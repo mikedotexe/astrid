@@ -39,7 +39,8 @@ members = [
     "crates/astrid-kernel",
 
     # Frontends
-    # "crates/astrid-cli",
+    "crates/astrid-cli",
+    "crates/astrid-capsule-cli",
     # "crates/astrid-cli-mockup",  # UI/UX prototype
     # "crates/astrid-telegram",
     "crates/astrid-vfs",
@@ -67,7 +68,7 @@ rust-version = "1.93"
 astrid-core = { path = "crates/astrid-core", version = "0.1.1" }
 astrid-crypto = { path = "crates/astrid-crypto", version = "0.1.1" }
 astrid-capabilities = { path = "crates/astrid-capabilities", version = "0.1.1" }
-astrid-events = { path = "crates/astrid-events", version = "0.1.1" }
+astrid-events = { path = "crates/astrid-events", version = "0.1.1", default-features = false }
 astrid-hooks = { path = "crates/astrid-hooks", version = "0.1.1" }
 astrid-mcp = { path = "crates/astrid-mcp", version = "0.1.1" }
 astrid-audit = { path = "crates/astrid-audit", version = "0.1.1" }

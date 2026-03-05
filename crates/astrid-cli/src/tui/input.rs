@@ -15,10 +15,83 @@ pub(crate) fn handle_input(app: &mut App) -> io::Result<()> {
             },
             UiState::Interrupted => handle_interrupted_input(app, key),
             UiState::CopyMode => handle_copy_input(app, key),
+            UiState::Onboarding { .. } => handle_onboarding_input(app, key),
             UiState::Error { .. } => handle_error_input(app, key),
         }
     }
     Ok(())
+}
+
+fn handle_onboarding_input(app: &mut App, key: KeyEvent) {
+    match key.code {
+        KeyCode::Esc => {
+            app.push_notice("Onboarding cancelled by user.");
+            app.state = UiState::Idle;
+            app.input.clear();
+            app.cursor_pos = 0;
+        },
+        KeyCode::Enter => {
+            let answer = app.input.clone();
+            app.input.clear();
+            app.cursor_pos = 0;
+
+            if let UiState::Onboarding {
+                capsule_id,
+                missing_keys,
+                prompts: _,
+                current_idx,
+                answers,
+            } = &mut app.state
+            {
+                let key_name = missing_keys[*current_idx].clone();
+                answers.insert(key_name, answer);
+                *current_idx = current_idx.saturating_add(1);
+
+                if *current_idx >= missing_keys.len() {
+                    let cid = capsule_id.clone();
+                    let final_answers = answers.clone();
+                    app.pending_actions.push(PendingAction::SubmitOnboarding {
+                        capsule_id: cid,
+                        answers: final_answers,
+                    });
+                    app.state = UiState::Idle;
+                }
+            }
+        },
+        KeyCode::Char(c) => {
+            app.input.insert(app.cursor_pos, c);
+            app.cursor_pos = app.cursor_pos.saturating_add(c.len_utf8());
+        },
+        KeyCode::Backspace => {
+            if app.cursor_pos > 0 {
+                let prev = app.input[..app.cursor_pos]
+                    .char_indices()
+                    .next_back()
+                    .map_or(0, |(i, _)| i);
+                app.input.remove(prev);
+                app.cursor_pos = prev;
+            }
+        },
+        KeyCode::Left => {
+            if app.cursor_pos > 0 {
+                let prev = app.input[..app.cursor_pos]
+                    .char_indices()
+                    .next_back()
+                    .map_or(0, |(i, _)| i);
+                app.cursor_pos = prev;
+            }
+        },
+        KeyCode::Right => {
+            if app.cursor_pos < app.input.len() {
+                let next = app.input[app.cursor_pos..]
+                    .char_indices()
+                    .nth(1)
+                    .map_or(app.input.len(), |(i, _)| app.cursor_pos.saturating_add(i));
+                app.cursor_pos = next;
+            }
+        },
+        _ => {},
+    }
 }
 
 #[allow(clippy::too_many_lines)]
@@ -40,15 +113,32 @@ fn handle_idle_input(app: &mut App, key: KeyEvent) {
 
         // Enter: select palette command and submit, or normal submit
         (KeyCode::Enter, _) => {
+            let mut submit_immediately = false;
+            let mut selected_from_palette = false;
+
             if palette_is_active {
                 let filtered = app.palette_filtered();
                 if let Some(cmd) = filtered.get(app.palette_selected) {
-                    app.input = cmd.name.to_string();
+                    if matches!(
+                        cmd.name.as_str(),
+                        "/help" | "/clear" | "/quit" | "/exit" | "/q" | "/refresh"
+                    ) {
+                        app.input = cmd.name.clone();
+                        submit_immediately = true;
+                    } else {
+                        app.input = format!("{} ", cmd.name);
+                    }
                     app.cursor_pos = app.input.len();
+                    selected_from_palette = true;
                 }
                 app.palette_reset();
             }
-            if let Some(content) = app.submit_input() {
+
+            // Submit if we aren't using the palette to auto-complete, or if the auto-completed command requires immediate submission.
+            // If the user already typed a full command with arguments, `selected_from_palette` will be false because `filtered` is empty.
+            if (!palette_is_active || !selected_from_palette || submit_immediately)
+                && let Some(content) = app.submit_input()
+            {
                 app.pending_actions.push(PendingAction::SendInput(content));
             }
         },
@@ -57,7 +147,15 @@ fn handle_idle_input(app: &mut App, key: KeyEvent) {
         (KeyCode::Tab, _) if palette_is_active => {
             let filtered = app.palette_filtered();
             if let Some(cmd) = filtered.get(app.palette_selected) {
-                app.input = cmd.name.to_string();
+                // If the command is a simple action that never takes arguments, don't append a space.
+                if matches!(
+                    cmd.name.as_str(),
+                    "/help" | "/clear" | "/quit" | "/exit" | "/q" | "/refresh"
+                ) {
+                    app.input = cmd.name.clone();
+                } else {
+                    app.input = format!("{} ", cmd.name);
+                }
                 app.cursor_pos = app.input.len();
             }
             app.palette_reset();

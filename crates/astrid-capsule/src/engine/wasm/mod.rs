@@ -25,7 +25,7 @@ pub struct WasmEngine {
     _capsule_dir: PathBuf,
     plugin: Option<Arc<Mutex<extism::Plugin>>>,
     inbound_rx: Option<tokio::sync::mpsc::Receiver<astrid_core::InboundMessage>>,
-    tools: Vec<std::sync::Arc<dyn crate::tool::CapsuleTool>>,
+    tools: Vec<Arc<dyn crate::tool::CapsuleTool>>,
 }
 
 impl WasmEngine {
@@ -67,17 +67,52 @@ impl ExecutionEngine for WasmEngine {
         let manifest = self.manifest.clone();
 
         let mut wasm_config = std::collections::HashMap::new();
+        let mut missing_keys = Vec::new();
+        let mut prompts = std::collections::HashMap::new();
+
         for (key, def) in &self.manifest.env {
             if let Ok(Some(val_bytes)) = ctx.kv.get(key).await {
                 if let Ok(val) = String::from_utf8(val_bytes) {
                     wasm_config.insert(key.clone(), serde_json::Value::String(val));
+                } else {
+                    missing_keys.push(key.clone());
+                    if let Some(req) = &def.request {
+                        prompts.insert(key.clone(), req.clone());
+                    }
                 }
             } else if let Some(default_val) = &def.default {
                 wasm_config.insert(key.clone(), default_val.clone());
+            } else {
+                // Key is missing and has no default
+                missing_keys.push(key.clone());
+                if let Some(req) = &def.request {
+                    prompts.insert(key.clone(), req.clone());
+                }
             }
         }
 
-        let (plugin, rx) = tokio::task::block_in_place(move || {
+        if !missing_keys.is_empty() {
+            let msg = astrid_events::ipc::IpcMessage::new(
+                "system.onboarding.required",
+                astrid_events::ipc::IpcPayload::OnboardingRequired {
+                    capsule_id: self.manifest.package.name.clone(),
+                    missing_keys: missing_keys.clone(),
+                    prompts,
+                },
+                uuid::Uuid::nil(), // Broadcast or global event for onboarding
+            );
+            let _ = ctx.event_bus.publish(astrid_events::AstridEvent::Ipc {
+                metadata: astrid_events::EventMetadata::new("wasm_engine"),
+                message: msg,
+            });
+
+            return Err(CapsuleError::UnsupportedEntryPoint(format!(
+                "Missing required environment variables: {}",
+                missing_keys.join(", ")
+            )));
+        }
+
+        let (plugin, rx, has_run) = tokio::task::block_in_place(move || {
             let wasm_bytes = std::fs::read(&wasm_path).map_err(|e| {
                 CapsuleError::UnsupportedEntryPoint(format!("Failed to read WASM: {e}"))
             })?;
@@ -134,6 +169,8 @@ impl ExecutionEngine for WasmEngine {
                 subscriptions: std::collections::HashMap::new(),
                 next_subscription_id,
                 config: wasm_config,
+                cli_socket_listener: ctx.cli_socket_listener.clone(),
+                active_streams: std::collections::HashMap::new(),
                 security: Some(security_gate),
                 hook_manager: None, // Will be injected by Gateway
                 runtime_handle: tokio::runtime::Handle::current(),
@@ -145,12 +182,16 @@ impl ExecutionEngine for WasmEngine {
             let user_data = UserData::new(host_state);
 
             let extism_wasm = Wasm::data(wasm_bytes);
-            let extism_manifest = Manifest::new([extism_wasm])
-                .with_timeout(std::time::Duration::from_secs(10)) // Reduced from 30s
-                .with_memory_max(1024); // 64MB
+            let mut extism_manifest = Manifest::new([extism_wasm]).with_memory_max(1024); // 64MB
 
-            // We will set instruction limits (fuel) when Wasmtime natively exposes it through Extism,
-            // but for now, the 10-second wall-clock timeout acts as our gas limit.
+            // Long-lived capsules (uplinks, cron, daemons) must not have a wall-clock
+            // timeout. Short-lived tool capsules get a 10-second safety timeout.
+            let is_daemon = !manifest.uplinks.is_empty()
+                || !manifest.cron_jobs.is_empty()
+                || manifest.capabilities.uplink;
+            if !is_daemon {
+                extism_manifest = extism_manifest.with_timeout(std::time::Duration::from_secs(10));
+            }
 
             let builder = PluginBuilder::new(extism_manifest).with_wasi(true);
             let builder = register_host_functions(builder, user_data);
@@ -159,12 +200,26 @@ impl ExecutionEngine for WasmEngine {
                 CapsuleError::UnsupportedEntryPoint(format!("Failed to build Extism plugin: {e}"))
             })?;
 
-            Ok::<_, CapsuleError>((plugin, rx))
+            let has_run = plugin.function_exists("run");
+
+            Ok::<_, CapsuleError>((plugin, rx, has_run))
         })?;
 
         let plugin_arc = Arc::new(Mutex::new(plugin));
 
-        let mut tools: Vec<std::sync::Arc<dyn crate::tool::CapsuleTool>> = Vec::new();
+        if has_run {
+            let plugin_clone = Arc::clone(&plugin_arc);
+            let capsule_name = self.manifest.package.name.clone();
+            tokio::task::spawn_blocking(move || {
+                tracing::info!(capsule = %capsule_name, "Starting background WASM run loop");
+                let mut p = plugin_clone.lock().expect("WASM plugin lock was poisoned");
+                if let Err(e) = p.call::<(), ()>("run", ()) {
+                    tracing::error!(capsule = %capsule_name, error = %e, "WASM background loop failed");
+                }
+            });
+        }
+
+        let mut tools: Vec<Arc<dyn crate::tool::CapsuleTool>> = Vec::new();
         for t in &self.manifest.tools {
             tools.push(Arc::new(tool::WasmCapsuleTool::new(
                 t.name.clone(),
@@ -197,7 +252,7 @@ impl ExecutionEngine for WasmEngine {
         self.inbound_rx.take()
     }
 
-    fn tools(&self) -> &[std::sync::Arc<dyn crate::tool::CapsuleTool>] {
+    fn tools(&self) -> &[Arc<dyn crate::tool::CapsuleTool>] {
         &self.tools
     }
 

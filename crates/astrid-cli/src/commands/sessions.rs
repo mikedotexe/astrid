@@ -1,140 +1,91 @@
-//! Sessions command - manage sessions.
+//! Commands for managing Astrid sessions.
 
-use astrid_core::{SessionId, truncate_to_boundary};
-use astrid_runtime::SessionStore;
+use anyhow::{Context, Result};
+use astrid_core::dirs::AstridHome;
 use colored::Colorize;
+use std::fs;
 
-use crate::theme::Theme;
+use crate::{SessionCommands, theme::Theme};
 
-/// List all sessions.
-pub(crate) fn list_sessions(store: &SessionStore) -> anyhow::Result<()> {
-    let sessions = store.list_with_metadata()?;
+pub(crate) fn handle_session_commands(command: SessionCommands) -> Result<()> {
+    match command {
+        SessionCommands::List => list_sessions(),
+        SessionCommands::Delete { id } => delete_session(&id),
+        SessionCommands::Info { id } => session_info(&id),
+    }
+}
 
-    if sessions.is_empty() {
-        println!("{}", Theme::info("No sessions found"));
+fn list_sessions() -> Result<()> {
+    let home = AstridHome::resolve().context("Failed to resolve Astrid home directory")?;
+    let sessions_dir = home.sessions_dir();
+
+    if !sessions_dir.exists() {
+        println!("{}", Theme::info("No active sessions found."));
         return Ok(());
     }
 
-    println!("\n{}", Theme::header("Sessions"));
-    println!(
-        "{:>8} {:>20} {:>10} {:>10} {}",
-        "ID".dimmed(),
-        "CREATED".dimmed(),
-        "MSGS".dimmed(),
-        "TOKENS".dimmed(),
-        "TITLE".dimmed()
-    );
-    println!("{}", Theme::separator());
-
-    for session in sessions {
-        println!(
-            "{:>8} {:>20} {:>10} {:>10} {}",
-            Theme::session_id(&session.id),
-            Theme::timestamp(&session.created_at),
-            session.message_count,
-            session.token_count,
-            session.display_title().dimmed()
-        );
+    let mut sessions = Vec::new();
+    for entry in fs::read_dir(sessions_dir)? {
+        let entry = entry?;
+        if entry.metadata()?.is_dir()
+            && let Some(name) = entry.file_name().to_str()
+        {
+            // If it looks like a UUID, count it as a session
+            if uuid::Uuid::parse_str(name).is_ok() {
+                let modified = entry.metadata()?.modified()?;
+                sessions.push((name.to_string(), modified));
+            }
+        }
     }
 
-    println!();
+    if sessions.is_empty() {
+        println!("{}", Theme::info("No active sessions found."));
+        return Ok(());
+    }
+
+    sessions.sort_by(|a, b| b.1.cmp(&a.1));
+
+    println!("{}", "Active Sessions:".bold());
+    for (id, modified) in sessions {
+        let time = chrono::DateTime::<chrono::Local>::from(modified)
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
+        println!("  {} ({})", Theme::session_id(&id), Theme::dimmed(&time));
+    }
+
     Ok(())
 }
 
-/// Show session details.
-pub(crate) fn show_session(store: &SessionStore, id: &str) -> anyhow::Result<()> {
-    let session = store
-        .load_by_str(id)?
-        .ok_or_else(|| anyhow::anyhow!("Session not found: {id}"))?;
+fn delete_session(id: &str) -> Result<()> {
+    let home = AstridHome::resolve().context("Failed to resolve Astrid home directory")?;
+    let session_dir = home.sessions_dir().join(id);
 
-    println!("\n{}", Theme::header("Session Details"));
-    println!("  ID: {}", session.id);
-    println!("  Created: {}", Theme::timestamp(&session.created_at));
-    println!("  Duration: {}", format_duration(session.duration()));
-    println!("  Messages: {}", session.messages.len());
-    println!("  Tokens: ~{}", session.token_count);
-
-    if let Some(title) = &session.metadata.title {
-        println!("  Title: {title}");
+    if !session_dir.exists() {
+        anyhow::bail!("Session not found: {id}");
     }
 
-    if !session.metadata.tags.is_empty() {
-        println!("  Tags: {}", session.metadata.tags.join(", "));
-    }
-
-    println!("\n{}", Theme::header("Recent Messages"));
-    for msg in session.last_messages(5) {
-        let role = match msg.role {
-            astrid_llm::MessageRole::User => "User".blue(),
-            astrid_llm::MessageRole::Assistant => "Assistant".green(),
-            astrid_llm::MessageRole::System => "System".yellow(),
-            astrid_llm::MessageRole::Tool => "Tool".magenta(),
-        };
-
-        let content = match &msg.content {
-            astrid_llm::MessageContent::Text(t) => {
-                if t.len() > 100 {
-                    format!("{}...", truncate_to_boundary(t, 100))
-                } else {
-                    t.clone()
-                }
-            },
-            astrid_llm::MessageContent::ToolCalls(calls) => {
-                format!("[Tool calls: {}]", calls.len())
-            },
-            astrid_llm::MessageContent::ToolResult(r) => {
-                format!("[Tool result: {}...]", truncate_to_boundary(&r.content, 50))
-            },
-            astrid_llm::MessageContent::MultiPart(_) => "[Multi-part]".to_string(),
-        };
-
-        println!("  {}: {}", role, content.dimmed());
-    }
-
-    println!();
-    Ok(())
-}
-
-/// Delete a session.
-pub(crate) fn delete_session(store: &SessionStore, id: &str) -> anyhow::Result<()> {
-    let uuid = uuid::Uuid::parse_str(id)?;
-    store.delete(&SessionId::from_uuid(uuid))?;
+    fs::remove_dir_all(&session_dir)?;
     println!("{}", Theme::success(&format!("Deleted session {id}")));
     Ok(())
 }
 
-/// Clean up sessions older than the given number of days.
-pub(crate) fn cleanup_sessions(store: &SessionStore, older_than_days: i64) -> anyhow::Result<()> {
-    let removed = store.cleanup_old(older_than_days)?;
-    if removed == 0 {
-        println!(
-            "{}",
-            Theme::info(&format!(
-                "No sessions older than {older_than_days} days found"
-            ))
-        );
-    } else {
-        println!(
-            "{}",
-            Theme::success(&format!(
-                "Cleaned up {removed} session(s) older than {older_than_days} days"
-            ))
-        );
-    }
-    Ok(())
-}
+fn session_info(id: &str) -> Result<()> {
+    let home = AstridHome::resolve().context("Failed to resolve Astrid home directory")?;
+    let session_dir = home.sessions_dir().join(id);
 
-/// Format a duration.
-fn format_duration(duration: chrono::Duration) -> String {
-    if duration.num_hours() > 0 {
-        format!("{}h {}m", duration.num_hours(), duration.num_minutes() % 60)
-    } else if duration.num_minutes() > 0 {
-        format!(
-            "{}m {}s",
-            duration.num_minutes(),
-            duration.num_seconds() % 60
-        )
-    } else {
-        format!("{}s", duration.num_seconds())
+    if !session_dir.exists() {
+        anyhow::bail!("Session not found: {id}");
     }
+
+    println!("{}", "Session Information".bold());
+    println!("  ID: {}", Theme::session_id(id));
+
+    let sock_path = session_dir.join("ipc.sock");
+    if sock_path.exists() {
+        println!("  Status: {}", "Alive (Socket Active)".green());
+    } else {
+        println!("  Status: {}", "Dormant".yellow());
+    }
+
+    Ok(())
 }

@@ -209,6 +209,8 @@ impl WasmHandler {
             has_connector_capability: false,
             inbound_tx: None,
             registered_connectors: Vec::new(),
+            cli_socket_listener: None,
+            active_streams: std::collections::HashMap::new(),
         };
         let user_data = UserData::new(host_state);
 

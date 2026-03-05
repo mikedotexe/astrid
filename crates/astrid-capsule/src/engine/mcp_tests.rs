@@ -33,10 +33,12 @@ mod tests {
             dependencies: HashMap::new(),
             capabilities: CapabilitiesDef {
                 net: vec![],
+                net_bind: vec![],
                 kv: vec![],
                 fs_read: vec![],
                 fs_write: vec![],
                 host_process: allowed_commands.into_iter().map(String::from).collect(),
+                uplink: false,
             },
             env: HashMap::new(),
             tools: vec![],
@@ -90,6 +92,7 @@ mod tests {
             workspace_root: std::path::PathBuf::from("/"),
             event_bus: bus,
             kv,
+            cli_socket_listener: None,
         };
 
         let result = engine.load(&ctx).await;
@@ -144,6 +147,7 @@ mod tests {
             workspace_root: std::path::PathBuf::from("/"),
             event_bus: bus,
             kv,
+            cli_socket_listener: None,
         };
 
         let result = engine.load(&ctx).await;
@@ -195,6 +199,7 @@ mod tests {
             workspace_root: std::path::PathBuf::from("/"),
             event_bus: bus,
             kv,
+            cli_socket_listener: None,
         };
 
         let result = engine.load(&ctx).await;

@@ -50,12 +50,6 @@ async fn handle_request(kernel: &Arc<crate::Kernel>, topic: String, req: KernelR
             info!(request_id = %request_id, "Kernel received capability approval");
             KernelResponse::Error("Approval logic not yet implemented in kernel router".to_string())
         },
-        KernelRequest::ListSessions => {
-            // Because sessions are managed by capsules in the microkernel, the OS
-            // itself might just broadcast a "sessions.request" and gather them,
-            // or query the storage layer!
-            KernelResponse::Success(serde_json::json!([]))
-        },
         KernelRequest::ListCapsules => {
             let reg = kernel.capsules.read().await;
             let mut list = Vec::new();
@@ -63,6 +57,30 @@ async fn handle_request(kernel: &Arc<crate::Kernel>, topic: String, req: KernelR
                 list.push(c.to_string());
             }
             KernelResponse::Success(serde_json::json!(list))
+        },
+        KernelRequest::GetCommands => {
+            let reg = kernel.capsules.read().await;
+            let mut commands = Vec::new();
+            for c in reg.values() {
+                for cmd in &c.manifest().commands {
+                    commands.push(astrid_events::kernel_api::CommandInfo {
+                        name: cmd.name.clone(),
+                        description: cmd
+                            .description
+                            .clone()
+                            .unwrap_or_else(|| "No description".to_string()),
+                        provider_capsule: c.id().to_string(),
+                    });
+                }
+            }
+            KernelResponse::Commands(commands)
+        },
+        KernelRequest::ReloadCapsules => {
+            // Note: In a production kernel, this should probably diff and hot-reload gracefully.
+            // For now, we will just call load_all_capsules which skips already-registered ones,
+            // effectively just loading newly discovered ones.
+            kernel.load_all_capsules().await;
+            KernelResponse::Success(serde_json::json!({"status": "reloaded"}))
         },
     };
 

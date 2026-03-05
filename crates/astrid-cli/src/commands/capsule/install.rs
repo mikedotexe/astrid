@@ -5,13 +5,9 @@ use std::io::Read;
 use std::path::Path;
 
 use anyhow::{Context, bail};
-use dialoguer::{Confirm, Input, Password, theme::ColorfulTheme};
 
 use astrid_capsule::discovery::load_manifest;
-use astrid_capsule::manifest::CapsuleManifest;
 use astrid_core::dirs::AstridHome;
-
-use crate::theme::Theme;
 
 pub(crate) fn install_capsule(source: &str, workspace: bool) -> anyhow::Result<()> {
     let home = AstridHome::resolve()?;
@@ -52,11 +48,6 @@ pub(crate) fn install_from_github(
     home: &AstridHome,
     _is_openclaw: bool,
 ) -> anyhow::Result<()> {
-    println!(
-        "{}",
-        Theme::info(&format!("Fetching capsule from GitHub: {url}"))
-    );
-
     let client = reqwest::blocking::Client::builder()
         .user_agent("astrid-cli")
         .timeout(std::time::Duration::from_secs(30))
@@ -72,8 +63,6 @@ pub(crate) fn install_from_github(
 
     let api_url = format!("https://api.github.com/repos/{org}/{repo}/releases/latest");
 
-    println!("{}", Theme::dimmed("  Checking for latest release..."));
-
     let res = client.get(&api_url).send();
 
     if let Ok(response) = res
@@ -88,11 +77,6 @@ pub(crate) fn install_from_github(
                     .get("browser_download_url")
                     .and_then(serde_json::Value::as_str)
             {
-                println!(
-                    "{}",
-                    Theme::success(&format!("  Found pre-compiled capsule: {name}"))
-                );
-
                 let tmp_dir = tempfile::tempdir()?;
                 let sanitized_name = Path::new(name).file_name().unwrap_or_default();
                 let download_path = tmp_dir.path().join(sanitized_name);
@@ -109,29 +93,9 @@ pub(crate) fn install_from_github(
         }
     }
 
-    println!(
-        "{}",
-        Theme::dimmed("  No pre-compiled `.capsule` release found.")
-    );
-
-    let theme = ColorfulTheme::default();
-    let proceed = Confirm::with_theme(&theme)
-        .with_prompt("Do you want to clone this repository and build the capsule locally? (WARNING: This will execute the repository's build scripts on your machine)")
-        .default(false)
-        .interact()
-        .unwrap_or(false);
-
-    if !proceed {
-        bail!("Installation aborted. No pre-compiled release was found.");
-    }
-
     let tmp_dir = tempfile::tempdir().context("failed to create temp dir for cloning")?;
     let clone_dir = tmp_dir.path().join(repo);
 
-    println!(
-        "{}",
-        Theme::dimmed("  Cloning repository to temporary directory...")
-    );
     let status = std::process::Command::new("git")
         .args(["clone", "--depth", "1", url, &clone_dir.to_string_lossy()])
         .status()
@@ -141,10 +105,6 @@ pub(crate) fn install_from_github(
         bail!("Failed to clone repository from GitHub.");
     }
 
-    println!(
-        "{}",
-        Theme::info("  Building capsule using Universal Migrator...")
-    );
     let output_dir = tmp_dir.path().join("dist");
     std::fs::create_dir_all(&output_dir)?;
 
@@ -172,12 +132,6 @@ pub(crate) fn install_from_openclaw(
     home: &AstridHome,
 ) -> anyhow::Result<()> {
     let plugin_name = source.strip_prefix("openclaw:").unwrap_or(source);
-    println!(
-        "{}",
-        Theme::info(&format!(
-            "Installing OpenClaw plugin from registry: {plugin_name}"
-        ))
-    );
 
     // Step 1: Mock Registry Fetch
     // In a real implementation, this would hit https://registry.openclaw.io
@@ -198,11 +152,6 @@ pub(crate) fn transpile_and_install(
     workspace: bool,
     home: &AstridHome,
 ) -> anyhow::Result<()> {
-    println!(
-        "{}",
-        Theme::info("  Detected OpenClaw plugin. Transpiling to Astrid Capsule...")
-    );
-
     let tmp_dir = tempfile::tempdir().context("failed to create temp dir for transpilation")?;
     let output_dir = tmp_dir.path();
 
@@ -244,7 +193,6 @@ pub(crate) fn transpile_and_install(
     .map_err(|e| anyhow::anyhow!("failed to generate Capsule.toml: {e}"))?;
 
     // 7. Proceed with standard installation from the temp directory
-    println!("{}", Theme::success("  Transpilation successful."));
     install_from_local_path(output_dir, workspace, home)
 }
 
@@ -270,6 +218,28 @@ pub(crate) fn install_from_local(
         return unpack_and_install(source_path, workspace, home);
     }
 
+    // Auto-build Rust capsules if we point at a source directory with a Cargo.toml
+    if source_path.is_dir() && source_path.join("Cargo.toml").exists() {
+        let tmp_dir = tempfile::tempdir().context("failed to create temp dir for building")?;
+        let output_dir = tmp_dir.path().join("dist");
+
+        crate::commands::build::run_build(
+            Some(source),
+            Some(output_dir.to_str().context("Invalid output dir path")?),
+            Some("rust"),
+            None,
+        )?;
+
+        // Find the newly built .capsule file in the output directory
+        for entry in std::fs::read_dir(&output_dir)? {
+            let entry = entry?;
+            if entry.path().extension().and_then(|s| s.to_str()) == Some("capsule") {
+                return unpack_and_install(&entry.path(), workspace, home);
+            }
+        }
+        bail!("Failed to auto-build capsule from Cargo project.");
+    }
+
     install_from_local_path(source_path, workspace, home)
 }
 
@@ -278,14 +248,6 @@ fn unpack_and_install(
     workspace: bool,
     home: &AstridHome,
 ) -> anyhow::Result<()> {
-    println!(
-        "{}",
-        Theme::info(&format!(
-            "Unpacking capsule archive: {}",
-            archive_path.display()
-        ))
-    );
-
     let tmp_dir = tempfile::tempdir().context("failed to create temp dir for unpacking")?;
     let unpack_dir = tmp_dir.path();
 
@@ -342,14 +304,6 @@ pub(crate) fn install_from_local_path(
     workspace: bool,
     home: &AstridHome,
 ) -> anyhow::Result<()> {
-    println!(
-        "{}",
-        Theme::info(&format!(
-            "Installing Capsule from: {}",
-            source_path.display()
-        ))
-    );
-
     let manifest_path = source_path.join("Capsule.toml");
     if !manifest_path.exists() {
         bail!("No Capsule.toml found in {}", source_path.display());
@@ -358,12 +312,6 @@ pub(crate) fn install_from_local_path(
     let manifest = load_manifest(&manifest_path).context("failed to load Capsule manifest")?;
     let id = manifest.package.name.clone();
 
-    // 1. Airlock Prompt
-    prompt_capabilities(&manifest)?;
-
-    // 2. Elicit Environment Variables
-    let env_values = elicit_env(&manifest)?;
-
     // 3. Resolve Target Directory
     let target_dir = resolve_target_dir(home, &id, workspace)?;
     let parent = target_dir.parent().context("target dir has no parent")?;
@@ -371,7 +319,6 @@ pub(crate) fn install_from_local_path(
         .with_context(|| format!("failed to create {}", parent.display()))?;
 
     // 4. Copy Capsule
-    println!("{}", Theme::dimmed(&format!("  Copying capsule '{id}'...")));
 
     // Backup existing target if present.
     if target_dir.exists() {
@@ -380,111 +327,7 @@ pub(crate) fn install_from_local_path(
 
     copy_plugin_dir(source_path, &target_dir)?;
 
-    // 5. Save securely elicited env to .env.json
-    if !env_values.is_empty() {
-        let env_path = target_dir.join(".env.json");
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            let mut options = std::fs::OpenOptions::new();
-            options.write(true).create(true).truncate(true).mode(0o600);
-            let mut file = options.open(&env_path)?;
-            std::io::Write::write_all(
-                &mut file,
-                serde_json::to_string_pretty(&env_values)?.as_bytes(),
-            )?;
-        }
-        #[cfg(not(unix))]
-        {
-            std::fs::write(&env_path, serde_json::to_string_pretty(&env_values)?)?;
-        }
-    }
-
-    println!("{}", Theme::success(&format!("Installed capsule '{id}'")));
-
-    if workspace {
-        println!("{}", Theme::dimmed("  Location: .astrid/plugins/"));
-    }
-
     Ok(())
-}
-
-fn prompt_capabilities(manifest: &CapsuleManifest) -> anyhow::Result<()> {
-    let caps = &manifest.capabilities;
-    let has_dangerous_caps = !caps.host_process.is_empty()
-        || !caps.fs_read.is_empty()
-        || !caps.fs_write.is_empty()
-        || !caps.net.is_empty();
-
-    if has_dangerous_caps {
-        println!(
-            "{}",
-            Theme::warning("\nAIRLOCK PROMPT: Dangerous Capabilities Requested!")
-        );
-        println!(
-            "{}",
-            Theme::dimmed(&format!(
-                "The capsule '{}' is requesting the following capabilities that escape the default sandbox:",
-                manifest.package.name
-            ))
-        );
-
-        if !caps.host_process.is_empty() {
-            println!("  - host_process: {}", caps.host_process.join(", "));
-        }
-        if !caps.fs_read.is_empty() {
-            println!("  - fs_read: {}", caps.fs_read.join(", "));
-        }
-        if !caps.fs_write.is_empty() {
-            println!("  - fs_write: {}", caps.fs_write.join(", "));
-        }
-        if !caps.net.is_empty() {
-            println!("  - net: {}", caps.net.join(", "));
-        }
-
-        println!();
-        let confirm = Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt("Do you want to grant these capabilities and continue installation?")
-            .default(false)
-            .interact()?;
-
-        if !confirm {
-            bail!("Installation aborted by user due to capability request.");
-        }
-    }
-
-    Ok(())
-}
-
-fn elicit_env(manifest: &CapsuleManifest) -> anyhow::Result<HashMap<String, String>> {
-    let mut env_values = HashMap::new();
-    let theme = ColorfulTheme::default();
-
-    if !manifest.env.is_empty() {
-        println!("\n{}", Theme::info("Capsule Environment Configuration:"));
-        for (key, def) in &manifest.env {
-            let default_prompt = format!("Please enter value for {key}");
-            let prompt_text = def.request.as_deref().unwrap_or(&default_prompt);
-
-            let value = if def.env_type == "secret" {
-                Password::with_theme(&theme)
-                    .with_prompt(prompt_text)
-                    .interact()?
-            } else {
-                let mut input = Input::<String>::with_theme(&theme).with_prompt(prompt_text);
-
-                if let Some(default_str) = def.default.as_ref().and_then(|v| v.as_str()) {
-                    input = input.default(default_str.to_string());
-                }
-
-                input.interact()?
-            };
-
-            env_values.insert(key.clone(), value);
-        }
-    }
-
-    Ok(env_values)
 }
 
 /// Recursively copy a directory tree.
@@ -529,6 +372,6 @@ fn resolve_target_dir(
         let root = std::env::current_dir().context("could not determine current directory")?;
         Ok(root.join(".astrid").join("plugins").join(id))
     } else {
-        Ok(home.plugins_dir().join(id))
+        Ok(home.capsules_dir().join(id))
     }
 }

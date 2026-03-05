@@ -5,60 +5,13 @@ use std::time::{Duration, Instant};
 
 // ─── Slash Command Palette ──────────────────────────────────────
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub(crate) struct SlashCommandDef {
-    pub name: &'static str,
-    pub description: &'static str,
+    pub name: String,
+    pub description: String,
 }
 
 pub(crate) const PALETTE_MAX_VISIBLE: usize = 6;
-
-pub(crate) const SLASH_COMMANDS: &[SlashCommandDef] = &[
-    SlashCommandDef {
-        name: "/help",
-        description: "Show available commands",
-    },
-    SlashCommandDef {
-        name: "/clear",
-        description: "Clear conversation history",
-    },
-    SlashCommandDef {
-        name: "/info",
-        description: "Show daemon status",
-    },
-    SlashCommandDef {
-        name: "/servers",
-        description: "List MCP servers",
-    },
-    SlashCommandDef {
-        name: "/tools",
-        description: "List available tools",
-    },
-    SlashCommandDef {
-        name: "/plugins",
-        description: "List registered plugins",
-    },
-    SlashCommandDef {
-        name: "/allowances",
-        description: "Show active allowances",
-    },
-    SlashCommandDef {
-        name: "/budget",
-        description: "Show budget usage",
-    },
-    SlashCommandDef {
-        name: "/audit",
-        description: "Show recent audit entries",
-    },
-    SlashCommandDef {
-        name: "/save",
-        description: "Save current session",
-    },
-    SlashCommandDef {
-        name: "/sessions",
-        description: "List active sessions",
-    },
-];
 
 // ─── UI State Machine ────────────────────────────────────────────
 
@@ -84,6 +37,14 @@ pub(crate) enum UiState {
     Interrupted,
     /// Copy mode — keyboard-driven block selection for clean text copying.
     CopyMode,
+    /// Capsule Onboarding (configuring environment variables).
+    Onboarding {
+        capsule_id: String,
+        missing_keys: Vec<String>,
+        prompts: std::collections::HashMap<String, String>,
+        current_idx: usize,
+        answers: std::collections::HashMap<String, String>,
+    },
 }
 
 // ─── Messages ────────────────────────────────────────────────────
@@ -93,7 +54,7 @@ pub(crate) enum UiState {
 pub(crate) enum MessageRole {
     User,
     Assistant,
-    System,
+    LocalUi,
 }
 
 /// Special message kinds for styled rendering.
@@ -188,6 +149,10 @@ pub(crate) enum PendingAction {
     },
     SendInput(String),
     CancelTurn,
+    SubmitOnboarding {
+        capsule_id: String,
+        answers: std::collections::HashMap<String, String>,
+    },
 }
 
 /// What the user chose for approval.
@@ -221,6 +186,7 @@ pub(crate) struct App {
     pub scroll_offset: usize,
 
     // ── Slash palette ──
+    pub slash_commands: Vec<SlashCommandDef>,
     pub palette_selected: usize,
     pub palette_scroll_offset: usize,
 
@@ -243,6 +209,9 @@ pub(crate) struct App {
     pub copy_cursor: usize,
     pub copy_selected: HashSet<usize>,
     pub copy_notice: Option<(String, Instant)>,
+
+    // ── Status Bar ──
+    pub status_message: Option<(String, Instant)>,
 }
 
 impl App {
@@ -264,6 +233,28 @@ impl App {
             cursor_pos: 0,
             scroll_offset: 0,
 
+            slash_commands: vec![
+                SlashCommandDef {
+                    name: "/help".to_string(),
+                    description: "Show available commands".to_string(),
+                },
+                SlashCommandDef {
+                    name: "/clear".to_string(),
+                    description: "Clear conversation history".to_string(),
+                },
+                SlashCommandDef {
+                    name: "/install".to_string(),
+                    description: "Install a capsule from a path or registry".to_string(),
+                },
+                SlashCommandDef {
+                    name: "/refresh".to_string(),
+                    description: "Reload all installed capsules into the OS".to_string(),
+                },
+                SlashCommandDef {
+                    name: "/quit".to_string(),
+                    description: "Disconnect from the daemon".to_string(),
+                },
+            ],
             palette_selected: 0,
             palette_scroll_offset: 0,
 
@@ -282,6 +273,8 @@ impl App {
             copy_cursor: 0,
             copy_selected: HashSet::new(),
             copy_notice: None,
+
+            status_message: None,
         }
     }
 
@@ -291,9 +284,9 @@ impl App {
     }
 
     /// Return the filtered list of slash commands matching the current input prefix.
-    pub(crate) fn palette_filtered(&self) -> Vec<&'static SlashCommandDef> {
+    pub(crate) fn palette_filtered(&self) -> Vec<&SlashCommandDef> {
         let prefix = &self.input;
-        SLASH_COMMANDS
+        self.slash_commands
             .iter()
             .filter(|cmd| cmd.name.starts_with(prefix))
             .collect()
@@ -330,7 +323,7 @@ impl App {
 
     /// Push a system notice.
     pub(crate) fn push_notice(&mut self, text: &str) {
-        self.push_message(MessageRole::System, text.to_string());
+        self.push_message(MessageRole::LocalUi, text.to_string());
     }
 
     /// Approve a pending tool call.
@@ -456,7 +449,7 @@ impl App {
                                 MessageRole::User => {
                                     parts.push(format!("> {}", msg.content));
                                 },
-                                MessageRole::Assistant | MessageRole::System => {
+                                MessageRole::Assistant | MessageRole::LocalUi => {
                                     parts.push(msg.content.clone());
                                 },
                             }

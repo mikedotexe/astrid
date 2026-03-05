@@ -62,6 +62,11 @@ pub struct HostState {
     pub inbound_tx: Option<mpsc::Sender<InboundMessage>>,
     /// Connectors registered by the WASM guest via `astrid_register_connector`.
     pub registered_connectors: Vec<ConnectorDescriptor>,
+    /// Optional natively bound unix listener.
+    pub cli_socket_listener: Option<Arc<tokio::sync::Mutex<tokio::net::UnixListener>>>,
+    /// Active, mapped UnixStreams from the socket listener.
+    pub active_streams:
+        std::collections::HashMap<u64, Arc<tokio::sync::Mutex<tokio::net::UnixStream>>>,
 }
 
 impl HostState {
@@ -134,7 +139,7 @@ mod tests {
             caller_context: None,
             capsule_id: CapsuleId::from_static("test"),
             workspace_root: PathBuf::from("/tmp"),
-            vfs: std::sync::Arc::new(astrid_vfs::HostVfs::new()),
+            vfs: Arc::new(astrid_vfs::HostVfs::new()),
             vfs_root_handle: astrid_capabilities::DirHandle::new(),
             upper_dir: None,
             kv,
@@ -149,6 +154,8 @@ mod tests {
             has_connector_capability: false,
             inbound_tx: None,
             registered_connectors: Vec::new(),
+            cli_socket_listener: None,
+            active_streams: std::collections::HashMap::new(),
         };
 
         let debug = format!("{state:?}");
@@ -175,7 +182,7 @@ mod tests {
             caller_context: None,
             capsule_id: CapsuleId::from_static("test"),
             workspace_root: PathBuf::from("/tmp"),
-            vfs: std::sync::Arc::new(astrid_vfs::HostVfs::new()),
+            vfs: Arc::new(astrid_vfs::HostVfs::new()),
             vfs_root_handle: astrid_capabilities::DirHandle::new(),
             upper_dir: None,
             kv,
@@ -190,6 +197,8 @@ mod tests {
             has_connector_capability: true,
             inbound_tx: None,
             registered_connectors: Vec::new(),
+            cli_socket_listener: None,
+            active_streams: std::collections::HashMap::new(),
         };
 
         assert!(state.connectors().is_empty());
@@ -220,7 +229,7 @@ mod tests {
             caller_context: None,
             capsule_id: CapsuleId::from_static("test"),
             workspace_root: PathBuf::from("/tmp"),
-            vfs: std::sync::Arc::new(astrid_vfs::HostVfs::new()),
+            vfs: Arc::new(astrid_vfs::HostVfs::new()),
             vfs_root_handle: astrid_capabilities::DirHandle::new(),
             upper_dir: None,
             kv,
@@ -235,6 +244,8 @@ mod tests {
             has_connector_capability: false,
             inbound_tx: None,
             registered_connectors: Vec::new(),
+            cli_socket_listener: None,
+            active_streams: std::collections::HashMap::new(),
         };
 
         assert!(state.inbound_tx.is_none());
@@ -262,7 +273,7 @@ mod tests {
             caller_context: None,
             capsule_id: CapsuleId::from_static("test"),
             workspace_root: PathBuf::from("/tmp"),
-            vfs: std::sync::Arc::new(astrid_vfs::HostVfs::new()),
+            vfs: Arc::new(astrid_vfs::HostVfs::new()),
             vfs_root_handle: astrid_capabilities::DirHandle::new(),
             upper_dir: None,
             kv,
@@ -277,6 +288,8 @@ mod tests {
             has_connector_capability: true,
             inbound_tx: None,
             registered_connectors: Vec::new(),
+            cli_socket_listener: None,
+            active_streams: std::collections::HashMap::new(),
         };
 
         // Fill to the limit
@@ -322,7 +335,7 @@ mod tests {
             caller_context: None,
             capsule_id: CapsuleId::from_static("test"),
             workspace_root: PathBuf::from("/tmp"),
-            vfs: std::sync::Arc::new(astrid_vfs::HostVfs::new()),
+            vfs: Arc::new(astrid_vfs::HostVfs::new()),
             vfs_root_handle: astrid_capabilities::DirHandle::new(),
             upper_dir: None,
             kv,
@@ -337,6 +350,8 @@ mod tests {
             has_connector_capability: true,
             inbound_tx: None,
             registered_connectors: Vec::new(),
+            cli_socket_listener: None,
+            active_streams: std::collections::HashMap::new(),
         };
 
         let desc1 = ConnectorDescriptor::builder("my-conn", FrontendType::Discord)
