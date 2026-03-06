@@ -26,6 +26,7 @@ pub struct WasmEngine {
     plugin: Option<Arc<Mutex<extism::Plugin>>>,
     inbound_rx: Option<tokio::sync::mpsc::Receiver<astrid_core::InboundMessage>>,
     tools: Vec<Arc<dyn crate::tool::CapsuleTool>>,
+    run_handle: Option<tokio::task::JoinHandle<()>>,
 }
 
 impl WasmEngine {
@@ -36,6 +37,7 @@ impl WasmEngine {
             plugin: None,
             inbound_rx: None,
             tools: Vec::new(),
+            run_handle: None,
         }
     }
 }
@@ -248,19 +250,24 @@ impl ExecutionEngine for WasmEngine {
                 );
             }
             let capsule_name = self.manifest.package.name.clone();
-            tokio::task::spawn_blocking(move || {
+            // Must spawn on a worker thread (not spawn_blocking) because WASM
+            // host functions (fs, http, kv, etc.) use block_in_place internally,
+            // which panics on spawn_blocking threads. Requires multi-thread runtime.
+            self.run_handle = Some(tokio::task::spawn(async move {
                 tracing::info!(capsule = %capsule_name, "Starting background WASM run loop");
-                let mut p = match plugin_arc.lock() {
-                    Ok(guard) => guard,
-                    Err(e) => {
-                        tracing::error!(capsule = %capsule_name, error = %e, "WASM plugin lock was poisoned");
-                        return;
-                    },
-                };
-                if let Err(e) = p.call::<(), ()>("run", ()) {
-                    tracing::error!(capsule = %capsule_name, error = %e, "WASM background loop failed");
-                }
-            });
+                tokio::task::block_in_place(|| {
+                    let mut p = match plugin_arc.lock() {
+                        Ok(guard) => guard,
+                        Err(e) => {
+                            tracing::error!(capsule = %capsule_name, error = %e, "WASM plugin lock was poisoned");
+                            return;
+                        },
+                    };
+                    if let Err(e) = p.call::<(), ()>("run", ()) {
+                        tracing::error!(capsule = %capsule_name, error = %e, "WASM background loop failed");
+                    }
+                });
+            }));
             // plugin_arc moved into the spawn — self.plugin stays None.
         } else {
             let mut tools: Vec<Arc<dyn crate::tool::CapsuleTool>> = Vec::new();
@@ -285,6 +292,9 @@ impl ExecutionEngine for WasmEngine {
             capsule = %self.manifest.package.name,
             "Unloading WASM component"
         );
+        if let Some(handle) = self.run_handle.take() {
+            handle.abort();
+        }
         self.plugin = None; // Drop releases WASM memory
         self.tools.clear();
         Ok(())
@@ -316,6 +326,10 @@ impl ExecutionEngine for WasmEngine {
             CapsuleError::ExecutionFailed(format!("failed to serialize interceptor request: {e}"))
         })?;
 
+        // block_in_place is required because Extism host functions (fs, http,
+        // kv, etc.) also call block_in_place internally during plugin.call().
+        // The caller MUST invoke this from a Tokio worker thread (e.g. via
+        // tokio::task::spawn), never from spawn_blocking.
         tokio::task::block_in_place(|| {
             let mut plugin = plugin
                 .lock()
@@ -342,8 +356,8 @@ mod tests {
         .join();
     }
 
-    /// Verifies that a poisoned mutex in the run-loop pattern (spawn_blocking)
-    /// completes without panicking — matching the exact pattern at lines 253-259.
+    /// Verifies that a poisoned mutex in the run-loop pattern completes
+    /// without panicking — matching the lock error handling in `load()`.
     #[tokio::test]
     async fn poisoned_lock_in_run_loop_does_not_panic() {
         let plugin_arc: Arc<Mutex<String>> = Arc::new(Mutex::new("fake_plugin".into()));

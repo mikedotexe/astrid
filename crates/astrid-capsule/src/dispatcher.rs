@@ -13,15 +13,10 @@
 //!   `tool.execute.search.result` but not `tool.execute.result`
 
 use std::sync::Arc;
-use std::time::Duration;
 
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
 
-/// Maximum time an interceptor invocation may run before being detached.
-const INTERCEPTOR_TIMEOUT: Duration = Duration::from_secs(15);
-
-use crate::capsule::CapsuleId;
 use crate::registry::CapsuleRegistry;
 use astrid_events::{AstridEvent, EventBus};
 
@@ -52,7 +47,7 @@ impl EventDispatcher {
 
         while let Some(event) = receiver.recv().await {
             if let AstridEvent::Ipc { message, .. } = &*event {
-                self.dispatch(message).await;
+                self.dispatch(message);
             }
         }
 
@@ -60,104 +55,83 @@ impl EventDispatcher {
     }
 
     /// Match an IPC event against all registered interceptors and invoke matches.
-    async fn dispatch(&self, message: &astrid_events::ipc::IpcMessage) {
-        let topic = &message.topic;
-        // Phase 1: collect matches under a brief read lock.
-        let matches: Vec<(CapsuleId, String)> = {
-            let registry = self.registry.read().await;
-            let mut matches = Vec::new();
-            for capsule_id in registry.list() {
-                if let Some(capsule) = registry.get(capsule_id) {
-                    if !matches!(capsule.state(), crate::capsule::CapsuleState::Ready) {
-                        continue;
-                    }
-                    for interceptor in &capsule.manifest().interceptors {
-                        if topic_matches(topic, &interceptor.event) {
-                            matches.push((capsule_id.clone(), interceptor.action.clone()));
-                        }
-                    }
-                }
-            }
-            matches
-        };
+    ///
+    /// Interceptors are dispatched concurrently — each gets its own spawned task
+    /// that runs to completion. This method returns immediately after spawning,
+    /// so the event loop is never blocked by slow or long-running interceptors.
+    fn dispatch(&self, message: &astrid_events::ipc::IpcMessage) {
+        let topic = Arc::new(message.topic.clone());
+        let registry = Arc::clone(&self.registry);
 
-        if matches.is_empty() {
-            return;
-        }
-
-        // Serialize the FULL message once for all invocations so capsules get metadata.
+        // Serialize payload eagerly so all interceptors share the same bytes.
         let payload_bytes = match serde_json::to_vec(message) {
             Ok(bytes) => Arc::new(bytes),
             Err(e) => {
-                warn!(topic, error = %e, "Failed to serialize IPC message for dispatch");
+                warn!(topic = %topic, error = %e, "Failed to serialize IPC message for dispatch");
                 return;
             },
         };
 
-        // Phase 2: invoke each matching interceptor via spawn_blocking so that
-        // WASM execution (which uses block_in_place internally) doesn't stall
-        // the dispatcher's async task. Each invocation is wrapped in a timeout.
-        for (capsule_id, action) in matches {
-            debug!(
-                capsule_id = %capsule_id,
-                action = %action,
-                topic,
-                "Dispatching interceptor"
-            );
+        // Spawn a lightweight coordinator task that collects matches under a
+        // brief read lock, then fans out each interceptor as its own task.
+        tokio::task::spawn(async move {
+            let matches: Vec<(Arc<dyn crate::capsule::Capsule>, String)> = {
+                let registry = registry.read().await;
+                let mut matches = Vec::new();
+                for capsule_id in registry.list() {
+                    if let Some(capsule) = registry.get(capsule_id) {
+                        if !matches!(capsule.state(), crate::capsule::CapsuleState::Ready) {
+                            continue;
+                        }
+                        for interceptor in &capsule.manifest().interceptors {
+                            if topic_matches(&topic, &interceptor.event) {
+                                matches.push((Arc::clone(&capsule), interceptor.action.clone()));
+                            }
+                        }
+                    }
+                }
+                matches
+                // Read lock dropped here.
+            };
 
-            let registry = Arc::clone(&self.registry);
-            let payload = Arc::clone(&payload_bytes);
-            let cid = capsule_id.clone();
-            let act = action.clone();
+            for (capsule, action) in matches {
+                let capsule_id = capsule.id().clone();
+                let payload = Arc::clone(&payload_bytes);
+                let topic = Arc::clone(&topic);
 
-            let handle = tokio::task::spawn_blocking(move || {
-                let registry = registry.blocking_read();
-                registry
-                    .get(&cid)
-                    .map(|capsule| capsule.invoke_interceptor(&act, &payload))
-            });
-
-            match tokio::time::timeout(INTERCEPTOR_TIMEOUT, handle).await {
-                Ok(Ok(Some(Ok(_)))) => {
+                // Each interceptor runs independently to completion. Spawned on
+                // a Tokio worker thread so block_in_place (used by
+                // invoke_interceptor and WASM host functions) works correctly.
+                // Requires a multi-thread Tokio runtime.
+                tokio::task::spawn(async move {
                     debug!(
                         capsule_id = %capsule_id,
                         action = %action,
-                        "Interceptor completed"
+                        topic = %topic,
+                        "Dispatching interceptor"
                     );
-                },
-                Ok(Ok(Some(Err(e)))) => {
-                    warn!(
-                        capsule_id = %capsule_id,
-                        action = %action,
-                        topic,
-                        error = %e,
-                        "Interceptor invocation failed"
-                    );
-                },
-                Ok(Ok(None)) => {
-                    debug!(
-                        capsule_id = %capsule_id,
-                        "Capsule no longer registered, skipping interceptor"
-                    );
-                },
-                Ok(Err(e)) => {
-                    warn!(
-                        capsule_id = %capsule_id,
-                        action = %action,
-                        error = %e,
-                        "Interceptor task panicked"
-                    );
-                },
-                Err(_) => {
-                    warn!(
-                        capsule_id = %capsule_id,
-                        action = %action,
-                        topic,
-                        "Interceptor timed out after {INTERCEPTOR_TIMEOUT:?}, detaching"
-                    );
-                },
+
+                    match capsule.invoke_interceptor(&action, &payload) {
+                        Ok(_) => {
+                            debug!(
+                                capsule_id = %capsule_id,
+                                action = %action,
+                                "Interceptor completed"
+                            );
+                        },
+                        Err(e) => {
+                            warn!(
+                                capsule_id = %capsule_id,
+                                action = %action,
+                                topic = %topic,
+                                error = %e,
+                                "Interceptor invocation failed"
+                            );
+                        },
+                    }
+                });
             }
-        }
+        });
     }
 }
 
@@ -335,16 +309,10 @@ mod tests {
         id: CapsuleId,
         manifest: CapsuleManifest,
         invoked: Arc<AtomicBool>,
-        /// When `true`, `invoke_interceptor` blocks forever (for timeout tests).
-        block_forever: bool,
     }
 
     impl MockCapsule {
-        fn new(
-            name: &str,
-            interceptor_event: &str,
-            block_forever: bool,
-        ) -> (Self, Arc<AtomicBool>) {
+        fn new(name: &str, interceptor_event: &str) -> (Self, Arc<AtomicBool>) {
             let invoked = Arc::new(AtomicBool::new(false));
             let manifest = CapsuleManifest {
                 package: PackageDef {
@@ -387,7 +355,6 @@ mod tests {
                 id: CapsuleId::from_static(name),
                 manifest,
                 invoked: Arc::clone(&invoked),
-                block_forever,
             };
             (capsule, invoked)
         }
@@ -415,14 +382,6 @@ mod tests {
         }
         fn invoke_interceptor(&self, _action: &str, _payload: &[u8]) -> CapsuleResult<Vec<u8>> {
             self.invoked.store(true, Ordering::SeqCst);
-            if self.block_forever {
-                // Simulate a hung interceptor. The dispatcher's timeout should
-                // detach this thread and continue processing. Uses a sleep
-                // longer than the test timeout (1s) so the dispatcher must
-                // detach rather than wait. Kept short (3s) to avoid blocking
-                // test runtime shutdown.
-                std::thread::sleep(Duration::from_secs(3));
-            }
             Ok(Vec::new())
         }
     }
@@ -444,7 +403,7 @@ mod tests {
 
     #[tokio::test]
     async fn dispatch_routes_to_matching_interceptor() {
-        let (capsule, invoked) = MockCapsule::new("test-capsule", "test.topic", false);
+        let (capsule, invoked) = MockCapsule::new("test-capsule", "test.topic");
 
         let mut registry = CapsuleRegistry::new();
         registry.register(Box::new(capsule)).unwrap();
@@ -472,7 +431,7 @@ mod tests {
 
     #[tokio::test]
     async fn dispatch_skips_non_matching_topic() {
-        let (capsule, invoked) = MockCapsule::new("test-capsule-skip", "specific.topic", false);
+        let (capsule, invoked) = MockCapsule::new("test-capsule-skip", "specific.topic");
 
         let mut registry = CapsuleRegistry::new();
         registry.register(Box::new(capsule)).unwrap();
@@ -497,48 +456,36 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn dispatch_timeout_does_not_block_dispatcher() {
-        // Create a capsule that blocks for 60s on invoke.
-        let (blocking_capsule, blocking_invoked) =
-            MockCapsule::new("blocking-capsule", "block.topic", true);
-        // Create a normal capsule on a different topic.
-        let (normal_capsule, normal_invoked) =
-            MockCapsule::new("normal-capsule", "normal.topic", false);
+    async fn dispatch_concurrent_does_not_block() {
+        // Both capsules match different topics. With concurrent dispatch,
+        // the second event is processed immediately without waiting for
+        // the first interceptor to complete.
+        let (cap_a, invoked_a) = MockCapsule::new("capsule-a", "topic.a");
+        let (cap_b, invoked_b) = MockCapsule::new("capsule-b", "topic.b");
 
         let mut registry = CapsuleRegistry::new();
-        registry.register(Box::new(blocking_capsule)).unwrap();
-        registry.register(Box::new(normal_capsule)).unwrap();
+        registry.register(Box::new(cap_a)).unwrap();
+        registry.register(Box::new(cap_b)).unwrap();
         let registry = Arc::new(RwLock::new(registry));
 
         let bus = Arc::new(EventBus::with_capacity(64));
-        // Use a 1-second timeout for fast tests.
         let dispatcher = EventDispatcher::new(Arc::clone(&registry), Arc::clone(&bus));
         let handle = tokio::spawn(dispatcher.run());
 
         tokio::task::yield_now().await;
 
-        // Publish to the blocking capsule first, then the normal one.
-        publish_ipc(&bus, "block.topic");
-        tokio::time::sleep(Duration::from_millis(50)).await;
-        publish_ipc(&bus, "normal.topic");
+        publish_ipc(&bus, "topic.a");
+        publish_ipc(&bus, "topic.b");
 
-        // The timeout is 1s. The normal capsule should be invoked shortly
-        // after the blocking capsule's timeout fires. Wait up to 5s.
-        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
-        while !normal_invoked.load(Ordering::SeqCst) {
-            if tokio::time::Instant::now() > deadline {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(100)).await;
-        }
+        tokio::time::sleep(Duration::from_millis(200)).await;
 
         assert!(
-            blocking_invoked.load(Ordering::SeqCst),
-            "blocking interceptor should have been entered"
+            invoked_a.load(Ordering::SeqCst),
+            "capsule-a interceptor should have been invoked"
         );
         assert!(
-            normal_invoked.load(Ordering::SeqCst),
-            "normal interceptor should have been invoked despite blocking capsule"
+            invoked_b.load(Ordering::SeqCst),
+            "capsule-b interceptor should have been invoked"
         );
 
         handle.abort();
