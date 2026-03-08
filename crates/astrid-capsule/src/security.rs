@@ -33,6 +33,21 @@ pub trait CapsuleSecurityGate: Send + Sync {
     /// Check whether the plugin is allowed to spawn a host process.
     async fn check_host_process(&self, capsule_id: &str, command: &str) -> Result<(), String>;
 
+    /// Check whether the plugin is allowed to accept connections on a bound socket.
+    ///
+    /// Default implementation denies all bind operations. Override to permit
+    /// capsules that declare `net_bind` capabilities.
+    ///
+    /// NOTE: This method currently takes no socket path argument because the
+    /// kernel pre-binds the socket and the path is not user-controllable.
+    /// If future work introduces capsule-specified bind addresses, add a
+    /// `socket_path: &str` parameter and enforce path-based confinement.
+    async fn check_net_bind(&self, capsule_id: &str) -> Result<(), String> {
+        Err(format!(
+            "plugin '{capsule_id}' denied: net_bind not permitted (default)"
+        ))
+    }
+
     /// Check whether the plugin is allowed to register a connector.
     ///
     /// Default implementation permits all registrations. Override to enforce
@@ -77,6 +92,10 @@ impl CapsuleSecurityGate for AllowAllGate {
     }
 
     async fn check_host_process(&self, _capsule_id: &str, _command: &str) -> Result<(), String> {
+        Ok(())
+    }
+
+    async fn check_net_bind(&self, _capsule_id: &str) -> Result<(), String> {
         Ok(())
     }
 
@@ -125,6 +144,12 @@ impl CapsuleSecurityGate for DenyAllGate {
         ))
     }
 
+    async fn check_net_bind(&self, capsule_id: &str) -> Result<(), String> {
+        Err(format!(
+            "plugin '{capsule_id}' denied: net_bind (DenyAllGate)"
+        ))
+    }
+
     async fn check_connector_register(
         &self,
         capsule_id: &str,
@@ -161,6 +186,11 @@ pub struct ManifestSecurityGate {
     /// Resolved filesystem prefixes for write access (scheme prefixes expanded
     /// to canonical physical paths at construction time).
     resolved_fs_write: Vec<String>,
+    /// Canonical workspace root used to confine wildcard (`"*"`) file access.
+    /// Wildcard only matches paths under this root — not the entire filesystem.
+    /// Stored as `PathBuf` so that `Path::starts_with` handles component-boundary
+    /// matching correctly (e.g. `/workspace-evil` does NOT match `/workspace`).
+    workspace_root_path: std::path::PathBuf,
 }
 
 impl ManifestSecurityGate {
@@ -169,36 +199,9 @@ impl ManifestSecurityGate {
         workspace_root: std::path::PathBuf,
         global_root: Option<std::path::PathBuf>,
     ) -> Self {
-        let resolved_fs_read = Self::resolve_schemes(
-            &manifest.capabilities.fs_read,
-            &workspace_root,
-            &global_root,
-        );
-        let resolved_fs_write = Self::resolve_schemes(
-            &manifest.capabilities.fs_write,
-            &workspace_root,
-            &global_root,
-        );
-        Self {
-            manifest,
-            resolved_fs_read,
-            resolved_fs_write,
-        }
-    }
-
-    /// Translate VFS scheme prefixes into physical paths.
-    ///
-    /// - `workspace://` → `<workspace_root>/`
-    /// - `global://` → `<global_root>/` (dropped if no global root is configured)
-    /// - `*` → kept as-is (wildcard)
-    /// - anything else → kept as-is (literal path prefix for backwards compat)
-    fn resolve_schemes(
-        entries: &[String],
-        workspace_root: &std::path::Path,
-        global_root: &Option<std::path::PathBuf>,
-    ) -> Vec<String> {
-        // Canonicalize roots once so the stored prefixes match the canonical
-        // paths produced by `resolve_physical_absolute` at request time.
+        // Canonicalize roots once up front. Both `resolve_schemes` (for prefix
+        // strings) and `workspace_root_path` (for wildcard confinement) use
+        // the same canonical values, avoiding redundant syscalls.
         let canonical_ws = workspace_root
             .canonicalize()
             .unwrap_or_else(|_| workspace_root.to_path_buf());
@@ -206,6 +209,37 @@ impl ManifestSecurityGate {
             .as_ref()
             .map(|g| g.canonicalize().unwrap_or_else(|_| g.clone()));
 
+        let resolved_fs_read = Self::resolve_schemes(
+            &manifest.capabilities.fs_read,
+            &canonical_ws,
+            &canonical_global,
+        );
+        let resolved_fs_write = Self::resolve_schemes(
+            &manifest.capabilities.fs_write,
+            &canonical_ws,
+            &canonical_global,
+        );
+        Self {
+            manifest,
+            resolved_fs_read,
+            resolved_fs_write,
+            workspace_root_path: canonical_ws,
+        }
+    }
+
+    /// Translate VFS scheme prefixes into physical paths.
+    ///
+    /// - `workspace://` -> `<workspace_root>/`
+    /// - `global://` -> `<global_root>/` (dropped if no global root is configured)
+    /// - `*` -> kept as-is (wildcard — confined at check time)
+    /// - anything else -> kept as-is (literal path prefix for backwards compat)
+    ///
+    /// Expects pre-canonicalized roots (canonicalization is done once in `new()`).
+    fn resolve_schemes(
+        entries: &[String],
+        canonical_ws: &std::path::Path,
+        canonical_global: &Option<std::path::PathBuf>,
+    ) -> Vec<String> {
         let mut resolved = Vec::with_capacity(entries.len());
         for entry in entries {
             if entry == "*" {
@@ -214,7 +248,7 @@ impl ManifestSecurityGate {
                 let path = canonical_ws.join(suffix);
                 resolved.push(path.to_string_lossy().to_string());
             } else if let Some(suffix) = entry.strip_prefix("global://") {
-                if let Some(ref g_root) = canonical_global {
+                if let Some(g_root) = canonical_global {
                     let path = g_root.join(suffix);
                     resolved.push(path.to_string_lossy().to_string());
                 }
@@ -225,6 +259,37 @@ impl ManifestSecurityGate {
             }
         }
         resolved
+    }
+
+    /// Check a filesystem path against a list of resolved allowed patterns.
+    ///
+    /// Rejects paths containing `..` (ParentDir) components to prevent traversal
+    /// attacks like `/workspace/../../etc/passwd` which would pass a naive
+    /// `starts_with` check. Uses `Path::starts_with` for component-boundary
+    /// matching, so `/workspace-evil` does NOT match `/workspace`.
+    ///
+    /// When a wildcard `"*"` is present, it only matches paths under the
+    /// canonical workspace root — preventing escape to global paths
+    /// (e.g. `~/.astrid/keys/`).
+    fn check_fs_permission(&self, path: &str, resolved: &[String]) -> bool {
+        let path_obj = std::path::Path::new(path);
+
+        // Reject paths with '..' components — these can bypass starts_with checks
+        // (e.g. /workspace/../../etc/passwd starts_with /workspace but resolves outside).
+        if path_obj
+            .components()
+            .any(|c| matches!(c, std::path::Component::ParentDir))
+        {
+            return false;
+        }
+
+        resolved.iter().any(|p| {
+            if p == "*" {
+                path_obj.starts_with(&self.workspace_root_path)
+            } else {
+                path_obj.starts_with(p)
+            }
+        })
     }
 }
 
@@ -255,12 +320,7 @@ impl CapsuleSecurityGate for ManifestSecurityGate {
     }
 
     async fn check_file_read(&self, capsule_id: &str, path: &str) -> Result<(), String> {
-        let path_obj = std::path::Path::new(path);
-        if self
-            .resolved_fs_read
-            .iter()
-            .any(|p| p == "*" || path_obj.starts_with(p))
-        {
+        if self.check_fs_permission(path, &self.resolved_fs_read) {
             Ok(())
         } else {
             Err(format!(
@@ -270,12 +330,7 @@ impl CapsuleSecurityGate for ManifestSecurityGate {
     }
 
     async fn check_file_write(&self, capsule_id: &str, path: &str) -> Result<(), String> {
-        let path_obj = std::path::Path::new(path);
-        if self
-            .resolved_fs_write
-            .iter()
-            .any(|p| p == "*" || path_obj.starts_with(p))
-        {
+        if self.check_fs_permission(path, &self.resolved_fs_write) {
             Ok(())
         } else {
             Err(format!(
@@ -296,6 +351,24 @@ impl CapsuleSecurityGate for ManifestSecurityGate {
         } else {
             Err(format!(
                 "plugin '{capsule_id}' denied: host process '{command}' not declared in manifest"
+            ))
+        }
+    }
+
+    async fn check_net_bind(&self, capsule_id: &str) -> Result<(), String> {
+        // Require at least one non-empty net_bind entry. Empty strings in the
+        // manifest are treated as malformed and do not grant capability.
+        let has_valid_entry = self
+            .manifest
+            .capabilities
+            .net_bind
+            .iter()
+            .any(|entry| !entry.is_empty());
+        if has_valid_entry {
+            Ok(())
+        } else {
+            Err(format!(
+                "plugin '{capsule_id}' denied: net_bind not declared in manifest"
             ))
         }
     }
@@ -386,6 +459,17 @@ mod interceptor_gate {
             };
             self.interceptor
                 .intercept(&action, "plugin host function: host process", None)
+                .await
+                .map(|_| ())
+                .map_err(|e| e.to_string())
+        }
+
+        async fn check_net_bind(&self, capsule_id: &str) -> Result<(), String> {
+            let action = SensitiveAction::CapsuleNetBind {
+                capsule_id: capsule_id.to_string(),
+            };
+            self.interceptor
+                .intercept(&action, "plugin host function: net_bind accept", None)
                 .await
                 .map(|_| ())
                 .map_err(|e| e.to_string())
@@ -539,14 +623,25 @@ mod tests {
         );
         assert!(gate.check_file_read("test", "/workspace/src").await.is_ok()); // Exact match is OK
 
-        // Write wildcard permits any path through the security gate.
-        // Note: Actual VFS operations are still mathematically confined to the workspace root
-        // by cap-std, so allowing it at the gate level is safe as long as the OS VFS is used.
-        assert!(gate.check_file_write("test", "/etc/passwd").await.is_ok());
+        // Write wildcard is confined to workspace root — paths outside are denied.
+        assert!(
+            gate.check_file_write("test", "/workspace/src/main.rs")
+                .await
+                .is_ok()
+        );
+        assert!(gate.check_file_write("test", "/etc/passwd").await.is_err());
         assert!(
             gate.check_file_write("test", "/random/file.txt")
                 .await
-                .is_ok()
+                .is_err()
+        );
+
+        // Path traversal via .. must be rejected even with explicit prefix match
+        assert!(
+            gate.check_file_read("test", "/workspace/src/../../etc/passwd")
+                .await
+                .is_err(),
+            "path traversal via .. must be rejected"
         );
     }
 
@@ -632,6 +727,81 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn wildcard_confined_to_workspace_root() {
+        // Use a real tempdir so canonicalize() resolves correctly on all platforms
+        // (e.g. macOS /tmp -> /private/tmp).
+        let tmp = tempfile::tempdir().unwrap();
+        let ws = tmp.path().join("project");
+        std::fs::create_dir_all(&ws).unwrap();
+        let canonical_ws = ws.canonicalize().unwrap();
+
+        let manifest = make_manifest(vec![], vec!["*"], vec!["*"]);
+        let gate = ManifestSecurityGate::new(manifest, ws, None);
+
+        // Paths under the canonical workspace root are allowed
+        let read_path = canonical_ws.join("src/main.rs");
+        assert!(
+            gate.check_file_read("test", read_path.to_str().unwrap())
+                .await
+                .is_ok()
+        );
+        let write_path = canonical_ws.join("out/file.txt");
+        assert!(
+            gate.check_file_write("test", write_path.to_str().unwrap())
+                .await
+                .is_ok()
+        );
+
+        // Paths outside the workspace root are denied even with wildcard
+        assert!(gate.check_file_read("test", "/etc/passwd").await.is_err());
+        assert!(
+            gate.check_file_write("test", "/home/user/.astrid/keys/user.key")
+                .await
+                .is_err()
+        );
+
+        // Prefix-collision attack: /project-evil should NOT match /project
+        let evil_path = canonical_ws.parent().unwrap().join("project-evil/file.txt");
+        assert!(
+            gate.check_file_write("test", evil_path.to_str().unwrap())
+                .await
+                .is_err()
+        );
+
+        // Path traversal attack: /workspace/../../etc/passwd must be rejected
+        // even though it starts_with /workspace at component level.
+        let traversal = format!("{}/../../etc/passwd", canonical_ws.display());
+        assert!(
+            gate.check_file_read("test", &traversal).await.is_err(),
+            "path traversal via .. must be rejected"
+        );
+        assert!(
+            gate.check_file_write("test", &traversal).await.is_err(),
+            "path traversal via .. must be rejected for writes"
+        );
+    }
+
+    #[tokio::test]
+    async fn net_bind_gate_enforced() {
+        // No net_bind capability -> denied
+        let manifest = make_manifest(vec![], vec![], vec![]);
+        let gate = ManifestSecurityGate::new(manifest, workspace_root(), None);
+        assert!(gate.check_net_bind("test").await.is_err());
+
+        // With net_bind capability -> allowed
+        let mut manifest2 = make_manifest(vec![], vec![], vec![]);
+        manifest2.capabilities.net_bind = vec!["unix:///tmp/sock".into()];
+        let gate2 = ManifestSecurityGate::new(manifest2, workspace_root(), None);
+        assert!(gate2.check_net_bind("test").await.is_ok());
+
+        // Empty string in net_bind is treated as malformed -> denied
+        let mut manifest3 = make_manifest(vec![], vec![], vec![]);
+        manifest3.capabilities.net_bind = vec!["".into()];
+        let gate3 = ManifestSecurityGate::new(manifest3, workspace_root(), None);
+        assert!(gate3.check_net_bind("test").await.is_err());
+    }
+
+    #[tokio::test]
     async fn allow_all_gate_permits_everything() {
         let gate = AllowAllGate;
         assert!(
@@ -641,6 +811,7 @@ mod tests {
         );
         assert!(gate.check_file_read("p", "/tmp/f").await.is_ok());
         assert!(gate.check_file_write("p", "/tmp/f").await.is_ok());
+        assert!(gate.check_net_bind("p").await.is_ok());
         assert!(
             gate.check_connector_register("p", "my-conn", "discord")
                 .await
@@ -658,6 +829,7 @@ mod tests {
         );
         assert!(gate.check_file_read("p", "/tmp/f").await.is_err());
         assert!(gate.check_file_write("p", "/tmp/f").await.is_err());
+        assert!(gate.check_net_bind("p").await.is_err());
         assert!(
             gate.check_connector_register("p", "my-conn", "discord")
                 .await
