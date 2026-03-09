@@ -72,6 +72,30 @@ impl OpenClawManifest {
     }
 }
 
+/// Detect whether a config schema property key likely holds a secret value.
+///
+/// Uses heuristic matching on common secret key naming patterns.
+#[must_use]
+pub fn is_secret_key(key: &str) -> bool {
+    let lower = key.to_lowercase();
+    lower.contains("api_key")
+        || lower.contains("apikey")
+        || lower == "token"
+        // Intentionally broad: catches camelCase variants like "accessToken",
+        // "refreshToken", "bearerToken". Better to over-flag than miss a secret.
+        || lower.ends_with("token")
+        || lower.contains("secret")
+        || lower.contains("password")
+        || lower.contains("credentials")
+        || lower.contains("private_key")
+        || lower.contains("privatekey")
+        || lower.contains("access_key")
+        || lower.contains("accesskey")
+        || lower == "authorization"
+        || lower == "jwt"
+        || lower == "passphrase"
+}
+
 const MANIFEST_FILENAME: &str = "openclaw.plugin.json";
 
 /// Parse the `OpenClaw` manifest from a plugin directory.
@@ -123,18 +147,8 @@ pub fn resolve_entry_point(plugin_dir: &Path) -> BridgeResult<String> {
             .and_then(|e| e.as_array())
         && let Some(first) = extensions.first().and_then(|v| v.as_str())
     {
-        // Reject path traversal and absolute paths — entry point must stay within plugin_dir
-        if first.contains("..") {
-            return Err(BridgeError::Manifest(format!(
-                "entry point '{first}' contains '..' — path traversal not allowed"
-            )));
-        }
-        if Path::new(first).is_absolute() {
-            return Err(BridgeError::Manifest(format!(
-                "entry point '{first}' is an absolute path — must be relative to plugin directory"
-            )));
-        }
-        return Ok(first.to_string());
+        let normalized = validate_entry_point_path(first)?;
+        return Ok(normalized);
     }
 
     // Fallback: check common entry point locations
@@ -145,11 +159,74 @@ pub fn resolve_entry_point(plugin_dir: &Path) -> BridgeResult<String> {
         }
     }
 
-    Err(BridgeError::Manifest(
-        "could not resolve entry point: no 'openclaw.extensions' in package.json \
-         and no src/index.ts, src/index.js, index.ts, or index.js found"
-            .into(),
+    Err(BridgeError::EntryPointNotFound(
+        plugin_dir.join("<unresolved>"),
     ))
+}
+
+/// Validate and normalize an entry point path for safe use in capsule manifests.
+///
+/// Strips a leading `./` prefix (common in real `OpenClaw` plugins), then
+/// rejects path traversal, absolute paths, and characters that could
+/// cause injection in TOML strings or CLI arguments.
+///
+/// Returns the normalized (stripped) path on success.
+fn validate_entry_point_path(path: &str) -> BridgeResult<String> {
+    // Normalize: strip leading "./" — real OpenClaw plugins commonly use it
+    let path = path.strip_prefix("./").unwrap_or(path);
+
+    if path.contains("..") {
+        return Err(BridgeError::Manifest(format!(
+            "entry point '{path}' contains '..' — path traversal not allowed"
+        )));
+    }
+    if path == "." {
+        return Err(BridgeError::Manifest(
+            "entry point '.' is not a valid file path".into(),
+        ));
+    }
+    if Path::new(path).is_absolute() {
+        return Err(BridgeError::Manifest(format!(
+            "entry point '{path}' is an absolute path — must be relative to plugin directory"
+        )));
+    }
+    // Only allow safe filesystem characters — prevents TOML/CLI injection
+    if !path
+        .bytes()
+        .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-' || b == b'.' || b == b'/')
+    {
+        return Err(BridgeError::Manifest(format!(
+            "entry point '{path}' contains invalid characters — \
+             only alphanumeric, '_', '-', '.', '/' are allowed"
+        )));
+    }
+    Ok(path.to_string())
+}
+
+/// Validate a config schema property key for safe use in TOML section headers.
+///
+/// Rejects keys that contain characters which could break TOML syntax.
+///
+/// # Errors
+///
+/// Returns [`BridgeError::ConfigValidation`] if the key is empty or contains
+/// characters outside `[a-zA-Z0-9_-]`.
+pub fn validate_schema_key(key: &str) -> BridgeResult<()> {
+    if key.is_empty() {
+        return Err(BridgeError::ConfigValidation(
+            "config schema property key must not be empty".into(),
+        ));
+    }
+    if !key
+        .bytes()
+        .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+    {
+        return Err(BridgeError::ConfigValidation(format!(
+            "config schema property key '{key}' contains invalid characters — \
+             only alphanumeric, '_', '-' are allowed"
+        )));
+    }
+    Ok(())
 }
 
 /// Convert an `OpenClaw` plugin ID to an Astrid-compatible plugin ID.
@@ -336,7 +413,7 @@ mod tests {
         .unwrap();
 
         let entry = resolve_entry_point(dir.path()).unwrap();
-        assert_eq!(entry, "./src/index.ts");
+        assert_eq!(entry, "src/index.ts");
     }
 
     #[test]
@@ -353,8 +430,11 @@ mod tests {
     fn resolve_entry_no_match_fails() {
         let dir = tempfile::tempdir().unwrap();
 
-        let result = resolve_entry_point(dir.path());
-        assert!(result.is_err());
+        let err = resolve_entry_point(dir.path()).unwrap_err();
+        assert!(
+            matches!(err, BridgeError::EntryPointNotFound(_)),
+            "expected EntryPointNotFound, got: {err}"
+        );
     }
 
     #[test]
@@ -390,6 +470,48 @@ mod tests {
         assert!(
             err.contains("absolute path"),
             "error should mention absolute path: {err}"
+        );
+    }
+
+    #[test]
+    fn resolve_entry_strips_dot_slash_prefix() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("package.json"),
+            r#"{"openclaw":{"extensions":["./src/index.ts"]}}"#,
+        )
+        .unwrap();
+
+        let entry = resolve_entry_point(dir.path()).unwrap();
+        assert_eq!(entry, "src/index.ts");
+    }
+
+    #[test]
+    fn is_secret_key_camel_case_patterns() {
+        // camelCase patterns that should be detected as secrets
+        assert!(is_secret_key("apiKey"), "apiKey should be secret");
+        assert!(is_secret_key("accessToken"), "accessToken should be secret");
+        assert!(is_secret_key("privateKey"), "privateKey should be secret");
+        assert!(is_secret_key("accessKey"), "accessKey should be secret");
+        assert!(
+            is_secret_key("clientSecret"),
+            "clientSecret should be secret"
+        );
+    }
+
+    #[test]
+    fn is_secret_key_non_secret_keys() {
+        assert!(!is_secret_key("baseUrl"), "baseUrl should not be secret");
+        assert!(!is_secret_key("timeout"), "timeout should not be secret");
+        assert!(!is_secret_key("model"), "model should not be secret");
+        assert!(!is_secret_key("region"), "region should not be secret");
+        assert!(!is_secret_key("enabled"), "enabled should not be secret");
+
+        // Note: "fooToken" WILL be flagged as secret — the heuristic is intentionally
+        // broad (ends_with("token")) to avoid missing camelCase variants.
+        assert!(
+            is_secret_key("fooToken"),
+            "fooToken should be flagged (broad token heuristic)"
         );
     }
 

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use std::path::PathBuf;
-use tracing::info;
+use tracing::{info, warn};
 
 use super::ExecutionEngine;
 use crate::context::CapsuleContext;
@@ -162,5 +162,63 @@ impl ExecutionEngine for McpHostEngine {
 
         // Let astrid-mcp drop the Child process and `Stdio` streams.
         Ok(())
+    }
+
+    fn invoke_interceptor(&self, action: &str, payload: &[u8]) -> CapsuleResult<Vec<u8>> {
+        let server_id = format!("capsule:{}", self.manifest.package.name);
+
+        let params: serde_json::Value = serde_json::from_slice(payload).map_err(|e| {
+            CapsuleError::ExecutionFailed(format!("failed to deserialize interceptor payload: {e}"))
+        })?;
+
+        // Use call_tool with the `astrid_hook_intercept` tool so we get
+        // a response back (request-response interceptor pattern).
+        let tool_args = serde_json::json!({
+            "hook": action,
+            "payload": params,
+        });
+
+        let client = self.mcp_client.clone();
+
+        let result = tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                client
+                    .call_tool(&server_id, "astrid_hook_intercept", tool_args)
+                    .await
+            })
+        });
+
+        match result {
+            Ok(tool_result) => {
+                // Extract text content from the MCP ToolResult
+                let text = tool_result
+                    .content
+                    .iter()
+                    .filter_map(|c| {
+                        if let astrid_mcp::ToolContent::Text { text } = c {
+                            Some(text.as_str())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join("");
+
+                if text.is_empty() || text == "null" {
+                    Ok(Vec::new())
+                } else {
+                    Ok(text.into_bytes())
+                }
+            },
+            Err(e) => {
+                warn!(
+                    capsule = %self.manifest.package.name,
+                    hook = %action,
+                    error = %e,
+                    "Failed to invoke hook interceptor on MCP capsule"
+                );
+                Ok(Vec::new())
+            },
+        }
     }
 }

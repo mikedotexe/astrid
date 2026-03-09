@@ -32,9 +32,17 @@ const QUICKJS_KERNEL: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/engine.w
 
 /// Named exports to add to the compiled WASM plugin.
 ///
-/// These must be in alphabetical order to match the sorted index that
-/// `QuickJS` uses when looking up `module.exports` keys.
-const PLUGIN_EXPORTS: &[&str] = &["describe-tools", "execute-tool", "run-hook"];
+/// These must match the exact `module.exports` keys in the JS shim, listed
+/// in alphabetical order to match the sorted index that `QuickJS` uses
+/// when looking up `module.exports` keys.
+const PLUGIN_EXPORTS: &[&str] = &[
+    "astrid_command_run",
+    "astrid_cron_trigger",
+    "astrid_deactivate",
+    "astrid_hook_trigger",
+    "astrid_tool_call",
+    "describe-tools",
+];
 
 /// Compute the blake3 hash of the embedded `QuickJS` kernel.
 ///
@@ -83,14 +91,17 @@ pub fn compile(js_source: &str, output_path: &Path) -> BridgeResult<()> {
     Ok(())
 }
 
-/// Locate the `astrid-openclaw` CLI binary for the Wizer subprocess.
+/// Locate the `astrid` CLI binary for the Wizer subprocess.
+///
+/// The Wizer subprocess needs an executable with the hidden `wizer-internal`
+/// subcommand. This lives in the `astrid` CLI binary.
 ///
 /// Search order:
-/// 1. `OPENCLAW_BRIDGE_BIN` environment variable
-/// 2. Current executable (when running as the CLI)
+/// 1. `ASTRID_BIN` environment variable (override for CI/testing)
+/// 2. Current executable (when running as the `astrid` CLI)
 /// 3. Sibling/ancestor directories (when running as a test binary in `target/debug/deps/`)
 fn find_bridge_binary() -> BridgeResult<PathBuf> {
-    if let Ok(path) = std::env::var("OPENCLAW_BRIDGE_BIN") {
+    if let Ok(path) = std::env::var("ASTRID_BIN") {
         let p = PathBuf::from(path);
         if p.exists() {
             return Ok(p);
@@ -100,29 +111,29 @@ fn find_bridge_binary() -> BridgeResult<PathBuf> {
     let self_exe = std::env::current_exe()
         .map_err(|e| BridgeError::CompileFailed(format!("cannot find own executable: {e}")))?;
 
-    // If we ARE the bridge binary (running as CLI), use ourselves
-    if self_exe.file_stem().is_some_and(|s| s == "astrid-openclaw") {
+    // If we ARE the astrid binary, use ourselves
+    if self_exe.file_stem().is_some_and(|s| s == "astrid") {
         return Ok(self_exe);
     }
 
     // When running as a test binary (target/debug/deps/xxx), look in ancestor dirs
     for ancestor in self_exe.ancestors().skip(1).take(3) {
-        let candidate = ancestor.join("astrid-openclaw");
+        let candidate = ancestor.join("astrid");
         if candidate.is_file() {
             return Ok(candidate);
         }
     }
 
     Err(BridgeError::CompileFailed(
-        "cannot find astrid-openclaw binary for Wizer subprocess. \
-         Set OPENCLAW_BRIDGE_BIN or ensure the binary is built."
+        "cannot find astrid binary for Wizer subprocess. \
+         Set ASTRID_BIN or ensure the CLI is built."
             .into(),
     ))
 }
 
 /// Run Wizer in a subprocess, piping JS source to stdin.
 ///
-/// Finds the `astrid-openclaw` binary and invokes its hidden `wizer-internal`
+/// Finds the `astrid` CLI binary and invokes its hidden `wizer-internal`
 /// subcommand. The child process runs Wizer on the embedded kernel and writes
 /// the pre-initialized WASM to a temp file.
 fn wizer_subprocess(js_source: &str) -> BridgeResult<Vec<u8>> {

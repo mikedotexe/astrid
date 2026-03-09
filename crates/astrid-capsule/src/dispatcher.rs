@@ -1,9 +1,24 @@
-//! Event dispatcher for routing IPC events to capsule interceptors.
+//! Event dispatcher for routing events to capsule interceptors.
 //!
 //! The dispatcher is a host-side async task that subscribes to the global
-//! `EventBus`, matches incoming IPC event topics against capsule interceptor
-//! patterns (from `Capsule.toml`), and invokes the corresponding WASM
+//! `EventBus`, matches incoming events against capsule interceptor patterns
+//! (from `Capsule.toml`), and invokes the corresponding WASM
 //! `astrid_hook_trigger` export on each matching capsule.
+//!
+//! # Event Routing
+//!
+//! The dispatcher handles two categories of events:
+//!
+//! - **IPC events**: matched by their `topic` field (e.g. `user.prompt`)
+//! - **Lifecycle events**: matched by `event_type()` (e.g. `tool_call_started`,
+//!   `session_created`). This enables WASM capsules (like the Hook Bridge) to
+//!   subscribe to lifecycle events and apply policy (merge strategies, hook
+//!   fan-out) on top of the kernel's dispatch mechanism.
+//!
+//! All dispatch is fire-and-forget from the dispatcher's perspective. Capsules
+//! that need request-response semantics (e.g. collecting responses from multiple
+//! subscribers) use `hooks::trigger` — the kernel syscall for fan-out with
+//! response collection.
 //!
 //! # Topic Matching
 //!
@@ -20,7 +35,11 @@ use tracing::{debug, warn};
 use crate::registry::CapsuleRegistry;
 use astrid_events::{AstridEvent, EventBus};
 
-/// Routes IPC events from the `EventBus` to capsule interceptors.
+/// Routes events from the `EventBus` to capsule interceptors.
+///
+/// Both IPC events (by topic) and lifecycle events (by `event_type()`) are
+/// dispatched fire-and-forget. Capsules needing response collection use
+/// `hooks::trigger` (the kernel fan-out syscall).
 pub struct EventDispatcher {
     registry: Arc<RwLock<CapsuleRegistry>>,
     event_bus: Arc<EventBus>,
@@ -38,20 +57,53 @@ impl EventDispatcher {
 
     /// Run the dispatch loop. Blocks until the event bus is closed.
     ///
-    /// Subscribes to all events on the bus, filters for IPC events, and
-    /// dispatches matching interceptors. This method should be spawned as
-    /// a background tokio task.
+    /// Subscribes to all events on the bus and routes both IPC events (by topic)
+    /// and lifecycle events (by `event_type()`). Should be spawned as a
+    /// background tokio task.
     pub async fn run(self) {
         let mut receiver = self.event_bus.subscribe();
         debug!("Event dispatcher started");
 
         while let Some(event) = receiver.recv().await {
-            if let AstridEvent::Ipc { message, .. } = &*event {
-                self.dispatch(message);
+            match &*event {
+                AstridEvent::Ipc { message, .. } => {
+                    self.dispatch_ipc(message);
+                },
+                other => {
+                    // Route lifecycle events to capsules with matching interceptors.
+                    // Uses event_type() (e.g. "tool_call_started") as the topic.
+                    self.dispatch_lifecycle(other);
+                },
             }
         }
 
         debug!("Event dispatcher stopped (event bus closed)");
+    }
+
+    /// Route a lifecycle event to capsules with matching interceptors.
+    ///
+    /// Uses `event_type()` (e.g. `tool_call_started`) as the topic for matching
+    /// against capsule interceptor patterns. Dispatch is fire-and-forget — return
+    /// values are discarded. Capsules that need request-response semantics should
+    /// use `hooks::trigger` (the kernel fan-out syscall) instead.
+    fn dispatch_lifecycle(&self, event: &AstridEvent) {
+        let topic = Arc::new(event.event_type().to_string());
+        let registry = Arc::clone(&self.registry);
+
+        // Serialize the entire event as the payload.
+        let payload_bytes = match serde_json::to_vec(event) {
+            Ok(bytes) => Arc::new(bytes),
+            Err(e) => {
+                warn!(
+                    event_type = %topic,
+                    error = %e,
+                    "Failed to serialize lifecycle event for dispatch"
+                );
+                return;
+            },
+        };
+
+        spawn_interceptor_fanout(registry, topic, payload_bytes);
     }
 
     /// Match an IPC event against all registered interceptors and invoke matches.
@@ -59,7 +111,7 @@ impl EventDispatcher {
     /// Interceptors are dispatched concurrently — each gets its own spawned task
     /// that runs to completion. This method returns immediately after spawning,
     /// so the event loop is never blocked by slow or long-running interceptors.
-    fn dispatch(&self, message: &astrid_events::ipc::IpcMessage) {
+    fn dispatch_ipc(&self, message: &astrid_events::ipc::IpcMessage) {
         let topic = Arc::new(message.topic.clone());
         let registry = Arc::clone(&self.registry);
 
@@ -72,67 +124,84 @@ impl EventDispatcher {
             },
         };
 
-        // Spawn a lightweight coordinator task that collects matches under a
-        // brief read lock, then fans out each interceptor as its own task.
-        tokio::task::spawn(async move {
-            let matches: Vec<(Arc<dyn crate::capsule::Capsule>, String)> = {
-                let registry = registry.read().await;
-                let mut matches = Vec::new();
-                for capsule_id in registry.list() {
-                    if let Some(capsule) = registry.get(capsule_id) {
-                        if !matches!(capsule.state(), crate::capsule::CapsuleState::Ready) {
-                            continue;
-                        }
-                        for interceptor in &capsule.manifest().interceptors {
-                            if topic_matches(&topic, &interceptor.event) {
-                                matches.push((Arc::clone(&capsule), interceptor.action.clone()));
-                            }
-                        }
-                    }
-                }
-                matches
-                // Read lock dropped here.
-            };
-
-            for (capsule, action) in matches {
-                let capsule_id = capsule.id().clone();
-                let payload = Arc::clone(&payload_bytes);
-                let topic = Arc::clone(&topic);
-
-                // Each interceptor runs independently to completion. Spawned on
-                // a Tokio worker thread so block_in_place (used by
-                // invoke_interceptor and WASM host functions) works correctly.
-                // Requires a multi-thread Tokio runtime.
-                tokio::task::spawn(async move {
-                    debug!(
-                        capsule_id = %capsule_id,
-                        action = %action,
-                        topic = %topic,
-                        "Dispatching interceptor"
-                    );
-
-                    match capsule.invoke_interceptor(&action, &payload) {
-                        Ok(_) => {
-                            debug!(
-                                capsule_id = %capsule_id,
-                                action = %action,
-                                "Interceptor completed"
-                            );
-                        },
-                        Err(e) => {
-                            warn!(
-                                capsule_id = %capsule_id,
-                                action = %action,
-                                topic = %topic,
-                                error = %e,
-                                "Interceptor invocation failed"
-                            );
-                        },
-                    }
-                });
-            }
-        });
+        spawn_interceptor_fanout(registry, topic, payload_bytes);
     }
+}
+
+/// Collect matching interceptors from the registry and spawn each as an
+/// independent task. Shared by both IPC and lifecycle dispatch paths.
+///
+/// Takes a brief read lock on the registry to collect matches, then fans out
+/// each interceptor on its own spawned task so `block_in_place` (used by
+/// `invoke_interceptor` and WASM host functions) works correctly. Requires a
+/// multi-thread Tokio runtime.
+fn spawn_interceptor_fanout(
+    registry: Arc<RwLock<CapsuleRegistry>>,
+    topic: Arc<String>,
+    payload_bytes: Arc<Vec<u8>>,
+) {
+    tokio::task::spawn(async move {
+        let matches = find_matching_interceptors(&registry, &topic).await;
+
+        for (capsule, action) in matches {
+            let capsule_id = capsule.id().clone();
+            let payload = Arc::clone(&payload_bytes);
+            let topic = Arc::clone(&topic);
+
+            tokio::task::spawn(async move {
+                debug!(
+                    capsule_id = %capsule_id,
+                    action = %action,
+                    topic = %topic,
+                    "Dispatching interceptor"
+                );
+
+                match capsule.invoke_interceptor(&action, &payload) {
+                    Ok(_) => {
+                        debug!(
+                            capsule_id = %capsule_id,
+                            action = %action,
+                            "Interceptor completed"
+                        );
+                    },
+                    Err(e) => {
+                        warn!(
+                            capsule_id = %capsule_id,
+                            action = %action,
+                            topic = %topic,
+                            error = %e,
+                            "Interceptor invocation failed"
+                        );
+                    },
+                }
+            });
+        }
+    });
+}
+
+/// Find all capsules with interceptors matching the given topic.
+///
+/// Takes a brief read lock on the registry. Only `Ready` capsules are
+/// considered. Returns `(capsule, action)` pairs for each match.
+async fn find_matching_interceptors(
+    registry: &RwLock<CapsuleRegistry>,
+    topic: &str,
+) -> Vec<(Arc<dyn crate::capsule::Capsule>, String)> {
+    let registry = registry.read().await;
+    let mut matches = Vec::new();
+    for capsule_id in registry.list() {
+        if let Some(capsule) = registry.get(capsule_id) {
+            if !matches!(capsule.state(), crate::capsule::CapsuleState::Ready) {
+                continue;
+            }
+            for interceptor in &capsule.manifest().interceptors {
+                if topic_matches(topic, &interceptor.event) {
+                    matches.push((Arc::clone(&capsule), interceptor.action.clone()));
+                }
+            }
+        }
+    }
+    matches
 }
 
 /// Returns `true` if `s` has no empty segments — i.e. no leading/trailing dots
@@ -486,6 +555,39 @@ mod tests {
         assert!(
             invoked_b.load(Ordering::SeqCst),
             "capsule-b interceptor should have been invoked"
+        );
+
+        handle.abort();
+    }
+
+    #[tokio::test]
+    async fn dispatch_routes_lifecycle_events() {
+        // Lifecycle events are dispatched by event_type() as the topic.
+        let (capsule, invoked) = MockCapsule::new("lifecycle-capsule", "tool_call_started");
+
+        let mut registry = CapsuleRegistry::new();
+        registry.register(Box::new(capsule)).unwrap();
+        let registry = Arc::new(RwLock::new(registry));
+
+        let bus = Arc::new(EventBus::with_capacity(64));
+        let dispatcher = EventDispatcher::new(Arc::clone(&registry), Arc::clone(&bus));
+        let handle = tokio::spawn(dispatcher.run());
+
+        tokio::task::yield_now().await;
+
+        // Publish a lifecycle event
+        bus.publish(AstridEvent::ToolCallStarted {
+            metadata: astrid_events::EventMetadata::new("test"),
+            call_id: uuid::Uuid::nil(),
+            tool_name: "search".into(),
+            server_name: None,
+        });
+
+        tokio::time::sleep(Duration::from_millis(200)).await;
+
+        assert!(
+            invoked.load(Ordering::SeqCst),
+            "EventDispatcher should dispatch lifecycle events by event_type()"
         );
 
         handle.abort();

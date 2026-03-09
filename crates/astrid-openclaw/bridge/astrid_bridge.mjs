@@ -80,6 +80,7 @@ const registeredHooks = new Map();
 const unsupportedRegistrations = [];
 const eventHandlers = new Map();
 let pluginConfig = {};
+let pluginModule = null;
 let servicesReady = false;
 let shuttingDown = false;
 
@@ -189,42 +190,69 @@ const pluginApi = {
     registeredChannels.set(chanName, { name: chanName, definition, handler });
     log.debug(`Registered channel: ${chanName}`);
   },
-  registerHook: (name, handler) => {
-    registeredHooks.set(name, handler);
+  registerHook: (name, handler, options) => {
+    if (!registeredHooks.has(name)) registeredHooks.set(name, []);
+    registeredHooks.get(name).push({ handler, options: options || {} });
     log.debug(`Registered hook: ${name}`);
   },
-  on: (event, handler) => {
+  on: (event, handler, options) => {
     if (!eventHandlers.has(event)) eventHandlers.set(event, []);
-    eventHandlers.get(event).push(handler);
+    const priority = (options && typeof options.priority === "number") ? options.priority : 100;
+    eventHandlers.get(event).push({ handler, priority });
+    eventHandlers.get(event).sort((a, b) => a.priority - b.priority);
     log.debug(`Registered event handler: ${event}`);
   },
 
-  // Nice to have: registerCommand, registerGatewayMethod, registerHttpHandler, registerHttpRoute
+  // registerCommand → maps to registerTool (a command IS a tool with simple args)
   registerCommand: (name, definition) => {
-    unsupportedRegistrations.push({ type: "command", name });
-    log.debug(`Registered command: ${name} (not wired to MCP bridge)`);
+    const handler = typeof definition === "function" ? definition : definition?.handler;
+    const desc = (typeof definition === "object" && definition?.description) || `Command: ${name}`;
+    const schema = (typeof definition === "object" && definition?.inputSchema) || {};
+    registeredTools.set(name, {
+      name,
+      definition: { name, description: desc, inputSchema: schema },
+      handler,
+    });
+    log.debug(`Registered command as tool: ${name}`);
   },
+
+  // registerGatewayMethod → maps to tool with kernel. prefix
   registerGatewayMethod: (name, handler) => {
-    unsupportedRegistrations.push({ type: "gatewayMethod", name });
-    log.debug(`Registered gateway method: ${name} (not wired to MCP bridge)`);
+    const toolName = `kernel.${name}`;
+    registeredTools.set(toolName, {
+      name: toolName,
+      definition: { name: toolName, description: `Kernel method: ${name}` },
+      handler,
+    });
+    log.debug(`Registered gateway method as tool: ${toolName}`);
   },
+
+  // HTTP handlers — captured as metadata, no HTTP server in capsule runtime
   registerHttpHandler: (path, handler) => {
     unsupportedRegistrations.push({ type: "httpHandler", name: path });
-    log.debug(`Registered HTTP handler: ${path} (not wired to MCP bridge)`);
+    log.debug(`Registered HTTP handler: ${path} (captured as metadata)`);
   },
   registerHttpRoute: (method, path, handler) => {
     unsupportedRegistrations.push({ type: "httpRoute", name: `${method} ${path}` });
-    log.debug(`Registered HTTP route: ${method} ${path} (not wired to MCP bridge)`);
+    log.debug(`Registered HTTP route: ${method} ${path} (captured as metadata)`);
   },
 
-  // Out of scope: registerProvider (OAuth flows), registerCli (host-side)
+  // OAuth providers and CLI — captured as metadata
   registerProvider: (name, definition) => {
     unsupportedRegistrations.push({ type: "provider", name });
-    log.debug(`Registered provider: ${name} (not wired to MCP bridge)`);
+    log.debug(`Registered provider: ${name} (captured as metadata)`);
   },
-  registerCli: (name, definition) => {
-    unsupportedRegistrations.push({ type: "cli", name });
-    log.debug(`Registered CLI command: ${name} (not available via MCP bridge)`);
+  // registerCli → maps to tools (a CLI subcommand IS a callable tool)
+  registerCli: (cliObj, options) => {
+    const commands = (options && options.commands) || [];
+    for (const cmdName of commands) {
+      registeredTools.set(cmdName, {
+        name: cmdName,
+        definition: { name: cmdName, description: `CLI command: ${cmdName}`, inputSchema: { type: "object", properties: {} } },
+        handler: cliObj && typeof cliObj.execute === "function" ? cliObj.execute.bind(cliObj) : () => {},
+      });
+      log.debug(`Registered CLI command as tool: ${cmdName}`);
+    }
   },
 };
 
@@ -301,6 +329,21 @@ function handleToolsList(id) {
     inputSchema: { type: "object", properties: {} },
   });
 
+  // Add interceptor hook tool — used by the kernel to invoke hooks that
+  // return data (request-response), as opposed to fire-and-forget notifications.
+  tools.push({
+    name: "astrid_hook_intercept",
+    description: "Invoke a plugin hook and return its result (interceptor pattern)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        hook: { type: "string", description: "Hook/event name to invoke" },
+        payload: { description: "Data to pass to the hook handler" },
+      },
+      required: ["hook"],
+    },
+  });
+
   const response = { tools };
   log.debug(`tools/list response: ${JSON.stringify(response)}`);
   sendResponse(id, response);
@@ -310,14 +353,68 @@ async function handleToolsCall(id, params) {
   const toolName = params?.name;
   const toolArgs = params?.arguments || {};
 
+  // Special: interceptor hook tool — dispatches to registered hooks/event
+  // handlers and returns the merged result back to the kernel.
+  if (toolName === "astrid_hook_intercept") {
+    const hookName = toolArgs.hook;
+
+    // Validate hookName — must be safe identifier chars only
+    if (typeof hookName !== "string" || !/^[a-zA-Z0-9_.\-]+$/.test(hookName)) {
+      sendResponse(id, {
+        content: [{ type: "text", text: "Invalid hook name — must match [a-zA-Z0-9_.-]" }],
+        isError: true,
+      });
+      return;
+    }
+
+    if (!servicesReady) {
+      sendResponse(id, {
+        content: [{ type: "text", text: "Bridge not ready — plugin still initializing" }],
+        isError: true,
+      });
+      return;
+    }
+
+    const hookData = toolArgs.payload ?? null;
+    let lastResult = null;
+
+    // Dispatch to on() event handlers (already sorted by priority)
+    const handlers = eventHandlers.get(hookName) || [];
+    for (const entry of handlers) {
+      try {
+        const r = await entry.handler(hookData);
+        if (r !== undefined && r !== null) lastResult = r;
+      } catch (e) {
+        log.error(`Hook intercept event handler for ${hookName} failed: ${e.message}`);
+      }
+    }
+
+    // Dispatch to registerHook handlers
+    const hookEntries = registeredHooks.get(hookName) || [];
+    for (const entry of hookEntries) {
+      try {
+        const r = await entry.handler(hookData);
+        if (r !== undefined && r !== null) lastResult = r;
+      } catch (e) {
+        log.error(`Hook intercept registered hook ${hookName} failed: ${e.message}`);
+      }
+    }
+
+    const resultText = lastResult !== null ? JSON.stringify(lastResult) : "null";
+    sendResponse(id, {
+      content: [{ type: "text", text: resultText }],
+    });
+    return;
+  }
+
   // Special: agent context tool (allowed before services are ready —
   // before_agent_start handlers do not depend on services)
   if (toolName === "__astrid_get_agent_context") {
     const handlers = eventHandlers.get("before_agent_start") || [];
     let context = {};
-    for (const handler of handlers) {
+    for (const entry of handlers) {
       try {
-        const result = await handler(toolArgs);
+        const result = await entry.handler(toolArgs);
         if (result && typeof result === "object") {
           context = { ...context, ...result };
         }
@@ -349,7 +446,7 @@ async function handleToolsCall(id, params) {
   }
 
   try {
-    const result = await tool.handler(toolName, toolArgs);
+    const result = await tool.handler(id, toolArgs);
     const text = typeof result === "string" ? result : JSON.stringify(result);
     sendResponse(id, {
       content: [{ type: "text", text }],
@@ -377,24 +474,43 @@ async function handleNotification(method, params) {
         channels,
       });
     }
+    // Report metadata-only registrations (HTTP, OAuth, CLI) to the host
+    if (unsupportedRegistrations.length > 0) {
+      sendNotification("notifications/astrid.metadataRegistrations", {
+        pluginId,
+        registrations: unsupportedRegistrations,
+      });
+    }
     return;
   }
   if (method === "notifications/astrid.setPluginConfig") {
     if (params?.config && typeof params.config === "object" && !Array.isArray(params.config)) {
       pluginConfig = params.config;
+      // Patch existing references so ctx.config.apiKey works
+      Object.assign(pluginApi.config, params.config);
+      Object.assign(pluginApi.pluginConfig, params.config);
       log.info(`Plugin config updated (${Object.keys(pluginConfig).length} keys)`);
     }
     return;
   }
   if (method === "notifications/astrid.hookEvent") {
-    const event = params?.event;
-    const data = params?.data;
+    const event = params?.hook ?? params?.event;
+    const data = params?.payload ?? params?.data;
     const handlers = eventHandlers.get(event) || [];
-    for (const handler of handlers) {
+    for (const entry of handlers) {
       try {
-        await handler(data);
+        await entry.handler(data);
       } catch (e) {
         log.error(`Hook event handler for ${event} failed: ${e.message}`);
+      }
+    }
+    // Also dispatch to registered hooks by name
+    const hookEntries = registeredHooks.get(event) || [];
+    for (const entry of hookEntries) {
+      try {
+        await entry.handler(data);
+      } catch (e) {
+        log.error(`Registered hook ${event} failed: ${e.message}`);
       }
     }
     return;
@@ -445,6 +561,17 @@ async function shutdown(reason) {
   if (shuttingDown) return;
   shuttingDown = true;
   log.info(`${reason} — shutting down`);
+
+  // Call plugin deactivate() before stopping services
+  const deactivate = pluginModule?.default?.deactivate || pluginModule?.deactivate;
+  if (typeof deactivate === "function") {
+    try {
+      await deactivate();
+    } catch (e) {
+      log.error(`Plugin deactivate() failed: ${e.message}`);
+    }
+  }
+
   await stopServices();
   process.exit(0);
 }
@@ -495,6 +622,7 @@ async function loadPlugin() {
 
   try {
     const mod = await import(fileUrl);
+    pluginModule = mod;
     const defaultExport = mod.default;
 
     if (defaultExport && typeof defaultExport === "object" && typeof defaultExport.register === "function") {
@@ -529,7 +657,7 @@ async function loadPlugin() {
       `Plugin loaded: ${registeredTools.size} tools, ` +
         `${registeredChannels.size} channels, ` +
         `${registeredServices.size} services` +
-        (unsupportedRegistrations.length > 0 ? `, ${unsupportedRegistrations.length} unsupported` : "")
+        (unsupportedRegistrations.length > 0 ? `, ${unsupportedRegistrations.length} metadata-only` : "")
     );
   } catch (e) {
     log.error(`Failed to load plugin: ${e.message}\n${e.stack}`);

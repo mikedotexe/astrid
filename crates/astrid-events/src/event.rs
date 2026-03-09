@@ -143,6 +143,19 @@ pub enum AstridEvent {
         frontend: String,
     },
 
+    /// Response message has been delivered to the user/frontend.
+    ///
+    /// Fired after the message is confirmed sent. Useful for auditing,
+    /// logging, or triggering post-delivery side effects.
+    MessageSent {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Message ID.
+        message_id: Uuid,
+        /// Target frontend.
+        frontend: String,
+    },
+
     /// Message fully processed (response sent).
     MessageProcessed {
         /// Event metadata.
@@ -151,6 +164,100 @@ pub enum AstridEvent {
         message_id: Uuid,
         /// Duration in milliseconds.
         duration_ms: u64,
+    },
+
+    // ========== Prompt / Cognitive Loop Events ==========
+    /// Prompt is being assembled before an LLM call.
+    ///
+    /// Capsules can inspect or modify the prompt context before it is sent
+    /// to the model.
+    PromptBuilding {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Request ID correlating to the upcoming LLM call.
+        request_id: Uuid,
+    },
+
+    /// A response message is about to be sent to the user/frontend.
+    ///
+    /// Allows capsules to intercept or transform outbound messages.
+    MessageSending {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Message ID.
+        message_id: Uuid,
+        /// Target frontend.
+        frontend: String,
+    },
+
+    /// Context compaction is starting (trimming conversation history).
+    ContextCompactionStarted {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Session ID being compacted.
+        session_id: Uuid,
+        /// Number of messages before compaction.
+        message_count: u32,
+    },
+
+    /// Context compaction completed.
+    ContextCompactionCompleted {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Session ID that was compacted.
+        session_id: Uuid,
+        /// Messages remaining after compaction.
+        messages_remaining: u32,
+    },
+
+    /// Session is being reset (conversation history cleared).
+    SessionResetting {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Session ID being reset.
+        session_id: Uuid,
+    },
+
+    /// Model selection is being resolved before an LLM call.
+    ///
+    /// Capsules can influence which model/provider is selected for a request.
+    ModelResolving {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Request ID.
+        request_id: Uuid,
+        /// Candidate provider (may be overridden by capsule).
+        provider: Option<String>,
+        /// Candidate model (may be overridden by capsule).
+        model: Option<String>,
+    },
+
+    /// The agent's cognitive loop has finished its run.
+    ///
+    /// Fired after the final response is produced, before session teardown.
+    /// Capsules can inspect the complete run for logging or analytics.
+    AgentLoopCompleted {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Agent ID.
+        agent_id: Uuid,
+        /// Total turns in the loop.
+        turns: u32,
+        /// Duration of the full loop in milliseconds.
+        duration_ms: u64,
+    },
+
+    /// A tool result is about to be persisted to conversation history.
+    ///
+    /// Capsules can intercept, redact, or transform the result before
+    /// it is stored.
+    ToolResultPersisting {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Tool call ID.
+        call_id: Uuid,
+        /// Tool name.
+        tool_name: String,
     },
 
     // ========== LLM Events ==========
@@ -520,16 +627,16 @@ pub enum AstridEvent {
     },
 
     // ========== System Events ==========
-    /// Gateway daemon started.
-    GatewayStarted {
+    /// Kernel daemon started.
+    KernelStarted {
         /// Event metadata.
         metadata: EventMetadata,
-        /// Gateway version.
+        /// Kernel version.
         version: String,
     },
 
-    /// Gateway daemon shutting down.
-    GatewayShutdown {
+    /// Kernel daemon shutting down.
+    KernelShutdown {
         /// Event metadata.
         metadata: EventMetadata,
         /// Reason for shutdown.
@@ -619,7 +726,16 @@ impl AstridEvent {
             | Self::SessionCreated { metadata, .. }
             | Self::SessionEnded { metadata, .. }
             | Self::SessionResumed { metadata, .. }
+            | Self::PromptBuilding { metadata, .. }
+            | Self::MessageSending { metadata, .. }
+            | Self::ContextCompactionStarted { metadata, .. }
+            | Self::ContextCompactionCompleted { metadata, .. }
+            | Self::SessionResetting { metadata, .. }
+            | Self::ModelResolving { metadata, .. }
+            | Self::AgentLoopCompleted { metadata, .. }
+            | Self::ToolResultPersisting { metadata, .. }
             | Self::MessageReceived { metadata, .. }
+            | Self::MessageSent { metadata, .. }
             | Self::MessageProcessed { metadata, .. }
             | Self::LlmRequestStarted { metadata, .. }
             | Self::LlmRequestCompleted { metadata, .. }
@@ -652,8 +768,8 @@ impl AstridEvent {
             | Self::BudgetAllocated { metadata, .. }
             | Self::BudgetWarning { metadata, .. }
             | Self::BudgetExceeded { metadata, .. }
-            | Self::GatewayStarted { metadata, .. }
-            | Self::GatewayShutdown { metadata, .. }
+            | Self::KernelStarted { metadata, .. }
+            | Self::KernelShutdown { metadata, .. }
             | Self::ConfigReloaded { metadata, .. }
             | Self::ConfigChanged { metadata, .. }
             | Self::HealthCheckCompleted { metadata, .. }
@@ -677,8 +793,18 @@ impl AstridEvent {
             Self::SessionCreated { .. } => "session_created",
             Self::SessionEnded { .. } => "session_ended",
             Self::SessionResumed { .. } => "session_resumed",
+            // Prompt / Cognitive Loop
+            Self::PromptBuilding { .. } => "prompt_building",
+            Self::MessageSending { .. } => "message_sending",
+            Self::ContextCompactionStarted { .. } => "context_compaction_started",
+            Self::ContextCompactionCompleted { .. } => "context_compaction_completed",
+            Self::SessionResetting { .. } => "session_resetting",
+            Self::ModelResolving { .. } => "model_resolving",
+            Self::AgentLoopCompleted { .. } => "agent_loop_completed",
+            Self::ToolResultPersisting { .. } => "tool_result_persisting",
             // Message Flow
             Self::MessageReceived { .. } => "message_received",
+            Self::MessageSent { .. } => "message_sent",
             Self::MessageProcessed { .. } => "message_processed",
             // LLM
             Self::LlmRequestStarted { .. } => "llm_request_started",
@@ -720,8 +846,8 @@ impl AstridEvent {
             Self::BudgetWarning { .. } => "budget_warning",
             Self::BudgetExceeded { .. } => "budget_exceeded",
             // System
-            Self::GatewayStarted { .. } => "gateway_started",
-            Self::GatewayShutdown { .. } => "gateway_shutdown",
+            Self::KernelStarted { .. } => "kernel_started",
+            Self::KernelShutdown { .. } => "kernel_shutdown",
             Self::ConfigReloaded { .. } => "config_reloaded",
             Self::ConfigChanged { .. } => "config_changed",
             Self::HealthCheckCompleted { .. } => "health_check_completed",
