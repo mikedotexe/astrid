@@ -207,25 +207,39 @@ fn handle_daemon_event(app: &mut App, event: AstridEvent) {
                 app.state = UiState::Idle;
                 app.scroll_offset = 0;
             }
-        } else if let astrid_events::ipc::IpcPayload::OnboardingRequired {
-            capsule_id,
-            missing_keys,
-            prompts,
-        } = &message.payload
+        } else if let astrid_events::ipc::IpcPayload::OnboardingRequired { capsule_id, fields } =
+            &message.payload
         {
+            if fields.is_empty() {
+                app.push_notice(&format!(
+                    "Capsule '{capsule_id}' reported missing configuration but provided no fields."
+                ));
+                return;
+            }
+
             let msg = format!("Action required: Capsule '{capsule_id}' requires configuration.");
             app.push_notice(&msg);
             app.status_message = Some((msg, Instant::now()));
 
+            let first = fields.first();
+            let is_first_enum = first.is_some_and(|f| {
+                matches!(
+                    f.field_type,
+                    astrid_events::ipc::OnboardingFieldType::Enum(_)
+                )
+            });
+            let enum_selected = first.map_or(0, input::default_enum_position);
+            let default_val = first.and_then(|f| f.default.clone()).unwrap_or_default();
+
             app.state = UiState::Onboarding {
                 capsule_id: capsule_id.clone(),
-                missing_keys: missing_keys.clone(),
-                prompts: prompts.clone(),
+                fields: fields.clone(),
                 current_idx: 0,
                 answers: std::collections::HashMap::new(),
+                enum_selected,
+                enum_scroll_offset: 0,
             };
-            app.input.clear();
-            app.cursor_pos = 0;
+            input::prefill_field_input(app, is_first_enum, &default_val);
         } else if let astrid_events::ipc::IpcPayload::SelectionRequired {
             request_id,
             title,

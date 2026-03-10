@@ -85,6 +85,116 @@ fn handle_selection_input(app: &mut App, key: KeyEvent) {
 }
 
 fn handle_onboarding_input(app: &mut App, key: KeyEvent) {
+    // Determine if the current field is an enum picker.
+    let is_enum_field = matches!(
+        &app.state,
+        UiState::Onboarding { fields, current_idx, .. }
+            if fields.get(*current_idx).is_some_and(|f|
+                matches!(f.field_type, astrid_events::ipc::OnboardingFieldType::Enum(_))
+            )
+    );
+
+    if is_enum_field {
+        handle_onboarding_enum_input(app, key);
+    } else {
+        handle_onboarding_text_input(app, key);
+    }
+}
+
+/// Advance to the next onboarding field or finish, pre-filling defaults.
+fn advance_onboarding(app: &mut App) {
+    // Check completion with a read-only borrow to avoid conflicts with finish_onboarding.
+    let done = matches!(
+        &app.state,
+        UiState::Onboarding { fields, current_idx, .. } if *current_idx >= fields.len()
+    );
+    if done {
+        finish_onboarding(app);
+        return;
+    }
+
+    // Reset enum state and extract pre-fill info in a single scoped borrow.
+    let (is_enum, default) = if let UiState::Onboarding {
+        fields,
+        current_idx,
+        enum_selected,
+        enum_scroll_offset,
+        ..
+    } = &mut app.state
+    {
+        *enum_scroll_offset = 0;
+
+        let field = fields.get(*current_idx);
+        let is_enum_field = field.is_some_and(|f| {
+            matches!(
+                f.field_type,
+                astrid_events::ipc::OnboardingFieldType::Enum(_)
+            )
+        });
+
+        // Pre-position enum_selected to the default value's index if present.
+        *enum_selected = field.map_or(0, default_enum_position);
+
+        let default_val = field.and_then(|f| f.default.clone()).unwrap_or_default();
+        (is_enum_field, default_val)
+    } else {
+        return;
+    };
+
+    // Enum fields use the picker; text/secret fields get the default pre-filled.
+    prefill_field_input(app, is_enum, &default);
+}
+
+/// Compute the initial `enum_selected` index for a field, matching its default
+/// to a position in the enum choices. Returns 0 if no match or not an enum.
+pub(crate) fn default_enum_position(field: &astrid_events::ipc::OnboardingField) -> usize {
+    field
+        .default
+        .as_deref()
+        .and_then(|default_val| match &field.field_type {
+            astrid_events::ipc::OnboardingFieldType::Enum(choices) => {
+                choices.iter().position(|c| c == default_val)
+            },
+            _ => None,
+        })
+        .unwrap_or(0)
+}
+
+/// Set `app.input` and `app.cursor_pos` for a new onboarding field.
+/// Enum fields clear the input (the picker handles selection);
+/// text/secret fields pre-fill with the default value.
+pub(crate) fn prefill_field_input(app: &mut App, is_enum: bool, default: &str) {
+    if is_enum {
+        app.input.clear();
+        app.cursor_pos = 0;
+    } else {
+        app.input = default.to_string();
+        app.cursor_pos = default.len();
+    }
+}
+
+/// Submit onboarding answers and return to Idle.
+fn finish_onboarding(app: &mut App) {
+    if let UiState::Onboarding {
+        capsule_id,
+        answers,
+        ..
+    } = &app.state
+    {
+        let cid = capsule_id.clone();
+        let final_answers = answers.clone();
+        app.pending_actions.push(PendingAction::SubmitOnboarding {
+            capsule_id: cid,
+            answers: final_answers,
+        });
+    }
+    app.state = UiState::Idle;
+    app.input.clear();
+    app.cursor_pos = 0;
+}
+
+/// Handle text/secret field input during onboarding.
+fn handle_onboarding_text_input(app: &mut App, key: KeyEvent) {
     match key.code {
         KeyCode::Esc => {
             app.push_notice("Onboarding cancelled by user.");
@@ -98,30 +208,21 @@ fn handle_onboarding_input(app: &mut App, key: KeyEvent) {
             app.cursor_pos = 0;
 
             if let UiState::Onboarding {
-                capsule_id,
-                missing_keys,
-                prompts: _,
+                fields,
                 current_idx,
                 answers,
+                ..
             } = &mut app.state
             {
-                let Some(key_name) = missing_keys.get(*current_idx).cloned() else {
+                let Some(field) = fields.get(*current_idx) else {
                     app.state = UiState::Idle;
                     return;
                 };
-                answers.insert(key_name, answer);
+                answers.insert(field.key.clone(), answer);
                 *current_idx = current_idx.saturating_add(1);
-
-                if *current_idx >= missing_keys.len() {
-                    let cid = capsule_id.clone();
-                    let final_answers = answers.clone();
-                    app.pending_actions.push(PendingAction::SubmitOnboarding {
-                        capsule_id: cid,
-                        answers: final_answers,
-                    });
-                    app.state = UiState::Idle;
-                }
             }
+            // advance_onboarding checks completion and calls finish_onboarding if done.
+            advance_onboarding(app);
         },
         KeyCode::Char(c) => {
             app.input.insert(app.cursor_pos, c);
@@ -154,6 +255,93 @@ fn handle_onboarding_input(app: &mut App, key: KeyEvent) {
                     .map_or(app.input.len(), |(i, _)| app.cursor_pos.saturating_add(i));
                 app.cursor_pos = next;
             }
+        },
+        _ => {},
+    }
+}
+
+/// Handle enum picker input during onboarding.
+fn handle_onboarding_enum_input(app: &mut App, key: KeyEvent) {
+    match key.code {
+        KeyCode::Esc => {
+            app.push_notice("Onboarding cancelled by user.");
+            app.state = UiState::Idle;
+            app.input.clear();
+            app.cursor_pos = 0;
+        },
+        KeyCode::Up => {
+            if let UiState::Onboarding {
+                enum_selected,
+                enum_scroll_offset,
+                ..
+            } = &mut app.state
+                && *enum_selected > 0
+            {
+                *enum_selected = enum_selected.saturating_sub(1);
+                if *enum_selected < *enum_scroll_offset {
+                    *enum_scroll_offset = *enum_selected;
+                }
+            }
+        },
+        KeyCode::Down => {
+            if let UiState::Onboarding {
+                fields,
+                current_idx,
+                enum_selected,
+                enum_scroll_offset,
+                ..
+            } = &mut app.state
+            {
+                let choice_count = fields.get(*current_idx).map_or(0, |f| match &f.field_type {
+                    astrid_events::ipc::OnboardingFieldType::Enum(v) => v.len(),
+                    _ => 0,
+                });
+                if enum_selected.saturating_add(1) < choice_count {
+                    *enum_selected = enum_selected.saturating_add(1);
+                    if *enum_selected >= enum_scroll_offset.saturating_add(PALETTE_MAX_VISIBLE) {
+                        *enum_scroll_offset = enum_selected
+                            .saturating_add(1)
+                            .saturating_sub(PALETTE_MAX_VISIBLE);
+                    }
+                }
+            }
+        },
+        KeyCode::Enter => {
+            let skipped = if let UiState::Onboarding {
+                fields,
+                current_idx,
+                enum_selected,
+                answers,
+                ..
+            } = &mut app.state
+            {
+                // Clamp enum_selected and pick from choices. If enum is empty,
+                // the field was already degraded to Text by build_onboarding_field,
+                // so this branch shouldn't be reached — but guard defensively.
+                // Returns (key, value) from the same .get() call to avoid re-indexing.
+                let selection = fields.get(*current_idx).and_then(|f| match &f.field_type {
+                    astrid_events::ipc::OnboardingFieldType::Enum(v) if !v.is_empty() => {
+                        let clamped = (*enum_selected).min(v.len().saturating_sub(1));
+                        Some((f.key.clone(), v[clamped].clone()))
+                    },
+                    _ => None,
+                });
+
+                let was_skipped = if let Some((key, value)) = selection {
+                    answers.insert(key, value);
+                    false
+                } else {
+                    true
+                };
+                *current_idx = current_idx.saturating_add(1);
+                was_skipped
+            } else {
+                false
+            };
+            if skipped {
+                app.push_notice("Skipped field with no available choices.");
+            }
+            advance_onboarding(app);
         },
         _ => {},
     }
