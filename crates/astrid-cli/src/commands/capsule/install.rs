@@ -318,7 +318,11 @@ pub(crate) fn install_from_local_path(
     Ok(())
 }
 
-/// Recursively copy a directory tree.
+/// Recursively copy a directory tree, dereferencing symlinks.
+///
+/// Symlinks are resolved to their target content (like `cp -rL`). This is
+/// required because `npm install` creates symlinks in `node_modules/.bin/`
+/// and the archiver also dereferences them via `follow_symlinks(true)`.
 pub(crate) fn copy_plugin_dir(src: &Path, dst: &Path) -> anyhow::Result<()> {
     std::fs::create_dir_all(dst).with_context(|| format!("failed to create {}", dst.display()))?;
 
@@ -330,19 +334,25 @@ pub(crate) fn copy_plugin_dir(src: &Path, dst: &Path) -> anyhow::Result<()> {
         let src_path = entry.path();
         let dst_path = dst.join(entry.file_name());
 
-        if file_type.is_symlink() {
-            bail!(
-                "plugin source contains a symlink at {}, which is not allowed",
-                src_path.display()
-            );
-        }
-
         if file_type.is_dir() {
             let name = entry.file_name();
-            if name == "node_modules" || name == ".git" || name == "dist" || name == "target" {
+            if name == ".git" || name == "dist" || name == "target" {
                 continue;
             }
             copy_plugin_dir(&src_path, &dst_path)?;
+        } else if file_type.is_symlink() {
+            // Dereference symlinks: resolve to the target's content and copy as
+            // a regular file. This handles npm's node_modules/.bin/ symlinks.
+            // fs::copy follows symlinks by default (reads the target, not the link).
+            let metadata = std::fs::metadata(&src_path)
+                .with_context(|| format!("symlink target not found for {}", src_path.display()))?;
+            if metadata.is_dir() {
+                // Symlink points to a directory - recurse into it
+                copy_plugin_dir(&src_path, &dst_path)?;
+            } else {
+                std::fs::copy(&src_path, &dst_path)
+                    .with_context(|| format!("failed to copy {}", src_path.display()))?;
+            }
         } else {
             std::fs::copy(&src_path, &dst_path)
                 .with_context(|| format!("failed to copy {}", src_path.display()))?;
@@ -361,5 +371,171 @@ fn resolve_target_dir(
         Ok(root.join(".astrid").join("plugins").join(id))
     } else {
         Ok(home.capsules_dir().join(id))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn install_preserves_node_modules() {
+        // End-to-end: create a capsule directory with node_modules, install it
+        // via install_from_local_path, and verify node_modules is preserved in
+        // the installed directory.
+        let capsule_dir = tempfile::tempdir().unwrap();
+        let base = capsule_dir.path();
+
+        // Minimal Capsule.toml
+        std::fs::write(
+            base.join("Capsule.toml"),
+            "[package]\nname = \"install-test\"\nversion = \"1.0.0\"\n\n\
+             [[mcp_server]]\nid = \"install-test\"\ncommand = \"node\"\nargs = [\"bridge.mjs\"]\n",
+        )
+        .unwrap();
+
+        // Bridge script
+        std::fs::write(base.join("bridge.mjs"), "// bridge").unwrap();
+
+        // Source
+        std::fs::create_dir_all(base.join("src")).unwrap();
+        std::fs::write(base.join("src/index.js"), "module.exports = {};").unwrap();
+
+        // package.json + node_modules (simulating npm install output)
+        std::fs::write(
+            base.join("package.json"),
+            r#"{"name": "install-test", "dependencies": {"got": "^1.0"}}"#,
+        )
+        .unwrap();
+        std::fs::create_dir_all(base.join("node_modules/got")).unwrap();
+        std::fs::write(
+            base.join("node_modules/got/index.js"),
+            "module.exports = {};",
+        )
+        .unwrap();
+
+        // Install into a fake AstridHome
+        let home_dir = tempfile::tempdir().unwrap();
+        let home = AstridHome::from_path(home_dir.path());
+        install_from_local_path(base, false, &home).expect("install should succeed");
+
+        // Verify installed directory preserves node_modules
+        let installed = home.capsules_dir().join("install-test");
+        assert!(
+            installed.join("Capsule.toml").exists(),
+            "installed capsule must have Capsule.toml"
+        );
+        assert!(
+            installed.join("node_modules/got/index.js").exists(),
+            "installed capsule must preserve node_modules"
+        );
+        assert!(
+            installed.join("package.json").exists(),
+            "installed capsule must preserve package.json"
+        );
+        assert!(
+            installed.join("src/index.js").exists(),
+            "installed capsule must preserve source"
+        );
+    }
+
+    #[test]
+    fn copy_plugin_dir_skips_git_and_build_artifacts() {
+        let src_dir = tempfile::tempdir().unwrap();
+        let base = src_dir.path();
+
+        std::fs::write(base.join("index.js"), "// code").unwrap();
+        std::fs::create_dir_all(base.join(".git/objects")).unwrap();
+        std::fs::write(base.join(".git/objects/abc"), "blob").unwrap();
+        std::fs::create_dir_all(base.join("dist")).unwrap();
+        std::fs::write(base.join("dist/out.js"), "// built").unwrap();
+        std::fs::create_dir_all(base.join("target")).unwrap();
+        std::fs::write(base.join("target/debug"), "// rust").unwrap();
+        std::fs::create_dir_all(base.join("node_modules/pkg")).unwrap();
+        std::fs::write(base.join("node_modules/pkg/index.js"), "// dep").unwrap();
+
+        let dst_dir = tempfile::tempdir().unwrap();
+        copy_plugin_dir(base, dst_dir.path()).unwrap();
+
+        assert!(dst_dir.path().join("index.js").exists());
+        assert!(
+            dst_dir.path().join("node_modules/pkg/index.js").exists(),
+            "node_modules must be preserved"
+        );
+        assert!(
+            !dst_dir.path().join(".git").exists(),
+            ".git must be skipped"
+        );
+        assert!(
+            !dst_dir.path().join("dist").exists(),
+            "dist must be skipped"
+        );
+        assert!(
+            !dst_dir.path().join("target").exists(),
+            "target must be skipped"
+        );
+    }
+
+    #[test]
+    #[cfg_attr(windows, ignore = "symlinks require elevated privileges on Windows")]
+    fn install_dereferences_node_modules_bin_symlinks() {
+        // Simulates the realistic npm install output: node_modules/.bin/
+        // contains relative symlinks to package executables. copy_plugin_dir
+        // must dereference these into regular files instead of bailing.
+        let capsule_dir = tempfile::tempdir().unwrap();
+        let base = capsule_dir.path();
+
+        std::fs::write(
+            base.join("Capsule.toml"),
+            "[package]\nname = \"symlink-test\"\nversion = \"1.0.0\"\n\n\
+             [[mcp_server]]\nid = \"symlink-test\"\ncommand = \"node\"\nargs = [\"bridge.mjs\"]\n",
+        )
+        .unwrap();
+        std::fs::write(base.join("bridge.mjs"), "// bridge").unwrap();
+
+        // Create node_modules with a .bin/ symlink (like npm install produces)
+        std::fs::create_dir_all(base.join("node_modules/somepkg")).unwrap();
+        std::fs::write(
+            base.join("node_modules/somepkg/cli.js"),
+            "#!/usr/bin/env node\nconsole.log('works');",
+        )
+        .unwrap();
+        std::fs::create_dir_all(base.join("node_modules/.bin")).unwrap();
+
+        // Relative symlink — this is what npm actually creates
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(
+            std::path::Path::new("../somepkg/cli.js"),
+            base.join("node_modules/.bin/somepkg"),
+        )
+        .unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(
+            std::path::Path::new("../somepkg/cli.js"),
+            base.join("node_modules/.bin/somepkg"),
+        )
+        .unwrap();
+
+        // Install must succeed (previously bailed on symlink)
+        let home_dir = tempfile::tempdir().unwrap();
+        let home = AstridHome::from_path(home_dir.path());
+        install_from_local_path(base, false, &home).expect("install must not bail on symlinks");
+
+        // Verify the symlink was dereferenced into a regular file
+        let installed = home.capsules_dir().join("symlink-test");
+        let bin_file = installed.join("node_modules/.bin/somepkg");
+        assert!(
+            bin_file.exists(),
+            ".bin/somepkg must exist as a regular file"
+        );
+        assert!(
+            !bin_file.is_symlink(),
+            ".bin/somepkg must be a regular file, not a symlink"
+        );
+        let content = std::fs::read_to_string(&bin_file).unwrap();
+        assert!(
+            content.contains("works"),
+            "dereferenced file must have original content"
+        );
     }
 }

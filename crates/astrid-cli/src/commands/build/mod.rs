@@ -398,15 +398,19 @@ fn build_openclaw_capsule(dir: &Path, output: Option<&str>) -> Result<()> {
             pack_capsule_archive(&out_file, &toml_content, Some(&wasm_path), dir, &[])?;
         },
         PluginTier::Node => {
-            // Tier 2: include the copied source tree and bridge script
+            // Tier 2: include the entire build output (source tree, node_modules,
+            // package.json, bridge script, etc.) — everything except Capsule.toml
+            // which is written separately by the archiver.
             let mut additional: Vec<PathBuf> = Vec::new();
-            let src_dir = build_dir.path().join("src");
-            if src_dir.exists() {
-                additional.push(src_dir);
-            }
-            let bridge_path = build_dir.path().join("astrid_bridge.mjs");
-            if bridge_path.exists() {
-                additional.push(bridge_path);
+            for entry in
+                fs::read_dir(build_dir.path()).context("Failed to read Tier 2 build directory")?
+            {
+                let entry = entry?;
+                let name = entry.file_name();
+                if name == "Capsule.toml" {
+                    continue; // written separately by pack_capsule_archive
+                }
+                additional.push(entry.path());
             }
             let refs: Vec<&Path> = additional.iter().map(PathBuf::as_path).collect();
             pack_capsule_archive(&out_file, &toml_content, None, build_dir.path(), &refs)?;
@@ -786,15 +790,14 @@ mod tests {
         let archive_dir = tempfile::tempdir().unwrap();
         let capsule_path = archive_dir.path().join("lifecycle-test.capsule");
 
-        // Collect Tier 2 artifacts
+        // Collect Tier 2 artifacts — everything except Capsule.toml
         let mut additional: Vec<PathBuf> = Vec::new();
-        let src_dir = build_dir.path().join("src");
-        if src_dir.exists() {
-            additional.push(src_dir);
-        }
-        let bridge_path = build_dir.path().join("astrid_bridge.mjs");
-        if bridge_path.exists() {
-            additional.push(bridge_path);
+        for entry in fs::read_dir(build_dir.path()).unwrap() {
+            let entry = entry.unwrap();
+            if entry.file_name() == "Capsule.toml" {
+                continue;
+            }
+            additional.push(entry.path());
         }
         let refs: Vec<&Path> = additional.iter().map(PathBuf::as_path).collect();
 
@@ -806,6 +809,26 @@ mod tests {
             fs::metadata(&capsule_path).unwrap().len() > 0,
             ".capsule should not be empty"
         );
+
+        // 3b. Verify exactly one Capsule.toml in the archive (no duplication)
+        {
+            let tar_gz = fs::File::open(&capsule_path).unwrap();
+            let decoder = flate2::read::GzDecoder::new(tar_gz);
+            let mut archive = tar::Archive::new(decoder);
+            let toml_count = archive
+                .entries()
+                .unwrap()
+                .map(|e| e.expect("archive entry must be readable"))
+                .filter(|e| {
+                    e.path().expect("archive entry path must be valid").as_ref()
+                        == Path::new("Capsule.toml")
+                })
+                .count();
+            assert_eq!(
+                toml_count, 1,
+                "archive must contain exactly one Capsule.toml, found {toml_count}"
+            );
+        }
 
         // 4. Unpack the archive
         let unpack_dir = tempfile::tempdir().unwrap();
@@ -824,6 +847,23 @@ mod tests {
             unpack_dir.path().join("src").exists(),
             "unpacked archive must contain source directory"
         );
+        assert!(
+            unpack_dir.path().join("package.json").exists(),
+            "unpacked archive must contain package.json for Node.js module resolution"
+        );
+        // node_modules presence depends on npm being available — verify it round-trips
+        // if the build dir had it (npm install succeeded during compile_tier2)
+        let npm_available = build_dir.path().join("node_modules").exists();
+        if npm_available {
+            assert!(
+                unpack_dir.path().join("node_modules").exists(),
+                "unpacked archive must contain node_modules when npm install succeeded"
+            );
+        } else {
+            eprintln!(
+                "NOTE: npm unavailable in test environment — node_modules assertions skipped"
+            );
+        }
 
         // 6. Load the manifest through Astrid's real parser — proves it's valid
         let manifest = load_manifest(&unpack_dir.path().join("Capsule.toml"))
@@ -951,6 +991,142 @@ mod tests {
         assert!(
             msg.contains("bogusKey"),
             "error should mention the bad key, got: {msg}"
+        );
+    }
+
+    /// Helper: create a node_modules dir with a symlink in .bin/, archive it,
+    /// and verify no symlink entries exist and content is preserved.
+    /// Guards the `follow_symlinks(true)` invariant in the archiver — if someone
+    /// changes it to `false`, these tests fail because symlink entries appear.
+    fn assert_symlinks_dereferenced(symlink_fn: impl FnOnce(&Path, &Path)) {
+        let build_dir = tempfile::tempdir().unwrap();
+        let base = build_dir.path();
+
+        let bin_dir = base.join("node_modules/.bin");
+        fs::create_dir_all(&bin_dir).unwrap();
+        let real_script = base.join("node_modules/somepkg/cli.js");
+        fs::create_dir_all(real_script.parent().unwrap()).unwrap();
+        fs::write(&real_script, "#!/usr/bin/env node\nconsole.log('hello');").unwrap();
+
+        symlink_fn(&real_script, &bin_dir.join("somepkg"));
+
+        let archive_path = base.join("test.capsule");
+        pack_capsule_archive(
+            &archive_path,
+            "[package]\nname = \"test\"\nversion = \"0.1.0\"\n",
+            None,
+            base,
+            &[&base.join("node_modules")],
+        )
+        .expect("archiving should succeed");
+
+        // Verify no symlink entries in the archive
+        let tar_gz = fs::File::open(&archive_path).unwrap();
+        let decoder = flate2::read::GzDecoder::new(tar_gz);
+        let mut archive = tar::Archive::new(decoder);
+
+        for entry in archive.entries().unwrap() {
+            let entry = entry.unwrap();
+            assert!(
+                !entry.header().entry_type().is_symlink()
+                    && !entry.header().entry_type().is_hard_link(),
+                "archive must not contain symlinks after follow_symlinks(true), found: {}",
+                entry.path().unwrap().display()
+            );
+        }
+
+        // Verify the dereferenced file has the correct content
+        let unpack_dir = tempfile::tempdir().unwrap();
+        unpack_capsule(&archive_path, unpack_dir.path());
+
+        let dereferenced = unpack_dir.path().join("node_modules/.bin/somepkg");
+        assert!(
+            dereferenced.exists(),
+            ".bin/somepkg should exist as a regular file"
+        );
+        let content = fs::read_to_string(&dereferenced).unwrap();
+        assert!(
+            content.contains("hello"),
+            "dereferenced file should have the original content"
+        );
+    }
+
+    #[test]
+    #[cfg_attr(windows, ignore = "symlinks require elevated privileges on Windows")]
+    fn archive_dereferences_absolute_symlinks() {
+        assert_symlinks_dereferenced(|target, link| {
+            #[cfg(unix)]
+            std::os::unix::fs::symlink(target, link).unwrap();
+            #[cfg(windows)]
+            std::os::windows::fs::symlink_file(target, link).unwrap();
+        });
+    }
+
+    #[test]
+    #[cfg_attr(windows, ignore = "symlinks require elevated privileges on Windows")]
+    fn archive_dereferences_relative_symlinks() {
+        // Relative symlink — this is what npm install actually creates:
+        // node_modules/.bin/somepkg -> ../somepkg/cli.js
+        // The path is relative to .bin/, so it resolves to node_modules/somepkg/cli.js
+        assert_symlinks_dereferenced(|_target, link| {
+            let relative = Path::new("../somepkg/cli.js");
+            #[cfg(unix)]
+            std::os::unix::fs::symlink(relative, link).unwrap();
+            #[cfg(windows)]
+            std::os::windows::fs::symlink_file(relative, link).unwrap();
+        });
+    }
+
+    #[test]
+    #[cfg_attr(windows, ignore = "symlinks require elevated privileges on Windows")]
+    fn archive_detects_symlink_cycle_without_hanging() {
+        // A malicious npm package could create a symlink pointing to an ancestor,
+        // causing infinite recursion in the archiver. Verify we detect and skip it.
+        let build_dir = tempfile::tempdir().unwrap();
+        let base = build_dir.path();
+
+        // Create: node_modules/evil/loop -> ../../ (points back to base)
+        let evil_dir = base.join("node_modules/evil");
+        fs::create_dir_all(&evil_dir).unwrap();
+        fs::write(evil_dir.join("legit.js"), "// not malicious").unwrap();
+
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(Path::new("../../"), evil_dir.join("loop")).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_dir(Path::new("../../"), evil_dir.join("loop")).unwrap();
+
+        // Archive must complete (not hang) and succeed
+        let archive_path = base.join("cycle-test.capsule");
+        pack_capsule_archive(
+            &archive_path,
+            "[package]\nname = \"cycle-test\"\nversion = \"0.1.0\"\n",
+            None,
+            base,
+            &[&base.join("node_modules")],
+        )
+        .expect("archiving must not hang on symlink cycles");
+
+        // Verify the archive contains the legit file but doesn't have infinite entries
+        let tar_gz = fs::File::open(&archive_path).unwrap();
+        let decoder = flate2::read::GzDecoder::new(tar_gz);
+        let mut archive = tar::Archive::new(decoder);
+
+        let entries: Vec<_> = archive
+            .entries()
+            .unwrap()
+            .filter_map(Result::ok)
+            .map(|e| e.path().unwrap().to_path_buf())
+            .collect();
+
+        assert!(
+            entries.iter().any(|p| p.ends_with("legit.js")),
+            "archive must contain the legit file"
+        );
+        // A cycle would produce thousands of entries; a healthy archive has < 20
+        assert!(
+            entries.len() < 50,
+            "archive has {} entries — cycle detection may have failed",
+            entries.len()
         );
     }
 }

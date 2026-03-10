@@ -1,9 +1,12 @@
 use anyhow::{Context, Result};
 use flate2::Compression;
 use flate2::write::GzEncoder;
-use std::fs::File;
-use std::path::Path;
-use tracing::info;
+use std::collections::HashSet;
+use std::fs::{self, File};
+use std::path::{Path, PathBuf};
+use tracing::{info, warn};
+
+const LARGE_ARCHIVE_BYTES: u64 = 50 * 1024 * 1024; // 50 MB
 
 /// Packages a set of files and directories into a single `.capsule` (tar.gz) archive.
 pub(crate) fn pack_capsule_archive(
@@ -20,6 +23,11 @@ pub(crate) fn pack_capsule_archive(
 
     let enc = GzEncoder::new(tar_gz, Compression::default());
     let mut tar = tar::Builder::new(enc);
+
+    // Explicitly enforce symlink dereferencing (this is already the default in the tar
+    // crate, but we state it explicitly because the install path rejects symlinks as a
+    // security measure and we want this invariant to survive upstream default changes).
+    tar.follow_symlinks(true);
 
     // 1. Write the synthesized Capsule.toml directly from memory
     let mut header = tar::Header::new_gnu();
@@ -49,6 +57,10 @@ pub(crate) fn pack_capsule_archive(
     }
 
     // 3. Append any additional contextual files (like READMEs, skill files, etc.)
+    // Use a cycle-safe recursive walk instead of tar's append_dir_all, because
+    // follow_symlinks(true) + append_dir_all has no cycle detection — a symlink
+    // pointing to an ancestor directory would cause infinite recursion and OOM.
+    let mut visited = HashSet::new();
     for file_path in additional_files {
         if file_path.exists() {
             let rel_path = file_path
@@ -56,12 +68,7 @@ pub(crate) fn pack_capsule_archive(
                 .unwrap_or(Path::new(file_path.file_name().unwrap_or_default()));
 
             if file_path.is_dir() {
-                tar.append_dir_all(rel_path, file_path).with_context(|| {
-                    format!(
-                        "Failed to append directory to archive: {}",
-                        file_path.display()
-                    )
-                })?;
+                append_dir_recursive(&mut tar, rel_path, file_path, &mut visited)?;
             } else {
                 let mut f = File::open(file_path).with_context(|| {
                     format!("Failed to open file for packing: {}", file_path.display())
@@ -75,6 +82,80 @@ pub(crate) fn pack_capsule_archive(
 
     tar.finish().context("Failed to finalize capsule archive")?;
 
+    // Warn if archive is large (node_modules can bloat Tier 2 capsules)
+    if let Ok(meta) = fs::metadata(output_path) {
+        let size_bytes = meta.len();
+        if size_bytes > LARGE_ARCHIVE_BYTES {
+            // Precision loss is irrelevant for a human-readable MB display value
+            #[expect(clippy::cast_precision_loss)]
+            let size_mb = size_bytes as f64 / (1024.0 * 1024.0);
+            warn!("⚠️  Capsule archive is {size_mb:.1} MB — consider trimming dependencies");
+        }
+    }
+
     info!("✅ Capsule packaged successfully!");
+    Ok(())
+}
+
+/// Recursively append a directory to the tar archive with symlink cycle detection.
+///
+/// Tracks visited directories by canonical path. If a symlink resolves to a
+/// directory we've already visited (cycle), it is skipped with a warning instead
+/// of causing infinite recursion.
+fn append_dir_recursive(
+    tar: &mut tar::Builder<GzEncoder<File>>,
+    archive_path: &Path,
+    fs_path: &Path,
+    visited: &mut HashSet<PathBuf>,
+) -> Result<()> {
+    // Canonicalize resolves symlinks to their real path, so a symlink pointing
+    // to an ancestor will resolve to the same canonical path we already visited.
+    let canonical = fs::canonicalize(fs_path).with_context(|| {
+        format!(
+            "Failed to resolve path for cycle detection: {}",
+            fs_path.display()
+        )
+    })?;
+
+    if !visited.insert(canonical) {
+        warn!(
+            "Skipping symlink cycle at {} — target was already archived",
+            fs_path.display()
+        );
+        return Ok(());
+    }
+
+    // Append the directory entry itself
+    tar.append_dir(archive_path, fs_path).with_context(|| {
+        format!(
+            "Failed to append directory to archive: {}",
+            fs_path.display()
+        )
+    })?;
+
+    // Recurse into children
+    for entry in fs::read_dir(fs_path)
+        .with_context(|| format!("Failed to read directory: {}", fs_path.display()))?
+    {
+        let entry = entry?;
+        let child_fs = entry.path();
+        let child_archive = archive_path.join(entry.file_name());
+
+        // Use fs::metadata (follows symlinks) to get the resolved type
+        let metadata = fs::metadata(&child_fs)
+            .with_context(|| format!("Failed to read metadata for {}", child_fs.display()))?;
+
+        if metadata.is_dir() {
+            append_dir_recursive(tar, &child_archive, &child_fs, visited)?;
+        } else {
+            let mut f = File::open(&child_fs).with_context(|| {
+                format!("Failed to open file for packing: {}", child_fs.display())
+            })?;
+            tar.append_file(&child_archive, &mut f).with_context(|| {
+                format!("Failed to append file to archive: {}", child_fs.display())
+            })?;
+        }
+    }
+
     Ok(())
 }
