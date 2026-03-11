@@ -183,6 +183,9 @@ pub struct OnboardingField {
     /// Optional default value.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub default: Option<String>,
+    /// Placeholder hint text shown when the input is empty (e.g. `"sk-..."`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub placeholder: Option<String>,
 }
 
 /// The type of input expected for an onboarding field.
@@ -330,6 +333,7 @@ mod tests {
             description: Some("Nostr relay endpoints".into()),
             field_type: OnboardingFieldType::Array,
             default: None,
+            placeholder: None,
         };
         let json = serde_json::to_string(&field).unwrap();
         let parsed: OnboardingField = serde_json::from_str(&json).unwrap();
@@ -347,6 +351,7 @@ mod tests {
                     description: None,
                     field_type: OnboardingFieldType::Secret,
                     default: None,
+                    placeholder: None,
                 },
                 OnboardingField {
                     key: "relays".into(),
@@ -354,6 +359,7 @@ mod tests {
                     description: None,
                     field_type: OnboardingFieldType::Array,
                     default: None,
+                    placeholder: None,
                 },
             ],
         };
@@ -395,6 +401,7 @@ mod tests {
             description: Some("The wallet address".into()),
             field_type: OnboardingFieldType::Text,
             default: None,
+            placeholder: None,
         };
         let json = serde_json::to_string(&field).unwrap();
         let parsed: OnboardingField = serde_json::from_str(&json).unwrap();
@@ -413,6 +420,7 @@ mod tests {
                 "dev".into(),
             ]),
             default: Some("testnet".into()),
+            placeholder: None,
         };
         let json = serde_json::to_string(&field).unwrap();
         let parsed: OnboardingField = serde_json::from_str(&json).unwrap();
@@ -428,6 +436,7 @@ mod tests {
             description: None,
             field_type: OnboardingFieldType::Secret,
             default: None,
+            placeholder: None,
         };
         let json = serde_json::to_string(&field).unwrap();
         let parsed: OnboardingField = serde_json::from_str(&json).unwrap();
@@ -445,6 +454,7 @@ mod tests {
                     description: Some("Choose the target network".into()),
                     field_type: OnboardingFieldType::Enum(vec!["testnet".into(), "mainnet".into()]),
                     default: Some("testnet".into()),
+                    placeholder: None,
                 },
                 OnboardingField {
                     key: "apiKey".into(),
@@ -452,6 +462,7 @@ mod tests {
                     description: None,
                     field_type: OnboardingFieldType::Secret,
                     default: None,
+                    placeholder: None,
                 },
             ],
         };
@@ -468,6 +479,7 @@ mod tests {
             description: None,
             field_type: OnboardingFieldType::Enum(vec![]),
             default: None,
+            placeholder: None,
         };
         let json = serde_json::to_string(&field).unwrap();
         let parsed: OnboardingField = serde_json::from_str(&json).unwrap();
