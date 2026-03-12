@@ -7,7 +7,8 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use tokio::sync::{mpsc, watch};
+use tokio::sync::{Semaphore, mpsc, watch};
+use tokio_util::sync::CancellationToken;
 
 use crate::capsule::CapsuleId;
 use astrid_core::uplink::{InboundMessage, MAX_UPLINKS_PER_CAPSULE, UplinkDescriptor};
@@ -115,6 +116,17 @@ pub struct HostState {
     /// on this channel. The kernel waits on the corresponding receiver before
     /// loading dependent capsules.
     pub ready_tx: Option<watch::Sender<bool>>,
+    /// Bounded concurrency semaphore for host function blocking calls.
+    ///
+    /// Limits the number of concurrent `block_in_place` / `block_on` operations
+    /// across all capsules to prevent tokio thread-pool exhaustion.
+    /// Created via [`default_host_semaphore`].
+    pub host_semaphore: Arc<Semaphore>,
+    /// Cooperative cancellation token for long-running host function calls.
+    ///
+    /// Triggered during capsule unload to unblock `ipc_recv`, `elicit`, and
+    /// `net_accept`/`net_read` host functions that may be waiting on I/O.
+    pub cancel_token: CancellationToken,
 }
 
 impl HostState {
@@ -147,6 +159,19 @@ impl HostState {
         &self.registered_uplinks
     }
 
+    /// Create the default host semaphore for bounding concurrent blocking calls.
+    ///
+    /// Reserves 2 threads for the tokio scheduler and event dispatch, with a
+    /// minimum of 2 permits so capsules can always make progress.
+    #[must_use]
+    pub fn default_host_semaphore() -> Arc<Semaphore> {
+        Arc::new(Semaphore::new(
+            std::thread::available_parallelism()
+                .map(|n| n.get().saturating_sub(2).max(2))
+                .unwrap_or(2),
+        ))
+    }
+
     /// Set the inbound message sender.
     pub fn set_inbound_tx(&mut self, tx: mpsc::Sender<InboundMessage>) {
         self.inbound_tx = Some(tx);
@@ -164,6 +189,11 @@ impl std::fmt::Debug for HostState {
             .field("has_uplink_capability", &self.has_uplink_capability)
             .field("has_inbound_tx", &self.inbound_tx.is_some())
             .field("registered_uplinks", &self.registered_uplinks.len())
+            .field(
+                "host_semaphore_permits",
+                &self.host_semaphore.available_permits(),
+            )
+            .field("cancel_token_cancelled", &self.cancel_token.is_cancelled())
             .finish_non_exhaustive()
     }
 }
@@ -215,6 +245,8 @@ mod tests {
             lifecycle_phase: None,
             secret_store: secret_store.clone(),
             ready_tx: None,
+            host_semaphore: Arc::new(Semaphore::new(2)),
+            cancel_token: CancellationToken::new(),
         };
 
         let debug = format!("{state:?}");
@@ -270,6 +302,8 @@ mod tests {
             lifecycle_phase: None,
             secret_store: secret_store.clone(),
             ready_tx: None,
+            host_semaphore: Arc::new(Semaphore::new(2)),
+            cancel_token: CancellationToken::new(),
         };
 
         assert!(state.uplinks().is_empty());
@@ -330,6 +364,8 @@ mod tests {
             lifecycle_phase: None,
             secret_store: secret_store.clone(),
             ready_tx: None,
+            host_semaphore: Arc::new(Semaphore::new(2)),
+            cancel_token: CancellationToken::new(),
         };
 
         assert!(state.inbound_tx.is_none());
@@ -386,6 +422,8 @@ mod tests {
             lifecycle_phase: None,
             secret_store: secret_store.clone(),
             ready_tx: None,
+            host_semaphore: Arc::new(Semaphore::new(2)),
+            cancel_token: CancellationToken::new(),
         };
 
         for i in 0..MAX_UPLINKS_PER_CAPSULE {
@@ -458,6 +496,8 @@ mod tests {
             lifecycle_phase: None,
             secret_store: secret_store.clone(),
             ready_tx: None,
+            host_semaphore: Arc::new(Semaphore::new(2)),
+            cancel_token: CancellationToken::new(),
         };
 
         let desc1 = UplinkDescriptor::builder("my-conn", "discord")

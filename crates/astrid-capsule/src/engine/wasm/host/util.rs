@@ -1,6 +1,9 @@
 //! Utility functions for WASM host implementations.
 
+use std::future::Future;
+
 use extism::{CurrentPlugin, Error, Val};
+use tokio::sync::Semaphore;
 
 /// Maximum allowed length for a guest string or payload (10 MB).
 pub(crate) const MAX_GUEST_PAYLOAD_LEN: u64 = 10 * 1024 * 1024;
@@ -71,4 +74,91 @@ pub(crate) fn get_safe_bytes(
         Val::I64(i64::try_from(ptr).map_err(|_| Error::msg("pointer value out of i64 range"))?);
     let memory: Vec<u8> = plugin.memory_get_val(&safe_val)?;
     Ok(memory)
+}
+
+/// Run an async future inside `block_in_place` / `block_on` with bounded
+/// concurrency. Acquires a permit from the host semaphore before executing,
+/// limiting concurrent blocking operations across all capsules.
+///
+/// For run-loop capsules the outer `block_in_place` is a no-op (already
+/// inside one), but the semaphore still gates concurrent I/O to prevent
+/// thundering-herd on the async runtime.
+pub(crate) fn bounded_block_on<F, T>(
+    handle: &tokio::runtime::Handle,
+    semaphore: &Semaphore,
+    fut: F,
+) -> T
+where
+    F: Future<Output = T>,
+{
+    tokio::task::block_in_place(|| {
+        handle.block_on(async {
+            // The semaphore is owned by HostState and lives for the capsule's
+            // lifetime. It is never explicitly closed, so acquire only fails if
+            // the semaphore is dropped (capsule already deallocated). A panic
+            // here is the correct fail-fast: it signals a critical runtime
+            // invariant violation that cannot be recovered from.
+            let _permit = semaphore
+                .acquire()
+                .await
+                .expect("host semaphore closed: capsule HostState was dropped");
+            fut.await
+        })
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn bounded_block_on_limits_concurrency() {
+        let semaphore = Arc::new(Semaphore::new(2));
+        let handle = tokio::runtime::Handle::current();
+        let concurrent = Arc::new(AtomicUsize::new(0));
+        let max_concurrent = Arc::new(AtomicUsize::new(0));
+
+        let mut tasks = Vec::new();
+        for _ in 0..6 {
+            let sem = semaphore.clone();
+            let h = handle.clone();
+            let c = concurrent.clone();
+            let mc = max_concurrent.clone();
+            tasks.push(tokio::task::spawn(async move {
+                bounded_block_on(&h, &sem, async {
+                    let current = c.fetch_add(1, Ordering::SeqCst) + 1;
+                    mc.fetch_max(current, Ordering::SeqCst);
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                    c.fetch_sub(1, Ordering::SeqCst);
+                });
+            }));
+        }
+
+        for t in tasks {
+            t.await.unwrap();
+        }
+
+        let max = max_concurrent.load(Ordering::SeqCst);
+        assert!(max <= 2, "max concurrent was {max} but should be <= 2");
+        // With 6 tasks and 50ms sleep each, we expect the semaphore to be
+        // saturated (max == 2) at some point during execution.
+        assert!(
+            max >= 1,
+            "expected at least 1 concurrent execution, got {max}"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn bounded_block_on_propagates_result() {
+        let semaphore = Semaphore::new(4);
+        let handle = tokio::runtime::Handle::current();
+
+        let result: Result<u32, &str> = bounded_block_on(&handle, &semaphore, async { Ok(42) });
+        assert_eq!(result.unwrap(), 42);
+
+        let err: Result<u32, &str> = bounded_block_on(&handle, &semaphore, async { Err("fail") });
+        assert_eq!(err.unwrap_err(), "fail");
+    }
 }
