@@ -1,5 +1,7 @@
 /// Cron scheduling.
 pub(crate) mod cron;
+/// Elicit lifecycle API (install/upgrade user input collection).
+pub(crate) mod elicit;
 /// File system operations for plugins.
 pub(crate) mod fs;
 /// HTTP network executions for plugins.
@@ -55,10 +57,12 @@ pub(crate) enum WasmHostFunction {
     CronSchedule,
     CronCancel,
     SpawnHost,
+    Elicit,
+    HasSecret,
 }
 
 impl WasmHostFunction {
-    pub(crate) const ALL: [Self; 29] = [
+    pub(crate) const ALL: [Self; 31] = [
         Self::FsExists,
         Self::FsMkdir,
         Self::FsReaddir,
@@ -88,6 +92,8 @@ impl WasmHostFunction {
         Self::NetAccept,
         Self::NetRead,
         Self::NetWrite,
+        Self::Elicit,
+        Self::HasSecret,
     ];
 
     #[must_use]
@@ -127,6 +133,8 @@ impl WasmHostFunction {
             Self::CronSchedule => "astrid_cron_schedule",
             Self::CronCancel => "astrid_cron_cancel",
             Self::SpawnHost => "astrid_spawn_host",
+            Self::Elicit => "astrid_elicit",
+            Self::HasSecret => "astrid_has_secret",
         }
     }
 
@@ -151,7 +159,9 @@ impl WasmHostFunction {
             | Self::NetBindUnix
             | Self::NetAccept
             | Self::NetRead
-            | Self::TriggerHook => 1,
+            | Self::TriggerHook
+            | Self::Elicit
+            | Self::HasSecret => 1,
             Self::WriteFile
             | Self::IpcPublish
             | Self::IpcRecv
@@ -195,7 +205,9 @@ impl WasmHostFunction {
             | Self::TriggerHook
             | Self::NetBindUnix
             | Self::NetAccept
-            | Self::NetRead => TYPE_I64,
+            | Self::NetRead
+            | Self::Elicit
+            | Self::HasSecret => TYPE_I64,
         }
     }
 }
@@ -310,6 +322,12 @@ pub fn register_host_functions(
             },
             WasmHostFunction::SpawnHost => {
                 builder.with_function(func.name(), args, rets, ud, process::astrid_spawn_host_impl)
+            },
+            WasmHostFunction::Elicit => {
+                builder.with_function(func.name(), args, rets, ud, elicit::astrid_elicit_impl)
+            },
+            WasmHostFunction::HasSecret => {
+                builder.with_function(func.name(), args, rets, ud, elicit::astrid_has_secret_impl)
             },
         };
     }
