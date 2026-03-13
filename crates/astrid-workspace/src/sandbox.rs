@@ -3,6 +3,38 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// Validate a path for safe interpolation into sandbox profiles (SBPL/bwrap).
+///
+/// Rejects relative paths, non-UTF-8, double-quote, backslash, and null byte -
+/// all of which can break or bypass sandbox profile syntax.
+fn validate_sandbox_str<'a>(path: &'a Path, label: &str) -> io::Result<&'a str> {
+    if !path.is_absolute() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!(
+                "sandbox {label} must be an absolute path, got: {}",
+                path.display()
+            ),
+        ));
+    }
+    let s = path.to_str().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("sandbox {label} is not valid UTF-8: {}", path.display()),
+        )
+    })?;
+    if s.contains(['"', '\\', '\0']) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!(
+                "sandbox {label} contains forbidden characters (double-quote, backslash, or null): {}",
+                path.display()
+            ),
+        ));
+    }
+    Ok(s)
+}
+
 /// Validates that a path is safe for interpolation into an SBPL profile string.
 ///
 /// Rejects:
@@ -14,8 +46,8 @@ use std::process::Command;
 /// # Errors
 ///
 /// Returns an error if the path is not valid UTF-8 or contains forbidden characters.
-#[cfg(any(target_os = "macos", test))]
-pub(crate) fn validate_sandbox_path(path: &Path) -> io::Result<()> {
+#[cfg(test)]
+fn validate_sandbox_path(path: &Path) -> io::Result<()> {
     let s = path.to_str().ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -51,15 +83,23 @@ impl SandboxCommand {
     ///
     /// # Errors
     ///
-    /// Returns an error if the worktree path is not valid UTF-8 or contains
-    /// characters unsafe for SBPL interpolation (double-quote, backslash, or null byte).
+    /// Returns an error if the worktree path is not absolute, not valid UTF-8,
+    /// or contains characters unsafe for SBPL interpolation (double-quote,
+    /// backslash, or null byte).
     ///
     /// # Panics
     ///
-    /// Panics if `validate_sandbox_path` passes but the path is not valid UTF-8.
-    /// This is unreachable because `validate_sandbox_path` rejects non-UTF-8 paths.
+    /// Panics on macOS if `validate_sandbox_str` passes but the path is not
+    /// valid UTF-8. This is unreachable because the validation rejects
+    /// non-UTF-8 paths.
     #[expect(clippy::needless_pass_by_value)]
     pub fn wrap(inner_cmd: Command, worktree_path: &Path) -> io::Result<Command> {
+        // Validate on all platforms for defense in depth and API consistency.
+        // On macOS the validated string is needed for SBPL interpolation.
+        // On Linux bwrap passes paths as argv entries (no injection risk),
+        // but we still reject unsafe paths at the API boundary.
+        let _ = validate_sandbox_str(worktree_path, "worktree path")?;
+
         #[cfg(target_os = "linux")]
         {
             // Bubblewrap implementation - paths are passed as separate argv entries (no injection).
@@ -98,11 +138,10 @@ impl SandboxCommand {
 
         #[cfg(target_os = "macos")]
         {
-            // Validation needed because SBPL interpolates paths into a string format.
-            // Linux bwrap passes paths as separate argv entries (no injection risk there).
-            validate_sandbox_path(worktree_path)?;
-            // Safe: validate_sandbox_path confirmed valid UTF-8 above.
-            let worktree_str = worktree_path.to_str().expect("validated UTF-8");
+            // Safe: validate_sandbox_str above confirmed valid UTF-8.
+            let worktree_str = worktree_path
+                .to_str()
+                .expect("unreachable: validated UTF-8 above");
 
             // macOS Seatbelt implementation
             // Deny all writes except to the worktree and /tmp.
@@ -265,9 +304,16 @@ impl ProcessSandboxConfig {
     ///
     /// # Errors
     ///
-    /// Returns an error on macOS if any configured path contains characters
-    /// unsafe for SBPL interpolation (double-quote, backslash, or null byte).
+    /// Returns an error if any configured path is not valid UTF-8, not absolute,
+    /// or contains characters that would break sandbox profile syntax
+    /// (double-quote, backslash, or null byte).
     pub fn sandbox_prefix(&self) -> io::Result<Option<SandboxPrefix>> {
+        // Validate all configured paths up front, regardless of platform.
+        // This ensures the doc contract ("returns Err for non-UTF-8 or
+        // forbidden chars") holds on every OS, not just macOS where SBPL
+        // interpolation makes it exploitable.
+        self.validate_all_paths()?;
+
         #[cfg(target_os = "linux")]
         {
             Ok(Some(self.build_bwrap_prefix()))
@@ -275,7 +321,7 @@ impl ProcessSandboxConfig {
 
         #[cfg(target_os = "macos")]
         {
-            Ok(Some(self.build_seatbelt_prefix()?))
+            self.build_seatbelt_prefix().map(Some)
         }
 
         #[cfg(not(any(target_os = "linux", target_os = "macos")))]
@@ -286,6 +332,21 @@ impl ProcessSandboxConfig {
             );
             Ok(None)
         }
+    }
+
+    /// Validate all configured paths for safe use in sandbox profiles.
+    fn validate_all_paths(&self) -> io::Result<()> {
+        validate_sandbox_str(&self.writable_root, "writable root")?;
+        for p in &self.extra_read_paths {
+            validate_sandbox_str(p, "extra read path")?;
+        }
+        for p in &self.extra_write_paths {
+            validate_sandbox_str(p, "extra write path")?;
+        }
+        for p in &self.hidden_paths {
+            validate_sandbox_str(p, "hidden path")?;
+        }
+        Ok(())
     }
 
     #[cfg(target_os = "linux")]
@@ -349,20 +410,7 @@ impl ProcessSandboxConfig {
 
     #[cfg(target_os = "macos")]
     fn build_seatbelt_prefix(&self) -> io::Result<SandboxPrefix> {
-        // Validate all paths before interpolation into the SBPL profile.
-        validate_sandbox_path(&self.writable_root)?;
-        for path in &self.extra_read_paths {
-            validate_sandbox_path(path)?;
-        }
-        for path in &self.extra_write_paths {
-            validate_sandbox_path(path)?;
-        }
-        for path in &self.hidden_paths {
-            validate_sandbox_path(path)?;
-        }
-
-        // Safe: validate_sandbox_path confirmed valid UTF-8 for all paths above.
-        let writable_root_str = self.writable_root.to_str().expect("validated UTF-8");
+        let writable_root_str = validate_sandbox_str(&self.writable_root, "writable root")?;
 
         // Build the network rule conditionally
         let network_rule = if self.allow_network {
@@ -375,16 +423,21 @@ impl ProcessSandboxConfig {
         let extra_read_rules: String = self
             .extra_read_paths
             .iter()
-            .map(|p| format!("    (subpath \"{}\")", p.to_str().expect("validated UTF-8")))
-            .collect::<Vec<_>>()
+            .map(|p| {
+                validate_sandbox_str(p, "extra read path").map(|s| format!("    (subpath \"{s}\")"))
+            })
+            .collect::<io::Result<Vec<_>>>()?
             .join("\n");
 
         // Build extra write path rules
         let extra_write_rules: String = self
             .extra_write_paths
             .iter()
-            .map(|p| format!("    (subpath \"{}\")", p.to_str().expect("validated UTF-8")))
-            .collect::<Vec<_>>()
+            .map(|p| {
+                validate_sandbox_str(p, "extra write path")
+                    .map(|s| format!("    (subpath \"{s}\")"))
+            })
+            .collect::<io::Result<Vec<_>>>()?
             .join("\n");
 
         // Build deny rules for hidden paths (e.g. ~/.astrid/)
@@ -392,13 +445,14 @@ impl ProcessSandboxConfig {
             .hidden_paths
             .iter()
             .map(|p| {
-                let s = p.to_str().expect("validated UTF-8");
-                format!(
-                    "(deny file-read* (subpath \"{s}\"))\n\
-                     (deny file-write* (subpath \"{s}\"))"
-                )
+                validate_sandbox_str(p, "hidden path").map(|s| {
+                    format!(
+                        "(deny file-read* (subpath \"{s}\"))\n\
+                         (deny file-write* (subpath \"{s}\"))"
+                    )
+                })
             })
-            .collect::<Vec<_>>()
+            .collect::<io::Result<Vec<_>>>()?
             .join("\n");
 
         let profile = format!(
@@ -446,6 +500,8 @@ impl ProcessSandboxConfig {
 mod tests {
     use super::*;
     use std::path::PathBuf;
+
+    // --- validate_sandbox_path tests ---
 
     #[test]
     fn validate_sandbox_path_accepts_normal_path() {
@@ -507,29 +563,74 @@ mod tests {
         );
     }
 
-    #[cfg(target_os = "macos")]
+    // --- SandboxCommand::wrap() tests ---
+
     #[test]
-    fn wrap_rejects_path_with_backslash() {
+    fn test_wrap_rejects_non_utf8_path() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let bad_bytes: &[u8] = b"/tmp/\xff\xfe/workspace";
+        let bad_path = Path::new(OsStr::from_bytes(bad_bytes));
         let cmd = Command::new("echo");
-        let bad_path = PathBuf::from("/tmp/work\\nspace");
-        let err = SandboxCommand::wrap(cmd, &bad_path).unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+        let result = SandboxCommand::wrap(cmd, bad_path);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
         assert!(
-            err.to_string().contains("forbidden characters"),
-            "unexpected error message: {err}"
+            err_msg.contains("not valid UTF-8"),
+            "error should mention UTF-8: {err_msg}"
         );
     }
 
-    #[cfg(target_os = "macos")]
     #[test]
-    fn wrap_rejects_path_with_double_quote() {
+    fn test_wrap_rejects_double_quote_path() {
+        let bad_path = Path::new("/tmp/evil\"injection/workspace");
         let cmd = Command::new("echo");
-        let bad_path = PathBuf::from("/tmp/bad\"path");
-        let err = SandboxCommand::wrap(cmd, &bad_path).unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+        let result = SandboxCommand::wrap(cmd, bad_path);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
         assert!(
-            err.to_string().contains("forbidden characters"),
-            "unexpected error message: {err}"
+            err_msg.contains("forbidden characters"),
+            "error should mention forbidden chars: {err_msg}"
+        );
+    }
+
+    #[test]
+    fn test_wrap_rejects_null_byte_path() {
+        let bad_path = Path::new("/tmp/evil\0null/workspace");
+        let cmd = Command::new("echo");
+        let result = SandboxCommand::wrap(cmd, bad_path);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("forbidden characters"),
+            "error should mention forbidden chars: {err_msg}"
+        );
+    }
+
+    #[test]
+    fn test_wrap_rejects_backslash_path() {
+        let bad_path = Path::new("/tmp/work\\nspace");
+        let cmd = Command::new("echo");
+        let result = SandboxCommand::wrap(cmd, bad_path);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("forbidden characters"),
+            "error should mention forbidden chars: {err_msg}"
+        );
+    }
+
+    #[test]
+    fn test_wrap_rejects_relative_path() {
+        let bad_path = Path::new("relative/workspace");
+        let cmd = Command::new("echo");
+        let result = SandboxCommand::wrap(cmd, bad_path);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("absolute path"),
+            "error should mention absolute path: {err_msg}"
         );
     }
 
@@ -549,6 +650,8 @@ mod tests {
             "profile should contain the worktree path"
         );
     }
+
+    // --- ProcessSandboxConfig builder tests ---
 
     #[test]
     fn test_sandbox_config_builder() {
@@ -576,6 +679,8 @@ mod tests {
         assert!(config.extra_write_paths.is_empty());
         assert!(config.hidden_paths.is_empty());
     }
+
+    // --- Platform-specific prefix tests ---
 
     #[cfg(target_os = "linux")]
     #[test]
@@ -757,27 +862,100 @@ mod tests {
         );
     }
 
-    #[cfg(target_os = "macos")]
+    // --- Cross-platform sandbox_prefix() rejection tests ---
+    // These are NOT gated by platform - sandbox_prefix() validates on all
+    // platforms for API contract consistency.
+
     #[test]
-    fn test_seatbelt_prefix_rejects_unsafe_writable_root() {
-        let config = ProcessSandboxConfig::new("/project/evil\"path");
-        let err = config.build_seatbelt_prefix().unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+    fn test_sandbox_prefix_rejects_relative_writable_root() {
+        let config = ProcessSandboxConfig::new("relative/project");
+        assert!(config.sandbox_prefix().is_err());
     }
 
-    #[cfg(target_os = "macos")]
     #[test]
-    fn test_seatbelt_prefix_rejects_unsafe_extra_read() {
+    fn test_sandbox_prefix_rejects_non_utf8_writable_root() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let bad_bytes: &[u8] = b"/tmp/\xff\xfe/workspace";
+        let bad_path = PathBuf::from(OsStr::from_bytes(bad_bytes));
+        let config = ProcessSandboxConfig::new(bad_path);
+        let result = config.sandbox_prefix();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not valid UTF-8"));
+    }
+
+    #[test]
+    fn test_sandbox_prefix_rejects_non_utf8_extra_paths() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let bad_bytes: &[u8] = b"/data/\xff\xfe";
+        let bad_path = PathBuf::from(OsStr::from_bytes(bad_bytes));
+
+        // Non-UTF-8 in extra read path
+        let config = ProcessSandboxConfig::new("/project").with_extra_read(bad_path.clone());
+        assert!(config.sandbox_prefix().is_err());
+
+        // Non-UTF-8 in extra write path
+        let config = ProcessSandboxConfig::new("/project").with_extra_write(bad_path.clone());
+        assert!(config.sandbox_prefix().is_err());
+
+        // Non-UTF-8 in hidden path
+        let config = ProcessSandboxConfig::new("/project").with_hidden(bad_path);
+        assert!(config.sandbox_prefix().is_err());
+    }
+
+    #[test]
+    fn test_sandbox_prefix_rejects_double_quote_in_paths() {
+        // Double-quote in writable root
+        let config = ProcessSandboxConfig::new("/project/evil\"dir");
+        assert!(config.sandbox_prefix().is_err());
+
+        // Double-quote in extra read path
         let config = ProcessSandboxConfig::new("/project").with_extra_read("/data/evil\"path");
-        let err = config.build_seatbelt_prefix().unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+        assert!(config.sandbox_prefix().is_err());
+
+        // Double-quote in extra write path
+        let config = ProcessSandboxConfig::new("/project").with_extra_write("/output/evil\"path");
+        assert!(config.sandbox_prefix().is_err());
+
+        // Double-quote in hidden path
+        let config = ProcessSandboxConfig::new("/project").with_hidden("/hidden/evil\"path");
+        assert!(config.sandbox_prefix().is_err());
     }
 
-    #[cfg(target_os = "macos")]
     #[test]
-    fn test_seatbelt_prefix_rejects_unsafe_hidden_path() {
-        let config = ProcessSandboxConfig::new("/project").with_hidden("/home/evil\"path");
-        let err = config.build_seatbelt_prefix().unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+    fn test_sandbox_prefix_rejects_backslash_in_paths() {
+        // Backslash in writable root
+        let config = ProcessSandboxConfig::new("/project/evil\\dir");
+        assert!(config.sandbox_prefix().is_err());
+
+        // Backslash in extra read path
+        let config = ProcessSandboxConfig::new("/project").with_extra_read("/data/evil\\path");
+        assert!(config.sandbox_prefix().is_err());
+
+        // Backslash in extra write path
+        let config = ProcessSandboxConfig::new("/project").with_extra_write("/output/evil\\path");
+        assert!(config.sandbox_prefix().is_err());
+
+        // Backslash in hidden path
+        let config = ProcessSandboxConfig::new("/project").with_hidden("/hidden/evil\\path");
+        assert!(config.sandbox_prefix().is_err());
+    }
+
+    #[test]
+    fn test_sandbox_prefix_rejects_null_byte_in_paths() {
+        let config = ProcessSandboxConfig::new("/project/evil\0dir");
+        assert!(config.sandbox_prefix().is_err());
+
+        let config = ProcessSandboxConfig::new("/project").with_extra_read("/data/evil\0path");
+        assert!(config.sandbox_prefix().is_err());
+
+        let config = ProcessSandboxConfig::new("/project").with_extra_write("/output/evil\0path");
+        assert!(config.sandbox_prefix().is_err());
+
+        let config = ProcessSandboxConfig::new("/project").with_hidden("/hidden/evil\0path");
+        assert!(config.sandbox_prefix().is_err());
     }
 }

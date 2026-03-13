@@ -510,8 +510,9 @@ impl ServerManager {
 
     /// Validate a path for use in sandbox configuration.
     ///
-    /// Rejects relative paths and paths containing double-quote characters
-    /// (which would break macOS Seatbelt SBPL profile syntax).
+    /// Rejects relative paths, non-UTF-8 paths, and paths containing
+    /// double-quote or null characters (which would break or bypass macOS
+    /// Seatbelt SBPL profile syntax).
     fn validate_sandbox_path(path: &std::path::Path, field: &str) -> McpResult<()> {
         if !path.is_absolute() {
             return Err(McpError::ConfigError(format!(
@@ -519,9 +520,12 @@ impl ServerManager {
                 path.display()
             )));
         }
-        if path.to_string_lossy().contains('"') {
+        let s = path.to_str().ok_or_else(|| {
+            McpError::ConfigError(format!("{field} is not valid UTF-8: {}", path.display()))
+        })?;
+        if s.contains(['"', '\0']) {
             return Err(McpError::ConfigError(format!(
-                "{field} must not contain double-quote characters, got: {}",
+                "{field} contains forbidden characters (double-quote or null): {}",
                 path.display()
             )));
         }
@@ -1330,6 +1334,56 @@ mod tests {
         assert_eq!(
             manager.workspace_root,
             Some(std::path::PathBuf::from("/my/workspace"))
+        );
+    }
+
+    #[test]
+    fn test_validate_sandbox_path_rejects_non_utf8() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let bad_bytes: &[u8] = b"/tmp/\xff\xfe/workspace";
+        let bad_path = std::path::Path::new(OsStr::from_bytes(bad_bytes));
+        let result = ServerManager::validate_sandbox_path(bad_path, "test_field");
+        assert!(
+            matches!(result, Err(McpError::ConfigError(ref msg)) if msg.contains("not valid UTF-8")),
+            "non-UTF-8 path should be rejected, got: {result:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_sandbox_path_rejects_null_byte() {
+        let bad_path = std::path::Path::new("/tmp/evil\0path");
+        let result = ServerManager::validate_sandbox_path(bad_path, "test_field");
+        assert!(
+            matches!(result, Err(McpError::ConfigError(ref msg)) if msg.contains("forbidden characters")),
+            "path with null byte should be rejected, got: {result:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_sandbox_path_accepts_valid_utf8() {
+        let good_path = std::path::Path::new("/tmp/valid-workspace");
+        let result = ServerManager::validate_sandbox_path(good_path, "test_field");
+        assert!(result.is_ok(), "valid UTF-8 path should be accepted");
+    }
+
+    #[test]
+    fn test_build_sandboxed_command_rejects_non_utf8_workspace_root() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let bad_bytes: &[u8] = b"/tmp/\xff\xfe/workspace";
+        let bad_path = std::path::PathBuf::from(OsStr::from_bytes(bad_bytes));
+
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs).with_workspace_root(bad_path);
+
+        let config = ServerConfig::stdio("test", "echo");
+        let result = manager.build_sandboxed_command("test", "echo", &config);
+        assert!(
+            matches!(result, Err(McpError::ConfigError(_))),
+            "non-UTF-8 workspace root should be rejected through build_sandboxed_command, got: {result:?}"
         );
     }
 
