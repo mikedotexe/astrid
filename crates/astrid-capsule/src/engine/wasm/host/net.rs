@@ -290,7 +290,7 @@ pub(crate) fn astrid_net_write_impl(
     let data = util::get_safe_bytes(plugin, &inputs[1], 10 * 1024 * 1024)?;
 
     let ud = user_data.get()?;
-    let (stream_arc, rt_handle, host_semaphore) = {
+    let (stream_arc, rt_handle, host_semaphore, cancel_token) = {
         let state = ud
             .lock()
             .map_err(|e| Error::msg(format!("host state lock poisoned: {e}")))?;
@@ -303,20 +303,30 @@ pub(crate) fn astrid_net_write_impl(
             stream,
             state.runtime_handle.clone(),
             state.host_semaphore.clone(),
+            state.cancel_token.clone(),
         )
     };
 
     use tokio::io::AsyncWriteExt;
-    util::bounded_block_on(&rt_handle, &host_semaphore, async {
-        let mut stream = stream_arc.lock().await;
-        // In the CLI architecture, we expect length-prefixed writes back to the client as well
-        let len = u32::try_from(data.len())
-            .map_err(|_| std::io::Error::other("write payload too large for length prefix"))?;
-        stream.write_all(&len.to_be_bytes()).await?;
-        stream.write_all(&data).await?;
-        stream.flush().await?;
-        Ok::<(), std::io::Error>(())
-    })?;
+    // Cancel safety: write_all is not cancel-safe, so cancellation mid-write
+    // may leave a partial frame on the socket. This is acceptable because the
+    // capsule is unloading - the socket will be closed by Drop on
+    // active_streams and the client will see a hard EOF / connection reset.
+    let result =
+        util::bounded_block_on_cancellable(&rt_handle, &host_semaphore, &cancel_token, async {
+            let mut stream = stream_arc.lock().await;
+            // In the CLI architecture, we expect length-prefixed writes back to the client as well
+            let len = u32::try_from(data.len())
+                .map_err(|_| std::io::Error::other("write payload too large for length prefix"))?;
+            stream.write_all(&len.to_be_bytes()).await?;
+            stream.write_all(&data).await?;
+            stream.flush().await?;
+            Ok::<(), std::io::Error>(())
+        });
+    match result {
+        Some(inner) => inner?,
+        None => return Err(Error::msg("capsule unloading")),
+    }
 
     Ok(())
 }
