@@ -50,6 +50,16 @@ action = "handle_watchdog_tick"
 event = "astrid.v1.event_bus.lagged"
 action = "handle_bus_lag"
 
+# Lifecycle restart signal from the kernel (ephemeral key cleanup)
+[[interceptor]]
+event = "system.v1.lifecycle.restart"
+action = "handle_lifecycle_restart"
+
+# Session clear request from frontends
+[[interceptor]]
+event = "session.v1.clear"
+action = "handle_session_clear"
+
 [dependencies]
 requires = [
     "topic:identity.v1.response.ready",
@@ -62,7 +72,9 @@ ipc_publish = [
     "prompt_builder.v1.assemble",
     "agent.v1.stream.delta",
     "agent.v1.response",
+    "agent.v1.session_changed",
     "tool.v1.request.execute",
     "llm.v1.request.generate.*",
     "session.v1.request.get_messages",
+    "session.v1.request.clear",
 ]
