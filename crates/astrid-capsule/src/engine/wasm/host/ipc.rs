@@ -63,6 +63,32 @@ pub(crate) fn serialize_envelope(result: &DrainResult) -> Result<String, Error> 
         .map_err(|e| Error::msg(format!("failed to serialize IPC messages: {e}")))
 }
 
+/// Remove a subscription by handle ID, rejecting runtime-owned interceptor handles.
+///
+/// Returns `Err` if the handle is protected (auto-subscribed interceptor) or
+/// if the handle ID is not found in `subscriptions`.
+pub(crate) fn remove_subscription(
+    subscriptions: &mut std::collections::HashMap<u64, EventReceiver>,
+    is_protected: bool,
+    handle_id: u64,
+) -> Result<(), Error> {
+    if is_protected {
+        tracing::warn!(
+            handle_id,
+            "Guest attempted to unsubscribe a runtime-owned interceptor handle",
+        );
+        return Err(Error::msg(
+            "Cannot unsubscribe a runtime-owned interceptor handle",
+        ));
+    }
+
+    if subscriptions.remove(&handle_id).is_none() {
+        return Err(Error::msg("Subscription handle not found"));
+    }
+
+    Ok(())
+}
+
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn astrid_ipc_publish_impl(
     plugin: &mut CurrentPlugin,
@@ -709,6 +735,69 @@ mod tests {
             "should unblock promptly, took {elapsed:?}"
         );
     }
+
+    #[test]
+    fn protected_interceptor_handle_rejects_unsubscribe() {
+        // Simulate post-auto-subscribe state: handle 1 is in subscriptions
+        // and flagged as protected (runtime-owned interceptor).
+        let bus = EventBus::new();
+        let receiver = bus.subscribe_topic("interceptor.topic");
+
+        let mut subscriptions = std::collections::HashMap::new();
+        let handle_id: u64 = 1;
+        subscriptions.insert(handle_id, receiver);
+
+        // The production function must reject protected handles.
+        let result = remove_subscription(&mut subscriptions, true, handle_id);
+        assert!(
+            result.is_err(),
+            "should reject unsubscribe on protected handle",
+        );
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("runtime-owned interceptor handle"),
+            "error should mention interceptor handle",
+        );
+
+        // Subscription must still exist.
+        assert!(
+            subscriptions.contains_key(&handle_id),
+            "protected subscription must survive unsubscribe attempt",
+        );
+    }
+
+    #[test]
+    fn guest_handle_allows_unsubscribe() {
+        // Guest-created handle (not protected) can be removed.
+        let bus = EventBus::new();
+        let receiver = bus.subscribe_topic("guest.topic");
+
+        let mut subscriptions = std::collections::HashMap::new();
+        let handle_id: u64 = 99;
+        subscriptions.insert(handle_id, receiver);
+
+        // The production function must allow unprotected handles.
+        let result = remove_subscription(&mut subscriptions, false, handle_id);
+        assert!(result.is_ok(), "should allow unsubscribe on guest handle");
+        assert!(
+            !subscriptions.contains_key(&handle_id),
+            "subscription should be gone after removal",
+        );
+    }
+
+    #[test]
+    fn unsubscribe_nonexistent_handle_returns_not_found() {
+        let mut subscriptions = std::collections::HashMap::new();
+
+        let result = remove_subscription(&mut subscriptions, false, 42);
+        assert!(result.is_err(), "should reject nonexistent handle");
+        assert!(
+            result.unwrap_err().to_string().contains("not found"),
+            "error should mention not found",
+        );
+    }
 }
 
 /// Return the pre-registered interceptor handle mappings for run-loop capsules.
@@ -764,9 +853,9 @@ pub(crate) fn astrid_ipc_unsubscribe_impl(
         .lock()
         .map_err(|e| Error::msg(format!("host state lock poisoned: {e}")))?;
 
-    if state.subscriptions.remove(&handle_id).is_none() {
-        return Err(Error::msg("Subscription handle not found"));
-    }
-
-    Ok(())
+    let is_protected = state
+        .interceptor_handles
+        .iter()
+        .any(|h| h.handle_id == handle_id);
+    remove_subscription(&mut state.subscriptions, is_protected, handle_id)
 }
