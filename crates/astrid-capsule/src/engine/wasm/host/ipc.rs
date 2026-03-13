@@ -334,7 +334,7 @@ pub(crate) fn astrid_ipc_recv_impl(
 
     // Temporarily remove the receiver from the map so we can drop the lock
     // before blocking. WASM is single-threaded so no concurrent access is possible.
-    let (mut receiver, runtime_handle, cancel_token) = {
+    let (mut receiver, runtime_handle, cancel_token, host_semaphore) = {
         let mut state = ud
             .lock()
             .map_err(|e| Error::msg(format!("host state lock poisoned: {e}")))?;
@@ -344,21 +344,33 @@ pub(crate) fn astrid_ipc_recv_impl(
             .ok_or_else(|| Error::msg("Subscription handle not found"))?;
         let runtime_handle = state.runtime_handle.clone();
         let cancel_token = state.cancel_token.clone();
-        (receiver, runtime_handle, cancel_token)
+        let host_semaphore = state.host_semaphore.clone();
+        (receiver, runtime_handle, cancel_token, host_semaphore)
     };
 
     // Block the WASM thread until a message arrives, timeout expires, or the
-    // capsule is unloaded (cancellation). The WASM engine runs inside
-    // block_in_place, so blocking here is safe.
-    let event = runtime_handle.block_on(async {
-        tokio::select! {
-            result = tokio::time::timeout(
+    // capsule is unloaded (cancellation). Routed through the host semaphore to
+    // bound concurrent blocking operations across all capsules.
+    //
+    // Note: the helper uses a biased select that strictly prioritises
+    // cancellation over completion. If a message arrives in the same poll
+    // tick as cancellation, the message is discarded. This is acceptable
+    // during teardown and prevents delayed shutdown under high throughput.
+    let event = util::bounded_block_on_cancellable(
+        &runtime_handle,
+        &host_semaphore,
+        &cancel_token,
+        async {
+            tokio::time::timeout(
                 std::time::Duration::from_millis(timeout_ms),
                 receiver.recv(),
-            ) => result.ok().flatten(),
-            () = cancel_token.cancelled() => None,
-        }
-    });
+            )
+            .await
+            .ok()
+            .flatten()
+        },
+    )
+    .flatten();
 
     // Collect the blocking-wake message (if any) plus drain remaining.
     let mut drain = drain_receiver(&mut receiver, util::MAX_GUEST_PAYLOAD_LEN as usize);
@@ -370,8 +382,10 @@ pub(crate) fn astrid_ipc_recv_impl(
         drain.messages.insert(0, message.clone());
     }
 
-    // Re-insert the receiver after draining
-    {
+    // Re-insert the receiver after draining. During teardown (cancel token
+    // fired), skip re-insertion: the capsule is dying and the lock may be
+    // poisoned from concurrent cleanup, which would surface a misleading error.
+    if !cancel_token.is_cancelled() {
         let mut state = ud
             .lock()
             .map_err(|e| Error::msg(format!("host state lock poisoned: {e}")))?;
