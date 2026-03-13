@@ -3,6 +3,7 @@
 //! Handles starting, stopping, and managing MCP server processes.
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::RwLock;
@@ -71,6 +72,40 @@ impl RunningServer {
     }
 }
 
+/// Build a `tokio::process::Command` for a trusted (unsandboxed) server.
+fn build_unsandboxed_command(
+    name: &str,
+    command: &str,
+    config: &ServerConfig,
+) -> tokio::process::Command {
+    let mut cmd = tokio::process::Command::new(command);
+    cmd.args(&config.args);
+
+    for (key, value) in &config.env {
+        if astrid_core::env_policy::is_blocked_spawn_env(key) {
+            warn!(
+                server = %name,
+                key = %key,
+                "Ignoring blocked env var from server config"
+            );
+            continue;
+        }
+        cmd.env(key, value);
+    }
+
+    // Prevent leaking runtime-internal vars to child processes.
+    cmd.env_remove("ASTRID_SOCKET_PATH");
+    cmd.env_remove("ASTRID_SESSION_TOKEN");
+    cmd.env_remove("ASTRID_HOME");
+
+    if let Some(cwd) = &config.cwd {
+        cmd.current_dir(cwd);
+    }
+
+    info!(server = name, "Spawning trusted (unsandboxed) MCP server");
+    cmd
+}
+
 /// Manages MCP server lifecycles.
 pub struct ServerManager {
     /// Server configurations.
@@ -79,6 +114,10 @@ pub struct ServerManager {
     running: Arc<RwLock<HashMap<String, RunningServer>>>,
     /// Timeout for graceful `close_with_timeout` during shutdown.
     shutdown_timeout: std::time::Duration,
+    /// Workspace root for sandbox writable directory.
+    ///
+    /// When `None`, sandboxing falls back to `config.cwd` or a temp directory.
+    workspace_root: Option<PathBuf>,
 }
 
 impl ServerManager {
@@ -90,7 +129,19 @@ impl ServerManager {
             configs,
             running: Arc::new(RwLock::new(HashMap::new())),
             shutdown_timeout,
+            workspace_root: None,
         }
+    }
+
+    /// Set the workspace root directory for sandbox writable access.
+    ///
+    /// When sandboxing is active (`trusted: false`), the sandboxed process
+    /// will have write access to this directory. If not set, falls back
+    /// to the server's `cwd` or a system temp directory.
+    #[must_use]
+    pub fn with_workspace_root(mut self, root: PathBuf) -> Self {
+        self.workspace_root = Some(root);
+        self
     }
 
     /// Create from default configuration.
@@ -253,34 +304,11 @@ impl ServerManager {
             McpError::ConfigError(format!("No command specified for stdio server {name}"))
         })?;
 
-        // Build the tokio::process::Command
-        let mut cmd = tokio::process::Command::new(command);
-        cmd.args(&config.args);
-
-        for (key, value) in &config.env {
-            if astrid_core::env_policy::is_blocked_spawn_env(key) {
-                warn!(
-                    server = %name,
-                    key = %key,
-                    "Ignoring blocked env var from server config"
-                );
-                continue;
-            }
-            cmd.env(key, value);
-        }
-
-        // Strip socket-related env vars from inherited environment.
-        // The env_policy blocklist prevents config-injected vars, but these
-        // could still be inherited from the parent process. With token auth
-        // (D1), this is belt-and-suspenders - even if the MCP server knows
-        // the socket path, it cannot authenticate without the token.
-        cmd.env_remove("ASTRID_SOCKET_PATH");
-        cmd.env_remove("ASTRID_SESSION_TOKEN");
-        cmd.env_remove("ASTRID_HOME");
-
-        if let Some(cwd) = &config.cwd {
-            cmd.current_dir(cwd);
-        }
+        let cmd = if config.trusted {
+            build_unsandboxed_command(name, command, config)
+        } else {
+            self.build_sandboxed_command(name, command, config)?
+        };
 
         // Create transport (spawns the child process)
         let transport = TokioChildProcess::new(cmd).map_err(|e| McpError::ServerStartFailed {
@@ -327,6 +355,177 @@ impl ServerManager {
         }
 
         Ok(())
+    }
+
+    /// Build a sandboxed `tokio::process::Command` for an untrusted server.
+    ///
+    /// Applies OS-level sandboxing (bwrap on Linux, sandbox-exec on macOS),
+    /// scrubs inherited environment variables, and hides `~/.astrid/`.
+    fn build_sandboxed_command(
+        &self,
+        name: &str,
+        command: &str,
+        config: &ServerConfig,
+    ) -> McpResult<tokio::process::Command> {
+        use astrid_workspace::ProcessSandboxConfig;
+
+        // config.cwd doubles as both the sandbox writable root and the process CWD.
+        // When set, the sandboxed process can write to its own working directory.
+        // Fallback order: config.cwd > workspace_root > temp_dir/astrid-mcp/<name>
+        let writable_root = config
+            .cwd
+            .as_ref()
+            .or(self.workspace_root.as_ref())
+            .cloned()
+            .unwrap_or_else(|| std::env::temp_dir().join("astrid-mcp").join(name));
+
+        // Validate writable_root and astrid_home against double-quote injection
+        // (paths are interpolated into macOS Seatbelt SBPL profiles).
+        Self::validate_sandbox_path(&writable_root, "writable_root (cwd)")?;
+
+        // Ensure the writable root exists before bwrap tries to bind-mount it.
+        std::fs::create_dir_all(&writable_root).map_err(|e| McpError::ServerStartFailed {
+            name: name.to_string(),
+            reason: format!(
+                "Failed to create writable root {}: {e}",
+                writable_root.display()
+            ),
+        })?;
+
+        // Resolve ~/.astrid/ path - this is mandatory for untrusted servers.
+        let astrid_home = Self::resolve_astrid_home()?;
+        Self::validate_sandbox_path(&astrid_home, "astrid_home")?;
+
+        // Build sandbox config
+        let mut sandbox_config = ProcessSandboxConfig::new(&writable_root)
+            .with_network(config.allow_network)
+            .with_hidden(astrid_home);
+
+        // Add config-specified extra paths. Validated for:
+        // 1. Absolute (avoid ambiguity about which directory they resolve relative to)
+        // 2. No double-quotes (prevent SBPL profile injection on macOS)
+        for path in &config.allowed_read_paths {
+            Self::validate_sandbox_path(path, "allowed_read_paths")?;
+            sandbox_config = sandbox_config.with_extra_read(path);
+        }
+        for path in &config.allowed_write_paths {
+            Self::validate_sandbox_path(path, "allowed_write_paths")?;
+            sandbox_config = sandbox_config.with_extra_write(path);
+        }
+
+        // Add common package manager cache dirs as read-only so npm/cargo
+        // don't re-download on every server start. Validate each path for
+        // consistency (skip silently on failure - these are optional).
+        if let Ok(home) = std::env::var("HOME") {
+            for cache_dir in &[".npm", ".nvm", ".cargo", ".rustup"] {
+                let cache_path = std::path::PathBuf::from(&home).join(cache_dir);
+                if cache_path.exists()
+                    && Self::validate_sandbox_path(&cache_path, "package manager cache").is_ok()
+                {
+                    sandbox_config = sandbox_config.with_extra_read(cache_path);
+                }
+            }
+        }
+
+        // Get sandbox prefix (bwrap/sandbox-exec args)
+        let sandbox_prefix = sandbox_config.sandbox_prefix();
+
+        // Build the command
+        let mut cmd = if let Some(prefix) = sandbox_prefix {
+            let mut cmd = tokio::process::Command::new(&prefix.program);
+            for arg in &prefix.args {
+                cmd.arg(arg);
+            }
+            cmd.arg(command);
+            cmd.args(&config.args);
+            cmd
+        } else {
+            warn!(
+                server = name,
+                "Sandboxing not available on this platform; \
+                 untrusted MCP server will run without OS-level isolation"
+            );
+            let mut cmd = tokio::process::Command::new(command);
+            cmd.args(&config.args);
+            cmd
+        };
+
+        // Environment scrubbing: clear inherited env, re-add safe vars.
+        cmd.env_clear();
+
+        // Use a fixed PATH so the parent process can't influence binary
+        // resolution inside the sandbox. HOME/USER/SHELL/TERM/LANG are
+        // identity/locale vars that are safe to forward from the parent.
+        cmd.env("PATH", "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin");
+        for var in &["HOME", "USER", "SHELL", "TERM", "LANG"] {
+            if let Ok(val) = std::env::var(var) {
+                cmd.env(var, val);
+            }
+        }
+
+        // Apply config env vars (filtered through blocklist)
+        for (key, value) in &config.env {
+            if astrid_core::env_policy::is_blocked_spawn_env(key) {
+                warn!(
+                    server = %name,
+                    key = %key,
+                    "Ignoring blocked env var from server config"
+                );
+                continue;
+            }
+            cmd.env(key, value);
+        }
+
+        // Always set CWD to the writable_root. If config.cwd was set, it was
+        // used as writable_root (highest priority). Otherwise, the fallback
+        // (workspace or temp dir) is used. This ensures the process CWD is
+        // always a directory that exists and is accessible inside the sandbox.
+        cmd.current_dir(&writable_root);
+
+        info!(
+            server = name,
+            writable_root = %writable_root.display(),
+            allow_network = config.allow_network,
+            "Spawning sandboxed MCP server"
+        );
+
+        Ok(cmd)
+    }
+
+    /// Validate a path for use in sandbox configuration.
+    ///
+    /// Rejects relative paths and paths containing double-quote characters
+    /// (which would break macOS Seatbelt SBPL profile syntax).
+    fn validate_sandbox_path(path: &std::path::Path, field: &str) -> McpResult<()> {
+        if !path.is_absolute() {
+            return Err(McpError::ConfigError(format!(
+                "{field} must be absolute, got: {}",
+                path.display()
+            )));
+        }
+        if path.to_string_lossy().contains('"') {
+            return Err(McpError::ConfigError(format!(
+                "{field} must not contain double-quote characters, got: {}",
+                path.display()
+            )));
+        }
+        Ok(())
+    }
+
+    /// Resolve the `~/.astrid/` directory path.
+    ///
+    /// This is mandatory for untrusted servers - if we can't determine
+    /// the path, we refuse to start the server rather than running it
+    /// with `~/.astrid/` exposed.
+    fn resolve_astrid_home() -> McpResult<std::path::PathBuf> {
+        astrid_core::dirs::AstridHome::resolve()
+            .map(|home| home.root().to_path_buf())
+            .map_err(|_| McpError::ServerStartFailed {
+                name: "sandbox".to_string(),
+                reason: "Cannot determine ~/.astrid/ path for sandbox hiding. \
+                         Set $HOME or $ASTRID_HOME, or mark the server as trusted."
+                    .to_string(),
+            })
     }
 
     /// Get a cloneable peer handle for a running server.
@@ -839,5 +1038,272 @@ mod tests {
         }
 
         assert!(!manager.should_restart("srv").await);
+    }
+
+    #[test]
+    fn test_build_unsandboxed_command() {
+        let config = ServerConfig::stdio("test", "echo")
+            .with_args(["hello"])
+            .with_env("FOO", "bar");
+
+        let cmd = build_unsandboxed_command("test", "echo", &config);
+
+        // Command program should be the original command
+        let program = cmd.as_std().get_program().to_string_lossy().to_string();
+        assert_eq!(program, "echo");
+    }
+
+    #[test]
+    fn test_build_sandboxed_command_adds_sandbox_prefix() {
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs)
+            .with_workspace_root(std::env::temp_dir().join("astrid-test-workspace"));
+
+        let config = ServerConfig::stdio("test", "echo").with_args(["hello"]);
+
+        let cmd = manager
+            .build_sandboxed_command("test", "echo", &config)
+            .expect("should build sandboxed command");
+
+        let program = cmd.as_std().get_program().to_string_lossy().to_string();
+
+        // On supported platforms, the program should be the sandbox wrapper
+        #[cfg(target_os = "linux")]
+        assert_eq!(program, "bwrap");
+        #[cfg(target_os = "macos")]
+        assert_eq!(program, "sandbox-exec");
+        // On unsupported platforms, falls through to original command
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        assert_eq!(program, "echo");
+    }
+
+    #[test]
+    fn test_trusted_server_bypasses_sandbox() {
+        let config = ServerConfig::stdio("test", "echo").trusted();
+
+        let cmd = build_unsandboxed_command("test", "echo", &config);
+
+        let program = cmd.as_std().get_program().to_string_lossy().to_string();
+        assert_eq!(
+            program, "echo",
+            "trusted server should run without sandbox wrapper"
+        );
+    }
+
+    #[test]
+    fn test_sandboxed_command_clears_env() {
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs)
+            .with_workspace_root(std::env::temp_dir().join("astrid-test-workspace"));
+
+        let config = ServerConfig::stdio("test", "echo").with_env("SAFE_VAR", "value");
+
+        let cmd = manager
+            .build_sandboxed_command("test", "echo", &config)
+            .expect("should build command");
+
+        let envs: Vec<_> = cmd
+            .as_std()
+            .get_envs()
+            .filter_map(|(k, v)| {
+                v.map(|v| {
+                    (
+                        k.to_string_lossy().to_string(),
+                        v.to_string_lossy().to_string(),
+                    )
+                })
+            })
+            .collect();
+
+        // Config env vars should be passed through
+        let has_safe_var = envs.iter().any(|(k, v)| k == "SAFE_VAR" && v == "value");
+        assert!(has_safe_var, "config env vars should be passed through");
+
+        // PATH should be the fixed value, not inherited from parent
+        let path_val = envs
+            .iter()
+            .find(|(k, _)| k == "PATH")
+            .map(|(_, v)| v.as_str());
+        assert_eq!(
+            path_val,
+            Some("/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"),
+            "PATH should be the fixed sandbox path, not inherited"
+        );
+
+        // Vars not in the safe list or config should not be present
+        let has_random_env = envs
+            .iter()
+            .any(|(k, _)| k == "CARGO_HOME" || k == "RUSTUP_HOME");
+        assert!(
+            !has_random_env,
+            "env_clear should have removed non-allowlisted vars"
+        );
+    }
+
+    #[test]
+    fn test_sandboxed_command_blocks_dangerous_env() {
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs)
+            .with_workspace_root(std::env::temp_dir().join("astrid-test-workspace"));
+
+        let config = ServerConfig::stdio("test", "echo")
+            .with_env("LD_PRELOAD", "/evil.so")
+            .with_env("SAFE_VAR", "ok");
+
+        let cmd = manager
+            .build_sandboxed_command("test", "echo", &config)
+            .expect("should build command");
+
+        let envs: Vec<_> = cmd
+            .as_std()
+            .get_envs()
+            .filter_map(|(k, v)| {
+                v.map(|v| {
+                    (
+                        k.to_string_lossy().to_string(),
+                        v.to_string_lossy().to_string(),
+                    )
+                })
+            })
+            .collect();
+
+        let has_ld_preload = envs.iter().any(|(k, _)| k == "LD_PRELOAD");
+        assert!(!has_ld_preload, "LD_PRELOAD should be blocked");
+
+        let has_safe = envs.iter().any(|(k, _)| k == "SAFE_VAR");
+        assert!(has_safe, "safe config env should pass through");
+    }
+
+    #[test]
+    fn test_writable_root_priority_cwd_first() {
+        let cwd_dir = std::env::temp_dir().join("astrid-test-cwd");
+        let ws_dir = std::env::temp_dir().join("astrid-test-ws");
+
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs).with_workspace_root(ws_dir.clone());
+
+        let mut config = ServerConfig::stdio("test", "echo");
+        config.cwd = Some(cwd_dir.clone());
+
+        let cmd = manager
+            .build_sandboxed_command("test", "echo", &config)
+            .expect("should build command");
+
+        let args: Vec<String> = cmd
+            .as_std()
+            .get_args()
+            .map(|a| a.to_string_lossy().to_string())
+            .collect();
+        let args_joined = args.join(" ");
+
+        let cwd_str = cwd_dir.to_string_lossy().to_string();
+        assert!(
+            args_joined.contains(&cwd_str),
+            "writable root should be {cwd_str} (config.cwd wins), got args: {args_joined}"
+        );
+    }
+
+    #[test]
+    fn test_writable_root_priority_workspace_second() {
+        let ws_dir = std::env::temp_dir().join("astrid-test-ws2");
+
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs).with_workspace_root(ws_dir.clone());
+
+        let config = ServerConfig::stdio("test", "echo");
+        // No cwd set, should fall back to workspace_root
+
+        let cmd = manager
+            .build_sandboxed_command("test", "echo", &config)
+            .expect("should build command");
+
+        let args: Vec<String> = cmd
+            .as_std()
+            .get_args()
+            .map(|a| a.to_string_lossy().to_string())
+            .collect();
+        let args_joined = args.join(" ");
+
+        let ws_str = ws_dir.to_string_lossy().to_string();
+        assert!(
+            args_joined.contains(&ws_str),
+            "writable root should be {ws_str} (workspace_root fallback), got args: {args_joined}"
+        );
+    }
+
+    #[test]
+    fn test_resolve_astrid_home_succeeds() {
+        // Should succeed as long as $HOME is set (which it is in test environments)
+        let result = ServerManager::resolve_astrid_home();
+        assert!(result.is_ok(), "should resolve astrid home from $HOME");
+
+        let path = result.expect("already checked");
+        assert!(
+            path.to_string_lossy().ends_with(".astrid"),
+            "path should end with .astrid, got: {}",
+            path.display()
+        );
+    }
+
+    #[test]
+    fn test_relative_allowed_paths_rejected() {
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs)
+            .with_workspace_root(std::env::temp_dir().join("astrid-test-workspace"));
+
+        let config = ServerConfig::stdio("test", "echo")
+            .with_read_path(std::path::PathBuf::from("relative/path"));
+
+        let result = manager.build_sandboxed_command("test", "echo", &config);
+        assert!(
+            matches!(result, Err(McpError::ConfigError(_))),
+            "relative allowed_read_paths should be rejected"
+        );
+
+        let config = ServerConfig::stdio("test", "echo")
+            .with_write_path(std::path::PathBuf::from("another/relative"));
+
+        let result = manager.build_sandboxed_command("test", "echo", &config);
+        assert!(
+            matches!(result, Err(McpError::ConfigError(_))),
+            "relative allowed_write_paths should be rejected"
+        );
+    }
+
+    #[test]
+    fn test_double_quote_in_paths_rejected() {
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs)
+            .with_workspace_root(std::env::temp_dir().join("astrid-test-workspace"));
+
+        let config = ServerConfig::stdio("test", "echo")
+            .with_read_path(std::path::PathBuf::from("/data/tricky\"path"));
+
+        let result = manager.build_sandboxed_command("test", "echo", &config);
+        assert!(
+            matches!(result, Err(McpError::ConfigError(_))),
+            "paths with double-quotes should be rejected to prevent SBPL injection"
+        );
+
+        let config = ServerConfig::stdio("test", "echo")
+            .with_write_path(std::path::PathBuf::from("/output/also\"bad"));
+
+        let result = manager.build_sandboxed_command("test", "echo", &config);
+        assert!(
+            matches!(result, Err(McpError::ConfigError(_))),
+            "write paths with double-quotes should also be rejected"
+        );
+    }
+
+    #[test]
+    fn test_with_workspace_root() {
+        let configs = ServersConfig::default();
+        let manager = ServerManager::new(configs)
+            .with_workspace_root(std::path::PathBuf::from("/my/workspace"));
+
+        assert_eq!(
+            manager.workspace_root,
+            Some(std::path::PathBuf::from("/my/workspace"))
+        );
     }
 }
