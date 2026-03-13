@@ -136,12 +136,11 @@ pub(crate) fn astrid_ipc_publish_impl(
 
     let payload_bytes = util::get_safe_bytes(plugin, &inputs[1], util::MAX_GUEST_PAYLOAD_LEN)?;
 
-    // Parse as raw JSON Value, then try to deserialize as a known IpcPayload variant.
-    // If the payload matches any standard variant (RawJson, UserInput, OnboardingRequired, etc.),
-    // use it directly. Otherwise fall back to Custom.
+    // Deserialize the guest payload into an IpcPayload, falling back to
+    // Custom for unrecognised or missing type tags.  See IpcPayload::from_json_value
+    // for the rationale behind the pre-check.
     let payload = match serde_json::from_slice::<serde_json::Value>(&payload_bytes) {
-        Ok(data) => serde_json::from_value::<IpcPayload>(data.clone())
-            .unwrap_or(IpcPayload::Custom { data }),
+        Ok(data) => IpcPayload::from_json_value(data),
         Err(_) => return Err(Error::msg("IPC payload is not valid JSON")),
     };
 
@@ -578,6 +577,104 @@ mod tests {
             total, 5,
             "should get all 5 messages (1 from recv + rest from drain)"
         );
+    }
+
+    /// Thin wrapper around the production deserialization path so we can
+    /// test it without a full WASM plugin context.
+    fn deserialize_publish_payload(payload_bytes: &[u8]) -> Result<IpcPayload, String> {
+        serde_json::from_slice::<serde_json::Value>(payload_bytes)
+            .map(IpcPayload::from_json_value)
+            .map_err(|_| "IPC payload is not valid JSON".into())
+    }
+
+    #[test]
+    fn publish_unknown_type_tag_produces_custom() {
+        let input = serde_json::json!({"type": "my_plugin_msg", "foo": 1});
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let payload = deserialize_publish_payload(&bytes).unwrap();
+
+        match payload {
+            IpcPayload::Custom { data } => {
+                assert_eq!(data["type"], "my_plugin_msg");
+                assert_eq!(data["foo"], 1);
+            },
+            other => panic!("expected Custom, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn publish_missing_type_tag_produces_custom() {
+        let input = serde_json::json!({"foo": 1, "bar": "baz"});
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let payload = deserialize_publish_payload(&bytes).unwrap();
+
+        match payload {
+            IpcPayload::Custom { data } => {
+                assert_eq!(data["foo"], 1);
+            },
+            other => panic!("expected Custom, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn publish_non_object_payload_produces_custom() {
+        // A bare JSON string has no `type` field.
+        let bytes = br#""hello""#;
+        let payload = deserialize_publish_payload(bytes).unwrap();
+
+        match payload {
+            IpcPayload::Custom { data } => {
+                assert_eq!(data, "hello");
+            },
+            other => panic!("expected Custom, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn publish_known_type_tag_deserializes_correctly() {
+        let input = serde_json::json!({"type": "connect"});
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let payload = deserialize_publish_payload(&bytes).unwrap();
+
+        assert_eq!(payload, IpcPayload::Connect);
+    }
+
+    #[test]
+    fn publish_known_tag_with_malformed_fields_falls_to_custom() {
+        // `user_input` requires a `text` field. Without it, deserialization
+        // fails and the .unwrap_or path produces Custom.
+        let input = serde_json::json!({"type": "user_input"});
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let payload = deserialize_publish_payload(&bytes).unwrap();
+
+        match payload {
+            IpcPayload::Custom { data } => {
+                assert_eq!(data["type"], "user_input");
+            },
+            other => panic!("expected Custom (malformed known tag), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn publish_custom_tag_with_data_unwraps_inner_value() {
+        // A well-formed {"type": "custom", "data": {...}} should deserialize
+        // via serde so that `data` is the inner value, not the outer wrapper.
+        let input = serde_json::json!({"type": "custom", "data": {"foo": 1}});
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let payload = deserialize_publish_payload(&bytes).unwrap();
+
+        match payload {
+            IpcPayload::Custom { data } => {
+                assert_eq!(data, serde_json::json!({"foo": 1}));
+            },
+            other => panic!("expected Custom with inner data, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn publish_invalid_json_is_error() {
+        let result = deserialize_publish_payload(b"not json at all");
+        assert!(result.is_err());
     }
 
     #[tokio::test]
