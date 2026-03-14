@@ -392,6 +392,47 @@ fn handle_daemon_event(app: &mut App, event: AstridEvent) {
         if message.topic == "astrid.v1.capsules_loaded" {
             app.pending_actions
                 .push(state::PendingAction::RefreshCommands);
+            // Hydrate session history now that capsules (including session
+            // capsule) are loaded. The guard in hydration_reply_topic
+            // ensures this only fires once even if capsules_loaded repeats.
+            if app.hydration_reply_topic.is_none() {
+                app.pending_actions
+                    .push(state::PendingAction::HydrateSession);
+            }
+        }
+
+        // Session hydration: populate conversation history from the session store.
+        // Only fires once per boot - reply topic is cleared after the first response.
+        // The session capsule publishes raw JSON (no "type" tag), so the host
+        // wraps it as IpcPayload::Custom via IpcPayload::from_json_value.
+        if let Some(expected_topic) = &app.hydration_reply_topic
+            && message.topic == *expected_topic
+            && let astrid_events::ipc::IpcPayload::Custom { data } = &message.payload
+            && let Some(messages) = data.get("messages")
+        {
+            app.hydration_reply_topic = None;
+            match serde_json::from_value::<Vec<astrid_events::llm::Message>>(messages.clone()) {
+                Ok(history) => {
+                    for msg in &history {
+                        let role = match msg.role {
+                            astrid_events::llm::MessageRole::User => MessageRole::User,
+                            astrid_events::llm::MessageRole::Assistant => MessageRole::Assistant,
+                            // System and Tool messages are not rendered in the TUI.
+                            _ => continue,
+                        };
+                        // TODO: extract text from MultiPart content once TUI
+                        // supports rich rendering.
+                        let content = msg.text().unwrap_or_default().to_string();
+                        if !content.is_empty() {
+                            app.push_message(role, content);
+                        }
+                    }
+                    tracing::debug!(message_count = history.len(), "Hydrated session history");
+                },
+                Err(e) => {
+                    tracing::warn!("Failed to parse session history: {e}");
+                },
+            }
         }
 
         // Registry responses
@@ -601,6 +642,21 @@ async fn handle_pending_actions(
                     astrid_events::ipc::IpcMessage::new(response_topic, response, session_id.0);
                 let _ = client.send_message(msg).await;
                 app.push_notice("Lifecycle input submitted.");
+            },
+            PendingAction::HydrateSession => {
+                let correlation_id = uuid::Uuid::new_v4().to_string();
+                let reply_topic = format!("session.v1.response.get_messages.{correlation_id}");
+                app.hydration_reply_topic = Some(reply_topic);
+                let hydration_req = serde_json::json!({
+                    "session_id": session_id.0.to_string(),
+                    "correlation_id": correlation_id,
+                });
+                let msg = astrid_events::ipc::IpcMessage::new(
+                    "session.v1.request.get_messages",
+                    astrid_events::ipc::IpcPayload::RawJson(hydration_req),
+                    session_id.0,
+                );
+                let _ = client.send_message(msg).await;
             },
         }
     }
