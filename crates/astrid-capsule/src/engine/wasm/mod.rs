@@ -249,6 +249,7 @@ impl ExecutionEngine for WasmEngine {
                     ctx.session_token.clone()
                 },
                 interceptor_handles: Vec::new(),
+                allowance_store: ctx.allowance_store.clone(),
             };
 
             // ready_tx starts as None; only set after plugin build if
@@ -602,6 +603,7 @@ pub fn run_lifecycle(
         cancel_token: tokio_util::sync::CancellationToken::new(),
         session_token: None,
         interceptor_handles: Vec::new(),
+        allowance_store: None,
     };
 
     let user_data = UserData::new(host_state);

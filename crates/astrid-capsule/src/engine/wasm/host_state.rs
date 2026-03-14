@@ -154,6 +154,12 @@ pub struct HostState {
     /// `run()` and `[[interceptor]]`. Each entry maps a subscription handle
     /// (in `self.subscriptions`) to the interceptor action name.
     pub interceptor_handles: Vec<InterceptorHandle>,
+    /// Shared allowance store for capsule-level approval requests.
+    ///
+    /// When set, the `astrid_request_approval` host function can check
+    /// existing allowances before prompting the user. Approvals with
+    /// session/always scope create new allowances here.
+    pub allowance_store: Option<std::sync::Arc<astrid_approval::AllowanceStore>>,
 }
 
 impl HostState {
@@ -277,6 +283,7 @@ mod tests {
             cancel_token: CancellationToken::new(),
             session_token: None,
             interceptor_handles: Vec::new(),
+            allowance_store: None,
         };
 
         let debug = format!("{state:?}");
@@ -337,6 +344,7 @@ mod tests {
             cancel_token: CancellationToken::new(),
             session_token: None,
             interceptor_handles: Vec::new(),
+            allowance_store: None,
         };
 
         assert!(state.uplinks().is_empty());
@@ -402,6 +410,7 @@ mod tests {
             cancel_token: CancellationToken::new(),
             session_token: None,
             interceptor_handles: Vec::new(),
+            allowance_store: None,
         };
 
         assert!(state.inbound_tx.is_none());
@@ -463,6 +472,7 @@ mod tests {
             cancel_token: CancellationToken::new(),
             session_token: None,
             interceptor_handles: Vec::new(),
+            allowance_store: None,
         };
 
         for i in 0..MAX_UPLINKS_PER_CAPSULE {
@@ -540,6 +550,7 @@ mod tests {
             cancel_token: CancellationToken::new(),
             session_token: None,
             interceptor_handles: Vec::new(),
+            allowance_store: None,
         };
 
         let desc1 = UplinkDescriptor::builder("my-conn", "discord")
