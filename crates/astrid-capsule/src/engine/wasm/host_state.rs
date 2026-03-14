@@ -67,6 +67,10 @@ pub struct HostState {
     pub global_vfs: Option<Arc<dyn astrid_vfs::Vfs>>,
     /// Capability handle for the global shared VFS root.
     pub global_vfs_root_handle: Option<astrid_capabilities::DirHandle>,
+    /// Concrete reference to the [`OverlayVfs`](astrid_vfs::OverlayVfs) for
+    /// commit/rollback operations. `None` for non-overlay VFS configurations
+    /// (e.g., tests with a plain `HostVfs`).
+    pub overlay_vfs: Option<Arc<astrid_vfs::OverlayVfs>>,
     /// Reference to the ephemeral upper directory to keep it alive for the session.
     pub upper_dir: Option<Arc<tempfile::TempDir>>,
     /// Plugin-scoped KV store (`plugin:{capsule_id}` namespace).
@@ -262,6 +266,7 @@ mod tests {
             global_root: None,
             global_vfs: None,
             global_vfs_root_handle: None,
+            overlay_vfs: None,
             upper_dir: None,
             kv,
             event_bus: astrid_events::EventBus::with_capacity(128),
@@ -324,6 +329,7 @@ mod tests {
             global_root: None,
             global_vfs: None,
             global_vfs_root_handle: None,
+            overlay_vfs: None,
             upper_dir: None,
             kv,
             event_bus: astrid_events::EventBus::with_capacity(128),
@@ -391,6 +397,7 @@ mod tests {
             global_root: None,
             global_vfs: None,
             global_vfs_root_handle: None,
+            overlay_vfs: None,
             upper_dir: None,
             kv,
             event_bus: astrid_events::EventBus::with_capacity(128),
@@ -454,6 +461,7 @@ mod tests {
             global_root: None,
             global_vfs: None,
             global_vfs_root_handle: None,
+            overlay_vfs: None,
             upper_dir: None,
             kv,
             event_bus: astrid_events::EventBus::with_capacity(128),
@@ -533,6 +541,7 @@ mod tests {
             global_root: None,
             global_vfs: None,
             global_vfs_root_handle: None,
+            overlay_vfs: None,
             upper_dir: None,
             kv,
             event_bus: astrid_events::EventBus::with_capacity(128),
