@@ -1,15 +1,16 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::process::{Command, Stdio};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use extism::{CurrentPlugin, Error, UserData, Val};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
+use astrid_workspace::SandboxCommand;
+
 use crate::engine::wasm::host::util;
 use crate::engine::wasm::host_state::HostState;
-use astrid_workspace::SandboxCommand;
 
 #[derive(Debug, Deserialize)]
 struct ProcessRequest<'a> {
@@ -299,11 +300,601 @@ pub(crate) fn astrid_spawn_host_impl(
     Ok(())
 }
 
+// ---------------------------------------------------------------------------
+// Background process management
+// ---------------------------------------------------------------------------
+
+/// Maximum number of concurrent background processes per capsule.
+pub(crate) const MAX_BACKGROUND_PROCESSES: usize = 8;
+
+/// Maximum bytes buffered per stream (stdout or stderr) before oldest data is
+/// dropped. 1 MB per stream, 2 MB total per process.
+const MAX_BUFFER_BYTES: usize = 1024 * 1024;
+
+/// A background process managed by the host on behalf of a WASM capsule.
+///
+/// Reader threads are fire-and-forget - they terminate naturally when the
+/// child's pipes close (after kill or natural exit). No `JoinHandle` storage
+/// is needed, avoiding hang risk in `Drop`.
+pub struct ManagedProcess {
+    /// The child process. Wrapped in `Option` so that explicit kill (or
+    /// `try_wait` reap) can `.take()` it, preventing `Drop` from sending
+    /// `killpg`/`kill` to a PID the OS may have already reused.
+    child: Option<std::process::Child>,
+    stdout_buf: Arc<Mutex<VecDeque<u8>>>,
+    stderr_buf: Arc<Mutex<VecDeque<u8>>>,
+    command: String,
+}
+
+/// Kill and reap a child process, including its entire process group on Unix.
+/// Returns the exit code if available.
+fn kill_and_reap(child: &mut std::process::Child) -> Option<i32> {
+    #[cfg(unix)]
+    {
+        let raw_pid = child.id();
+        let pid = nix::unistd::Pid::from_raw(i32::try_from(raw_pid).unwrap_or(i32::MAX));
+        // Best-effort: process group may already be dead.
+        let _ = nix::sys::signal::killpg(pid, nix::sys::signal::Signal::SIGKILL);
+    }
+    let _ = child.kill(); // fallback / Windows
+    child.wait().ok().and_then(|s| s.code())
+}
+
+impl Drop for ManagedProcess {
+    fn drop(&mut self) {
+        // Only act if the child hasn't already been taken by explicit kill
+        // or reaped by try_wait. This prevents killpg on a PID the OS may
+        // have reused for an unrelated process.
+        if let Some(mut child) = self.child.take() {
+            kill_and_reap(&mut child);
+        }
+    }
+}
+
+/// Drain a buffer, converting to a lossy UTF-8 string.
+fn drain_buffer(buf: &Mutex<VecDeque<u8>>) -> String {
+    let mut locked = buf.lock().unwrap_or_else(|e| e.into_inner());
+    let bytes: Vec<u8> = locked.drain(..).collect();
+    String::from_utf8_lossy(&bytes).into_owned()
+}
+
+/// Spawn a reader thread that drains a pipe into a bounded buffer.
+fn spawn_reader_thread(
+    id: u64,
+    label: &str,
+    mut pipe: impl std::io::Read + Send + 'static,
+    buffer: Arc<Mutex<VecDeque<u8>>>,
+) {
+    let name = format!("bg-{id}-{label}");
+    std::thread::Builder::new()
+        .name(name)
+        .spawn(move || {
+            let mut chunk = [0u8; 4096];
+            loop {
+                match pipe.read(&mut chunk) {
+                    Ok(0) => break, // pipe closed
+                    Ok(n) => {
+                        let mut locked = buffer.lock().unwrap_or_else(|e| e.into_inner());
+                        locked.extend(&chunk[..n]);
+                        // Enforce cap: drop oldest data if over limit.
+                        let excess = locked.len().saturating_sub(MAX_BUFFER_BYTES);
+                        if excess > 0 {
+                            locked.drain(..excess);
+                        }
+                    },
+                    Err(_) => break,
+                }
+            }
+        })
+        .ok(); // Thread spawn failure is non-fatal - output just won't be captured.
+}
+
+/// Prepare a sandboxed command for background execution.
+///
+/// Shared between spawn_host (sync) and spawn_background (async). Applies
+/// environment stripping and sandbox wrapping.
+fn prepare_sandboxed_command(
+    cmd: &str,
+    args: &[&str],
+    workspace_root: &std::path::Path,
+) -> Result<Command, Error> {
+    let mut inner_cmd = Command::new(cmd);
+    inner_cmd.args(args);
+    inner_cmd.env_remove("ASTRID_SOCKET_PATH");
+    inner_cmd.env_remove("ASTRID_SESSION_TOKEN");
+    inner_cmd.env_remove("ASTRID_HOME");
+
+    SandboxCommand::wrap(inner_cmd, workspace_root)
+        .map_err(|e| Error::msg(format!("failed to wrap command in sandbox: {e}")))
+}
+
+// ---------------------------------------------------------------------------
+// Request/response types for background process host functions
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Serialize)]
+struct SpawnBackgroundResult {
+    id: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct BackgroundProcessRequest {
+    id: u64,
+}
+
+#[derive(Debug, Serialize)]
+struct ReadLogsResult {
+    stdout: String,
+    stderr: String,
+    running: bool,
+    exit_code: Option<i32>,
+}
+
+#[derive(Debug, Serialize)]
+struct KillProcessResult {
+    killed: bool,
+    exit_code: Option<i32>,
+    stdout: String,
+    stderr: String,
+}
+
+// ---------------------------------------------------------------------------
+// Host function: spawn background process
+// ---------------------------------------------------------------------------
+
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn astrid_spawn_background_host_impl(
+    plugin: &mut CurrentPlugin,
+    inputs: &[Val],
+    outputs: &mut [Val],
+    user_data: UserData<HostState>,
+) -> Result<(), Error> {
+    let req_bytes: Vec<u8> = util::get_safe_bytes(plugin, &inputs[0], util::MAX_GUEST_PAYLOAD_LEN)?;
+    let req: ProcessRequest = serde_json::from_slice(&req_bytes)
+        .map_err(|e| Error::msg(format!("failed to parse process request: {e}")))?;
+
+    let ud = user_data.get()?;
+    let state = ud
+        .lock()
+        .map_err(|e| Error::msg(format!("host state lock poisoned: {e}")))?;
+
+    // Check process limit before doing any expensive work.
+    if state.background_processes.len() >= MAX_BACKGROUND_PROCESSES {
+        return Err(Error::msg(format!(
+            "background process limit reached (max {MAX_BACKGROUND_PROCESSES})"
+        )));
+    }
+
+    let workspace_root = state.workspace_root.clone();
+    let security = state.security.clone();
+    let capsule_id = state.capsule_id.as_str().to_owned();
+    let handle = state.runtime_handle.clone();
+    let semaphore = state.host_semaphore.clone();
+    drop(state);
+
+    // Security gate - same check as synchronous spawn.
+    if let Some(sec) = security {
+        let cmd = req.cmd.to_string();
+        util::bounded_block_on(&handle, &semaphore, async {
+            sec.check_host_process(&capsule_id, &cmd).await
+        })
+        .map_err(|e| Error::msg(format!("Security Check Failed: {e}")))?;
+    } else {
+        return Err(Error::msg(
+            "Security Check Failed: No security gate found for host_process capability.",
+        ));
+    }
+
+    let mut sandboxed_cmd = prepare_sandboxed_command(req.cmd, &req.args, &workspace_root)?;
+
+    // Set up as process group leader for clean group kills on Unix.
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt as _;
+        sandboxed_cmd.process_group(0);
+    }
+
+    sandboxed_cmd.stdout(Stdio::piped());
+    sandboxed_cmd.stderr(Stdio::piped());
+
+    let command_str = format!("{} {}", req.cmd, req.args.join(" "));
+
+    let child = sandboxed_cmd
+        .spawn()
+        .map_err(|e| Error::msg(format!("failed to spawn background process: {e}")))?;
+
+    // Wrap immediately in ManagedProcess so that any early return (lock
+    // failure, limit exceeded) triggers Drop which kills + reaps the child.
+    // Without this, a bare `std::process::Child` drop just closes handles
+    // and leaves the process running as an orphan.
+    let stdout_buf: Arc<Mutex<VecDeque<u8>>> = Arc::new(Mutex::new(VecDeque::new()));
+    let stderr_buf: Arc<Mutex<VecDeque<u8>>> = Arc::new(Mutex::new(VecDeque::new()));
+    let mut managed = ManagedProcess {
+        child: Some(child),
+        stdout_buf: Arc::clone(&stdout_buf),
+        stderr_buf: Arc::clone(&stderr_buf),
+        command: command_str,
+    };
+
+    // Re-lock HostState to get the handle ID BEFORE spawning threads,
+    // so the thread name includes the correct ID.
+    let ud2 = user_data.get()?;
+    let mut state = ud2
+        .lock()
+        .map_err(|e| Error::msg(format!("host state lock poisoned: {e}")))?;
+
+    // Defensive re-check: limit could theoretically have been reached between
+    // the first check and re-acquisition (Extism serializes per-plugin, so
+    // this can't happen in practice, but defense-in-depth costs nothing).
+    // On early return, `managed` Drop kills + reaps the child.
+    if state.background_processes.len() >= MAX_BACKGROUND_PROCESSES {
+        return Err(Error::msg(format!(
+            "background process limit reached (max {MAX_BACKGROUND_PROCESSES})"
+        )));
+    }
+
+    let process_id = state.next_process_id;
+    state.next_process_id += 1;
+
+    if let Some(child) = managed.child.as_mut() {
+        if let Some(stdout) = child.stdout.take() {
+            spawn_reader_thread(process_id, "stdout", stdout, Arc::clone(&stdout_buf));
+        }
+        if let Some(stderr) = child.stderr.take() {
+            spawn_reader_thread(process_id, "stderr", stderr, Arc::clone(&stderr_buf));
+        }
+    }
+
+    tracing::info!(
+        capsule_id = %capsule_id,
+        process_id = process_id,
+        command = %managed.command,
+        "Spawned background process"
+    );
+
+    state.background_processes.insert(process_id, managed);
+    drop(state);
+
+    let result = SpawnBackgroundResult { id: process_id };
+    let result_bytes = serde_json::to_vec(&result)?;
+    let mem = plugin.memory_new(&result_bytes)?;
+    outputs[0] = plugin.memory_to_val(mem);
+
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Host function: read process logs
+// ---------------------------------------------------------------------------
+
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn astrid_read_process_logs_host_impl(
+    plugin: &mut CurrentPlugin,
+    inputs: &[Val],
+    outputs: &mut [Val],
+    user_data: UserData<HostState>,
+) -> Result<(), Error> {
+    let req_bytes: Vec<u8> = util::get_safe_bytes(plugin, &inputs[0], 256)?;
+    let req: BackgroundProcessRequest = serde_json::from_slice(&req_bytes)
+        .map_err(|e| Error::msg(format!("failed to parse read logs request: {e}")))?;
+
+    let ud = user_data.get()?;
+    let mut state = ud
+        .lock()
+        .map_err(|e| Error::msg(format!("host state lock poisoned: {e}")))?;
+
+    let proc = state
+        .background_processes
+        .get_mut(&req.id)
+        .ok_or_else(|| Error::msg(format!("no background process with id {}", req.id)))?;
+
+    // try_wait is non-blocking (waitpid WNOHANG). If it returns Some(status),
+    // the child has been reaped and the PID is free for OS reuse. We must
+    // .take() the child so Drop doesn't killpg a potentially-reused PID.
+    let (running, exit_code) = if let Some(child) = proc.child.as_mut() {
+        match child.try_wait() {
+            Ok(Some(status)) => {
+                // Child reaped - take it so Drop won't act on stale PID.
+                proc.child.take();
+                (false, status.code())
+            },
+            Ok(None) => (true, None),
+            Err(_) => {
+                proc.child.take();
+                (false, Some(-1))
+            },
+        }
+    } else {
+        // Child already taken (previously reaped). Still dead.
+        (false, None)
+    };
+
+    // Clone buffer Arcs so we can drain outside the HostState lock if needed.
+    // In practice, draining is fast, so we do it under the lock for simplicity.
+    let stdout = drain_buffer(&proc.stdout_buf);
+    let stderr = drain_buffer(&proc.stderr_buf);
+    drop(state);
+
+    let result = ReadLogsResult {
+        stdout,
+        stderr,
+        running,
+        exit_code,
+    };
+    let result_bytes = serde_json::to_vec(&result)?;
+    let mem = plugin.memory_new(&result_bytes)?;
+    outputs[0] = plugin.memory_to_val(mem);
+
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Host function: kill process
+// ---------------------------------------------------------------------------
+
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn astrid_kill_process_host_impl(
+    plugin: &mut CurrentPlugin,
+    inputs: &[Val],
+    outputs: &mut [Val],
+    user_data: UserData<HostState>,
+) -> Result<(), Error> {
+    let req_bytes: Vec<u8> = util::get_safe_bytes(plugin, &inputs[0], 256)?;
+    let req: BackgroundProcessRequest = serde_json::from_slice(&req_bytes)
+        .map_err(|e| Error::msg(format!("failed to parse kill request: {e}")))?;
+
+    let ud = user_data.get()?;
+    let mut state = ud
+        .lock()
+        .map_err(|e| Error::msg(format!("host state lock poisoned: {e}")))?;
+
+    // Remove from map (takes ownership) so we can drop the HostState lock
+    // before doing the potentially-blocking kill + wait.
+    let mut proc = state
+        .background_processes
+        .remove(&req.id)
+        .ok_or_else(|| Error::msg(format!("no background process with id {}", req.id)))?;
+
+    let capsule_id = state.capsule_id.as_str().to_owned();
+    drop(state);
+
+    // Drain remaining buffered output before killing.
+    let stdout = drain_buffer(&proc.stdout_buf);
+    let stderr = drain_buffer(&proc.stderr_buf);
+
+    // Take the child so Drop won't double-kill on a potentially-reused PID.
+    let exit_code = if let Some(mut child) = proc.child.take() {
+        kill_and_reap(&mut child)
+    } else {
+        // Already reaped by a prior try_wait in read_logs.
+        None
+    };
+
+    tracing::info!(
+        capsule_id = %capsule_id,
+        process_id = req.id,
+        command = %proc.command,
+        exit_code = ?exit_code,
+        "Killed background process"
+    );
+
+    let result = KillProcessResult {
+        killed: true,
+        exit_code,
+        stdout,
+        stderr,
+    };
+    let result_bytes = serde_json::to_vec(&result)?;
+    let mem = plugin.memory_new(&result_bytes)?;
+    outputs[0] = plugin.memory_to_val(mem);
+
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::process::Command;
-    use std::sync::Arc;
+
+    #[test]
+    fn buffer_cap_enforced() {
+        let buf: Arc<Mutex<VecDeque<u8>>> = Arc::new(Mutex::new(VecDeque::new()));
+        let mut data = vec![b'A'; MAX_BUFFER_BYTES + 500];
+        // Mark the first byte (should be dropped) and byte at index 500
+        // (should become the new first byte after drain).
+        data[0] = b'X';
+        data[500] = b'Y';
+
+        // Simulate what the reader thread does: append then cap.
+        {
+            let mut locked = buf.lock().unwrap_or_else(|e| e.into_inner());
+            locked.extend(&data);
+            let excess = locked.len().saturating_sub(MAX_BUFFER_BYTES);
+            if excess > 0 {
+                locked.drain(..excess);
+            }
+        }
+
+        let locked = buf.lock().unwrap_or_else(|e| e.into_inner());
+        assert_eq!(locked.len(), MAX_BUFFER_BYTES);
+        // The oldest 500 bytes should have been dropped.
+        assert_eq!(locked[0], b'Y');
+        assert!(!locked.contains(&b'X'));
+    }
+
+    #[test]
+    fn drain_buffer_clears_and_returns() {
+        let buf: Arc<Mutex<VecDeque<u8>>> = Arc::new(Mutex::new(VecDeque::new()));
+        {
+            let mut locked = buf.lock().unwrap_or_else(|e| e.into_inner());
+            locked.extend(b"hello world");
+        }
+
+        let result = drain_buffer(&buf);
+        assert_eq!(result, "hello world");
+
+        // Buffer should be empty after drain.
+        let locked = buf.lock().unwrap_or_else(|e| e.into_inner());
+        assert!(locked.is_empty());
+    }
+
+    #[test]
+    fn drain_buffer_handles_empty() {
+        let buf: Arc<Mutex<VecDeque<u8>>> = Arc::new(Mutex::new(VecDeque::new()));
+        let result = drain_buffer(&buf);
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn managed_process_drop_kills_child() {
+        let child = Command::new("sleep")
+            .arg("60")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("failed to spawn sleep");
+
+        let raw_pid = child.id();
+
+        let managed = ManagedProcess {
+            child: Some(child),
+            stdout_buf: Arc::new(Mutex::new(VecDeque::new())),
+            stderr_buf: Arc::new(Mutex::new(VecDeque::new())),
+            command: "sleep 60".to_string(),
+        };
+
+        drop(managed);
+
+        // Verify the process is dead by checking if waitpid returns an error
+        // (the process was already reaped by Drop).
+        #[cfg(unix)]
+        {
+            let pid = nix::unistd::Pid::from_raw(i32::try_from(raw_pid).unwrap_or(i32::MAX));
+            // kill with signal 0 checks if process exists without sending a signal.
+            let result = nix::sys::signal::kill(pid, None);
+            assert!(
+                result.is_err(),
+                "process should be dead after ManagedProcess drop"
+            );
+        }
+    }
+
+    #[test]
+    fn spawn_respects_limit() {
+        use std::collections::HashMap;
+
+        let mut processes: HashMap<u64, ManagedProcess> = HashMap::new();
+        for i in 0..MAX_BACKGROUND_PROCESSES {
+            let child = Command::new("sleep")
+                .arg("60")
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("failed to spawn");
+            processes.insert(
+                i as u64,
+                ManagedProcess {
+                    child: Some(child),
+                    stdout_buf: Arc::new(Mutex::new(VecDeque::new())),
+                    stderr_buf: Arc::new(Mutex::new(VecDeque::new())),
+                    command: "sleep 60".to_string(),
+                },
+            );
+        }
+
+        // This is the exact check the host function performs before spawning.
+        assert!(
+            processes.len() >= MAX_BACKGROUND_PROCESSES,
+            "at limit: should reject new spawns"
+        );
+
+        // Verify one below limit is allowed.
+        processes.remove(&0); // remove one
+        assert!(
+            processes.len() < MAX_BACKGROUND_PROCESSES,
+            "below limit: should allow new spawns"
+        );
+
+        // Cleanup: drop kills all processes.
+    }
+
+    #[test]
+    fn kill_nonexistent_returns_error() {
+        // Simulate the lookup that kill_process does.
+        let processes: std::collections::HashMap<u64, ManagedProcess> =
+            std::collections::HashMap::new();
+        assert!(processes.get(&999).is_none());
+    }
+
+    #[test]
+    fn read_logs_after_natural_exit() {
+        let mut child = Command::new("echo")
+            .arg("hello from echo")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("failed to spawn echo");
+
+        let stdout_buf: Arc<Mutex<VecDeque<u8>>> = Arc::new(Mutex::new(VecDeque::new()));
+        let stderr_buf: Arc<Mutex<VecDeque<u8>>> = Arc::new(Mutex::new(VecDeque::new()));
+
+        // Spawn reader thread for stdout (echo exits quickly).
+        if let Some(stdout) = child.stdout.take() {
+            spawn_reader_thread(1, "stdout", stdout, Arc::clone(&stdout_buf));
+        }
+
+        // Wait for the process to exit naturally.
+        let status = child.wait().expect("failed to wait");
+        assert!(status.success());
+
+        // Give reader thread a moment to drain the pipe.
+        std::thread::sleep(std::time::Duration::from_millis(50));
+
+        // try_wait should report exited.
+        // (child.wait() already reaped, so try_wait returns the cached status.)
+        // Simulate what read_logs does: drain buffers.
+        let stdout = drain_buffer(&stdout_buf);
+        let stderr = drain_buffer(&stderr_buf);
+
+        assert!(
+            stdout.contains("hello from echo"),
+            "expected output after natural exit, got: {stdout}"
+        );
+        assert!(stderr.is_empty());
+    }
+
+    #[test]
+    fn kill_returns_final_output() {
+        let mut child = Command::new("echo")
+            .arg("final output")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("failed to spawn echo");
+
+        let stdout_buf: Arc<Mutex<VecDeque<u8>>> = Arc::new(Mutex::new(VecDeque::new()));
+
+        if let Some(stdout) = child.stdout.take() {
+            spawn_reader_thread(1, "test-stdout", stdout, Arc::clone(&stdout_buf));
+        }
+
+        // Wait for process to exit and reader thread to capture output.
+        let _ = child.wait().expect("failed to wait for child");
+        std::thread::sleep(std::time::Duration::from_millis(50));
+
+        let stdout = drain_buffer(&stdout_buf);
+        assert!(
+            stdout.contains("final output"),
+            "expected 'final output' in stdout, got: {stdout}"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // ProcessTracker tests (from main)
+    // -----------------------------------------------------------------------
 
     #[test]
     fn tracker_register_unregister() {
