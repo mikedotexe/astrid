@@ -79,15 +79,23 @@ const NS_ENTRIES: &str = "audit:entries";
 const NS_SESSION_INDEX: &str = "audit:session_index";
 const NS_CHAIN_HEADS: &str = "audit:chain_heads";
 
-/// Run an async future synchronously.
+/// Run an async future synchronously, bridging the sync [`AuditStorage`] trait
+/// to the async [`KvStore`](astrid_storage::kv::KvStore) trait.
 ///
-/// `SurrealKV` operations are fast in-process (no network), so bridging
-/// the sync `AuditStorage` trait to the async `KvStore` trait is safe.
+/// `SurrealKV` operations are fast in-process (no network), so blocking is safe.
 ///
-/// Handles three cases:
-/// - Inside an async context: uses a scoped thread to avoid the
-///   "cannot `block_on` from within a runtime" panic.
-/// - Outside a runtime: creates a temporary runtime.
+/// Handles three runtime contexts:
+/// - **Multi-threaded tokio runtime** (production): uses `block_in_place` to
+///   avoid O(N) OS thread churn when `verify_all()` or concurrent writes hit
+///   this path repeatedly.
+/// - **Single-threaded tokio runtime** (unit tests): uses a scoped thread
+///   because `block_in_place` panics on `current_thread` runtimes.
+/// - **No runtime** (sync `#[test]` functions): creates a temporary runtime.
+///
+/// # Panics
+///
+/// Panics if the temporary runtime cannot be created (no-runtime path) or if
+/// the scoped thread panics (single-threaded runtime path).
 fn block_on<F>(f: F) -> F::Output
 where
     F: std::future::Future + Send,
@@ -95,15 +103,27 @@ where
 {
     match tokio::runtime::Handle::try_current() {
         Ok(handle) => {
-            // Inside a tokio runtime — use a scoped thread to avoid panic.
-            std::thread::scope(|s| {
-                s.spawn(|| handle.block_on(f))
-                    .join()
-                    .expect("async thread panicked")
-            })
+            if handle.runtime_flavor() == tokio::runtime::RuntimeFlavor::MultiThread {
+                // Multi-threaded runtime (production): block_in_place yields
+                // the worker thread to the runtime scheduler instead of
+                // spawning a new OS thread per storage operation.
+                // Nested block_in_place calls (e.g. WASM host -> interceptor
+                // -> audit append) are safe: tokio detects the thread is
+                // already in a blocking context and skips worker-thread
+                // migration, running the closure directly.
+                tokio::task::block_in_place(|| handle.block_on(f))
+            } else {
+                // Single-threaded runtime (tests): block_in_place panics on
+                // current_thread runtimes, so fall back to a scoped thread.
+                std::thread::scope(|s| {
+                    s.spawn(|| handle.block_on(f))
+                        .join()
+                        .expect("async thread panicked")
+                })
+            }
         },
         Err(_) => {
-            // No runtime — create a lightweight current-thread runtime.
+            // No runtime (sync tests) - create a temporary one.
             tokio::runtime::Builder::new_current_thread()
                 .enable_all()
                 .build()
@@ -382,5 +402,81 @@ mod tests {
 
         let head = storage.get_chain_head(&session_id).unwrap().unwrap();
         assert_eq!(head, entry2.id);
+    }
+
+    /// Exercises the `block_in_place` branch that only fires under a
+    /// multi-threaded runtime (the production path fixed by #305).
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn test_store_and_retrieve_multi_thread() {
+        let storage = SurrealKvAuditStorage::in_memory();
+        let keypair = test_keypair();
+        let session_id = SessionId::new();
+
+        let entry = AuditEntry::create(
+            session_id.clone(),
+            AuditAction::SessionStarted {
+                user_id: keypair.key_id(),
+                platform: "cli".to_string(),
+            },
+            AuthorizationProof::System {
+                reason: "test".to_string(),
+            },
+            AuditOutcome::success(),
+            ContentHash::zero(),
+            &keypair,
+        );
+
+        let entry_id = entry.id.clone();
+        storage.store(&entry).unwrap();
+
+        let retrieved = storage.get(&entry_id).unwrap().unwrap();
+        assert_eq!(retrieved.id, entry_id);
+
+        // Also verify session queries work through block_in_place.
+        let entries = storage.get_session_entries(&session_id).unwrap();
+        assert_eq!(entries.len(), 1);
+
+        let head = storage.get_chain_head(&session_id).unwrap().unwrap();
+        assert_eq!(head, entry_id);
+    }
+
+    /// Concurrent stores from multiple tasks under a multi-threaded runtime.
+    /// Exercises the `block_in_place` path under the load pattern from #305.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn test_concurrent_stores_multi_thread() {
+        let storage = std::sync::Arc::new(SurrealKvAuditStorage::in_memory());
+        let mut handles = Vec::new();
+
+        for _ in 0..8 {
+            let s = std::sync::Arc::clone(&storage);
+            handles.push(tokio::task::spawn(async move {
+                let keypair = test_keypair();
+                let session_id = SessionId::new();
+                let entry = AuditEntry::create(
+                    session_id,
+                    AuditAction::SessionStarted {
+                        user_id: keypair.key_id(),
+                        platform: "cli".to_string(),
+                    },
+                    AuthorizationProof::System {
+                        reason: "test".to_string(),
+                    },
+                    AuditOutcome::success(),
+                    ContentHash::zero(),
+                    &keypair,
+                );
+                s.store(&entry).unwrap();
+                entry.id
+            }));
+        }
+
+        for h in handles {
+            let id = h.await.unwrap();
+            assert!(storage.get(&id).unwrap().is_some());
+        }
+
+        // All 8 sessions should be visible.
+        let sessions = storage.list_sessions().unwrap();
+        assert_eq!(sessions.len(), 8);
     }
 }
