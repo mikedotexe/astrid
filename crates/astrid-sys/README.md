@@ -1,65 +1,41 @@
 # astrid-sys
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-sys)](https://crates.io/crates/astrid-sys)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-Raw FFI bindings defining the absolute lowest-level boundary of the Astralis OS Microkernel. 
+**The syscall table for Astrid OS.**
 
-If Astralis is a vast station in orbit, `astrid-sys` defines the physical airlocks connecting isolated WASM capsules to the core infrastructure. It represents a mathematically pure Application Binary Interface (ABI) where every parameter and return type crossing the WebAssembly boundary is reduced to raw bytes (`Vec<u8>`). This crate operates strictly at the system call level, providing unopinionated, unvarnished access to the host kernel.
+In the OS model, this crate is the boundary between user space and kernel space. It declares the 48 host functions that a WASM capsule can invoke, and nothing else. No logic, no validation, no deserialization. Every parameter crosses the boundary as `Vec<u8>`. The kernel enforces capability checks on its side of each call.
 
-## Core Features
+Capsule authors should never depend on this crate directly. Use `astrid-sdk`, which wraps every syscall in a typed, safe Rust function. This crate exists for the same reason `/usr/include/asm/unistd.h` exists: to define the raw ABI contract between user space and kernel.
 
-The architectural mandate of `astrid-sys` is **zero host-side abstraction**. By reducing the entire API surface to contiguous byte arrays, we achieve true OS-level primitiveness:
+## The ABI
 
-* **Encoding Agnosticism:** File paths can contain non-UTF-8 sequences and IPC topics can be raw binary hashes.
-* **Maximum Performance:** The core kernel never wastes a single CPU cycle validating string encodings or deserializing complex structs across the WASM boundary.
-* **Decoupling:** All ergonomic serialization, typing, and safety abstractions are intentionally pushed up into User-Space, specifically handled by the `astrid-sdk` crate.
+All 48 functions live in a single `#[host_fn] extern "ExtismHost"` block. Declared via `extism-pdk 1.4`.
 
-## The API Surface
+**Filesystem (7)** `astrid_fs_exists`, `astrid_read_file`, `astrid_write_file`, `astrid_fs_mkdir`, `astrid_fs_readdir`, `astrid_fs_stat`, `astrid_fs_unlink`
 
-The airlocks expose four primary hardware-level domains to the WASM environment, implemented via `extism-pdk` host functions.
+**IPC (7)** `astrid_ipc_publish`, `astrid_ipc_subscribe`, `astrid_ipc_unsubscribe`, `astrid_ipc_poll`, `astrid_ipc_recv`, `astrid_uplink_register`, `astrid_uplink_send`
 
-### Virtual File System (VFS)
-Raw block-level access to the sandboxed file system provided to the capsule.
-* `astrid_fs_exists`, `astrid_fs_stat`, `astrid_fs_mkdir`, `astrid_fs_readdir`, `astrid_fs_unlink`
-* `astrid_read_file`, `astrid_write_file`
+**Storage (7)** `astrid_kv_get`, `astrid_kv_set`, `astrid_kv_delete`, `astrid_kv_list_keys`, `astrid_kv_clear_prefix`, `astrid_get_config`, `astrid_get_caller`
 
-### Inter-Process Communication (IPC)
-The central nervous system for inter-capsule communication and direct frontend uplinks.
-* **Message Bus:** `astrid_ipc_publish`, `astrid_ipc_subscribe`, `astrid_ipc_unsubscribe`, `astrid_ipc_poll`
-* **Direct Uplinks:** `astrid_uplink_register`, `astrid_uplink_send`
+**Network (7)** `astrid_http_request`, `astrid_net_bind_unix`, `astrid_net_accept`, `astrid_net_poll_accept`, `astrid_net_read`, `astrid_net_write`, `astrid_net_close_stream`
 
-### Storage & Configuration
-Persistent state and system-level environment queries.
-* **Key-Value Store:** `astrid_kv_get`, `astrid_kv_set`
-* **Configuration:** `astrid_get_config`
+**Identity (5)** `astrid_identity_resolve`, `astrid_identity_link`, `astrid_identity_unlink`, `astrid_identity_create_user`, `astrid_identity_list_links`
 
-### General System Services
-Core background services, networking, and chronometry.
-* `astrid_http_request` - Outbound HTTP requests
-* `astrid_log` - Appending raw bytes to the OS journal
-* `astrid_cron_schedule`, `astrid_cron_cancel` - Dynamic scheduling triggers
+**Process (4)** `astrid_spawn_host`, `astrid_spawn_background_host`, `astrid_read_process_logs_host`, `astrid_kill_process_host`
 
-## Quick Start
+**Lifecycle (5)** `astrid_elicit`, `astrid_has_secret`, `astrid_signal_ready`, `astrid_get_interceptor_handles`, `astrid_check_capsule_capability`
 
-As a capsule developer, **you should almost never depend on `astrid-sys` directly**. 
+**System (6)** `astrid_log`, `astrid_cron_schedule`, `astrid_cron_cancel`, `astrid_trigger_hook`, `astrid_clock_ms`, `astrid_request_approval`
 
-This crate is the raw transmission layer. Writing code against it is akin to writing assembly; it is powerful but inherently unsafe and verbose. Instead, user-space capsules depend on `astrid-sdk`, which wraps these raw `Vec<u8>` FFI calls in safe, strongly-typed, and ergonomic Rust futures and structs.
+## Design decisions
 
-For systems engineers modifying the kernel boundary, a typical host function definition in this crate looks like this:
+**Everything is `Vec<u8>`.** File paths can contain non-UTF-8 sequences. IPC topics can be binary hashes. The kernel never validates encodings at the ABI layer. This is deliberate: the boundary is a data pipe, not a schema validator.
 
-```rust
-use extism_pdk::*;
+**No return-code convention.** Success and failure semantics are defined per-syscall. Some return JSON objects, some return raw bytes, some return nothing. The SDK layer imposes uniform `Result<T, SysError>` semantics on top.
 
-#[host_fn]
-extern "ExtismHost" {
-    /// Poll for the next message on an IPC subscription handle.
-    pub fn astrid_ipc_poll(handle: Vec<u8>) -> Vec<u8>;
-}
-```
-
-The host (the Astralis runtime) implements the exact inverse of this interface. It receives the raw bytes through the airlock, executes the system operation according to the capsule's capability sandbox, and returns the response bytes back across the void.
+**Single extern block.** All 48 declarations live in one `#[host_fn] extern "ExtismHost"` block. No module hierarchy. The SDK layer provides the module structure.
 
 ## Development
 
@@ -67,6 +43,8 @@ The host (the Astralis runtime) implements the exact inverse of this interface. 
 cargo test -p astrid-sys
 ```
 
+This crate contains zero Rust-side logic. It declares `extern` functions only. Behavioral tests live in `astrid-sdk` and `astrid-integration-tests`.
+
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).

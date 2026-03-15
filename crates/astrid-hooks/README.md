@@ -1,77 +1,67 @@
 # astrid-hooks
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-hooks)](https://crates.io/crates/astrid-hooks)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-User-defined extension points and lifecycle hooks for the Astrid secure agent runtime.
+**User-defined interceptors. Signal handlers for the OS.**
 
-The `astrid-hooks` crate provides a robust, event-driven extension architecture for the Astralis OS runtime. It enables developers and system administrators to intercept key execution phases—from session lifecycles and tool invocations to approval flows—and inject custom logic without modifying the core engine. By abstracting the execution medium into unified handlers, this crate allows Astralis to trigger shell commands, execute WebAssembly modules, dispatch HTTP webhooks, or cascade into LLM-based agent handlers.
+The kernel fires events at 23 points in the execution lifecycle. Hooks intercept those events and return typed verdicts: continue, block, ask the human, or continue with modifications. Shell commands, HTTP webhooks, and Extism WASM modules can all serve as handlers. No core engine changes required.
 
-## Core Features
+This is how operators customize Astrid without forking it. A security team blocks `rm` via a shell hook. A compliance system logs every tool call to an external webhook. A WASM module rewrites prompts before they reach the model. All without touching kernel code.
 
-- **Comprehensive Event Model**: Intercept execution at granular stages including `PreToolCall`, `PostToolCall`, `ApprovalRequest`, and `SessionStart`.
-- **Pluggable Execution Handlers**: Dispatch events seamlessly to local shell environments, remote REST APIs, secure WebAssembly sandboxes, or secondary AI agents.
-- **Context-Aware Execution**: Inject structured state and environment variables into handlers dynamically based on the triggering event.
-- **Profile Management**: Group related hooks into named profiles (`HookProfile`) for environment-specific or agent-specific configurations.
-- **Asynchronous Integration**: Fully async architecture built on `tokio` for high-throughput, non-blocking hook resolution.
+## How it works
 
-## Architecture
+A hook binds one handler to one event. When the kernel fires that event, the `HookExecutor` runs all matching hooks in priority order (lower integer runs first). Each handler returns a `HookResult`:
 
-Within the broader Astralis ecosystem, `astrid-hooks` sits between the event bus (`astrid-events`) and the core runtime scheduler. When the runtime reaches a defined transition point (e.g., about to execute a tool), it broadcasts an event. The `HookExecutor` matches the event against the registered `HookManager` routing table.
+- **`Continue`** proceeds normally.
+- **`Block { reason }`** short-circuits the chain and rejects the operation.
+- **`Ask { question }`** pauses for human input.
+- **`ContinueWith { modifications }`** proceeds with altered context.
 
-If a match is found, the executor materializes the specific `HookHandler`:
-- **Command Handlers**: Spawn localized subprocesses, capturing `stdout`/`stderr` and returning the execution result. Useful for localized scripting and immediate side-effects.
-- **HTTP Handlers**: Construct and dispatch RESTful payloads to external webhooks. Ideal for remote auditing, alerting, or decentralized processing.
-- **WASM Handlers**: Sandbox logic execution using `extism` for secure, multi-tenant extension without OS-level permissions.
-- **Agent Handlers**: Delegate complex, fuzzy logic to isolated subagents for recursive workflows.
+If multiple hooks fire on the same event, `Block` takes absolute precedence. `Ask` takes precedence over `Continue`. `ContinueWith` modifications merge across hooks.
 
-## Quick Start
+Each hook declares a `FailAction` for when the handler itself fails (timeout, crash, bad output): `Warn` (log and continue, the default), `Block` (treat failure as rejection), or `Ignore` (silent).
 
-The fundamental workflow requires initializing a `HookManager`, defining your hooks, and executing them in context.
+## 23 lifecycle events
 
-```rust
-use astrid_hooks::{Hook, HookEvent, HookHandler, HookManager, HookExecutor};
+Session start/end/reset. Prompt assembly. Tool calls (pre, post, error, result persist). Approval flows (pre, post). Context compaction (pre, post). Subagent start/stop. Model resolution. Message send/receive/sent. Agent loop end. Kernel start/stop. Notification.
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut manager = HookManager::new();
+## Three handler types
 
-    // Define a command-based hook to audit tool executions locally
-    let audit_hook = Hook::new(HookEvent::PreToolCall)
-        .with_handler(HookHandler::Command {
-            command: "audit-logger".to_string(),
-            args: vec!["--tool".to_string(), "$TOOL_NAME".to_string()],
-            env: Default::default(),
-        });
-        
-    // Define an HTTP webhook for real-time approval escalation
-    let approval_hook = Hook::new(HookEvent::ApprovalRequest)
-        .with_handler(HookHandler::Http {
-            url: "https://internal.sec.corp/api/v1/approvals".to_string(),
-            method: "POST".to_string(),
-            headers: Default::default(),
-        });
+- **Command**: spawns a shell process, passes context as `ASTRID_HOOK_*` environment variables and JSON on stdin. Reads the verdict from stdout.
+- **HTTP**: POSTs to a webhook URL. Reads the verdict from the response body.
+- **WASM**: calls a function in an Extism module. Reads the verdict from the return value.
 
-    manager.register(audit_hook);
-    manager.register(approval_hook);
-    
-    // In practice, HookExecutor is integrated within the Astralis runtime
-    // and invoked automatically during lifecycle transitions.
-    let executor = HookExecutor::new(manager);
-    
-    Ok(())
-}
+## TOML discovery
+
+Hooks load from `HOOK.toml`, `hook.toml`, or `hooks.toml` files in `.astrid/hooks/` or configured extra paths. Example:
+
+```toml
+event = "pre_tool_call"
+name = "block-rm"
+timeout_secs = 5
+fail_action = "block"
+
+[handler]
+type = "command"
+command = "sh"
+args = ["-c", "case \"$ASTRID_HOOK_DATA\" in *rm*) echo 'block: rm blocked';; *) echo continue;; esac"]
 ```
 
-### Supported Hook Events
+## Output protocol
 
-The system currently tracks the following deterministic lifecycle states:
-- `SessionStart` / `SessionEnd`
-- `UserPrompt`
-- `PreToolCall` / `PostToolCall` / `ToolCallError`
-- `ApprovalRequest` / `ApprovalGranted` / `ApprovalDenied`
-- `SubagentSpawn` / `SubagentComplete`
+Handlers signal results through stdout (command) or response body (HTTP):
+
+- Empty or `"continue"`: `Continue`
+- `"block: <reason>"`: `Block`
+- `"ask: <question>"`: `Ask`
+- JSON with `"action"` field: deserialized directly into `HookResult`
+
+## Current state
+
+The public API surface is intentionally narrow: `Hook`, `HookHandler`, `HookEvent`, and `HookResult`. The manager, executor, discovery, profiles, and handler modules are all `pub(crate)` internal, consumed by the kernel. Most builder methods on `Hook` and `HookHandler` are also `pub(crate)`. This crate defines the types and execution model. The kernel drives it.
+
+Built-in profiles exist for `minimal`, `logging`, `security`, and `development` setups, but these are internal and not yet exposed as user-facing configuration.
 
 ## Development
 
@@ -81,4 +71,4 @@ cargo test -p astrid-hooks
 
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).

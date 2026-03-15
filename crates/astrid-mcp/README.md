@@ -1,110 +1,75 @@
 # astrid-mcp
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-mcp)](https://crates.io/crates/astrid-mcp)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-Robust MCP client integration and server lifecycle management for the Astralis OS.
+**The syscall boundary for external tools. Device drivers for the OS.**
 
-`astrid-mcp` provides the essential bridge between the Astralis intelligence kernel and external tool ecosystems. By wrapping the official `rmcp` SDK (Model Context Protocol), this crate transforms standard MCP interactions into secure, audited, and capability-driven operations native to Astralis. It manages the full lifecycle of MCP servers, rigorously verifies executables before launch, and enforces strict authorization boundaries on every tool invocation.
+Astrid capsules live inside WASM. External tool servers live outside it. This crate bridges the gap: it manages MCP server processes, verifies their binaries before spawning them, gates every tool call through the capability system, and writes audit entries for every invocation. It is the sole path through which the kernel reaches external tools.
 
-## Core Features
+Wraps the `rmcp` SDK. Implements the MCP 2025-11-25 spec (sampling, roots, elicitation, URL elicitation).
 
-* **Server Lifecycle Management**: Native process control to start, stop, restart, and monitor MCP server instances directly from TOML configurations.
-* **Capability-Based Authorization**: Zero-trust tool invocation using the Astralis capabilities system and strict, centralized audit logging.
-* **Nov 2025 MCP Spec Native**:
-  * **Sampling**: Support for server-initiated LLM calls.
-  * **Roots**: Dynamic server boundary inquiries.
-  * **Elicitation**: Safe human-in-the-loop requests and URL credential collection.
-* **Dynamic Configuration**: Hot-pluggable configuration allowing servers to be dynamically added or removed at runtime.
+## Why this exists
 
-## Architecture
+An agent calling `mcp://filesystem:read_file` is analogous to a process calling `read(2)`. The kernel must verify authorization, log the call, and manage the server process that handles it. Without this crate, every tool call would bypass the security model.
 
-`astrid-mcp` is designed in layers to isolate process management from protocol logic and authorization. This separation of concerns ensures that a compromised external tool cannot bypass Astralis security boundaries.
+## Two client layers
 
-* **`ServerManager`**: Handles spawning child processes, capturing standard I/O for MCP transport, tracking process health, and enforcing restart policies.
-* **`McpClient`**: The primary interface for caching tools, handling server notices (e.g., tool list refreshes), and orchestrating standard MCP communications over the underlying `rmcp` transport.
-* **`SecureMcpClient`**: A secure wrapper requiring `SessionId`, `CapabilityStore`, and `AuditLog` instances. It mandates that every tool invocation holds a valid capability token and logs all operations (both success and failure) to the centralized Astralis audit system. (Built but not yet wired into the runtime.)
+**`McpClient`** manages server processes, caches tools, and dispatches calls without authorization checks. It is the raw interface for kernel-internal use.
 
-## Quick Start
+**`SecureMcpClient`** wraps `McpClient` with the full security chain: capability token validation, single-use token consumption (atomic, blocks replay), issuer verification against the runtime's ed25519 public key, and audit logging of every call with a BLAKE3 hash of the arguments. This is what the kernel's tool dispatch path uses.
 
-Add `astrid-mcp` to your `Cargo.toml`:
+Both clients are cheaply cloneable. All clones share the same `ServerManager`, tools cache, and capability state via `Arc`.
+
+## Server lifecycle
+
+`ServerManager` owns server processes. It starts them, monitors health via `RunningService::is_closed()`, enforces restart policies (`Never`, `OnFailure { max_retries }`, `Always`), and tracks restart counts for backoff. `try_reconnect` checks the restart policy and reconnects atomically to avoid TOCTOU races.
+
+Binary hash verification runs before any process spawns. If a `binary_hash` is configured, the server binary is read, BLAKE3-hashed, and compared. Mismatch aborts with `McpError::BinaryHashMismatch`. No fallback, no override.
+
+Untrusted servers (the default) are wrapped in an OS-level sandbox via `astrid-workspace`. Trusted servers (`trusted = true`) run natively.
+
+## Reactive tool cache
+
+When a server sends `notifications/tools/list_changed`, a background listener refreshes the in-memory tool cache without polling. The notice channel also handles uplink registrations for Tier 2 capsule processes.
+
+## Server name validation
+
+Server names are validated against a strict ASCII allowlist: alphanumeric, hyphens, underscores, colons, dots (not leading). Path separators, null bytes, shell metacharacters, and Unicode lookalikes are rejected. Display names in error messages are truncated to 40 characters to prevent log poisoning from attacker-controlled input.
+
+## Usage
 
 ```toml
 [dependencies]
 astrid-mcp = { workspace = true }
 ```
 
-Instantiate a client, configure a server, and execute a tool:
-
 ```rust
 use astrid_mcp::{McpClient, ServersConfig, ServerConfig};
 
-#[tokio::main]
-async fn main() -> Result<(), astrid_mcp::McpError> {
-    let mut config = ServersConfig::default();
-    
-    // Configure an npx-based MCP server
-    config.add(
-        ServerConfig::stdio("filesystem", "npx")
-            .with_args(["-y", "@anthropics/mcp-server-filesystem", "/tmp"])
-            .auto_start()
-    );
+let mut config = ServersConfig::default();
+config.add(
+    ServerConfig::stdio("filesystem", "npx")
+        .with_args(["-y", "@anthropics/mcp-server-filesystem", "/tmp"])
+        .auto_start(),
+)?;
 
-    let client = McpClient::with_config(config);
-    client.connect("filesystem").await?;
+let client = McpClient::with_config(config);
+client.connect("filesystem").await?;
 
-    let result = client.call_tool(
-        "filesystem",
-        "read_file",
-        serde_json::json!({"path": "/tmp/test.txt"})
-    ).await?;
-
-    println!("Tool output: {}", result.text_content());
-    Ok(())
-}
-```
-
-### Secure Usage
-
-For production environments within Astralis, the `SecureMcpClient` enforces capability requirements and records immutable audit trails. It requires tight integration with `astrid-core`, `astrid-audit`, and `astrid-capabilities`.
-
-```rust
-use astrid_mcp::{McpClient, SecureMcpClient, ServersConfig};
-use astrid_core::SessionId;
-use std::sync::Arc;
-
-// Assume capabilities_store and audit_log are initialized by the Astralis runtime
-let base_client = McpClient::with_config(config);
-let secure_client = SecureMcpClient::new(
-    base_client,
-    capabilities_store,
-    audit_log,
-    SessionId::new()
-);
-
-// Connect and automatically audit the connection event
-secure_client.connect("filesystem").await?;
-
-// Invocation requires prior capability issuance
-// If unauthorized, this returns a requirement for approval rather than failing blindly
-let result = secure_client.call_tool_if_authorized(
-    "filesystem",
-    "write_file",
-    serde_json::json!({"path": "/tmp/out.txt", "content": "hello"})
+let tools = client.list_tools().await?;
+let result = client.call_tool(
+    "filesystem", "read_file",
+    serde_json::json!({"path": "/tmp/hello.txt"})
 ).await?;
 ```
 
 ## Development
 
-To run tests for this specific crate within the workspace:
-
 ```bash
 cargo test -p astrid-mcp --all-features
 ```
 
-When contributing to protocol-level features, ensure you reference the November 2025 MCP specification and implement the corresponding handlers in the `capabilities` module.
-
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).

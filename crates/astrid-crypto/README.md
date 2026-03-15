@@ -1,59 +1,55 @@
 # astrid-crypto
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-crypto)](https://crates.io/crates/astrid-crypto)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-Cryptographic primitives for the Astralis secure agent runtime.
+**The cryptographic foundation that makes authorization math, not hope.**
 
-In the Astralis architecture, authorization is never delegated to the LLM. Instead, it relies strictly on verifiable cryptography. `astrid-crypto` provides the foundational primitives that make this possible: Ed25519 key management, BLAKE3 content hashing, and signature verification. This crate acts as the security boundary for the runtime, ensuring that capability tokens, audit logs, and agent identities are mathematically enforced and protected against common attack vectors.
+In the OS model, this is the kernel's cryptographic subsystem. Every capability token, every audit chain link, every agent identity assertion ultimately bottoms out in the primitives this crate provides: Ed25519 signatures via `ed25519-dalek`, BLAKE3 content hashing via `blake3`, and secure key lifecycle via `zeroize`. No other crate in the workspace touches raw key material.
 
-## Core Features
+## What this crate provides
 
-* **Secure Key Management**: Ed25519 keypairs with automatic `ZeroizeOnDrop` memory clearing for sensitive material.
-* **Hardened Filesystem Operations**: Atomic key file creation with `0o600` permissions (on Unix) and protection against symlink attacks.
-* **High-Performance Hashing**: BLAKE3-backed `ContentHash` for rapid audit chain linking and data integrity.
-* **Serialization Ready**: Seamless Base64 and Hex encoding/decoding via Serde integration.
+**`KeyPair`** generates Ed25519 signing keys from `OsRng`. The `SigningKey` is `ZeroizeOnDrop`, scrubbed from memory when the struct drops. `KeyPair` deliberately does not implement `Clone`. You cannot silently duplicate a private key. Pass by reference or explicitly export the secret bytes. `Debug` prints only the first 8 bytes of the public key as hex, never raw material. `from_secret_key` zeroizes its temporary buffer immediately after constructing the `SigningKey`.
 
-## Quick Start
+**`PublicKey`** is 32 bytes, `Clone`, `Copy`, `Hash`. Serializes as base64 via serde. Supports hex and base64 round-trips. `key_id_hex()` returns the first 8 bytes as hex for safe logging. Verifies signatures independently of the `KeyPair` that produced them, which is how the audit log verifies entries signed by rotated keys.
+
+**`Signature`** is 64 bytes, `Clone`, `Copy`. Serializes as base64. `Debug` prints only a short hex prefix. Wraps `ed25519-dalek::Signature` with `from_bytes`, `to_dalek`, and standalone `verify(message, public_key_bytes)`.
+
+**`ContentHash`** is a 32-byte BLAKE3 hash. Used for audit chain linking (each entry hashes the previous), capsule source tree verification, and tool argument privacy (arguments stored as hashes, not raw content). `zero()` is the sentinel value for genesis entries. Serializes as hex via serde.
+
+## Who depends on this
+
+`astrid-capabilities` signs and verifies capability tokens. `astrid-audit` signs entries and links them via `ContentHash`. `astrid-approval` passes the runtime `KeyPair` through to both. `astrid-capsule` uses `ContentHash` for BLAKE3 source tree verification before loading WASM binaries. This crate is the root of the trust chain.
+
+## Encoding conventions
+
+`PublicKey` and `Signature` serialize as base64 in JSON (compact for network transport). `ContentHash` serializes as hex (human-readable in logs and audit dumps). All three support both hex and base64 round-trip conversions for interop.
+
+## Usage
+
+```toml
+[dependencies]
+astrid-crypto = { workspace = true }
+```
 
 ```rust
 use astrid_crypto::{KeyPair, ContentHash};
 
-// Generate an ephemeral runtime key
 let keypair = KeyPair::generate();
 
-// Hash and sign a payload
-let message = b"system_instruction:terminate";
+let message = b"capability:fs.read:/tmp";
 let hash = ContentHash::hash(message);
-let signature = keypair.sign(hash.as_bytes());
 
-// Verify the cryptographic authorization
+let signature = keypair.sign(hash.as_bytes());
 assert!(keypair.verify(hash.as_bytes(), &signature).is_ok());
+
+let pk = keypair.export_public_key();
+println!("key_id={}", pk.key_id_hex()); // first 8 bytes, safe to log
 ```
 
-## Architecture and Security Model
-
-`astrid-crypto` is designed defensively to protect against misconfigurations and system-level attacks.
-
-### Memory and Storage Isolation
-The `KeyPair` struct strictly guards the private `SigningKey`. It does not implement `Clone`, forcing developers to pass it by reference. All file read buffers are wrapped in `Zeroizing` containers to ensure sensitive material is scrubbed from memory immediately after parsing.
-
-### Content Hashing
-Astralis relies on `ContentHash` (backed by BLAKE3) for cryptographic links in audit trails and capability identifiers.
-
-## API Reference
-
-The crate exposes a minimal, focused public API:
-* `KeyPair`: Generation, secure storage, and signing.
-* `PublicKey`: Serialization-friendly verification key.
-* `ContentHash`: 32-byte BLAKE3 hash with zero-hash support.
-* `Signature`: Strongly typed wrapper around Ed25519 signatures.
-* `CryptoError`: Unified `thiserror` enumeration for cryptographic and IO failures.
+`#![deny(unsafe_code)]` is enforced crate-wide.
 
 ## Development
-
-To run the unit tests, including the filesystem security checks:
 
 ```bash
 cargo test -p astrid-crypto
@@ -61,4 +57,4 @@ cargo test -p astrid-crypto
 
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).

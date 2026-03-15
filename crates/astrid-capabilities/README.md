@@ -1,94 +1,70 @@
 # astrid-capabilities
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-capabilities)](https://crates.io/crates/astrid-capabilities)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-Cryptographically signed, glob-scoped authorization tokens for the Astralis runtime.
+**The agent cannot forge the token. It cannot replay an old one. It cannot talk its way past the check.**
 
-This crate implements the core capability-based security model for Astralis. It ensures that every action taken by an agent—whether invoking a Model Context Protocol (MCP) tool or accessing the local filesystem—is explicitly authorized by a verifiable token. Rather than relying on implicit permissions or ambient authority, `astrid-capabilities` requires a cryptographically signed token linked directly to a user approval event. This guarantees a verifiable chain of authorization that cannot be forged, bypassed, or escalated.
+In the OS model, capability tokens are the kernel's access control mechanism. An agent that wants to call `mcp://filesystem:read_file` needs a signed token granting `Permission::Invoke` on a matching resource pattern. No token, no access. The token is Ed25519-signed by the runtime key, linked to the approval audit entry that created it, optionally time-bounded, and scoped to session or persistent storage. The agent has no way to mint, modify, or extend them.
 
-## Core Features
+## How tokens work
 
-* **Cryptographic Verification**: The runtime signs all capability tokens using Ed25519 keys, preventing tampering or forgery by compromised agents.
-* **Precise Resource Scoping**: Supports exact URI matches and glob patterns (e.g., `mcp://filesystem:*`, `file:///home/user/**`) with strict, built-in path traversal prevention.
-* **Audit Linkage**: Every token immutably references the specific `AuditEntryId` of the user approval that generated it, maintaining a perfect forensic trail.
-* **Flexible Storage Backends**: Unified interface for ephemeral session tokens (in-memory) and durable persistent tokens (backed by SurrealKV).
-* **Replay & Revocation Protection**: Built-in support for single-use tokens, used-token tracking, and explicit revocation lists.
-* **Time-Bounded Access**: Expiration enforcement with configurable clock-skew tolerance.
+When a human approves an action with "Allow Always", the security interceptor (`astrid-approval`) calls into this crate to mint a `CapabilityToken`. The token is signed, stored, and returned as proof. On subsequent calls, the interceptor finds the token and skips the approval prompt.
 
-## Architecture & Security Model
+`ResourcePattern` uses compiled glob matching via `globset`. Patterns like `mcp://filesystem:*` match any tool on that server. `file:///home/user/**` matches any file under that directory. Exact URIs skip glob compilation for speed. Path traversal (`..`) is rejected at pattern creation and again at match time. Defense in depth.
 
-The security model assumes that agent runtimes are untrusted and must prove they have the authority to execute specific actions. 
+**Dual-tier storage.** Session tokens live in memory via `RwLock<HashMap>`. Persistent tokens survive restarts via SurrealKV. Both tiers share revocation and single-use tracking. Revocation persists to KV before updating in-memory state, so a crash between the two cannot resurrect a revoked token.
 
-When a user approves an action, the system generates a `CapabilityToken`. This token contains the exact resource scope, the granted permissions, the expiration time, and the UUID of the approval audit entry. The system then hashes this data and signs it using the runtime's private key. 
+**Replay protection.** Single-use tokens are marked consumed atomically under a write lock. `mark_used` checks, persists, and inserts in one critical section to prevent TOCTOU races. State survives process restart via KV.
 
-At the point of resource access, the `CapabilityValidator` intercepts the request, retrieves the relevant tokens from the `CapabilityStore`, verifies the Ed25519 signatures, checks for expiration or revocation, and confirms the resource requested matches the token's allowed glob pattern.
+**Tamper detection on read.** Persistent tokens are re-validated (expiry + signature) on every `get()`, `find_capability()`, and `has_capability()` call. A token tampered on disk fails signature verification and is silently skipped. Session tokens skip this check because they were validated at `add()` time and live in trusted memory.
 
-## Quick Start
+**Clock-skew tolerance.** Configurable window (default 30 seconds) via `validate_with_skew`. A token that expired 10 seconds ago still passes with the default tolerance.
 
-The following example demonstrates creating a token, persisting it to memory, and validating a subsequent access request.
+## Resource pattern examples
+
+| Pattern | Matches |
+|---|---|
+| `mcp://filesystem:read_file` | Exactly that one tool |
+| `mcp://filesystem:*` | Any tool on the `filesystem` server |
+| `mcp://*:read_*` | Any `read_` tool on any server |
+| `file:///home/user/**` | Any file under `/home/user` |
+
+## Usage
+
+```toml
+[dependencies]
+astrid-capabilities = { workspace = true }
+```
 
 ```rust
 use astrid_capabilities::{
     CapabilityToken, CapabilityStore, ResourcePattern, TokenScope, AuditEntryId,
-    TokenBuilder, CapabilityValidator
 };
 use astrid_core::Permission;
 use astrid_crypto::KeyPair;
-use std::time::Duration;
 
-// 1. Initialize storage and the runtime cryptographic identity
-let store = CapabilityStore::in_memory();
 let runtime_key = KeyPair::generate();
+let pattern = ResourcePattern::new("mcp://filesystem:*").unwrap();
 
-// 2. Define the exact scope of the capability
-let pattern = ResourcePattern::new("mcp://filesystem:*").expect("valid pattern");
+let token = CapabilityToken::create(
+    pattern,
+    vec![Permission::Invoke],
+    TokenScope::Session,
+    runtime_key.key_id(),
+    AuditEntryId::new(),
+    &runtime_key,
+    None, // no TTL
+);
 
-// 3. Generate a signed token linked to an audit event
-let token = TokenBuilder::new(pattern)
-    .permission(Permission::Invoke)
-    .session()
-    .ttl(chrono::Duration::hours(1))
-    .build(runtime_key.key_id(), AuditEntryId::new(), &runtime_key);
-
-// 4. Store the authorized capability
+let store = CapabilityStore::in_memory();
 store.add(token).unwrap();
-
-// 5. Validate authorization at the point of use
-let validator = CapabilityValidator::new(&store);
-let auth_result = validator.check("mcp://filesystem:read_file", Permission::Invoke);
-
-assert!(auth_result.is_authorized());
+assert!(store.has_capability("mcp://filesystem:read_file", Permission::Invoke));
 ```
 
-## Resource Patterns
-
-`astrid-capabilities` uses a custom URI scheme to define access boundaries. Resources follow either an MCP tool format (`mcp://server:tool`) or a filesystem format (`file://path`). 
-
-The `ResourcePattern` type parses these URIs and supports glob matching:
-
-* `mcp://filesystem:read_file` - Exact match for a single tool.
-* `mcp://filesystem:*` - Matches any tool hosted by the `filesystem` server.
-* `mcp://*:read_*` - Matches any tool starting with `read_` across all servers.
-* `file:///home/user/**` - Matches any file or directory under `/home/user`.
-
-### Path Traversal Protection
-
-To prevent directory traversal attacks, the `ResourcePattern` constructor and its matching engine actively reject any pattern or resource URI containing `..` segments. Even if a glob pattern like `file:///home/user/**` is authorized, a subsequent check against `file:///home/user/../../etc/passwd` will deterministically fail.
-
-## Storage & Persistence
-
-The `CapabilityStore` abstracts token persistence across two tiers:
-
-1. **Session Scope**: Ephemeral tokens stored in memory. These are destroyed when the application restarts or when `clear_session` is invoked.
-2. **Persistent Scope**: Durable tokens persisted to disk using the `astrid-storage` crate (backed by SurrealKV). 
-
-Regardless of the storage tier, the store maintains synchronized state for revoked tokens and single-use token consumption, preventing replay attacks across both memory and disk boundaries.
+This crate also defines `DirHandle` and `FileHandle`, the opaque UUID-based handles used by `astrid-vfs`. You cannot construct a path to a directory you have not been granted.
 
 ## Development
-
-To run the test suite for this specific crate:
 
 ```bash
 cargo test -p astrid-capabilities
@@ -96,4 +72,4 @@ cargo test -p astrid-capabilities
 
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).

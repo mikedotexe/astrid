@@ -1,102 +1,79 @@
 # astrid-storage
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-storage)](https://crates.io/crates/astrid-storage)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-The unified dual-tier persistence layer for the Astralis runtime.
+**The persistence layer. Disk for the OS.**
 
-`astrid-storage` provides the foundational memory and persistence infrastructure for the Astralis OS. It implements a strictly separated two-tier architecture: a low-level, high-performance Key-Value store for isolating untrusted WASM capsules, and a high-level document-graph query engine for managing the system's core capabilities, audit chains, and approval routing.
+An operating system needs disk. Astrid has two tiers: a raw key-value store for capsule data and a full query engine for system state. Both scale from a single embedded process to a distributed cluster through configuration alone. No code changes. Same API.
 
-By centralizing storage around the SurrealDB ecosystem, the runtime scales from a single-agent embedded binary to a distributed multi-node deployment backed by TiKV without altering a single line of application code.
+## Why two tiers
 
-## Core Features
-- **Namespace Isolation**: `ScopedKvStore` enforces rigid boundaries for multi-tenant or multi-plugin execution environments.
-- **Typed Operations**: Built-in `get_json` and `set_json` convenience methods for ergonomic struct serialization within scoped boundaries.
-- **Memory Fallback**: A fully compliant `MemoryKvStore` implementation for ephemeral sessions, fast unit testing, and temporary state.
-- **Unified Scaling**: Transition from local `surrealkv://` embedded stores to distributed `tikv://` clusters through configuration alone.
+Capsules need fast, isolated byte storage. The audit log, capability store, and identity system need relations, graph traversal, and SurrealQL queries. Forcing both through the same interface wastes either simplicity or power. So they get separate tiers with separate backing stores, unified behind one crate.
 
-## Architecture
+| Deployment | KV backend | DB backend |
+|---|---|---|
+| Dev / single-agent | SurrealKV (embedded LSM-tree) | SurrealDB (embedded, SurrealKV) |
+| Production / multi-node | SurrealKV (embedded) | SurrealDB (over TiKV, Raft) |
 
-### Tier 1: Raw Key-Value (`KvStore`)
-Designed for strict WASM guest isolation. Powered by `SurrealKV`, an embedded, versioned, ACID-compliant LSM-tree. 
+The multi-node path exists in the type system and connection strings. It has not been deployed in production yet.
 
-Untrusted capsules never receive direct access to the file system or global state. Instead, the runtime provisions a `ScopedKvStore` bound to a specific namespace (e.g., `wasm:{plugin_id}`). The guest code executes `get`, `set`, and `delete` operations without visibility into the underlying host key structure, enforcing a cryptographic airlock around guest memory.
+## Namespace isolation
 
-### Tier 2: Query Engine (`Database`)
-Designed for the Astralis system core. Powered by `SurrealDB` and `SurrealQL`.
+Every KV operation is scoped to a namespace. WASM guests receive a `ScopedKvStore` bound to `wasm:{capsule_id}` and never see the raw key structure. The kernel uses `system:*` namespaces for internal state.
 
-System operations require relational integrity, graph traversal, and complex querying. The Tier 2 engine manages the cryptographic audit log, capability tokens, budget tracking, and persistent agent memory. It uses the exact same underlying `SurrealKV` storage engine when running in embedded mode, ensuring atomic consistency across the entire OS.
+Internally, keys are stored as `"{namespace}\0{key}"`. The null-byte separator is the isolation boundary. Empty namespaces, empty keys, and keys containing null bytes are rejected at validation before reaching the storage engine. `SurrealKvStore` uses transactional range scans bounded by the null-byte separator, so a namespace scan is O(keys in namespace), not O(total keys).
 
-## Quick Start
+## Secret storage
 
-This is an internal workspace crate. Add it to your `Cargo.toml` using the workspace inheritance and specify the storage engines you require.
+The `SecretStore` trait provides synchronous credential storage (called from synchronous Extism host functions that bridge to async via `block_on`). Three implementations:
+
+- `KvSecretStore` stores secrets in the KV tier with a `__secret:` key prefix. Works everywhere. No OS-level encryption at rest.
+- `KeychainSecretStore` (`keychain` feature) uses the OS keychain via the `keyring` crate. Per-capsule isolation via service name scoping.
+- `FallbackSecretStore` (`keychain` feature) probes the keychain once at construction. If accessible, all operations go to keychain. If not, all go to KV. No per-operation fallback that could scatter secrets across both backends.
+
+The `build_secret_store` convenience constructor picks the best available backend.
+
+## Identity
+
+`IdentityStore` manages users and cross-platform identity links. A Discord user, a Telegram user, and a CLI user can all resolve to the same `AstridUserId`. Platform names are normalized (case, whitespace). Path-injection characters (`/`, `\0`) in platform names, user IDs, and display names are rejected before key construction.
+
+## Feature flags
+
+| Feature | Enables |
+|---|---|
+| `kv` | `SurrealKvStore` (persistent embedded KV) |
+| `db` | `Database` (SurrealDB query engine) |
+| `keychain` | `KeychainSecretStore` + `FallbackSecretStore` |
+| `full` | `kv` + `db` |
+
+`MemoryKvStore` and `KvSecretStore` are always available with no feature flags.
+
+## Usage
 
 ```toml
 [dependencies]
 astrid-storage = { workspace = true, features = ["full"] }
 ```
 
-### Provisioning a WASM Capsule Storage Airlock
-
-When docking a new extension, the runtime provisions an isolated storage view:
-
 ```rust
 use std::sync::Arc;
 use astrid_storage::kv::{MemoryKvStore, ScopedKvStore};
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
-struct ExtensionConfig {
-    retries: u32,
-    endpoint: String,
-}
+let store = Arc::new(MemoryKvStore::new());
+let scoped = ScopedKvStore::new(store, "wasm:my-plugin")?;
 
-// Host provisions the global memory store
-let global_store = Arc::new(MemoryKvStore::new());
-
-// Host binds a restricted namespace for the extension
-let extension_storage = ScopedKvStore::new(global_store, "wasm:data-processor").unwrap();
-
-// Extension executes typed reads and writes safely contained in its orbit
-let config = ExtensionConfig {
-    retries: 3,
-    endpoint: "api.internal.net".into(),
-};
-
-extension_storage.set_json("agent_config", &config).await.unwrap();
-```
-
-### Initializing the System Database
-
-The `Database` struct wraps the connection logic for the main OS state:
-
-```rust
-use astrid_storage::Database;
-
-// Connect to a local embedded database for development
-let db = Database::connect_embedded("./data/system.db").await.unwrap();
-
-// Or initialize an ephemeral memory database for tests
-let test_db = Database::connect_memory().await.unwrap();
-
-// Access the underlying SurrealDB client for direct SurrealQL queries
-let client = db.client();
+scoped.set("config", b"{}".to_vec()).await?;
+scoped.set_json("prefs", &serde_json::json!({"key": "value"})).await?;
+let loaded: serde_json::Value = scoped.get_json("prefs").await?.unwrap();
 ```
 
 ## Development
 
 ```bash
-# Run tests for the in-memory implementations
-cargo test -p astrid-storage
-
-# Run tests requiring the SurrealKV feature
-cargo test -p astrid-storage --features kv
-
-# Run tests requiring all storage backends
 cargo test -p astrid-storage --all-features
 ```
 
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).

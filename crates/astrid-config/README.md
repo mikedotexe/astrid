@@ -1,102 +1,70 @@
 # astrid-config
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-config)](https://crates.io/crates/astrid-config)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-Unified, layered, and strictly validated configuration for the Astralis OS runtime.
+**The layered configuration system.**
 
-`astrid-config` provides a single, consolidated configuration type for the entire Astrid runtime. It resolves configuration scattered across domains (security, budgets, models, gateways) into a cohesive, deterministic structure. Rather than relying on simple overrides, it implements a secure merging algorithm where lower-trust scopes (like a project workspace) are cryptographically restricted from loosening security policies established by higher-trust scopes (like the system administrator).
+An operating system must load configuration from untrusted sources without letting those sources escalate privileges. `git clone` a hostile project and its `.astrid/config.toml` sits inside the workspace. This crate merges five config layers into a single `Config`, then enforces a hard invariant: the workspace layer can only tighten security, never loosen it.
 
-## Core Features
+This crate has zero dependencies on other internal astrid crates. It depends only on `serde`, `toml`, `serde_json`, `thiserror`, `tracing`, and `directories`. Conversion to domain types happens at the integration boundary.
 
-* **Deterministic Layering**: Predictable merging of embedded defaults, system, user, and workspace configurations.
-* **Security Enforcement**: Workspace-level configurations are sandboxed. They can tighten budgets, reduce rate limits, and append to blocklists, but they cannot exfiltrate API keys, elevate workspace modes, or expand allowed system paths.
-* **Strict Validation**: Post-merge validation guarantees invariants (e.g., maximum token boundaries, supported providers, non-negative limits) before the runtime boots, making invalid states unrepresentable.
-* **Traceability**: The `ResolvedConfig` struct explicitly tracks the origin file of every final field value (`FieldSources`), simplifying debugging.
-* **Zero Internal Dependencies**: Designed as a pure data crate. It depends only on `serde`, `toml`, `directories`, and `thiserror`, with domain conversion happening strictly at the integration boundary to minimize coupling.
+## Precedence
 
-## Architecture: Precedence & Layering
+From highest to lowest priority:
 
-From lowest to highest priority, `astrid-config` merges settings in the following order:
+1. **Workspace** (`{workspace}/.astrid/config.toml`) - untrusted input, restricted
+2. **User** (`~/.astrid/config.toml`)
+3. **System** (`/etc/astrid/config.toml`)
+4. **Environment variables** (`ASTRID_*`, `ANTHROPIC_*`) - fallback only, applied to fields no config file set
+5. **Embedded defaults** (`defaults.toml` compiled into the binary)
 
-1. **Embedded Defaults** (`defaults.toml` compiled directly into the binary)
-2. **System** (`/etc/astrid/config.toml`)
-3. **User** (`~/.astrid/config.toml` or `$ASTRID_HOME/config.toml`)
-4. **Workspace** (`{workspace}/.astrid/config.toml`)
-5. **Environment Variables** (e.g., `ASTRID_MODEL_PROVIDER`, used as final fallbacks)
+## Workspace restriction enforcement
 
-### Workspace Security Restrictions
+After merging the workspace layer, a hard enforcement pass runs against the pre-workspace baseline:
 
-The workspace layer is treated as untrusted. When merging the workspace configuration, `astrid-config` enforces strict boundary rules against the system/user baseline:
+- **Budgets can only decrease.** `session_max_usd` and `per_action_max_usd` are clamped to the baseline value.
+- **Security booleans can only tighten.** `require_approval_for_delete` can only become true. `allow_write_outside_workspace` can only become false.
+- **Deny-lists can only grow.** Workspace can add to `denied_hosts` and `denied_commands` but cannot remove entries.
+- **Allow-lists cannot expand.** Workspace cannot add entries to `allowed_paths`.
+- **API keys cannot be overridden.** `model.api_key` and `model.api_url` from workspace are reverted.
+- **Server injection blocked.** Workspace cannot add new MCP server definitions.
 
-* **Clamping**: Budgets, timeouts, concurrency limits, and rate limits can only be decreased.
-* **Monotonic Security**: Security toggles (e.g., `require_approval_for_network`) can only be enabled, never disabled.
-* **Union-Only Arrays**: Deny-lists (`blocked_tools`, `denied_paths`) can only accept new entries.
-* **Expansion Blocking**: Allow-lists (`allowed_paths`, `allowed_hosts`) cannot be expanded beyond the baseline.
-* **Override Blocking**: Sensitive fields like `model.api_key` or `model.api_url` cannot be redefined by the workspace.
+Violations are logged and silently reverted. The agent never sees the hostile values.
 
-## Quick Start
+## Variable expansion
 
-Add `astrid-config` to your crate dependencies:
+`${VAR}` references in workspace config are restricted to `ASTRID_*` and `ANTHROPIC_*` prefixes. `${AWS_SECRET_ACCESS_KEY}` is left unresolved. This prevents a workspace config from exfiltrating arbitrary environment variables into fields the agent can read.
 
-```toml
-[dependencies]
-astrid-config = { workspace = true }
-```
+## Validation
 
-### Loading the Full Precedence Chain
+Post-merge validation checks: supported providers (`claude`, `openai`, `openai-compat`, `zai`, `unknown`), temperature range (0.0-1.0), token bounds (1-16M), budget invariants (per-action cannot exceed session), zero-value timeout guards, and valid enum strings.
 
-```rust
-use astrid_config::Config;
-use std::path::Path;
+## Credential redaction
 
-// Load the configuration, automatically detecting defaults, system, user,
-// and merging the provided workspace root.
-let workspace_root = Path::new("/path/to/project");
-let resolved = Config::load(Some(workspace_root)).expect("Failed to load configuration");
+`ModelConfig` has a custom `Serialize` that omits `api_key` and `api_url`. `Debug` replaces credential values with presence booleans. `ServerSection` redacts environment variable values. Credentials never appear in logs, config dumps, or serialized output.
 
-// Access the strictly validated configuration
-let config = resolved.config;
-println!("Active Provider: {}", config.model.provider);
+## Field-level provenance
 
-// Inspect where a specific field came from
-let provider_source = resolved.field_sources.get("model.provider");
-println!("Provider configured by layer: {:?}", provider_source);
-```
+`ResolvedConfig` wraps `Config` with a `FieldSources` map recording which layer last wrote every dotted field path. `config show` annotates each value with `[defaults]`, `[system]`, `[user]`, `[workspace]`, or `[env]`. Output formats: TOML with inline source annotations, or JSON.
 
-### Loading a Specific File
+## Key types
 
-For isolated contexts, tooling, or testing, you can bypass the layering logic and load a single file directly:
-
-```rust
-use astrid_config::Config;
-use std::path::Path;
-
-let config = Config::load_file(Path::new("custom-config.toml")).expect("Failed to parse config file");
-```
+| Type | Role |
+|---|---|
+| `Config` | Root struct. 21 sections: model, runtime, security, budget, rate_limits, servers, audit, keys, workspace, git, hooks, logging, gateway, timeouts, sessions, subagents, retry, spark, uplinks, identity. |
+| `Config::load(workspace_root)` | Full precedence chain with restriction enforcement and validation. |
+| `Config::load_with_home(workspace_root, astrid_home)` | Explicit home override for tests and containers. |
+| `ResolvedConfig` | `Config` + `FieldSources` + list of loaded file paths. |
+| `ConfigLayer` | `Defaults`, `System`, `User`, `Workspace`, `Environment`. |
+| `ConfigError` | `ReadError`, `ParseError`, `ValidationError`, `EnvError`, `RestrictionViolation`, `NoHomeDir`. |
 
 ## Development
-
-The public API is deliberately small, exporting the core types required for integration:
-
-* `Config`: The root data structure containing all sections (`ModelConfig`, `SecurityConfig`, `BudgetSection`, etc.).
-* `ResolvedConfig`: A wrapper around `Config` that includes file loading history and field-level lineage.
-* `ConfigLayer`: An enum representing the origin of a configuration value (Defaults, System, User, Workspace, Environment).
-* `ConfigError`: A unified error type encompassing IO errors, TOML parsing failures, and constraint violations.
-
-To run tests specific to the configuration parser, validation bounds, and merge restriction logic:
 
 ```bash
 cargo test -p astrid-config
 ```
 
-When contributing to this crate, adhere to the following workflow:
-1. Add new configuration fields to the appropriate section in `src/types.rs`.
-2. Provide a sensible, secure fallback for the field in `src/defaults.toml`.
-3. Add strict validation logic in `src/validate.rs`. 
-4. If the field pertains to security, budgets, or limits, appropriate clamp, union, or block logic MUST be added to `src/merge/restrict.rs` to ensure workspace sandboxing holds.
-
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).

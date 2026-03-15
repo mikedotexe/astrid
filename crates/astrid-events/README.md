@@ -1,113 +1,59 @@
 # astrid-events
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-events)](https://crates.io/crates/astrid-events)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-Asynchronous event bus and cross-boundary IPC router for the Astralis OS runtime.
+**The IPC bus and message schemas.**
 
-`astrid-events` acts as the central nervous system connecting the isolated components of the Astralis OS. It provides a robust, broadcast-based distribution layer that shuttles internal host service events and strongly typed IPC messages across WASM boundaries. By combining high-performance asynchronous polling with strictly regulated topic matching, this crate ensures seamless and predictable communication without risking host stability.
+Every component in Astrid communicates through events. The kernel publishes lifecycle transitions. Capsules publish IPC messages. The CLI subscribes to streaming responses. The audit log observes everything. This crate provides the bus that carries those events and the payload schemas that give them structure.
 
-## Core Features
+Split by a `runtime` feature flag so WASM capsules can depend on schemas alone, without pulling in `tokio` or `chrono`.
 
-- **Dual-Mode Subscriptions**: Subscribe via async streams (`bus.subscribe()`) or synchronous callbacks (`EventSubscriber`).
-- **Topic-Based Routing**: Filter cross-boundary IPC messages by topic string. Supports exact matches (`astrid.cli.input`) and trailing wildcards (`astrid.*`).
-- **Cross-Boundary IPC Schemas**: Standardized, strongly typed payloads (`UserInput`, `AgentResponse`, `ApprovalRequired`) for safe communication with untrusted WASM guests.
-- **Swarm Signatures**: Built-in support for cryptographic signatures on IPC messages, enabling stateless verification across distributed Astralis nodes.
-- **Quota Enforcement**: Integrated token-bucket rate limiter (`IpcRateLimiter`) that strictly caps guest payload sizes (5MB hard limit) and transmission frequencies (10MB/s).
-- **Memory-Safe Registry**: Advanced subscriber registry explicitly designed to prevent `Arc` reference cycles when dealing with self-referential callbacks.
+## The bus
 
-## Architecture
+`EventBus` wraps `tokio::sync::broadcast` with a default capacity of 1,024 slots. All async subscribers receive every published event in order. Synchronous subscribers are notified via a `SubscriberRegistry` with `catch_unwind` isolation. One bad subscriber panics; the bus keeps running.
 
-The crate is built around the `EventBus`, a concurrent broadcast channel that guarantees ordered, asynchronous event delivery. Every published `AstridEvent` is instantly available to all connected subscribers.
+Clone-safe. All clones share the same broadcast channel and subscriber registry.
 
-To accommodate the diverse execution contexts within Astralis (e.g., background daemon tasks vs. immediate audit loggers), the bus supports a dual-mode subscription model:
-1. **Asynchronous Receivers**: Yields an `EventReceiver` stream for polling loops.
-2. **Synchronous Subscribers**: Registers `EventSubscriber` traits via the `SubscriberRegistry` for immediate, inline callback execution.
+## Topic filtering
 
-## Quick Start
+`bus.subscribe_topic(pattern)` yields only `AstridEvent::Ipc` messages where the topic matches the pattern. Supports exact matches, single-segment wildcards (`astrid.*.input`), and trailing wildcards (`astrid.v1.lifecycle.*`). Topic depth is capped at 20 segments.
 
-### Asynchronous Subscriptions
+## Lag tracking
 
-The primary method for background tasks is to obtain an `EventReceiver` and poll it asynchronously.
+`EventReceiver::drain_lagged()` returns the cumulative count of messages dropped due to channel overflow. Surface backpressure to callers without crashing the receiver.
 
-```rust
-use astrid_events::{EventBus, AstridEvent, EventMetadata};
+## Rate limiting
 
-async fn monitor_runtime() {
-    let bus = EventBus::new();
-    let mut receiver = bus.subscribe();
+`IpcRateLimiter` enforces per-source-ID quotas: 5 MB hard cap per payload, 10 MB/s rolling throughput limit per WASM guest. One instance per host process, shared via `Arc`.
 
-    // Publish an internal system event
-    bus.publish(AstridEvent::RuntimeStarted {
-        metadata: EventMetadata::new("system_monitor"),
-        version: "1.0.0".to_string(),
-    });
+## The event taxonomy
 
-    // Await the next event in the queue
-    while let Some(event) = receiver.recv().await {
-        println!("Received event: {}", event.event_type());
-    }
-}
-```
+`AstridEvent` is a single enum covering:
 
-### IPC Topic Routing
+- Agent lifecycle (runtime start/stop, session create/end)
+- LLM request/stream lifecycle (request, stream deltas including `ReasoningDelta` for chain-of-thought, response, usage)
+- Tool calls (execute request, result)
+- IPC messages (topic-routed, with optional cryptographic signature)
+- MCP events (server lifecycle, tool discovery)
+- Sub-agent trees (spawn, complete)
+- Capability and approval gates (request, decision)
+- Budget tracking (reserve, commit, refund)
+- Capsule loading (discovered, loaded, failed)
+- Kernel/system events (shutdown, health)
 
-When bridging communication from WASM guests or remote agents, subscribe exclusively to specific IPC topics to filter out internal system noise.
+Every variant carries `EventMetadata`: UUID, UTC timestamp, correlation/session/user IDs, and source component.
 
-```rust
-use astrid_events::EventBus;
+## IPC payloads
 
-async fn handle_cli_input(bus: &EventBus) {
-    // Subscribe using a trailing wildcard to capture all CLI-related IPC messages
-    let mut cli_receiver = bus.subscribe_topic("astrid.cli.*");
+`IpcPayload` is always available (no `runtime` feature needed). It covers every host-capsule protocol message: `UserInput`, `AgentResponse`, `ApprovalRequired`/`ApprovalResponse`, `OnboardingRequired`, `LlmRequest`/`LlmStreamEvent`/`LlmResponse`, `ToolExecuteRequest`/`ToolExecuteResult`, `ElicitRequest`/`ElicitResponse`, `Connect`/`Disconnect`, `RawJson`, and `Custom`. Unknown tags deserialize to `IpcPayload::Unknown` instead of failing.
 
-    while let Some(event) = cli_receiver.recv().await {
-        if let astrid_events::AstridEvent::Ipc { message, .. } = &*event {
-            println!("Intercepted IPC on topic {}: {:?}", message.topic, message.payload);
-        }
-    }
-}
-```
+## Feature flags
 
-### Synchronous Callbacks
-
-For components requiring immediate notification without the overhead of async polling (provided they do not block), use the synchronous registry.
-
-```rust
-use std::sync::Arc;
-use astrid_events::{EventBus, EventSubscriber, AstridEvent, FilterSubscriber};
-
-fn setup_sync_logger(bus: &EventBus) {
-    let subscriber = FilterSubscriber::new("audit_logger", |event| {
-        println!("Synchronous audit log: {}", event.event_type());
-    })
-    // Restrict the callback to specific event types
-    .with_filter(AstridEvent::is_security_event);
-
-    bus.registry().register(Arc::new(subscriber));
-}
-```
-
-> **Warning:** Storing a strong clone of `EventBus` inside a synchronous subscriber will create an `Arc` reference cycle, resulting in a memory leak. Use `std::sync::Weak<EventBus>` if the subscriber must publish subsequent events, or utilize the `bus` reference provided directly in the `on_event` signature.
-
-## Rate Limiting
-
-To protect the host process from aggressive WASM guests or misconfigured plugins, `astrid-events` enforces throughput quotas via the `IpcRateLimiter`.
-
-```rust
-use astrid_events::IpcRateLimiter;
-use uuid::Uuid;
-
-let limiter = IpcRateLimiter::new();
-let plugin_id = Uuid::new_v4();
-let payload_size_bytes = 1024 * 500; // 500 KB
-
-match limiter.check_quota(plugin_id, payload_size_bytes) {
-    Ok(_) => println!("Payload accepted"),
-    Err(e) => println!("Quota exceeded: {e}"),
-}
-```
+| Feature | What it enables | Dependencies added |
+|---|---|---|
+| `runtime` (default) | `EventBus`, `EventReceiver`, `AstridEvent`, `IpcMessage`, `IpcRateLimiter`, subscriber registry | `tokio`, `chrono`, `dashmap`, `tracing`, `astrid-core` |
+| (none) | `IpcPayload`, LLM types, `KernelRequest`/`KernelResponse` | `serde`, `serde_json`, `thiserror`, `uuid` only |
 
 ## Development
 
@@ -117,4 +63,4 @@ cargo test -p astrid-events
 
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).

@@ -1,90 +1,69 @@
 # astrid-workspace
 
-[![Crates.io](https://img.shields.io/crates/v/astrid-workspace)](https://crates.io/crates/astrid-workspace)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE-MIT)
 [![MSRV: 1.94](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 
-Operational boundaries, safe zones, and airlock routing for the Astralis agent runtime.
+**Host-level process containment. The second sandbox.**
 
-While the WASM execution sandbox (Capsules) provides inescapable memory and thread safety, `astrid-workspace` defines the semantic, physical boundaries of where an agent is authorized to operate on the host machine. It establishes the "safe interior" of the workspace hull and provides a strict "airlock" protocol for when an agent needs to reach beyond those borders.
+Astrid has two sandboxes. The WASM sandbox is inescapable by design: capsule code runs in WebAssembly with zero ambient authority. But the agent also spawns native processes (npm, python, shell commands) that run outside WASM. This crate wraps those processes in OS-native containment so they cannot write outside the workspace or read sensitive host paths.
 
-## Core Features
+On Linux: `bwrap` (bubblewrap). On macOS: `sandbox-exec` with a generated Seatbelt profile. On other platforms: passthrough with a warning.
 
-* **Boundary Enforcement**: Pre-compiled glob matching, canonical path resolution, and symlink evaluation to prevent directory traversal and unauthorized host system access.
-* **Airlock Routing (Escapes)**: Structured `EscapeRequest` and `EscapeDecision` flows to handle agent operations that attempt to reach outside the safe zone.
-* **Operational Postures**: Configurable safety modes ranging from strictly `Safe` (always ask before opening the airlock) to fully `Autonomous` (unrestricted deep-space operation).
-* **Mission Profiles**: Predefined configurations (`safe`, `power_user`, `autonomous`, `ci`) designed for specific operating environments.
-* **Session Memory**: Persistent and session-scoped state tracking via the `EscapeHandler` to remember user-approved airlock decisions seamlessly.
+The WASM sandbox protects against malicious capsule code. This sandbox protects against malicious tool output that reaches native execution. They are complementary. The workspace sandbox is escapable with user approval. The WASM sandbox is not.
 
-## Architecture: The Boundary vs. The Sandbox
+## How it works
 
-Understanding the distinction between this crate and the WASM sandbox is critical for Astralis developers.
+`SandboxCommand` takes a `std::process::Command` and returns a new command prepended with the platform's sandbox wrapper. On Linux, it prepends `bwrap` with `--ro-bind / /` for read access, `--bind` for the writable root, `--tmpfs /tmp`, `--unshare-all`, `--share-net`, and `--die-with-parent`. On macOS, it generates an SBPL profile inline (passed via `-p`, not a temp file) that denies by default and allows reads/writes only to the workspace and `/tmp`.
 
-| Aspect | Workspace Boundary (`astrid-workspace`) | Execution Sandbox (WASM/Capsules) |
-|--------|-----------------------------------------|-----------------------------------|
-| **Domain** | Semantic file system access and host operations. | CPU instructions, memory allocation, panic isolation. |
-| **Flexibility** | Escapable via the airlock approval process. | Inescapable by design. |
-| **Control** | User-defined per mission profile. | Hardcoded by the Astralis kernel architecture. |
-| **Purpose** | Prevents agents from accidentally modifying the host system. | Prevents malicious code from exploiting the host runtime. |
+`ProcessSandboxConfig` is a data-oriented builder for when you need a `tokio::process::Command` or finer control. It produces a `SandboxPrefix` (program + args) that you prepend to any command type.
 
-### How Integration Works
+## Injection-safe profile generation
 
-`astrid-workspace` acts as the primary navigational chart for the Astralis OS. It does not perform the file operations itself; instead, it provides the deterministic logic required by `astrid-core` and the various execution components (WASM host functions, MCP tools) to decide if an action is permitted.
+Every path interpolated into a Seatbelt profile is validated first. The crate rejects:
 
-When an agent attempts a filesystem operation:
-1. The requested path is canonicalized to resolve symlinks and relative segments.
-2. The `WorkspaceBoundary` evaluates the path against the active `WorkspaceConfig`.
-3. If the path falls within the workspace root or an `auto_allow` list, the operation proceeds (`PathCheck::Allowed` or `PathCheck::AutoAllowed`).
-4. If the path breaches the perimeter and is not on a `never_allow` list, execution halts. The system generates an `EscapeRequest` and routes it over the `EventBus`.
-5. The frontend intercepts the request, prompts the user, and returns an `EscapeDecision` (`AllowOnce`, `AllowSession`, `AllowAlways`, or `Deny`).
-6. The `EscapeHandler` records the decision and unblocks the execution thread.
+- Relative paths (must be absolute)
+- Non-UTF-8 paths (lossy coercion would misalign the SBPL rule with the real path)
+- Double-quote (`"`) in paths (SBPL string delimiter, allows sandbox escape)
+- Backslash (`\`) in paths (SBPL escape character, silently reinterprets the path)
+- Null bytes (defense in depth)
 
-## Quick Start
+Validation runs on all platforms, not just macOS, so the API contract is consistent everywhere. The tests include an actual SBPL injection payload to verify rejection.
 
-### Configuring a Mission Profile
-
-You can build a custom boundary using `WorkspaceConfig` or rely on predefined profiles:
+## Builder API
 
 ```rust
-use astrid_workspace::profiles::WorkspaceProfile;
+use astrid_workspace::ProcessSandboxConfig;
 
-// Load the power-user profile which auto-allows standard developer directories
-// like ~/.cargo or /usr/include while protecting the rest of the system.
-let profile = WorkspaceProfile::power_user("/home/user/workspace");
-let boundary = astrid_workspace::WorkspaceBoundary::new(profile.config);
+let config = ProcessSandboxConfig::new("/home/user/project")
+    .with_network(true)
+    .with_extra_read("/usr/local/share/myapp")
+    .with_extra_write("/data/output")
+    .with_hidden("/home/user/.astrid");
+
+if let Some(prefix) = config.sandbox_prefix()? {
+    let mut cmd = tokio::process::Command::new(&prefix.program);
+    cmd.args(&prefix.args);
+    cmd.arg("npx").arg("@anthropic/mcp-server-filesystem");
+}
 ```
 
-### Managing Airlock Escapes
+Hidden paths are overlaid with empty tmpfs on Linux and excluded from the Seatbelt allowlist on macOS.
 
-When a path requires approval, use the `EscapeHandler` to manage the request state over time:
+## Internal modules
 
-```rust
-use std::path::PathBuf;
-use astrid_workspace::{EscapeHandler, EscapeRequest, EscapeOperation, EscapeDecision};
+Several modules are `pub(crate)` and consumed by higher-level Astrid crates, not directly by users:
 
-let mut handler = EscapeHandler::new();
-let path = PathBuf::from("/external/data/metrics.csv");
-
-// 1. Generate the request
-let request = EscapeRequest::new(&path, EscapeOperation::Read, "Analyze external metrics")
-    .with_tool("read_file")
-    .with_server("mcp-filesystem");
-
-// 2. Process the user's decision
-handler.process_decision(&request, EscapeDecision::AllowAlways);
-
-// 3. Subsequent checks will pass automatically
-assert!(handler.is_allowed(&path));
-```
+- **Boundaries**: pre-compiled glob matching, canonical path resolution, and symlink evaluation for directory traversal prevention. Three modes: `Safe` (always ask), `Guided` (smart defaults), `Autonomous` (unrestricted).
+- **Escape/airlock**: structured `EscapeRequest`/`EscapeDecision` flows with session-scoped and permanent approval memory. Remembered paths are canonicalized on store and validated on restore (relative and non-existent paths rejected).
+- **Profiles**: predefined workspace configurations for `safe`, `power_user`, `autonomous` (aliased as `yolo`), and `ci` environments.
+- **Worktrees**: `ActiveWorktree` creates a per-session Git branch and worktree. Auto-commits WIP on drop, then removes the physical worktree to reclaim disk space.
 
 ## Development
 
-To build and test the workspace crate specifically:
-
 ```bash
-cargo test -p astrid-workspace --all-features
+cargo test -p astrid-workspace
 ```
 
 ## License
 
-This project is dual-licensed under either the [MIT License](../../LICENSE-MIT) or the [Apache License, Version 2.0](../../LICENSE-APACHE), at your option.
+Dual MIT/Apache-2.0. See [LICENSE-MIT](../../LICENSE-MIT) and [LICENSE-APACHE](../../LICENSE-APACHE).
