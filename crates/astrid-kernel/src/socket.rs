@@ -17,18 +17,24 @@ pub(crate) fn kernel_socket_path() -> PathBuf {
     }
 }
 
+/// Maximum byte length for a Unix domain socket path.
+/// macOS/FreeBSD/OpenBSD `sockaddr_un.sun_path` is 104 bytes; Linux is 108.
+#[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
+const MAX_SOCKET_PATH_LEN: usize = 104;
+#[cfg(not(any(target_os = "macos", target_os = "freebsd", target_os = "openbsd")))]
+const MAX_SOCKET_PATH_LEN: usize = 108;
+
 /// Binds a local Unix Domain Socket for the OS.
 /// Returns the bound listener so it can be passed into the WASM execution context.
 ///
 /// # Errors
-/// Returns an error if the socket cannot be bound.
+/// Returns an error if the socket cannot be bound, the path exceeds the
+/// platform's `sun_path` limit, or another kernel instance is already
+/// listening on the socket.
 pub(crate) fn bind_session_socket() -> Result<UnixListener, std::io::Error> {
     let path = kernel_socket_path();
 
-    // Remove stale socket file if it exists
-    if path.exists() {
-        let _ = std::fs::remove_file(&path);
-    }
+    prepare_socket_path(&path)?;
 
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| {
@@ -81,4 +87,127 @@ pub(crate) fn generate_session_token() -> Result<(SessionToken, PathBuf), std::i
     let path = home.token_path();
     token.write_to_file(&path)?;
     Ok((token, path))
+}
+
+/// Validate a socket path and handle stale/live socket detection.
+///
+/// Extracted from `bind_session_socket` for testability. Returns `Ok(())`
+/// if the path is safe to bind (stale socket removed or no socket exists).
+/// Returns `Err` if the path is too long or another kernel is listening.
+fn prepare_socket_path(path: &std::path::Path) -> Result<(), std::io::Error> {
+    let path_len = path.as_os_str().as_encoded_bytes().len();
+    if path_len >= MAX_SOCKET_PATH_LEN {
+        return Err(std::io::Error::other(format!(
+            "Socket path is {path_len} bytes, exceeding the platform limit of {MAX_SOCKET_PATH_LEN} bytes: {}",
+            path.display()
+        )));
+    }
+
+    if path.is_symlink() {
+        warn!(path = %path.display(), "Removing unexpected symlink at socket path");
+        std::fs::remove_file(path).map_err(|e| {
+            std::io::Error::other(format!(
+                "Failed to remove symlink at socket path {}: {e}",
+                path.display()
+            ))
+        })?;
+    } else if path.exists() {
+        match std::os::unix::net::UnixStream::connect(path) {
+            Ok(_stream) => {
+                return Err(std::io::Error::other(format!(
+                    "Another kernel instance is already running on this socket: {}",
+                    path.display()
+                )));
+            },
+            Err(e) if e.kind() == std::io::ErrorKind::ConnectionRefused => {
+                // No listener attached: stale socket, safe to remove.
+                std::fs::remove_file(path).map_err(|e| {
+                    std::io::Error::other(format!(
+                        "Failed to remove stale socket {}: {e}",
+                        path.display()
+                    ))
+                })?;
+            },
+            Err(e) => {
+                // Other errors (EACCES, etc.) may indicate a live kernel
+                // under a different user or transient issue. Don't delete.
+                return Err(std::io::Error::other(format!(
+                    "Failed to probe existing socket {}: {e}",
+                    path.display()
+                )));
+            },
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn path_too_long_is_rejected() {
+        // Build a path that exceeds the platform limit.
+        let long_name = "a".repeat(MAX_SOCKET_PATH_LEN + 10);
+        let path = PathBuf::from(format!("/tmp/{long_name}.sock"));
+        let err = prepare_socket_path(&path).unwrap_err();
+        assert!(
+            err.to_string().contains("exceeding the platform limit"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn stale_socket_is_removed() {
+        // Bind a listener, drop it (making the socket stale), then verify
+        // prepare_socket_path removes it.
+        let dir = tempfile::tempdir().unwrap();
+        let sock = dir.path().join("test.sock");
+
+        // Create and immediately drop a listener to leave a stale socket file.
+        let _listener = std::os::unix::net::UnixListener::bind(&sock).unwrap();
+        drop(_listener);
+
+        assert!(sock.exists(), "socket file should exist after bind");
+        prepare_socket_path(&sock).unwrap();
+        assert!(!sock.exists(), "stale socket should have been removed");
+    }
+
+    #[test]
+    fn live_socket_is_rejected() {
+        let dir = tempfile::tempdir().unwrap();
+        let sock = dir.path().join("test.sock");
+
+        // Keep the listener alive so connect succeeds.
+        let _listener = std::os::unix::net::UnixListener::bind(&sock).unwrap();
+
+        let err = prepare_socket_path(&sock).unwrap_err();
+        assert!(
+            err.to_string().contains("already running"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn symlink_is_removed() {
+        let dir = tempfile::tempdir().unwrap();
+        let target = dir.path().join("target");
+        std::fs::write(&target, "not a socket").unwrap();
+
+        let sock = dir.path().join("test.sock");
+        std::os::unix::fs::symlink(&target, &sock).unwrap();
+        assert!(sock.is_symlink());
+
+        prepare_socket_path(&sock).unwrap();
+        assert!(!sock.exists(), "symlink should have been removed");
+        assert!(target.exists(), "target should be untouched");
+    }
+
+    #[test]
+    fn nonexistent_path_succeeds() {
+        let dir = tempfile::tempdir().unwrap();
+        let sock = dir.path().join("does_not_exist.sock");
+        prepare_socket_path(&sock).unwrap();
+    }
 }

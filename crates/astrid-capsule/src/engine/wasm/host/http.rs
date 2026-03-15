@@ -65,22 +65,40 @@ impl reqwest::dns::Resolve for SafeDnsResolver {
 }
 
 /// Checks if an IP address is safe to connect to (not local, private, or multicast).
-fn is_safe_ip(mut ip: std::net::IpAddr) -> bool {
-    // Escape hatch for integration tests that need to spin up local servers
+/// Cached SSRF escape-hatch check. Evaluated once per process; logs a
+/// warning on first access if either env var is set.
+static SSRF_BYPASS: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
     if std::env::var("ASTRID_TEST_ALLOW_LOCAL_IP").is_ok() {
+        tracing::warn!(
+            "ASTRID_TEST_ALLOW_LOCAL_IP is set - SSRF protection disabled for ALL capsules"
+        );
         return true;
     }
-
-    // Global escape hatch for deployments that require plugins to access internal network services
     if std::env::var("ASTRID_ALLOW_LOCAL_IPS").is_ok() {
+        tracing::warn!(
+            "ASTRID_ALLOW_LOCAL_IPS is set - SSRF protection disabled for ALL capsules. \
+             Private/loopback IP ranges are reachable by every loaded capsule."
+        );
+        return true;
+    }
+    false
+});
+
+fn is_safe_ip(mut ip: std::net::IpAddr) -> bool {
+    if *SSRF_BYPASS {
         return true;
     }
 
     if let std::net::IpAddr::V6(ipv6) = ip {
         if let Some(ipv4) = ipv6.to_ipv4_mapped() {
             ip = std::net::IpAddr::V4(ipv4);
-        } else if let Some(ipv4) = ipv6.to_ipv4() {
-            ip = std::net::IpAddr::V4(ipv4);
+        } else if ipv6.segments()[..6].iter().all(|&s| s == 0) {
+            // IPv4-compatible addresses (::x.x.x.x) are deprecated by RFC 4291
+            // but must still be blocked (e.g. ::127.0.0.1 is loopback).
+            let [.., hi, lo] = ipv6.segments();
+            let [a, b] = hi.to_be_bytes();
+            let [c, d] = lo.to_be_bytes();
+            ip = std::net::IpAddr::V4(std::net::Ipv4Addr::new(a, b, c, d));
         }
     }
 
@@ -301,5 +319,18 @@ mod tests {
         assert!(!is_safe_ip(
             IpAddr::from_str("::ffff:169.254.169.254").unwrap()
         ));
+    }
+
+    #[test]
+    fn blocks_ipv4_compatible_ipv6_bypass() {
+        // IPv4-compatible (deprecated RFC 4291, no ::ffff prefix).
+        // These exercise the explicit segment extraction that replaced
+        // the deprecated Ipv6Addr::to_ipv4().
+        assert!(!is_safe_ip(IpAddr::from_str("::127.0.0.1").unwrap()));
+        assert!(!is_safe_ip(IpAddr::from_str("::10.0.0.1").unwrap()));
+        assert!(!is_safe_ip(IpAddr::from_str("::169.254.169.254").unwrap()));
+        // ::1 is IPv6 loopback; after compatible-branch extraction it
+        // becomes 0.0.0.1, blocked by the 0.0.0.0/8 check (not loopback).
+        assert!(!is_safe_ip(IpAddr::from_str("::0.0.0.1").unwrap()));
     }
 }
