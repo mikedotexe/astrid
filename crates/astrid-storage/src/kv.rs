@@ -47,6 +47,18 @@ fn validate_namespace(namespace: &str) -> StorageResult<()> {
     Ok(())
 }
 
+/// Validate that a prefix is safe for range operations.
+///
+/// Prefixes may be empty (clears all keys) but must not contain the null byte.
+fn validate_prefix(prefix: &str) -> StorageResult<()> {
+    if prefix.contains('\0') {
+        return Err(StorageError::InvalidKey(
+            "prefix must not contain null bytes".into(),
+        ));
+    }
+    Ok(())
+}
+
 /// Validate that a key is safe for storage.
 ///
 /// Keys must be non-empty and must not contain the null byte.
@@ -184,6 +196,23 @@ pub trait KvStore: Send + Sync {
 
     /// Delete all keys in a namespace.
     async fn clear_namespace(&self, namespace: &str) -> StorageResult<u64>;
+
+    /// Delete all keys matching a prefix within a namespace.
+    ///
+    /// Returns the number of keys that matched the prefix.
+    ///
+    /// Default implementation lists then deletes one-by-one (non-atomic).
+    /// On error, some keys may already have been deleted. Backends should
+    /// override with an atomic implementation.
+    async fn clear_prefix(&self, namespace: &str, prefix: &str) -> StorageResult<u64> {
+        validate_prefix(prefix)?;
+        let keys = self.list_keys_with_prefix(namespace, prefix).await?;
+        let count = u64::try_from(keys.len()).unwrap_or(u64::MAX);
+        for key in &keys {
+            self.delete(namespace, key).await?;
+        }
+        Ok(count)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -287,6 +316,25 @@ impl KvStore for MemoryKvStore {
             .cloned()
             .collect();
         let count = keys.len() as u64;
+        for key in keys {
+            data.remove(&key);
+        }
+        Ok(count)
+    }
+
+    async fn clear_prefix(&self, namespace: &str, prefix: &str) -> StorageResult<u64> {
+        validate_prefix(prefix)?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| StorageError::Internal(e.to_string()))?;
+        let full_prefix = format!("{namespace}\0{prefix}");
+        let keys: Vec<String> = data
+            .keys()
+            .filter(|k| k.starts_with(&full_prefix))
+            .cloned()
+            .collect();
+        let count = u64::try_from(keys.len()).unwrap_or(u64::MAX);
         for key in keys {
             data.remove(&key);
         }
@@ -501,6 +549,38 @@ impl KvStore for SurrealKvStore {
         }
         Ok(count)
     }
+
+    async fn clear_prefix(&self, namespace: &str, prefix: &str) -> StorageResult<u64> {
+        validate_namespace(namespace)?;
+        validate_prefix(prefix)?;
+        let start = composite_key(namespace, prefix);
+        let end = prefix_range_end(namespace, prefix);
+
+        let mut tx = self.tree.begin().map_err(|ref e| map_kv_err(e))?;
+
+        // Collect keys first, then delete (iterator borrows tx immutably).
+        let keys_to_delete = {
+            let mut iter = tx.range(&start, &end).map_err(|ref e| map_kv_err(e))?;
+            iter.seek_first().map_err(|ref e| map_kv_err(e))?;
+            let mut keys = Vec::new();
+            while iter.valid() {
+                keys.push(iter.key());
+                iter.next().map_err(|ref e| map_kv_err(e))?;
+            }
+            keys
+        }; // iterator dropped — releases immutable borrow on tx
+
+        let count = u64::try_from(keys_to_delete.len()).unwrap_or(u64::MAX);
+        for key in &keys_to_delete {
+            tx.delete(key).map_err(|ref e| map_kv_err(e))?;
+        }
+        if count > 0 {
+            tx.commit().await.map_err(|ref e| map_kv_err(e))?;
+        }
+        // When count == 0, tx is dropped without commit. SurrealKV's MVCC
+        // model aborts uncommitted transactions on Drop (same as clear_namespace).
+        Ok(count)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -647,12 +727,7 @@ impl ScopedKvStore {
     ///
     /// Returns an error if the underlying store operation fails.
     pub async fn clear_prefix(&self, prefix: &str) -> StorageResult<u64> {
-        let keys = self.list_keys_with_prefix(prefix).await?;
-        let count = u64::try_from(keys.len()).unwrap_or(u64::MAX);
-        for key in &keys {
-            self.delete(key).await?;
-        }
-        Ok(count)
+        self.inner.clear_prefix(&self.namespace, prefix).await
     }
 
     // -- Typed convenience (JSON) --
@@ -1062,6 +1137,52 @@ mod tests {
             let cleared = store.clear_namespace("ns1").await.unwrap();
             assert_eq!(cleared, 2);
             assert!(store.list_keys("ns1").await.unwrap().is_empty());
+            assert_eq!(store.list_keys("ns2").await.unwrap().len(), 1);
+        }
+
+        #[tokio::test]
+        async fn test_surreal_clear_prefix_basic() {
+            let (store, _dir) = make_store();
+            store.set("ns1", "pfx.a", b"1".to_vec()).await.unwrap();
+            store.set("ns1", "pfx.b", b"2".to_vec()).await.unwrap();
+            store.set("ns1", "other", b"3".to_vec()).await.unwrap();
+            store.set("ns2", "pfx.c", b"4".to_vec()).await.unwrap();
+
+            let cleared = store.clear_prefix("ns1", "pfx.").await.unwrap();
+            assert_eq!(cleared, 2);
+            // "other" in ns1 untouched
+            assert_eq!(
+                store.get("ns1", "other").await.unwrap(),
+                Some(b"3".to_vec())
+            );
+            // ns2 untouched
+            assert_eq!(
+                store.get("ns2", "pfx.c").await.unwrap(),
+                Some(b"4".to_vec())
+            );
+        }
+
+        #[tokio::test]
+        async fn test_surreal_clear_prefix_no_matches() {
+            let (store, _dir) = make_store();
+            store.set("ns1", "key", b"v".to_vec()).await.unwrap();
+            let cleared = store.clear_prefix("ns1", "nope.").await.unwrap();
+            assert_eq!(cleared, 0);
+            // Original key untouched
+            assert!(store.exists("ns1", "key").await.unwrap());
+        }
+
+        #[tokio::test]
+        async fn test_surreal_clear_prefix_empty_clears_all() {
+            let (store, _dir) = make_store();
+            store.set("ns1", "a", b"1".to_vec()).await.unwrap();
+            store.set("ns1", "b", b"2".to_vec()).await.unwrap();
+            store.set("ns2", "c", b"3".to_vec()).await.unwrap();
+
+            let cleared = store.clear_prefix("ns1", "").await.unwrap();
+            assert_eq!(cleared, 2);
+            assert!(store.list_keys("ns1").await.unwrap().is_empty());
+            // ns2 untouched
             assert_eq!(store.list_keys("ns2").await.unwrap().len(), 1);
         }
     }
