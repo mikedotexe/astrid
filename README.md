@@ -180,7 +180,8 @@ Astrid follows a strict kernel/user-space divide. The kernel (native Rust daemon
 | `astrid-capabilities` | Ed25519-signed capability tokens with glob resource patterns and time bounds. |
 | `astrid-audit` | Chain-linked cryptographic audit log. Each entry is signed and hashes the previous. SurrealKV-backed with chain verification. |
 | `astrid-vfs` | Copy-on-write overlay filesystem. `Vfs` trait with `HostVfs` and `OverlayVfs` implementations. Capability-based `DirHandle`/`FileHandle`. |
-| `astrid-events` | IPC event bus. Broadcast-based with async receivers and synchronous subscriber callbacks. Feature-gated for WASM compatibility. |
+| `astrid-events` | IPC event bus. Broadcast-based with async receivers and synchronous subscriber callbacks. Types re-exported from `astrid-types`. |
+| `astrid-types` | Shared data types: IPC payloads, LLM schemas, kernel API. Minimal deps, WASM-compatible. Used by both kernel and SDK. |
 | `astrid-capsule` | Capsule runtime: manifest parsing, WASM/MCP/static engines, dependency resolution via toposort, capsule registry, hot-reload watcher. |
 | `astrid-mcp` | MCP client/server lifecycle. Wraps `rmcp` with binary hash verification, capability gating, and elicitation support. |
 | `astrid-crypto` | Ed25519 key pairs (via `ed25519-dalek`), BLAKE3 content hashing, signatures. Keys are zeroized on drop. |

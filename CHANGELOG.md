@@ -11,7 +11,13 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ### Added
 
+- `astrid-types` crate — shared IPC payload, LLM, and kernel API types with minimal deps (serde, uuid, chrono). WASM-compatible. Both `astrid-events` and the user-space SDK depend on this.
 - `yolo` as an alias for `autonomous` workspace mode (`astrid-config`, `astrid-workspace`)
+
+### Changed
+
+- `astrid-events` now re-exports types from `astrid-types` instead of defining them inline. All existing import paths remain valid.
+- `astrid-events` `runtime` feature removed — all functionality is now always available. Consumers no longer need `features = ["runtime"]`.
 
 ### Removed
 
