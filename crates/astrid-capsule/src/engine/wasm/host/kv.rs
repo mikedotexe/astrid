@@ -30,10 +30,7 @@ pub(crate) fn astrid_kv_get_impl(
     })
     .map_err(|e| Error::msg(format!("kv_get failed: {e}")))?;
 
-    let value_bytes = match result {
-        Some(v) => serde_json::to_vec(&v).unwrap_or_default(),
-        None => Vec::new(),
-    };
+    let value_bytes = result.unwrap_or_default();
 
     let mem = plugin.memory_new(&value_bytes)?;
     outputs[0] = plugin.memory_to_val(mem);
