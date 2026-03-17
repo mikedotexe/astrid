@@ -10,13 +10,15 @@
 #![deny(unreachable_pub)]
 #![deny(clippy::unwrap_used)]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
-#![allow(dead_code)]
+#![expect(
+    dead_code,
+    reason = "incremental development — some plumbing used by later features"
+)]
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 
 mod commands;
-pub mod config_bridge;
 mod formatter;
 mod repl;
 /// The socket client for interacting with the Kernel.
@@ -82,27 +84,17 @@ enum Commands {
         from_mcp_json: Option<String>,
     },
 
-    /// Run the Astrid Daemon in the background for a specific session
-    Daemon {
-        /// The session ID to bind the daemon to
-        #[arg(short, long)]
-        session: String,
-
-        /// Optional workspace root directory
-        #[arg(short, long)]
-        workspace: Option<std::path::PathBuf>,
-    },
-
     /// Initialize a workspace
     Init,
 
-    /// Internal: run Wizer on the embedded `QuickJS` kernel (used by compiler subprocess).
-    #[command(hide = true)]
-    WizerInternal {
-        /// Output path for the Wizer'd WASM.
-        #[arg(long)]
-        output: std::path::PathBuf,
-    },
+    /// Start the Astrid daemon in persistent mode (detached, no TUI)
+    Start,
+
+    /// Show daemon status (PID, uptime, connected clients, loaded capsules)
+    Status,
+
+    /// Stop a running Astrid daemon
+    Stop,
 }
 
 #[derive(Subcommand)]
@@ -162,13 +154,10 @@ fn init_logging(cli: &Cli) {
         .ok()
         .map(|r| r.config);
 
-    let needs_file_log = matches!(
-        cli.command,
-        Some(Commands::Chat { .. } | Commands::Daemon { .. }) | None
-    );
+    let needs_file_log = matches!(cli.command, Some(Commands::Chat { .. }) | None);
 
     let log_config = if let Some(cfg) = &unified_cfg {
-        let mut lc = config_bridge::to_log_config(cfg);
+        let mut lc = astrid_telemetry::log_config_from(cfg);
         if cli.verbose {
             "debug".clone_into(&mut lc.level);
         }
@@ -223,98 +212,30 @@ async fn main() -> Result<()> {
             let workspace = std::env::current_dir().ok();
             run_or_connect(None, workspace, output_format).await?;
         },
-        Some(Commands::Daemon { session, workspace }) => {
-            let session_id = astrid_core::SessionId::from_uuid(
-                uuid::Uuid::parse_str(&session)
-                    .map_err(|e| anyhow::anyhow!("Invalid UUID format: {e}"))?,
-            );
-            let ws = workspace.unwrap_or_else(|| {
-                std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."))
-            });
-
-            let kernel = astrid_kernel::Kernel::new(session_id.clone(), ws)
-                .await
-                .map_err(|e| anyhow::anyhow!("Failed to boot local Kernel: {e}"))?;
-
-            // Load all plugins (auto-discovery)
-            kernel.load_all_capsules().await;
-
-            // Verify the CLI proxy capsule loaded. Without it, the daemon
-            // has no accept loop and CLI connections will always time out.
-            {
-                let reg = kernel.capsules.read().await;
-                let has_cli_proxy = reg
-                    .list()
-                    .iter()
-                    .any(|id| id.as_str() == "astrid-capsule-cli");
-                if !has_cli_proxy {
-                    tracing::error!(
-                        "CLI proxy capsule (astrid-capsule-cli) not found - \
-                         daemon cannot accept CLI connections"
-                    );
-                    anyhow::bail!(
-                        "CLI proxy capsule (astrid-capsule-cli) not found. \
-                         Ensure it is installed in ~/.astrid/capsules/ or \
-                         .astrid/capsules/ in your workspace."
-                    );
-                }
-            }
-
-            // Signal readiness AFTER all capsules are loaded and accepting
-            // connections. The CLI polls for this file to avoid connecting
-            // before the handshake accept loop is running.
-            astrid_kernel::socket::write_readiness_file().map_err(|e| {
-                anyhow::anyhow!(
-                    "Failed to write readiness file \
-                     (daemon is useless without it): {e}"
-                )
-            })?;
-
-            println!(
-                "{}",
-                theme::Theme::success(&format!(
-                    "Kernel successfully booted for session {}",
-                    session_id.0
-                ))
-            );
-
-            // Wait for a termination signal, then shut down gracefully.
-            // SIGTERM is Unix-only; on other platforms we rely on Ctrl+C alone.
-            #[cfg(unix)]
-            {
-                let mut sigterm =
-                    tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-                        .context("failed to register SIGTERM handler")?;
-                tokio::select! {
-                    _ = tokio::signal::ctrl_c() => {
-                        tracing::info!("Received SIGINT, shutting down");
-                    }
-                    _ = sigterm.recv() => {
-                        tracing::info!("Received SIGTERM, shutting down");
-                    }
-                }
-            }
-            #[cfg(not(unix))]
-            {
-                tokio::signal::ctrl_c()
-                    .await
-                    .context("failed to listen for Ctrl+C")?;
-                tracing::info!("Received SIGINT, shutting down");
-            }
-            kernel.shutdown(Some("signal".to_string())).await;
-        },
         Some(Commands::Build {
             path,
             output,
             project_type,
             from_mcp_json,
         }) => {
-            commands::build::run_build(
-                path.as_deref(),
-                output.as_deref(),
-                project_type.as_deref(),
-                from_mcp_json.as_deref(),
-            )?;
+            let build_bin = find_companion_binary("astrid-build")?;
+            let mut cmd = std::process::Command::new(build_bin);
+            if let Some(p) = &path {
+                cmd.arg(p);
+            }
+            if let Some(o) = &output {
+                cmd.arg("--output").arg(o);
+            }
+            if let Some(t) = &project_type {
+                cmd.arg("--type").arg(t);
+            }
+            if let Some(m) = &from_mcp_json {
+                cmd.arg("--from-mcp-json").arg(m);
+            }
+            let status = cmd.status().context("Failed to run astrid-build")?;
+            if !status.success() {
+                std::process::exit(status.code().unwrap_or(1));
+            }
         },
         Some(Commands::Init) => {
             commands::init::run_init()?;
@@ -337,9 +258,109 @@ async fn main() -> Result<()> {
         Some(Commands::Session { command }) => {
             commands::sessions::handle_session_commands(command)?;
         },
-        Some(Commands::WizerInternal { output }) => {
-            astrid_openclaw::compiler::run_wizer_internal(&output)
-                .map_err(|e| anyhow::anyhow!("wizer-internal failed: {e}"))?;
+        Some(Commands::Start) => {
+            ensure_global_config();
+            let socket_path = socket_client::proxy_socket_path();
+
+            // Check if daemon is already running
+            if socket_path.exists() {
+                if let Ok(_stream) = tokio::net::UnixStream::connect(&socket_path).await {
+                    println!(
+                        "{}",
+                        theme::Theme::warning("Astrid daemon is already running.")
+                    );
+                    return Ok(());
+                }
+                // Stale socket — clean up
+                let _ = std::fs::remove_file(&socket_path);
+                let _ = std::fs::remove_file(socket_client::readiness_path());
+            }
+
+            let ready_path = socket_client::readiness_path();
+            spawn_persistent_daemon(&ready_path).await?;
+        },
+        Some(Commands::Status) => {
+            let socket_path = socket_client::proxy_socket_path();
+            if !socket_path.exists() {
+                println!("{}", theme::Theme::info("No Astrid daemon is running."));
+                return Ok(());
+            }
+
+            // Connect and send GetStatus request
+            let session_id = astrid_core::SessionId::from_uuid(uuid::Uuid::new_v4());
+            match socket_client::SocketClient::connect(session_id).await {
+                Ok(mut client) => {
+                    let req = astrid_types::kernel::KernelRequest::GetStatus;
+                    if let Ok(val) = serde_json::to_value(req) {
+                        let msg = astrid_types::ipc::IpcMessage::new(
+                            "astrid.v1.request.status",
+                            astrid_types::ipc::IpcPayload::RawJson(val),
+                            uuid::Uuid::nil(),
+                        );
+                        client.send_message(msg).await?;
+
+                        if let Some(response) = client.read_message().await?
+                            && let astrid_types::ipc::IpcPayload::RawJson(val) = response.payload
+                            && let Ok(astrid_types::kernel::KernelResponse::Status(status)) =
+                                serde_json::from_value::<astrid_types::kernel::KernelResponse>(val)
+                        {
+                            let uptime_display = format_uptime(status.uptime_secs);
+                            println!(
+                                "{}",
+                                theme::Theme::success(&format!(
+                                    "Astrid daemon (PID {}, uptime {})",
+                                    status.pid, uptime_display
+                                ))
+                            );
+                            println!("  Version:    {}", status.version);
+                            println!("  Clients:    {}", status.connected_clients);
+                            println!("  Capsules:   {} loaded", status.loaded_capsules.len());
+                            for capsule in &status.loaded_capsules {
+                                println!("    - {capsule}");
+                            }
+                        } else {
+                            println!("{}", theme::Theme::error("Unexpected response from daemon"));
+                        }
+                    }
+                },
+                Err(_) => {
+                    println!(
+                        "{}",
+                        theme::Theme::error(
+                            "Daemon socket exists but connection failed. \
+                             It may be starting up or in a bad state."
+                        )
+                    );
+                },
+            }
+        },
+        Some(Commands::Stop) => {
+            let socket_path = socket_client::proxy_socket_path();
+            if !socket_path.exists() {
+                println!("{}", theme::Theme::info("No Astrid daemon is running."));
+                return Ok(());
+            }
+
+            let session_id = astrid_core::SessionId::from_uuid(uuid::Uuid::new_v4());
+            if let Ok(mut client) = socket_client::SocketClient::connect(session_id).await {
+                let req = astrid_types::kernel::KernelRequest::Shutdown {
+                    reason: Some("astrid stop".to_string()),
+                };
+                if let Ok(val) = serde_json::to_value(req) {
+                    let msg = astrid_types::ipc::IpcMessage::new(
+                        "astrid.v1.request.shutdown",
+                        astrid_types::ipc::IpcPayload::RawJson(val),
+                        uuid::Uuid::nil(),
+                    );
+                    client.send_message(msg).await?;
+                    println!("{}", theme::Theme::success("Astrid daemon stopped."));
+                }
+            } else {
+                // Socket exists but can't connect — stale. Clean up.
+                let _ = std::fs::remove_file(&socket_path);
+                let _ = std::fs::remove_file(socket_client::readiness_path());
+                println!("{}", theme::Theme::info("Cleaned up stale daemon socket."));
+            }
         },
     }
 
@@ -353,24 +374,48 @@ fn daemon_log_hint() -> String {
         .unwrap_or_default()
 }
 
-/// The core Host wrapper logic.
+/// Locate a companion binary (e.g. `astrid-daemon`, `astrid-build`).
+///
+/// Search order:
+/// 1. Same directory as the current executable (co-installed)
+/// 2. `PATH` lookup
+pub(crate) fn find_companion_binary(name: &str) -> Result<std::path::PathBuf> {
+    // 1. Check next to the CLI binary
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(dir) = exe.parent()
+    {
+        let candidate = dir.join(name);
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
+    }
+
+    // 2. PATH lookup
+    if let Ok(path) = which::which(name) {
+        return Ok(path);
+    }
+
+    anyhow::bail!(
+        "{name} not found. Ensure it is installed alongside the astrid CLI \
+         or available in PATH."
+    )
+}
+
 /// Spawn the daemon process and wait for it to signal readiness.
 ///
 /// Returns the child process handle on success. The caller must `drop()` it
 /// after a successful handshake (to disown), or `kill()` + `wait()` on failure.
 ///
 /// # Errors
-/// Returns an error if the daemon fails to spawn or doesn't become ready
-/// within 10 seconds.
+/// Returns an error if the daemon binary is not found, fails to spawn, or
+/// doesn't become ready within 10 seconds.
 async fn spawn_daemon(ready_path: &std::path::Path) -> Result<std::process::Child> {
     println!("{}", theme::Theme::info("Booting Astrid daemon..."));
     let ws = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    let exe = std::env::current_exe().context("Failed to get current executable path")?;
+    let daemon_bin = find_companion_binary("astrid-daemon")?;
 
-    let mut cmd = std::process::Command::new(exe);
-    cmd.arg("daemon")
-        .arg("--session")
-        .arg(astrid_core::SessionId::SYSTEM.0.to_string());
+    let mut cmd = std::process::Command::new(daemon_bin);
+    cmd.arg("--ephemeral");
 
     if let Some(ws_path) = ws.to_str() {
         cmd.arg("--workspace").arg(ws_path);
@@ -512,4 +557,72 @@ pub(crate) async fn run_or_connect(
         .map_or_else(|| "unknown".to_string(), |r| r.config.model.model);
 
     crate::commands::chat::run_chat(&mut client, &session_id, &model_name, format).await
+}
+
+/// Spawn a persistent (non-ephemeral) daemon and wait for readiness.
+async fn spawn_persistent_daemon(ready_path: &std::path::Path) -> Result<()> {
+    println!(
+        "{}",
+        theme::Theme::info("Starting Astrid daemon (persistent mode)...")
+    );
+    let ws = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let daemon_bin = find_companion_binary("astrid-daemon")?;
+
+    let mut cmd = std::process::Command::new(daemon_bin);
+    // No --ephemeral flag = persistent mode
+
+    if let Some(ws_path) = ws.to_str() {
+        cmd.arg("--workspace").arg(ws_path);
+    }
+
+    cmd.stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null());
+
+    let _ = std::fs::remove_file(ready_path);
+
+    let mut child = cmd.spawn().context("Failed to spawn Astrid daemon")?;
+
+    let mut ready = false;
+    for _ in 0..200 {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        if ready_path.exists() {
+            ready = true;
+            break;
+        }
+        if let Ok(Some(status)) = child.try_wait() {
+            anyhow::bail!("Daemon exited prematurely ({status}).{}", daemon_log_hint());
+        }
+    }
+    if !ready {
+        let _ = child.kill();
+        let _ = child.wait();
+        anyhow::bail!(
+            "Daemon failed to become ready within 10 seconds.{}",
+            daemon_log_hint()
+        );
+    }
+
+    // Disown the child — it runs independently.
+    drop(child);
+
+    println!(
+        "{}",
+        theme::Theme::success("Astrid daemon started (persistent mode).")
+    );
+    Ok(())
+}
+
+/// Format seconds into a human-readable uptime string.
+fn format_uptime(secs: u64) -> String {
+    let hours = secs / 3600;
+    let minutes = (secs % 3600) / 60;
+    let seconds = secs % 60;
+    if hours > 0 {
+        format!("{hours}h{minutes:02}m{seconds:02}s")
+    } else if minutes > 0 {
+        format!("{minutes}m{seconds:02}s")
+    } else {
+        format!("{seconds}s")
+    }
 }
