@@ -26,7 +26,7 @@ use astrid_mcp::{McpClient, SecureMcpClient, ServerManager, ServersConfig};
 use astrid_vfs::{HostVfs, OverlayVfs, Vfs};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use tokio::sync::RwLock;
 
 /// The core Operating System Kernel.
@@ -69,6 +69,8 @@ pub struct Kernel {
     pub audit_log: Arc<AuditLog>,
     /// Number of active client connections (CLI sessions).
     pub active_connections: AtomicUsize,
+    /// Ephemeral mode: shut down immediately when the last client disconnects.
+    pub ephemeral: AtomicBool,
     /// Instant when the kernel was booted (for uptime calculation).
     pub boot_time: std::time::Instant,
     /// Sender for the API-initiated shutdown signal. The daemon's main loop
@@ -211,6 +213,7 @@ impl Kernel {
             kv,
             audit_log,
             active_connections: AtomicUsize::new(0),
+            ephemeral: AtomicBool::new(false),
             boot_time: std::time::Instant::now(),
             shutdown_tx: tokio::sync::watch::channel(false).0,
             session_token: Arc::new(session_token),
@@ -512,6 +515,11 @@ impl Kernel {
             self.allowance_store.clear_session_allowances();
             tracing::info!("last client disconnected, session allowances cleared");
         }
+    }
+
+    /// Enable or disable ephemeral mode (immediate shutdown on last disconnect).
+    pub fn set_ephemeral(&self, val: bool) {
+        self.ephemeral.store(val, Ordering::Relaxed);
     }
 
     /// Number of active client connections.
@@ -857,17 +865,43 @@ fn load_or_generate_runtime_key(keys_dir: &Path) -> std::io::Result<KeyPair> {
 /// and `EventDispatcher` (all events).
 const INTERNAL_SUBSCRIBER_COUNT: usize = 3;
 
+/// Initial grace period before idle checking begins.
+const IDLE_INITIAL_GRACE: std::time::Duration = std::time::Duration::from_secs(5);
+/// Additional grace for non-ephemeral daemons to let capsules fully initialize.
+const IDLE_NON_EPHEMERAL_GRACE: std::time::Duration = std::time::Duration::from_secs(25);
+/// How often the idle monitor polls when running in ephemeral mode.
+const IDLE_EPHEMERAL_CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(1);
+/// How often the idle monitor polls when running in persistent mode.
+const IDLE_CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(15);
+/// Default idle timeout for non-ephemeral daemons (5 minutes).
+const IDLE_DEFAULT_TIMEOUT: std::time::Duration = std::time::Duration::from_mins(5);
+
 fn spawn_idle_monitor(kernel: Arc<Kernel>) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
-        let grace = std::time::Duration::from_secs(30);
-        let timeout_secs: u64 = std::env::var("ASTRID_IDLE_TIMEOUT_SECS")
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(300);
-        let idle_timeout = std::time::Duration::from_secs(timeout_secs);
-        let check_interval = std::time::Duration::from_secs(15);
+        // Initial grace period — wait for capsules to boot and first client
+        // to connect before checking idle status.
+        tokio::time::sleep(IDLE_INITIAL_GRACE).await;
 
-        tokio::time::sleep(grace).await;
+        // Read ephemeral flag after grace period (set by daemon after boot).
+        let ephemeral = kernel.ephemeral.load(Ordering::Relaxed);
+        let idle_timeout = if ephemeral {
+            std::time::Duration::ZERO
+        } else {
+            std::env::var("ASTRID_IDLE_TIMEOUT_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .map_or(IDLE_DEFAULT_TIMEOUT, std::time::Duration::from_secs)
+        };
+        let check_interval = if ephemeral {
+            IDLE_EPHEMERAL_CHECK_INTERVAL
+        } else {
+            IDLE_CHECK_INTERVAL
+        };
+
+        // Non-ephemeral: additional grace to let capsules fully initialize.
+        if !ephemeral {
+            tokio::time::sleep(IDLE_NON_EPHEMERAL_GRACE).await;
+        }
         let mut idle_since: Option<tokio::time::Instant> = None;
 
         loop {
@@ -902,7 +936,7 @@ fn spawn_idle_monitor(kernel: Arc<Kernel>) -> tokio::task::JoinHandle<()> {
 
                 tracing::debug!(
                     idle_secs = elapsed.as_secs(),
-                    timeout_secs,
+                    timeout_secs = idle_timeout.as_secs(),
                     connections,
                     bus_subscribers,
                     "Kernel idle, monitoring timeout"
