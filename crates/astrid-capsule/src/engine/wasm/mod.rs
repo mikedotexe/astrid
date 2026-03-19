@@ -13,6 +13,88 @@ use crate::manifest::CapsuleManifest;
 
 pub mod host;
 pub mod host_state;
+
+/// Today's date as `YYYY-MM-DD` for daily log rotation.
+fn today_date_string() -> String {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default();
+    let secs = now.as_secs();
+    // Days since epoch → date components.
+    let days = secs / 86400;
+    let (y, m, d) = civil_from_days(days as i64);
+    format!("{y:04}-{m:02}-{d:02}")
+}
+
+/// Convert days since Unix epoch to (year, month, day).
+/// Algorithm from Howard Hinnant's `chrono`-compatible date library.
+#[expect(clippy::arithmetic_side_effects)]
+fn civil_from_days(days: i64) -> (i64, u32, u32) {
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097) as u32;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
+    let y = (yoe as i64) + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    (y, m, d)
+}
+
+/// Delete log files older than `max_days` from a capsule log directory.
+///
+/// Only deletes files matching the `YYYY-MM-DD.log` pattern.
+fn prune_old_logs(log_dir: &std::path::Path, max_days: u64) {
+    let cutoff = std::time::SystemTime::now()
+        .checked_sub(std::time::Duration::from_secs(max_days * 86400))
+        .unwrap_or(std::time::UNIX_EPOCH);
+
+    let Ok(entries) = std::fs::read_dir(log_dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name_str = name.to_string_lossy();
+        // Only touch files matching YYYY-MM-DD.log pattern.
+        if !name_str.ends_with(".log") || name_str.len() != 14 {
+            continue;
+        }
+        if let Ok(meta) = entry.metadata()
+            && let Ok(modified) = meta.modified()
+            && modified < cutoff
+        {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
+}
+
+/// Read the expected WASM hash from `meta.json` in the capsule directory.
+fn read_expected_wasm_hash(capsule_dir: &std::path::Path) -> Option<String> {
+    let meta_path = capsule_dir.join("meta.json");
+    let content = std::fs::read_to_string(&meta_path).ok()?;
+    let meta: serde_json::Value = serde_json::from_str(&content).ok()?;
+    meta.get("wasm_hash")?.as_str().map(String::from)
+}
+
+/// Resolve a content-addressed WASM binary from `lib/{hash}.wasm`.
+///
+/// Reads `meta.json` in the capsule dir to find the `wasm_hash` field,
+/// then resolves the path in the Astrid home `lib/` directory.
+fn resolve_content_addressed_wasm(capsule_dir: &std::path::Path) -> Option<PathBuf> {
+    let meta_path = capsule_dir.join("meta.json");
+    let content = std::fs::read_to_string(&meta_path).ok()?;
+    let meta: serde_json::Value = serde_json::from_str(&content).ok()?;
+    let hash = meta.get("wasm_hash")?.as_str()?;
+    let home = astrid_core::dirs::AstridHome::resolve().ok()?;
+    let wasm_path = home.bin_dir().join(format!("{hash}.wasm"));
+    if wasm_path.exists() {
+        Some(wasm_path)
+    } else {
+        None
+    }
+}
 pub(crate) mod tool;
 
 /// Wall-clock timeout for short-lived (non-daemon) WASM capsules.
@@ -76,7 +158,13 @@ impl ExecutionEngine for WasmEngine {
         let wasm_path = if component.path.is_absolute() {
             component.path.clone()
         } else {
-            self._capsule_dir.join(&component.path)
+            let local = self._capsule_dir.join(&component.path);
+            if local.exists() {
+                local
+            } else {
+                // WASM may be content-addressed in lib/ — check meta.json for hash.
+                resolve_content_addressed_wasm(&self._capsule_dir).unwrap_or(local)
+            }
         };
 
         // Clone context components to move into block_in_place
@@ -115,10 +203,33 @@ impl ExecutionEngine for WasmEngine {
         let process_tracker = Arc::new(crate::engine::wasm::host::process::ProcessTracker::new());
         let process_tracker_for_listener = process_tracker.clone();
 
+        let capsule_dir_for_verify = self._capsule_dir.clone();
         let (plugin, rx, has_run, ready_rx) = tokio::task::block_in_place(move || {
             let wasm_bytes = std::fs::read(&wasm_path).map_err(|e| {
                 CapsuleError::UnsupportedEntryPoint(format!("Failed to read WASM: {e}"))
             })?;
+
+            // BLAKE3 integrity verification. Fail-secure: no hash = no load.
+            let actual_hash = blake3::hash(&wasm_bytes).to_hex().to_string();
+            match read_expected_wasm_hash(&capsule_dir_for_verify) {
+                Some(expected_hash) if actual_hash == expected_hash => {
+                    // Hash matches — verified.
+                },
+                Some(expected_hash) => {
+                    return Err(CapsuleError::UnsupportedEntryPoint(format!(
+                        "WASM integrity check failed: expected BLAKE3 {expected_hash}, \
+                         got {actual_hash}. The binary may have been tampered with."
+                    )));
+                },
+                None => {
+                    return Err(CapsuleError::UnsupportedEntryPoint(format!(
+                        "WASM capsule '{}' has no BLAKE3 hash in meta.json. \
+                         Capsules must be installed via `astrid capsule install` \
+                         which records the hash. Refusing to load unverified binary.",
+                        manifest.package.name
+                    )));
+                },
+            }
 
             let (tx, rx) = if !manifest.uplinks.is_empty() {
                 let (tx, rx) = tokio::sync::mpsc::channel(128);
@@ -214,6 +325,54 @@ impl ExecutionEngine for WasmEngine {
                 gate_global_root,
             ));
 
+            // Set up /tmp VFS backed by the principal's .local/tmp/ directory.
+            let tmp_dir = if let Ok(home) = astrid_core::dirs::AstridHome::resolve() {
+                let ph = home.principal_home(&ctx.principal);
+                let dir = ph.tmp_dir();
+                if dir.exists() || std::fs::create_dir_all(&dir).is_ok() {
+                    Some(dir)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            let (tmp_vfs, tmp_vfs_root_handle) = if let Some(ref t_root) = tmp_dir {
+                let t_vfs = astrid_vfs::HostVfs::new();
+                let t_handle = astrid_capabilities::DirHandle::new();
+                if tokio::runtime::Handle::current()
+                    .block_on(async { t_vfs.register_dir(t_handle.clone(), t_root.clone()).await })
+                    .is_ok()
+                {
+                    (
+                        Some(Arc::new(t_vfs) as Arc<dyn astrid_vfs::Vfs>),
+                        Some(t_handle),
+                    )
+                } else {
+                    (None, None)
+                }
+            } else {
+                (None, None)
+            };
+
+            // Open per-capsule daily log file at .local/log/{capsule}/{date}.log.
+            // Prunes logs older than 7 days on each capsule load.
+            let capsule_log = if let Ok(home) = astrid_core::dirs::AstridHome::resolve() {
+                let ph = home.principal_home(&ctx.principal);
+                let capsule_log_dir = ph.log_dir().join(&manifest.package.name);
+                let _ = std::fs::create_dir_all(&capsule_log_dir);
+                prune_old_logs(&capsule_log_dir, 7);
+                let today = today_date_string();
+                std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(capsule_log_dir.join(format!("{today}.log")))
+                    .ok()
+                    .map(|f| Arc::new(std::sync::Mutex::new(f)))
+            } else {
+                None
+            };
+
             let secret_store = astrid_storage::build_secret_store(
                 &manifest.package.name,
                 kv.clone(),
@@ -221,8 +380,10 @@ impl ExecutionEngine for WasmEngine {
             );
 
             let host_state = HostState {
+                principal: ctx.principal.clone(),
                 capsule_uuid,
                 caller_context: None,
+                capsule_log,
                 capsule_id: crate::capsule::CapsuleId::new(&manifest.package.name)
                     .map_err(|e| CapsuleError::UnsupportedEntryPoint(e.to_string()))?,
                 workspace_root,
@@ -231,6 +392,9 @@ impl ExecutionEngine for WasmEngine {
                 global_root,
                 global_vfs,
                 global_vfs_root_handle,
+                tmp_dir,
+                tmp_vfs,
+                tmp_vfs_root_handle,
                 overlay_vfs: Some(overlay_vfs),
                 upper_dir: Some(Arc::new(upper_temp)),
                 kv,
@@ -651,8 +815,10 @@ pub fn run_lifecycle(
         })?;
 
     let host_state = HostState {
+        principal: astrid_core::PrincipalId::default(),
         capsule_uuid: uuid::Uuid::new_v4(),
         caller_context: None,
+        capsule_log: None,
         capsule_id: cfg.capsule_id.clone(),
         workspace_root: cfg.workspace_root,
         vfs: Arc::new(vfs),
@@ -660,6 +826,9 @@ pub fn run_lifecycle(
         global_root: None,
         global_vfs: None,
         global_vfs_root_handle: None,
+        tmp_dir: None,
+        tmp_vfs: None,
+        tmp_vfs_root_handle: None,
         overlay_vfs: None,
         upper_dir: None,
         kv: cfg.kv,

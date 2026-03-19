@@ -72,6 +72,31 @@ impl RunningServer {
     }
 }
 
+/// Today's date as `YYYY-MM-DD` for daily log file naming.
+#[allow(
+    clippy::arithmetic_side_effects,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
+fn today_date_string() -> String {
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let days = i64::from((secs / 86400) as u32);
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097) as u32;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
+    let y = i64::from(yoe) + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    format!("{y:04}-{m:02}-{d:02}")
+}
+
 /// Build a `tokio::process::Command` for a trusted (unsandboxed) server.
 fn build_unsandboxed_command(
     name: &str,
@@ -118,6 +143,11 @@ pub struct ServerManager {
     ///
     /// When `None`, sandboxing falls back to `config.cwd` or a temp directory.
     workspace_root: Option<PathBuf>,
+    /// Directory for capsule stderr log files.
+    ///
+    /// When set, MCP capsule server stderr is redirected to
+    /// `{capsule_log_dir}/{capsule-name}.log`. When `None`, stderr is inherited.
+    capsule_log_dir: Option<PathBuf>,
 }
 
 impl ServerManager {
@@ -130,6 +160,7 @@ impl ServerManager {
             running: Arc::new(RwLock::new(HashMap::new())),
             shutdown_timeout,
             workspace_root: None,
+            capsule_log_dir: None,
         }
     }
 
@@ -141,6 +172,15 @@ impl ServerManager {
     #[must_use]
     pub fn with_workspace_root(mut self, root: PathBuf) -> Self {
         self.workspace_root = Some(root);
+        self
+    }
+
+    /// Set the directory for capsule stderr log files.
+    ///
+    /// MCP capsule stderr will be redirected to `{dir}/{capsule-name}.log`.
+    #[must_use]
+    pub fn with_capsule_log_dir(mut self, dir: PathBuf) -> Self {
+        self.capsule_log_dir = Some(dir);
         self
     }
 
@@ -314,11 +354,28 @@ impl ServerManager {
             McpError::ConfigError(format!("No command specified for stdio server {name}"))
         })?;
 
-        let cmd = if config.trusted {
+        let mut cmd = if config.trusted {
             build_unsandboxed_command(name, command, config)
         } else {
             self.build_sandboxed_command(name, command, config)?
         };
+
+        // Redirect capsule stderr to a per-capsule daily log file if configured.
+        if let Some(ref log_dir) = self.capsule_log_dir {
+            let capsule_name = name.strip_prefix("capsule:").unwrap_or(name);
+            let capsule_log_dir = log_dir.join(capsule_name);
+            let _ = std::fs::create_dir_all(&capsule_log_dir);
+            let today = today_date_string();
+            let log_path = capsule_log_dir.join(format!("{today}.log"));
+            if let Ok(file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&log_path)
+            {
+                cmd.stderr(file);
+                info!(server = name, log = %log_path.display(), "Redirecting capsule stderr to log file");
+            }
+        }
 
         // Create transport (spawns the child process)
         let transport = TokioChildProcess::new(cmd).map_err(|e| McpError::ServerStartFailed {

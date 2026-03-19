@@ -77,7 +77,7 @@ pub struct Kernel {
     /// selects on the receiver to exit gracefully without `process::exit`.
     pub shutdown_tx: tokio::sync::watch::Sender<bool>,
     /// Session token for socket authentication. Generated at boot, written to
-    /// `~/.astrid/sessions/system.token`. CLI sends this as its first message.
+    /// `~/.astrid/run/system.token`. CLI sends this as its first message.
     pub session_token: Arc<astrid_core::session_token::SessionToken>,
     /// Path where the session token was written at boot. Stored so shutdown
     /// uses the exact same path (avoids fallback mismatch if env changes).
@@ -127,9 +127,11 @@ impl Kernel {
         })?;
 
         // Resolve the global shared directory for the `global://` VFS scheme.
-        // Scoped to `~/.astrid/shared/` — NOT the full `~/.astrid/` root — so
-        // capsules cannot access keys, databases, or capsule .env files.
-        let global_root = Some(home.shared_dir());
+        // Points to `~/.astrid/home/{principal}/` — NOT the full `~/.astrid/`
+        // root — so capsules cannot access keys, databases, or config.
+        let default_principal = astrid_core::PrincipalId::default();
+        let principal_home = home.principal_home(&default_principal);
+        let global_root = Some(principal_home.root().to_path_buf());
 
         // 1. Open the persistent KV store (needed by capability store below).
         let kv_path = home.state_db_path();
@@ -143,8 +145,9 @@ impl Kernel {
         // 2. Initialize MCP process manager with security layer.
         //    Set workspace_root so sandboxed MCP servers have a writable directory.
         let mcp_config = ServersConfig::load_default().unwrap_or_default();
-        let mcp_manager =
-            ServerManager::new(mcp_config).with_workspace_root(workspace_root.clone());
+        let mcp_manager = ServerManager::new(mcp_config)
+            .with_workspace_root(workspace_root.clone())
+            .with_capsule_log_dir(principal_home.log_dir());
         let mcp_client = McpClient::new(mcp_manager);
 
         // 3. Bootstrap capability store (persistent) and audit log.
@@ -258,13 +261,26 @@ impl Kernel {
 
         // Build the context — use the shared kernel KV so capsules can
         // communicate state through overlapping KV namespaces.
+        let principal = astrid_core::PrincipalId::default();
         let kv = astrid_storage::ScopedKvStore::new(
             Arc::clone(&self.kv) as Arc<dyn astrid_storage::KvStore>,
-            format!("capsule:{}", capsule.id()),
+            format!("{principal}:capsule:{}", capsule.id()),
         )?;
 
-        // Pre-load `.env.json` into the KV store if it exists
-        let env_path = dir.join(".env.json");
+        // Pre-load env config into the KV store.
+        // Check principal config first, fall back to capsule dir's .env.json.
+        let capsule_name = capsule.id().to_string();
+        let env_path = if let Ok(home) = astrid_core::dirs::AstridHome::resolve() {
+            let ph = home.principal_home(&principal);
+            let principal_env = ph.env_dir().join(format!("{capsule_name}.env.json"));
+            if principal_env.exists() {
+                principal_env
+            } else {
+                dir.join(".env.json")
+            }
+        } else {
+            dir.join(".env.json")
+        };
         if env_path.exists()
             && let Ok(contents) = std::fs::read_to_string(&env_path)
             && let Ok(env_map) =
@@ -276,6 +292,7 @@ impl Kernel {
         }
 
         let ctx = astrid_capsule::context::CapsuleContext::new(
+            principal.clone(),
             self.workspace_root.clone(),
             self.global_root.clone(),
             kv,
@@ -390,9 +407,11 @@ impl Kernel {
         use astrid_capsule::toposort::toposort_manifests;
         use astrid_core::dirs::AstridHome;
 
+        // Discovery paths in priority order: principal > workspace.
         let mut paths = Vec::new();
         if let Ok(home) = AstridHome::resolve() {
-            paths.push(home.capsules_dir());
+            let principal = astrid_core::PrincipalId::default();
+            paths.push(home.principal_home(&principal).capsules_dir());
         }
 
         let discovered = astrid_capsule::discovery::discover_manifests(Some(&paths));
@@ -739,8 +758,9 @@ impl Kernel {
             "Injecting tool schemas into capsule KV stores"
         );
 
+        let principal = astrid_core::PrincipalId::default();
         for capsule_id in &capsule_ids {
-            let namespace = format!("capsule:{capsule_id}");
+            let namespace = format!("{principal}:capsule:{capsule_id}");
             if let Err(e) = self
                 .kv
                 .set(&namespace, "tool_schemas", tool_bytes.clone())
@@ -799,7 +819,12 @@ fn open_audit_log() -> std::io::Result<Arc<AuditLog>> {
         .map_err(|e| std::io::Error::other(format!("cannot create Astrid home dirs: {e}")))?;
 
     let runtime_key = load_or_generate_runtime_key(&home.keys_dir())?;
-    let audit_log = AuditLog::open(home.audit_db_path(), runtime_key)
+    let default_principal = astrid_core::PrincipalId::default();
+    let principal_home = home.principal_home(&default_principal);
+    principal_home
+        .ensure()
+        .map_err(|e| std::io::Error::other(format!("cannot create principal home dirs: {e}")))?;
+    let audit_log = AuditLog::open(principal_home.audit_dir(), runtime_key)
         .map_err(|e| std::io::Error::other(format!("cannot open audit log: {e}")))?;
 
     // Verify all historical chains on boot.

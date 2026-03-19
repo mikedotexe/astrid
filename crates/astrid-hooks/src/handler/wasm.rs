@@ -206,17 +206,22 @@ impl WasmHandler {
         );
 
         let host_state = HostState {
+            principal: astrid_core::PrincipalId::default(),
             capsule_uuid: uuid::Uuid::new_v4(),
             caller_context: None,
+            capsule_log: None,
             capsule_id: CapsuleId::from_static(&hook_identity),
             workspace_root: self.workspace_root.clone(),
             vfs: Arc::new(vfs),
             vfs_root_handle: root_handle,
-            // Hooks intentionally do not support global:// access — they run
+            // Hooks intentionally do not support global:// or /tmp access — they run
             // outside the full capsule manifest/security-gate lifecycle.
             global_root: None,
             global_vfs: None,
             global_vfs_root_handle: None,
+            tmp_dir: None,
+            tmp_vfs: None,
+            tmp_vfs_root_handle: None,
             overlay_vfs: None,
             upper_dir: None,
             kv,
