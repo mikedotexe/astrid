@@ -829,19 +829,8 @@ pub(crate) fn install_from_local_path_inner(
         source: original_source
             .map(String::from)
             .or_else(|| existing_meta.and_then(|m| m.source)),
-        provides: manifest
-            .effective_provides()
-            .iter()
-            .filter(|cap| {
-                // Auto-derived provides may contain wildcards from ipc_publish
-                // patterns (e.g. "topic:registry.v1.response.*"). Filter them
-                // out — meta.json provides should be concrete capabilities.
-                let body = cap.split_once(':').map_or(cap.as_str(), |(_, b)| b);
-                !body.contains('*')
-            })
-            .cloned()
-            .collect(),
-        requires: manifest.dependencies.requires.clone(),
+        imports: version_map_to_strings(&manifest.imports, |d| d.version.to_string()),
+        exports: version_map_to_strings(&manifest.exports, |d| d.version.to_string()),
         topics: baked_topics,
         wasm_hash,
     };
@@ -902,6 +891,23 @@ fn content_address_wasm(
     let _ = std::fs::remove_file(&wasm_path);
 
     Ok(Some(hash))
+}
+
+/// Convert a nested namespace→interface→T map to namespace→interface→String
+/// by extracting the version via the provided closure.
+fn version_map_to_strings<T>(
+    map: &std::collections::HashMap<String, std::collections::HashMap<String, T>>,
+    version_fn: impl Fn(&T) -> String,
+) -> std::collections::HashMap<String, std::collections::HashMap<String, String>> {
+    map.iter()
+        .map(|(ns, ifaces)| {
+            let inner = ifaces
+                .iter()
+                .map(|(name, def)| (name.clone(), version_fn(def)))
+                .collect();
+            (ns.clone(), inner)
+        })
+        .collect()
 }
 
 /// Resolve the path to a capsule's env config file.
@@ -1612,8 +1618,20 @@ mod tests {
             installed_at: "2026-01-01T00:00:00Z".into(),
             updated_at: "2026-03-12T00:00:00Z".into(),
             source: Some("@org/my-capsule".into()),
-            provides: vec!["tool:run_shell".into(), "topic:session.response.*".into()],
-            requires: vec!["topic:identity.response.ready".into()],
+            imports: {
+                let mut m = std::collections::HashMap::new();
+                let mut astrid = std::collections::HashMap::new();
+                astrid.insert("session".into(), "^1.0".into());
+                m.insert("astrid".into(), astrid);
+                m
+            },
+            exports: {
+                let mut m = std::collections::HashMap::new();
+                let mut astrid = std::collections::HashMap::new();
+                astrid.insert("llm".into(), "1.0.0".into());
+                m.insert("astrid".into(), astrid);
+                m
+            },
             topics: vec![],
             wasm_hash: None,
         };
@@ -1623,8 +1641,8 @@ mod tests {
         assert_eq!(loaded.installed_at, "2026-01-01T00:00:00Z");
         assert_eq!(loaded.updated_at, "2026-03-12T00:00:00Z");
         assert_eq!(loaded.source.as_deref(), Some("@org/my-capsule"));
-        assert_eq!(loaded.provides.len(), 2);
-        assert_eq!(loaded.requires, vec!["topic:identity.response.ready"]);
+        assert_eq!(loaded.exports["astrid"]["llm"], "1.0.0");
+        assert_eq!(loaded.imports["astrid"]["session"], "^1.0");
     }
 
     #[test]
@@ -1635,8 +1653,8 @@ mod tests {
             installed_at: "2026-01-01T00:00:00Z".into(),
             updated_at: "2026-01-01T00:00:00Z".into(),
             source: None,
-            provides: vec![],
-            requires: vec![],
+            imports: std::collections::HashMap::new(),
+            exports: std::collections::HashMap::new(),
             topics: vec![],
             wasm_hash: None,
         };
@@ -1650,12 +1668,12 @@ mod tests {
             "source: None should be omitted from JSON"
         );
         assert!(
-            !json.contains("provides"),
-            "empty provides should be omitted from JSON"
+            !json.contains("imports"),
+            "empty imports should be omitted from JSON"
         );
         assert!(
-            !json.contains("requires"),
-            "empty requires should be omitted from JSON"
+            !json.contains("exports"),
+            "empty exports should be omitted from JSON"
         );
     }
 
