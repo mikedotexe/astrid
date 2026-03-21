@@ -444,6 +444,9 @@ impl Kernel {
             }
         }
 
+        // Validate imports/exports: every required import must have a matching export.
+        validate_imports_exports(&sorted);
+
         // Partition after sorting: uplinks first, then the rest.
         // The relative order within each partition is preserved from the
         // toposort, so dependency edges are still respected. Cross-partition
@@ -1495,6 +1498,65 @@ mod tests {
         tracker.last_attempt = std::time::Instant::now() - RestartTracker::MAX_BACKOFF;
         assert!(!tracker.should_restart());
     }
+}
+
+// ---------------------------------------------------------------------------
+// Boot validation
+// ---------------------------------------------------------------------------
+
+/// Validate that every capsule's required imports have a matching export
+/// from another loaded capsule. Logs errors for unsatisfied required imports
+/// and info messages for unsatisfied optional imports.
+fn validate_imports_exports(
+    manifests: &[(
+        astrid_capsule::manifest::CapsuleManifest,
+        std::path::PathBuf,
+    )],
+) {
+    let exports_by_interface: std::collections::HashMap<(&str, &str), Vec<&semver::Version>> =
+        manifests.iter().flat_map(|(m, _)| m.export_triples()).fold(
+            std::collections::HashMap::new(),
+            |mut acc, (ns, name, ver)| {
+                acc.entry((ns, name)).or_default().push(ver);
+                acc
+            },
+        );
+
+    let mut satisfied_count: u32 = 0;
+    let mut warning_count: u32 = 0;
+
+    for (manifest, _) in manifests {
+        for (ns, name, req, optional) in manifest.import_tuples() {
+            let has_provider = exports_by_interface
+                .get(&(ns, name))
+                .is_some_and(|versions| versions.iter().any(|v| req.matches(v)));
+
+            if has_provider {
+                satisfied_count = satisfied_count.saturating_add(1);
+            } else if optional {
+                tracing::info!(
+                    capsule = %manifest.package.name,
+                    import = %format!("{ns}/{name} {req}"),
+                    "Optional import not satisfied — capsule will boot with reduced functionality"
+                );
+                warning_count = warning_count.saturating_add(1);
+            } else {
+                tracing::error!(
+                    capsule = %manifest.package.name,
+                    import = %format!("{ns}/{name} {req}"),
+                    "Required import not satisfied — no loaded capsule exports this interface"
+                );
+                warning_count = warning_count.saturating_add(1);
+            }
+        }
+    }
+
+    tracing::info!(
+        capsules = manifests.len(),
+        imports_satisfied = satisfied_count,
+        warnings = warning_count,
+        "Boot validation complete"
+    );
 }
 
 // ---------------------------------------------------------------------------

@@ -843,12 +843,59 @@ pub(crate) fn install_from_local_path_inner(
         prompt_env_fields(&manifest.env, &env_path)?;
     }
 
+    // Warn if the newly installed capsule has unsatisfied imports.
+    validate_install_imports(&manifest);
+
     // Clean up backup
     if let Some(ref backup) = backup_dir {
         let _ = std::fs::remove_dir_all(backup);
     }
 
     Ok(())
+}
+
+/// Check if a newly installed capsule's required imports are satisfied by
+/// other installed capsules' exports. Prints actionable guidance for
+/// unsatisfied required imports. Silent for optional imports.
+fn validate_install_imports(manifest: &astrid_capsule::manifest::CapsuleManifest) {
+    if !manifest.has_imports() {
+        return;
+    }
+    let Ok(all_capsules) = super::meta::scan_installed_capsules() else {
+        return;
+    };
+
+    let mut missing = Vec::new();
+
+    for (ns, name, req, optional) in manifest.import_tuples() {
+        if optional {
+            continue;
+        }
+        let satisfied = all_capsules.iter().any(|c| {
+            c.name != manifest.package.name
+                && c.meta.as_ref().is_some_and(|m| {
+                    m.exports
+                        .get(ns)
+                        .and_then(|ifaces| ifaces.get(name))
+                        .and_then(|v| semver::Version::parse(v).ok())
+                        .is_some_and(|v| req.matches(&v))
+                })
+        });
+
+        if !satisfied {
+            missing.push(format!("{ns}/{name} {req}"));
+        }
+    }
+
+    if !missing.is_empty() {
+        eprintln!();
+        for m in &missing {
+            eprintln!("  Note: {} needs {m}.", manifest.package.name);
+        }
+        eprintln!(
+            "  Install the missing capsule(s) or run `astrid init` to set up a complete environment."
+        );
+    }
 }
 
 /// Content-address WASM binaries into the shared `lib/` directory.
