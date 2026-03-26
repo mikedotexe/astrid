@@ -9,6 +9,10 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+### Changed
+
+- `consciousness-bridge` now sends an explicit zero semantic vector at the start of each autonomous rest window so minime experiences actual semantic silence instead of indefinitely holding the last text stimulus.
+
 ## [0.5.1] - 2026-03-25
 
 ### Added
