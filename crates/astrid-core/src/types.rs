@@ -197,45 +197,6 @@ impl fmt::Display for Permission {
     }
 }
 
-/// Risk level classification for operations.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum RiskLevel {
-    /// Low risk - typically allowed without explicit approval
-    Low,
-    /// Medium risk - may require approval depending on context
-    Medium,
-    /// High risk - requires explicit approval
-    High,
-    /// Critical risk - requires elevated approval with additional verification
-    Critical,
-}
-
-impl fmt::Display for RiskLevel {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Low => write!(f, "low"),
-            Self::Medium => write!(f, "medium"),
-            Self::High => write!(f, "high"),
-            Self::Critical => write!(f, "critical"),
-        }
-    }
-}
-
-impl RiskLevel {
-    /// Check if this risk level requires user approval by default.
-    #[must_use]
-    pub fn requires_approval(&self) -> bool {
-        matches!(self, Self::High | Self::Critical)
-    }
-
-    /// Check if this risk level requires DM verification (vs inline).
-    #[must_use]
-    pub fn requires_dm_verification(&self) -> bool {
-        matches!(self, Self::Critical)
-    }
-}
-
 /// Request for user approval of an operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApprovalRequest {
@@ -245,8 +206,6 @@ pub struct ApprovalRequest {
     pub operation: String,
     /// Human-readable description
     pub description: String,
-    /// Risk level
-    pub risk_level: RiskLevel,
     /// Resource being accessed (if applicable)
     pub resource: Option<String>,
     /// Suggested options
@@ -261,7 +220,6 @@ impl ApprovalRequest {
             request_id: Uuid::new_v4(),
             operation: operation.into(),
             description: description.into(),
-            risk_level: RiskLevel::Medium,
             resource: None,
             options: vec![
                 ApprovalOption::AllowOnce,
@@ -271,13 +229,6 @@ impl ApprovalRequest {
                 ApprovalOption::Deny,
             ],
         }
-    }
-
-    /// Set the risk level.
-    #[must_use]
-    pub fn with_risk_level(mut self, level: RiskLevel) -> Self {
-        self.risk_level = level;
-        self
     }
 
     /// Set the resource.
@@ -416,20 +367,5 @@ mod tests {
         assert_eq!(Permission::Read.to_string(), "read");
         assert_eq!(Permission::Write.to_string(), "write");
         assert_eq!(Permission::Execute.to_string(), "execute");
-    }
-
-    #[test]
-    fn test_risk_level_ordering() {
-        assert!(RiskLevel::Low < RiskLevel::Medium);
-        assert!(RiskLevel::Medium < RiskLevel::High);
-        assert!(RiskLevel::High < RiskLevel::Critical);
-    }
-
-    #[test]
-    fn test_risk_level_requires_approval() {
-        assert!(!RiskLevel::Low.requires_approval());
-        assert!(!RiskLevel::Medium.requires_approval());
-        assert!(RiskLevel::High.requires_approval());
-        assert!(RiskLevel::Critical.requires_approval());
     }
 }
