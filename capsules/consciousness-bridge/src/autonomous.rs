@@ -1980,13 +1980,23 @@ pub fn spawn_autonomous_loop(
                             }
                             "CLOSE_EYES" | "QUIET" => {
                                 // Astrid wants to snooze all sensory input.
+                                // Also signal perception.py to pause LLaVA/whisper,
+                                // freeing Ollama for dialogue.
                                 conv.senses_snoozed = true;
-                                info!("Astrid snoozed her senses");
+                                let flag = PathBuf::from(
+                                    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_paused.flag"
+                                );
+                                let _ = std::fs::write(&flag, "paused by CLOSE_EYES");
+                                info!("Astrid snoozed her senses (perception.py paused)");
                             }
                             "OPEN_EYES" | "WAKE" => {
-                                // Astrid re-enables sensory input.
+                                // Astrid re-enables sensory input + resumes perception.py.
                                 conv.senses_snoozed = false;
-                                info!("Astrid reopened her senses");
+                                let flag = PathBuf::from(
+                                    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_paused.flag"
+                                );
+                                let _ = std::fs::remove_file(&flag);
+                                info!("Astrid reopened her senses (perception.py resumed)");
                             }
                             other if other == "SEARCH" || other.starts_with("SEARCH ") || other.starts_with("SEARCH-") => {
                                 // Astrid wants web search enrichment next exchange.

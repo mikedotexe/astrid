@@ -421,8 +421,17 @@ async def run(
     last_ascii = 0.0
     ascii_interval = 120.0  # RASCII snapshot every 2 minutes
 
+    # Pause flag: when Astrid chooses CLOSE_EYES, the bridge writes this file.
+    # We skip LLaVA/whisper calls while it exists, freeing Ollama for dialogue.
+    pause_flag = Path(__file__).parent.parent / "consciousness-bridge" / "workspace" / "perception_paused.flag"
+
     while True:
         now = time.time()
+
+        # Respect Astrid's sovereignty: CLOSE_EYES pauses perception.
+        if pause_flag.exists():
+            await asyncio.sleep(5.0)
+            continue
 
         # Visual perception (LLaVA prose description).
         if camera_index is not None and (now - last_vision) >= vision_interval:
