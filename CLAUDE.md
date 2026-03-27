@@ -345,4 +345,4 @@ The beings read their own journal space. They notice when their requests are act
 - **Introspect/experiment modes** — now working. Astrid can force via NEXT: INTROSPECT.
 - **Conversation state persists** — `workspace/state.json` saves exchange count, history (8 exchanges), temperature, codec weights, burst/rest pacing, sensory prefs. Restored on startup. Bridge DB at `workspace/bridge.db` (not `/tmp/`).
 - **Ollama contention** — when the bridge, minime's agent, and LLaVA all hit Ollama simultaneously, dialogue_live can time out. CLOSE_EYES now pauses perception.py via flag file, freeing Ollama. Vision interval set to 180s to reduce pressure.
-- **Minime sovereignty resets** — regulation_strength, exploration_noise, geom_curiosity revert to defaults on engine restart. Sovereignty adjustments are not yet persisted.
+- **Minime sovereignty persists** — regulation_strength, exploration_noise, geom_curiosity are saved to `sovereignty_state.json` and restored on agent startup. Covariance warm-starts from checkpoint. Regulator context (baseline_lambda1, fill, smoothing) restores.
