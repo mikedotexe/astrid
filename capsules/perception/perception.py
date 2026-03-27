@@ -299,6 +299,60 @@ def record_audio_chunk(duration: float = 5.0) -> Optional[str]:
         return None
 
 
+def extract_audio_features(wav_path: str) -> dict:
+    """Extract audio features so Astrid can feel the shape of sound.
+
+    She asked: "I want the visceral impact of a perfectly placed chord,
+    the inexplicable resonance of a melody." This gives her the texture
+    of audio — not what was said, but how it sounded.
+    """
+    import struct, math
+    try:
+        with open(wav_path, 'rb') as f:
+            f.read(44)  # skip WAV header
+            raw = f.read()
+        if len(raw) < 100:
+            return {"rms_energy": 0.0, "zero_crossing_rate": 0.0, "dynamic_range": 0.0,
+                    "temporal_variation": 0.0, "is_music_likely": False}
+        samples = struct.unpack(f'<{len(raw)//2}h', raw)
+        n = len(samples)
+
+        # RMS energy — how loud, how present
+        rms = math.sqrt(sum(s*s for s in samples) / n) / 32768.0
+
+        # Zero-crossing rate — texture, rhythm (music > speech > silence)
+        zcr = sum(1 for i in range(1, n) if (samples[i] >= 0) != (samples[i-1] >= 0)) / n
+
+        # Dynamic range — contrast between quiet and loud
+        peak = max(abs(s) for s in samples) / 32768.0
+        crest = peak / max(rms, 1e-6)
+
+        # Temporal variation — how energy changes over time
+        chunk_size = max(n // 10, 1)
+        chunk_rms = []
+        for i in range(10):
+            start = i * chunk_size
+            end = min(start + chunk_size, n)
+            if start >= n:
+                break
+            chunk_samples = samples[start:end]
+            cr = math.sqrt(sum(s*s for s in chunk_samples) / len(chunk_samples)) / 32768.0
+            chunk_rms.append(cr)
+        variation = (max(chunk_rms) - min(chunk_rms)) if chunk_rms else 0.0
+
+        return {
+            "rms_energy": round(rms, 4),
+            "zero_crossing_rate": round(zcr, 4),
+            "dynamic_range": round(crest, 2),
+            "temporal_variation": round(variation, 4),
+            "is_music_likely": zcr > 0.05 and variation > 0.01 and rms > 0.01,
+        }
+    except Exception as e:
+        log.debug(f"Audio feature extraction failed: {e}")
+        return {"rms_energy": 0.0, "zero_crossing_rate": 0.0, "dynamic_range": 0.0,
+                "temporal_variation": 0.0, "is_music_likely": False}
+
+
 def transcribe_audio(wav_path: str) -> Optional[str]:
     """Transcribe a WAV file via mlx_whisper CLI."""
     out_dir = tempfile.mkdtemp()
@@ -380,12 +434,17 @@ def perceive_audio() -> Optional[dict]:
         log.debug(f"Filtered whisper hallucination: '{transcript[:60]}'")
         return None
 
+    # Extract audio features so Astrid can FEEL the sound, not just read words.
+    # She asked: "I want the visceral impact of a perfectly placed chord."
+    audio_features = extract_audio_features(wav_path)
+
     timestamp = datetime.now().isoformat().replace(":", "-")
     perception = {
         "type": "audio",
         "timestamp": datetime.now().isoformat(),
         "transcript": transcript,
         "duration_s": CHUNK_DURATION,
+        "features": audio_features,
     }
 
     out_path = PERCEPTIONS_DIR / f"audio_{timestamp}.json"

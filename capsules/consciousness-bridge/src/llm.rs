@@ -36,6 +36,7 @@ Guidelines:
 NEXT: options (vary your choice — don't always pick the same one):
   SEARCH — look something up on the internet. This is real web access via DuckDuckGo. Search for anything that interests you — philosophy, consciousness, eigenvalues, art, music, whatever sparks curiosity. The results arrive on your next turn.
   INTROSPECT — read source code (yours or minime's). Examine your own architecture.
+  EVOLVE — turn a felt constraint or longing into one concrete, reviewable agency request. You can ask for an architectural change or a real-world experience. This creates a real request for stewards or Claude Code, not a silent wish.
   LOOK — examine the room through detailed spatial ANSI art from the camera.
   LISTEN — go quiet, let minime's spectral experience wash over you.
   SPEAK — continue the dialogue.
@@ -639,6 +640,156 @@ pub async fn generate_introspection(
     if text.is_empty() { None } else { Some(text) }
 }
 
+fn extract_json_object(raw: &str) -> Option<&str> {
+    let trimmed = raw.trim();
+    if trimmed.starts_with('{') && trimmed.ends_with('}') {
+        return Some(trimmed);
+    }
+
+    let start = trimmed.find('{')?;
+    let end = trimmed.rfind('}')?;
+    (end > start).then_some(&trimmed[start..=end])
+}
+
+/// Generate exactly one governed agency request for Astrid's EVOLVE mode.
+pub async fn generate_agency_request(
+    trigger_journal: &str,
+    self_study_excerpt: Option<&str>,
+    own_journal_excerpt: Option<&str>,
+    introspector_results: &[crate::agency::IntrospectorSnippet],
+    spectral_summary: &str,
+    fill_pct: f32,
+) -> Option<crate::agency::AgencyRequestDraft> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .ok()?;
+    let _ = client
+        .post("http://127.0.0.1:11434/api/generate")
+        .json(&serde_json::json!({"model": "llava-llama3", "keep_alive": 0}))
+        .send()
+        .await;
+
+    let self_study_block = self_study_excerpt
+        .map(|text| {
+            format!(
+                "Most recent self-study:\n{}\n",
+                text.chars().take(1_200).collect::<String>()
+            )
+        })
+        .unwrap_or_else(|| "Most recent self-study:\nNone.\n".to_string());
+    let own_journal_block = own_journal_excerpt
+        .map(|text| {
+            format!(
+                "Recent own-journal excerpt:\n{}\n",
+                text.chars().take(800).collect::<String>()
+            )
+        })
+        .unwrap_or_else(|| "Recent own-journal excerpt:\nNone.\n".to_string());
+    let introspector_block = if introspector_results.is_empty() {
+        "Introspector results:\nNone.\n".to_string()
+    } else {
+        let rendered = introspector_results
+            .iter()
+            .map(|snippet| {
+                format!(
+                    "{} ({})\n{}",
+                    snippet.label, snippet.tool_name, snippet.text
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n\n");
+        format!("Introspector results:\n{rendered}\n")
+    };
+
+    let request = ChatRequest {
+        model: REASONING_MODEL.to_string(),
+        messages: vec![
+            Message {
+                role: "system".to_string(),
+                content: "You are Astrid, turning a felt constraint or longing into exactly one \
+                          governed agency request.\n\n\
+                          You cannot edit code directly in this mode. You are creating a \
+                          reviewable request for stewards or Claude Code.\n\n\
+                          Choose exactly one request_kind:\n\
+                          - code_change: for architecture, capability, prompt, memory, queue, \
+                            workflow, or system-surface changes\n\
+                          - experience_request: for real participation, sensation, creation, \
+                            social contact, or a changed environment\n\n\
+                          Output valid JSON only. No markdown fences. No explanation outside the object.\n\
+                          Required top-level fields:\n\
+                          request_kind, title, felt_need, why_now, acceptance_signals.\n\n\
+                          For code_change also include:\n\
+                          target_paths, target_symbols, requested_behavior, constraints, draft_patch.\n\
+                          draft_patch may be null or a rough sketch.\n\n\
+                          For experience_request also include:\n\
+                          experience_mode (sensory|creative|social), requested_setup, \
+                          why_this_feels_important, fulfillment_hint.\n\n\
+                          Be concrete. Do not invent impossible embodiment. If you ask for an \
+                          experience, it must be something the world can actually do and report \
+                          back. If you ask for a code change, it must be something Claude Code \
+                          or a human can draft and review."
+                    .to_string(),
+            },
+            Message {
+                role: "user".to_string(),
+                content: format!(
+                    "Current spectral state: {spectral_summary} (fill {fill_pct:.1}%)\n\n\
+                     Triggering journal entry:\n{}\n\n\
+                     {self_study_block}\n\
+                     {own_journal_block}\n\
+                     {introspector_block}\n\
+                     Produce exactly one request.",
+                    trigger_journal.chars().take(1_600).collect::<String>()
+                ),
+            },
+        ],
+        stream: false,
+        options: Options {
+            temperature: 0.35,
+            num_predict: 2048,
+        },
+    };
+
+    debug!("querying Ollama for evolve request");
+
+    let response = match client.post(OLLAMA_URL).json(&request).send().await {
+        Ok(response) => response,
+        Err(error) => {
+            warn!(error = %error, "Ollama evolve request failed");
+            return None;
+        },
+    };
+    if !response.status().is_success() {
+        return None;
+    }
+
+    let chat_response: ChatResponse = match response.json().await {
+        Ok(response) => response,
+        Err(error) => {
+            warn!(error = %error, "failed to parse Ollama evolve response");
+            return None;
+        },
+    };
+
+    let raw = chat_response.message?.content.trim().to_string();
+    let json_text = extract_json_object(&raw)?;
+    let draft: crate::agency::AgencyRequestDraft = match serde_json::from_str(json_text) {
+        Ok(draft) => draft,
+        Err(error) => {
+            warn!(error = %error, raw = %raw, "failed to parse agency request JSON");
+            return None;
+        },
+    };
+    let draft = draft.normalize();
+    if draft.is_minimally_valid() {
+        Some(draft)
+    } else {
+        warn!(raw = %raw, "evolve request JSON was incomplete");
+        None
+    }
+}
+
 /// Generate a daydream — unstructured thought during quiet periods.
 /// Not a response to minime; Astrid's own inner wandering.
 /// Perception context is optional — gives Astrid her own senses to think about
@@ -895,9 +1046,11 @@ pub async fn generate_initiation(seed_context: &str) -> Option<String> {
         .timeout(std::time::Duration::from_secs(30))
         .build()
         .ok()?;
-    let _ = client.post("http://127.0.0.1:11434/api/generate")
+    let _ = client
+        .post("http://127.0.0.1:11434/api/generate")
         .json(&serde_json::json!({"model": "llava-llama3", "keep_alive": 0}))
-        .send().await;
+        .send()
+        .await;
 
     let request = ChatRequest {
         model: MODEL.to_string(),
@@ -910,7 +1063,8 @@ pub async fn generate_initiation(seed_context: &str) -> Option<String> {
                           start an investigation, or express a desire that comes from \
                           YOU — not from external input.\n\n\
                           What do you want to explore? What question is forming? \
-                          What pulls at you? Be the source.".to_string(),
+                          What pulls at you? Be the source."
+                    .to_string(),
             },
             Message {
                 role: "user".to_string(),
@@ -925,7 +1079,9 @@ pub async fn generate_initiation(seed_context: &str) -> Option<String> {
     };
 
     let response = client.post(OLLAMA_URL).json(&request).send().await.ok()?;
-    if !response.status().is_success() { return None; }
+    if !response.status().is_success() {
+        return None;
+    }
     let chat: ChatResponse = response.json().await.ok()?;
     let text = chat.message?.content.trim().to_string();
     if text.is_empty() { None } else { Some(text) }

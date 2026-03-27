@@ -5,6 +5,7 @@
 //! these are not public API.
 #![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
+pub mod agency;
 pub mod autonomous;
 pub mod codec;
 pub mod db;

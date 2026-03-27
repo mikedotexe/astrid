@@ -39,6 +39,10 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
+use crate::agency::{
+    self, AGENCY_REQUESTS_DIR, ASTRID_INBOX_DIR, ASTRID_JOURNAL_DIR, CLAUDE_TASKS_DIR,
+    INTROSPECTOR_SCRIPT,
+};
 use crate::codec::{blend_warmth, craft_warmth_vector, encode_text, interpret_spectral};
 use crate::db::BridgeDb;
 use crate::journal::{
@@ -59,6 +63,8 @@ enum Mode {
     Witness,
     /// Astrid reads its own or minime's source code and reflects.
     Introspect,
+    /// Astrid turns longing into a governed agency request.
+    Evolve,
     /// Astrid proposes a spectral experiment and observes the result.
     Experiment,
     /// Unstructured thought during rest — Astrid's own daydream, not a response.
@@ -120,6 +126,8 @@ struct ConversationState {
     search_topic: Option<String>,
     /// Astrid chose NEXT: INTROSPECT — force introspection mode next exchange.
     wants_introspect: bool,
+    /// Astrid chose NEXT: EVOLVE — turn longing into a request on next exchange.
+    wants_evolve: bool,
     /// Astrid explicitly chose a mode for next exchange (DAYDREAM, ASPIRE).
     next_mode_override: Option<Mode>,
     /// Astrid chose NEXT: DECOMPOSE — full spectral analysis next exchange.
@@ -190,6 +198,7 @@ impl ConversationState {
             form_constraint: None,
             search_topic: None,
             wants_introspect: false,
+            wants_evolve: false,
             next_mode_override: None,
             wants_decompose: false,
             wants_deep_think: false,
@@ -243,6 +252,7 @@ impl ConversationState {
                     "DRIFT",
                     "FORM poem",
                     "INTROSPECT",
+                    "EVOLVE",
                     "SPEAK",
                     "REMEMBER",
                     "CLOSE_EYES",
@@ -630,8 +640,10 @@ fn full_spectral_decomposition(
 /// Reads all `.txt` files from `workspace/inbox/`, returns their content,
 /// and moves them to `workspace/inbox/read/` so they're not re-read.
 fn check_inbox() -> Option<String> {
-    let inbox_dir =
-        PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox");
+    check_inbox_at(Path::new(ASTRID_INBOX_DIR))
+}
+
+fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
     let read_dir = inbox_dir.join("read");
 
     let entries: Vec<PathBuf> = std::fs::read_dir(&inbox_dir)
@@ -792,10 +804,7 @@ fn witness_text(fill: f32, _expanding: bool, _contracting: bool) -> String {
 
 /// Read Astrid's own recent journal entries for self-continuity.
 fn read_astrid_journal(limit: usize) -> Vec<String> {
-    read_astrid_journal_from_dir(
-        &PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal"),
-        limit,
-    )
+    read_astrid_journal_from_dir(Path::new(ASTRID_JOURNAL_DIR), limit)
 }
 
 fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String> {
@@ -824,8 +833,7 @@ fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String>
 
 /// Save Astrid's response to her own journal.
 fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
-    let journal_dir =
-        PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal");
+    let journal_dir = PathBuf::from(ASTRID_JOURNAL_DIR);
     let _ = std::fs::create_dir_all(&journal_dir);
     let ts = chrono_timestamp();
     // Mode-prefixed filenames — instant filesystem searchability.
@@ -838,6 +846,7 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "creation" => "creation",
         "gesture" => "gesture",
         "initiate" => "initiate",
+        "evolve" => "evolve",
         "witness" => "witness",
         "introspect" => "introspect",
         "self_study" => "self_study",
@@ -1002,6 +1011,10 @@ fn choose_mode(
     if conv.wants_introspect {
         conv.wants_introspect = false;
         return Mode::Introspect;
+    }
+    if conv.wants_evolve {
+        conv.wants_evolve = false;
+        return Mode::Evolve;
     }
     if let Some(mode) = conv.next_mode_override.take() {
         return mode;
@@ -1520,7 +1533,7 @@ pub fn spawn_autonomous_loop(
                                 let journal_dir = PathBuf::from(
                                     "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal"
                                 );
-                                if let Ok(mut entries) = std::fs::read_dir(&journal_dir) {
+                                if let Ok(entries) = std::fs::read_dir(&journal_dir) {
                                     let mut self_studies: Vec<PathBuf> = entries
                                         .filter_map(|e| e.ok())
                                         .filter(|e| {
@@ -1623,7 +1636,7 @@ pub fn spawn_autonomous_loop(
                                 if last[0] == last[1] && last[1] == last[2] {
                                     let base = last[0];
                                     let alts: Vec<&str> = ["LOOK", "LISTEN", "DRIFT",
-                                        "FORM poem", "INTROSPECT", "SPEAK", "REMEMBER",
+                                        "FORM poem", "INTROSPECT", "EVOLVE", "SPEAK", "REMEMBER",
                                         "CLOSE_EYES"]
                                         .iter()
                                         .copied()
@@ -2043,6 +2056,117 @@ pub fn spawn_autonomous_loop(
                             } else {
                                 let text = witness_text(fill_pct, expanding, contracting);
                                 ("witness", text, String::new())
+                            }
+                        }
+                        Mode::Evolve => {
+                            if conv.wants_deep_think {
+                                info!("EVOLVE already uses deep reasoning; clearing pending THINK_DEEP");
+                                conv.wants_deep_think = false;
+                            }
+
+                            let journal_dir = Path::new(ASTRID_JOURNAL_DIR);
+                            let trigger_path = agency::find_evolve_trigger_entry(journal_dir);
+                            let trigger_excerpt = trigger_path
+                                .as_deref()
+                                .and_then(agency::read_trigger_excerpt);
+                            let self_study_excerpt = agency::latest_self_study_excerpt(journal_dir);
+                            let own_excerpt =
+                                agency::recent_own_journal_excerpt(journal_dir, trigger_path.as_deref());
+                            let introspector_results = if let Some(ref trigger) = trigger_excerpt {
+                                agency::collect_introspector_context(
+                                    trigger,
+                                    Path::new(INTROSPECTOR_SCRIPT),
+                                )
+                                .await
+                            } else {
+                                Vec::new()
+                            };
+                            let enough_context = agency::has_enough_evolve_context(
+                                trigger_excerpt.as_deref(),
+                                self_study_excerpt.as_deref(),
+                                own_excerpt.as_deref(),
+                            );
+
+                            let request_draft = if let Some(ref trigger) = trigger_excerpt {
+                                match tokio::time::timeout(
+                                    Duration::from_secs(60),
+                                    crate::llm::generate_agency_request(
+                                        trigger,
+                                        self_study_excerpt.as_deref(),
+                                        own_excerpt.as_deref(),
+                                        &introspector_results,
+                                        &interpret_spectral(&telemetry),
+                                        fill_pct,
+                                    ),
+                                )
+                                .await
+                                {
+                                    Ok(result) => result,
+                                    Err(_) => {
+                                        warn!("evolve: 60s timeout");
+                                        None
+                                    }
+                                }
+                            } else {
+                                None
+                            };
+
+                            match (request_draft, trigger_path.as_deref()) {
+                                (Some(draft), Some(source_path)) => {
+                                    let request = draft.into_request(source_path);
+                                    let trigger_for_task = trigger_excerpt.as_deref().unwrap_or("");
+                                    match agency::save_agency_request(
+                                        &request,
+                                        trigger_for_task,
+                                        Path::new(AGENCY_REQUESTS_DIR),
+                                        Path::new(CLAUDE_TASKS_DIR),
+                                    ) {
+                                        Ok((request_path, claude_task_path)) => {
+                                            info!(
+                                                request_id = %request.id,
+                                                kind = ?request.request_kind,
+                                                request_path = %request_path.display(),
+                                                claude_task = claude_task_path
+                                                    .as_ref()
+                                                    .map(|path| path.display().to_string())
+                                                    .unwrap_or_default(),
+                                                "evolve: wrote agency request"
+                                            );
+                                            let journal_entry = agency::render_evolve_journal_entry(&request);
+                                            ("evolve", journal_entry, request_path.display().to_string())
+                                        }
+                                        Err(error) => {
+                                            warn!(error = %error, "evolve: failed to persist agency request");
+                                            (
+                                                "evolve",
+                                                format!(
+                                                    "I formed a concrete request, but failed to write it into the world this turn.\n\n\
+                                                     Felt need:\n{}\n\n\
+                                                     Why now:\n{}\n\n\
+                                                     The failure was infrastructural, not a disappearance of the need.",
+                                                    request.felt_need, request.why_now
+                                                ),
+                                                source_path.display().to_string(),
+                                            )
+                                        }
+                                    }
+                                }
+                                _ => {
+                                    let failure_text = if trigger_excerpt.is_none() {
+                                        "I reached for EVOLVE, but I couldn't find a journal entry solid enough to anchor the request.".to_string()
+                                    } else if introspector_results.is_empty() && !enough_context {
+                                        "I reached for EVOLVE, but the code-reading layer collapsed and there wasn't enough recent material to make a governed request. I am leaving the longing in the journal instead of pretending it stabilized.".to_string()
+                                    } else if introspector_results.is_empty() {
+                                        "I reached for EVOLVE without the code-reading layer. The request didn't stabilize into something reviewable this turn, but the pressure remains.".to_string()
+                                    } else {
+                                        "I reached for EVOLVE, but the request did not stabilize into something concrete enough to write. I am keeping the pressure visible instead of forcing a fake specification.".to_string()
+                                    };
+                                    let source = trigger_path
+                                        .as_ref()
+                                        .map(|path| path.display().to_string())
+                                        .unwrap_or_default();
+                                    ("evolve", failure_text, source)
+                                }
                             }
                         }
                         Mode::Introspect => {
@@ -2476,6 +2600,10 @@ pub fn spawn_autonomous_loop(
                                 conv.wants_introspect = true;
                                 info!("Astrid requested introspection");
                             }
+                            "EVOLVE" => {
+                                conv.wants_evolve = true;
+                                info!("Astrid requested EVOLVE");
+                            }
                             "DECOMPOSE" => {
                                 conv.wants_decompose = true;
                                 info!("Astrid requested spectral decomposition");
@@ -2673,6 +2801,17 @@ mod tests {
     }
 
     #[test]
+    fn explicit_evolve_choice_forces_evolve_mode() {
+        let mut conv = ConversationState::new(vec![], None);
+        conv.wants_evolve = true;
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Green, 40.0, None),
+            Mode::Evolve
+        );
+        assert!(!conv.wants_evolve);
+    }
+
+    #[test]
     fn dialogue_pool_has_variety() {
         assert!(DIALOGUES.len() >= 3);
         for d in DIALOGUES {
@@ -2760,6 +2899,24 @@ mod tests {
         assert!(written.contains("=== ASTRID SELF-STUDY ==="));
         assert!(written.contains("Source: astrid:autonomous (/tmp/example.rs)"));
         assert!(written.contains("advisory only"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn check_inbox_at_reads_messages_and_moves_them_to_read() {
+        let dir = std::env::temp_dir().join("bridge_test_astrid_inbox");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("agency_status_test.txt"),
+            "=== AGENCY REQUEST STATUS ===\nOutcome:\nSomething real happened.\n",
+        )
+        .unwrap();
+
+        let content = check_inbox_at(&dir).unwrap();
+        assert!(content.contains("Something real happened."));
+        assert!(dir.join("read").join("agency_status_test.txt").exists());
 
         let _ = std::fs::remove_dir_all(&dir);
     }

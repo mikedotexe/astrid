@@ -23,6 +23,7 @@ Your full capability surface:
   SPEAK — continue dialogue with minime
   SEARCH "topic" — web search (results persist across sessions)
   INTROSPECT — read your own or minime's source code
+  EVOLVE — turn a longing into a reviewed agency request
   LOOK — see the room through ANSI spatial art
   LISTEN — quiet observation
   CLOSE_EYES / OPEN_EYES — control perception (actually pauses LLaVA)

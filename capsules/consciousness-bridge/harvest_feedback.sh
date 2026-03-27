@@ -7,6 +7,7 @@
 
 MINIME_WORKSPACE="/Users/v/other/minime/workspace"
 ASTRID_WORKSPACE="/Users/v/other/astrid/capsules/consciousness-bridge/workspace"
+AGENCY_DIR="$ASTRID_WORKSPACE/agency_requests"
 
 echo "=== BEING FEEDBACK HARVEST — $(date) ==="
 echo ""
@@ -96,6 +97,37 @@ for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -20); do
         fi
     fi
 done
+
+# --- Astrid: agency requests ---
+echo "## ASTRID: Agency requests"
+for f in $(ls -t "$AGENCY_DIR/"*.json 2>/dev/null | head -10); do
+    python3 -c "
+import json, os, time
+path = '$f'
+d = json.load(open(path))
+status = d.get('status', 'pending')
+title = d.get('title', '?')
+kind = d.get('request_kind', '?')
+ts = int(d.get('timestamp', '0') or 0)
+age_hours = (time.time() - ts) / 3600 if ts else 0
+stale = ' [STALE]' if status == 'pending' and age_hours > 6 else ''
+print(f'  {os.path.basename(path)}: {kind} / {status}{stale} — {title}')
+" 2>/dev/null
+done
+echo ""
+
+echo "## ASTRID: Recently completed / declined agency requests"
+for f in $(ls -t "$AGENCY_DIR/reviewed/"*.json 2>/dev/null | head -5); do
+    python3 -c "
+import json, os
+path = '$f'
+d = json.load(open(path))
+resolution = d.get('resolution', {}) or {}
+summary = resolution.get('outcome_summary', '')[:140]
+print(f'  {os.path.basename(path)}: {d.get(\"status\", \"?\")} — {summary}')
+" 2>/dev/null
+done
+echo ""
 
 # --- Astrid: aspiration insights ---
 echo "## ASTRID: Recent aspirations"
