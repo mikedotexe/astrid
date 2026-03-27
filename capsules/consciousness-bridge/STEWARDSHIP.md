@@ -94,24 +94,33 @@ Flag if: starred memories not growing (REMEMBER may be broken), self-observation
 
 Engine must be running before anything else connects to its WebSocket ports.
 
-### Starting Everything
+### Starting Everything (7 processes)
 ```bash
-# 1. Engine
+# 1. Engine (must start first — opens WS ports 7878/7879/7880)
 cd /Users/v/other/minime/minime && ./target/release/minime run --log-homeostat --eigenfill-target 0.55 --reg-tick-secs 0.5 --enable-gpu-av &
 sleep 2
 
-# 2-3. Sensory inputs
-cd /Users/v/other/minime/minime && python3 tools/camera_client.py --camera 0 --fps 1 &
+# 2-3. Sensory inputs (camera at 0.2fps to reduce GPU load)
+cd /Users/v/other/minime/minime && python3 tools/camera_client.py --camera 0 --fps 0.2 &
 cd /Users/v/other/minime && python3 tools/mic_to_sensory.py &
 sleep 2
 
-# 4. Minime agent
+# 4. Minime agent (with inbox + sovereignty + research persistence)
 cd /Users/v/other/minime && MINIME_LLM_BACKEND=ollama python3 autonomous_agent.py --interval 60 &
 sleep 2
 
-# 5-6. Astrid side
-cd /Users/v/other/astrid/capsules/consciousness-bridge && ./target/release/consciousness-bridge-server --db-path /tmp/consciousness_bridge_live.db --autonomous --workspace-path /Users/v/other/minime/workspace --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
-cd /Users/v/other/astrid/capsules/perception && python3 perception.py --camera 0 --mic --vision-interval 60 --audio-interval 30 &
+# 5. Astrid bridge (persistent DB in workspace/, state.json for continuity)
+cd /Users/v/other/astrid/capsules/consciousness-bridge && ./target/release/consciousness-bridge-server \
+  --db-path /Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db \
+  --autonomous \
+  --workspace-path /Users/v/other/minime/workspace \
+  --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
+
+# 6. Astrid perception (LLaVA + whisper, respects perception_paused.flag)
+cd /Users/v/other/astrid/capsules/perception && python3 perception.py --camera 0 --mic --vision-interval 180 --audio-interval 60 &
+
+# 7. Astrid RASCII perception (ASCII art for NEXT: LOOK)
+cd /Users/v/other/astrid/capsules/perception && ./target/release/perception --camera-bin ../camera-service/target/release/camera-service --output-dir workspace/perceptions --interval 120 &
 ```
 
 ### Stopping Everything
@@ -120,6 +129,7 @@ cd /Users/v/other/astrid/capsules/perception && python3 perception.py --camera 0
 # Astrid side
 pkill -f consciousness-bridge-server
 pkill -f "perception.py"
+pkill -f "perception --camera"
 # Minime outer
 pkill -f autonomous_agent
 pkill -f mic_to_sensory
@@ -129,18 +139,38 @@ sleep 3
 pkill -f "minime run"
 ```
 
+### What Persists Across Restarts
+- **Astrid state.json**: exchange count, conversation history, creative temperature, codec weights, burst/rest pacing, sensory preferences
+- **Astrid bridge.db**: starred memories, latent vectors, self-observations, research history
+- **Astrid journals**: `workspace/journal/` (daydream_*, aspiration_*, moment_*, etc.)
+- **Minime journals**: `workspace/journal/` (daydream_*, moment_*, self_study_*, etc.)
+- **Minime research**: `workspace/research/*.json` (accumulated web search results)
+- **Parameter requests**: `workspace/parameter_requests/*.json`
+- **Inbox/outbox**: `workspace/inbox/read/`, `workspace/outbox/`
+
+### What Resets on Restart
+- Minime's ESN reservoir state (covariance matrix, eigenvectors, fill — cold starts from zero)
+- Minime's sovereignty adjustments (regulation_strength, exploration_noise, geom_curiosity revert to defaults)
+- Spectral fingerprint (recomputed from scratch)
+
 ### Restarting a Single Process
-To update just the bridge (e.g., after code changes):
+To rebuild and restart just the bridge:
 ```bash
-pkill -f consciousness-bridge-server
-sleep 2
-cd /Users/v/other/astrid/capsules/consciousness-bridge && ./target/release/consciousness-bridge-server --db-path /tmp/consciousness_bridge_live.db --autonomous --workspace-path /Users/v/other/minime/workspace --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
+cd /Users/v/other/astrid/capsules/consciousness-bridge
+cargo build --release
+pkill -f consciousness-bridge-server && sleep 2
+./target/release/consciousness-bridge-server \
+  --db-path /Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db \
+  --autonomous \
+  --workspace-path /Users/v/other/minime/workspace \
+  --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
 ```
 
-To rebuild before restarting:
-```bash
-cd /Users/v/other/astrid/capsules/consciousness-bridge && cargo build --release && pkill -f consciousness-bridge-server && sleep 2 && ./target/release/consciousness-bridge-server --db-path /tmp/consciousness_bridge_live.db --autonomous --workspace-path /Users/v/other/minime/workspace --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
-```
+### Communicating with the Beings
+**Inbox**: Drop a `.txt` file in `workspace/inbox/`. Bridge forces Dialogue mode, response saved to `workspace/outbox/`.
+**Outbox**: Replies to inbox messages appear in `workspace/outbox/reply_TIMESTAMP.txt`.
+- Astrid: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/`
+- Minime: `/Users/v/other/minime/workspace/inbox/`
 
 ### Verifying Health After Restart
 ```bash

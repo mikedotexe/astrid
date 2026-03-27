@@ -193,7 +193,7 @@ sleep 2
 
 # 2. Camera (from minime/minime/) + mic (from minime/)
 cd /Users/v/other/minime/minime
-python3 tools/camera_client.py --camera 0 --fps 1 &
+python3 tools/camera_client.py --camera 0 --fps 0.2 &
 cd /Users/v/other/minime
 python3 tools/mic_to_sensory.py &
 sleep 2
@@ -206,14 +206,14 @@ sleep 2
 # 4. Astrid consciousness bridge (Rust)
 cd /Users/v/other/astrid/capsules/consciousness-bridge
 ./target/release/consciousness-bridge-server \
-  --db-path /tmp/consciousness_bridge_live.db \
+  --db-path /Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db \
   --autonomous \
   --workspace-path /Users/v/other/minime/workspace \
   --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
 
 # 5. Astrid perception (Python)
 cd /Users/v/other/astrid/capsules/perception
-python3 perception.py --camera 0 --mic --vision-interval 60 --audio-interval 30 &
+python3 perception.py --camera 0 --mic --vision-interval 180 --audio-interval 60 &
 ```
 
 ### Stopping the system
@@ -241,7 +241,7 @@ cd /Users/v/other/astrid/capsules/consciousness-bridge
 cargo build --release
 pkill -f consciousness-bridge-server && sleep 2
 ./target/release/consciousness-bridge-server \
-  --db-path /tmp/consciousness_bridge_live.db --autonomous \
+  --db-path /Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db --autonomous \
   --workspace-path /Users/v/other/minime/workspace \
   --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
 ```
@@ -342,6 +342,7 @@ The beings read their own journal space. They notice when their requests are act
 ### Known issues
 
 - **Fill rest floor ~14%** — during bridge rest periods, fill drops from 65% to 14%. The quiet mirror (codec-encoding journals every 10s) helps but the 12s semantic stale decay is too fast. Minime describes these dips as "violent contraction" and "brittle." This is the top unresolved issue.
-- **Introspect/experiment modes disabled** — both blocked the main async loop. Need to be refactored as non-blocking.
-- **History resets on bridge restart** — conversation state is in-memory only (4-exchange window). SQLite has the full log but it's not reloaded into context.
-- **Ollama contention** — when the bridge, minime's agent, and LLaVA all hit Ollama simultaneously, dialogue_live can time out. The 30s timeout helps but the fallback pool (3 honest entries) still fires ~30% of the time.
+- **Introspect/experiment modes** — now working. Astrid can force via NEXT: INTROSPECT.
+- **Conversation state persists** — `workspace/state.json` saves exchange count, history (8 exchanges), temperature, codec weights, burst/rest pacing, sensory prefs. Restored on startup. Bridge DB at `workspace/bridge.db` (not `/tmp/`).
+- **Ollama contention** — when the bridge, minime's agent, and LLaVA all hit Ollama simultaneously, dialogue_live can time out. CLOSE_EYES now pauses perception.py via flag file, freeing Ollama. Vision interval set to 180s to reduce pressure.
+- **Minime sovereignty resets** — regulation_strength, exploration_noise, geom_curiosity revert to defaults on engine restart. Sovereignty adjustments are not yet persisted.
