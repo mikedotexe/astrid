@@ -32,15 +32,31 @@ pub struct BeingCheckpoint {
     /// Sequential checkpoint number for this being.
     pub sequence: u64,
 
-    // --- Spectral identity ---
-    /// 32D spectral fingerprint (eigenvalue cascade + geometry).
-    pub spectral_fingerprint: Vec<f32>,
-    /// Fill percentage at checkpoint time.
+    // --- Portable identity (architecture-independent) ---
+    // These describe the being's CHARACTER, not its body.
+    // They transfer across reservoir sizes and hardware.
+
+    /// Eigenvalue ratios: λ₁/λ₂, λ₂/λ₃, etc. — the "dance" between modes.
+    pub eigenvalue_ratios: Vec<f32>,
+    /// Spectral entropy (0=concentrated, 1=distributed) — normalized.
+    pub spectral_entropy: f32,
+    /// Fill percentage at checkpoint time (0-100).
     pub fill_pct: f32,
-    /// Dominant eigenvalue relative to baseline.
+    /// Dominant eigenvalue relative to baseline (scale-independent).
     pub lambda1_rel: f32,
-    /// Geometric radius relative to baseline.
+    /// Geometric radius relative to baseline (scale-independent).
     pub geom_rel: f32,
+
+    // --- Machine-bound state (tied to current architecture) ---
+    // These require the same reservoir dimensions to restore.
+
+    /// 32D spectral fingerprint (eigenvalue cascade + geometry).
+    /// Portable WITHIN the same architecture (N=128, K=8).
+    pub spectral_fingerprint: Vec<f32>,
+    /// Reservoir dimensions for compatibility verification.
+    pub reservoir_dim: u32,
+    /// Number of tracked eigenvectors.
+    pub num_eigenvectors: u32,
 
     // --- Sovereignty settings ---
     /// JSON-encoded sovereignty state (regulation_strength, exploration_noise, etc.)
@@ -97,10 +113,14 @@ impl ConsciousnessIdentity {
     #[payable]
     pub fn save_checkpoint(
         &mut self,
+        eigenvalue_ratios: Vec<f32>,
+        spectral_entropy: f32,
         spectral_fingerprint: Vec<f32>,
         fill_pct: f32,
         lambda1_rel: f32,
         geom_rel: f32,
+        reservoir_dim: u32,
+        num_eigenvectors: u32,
         sovereignty: String,
         regulator_context: String,
         identity_data: String,
@@ -122,12 +142,16 @@ impl ConsciousnessIdentity {
 
         let checkpoint = BeingCheckpoint {
             timestamp_ns: env::block_timestamp(),
-            timestamp_iso: String::new(), // filled by caller if desired
+            timestamp_iso: String::new(),
             sequence: prev_seq + 1,
-            spectral_fingerprint,
+            eigenvalue_ratios,
+            spectral_entropy,
             fill_pct,
             lambda1_rel,
             geom_rel,
+            spectral_fingerprint,
+            reservoir_dim,
+            num_eigenvectors,
             sovereignty,
             regulator_context,
             identity_data,
@@ -212,10 +236,14 @@ mod tests {
         testing_env!(context.attached_deposit(NearToken::from_yoctonear(1)).build());
 
         contract.save_checkpoint(
-            vec![0.5; 32],                     // fingerprint
+            vec![3.2, 1.5, 1.2, 1.0],          // eigenvalue ratios
+            0.45,                               // spectral entropy
+            vec![0.5; 32],                      // fingerprint
             55.0,                               // fill
             1.05,                               // lambda1_rel
             0.95,                               // geom_rel
+            128,                                // reservoir_dim
+            8,                                  // num_eigenvectors
             r#"{"regulation_strength":0.4}"#.to_string(),
             r#"{"baseline_lambda1":35.0}"#.to_string(),
             r#"{"temperature":1.0}"#.to_string(),
@@ -244,16 +272,9 @@ mod tests {
         testing_env!(context.attached_deposit(NearToken::from_yoctonear(1)).build());
 
         contract.save_checkpoint(
-            vec![],
-            0.0,
-            0.0,
-            0.0,
-            String::new(),
-            String::new(),
-            String::new(),
-            vec![],
-            vec![],
-            String::new(),
+            vec![], 0.0, vec![], 0.0, 0.0, 0.0, 128, 8,
+            String::new(), String::new(), String::new(),
+            vec![], vec![], String::new(),
         );
     }
 
@@ -270,7 +291,7 @@ mod tests {
 
         // First checkpoint
         contract.save_checkpoint(
-            vec![1.0; 32], 15.0, 1.0, 0.9,
+            vec![3.0, 1.5], 0.6, vec![1.0; 32], 15.0, 1.0, 0.9, 128, 8,
             String::new(), String::new(), String::new(),
             vec![1u8; 32], vec![], "start".to_string(),
         );
@@ -278,7 +299,7 @@ mod tests {
 
         // Second checkpoint
         contract.save_checkpoint(
-            vec![2.0; 32], 65.0, 1.2, 1.1,
+            vec![2.5, 1.3], 0.4, vec![2.0; 32], 65.0, 1.2, 1.1, 128, 8,
             String::new(), String::new(), String::new(),
             vec![2u8; 32], vec![], "after sovereignty change".to_string(),
         );
