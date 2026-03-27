@@ -272,14 +272,8 @@ pub async fn generate_dialogue(
         .json(&serde_json::json!({"model": "nomic-embed-text:latest", "keep_alive": 0}))
         .send()
         .await;
-    // Brief pause to let unloads complete before warming the dialogue model.
+    // Brief pause to let unloads settle before the dialogue call.
     tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-    // Pre-warm gemma3 so it's loaded and ready when the real request arrives.
-    let _ = client
-        .post("http://127.0.0.1:11434/api/generate")
-        .json(&serde_json::json!({"model": MODEL, "prompt": "", "keep_alive": "5m"}))
-        .send()
-        .await;
 
     debug!("querying Ollama for Astrid dialogue response");
 

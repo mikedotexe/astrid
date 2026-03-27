@@ -648,8 +648,6 @@ fn check_inbox() -> Option<String> {
 }
 
 fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
-    let read_dir = inbox_dir.join("read");
-
     let entries: Vec<PathBuf> = std::fs::read_dir(&inbox_dir)
         .ok()?
         .filter_map(|e| e.ok())
@@ -664,7 +662,9 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
         return None;
     }
 
-    let _ = std::fs::create_dir_all(&read_dir);
+    // Read WITHOUT moving. Messages stay in inbox until retire_inbox()
+    // is called after the exchange succeeds. This prevents lost messages
+    // when dialogue fails (the bug that ate Eugene's hello).
     let mut messages = Vec::new();
     for path in &entries {
         if let Ok(content) = std::fs::read_to_string(path) {
@@ -672,17 +672,34 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
                 messages.push(content.trim().to_string());
             }
         }
-        // Move to read/.
-        if let Some(name) = path.file_name() {
-            let dest = read_dir.join(name);
-            let _ = std::fs::rename(path, dest);
-        }
     }
 
     if messages.is_empty() {
         None
     } else {
         Some(messages.join("\n---\n"))
+    }
+}
+
+/// Move consumed inbox messages to read/ AFTER the exchange succeeds.
+/// This prevents the bug where messages are eaten but never acted on
+/// because the dialogue call failed (the "Eugene's hello" bug).
+fn retire_inbox() {
+    retire_inbox_at(Path::new(ASTRID_INBOX_DIR));
+}
+
+fn retire_inbox_at(inbox_dir: &Path) {
+    let read_dir = inbox_dir.join("read");
+    let _ = std::fs::create_dir_all(&read_dir);
+    if let Ok(entries) = std::fs::read_dir(inbox_dir) {
+        for entry in entries.filter_map(|e| e.ok()) {
+            let path = entry.path();
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "txt") {
+                if let Some(name) = path.file_name() {
+                    let _ = std::fs::rename(&path, read_dir.join(name));
+                }
+            }
+        }
     }
 }
 
@@ -1739,8 +1756,43 @@ pub fn spawn_autonomous_loop(
                                 ).await {
                                     Ok(result) => result,
                                     Err(_) => {
-                                        warn!("dialogue_live: {}s timeout — falling back", timeout_secs);
-                                        None
+                                        // Retry once after a pause — Ollama may have been
+                                        // busy with minime's agent. The "Eugene's hello" bug
+                                        // showed that single-attempt timeout wastes the inbox.
+                                        warn!("dialogue_live: {}s timeout — retrying once", timeout_secs);
+                                        tokio::time::sleep(Duration::from_secs(3)).await;
+                                        match tokio::time::timeout(
+                                            Duration::from_secs(timeout_secs),
+                                            crate::llm::generate_dialogue(
+                                                journal,
+                                                &spectral_summary,
+                                                fill_pct,
+                                                perception_text.as_deref(),
+                                                &conv.history,
+                                                web_context.as_deref(),
+                                                modality_context.as_deref(),
+                                                effective_temperature,
+                                                num_predict,
+                                                if let Some(ref form) = conv.form_constraint {
+                                                    Some(format!(
+                                                        "Express your response as a {}.",
+                                                        form
+                                                    ))
+                                                } else {
+                                                    conv.emphasis.clone()
+                                                }.as_deref(),
+                                                continuity_block.as_deref(),
+                                                feedback_hint.as_deref(),
+                                                diversity_hint.as_deref(),
+                                                model_override,
+                                            )
+                                        ).await {
+                                            Ok(result) => result,
+                                            Err(_) => {
+                                                warn!("dialogue_live: retry also timed out");
+                                                None
+                                            }
+                                        }
                                     }
                                 }
                             } else {
@@ -2756,6 +2808,12 @@ pub fn spawn_autonomous_loop(
                             }
                             _ => {} // Unknown action — continue normally.
                         }
+                    }
+
+                    // Inbox messages survived the exchange — now retire them.
+                    // (Only moved to read/ AFTER success, not before.)
+                    if inbox_content.is_some() {
+                        retire_inbox();
                     }
 
                     // Resume perception after exchange completes.
