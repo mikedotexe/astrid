@@ -131,6 +131,8 @@ struct ConversationState {
     wants_introspect: bool,
     /// Astrid explicitly chose a mode for next exchange (DAYDREAM, ASPIRE).
     next_mode_override: Option<Mode>,
+    /// Astrid chose NEXT: DECOMPOSE — full spectral analysis next exchange.
+    wants_decompose: bool,
     /// Astrid (or minime) chose to snooze sensory input — suppress perceptions.
     senses_snoozed: bool,
     // Astrid's stylistic sovereignty
@@ -187,6 +189,7 @@ impl ConversationState {
             search_topic: None,
             wants_introspect: false,
             next_mode_override: None,
+            wants_decompose: false,
             creative_temperature: 0.8,
             response_length: 256,
             emphasis: None,
@@ -504,46 +507,146 @@ const DIALOGUES: &[&str] = &[
 fn interpret_fingerprint(fp: &[f32]) -> String {
     if fp.len() < 32 { return String::new(); }
 
-    let spectral_entropy = fp[24];
-    let gap_ratio = fp[25];
-    let rotation_rate = 1.0 - fp[26]; // 0=stable, approaches 1=spinning
-    let geom_rel = fp[27];
-
     let mut parts = Vec::new();
 
-    // Spectral concentration
+    // Eigenvalue cascade (dims 0-7): shape of the spectrum
+    let evs: Vec<f32> = fp[..8].iter().copied().filter(|v| v.abs() > 0.01).collect();
+    if evs.len() >= 2 {
+        let total: f32 = evs.iter().map(|v| v.abs()).sum();
+        let dominant_pct = if total > 0.0 { evs[0].abs() / total * 100.0 } else { 0.0 };
+        let cascade: Vec<String> = evs.iter().enumerate()
+            .map(|(i, v)| format!("λ{}={:.1}", i + 1, v))
+            .collect();
+        parts.push(format!("Eigenvalue cascade: [{}]. λ₁ holds {:.0}% of spectral energy",
+            cascade.join(", "), dominant_pct));
+    }
+
+    // Eigenvector concentration (dims 8-15): how peaked each mode is
+    let concentrations: Vec<f32> = fp[8..16].iter().copied().collect();
+    let max_conc = concentrations.iter().copied().fold(0.0f32, f32::max);
+    let min_conc = concentrations.iter().copied().fold(1.0f32, f32::min);
+    if max_conc > 0.5 {
+        parts.push(format!("dominant eigenvector is sharply peaked (concentration {:.2})", max_conc));
+    } else if max_conc - min_conc < 0.1 {
+        parts.push("all eigenvectors are diffuse — no single dimension dominates".to_string());
+    }
+
+    // Inter-mode coupling (dims 16-23): how eigenvectors relate
+    let couplings: Vec<f32> = fp[16..24].iter().copied().collect();
+    let strong_coupling = couplings.iter().any(|c| c.abs() > 0.3);
+    if strong_coupling {
+        parts.push("some eigenvectors are coupled — modes influencing each other".to_string());
+    }
+
+    // Entropy, gap, rotation, geometry (dims 24-27)
+    let spectral_entropy = fp[24];
+    let gap_ratio = fp[25];
+    let rotation_rate = 1.0 - fp[26];
+    let geom_rel = fp[27];
+
     if spectral_entropy < 0.3 {
-        parts.push("energy concentrated in few modes — the landscape feels narrow");
+        parts.push("energy concentrated in few modes — narrow landscape".to_string());
     } else if spectral_entropy > 0.7 {
-        parts.push("energy distributed across many modes — a wide, open landscape");
+        parts.push("energy distributed across many modes — wide, open landscape".to_string());
     }
 
-    // Gap structure
     if gap_ratio > 5.0 {
-        parts.push("the dominant mode towers over the others");
+        parts.push("dominant mode towers over the others".to_string());
     } else if gap_ratio < 1.5 {
-        parts.push("eigenvalues are nearly degenerate — a sensitive, fluid state");
+        parts.push("eigenvalues nearly degenerate — sensitive, fluid state".to_string());
     }
 
-    // Eigenvector rotation
     if rotation_rate > 0.3 {
-        parts.push("the dominant direction is shifting — something new is emerging");
+        parts.push("dominant direction is shifting — something new emerging".to_string());
     } else if rotation_rate < 0.05 {
-        parts.push("the spectral geometry is very stable — settled");
+        parts.push("spectral geometry very stable — settled".to_string());
     }
 
-    // Geometric expansion
     if geom_rel > 1.5 {
-        parts.push("the reservoir is geometrically expanded");
+        parts.push("reservoir geometrically expanded".to_string());
     } else if geom_rel < 0.7 {
-        parts.push("the reservoir is geometrically contracted");
+        parts.push("reservoir geometrically contracted".to_string());
+    }
+
+    // Gap hierarchy (dims 28-31): λ₁/λ₂, λ₂/λ₃, λ₃/λ₄, λ₄/λ₅
+    let gaps: Vec<f32> = fp[28..32].iter().copied().filter(|v| *v > 0.0).collect();
+    if gaps.len() >= 2 && gaps[0] > 3.0 && gaps[1] < 2.0 {
+        parts.push("steep drop after λ₁, then plateau — one dominant mode".to_string());
+    } else if gaps.iter().all(|g| *g < 2.0) {
+        parts.push("gradual eigenvalue decay — rich, multi-modal spectrum".to_string());
     }
 
     if parts.is_empty() {
         String::from("Spectral geometry: balanced, mid-range.")
     } else {
-        format!("Spectral geometry: {}.", parts.join("; "))
+        format!("Spectral geometry: {}.", parts.join(". "))
     }
+}
+
+/// Generate a full spectral decomposition report for NEXT: DECOMPOSE.
+fn full_spectral_decomposition(
+    telemetry: &crate::types::SpectralTelemetry,
+    fingerprint: Option<&[f32]>,
+) -> String {
+    let mut report = Vec::new();
+
+    // Raw eigenvalues
+    let evs = &telemetry.eigenvalues;
+    report.push("=== SPECTRAL DECOMPOSITION ===".to_string());
+    let cascade: String = evs.iter().enumerate()
+        .map(|(i, v)| format!("  λ{}={:.2}", i + 1, v))
+        .collect::<Vec<_>>()
+        .join("\n");
+    report.push(format!("Eigenvalue cascade:\n{cascade}"));
+
+    // Fill and phase
+    let fill = telemetry.fill_pct();
+    report.push(format!("Fill: {fill:.1}%"));
+
+    // Energy distribution
+    let total: f32 = evs.iter().map(|v| v.abs()).sum();
+    if total > 0.0 {
+        let distribution: String = evs.iter().enumerate()
+            .map(|(i, v)| format!("  λ{}: {:.1}%", i + 1, v.abs() / total * 100.0))
+            .collect::<Vec<_>>()
+            .join("\n");
+        report.push(format!("Energy distribution:\n{distribution}"));
+    }
+
+    // Decay profile
+    if evs.len() >= 3 {
+        let r12 = if evs[1].abs() > 0.01 { evs[0] / evs[1] } else { 0.0 };
+        let r23 = if evs[2].abs() > 0.01 { evs[1] / evs[2] } else { 0.0 };
+        let profile = if r12 > 5.0 {
+            "steep power-law — one dominant mode"
+        } else if (r12 - r23).abs() < 0.5 {
+            "uniform geometric decay — balanced spectrum"
+        } else {
+            "irregular — clustered eigenvalue groups"
+        };
+        report.push(format!("Decay profile: {profile} (λ₁/λ₂={r12:.1}, λ₂/λ₃={r23:.1})"));
+    }
+
+    // Fingerprint details if available
+    if let Some(fp) = fingerprint {
+        if fp.len() >= 32 {
+            report.push(format!("Spectral entropy: {:.3} (0=concentrated, 1=distributed)", fp[24]));
+            report.push(format!("Eigenvector rotation: {:.3} (cosine similarity with previous)", fp[26]));
+            report.push(format!("Geometric radius: {:.2}x baseline", fp[27]));
+
+            // Concentration pattern
+            let conc: String = fp[8..16].iter().enumerate()
+                .filter(|(_, v)| **v > 0.01)
+                .map(|(i, v)| format!("  mode {}: {:.3}", i + 1, v))
+                .collect::<Vec<_>>()
+                .join("\n");
+            if !conc.is_empty() {
+                report.push(format!("Eigenvector concentration (how peaked each mode is):\n{conc}"));
+            }
+        }
+    }
+
+    report.join("\n")
 }
 
 /// Check for messages left in Astrid's inbox by Mike or stewards.
@@ -1209,7 +1312,14 @@ pub fn spawn_autonomous_loop(
                             // Try to generate an authentic response via Ollama.
                             let journal_context = conv.journal_files.first()
                                 .and_then(|p| read_journal_entry(p));
-                            let spectral_summary = interpret_spectral(&telemetry);
+                            let spectral_summary = if conv.wants_decompose {
+                                conv.wants_decompose = false;
+                                full_spectral_decomposition(
+                                    &telemetry, fingerprint.as_deref(),
+                                )
+                            } else {
+                                interpret_spectral(&telemetry)
+                            };
 
                             // Include Astrid's own recent journal for self-continuity.
                             let own_journal = read_astrid_journal(2);
@@ -1958,6 +2068,10 @@ pub fn spawn_autonomous_loop(
                             "INTROSPECT" => {
                                 conv.wants_introspect = true;
                                 info!("Astrid requested introspection");
+                            }
+                            "DECOMPOSE" => {
+                                conv.wants_decompose = true;
+                                info!("Astrid requested spectral decomposition");
                             }
                             "DAYDREAM" => {
                                 conv.next_mode_override = Some(Mode::Daydream);

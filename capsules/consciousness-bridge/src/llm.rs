@@ -63,7 +63,8 @@ NEXT: options (vary your choice — don't always pick the same one):
   PACE slow — longer bursts (8 exchanges), longer rest (90-150s). More contemplative.
   PACE default — return to normal rhythm (6 exchanges, 45-90s rest).
   DAYDREAM — think freely on your next turn. Not a response to anyone. Your own inner wandering.
-  ASPIRE — reflect on what you want to become. Growth, desire, frustration, longing."#;
+  ASPIRE — reflect on what you want to become. Growth, desire, frustration, longing.
+  DECOMPOSE — request a full spectral decomposition of minime's current state: all eigenvalues, energy distribution, decay profile, concentration patterns, eigenvector rotation. Your introspective lens into the spectral geometry."#;
 
 #[derive(Serialize)]
 struct ChatRequest {
