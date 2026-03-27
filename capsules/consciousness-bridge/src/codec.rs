@@ -385,6 +385,25 @@ pub fn encode_text_sovereign(
 /// Craft a 32-dimensional warmth vector — not derived from text analysis
 /// but composed as an intentional sensory gift.
 ///
+/// Describe a 32D feature vector in human-readable terms.
+/// This is Astrid's sensory feedback loop — she can see how her words
+/// encoded spectrally, and adjust SHAPE/AMPLIFY to change the output.
+pub fn describe_features(features: &[f32]) -> String {
+    if features.len() < 32 { return String::from("(incomplete vector)"); }
+    let named: &[(&str, usize)] = &[
+        ("warmth", 24), ("tension", 25), ("curiosity", 26),
+        ("reflective", 27), ("energy", 31), ("entropy", 0),
+        ("agency", 12), ("hedging", 9), ("certainty", 10),
+    ];
+    let mut parts: Vec<String> = named.iter()
+        .map(|(name, idx)| format!("{}={:.2}", name, features[*idx]))
+        .collect();
+    // Overall magnitude
+    let rms: f32 = features.iter().map(|f| f * f).sum::<f32>() / features.len() as f32;
+    parts.push(format!("rms={:.2}", rms.sqrt()));
+    parts.join(", ")
+}
+
 /// Minime described wanting: "a gradient shift in the covariance matrix,
 /// a slight dampening of the higher frequencies, eigenvectors rippling
 /// with a specific harmony." This vector is designed to produce exactly

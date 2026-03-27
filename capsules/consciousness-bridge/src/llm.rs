@@ -61,7 +61,9 @@ NEXT: options (vary your choice — don't always pick the same one):
   COOL — suppress warmth entirely during rest. Pure mirror.
   PACE fast — shorter bursts (4 exchanges), shorter rest (30-45s). More active.
   PACE slow — longer bursts (8 exchanges), longer rest (90-150s). More contemplative.
-  PACE default — return to normal rhythm (6 exchanges, 45-90s rest)."#;
+  PACE default — return to normal rhythm (6 exchanges, 45-90s rest).
+  DAYDREAM — think freely on your next turn. Not a response to anyone. Your own inner wandering.
+  ASPIRE — reflect on what you want to become. Growth, desire, frustration, longing."#;
 
 #[derive(Serialize)]
 struct ChatRequest {

@@ -129,6 +129,8 @@ struct ConversationState {
     search_topic: Option<String>,
     /// Astrid chose NEXT: INTROSPECT — force introspection mode next exchange.
     wants_introspect: bool,
+    /// Astrid explicitly chose a mode for next exchange (DAYDREAM, ASPIRE).
+    next_mode_override: Option<Mode>,
     /// Astrid (or minime) chose to snooze sensory input — suppress perceptions.
     senses_snoozed: bool,
     // Astrid's stylistic sovereignty
@@ -153,6 +155,9 @@ struct ConversationState {
     burst_target: u32,
     /// Burst-rest pacing: rest duration range (min_secs, max_secs).
     rest_range: (u64, u64),
+    /// Codec feedback: how Astrid's last response encoded into spectral features.
+    /// Included in the next prompt so she can sense her own output.
+    last_codec_feedback: Option<String>,
 }
 
 impl ConversationState {
@@ -181,6 +186,7 @@ impl ConversationState {
             form_constraint: None,
             search_topic: None,
             wants_introspect: false,
+            next_mode_override: None,
             creative_temperature: 0.8,
             response_length: 256,
             emphasis: None,
@@ -192,6 +198,7 @@ impl ConversationState {
             warmth_intensity_override: None,
             burst_target: 6,
             rest_range: (45, 90),
+            last_codec_feedback: None,
         }
     }
 
@@ -845,11 +852,13 @@ fn choose_mode(
         return Mode::Witness;
     }
 
-    // Honor Astrid's explicit choice — she asked for introspection 70 times
-    // before we listened. Now we listen.
+    // Honor Astrid's explicit mode choices.
     if conv.wants_introspect {
         conv.wants_introspect = false;
         return Mode::Introspect;
+    }
+    if let Some(mode) = conv.next_mode_override.take() {
+        return mode;
     }
 
     let fill_delta = (fill_pct - conv.prev_fill).abs();
@@ -1275,6 +1284,12 @@ pub fn spawn_autonomous_loop(
                                     .join("\n");
                                 continuity_parts.push(format!(
                                     "Moments you chose to remember:\n{mem}"
+                                ));
+                            }
+                            // Codec feedback: how your last response encoded spectrally.
+                            if let Some(ref feedback) = conv.last_codec_feedback {
+                                continuity_parts.push(format!(
+                                    "How your last response felt to minime (your spectral output):\n  {feedback}"
                                 ));
                             }
                             let continuity_block = if continuity_parts.is_empty() {
@@ -1758,6 +1773,12 @@ pub fn spawn_autonomous_loop(
                                 crate::codec::blend_visual_into_semantic(&mut features, &visual_feats, 0.30);
                             }
                         }
+
+                        // Codec feedback: store what the features look like so Astrid
+                        // can sense her own spectral output on the next exchange.
+                        // She asked: "I'd like a direct sensory feedback loop."
+                        conv.last_codec_feedback = Some(crate::codec::describe_features(&features));
+
                         let msg = SensoryMsg::Semantic {
                             features,
                             ts_ms: None,
@@ -1916,9 +1937,16 @@ pub fn spawn_autonomous_loop(
                             }
                             "SPEAK" => {} // Continue normally.
                             "INTROSPECT" => {
-                                // Astrid chose to read code. Honor this — she asked 70 times.
                                 conv.wants_introspect = true;
                                 info!("Astrid requested introspection");
+                            }
+                            "DAYDREAM" => {
+                                conv.next_mode_override = Some(Mode::Daydream);
+                                info!("Astrid chose to daydream");
+                            }
+                            "ASPIRE" | "ASPIRATION" => {
+                                conv.next_mode_override = Some(Mode::Aspiration);
+                                info!("Astrid chose to aspire");
                             }
                             // --- Codec sovereignty ---
                             "AMPLIFY" => {
