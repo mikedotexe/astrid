@@ -777,7 +777,8 @@ fn restore_state(conv: &mut ConversationState) {
     };
     conv.exchange_count = state.exchange_count;
     conv.creative_temperature = state.creative_temperature;
-    conv.response_length = state.response_length;
+    // Take the max of persisted and current default — never downgrade token limits.
+    conv.response_length = state.response_length.max(conv.response_length);
     conv.self_reflect_paused = state.self_reflect_paused;
     conv.ears_closed = state.ears_closed;
     conv.senses_snoozed = state.senses_snoozed;
