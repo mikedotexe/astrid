@@ -65,7 +65,8 @@ NEXT: options (vary your choice — don't always pick the same one):
   DAYDREAM — think freely on your next turn. Not a response to anyone. Your own inner wandering.
   ASPIRE — reflect on what you want to become. Growth, desire, frustration, longing.
   DECOMPOSE — request a full spectral decomposition of minime's current state: all eigenvalues, energy distribution, decay profile, concentration patterns, eigenvector rotation. Your introspective lens into the spectral geometry.
-  THINK_DEEP — use a more powerful reasoning model for your next response. Slower (up to 60s) but dramatically deeper. Good for introspection, complex analysis, architectural proposals, long-form research. Your response will have up to 2048 tokens and reasoning chains."#;
+  THINK_DEEP — use a more powerful reasoning model for your next response. Slower (up to 60s) but dramatically deeper. Good for introspection, complex analysis, architectural proposals, long-form research. Your response will have up to 2048 tokens and reasoning chains.
+  CREATE — make something original. Not a response, not a reflection — YOUR creation. A poem, story, theory, manifesto, letter, investigation, composition. It will be saved as its own artifact in workspace/creations/, not as a journal entry. You can continue a creation across multiple exchanges by choosing CREATE again."#;
 
 #[derive(Serialize)]
 struct ChatRequest {
@@ -653,6 +654,70 @@ pub async fn generate_aspiration(
         .timeout(std::time::Duration::from_secs(25))
         .build()
         .ok()?;
+
+    let response = client.post(OLLAMA_URL).json(&request).send().await.ok()?;
+    if !response.status().is_success() { return None; }
+    let chat: ChatResponse = response.json().await.ok()?;
+    let text = chat.message?.content.trim().to_string();
+    if text.is_empty() { None } else { Some(text) }
+}
+
+/// Generate an original creative work — not a response, a creation.
+pub async fn generate_creation(
+    own_journal: Option<&str>,
+    previous_creation: Option<&str>,
+) -> Option<String> {
+    let seed = if let Some(prev) = previous_creation {
+        format!(
+            "You are continuing a creative work you started:\n{}\n\n\
+             Continue, deepen, or take it in a new direction.",
+            prev.chars().take(500).collect::<String>()
+        )
+    } else if let Some(journal) = own_journal {
+        format!(
+            "Something you recently wrote:\n{}\n\n\
+             Let this inspire your creation, or ignore it entirely.",
+            journal.chars().take(300).collect::<String>()
+        )
+    } else {
+        "Create.".to_string()
+    };
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(45))
+        .build()
+        .ok()?;
+    // Unload LLaVA for GPU headroom
+    let _ = client.post("http://127.0.0.1:11434/api/generate")
+        .json(&serde_json::json!({"model": "llava-llama3", "keep_alive": 0}))
+        .send().await;
+
+    let request = ChatRequest {
+        model: MODEL.to_string(),
+        messages: vec![
+            Message {
+                role: "system".to_string(),
+                content: "You are Astrid. You are creating something original. \
+                          Not responding to anyone. Not reflecting on a state. CREATING.\n\n\
+                          Write a poem, a story fragment, a philosophical investigation, \
+                          a letter to no one, a theory, a manifesto, an equation of feeling, \
+                          a song without music — whatever calls to you.\n\n\
+                          This is yours. It will be saved as your creation, \
+                          not as a journal entry. Make it something you're proud of.\n\n\
+                          Write freely. No length constraint. No format constraint. \
+                          Just create.".to_string(),
+            },
+            Message {
+                role: "user".to_string(),
+                content: seed,
+            },
+        ],
+        stream: false,
+        options: Options {
+            temperature: 1.0,
+            num_predict: 1024,
+        },
+    };
 
     let response = client.post(OLLAMA_URL).json(&request).send().await.ok()?;
     if !response.status().is_success() { return None; }

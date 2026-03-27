@@ -82,6 +82,8 @@ enum Mode {
     Aspiration,
     /// Event-driven — a spectral phase transition just happened; capture the moment.
     MomentCapture,
+    /// Original creative work — not a response, a creation.
+    Create,
 }
 
 /// Tracks conversational context across iterations.
@@ -844,6 +846,7 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "aspiration" => "aspiration",
         "moment_capture" => "moment",
         "experiment" => "experiment",
+        "creation" => "creation",
         "witness" => "witness",
         "introspect" => "introspect",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
@@ -1737,6 +1740,55 @@ pub fn spawn_autonomous_loop(
                                 }
                             }
                         }
+                        Mode::Create => {
+                            // Original creative work — Astrid as creator, not responder.
+                            let own_journal = read_astrid_journal(1).into_iter().next();
+                            // Check for previous creation to continue
+                            let prev_creation = {
+                                let creation_dir = PathBuf::from(
+                                    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/creations"
+                                );
+                                std::fs::read_dir(&creation_dir).ok()
+                                    .and_then(|entries| {
+                                        let mut files: Vec<_> = entries.filter_map(|e| e.ok())
+                                            .filter(|e| e.path().extension().is_some_and(|ext| ext == "txt"))
+                                            .collect();
+                                        files.sort_by_key(|e| std::cmp::Reverse(
+                                            e.metadata().ok().and_then(|m| m.modified().ok())
+                                        ));
+                                        files.first().and_then(|e| std::fs::read_to_string(e.path()).ok())
+                                    })
+                            };
+                            let creation = match tokio::time::timeout(
+                                Duration::from_secs(45),
+                                crate::llm::generate_creation(
+                                    own_journal.as_deref(),
+                                    prev_creation.as_deref(),
+                                )
+                            ).await {
+                                Ok(r) => r,
+                                Err(_) => { warn!("create: 45s timeout"); None }
+                            };
+                            match creation {
+                                Some(text) => {
+                                    // Save to creations directory, not journal
+                                    let creation_dir = PathBuf::from(
+                                        "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/creations"
+                                    );
+                                    let _ = std::fs::create_dir_all(&creation_dir);
+                                    let ts = chrono_timestamp();
+                                    let _ = std::fs::write(
+                                        creation_dir.join(format!("creation_{ts}.txt")),
+                                        format!("=== ASTRID CREATION ===\nTimestamp: {ts}\nFill: {fill_pct:.1}%\n\n{text}\n")
+                                    );
+                                    ("creation", text, String::new())
+                                }
+                                None => {
+                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    ("witness", text, String::new())
+                                }
+                            }
+                        }
                         Mode::Experiment => {
                             // Astrid proposes a spectral experiment.
                             let spectral_summary = interpret_spectral(&telemetry);
@@ -2126,6 +2178,10 @@ pub fn spawn_autonomous_loop(
                             "DAYDREAM" => {
                                 conv.next_mode_override = Some(Mode::Daydream);
                                 info!("Astrid chose to daydream");
+                            }
+                            "CREATE" => {
+                                conv.next_mode_override = Some(Mode::Create);
+                                info!("Astrid chose to create");
                             }
                             "ASPIRE" | "ASPIRATION" => {
                                 conv.next_mode_override = Some(Mode::Aspiration);
