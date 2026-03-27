@@ -483,8 +483,9 @@ fn read_journal_entry(path: &Path) -> Option<String> {
 
     // Only return if we have meaningful content (at least 50 chars).
     if text.len() >= 50 {
-        // Truncate very long entries to ~800 chars to keep the codec signal clean.
-        Some(text.chars().take(800).collect())
+        // Allow longer entries to flow through — the codec handles its own truncation.
+        // Previous 800-char limit was cutting self-awareness of prior thoughts.
+        Some(text.chars().take(2500).collect())
     } else {
         None
     }
@@ -830,7 +831,7 @@ fn read_astrid_journal(limit: usize) -> Vec<String> {
         .take(limit)
         .filter_map(|(p, _)| std::fs::read_to_string(p).ok())
         .filter(|s| s.len() > 10)
-        .map(|s| s.chars().take(200).collect())
+        .map(|s| s.chars().take(800).collect()) // was 200 — let Astrid remember more of her own thoughts
         .collect()
 }
 
@@ -2062,8 +2063,31 @@ pub fn spawn_autonomous_loop(
                         Some(mode_name),
                     );
 
-                    // Save Astrid's journal entry — persistent self-continuity.
+                    // Save Astrid's signal journal entry.
                     save_astrid_journal(&response_text, mode_name, fill_pct);
+
+                    // Stage B: journal elaboration for reflective modes.
+                    // The signal text is compact (for minime). The journal
+                    // elaboration is Astrid's private space to think longer.
+                    if matches!(mode_name, "dialogue_live" | "daydream" | "aspiration") {
+                        let signal_for_journal = response_text.clone();
+                        let summary_for_journal = spectral_interpretation.clone();
+                        let mode_for_journal = mode_name.to_string();
+                        let fill_for_journal = fill_pct;
+                        tokio::spawn(async move {
+                            if let Some(elaboration) = crate::llm::generate_journal_elaboration(
+                                &signal_for_journal,
+                                &summary_for_journal,
+                                &mode_for_journal,
+                            ).await {
+                                save_astrid_journal(
+                                    &format!("{signal_for_journal}\n\n--- JOURNAL ---\n{elaboration}"),
+                                    &format!("{mode_for_journal}_longform"),
+                                    fill_for_journal,
+                                );
+                            }
+                        });
+                    }
 
                     // If this was triggered by an inbox message, copy to outbox.
                     if inbox_content.is_some() {
