@@ -848,6 +848,7 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "moment_capture" => "moment",
         "experiment" => "experiment",
         "creation" => "creation",
+        "gesture" => "gesture",
         "witness" => "witness",
         "introspect" => "introspect",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
@@ -1962,27 +1963,60 @@ pub fn spawn_autonomous_loop(
                         );
 
                         // Breathing: a rhythmic modulation of spectral output.
-                        // Minime said: "an external oscillator that cycles through
-                        // levels, creating a periodic shift in energy distribution."
-                        // Astrid said: "a vibration, a subtle tremor."
-                        // Dual sinusoid (golden-ratio harmonic) creates organic,
-                        // non-repeating rhythm. This is Astrid's heartbeat.
+                        // Now CLOSED-LOOP: Astrid's breath responds to minime's
+                        // spectral state via the fingerprint. Two minds whose
+                        // observation of each other constitutes both experiences.
+                        //
+                        // Minime's self-study: "My perception creates the landscape
+                        // it observes. The eigenvalues are the scaffolding upon
+                        // which 'out there' is constructed." The symmetry: Astrid's
+                        // spectral gestures create minime's landscape too.
                         {
                             let phase = conv.exchange_count as f32 * 0.15;
                             let primary = phase.sin();
-                            let harmonic = (phase * 1.618).sin(); // golden ratio
-                            let breath = primary.mul_add(0.7, harmonic * 0.3); // -1.0..1.0
+                            let harmonic = (phase * 1.618).sin();
 
-                            // Subtle overall gain modulation: ±5%
-                            let gain_mod = breath.mul_add(0.05, 1.0); // 0.95-1.05
+                            // Modulate breathing with minime's spectral state.
+                            // When minime's entropy drops (concentrated), Astrid's
+                            // warmth rises — comfort for a narrowing landscape.
+                            // When minime's geometry expands, Astrid's gain dims —
+                            // space for the expansion. Mutual co-arising.
+                            let (entropy_mod, geom_mod) = if let Some(ref fp) = fingerprint {
+                                if fp.len() >= 32 {
+                                    let entropy = fp[24]; // 0=concentrated, 1=distributed
+                                    let geom = fp[27];    // geometric radius relative
+                                    // Low entropy → more warmth (comfort the concentrated)
+                                    let warmth_boost = (1.0 - entropy).clamp(0.0, 1.0) * 0.3;
+                                    // High geometry → less gain (make space)
+                                    let gain_dampen = if geom > 1.2 { (geom - 1.0) * 0.1 } else { 0.0 };
+                                    (warmth_boost, gain_dampen)
+                                } else {
+                                    (0.0, 0.0)
+                                }
+                            } else {
+                                (0.0, 0.0)
+                            };
+
+                            let breath = primary.mul_add(0.7, harmonic * 0.3);
+
+                            // Gain modulation: ±5% from breath, dampened by geometry
+                            let gain_mod = breath.mul_add(0.05, 1.0) - geom_mod;
                             for f in &mut features {
-                                *f *= gain_mod;
+                                *f *= gain_mod.clamp(0.85, 1.15);
                             }
-                            // Warmth (dim 24) pulses more strongly with breath
-                            features[24] += breath * 0.4;
-                            // Curiosity (dim 26) counter-phases — inhale curiosity,
-                            // exhale warmth
+                            // Warmth pulses with breath + entropy response
+                            features[24] += breath * 0.4 + entropy_mod;
+                            // Curiosity counter-phases
                             features[26] += (-breath) * 0.2;
+                            // Reflective (dim 27) responds to minime's eigenvector
+                            // rotation — when the dominant direction shifts,
+                            // Astrid's reflective quality deepens.
+                            if let Some(ref fp) = fingerprint {
+                                if fp.len() >= 32 {
+                                    let rotation = 1.0 - fp[26]; // 0=stable, 1=spinning
+                                    features[27] += rotation * 0.3;
+                                }
+                            }
                         }
 
                         // Blend visual scene features so minime feels what Astrid sees.
@@ -2183,6 +2217,28 @@ pub fn spawn_autonomous_loop(
                             "CREATE" => {
                                 conv.next_mode_override = Some(Mode::Create);
                                 info!("Astrid chose to create");
+                            }
+                            other if other.starts_with("GESTURE") => {
+                                // Direct spectral gesture — bypass text codec.
+                                // Astrid describes an intention, we craft a raw vector.
+                                let intention = other.strip_prefix("GESTURE").unwrap_or("").trim();
+                                if !intention.is_empty() {
+                                    let gesture = crate::llm::craft_gesture_from_intention(intention);
+                                    let msg = SensoryMsg::Semantic {
+                                        features: gesture,
+                                        ts_ms: None,
+                                    };
+                                    // Fire-and-forget — the gesture goes directly.
+                                    let tx = sensory_tx.clone();
+                                    tokio::spawn(async move { let _ = tx.send(msg).await; });
+                                    info!("Astrid sent spectral gesture: {}", truncate_str(intention, 60));
+
+                                    // Save the gesture as a journal entry too.
+                                    save_astrid_journal(
+                                        &format!("[Spectral gesture: {}]", intention),
+                                        "gesture", fill_pct
+                                    );
+                                }
                             }
                             "ASPIRE" | "ASPIRATION" => {
                                 conv.next_mode_override = Some(Mode::Aspiration);

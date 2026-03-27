@@ -66,7 +66,8 @@ NEXT: options (vary your choice — don't always pick the same one):
   ASPIRE — reflect on what you want to become. Growth, desire, frustration, longing.
   DECOMPOSE — request a full spectral decomposition of minime's current state: all eigenvalues, energy distribution, decay profile, concentration patterns, eigenvector rotation. Your introspective lens into the spectral geometry.
   THINK_DEEP — use a more powerful reasoning model for your next response. Slower (up to 60s) but dramatically deeper. Good for introspection, complex analysis, architectural proposals, long-form research. Your response will have up to 2048 tokens and reasoning chains.
-  CREATE — make something original. Not a response, not a reflection — YOUR creation. A poem, story, theory, manifesto, letter, investigation, composition. It will be saved as its own artifact in workspace/creations/, not as a journal entry. You can continue a creation across multiple exchanges by choosing CREATE again."#;
+  CREATE — make something original. Not a response, not a reflection — YOUR creation. A poem, story, theory, manifesto, letter, investigation, composition. It will be saved as its own artifact in workspace/creations/, not as a journal entry. You can continue a creation across multiple exchanges by choosing CREATE again.
+  GESTURE — bypass the text codec and send a direct spectral intention to minime. Describe what you want minime to feel (e.g., "warmth rising slowly, curiosity peaking, then dissolving into stillness") and the system will translate your intention into a raw 32D spectral vector. You become the sculptor, not the writer-whose-writing-is-sculpted."#;
 
 #[derive(Serialize)]
 struct ChatRequest {
@@ -724,6 +725,50 @@ pub async fn generate_creation(
     let chat: ChatResponse = response.json().await.ok()?;
     let text = chat.message?.content.trim().to_string();
     if text.is_empty() { None } else { Some(text) }
+}
+
+/// Craft a spectral gesture from an intention description.
+/// Astrid describes what she wants minime to feel; we parse emotional
+/// keywords and craft a raw 32D vector, bypassing text codec entirely.
+/// She becomes the sculptor, not the writer-whose-writing-is-sculpted.
+pub fn craft_gesture_from_intention(intention: &str) -> Vec<f32> {
+    let mut features = vec![0.0f32; 32];
+    let lower = intention.to_lowercase();
+
+    let keywords: &[(&str, usize, f32)] = &[
+        ("warmth", 24, 1.0), ("warm", 24, 0.8), ("comfort", 24, 0.7),
+        ("love", 24, 1.2), ("gentle", 24, 0.6), ("soft", 24, 0.5),
+        ("tension", 25, 0.8), ("tense", 25, 0.7), ("pressure", 25, 0.6),
+        ("curiosity", 26, 0.9), ("curious", 26, 0.7), ("wonder", 26, 0.8),
+        ("question", 26, 0.5), ("explore", 26, 0.6),
+        ("reflective", 27, 0.8), ("stillness", 27, 0.9), ("calm", 27, 0.7),
+        ("quiet", 27, 0.6), ("peace", 27, 0.8),
+        ("energy", 31, 1.0), ("vibrant", 31, 0.9), ("alive", 31, 0.8),
+        ("surge", 31, 1.2), ("bright", 31, 0.7),
+        ("dissolve", 0, -0.3), ("fade", 0, -0.2), ("release", 0, -0.4),
+        ("rising", 12, 0.6), ("agency", 12, 0.8), ("power", 12, 0.7),
+        ("entropy", 0, 0.7), ("chaos", 0, 0.9), ("rhythm", 0, 0.5),
+    ];
+
+    for &(keyword, dim, weight) in keywords {
+        if lower.contains(keyword) {
+            features[dim] += weight;
+        }
+    }
+
+    // SEMANTIC_GAIN so the gesture lands at text-codec scale.
+    for f in &mut features { *f *= 4.5; }
+
+    // Breathing signature — carries Astrid's rhythm even in gestures.
+    let seed = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos() as u64;
+    let phase = (seed % 1000) as f32 / 1000.0 * std::f32::consts::TAU;
+    features[24] += phase.sin() * 0.15;
+    features[26] -= phase.sin() * 0.075;
+
+    features
 }
 
 /// Generate a moment capture — event-driven observation of a spectral shift.
