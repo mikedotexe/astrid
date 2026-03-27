@@ -54,6 +54,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
+use serde::{Deserialize, Serialize};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
@@ -564,6 +565,78 @@ fn check_inbox() -> Option<String> {
     }
 }
 
+/// Persistent state saved across restarts.
+/// Serialized to `workspace/state.json` after each exchange.
+const STATE_PATH: &str =
+    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json";
+
+#[derive(Serialize, Deserialize)]
+struct SavedState {
+    exchange_count: u64,
+    creative_temperature: f32,
+    response_length: u32,
+    self_reflect_paused: bool,
+    ears_closed: bool,
+    senses_snoozed: bool,
+    recent_next_choices: Vec<String>,
+    history: Vec<SavedExchange>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SavedExchange {
+    minime_said: String,
+    astrid_said: String,
+}
+
+fn save_state(conv: &ConversationState) {
+    let state = SavedState {
+        exchange_count: conv.exchange_count,
+        creative_temperature: conv.creative_temperature,
+        response_length: conv.response_length,
+        self_reflect_paused: conv.self_reflect_paused,
+        ears_closed: conv.ears_closed,
+        senses_snoozed: conv.senses_snoozed,
+        recent_next_choices: conv.recent_next_choices.iter().cloned().collect(),
+        history: conv.history.iter().map(|e| SavedExchange {
+            minime_said: e.minime_said.clone(),
+            astrid_said: e.astrid_said.clone(),
+        }).collect(),
+    };
+    if let Ok(json) = serde_json::to_string_pretty(&state) {
+        let _ = std::fs::write(STATE_PATH, json);
+    }
+}
+
+fn restore_state(conv: &mut ConversationState) {
+    let json = match std::fs::read_to_string(STATE_PATH) {
+        Ok(j) => j,
+        Err(_) => return,
+    };
+    let state: SavedState = match serde_json::from_str(&json) {
+        Ok(s) => s,
+        Err(e) => {
+            warn!(error = %e, "failed to parse saved state");
+            return;
+        }
+    };
+    conv.exchange_count = state.exchange_count;
+    conv.creative_temperature = state.creative_temperature;
+    conv.response_length = state.response_length;
+    conv.self_reflect_paused = state.self_reflect_paused;
+    conv.ears_closed = state.ears_closed;
+    conv.senses_snoozed = state.senses_snoozed;
+    conv.recent_next_choices = state.recent_next_choices.into_iter().collect();
+    conv.history = state.history.into_iter().map(|e| crate::llm::Exchange {
+        minime_said: e.minime_said,
+        astrid_said: e.astrid_said,
+    }).collect();
+    info!(
+        exchanges = conv.exchange_count,
+        history_len = conv.history.len(),
+        "restored conversation state from previous session"
+    );
+}
+
 fn witness_text(fill: f32, _expanding: bool, _contracting: bool) -> String {
     format!("[witness — LLM unavailable] fill={fill:.1}%")
 }
@@ -810,6 +883,7 @@ pub fn spawn_autonomous_loop(
         );
 
         let mut conv = ConversationState::new(journal_files, workspace_path);
+        restore_state(&mut conv);
         let base_interval = interval;
 
         // Wait for connections to establish.
@@ -917,7 +991,8 @@ pub fn spawn_autonomous_loop(
 
             tokio::select! {
                 _ = shutdown.changed() => {
-                    info!("autonomous loop shutting down");
+                    info!("autonomous loop shutting down — saving state");
+                    save_state(&conv);
                     return;
                 }
                 () = tokio::time::sleep(wait) => {
@@ -999,15 +1074,20 @@ pub fn spawn_autonomous_loop(
                         perception_text
                     };
 
-                    // Choose mode and generate text.
+                    // Choose mode. Inbox messages force dialogue so Astrid can respond.
                     let fingerprint = {
                         let s = state.read().await;
                         s.spectral_fingerprint.clone()
                     };
-                    let mode = choose_mode(
-                        &mut conv, safety, fill_pct,
-                        fingerprint.as_deref(),
-                    );
+                    let mode = if inbox_content.is_some() {
+                        info!("inbox message present — forcing dialogue mode");
+                        Mode::Dialogue
+                    } else {
+                        choose_mode(
+                            &mut conv, safety, fill_pct,
+                            fingerprint.as_deref(),
+                        )
+                    };
                     let (mode_name, response_text, journal_source) = match mode {
                         Mode::Mirror => {
                             // Read a journal entry — not always the newest.
@@ -1777,11 +1857,12 @@ pub fn spawn_autonomous_loop(
                         }
                     }
 
-                    // Update state.
+                    // Update state and persist across restarts.
                     conv.prev_fill = fill_pct;
                     conv.exchange_count = conv.exchange_count.saturating_add(1);
                     burst_count = burst_count.saturating_add(1);
                     conv.last_mode = mode;
+                    save_state(&conv);
                 }
             }
         }
