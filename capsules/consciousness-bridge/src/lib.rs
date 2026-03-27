@@ -8,6 +8,7 @@
 pub mod autonomous;
 pub mod codec;
 pub mod db;
+pub mod journal;
 pub mod llm;
 pub mod mcp;
 pub mod types;

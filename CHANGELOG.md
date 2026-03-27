@@ -22,6 +22,8 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ### Added
 
+- Root-level `LONGFORM_JOURNAL_TRACE.md` documenting a traced analysis of consciousness-bridge longform journal generation, closed-loop breathing modulation, and continuity/readback behavior.
+- Symmetric self-study feedback loop for the consciousness bridge: minime `self_study_*.txt` entries are now prioritized as immediate dialogue feedback, Astrid `INTROSPECT` writes canonical `self_study_*.txt` journal artifacts, and Astrid self-study is mirrored into minime's inbox as advisory architectural feedback.
 - **WIT-driven IPC topic schemas.** Capsules declare `wit_type = "record-name"` on `[[topic]]` entries in `Capsule.toml`. At install time, `wit-parser` reads the record from the capsule's `wit/` directory, extracts field names, types, and `///` doc comments into JSON Schema, and bakes it into `meta.json`. At runtime, `WasmEngine::load()` populates the `SchemaCatalog` from baked schemas. The LLM sees typed field descriptions without capsule authors writing JSON Schema by hand. (#643)
 - `astrid-build::wit_schema` module — converts WIT records to JSON Schema. Handles primitives, `option<T>`, `list<T>`, tuple, enum, flags, variant, result, nested records, and type aliases. (#643)
 - `wit_type: Option<String>` field on `TopicDef` in `Capsule.toml` — references a WIT record by kebab-case name. (#643)

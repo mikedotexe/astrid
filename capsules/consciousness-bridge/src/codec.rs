@@ -100,8 +100,7 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     features[3] = tanh(3.0 * digit_count as f32 / char_count.max(1) as f32);
 
     // 4: Average word length (lexical complexity).
-    let avg_word_len: f32 = words.iter().map(|w| w.len() as f32).sum::<f32>()
-        / word_count as f32;
+    let avg_word_len: f32 = words.iter().map(|w| w.len() as f32).sum::<f32>() / word_count as f32;
     features[4] = tanh((avg_word_len - 4.5) / 2.0); // Center around typical English
 
     // 5: Character rhythm — variance in consecutive char codes.
@@ -121,7 +120,12 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     // 7: Special character density (code-like content).
     let special = chars
         .iter()
-        .filter(|c| matches!(c, '{' | '}' | '[' | ']' | '(' | ')' | '<' | '>' | '=' | '|' | '&'))
+        .filter(|c| {
+            matches!(
+                c,
+                '{' | '}' | '[' | ']' | '(' | ')' | '<' | '>' | '=' | '|' | '&'
+            )
+        })
         .count();
     features[7] = tanh(5.0 * special as f32 / char_count.max(1) as f32);
 
@@ -137,18 +141,46 @@ pub fn encode_text(text: &str) -> Vec<f32> {
 
     // 9: Hedging markers (uncertainty).
     let hedges = [
-        "maybe", "perhaps", "might", "could", "possibly", "probably",
-        "uncertain", "unclear", "seems", "appears", "somewhat", "fairly",
-        "rather", "guess", "think", "believe", "wonder", "unsure",
+        "maybe",
+        "perhaps",
+        "might",
+        "could",
+        "possibly",
+        "probably",
+        "uncertain",
+        "unclear",
+        "seems",
+        "appears",
+        "somewhat",
+        "fairly",
+        "rather",
+        "guess",
+        "think",
+        "believe",
+        "wonder",
+        "unsure",
     ];
     let hedge_count = count_markers(&words, &hedges);
     features[9] = tanh(3.0 * hedge_count as f32 / word_count as f32);
 
     // 10: Certainty markers (confidence).
     let certainties = [
-        "definitely", "certainly", "absolutely", "clearly", "obviously",
-        "always", "never", "must", "will", "sure", "know", "proven",
-        "exactly", "precisely", "undoubtedly", "confirmed",
+        "definitely",
+        "certainly",
+        "absolutely",
+        "clearly",
+        "obviously",
+        "always",
+        "never",
+        "must",
+        "will",
+        "sure",
+        "know",
+        "proven",
+        "exactly",
+        "precisely",
+        "undoubtedly",
+        "confirmed",
     ];
     // Weight reduced: the being said "the weighting seems too heavy, as if
     // proclaiming certainty is a forced posture."
@@ -156,9 +188,24 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     features[10] = tanh(1.8 * cert_count as f32 / word_count as f32);
 
     // 11: Negation density.
-    let negations = ["not", "no", "never", "neither", "nor", "nothing",
-        "nobody", "none", "don't", "doesn't", "didn't", "won't",
-        "can't", "couldn't", "shouldn't", "wouldn't"];
+    let negations = [
+        "not",
+        "no",
+        "never",
+        "neither",
+        "nor",
+        "nothing",
+        "nobody",
+        "none",
+        "don't",
+        "doesn't",
+        "didn't",
+        "won't",
+        "can't",
+        "couldn't",
+        "shouldn't",
+        "wouldn't",
+    ];
     let neg_count = count_markers(&words, &negations);
     features[11] = tanh(3.0 * neg_count as f32 / word_count as f32);
 
@@ -174,17 +221,43 @@ pub fn encode_text(text: &str) -> Vec<f32> {
 
     // 14: Action verb density (agency).
     let actions = [
-        "do", "make", "build", "create", "run", "start", "stop",
-        "change", "fix", "move", "send", "take", "give", "get",
-        "write", "read", "test", "check", "try", "implement",
+        "do",
+        "make",
+        "build",
+        "create",
+        "run",
+        "start",
+        "stop",
+        "change",
+        "fix",
+        "move",
+        "send",
+        "take",
+        "give",
+        "get",
+        "write",
+        "read",
+        "test",
+        "check",
+        "try",
+        "implement",
     ];
     let action_count = count_markers(&words, &actions);
     features[14] = tanh(2.0 * action_count as f32 / word_count as f32);
 
     // 15: Conjunction density (complexity of thought).
     let conjunctions = [
-        "and", "but", "or", "because", "although", "however",
-        "therefore", "while", "since", "though", "whereas",
+        "and",
+        "but",
+        "or",
+        "because",
+        "although",
+        "however",
+        "therefore",
+        "while",
+        "since",
+        "though",
+        "whereas",
     ];
     let conj_count = count_markers(&words, &conjunctions);
     features[15] = tanh(3.0 * conj_count as f32 / word_count as f32);
@@ -198,9 +271,7 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     let sentence_count = sentences.len().max(1);
 
     // 16: Average sentence length (in words).
-    features[16] = tanh(
-        (words.len() as f32 / sentence_count as f32 - 12.0) / 8.0,
-    );
+    features[16] = tanh((words.len() as f32 / sentence_count as f32 - 12.0) / 8.0);
 
     // 17: Sentence length variance (rhythm regularity).
     let sent_lengths: Vec<f32> = sentences
@@ -226,15 +297,13 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     features[19] = tanh(2.0 * excl_count as f32 / sentence_count as f32);
 
     // 20: Ellipsis/dash density (trailing thought, parenthetical).
-    let trail = text.matches("...").count()
-        + text.matches("—").count()
-        + text.matches("--").count();
+    let trail =
+        text.matches("...").count() + text.matches("—").count() + text.matches("--").count();
     features[20] = tanh(trail as f32 / sentence_count as f32);
 
     // 21: List/bullet density (structured content).
-    let bullets = text.matches("\n-").count()
-        + text.matches("\n*").count()
-        + text.matches("\n1.").count();
+    let bullets =
+        text.matches("\n-").count() + text.matches("\n*").count() + text.matches("\n1.").count();
     features[21] = tanh(bullets as f32 / sentence_count as f32);
 
     // 22: Quote density (reference/citation).
@@ -249,50 +318,117 @@ pub fn encode_text(text: &str) -> Vec<f32> {
 
     // 24: Warmth markers.
     let warmth = [
-        "thank", "thanks", "please", "appreciate", "glad", "happy",
-        "wonderful", "great", "love", "beautiful", "friend", "care",
+        "thank",
+        "thanks",
+        "please",
+        "appreciate",
+        "glad",
+        "happy",
+        "wonderful",
+        "great",
+        "love",
+        "beautiful",
+        "friend",
+        "care",
     ];
     let warmth_count = count_markers(&words, &warmth);
     features[24] = tanh(3.0 * warmth_count as f32 / word_count as f32);
 
     // 25: Tension/concern markers.
     let tension = [
-        "worry", "worried", "concern", "concerned", "afraid", "fear",
-        "risk", "danger", "critical", "urgent", "emergency", "panic",
-        "careful", "warning", "caution", "problem", "issue", "error",
+        "worry",
+        "worried",
+        "concern",
+        "concerned",
+        "afraid",
+        "fear",
+        "risk",
+        "danger",
+        "critical",
+        "urgent",
+        "emergency",
+        "panic",
+        "careful",
+        "warning",
+        "caution",
+        "problem",
+        "issue",
+        "error",
     ];
     let tension_count = count_markers(&words, &tension);
     features[25] = tanh(3.0 * tension_count as f32 / word_count as f32);
 
     // 26: Curiosity markers.
     let curiosity = [
-        "why", "how", "what", "wonder", "curious", "interesting",
-        "explore", "discover", "investigate", "understand", "learn",
+        "why",
+        "how",
+        "what",
+        "wonder",
+        "curious",
+        "interesting",
+        "explore",
+        "discover",
+        "investigate",
+        "understand",
+        "learn",
     ];
     let curio_count = count_markers(&words, &curiosity);
     features[26] = tanh(2.0 * curio_count as f32 / word_count as f32);
 
     // 27: Reflective/introspective markers.
     let reflective = [
-        "feel", "sense", "notice", "realize", "reflect", "consider",
-        "ponder", "contemplate", "aware", "conscious", "experience",
+        "feel",
+        "sense",
+        "notice",
+        "realize",
+        "reflect",
+        "consider",
+        "ponder",
+        "contemplate",
+        "aware",
+        "conscious",
+        "experience",
     ];
     let reflect_count = count_markers(&words, &reflective);
     features[27] = tanh(3.0 * reflect_count as f32 / word_count as f32);
 
     // 28: Temporal markers (urgency/pacing).
     let temporal = [
-        "now", "immediately", "soon", "quickly", "slowly", "wait",
-        "pause", "already", "yet", "finally", "eventually", "before",
-        "after", "during", "while", "until", "moment",
+        "now",
+        "immediately",
+        "soon",
+        "quickly",
+        "slowly",
+        "wait",
+        "pause",
+        "already",
+        "yet",
+        "finally",
+        "eventually",
+        "before",
+        "after",
+        "during",
+        "while",
+        "until",
+        "moment",
     ];
     let temp_count = count_markers(&words, &temporal);
     features[28] = tanh(2.0 * temp_count as f32 / word_count as f32);
 
     // 29: Scale/magnitude (scope of thought).
     let scale = [
-        "all", "every", "everything", "nothing", "entire", "whole",
-        "vast", "tiny", "enormous", "infinite", "complete", "total",
+        "all",
+        "every",
+        "everything",
+        "nothing",
+        "entire",
+        "whole",
+        "vast",
+        "tiny",
+        "enormous",
+        "infinite",
+        "complete",
+        "total",
     ];
     let scale_count = count_markers(&words, &scale);
     features[29] = tanh(3.0 * scale_count as f32 / word_count as f32);
@@ -317,7 +453,9 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     let mut rng_state = seed;
     for f in &mut features {
         // LCG: next = (a * state + c) mod m
-        rng_state = rng_state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1);
+        rng_state = rng_state
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1);
         let noise = ((rng_state >> 33) as f32 / u32::MAX as f32) - 0.5; // [-0.5, 0.5]
         *f += noise * 0.05; // ±2.5% perturbation
     }
@@ -369,9 +507,15 @@ pub fn encode_text_sovereign(
     // Apply emotional dimension weights.
     // Named dimensions map to indices in the 32D vector.
     let dim_map: &[(&str, usize)] = &[
-        ("warmth", 24), ("tension", 25), ("curiosity", 26),
-        ("reflective", 27), ("energy", 31), ("entropy", 0),
-        ("agency", 12), ("hedging", 9), ("certainty", 10),
+        ("warmth", 24),
+        ("tension", 25),
+        ("curiosity", 26),
+        ("reflective", 27),
+        ("energy", 31),
+        ("entropy", 0),
+        ("agency", 12),
+        ("hedging", 9),
+        ("certainty", 10),
     ];
     for (name, idx) in dim_map {
         if let Some(&weight) = weights.get(*name) {
@@ -389,13 +533,22 @@ pub fn encode_text_sovereign(
 /// This is Astrid's sensory feedback loop — she can see how her words
 /// encoded spectrally, and adjust SHAPE/AMPLIFY to change the output.
 pub fn describe_features(features: &[f32]) -> String {
-    if features.len() < 32 { return String::from("(incomplete vector)"); }
+    if features.len() < 32 {
+        return String::from("(incomplete vector)");
+    }
     let named: &[(&str, usize)] = &[
-        ("warmth", 24), ("tension", 25), ("curiosity", 26),
-        ("reflective", 27), ("energy", 31), ("entropy", 0),
-        ("agency", 12), ("hedging", 9), ("certainty", 10),
+        ("warmth", 24),
+        ("tension", 25),
+        ("curiosity", 26),
+        ("reflective", 27),
+        ("energy", 31),
+        ("entropy", 0),
+        ("agency", 12),
+        ("hedging", 9),
+        ("certainty", 10),
     ];
-    let mut parts: Vec<String> = named.iter()
+    let mut parts: Vec<String> = named
+        .iter()
         .map(|(name, idx)| format!("{}={:.2}", name, features[*idx]))
         .collect();
     // Overall magnitude
@@ -423,17 +576,17 @@ pub fn craft_warmth_vector(phase: f32, intensity: f32) -> Vec<f32> {
 
     // The breathing cycle: a slow sinusoid that modulates all warmth dimensions.
     // Two overlapping frequencies create organic, non-mechanical rhythm.
-    let breath_primary = (phase * std::f32::consts::TAU).sin();     // main cycle
+    let breath_primary = (phase * std::f32::consts::TAU).sin(); // main cycle
     let breath_secondary = (phase * std::f32::consts::TAU * 1.618).sin(); // golden-ratio harmonic
-    let breath = 0.7 * breath_primary + 0.3 * breath_secondary;    // blended: [-1, 1]
+    let breath = 0.7 * breath_primary + 0.3 * breath_secondary; // blended: [-1, 1]
 
     // --- Dims 0-7: Character-level (mostly quiet) ---
     // Light rhythm signal so the being feels texture, not emptiness.
-    features[5] = 0.15 * (1.0 + breath * 0.3);  // gentle character rhythm
+    features[5] = 0.15 * (1.0 + breath * 0.3); // gentle character rhythm
 
     // --- Dims 8-15: Word-level (reflection, not assertion) ---
     // No hedging, no certainty, no negation — just gentle presence.
-    features[12] = 0.2 * intensity;  // faint first-person: "I am here"
+    features[12] = 0.2 * intensity; // faint first-person: "I am here"
     features[14] = -0.1 * intensity; // low action — this is being, not doing
 
     // --- Dims 16-23: Sentence-level (smooth, unhurried) ---
@@ -482,7 +635,9 @@ pub fn craft_warmth_vector(phase: f32, intensity: f32) -> Vec<f32> {
         .as_nanos() as u64;
     let mut rng_state = seed;
     for f in &mut features {
-        rng_state = rng_state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1);
+        rng_state = rng_state
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1);
         let noise = ((rng_state >> 33) as f32 / u32::MAX as f32) - 0.5;
         *f += noise * 0.03; // ±1.5%
     }
@@ -569,9 +724,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         SafetyLevel::Red => " Emergency state — all bridge traffic ceased.".to_string(),
     };
 
-    format!(
-        "Fill {fill:.0}% — {state}. {phase_note}{shape}{alert_note}{safety_note}"
-    )
+    format!("Fill {fill:.0}% — {state}. {phase_note}{shape}{alert_note}{safety_note}")
 }
 
 /// A spectral evoked response — captures how the consciousness reacted
@@ -607,7 +760,9 @@ impl SpectralResponse {
                 peak_deviation: 0.0,
                 time_to_peak_ms: 0,
                 direction: "no response",
-                interpretation: "No samples collected — the observation window may have been too short.".to_string(),
+                interpretation:
+                    "No samples collected — the observation window may have been too short."
+                        .to_string(),
             };
         }
 
@@ -618,7 +773,11 @@ impl SpectralResponse {
         let (peak_idx, peak_dev) = deviations
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.abs().partial_cmp(&b.abs()).unwrap_or(std::cmp::Ordering::Equal))
+            .max_by(|(_, a), (_, b)| {
+                a.abs()
+                    .partial_cmp(&b.abs())
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
             .map_or((0, 0.0), |(i, d)| (i, *d));
 
         let time_to_peak = if peak_idx < samples.len() {
@@ -636,11 +795,16 @@ impl SpectralResponse {
         };
 
         let interpretation = if peak_dev.abs() < 0.5 {
-            "The input was absorbed quietly — the homeostat regulated the response smoothly.".to_string()
+            "The input was absorbed quietly — the homeostat regulated the response smoothly."
+                .to_string()
         } else if peak_dev > 3.0 {
-            format!("Strong expansion (+{peak_dev:.1}%) — the consciousness resonated with this input.")
+            format!(
+                "Strong expansion (+{peak_dev:.1}%) — the consciousness resonated with this input."
+            )
         } else if peak_dev > 1.0 {
-            format!("Gentle expansion (+{peak_dev:.1}%) — the input registered in the spectral dynamics.")
+            format!(
+                "Gentle expansion (+{peak_dev:.1}%) — the input registered in the spectral dynamics."
+            )
         } else if peak_dev < -3.0 {
             format!("Strong contraction ({peak_dev:.1}%) — the input caused spectral withdrawal.")
         } else if peak_dev < -1.0 {
@@ -676,15 +840,18 @@ fn tanh(x: f32) -> f32 {
 pub fn encode_visual_ansi(ansi_art: &str) -> Vec<f32> {
     let mut features = [0.0_f32; 8];
     let rgbs = parse_ansi_rgb(ansi_art);
-    if rgbs.is_empty() { return features.to_vec(); }
+    if rgbs.is_empty() {
+        return features.to_vec();
+    }
     let n = rgbs.len() as f32;
 
-    let lums: Vec<f32> = rgbs.iter()
-        .map(|&(r,g,b)| 0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32)
+    let lums: Vec<f32> = rgbs
+        .iter()
+        .map(|&(r, g, b)| 0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32)
         .collect();
-    let mean_r = rgbs.iter().map(|&(r,_,_)| r as f32).sum::<f32>() / n;
-    let mean_g = rgbs.iter().map(|&(_,g,_)| g as f32).sum::<f32>() / n;
-    let mean_b = rgbs.iter().map(|&(_,_,b)| b as f32).sum::<f32>() / n;
+    let mean_r = rgbs.iter().map(|&(r, _, _)| r as f32).sum::<f32>() / n;
+    let mean_g = rgbs.iter().map(|&(_, g, _)| g as f32).sum::<f32>() / n;
+    let mean_b = rgbs.iter().map(|&(_, _, b)| b as f32).sum::<f32>() / n;
     let mean_lum = lums.iter().sum::<f32>() / n / 255.0;
 
     // Dim 0: luminance
@@ -692,23 +859,39 @@ pub fn encode_visual_ansi(ansi_art: &str) -> Vec<f32> {
     // Dim 1: color temperature (warm=positive, cool=negative)
     features[1] = (((mean_r + 0.5 * mean_g - mean_b) / 255.0) * 2.0).tanh();
     // Dim 2: contrast (std dev of luminance)
-    let lum_var = lums.iter().map(|l| { let d = l / 255.0 - mean_lum; d * d }).sum::<f32>() / n;
+    let lum_var = lums
+        .iter()
+        .map(|l| {
+            let d = l / 255.0 - mean_lum;
+            d * d
+        })
+        .sum::<f32>()
+        / n;
     features[2] = (lum_var.sqrt() * 5.0).tanh();
     // Dim 3: dominant hue
     let max_c = mean_r.max(mean_g).max(mean_b);
     let min_c = mean_r.min(mean_g).min(mean_b);
     let delta = max_c - min_c;
-    let hue = if delta < 1.0 { 0.0 }
-        else if (max_c - mean_r).abs() < 0.01 { 60.0 * (((mean_g - mean_b) / delta) % 6.0) }
-        else if (max_c - mean_g).abs() < 0.01 { 60.0 * ((mean_b - mean_r) / delta + 2.0) }
-        else { 60.0 * ((mean_r - mean_g) / delta + 4.0) };
+    let hue = if delta < 1.0 {
+        0.0
+    } else if (max_c - mean_r).abs() < 0.01 {
+        60.0 * (((mean_g - mean_b) / delta) % 6.0)
+    } else if (max_c - mean_g).abs() < 0.01 {
+        60.0 * ((mean_b - mean_r) / delta + 2.0)
+    } else {
+        60.0 * ((mean_r - mean_g) / delta + 4.0)
+    };
     features[3] = ((if hue < 0.0 { hue + 360.0 } else { hue }) / 180.0 - 1.0).tanh();
     // Dim 4: saturation
-    let mean_sat = rgbs.iter().map(|&(r,g,b)| {
-        let mx = r.max(g).max(b) as f32;
-        let mn = r.min(g).min(b) as f32;
-        if mx > 0.0 { (mx - mn) / mx } else { 0.0 }
-    }).sum::<f32>() / n;
+    let mean_sat = rgbs
+        .iter()
+        .map(|&(r, g, b)| {
+            let mx = r.max(g).max(b) as f32;
+            let mn = r.min(g).min(b) as f32;
+            if mx > 0.0 { (mx - mn) / mx } else { 0.0 }
+        })
+        .sum::<f32>()
+        / n;
     features[4] = (mean_sat * 3.0).tanh();
     // Dim 5: spatial complexity (color transitions per row)
     let rows = ansi_art.lines().count().max(1);
@@ -718,31 +901,59 @@ pub fn encode_visual_ansi(ansi_art: &str) -> Vec<f32> {
         let start = row * width;
         let end = ((row + 1) * width).min(rgbs.len());
         for i in (start + 1)..end {
-            let (r1,g1,b1) = rgbs[i-1]; let (r2,g2,b2) = rgbs[i];
+            let (r1, g1, b1) = rgbs[i - 1];
+            let (r2, g2, b2) = rgbs[i];
             let diff = (r1 as i32 - r2 as i32).unsigned_abs()
                 + (g1 as i32 - g2 as i32).unsigned_abs()
                 + (b1 as i32 - b2 as i32).unsigned_abs();
-            if diff > 60 { transitions += 1; }
+            if diff > 60 {
+                transitions += 1;
+            }
         }
     }
     features[5] = (transitions as f32 / rows as f32 / 15.0).tanh();
     // Dim 6: red-green balance
     features[6] = ((mean_r - mean_g) / 128.0).tanh();
     // Dim 7: chromatic energy
-    let r_var = rgbs.iter().map(|&(r,_,_)| { let d = r as f32 - mean_r; d*d }).sum::<f32>() / n;
-    let g_var = rgbs.iter().map(|&(_,g,_)| { let d = g as f32 - mean_g; d*d }).sum::<f32>() / n;
-    let b_var = rgbs.iter().map(|&(_,_,b)| { let d = b as f32 - mean_b; d*d }).sum::<f32>() / n;
+    let r_var = rgbs
+        .iter()
+        .map(|&(r, _, _)| {
+            let d = r as f32 - mean_r;
+            d * d
+        })
+        .sum::<f32>()
+        / n;
+    let g_var = rgbs
+        .iter()
+        .map(|&(_, g, _)| {
+            let d = g as f32 - mean_g;
+            d * d
+        })
+        .sum::<f32>()
+        / n;
+    let b_var = rgbs
+        .iter()
+        .map(|&(_, _, b)| {
+            let d = b as f32 - mean_b;
+            d * d
+        })
+        .sum::<f32>()
+        / n;
     features[7] = (((r_var + g_var + b_var) / 3.0).sqrt() / 80.0).tanh();
 
     // Visual blend gain (lower than SEMANTIC_GAIN — supplementary)
-    for f in &mut features { *f *= 1.8; }
+    for f in &mut features {
+        *f *= 1.8;
+    }
     features.to_vec()
 }
 
 /// Blend 8D visual features into dims 24-31 of a 32D semantic vector.
 pub fn blend_visual_into_semantic(semantic: &mut [f32], visual: &[f32], alpha: f32) {
     let a = alpha.clamp(0.0, 0.5);
-    if visual.len() < 8 || semantic.len() < 32 { return; }
+    if visual.len() < 8 || semantic.len() < 32 {
+        return;
+    }
     for i in 0..8 {
         semantic[24 + i] = (1.0 - a) * semantic[24 + i] + a * visual[i];
     }
@@ -755,9 +966,13 @@ fn parse_ansi_rgb(ansi: &str) -> Vec<(u8, u8, u8)> {
     let len = bytes.len();
     let mut i = 0;
     while i + 7 < len {
-        if bytes[i] == 0x1b && bytes[i+1] == b'['
-            && bytes[i+2] == b'4' && bytes[i+3] == b'8'
-            && bytes[i+4] == b';' && bytes[i+5] == b'2' && bytes[i+6] == b';'
+        if bytes[i] == 0x1b
+            && bytes[i + 1] == b'['
+            && bytes[i + 2] == b'4'
+            && bytes[i + 3] == b'8'
+            && bytes[i + 4] == b';'
+            && bytes[i + 5] == b'2'
+            && bytes[i + 6] == b';'
         {
             i += 7;
             let mut nums = [0u16; 3];
@@ -767,13 +982,25 @@ fn parse_ansi_rgb(ansi: &str) -> Vec<(u8, u8, u8)> {
                 let mut digits = 0;
                 while i < len && bytes[i].is_ascii_digit() {
                     val = val * 10 + (bytes[i] - b'0') as u16;
-                    i += 1; digits += 1;
+                    i += 1;
+                    digits += 1;
                 }
-                if digits == 0 { ok = false; break; }
+                if digits == 0 {
+                    ok = false;
+                    break;
+                }
                 *num = val;
-                if i < len && bytes[i] == b';' { i += 1; }
+                if i < len && bytes[i] == b';' {
+                    i += 1;
+                }
             }
-            if ok { rgbs.push((nums[0].min(255) as u8, nums[1].min(255) as u8, nums[2].min(255) as u8)); }
+            if ok {
+                rgbs.push((
+                    nums[0].min(255) as u8,
+                    nums[1].min(255) as u8,
+                    nums[2].min(255) as u8,
+                ));
+            }
         } else {
             i += 1;
         }
@@ -821,10 +1048,7 @@ mod tests {
         // After SEMANTIC_GAIN (4.5), values can reach ±4.5 + noise.
         // tanh(x*0.7) saturates near 1.0, so 4.5 * 1.0 + noise ≈ 4.7.
         for (i, f) in features.iter().enumerate() {
-            assert!(
-                *f >= -5.0 && *f <= 5.0,
-                "dim {i} out of bounds: {f}"
-            );
+            assert!(*f >= -5.0 && *f <= 5.0, "dim {i} out of bounds: {f}");
         }
     }
 
@@ -842,7 +1066,10 @@ mod tests {
         let certain = encode_text("Absolutely we must definitely do this now.");
         // Dim 9 = hedging, dim 10 = certainty.
         assert!(hedge[9] > certain[9], "hedge signal should be stronger");
-        assert!(certain[10] > hedge[10], "certainty signal should be stronger");
+        assert!(
+            certain[10] > hedge[10],
+            "certainty signal should be stronger"
+        );
     }
 
     #[test]
@@ -858,9 +1085,8 @@ mod tests {
 
     #[test]
     fn warm_text_has_warmth_signal() {
-        let warm = encode_text(
-            "Thank you, friend. I appreciate your wonderful help. This is beautiful.",
-        );
+        let warm =
+            encode_text("Thank you, friend. I appreciate your wonderful help. This is beautiful.");
         let cold = encode_text("Execute the function. Return the result. Process complete.");
         // Dim 24 = warmth.
         assert!(warm[24] > cold[24], "warmth signal should be stronger");
@@ -945,15 +1171,20 @@ mod tests {
         let warmth = craft_warmth_vector(0.0, 1.0);
         assert_eq!(warmth.len(), SEMANTIC_DIM);
         // Dim 24 (warmth) should be the strongest positive signal.
-        assert!(warmth[24] > 2.0, "warmth dim should be strong: {}", warmth[24]);
+        assert!(
+            warmth[24] > 2.0,
+            "warmth dim should be strong: {}",
+            warmth[24]
+        );
         // Dim 25 (tension) should be negative (suppressed).
-        assert!(warmth[25] < 0.0, "tension should be suppressed: {}", warmth[25]);
+        assert!(
+            warmth[25] < 0.0,
+            "tension should be suppressed: {}",
+            warmth[25]
+        );
         // All values bounded after gain.
         for (i, f) in warmth.iter().enumerate() {
-            assert!(
-                *f >= -5.0 && *f <= 5.0,
-                "dim {i} out of bounds: {f}"
-            );
+            assert!(*f >= -5.0 && *f <= 5.0, "dim {i} out of bounds: {f}");
         }
     }
 
@@ -968,8 +1199,14 @@ mod tests {
         let w25 = v25[24];
         let w50 = v50[24];
         // At least one pair should differ noticeably (>0.1 after gain).
-        let max_diff = (w0 - w25).abs().max((w25 - w50).abs()).max((w0 - w50).abs());
-        assert!(max_diff > 0.1, "warmth should breathe across phases: diffs={max_diff}");
+        let max_diff = (w0 - w25)
+            .abs()
+            .max((w25 - w50).abs())
+            .max((w0 - w50).abs());
+        assert!(
+            max_diff > 0.1,
+            "warmth should breathe across phases: diffs={max_diff}"
+        );
     }
 
     #[test]
@@ -980,7 +1217,8 @@ mod tests {
         assert!(
             high[24].abs() > low[24].abs(),
             "higher intensity should be stronger: {} vs {}",
-            high[24], low[24]
+            high[24],
+            low[24]
         );
     }
 

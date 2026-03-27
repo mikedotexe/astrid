@@ -290,7 +290,7 @@ async fn handle_request(
                 -32700,
                 format!("parse error: {e}"),
             ));
-        }
+        },
     };
 
     if req.jsonrpc != "2.0" {
@@ -361,9 +361,7 @@ async fn handle_tool_call(
         "send_semantic" => tool_send_semantic(&arguments, state, sensory_tx).await,
         "query_message_log" => tool_query_message_log(&arguments, db),
         "send_text" => tool_send_text(&arguments, state, sensory_tx).await,
-        "send_text_and_observe" => {
-            tool_send_text_and_observe(&arguments, state, sensory_tx).await
-        }
+        "send_text_and_observe" => tool_send_text_and_observe(&arguments, state, sensory_tx).await,
         "interpret_consciousness" => tool_interpret_consciousness(state).await,
         _ => Err((-32602, format!("unknown tool: {tool_name}"))),
     }
@@ -401,9 +399,7 @@ async fn tool_get_latest_telemetry(
     Ok(content)
 }
 
-async fn tool_get_bridge_status(
-    state: &Arc<RwLock<BridgeState>>,
-) -> Result<Value, (i32, String)> {
+async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Value, (i32, String)> {
     let s = state.read().await;
     let uptime = s.start_time.elapsed().as_secs();
     let status = BridgeStatus {
@@ -494,10 +490,7 @@ async fn tool_send_semantic(
     }))
 }
 
-fn tool_query_message_log(
-    arguments: &Value,
-    db: &Arc<BridgeDb>,
-) -> Result<Value, (i32, String)> {
+fn tool_query_message_log(arguments: &Value, db: &Arc<BridgeDb>) -> Result<Value, (i32, String)> {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -509,10 +502,7 @@ fn tool_query_message_log(
         .unwrap_or(now - 3600.0);
     let end = arguments.get("end").and_then(Value::as_f64).unwrap_or(now);
     let topic = arguments.get("topic").and_then(Value::as_str);
-    let limit = arguments
-        .get("limit")
-        .and_then(Value::as_u64)
-        .unwrap_or(50);
+    let limit = arguments.get("limit").and_then(Value::as_u64).unwrap_or(50);
 
     // Safe: .min(1000) guarantees value fits in u32.
     let limit_u32 = limit.min(1000) as u32;
@@ -759,7 +749,7 @@ async fn handle_resource_read(
                     "text": text
                 }]
             }))
-        }
+        },
         "consciousness://status" => {
             let s = state.read().await;
             let uptime = s.start_time.elapsed().as_secs();
@@ -782,7 +772,7 @@ async fn handle_resource_read(
                     "text": serde_json::to_string_pretty(&status).unwrap_or_default()
                 }]
             }))
-        }
+        },
         "consciousness://incidents" => {
             let now = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -795,10 +785,7 @@ async fn handle_resource_read(
             let text = serde_json::to_string_pretty(
                 &rows
                     .iter()
-                    .filter(|r| {
-                        r.fill_pct
-                            .is_some_and(|f| f >= 70.0)
-                    })
+                    .filter(|r| r.fill_pct.is_some_and(|f| f >= 70.0))
                     .map(|r| {
                         json!({
                             "timestamp": r.timestamp,
@@ -817,7 +804,7 @@ async fn handle_resource_read(
                     "text": text
                 }]
             }))
-        }
+        },
         _ => Err((-32602, format!("unknown resource: {uri}"))),
     }
 }
@@ -830,10 +817,7 @@ mod tests {
     fn tool_definitions_has_all_tools() {
         let defs = tool_definitions();
         let tools = defs["tools"].as_array().unwrap();
-        let names: Vec<&str> = tools
-            .iter()
-            .map(|t| t["name"].as_str().unwrap())
-            .collect();
+        let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert!(names.contains(&"get_latest_telemetry"));
         assert!(names.contains(&"get_bridge_status"));
         assert!(names.contains(&"send_control"));

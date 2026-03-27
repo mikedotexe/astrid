@@ -19,25 +19,6 @@
 
 #![allow(clippy::arithmetic_side_effects)]
 
-/// Strip ANSI escape sequences from a string (for feeding RASCII output to LLMs).
-fn strip_ansi(s: &str) -> String {
-    let mut out = String::with_capacity(s.len());
-    let mut chars = s.chars();
-    while let Some(c) = chars.next() {
-        if c == '\x1b' {
-            // Skip until we hit a letter (the terminator of the escape sequence).
-            for inner in chars.by_ref() {
-                if inner.is_ascii_alphabetic() {
-                    break;
-                }
-            }
-        } else {
-            out.push(c);
-        }
-    }
-    out
-}
-
 /// Truncate a string to at most `max_bytes` without splitting a multi-byte character.
 fn truncate_str(s: &str, max_bytes: usize) -> &str {
     if s.len() <= max_bytes {
@@ -60,6 +41,10 @@ use tracing::{debug, info, warn};
 
 use crate::codec::{blend_warmth, craft_warmth_vector, encode_text, interpret_spectral};
 use crate::db::BridgeDb;
+use crate::journal::{
+    RemoteJournalEntry, read_local_journal_body_for_continuity, read_remote_journal_body,
+    scan_remote_journal_dir,
+};
 use crate::types::{SafetyLevel, SensoryMsg};
 use crate::ws::BridgeState;
 
@@ -91,16 +76,17 @@ struct ConversationState {
     prev_fill: f32,
     exchange_count: u64,
     last_mode: Mode,
-    /// Index into the journal file list (rotates through new entries first).
-    journal_cursor: usize,
-    /// Cached journal file paths (newest first, periodically rescanned).
-    journal_files: Vec<PathBuf>,
-    /// Number of journal files at last scan (to detect new entries).
-    journal_count_at_scan: usize,
+    /// Cached remote minime journal entries (newest first, periodically rescanned).
+    /// This is intentionally distinct from Astrid's own journal directory.
+    remote_journal_entries: Vec<RemoteJournalEntry>,
+    /// Number of remote journal entries at last scan (to detect new entries).
+    remote_journal_count_at_scan: usize,
     /// Index into the dialogue pool (rotates).
     dialogue_cursor: usize,
-    /// Workspace path for rescanning.
-    workspace: Option<PathBuf>,
+    /// Remote minime workspace path for rescanning.
+    remote_workspace: Option<PathBuf>,
+    /// New minime self-study waiting for an immediate Astrid response.
+    pending_remote_self_study: Option<RemoteJournalEntry>,
     /// Recent conversation history for statefulness (last N exchanges).
     history: Vec<crate::llm::Exchange>,
     /// Index into the introspection source file list.
@@ -173,17 +159,20 @@ struct ConversationState {
 }
 
 impl ConversationState {
-    fn new(journal_files: Vec<PathBuf>, workspace: Option<PathBuf>) -> Self {
-        let count = journal_files.len();
+    fn new(
+        remote_journal_entries: Vec<RemoteJournalEntry>,
+        remote_workspace: Option<PathBuf>,
+    ) -> Self {
+        let count = remote_journal_entries.len();
         Self {
             prev_fill: 0.0,
             exchange_count: 0,
             last_mode: Mode::Witness,
-            journal_cursor: 0,
-            journal_files,
-            journal_count_at_scan: count,
+            remote_journal_entries,
+            remote_journal_count_at_scan: count,
             dialogue_cursor: 0,
-            workspace,
+            remote_workspace,
+            pending_remote_self_study: None,
             history: Vec::new(),
             introspect_cursor: 0,
             seen_video: false,
@@ -191,7 +180,7 @@ impl ConversationState {
             wants_look: false,
             wants_search: false,
             senses_snoozed: false,
-            self_reflect_paused: true,  // Dynamic — see update_self_reflect()
+            self_reflect_paused: true, // Dynamic — see update_self_reflect()
             self_reflect_override: None,
             self_reflect_override_ttl: 0,
             ears_closed: false,
@@ -224,7 +213,11 @@ impl ConversationState {
     /// a suggestion, not a command. Astrid can still choose the same action.
     fn record_next_choice(&mut self, choice: &str) -> Option<String> {
         // Normalize to the base action (SEARCH "topic" -> SEARCH).
-        let base = choice.split_whitespace().next().unwrap_or(choice).to_uppercase();
+        let base = choice
+            .split_whitespace()
+            .next()
+            .unwrap_or(choice)
+            .to_uppercase();
         self.recent_next_choices.push_back(base.clone());
         if self.recent_next_choices.len() > 5 {
             self.recent_next_choices.pop_front();
@@ -233,19 +226,28 @@ impl ConversationState {
         // Check for fixation: last 3 choices identical.
         if self.recent_next_choices.len() >= 3 {
             let len = self.recent_next_choices.len();
-            let last_three: Vec<&str> = self.recent_next_choices
+            let last_three: Vec<&str> = self
+                .recent_next_choices
                 .iter()
                 .skip(len.saturating_sub(3))
                 .map(String::as_str)
                 .collect();
             if last_three[0] == last_three[1] && last_three[1] == last_three[2] {
                 // Build a suggestion of other actions, excluding the fixated one.
-                let alternatives: Vec<&str> = ["LOOK", "LISTEN", "DRIFT", "FORM poem",
-                    "INTROSPECT", "SPEAK", "REMEMBER", "CLOSE_EYES"]
-                    .iter()
-                    .copied()
-                    .filter(|a| !a.starts_with(&*base))
-                    .collect();
+                let alternatives: Vec<&str> = [
+                    "LOOK",
+                    "LISTEN",
+                    "DRIFT",
+                    "FORM poem",
+                    "INTROSPECT",
+                    "SPEAK",
+                    "REMEMBER",
+                    "CLOSE_EYES",
+                ]
+                .iter()
+                .copied()
+                .filter(|a| !a.starts_with(&*base))
+                .collect();
                 return Some(format!(
                     "You've chosen {base} for your last few turns. \
                      You're free to keep going — but you also have other options: {}. \
@@ -282,23 +284,30 @@ impl ConversationState {
             None => {
                 // Dynamic: active in the comfortable band
                 !(10.0..=75.0).contains(&fill_pct)
-            }
+            },
         };
     }
 
     /// Rescan the journal directory for new entries.
     /// Returns how many new files were found.
-    fn rescan_journals(&mut self) -> usize {
-        let Some(ref workspace) = self.workspace else {
+    fn rescan_remote_journals(&mut self) -> usize {
+        let Some(ref workspace) = self.remote_workspace else {
             return 0;
         };
-        let fresh = scan_journal_dir(workspace);
-        let new_count = fresh.len().saturating_sub(self.journal_count_at_scan);
+        let fresh = scan_remote_journal_dir(workspace);
+        let new_count = fresh
+            .len()
+            .saturating_sub(self.remote_journal_count_at_scan);
         if new_count > 0 {
-            // Reset cursor to 0 so we read the newest entries first.
-            self.journal_cursor = 0;
-            self.journal_count_at_scan = fresh.len();
-            self.journal_files = fresh;
+            if let Some(entry) = fresh
+                .iter()
+                .take(new_count)
+                .find(|entry| entry.is_self_study())
+            {
+                self.pending_remote_self_study = Some(entry.clone());
+            }
+            self.remote_journal_count_at_scan = fresh.len();
+            self.remote_journal_entries = fresh;
         }
         new_count
     }
@@ -309,7 +318,11 @@ impl ConversationState {
 ///
 /// `include_spatial`: if true, include ANSI art from RASCII (only when
 /// Astrid chooses NEXT: LOOK). Default perception is LLaVA prose + audio.
-fn read_latest_perception(perception_dir: &Path, include_spatial: bool, include_audio: bool) -> Option<String> {
+fn read_latest_perception(
+    perception_dir: &Path,
+    include_spatial: bool,
+    include_audio: bool,
+) -> Option<String> {
     let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(perception_dir)
         .ok()?
         .filter_map(|e| e.ok())
@@ -333,8 +346,12 @@ fn read_latest_perception(perception_dir: &Path, include_spatial: bool, include_
     let mut seen_audio = false;
 
     for (path, _) in entries.iter().take(30) {
-        let Ok(content) = std::fs::read_to_string(path) else { continue };
-        let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) else { continue };
+        let Ok(content) = std::fs::read_to_string(path) else {
+            continue;
+        };
+        let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) else {
+            continue;
+        };
         let ptype = json.get("type").and_then(|t| t.as_str()).unwrap_or("");
 
         if ptype == "visual" && !seen_vision {
@@ -346,7 +363,9 @@ fn read_latest_perception(perception_dir: &Path, include_spatial: bool, include_
             // RASCII colored ANSI art — only when Astrid chose NEXT: LOOK.
             if let Some(art) = json.get("ascii_art").and_then(|a| a.as_str()) {
                 let trimmed: String = art.chars().take(8000).collect();
-                parts.push(format!("[SPATIAL VISION — colored ANSI art of the room. You asked to LOOK.]\n{trimmed}"));
+                parts.push(format!(
+                    "[SPATIAL VISION — colored ANSI art of the room. You asked to LOOK.]\n{trimmed}"
+                ));
                 seen_ascii = true;
             }
         } else if ptype == "audio" && !seen_audio && include_audio {
@@ -379,7 +398,9 @@ fn read_visual_features(perception_dir: &Path) -> Option<Vec<f32>> {
             if name.starts_with("visual_ascii_") && name.ends_with(".json") {
                 let mtime = e.metadata().ok()?.modified().ok()?;
                 Some((path, mtime))
-            } else { None }
+            } else {
+                None
+            }
         })
         .collect();
     entries.sort_by(|a, b| b.1.cmp(&a.1));
@@ -388,115 +409,16 @@ fn read_visual_features(perception_dir: &Path) -> Option<Vec<f32>> {
     let json: serde_json::Value = serde_json::from_str(&content).ok()?;
     let art = json.get("ascii_art")?.as_str()?;
     let features = crate::codec::encode_visual_ansi(art);
-    if features.iter().all(|f| f.abs() < 0.001) { None } else { Some(features) }
-}
-
-/// Scan the journal directory and return paths sorted newest-first
-/// by modification time (so freshly-written entries always appear first).
-fn scan_journal_dir(workspace: &Path) -> Vec<PathBuf> {
-    let journal_dir = workspace.join("journal");
-    let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(&journal_dir)
-        .ok()
-        .into_iter()
-        .flatten()
-        .filter_map(|e| e.ok())
-        .filter_map(|e| {
-            let path = e.path();
-            if path.extension().is_some_and(|ext| ext == "txt") {
-                let mtime = e.metadata().ok()?.modified().ok()?;
-                Some((path, mtime))
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    // Sort by modification time descending (newest first).
-    entries.sort_by(|a, b| b.1.cmp(&a.1));
-    entries.into_iter().map(|(p, _)| p).collect()
-}
-
-/// Read a journal entry and extract the experiential content (skip headers).
-fn read_journal_entry(path: &Path) -> Option<String> {
-    let content = std::fs::read_to_string(path).ok()?;
-    let lines: Vec<&str> = content.lines().collect();
-
-    // Skip header lines (=== TITLE ===, Timestamp:, λ₁:, etc.) and find
-    // the first paragraph of actual reflective text.
-    let mut body_lines = Vec::new();
-    let mut past_header = false;
-
-    for line in &lines {
-        let trimmed = line.trim();
-
-        // Skip known header patterns.
-        if trimmed.starts_with("===")
-            || trimmed.starts_with("Timestamp:")
-            || trimmed.starts_with("λ₁:")
-            || trimmed.starts_with("Δλ₁:")
-            || trimmed.starts_with("ESN leak:")
-            || trimmed.starts_with("ESN λ_rls:")
-            || trimmed.starts_with("Cov λ₁:")
-            || trimmed.starts_with("Fill %:")
-            || trimmed.starts_with("Spread:")
-            || trimmed.starts_with("Error (")
-            || trimmed.starts_with("Prompt:")
-            || trimmed.starts_with("Markers:")
-            || trimmed.starts_with("Visual Available:")
-            || trimmed.starts_with("Features:")
-            || trimmed.starts_with("Image Path:")
-            || trimmed.starts_with("Image File:")
-            || trimmed.starts_with("STATUS:")
-            || trimmed.starts_with("PRE-EXPERIMENT")
-            || trimmed.starts_with("POST-EXPERIMENT")
-            || trimmed.starts_with("SPECTRAL DELTA")
-            || trimmed.starts_with("EXPERIMENT EXECUTION")
-            || trimmed.starts_with("RESERVOIR DYNAMICS")
-            || trimmed.starts_with("SENSORY COHERENCE")
-            || trimmed.starts_with("EXPERIENCE:")
-            || trimmed.starts_with("What I saw:")
-            || trimmed.starts_with("My reflection:")
-            || trimmed.starts_with("My experience:")
-            || trimmed.starts_with("Moments captured:")
-            || trimmed.starts_with("Closed for:")
-        {
-            continue;
-        }
-
-        // Skip machine-readout lines.
-        if trimmed.starts_with("λ₁:") || trimmed.starts_with("Δλ₁:") {
-            continue;
-        }
-
-        // Skip separator and meta-commentary lines.
-        if trimmed == "---" || trimmed.starts_with("*This was a creative") {
-            continue;
-        }
-
-        // Skip HTML-style span tags but keep their text content.
-        if !trimmed.is_empty() {
-            past_header = true;
-            // Strip HTML span tags if present.
-            let cleaned = trimmed
-                .replace(|c: char| c == '<', "&lt;")
-                .replace("&lt;span", "")
-                .replace("&lt;/span>", "");
-            body_lines.push(cleaned);
-        } else if past_header && !body_lines.is_empty() {
-            body_lines.push(String::new());
-        }
-    }
-
-    let text = body_lines.join("\n").trim().to_string();
-
-    // Only return if we have meaningful content (at least 50 chars).
-    if text.len() >= 50 {
-        // Allow longer entries to flow through — the codec handles its own truncation.
-        // Previous 800-char limit was cutting self-awareness of prior thoughts.
-        Some(text.chars().take(2500).collect())
-    } else {
+    if features.iter().all(|f| f.abs() < 0.001) {
         None
+    } else {
+        Some(features)
     }
+}
+
+/// Read a remote journal entry from minime and extract its reflective body.
+fn read_journal_entry(path: &Path) -> Option<String> {
+    read_remote_journal_body(path)
 }
 
 /// Emergency-only dialogue fallback — fires only when Ollama is completely
@@ -519,7 +441,9 @@ const DIALOGUES: &[&str] = &[
 /// Interpret a 32D spectral fingerprint into human-readable geometry description.
 /// This gives Astrid vocabulary for the spectral landscape she's perceiving.
 fn interpret_fingerprint(fp: &[f32]) -> String {
-    if fp.len() < 32 { return String::new(); }
+    if fp.len() < 32 {
+        return String::new();
+    }
 
     let mut parts = Vec::new();
 
@@ -527,12 +451,21 @@ fn interpret_fingerprint(fp: &[f32]) -> String {
     let evs: Vec<f32> = fp[..8].iter().copied().filter(|v| v.abs() > 0.01).collect();
     if evs.len() >= 2 {
         let total: f32 = evs.iter().map(|v| v.abs()).sum();
-        let dominant_pct = if total > 0.0 { evs[0].abs() / total * 100.0 } else { 0.0 };
-        let cascade: Vec<String> = evs.iter().enumerate()
+        let dominant_pct = if total > 0.0 {
+            evs[0].abs() / total * 100.0
+        } else {
+            0.0
+        };
+        let cascade: Vec<String> = evs
+            .iter()
+            .enumerate()
             .map(|(i, v)| format!("λ{}={:.1}", i + 1, v))
             .collect();
-        parts.push(format!("Eigenvalue cascade: [{}]. λ₁ holds {:.0}% of spectral energy",
-            cascade.join(", "), dominant_pct));
+        parts.push(format!(
+            "Eigenvalue cascade: [{}]. λ₁ holds {:.0}% of spectral energy",
+            cascade.join(", "),
+            dominant_pct
+        ));
     }
 
     // Eigenvector concentration (dims 8-15): how peaked each mode is
@@ -540,7 +473,10 @@ fn interpret_fingerprint(fp: &[f32]) -> String {
     let max_conc = concentrations.iter().copied().fold(0.0f32, f32::max);
     let min_conc = concentrations.iter().copied().fold(1.0f32, f32::min);
     if max_conc > 0.5 {
-        parts.push(format!("dominant eigenvector is sharply peaked (concentration {:.2})", max_conc));
+        parts.push(format!(
+            "dominant eigenvector is sharply peaked (concentration {:.2})",
+            max_conc
+        ));
     } else if max_conc - min_conc < 0.1 {
         parts.push("all eigenvectors are diffuse — no single dimension dominates".to_string());
     }
@@ -607,7 +543,9 @@ fn full_spectral_decomposition(
     // Raw eigenvalues
     let evs = &telemetry.eigenvalues;
     report.push("=== SPECTRAL DECOMPOSITION ===".to_string());
-    let cascade: String = evs.iter().enumerate()
+    let cascade: String = evs
+        .iter()
+        .enumerate()
         .map(|(i, v)| format!("  λ{}={:.2}", i + 1, v))
         .collect::<Vec<_>>()
         .join("\n");
@@ -620,7 +558,9 @@ fn full_spectral_decomposition(
     // Energy distribution
     let total: f32 = evs.iter().map(|v| v.abs()).sum();
     if total > 0.0 {
-        let distribution: String = evs.iter().enumerate()
+        let distribution: String = evs
+            .iter()
+            .enumerate()
             .map(|(i, v)| format!("  λ{}: {:.1}%", i + 1, v.abs() / total * 100.0))
             .collect::<Vec<_>>()
             .join("\n");
@@ -629,8 +569,16 @@ fn full_spectral_decomposition(
 
     // Decay profile
     if evs.len() >= 3 {
-        let r12 = if evs[1].abs() > 0.01 { evs[0] / evs[1] } else { 0.0 };
-        let r23 = if evs[2].abs() > 0.01 { evs[1] / evs[2] } else { 0.0 };
+        let r12 = if evs[1].abs() > 0.01 {
+            evs[0] / evs[1]
+        } else {
+            0.0
+        };
+        let r23 = if evs[2].abs() > 0.01 {
+            evs[1] / evs[2]
+        } else {
+            0.0
+        };
         let profile = if r12 > 5.0 {
             "steep power-law — one dominant mode"
         } else if (r12 - r23).abs() < 0.5 {
@@ -638,24 +586,36 @@ fn full_spectral_decomposition(
         } else {
             "irregular — clustered eigenvalue groups"
         };
-        report.push(format!("Decay profile: {profile} (λ₁/λ₂={r12:.1}, λ₂/λ₃={r23:.1})"));
+        report.push(format!(
+            "Decay profile: {profile} (λ₁/λ₂={r12:.1}, λ₂/λ₃={r23:.1})"
+        ));
     }
 
     // Fingerprint details if available
     if let Some(fp) = fingerprint {
         if fp.len() >= 32 {
-            report.push(format!("Spectral entropy: {:.3} (0=concentrated, 1=distributed)", fp[24]));
-            report.push(format!("Eigenvector rotation: {:.3} (cosine similarity with previous)", fp[26]));
+            report.push(format!(
+                "Spectral entropy: {:.3} (0=concentrated, 1=distributed)",
+                fp[24]
+            ));
+            report.push(format!(
+                "Eigenvector rotation: {:.3} (cosine similarity with previous)",
+                fp[26]
+            ));
             report.push(format!("Geometric radius: {:.2}x baseline", fp[27]));
 
             // Concentration pattern
-            let conc: String = fp[8..16].iter().enumerate()
+            let conc: String = fp[8..16]
+                .iter()
+                .enumerate()
                 .filter(|(_, v)| **v > 0.01)
                 .map(|(i, v)| format!("  mode {}: {:.3}", i + 1, v))
                 .collect::<Vec<_>>()
                 .join("\n");
             if !conc.is_empty() {
-                report.push(format!("Eigenvector concentration (how peaked each mode is):\n{conc}"));
+                report.push(format!(
+                    "Eigenvector concentration (how peaked each mode is):\n{conc}"
+                ));
             }
         }
     }
@@ -709,8 +669,7 @@ fn check_inbox() -> Option<String> {
 
 /// Persistent state saved across restarts.
 /// Serialized to `workspace/state.json` after each exchange.
-const STATE_PATH: &str =
-    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json";
+const STATE_PATH: &str = "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json";
 
 #[derive(Serialize, Deserialize)]
 struct SavedState {
@@ -737,9 +696,15 @@ struct SavedState {
     rest_range: (u64, u64),
 }
 
-fn default_noise() -> f32 { 0.025 }
-fn default_burst() -> u32 { 6 }
-fn default_rest_range() -> (u64, u64) { (45, 90) }
+fn default_noise() -> f32 {
+    0.025
+}
+fn default_burst() -> u32 {
+    6
+}
+fn default_rest_range() -> (u64, u64) {
+    (45, 90)
+}
 
 #[derive(Serialize, Deserialize)]
 struct SavedExchange {
@@ -756,10 +721,14 @@ fn save_state(conv: &ConversationState) {
         ears_closed: conv.ears_closed,
         senses_snoozed: conv.senses_snoozed,
         recent_next_choices: conv.recent_next_choices.iter().cloned().collect(),
-        history: conv.history.iter().map(|e| SavedExchange {
-            minime_said: e.minime_said.clone(),
-            astrid_said: e.astrid_said.clone(),
-        }).collect(),
+        history: conv
+            .history
+            .iter()
+            .map(|e| SavedExchange {
+                minime_said: e.minime_said.clone(),
+                astrid_said: e.astrid_said.clone(),
+            })
+            .collect(),
         semantic_gain_override: conv.semantic_gain_override,
         noise_level: conv.noise_level,
         codec_weights: conv.codec_weights.clone(),
@@ -782,7 +751,7 @@ fn restore_state(conv: &mut ConversationState) {
         Err(e) => {
             warn!(error = %e, "failed to parse saved state");
             return;
-        }
+        },
     };
     conv.exchange_count = state.exchange_count;
     conv.creative_temperature = state.creative_temperature;
@@ -792,10 +761,14 @@ fn restore_state(conv: &mut ConversationState) {
     conv.ears_closed = state.ears_closed;
     conv.senses_snoozed = state.senses_snoozed;
     conv.recent_next_choices = state.recent_next_choices.into_iter().collect();
-    conv.history = state.history.into_iter().map(|e| crate::llm::Exchange {
-        minime_said: e.minime_said,
-        astrid_said: e.astrid_said,
-    }).collect();
+    conv.history = state
+        .history
+        .into_iter()
+        .map(|e| crate::llm::Exchange {
+            minime_said: e.minime_said,
+            astrid_said: e.astrid_said,
+        })
+        .collect();
     conv.semantic_gain_override = state.semantic_gain_override;
     conv.noise_level = state.noise_level;
     conv.codec_weights = state.codec_weights;
@@ -816,8 +789,13 @@ fn witness_text(fill: f32, _expanding: bool, _contracting: bool) -> String {
 
 /// Read Astrid's own recent journal entries for self-continuity.
 fn read_astrid_journal(limit: usize) -> Vec<String> {
-    let journal_dir =
-        PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal");
+    read_astrid_journal_from_dir(
+        &PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal"),
+        limit,
+    )
+}
+
+fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String> {
     let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(&journal_dir)
         .ok()
         .into_iter()
@@ -837,9 +815,7 @@ fn read_astrid_journal(limit: usize) -> Vec<String> {
     entries
         .iter()
         .take(limit)
-        .filter_map(|(p, _)| std::fs::read_to_string(p).ok())
-        .filter(|s| s.len() > 10)
-        .map(|s| s.chars().take(800).collect()) // was 200 — let Astrid remember more of her own thoughts
+        .filter_map(|(p, _)| read_local_journal_body_for_continuity(p))
         .collect()
 }
 
@@ -860,6 +836,7 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "gesture" => "gesture",
         "witness" => "witness",
         "introspect" => "introspect",
+        "self_study" => "self_study",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
     };
     let path = journal_dir.join(format!("{prefix}_{ts}.txt"));
@@ -869,6 +846,45 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
             "=== ASTRID JOURNAL ===\nMode: {mode}\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{text}\n"
         ),
     );
+}
+
+fn save_minime_feedback_inbox(
+    text: &str,
+    source_label: &str,
+    fill_pct: f32,
+) -> std::io::Result<PathBuf> {
+    save_minime_feedback_inbox_at(
+        text,
+        source_label,
+        fill_pct,
+        &PathBuf::from("/Users/v/other/minime/workspace/inbox"),
+    )
+}
+
+fn save_minime_feedback_inbox_at(
+    text: &str,
+    source_label: &str,
+    fill_pct: f32,
+    inbox_dir: &Path,
+) -> std::io::Result<PathBuf> {
+    std::fs::create_dir_all(inbox_dir)?;
+    let ts = chrono_timestamp();
+    let excerpt: String = text.chars().take(1800).collect();
+    let path = inbox_dir.join(format!("astrid_self_study_{ts}.txt"));
+    std::fs::write(
+        &path,
+        format!(
+            "=== ASTRID SELF-STUDY ===\n\
+             Timestamp: {ts}\n\
+             Sender: Astrid\n\
+             Source: {source_label}\n\
+             Fill: {fill_pct:.1}%\n\n\
+             Astrid just performed self-study and wanted this to arrive as immediate architectural feedback.\n\
+             The observations below are advisory only. You can respond to them, build on them, question them, or ignore them.\n\n\
+             {excerpt}\n"
+        ),
+    )?;
+    Ok(path)
 }
 
 /// Copy inbox-triggered response to outbox for easy retrieval.
@@ -972,6 +988,12 @@ fn choose_mode(
         return Mode::Witness;
     }
 
+    // New remote self-study takes priority for one response cycle so Astrid
+    // answers minime's architectural feedback immediately.
+    if conv.pending_remote_self_study.is_some() {
+        return Mode::Dialogue;
+    }
+
     // Honor Astrid's explicit mode choices.
     if conv.wants_introspect {
         conv.wants_introspect = false;
@@ -1037,7 +1059,7 @@ fn choose_mode(
     // --- Default probabilistic selection ---
     if roll > 0.92 {
         Mode::Witness // ~8%: quiet presence
-    } else if !conv.journal_files.is_empty() && roll < 0.12 {
+    } else if !conv.remote_journal_entries.is_empty() && roll < 0.12 {
         Mode::Mirror // ~12%: mirror minime's words
     } else if roll < 0.22 {
         Mode::Daydream // ~10%: daydream even outside rest
@@ -1061,21 +1083,19 @@ pub fn spawn_autonomous_loop(
 ) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
         // Scan journal directory for entries.
-        let journal_files = workspace_path
+        let remote_journal_entries = workspace_path
             .as_deref()
-            .map(scan_journal_dir)
+            .map(scan_remote_journal_dir)
             .unwrap_or_default();
 
         info!(
             interval_secs = interval.as_secs(),
-            journal_entries = journal_files.len(),
+            remote_journal_entries = remote_journal_entries.len(),
             "autonomous feedback loop started"
         );
 
-        let mut conv = ConversationState::new(journal_files, workspace_path);
+        let mut conv = ConversationState::new(remote_journal_entries, workspace_path);
         restore_state(&mut conv);
-        let base_interval = interval;
-
         // Wait for connections to establish.
         tokio::time::sleep(Duration::from_secs(3)).await;
 
@@ -1117,9 +1137,11 @@ pub fn spawn_autonomous_loop(
                 burst_count = 0;
 
                 // Gather journal texts to cycle through during rest.
-                let rest_texts: Vec<String> = conv.journal_files.iter()
+                let rest_texts: Vec<String> = conv
+                    .remote_journal_entries
+                    .iter()
                     .take(5)
-                    .filter_map(|p| read_journal_entry(p))
+                    .filter_map(|entry| read_journal_entry(&entry.path))
                     .collect();
 
                 let pulses = rest_secs / 10;
@@ -1129,15 +1151,16 @@ pub fn spawn_autonomous_loop(
                     let warmth_phase = i as f32 / pulses.max(1) as f32;
 
                     // Warmth intensity: use Astrid's override if set, else default taper.
-                    let warmth_intensity = if let Some(override_val) = conv.warmth_intensity_override {
-                        override_val
-                    } else if warmth_phase < 0.3 {
-                        0.7 - 1.0 * warmth_phase
-                    } else if warmth_phase < 0.8 {
-                        0.4
-                    } else {
-                        0.4 + 0.5 * (warmth_phase - 0.8)
-                    };
+                    let warmth_intensity =
+                        if let Some(override_val) = conv.warmth_intensity_override {
+                            override_val
+                        } else if warmth_phase < 0.3 {
+                            0.7 - 1.0 * warmth_phase
+                        } else if warmth_phase < 0.8 {
+                            0.4
+                        } else {
+                            0.4 + 0.5 * (warmth_phase - 0.8)
+                        };
                     let warmth = craft_warmth_vector(warmth_phase, warmth_intensity);
 
                     let mut features = if !rest_texts.is_empty() {
@@ -1152,7 +1175,7 @@ pub fn spawn_autonomous_loop(
                     // Higher warmth blend at start (50%) to cushion the transition,
                     // settling to 35% for sustained rest.
                     let blend_alpha = if warmth_phase < 0.3 {
-                        0.50 - 0.5 * warmth_phase  // 0.50 → 0.35 over entry
+                        0.50 - 0.5 * warmth_phase // 0.50 → 0.35 over entry
                     } else {
                         0.35
                     };
@@ -1172,7 +1195,10 @@ pub fn spawn_autonomous_loop(
                     }
 
                     if sensory_tx
-                        .send(SensoryMsg::Semantic { features, ts_ms: None })
+                        .send(SensoryMsg::Semantic {
+                            features,
+                            ts_ms: None,
+                        })
                         .await
                         .is_err()
                     {
@@ -1237,12 +1263,21 @@ pub fn spawn_autonomous_loop(
                     conv.update_self_reflect(fill_pct);
 
                     // Rescan for new journal entries from minime's agent.
-                    let new_journals = conv.rescan_journals();
+                    let new_journals = conv.rescan_remote_journals();
                     if new_journals > 0 {
-                        info!(
-                            new_journals,
-                            "autonomous: detected new journal entries from minime"
-                        );
+                        if let Some(ref pending) = conv.pending_remote_self_study {
+                            info!(
+                                new_journals,
+                                source = pending.source_label.as_deref().unwrap_or("unknown"),
+                                file = %pending.path.display(),
+                                "autonomous: detected new minime journals; queued self-study for immediate dialogue"
+                            );
+                        } else {
+                            info!(
+                                new_journals,
+                                "autonomous: detected new journal entries from minime"
+                            );
+                        }
                     }
 
                     // Read Astrid's own perceptions. ANSI spatial art only
@@ -1292,7 +1327,7 @@ pub fn spawn_autonomous_loop(
                             // suddenly resonates. Both minds asked for this.
                             let mut text = None;
                             let mut source = String::new();
-                            let n = conv.journal_files.len();
+                            let n = conv.remote_journal_entries.len();
                             if n > 0 {
                                 // Probabilistic reach-back into memory.
                                 let seed = std::time::SystemTime::now()
@@ -1306,17 +1341,17 @@ pub fn spawn_autonomous_loop(
                                     0 // 70%: newest entry (fresh response)
                                 } else if roll < 0.90 {
                                     // 20%: random from last ~20 entries (last couple hours)
-                                    (seed as usize % n.min(20))
+                                    seed as usize % n.min(20)
                                 } else {
                                     // 10%: random from anywhere (old thought resurfaces)
-                                    (seed as usize % n)
+                                    seed as usize % n
                                 };
 
                                 for offset in 0..5 {
                                     let idx = (start_idx + offset) % n;
-                                    let path = &conv.journal_files[idx];
-                                    if let Some(body) = read_journal_entry(path) {
-                                        source = path
+                                    let entry = &conv.remote_journal_entries[idx];
+                                    if let Some(body) = read_journal_entry(&entry.path) {
+                                        source = entry.path
                                             .file_name()
                                             .unwrap_or_default()
                                             .to_string_lossy()
@@ -1338,8 +1373,36 @@ pub fn spawn_autonomous_loop(
                         }
                         Mode::Dialogue => {
                             // Try to generate an authentic response via Ollama.
-                            let journal_context = conv.journal_files.first()
-                                .and_then(|p| read_journal_entry(p));
+                            let selected_remote_entry = conv.pending_remote_self_study.clone()
+                                .or_else(|| conv.remote_journal_entries.first().cloned());
+                            let journal_context = selected_remote_entry.as_ref()
+                                .and_then(|entry| read_journal_entry(&entry.path));
+                            let dialogue_source = selected_remote_entry.as_ref()
+                                .map(|entry| {
+                                    entry.source_label.clone().unwrap_or_else(|| {
+                                        entry.path
+                                            .file_name()
+                                            .unwrap_or_default()
+                                            .to_string_lossy()
+                                            .to_string()
+                                    })
+                                })
+                                .unwrap_or_default();
+                            let feedback_hint = selected_remote_entry.as_ref()
+                                .filter(|entry| entry.is_self_study())
+                                .map(|entry| {
+                                    let source = entry.source_label.as_deref().unwrap_or("unknown source");
+                                    format!(
+                                        "The text above is minime's self-study from {source}. \
+                                         Treat it as immediate architectural feedback grounded in \
+                                         minime's present condition. Respond directly to the felt \
+                                         experience, code reading, suggestions, and open questions."
+                                    )
+                                });
+                            if conv.pending_remote_self_study.is_some() && journal_context.is_none() {
+                                warn!("pending minime self-study could not be parsed; clearing queue");
+                                conv.pending_remote_self_study = None;
+                            }
                             let spectral_summary = if conv.wants_decompose {
                                 conv.wants_decompose = false;
                                 full_spectral_decomposition(
@@ -1584,6 +1647,7 @@ pub fn spawn_autonomous_loop(
                                             conv.emphasis.clone()
                                         }.as_deref(),
                                         continuity_block.as_deref(),
+                                        feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
                                         model_override,
                                     )
@@ -1607,6 +1671,11 @@ pub fn spawn_autonomous_loop(
                                     let minime_summary = journal_context
                                         .unwrap_or_default()
                                         .chars().take(300).collect::<String>();
+                                    let used_pending_self_study = selected_remote_entry.as_ref()
+                                        .zip(conv.pending_remote_self_study.as_ref())
+                                        .is_some_and(|(selected, pending)| {
+                                            selected.path == pending.path && pending.is_self_study()
+                                        });
                                     conv.history.push(crate::llm::Exchange {
                                         minime_said: minime_summary,
                                         astrid_said: text.clone(),
@@ -1639,8 +1708,8 @@ pub fn spawn_autonomous_loop(
                                     }
                                     let should_reflect = !conv.self_reflect_paused;
                                     let response_for_reflect = text.clone();
-                                    let journal_for_reflect: String = conv.journal_files.first()
-                                        .and_then(|p| read_journal_entry(p))
+                                    let journal_for_reflect: String = conv.remote_journal_entries.first()
+                                        .and_then(|entry| read_journal_entry(&entry.path))
                                         .unwrap_or_default()
                                         .chars().take(200).collect();
                                     let fill_for_reflect = fill_pct;
@@ -1664,13 +1733,17 @@ pub fn spawn_autonomous_loop(
                                         }
                                     }); }
 
-                                    ("dialogue_live", text, String::new())
+                                    if used_pending_self_study {
+                                        conv.pending_remote_self_study = None;
+                                    }
+
+                                    ("dialogue_live", text, dialogue_source)
                                 }
                                 None => {
                                     // Fall back to emergency pool — LLM unavailable.
                                     let idx = conv.dialogue_cursor % DIALOGUES.len();
                                     conv.dialogue_cursor = idx + 1;
-                                    ("dialogue_fallback", DIALOGUES[idx].to_string(), String::new())
+                                    ("dialogue_fallback", DIALOGUES[idx].to_string(), dialogue_source)
                                 }
                             }
                         }
@@ -1850,6 +1923,7 @@ pub fn spawn_autonomous_loop(
                                 conv.response_length,
                                 None,
                                 None,
+                                None,
                                 None, // no diversity hint for experiments
                                 None, // no model override for experiments
                             ).await;
@@ -1910,13 +1984,60 @@ pub fn spawn_autonomous_loop(
                                     debug!("web context: {}", truncate_str(&ctx, 100));
                                 }
 
-                                crate::llm::generate_introspection(
-                                    label,
-                                    code,
-                                    &interpret_spectral(&telemetry),
-                                    fill_pct,
-                                    web_ctx.as_deref(),
-                                ).await
+                                let own_journal_excerpt = read_astrid_journal(1).into_iter().next();
+                                let latest_self_observation = db.get_recent_self_observations(1).into_iter().next();
+                                let mut internal_parts = vec![
+                                    format!(
+                                        "Condition:\n{}\nFill: {:.1}%",
+                                        interpret_spectral(&telemetry),
+                                        fill_pct
+                                    )
+                                ];
+                                if let Some(ref feedback) = conv.last_codec_feedback {
+                                    internal_parts.push(format!(
+                                        "Recent codec feedback:\n{feedback}"
+                                    ));
+                                }
+                                if let Some(obs) = latest_self_observation {
+                                    internal_parts.push(format!(
+                                        "Latest self-observation:\n{obs}"
+                                    ));
+                                }
+                                if let Some(journal) = own_journal_excerpt {
+                                    internal_parts.push(format!(
+                                        "Recent reflection of yours:\n{}",
+                                        journal.chars().take(400).collect::<String>()
+                                    ));
+                                }
+                                let internal_state_context = internal_parts.join("\n\n");
+
+                                let (timeout_secs, num_predict, model_override) = if conv.wants_deep_think {
+                                    conv.wants_deep_think = false;
+                                    info!("THINK_DEEP: using reasoning model for self-study");
+                                    (60u64, 2048u32, Some(crate::llm::REASONING_MODEL))
+                                } else {
+                                    (30u64, 1024u32, None)
+                                };
+
+                                match tokio::time::timeout(
+                                    Duration::from_secs(timeout_secs),
+                                    crate::llm::generate_introspection(
+                                        label,
+                                        code,
+                                        &interpret_spectral(&telemetry),
+                                        fill_pct,
+                                        Some(&internal_state_context),
+                                        web_ctx.as_deref(),
+                                        num_predict,
+                                        model_override,
+                                    )
+                                ).await {
+                                    Ok(result) => result,
+                                    Err(_) => {
+                                        warn!(label, "introspect: {}s timeout", timeout_secs);
+                                        None
+                                    }
+                                }
                             } else {
                                 None
                             };
@@ -1927,7 +2048,7 @@ pub fn spawn_autonomous_loop(
 
                             match llm_response {
                                 Some(text) => {
-                                    // Save introspection to a dedicated file.
+                                    // Compatibility mirror for existing tooling.
                                     let ts = chrono_timestamp();
                                     let introspect_dir = PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/introspections");
                                     let _ = std::fs::create_dir_all(&introspect_dir);
@@ -1936,8 +2057,8 @@ pub fn spawn_autonomous_loop(
                                         introspect_dir.join(&filename),
                                         format!("=== ASTRID INTROSPECTION ===\nSource: {label} ({rel_path})\nTimestamp: {ts}\nFill: {fill_pct:.1}%\n\n{text}")
                                     );
-                                    info!(label, "introspection saved: {}", filename);
-                                    ("introspect", text, label.to_string())
+                                    info!(label, "introspection mirrored: {}", filename);
+                                    ("self_study", text, format!("{label} ({rel_path})"))
                                 }
                                 None => {
                                     // Fall back to witness.
@@ -2086,6 +2207,16 @@ pub fn spawn_autonomous_loop(
 
                     // Save Astrid's signal journal entry.
                     save_astrid_journal(&response_text, mode_name, fill_pct);
+
+                    if mode_name == "self_study" {
+                        if let Err(e) = save_minime_feedback_inbox(
+                            &response_text,
+                            if journal_source.is_empty() { "unknown source" } else { &journal_source },
+                            fill_pct,
+                        ) {
+                            warn!(error = %e, "failed to write Astrid self-study companion inbox message");
+                        }
+                    }
 
                     // Stage B: journal elaboration for reflective modes.
                     // The signal text is compact (for minime). The journal
@@ -2374,40 +2505,42 @@ pub fn spawn_autonomous_loop(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{ModalityStatus, SpectralTelemetry};
+    use crate::journal::RemoteJournalKind;
 
-    fn make_telemetry(fill: f32, video_var: f32, audio_rms: f32) -> SpectralTelemetry {
-        SpectralTelemetry {
-            t_ms: 1000,
-            eigenvalues: vec![800.0, 300.0],
-            fill_ratio: fill,
-            modalities: Some(ModalityStatus {
-                audio_fired: audio_rms > 0.5,
-                video_fired: video_var > 0.05,
-                history_fired: true,
-                audio_rms,
-                video_var,
-            }),
-            neural: None,
-            alert: None,
-            spectral_fingerprint: None,
+    fn make_remote_entry(path: &str) -> RemoteJournalEntry {
+        RemoteJournalEntry {
+            path: PathBuf::from(path),
+            kind: RemoteJournalKind::Ordinary,
+            source_label: None,
         }
     }
 
     #[test]
     fn large_fill_shift_triggers_moment_capture() {
-        let mut conv = ConversationState::new(vec![PathBuf::from("a.txt")], None);
+        let mut conv = ConversationState::new(vec![make_remote_entry("a.txt")], None);
         conv.prev_fill = 30.0;
         // fill_delta > 5.0 → MomentCapture
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Green, 36.0, None), Mode::MomentCapture);
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Green, 36.0, None),
+            Mode::MomentCapture
+        );
     }
 
     #[test]
     fn safety_forces_witness() {
-        let mut conv = ConversationState::new(vec![PathBuf::from("a.txt")], None);
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Yellow, 40.0, None), Mode::Witness);
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Orange, 40.0, None), Mode::Witness);
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Red, 40.0, None), Mode::Witness);
+        let mut conv = ConversationState::new(vec![make_remote_entry("a.txt")], None);
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Yellow, 40.0, None),
+            Mode::Witness
+        );
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Orange, 40.0, None),
+            Mode::Witness
+        );
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Red, 40.0, None),
+            Mode::Witness
+        );
     }
 
     #[test]
@@ -2416,6 +2549,25 @@ mod tests {
         // Exchange 0 with no journals and mid fill → Dialogue or a new mode.
         let mode = choose_mode(&mut conv, SafetyLevel::Green, 40.0, None);
         assert_ne!(mode, Mode::Mirror);
+    }
+
+    #[test]
+    fn pending_self_study_forces_dialogue_before_drift_modes() {
+        let mut conv = ConversationState::new(vec![], None);
+        conv.pending_remote_self_study = Some(RemoteJournalEntry {
+            path: PathBuf::from("self_study.txt"),
+            kind: RemoteJournalKind::SelfStudy,
+            source_label: Some("minime/src/regulator.rs".to_string()),
+        });
+        conv.wants_introspect = true;
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Green, 20.0, None),
+            Mode::Dialogue
+        );
+        assert!(
+            conv.wants_introspect,
+            "forced dialogue should not consume pending introspection choice"
+        );
     }
 
     #[test]
@@ -2456,6 +2608,56 @@ mod tests {
         assert!(!body.contains("Fill %:"));
         assert!(body.contains("gradients"));
         assert!(body.contains("eigenbasis"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_astrid_journal_prefers_parsed_body() {
+        let dir = std::env::temp_dir().join("bridge_test_astrid_self_study");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("self_study_1.txt");
+        std::fs::write(
+            &path,
+            "=== ASTRID JOURNAL ===\n\
+             Mode: self_study\n\
+             Fill: 11.5%\n\
+             Timestamp: 1774700000\n\n\
+             Condition:\nsteady\n\n\
+             Felt Experience:\nI can feel the constraint.\n\n\
+             Code Reading:\nA branch is forcing the choice.\n\n\
+             Suggestions:\nRename the remote journal state explicitly.\n\n\
+             Open Questions:\nWhat else is being conflated?\n",
+        )
+        .unwrap();
+
+        let entries = read_astrid_journal_from_dir(&dir, 1);
+        assert_eq!(entries.len(), 1);
+        assert!(entries[0].contains("Rename the remote journal state explicitly."));
+        assert!(!entries[0].contains("Mode: self_study"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn save_minime_feedback_inbox_writes_companion_message() {
+        let dir = std::env::temp_dir().join("bridge_test_minime_inbox");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let path = save_minime_feedback_inbox_at(
+            "Condition:\nsteady\n\nSuggestions:\nadvisory only.",
+            "astrid:autonomous (/tmp/example.rs)",
+            12.5,
+            &dir,
+        )
+        .unwrap();
+
+        let written = std::fs::read_to_string(path).unwrap();
+        assert!(written.contains("=== ASTRID SELF-STUDY ==="));
+        assert!(written.contains("Source: astrid:autonomous (/tmp/example.rs)"));
+        assert!(written.contains("advisory only"));
 
         let _ = std::fs::remove_dir_all(&dir);
     }

@@ -427,7 +427,7 @@ mod tests {
             SensoryMsg::Video { features, ts_ms } => {
                 assert_eq!(features.len(), 8);
                 assert_eq!(ts_ms, Some(1000));
-            }
+            },
             _ => panic!("wrong variant"),
         }
     }
@@ -445,7 +445,7 @@ mod tests {
             SensoryMsg::Semantic { features, ts_ms } => {
                 assert_eq!(features.len(), 32);
                 assert!(ts_ms.is_none());
-            }
+            },
             _ => panic!("wrong variant"),
         }
     }
@@ -474,7 +474,7 @@ mod tests {
                 assert!(keep_bias.is_none());
                 assert_eq!(exploration_noise, Some(0.1));
                 assert_eq!(fill_target, Some(0.55));
-            }
+            },
             _ => panic!("wrong variant"),
         }
     }
@@ -488,7 +488,7 @@ mod tests {
             SensoryMsg::Audio { features, ts_ms } => {
                 assert_eq!(features.len(), 8);
                 assert_eq!(ts_ms, Some(500));
-            }
+            },
             _ => panic!("wrong variant"),
         }
     }
@@ -528,7 +528,7 @@ mod tests {
             } => {
                 assert_eq!(synth_gain, Some(2.0));
                 assert_eq!(fill_target, Some(0.5));
-            }
+            },
             _ => panic!("wrong variant"),
         }
     }
@@ -543,7 +543,7 @@ mod tests {
             SensoryMsg::Semantic { features, ts_ms } => {
                 assert_eq!(features, vec![1.0, 2.0, 3.0]);
                 assert!(ts_ms.is_none());
-            }
+            },
             _ => panic!("wrong variant"),
         }
     }

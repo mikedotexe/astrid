@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use futures_util::{SinkExt, StreamExt};
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tracing::{debug, error, info, warn};
 
@@ -42,7 +42,6 @@ pub struct BridgeState {
     pub spectral_fingerprint: Option<Vec<f32>>,
 
     // -- Metrics --
-
     /// Messages received from minime (telemetry direction).
     pub telemetry_received: u64,
     /// Messages sent to minime (sensory direction).
@@ -197,10 +196,10 @@ pub fn spawn_telemetry_subscriber(
                         let mut s = state.write().await;
                         s.telemetry_connected = false;
                     }
-                }
+                },
                 Err(e) => {
                     warn!(error = %e, "failed to connect to minime telemetry");
-                }
+                },
             }
 
             // Backoff before reconnecting.
@@ -229,7 +228,7 @@ async fn handle_telemetry_message(
         Err(e) => {
             warn!(error = %e, "failed to parse telemetry message");
             return;
-        }
+        },
     };
 
     let lambda1 = telemetry.lambda1();
@@ -237,7 +236,11 @@ async fn handle_telemetry_message(
     // minime sends fill_ratio as 0.0-1.0; convert to percentage.
     let fill_pct = telemetry.fill_pct();
     let safety = SafetyLevel::from_fill(fill_pct);
-    let phase = if fill_pct > 55.0 { "expanding" } else { "contracting" };
+    let phase = if fill_pct > 55.0 {
+        "expanding"
+    } else {
+        "contracting"
+    };
 
     // Update shared state.
     {
@@ -324,7 +327,7 @@ fn handle_safety_transition(
                 Ok(id) => *active_incident_id = Some(id),
                 Err(e) => error!(error = %e, "failed to log safety incident"),
             }
-        }
+        },
         // De-escalation: returning to green.
         (_, SafetyLevel::Green) => {
             info!(
@@ -337,7 +340,7 @@ fn handle_safety_transition(
             if let Some(id) = active_incident_id.take() {
                 let _ = db.resolve_incident(id);
             }
-        }
+        },
     }
 }
 
@@ -488,10 +491,10 @@ pub fn spawn_sensory_sender(
                         let mut s = state.write().await;
                         s.sensory_connected = false;
                     }
-                }
+                },
                 Err(e) => {
                     warn!(error = %e, "failed to connect to minime sensory input");
-                }
+                },
             }
 
             let delay = backoff.next_delay();
@@ -678,12 +681,8 @@ mod tests {
         // Green → Yellow → Orange → Red → Green (recovery).
         let fills = [0.50, 0.72, 0.85, 0.95, 0.40];
         for fill in fills {
-            handle_telemetry_message(
-                &make_eigenpacket(fill, 512.0 + fill * 512.0),
-                &state,
-                &db,
-            )
-            .await;
+            handle_telemetry_message(&make_eigenpacket(fill, 512.0 + fill * 512.0), &state, &db)
+                .await;
         }
 
         assert_eq!(state.read().await.safety_level, SafetyLevel::Green);

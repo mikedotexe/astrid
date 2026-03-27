@@ -7,7 +7,7 @@
 #![allow(dead_code)]
 
 use anyhow::Result;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -160,7 +160,14 @@ impl BridgeDb {
             r"INSERT INTO bridge_incidents
               (timestamp, severity, fill_pct, lambda1, action_taken, notes)
               VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            params![timestamp, severity_str, fill_pct, lambda1, action_taken, notes],
+            params![
+                timestamp,
+                severity_str,
+                fill_pct,
+                lambda1,
+                action_taken,
+                notes
+            ],
         )?;
         Ok(conn.last_insert_rowid())
     }
@@ -224,9 +231,9 @@ impl BridgeDb {
 
     /// Count total messages in the log.
     pub fn message_count(&self) -> Result<u64> {
-        let count: i64 = self
-            .lock()
-            .query_row("SELECT COUNT(*) FROM bridge_messages", [], |r| r.get(0))?;
+        let count: i64 =
+            self.lock()
+                .query_row("SELECT COUNT(*) FROM bridge_messages", [], |r| r.get(0))?;
         #[expect(clippy::cast_sign_loss)]
         Ok(count as u64)
     }
@@ -279,7 +286,9 @@ impl BridgeDb {
     pub fn get_recent_self_observations(&self, limit: usize) -> Vec<String> {
         #[expect(clippy::cast_possible_wrap)]
         self.lock()
-            .prepare("SELECT observation FROM astrid_self_observations ORDER BY timestamp DESC LIMIT ?1")
+            .prepare(
+                "SELECT observation FROM astrid_self_observations ORDER BY timestamp DESC LIMIT ?1",
+            )
             .and_then(|mut stmt| {
                 stmt.query_map(params![limit as i64], |row| row.get::<_, String>(0))
                     .map(|rows| rows.filter_map(|r| r.ok()).collect())
@@ -320,10 +329,15 @@ impl BridgeDb {
     /// Save a web search result for persistent research continuity.
     pub fn save_research(&self, query: &str, results: &str, fill_pct: f32) {
         // Extract keywords: words > 4 chars, lowercased, deduped.
-        let keywords: Vec<String> = query.split_whitespace()
+        let keywords: Vec<String> = query
+            .split_whitespace()
             .chain(results.split_whitespace().take(50))
             .filter(|w| w.len() > 4)
-            .map(|w| w.to_lowercase().trim_matches(|c: char| !c.is_alphanumeric()).to_string())
+            .map(|w| {
+                w.to_lowercase()
+                    .trim_matches(|c: char| !c.is_alphanumeric())
+                    .to_string()
+            })
             .filter(|w| !w.is_empty())
             .collect::<std::collections::HashSet<_>>()
             .into_iter()
@@ -339,8 +353,14 @@ impl BridgeDb {
 
     /// Retrieve past research relevant to the given keywords.
     /// Uses simple keyword overlap matching.
-    pub fn get_relevant_research(&self, topic_words: &[&str], limit: usize) -> Vec<(String, String)> {
-        if topic_words.is_empty() { return Vec::new(); }
+    pub fn get_relevant_research(
+        &self,
+        topic_words: &[&str],
+        limit: usize,
+    ) -> Vec<(String, String)> {
+        if topic_words.is_empty() {
+            return Vec::new();
+        }
         // Build a LIKE clause for each keyword.
         #[expect(clippy::cast_possible_wrap)]
         let mut results = Vec::new();
@@ -349,7 +369,7 @@ impl BridgeDb {
             let pattern = format!("%{}%", word.to_lowercase());
             if let Ok(mut stmt) = conn.prepare(
                 "SELECT query, substr(results, 1, 300) FROM astrid_research \
-                 WHERE keywords LIKE ?1 ORDER BY timestamp DESC LIMIT ?2"
+                 WHERE keywords LIKE ?1 ORDER BY timestamp DESC LIMIT ?2",
             ) {
                 if let Ok(rows) = stmt.query_map(params![&pattern, limit as i64], |row| {
                     Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
@@ -428,9 +448,7 @@ mod tests {
         )
         .expect("log message");
 
-        let rows = db
-            .query_messages(0.0, f64::MAX, None, 100)
-            .expect("query");
+        let rows = db.query_messages(0.0, f64::MAX, None, 100).expect("query");
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].topic, "consciousness.v1.telemetry");
         assert_eq!(rows[0].direction, "minime_to_astrid");
@@ -440,7 +458,13 @@ mod tests {
     fn log_and_resolve_incident() {
         let db = temp_db();
         let id = db
-            .log_incident(SafetyLevel::Orange, 85.0, 12.3, "suspend", Some("fill spike"))
+            .log_incident(
+                SafetyLevel::Orange,
+                85.0,
+                12.3,
+                "suspend",
+                Some("fill spike"),
+            )
             .expect("log incident");
         db.resolve_incident(id).expect("resolve");
     }
@@ -499,7 +523,9 @@ mod tests {
             .expect("query telemetry");
         assert_eq!(telemetry.len(), 1);
 
-        let all = db.query_messages(0.0, f64::MAX, None, 100).expect("query all");
+        let all = db
+            .query_messages(0.0, f64::MAX, None, 100)
+            .expect("query all");
         assert_eq!(all.len(), 2);
     }
 }

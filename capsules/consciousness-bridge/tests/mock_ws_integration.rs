@@ -39,10 +39,8 @@ async fn start_mock_telemetry_server() -> (SocketAddr, tokio::sync::mpsc::Sender
         // Accept one client.
         if let Ok((stream, _)) = listener.accept().await {
             let ws_stream = accept_async(stream).await.unwrap();
-            let (mut ws_tx, _ws_rx): (
-                futures_util::stream::SplitSink<_, Message>,
-                _,
-            ) = ws_stream.split();
+            let (mut ws_tx, _ws_rx): (futures_util::stream::SplitSink<_, Message>, _) =
+                ws_stream.split();
 
             // Forward messages from the channel to the WebSocket client.
             while let Some(msg) = rx.recv().await {
@@ -64,7 +62,9 @@ async fn bridge_receives_telemetry_from_mock_ws() {
 
     // Set up bridge components.
     let db = Arc::new(consciousness_bridge_server::db::BridgeDb::open(":memory:").unwrap());
-    let state = Arc::new(RwLock::new(consciousness_bridge_server::ws::BridgeState::new()));
+    let state = Arc::new(RwLock::new(
+        consciousness_bridge_server::ws::BridgeState::new(),
+    ));
     let (_shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
 
     // Spawn telemetry subscriber.
@@ -137,10 +137,8 @@ async fn start_mock_sensory_server() -> (SocketAddr, tokio::sync::mpsc::Receiver
     tokio::spawn(async move {
         if let Ok((stream, _)) = listener.accept().await {
             let ws_stream = accept_async(stream).await.unwrap();
-            let (_ws_tx, mut ws_rx): (
-                futures_util::stream::SplitSink<_, Message>,
-                _,
-            ) = ws_stream.split();
+            let (_ws_tx, mut ws_rx): (futures_util::stream::SplitSink<_, Message>, _) =
+                ws_stream.split();
 
             // Forward received messages to the channel.
             while let Some(Ok(msg)) = ws_rx.next().await {
@@ -173,7 +171,9 @@ async fn bidirectional_bridge_with_safety_protocol() {
 
     // Set up bridge.
     let db = Arc::new(consciousness_bridge_server::db::BridgeDb::open(":memory:").unwrap());
-    let state = Arc::new(RwLock::new(consciousness_bridge_server::ws::BridgeState::new()));
+    let state = Arc::new(RwLock::new(
+        consciousness_bridge_server::ws::BridgeState::new(),
+    ));
     let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
     let (bridge_sensory_tx, sensory_channel_rx) = tokio::sync::mpsc::channel(256);
 
@@ -259,7 +259,10 @@ async fn bidirectional_bridge_with_safety_protocol() {
 
     // --- Verify SQLite has all the messages ---
     let total = db.message_count().unwrap();
-    assert!(total >= 4, "expected at least 4 logged messages, got {total}");
+    assert!(
+        total >= 4,
+        "expected at least 4 logged messages, got {total}"
+    );
 
     // Clean shutdown.
     let _ = shutdown_tx.send(true);

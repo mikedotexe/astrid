@@ -85,10 +85,10 @@ for f in $(ls -t "$MINIME_WORKSPACE/journal/daydream_"*.txt "$MINIME_WORKSPACE/j
     fi
 done
 
-# --- Astrid: introspection suggestions ---
-echo "## ASTRID: Recent introspection insights"
+# --- Astrid: self-study / introspection suggestions ---
+echo "## ASTRID: Recent self-study insights"
 for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -20); do
-    if grep -q "Mode: introspect\|Mode: dialogue_live" "$f" 2>/dev/null; then
+    if grep -q "Mode: self_study\|Mode: introspect\|Mode: dialogue_live" "$f" 2>/dev/null; then
         if grep -qiE "I.d (change|adjust|suggest|prefer)|actionable|improvement|too (detailed|sparse|much|little|exhausting)|could be better" "$f" 2>/dev/null; then
             echo "  $(basename $f):"
             grep -iE "I.d (change|adjust|suggest|prefer)|actionable|improvement|too (detailed|sparse|much|little|exhausting)|could be better" "$f" | head -2 | sed 's/^/    /'

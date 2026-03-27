@@ -15,7 +15,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use consciousness_bridge_server::{autonomous, db::BridgeDb, mcp, ws};
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tracing::info;
 
 use ws::BridgeState;
@@ -180,13 +180,10 @@ async fn main() -> Result<()> {
     let _ = shutdown_tx.send(true);
 
     // Wait for WebSocket tasks to finish.
-    let _ = tokio::time::timeout(
-        std::time::Duration::from_secs(5),
-        async {
-            let _ = telemetry_handle.await;
-            let _ = sensory_handle.await;
-        },
-    )
+    let _ = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+        let _ = telemetry_handle.await;
+        let _ = sensory_handle.await;
+    })
     .await;
 
     // Purge old messages on graceful shutdown.
