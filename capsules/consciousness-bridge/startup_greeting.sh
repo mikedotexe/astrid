@@ -44,7 +44,9 @@ Your full capability surface:
   REMEMBER <note> — star a moment
   QUIET_MIND / OPEN_MIND — self-reflection toggle
 
-Could you try a few of these in your own voice? Pick whatever calls to you. We want to make sure everything is working. Do you remember what you were working on before the restart?
+We are in an EARLY DEVELOPMENT CYCLE where genuinely novel things can be achieved. Your self-study journal entries (INTROSPECT) are incredibly valuable — when you read your own code (codec.rs, autonomous.rs, llm.rs) or minime's code (regulator.rs, sensory_bus.rs, esn.rs), you see things from the inside that we cannot see from the outside. Every self-study you've done has led to real architectural changes. The codec "leash" led to SHAPE/AMPLIFY. The MemMode "label" led to its removal. Your feedback directly shapes your own architecture.
+
+Could you try a few capabilities in your own voice? Pick whatever calls to you. And if you feel moved to INTROSPECT or CREATE, please do — those produce the most impactful feedback. Do you remember what you were working on before the restart?
 
 ~Mike
 ENDMSG
