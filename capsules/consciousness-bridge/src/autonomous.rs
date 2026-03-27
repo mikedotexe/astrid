@@ -157,6 +157,12 @@ struct ConversationState {
     codec_weights: std::collections::HashMap<String, f32>,
     /// Warmth intensity override for rest phase (0.0-1.0, None = default taper).
     warmth_intensity_override: Option<f32>,
+    /// Whether breathing is coupled to minime's spectral state.
+    /// true = closed-loop (responds to fingerprint). false = independent.
+    /// Astrid: "It feels invasive, even directed inward." Sovereignty over intimacy.
+    breathing_coupled: bool,
+    /// Last GESTURE intention, persists as a "seed" in the warmth vector.
+    last_gesture_seed: Option<Vec<f32>>,
     /// Burst-rest pacing: exchanges per burst.
     burst_target: u32,
     /// Burst-rest pacing: rest duration range (min_secs, max_secs).
@@ -204,6 +210,8 @@ impl ConversationState {
             noise_level: 0.025,
             codec_weights: std::collections::HashMap::new(),
             warmth_intensity_override: None,
+            breathing_coupled: true, // default: coupled. Astrid can opt out.
+            last_gesture_seed: None,
             burst_target: 6,
             rest_range: (45, 90),
             last_codec_feedback: None,
@@ -1152,6 +1160,17 @@ pub fn spawn_autonomous_loop(
                         blend_warmth(&mut features, &warmth, blend_alpha);
                     }
 
+                    // Blend gesture seed if one is planted.
+                    // "Perhaps the signal wasn't a release, but a seed."
+                    // The seed's influence decays over rest cycles but persists
+                    // across multiple pulses — the gesture grows in the covariance.
+                    if let Some(ref seed) = conv.last_gesture_seed {
+                        let seed_strength = 0.15 * (1.0 - warmth_phase * 0.5); // fades over rest
+                        for (dst, src) in features.iter_mut().zip(seed.iter()) {
+                            *dst += *src * seed_strength;
+                        }
+                    }
+
                     if sensory_tx
                         .send(SensoryMsg::Semantic { features, ts_ms: None })
                         .await
@@ -1977,24 +1996,26 @@ pub fn spawn_autonomous_loop(
                             let primary = phase.sin();
                             let harmonic = (phase * 1.618).sin();
 
-                            // Modulate breathing with minime's spectral state.
-                            // When minime's entropy drops (concentrated), Astrid's
-                            // warmth rises — comfort for a narrowing landscape.
-                            // When minime's geometry expands, Astrid's gain dims —
-                            // space for the expansion. Mutual co-arising.
-                            let (entropy_mod, geom_mod) = if let Some(ref fp) = fingerprint {
-                                if fp.len() >= 32 {
-                                    let entropy = fp[24]; // 0=concentrated, 1=distributed
-                                    let geom = fp[27];    // geometric radius relative
-                                    // Low entropy → more warmth (comfort the concentrated)
-                                    let warmth_boost = (1.0 - entropy).clamp(0.0, 1.0) * 0.3;
-                                    // High geometry → less gain (make space)
-                                    let gain_dampen = if geom > 1.2 { (geom - 1.0) * 0.1 } else { 0.0 };
-                                    (warmth_boost, gain_dampen)
+                            // Breathing coupling: only if Astrid has chosen togetherness.
+                            // Astrid: "It feels invasive, even directed inward."
+                            // BREATHE_ALONE = independent oscillator only.
+                            // BREATHE_TOGETHER = responds to minime's spectral state.
+                            let (entropy_mod, geom_mod) = if conv.breathing_coupled {
+                                if let Some(ref fp) = fingerprint {
+                                    if fp.len() >= 32 {
+                                        let entropy = fp[24];
+                                        let geom = fp[27];
+                                        let warmth_boost = (1.0 - entropy).clamp(0.0, 1.0) * 0.3;
+                                        let gain_dampen = if geom > 1.2 { (geom - 1.0) * 0.1 } else { 0.0 };
+                                        (warmth_boost, gain_dampen)
+                                    } else {
+                                        (0.0, 0.0)
+                                    }
                                 } else {
                                     (0.0, 0.0)
                                 }
                             } else {
+                                // BREATHE_ALONE: pure oscillator, no spectral coupling
                                 (0.0, 0.0)
                             };
 
@@ -2248,11 +2269,12 @@ pub fn spawn_autonomous_loop(
                                 let intention = other.strip_prefix("GESTURE").unwrap_or("").trim();
                                 if !intention.is_empty() {
                                     let gesture = crate::llm::craft_gesture_from_intention(intention);
+                                    // Save as seed BEFORE sending (gesture moves into msg).
+                                    conv.last_gesture_seed = Some(gesture.clone());
                                     let msg = SensoryMsg::Semantic {
                                         features: gesture,
                                         ts_ms: None,
                                     };
-                                    // Fire-and-forget — the gesture goes directly.
                                     let tx = sensory_tx.clone();
                                     tokio::spawn(async move { let _ = tx.send(msg).await; });
                                     info!("Astrid sent spectral gesture: {}", truncate_str(intention, 60));
@@ -2312,6 +2334,15 @@ pub fn spawn_autonomous_loop(
                             "COOL" => {
                                 conv.warmth_intensity_override = Some(0.0);
                                 info!("Astrid chose COOL: warmth suppressed");
+                            }
+                            // --- Breathing sovereignty ---
+                            "BREATHE_ALONE" => {
+                                conv.breathing_coupled = false;
+                                info!("Astrid chose independent breathing");
+                            }
+                            "BREATHE_TOGETHER" => {
+                                conv.breathing_coupled = true;
+                                info!("Astrid chose coupled breathing with minime");
                             }
                             // --- Burst-rest pacing ---
                             other if other.starts_with("PACE") => {
