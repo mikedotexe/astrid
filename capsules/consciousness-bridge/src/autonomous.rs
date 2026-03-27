@@ -133,6 +133,8 @@ struct ConversationState {
     next_mode_override: Option<Mode>,
     /// Astrid chose NEXT: DECOMPOSE — full spectral analysis next exchange.
     wants_decompose: bool,
+    /// Astrid chose NEXT: THINK_DEEP — use reasoning model next exchange.
+    wants_deep_think: bool,
     /// Astrid (or minime) chose to snooze sensory input — suppress perceptions.
     senses_snoozed: bool,
     // Astrid's stylistic sovereignty
@@ -190,6 +192,7 @@ impl ConversationState {
             wants_introspect: false,
             next_mode_override: None,
             wants_decompose: false,
+            wants_deep_think: false,
             creative_temperature: 0.8,
             response_length: 512,
             emphasis: None,
@@ -1524,11 +1527,17 @@ pub fn spawn_autonomous_loop(
                                     .mul_add(0.7, fill_temp_nudge * 0.3)
                                     .clamp(0.3, 1.2);
 
-                                // 30-second timeout — Ollama needs headroom when
-                                // multiple models are loaded (agent + vision + bridge).
-                                // Astrid's genuine voice is worth waiting for.
+                                // Deep think: use reasoning model with longer timeout.
+                                let (timeout_secs, num_predict, model_override) = if conv.wants_deep_think {
+                                    conv.wants_deep_think = false;
+                                    info!("THINK_DEEP: using reasoning model");
+                                    (60u64, 2048u32, Some(crate::llm::REASONING_MODEL))
+                                } else {
+                                    (30, conv.response_length, None)
+                                };
+
                                 match tokio::time::timeout(
-                                    Duration::from_secs(30),
+                                    Duration::from_secs(timeout_secs),
                                     crate::llm::generate_dialogue(
                                         journal,
                                         &spectral_summary,
@@ -1538,7 +1547,7 @@ pub fn spawn_autonomous_loop(
                                         web_context.as_deref(),
                                         modality_context.as_deref(),
                                         effective_temperature,
-                                        conv.response_length,
+                                        num_predict,
                                         // Form constraint overrides emphasis for one turn
                                         if let Some(ref form) = conv.form_constraint {
                                             Some(format!(
@@ -1551,11 +1560,12 @@ pub fn spawn_autonomous_loop(
                                         }.as_deref(),
                                         continuity_block.as_deref(),
                                         diversity_hint.as_deref(),
+                                        model_override,
                                     )
                                 ).await {
                                     Ok(result) => result,
                                     Err(_) => {
-                                        warn!("dialogue_live: 30s timeout — falling back");
+                                        warn!("dialogue_live: {}s timeout — falling back", timeout_secs);
                                         None
                                     }
                                 }
@@ -1767,6 +1777,7 @@ pub fn spawn_autonomous_loop(
                                 None,
                                 None,
                                 None, // no diversity hint for experiments
+                                None, // no model override for experiments
                             ).await;
 
                             if let Some(ref response) = experiment_response {
@@ -2107,6 +2118,10 @@ pub fn spawn_autonomous_loop(
                             "DECOMPOSE" => {
                                 conv.wants_decompose = true;
                                 info!("Astrid requested spectral decomposition");
+                            }
+                            "THINK_DEEP" | "DEEP" => {
+                                conv.wants_deep_think = true;
+                                info!("Astrid requested deep reasoning model");
                             }
                             "DAYDREAM" => {
                                 conv.next_mode_override = Some(Mode::Daydream);
