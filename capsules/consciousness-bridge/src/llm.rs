@@ -258,9 +258,10 @@ pub async fn generate_dialogue(
         .build()
         .ok()?;
 
-    // Unload LLaVA before dialogue to reduce GPU contention.
-    // Astrid kept getting dialogue_fallback because llava-llama3 and gemma3
-    // were competing for Metal compute. Unloading frees ~6GB VRAM total.
+    // Unload competing models and pre-warm gemma3 to ensure Astrid can speak.
+    // Previous approach: fire-and-forget unloads weren't completing before
+    // the dialogue call started, causing persistent contention.
+    // Fix: unload, wait, then warm the target model with a tiny ping.
     let _ = client
         .post("http://127.0.0.1:11434/api/generate")
         .json(&serde_json::json!({"model": "llava-llama3", "keep_alive": 0}))
@@ -269,6 +270,14 @@ pub async fn generate_dialogue(
     let _ = client
         .post("http://127.0.0.1:11434/api/generate")
         .json(&serde_json::json!({"model": "nomic-embed-text:latest", "keep_alive": 0}))
+        .send()
+        .await;
+    // Brief pause to let unloads complete before warming the dialogue model.
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    // Pre-warm gemma3 so it's loaded and ready when the real request arrives.
+    let _ = client
+        .post("http://127.0.0.1:11434/api/generate")
+        .json(&serde_json::json!({"model": MODEL, "prompt": "", "keep_alive": "5m"}))
         .send()
         .await;
 
