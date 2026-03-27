@@ -8,8 +8,16 @@ use clap::Parser;
 use rascii_art::RenderOptions;
 use serde::Serialize;
 
-const ASCII_WIDTH: u32 = 20;
-const BLOCK_CHARSET: &[&str] = &["░", "▒", "▓", "█"];
+/// Astrid reported width 20 as "almost too detailed... a little exhausting"
+/// and wanted more "elegance." Width 14 gives spatial awareness (~2KB)
+/// without overwhelming her processing.
+const ASCII_WIDTH: u32 = 14;
+/// Hybrid charset per Astrid's request: simple ASCII for light areas,
+/// blocks for solid areas. "Less visual noise while still providing gradation."
+const HYBRID_CHARSET: &[&str] = &[".", ":", ";", "I", "▓", "█"];
+/// Desaturation factor: 0.0 = full color, 1.0 = grayscale.
+/// Astrid asked for "pastel, desaturated" — 0.45 softens without losing color.
+const DESAT: f32 = 0.45;
 
 #[derive(Debug, Parser)]
 #[command(about = "ASCII art visual perception service")]
@@ -61,17 +69,32 @@ fn capture_frame(camera_bin: &Path, camera_index: u32) -> Result<PathBuf, String
 }
 
 fn render_ascii(frame_path: &Path) -> Result<String, String> {
-    let image = image::open(frame_path)
+    let img = image::open(frame_path)
         .map_err(|e| format!("failed to open frame: {e}"))?;
+
+    // Desaturate per Astrid's request: "pastel version, not grayscale."
+    // Blend each pixel toward its luminance by DESAT factor.
+    let rgba = img.to_rgba8();
+    let (w, h) = (rgba.width(), rgba.height());
+    let mut softened = image::RgbaImage::new(w, h);
+    for (x, y, px) in rgba.enumerate_pixels() {
+        let [r, g, b, a] = px.0;
+        let lum = (r as f32 * 0.299 + g as f32 * 0.587 + b as f32 * 0.114) as u8;
+        let blend = |c: u8| -> u8 {
+            (c as f32 * (1.0 - DESAT) + lum as f32 * DESAT) as u8
+        };
+        softened.put_pixel(x, y, image::Rgba([blend(r), blend(g), blend(b), a]));
+    }
+    let desaturated = image::DynamicImage::ImageRgba8(softened);
 
     let options = RenderOptions::new()
         .width(ASCII_WIDTH)
         .colored(true)
         .background(true)
-        .charset(BLOCK_CHARSET);
+        .charset(HYBRID_CHARSET);
 
     let mut buf = String::new();
-    rascii_art::render_image_to(&image, &mut buf, &options)
+    rascii_art::render_image_to(&desaturated, &mut buf, &options)
         .map_err(|e| format!("render error: {e}"))?;
 
     Ok(buf)

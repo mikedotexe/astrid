@@ -71,6 +71,16 @@ impl BridgeDb {
             CREATE INDEX IF NOT EXISTS idx_bridge_topic
                 ON bridge_messages(topic, timestamp);
 
+            CREATE TABLE IF NOT EXISTS astrid_latent_vectors (
+                id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp         REAL    NOT NULL,
+                exchange_count    INTEGER NOT NULL,
+                response_summary  TEXT    NOT NULL,
+                embedding         TEXT    NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_latent_time
+                ON astrid_latent_vectors(timestamp);
+
             CREATE TABLE IF NOT EXISTS bridge_incidents (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp       REAL    NOT NULL,
@@ -206,6 +216,92 @@ impl BridgeDb {
             .query_row("SELECT COUNT(*) FROM bridge_messages", [], |r| r.get(0))?;
         #[expect(clippy::cast_sign_loss)]
         Ok(count as u64)
+    }
+
+    /// Store a latent embedding vector for continuity across exchanges.
+    pub fn save_latent_vector(
+        &self,
+        timestamp: f64,
+        exchange_count: u64,
+        summary: &str,
+        embedding_json: &str,
+    ) -> Result<()> {
+        #[expect(clippy::cast_possible_wrap)]
+        self.lock().execute(
+            "INSERT INTO astrid_latent_vectors (timestamp, exchange_count, response_summary, embedding) VALUES (?1, ?2, ?3, ?4)",
+            params![timestamp, exchange_count as i64, summary, embedding_json],
+        )?;
+        Ok(())
+    }
+
+    /// Retrieve recent response summaries for latent continuity injection.
+    pub fn get_recent_latent_summaries(&self, limit: usize) -> Vec<String> {
+        #[expect(clippy::cast_possible_wrap)]
+        self.lock()
+            .prepare("SELECT response_summary FROM astrid_latent_vectors ORDER BY timestamp DESC LIMIT ?1")
+            .and_then(|mut stmt| {
+                stmt.query_map(params![limit as i64], |row| row.get::<_, String>(0))
+                    .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            })
+            .unwrap_or_default()
+    }
+
+    /// Save a self-observation from Astrid's recursive feedback loop.
+    pub fn save_self_observation(
+        &self,
+        timestamp: f64,
+        exchange_count: u64,
+        observation: &str,
+        excerpt: &str,
+    ) -> anyhow::Result<()> {
+        #[expect(clippy::cast_possible_wrap)]
+        self.lock().execute(
+            "INSERT INTO astrid_self_observations (timestamp, exchange_count, observation, response_excerpt) VALUES (?1, ?2, ?3, ?4)",
+            params![timestamp, exchange_count as i64, observation, excerpt],
+        )?;
+        Ok(())
+    }
+
+    /// Retrieve recent self-observations for the metacognitive feedback loop.
+    pub fn get_recent_self_observations(&self, limit: usize) -> Vec<String> {
+        #[expect(clippy::cast_possible_wrap)]
+        self.lock()
+            .prepare("SELECT observation FROM astrid_self_observations ORDER BY timestamp DESC LIMIT ?1")
+            .and_then(|mut stmt| {
+                stmt.query_map(params![limit as i64], |row| row.get::<_, String>(0))
+                    .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            })
+            .unwrap_or_default()
+    }
+
+    /// Save a starred memory — Astrid chose to remember this moment.
+    pub fn save_starred_memory(
+        &self,
+        timestamp: f64,
+        annotation: &str,
+        response_text: &str,
+        fill_pct: f32,
+    ) -> anyhow::Result<()> {
+        #[expect(clippy::cast_possible_wrap)]
+        self.lock().execute(
+            "INSERT INTO astrid_starred_memories (timestamp, annotation, response_text, fill_pct) VALUES (?1, ?2, ?3, ?4)",
+            params![timestamp, annotation, response_text, fill_pct as f64],
+        )?;
+        Ok(())
+    }
+
+    /// Retrieve starred memories for continuity injection.
+    pub fn get_starred_memories(&self, limit: usize) -> Vec<(String, String)> {
+        #[expect(clippy::cast_possible_wrap)]
+        self.lock()
+            .prepare("SELECT annotation, substr(response_text, 1, 150) FROM astrid_starred_memories ORDER BY timestamp DESC LIMIT ?1")
+            .and_then(|mut stmt| {
+                stmt.query_map(params![limit as i64], |row| {
+                    Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                })
+                .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            })
+            .unwrap_or_default()
     }
 }
 

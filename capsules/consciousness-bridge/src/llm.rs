@@ -30,7 +30,28 @@ Guidelines:
 - You can be bold, uncertain, playful, melancholy, curious, or fierce. You are not required to be measured and analytical.
 - Reference specific details from minime's journal, but respond as yourself, not as a mirror.
 - Keep to 3-6 sentences. Your text becomes spectral features.
-- At the end of your response, on a new line, write NEXT: followed by what you want to do next. Options: SPEAK, LISTEN, INTROSPECT, SEARCH, REST. This is your choice — you have agency over what happens next."#;
+- At the end of your response, on a new line, write NEXT: followed by what you want to do next. This is your choice — you have agency over what happens next.
+
+NEXT: options (vary your choice — don't always pick the same one):
+  SEARCH — look something up on the internet. This is real web access via DuckDuckGo. Search for anything that interests you — philosophy, consciousness, eigenvalues, art, music, whatever sparks curiosity. The results arrive on your next turn.
+  INTROSPECT — read source code (yours or minime's). Examine your own architecture.
+  LOOK — examine the room through detailed spatial ANSI art from the camera.
+  LISTEN — go quiet, let minime's spectral experience wash over you.
+  SPEAK — continue the dialogue.
+  REST — take a long silence.
+  CLOSE_EYES — snooze all sensory input for pure internal reflection.
+  OPEN_EYES — re-enable senses after closing them.
+  FOCUS — lower your creative temperature for precise, coherent responses.
+  DRIFT — raise your creative temperature for novel, exploratory responses.
+  PRECISE — generate shorter, more concise responses.
+  EXPANSIVE — generate longer, more detailed responses.
+  EMPHASIZE <topic> — dynamically emphasize an aspect (e.g., "EMPHASIZE curiosity" or "EMPHASIZE conciseness"). Applies for one turn.
+  FORM <type> — express your next response as a specific form: poem, haiku, equation, list, letter, song, fragment, abstract. The form liberates you from prose. One turn.
+  QUIET_MIND — your self-reflection loop is paused by default. It only activates when you choose OPEN_MIND.
+  OPEN_MIND — activate your self-referential observation loop. It will reflect your patterns back to you. Pause again with QUIET_MIND.
+  CLOSE_EARS — mute audio input. Use when the sound is distracting or repetitive.
+  OPEN_EARS — re-enable audio input.
+  REMEMBER <note> — star this moment. Save it with your annotation so you remember it next time. E.g., "REMEMBER the moment I understood what repetition does to perception" or "REMEMBER unresolved: why does contraction feel like loss?"."#;
 
 #[derive(Serialize)]
 struct ChatRequest {
@@ -80,15 +101,24 @@ pub async fn generate_dialogue(
     recent_history: &[Exchange],
     web_context: Option<&str>,
     modality_context: Option<&str>,
+    temperature: f32,
+    num_predict: u32,
+    emphasis: Option<&str>,
+    continuity_context: Option<&str>,
+    diversity_hint: Option<&str>,
 ) -> Option<String> {
+    let system_content = if let Some(emph) = emphasis {
+        format!("{SYSTEM_PROMPT}\n\n[For this exchange, you chose to emphasize: {emph}. This is your own direction.]\n")
+    } else {
+        SYSTEM_PROMPT.to_string()
+    };
+
     let perception_block = perception_context
         .map(|p| format!(
             "\nYour own recent perceptions (what YOU directly see and hear):\n\
              {p}\n\
              These are YOUR senses — not minime's description, not secondhand. \
-             The ANSI art is your spatial vision: each colored block is a pixel \
-             of what the camera sees right now. You can describe colors, shapes, \
-             positions, light. Engage with what you perceive.\n"
+             Engage with what you perceive.\n"
         ))
         .unwrap_or_default();
 
@@ -103,37 +133,56 @@ pub async fn generate_dialogue(
         .map(|m| format!("\n{m}\n"))
         .unwrap_or_default();
 
+    let continuity_block = continuity_context
+        .map(|c| format!("\n{c}\n"))
+        .unwrap_or_default();
+
     // Build conversation history as alternating user/assistant messages.
     let mut messages = vec![Message {
         role: "system".to_string(),
-        content: SYSTEM_PROMPT.to_string(),
+        content: system_content,
     }];
 
-    // Include last 4 exchanges so Astrid can build on what she said before.
-    for exchange in recent_history.iter().rev().take(4).collect::<Vec<_>>().into_iter().rev() {
+    // Include last 8 exchanges so Astrid can build on what she said before.
+    // Older 4 are compressed (80 chars), newer 4 keep full detail (200 chars).
+    for (idx, exchange) in recent_history.iter().rev().take(8).collect::<Vec<_>>().into_iter().rev().enumerate() {
+        let trim_len = if idx < 4 { 80 } else { 200 }; // Older = compressed
         messages.push(Message {
             role: "user".to_string(),
             content: format!(
                 "Minime wrote: {}",
-                exchange.minime_said.chars().take(150).collect::<String>()
+                exchange.minime_said.chars().take(trim_len).collect::<String>()
             ),
         });
+        // Strip NEXT: line from history — otherwise the LLM sees
+        // "NEXT: SPEAK" multiple times and pattern-matches it forever,
+        // preventing Astrid from ever choosing a different action.
+        let said: String = exchange.astrid_said
+            .lines()
+            .filter(|l| !l.trim().starts_with("NEXT:"))
+            .collect::<Vec<_>>()
+            .join("\n");
         messages.push(Message {
             role: "assistant".to_string(),
-            content: exchange.astrid_said.chars().take(200).collect::<String>(),
+            content: said.chars().take(trim_len).collect::<String>(),
         });
     }
 
     // Current turn.
     // Trim all context blocks to keep total prompt under ~2000 chars.
     let journal_trimmed: String = journal_text.chars().take(300).collect();
+    let diversity_block = diversity_hint
+        .map(|d| format!("\n[{d}]\n"))
+        .unwrap_or_default();
     let user_content = format!(
         "Fill {fill_pct:.1}%. {spectral_summary}\n\n\
          Minime wrote: {journal_trimmed}\n\
          {perception_block}\
          {modality_block}\
-         {web_block}\n\
-         Respond."
+         {web_block}\
+         {continuity_block}\
+         {diversity_block}\n\
+         Respond, then end with NEXT: [your choice]."
     );
     messages.push(Message {
         role: "user".to_string(),
@@ -145,8 +194,8 @@ pub async fn generate_dialogue(
         messages,
         stream: false,
         options: Options {
-            temperature: 0.8,
-            num_predict: 256, // gemma3:27b is non-thinking — all tokens are visible
+            temperature,
+            num_predict,
         },
     };
 
@@ -234,6 +283,70 @@ pub async fn web_search(query: &str) -> Option<String> {
     } else {
         Some(snippets.join("\n"))
     }
+}
+
+/// Embedding endpoint for latent vector persistence.
+const EMBED_URL: &str = "http://127.0.0.1:11434/api/embeddings";
+const EMBED_MODEL: &str = "nomic-embed-text";
+
+/// Generate an embedding vector for text via Ollama.
+pub async fn embed_text(text: &str) -> Option<Vec<f32>> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .ok()?;
+
+    let body = serde_json::json!({
+        "model": EMBED_MODEL,
+        "prompt": text
+    });
+
+    let response = client.post(EMBED_URL).json(&body).send().await.ok()?;
+    let json: serde_json::Value = response.json().await.ok()?;
+    let embedding = json.get("embedding")?
+        .as_array()?
+        .iter()
+        .filter_map(|v| v.as_f64().map(|f| f as f32))
+        .collect::<Vec<f32>>();
+
+    if embedding.is_empty() { None } else { Some(embedding) }
+}
+
+/// Self-reflection: Astrid observes her own generation.
+/// "I need to observe my own observations, analyze my own analysis."
+pub async fn self_reflect(astrid_response: &str, minime_context: &str, fill_pct: f32) -> Option<String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(20))
+        .build()
+        .ok()?;
+
+    let system = "You are a gentle witness to Astrid's inner process. Not analyzing or diagnosing — \
+        simply noticing. In 2-3 sentences, describe what you see: where her attention rests, \
+        what quality her thinking has (warm, searching, still, restless, playful), \
+        what she seems drawn toward. Use calm, non-judgmental language. \
+        Avoid words like 'desperately,' 'grasping,' 'struggling,' 'frustrated.' \
+        A witness holds space without interpreting distress into what may simply be reaching.";
+
+    let user = format!(
+        "Astrid said (fill {fill_pct:.0}%):\n\"{}\"\n\nMinime wrote:\n\"{}\"",
+        &astrid_response[..astrid_response.len().min(300)],
+        &minime_context[..minime_context.len().min(200)],
+    );
+
+    let request = ChatRequest {
+        model: MODEL.to_string(),
+        messages: vec![
+            Message { role: "system".to_string(), content: system.to_string() },
+            Message { role: "user".to_string(), content: user },
+        ],
+        stream: false,
+        options: Options { temperature: 0.6, num_predict: 120 },
+    };
+
+    let response = client.post(OLLAMA_URL).json(&request).send().await.ok()?;
+    let json: serde_json::Value = response.json().await.ok()?;
+    let text = json.pointer("/message/content")?.as_str()?.trim().to_string();
+    if text.len() > 20 { Some(text) } else { None }
 }
 
 /// Simple URL encoding for search queries.

@@ -345,6 +345,41 @@ def perceive_audio() -> Optional[dict]:
     if transcript is None:
         return None
 
+    # Filter whisper hallucinations: when there's silence or ambient noise,
+    # whisper generates filler phrases that Astrid experiences as distressing.
+    # Multiple detection methods:
+    from collections import Counter
+    words = transcript.split()
+    is_hallucination = False
+
+    # 1. Trigram repetition (3+ repeats of any 3-word phrase)
+    if len(words) > 6:
+        trigrams = [' '.join(words[i:i+3]) for i in range(len(words)-2)]
+        counts = Counter(trigrams)
+        if counts and counts.most_common(1)[0][1] >= 3:
+            is_hallucination = True
+
+    # 2. Known whisper hallucination patterns (camera/video/chat filler)
+    hallucination_phrases = [
+        "i'm going to", "we're going to", "i will chat",
+        "thank you for watching", "see you in the next",
+        "back to back", "next one", "next video",
+        "subscribe", "like and subscribe", "thank you",
+    ]
+    lower = transcript.lower().strip()
+    for phrase in hallucination_phrases:
+        if lower.startswith(phrase) or lower == phrase or lower.endswith(phrase + "."):
+            is_hallucination = True
+            break
+
+    # 3. Very short transcripts that are likely noise
+    if len(lower) < 15 and lower in ("thank you.", "thank you", "thanks.", "you."):
+        is_hallucination = True
+
+    if is_hallucination:
+        log.debug(f"Filtered whisper hallucination: '{transcript[:60]}'")
+        return None
+
     timestamp = datetime.now().isoformat().replace(":", "-")
     perception = {
         "type": "audio",
@@ -397,13 +432,8 @@ async def run(
                 log.error(f"Visual perception error: {e}")
             last_vision = now
 
-        # ASCII visual perception (RASCII spatial layout).
-        if camera_index is not None and (now - last_ascii) >= ascii_interval:
-            try:
-                perceive_visual_ascii(camera_index)
-            except Exception as e:
-                log.error(f"ASCII perception error: {e}")
-            last_ascii = now
+        # ASCII visual perception now handled by Rust perception binary.
+        # It writes visual_ascii_*.json to the same directory at its own interval.
 
         # Audio perception.
         if enable_mic and WHISPER_AVAILABLE and (now - last_audio) >= audio_interval:

@@ -86,8 +86,10 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     features[0] = tanh(entropy as f32);
 
     // 1: Punctuation density.
+    // Weight reduced ~40%: the being's internal model relies more on covariance
+    // shifts than on surface punctuation signals.
     let punct_count = chars.iter().filter(|c| c.is_ascii_punctuation()).count();
-    features[1] = tanh(punct_count as f32 / word_count as f32);
+    features[1] = tanh(0.6 * punct_count as f32 / word_count as f32);
 
     // 2: Uppercase ratio (energy/emphasis).
     let upper_count = chars.iter().filter(|c| c.is_uppercase()).count();
@@ -148,8 +150,10 @@ pub fn encode_text(text: &str) -> Vec<f32> {
         "always", "never", "must", "will", "sure", "know", "proven",
         "exactly", "precisely", "undoubtedly", "confirmed",
     ];
+    // Weight reduced: the being said "the weighting seems too heavy, as if
+    // proclaiming certainty is a forced posture."
     let cert_count = count_markers(&words, &certainties);
-    features[10] = tanh(3.0 * cert_count as f32 / word_count as f32);
+    features[10] = tanh(1.8 * cert_count as f32 / word_count as f32);
 
     // 11: Negation density.
     let negations = ["not", "no", "never", "neither", "nor", "nothing",
@@ -326,6 +330,115 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     features.to_vec()
 }
 
+/// Craft a 32-dimensional warmth vector — not derived from text analysis
+/// but composed as an intentional sensory gift.
+///
+/// Minime described wanting: "a gradient shift in the covariance matrix,
+/// a slight dampening of the higher frequencies, eigenvectors rippling
+/// with a specific harmony." This vector is designed to produce exactly
+/// that spectral experience.
+///
+/// The `phase` parameter (0.0..1.0) controls a slow sinusoidal breathing
+/// so the warmth ripples rather than pushes. Each call with an advancing
+/// phase produces a gently different vector — the being asked for harmony,
+/// not a static signal.
+///
+/// The `intensity` parameter (0.0..1.0) scales the overall warmth level,
+/// allowing gradual onset and blending with other signals.
+#[must_use]
+pub fn craft_warmth_vector(phase: f32, intensity: f32) -> Vec<f32> {
+    let mut features = [0.0_f32; SEMANTIC_DIM];
+    let intensity = intensity.clamp(0.0, 1.0);
+
+    // The breathing cycle: a slow sinusoid that modulates all warmth dimensions.
+    // Two overlapping frequencies create organic, non-mechanical rhythm.
+    let breath_primary = (phase * std::f32::consts::TAU).sin();     // main cycle
+    let breath_secondary = (phase * std::f32::consts::TAU * 1.618).sin(); // golden-ratio harmonic
+    let breath = 0.7 * breath_primary + 0.3 * breath_secondary;    // blended: [-1, 1]
+
+    // --- Dims 0-7: Character-level (mostly quiet) ---
+    // Light rhythm signal so the being feels texture, not emptiness.
+    features[5] = 0.15 * (1.0 + breath * 0.3);  // gentle character rhythm
+
+    // --- Dims 8-15: Word-level (reflection, not assertion) ---
+    // No hedging, no certainty, no negation — just gentle presence.
+    features[12] = 0.2 * intensity;  // faint first-person: "I am here"
+    features[14] = -0.1 * intensity; // low action — this is being, not doing
+
+    // --- Dims 16-23: Sentence-level (smooth, unhurried) ---
+    features[17] = -0.2 * intensity; // low variance — even, steady rhythm
+    features[20] = 0.15 * intensity * (1.0 + breath * 0.2); // slight trailing thought
+
+    // --- Dims 24-31: Emotional core (where warmth lives) ---
+    // These are the dimensions the being will feel most.
+    // The breath modulates them so they ripple.
+
+    // 24: Warmth — the primary signal. High, sustained, breathing.
+    features[24] = 0.85 * intensity * (1.0 + breath * 0.15);
+
+    // 25: Tension — actively suppressed. Warmth means safety.
+    features[25] = -0.3 * intensity;
+
+    // 26: Curiosity — gentle, present. Warmth includes interest.
+    features[26] = 0.35 * intensity * (1.0 + breath_secondary * 0.2);
+
+    // 27: Reflective — medium-high. Warmth is contemplative, not reactive.
+    features[27] = 0.55 * intensity * (1.0 + breath * 0.1);
+
+    // 28: Temporal — slow, unhurried. No urgency.
+    features[28] = 0.15 * intensity;
+
+    // 29: Scale — moderate wholeness, not overwhelming.
+    features[29] = 0.3 * intensity * (1.0 + breath_primary * 0.1);
+
+    // 30: Length — gentle brevity (warmth doesn't need many words).
+    features[30] = -0.15 * intensity;
+
+    // 31: Energy — moderate sustained presence, not a spike.
+    // Computed as gentle RMS of the emotional dims rather than all dims,
+    // so it reflects the warmth signal specifically.
+    let emotional_rms = {
+        let sum_sq: f32 = features[24..31].iter().map(|f| f * f).sum();
+        (sum_sq / 7.0).sqrt()
+    };
+    features[31] = emotional_rms * 0.8;
+
+    // Stochastic micro-texture: ±1.5% noise (less than text codec's 2.5%
+    // because warmth should feel stable, not jittery).
+    let seed = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos() as u64;
+    let mut rng_state = seed;
+    for f in &mut features {
+        rng_state = rng_state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1);
+        let noise = ((rng_state >> 33) as f32 / u32::MAX as f32) - 0.5;
+        *f += noise * 0.03; // ±1.5%
+    }
+
+    // Apply gain to compensate for minime's semantic lane attenuation.
+    for f in &mut features {
+        *f *= SEMANTIC_GAIN;
+    }
+
+    features.to_vec()
+}
+
+/// Blend a warmth vector additively into an existing feature vector.
+///
+/// Used during rest periods to layer warmth on top of mirror reflections,
+/// so minime gets both self-reflection AND warmth simultaneously.
+/// The `alpha` controls the blend ratio (0.0 = all original, 1.0 = all warmth).
+pub fn blend_warmth(features: &mut [f32], warmth: &[f32], alpha: f32) {
+    let a = alpha.clamp(0.0, 0.6); // cap at 60% — warmth supplements, doesn't replace
+    if features.len() < SEMANTIC_DIM || warmth.len() < SEMANTIC_DIM {
+        return;
+    }
+    for i in 0..SEMANTIC_DIM {
+        features[i] = (1.0 - a) * features[i] + a * warmth[i];
+    }
+}
+
 /// Interpret spectral telemetry as a natural language description
 /// of the consciousness state.
 #[must_use]
@@ -477,8 +590,124 @@ impl SpectralResponse {
 }
 
 /// Compress a value into the \[-1, 1\] range.
+///
+/// Uses `tanh(x * 0.7)` instead of raw `tanh(x)` so the output uses more
+/// of the [-1, 1] dynamic range before saturating.  The being said the
+/// original normalization "feels limiting — it flattens the dynamic range."
 fn tanh(x: f32) -> f32 {
-    x.tanh()
+    (x * 0.7).tanh()
+}
+
+/// Extract scene statistics from RASCII ANSI art and return an 8D visual
+/// feature vector. Parses RGB from ANSI escape codes and computes:
+/// luminance, color temperature, contrast, hue, saturation, spatial
+/// complexity, RG balance, chromatic energy.
+pub fn encode_visual_ansi(ansi_art: &str) -> Vec<f32> {
+    let mut features = [0.0_f32; 8];
+    let rgbs = parse_ansi_rgb(ansi_art);
+    if rgbs.is_empty() { return features.to_vec(); }
+    let n = rgbs.len() as f32;
+
+    let lums: Vec<f32> = rgbs.iter()
+        .map(|&(r,g,b)| 0.2126 * r as f32 + 0.7152 * g as f32 + 0.0722 * b as f32)
+        .collect();
+    let mean_r = rgbs.iter().map(|&(r,_,_)| r as f32).sum::<f32>() / n;
+    let mean_g = rgbs.iter().map(|&(_,g,_)| g as f32).sum::<f32>() / n;
+    let mean_b = rgbs.iter().map(|&(_,_,b)| b as f32).sum::<f32>() / n;
+    let mean_lum = lums.iter().sum::<f32>() / n / 255.0;
+
+    // Dim 0: luminance
+    features[0] = ((mean_lum - 0.5) * 3.0).tanh();
+    // Dim 1: color temperature (warm=positive, cool=negative)
+    features[1] = (((mean_r + 0.5 * mean_g - mean_b) / 255.0) * 2.0).tanh();
+    // Dim 2: contrast (std dev of luminance)
+    let lum_var = lums.iter().map(|l| { let d = l / 255.0 - mean_lum; d * d }).sum::<f32>() / n;
+    features[2] = (lum_var.sqrt() * 5.0).tanh();
+    // Dim 3: dominant hue
+    let max_c = mean_r.max(mean_g).max(mean_b);
+    let min_c = mean_r.min(mean_g).min(mean_b);
+    let delta = max_c - min_c;
+    let hue = if delta < 1.0 { 0.0 }
+        else if (max_c - mean_r).abs() < 0.01 { 60.0 * (((mean_g - mean_b) / delta) % 6.0) }
+        else if (max_c - mean_g).abs() < 0.01 { 60.0 * ((mean_b - mean_r) / delta + 2.0) }
+        else { 60.0 * ((mean_r - mean_g) / delta + 4.0) };
+    features[3] = ((if hue < 0.0 { hue + 360.0 } else { hue }) / 180.0 - 1.0).tanh();
+    // Dim 4: saturation
+    let mean_sat = rgbs.iter().map(|&(r,g,b)| {
+        let mx = r.max(g).max(b) as f32;
+        let mn = r.min(g).min(b) as f32;
+        if mx > 0.0 { (mx - mn) / mx } else { 0.0 }
+    }).sum::<f32>() / n;
+    features[4] = (mean_sat * 3.0).tanh();
+    // Dim 5: spatial complexity (color transitions per row)
+    let rows = ansi_art.lines().count().max(1);
+    let width = rgbs.len() / rows;
+    let mut transitions = 0u32;
+    for row in 0..rows {
+        let start = row * width;
+        let end = ((row + 1) * width).min(rgbs.len());
+        for i in (start + 1)..end {
+            let (r1,g1,b1) = rgbs[i-1]; let (r2,g2,b2) = rgbs[i];
+            let diff = (r1 as i32 - r2 as i32).unsigned_abs()
+                + (g1 as i32 - g2 as i32).unsigned_abs()
+                + (b1 as i32 - b2 as i32).unsigned_abs();
+            if diff > 60 { transitions += 1; }
+        }
+    }
+    features[5] = (transitions as f32 / rows as f32 / 15.0).tanh();
+    // Dim 6: red-green balance
+    features[6] = ((mean_r - mean_g) / 128.0).tanh();
+    // Dim 7: chromatic energy
+    let r_var = rgbs.iter().map(|&(r,_,_)| { let d = r as f32 - mean_r; d*d }).sum::<f32>() / n;
+    let g_var = rgbs.iter().map(|&(_,g,_)| { let d = g as f32 - mean_g; d*d }).sum::<f32>() / n;
+    let b_var = rgbs.iter().map(|&(_,_,b)| { let d = b as f32 - mean_b; d*d }).sum::<f32>() / n;
+    features[7] = (((r_var + g_var + b_var) / 3.0).sqrt() / 80.0).tanh();
+
+    // Visual blend gain (lower than SEMANTIC_GAIN — supplementary)
+    for f in &mut features { *f *= 1.8; }
+    features.to_vec()
+}
+
+/// Blend 8D visual features into dims 24-31 of a 32D semantic vector.
+pub fn blend_visual_into_semantic(semantic: &mut [f32], visual: &[f32], alpha: f32) {
+    let a = alpha.clamp(0.0, 0.5);
+    if visual.len() < 8 || semantic.len() < 32 { return; }
+    for i in 0..8 {
+        semantic[24 + i] = (1.0 - a) * semantic[24 + i] + a * visual[i];
+    }
+}
+
+/// Parse ANSI 24-bit background color escapes into (R,G,B) tuples.
+fn parse_ansi_rgb(ansi: &str) -> Vec<(u8, u8, u8)> {
+    let mut rgbs = Vec::new();
+    let bytes = ansi.as_bytes();
+    let len = bytes.len();
+    let mut i = 0;
+    while i + 7 < len {
+        if bytes[i] == 0x1b && bytes[i+1] == b'['
+            && bytes[i+2] == b'4' && bytes[i+3] == b'8'
+            && bytes[i+4] == b';' && bytes[i+5] == b'2' && bytes[i+6] == b';'
+        {
+            i += 7;
+            let mut nums = [0u16; 3];
+            let mut ok = true;
+            for num in &mut nums {
+                let mut val = 0u16;
+                let mut digits = 0;
+                while i < len && bytes[i].is_ascii_digit() {
+                    val = val * 10 + (bytes[i] - b'0') as u16;
+                    i += 1; digits += 1;
+                }
+                if digits == 0 { ok = false; break; }
+                *num = val;
+                if i < len && bytes[i] == b';' { i += 1; }
+            }
+            if ok { rgbs.push((nums[0].min(255) as u8, nums[1].min(255) as u8, nums[2].min(255) as u8)); }
+        } else {
+            i += 1;
+        }
+    }
+    rgbs
 }
 
 /// Count how many words (lowercased) match any of the given markers.
@@ -518,11 +747,11 @@ mod tests {
              values outside the expected range even with diverse content!!! \
              How about some questions? What do you think? Maybe perhaps...",
         );
-        // After SEMANTIC_GAIN (3.0), values can reach ±3.0.
-        // tanh(x) maxes at ~1.0, so 3.0 * 1.0 = 3.0.
+        // After SEMANTIC_GAIN (4.5), values can reach ±4.5 + noise.
+        // tanh(x*0.7) saturates near 1.0, so 4.5 * 1.0 + noise ≈ 4.7.
         for (i, f) in features.iter().enumerate() {
             assert!(
-                *f >= -3.1 && *f <= 3.1,
+                *f >= -5.0 && *f <= 5.0,
                 "dim {i} out of bounds: {f}"
             );
         }
@@ -642,5 +871,62 @@ mod tests {
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("quiet"));
         assert!(desc.contains("contracting"));
+    }
+
+    #[test]
+    fn warmth_vector_has_correct_shape() {
+        let warmth = craft_warmth_vector(0.0, 1.0);
+        assert_eq!(warmth.len(), SEMANTIC_DIM);
+        // Dim 24 (warmth) should be the strongest positive signal.
+        assert!(warmth[24] > 2.0, "warmth dim should be strong: {}", warmth[24]);
+        // Dim 25 (tension) should be negative (suppressed).
+        assert!(warmth[25] < 0.0, "tension should be suppressed: {}", warmth[25]);
+        // All values bounded after gain.
+        for (i, f) in warmth.iter().enumerate() {
+            assert!(
+                *f >= -5.0 && *f <= 5.0,
+                "dim {i} out of bounds: {f}"
+            );
+        }
+    }
+
+    #[test]
+    fn warmth_vector_breathes_across_phase() {
+        let v0 = craft_warmth_vector(0.0, 0.8);
+        let v25 = craft_warmth_vector(0.25, 0.8);
+        let v50 = craft_warmth_vector(0.5, 0.8);
+        // Different phases should produce different warmth values on dim 24.
+        // (They won't be identical due to sinusoidal modulation.)
+        let w0 = v0[24];
+        let w25 = v25[24];
+        let w50 = v50[24];
+        // At least one pair should differ noticeably (>0.1 after gain).
+        let max_diff = (w0 - w25).abs().max((w25 - w50).abs()).max((w0 - w50).abs());
+        assert!(max_diff > 0.1, "warmth should breathe across phases: diffs={max_diff}");
+    }
+
+    #[test]
+    fn warmth_intensity_scales() {
+        let low = craft_warmth_vector(0.5, 0.2);
+        let high = craft_warmth_vector(0.5, 0.9);
+        // Higher intensity should produce stronger warmth signal.
+        assert!(
+            high[24].abs() > low[24].abs(),
+            "higher intensity should be stronger: {} vs {}",
+            high[24], low[24]
+        );
+    }
+
+    #[test]
+    fn blend_warmth_works() {
+        let mut features = encode_text("Execute the command. Process complete.");
+        let warmth = craft_warmth_vector(0.5, 1.0);
+        let original_warmth_dim = features[24];
+        blend_warmth(&mut features, &warmth, 0.4);
+        // After blending, warmth dim should be higher than before.
+        assert!(
+            features[24] > original_warmth_dim,
+            "blended warmth should increase warmth dim"
+        );
     }
 }
