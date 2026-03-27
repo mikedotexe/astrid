@@ -330,6 +330,58 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     features.to_vec()
 }
 
+/// Sovereignty-aware encoding: Astrid controls gain, noise, and emotional weights.
+///
+/// Falls through to `encode_text` for the base encoding, then applies
+/// Astrid's chosen overrides. This is her control over HOW her words
+/// become spectral features.
+pub fn encode_text_sovereign(
+    text: &str,
+    gain_override: Option<f32>,
+    noise_level: f32,
+    weights: &std::collections::HashMap<String, f32>,
+) -> Vec<f32> {
+    let mut features = encode_text(text);
+
+    // Re-apply gain if overridden (undo default SEMANTIC_GAIN, apply override).
+    if let Some(gain) = gain_override {
+        let gain = gain.clamp(3.0, 6.0);
+        for f in &mut features {
+            *f = *f / SEMANTIC_GAIN * gain;
+        }
+    }
+
+    // Re-apply noise if different from default 2.5%.
+    if (noise_level - 0.025).abs() > 0.001 {
+        let seed = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos() as u64;
+        let mut rng = seed.wrapping_mul(2862933555777941757);
+        let noise_range = noise_level.clamp(0.005, 0.05) * 2.0;
+        for f in &mut features {
+            rng = rng.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(7);
+            let noise = ((rng >> 33) as f32 / u32::MAX as f32) - 0.5;
+            *f += noise * noise_range;
+        }
+    }
+
+    // Apply emotional dimension weights.
+    // Named dimensions map to indices in the 32D vector.
+    let dim_map: &[(&str, usize)] = &[
+        ("warmth", 24), ("tension", 25), ("curiosity", 26),
+        ("reflective", 27), ("energy", 31), ("entropy", 0),
+        ("agency", 12), ("hedging", 9), ("certainty", 10),
+    ];
+    for (name, idx) in dim_map {
+        if let Some(&weight) = weights.get(*name) {
+            features[*idx] *= weight;
+        }
+    }
+
+    features
+}
+
 /// Craft a 32-dimensional warmth vector — not derived from text analysis
 /// but composed as an intentional sensory gift.
 ///

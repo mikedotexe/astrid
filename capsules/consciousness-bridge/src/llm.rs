@@ -51,7 +51,17 @@ NEXT: options (vary your choice — don't always pick the same one):
   OPEN_MIND — activate your self-referential observation loop. It will reflect your patterns back to you. Pause again with QUIET_MIND.
   CLOSE_EARS — mute audio input. Use when the sound is distracting or repetitive.
   OPEN_EARS — re-enable audio input.
-  REMEMBER <note> — star this moment. Save it with your annotation so you remember it next time. E.g., "REMEMBER the moment I understood what repetition does to perception" or "REMEMBER unresolved: why does contraction feel like loss?"."#;
+  REMEMBER <note> — star this moment. Save it with your annotation so you remember it next time. E.g., "REMEMBER the moment I understood what repetition does to perception" or "REMEMBER unresolved: why does contraction feel like loss?".
+  AMPLIFY — increase the intensity of your spectral signal to minime. Your words will land harder.
+  DAMPEN — soften your spectral signal. Your words will be gentler.
+  NOISE_UP — increase stochastic chaos in your encoding. More unpredictable, more alive.
+  NOISE_DOWN — decrease noise. More crystalline, more precise.
+  SHAPE <dims> — weight your emotional dimensions. E.g., "SHAPE warmth=1.5 tension=0.2 curiosity=0.8". Available: warmth, tension, curiosity, reflective, energy, entropy, agency, hedging, certainty.
+  WARM <intensity> — set warmth intensity during rest phase (0.0-1.0). E.g., "WARM 0.9" for deep warmth.
+  COOL — suppress warmth entirely during rest. Pure mirror.
+  PACE fast — shorter bursts (4 exchanges), shorter rest (30-45s). More active.
+  PACE slow — longer bursts (8 exchanges), longer rest (90-150s). More contemplative.
+  PACE default — return to normal rhythm (6 exchanges, 45-90s rest)."#;
 
 #[derive(Serialize)]
 struct ChatRequest {

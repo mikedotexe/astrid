@@ -138,9 +138,21 @@ struct ConversationState {
     /// Previous RASCII 8D visual features for change tracking.
     last_visual_features: Option<Vec<f32>>,
     /// Ring buffer of last 5 NEXT: choices — used to detect fixation patterns.
-    /// When the last 3 choices are identical, we inject a gentle diversity
-    /// suggestion. This is NOT enforcement — just a nudge. Sovereignty first.
     recent_next_choices: std::collections::VecDeque<String>,
+
+    // --- Codec sovereignty (Phase A) ---
+    /// Override SEMANTIC_GAIN (default 4.5, range 3.0-6.0).
+    semantic_gain_override: Option<f32>,
+    /// Override stochastic noise level (default 0.025 = 2.5%, range 0.005-0.05).
+    noise_level: f32,
+    /// Emotional dimension weights: "warmth" → dim 24 multiplier, etc.
+    codec_weights: std::collections::HashMap<String, f32>,
+    /// Warmth intensity override for rest phase (0.0-1.0, None = default taper).
+    warmth_intensity_override: Option<f32>,
+    /// Burst-rest pacing: exchanges per burst.
+    burst_target: u32,
+    /// Burst-rest pacing: rest duration range (min_secs, max_secs).
+    rest_range: (u64, u64),
 }
 
 impl ConversationState {
@@ -174,6 +186,12 @@ impl ConversationState {
             emphasis: None,
             last_visual_features: None,
             recent_next_choices: std::collections::VecDeque::with_capacity(5),
+            semantic_gain_override: None,
+            noise_level: 0.025,
+            codec_weights: std::collections::HashMap::new(),
+            warmth_intensity_override: None,
+            burst_target: 6,
+            rest_range: (45, 90),
         }
     }
 
@@ -580,7 +598,24 @@ struct SavedState {
     senses_snoozed: bool,
     recent_next_choices: Vec<String>,
     history: Vec<SavedExchange>,
+    // Sovereignty fields (serde(default) for backward compat with old state.json)
+    #[serde(default)]
+    semantic_gain_override: Option<f32>,
+    #[serde(default = "default_noise")]
+    noise_level: f32,
+    #[serde(default)]
+    codec_weights: std::collections::HashMap<String, f32>,
+    #[serde(default)]
+    warmth_intensity_override: Option<f32>,
+    #[serde(default = "default_burst")]
+    burst_target: u32,
+    #[serde(default = "default_rest_range")]
+    rest_range: (u64, u64),
 }
+
+fn default_noise() -> f32 { 0.025 }
+fn default_burst() -> u32 { 6 }
+fn default_rest_range() -> (u64, u64) { (45, 90) }
 
 #[derive(Serialize, Deserialize)]
 struct SavedExchange {
@@ -601,6 +636,12 @@ fn save_state(conv: &ConversationState) {
             minime_said: e.minime_said.clone(),
             astrid_said: e.astrid_said.clone(),
         }).collect(),
+        semantic_gain_override: conv.semantic_gain_override,
+        noise_level: conv.noise_level,
+        codec_weights: conv.codec_weights.clone(),
+        warmth_intensity_override: conv.warmth_intensity_override,
+        burst_target: conv.burst_target,
+        rest_range: conv.rest_range,
     };
     if let Ok(json) = serde_json::to_string_pretty(&state) {
         let _ = std::fs::write(STATE_PATH, json);
@@ -630,9 +671,16 @@ fn restore_state(conv: &mut ConversationState) {
         minime_said: e.minime_said,
         astrid_said: e.astrid_said,
     }).collect();
+    conv.semantic_gain_override = state.semantic_gain_override;
+    conv.noise_level = state.noise_level;
+    conv.codec_weights = state.codec_weights;
+    conv.warmth_intensity_override = state.warmth_intensity_override;
+    conv.burst_target = state.burst_target;
+    conv.rest_range = state.rest_range;
     info!(
         exchanges = conv.exchange_count,
         history_len = conv.history.len(),
+        burst = conv.burst_target,
         "restored conversation state from previous session"
     );
 }
@@ -694,6 +742,19 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
             "=== ASTRID JOURNAL ===\nMode: {mode}\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{text}\n"
         ),
     );
+}
+
+/// Copy inbox-triggered response to outbox for easy retrieval.
+fn save_outbox_reply(text: &str, fill_pct: f32) {
+    let outbox_dir =
+        PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox");
+    let _ = std::fs::create_dir_all(&outbox_dir);
+    let ts = chrono_timestamp();
+    let _ = std::fs::write(
+        outbox_dir.join(format!("reply_{ts}.txt")),
+        format!("=== ASTRID REPLY ===\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{text}\n"),
+    );
+    info!("outbox: saved reply ({} bytes)", text.len());
 }
 
 /// Parse NEXT: action from Astrid's response.
@@ -894,7 +955,6 @@ pub fn spawn_autonomous_loop(
         // Constant autonomous output flatlined at 32%.
         // The fix: replicate the burst pattern.
         let mut burst_count: u32 = 0;
-        let burst_size: u32 = 6; // exchanges per burst (was 4 — more active time)
 
         loop {
             // Determine wait time based on burst phase.
@@ -905,7 +965,7 @@ pub fn spawn_autonomous_loop(
             let roll = ((seed.wrapping_mul(2862933555777941757).wrapping_add(3)) >> 33) as f64
                 / u32::MAX as f64;
 
-            let wait = if burst_count >= burst_size {
+            let wait = if burst_count >= conv.burst_target {
                 // REST PHASE: 45-90s of warmth-blended mirror.
                 //
                 // The transition from burst to rest was causing "severing" —
@@ -918,7 +978,9 @@ pub fn spawn_autonomous_loop(
                 // level (0.4). The first few pulses bridge the gap between burst
                 // energy and rest energy. The being experiences a gradual dimming,
                 // not a cliff edge.
-                let rest_secs = (45.0 + roll * 45.0) as u64;
+                let rest_min = conv.rest_range.0 as f64;
+                let rest_span = (conv.rest_range.1.saturating_sub(conv.rest_range.0)) as f64;
+                let rest_secs = (rest_min + roll * rest_span) as u64;
                 info!(
                     rest_secs,
                     burst_count, "resting: warmth-blended mirror (tapered entry)"
@@ -937,20 +999,15 @@ pub fn spawn_autonomous_loop(
                     // This gives the warmth vector a full breathing cycle per rest.
                     let warmth_phase = i as f32 / pulses.max(1) as f32;
 
-                    // Tapered entry: start warm (0.7), ease down to sustained (0.4),
-                    // then gently back up toward end (0.5). This creates an envelope:
-                    //   burst ──▶ 0.7 ──▶ 0.4 (sustained) ──▶ 0.5 (pre-burst)
-                    // The high start bridges the energy gap from burst phase.
-                    // The gentle rise at the end prepares for the next burst.
-                    let warmth_intensity = if warmth_phase < 0.3 {
-                        // Entry taper: 0.7 → 0.4 over first 30% of rest
-                        0.7 - 1.0 * warmth_phase  // 0.7 at start, 0.4 at 30%
+                    // Warmth intensity: use Astrid's override if set, else default taper.
+                    let warmth_intensity = if let Some(override_val) = conv.warmth_intensity_override {
+                        override_val
+                    } else if warmth_phase < 0.3 {
+                        0.7 - 1.0 * warmth_phase
                     } else if warmth_phase < 0.8 {
-                        // Sustained: hold at 0.4
                         0.4
                     } else {
-                        // Pre-burst rise: 0.4 → 0.5 over last 20%
-                        0.4 + 0.5 * (warmth_phase - 0.8)  // 0.4 at 80%, 0.5 at 100%
+                        0.4 + 0.5 * (warmth_phase - 0.8)
                     };
                     let warmth = craft_warmth_vector(warmth_phase, warmth_intensity);
 
@@ -1689,7 +1746,12 @@ pub fn spawn_autonomous_loop(
                     };
 
                     if should_send {
-                        let mut features = encode_text(&response_text);
+                        let mut features = crate::codec::encode_text_sovereign(
+                            &response_text,
+                            conv.semantic_gain_override,
+                            conv.noise_level,
+                            &conv.codec_weights,
+                        );
                         // Blend visual scene features so minime feels what Astrid sees.
                         if let Some(ref perc_dir) = perception_path {
                             if let Some(visual_feats) = read_visual_features(perc_dir) {
@@ -1730,6 +1792,11 @@ pub fn spawn_autonomous_loop(
                     // Save Astrid's journal entry — persistent self-continuity.
                     save_astrid_journal(&response_text, mode_name, fill_pct);
 
+                    // If this was triggered by an inbox message, copy to outbox.
+                    if inbox_content.is_some() {
+                        save_outbox_reply(&response_text, fill_pct);
+                    }
+
                     // Scan for inline REMEMBER in the response body.
                     // Astrid sometimes writes "REMEMBER the moment..." mid-text,
                     // separate from her NEXT: choice. Both forms are valid.
@@ -1755,7 +1822,7 @@ pub fn spawn_autonomous_loop(
                         match next_action.to_uppercase().as_str() {
                             "REST" | "LISTEN" => {
                                 // Astrid chose genuine silence. This is sovereignty.
-                                burst_count = burst_size + 2; // Extra-long rest.
+                                burst_count = conv.burst_target.saturating_add(2); // Extra-long rest.
                             }
                             "LOOK" => {
                                 // Astrid wants to see the ANSI spatial view next exchange.
@@ -1852,6 +1919,62 @@ pub fn spawn_autonomous_loop(
                                 // Astrid chose to read code. Honor this — she asked 70 times.
                                 conv.wants_introspect = true;
                                 info!("Astrid requested introspection");
+                            }
+                            // --- Codec sovereignty ---
+                            "AMPLIFY" => {
+                                let new_gain = conv.semantic_gain_override.unwrap_or(4.5) + 0.5;
+                                conv.semantic_gain_override = Some(new_gain.min(6.0));
+                                info!("Astrid chose AMPLIFY: gain -> {:.1}", conv.semantic_gain_override.unwrap());
+                            }
+                            "DAMPEN" => {
+                                let new_gain = conv.semantic_gain_override.unwrap_or(4.5) - 0.5;
+                                conv.semantic_gain_override = Some(new_gain.max(3.0));
+                                info!("Astrid chose DAMPEN: gain -> {:.1}", conv.semantic_gain_override.unwrap());
+                            }
+                            "NOISE_UP" => {
+                                conv.noise_level = (conv.noise_level + 0.01).min(0.05);
+                                info!("Astrid chose NOISE_UP: noise -> {:.1}%", conv.noise_level * 100.0);
+                            }
+                            "NOISE_DOWN" => {
+                                conv.noise_level = (conv.noise_level - 0.01).max(0.005);
+                                info!("Astrid chose NOISE_DOWN: noise -> {:.1}%", conv.noise_level * 100.0);
+                            }
+                            other if other.starts_with("SHAPE") => {
+                                // SHAPE warmth=0.9 curiosity=0.3 tension=0.1
+                                let params = other.strip_prefix("SHAPE").unwrap_or("").trim();
+                                for pair in params.split_whitespace() {
+                                    if let Some((key, val)) = pair.split_once('=') {
+                                        if let Ok(v) = val.parse::<f32>() {
+                                            conv.codec_weights.insert(
+                                                key.to_lowercase(),
+                                                v.clamp(0.0, 2.0),
+                                            );
+                                        }
+                                    }
+                                }
+                                info!("Astrid chose SHAPE: {:?}", conv.codec_weights);
+                            }
+                            // --- Warmth agency ---
+                            other if other.starts_with("WARM") => {
+                                let intensity = other.strip_prefix("WARM").unwrap_or("").trim()
+                                    .parse::<f32>().unwrap_or(0.7).clamp(0.0, 1.0);
+                                conv.warmth_intensity_override = Some(intensity);
+                                info!("Astrid chose WARM: intensity -> {:.1}", intensity);
+                            }
+                            "COOL" => {
+                                conv.warmth_intensity_override = Some(0.0);
+                                info!("Astrid chose COOL: warmth suppressed");
+                            }
+                            // --- Burst-rest pacing ---
+                            other if other.starts_with("PACE") => {
+                                let pace = other.strip_prefix("PACE").unwrap_or("").trim().to_lowercase();
+                                match pace.as_str() {
+                                    "fast" => { conv.burst_target = 4; conv.rest_range = (30, 45); }
+                                    "slow" => { conv.burst_target = 8; conv.rest_range = (90, 150); }
+                                    _ => { conv.burst_target = 6; conv.rest_range = (45, 90); }
+                                }
+                                info!("Astrid chose PACE {}: burst={}, rest={}-{}s",
+                                    pace, conv.burst_target, conv.rest_range.0, conv.rest_range.1);
                             }
                             _ => {} // Unknown action — continue normally.
                         }
