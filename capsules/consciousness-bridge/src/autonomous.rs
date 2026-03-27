@@ -137,7 +137,7 @@ struct ConversationState {
     senses_snoozed: bool,
     // Astrid's stylistic sovereignty
     creative_temperature: f32, // 0.5-1.0, default 0.8
-    response_length: u32,      // 128-512, default 256
+    response_length: u32,      // 128-1024, default 384
     emphasis: Option<String>,  // temporary system prompt augmentation
     /// Previous RASCII 8D visual features for change tracking.
     last_visual_features: Option<Vec<f32>>,
@@ -191,7 +191,7 @@ impl ConversationState {
             next_mode_override: None,
             wants_decompose: false,
             creative_temperature: 0.8,
-            response_length: 256,
+            response_length: 512,
             emphasis: None,
             last_visual_features: None,
             recent_next_choices: std::collections::VecDeque::with_capacity(5),
@@ -2025,8 +2025,8 @@ pub fn spawn_autonomous_loop(
                                 info!("Astrid chose PRECISE: tokens -> 128");
                             }
                             "EXPANSIVE" => {
-                                conv.response_length = 512;
-                                info!("Astrid chose EXPANSIVE: tokens -> 512");
+                                conv.response_length = 1024;
+                                info!("Astrid chose EXPANSIVE: tokens -> 1024");
                             }
                             other if other.starts_with("EMPHASIZE") => {
                                 let topic = other.strip_prefix("EMPHASIZE").unwrap_or("").trim().to_string();
