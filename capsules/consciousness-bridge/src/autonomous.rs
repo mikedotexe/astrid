@@ -1292,6 +1292,23 @@ pub fn spawn_autonomous_loop(
                                     "How your last response felt to minime (your spectral output):\n  {feedback}"
                                 ));
                             }
+                            // Research continuity: past searches relevant to current context.
+                            if let Some(ref journal) = journal_context {
+                                let topic_words: Vec<&str> = journal.split_whitespace()
+                                    .filter(|w| w.len() > 5)
+                                    .take(5)
+                                    .collect();
+                                let past_research = db.get_relevant_research(&topic_words, 3);
+                                if !past_research.is_empty() {
+                                    let research = past_research.iter()
+                                        .map(|(q, r)| format!("  • \"{q}\": {r}"))
+                                        .collect::<Vec<_>>()
+                                        .join("\n");
+                                    continuity_parts.push(format!(
+                                        "Knowledge you've gathered from past searches:\n{research}"
+                                    ));
+                                }
+                            }
                             let continuity_block = if continuity_parts.is_empty() {
                                 None
                             } else {
@@ -1337,8 +1354,10 @@ pub fn spawn_autonomous_loop(
                                     None
                                 } else {
                                     let ctx = crate::llm::web_search(&query).await;
-                                    if ctx.is_some() {
+                                    if let Some(ref results) = ctx {
                                         info!(query = %query, "dialogue: web search enriched response");
+                                        // Persist for research continuity.
+                                        db.save_research(&query, results, fill_pct);
                                     }
                                     ctx
                                 }

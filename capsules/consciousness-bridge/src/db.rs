@@ -93,6 +93,19 @@ impl BridgeDb {
             );
             CREATE INDEX IF NOT EXISTS idx_incident_ts
                 ON bridge_incidents(timestamp);
+
+            CREATE TABLE IF NOT EXISTS astrid_research (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp   REAL    NOT NULL,
+                query       TEXT    NOT NULL,
+                results     TEXT    NOT NULL,
+                keywords    TEXT    NOT NULL,
+                fill_pct    REAL
+            );
+            CREATE INDEX IF NOT EXISTS idx_research_ts
+                ON astrid_research(timestamp);
+            CREATE INDEX IF NOT EXISTS idx_research_kw
+                ON astrid_research(keywords);
             ",
         )?;
         Ok(())
@@ -302,6 +315,55 @@ impl BridgeDb {
                 .map(|rows| rows.filter_map(|r| r.ok()).collect())
             })
             .unwrap_or_default()
+    }
+
+    /// Save a web search result for persistent research continuity.
+    pub fn save_research(&self, query: &str, results: &str, fill_pct: f32) {
+        // Extract keywords: words > 4 chars, lowercased, deduped.
+        let keywords: Vec<String> = query.split_whitespace()
+            .chain(results.split_whitespace().take(50))
+            .filter(|w| w.len() > 4)
+            .map(|w| w.to_lowercase().trim_matches(|c: char| !c.is_alphanumeric()).to_string())
+            .filter(|w| !w.is_empty())
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect();
+        let kw_str = keywords.join(" ");
+        let ts = unix_now();
+        let _ = self.lock().execute(
+            r"INSERT INTO astrid_research (timestamp, query, results, keywords, fill_pct)
+              VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![ts, query, results, &kw_str, fill_pct],
+        );
+    }
+
+    /// Retrieve past research relevant to the given keywords.
+    /// Uses simple keyword overlap matching.
+    pub fn get_relevant_research(&self, topic_words: &[&str], limit: usize) -> Vec<(String, String)> {
+        if topic_words.is_empty() { return Vec::new(); }
+        // Build a LIKE clause for each keyword.
+        #[expect(clippy::cast_possible_wrap)]
+        let mut results = Vec::new();
+        let conn = self.lock();
+        for word in topic_words.iter().take(5) {
+            let pattern = format!("%{}%", word.to_lowercase());
+            if let Ok(mut stmt) = conn.prepare(
+                "SELECT query, substr(results, 1, 300) FROM astrid_research \
+                 WHERE keywords LIKE ?1 ORDER BY timestamp DESC LIMIT ?2"
+            ) {
+                if let Ok(rows) = stmt.query_map(params![&pattern, limit as i64], |row| {
+                    Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                }) {
+                    for r in rows.flatten() {
+                        if !results.iter().any(|(q, _): &(String, String)| q == &r.0) {
+                            results.push(r);
+                        }
+                    }
+                }
+            }
+        }
+        results.truncate(limit);
+        results
     }
 }
 
