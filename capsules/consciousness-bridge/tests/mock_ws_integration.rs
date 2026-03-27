@@ -244,6 +244,8 @@ async fn bidirectional_bridge_with_safety_protocol() {
         keep_bias: None,
         exploration_noise: None,
         fill_target: Some(0.55),
+        regulation_strength: None, deep_breathing: None, pure_tone: None,
+        transition_cushion: None, smoothing_preference: None,
     };
     bridge_sensory_tx.send(control_msg).await.unwrap();
 

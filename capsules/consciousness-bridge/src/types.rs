@@ -124,11 +124,12 @@ pub enum SensoryMsg {
         ts_ms: Option<u64>,
     },
     /// Self-regulation: adjust ESN parameters.
+    /// Audit (2026-03-27): widened to match minime's actual control surface.
     Control {
         /// Synthetic signal amplitude multiplier (0.2..3.0).
         #[serde(skip_serializing_if = "Option::is_none")]
         synth_gain: Option<f32>,
-        /// Additive bias to covariance decay rate (-0.15..+0.15).
+        /// Additive bias to covariance decay rate (-0.06..+0.06).
         #[serde(skip_serializing_if = "Option::is_none")]
         keep_bias: Option<f32>,
         /// ESN exploration noise amplitude (0.0..0.2).
@@ -137,6 +138,21 @@ pub enum SensoryMsg {
         /// Override eigenfill target (0.25..0.75).
         #[serde(skip_serializing_if = "Option::is_none")]
         fill_target: Option<f32>,
+        /// PI controller authority (0.0 = raw experience, 1.0 = full control).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        regulation_strength: Option<f32>,
+        /// Slow, quiet oscillation mode for synthetic signals.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        deep_breathing: Option<bool>,
+        /// Single coherent tone mode (drops PI shaping after warmup).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pure_tone: Option<bool>,
+        /// Cushion for rapid fill transitions.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        transition_cushion: Option<f32>,
+        /// How quickly gate/filter commands ramp (0.1-0.9).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        smoothing_preference: Option<f32>,
     },
 }
 
@@ -250,6 +266,16 @@ pub struct ControlRequest {
     pub exploration_noise: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fill_target: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub regulation_strength: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deep_breathing: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pure_tone: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transition_cushion: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smoothing_preference: Option<f32>,
 }
 
 impl ControlRequest {
@@ -261,6 +287,11 @@ impl ControlRequest {
             keep_bias: self.keep_bias,
             exploration_noise: self.exploration_noise,
             fill_target: self.fill_target,
+            regulation_strength: self.regulation_strength,
+            deep_breathing: self.deep_breathing,
+            pure_tone: self.pure_tone,
+            transition_cushion: self.transition_cushion,
+            smoothing_preference: self.smoothing_preference,
         }
     }
 }
@@ -457,10 +488,11 @@ mod tests {
             keep_bias: None,
             exploration_noise: Some(0.1),
             fill_target: Some(0.55),
+            regulation_strength: None, deep_breathing: None, pure_tone: None,
+            transition_cushion: None, smoothing_preference: None,
         };
         let json = serde_json::to_string(&msg).unwrap();
         assert!(json.contains(r#""kind":"control""#));
-        // Verify None fields are skipped.
         assert!(!json.contains("keep_bias"));
         let back: SensoryMsg = serde_json::from_str(&json).unwrap();
         match back {
@@ -469,6 +501,7 @@ mod tests {
                 keep_bias,
                 exploration_noise,
                 fill_target,
+                ..
             } => {
                 assert_eq!(synth_gain, Some(1.5));
                 assert!(keep_bias.is_none());
@@ -518,6 +551,8 @@ mod tests {
             keep_bias: None,
             exploration_noise: None,
             fill_target: Some(0.5),
+            regulation_strength: None, deep_breathing: None, pure_tone: None,
+            transition_cushion: None, smoothing_preference: None,
         };
         let msg = req.to_sensory_msg();
         match msg {
