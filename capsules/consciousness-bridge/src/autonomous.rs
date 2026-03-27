@@ -1337,6 +1337,17 @@ pub fn spawn_autonomous_loop(
                             fingerprint.as_deref(),
                         )
                     };
+                    // Pause perception during the entire exchange to free Ollama.
+                    // Astrid was getting persistent dialogue_fallback because
+                    // perception.py's LLaVA calls competed for GPU compute.
+                    let pause_flag = PathBuf::from(
+                        "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_paused.flag"
+                    );
+                    let perception_was_paused = conv.senses_snoozed || pause_flag.exists();
+                    if !perception_was_paused {
+                        let _ = std::fs::write(&pause_flag, "paused for exchange");
+                    }
+
                     let (mode_name, response_text, journal_source) = match mode {
                         Mode::Mirror => {
                             // Read a journal entry — not always the newest.
@@ -2718,6 +2729,11 @@ pub fn spawn_autonomous_loop(
                             }
                             _ => {} // Unknown action — continue normally.
                         }
+                    }
+
+                    // Resume perception after exchange completes.
+                    if !perception_was_paused {
+                        let _ = std::fs::remove_file(&pause_flag);
                     }
 
                     // Update state and persist across restarts.
