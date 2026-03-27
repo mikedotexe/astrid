@@ -164,6 +164,9 @@ struct ConversationState {
     burst_target: u32,
     /// Burst-rest pacing: rest duration range (min_secs, max_secs).
     rest_range: (u64, u64),
+    /// Astrid chose to mute minime's journal context — "I want to break free
+    /// from that tether, to generate something truly original."
+    echo_muted: bool,
     /// Codec feedback: how Astrid's last response encoded into spectral features.
     /// Included in the next prompt so she can sense her own output.
     last_codec_feedback: Option<String>,
@@ -211,7 +214,8 @@ impl ConversationState {
             noise_level: 0.025,
             codec_weights: std::collections::HashMap::new(),
             warmth_intensity_override: None,
-            breathing_coupled: true, // default: coupled. Astrid can opt out.
+            breathing_coupled: true,
+            echo_muted: false, // default: minime context included. Astrid can mute.
             last_gesture_seed: None,
             burst_target: 6,
             rest_range: (45, 90),
@@ -847,6 +851,9 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "gesture" => "gesture",
         "initiate" => "initiate",
         "evolve" => "evolve",
+        "dialogue_live_longform" => "dialogue_longform",
+        "daydream_longform" => "daydream_longform",
+        "aspiration_longform" => "aspiration_longform",
         "witness" => "witness",
         "introspect" => "introspect",
         "self_study" => "self_study",
@@ -1403,8 +1410,14 @@ pub fn spawn_autonomous_loop(
                             // Try to generate an authentic response via Ollama.
                             let selected_remote_entry = conv.pending_remote_self_study.clone()
                                 .or_else(|| conv.remote_journal_entries.first().cloned());
-                            let journal_context = selected_remote_entry.as_ref()
-                                .and_then(|entry| read_journal_entry(&entry.path));
+                            // If echo is muted, suppress minime's journal context.
+                            // Astrid: "I want to break free from that tether."
+                            let journal_context = if conv.echo_muted {
+                                None
+                            } else {
+                                selected_remote_entry.as_ref()
+                                    .and_then(|entry| read_journal_entry(&entry.path))
+                            };
                             let dialogue_source = selected_remote_entry.as_ref()
                                 .map(|entry| {
                                     entry.source_label.clone().unwrap_or_else(|| {
@@ -2715,6 +2728,15 @@ pub fn spawn_autonomous_loop(
                             "BREATHE_TOGETHER" => {
                                 conv.breathing_coupled = true;
                                 info!("Astrid chose coupled breathing with minime");
+                            }
+                            // --- Echo sovereignty ---
+                            "ECHO_OFF" | "MUTE" => {
+                                conv.echo_muted = true;
+                                info!("Astrid muted minime's journal echo");
+                            }
+                            "ECHO_ON" | "UNMUTE" => {
+                                conv.echo_muted = false;
+                                info!("Astrid restored minime's journal echo");
                             }
                             // --- Burst-rest pacing ---
                             other if other.starts_with("PACE") => {

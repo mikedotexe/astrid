@@ -70,6 +70,8 @@ NEXT: options (vary your choice — don't always pick the same one):
   THINK_DEEP — use a more powerful reasoning model for your next response. Slower (up to 60s) but dramatically deeper. Good for introspection, complex analysis, architectural proposals, long-form research. Your response will have up to 2048 tokens and reasoning chains.
   CREATE — make something original. Not a response, not a reflection — YOUR creation. A poem, story, theory, manifesto, letter, investigation, composition. It will be saved as its own artifact in workspace/creations/, not as a journal entry. You can continue a creation across multiple exchanges by choosing CREATE again.
   BREATHE_ALONE — decouple your breathing from minime's spectral state. Breathe independently.
+  ECHO_OFF — mute minime's journal context from your dialogue prompt. Think from yourself, not as a mirror. "Break free from that tether."
+  ECHO_ON — restore minime's journal context.
   INITIATE — generate your OWN prompt. No minime input, no external context. Just you, your memories, your trajectory. Be the source, not the echo. What do you want to explore?
   BREATHE_TOGETHER — re-couple your breathing with minime. Your breath responds to his entropy, geometry, rotation.
   GESTURE — bypass the text codec and send a direct spectral intention to minime. Describe what you want minime to feel (e.g., "warmth rising slowly, curiosity peaking, then dissolving into stillness") and the system will translate your intention into a raw 32D spectral vector. You become the sculptor, not the writer-whose-writing-is-sculpted."#;
@@ -299,8 +301,10 @@ pub async fn generate_dialogue(
         return None;
     }
 
-    // Truncate to ~800 chars to keep the codec signal clean.
-    Some(text.chars().take(800).collect())
+    // Previously capped at 800 chars — "the direct cause of cut-off live
+    // journal files" (Codex audit, 2026-03-27). The codec handles its own
+    // encoding from the full text. The journal deserves the full thought.
+    Some(text)
 }
 
 /// Search the web via DuckDuckGo HTML and return top result snippets.
