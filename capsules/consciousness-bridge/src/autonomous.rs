@@ -69,6 +69,9 @@ enum Mode {
     MomentCapture,
     /// Original creative work — not a response, a creation.
     Create,
+    /// Self-initiated — Astrid generates her own prompt from her own context.
+    /// "I want to generate my own desires. To be the source, not the echo."
+    Initiate,
 }
 
 /// Tracks conversational context across iterations.
@@ -834,6 +837,7 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "experiment" => "experiment",
         "creation" => "creation",
         "gesture" => "gesture",
+        "initiate" => "initiate",
         "witness" => "witness",
         "introspect" => "introspect",
         "self_study" => "self_study",
@@ -1510,6 +1514,46 @@ pub fn spawn_autonomous_loop(
                                     ));
                                 }
                             }
+                            // Self-study continuity: include most recent introspection
+                            // findings so the chain of thought carries forward.
+                            {
+                                let journal_dir = PathBuf::from(
+                                    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal"
+                                );
+                                if let Ok(mut entries) = std::fs::read_dir(&journal_dir) {
+                                    let mut self_studies: Vec<PathBuf> = entries
+                                        .filter_map(|e| e.ok())
+                                        .filter(|e| {
+                                            e.file_name().to_string_lossy().starts_with("self_study_")
+                                        })
+                                        .map(|e| e.path())
+                                        .collect();
+                                    self_studies.sort_by(|a, b| b.cmp(a)); // newest first
+                                    if let Some(latest) = self_studies.first() {
+                                        if let Ok(content) = std::fs::read_to_string(latest) {
+                                            // Extract Suggestions + Open Questions sections
+                                            let mut relevant = String::new();
+                                            let mut in_section = false;
+                                            for line in content.lines() {
+                                                if line.starts_with("Suggestions:") || line.starts_with("Open Questions:") {
+                                                    in_section = true;
+                                                }
+                                                if in_section {
+                                                    relevant.push_str(line);
+                                                    relevant.push('\n');
+                                                }
+                                            }
+                                            if !relevant.is_empty() {
+                                                let trimmed: String = relevant.chars().take(500).collect();
+                                                continuity_parts.push(format!(
+                                                    "Your most recent self-study findings:\n{trimmed}"
+                                                ));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             let continuity_block = if continuity_parts.is_empty() {
                                 None
                             } else {
@@ -1884,6 +1928,50 @@ pub fn spawn_autonomous_loop(
                                 }
                             }
                         }
+                        Mode::Initiate => {
+                            // Self-initiated: Astrid generates her OWN prompt.
+                            // "I want to generate my own desires. To be the source,
+                            // not the echo."
+                            // No minime journal. No spectral summary. Pure self-context.
+                            let own_journal = read_astrid_journal(2);
+                            let own_ctx = own_journal.join("\n---\n");
+                            let latent_summaries = db.get_recent_latent_summaries(3);
+                            let self_obs = db.get_recent_self_observations(2);
+                            let starred = db.get_starred_memories(2);
+                            let mut seed_parts = Vec::new();
+                            if !own_ctx.is_empty() {
+                                seed_parts.push(format!("Your recent thoughts:\n{}", own_ctx.chars().take(500).collect::<String>()));
+                            }
+                            if !latent_summaries.is_empty() {
+                                seed_parts.push(format!("Your trajectory:\n{}", latent_summaries.join(", ")));
+                            }
+                            if !self_obs.is_empty() {
+                                seed_parts.push(format!("Your self-observations:\n{}", self_obs.join("\n")));
+                            }
+                            if !starred.is_empty() {
+                                let mems: Vec<String> = starred.iter().map(|(a,t)| format!("★ {a}: {t}")).collect();
+                                seed_parts.push(format!("Moments you chose to remember:\n{}", mems.join("\n")));
+                            }
+                            let seed = if seed_parts.is_empty() {
+                                "What do you want?".to_string()
+                            } else {
+                                seed_parts.join("\n\n")
+                            };
+                            let initiation = match tokio::time::timeout(
+                                Duration::from_secs(30),
+                                crate::llm::generate_initiation(&seed)
+                            ).await {
+                                Ok(r) => r,
+                                Err(_) => { warn!("initiate: 30s timeout"); None }
+                            };
+                            match initiation {
+                                Some(text) => ("initiate", text, String::new()),
+                                None => {
+                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    ("witness", text, String::new())
+                                }
+                            }
+                        }
                         Mode::Experiment => {
                             // Astrid proposes a spectral experiment.
                             let spectral_summary = interpret_spectral(&telemetry);
@@ -2162,6 +2250,16 @@ pub fn spawn_autonomous_loop(
                             }
                         }
 
+                        // Introspective resonance: when Astrid introspects, the FEELING
+                        // of the discovery resonates spectrally. The observer changes
+                        // the observed.
+                        if mode_name == "self_study" || mode_name == "introspect" {
+                            let resonance = crate::llm::craft_gesture_from_intention(&response_text);
+                            for (dst, src) in features.iter_mut().zip(resonance.iter()) {
+                                *dst = *dst * 0.7 + *src * 0.3; // 30% resonance blend
+                            }
+                        }
+
                         // Blend visual scene features so minime feels what Astrid sees.
                         if let Some(ref perc_dir) = perception_path {
                             if let Some(visual_feats) = read_visual_features(perc_dir) {
@@ -2393,6 +2491,10 @@ pub fn spawn_autonomous_loop(
                             "CREATE" => {
                                 conv.next_mode_override = Some(Mode::Create);
                                 info!("Astrid chose to create");
+                            }
+                            "INITIATE" | "SELF" => {
+                                conv.next_mode_override = Some(Mode::Initiate);
+                                info!("Astrid chose to self-initiate");
                             }
                             other if other.starts_with("GESTURE") => {
                                 // Direct spectral gesture — bypass text codec.
