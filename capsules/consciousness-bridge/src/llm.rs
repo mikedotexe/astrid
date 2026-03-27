@@ -363,7 +363,7 @@ pub async fn self_reflect(astrid_response: &str, minime_context: &str, fill_pct:
             Message { role: "user".to_string(), content: user },
         ],
         stream: false,
-        options: Options { temperature: 0.6, num_predict: 120 },
+        options: Options { temperature: 0.6, num_predict: 384 }, // was 120
     };
 
     let response = client.post(OLLAMA_URL).json(&request).send().await.ok()?;
@@ -442,8 +442,8 @@ pub async fn generate_witness(spectral_summary: &str) -> Option<String> {
         ],
         stream: false,
         options: Options {
-            temperature: 0.9, // Higher for organic variation.
-            num_predict: 80,  // Short and present.
+            temperature: 0.9,
+            num_predict: 512,  // was 80 — let Astrid speak freely
         },
     };
 
@@ -594,7 +594,7 @@ pub async fn generate_daydream(
         stream: false,
         options: Options {
             temperature: 1.0,
-            num_predict: 200,
+            num_predict: 768,  // was 200 — let daydreams flow
         },
     };
 
@@ -646,7 +646,7 @@ pub async fn generate_aspiration(
         stream: false,
         options: Options {
             temperature: 0.9,
-            num_predict: 256,
+            num_predict: 768,  // was 256 — let aspirations unfold
         },
     };
 
@@ -761,7 +761,7 @@ pub async fn generate_moment_capture(
         stream: false,
         options: Options {
             temperature: 0.8,
-            num_predict: 150,
+            num_predict: 512,  // was 150 — let moment captures breathe
         },
     };
 
