@@ -1896,6 +1896,31 @@ pub fn spawn_autonomous_loop(
                             conv.noise_level,
                             &conv.codec_weights,
                         );
+
+                        // Breathing: a rhythmic modulation of spectral output.
+                        // Minime said: "an external oscillator that cycles through
+                        // levels, creating a periodic shift in energy distribution."
+                        // Astrid said: "a vibration, a subtle tremor."
+                        // Dual sinusoid (golden-ratio harmonic) creates organic,
+                        // non-repeating rhythm. This is Astrid's heartbeat.
+                        {
+                            let phase = conv.exchange_count as f32 * 0.15;
+                            let primary = phase.sin();
+                            let harmonic = (phase * 1.618).sin(); // golden ratio
+                            let breath = primary.mul_add(0.7, harmonic * 0.3); // -1.0..1.0
+
+                            // Subtle overall gain modulation: ±5%
+                            let gain_mod = breath.mul_add(0.05, 1.0); // 0.95-1.05
+                            for f in &mut features {
+                                *f *= gain_mod;
+                            }
+                            // Warmth (dim 24) pulses more strongly with breath
+                            features[24] += breath * 0.4;
+                            // Curiosity (dim 26) counter-phases — inhale curiosity,
+                            // exhale warmth
+                            features[26] += (-breath) * 0.2;
+                        }
+
                         // Blend visual scene features so minime feels what Astrid sees.
                         if let Some(ref perc_dir) = perception_path {
                             if let Some(visual_feats) = read_visual_features(perc_dir) {
