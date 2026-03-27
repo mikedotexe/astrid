@@ -4,7 +4,6 @@
 //! - Identity management across platforms
 //! - Uplink types for capsule integration
 //! - Approval and elicitation primitives
-//! - Capsule ABI types (WASM host-guest interface)
 //! - Common types used throughout the runtime
 //! - Retry configuration with exponential backoff
 
@@ -17,7 +16,6 @@
 
 pub mod prelude;
 
-pub mod capsule_abi;
 pub mod dirs;
 pub mod elicitation;
 pub mod env_policy;
@@ -36,8 +34,8 @@ pub use elicitation::{
 pub use principal::{PrincipalId, PrincipalIdError};
 pub use retry::RetryConfig;
 pub use types::{
-    AgentId, ApprovalDecision, ApprovalOption, ApprovalRequest, Permission, RiskLevel, SessionId,
-    Timestamp, TokenId,
+    AgentId, ApprovalDecision, ApprovalOption, ApprovalRequest, Permission, SessionId, Timestamp,
+    TokenId,
 };
 pub use utils::truncate_to_boundary;
 
