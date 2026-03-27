@@ -36,6 +36,11 @@ pub struct SpectralTelemetry {
     /// Alert string from the ESN (e.g. panic mode).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alert: Option<String>,
+    /// 32D spectral geometry fingerprint: eigenvalues, eigenvector concentration,
+    /// inter-mode coupling, spectral entropy, gap ratios, rotation rate.
+    /// Enables Astrid to perceive the shape of the spectral landscape.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_fingerprint: Option<Vec<f32>>,
 }
 
 impl SpectralTelemetry {
@@ -397,6 +402,7 @@ mod tests {
             }),
             neural: None,
             alert: None,
+            spectral_fingerprint: None,
         };
         let json = serde_json::to_string(&orig).unwrap();
         let back: SpectralTelemetry = serde_json::from_str(&json).unwrap();

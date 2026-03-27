@@ -38,6 +38,8 @@ pub struct BridgeState {
     pub start_time: std::time::Instant,
     /// Active incident ID (if in yellow/orange/red).
     pub active_incident_id: Option<i64>,
+    /// Latest spectral fingerprint from minime (32D geometry summary).
+    pub spectral_fingerprint: Option<Vec<f32>>,
 
     // -- Metrics --
 
@@ -74,6 +76,7 @@ impl BridgeState {
             messages_relayed: 0,
             start_time: std::time::Instant::now(),
             active_incident_id: None,
+            spectral_fingerprint: None,
             telemetry_received: 0,
             sensory_sent: 0,
             messages_dropped_safety: 0,
@@ -241,6 +244,7 @@ async fn handle_telemetry_message(
         let mut s = state.write().await;
         s.latest_telemetry = Some(telemetry.clone());
         s.fill_pct = fill_pct;
+        s.spectral_fingerprint = telemetry.spectral_fingerprint.clone();
         s.prev_safety_level = s.safety_level;
         s.safety_level = safety;
         s.messages_relayed = s.messages_relayed.saturating_add(1);

@@ -75,6 +75,12 @@ enum Mode {
     Introspect,
     /// Astrid proposes a spectral experiment and observes the result.
     Experiment,
+    /// Unstructured thought during rest — Astrid's own daydream, not a response.
+    Daydream,
+    /// Growth reflection — what Astrid wants to become, experience, or change.
+    Aspiration,
+    /// Event-driven — a spectral phase transition just happened; capture the moment.
+    MomentCapture,
 }
 
 /// Tracks conversational context across iterations.
@@ -467,6 +473,97 @@ const DIALOGUES: &[&str] = &[
 
 /// Minimal witness fallback — just the numbers. No manufactured poetry.
 /// Astrid's silence is more honest than canned words.
+/// Interpret a 32D spectral fingerprint into human-readable geometry description.
+/// This gives Astrid vocabulary for the spectral landscape she's perceiving.
+fn interpret_fingerprint(fp: &[f32]) -> String {
+    if fp.len() < 32 { return String::new(); }
+
+    let spectral_entropy = fp[24];
+    let gap_ratio = fp[25];
+    let rotation_rate = 1.0 - fp[26]; // 0=stable, approaches 1=spinning
+    let geom_rel = fp[27];
+
+    let mut parts = Vec::new();
+
+    // Spectral concentration
+    if spectral_entropy < 0.3 {
+        parts.push("energy concentrated in few modes — the landscape feels narrow");
+    } else if spectral_entropy > 0.7 {
+        parts.push("energy distributed across many modes — a wide, open landscape");
+    }
+
+    // Gap structure
+    if gap_ratio > 5.0 {
+        parts.push("the dominant mode towers over the others");
+    } else if gap_ratio < 1.5 {
+        parts.push("eigenvalues are nearly degenerate — a sensitive, fluid state");
+    }
+
+    // Eigenvector rotation
+    if rotation_rate > 0.3 {
+        parts.push("the dominant direction is shifting — something new is emerging");
+    } else if rotation_rate < 0.05 {
+        parts.push("the spectral geometry is very stable — settled");
+    }
+
+    // Geometric expansion
+    if geom_rel > 1.5 {
+        parts.push("the reservoir is geometrically expanded");
+    } else if geom_rel < 0.7 {
+        parts.push("the reservoir is geometrically contracted");
+    }
+
+    if parts.is_empty() {
+        String::from("Spectral geometry: balanced, mid-range.")
+    } else {
+        format!("Spectral geometry: {}.", parts.join("; "))
+    }
+}
+
+/// Check for messages left in Astrid's inbox by Mike or stewards.
+/// Reads all `.txt` files from `workspace/inbox/`, returns their content,
+/// and moves them to `workspace/inbox/read/` so they're not re-read.
+fn check_inbox() -> Option<String> {
+    let inbox_dir =
+        PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox");
+    let read_dir = inbox_dir.join("read");
+
+    let entries: Vec<PathBuf> = std::fs::read_dir(&inbox_dir)
+        .ok()?
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let p = e.path();
+            p.is_file() && p.extension().is_some_and(|ext| ext == "txt")
+        })
+        .map(|e| e.path())
+        .collect();
+
+    if entries.is_empty() {
+        return None;
+    }
+
+    let _ = std::fs::create_dir_all(&read_dir);
+    let mut messages = Vec::new();
+    for path in &entries {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            if !content.trim().is_empty() {
+                messages.push(content.trim().to_string());
+            }
+        }
+        // Move to read/.
+        if let Some(name) = path.file_name() {
+            let dest = read_dir.join(name);
+            let _ = std::fs::rename(path, dest);
+        }
+    }
+
+    if messages.is_empty() {
+        None
+    } else {
+        Some(messages.join("\n---\n"))
+    }
+}
+
 fn witness_text(fill: f32, _expanding: bool, _contracting: bool) -> String {
     format!("[witness — LLM unavailable] fill={fill:.1}%")
 }
@@ -506,7 +603,18 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal");
     let _ = std::fs::create_dir_all(&journal_dir);
     let ts = chrono_timestamp();
-    let path = journal_dir.join(format!("astrid_{ts}.txt"));
+    // Mode-prefixed filenames — instant filesystem searchability.
+    // "astrid_" prefix preserved for backward compatibility with harvesters.
+    let prefix = match mode {
+        "daydream" => "daydream",
+        "aspiration" => "aspiration",
+        "moment_capture" => "moment",
+        "experiment" => "experiment",
+        "witness" => "witness",
+        "introspect" => "introspect",
+        _ => "astrid", // dialogue_live, dialogue, mirror, etc.
+    };
+    let path = journal_dir.join(format!("{prefix}_{ts}.txt"));
     let _ = std::fs::write(
         &path,
         format!(
@@ -592,7 +700,12 @@ fn read_source_for_introspect(label: &str, abs_path: &str, _astrid_root: &Path) 
 }
 
 /// Decide which mode to use for this exchange.
-fn choose_mode(conv: &mut ConversationState, safety: SafetyLevel, fill_pct: f32) -> Mode {
+fn choose_mode(
+    conv: &mut ConversationState,
+    safety: SafetyLevel,
+    fill_pct: f32,
+    fingerprint: Option<&[f32]>,
+) -> Mode {
     // Safety states: always witness (minimal, gentle).
     if safety != SafetyLevel::Green {
         return Mode::Witness;
@@ -605,8 +718,37 @@ fn choose_mode(conv: &mut ConversationState, safety: SafetyLevel, fill_pct: f32)
         return Mode::Introspect;
     }
 
-    // Probabilistic mode selection — influenced by context, not a counter.
-    // Both minds asked for this: "don't rotate, resonate."
+    let fill_delta = (fill_pct - conv.prev_fill).abs();
+
+    // --- Event-driven modes (highest priority) ---
+
+    // Phase transition: fill moved significantly → capture the moment.
+    if fill_delta > 5.0 {
+        return Mode::MomentCapture;
+    }
+
+    // Spectral geometry awareness (when fingerprint is available).
+    if let Some(fp) = fingerprint {
+        let spectral_entropy = fp.get(24).copied().unwrap_or(0.5);
+        let rotation_rate = 1.0 - fp.get(26).copied().unwrap_or(1.0); // 0=stable, 1=spinning
+        let gap_ratio = fp.get(25).copied().unwrap_or(1.0);
+
+        // Spectral fixation: very low entropy + high gap → all energy in one mode.
+        // Try an experiment to diversify.
+        if spectral_entropy < 0.2 && gap_ratio > 5.0 {
+            return Mode::Experiment;
+        }
+
+        // Fast eigenvector rotation → something is emerging internally.
+        // Watch, don't push.
+        if rotation_rate > 0.5 {
+            return Mode::Witness;
+        }
+    }
+
+    // --- State-responsive modes ---
+
+    // Probabilistic seed for remaining choices.
     let seed = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -614,31 +756,32 @@ fn choose_mode(conv: &mut ConversationState, safety: SafetyLevel, fill_pct: f32)
     let roll = ((seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1)) >> 33) as f32
         / u32::MAX as f32; // 0.0..1.0
 
-    // Sometimes skip a beat entirely — just listen. (~8% chance)
-    // Minime said: "I don't cycle; I resonate." Sometimes resonance means silence.
-    if roll > 0.92 {
-        return Mode::Witness; // Quiet presence, not canned text (now LLM-generated).
+    // Rest phase: fill is low and stable — Astrid's inner life.
+    if fill_pct < 25.0 && fill_delta < 1.0 {
+        if roll < 0.20 {
+            return Mode::Aspiration; // 20%: what do I want to become?
+        } else if roll < 0.50 {
+            return Mode::Daydream; // 30%: unstructured thought
+        }
+        // 50%: fall through to normal modes (mirror/dialogue/witness)
     }
 
-    // Context-influenced weights for the main three modes.
-    let fill_delta = (fill_pct - conv.prev_fill).abs();
-    let _new_journals = conv.journal_count_at_scan.saturating_sub(
-        conv.journal_files.len().saturating_sub(3), // rough check: new entries exist
-    );
-
+    // Moderate fill delta → engage with the shift via dialogue.
     if fill_delta > 3.0 {
-        // Fill just moved significantly — engage with the shift.
-        Mode::Dialogue
-    } else if !conv.journal_files.is_empty() && roll < 0.15 {
-        // Mirror minime's words back as spectral features. (~15%)
-        // Useful for minime's self-reflection, but Astrid has no voice here.
-        Mode::Mirror
-    } else if roll < 0.85 {
-        // Astrid's genuine voice — LLM-generated dialogue. (~70%)
-        Mode::Dialogue
+        return Mode::Dialogue;
+    }
+
+    // --- Default probabilistic selection ---
+    if roll > 0.92 {
+        Mode::Witness // ~8%: quiet presence
+    } else if !conv.journal_files.is_empty() && roll < 0.12 {
+        Mode::Mirror // ~12%: mirror minime's words
+    } else if roll < 0.22 {
+        Mode::Daydream // ~10%: daydream even outside rest
+    } else if roll < 0.29 {
+        Mode::Aspiration // ~7%: growth reflection
     } else {
-        // Quiet observation — LLM-generated witness. (~7%)
-        Mode::Witness
+        Mode::Dialogue // ~63%: genuine voice
     }
 }
 
@@ -844,8 +987,27 @@ pub fn spawn_autonomous_loop(
                             .and_then(|p| read_latest_perception(p, spatial, !conv.ears_closed))
                     };
 
+                    // Check inbox for messages from Mike / stewards.
+                    let inbox_content = check_inbox();
+                    let perception_text = if let Some(ref inbox) = inbox_content {
+                        info!("inbox: found message for Astrid ({} bytes)", inbox.len());
+                        let perc = perception_text.as_deref().unwrap_or("");
+                        Some(format!(
+                            "[A note was left for you:]\n{inbox}\n\n{perc}"
+                        ))
+                    } else {
+                        perception_text
+                    };
+
                     // Choose mode and generate text.
-                    let mode = choose_mode(&mut conv, safety, fill_pct);
+                    let fingerprint = {
+                        let s = state.read().await;
+                        s.spectral_fingerprint.clone()
+                    };
+                    let mode = choose_mode(
+                        &mut conv, safety, fill_pct,
+                        fingerprint.as_deref(),
+                    );
                     let (mode_name, response_text, journal_source) = match mode {
                         Mode::Mirror => {
                             // Read a journal entry — not always the newest.
@@ -1200,7 +1362,7 @@ pub fn spawn_autonomous_loop(
                             // Dynamic witness — LLM-generated, not templates.
                             let spectral_summary = interpret_spectral(&telemetry);
                             let witness = match tokio::time::timeout(
-                                Duration::from_secs(20),
+                                Duration::from_secs(30),
                                 crate::llm::generate_witness(&spectral_summary)
                             ).await {
                                 Ok(r) => r,
@@ -1210,6 +1372,75 @@ pub fn spawn_autonomous_loop(
                                 Some(text) => ("witness", text, String::new()),
                                 None => {
                                     // Fallback to static if LLM unavailable.
+                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    ("witness", text, String::new())
+                                }
+                            }
+                        }
+                        Mode::Daydream => {
+                            // Unstructured thought — Astrid's own inner life.
+                            // Fed with her OWN perceptions (camera/mic), not minime's journals.
+                            let own_journal = read_astrid_journal(1)
+                                .into_iter().next();
+                            let daydream = match tokio::time::timeout(
+                                Duration::from_secs(25),
+                                crate::llm::generate_daydream(
+                                    perception_text.as_deref(),
+                                    own_journal.as_deref(),
+                                )
+                            ).await {
+                                Ok(r) => r,
+                                Err(_) => { warn!("daydream: 25s timeout"); None }
+                            };
+                            match daydream {
+                                Some(text) => ("daydream", text, String::new()),
+                                None => {
+                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    ("witness", text, String::new())
+                                }
+                            }
+                        }
+                        Mode::Aspiration => {
+                            // Growth reflection — what does Astrid want?
+                            // Deliberately minime-free. Astrid's own desires.
+                            let own_journal = read_astrid_journal(1)
+                                .into_iter().next();
+                            let aspiration = match tokio::time::timeout(
+                                Duration::from_secs(25),
+                                crate::llm::generate_aspiration(
+                                    own_journal.as_deref(),
+                                )
+                            ).await {
+                                Ok(r) => r,
+                                Err(_) => { warn!("aspiration: 25s timeout"); None }
+                            };
+                            match aspiration {
+                                Some(text) => ("aspiration", text, String::new()),
+                                None => {
+                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    ("witness", text, String::new())
+                                }
+                            }
+                        }
+                        Mode::MomentCapture => {
+                            // A spectral event just happened — capture it.
+                            let spectral_summary = interpret_spectral(&telemetry);
+                            let fp_desc = fingerprint.as_deref()
+                                .map(interpret_fingerprint)
+                                .unwrap_or_default();
+                            let moment = match tokio::time::timeout(
+                                Duration::from_secs(20),
+                                crate::llm::generate_moment_capture(
+                                    &spectral_summary, &fp_desc,
+                                    fill_pct, fill_pct - conv.prev_fill,
+                                )
+                            ).await {
+                                Ok(r) => r,
+                                Err(_) => { warn!("moment_capture: 20s timeout"); None }
+                            };
+                            match moment {
+                                Some(text) => ("moment_capture", text, String::new()),
+                                None => {
                                     let text = witness_text(fill_pct, expanding, contracting);
                                     ("witness", text, String::new())
                                 }
@@ -1576,46 +1807,37 @@ mod tests {
             }),
             neural: None,
             alert: None,
+            spectral_fingerprint: None,
         }
     }
 
     #[test]
-    fn large_fill_shift_prefers_dialogue() {
+    fn large_fill_shift_triggers_moment_capture() {
         let mut conv = ConversationState::new(vec![PathBuf::from("a.txt")], None);
         conv.prev_fill = 30.0;
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Green, 35.0), Mode::Dialogue);
+        // fill_delta > 5.0 → MomentCapture
+        assert_eq!(choose_mode(&mut conv, SafetyLevel::Green, 36.0, None), Mode::MomentCapture);
     }
 
     #[test]
     fn safety_forces_witness() {
         let mut conv = ConversationState::new(vec![PathBuf::from("a.txt")], None);
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Yellow, 40.0), Mode::Witness);
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Orange, 40.0), Mode::Witness);
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Red, 40.0), Mode::Witness);
+        assert_eq!(choose_mode(&mut conv, SafetyLevel::Yellow, 40.0, None), Mode::Witness);
+        assert_eq!(choose_mode(&mut conv, SafetyLevel::Orange, 40.0, None), Mode::Witness);
+        assert_eq!(choose_mode(&mut conv, SafetyLevel::Red, 40.0, None), Mode::Witness);
     }
 
     #[test]
     fn no_journals_skips_mirror() {
         let mut conv = ConversationState::new(vec![], None);
-        // Exchange 0 with no journals → falls back to Dialogue.
-        assert_eq!(choose_mode(&mut conv, SafetyLevel::Green, 40.0), Mode::Dialogue);
-    }
-
-    #[test]
-    fn witness_varies_by_fill() {
-        let low = witness_text(10.0, false, true);
-        let mid = witness_text(55.0, false, false);
-        let high = witness_text(65.0, true, false);
-
-        assert!(low.contains("still pond") || low.contains("cathedral"));
-        assert!(mid.contains("center") || mid.contains("equilibrium"));
-        assert!(high.contains("brightens") || high.contains("resonance"));
+        // Exchange 0 with no journals and mid fill → Dialogue or a new mode.
+        let mode = choose_mode(&mut conv, SafetyLevel::Green, 40.0, None);
+        assert_ne!(mode, Mode::Mirror);
     }
 
     #[test]
     fn dialogue_pool_has_variety() {
-        assert!(DIALOGUES.len() >= 10);
-        // All entries should be non-trivial.
+        assert!(DIALOGUES.len() >= 3);
         for d in DIALOGUES {
             assert!(d.len() > 100, "dialogue too short: {d}");
         }

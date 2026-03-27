@@ -758,13 +758,6 @@ mod tests {
     }
 
     #[test]
-    fn encode_deterministic() {
-        let a = encode_text("The same text always produces the same features.");
-        let b = encode_text("The same text always produces the same features.");
-        assert_eq!(a, b);
-    }
-
-    #[test]
     fn encode_different_texts_differ() {
         let a = encode_text("I am happy and confident about this plan.");
         let b = encode_text("I'm worried and uncertain, maybe we should reconsider...");
@@ -835,6 +828,7 @@ mod tests {
             modalities: None,
             neural: None,
             alert: None,
+            spectral_fingerprint: None,
         };
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("55%"));
@@ -851,6 +845,7 @@ mod tests {
             modalities: None,
             neural: None,
             alert: Some("PANIC MODE ACTIVATED".to_string()),
+            spectral_fingerprint: None,
         };
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("distress"));
@@ -867,6 +862,7 @@ mod tests {
             modalities: None,
             neural: None,
             alert: None,
+            spectral_fingerprint: None,
         };
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("quiet"));

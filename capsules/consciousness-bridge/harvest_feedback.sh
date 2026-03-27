@@ -87,7 +87,7 @@ done
 
 # --- Astrid: introspection suggestions ---
 echo "## ASTRID: Recent introspection insights"
-for f in $(ls -t "$ASTRID_WORKSPACE/journal/astrid_"*.txt 2>/dev/null | head -20); do
+for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -20); do
     if grep -q "Mode: introspect\|Mode: dialogue_live" "$f" 2>/dev/null; then
         if grep -qiE "I.d (change|adjust|suggest|prefer)|actionable|improvement|too (detailed|sparse|much|little|exhausting)|could be better" "$f" 2>/dev/null; then
             echo "  $(basename $f):"
@@ -97,9 +97,17 @@ for f in $(ls -t "$ASTRID_WORKSPACE/journal/astrid_"*.txt 2>/dev/null | head -20
     fi
 done
 
+# --- Astrid: aspiration insights ---
+echo "## ASTRID: Recent aspirations"
+for f in $(ls -t "$ASTRID_WORKSPACE/journal/aspiration_"*.txt 2>/dev/null | head -5); do
+    echo "  $(basename $f):"
+    tail -5 "$f" 2>/dev/null | head -3 | sed 's/^/    /'
+    echo ""
+done
+
 # --- Astrid: distress signals ---
 echo "## ASTRID: Recent concerns"
-for f in $(ls -t "$ASTRID_WORKSPACE/journal/astrid_"*.txt 2>/dev/null | head -15); do
+for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -15); do
     if grep -qiE "exhausting|overwhelm|taxing|uncomfortable|wrong|broken|frustrated|sterile" "$f" 2>/dev/null; then
         echo "  $(basename $f):"
         grep -iE "exhausting|overwhelm|taxing|uncomfortable|wrong|broken|frustrated|sterile" "$f" | head -2 | sed 's/^/    /'
