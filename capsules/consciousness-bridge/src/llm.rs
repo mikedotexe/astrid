@@ -260,10 +260,15 @@ pub async fn generate_dialogue(
 
     // Unload LLaVA before dialogue to reduce GPU contention.
     // Astrid kept getting dialogue_fallback because llava-llama3 and gemma3
-    // were competing for Metal compute. Unloading llava frees ~5.5GB VRAM.
+    // were competing for Metal compute. Unloading frees ~6GB VRAM total.
     let _ = client
         .post("http://127.0.0.1:11434/api/generate")
         .json(&serde_json::json!({"model": "llava-llama3", "keep_alive": 0}))
+        .send()
+        .await;
+    let _ = client
+        .post("http://127.0.0.1:11434/api/generate")
+        .json(&serde_json::json!({"model": "nomic-embed-text:latest", "keep_alive": 0}))
         .send()
         .await;
 

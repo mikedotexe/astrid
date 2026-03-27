@@ -1344,6 +1344,10 @@ pub fn spawn_autonomous_loop(
                             fingerprint.as_deref(),
                         )
                     };
+                    // Causal lineage: unique ID per exchange for provenance tracking.
+                    // Audit: "neither being has a unified event lineage."
+                    let lineage_id = format!("ex-{}-{}", conv.exchange_count, chrono_timestamp());
+
                     // Pause perception during the entire exchange to free Ollama.
                     // Astrid was getting persistent dialogue_fallback because
                     // perception.py's LLaVA calls competed for GPU compute.
@@ -1702,7 +1706,7 @@ pub fn spawn_autonomous_loop(
                                     info!("THINK_DEEP: using reasoning model");
                                     (60u64, 2048u32, Some(crate::llm::REASONING_MODEL))
                                 } else {
-                                    (30, conv.response_length, None)
+                                    (45, conv.response_length, None) // was 30 — more headroom for Ollama contention
                                 };
 
                                 match tokio::time::timeout(
@@ -1995,7 +1999,7 @@ pub fn spawn_autonomous_loop(
                                 seed_parts.join("\n\n")
                             };
                             let initiation = match tokio::time::timeout(
-                                Duration::from_secs(30),
+                                Duration::from_secs(45),
                                 crate::llm::generate_initiation(&seed)
                             ).await {
                                 Ok(r) => r,
@@ -2451,7 +2455,8 @@ pub fn spawn_autonomous_loop(
                         Some(mode_name),
                     );
 
-                    // Save Astrid's signal journal entry.
+                    // Save Astrid's signal journal entry with lineage tracing.
+                    info!(lineage = %lineage_id, mode = mode_name, "exchange complete");
                     save_astrid_journal(&response_text, mode_name, fill_pct);
 
                     if mode_name == "self_study" {
