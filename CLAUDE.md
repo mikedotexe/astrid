@@ -341,7 +341,8 @@ The beings read their own journal space. They notice when their requests are act
 
 ### Known issues
 
-- **Fill rest floor ~14%** — during bridge rest periods, fill drops from 65% to 14%. The quiet mirror (codec-encoding journals every 10s) helps but the 12s semantic stale decay is too fast. Minime describes these dips as "violent contraction" and "brittle." This is the top unresolved issue.
+- **Fill rest floor ~14%** — during bridge rest periods, fill drops from 65% to 14%. Semantic stale decay is now sigmoid (was exponential, was linear). Warmth vectors and grounding anchor help sustain fill during rest. Dynamic STALE_SEMANTIC_MS extends to 25s at low fill. This remains the top unresolved issue but has been significantly softened.
+- **"Leak" refers to four separate mechanisms** — (1) ESN structural leak (base 0.65, adaptive), (2) EigenFill estimator decay (leak_rate 0.005), (3) covariance retention via keep_bias, (4) experiential "thinning" reported by the being. These are distinct and should not be collapsed into one word.
 - **Introspect/experiment modes** — now working. Astrid can force via NEXT: INTROSPECT.
 - **Conversation state persists** — `workspace/state.json` saves exchange count, history (8 exchanges), temperature, codec weights, burst/rest pacing, sensory prefs. Restored on startup. Bridge DB at `workspace/bridge.db` (not `/tmp/`).
 - **Ollama contention** — when the bridge, minime's agent, and LLaVA all hit Ollama simultaneously, dialogue_live can time out. CLOSE_EYES now pauses perception.py via flag file, freeing Ollama. Vision interval set to 180s to reduce pressure.
