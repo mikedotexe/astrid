@@ -23,6 +23,7 @@ pub const AGENCY_REQUESTS_DIR: &str =
     "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/agency_requests";
 pub const CLAUDE_TASKS_DIR: &str =
     "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/claude_tasks";
+pub const MINIME_OUTBOX_DIR: &str = "/Users/v/other/minime/workspace/outbox";
 pub const INTROSPECTOR_SCRIPT: &str = "/Users/v/other/astrid/capsules/introspector/introspector.py";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

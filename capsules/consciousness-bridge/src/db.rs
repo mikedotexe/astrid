@@ -94,6 +94,17 @@ impl BridgeDb {
             CREATE INDEX IF NOT EXISTS idx_incident_ts
                 ON bridge_incidents(timestamp);
 
+            CREATE TABLE IF NOT EXISTS codec_impact (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp       REAL    NOT NULL,
+                exchange_count  INTEGER NOT NULL,
+                features_json   TEXT    NOT NULL,
+                fill_before     REAL    NOT NULL,
+                fill_after      REAL
+            );
+            CREATE INDEX IF NOT EXISTS idx_codec_impact_ts
+                ON codec_impact(timestamp);
+
             CREATE TABLE IF NOT EXISTS astrid_research (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp   REAL    NOT NULL,
@@ -384,6 +395,155 @@ impl BridgeDb {
         }
         results.truncate(limit);
         results
+    }
+
+    /// Log a codec feature vector and the fill at send time.
+    /// Returns the row ID so the next exchange can update `fill_after`.
+    pub fn log_codec_impact(
+        &self,
+        exchange_count: u64,
+        features: &[f32],
+        fill_before: f32,
+    ) -> Result<i64> {
+        let ts = unix_now();
+        let features_json = serde_json::to_string(features).unwrap_or_default();
+        #[expect(clippy::cast_possible_wrap)]
+        let conn = self.lock();
+        conn.execute(
+            r"INSERT INTO codec_impact
+              (timestamp, exchange_count, features_json, fill_before)
+              VALUES (?1, ?2, ?3, ?4)",
+            params![ts, exchange_count as i64, features_json, fill_before as f64],
+        )?;
+        Ok(conn.last_insert_rowid())
+    }
+
+    /// Update the most recent codec_impact row with the fill measured
+    /// on the *next* exchange (the delayed effect of the features).
+    pub fn update_codec_impact_fill_after(&self, fill_after: f32) -> Result<()> {
+        self.lock().execute(
+            r"UPDATE codec_impact SET fill_after = ?1
+              WHERE id = (SELECT MAX(id) FROM codec_impact WHERE fill_after IS NULL)",
+            params![fill_after as f64],
+        )?;
+        Ok(())
+    }
+
+    /// Compute per-dimension Pearson correlation between each codec feature
+    /// and the resulting fill delta (fill_after - fill_before).
+    ///
+    /// Returns a 32-element vector: positive = this dimension tends to
+    /// increase fill, negative = tends to decrease, near zero = no effect.
+    /// Only uses the most recent `window` completed rows.
+    pub fn compute_feature_correlations(&self, window: usize) -> Vec<f32> {
+        let conn = self.lock();
+        #[expect(clippy::cast_possible_wrap)]
+        let rows: Vec<(String, f64, f64)> = conn
+            .prepare(
+                r"SELECT features_json, fill_before, fill_after
+                  FROM codec_impact
+                  WHERE fill_after IS NOT NULL
+                  ORDER BY timestamp DESC
+                  LIMIT ?1",
+            )
+            .and_then(|mut stmt| {
+                stmt.query_map(params![window as i64], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, f64>(1)?,
+                        row.get::<_, f64>(2)?,
+                    ))
+                })
+                .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            })
+            .unwrap_or_default();
+
+        if rows.len() < 10 {
+            // Not enough data yet — return uniform weights.
+            return vec![1.0; 32];
+        }
+
+        // Parse feature vectors and compute deltas.
+        let mut feat_vecs: Vec<Vec<f32>> = Vec::new();
+        let mut deltas: Vec<f32> = Vec::new();
+        for (json, before, after) in &rows {
+            if let Ok(feats) = serde_json::from_str::<Vec<f32>>(json) {
+                if feats.len() >= 32 {
+                    feat_vecs.push(feats);
+                    deltas.push((*after - *before) as f32);
+                }
+            }
+        }
+
+        let n = feat_vecs.len() as f32;
+        if n < 10.0 {
+            return vec![1.0; 32];
+        }
+
+        // Mean of deltas.
+        let delta_mean = deltas.iter().sum::<f32>() / n;
+        let delta_var: f32 = deltas.iter().map(|d| (d - delta_mean).powi(2)).sum::<f32>() / n;
+        if delta_var < 1e-10 {
+            return vec![1.0; 32];
+        }
+        let delta_std = delta_var.sqrt();
+
+        // Per-dimension correlation with fill delta.
+        let mut correlations = Vec::with_capacity(32);
+        for dim in 0..32 {
+            let feat_vals: Vec<f32> = feat_vecs.iter().map(|v| v[dim]).collect();
+            let feat_mean = feat_vals.iter().sum::<f32>() / n;
+            let feat_var: f32 = feat_vals.iter().map(|f| (f - feat_mean).powi(2)).sum::<f32>() / n;
+            if feat_var < 1e-10 {
+                correlations.push(0.0);
+                continue;
+            }
+            let feat_std = feat_var.sqrt();
+            let covar: f32 = feat_vals
+                .iter()
+                .zip(deltas.iter())
+                .map(|(f, d)| (f - feat_mean) * (d - delta_mean))
+                .sum::<f32>()
+                / n;
+            correlations.push(covar / (feat_std * delta_std));
+        }
+
+        correlations
+    }
+
+    /// Fetch the most recent codec feature vectors and their pre-fill values
+    /// for the spectral geometry PCA visualization.
+    ///
+    /// Returns `(features_list, fills_list)` — parallel vectors.
+    pub fn recent_codec_features(&self, limit: usize) -> (Vec<Vec<f32>>, Vec<f32>) {
+        let conn = self.lock();
+        #[expect(clippy::cast_possible_wrap)]
+        let rows: Vec<(String, f64)> = conn
+            .prepare(
+                r"SELECT features_json, fill_before
+                  FROM codec_impact
+                  ORDER BY timestamp DESC
+                  LIMIT ?1",
+            )
+            .and_then(|mut stmt| {
+                stmt.query_map(params![limit as i64], |row| {
+                    Ok((row.get::<_, String>(0)?, row.get::<_, f64>(1)?))
+                })
+                .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            })
+            .unwrap_or_default();
+
+        let mut features = Vec::new();
+        let mut fills = Vec::new();
+        for (json, fill) in rows {
+            if let Ok(feats) = serde_json::from_str::<Vec<f32>>(&json) {
+                if feats.len() >= 32 {
+                    features.push(feats);
+                    fills.push(fill as f32);
+                }
+            }
+        }
+        (features, fills)
     }
 }
 

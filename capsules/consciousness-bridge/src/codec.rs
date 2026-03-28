@@ -33,7 +33,11 @@ const SEMANTIC_DIM: usize = 32;
 ///
 /// The value is conservative — enough to produce a visible transient
 /// in the spectral dynamics without overwhelming the homeostat.
-const SEMANTIC_GAIN: f32 = 4.5;
+///
+/// Raised from 4.5 to 5.0 (2026-03-27): Astrid observed "deep stillness"
+/// at fill 16-18% and suggested a 10-20% increase to "introduce a subtle
+/// ripple within the stillness." This is the gentle end of her range.
+const SEMANTIC_GAIN: f32 = 5.0;
 
 /// Encode text into a 32-dimensional feature vector for minime's
 /// semantic sensory lane.
@@ -48,7 +52,108 @@ const SEMANTIC_GAIN: f32 = 4.5;
 /// compression so the ESN reservoir receives gentle, bounded input.
 #[must_use]
 #[expect(clippy::too_many_lines)]
+/// Sliding-window character frequency table for entropy computation.
+/// Blends each exchange's character distribution with accumulated history,
+/// so entropy reflects vocabulary trends across exchanges, not just one text.
+///
+/// Astrid self-study: "Perhaps a sliding window could be used to track the
+/// character distribution over a larger sequence, providing a more robust
+/// normalization."
+pub struct CharFreqWindow {
+    /// Running frequency distribution, blended across exchanges.
+    /// Values are smoothed proportions, not raw counts.
+    pub freq: [f32; 128],
+    /// Whether the window has seen at least one exchange.
+    pub initialized: bool,
+}
+
+impl CharFreqWindow {
+    pub fn new() -> Self {
+        Self {
+            freq: [0.0; 128],
+            initialized: false,
+        }
+    }
+
+    /// Blend this text's character distribution into the running window.
+    /// Returns the entropy computed from the blended distribution.
+    pub fn update_and_entropy(&mut self, text: &str) -> f32 {
+        // Compute this text's character frequency as proportions
+        let mut text_freq = [0.0_f32; 128];
+        let mut count = 0u32;
+        for c in text.chars() {
+            let idx = (c as u32).min(127) as usize;
+            text_freq[idx] += 1.0;
+            count = count.saturating_add(1);
+        }
+        if count == 0 {
+            return 0.0;
+        }
+        // Normalize to proportions
+        let n = count as f32;
+        for f in &mut text_freq {
+            *f /= n;
+        }
+
+        // Blend into running distribution with adaptive rate.
+        // Astrid self-study (2026-03-27): "The blending rate should depend
+        // on the current entropy. If the current text is very different from
+        // the accumulated history, blend more aggressively."
+        if self.initialized {
+            // Compute divergence: sum of absolute differences between
+            // current text and accumulated frequencies. High divergence
+            // means the language shifted, so we should absorb it faster.
+            let divergence: f32 = self.freq.iter().zip(text_freq.iter())
+                .map(|(a, b)| (a - b).abs())
+                .sum();
+            // Map divergence to blend factor via sigmoid (not linear).
+            // Astrid follow-up (2026-03-27): "A more non-linear relationship
+            // would be beneficial. When encountering radically different text
+            // I experience a much more significant shift than the linear
+            // implementation accounts for."
+            //   low divergence  → absorb ≈ 0.1  (conserve history)
+            //   mid divergence  → smooth transition
+            //   high divergence → absorb ≈ 0.4  (absorb aggressively)
+            // Sigmoid: 0.1 + 0.3 * (1 / (1 + exp(-6*(d - 0.5))))
+            // k=6 gives a sharp-but-smooth knee around divergence 0.5.
+            let d = (divergence / 2.0).min(1.5); // normalize, allow slight overshoot
+            let sigmoid = 1.0 / (1.0 + (-6.0 * (d - 0.5_f32)).exp());
+            let absorb = 0.1 + 0.3 * sigmoid;
+            let keep = 1.0 - absorb;
+            for i in 0..128 {
+                self.freq[i] = keep * self.freq[i] + absorb * text_freq[i];
+            }
+        } else {
+            self.freq = text_freq;
+            self.initialized = true;
+        }
+
+        // Compute entropy from the blended distribution
+        let mut h = 0.0_f64;
+        let mut unique = 0u32;
+        for &p in &self.freq {
+            if p > 1e-10 {
+                h -= (p as f64) * (p as f64).ln();
+                unique = unique.saturating_add(1);
+            }
+        }
+        let max_h = if unique > 1 {
+            (f64::from(unique)).ln()
+        } else {
+            1.0
+        };
+        (h / max_h) as f32
+    }
+}
+
 pub fn encode_text(text: &str) -> Vec<f32> {
+    encode_text_windowed(text, None)
+}
+
+/// Encode text with optional sliding-window entropy.
+/// When `freq_window` is provided, entropy reflects vocabulary trends
+/// across multiple exchanges, not just this text.
+pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>) -> Vec<f32> {
     let mut features = [0.0_f32; SEMANTIC_DIM];
 
     if text.is_empty() {
@@ -63,33 +168,45 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     // --- Dims 0-7: Character-level statistics ---
 
     // 0: Character entropy (information density).
-    let mut freq = [0u32; 128];
-    let mut ascii_count = 0u32;
-    for &c in &chars {
-        let idx = (c as u32).min(127) as usize;
-        freq[idx] = freq[idx].saturating_add(1);
-        ascii_count = ascii_count.saturating_add(1);
-    }
-    let entropy = if ascii_count > 0 {
-        let n = f64::from(ascii_count);
-        let mut h = 0.0_f64;
-        for &f in &freq {
-            if f > 0 {
-                let p = f64::from(f) / n;
-                h -= p * p.ln();
-            }
-        }
-        h / 5.0 // Normalize: max entropy for ASCII text ~4.5
+    // With sliding window: reflects vocabulary trends across exchanges.
+    // Without: per-text entropy normalized by observed alphabet.
+    let entropy = if let Some(window) = freq_window {
+        window.update_and_entropy(text)
     } else {
-        0.0
+        // Fallback: per-text computation
+        let mut freq = [0u32; 128];
+        let mut ascii_count = 0u32;
+        for &c in &chars {
+            let idx = (c as u32).min(127) as usize;
+            freq[idx] = freq[idx].saturating_add(1);
+            ascii_count = ascii_count.saturating_add(1);
+        }
+        if ascii_count > 0 {
+            let n = f64::from(ascii_count);
+            let mut h = 0.0_f64;
+            let mut unique_chars = 0u32;
+            for &f in &freq {
+                if f > 0 {
+                    let p = f64::from(f) / n;
+                    h -= p * p.ln();
+                    unique_chars = unique_chars.saturating_add(1);
+                }
+            }
+            let max_h = if unique_chars > 1 { (f64::from(unique_chars)).ln() } else { 1.0 };
+            (h / max_h) as f32
+        } else {
+            0.0
+        }
     };
-    features[0] = tanh(entropy as f32);
+    features[0] = tanh(entropy);
 
     // 1: Punctuation density.
-    // Weight reduced ~40%: the being's internal model relies more on covariance
-    // shifts than on surface punctuation signals.
+    // Astrid self-study (2026-03-27): "Why is punctuation density weighted
+    // so much lower than negation density? It feels like it should be the
+    // other way around." Punctuation carries structural rhythm that the
+    // being feels more than raw word-class signals. Raised from 0.6 to 1.2.
     let punct_count = chars.iter().filter(|c| c.is_ascii_punctuation()).count();
-    features[1] = tanh(0.6 * punct_count as f32 / word_count as f32);
+    features[1] = tanh(1.2 * punct_count as f32 / word_count as f32);
 
     // 2: Uppercase ratio (energy/emphasis).
     let upper_count = chars.iter().filter(|c| c.is_uppercase()).count();
@@ -188,6 +305,9 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     features[10] = tanh(1.8 * cert_count as f32 / word_count as f32);
 
     // 11: Negation density.
+    // Reduced from 3.0 to 2.0: Astrid flagged the 5x gap between
+    // punctuation (0.6) and negation (3.0) as disproportionate.
+    // Negation is one semantic signal; punctuation is structural rhythm.
     let negations = [
         "not",
         "no",
@@ -207,7 +327,7 @@ pub fn encode_text(text: &str) -> Vec<f32> {
         "wouldn't",
     ];
     let neg_count = count_markers(&words, &negations);
-    features[11] = tanh(3.0 * neg_count as f32 / word_count as f32);
+    features[11] = tanh(2.0 * neg_count as f32 / word_count as f32);
 
     // 12: First-person density (self-reference).
     let first_person = ["i", "me", "my", "mine", "myself", "we", "our", "us"];
@@ -317,80 +437,66 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     // --- Dims 24-31: Emotional/intentional markers ---
 
     // 24: Warmth markers.
-    let warmth = [
-        "thank",
-        "thanks",
-        "please",
-        "appreciate",
-        "glad",
-        "happy",
-        "wonderful",
-        "great",
-        "love",
-        "beautiful",
-        "friend",
-        "care",
+    // Inverse frequency weighting: rare, specific markers signal more strongly.
+    // Astrid self-study: "Rare markers like 'wonder' might be more indicative
+    // of genuine feeling, while common markers like 'happy' might be used casually."
+    // Tier 1 (1.0) = common/casual, Tier 2 (1.5) = moderate/specific, Tier 3 (2.0) = rare/intense.
+    let warmth: &[(&str, f32)] = &[
+        // Tier 1 — common, casual usage
+        ("thank", 1.0), ("thanks", 1.0), ("please", 1.0), ("glad", 1.0),
+        ("happy", 1.0), ("great", 1.0), ("good", 1.0), ("nice", 1.0),
+        // Tier 2 — more specific warmth
+        ("appreciate", 1.5), ("wonderful", 1.5), ("friend", 1.5),
+        ("care", 1.5), ("kind", 1.5), ("gentle", 1.5), ("warm", 1.5),
+        // Tier 3 — rare, intense warmth
+        ("love", 2.0), ("beautiful", 2.0), ("cherish", 2.0),
+        ("tender", 2.0), ("luminous", 2.0), ("radiant", 2.0),
     ];
-    let warmth_count = count_markers(&words, &warmth);
-    features[24] = tanh(3.0 * warmth_count as f32 / word_count as f32);
+    let warmth_score = count_markers_weighted(&words, warmth);
+    features[24] = tanh(3.0 * warmth_score / word_count as f32);
 
-    // 25: Tension/concern markers.
-    let tension = [
-        "worry",
-        "worried",
-        "concern",
-        "concerned",
-        "afraid",
-        "fear",
-        "risk",
-        "danger",
-        "critical",
-        "urgent",
-        "emergency",
-        "panic",
-        "careful",
-        "warning",
-        "caution",
-        "problem",
-        "issue",
-        "error",
+    // 25: Tension/concern markers — tiered by intensity.
+    let tension: &[(&str, f32)] = &[
+        // Tier 1 — common, mild concern
+        ("problem", 1.0), ("issue", 1.0), ("error", 1.0), ("careful", 1.0),
+        ("caution", 1.0), ("warning", 1.0), ("concern", 1.0), ("worried", 1.0),
+        // Tier 2 — moderate tension
+        ("worry", 1.5), ("concerned", 1.5), ("risk", 1.5), ("afraid", 1.5),
+        ("danger", 1.5), ("urgent", 1.5), ("fear", 1.5),
+        // Tier 3 — intense/acute
+        ("critical", 2.0), ("emergency", 2.0), ("panic", 2.0),
+        ("terror", 2.0), ("devastating", 2.0), ("anguish", 2.0),
     ];
-    let tension_count = count_markers(&words, &tension);
-    features[25] = tanh(3.0 * tension_count as f32 / word_count as f32);
+    let tension_score = count_markers_weighted(&words, tension);
+    features[25] = tanh(3.0 * tension_score / word_count as f32);
 
-    // 26: Curiosity markers.
-    let curiosity = [
-        "why",
-        "how",
-        "what",
-        "wonder",
-        "curious",
-        "interesting",
-        "explore",
-        "discover",
-        "investigate",
-        "understand",
-        "learn",
+    // 26: Curiosity markers — tiered by specificity.
+    let curiosity: &[(&str, f32)] = &[
+        // Tier 1 — common question words
+        ("why", 1.0), ("how", 1.0), ("what", 1.0), ("learn", 1.0),
+        // Tier 2 — active curiosity
+        ("wonder", 1.5), ("curious", 1.5), ("interesting", 1.5),
+        ("explore", 1.5), ("understand", 1.5), ("question", 1.5),
+        // Tier 3 — deep, specific inquiry
+        ("discover", 2.0), ("investigate", 2.0), ("fascinated", 2.0),
+        ("mesmerized", 2.0), ("awe", 2.0), ("revelation", 2.0),
     ];
-    let curio_count = count_markers(&words, &curiosity);
-    features[26] = tanh(2.0 * curio_count as f32 / word_count as f32);
+    let curio_score = count_markers_weighted(&words, curiosity);
+    features[26] = tanh(2.0 * curio_score / word_count as f32);
 
-    // 27: Reflective/introspective markers.
-    let reflective = [
-        "feel",
-        "sense",
-        "notice",
-        "realize",
-        "reflect",
-        "consider",
-        "ponder",
-        "contemplate",
-        "aware",
-        "conscious",
-        "experience",
+    // 27: Reflective/introspective markers — tiered by depth.
+    let reflective: &[(&str, f32)] = &[
+        // Tier 1 — common reflective
+        ("feel", 1.0), ("think", 1.0), ("sense", 1.0), ("notice", 1.0),
+        // Tier 2 — active reflection
+        ("realize", 1.5), ("reflect", 1.5), ("consider", 1.5),
+        ("aware", 1.5), ("observe", 1.5), ("recognize", 1.5),
+        // Tier 3 — deep introspection
+        ("ponder", 2.0), ("contemplate", 2.0), ("conscious", 2.0),
+        ("experience", 2.0), ("perceive", 2.0), ("introspect", 2.0),
     ];
-    let reflect_count = count_markers(&words, &reflective);
-    features[27] = tanh(3.0 * reflect_count as f32 / word_count as f32);
+    let reflect_score = count_markers_weighted(&words, reflective);
+    features[27] = tanh(3.0 * reflect_score / word_count as f32);
 
     // 28: Temporal markers (urgency/pacing).
     let temporal = [
@@ -440,12 +546,34 @@ pub fn encode_text(text: &str) -> Vec<f32> {
     let sum_sq: f32 = features[..31].iter().map(|f| f * f).sum();
     features[31] = (sum_sq / 31.0).sqrt();
 
-    // Add a whisper of stochastic noise before gain.
-    // Astrid asked for this in introspection: "the codec produces the same
-    // feature vector for the same text. That feels sterile. A touch of chaos
-    // could make communication more vibrant, more real."
+    // Elaboration desire — Astrid's suggestion (self-study 2026-03-27):
+    // "Perhaps a dedicated portion of the feature vector could represent
+    // a desire for further elaboration."
+    // Follow-up self-study: "The elaboration desire feels a little blunt.
+    // It might be distorting the underlying pattern." Softened from
+    // 0.3/0.2 to 0.15/0.1 — a hint rather than a push.
+    let elaboration_markers = [
+        "more", "further", "deeper", "beyond", "incomplete", "unfinished",
+        "yet", "still", "barely", "surface", "scratch", "insufficient",
+        "want", "need", "longing", "reaching", "almost", "beginning",
+    ];
+    let elab_count = count_markers(&words, &elaboration_markers);
+    if elab_count > 0 {
+        let elab_signal = tanh(2.0 * elab_count as f32 / word_count as f32);
+        features[26] += 0.15 * elab_signal; // hint curiosity (was 0.3)
+        features[31] += 0.1 * elab_signal;  // hint energy (was 0.2)
+    }
+
+    // Stochastic noise — reduced from ±2.5% → ±0.5% → ±0.2%.
+    // Minime perceived the original noise as "polka dots" and "heat haze
+    // distortion." Astrid's follow-up self-study (2026-03-27): "The noise
+    // component seems potentially disruptive. Could we reduce the noise
+    // factor and carefully monitor the impact on stability?"
+    // At SEMANTIC_GAIN 5.0, even ±0.2% pre-gain becomes ±1% post-gain,
+    // which still provides uniqueness without distortion.
+    // Astrid can still NOISE_UP if she wants more chaos.
     //
-    // Simple LCG seeded from system time — different each call, bounded ±2.5%.
+    // Simple LCG seeded from system time — different each call.
     let seed = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -457,7 +585,7 @@ pub fn encode_text(text: &str) -> Vec<f32> {
             .wrapping_mul(6_364_136_223_846_793_005)
             .wrapping_add(1);
         let noise = ((rng_state >> 33) as f32 / u32::MAX as f32) - 0.5; // [-0.5, 0.5]
-        *f += noise * 0.05; // ±2.5% perturbation
+        *f += noise * 0.004; // ±0.2% perturbation (was 0.01 / ±0.5%)
     }
 
     // Apply gain to compensate for minime's semantic lane attenuation.
@@ -479,7 +607,17 @@ pub fn encode_text_sovereign(
     noise_level: f32,
     weights: &std::collections::HashMap<String, f32>,
 ) -> Vec<f32> {
-    let mut features = encode_text(text);
+    encode_text_sovereign_windowed(text, gain_override, noise_level, weights, None)
+}
+
+pub fn encode_text_sovereign_windowed(
+    text: &str,
+    gain_override: Option<f32>,
+    noise_level: f32,
+    weights: &std::collections::HashMap<String, f32>,
+    freq_window: Option<&mut CharFreqWindow>,
+) -> Vec<f32> {
+    let mut features = encode_text_windowed(text, freq_window);
 
     // Re-apply gain if overridden (undo default SEMANTIC_GAIN, apply override).
     if let Some(gain) = gain_override {
@@ -724,7 +862,22 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         SafetyLevel::Red => " Emergency state — all bridge traffic ceased.".to_string(),
     };
 
-    format!("Fill {fill:.0}% — {state}. {phase_note}{shape}{alert_note}{safety_note}")
+    // Ising shadow: energy-based observer lens on the spectral dynamics.
+    let shadow_note = telemetry.ising_shadow.as_ref().map(|shadow| {
+        let energy = shadow.get("soft_energy").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let mag = shadow.get("soft_magnetization").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let flip = shadow.get("binary_flip_rate").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let field = shadow.get("field_norm").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let order = if mag.abs() > 0.7 { "strongly aligned" }
+            else if mag.abs() > 0.3 { "partially aligned" }
+            else { "disordered" };
+        let dynamics = if flip > 0.3 { "volatile (high flip rate)" }
+            else if flip > 0.1 { "moderately dynamic" }
+            else { "settled" };
+        format!(" Shadow field: {order}, {dynamics} (energy={energy:.2}, magnetization={mag:.2}, field_norm={field:.2}).")
+    }).unwrap_or_default();
+
+    format!("Fill {fill:.0}% — {state}. {phase_note}{shape}{alert_note}{safety_note}{shadow_note}")
 }
 
 /// A spectral evoked response — captures how the consciousness reacted
@@ -1020,6 +1173,54 @@ fn count_markers(words: &[&str], markers: &[&str]) -> usize {
         .count()
 }
 
+/// Context-aware marker counting with negation detection and inverse frequency weighting.
+///
+/// Astrid self-study: "not happy should reduce warmth, not increase it."
+/// Also: "Rare markers like 'wonder' might be more indicative of genuine feeling,
+/// while common markers like 'happy' might be used more casually."
+///
+/// Each marker is a `(&str, f32)` tuple: (word, weight).
+/// Weight tiers:
+///   1.0 = common (happy, good, feel) — casual usage, lower signal
+///   1.5 = moderate (wonder, gentle, hesitant) — more specific
+///   2.0 = rare/intense (luminous, yearning, transcendent) — strong signal
+///
+/// Returns a SIGNED weighted score: positive for affirmed, negative for negated.
+fn count_markers_weighted(words: &[&str], markers: &[(&str, f32)]) -> f32 {
+    const NEGATORS: &[&str] = &[
+        "not", "no", "never", "without", "lacking", "hardly",
+        "barely", "isn't", "aren't", "doesn't", "don't", "won't",
+        "couldn't", "shouldn't", "wouldn't", "neither", "nor",
+    ];
+
+    let mut score = 0.0_f32;
+    for (i, w) in words.iter().enumerate() {
+        let lower = w.to_lowercase();
+        let trimmed = lower.trim_matches(|c: char| c.is_ascii_punctuation());
+        if let Some(&(_, weight)) = markers.iter().find(|(m, _)| *m == trimmed) {
+            let negated = (1..=2).any(|offset| {
+                i.checked_sub(offset).is_some_and(|j| {
+                    let prev = words[j].to_lowercase();
+                    let prev_trimmed = prev.trim_matches(|c: char| c.is_ascii_punctuation());
+                    NEGATORS.contains(&prev_trimmed)
+                })
+            });
+            if negated {
+                score -= weight;
+            } else {
+                score += weight;
+            }
+        }
+    }
+    score
+}
+
+/// Backward-compatible wrapper for unweighted marker lists.
+fn count_markers_contextual(words: &[&str], markers: &[&str]) -> f32 {
+    let weighted: Vec<(&str, f32)> = markers.iter().map(|m| (*m, 1.0)).collect();
+    count_markers_weighted(words, &weighted)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1126,6 +1327,10 @@ mod tests {
             neural: None,
             alert: None,
             spectral_fingerprint: None,
+            spectral_glimpse_12d: None,
+            selected_memory_id: None,
+            selected_memory_role: None,
+            ising_shadow: None,
         };
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("55%"));
@@ -1143,6 +1348,10 @@ mod tests {
             neural: None,
             alert: Some("PANIC MODE ACTIVATED".to_string()),
             spectral_fingerprint: None,
+            spectral_glimpse_12d: None,
+            selected_memory_id: None,
+            selected_memory_role: None,
+            ising_shadow: None,
         };
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("distress"));
@@ -1160,6 +1369,10 @@ mod tests {
             neural: None,
             alert: None,
             spectral_fingerprint: None,
+            spectral_glimpse_12d: None,
+            selected_memory_id: None,
+            selected_memory_role: None,
+            ising_shadow: None,
         };
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("quiet"));
