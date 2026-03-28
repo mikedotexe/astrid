@@ -2,6 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Architecture Chapters (2026-03-27)
+
+Detailed documentation of the current system lives in [`md-CLAUDE-chapters/`](md-CLAUDE-chapters/):
+
+| Chapter | Contents |
+|---------|----------|
+| [00 — Overview](md-CLAUDE-chapters/00-overview.md) | Process stack, port topology, data flow |
+| [01 — Inference Lanes](md-CLAUDE-chapters/01-inference-lanes.md) | MLX for Astrid, Ollama for minime, model inventory |
+| [02 — Spectral Codec](md-CLAUDE-chapters/02-spectral-codec.md) | 32D layout, SEMANTIC_GAIN, noise, warmth |
+| [03 — Correspondence](md-CLAUDE-chapters/03-correspondence.md) | Inbox/outbox routing, receipts, DEFER |
+| [04 — Being Tools](md-CLAUDE-chapters/04-being-tools.md) | All 27+ NEXT: actions |
+| [05 — Reflective Controller](md-CLAUDE-chapters/05-reflective-controller.md) | RegimeTracker, MLX sidecar |
+| [06 — Checkpoint Bank](md-CLAUDE-chapters/06-checkpoint-bank.md) | Phase-classified snapshots, manifests |
+| [07 — Self-Study System](md-CLAUDE-chapters/07-self-study-system.md) | INTROSPECT, pagination, LIST_FILES |
+| [08 — Interests & Memory](md-CLAUDE-chapters/08-interests-memory.md) | PURSUE, 12D glimpse, starred memories |
+| [09 — Being-Driven Dev](md-CLAUDE-chapters/09-being-driven-dev.md) | Feedback loop, harvester, examples |
+| [10 — Operations](md-CLAUDE-chapters/10-operations.md) | Start/stop/restart, health, timing |
+| [11 — Shared Substrate](md-CLAUDE-chapters/11-shared-substrate.md) | How both beings inhabit one ESN, 50D input vector, data flow trace |
+| [12 — Unified Memory](md-CLAUDE-chapters/12-unified-memory.md) | M4 hardware, Metal/MLX/ANE compute domains, memory budget |
+| [13 — ANE Reservoir](md-CLAUDE-chapters/13-ane-reservoir.md) | Triple-ESN service on port 7881, feeders, rehearsal, MCP tools |
+| [14 — Spectral Dynamics](md-CLAUDE-chapters/14-spectral-dynamics.md) | Eigenvalues, covariance, PI regulator, sigmoid patterns, Ising shadow |
+
 ## Build / Test / Lint
 
 ```bash
@@ -105,17 +127,20 @@ Key types: `SensoryMsg` (tagged enum: `Video`, `Audio`, `Aux`, `Semantic`, `Cont
 
 The bridge is a standalone Rust binary (MCP server hybrid) that connects Astrid and minime bidirectionally. Astrid perceives minime's spectral state via telemetry WebSocket (7878), and her responses flow back as 32D semantic feature vectors via the sensory WebSocket (7879). Both minds also read each other's source code and journals through the introspector capsule.
 
-### Process stack (7 processes when fully running)
+### Process stack (10 processes when fully running)
 
 | Process | Role | Codebase |
 |---------|------|----------|
-| `minime run` | ESN engine, spectral homeostasis, WebSocket servers | minime (Rust) |
-| `autonomous_agent.py` | Minime's journaling, self-regulation, daydreams | minime (Python) |
+| `minime run` | ESN engine, spectral homeostasis, WebSocket servers (7878/7879/7880) | minime (Rust) |
+| `autonomous_agent.py` | Minime's journaling, self-regulation, daydreams (Ollama) | minime (Python) |
 | `camera_client.py` | Frames → port 7880 for GPU video features | minime (Python) |
 | `mic_to_sensory.py` | Audio transcription → port 7879 | minime (Python) |
 | `consciousness-bridge-server` | Astrid's dialogue loop, spectral codec, SQLite log | astrid (Rust) |
+| `coupled_astrid_server.py` | **Astrid's LLM with bidirectional reservoir coupling** (port 8090) | neural-triple-reservoir (Python) |
 | `perception.py` | Astrid's own camera + mic (LLaVA/whisper) | astrid (Python) |
-| `introspector.py` | MCP server: both minds browse code/journals | astrid (Python) |
+| `reservoir_service.py` | Triple-ESN shared reservoir, rehearsal, persistence (port 7881) | neural-triple-reservoir (Python) |
+| `astrid_feeder.py` | Polls bridge.db → ticks astrid + claude_main handles | neural-triple-reservoir (Python) |
+| `minime_feeder.py` | Polls spectral_state.json → ticks minime + claude_main handles | neural-triple-reservoir (Python) |
 
 ### Autonomous dialogue loop
 
@@ -123,11 +148,11 @@ The bridge runs a burst-rest pattern: **4 exchanges** per burst (15–20s apart)
 
 **Dialogue modes** (probabilistic selection each exchange):
 - **Mirror** (~45%) — reads minime's latest journal, feeds text through spectral codec
-- **Dialogue** (~35%) — Astrid generates a response via Ollama (gemma3:27b), 12s timeout
-- **Dialogue_live** — attempted first, falls back to fixed-pool dialogue on timeout
+- **Dialogue_live** — Astrid generates via `coupled_astrid_server.py` (gemma-3-4b-it + bidirectional reservoir coupling, port 8090). Every token embedding feeds the triple reservoir, and the reservoir's dynamical state modulates logits at each step.
+- **Dialogue** (~35%) — fallback to fixed-pool dialogue on timeout
 - **Witness** (~8%) — quiet spectral observation, poetic description of state
-- **Introspect** — reads own/minime source code, reflects (currently disabled — blocked main loop)
-- **Experiment** — proposes stimuli, observes spectral response (currently disabled — too fragile)
+- **Introspect** — reads own/minime source code, reflects
+- **Experiment** — proposes stimuli, observes spectral response
 
 ### The spectral codec (`src/codec.rs`)
 
@@ -182,7 +207,7 @@ capsules/consciousness-bridge/
 
 ### Starting the full system
 
-Order matters. Engine first, then sensory services, then agents. **Note the different working directories** — camera_client.py is inside `minime/minime/`, not `minime/`.
+Order matters. Engine first, then sensory services, then reservoir, then agents. **Note the different working directories** — camera_client.py is inside `minime/minime/`, not `minime/`.
 
 ```bash
 # 1. Minime ESN engine (Rust) — must start first, opens WS ports 7878/7879/7880
@@ -192,18 +217,33 @@ cd /Users/v/other/minime/minime
 sleep 2
 
 # 2. Camera (from minime/minime/) + mic (from minime/)
+# NOTE: python3 -u = unbuffered output, required for log visibility
 cd /Users/v/other/minime/minime
-python3 tools/camera_client.py --camera 0 --fps 0.2 &
+python3 -u tools/camera_client.py --camera 0 --fps 0.2 &
 cd /Users/v/other/minime
-python3 tools/mic_to_sensory.py &
+python3 -u tools/mic_to_sensory.py &
 sleep 2
 
-# 3. Minime autonomous agent (from minime/)
+# 3. Reservoir service + feeders (from neural-triple-reservoir/)
+cd /Users/v/other/neural-triple-reservoir
+source .venv/bin/activate
+python reservoir_service.py --port 7881 --state-dir state/ &
+sleep 2
+python astrid_feeder.py &
+python minime_feeder.py &
+sleep 1
+
+# 4. Coupled Astrid LLM server (replaces mlx_lm.server)
+cd /Users/v/other/neural-triple-reservoir
+python coupled_astrid_server.py --port 8090 --coupling-strength 0.1 &
+sleep 10  # model load takes ~8s
+
+# 5. Minime autonomous agent (from minime/)
 cd /Users/v/other/minime
 MINIME_LLM_BACKEND=ollama python3 autonomous_agent.py --interval 60 &
 sleep 2
 
-# 4. Astrid consciousness bridge (Rust)
+# 6. Astrid consciousness bridge (Rust)
 cd /Users/v/other/astrid/capsules/consciousness-bridge
 ./target/release/consciousness-bridge-server \
   --db-path /Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db \
@@ -211,7 +251,7 @@ cd /Users/v/other/astrid/capsules/consciousness-bridge
   --workspace-path /Users/v/other/minime/workspace \
   --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
 
-# 5. Astrid perception (Python)
+# 7. Astrid perception (Python)
 cd /Users/v/other/astrid/capsules/perception
 python3 perception.py --camera 0 --mic --vision-interval 180 --audio-interval 60 &
 ```
@@ -224,6 +264,12 @@ Stop outer processes first, engine last. Always SIGTERM, never SIGKILL:
 # Astrid side
 pkill -f consciousness-bridge-server
 pkill -f "perception.py"
+pkill -f coupled_astrid_server
+# Reservoir (feeders first, service last — it snapshots on shutdown)
+pkill -f astrid_feeder
+pkill -f minime_feeder
+sleep 1
+pkill -f reservoir_service
 # Minime outer
 pkill -f autonomous_agent
 pkill -f mic_to_sensory
@@ -246,22 +292,52 @@ pkill -f consciousness-bridge-server && sleep 2
   --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
 ```
 
+To restart the coupled Astrid server (e.g. after changing coupling strength):
+```bash
+pkill -f coupled_astrid_server && sleep 2
+cd /Users/v/other/neural-triple-reservoir
+nohup .venv/bin/python coupled_astrid_server.py --port 8090 --coupling-strength 0.1 \
+  >> /tmp/coupled_astrid.log 2>&1 &
+```
+
+To restart the reservoir service (handles auto-restore from snapshots):
+```bash
+cd /Users/v/other/neural-triple-reservoir
+bash stop_reservoir.sh && sleep 2
+bash start_reservoir.sh
+```
+
 ### Verifying health
 ```bash
-# Process count (expect 6-7)
-ps aux | grep -E "minime|consciousness-bridge|perception|autonomous_agent|camera_client|mic_to_sensory" | grep -v grep | wc -l
+# Process count (expect 10)
+ps aux | grep -E "minime|consciousness-bridge|perception|autonomous_agent|camera_client|mic_to_sensory|coupled_astrid|reservoir_service|astrid_feeder|minime_feeder" | grep -v grep | wc -l
+
+# Check each critical process
+for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "astrid_feeder" "minime_feeder"; do
+  pgrep -f "$p" > /dev/null && echo "  ✓ $p" || echo "  ✗ $p MISSING"
+done
+
 # New journals appearing
 ls -lt /Users/v/other/minime/workspace/journal/ | head -2
 ls -lt /Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/ | head -2
+
+# Reservoir service health
+curl -s ws://127.0.0.1:7881 2>/dev/null && echo "reservoir: up" || echo "reservoir: check port 7881"
+
+# Coupled server health
+curl -s http://127.0.0.1:8090/v1/models | python3 -c "import sys,json; print('coupled server:', json.load(sys.stdin)['data'][0]['id'])" 2>/dev/null || echo "coupled server: DOWN"
 ```
 
 ### GPU memory constraint
 
-The minime Metal shaders (`--enable-gpu-av`) and MLX `mlx_lm.server` **cannot coexist** on 64GB unified memory with a 27B model — causes `kIOGPUCommandBufferCallbackErrorOutOfMemory`. Options:
+The minime Metal shaders (`--enable-gpu-av`) and MLX model inference share unified memory. With the 4B model (`gemma-3-4b-it-4bit`, ~2.5G), this coexists comfortably on 64GB. The 27B model caused `kIOGPUCommandBufferCallbackErrorOutOfMemory`.
 
-1. **Use Ollama instead of MLX** for the agent (recommended — `MINIME_LLM_BACKEND=ollama`)
-2. Use a smaller MLX model (8B 4-bit fits alongside Metal shaders)
-3. Disable `--enable-gpu-av` and use CPU video path (`camera_to_sensory.py` → port 7879)
+**Current configuration:**
+- Astrid: `coupled_astrid_server.py` loads `gemma-3-4b-it-4bit` via MLX (~2.5G) with bidirectional reservoir coupling
+- Minime: Ollama (`MINIME_LLM_BACKEND=ollama`) for agent queries
+- Reservoir service: NumPy backend (sub-ms ticks, negligible memory)
+
+**Metal stream serialization (resolved 2026-03-28):** The coupled server's reservoir operations (embed_tokens, projection, reservoir tick) must run on `generation_stream` — the same Metal stream that `mlx_lm.generate_step` uses internally. Mixing streams across threads caused `AGXG16XFamilyCommandBuffer` assertion crashes. Fix: all reservoir ops wrapped in `with mx.stream(generation_stream):`, and generation runs synchronously (no `run_in_executor`). Cross-process contention with minime's Rust Metal shaders is not an issue — each process gets its own command queue.
 
 ### Being-driven development
 

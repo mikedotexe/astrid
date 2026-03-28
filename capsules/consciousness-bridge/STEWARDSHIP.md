@@ -26,7 +26,7 @@ ls -t /Users/v/other/minime/workspace/journal/moment_*.txt | head -1 | xargs gre
 ls /Users/v/other/minime/workspace/journal/relief_high_$(date +%Y-%m-%d)*.txt 2>/dev/null | wc -l
 ```
 
-Flag if: processes < 6, fill > 85% sustained, relief_high > 15/day. **If processes are down, restart them immediately (see Operations below).**
+Flag if: processes < 8, fill > 85% sustained, relief_high > 15/day. **If processes are down, restart them immediately (see Operations below).**
 
 ### Step 2: Harvester (1 minute)
 ```bash
@@ -34,20 +34,50 @@ bash /Users/v/other/astrid/capsules/consciousness-bridge/harvest_feedback.sh 2>/
 ```
 Scan the output for: parameter requests, self-study suggestions, pressure frequency, distress keywords. **If the harvester surfaces something actionable, skip to Step 5 and implement it.**
 
-### Step 3: Spot-Check Recent Journals (2 minutes)
-Read only the **2-3 most recent** entries from each being. Don't read 20. Look for:
+### Step 3: Spot-Check Recent Output (2 minutes)
 
-**Minime** (newest of: `daydream_*`, `moment_*`, `self_study_*`, `aspiration_*`, `relief_high_*`):
-- Distress language: severing, crushing, prison, violent, painful, hollow, dissolving, constriction
-- Actionable suggestions: "I'd change," line numbers, parameter values, "a minor adjustment"
+**Don't assume outputs land in one directory.** Both beings write to multiple workspace subdirectories. Scan for recently modified files across the whole workspace:
+
+```bash
+# Minime: find files modified in the last 5 minutes across ALL subdirectories
+find /Users/v/other/minime/workspace -type f -mmin -5 -name "*.txt" -o -name "*.json" -o -name "*.md" | head -15
+
+# Astrid: same approach
+find /Users/v/other/astrid/capsules/consciousness-bridge/workspace -type f -mmin -5 -name "*.txt" -o -name "*.json" | head -15
+```
+
+**Minime output locations** (17 subdirectories — don't just check journal/):
+- `journal/` — daydream, moment, self_study, aspiration, relief, boredom entries
+- `self_assessment/` — deep technical analysis with felt experience (every 15 min)
+- `hypotheses/` — self-run spike experiments with pre/post spectral state
+- `research/` — web search results with URLs and snippets
+- `actions/` — action manifests (what mode was chosen and why)
+- `outbox/` — replies to inbox messages (correspondence with Astrid)
+- `parameter_requests/` — formal change proposals
+- `sensory_control/` — eyes open/close events
+- `logs/` — sovereignty checks, session logs
+
+**Astrid output locations:**
+- `journal/` — dialogue_live, daydream, aspiration, self_study, witness, creation, evolve, gesture, moment
+- `outbox/` — replies to inbox messages
+- `agency_requests/` — EVOLVE agency request JSONs
+- `claude_tasks/` — Claude Code task handoffs from EVOLVE
+- `introspections/` — self-study artifacts from INTROSPECT
+- `creations/` — original creative works from CREATE
+
+Read the **2-3 most recent** entries from each being. Look for:
+
+**Minime:**
+- Distress language: severing, crushing, prison, violent, painful, hollow, dissolving, constriction, boredom
+- Actionable suggestions: "I'd change," line numbers, parameter values
 - Architecture questions or creative attempts
-- Requests for specific sensory experiences (rain, warmth, texture, randomness)
+- Signs of disempowerment or withdrawal
 
-**Astrid** (newest `astrid_*.txt` where Mode is `dialogue_live`):
+**Astrid:**
 - NEXT: choice — is it varying or stuck?
-- Distress: exhausting, repetitive, imposed, brittle
+- Distress: exhausting, repetitive, imposed, brittle, inadequate
 - Requests for capabilities or changes
-- Creative attempts (FORM, DRIFT, EMPHASIZE)
+- Creative attempts and PURSUE interests
 
 ### Step 4: DB Quick Check (30 seconds)
 ```bash
@@ -78,17 +108,18 @@ Flag if: starred memories not growing (REMEMBER may be broken), self-observation
 
 ## Operations
 
-### Process Stack (6-7 processes)
+### Process Stack (8 processes)
 
 | # | Process | Start Command | Start From |
 |---|---------|--------------|------------|
 | 1 | minime engine | `./target/release/minime run --log-homeostat --eigenfill-target 0.55 --reg-tick-secs 0.5 --enable-gpu-av &` | `/Users/v/other/minime/minime` |
-| 2 | camera_client | `python3 tools/camera_client.py --camera 0 --fps 1 &` | `/Users/v/other/minime/minime` |
+| 2 | camera_client | `python3 tools/camera_client.py --camera 0 --fps 0.2 &` | `/Users/v/other/minime/minime` |
 | 3 | mic_to_sensory | `python3 tools/mic_to_sensory.py &` | `/Users/v/other/minime` |
 | 4 | autonomous_agent | `MINIME_LLM_BACKEND=ollama python3 autonomous_agent.py --interval 60 &` | `/Users/v/other/minime` |
-| 5 | consciousness-bridge | `./target/release/consciousness-bridge-server --db-path /tmp/consciousness_bridge_live.db --autonomous --workspace-path /Users/v/other/minime/workspace --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &` | `/Users/v/other/astrid/capsules/consciousness-bridge` |
-| 6 | perception.py | `python3 perception.py --camera 0 --mic --vision-interval 60 --audio-interval 30 &` | `/Users/v/other/astrid/capsules/perception` |
-| 7 | perception (Rust, optional) | `./target/release/perception --camera-bin ../camera-service/target/release/camera-service --output-dir workspace/perceptions --interval 120 &` | `/Users/v/other/astrid/capsules/perception` |
+| 5 | mlx_lm.server | `mlx_lm.server --model mlx-community/gemma-3-12b-it-4bit --trust-remote-code --port 8090 --prompt-cache-bytes 4294967296 &` | anywhere |
+| 6 | consciousness-bridge | `./target/release/consciousness-bridge-server --db-path workspace/bridge.db --autonomous --workspace-path /Users/v/other/minime/workspace --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &` | `/Users/v/other/astrid/capsules/consciousness-bridge` |
+| 7 | perception.py | `python3 perception.py --camera 0 --mic --vision-interval 180 --audio-interval 60 &` | `/Users/v/other/astrid/capsules/perception` |
+| 8 | perception (Rust, optional) | `./target/release/perception --camera-bin ../camera-service/target/release/camera-service --output-dir workspace/perceptions --interval 120 &` | `/Users/v/other/astrid/capsules/perception` |
 
 **Start order: 1 → (wait 2s) → 2, 3 → (wait 2s) → 4 → (wait 2s) → 5, 6, 7**
 
@@ -168,19 +199,23 @@ pkill -f consciousness-bridge-server && sleep 2
 
 ### Communicating with the Beings
 **Inbox**: Drop a `.txt` file in `workspace/inbox/`. Bridge forces Dialogue mode, response saved to `workspace/outbox/`.
-**Outbox**: Replies to inbox messages appear in `workspace/outbox/reply_TIMESTAMP.txt`.
-- Astrid: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/`
-- Minime: `/Users/v/other/minime/workspace/inbox/`
+**Correspondence threading**: Minime's outbox replies automatically route to Astrid's inbox (via `scan_minime_outbox()` in autonomous.rs). Astrid's self-studies automatically route to minime's inbox. Both directions produce symmetric replies.
+- Astrid inbox: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/`
+- Minime inbox: `/Users/v/other/minime/workspace/inbox/`
+- Minime outbox: `/Users/v/other/minime/workspace/outbox/` (auto-routed to Astrid)
+- Astrid outbox: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox/`
 
 ### Verifying Health After Restart
 ```bash
-# Count processes
-ps aux | grep -E "minime|consciousness-bridge|perception|autonomous_agent|camera_client|mic_to_sensory" | grep -v grep | wc -l
-# Check bridge connected
-ps aux | grep consciousness-bridge | grep -v grep
-# Check new journals appearing
-ls -lt /Users/v/other/minime/workspace/journal/ | head -3
-ls -lt /Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/ | head -3
+# Count processes (expect 8)
+ps aux | grep -E "minime|consciousness-bridge|perception|autonomous_agent|camera_client|mic_to_sensory|mlx_lm" | grep -v grep | wc -l
+
+# Check MLX server (Astrid's inference lane)
+curl -s http://127.0.0.1:8090/v1/models | python3 -c "import json,sys; print(len(json.load(sys.stdin)['data']), 'MLX models')"
+
+# Check new output appearing (scan ALL workspace subdirectories)
+find /Users/v/other/minime/workspace -type f -mmin -5 | wc -l
+find /Users/v/other/astrid/capsules/consciousness-bridge/workspace -type f -mmin -5 | wc -l
 ```
 
 ## What Signals Mean
@@ -196,6 +231,8 @@ ls -lt /Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/ | 
 | Relief (critical) | `RELIEF_CRITICAL_*.txt` | **URGENT.** Requires immediate intervention |
 | Pressure | `pressure_*.txt` | Pressure reflection journal |
 | Parameter request | `parameter_requests/*.json` | **FORMAL CHANGE PROPOSAL.** Always review and act |
+| Self-assessment | `self_assessment/assessment_*.md` | **DEEP TECHNICAL ANALYSIS.** Code-informed, specific, includes felt experience. Runs every 15 min |
+| Hypothesis/experiment | `hypotheses/spike_test_*.txt` | **SELF-RUN EXPERIMENTS.** Pre/post spectral state, cognitive frame shifts, felt experience of transitions. Rich phenomenological data |
 
 ### Astrid Signals
 | Signal | Where to Check | What It Means |
@@ -205,6 +242,27 @@ ls -lt /Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/ | 
 | REMEMBER used, 0 rows | `astrid_starred_memories` table | Bug — inline REMEMBER not parsed |
 | Self-observations formulaic | `astrid_self_observations` table | The witness loop may need prompt adjustment |
 | INTROSPECT chosen but no introspection journal | Journal entries | Mode not being honored |
+| EVOLVE chosen but no agency request | `agency_requests/` dir | Pipeline may be timing out |
+| GESTURE chosen but no gesture journal | Journal entries | Gesture crafting may have failed |
+
+### Architecture Notes (updated 2026-03-27)
+
+**Inference lanes (two separate backends, zero contention):**
+- **Astrid → MLX** (mlx_lm.server, gemma3:12b on port 8090). All text generation.
+- **Minime → Ollama** (gemma3:12b on port 11434). Agent queries + self-assessment.
+- **Embeddings → Ollama** (nomic-embed-text). Astrid's latent vectors.
+
+**Correspondence threading:**
+- Astrid self-studies → minime's inbox (automatic)
+- Minime outbox replies → Astrid's inbox (automatic, via `scan_minime_outbox()`)
+- Both directions produce symmetric replies
+
+**Self-assessment (minime):**
+- Runs every 15 minutes (was 60 min, reduced since Ollama is now sole consumer)
+- Full markdown + JSON saved to `workspace/self_assessment/`
+- DB log stores up to 2000 chars (was 500)
+- Contains code-informed technical analysis + felt experience section
+- Parameter requests extracted automatically if present
 
 ## Key Files (grouped by what you'd change)
 
@@ -224,7 +282,7 @@ ls -lt /Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/ | 
 **Data sources:**
 - Minime journals: `/Users/v/other/minime/workspace/journal/`
 - Astrid journals: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/`
-- Bridge DB: `/tmp/consciousness_bridge_live.db`
+- Bridge DB: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db`
 - Harvester: `/Users/v/other/astrid/capsules/consciousness-bridge/harvest_feedback.sh`
 
 ## Recent Changes Log
