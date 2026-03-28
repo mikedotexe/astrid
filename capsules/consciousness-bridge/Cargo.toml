@@ -26,6 +26,8 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 tokio-tungstenite = "0.21"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+rascii_art = { path = "/Users/v/other/RASCII", default-features = false }
+image = "0.25.5"
 
 [lints.rust]
 unsafe_code = "deny"

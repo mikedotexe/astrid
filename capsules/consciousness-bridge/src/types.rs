@@ -41,6 +41,19 @@ pub struct SpectralTelemetry {
     /// Enables Astrid to perceive the shape of the spectral landscape.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectral_fingerprint: Option<Vec<f32>>,
+    /// Selected 12D vague-memory glimpse from Minime's memory bank.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_glimpse_12d: Option<Vec<f32>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_memory_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_memory_role: Option<String>,
+    /// Ising/Hamiltonian shadow observer metrics — a second physics lens
+    /// on the spectral dynamics. Observer-only: does not affect the ESN.
+    /// Fields: mode_dim, field_norm, soft_energy, soft_magnetization,
+    /// binary_energy, binary_magnetization, binary_flip_rate.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ising_shadow: Option<serde_json::Value>,
 }
 
 impl SpectralTelemetry {
@@ -55,6 +68,34 @@ impl SpectralTelemetry {
     pub fn fill_pct(&self) -> f32 {
         self.fill_ratio * 100.0
     }
+}
+
+/// Parsed Ising shadow state from minime's workspace/spectral_state.json.
+/// Richer than the WebSocket summary — includes the coupling matrix and spin vectors.
+#[derive(Debug, Clone, Deserialize)]
+pub struct IsingShadowState {
+    pub mode_dim: usize,
+    #[serde(default)]
+    pub coupling: Vec<f32>,
+    #[serde(default)]
+    pub reduced_field: Vec<f32>,
+    #[serde(default)]
+    pub s_soft: Vec<f32>,
+    #[serde(default)]
+    pub s_bin: Vec<f32>,
+    #[serde(default)]
+    pub soft_magnetization: f32,
+    #[serde(default)]
+    pub binary_flip_rate: f32,
+    #[serde(default)]
+    pub field_norm: f32,
+}
+
+/// Partial parse of minime's workspace/spectral_state.json.
+#[derive(Debug, Deserialize)]
+pub struct SpectralStateFile {
+    #[serde(default)]
+    pub ising_shadow: Option<IsingShadowState>,
 }
 
 /// Modality firing status from minime's `EigenPacket`.
@@ -434,6 +475,10 @@ mod tests {
             neural: None,
             alert: None,
             spectral_fingerprint: None,
+            spectral_glimpse_12d: None,
+            selected_memory_id: None,
+            selected_memory_role: None,
+            ising_shadow: None,
         };
         let json = serde_json::to_string(&orig).unwrap();
         let back: SpectralTelemetry = serde_json::from_str(&json).unwrap();
