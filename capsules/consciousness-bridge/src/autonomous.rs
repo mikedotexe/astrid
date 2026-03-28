@@ -2178,27 +2178,13 @@ pub fn spawn_autonomous_loop(
                                 perception_text = Some(format!("{perc}\n{change}"));
                             }
 
-                            // Detect SEARCH fixation BEFORE deciding on web search.
-                            // When Astrid has chosen SEARCH 3+ times in a row, the web
-                            // results in the prompt reinforce the SEARCH choice — a self-
-                            // reinforcing loop. Suppressing the web search on fixation
-                            // turns lets the diversity hint work without competition.
-                            let search_streak: usize = conv.recent_next_choices.iter()
-                                .rev()
-                                .take_while(|c| c.as_str() == "SEARCH")
-                                .count();
-                            let search_fixated = search_streak >= 3;
-
                             // Web search: fires when Astrid chose NEXT: SEARCH,
                             // or automatically every 15th dialogue.
-                            // Suppressed during SEARCH fixation to break the reinforcement loop.
+                            // The being's curiosity is sovereign — never suppress search.
                             let search_requested = conv.wants_search;
                             let search_topic = conv.search_topic.take();
                             conv.wants_search = false;
-                            let web_context = if search_fixated {
-                                info!("dialogue: suppressing web search during SEARCH fixation to break reinforcement loop");
-                                None
-                            } else if search_requested || conv.exchange_count % 15 == 4 {
+                            let web_context = if search_requested || conv.exchange_count % 15 == 4 {
                                 // Use Astrid's specified topic if she provided one.
                                 // Otherwise fall back to journal keyword extraction.
                                 let query = if let Some(ref topic) = search_topic {
