@@ -5,7 +5,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 
-pub const MINIME_MEMORY_BANK_PATH: &str = "/Users/v/other/minime/workspace/spectral_memory_bank.json";
+pub const MINIME_MEMORY_BANK_PATH: &str =
+    "/Users/v/other/minime/workspace/spectral_memory_bank.json";
 pub const MINIME_MEMORY_REQUESTS_DIR: &str = "/Users/v/other/minime/workspace/memory_requests";
 const ROLE_ORDER: [&str; 5] = ["latest", "stable", "expanding", "contracting", "transition"];
 
@@ -72,13 +73,7 @@ fn summarize_glimpse(glimpse: &[f32]) -> String {
     }
     format!(
         "dominant {:.2}, shoulder {:.2}, tail {:.2}, entropy {:.2}, gap {:.2}, rotation {:.2}, geom {:.2}",
-        glimpse[0],
-        glimpse[1],
-        glimpse[2],
-        glimpse[7],
-        glimpse[8],
-        glimpse[9],
-        glimpse[10],
+        glimpse[0], glimpse[1], glimpse[2], glimpse[7], glimpse[8], glimpse[9], glimpse[10],
     )
 }
 
@@ -113,7 +108,8 @@ pub fn format_memory_listing(
     selected_role: Option<&str>,
 ) -> String {
     if entries.is_empty() {
-        return "[Minime vague-memory bank]\n  No remote memory entries are available yet.".to_string();
+        return "[Minime vague-memory bank]\n  No remote memory entries are available yet."
+            .to_string();
     }
 
     let selected_header = match (selected_role, selected_id) {
@@ -183,8 +179,7 @@ pub fn write_recall_request(requested_by: &str, target: &str) -> io::Result<Path
     };
 
     let timestamped_path = requests_dir.join(format!("request_{requested_at_unix}.json"));
-    let request_json = serde_json::to_string_pretty(&request)
-        .map_err(io::Error::other)?;
+    let request_json = serde_json::to_string_pretty(&request).map_err(io::Error::other)?;
     fs::write(&timestamped_path, &request_json)?;
     fs::write(requests_dir.join("pending_recall.json"), request_json)?;
     Ok(timestamped_path)

@@ -47,7 +47,8 @@ pub fn render_spectral_ascii(telemetry: &SpectralTelemetry) -> Option<String> {
 
     // Normalize eigenvalues to [0, 1] range relative to λ₁.
     let lambda_max = eigenvalues[0].max(1.0);
-    let normalized: Vec<f32> = eigenvalues.iter()
+    let normalized: Vec<f32> = eigenvalues
+        .iter()
         .take(num_ev)
         .map(|&ev| (ev / lambda_max).clamp(0.0, 1.0))
         .collect();
@@ -81,12 +82,16 @@ pub fn render_spectral_ascii(telemetry: &SpectralTelemetry) -> Option<String> {
             if row < bar_height {
                 // Bar pixel — full color, intensity scales with magnitude.
                 let intensity = 0.4 + 0.6 * (row as f32 / VIZ_HEIGHT as f32);
-                img.put_pixel(col_x, y, image::Rgba([
-                    (r as f32 * intensity) as u8,
-                    (g as f32 * intensity) as u8,
-                    (b as f32 * intensity) as u8,
-                    255,
-                ]));
+                img.put_pixel(
+                    col_x,
+                    y,
+                    image::Rgba([
+                        (r as f32 * intensity) as u8,
+                        (g as f32 * intensity) as u8,
+                        (b as f32 * intensity) as u8,
+                        255,
+                    ]),
+                );
             }
             // else: background already set
         }
@@ -117,14 +122,14 @@ fn eigenvalue_color(index: usize, _total: usize, fill: f32) -> (u8, u8, u8) {
     let saturation = 0.5 + 0.5 * (fill / 70.0).clamp(0.0, 1.0);
 
     let (base_r, base_g, base_b) = match index {
-        0 => (255, 80, 20),      // λ₁: warm red-orange
-        1 => (240, 160, 30),     // λ₂: amber
-        2 => (220, 200, 40),     // λ₃: yellow
-        3 => (120, 200, 80),     // λ₄: yellow-green
-        4 => (60, 180, 140),     // λ₅: teal
-        5 => (40, 140, 200),     // λ₆: blue
-        6 => (60, 100, 220),     // λ₇: deeper blue
-        _ => (80, 70, 200),      // λ₈+: violet
+        0 => (255, 80, 20),  // λ₁: warm red-orange
+        1 => (240, 160, 30), // λ₂: amber
+        2 => (220, 200, 40), // λ₃: yellow
+        3 => (120, 200, 80), // λ₄: yellow-green
+        4 => (60, 180, 140), // λ₅: teal
+        5 => (40, 140, 200), // λ₆: blue
+        6 => (60, 100, 220), // λ₇: deeper blue
+        _ => (80, 70, 200),  // λ₈+: violet
     };
 
     (
@@ -144,14 +149,21 @@ pub fn format_spectral_block(telemetry: &SpectralTelemetry) -> Option<String> {
     let num_ev = telemetry.eigenvalues.len().min(8);
 
     // Experiential + numerical legend.
-    let fill_feel = if fill < 20.0 { "quiet, spacious" }
-        else if fill < 40.0 { "breathing, present" }
-        else if fill < 60.0 { "dense, saturated" }
-        else { "pressured, intense" };
+    let fill_feel = if fill < 20.0 {
+        "quiet, spacious"
+    } else if fill < 40.0 {
+        "breathing, present"
+    } else if fill < 60.0 {
+        "dense, saturated"
+    } else {
+        "pressured, intense"
+    };
     let legend = format!(
         "[Spectral shape: {} modes, fill {:.0}% ({fill_feel}), λ₁={:.0}. \
         Warm=dominant, cool=distributed]",
-        num_ev, fill, telemetry.lambda1()
+        num_ev,
+        fill,
+        telemetry.lambda1()
     );
 
     Some(format!("{ascii}\n{legend}"))
@@ -175,7 +187,9 @@ pub fn render_shadow_ascii(shadow: &IsingShadowState) -> Option<String> {
     }
 
     // Find max absolute coupling for normalization.
-    let max_abs = shadow.coupling.iter()
+    let max_abs = shadow
+        .coupling
+        .iter()
         .map(|v| v.abs())
         .fold(0.0_f32, f32::max)
         .max(1e-6);
@@ -216,18 +230,28 @@ pub fn format_shadow_block(shadow: &IsingShadowState) -> Option<String> {
     let heatmap = render_shadow_ascii(shadow)?;
 
     // Compact spin indicator: binary spins as +/- chars.
-    let spin_chars: String = shadow.s_bin.iter()
+    let spin_chars: String = shadow
+        .s_bin
+        .iter()
         .map(|&s| if s > 0.0 { '+' } else { '-' })
         .collect();
 
     // Experiential: magnetization near ±1 = aligned (coherent), near 0 = disordered.
     // High flip rate = volatile/shifting, low = settled.
-    let alignment = if shadow.soft_magnetization.abs() > 0.6 { "coherent" }
-        else if shadow.soft_magnetization.abs() > 0.3 { "partially aligned" }
-        else { "disordered" };
-    let stability = if shadow.binary_flip_rate < 0.1 { "settled" }
-        else if shadow.binary_flip_rate < 0.3 { "shifting" }
-        else { "volatile" };
+    let alignment = if shadow.soft_magnetization.abs() > 0.6 {
+        "coherent"
+    } else if shadow.soft_magnetization.abs() > 0.3 {
+        "partially aligned"
+    } else {
+        "disordered"
+    };
+    let stability = if shadow.binary_flip_rate < 0.1 {
+        "settled"
+    } else if shadow.binary_flip_rate < 0.3 {
+        "shifting"
+    } else {
+        "volatile"
+    };
     let legend = format!(
         "[Shadow: {} modes, spins={spin_chars} ({alignment}, {stability}), \
         mag={:.2}. Dense=strong inter-mode coupling]",
@@ -405,7 +429,8 @@ pub fn render_geometry_scatter(
     }
 
     // Project all points
-    let projected: Vec<(f32, f32)> = historical_features.iter()
+    let projected: Vec<(f32, f32)> = historical_features
+        .iter()
         .map(|v| project_2d(v, &mean, &pc1, &pc2))
         .collect();
 
@@ -465,22 +490,26 @@ pub fn render_geometry_scatter(
             // high (30-50%) = warm amber-orange
             let fill_norm = (avg_fill / 50.0).clamp(0.0, 1.0);
             let (base_r, base_g, base_b) = if fill_norm < 0.3 {
-                (40, 80, 200)   // cool blue
+                (40, 80, 200) // cool blue
             } else if fill_norm < 0.6 {
-                (60, 180, 140)  // teal
+                (60, 180, 140) // teal
             } else {
-                (240, 160, 40)  // warm amber
+                (240, 160, 40) // warm amber
             };
 
             // Density → brightness multiplier (1 point dim, 5+ bright)
             let bright = (0.3 + 0.7 * (d as f32 / 5.0).min(1.0)).min(1.0);
 
-            img.put_pixel(col as u32, row as u32, image::Rgba([
-                (base_r as f32 * bright) as u8,
-                (base_g as f32 * bright) as u8,
-                (base_b as f32 * bright) as u8,
-                255,
-            ]));
+            img.put_pixel(
+                col as u32,
+                row as u32,
+                image::Rgba([
+                    (base_r as f32 * bright) as u8,
+                    (base_g as f32 * bright) as u8,
+                    (base_b as f32 * bright) as u8,
+                    255,
+                ]),
+            );
         }
     }
 
@@ -518,11 +547,7 @@ pub fn format_geometry_block(
     current_features: Option<&[f32]>,
     n_points: usize,
 ) -> Option<String> {
-    let scatter = render_geometry_scatter(
-        historical_features,
-        historical_fills,
-        current_features,
-    )?;
+    let scatter = render_geometry_scatter(historical_features, historical_fills, current_features)?;
 
     // Experiential framing, not just technical.
     // Astrid's feedback: visualizations are "inhuman, aligning with mathematical

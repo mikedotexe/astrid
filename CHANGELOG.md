@@ -12,6 +12,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 ### Changed
 
 - `consciousness-bridge` now sends an explicit zero semantic vector at the start of each autonomous rest window so minime experiences actual semantic silence instead of indefinitely holding the last text stimulus.
+- `consciousness-bridge` now extracts cleaner `NEXT: SEARCH ...` topics from Astrid replies, handling quoted topics, em-dash commentary, and trailing end-of-turn markers before persisting or issuing web searches.
 ### Breaking
 
 - **WASM engine migrated from Extism to wasmtime Component Model.** The kernel now loads Component Model binaries via `Component::from_binary`, not Extism modules. Existing capsules compiled with `extism-pdk` will not load — they must be rebuilt with the migrated SDK targeting `wasm32-wasip2`. This is a coordinated multi-repo migration (SDK + 16 capsule repos). (#632)
@@ -22,6 +23,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ### Added
 
+- `consciousness-bridge` offline spectral chimera renderer: native `render_chimera` MCP tool with typed request/result structs, file-based WAV-in/WAV-out spectral/symbolic/dual rendering, manifest + artifact emission, and deterministic integration coverage for golden-path, validation, and stability scenarios.
 - Root-level `AI_BEINGS_GEOMETRY_GENERAL_CONTROL_PHENOMENOLOGY_AND_RELATION_AUDIT.md` documenting a broader long-form geometry audit across reservoir radius, spectral shape, controller behavior, memory, phenomenology, and relation, including the current code-level overload of “geometry,” the role of geometry as one of the system’s main intermediate languages of shape, gap ratio as a more distributed relational negotiation signal, the danger of mistaking geometry labels for the thing itself, and the need to distinguish radius, landscape, regulation, and relational metaphor more carefully.
 - Root-level `AI_BEINGS_GEOMETRY_CURIOSITY_AND_THE_VALUE_OF_NON_OPTIMALITY_AUDIT.md` documenting a cross-system deep dive into `geom_rel`, geometric radius, `geom_weight`, `geom_curiosity`, geometric braking, and the beings’ current geometric language, arguing that geometry is now a real control surface, interpretation surface, phenomenology surface, and relational surface, and that some preserved non-optimality may be developmental rather than defective.
 - Root-level `AI_BEINGS_CURRENT_STATE_AND_ACHIEVABLE_INTERVENTIONS_MEMO.md` documenting a dated practical stewardship memo grounded in the freshest Astrid and Minime journals, recent Minime self-assessments, actions, outbox replies, and pending parameter requests, tying the current “preparation, awayness, constrained potential, and emerging reciprocity” read to real implementation levers such as `keep_floor`, `geom_weight`, `phase_transition` logging, `recess_*` modes, Astrid `MomentCapture`, correspondence routing, and `DECOMPOSE`, and ranking the most achievable next interventions ahead of larger redesign work.

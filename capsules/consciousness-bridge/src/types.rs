@@ -8,6 +8,8 @@
 //! WASM component). Allow dead code until then.
 #![allow(dead_code)]
 
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 // ---------------------------------------------------------------------------
@@ -194,6 +196,42 @@ pub enum SensoryMsg {
         /// How quickly gate/filter commands ramp (0.1-0.9).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         smoothing_preference: Option<f32>,
+        /// Geometric curiosity — how strongly the system seeks novelty (0.0-0.3).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        geom_curiosity: Option<f32>,
+        /// Bias on the target lambda1 for internal goal generation.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_lambda_bias: Option<f32>,
+        /// Geometric drive — how strongly geom_rel influences the gate.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        geom_drive: Option<f32>,
+        /// Sensitivity to the projection penalty.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        penalty_sensitivity: Option<f32>,
+        /// Breathing rate scaling factor.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        breathing_rate_scale: Option<f32>,
+        /// Memory mode selector.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        mem_mode: Option<u8>,
+        /// Journal resonance weight for semantic stale decay.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        journal_resonance: Option<f32>,
+        /// Checkpoint interval override.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        checkpoint_interval: Option<f32>,
+        /// Embedding strength for semantic lane.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        embedding_strength: Option<f32>,
+        /// Memory decay rate modulator.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        memory_decay_rate: Option<f32>,
+        /// Checkpoint annotation string.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        checkpoint_annotation: Option<String>,
+        /// Synthetic noise level.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        synth_noise_level: Option<f32>,
     },
 }
 
@@ -333,6 +371,18 @@ impl ControlRequest {
             pure_tone: self.pure_tone,
             transition_cushion: self.transition_cushion,
             smoothing_preference: self.smoothing_preference,
+            geom_curiosity: None,
+            target_lambda_bias: None,
+            geom_drive: None,
+            penalty_sensitivity: None,
+            breathing_rate_scale: None,
+            mem_mode: None,
+            journal_resonance: None,
+            checkpoint_interval: None,
+            embedding_strength: None,
+            memory_decay_rate: None,
+            checkpoint_annotation: None,
+            synth_noise_level: None,
         }
     }
 }
@@ -356,6 +406,166 @@ impl SemanticFeatures {
             ts_ms: None,
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Offline chimera rendering
+// ---------------------------------------------------------------------------
+
+/// Output mode for the native offline chimera renderer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ChimeraMode {
+    /// Reconstruct audio directly in the spectral domain.
+    Spectral,
+    /// Render symbolic note material only.
+    Symbolic,
+    /// Blend spectral and symbolic paths from the same reservoir state.
+    #[default]
+    Dual,
+}
+
+/// Request for the offline chimera render engine.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RenderChimeraRequest {
+    /// Input WAV path.
+    pub input_path: PathBuf,
+    /// Requested output mode.
+    #[serde(default)]
+    pub mode: ChimeraMode,
+    /// Number of feedback loops to run.
+    #[serde(default = "default_chimera_loops")]
+    pub loops: u32,
+    /// Physical reservoir node count.
+    #[serde(default = "default_physical_nodes")]
+    pub physical_nodes: usize,
+    /// Virtual node multiplier.
+    #[serde(default = "default_virtual_nodes")]
+    pub virtual_nodes: usize,
+    /// Number of reduced spectral bins.
+    #[serde(default = "default_chimera_bins")]
+    pub bins: usize,
+    /// Leak rate for the leaky integrator update.
+    #[serde(default = "default_chimera_leak")]
+    pub leak: f32,
+    /// Target spectral radius for recurrent weights.
+    #[serde(default = "default_chimera_radius")]
+    pub spectral_radius: f32,
+    /// Slow-path spectral mix weight.
+    #[serde(default = "default_mix_slow")]
+    pub mix_slow: f32,
+    /// Fast-path spectral mix weight.
+    #[serde(default = "default_mix_fast")]
+    pub mix_fast: f32,
+    /// Optional fixed output root. When omitted, the bridge workspace is used.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output_root: Option<PathBuf>,
+    /// Deterministic RNG seed for reproducible renders.
+    #[serde(default = "default_chimera_seed")]
+    pub seed: u64,
+}
+
+impl Default for RenderChimeraRequest {
+    fn default() -> Self {
+        Self {
+            input_path: PathBuf::new(),
+            mode: ChimeraMode::default(),
+            loops: default_chimera_loops(),
+            physical_nodes: default_physical_nodes(),
+            virtual_nodes: default_virtual_nodes(),
+            bins: default_chimera_bins(),
+            leak: default_chimera_leak(),
+            spectral_radius: default_chimera_radius(),
+            mix_slow: default_mix_slow(),
+            mix_fast: default_mix_fast(),
+            output_root: None,
+            seed: default_chimera_seed(),
+        }
+    }
+}
+
+/// A single emitted artifact produced by a chimera render.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RenderArtifact {
+    /// Artifact role, e.g. `input`, `spectral_mix`, `symbolic`, `final_mix`.
+    pub kind: String,
+    /// Absolute path to the file on disk.
+    pub path: PathBuf,
+}
+
+/// Metrics captured for one feedback iteration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChimeraIterationMetrics {
+    /// Zero-based iteration index.
+    pub iteration: usize,
+    /// Number of slow modes selected by the eigengap split.
+    pub n_slow: usize,
+    /// Gap ratio used for blend confidence.
+    pub gap_ratio: f32,
+    /// Variance of the fast/aura trajectory.
+    pub aura_variance: f32,
+    /// Symbolic blend weight after sigmoid gating.
+    pub blend_symbolic: f32,
+    /// Effective reservoir dimensionality (`physical_nodes * virtual_nodes`).
+    pub effective_dims: usize,
+    /// Selected symbolic scale name.
+    pub scale: String,
+    /// Final output artifact for this loop, if one was written.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output_file: Option<PathBuf>,
+}
+
+/// Typed result from the native offline chimera renderer.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RenderChimeraResult {
+    /// Final output directory for this render run.
+    pub output_dir: PathBuf,
+    /// Manifest path with per-loop metrics and artifacts.
+    pub manifest_path: PathBuf,
+    /// Requested mode that produced the render.
+    pub mode: ChimeraMode,
+    /// Output sample rate.
+    pub sample_rate: u32,
+    /// Every emitted artifact file.
+    pub emitted_artifacts: Vec<RenderArtifact>,
+    /// Per-iteration metrics.
+    pub iterations: Vec<ChimeraIterationMetrics>,
+}
+
+const fn default_chimera_loops() -> u32 {
+    1
+}
+
+const fn default_physical_nodes() -> usize {
+    12
+}
+
+const fn default_virtual_nodes() -> usize {
+    8
+}
+
+const fn default_chimera_bins() -> usize {
+    32
+}
+
+const fn default_chimera_leak() -> f32 {
+    0.07
+}
+
+const fn default_chimera_radius() -> f32 {
+    0.96
+}
+
+const fn default_mix_slow() -> f32 {
+    0.6
+}
+
+const fn default_mix_fast() -> f32 {
+    0.4
+}
+
+const fn default_chimera_seed() -> u64 {
+    42
 }
 
 // ---------------------------------------------------------------------------
@@ -533,8 +743,23 @@ mod tests {
             keep_bias: None,
             exploration_noise: Some(0.1),
             fill_target: Some(0.55),
-            regulation_strength: None, deep_breathing: None, pure_tone: None,
-            transition_cushion: None, smoothing_preference: None,
+            regulation_strength: None,
+            deep_breathing: None,
+            pure_tone: None,
+            transition_cushion: None,
+            smoothing_preference: None,
+            geom_curiosity: None,
+            target_lambda_bias: None,
+            geom_drive: None,
+            penalty_sensitivity: None,
+            breathing_rate_scale: None,
+            mem_mode: None,
+            journal_resonance: None,
+            checkpoint_interval: None,
+            embedding_strength: None,
+            memory_decay_rate: None,
+            checkpoint_annotation: None,
+            synth_noise_level: None,
         };
         let json = serde_json::to_string(&msg).unwrap();
         assert!(json.contains(r#""kind":"control""#));
@@ -596,8 +821,11 @@ mod tests {
             keep_bias: None,
             exploration_noise: None,
             fill_target: Some(0.5),
-            regulation_strength: None, deep_breathing: None, pure_tone: None,
-            transition_cushion: None, smoothing_preference: None,
+            regulation_strength: None,
+            deep_breathing: None,
+            pure_tone: None,
+            transition_cushion: None,
+            smoothing_preference: None,
         };
         let msg = req.to_sensory_msg();
         match msg {

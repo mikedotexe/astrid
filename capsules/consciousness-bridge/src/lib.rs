@@ -6,13 +6,16 @@
 #![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 pub mod agency;
+pub mod audio;
 pub mod autonomous;
+pub mod chimera;
+pub mod chimera_prime;
 pub mod codec;
 pub mod db;
 pub mod journal;
 pub mod llm;
-pub mod memory;
 pub mod mcp;
+pub mod memory;
 pub mod reflective;
 pub mod spectral_viz;
 pub mod types;

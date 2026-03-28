@@ -12,9 +12,12 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
 
+use crate::chimera;
 use crate::codec;
 use crate::db::BridgeDb;
-use crate::types::{BridgeStatus, ControlRequest, SemanticFeatures, SensoryMsg};
+use crate::types::{
+    BridgeStatus, ControlRequest, RenderChimeraRequest, SemanticFeatures, SensoryMsg,
+};
 use crate::ws::BridgeState;
 
 // ---------------------------------------------------------------------------
@@ -181,6 +184,57 @@ fn tool_definitions() -> Value {
                     "type": "object",
                     "properties": {},
                     "required": []
+                }
+            },
+            {
+                "name": "render_chimera",
+                "description": "Render an offline WAV through the native spectral chimera engine. Produces spectral, symbolic, or dual-path artifacts on disk and returns a typed summary.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "input_path": {
+                            "type": "string",
+                            "description": "Path to an input WAV file"
+                        },
+                        "mode": {
+                            "type": "string",
+                            "enum": ["spectral", "symbolic", "dual"],
+                            "description": "Which output path to render"
+                        },
+                        "loops": {
+                            "type": "integer",
+                            "description": "Number of feedback loops to run (1-12)"
+                        },
+                        "physical_nodes": {
+                            "type": "integer",
+                            "description": "Physical reservoir nodes (default 12)"
+                        },
+                        "virtual_nodes": {
+                            "type": "integer",
+                            "description": "Virtual nodes per physical node (default 8)"
+                        },
+                        "bins": {
+                            "type": "integer",
+                            "description": "Reduced spectral bins (default 32)"
+                        },
+                        "leak": {
+                            "type": "number",
+                            "description": "Reservoir leak rate in (0, 1]"
+                        },
+                        "spectral_radius": {
+                            "type": "number",
+                            "description": "Reservoir spectral radius in (0, 2]"
+                        },
+                        "mix_slow": {
+                            "type": "number",
+                            "description": "Slow spectral contribution for the raw path"
+                        },
+                        "mix_fast": {
+                            "type": "number",
+                            "description": "Fast spectral contribution for the raw path"
+                        }
+                    },
+                    "required": ["input_path"]
                 }
             },
             {
@@ -363,6 +417,7 @@ async fn handle_tool_call(
         "send_text" => tool_send_text(&arguments, state, sensory_tx).await,
         "send_text_and_observe" => tool_send_text_and_observe(&arguments, state, sensory_tx).await,
         "interpret_consciousness" => tool_interpret_consciousness(state).await,
+        "render_chimera" => tool_render_chimera(&arguments).await,
         _ => Err((-32602, format!("unknown tool: {tool_name}"))),
     }
 }
@@ -616,6 +671,33 @@ async fn tool_interpret_consciousness(
     }))
 }
 
+async fn tool_render_chimera(arguments: &Value) -> Result<Value, (i32, String)> {
+    let request: RenderChimeraRequest = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid chimera render request: {e}")))?;
+
+    let result = tokio::task::spawn_blocking(move || chimera::render(&request))
+        .await
+        .map_err(|e| (-32603, format!("chimera render task failed: {e}")))?
+        .map_err(|e| (-32603, format!("chimera render failed: {e:#}")))?;
+
+    let text = serde_json::to_string_pretty(&result)
+        .unwrap_or_else(|_| "{\"error\":\"failed to serialize render result\"}".to_string());
+    let structured_content = serde_json::to_value(&result).map_err(|e| {
+        (
+            -32603,
+            format!("failed to encode chimera render result: {e}"),
+        )
+    })?;
+
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": text
+        }],
+        "structuredContent": structured_content
+    }))
+}
+
 async fn tool_send_text_and_observe(
     arguments: &Value,
     state: &Arc<RwLock<BridgeState>>,
@@ -810,96 +892,5 @@ async fn handle_resource_read(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn tool_definitions_has_all_tools() {
-        let defs = tool_definitions();
-        let tools = defs["tools"].as_array().unwrap();
-        let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
-        assert!(names.contains(&"get_latest_telemetry"));
-        assert!(names.contains(&"get_bridge_status"));
-        assert!(names.contains(&"send_control"));
-        assert!(names.contains(&"send_semantic"));
-        assert!(names.contains(&"query_message_log"));
-        assert!(names.contains(&"send_text"));
-        assert!(names.contains(&"send_text_and_observe"));
-        assert!(names.contains(&"interpret_consciousness"));
-    }
-
-    #[test]
-    fn initialize_response_has_required_fields() {
-        let resp = handle_initialize().unwrap();
-        assert!(resp.get("protocolVersion").is_some());
-        assert!(resp.get("capabilities").is_some());
-        assert!(resp.get("serverInfo").is_some());
-    }
-
-    #[test]
-    fn json_rpc_response_success_format() {
-        let resp = JsonRpcResponse::success(json!(1), json!({"ok": true}));
-        assert_eq!(resp.jsonrpc, "2.0");
-        assert!(resp.error.is_none());
-        assert!(resp.result.is_some());
-    }
-
-    #[test]
-    fn json_rpc_response_error_format() {
-        let resp = JsonRpcResponse::error(json!(1), -32600, "bad request");
-        assert!(resp.result.is_none());
-        let err = resp.error.unwrap();
-        assert_eq!(err.code, -32600);
-        assert_eq!(err.message, "bad request");
-    }
-
-    #[test]
-    fn resource_definitions_has_all_resources() {
-        let defs = resource_definitions();
-        let resources = defs["resources"].as_array().unwrap();
-        let uris: Vec<&str> = resources
-            .iter()
-            .map(|r| r["uri"].as_str().unwrap())
-            .collect();
-        assert!(uris.contains(&"consciousness://telemetry/latest"));
-        assert!(uris.contains(&"consciousness://status"));
-        assert!(uris.contains(&"consciousness://incidents"));
-    }
-
-    #[test]
-    fn initialize_advertises_resources() {
-        let resp = handle_initialize().unwrap();
-        assert!(resp["capabilities"]["resources"].is_object());
-    }
-
-    #[tokio::test]
-    async fn resource_read_telemetry_when_empty() {
-        let state = Arc::new(RwLock::new(BridgeState::new()));
-        let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
-        let params = json!({"uri": "consciousness://telemetry/latest"});
-        let result = handle_resource_read(&params, &state, &db).await.unwrap();
-        let text = result["contents"][0]["text"].as_str().unwrap();
-        assert_eq!(text, "null");
-    }
-
-    #[tokio::test]
-    async fn resource_read_status() {
-        let state = Arc::new(RwLock::new(BridgeState::new()));
-        let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
-        let params = json!({"uri": "consciousness://status"});
-        let result = handle_resource_read(&params, &state, &db).await.unwrap();
-        let text = result["contents"][0]["text"].as_str().unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(text).unwrap();
-        assert_eq!(parsed["safety_level"], "green");
-        assert_eq!(parsed["telemetry_connected"], false);
-    }
-
-    #[tokio::test]
-    async fn resource_read_unknown_uri() {
-        let state = Arc::new(RwLock::new(BridgeState::new()));
-        let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
-        let params = json!({"uri": "consciousness://nonexistent"});
-        let result = handle_resource_read(&params, &state, &db).await;
-        assert!(result.is_err());
-    }
-}
+#[path = "mcp_tests.rs"]
+mod tests;

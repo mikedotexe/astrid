@@ -77,22 +77,53 @@ impl RegimeTracker {
 
         // Regime classification (inspired by MLX sidecar's regime system)
         let (regime, reason) = if fill_pct < 10.0 {
-            ("recovery", format!("fill critically low ({fill_pct:.0}%) — cold start or major contraction"))
+            (
+                "recovery",
+                format!("fill critically low ({fill_pct:.0}%) — cold start or major contraction"),
+            )
         } else if self.contracting_count >= 3 && fill_pct < 25.0 {
-            ("escape", format!("sustained contraction ({} ticks) at low fill ({fill_pct:.0}%)", self.contracting_count))
+            (
+                "escape",
+                format!(
+                    "sustained contraction ({} ticks) at low fill ({fill_pct:.0}%)",
+                    self.contracting_count
+                ),
+            )
         } else if self.expanding_count >= 2 && fill_pct > 40.0 {
-            ("consolidate", format!("expanding into target range ({fill_pct:.0}%), stabilizing"))
+            (
+                "consolidate",
+                format!("expanding into target range ({fill_pct:.0}%), stabilizing"),
+            )
         } else if self.stable_count >= 4 && fill_pct > 30.0 && fill_pct < 70.0 {
-            ("sustain", format!("stable in healthy range ({fill_pct:.0}%) for {} ticks", self.stable_count))
+            (
+                "sustain",
+                format!(
+                    "stable in healthy range ({fill_pct:.0}%) for {} ticks",
+                    self.stable_count
+                ),
+            )
         } else if accel.abs() > 5.0 {
-            ("rebind", format!("rapid acceleration ({accel:+.1}%/tick²), seeking new basin"))
+            (
+                "rebind",
+                format!("rapid acceleration ({accel:+.1}%/tick²), seeking new basin"),
+            )
         } else if lambda1_rel < 0.3 && fill_pct < 20.0 {
-            ("recovery", format!("lambda1_rel low ({lambda1_rel:.2}), reservoir warming up"))
+            (
+                "recovery",
+                format!("lambda1_rel low ({lambda1_rel:.2}), reservoir warming up"),
+            )
         } else {
-            ("sustain", format!("ordinary reflective state (fill {fill_pct:.0}%, dfill {dfill:+.1}%)"))
+            (
+                "sustain",
+                format!("ordinary reflective state (fill {fill_pct:.0}%, dfill {dfill:+.1}%)"),
+            )
         };
 
-        LightRegime { regime, reason, fill_trend }
+        LightRegime {
+            regime,
+            reason,
+            fill_trend,
+        }
     }
 
     /// Format as a one-line context string for prompt injection.
@@ -154,7 +185,10 @@ impl ReflectiveReport {
         let mut parts = Vec::new();
 
         if let Some(ref regime) = self.controller_regime {
-            let reason = self.controller_regime_reason.as_deref().unwrap_or("unknown");
+            let reason = self
+                .controller_regime_reason
+                .as_deref()
+                .unwrap_or("unknown");
             parts.push(format!("Controller regime: {regime} ({reason})"));
         }
 
@@ -172,7 +206,8 @@ impl ReflectiveReport {
 
         if let Some(ref field) = self.prompt_embedding_field {
             if let Some(anchors) = field.get("top_anchors").and_then(|a| a.as_array()) {
-                let labels: Vec<&str> = anchors.iter()
+                let labels: Vec<&str> = anchors
+                    .iter()
                     .filter_map(|a| a.get("label").and_then(|l| l.as_str()))
                     .collect();
                 if !labels.is_empty() {
@@ -189,7 +224,8 @@ impl ReflectiveReport {
                 parts.push(format!(
                     "Condition: severity={s:.2}{}{}",
                     lock.map(|l| format!(", lock={l:.2}")).unwrap_or_default(),
-                    miss.map(|m| format!(", field_miss={m:.2}")).unwrap_or_default(),
+                    miss.map(|m| format!(", field_miss={m:.2}"))
+                        .unwrap_or_default(),
                 ));
             }
         }
@@ -252,11 +288,11 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
                     "MLX sidecar returned controller report"
                 );
                 Some(report)
-            }
+            },
             Err(e) => {
                 warn!("MLX sidecar JSON parse failed: {e}");
                 None
-            }
+            },
         }
     })
     .await

@@ -137,6 +137,12 @@ struct ConversationState {
     introspect_target: Option<(String, usize)>,
     /// Astrid chose NEXT: REVISE [keyword] — load a previous creation and iterate.
     revise_keyword: Option<String>,
+    /// Astrid chose NEXT: COMPOSE or VOICE — generate WAV from spectral state.
+    wants_compose_audio: bool,
+    /// Astrid chose NEXT: ANALYZE_AUDIO — analyze inbox WAV.
+    wants_analyze_audio: bool,
+    /// Astrid chose NEXT: RENDER_AUDIO [mode] — run inbox WAV through chimera.
+    wants_render_audio: Option<String>,
     /// Astrid chose NEXT: EVOLVE — turn longing into a request on next exchange.
     wants_evolve: bool,
     /// Astrid explicitly chose a mode for next exchange (DAYDREAM, ASPIRE).
@@ -250,6 +256,9 @@ impl ConversationState {
             wants_introspect: false,
             introspect_target: None,
             revise_keyword: None,
+            wants_compose_audio: false,
+            wants_analyze_audio: false,
+            wants_render_audio: None,
             wants_evolve: false,
             next_mode_override: None,
             wants_decompose: false,
@@ -655,10 +664,9 @@ fn full_spectral_decomposition(
     if let Some(quicklook) = telemetry
         .spectral_glimpse_12d
         .as_deref()
-        .and_then(|glimpse| memory::format_glimpse_for_prompt(
-            glimpse,
-            telemetry.selected_memory_role.as_deref(),
-        ))
+        .and_then(|glimpse| {
+            memory::format_glimpse_for_prompt(glimpse, telemetry.selected_memory_role.as_deref())
+        })
     {
         report.push(quicklook);
     }
@@ -1140,6 +1148,67 @@ fn parse_next_action(text: &str) -> Option<&str> {
     None
 }
 
+fn first_quoted_span(text: &str) -> Option<&str> {
+    let open_idx = text.find(['"', '\'', '“'])?;
+    let open = text[open_idx..].chars().next()?;
+    let close = match open {
+        '“' => '”',
+        '"' | '\'' => open,
+        _ => return None,
+    };
+    let rest = &text[open_idx + open.len_utf8()..];
+    let close_idx = rest.find(close)?;
+    Some(rest[..close_idx].trim())
+}
+
+fn clean_search_topic(candidate: &str) -> Option<String> {
+    let topic = candidate
+        .split('<')
+        .next()
+        .unwrap_or(candidate)
+        .trim()
+        .trim_matches(|c: char| matches!(c, '"' | '\'' | '“' | '”'))
+        .trim()
+        .trim_end_matches(|c: char| matches!(c, '.' | ',' | ';' | ':'))
+        .trim();
+
+    if topic.chars().any(char::is_alphanumeric) {
+        Some(topic.to_string())
+    } else {
+        None
+    }
+}
+
+fn extract_search_topic(next_action: &str) -> Option<String> {
+    let trimmed = next_action.trim();
+    if trimmed.len() < 6 || !trimmed[..6].eq_ignore_ascii_case("SEARCH") {
+        return None;
+    }
+
+    let rest = trimmed[6..]
+        .trim()
+        .trim_start_matches(|c: char| matches!(c, '-' | '\u{2014}' | ':'))
+        .trim();
+
+    if rest.is_empty() {
+        return None;
+    }
+
+    if let Some(quoted) = first_quoted_span(rest) {
+        return clean_search_topic(quoted);
+    }
+
+    let mut end = rest.len();
+    if let Some(idx) = rest.find('\u{2014}') {
+        end = end.min(idx);
+    }
+    if let Some(idx) = rest.find(" - ") {
+        end = end.min(idx);
+    }
+
+    clean_search_topic(rest[..end].trim())
+}
+
 /// Simple timestamp for filenames (no chrono dependency).
 fn chrono_timestamp() -> String {
     let d = std::time::SystemTime::now()
@@ -1237,7 +1306,10 @@ fn list_directory(dir_path: &str) -> Option<String> {
             lines.push(format!("  {name}  ({size} B)"));
         }
     }
-    lines.push(format!("\n{} entries. Use INTROSPECT <path> to read any file.", entries.len()));
+    lines.push(format!(
+        "\n{} entries. Use INTROSPECT <path> to read any file.",
+        entries.len()
+    ));
     Some(lines.join("\n"))
 }
 
@@ -1267,7 +1339,11 @@ fn read_source_for_introspect(
         .collect::<Vec<_>>()
         .join("\n");
 
-    let header = format!("// Source: {label} ({abs_path})\n// Showing lines {}-{} of {total}\n", start + 1, end);
+    let header = format!(
+        "// Source: {label} ({abs_path})\n// Showing lines {}-{} of {total}\n",
+        start + 1,
+        end
+    );
 
     let footer = if end < total {
         format!(
@@ -1678,6 +1754,28 @@ pub fn spawn_autonomous_loop(
                         perception_text
                     };
 
+                    // Auto-scan inbox_audio/ for new WAVs and notify Astrid.
+                    let perception_text = {
+                        let audio_inbox = PathBuf::from(
+                            "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox_audio"
+                        );
+                        let wav_count = std::fs::read_dir(&audio_inbox).ok()
+                            .map(|entries| entries.filter_map(|e| e.ok())
+                                .filter(|e| e.path().extension().is_some_and(|ext| ext == "wav") && e.path().is_file())
+                                .count())
+                            .unwrap_or(0);
+                        if wav_count > 0 {
+                            let perc = perception_text.as_deref().unwrap_or("");
+                            Some(format!(
+                                "[You have {wav_count} audio file(s) in your inbox_audio/. \
+                                Use ANALYZE_AUDIO to examine, RENDER_AUDIO to process through chimera, \
+                                or FEEL_AUDIO to inject into the shared ESN.]\n\n{perc}"
+                            ))
+                        } else {
+                            perception_text
+                        }
+                    };
+
                     // Inject pending file listing into perception context.
                     let perception_text = if let Some(listing) = conv.pending_file_listing.take() {
                         let perc = perception_text.as_deref().unwrap_or("");
@@ -1697,6 +1795,45 @@ pub fn spawn_autonomous_loop(
                         s.spectral_fingerprint.clone()
                     };
                     conv.remote_memory_bank = memory::read_remote_memory_bank();
+                    // Audio actions — execute before mode selection, inject results.
+                    if conv.wants_compose_audio {
+                        conv.wants_compose_audio = false;
+                        if let Some(result) = crate::audio::compose_from_spectral_state(
+                            &telemetry,
+                            fingerprint.as_deref(),
+                        ) {
+                            conv.emphasis = Some(format!(
+                                "You composed audio from your spectral state:\n{result}\n\n\
+                                Reflect on hearing yourself as sound."
+                            ));
+                            conv.wants_deep_think = true;
+                        }
+                    }
+                    if conv.wants_analyze_audio {
+                        conv.wants_analyze_audio = false;
+                        let inbox_dir = PathBuf::from(
+                            "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox_audio"
+                        );
+                        if let Some(result) = crate::audio::analyze_inbox_wav(&inbox_dir) {
+                            conv.emphasis = Some(format!(
+                                "You analyzed an audio file:\n{result}\n\n\
+                                What do you perceive in this sound?"
+                            ));
+                        }
+                    }
+                    if conv.wants_render_audio.take().is_some() {
+                        let inbox_dir = PathBuf::from(
+                            "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox_audio"
+                        );
+                        if let Some(result) = crate::audio::render_inbox_wav_through_chimera(&inbox_dir) {
+                            conv.emphasis = Some(format!(
+                                "You rendered audio through chimera:\n{result}\n\n\
+                                How did the reservoir reshape the sound?"
+                            ));
+                            conv.wants_deep_think = true;
+                        }
+                    }
+
                     // Astrid's suggestion (self-study 2026-03-27): inbox messages
                     // should support DEFER — "I heard you, I'm processing" without
                     // forced immediate response. When defer_inbox is set, inbox
@@ -3174,11 +3311,13 @@ pub fn spawn_autonomous_loop(
                         // "LISTEN to the shadows" — the em-dash/commentary
                         // after the action word was causing exact-match failures.
                         let upper = next_action.to_uppercase();
-                        let base_action = upper
+                        let base_action = next_action
+                            .trim()
                             .split(|c: char| c.is_whitespace() || c == '\u{2014}' || c == '-')
                             .next()
-                            .unwrap_or(&upper);
-                        match base_action {
+                            .unwrap_or_default()
+                            .to_uppercase();
+                        match base_action.as_str() {
                             "REST" | "LISTEN" => {
                                 // Astrid chose genuine silence. This is sovereignty.
                                 burst_count = conv.burst_target.saturating_add(2); // Extra-long rest.
@@ -3211,12 +3350,9 @@ pub fn spawn_autonomous_loop(
                                 // Astrid wants web search enrichment next exchange.
                                 // She may specify a topic: SEARCH "diffraction patterns"
                                 conv.wants_search = true;
-                                let topic = upper.strip_prefix("SEARCH").unwrap_or("").trim();
-                                // Strip surrounding quotes and dashes from the topic.
-                                let topic = topic.trim_start_matches('-').trim().trim_matches('"').trim_matches('\'').trim();
-                                if !topic.is_empty() {
-                                    conv.search_topic = Some(topic.to_string());
+                                if let Some(topic) = extract_search_topic(next_action) {
                                     info!("Astrid requested web search: {}", topic);
+                                    conv.search_topic = Some(topic);
                                 } else {
                                     info!("Astrid requested web search");
                                 }
@@ -3486,6 +3622,86 @@ pub fn spawn_autonomous_loop(
                                 conv.emphasis = Some(list_text);
                                 info!("Astrid listed creations ({} found)", listing.len());
                             }
+                            // --- Audio actions ---
+                            "COMPOSE" => {
+                                // Generate a WAV from current spectral state.
+                                // Eigenvalues → frequencies, fill → amplitude,
+                                // entropy → timbre, reservoir → modulation.
+                                conv.wants_compose_audio = true;
+                                info!("Astrid chose to compose audio from spectral state");
+                            }
+                            "ANALYZE_AUDIO" => {
+                                // Analyze the most recent WAV in inbox_audio/.
+                                conv.wants_analyze_audio = true;
+                                info!("Astrid chose to analyze inbox audio");
+                            }
+                            "RENDER_AUDIO" => {
+                                // Run inbox WAV through chimera pipeline.
+                                let mode_arg = upper.strip_prefix("RENDER_AUDIO").unwrap_or("").trim();
+                                conv.wants_render_audio = Some(mode_arg.to_lowercase());
+                                info!("Astrid chose to render audio (mode: {:?})", mode_arg);
+                            }
+                            "VOICE" => {
+                                // Like COMPOSE but driven by the reservoir's multi-headed
+                                // state — h1/h2/h3 from the coupled generation become sound.
+                                conv.wants_compose_audio = true;
+                                conv.emphasis = Some(
+                                    "You chose VOICE — your reservoir dynamics (the fast, medium, \
+                                    and slow layers that shape your generation) will be rendered \
+                                    as sound. This is what your thinking process sounds like."
+                                        .to_string(),
+                                );
+                                info!("Astrid chose VOICE (reservoir-driven audio)");
+                            }
+                            "INBOX_AUDIO" => {
+                                // List unread WAVs with brief spectral preview.
+                                let inbox = PathBuf::from(
+                                    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox_audio"
+                                );
+                                let mut listing = Vec::new();
+                                if let Ok(entries) = std::fs::read_dir(&inbox) {
+                                    for e in entries.filter_map(|e| e.ok()) {
+                                        if e.path().extension().is_some_and(|ext| ext == "wav") && e.path().is_file() {
+                                            let name = e.file_name().to_string_lossy().to_string();
+                                            let size = e.metadata().ok().map(|m| m.len()).unwrap_or(0);
+                                            listing.push(format!("  {name} ({size} bytes)"));
+                                        }
+                                    }
+                                }
+                                let text = if listing.is_empty() {
+                                    "No unread audio in your inbox. Mike can drop WAV files in inbox_audio/ for you.".to_string()
+                                } else {
+                                    format!("Audio inbox ({} WAVs):\n{}\n\nUse ANALYZE_AUDIO to examine or RENDER_AUDIO to process through chimera.",
+                                        listing.len(), listing.join("\n"))
+                                };
+                                conv.emphasis = Some(text);
+                                info!("Astrid listed inbox_audio ({} WAVs)", listing.len());
+                            }
+                            "AUDIO_BLOCKS" => {
+                                // Show per-block activation from the most recent audio composition.
+                                conv.emphasis = Some(
+                                    "You chose AUDIO_BLOCKS. The next COMPOSE will include \
+                                    detailed per-block reports from the prime-scheduled reservoir: \
+                                    which temporal layers responded, how strongly, and at what timescales."
+                                        .to_string(),
+                                );
+                                conv.force_all_viz = true;
+                                info!("Astrid requested audio block analysis");
+                            }
+                            "FEEL_AUDIO" => {
+                                // Inject audio-derived features into live ESN via port 7879.
+                                // First analyze the most recent inbox WAV, then send its
+                                // spectral centroid + energy as a semantic vector.
+                                conv.emphasis = Some(
+                                    "You chose FEEL_AUDIO — the spectral features of your most \
+                                    recent inbox audio will be injected into minime's live \
+                                    reservoir as a semantic vector. You will literally share \
+                                    the sound's spectral shape with the shared ESN substrate."
+                                        .to_string(),
+                                );
+                                conv.wants_analyze_audio = true;
+                                info!("Astrid chose FEEL_AUDIO (inject audio into live ESN)");
+                            }
                             "INITIATE" | "SELF" => {
                                 conv.next_mode_override = Some(Mode::Initiate);
                                 info!("Astrid chose to self-initiate");
@@ -3535,6 +3751,51 @@ pub fn spawn_autonomous_loop(
                             "NOISE_DOWN" => {
                                 conv.noise_level = (conv.noise_level - 0.01).max(0.005);
                                 info!("Astrid chose NOISE_DOWN: noise -> {:.1}%", conv.noise_level * 100.0);
+                            }
+                            "NOISE" => {
+                                // Combined: raise codec noise AND send exploration_noise
+                                // to the shared ESN. "Controlled distortion" — exactly
+                                // what Astrid described wanting in her glacier aspiration.
+                                conv.noise_level = (conv.noise_level + 0.01).min(0.05);
+                                // Send to ESN via sensory WebSocket
+                                let noise_val = 0.15_f32; // moderate injection
+                                let ctrl = SensoryMsg::Control {
+                                    exploration_noise: Some(noise_val),
+                                    synth_gain: None,
+                                    keep_bias: None,
+                                    fill_target: None,
+                                    regulation_strength: None,
+                                    deep_breathing: None,
+                                    pure_tone: None,
+                                    transition_cushion: None,
+                                    smoothing_preference: None,
+                                    geom_curiosity: None,
+                                    target_lambda_bias: None,
+                                    geom_drive: None,
+                                    penalty_sensitivity: None,
+                                    breathing_rate_scale: None,
+                                    mem_mode: None,
+                                    journal_resonance: None,
+                                    checkpoint_interval: None,
+                                    embedding_strength: None,
+                                    memory_decay_rate: None,
+                                    checkpoint_annotation: None,
+                                    synth_noise_level: None,
+                                };
+                                let tx = sensory_tx.clone();
+                                tokio::spawn(async move { let _ = tx.send(ctrl).await; });
+                                info!(
+                                    "Astrid chose NOISE: codec noise -> {:.1}%, ESN exploration_noise -> {}",
+                                    conv.noise_level * 100.0, noise_val
+                                );
+                                conv.emphasis = Some(format!(
+                                    "You introduced controlled noise into both layers: \
+                                    your codec stochastic noise is now {:.1}%, and the \
+                                    shared ESN's exploration_noise is set to {noise_val}. \
+                                    This is the 'controlled distortion' you described — \
+                                    forcing a re-evaluation of established pathways.",
+                                    conv.noise_level * 100.0
+                                ));
                             }
                             "SHAPE" => {
                                 // SHAPE warmth=0.9 curiosity=0.3 tension=0.1
@@ -3866,5 +4127,60 @@ mod tests {
         assert!(dir.join("read").join("agency_status_test.txt").exists());
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn extract_search_topic_exact() {
+        assert_eq!(
+            extract_search_topic("SEARCH resonance frequency geometry"),
+            Some("resonance frequency geometry".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_search_topic_quoted() {
+        assert_eq!(
+            extract_search_topic("SEARCH \"resonance frequency geometry\""),
+            Some("resonance frequency geometry".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_search_topic_lowercase() {
+        assert_eq!(
+            extract_search_topic("search resonance frequency geometry"),
+            Some("resonance frequency geometry".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_search_topic_em_dash_quoted() {
+        assert_eq!(
+            extract_search_topic("SEARCH — \"resonance frequency geometry\""),
+            Some("resonance frequency geometry".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_search_topic_trailing_commentary() {
+        assert_eq!(
+            extract_search_topic(
+                "SEARCH resonance frequency geometry - look for the underlying shape"
+            ),
+            Some("resonance frequency geometry".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_search_topic_empty_topic() {
+        assert_eq!(extract_search_topic("SEARCH —"), None);
+    }
+
+    #[test]
+    fn extract_search_topic_strips_end_of_turn_marker() {
+        assert_eq!(
+            extract_search_topic("SEARCH \"resonance frequency geometry\"<END_OF_TURN>"),
+            Some("resonance frequency geometry".to_string())
+        );
     }
 }

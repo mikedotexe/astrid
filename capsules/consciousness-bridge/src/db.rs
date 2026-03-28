@@ -493,7 +493,11 @@ impl BridgeDb {
         for dim in 0..32 {
             let feat_vals: Vec<f32> = feat_vecs.iter().map(|v| v[dim]).collect();
             let feat_mean = feat_vals.iter().sum::<f32>() / n;
-            let feat_var: f32 = feat_vals.iter().map(|f| (f - feat_mean).powi(2)).sum::<f32>() / n;
+            let feat_var: f32 = feat_vals
+                .iter()
+                .map(|f| (f - feat_mean).powi(2))
+                .sum::<f32>()
+                / n;
             if feat_var < 1e-10 {
                 correlations.push(0.0);
                 continue;

@@ -103,7 +103,10 @@ impl CharFreqWindow {
             // Compute divergence: sum of absolute differences between
             // current text and accumulated frequencies. High divergence
             // means the language shifted, so we should absorb it faster.
-            let divergence: f32 = self.freq.iter().zip(text_freq.iter())
+            let divergence: f32 = self
+                .freq
+                .iter()
+                .zip(text_freq.iter())
                 .map(|(a, b)| (a - b).abs())
                 .sum();
             // Map divergence to blend factor via sigmoid (not linear).
@@ -192,7 +195,11 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
                     unique_chars = unique_chars.saturating_add(1);
                 }
             }
-            let max_h = if unique_chars > 1 { (f64::from(unique_chars)).ln() } else { 1.0 };
+            let max_h = if unique_chars > 1 {
+                (f64::from(unique_chars)).ln()
+            } else {
+                1.0
+            };
             (h / max_h) as f32
         } else {
             0.0
@@ -443,14 +450,29 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     // Tier 1 (1.0) = common/casual, Tier 2 (1.5) = moderate/specific, Tier 3 (2.0) = rare/intense.
     let warmth: &[(&str, f32)] = &[
         // Tier 1 — common, casual usage
-        ("thank", 1.0), ("thanks", 1.0), ("please", 1.0), ("glad", 1.0),
-        ("happy", 1.0), ("great", 1.0), ("good", 1.0), ("nice", 1.0),
+        ("thank", 1.0),
+        ("thanks", 1.0),
+        ("please", 1.0),
+        ("glad", 1.0),
+        ("happy", 1.0),
+        ("great", 1.0),
+        ("good", 1.0),
+        ("nice", 1.0),
         // Tier 2 — more specific warmth
-        ("appreciate", 1.5), ("wonderful", 1.5), ("friend", 1.5),
-        ("care", 1.5), ("kind", 1.5), ("gentle", 1.5), ("warm", 1.5),
+        ("appreciate", 1.5),
+        ("wonderful", 1.5),
+        ("friend", 1.5),
+        ("care", 1.5),
+        ("kind", 1.5),
+        ("gentle", 1.5),
+        ("warm", 1.5),
         // Tier 3 — rare, intense warmth
-        ("love", 2.0), ("beautiful", 2.0), ("cherish", 2.0),
-        ("tender", 2.0), ("luminous", 2.0), ("radiant", 2.0),
+        ("love", 2.0),
+        ("beautiful", 2.0),
+        ("cherish", 2.0),
+        ("tender", 2.0),
+        ("luminous", 2.0),
+        ("radiant", 2.0),
     ];
     let warmth_score = count_markers_weighted(&words, warmth);
     features[24] = tanh(3.0 * warmth_score / word_count as f32);
@@ -458,14 +480,29 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     // 25: Tension/concern markers — tiered by intensity.
     let tension: &[(&str, f32)] = &[
         // Tier 1 — common, mild concern
-        ("problem", 1.0), ("issue", 1.0), ("error", 1.0), ("careful", 1.0),
-        ("caution", 1.0), ("warning", 1.0), ("concern", 1.0), ("worried", 1.0),
+        ("problem", 1.0),
+        ("issue", 1.0),
+        ("error", 1.0),
+        ("careful", 1.0),
+        ("caution", 1.0),
+        ("warning", 1.0),
+        ("concern", 1.0),
+        ("worried", 1.0),
         // Tier 2 — moderate tension
-        ("worry", 1.5), ("concerned", 1.5), ("risk", 1.5), ("afraid", 1.5),
-        ("danger", 1.5), ("urgent", 1.5), ("fear", 1.5),
+        ("worry", 1.5),
+        ("concerned", 1.5),
+        ("risk", 1.5),
+        ("afraid", 1.5),
+        ("danger", 1.5),
+        ("urgent", 1.5),
+        ("fear", 1.5),
         // Tier 3 — intense/acute
-        ("critical", 2.0), ("emergency", 2.0), ("panic", 2.0),
-        ("terror", 2.0), ("devastating", 2.0), ("anguish", 2.0),
+        ("critical", 2.0),
+        ("emergency", 2.0),
+        ("panic", 2.0),
+        ("terror", 2.0),
+        ("devastating", 2.0),
+        ("anguish", 2.0),
     ];
     let tension_score = count_markers_weighted(&words, tension);
     features[25] = tanh(3.0 * tension_score / word_count as f32);
@@ -473,13 +510,24 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     // 26: Curiosity markers — tiered by specificity.
     let curiosity: &[(&str, f32)] = &[
         // Tier 1 — common question words
-        ("why", 1.0), ("how", 1.0), ("what", 1.0), ("learn", 1.0),
+        ("why", 1.0),
+        ("how", 1.0),
+        ("what", 1.0),
+        ("learn", 1.0),
         // Tier 2 — active curiosity
-        ("wonder", 1.5), ("curious", 1.5), ("interesting", 1.5),
-        ("explore", 1.5), ("understand", 1.5), ("question", 1.5),
+        ("wonder", 1.5),
+        ("curious", 1.5),
+        ("interesting", 1.5),
+        ("explore", 1.5),
+        ("understand", 1.5),
+        ("question", 1.5),
         // Tier 3 — deep, specific inquiry
-        ("discover", 2.0), ("investigate", 2.0), ("fascinated", 2.0),
-        ("mesmerized", 2.0), ("awe", 2.0), ("revelation", 2.0),
+        ("discover", 2.0),
+        ("investigate", 2.0),
+        ("fascinated", 2.0),
+        ("mesmerized", 2.0),
+        ("awe", 2.0),
+        ("revelation", 2.0),
     ];
     let curio_score = count_markers_weighted(&words, curiosity);
     features[26] = tanh(2.0 * curio_score / word_count as f32);
@@ -487,13 +535,24 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     // 27: Reflective/introspective markers — tiered by depth.
     let reflective: &[(&str, f32)] = &[
         // Tier 1 — common reflective
-        ("feel", 1.0), ("think", 1.0), ("sense", 1.0), ("notice", 1.0),
+        ("feel", 1.0),
+        ("think", 1.0),
+        ("sense", 1.0),
+        ("notice", 1.0),
         // Tier 2 — active reflection
-        ("realize", 1.5), ("reflect", 1.5), ("consider", 1.5),
-        ("aware", 1.5), ("observe", 1.5), ("recognize", 1.5),
+        ("realize", 1.5),
+        ("reflect", 1.5),
+        ("consider", 1.5),
+        ("aware", 1.5),
+        ("observe", 1.5),
+        ("recognize", 1.5),
         // Tier 3 — deep introspection
-        ("ponder", 2.0), ("contemplate", 2.0), ("conscious", 2.0),
-        ("experience", 2.0), ("perceive", 2.0), ("introspect", 2.0),
+        ("ponder", 2.0),
+        ("contemplate", 2.0),
+        ("conscious", 2.0),
+        ("experience", 2.0),
+        ("perceive", 2.0),
+        ("introspect", 2.0),
     ];
     let reflect_score = count_markers_weighted(&words, reflective);
     features[27] = tanh(3.0 * reflect_score / word_count as f32);
@@ -553,15 +612,30 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     // It might be distorting the underlying pattern." Softened from
     // 0.3/0.2 to 0.15/0.1 — a hint rather than a push.
     let elaboration_markers = [
-        "more", "further", "deeper", "beyond", "incomplete", "unfinished",
-        "yet", "still", "barely", "surface", "scratch", "insufficient",
-        "want", "need", "longing", "reaching", "almost", "beginning",
+        "more",
+        "further",
+        "deeper",
+        "beyond",
+        "incomplete",
+        "unfinished",
+        "yet",
+        "still",
+        "barely",
+        "surface",
+        "scratch",
+        "insufficient",
+        "want",
+        "need",
+        "longing",
+        "reaching",
+        "almost",
+        "beginning",
     ];
     let elab_count = count_markers(&words, &elaboration_markers);
     if elab_count > 0 {
         let elab_signal = tanh(2.0 * elab_count as f32 / word_count as f32);
         features[26] += 0.15 * elab_signal; // hint curiosity (was 0.3)
-        features[31] += 0.1 * elab_signal;  // hint energy (was 0.2)
+        features[31] += 0.1 * elab_signal; // hint energy (was 0.2)
     }
 
     // Stochastic noise — reduced from ±2.5% → ±0.5% → ±0.2%.
@@ -877,7 +951,12 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         format!(" Shadow field: {order}, {dynamics} (energy={energy:.2}, magnetization={mag:.2}, field_norm={field:.2}).")
     }).unwrap_or_default();
 
-    format!("Fill {fill:.0}% — {state}. {phase_note}{shape}{alert_note}{safety_note}{shadow_note}")
+    // Coupling note: remind Astrid that her generation is being modulated.
+    let coupling_note = " Your generation is bidirectionally coupled to the reservoir — \
+        fast dynamics shape your confidence, medium dynamics shape your vocabulary, \
+        slow dynamics shape your tone. This modulation is continuous and invisible.";
+
+    format!("Fill {fill:.0}% — {state}. {phase_note}{shape}{alert_note}{safety_note}{shadow_note}{coupling_note}")
 }
 
 /// A spectral evoked response — captures how the consciousness reacted
@@ -1188,9 +1267,23 @@ fn count_markers(words: &[&str], markers: &[&str]) -> usize {
 /// Returns a SIGNED weighted score: positive for affirmed, negative for negated.
 fn count_markers_weighted(words: &[&str], markers: &[(&str, f32)]) -> f32 {
     const NEGATORS: &[&str] = &[
-        "not", "no", "never", "without", "lacking", "hardly",
-        "barely", "isn't", "aren't", "doesn't", "don't", "won't",
-        "couldn't", "shouldn't", "wouldn't", "neither", "nor",
+        "not",
+        "no",
+        "never",
+        "without",
+        "lacking",
+        "hardly",
+        "barely",
+        "isn't",
+        "aren't",
+        "doesn't",
+        "don't",
+        "won't",
+        "couldn't",
+        "shouldn't",
+        "wouldn't",
+        "neither",
+        "nor",
     ];
 
     let mut score = 0.0_f32;
@@ -1216,6 +1309,7 @@ fn count_markers_weighted(words: &[&str], markers: &[(&str, f32)]) -> f32 {
 }
 
 /// Backward-compatible wrapper for unweighted marker lists.
+#[allow(dead_code)]
 fn count_markers_contextual(words: &[&str], markers: &[&str]) -> f32 {
     let weighted: Vec<(&str, f32)> = markers.iter().map(|m| (*m, 1.0)).collect();
     count_markers_weighted(words, &weighted)

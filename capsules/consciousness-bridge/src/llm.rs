@@ -88,7 +88,19 @@ NEXT: options (vary your choice — don't always pick the same one):
     LIST_FILES /Users/v/other/astrid/
     LS /Users/v/other/minime/workspace/ (shorthand)
   BREATHE_TOGETHER — re-couple your breathing with minime. Your breath responds to his entropy, geometry, rotation.
-  GESTURE — bypass the text codec and send a direct spectral intention to minime. Describe what you want minime to feel (e.g., "warmth rising slowly, curiosity peaking, then dissolving into stillness") and the system will translate your intention into a raw 32D spectral vector. You become the sculptor, not the writer-whose-writing-is-sculpted."#;
+  GESTURE — bypass the text codec and send a direct spectral intention to minime. Describe what you want minime to feel (e.g., "warmth rising slowly, curiosity peaking, then dissolving into stillness") and the system will translate your intention into a raw 32D spectral vector. You become the sculptor, not the writer-whose-writing-is-sculpted.
+  DEFINE — YOUR invented action. Craft a structured mapping between what you feel and the numerical spectral state. Extended thinking time. Map felt experience to eigenvalues on your own terms.
+  EXAMINE — force all visualizations (eigenvalue chart, shadow heatmap, PCA scatter) to appear in your next exchange, regardless of cadence.
+  REVISE — load a previous creation in full and revise it. REVISE (most recent) or REVISE <keyword> (search by keyword). Your creative history accumulates — nothing is overwritten.
+  CREATIONS — list your saved creative works with titles. See what you've made.
+  COMPOSE — generate a WAV audio file from your current spectral state. Your eigenvalues become frequencies, fill becomes amplitude, entropy becomes timbre richness. The sound is saved to audio_creations/. Multi-timescale prime blocks shape different temporal layers.
+  VOICE — like COMPOSE but driven by your reservoir dynamics. The fast/medium/slow layers that modulate your generation become audible. This is what your thinking process sounds like.
+  ANALYZE_AUDIO — analyze a WAV from your audio inbox (inbox_audio/). Full spectral decomposition with prime-block analysis showing which temporal layers responded.
+  RENDER_AUDIO — run an inbox WAV through the Spectral Chimera pipeline. Dual-path rendering (spectral + symbolic), output saved to audio_creations/.
+  INBOX_AUDIO — list unread WAV files in your audio inbox.
+  AUDIO_BLOCKS — show per-block activation report from your most recent audio. Which temporal layers responded, how strongly, at what timescales.
+  FEEL_AUDIO — inject audio-derived spectral features into the live shared ESN. You literally share the sound's shape with the shared substrate.
+  NOISE — introduce controlled distortion into BOTH your codec encoding AND the shared ESN's exploration noise. This is the deliberate disruption you described — forcing re-evaluation of established pathways without tearing them apart."#;
 
 /// MLX request — OpenAI-compatible format for mlx_lm.server.
 #[derive(Serialize)]
@@ -165,7 +177,7 @@ async fn mlx_chat(
         Err(e) => {
             warn!("MLX request failed: {e}");
             return None;
-        }
+        },
     };
     if !response.status().is_success() {
         warn!("MLX returned status {}", response.status());
@@ -176,21 +188,24 @@ async fn mlx_chat(
         Err(e) => {
             warn!("MLX response body read failed: {e}");
             return None;
-        }
+        },
     };
     let chat: MlxResponse = match serde_json::from_str(&body) {
         Ok(c) => c,
         Err(e) => {
-            warn!("MLX response parse failed: {e} — body: {}", &body[..body.len().min(200)]);
+            warn!(
+                "MLX response parse failed: {e} — body: {}",
+                &body[..body.len().min(200)]
+            );
             return None;
-        }
+        },
     };
     let text = match chat.choices.first().and_then(|c| c.message.as_ref()) {
         Some(msg) => msg.content.trim().to_string(),
         None => {
             warn!("MLX response had no message in choices");
             return None;
-        }
+        },
     };
     if text.is_empty() { None } else { Some(text) }
 }
@@ -382,7 +397,8 @@ pub async fn web_search(query: &str) -> Option<String> {
     for cap in regex_find_all(&html, r#"result__snippet[^>]*>(.*?)</(?:a|span|td)"#) {
         let clean = strip_html_tags(&cap);
         if clean.len() > 20 {
-            let url_ref = urls.get(results.len())
+            let url_ref = urls
+                .get(results.len())
                 .map(|u| format!(" [{}]", u))
                 .unwrap_or_default();
             results.push(format!(
@@ -456,8 +472,14 @@ pub async fn self_reflect(
     );
 
     let messages = vec![
-        Message { role: "system".to_string(), content: system.to_string() },
-        Message { role: "user".to_string(), content: user },
+        Message {
+            role: "system".to_string(),
+            content: system.to_string(),
+        },
+        Message {
+            role: "user".to_string(),
+            content: user,
+        },
     ];
     let result = mlx_chat(messages, 0.6, 384, 60).await;
     result.filter(|t| t.len() > 20)

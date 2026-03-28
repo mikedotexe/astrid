@@ -21,9 +21,10 @@ Astrid Kernel                          minime Engine
 The capsule uses a **hybrid MCP+WASM architecture**:
 
 - **MCP server** (this binary): Native Rust process that handles WebSocket
-  connections to minime and SQLite persistence. Runs as a stdio subprocess
-  managed by the Astrid kernel. Required because the WASM sandbox's SSRF
-  protection blocks HTTP to localhost.
+  connections to minime, SQLite persistence, and native offline audio
+  rendering. Runs as a stdio subprocess managed by the Astrid kernel.
+  Required because the WASM sandbox's SSRF protection blocks HTTP to
+  localhost and does not expose audio/DSP host APIs.
 - **WASM component** (future): Will handle IPC bus integration via
   interceptors and topic publishing.
 
@@ -36,6 +37,19 @@ The capsule uses a **hybrid MCP+WASM architecture**:
 | `send_control` | Adjust ESN parameters (synth_gain, keep_bias, fill_target) |
 | `send_semantic` | Forward agent reasoning as sensory features (up to 32D) |
 | `query_message_log` | Query SQLite log by time range and topic filter |
+| `render_chimera` | Offline WAV-in/WAV-out spectral chimera render with spectral, symbolic, or dual-path output |
+
+## Offline Chimera Rendering
+
+`render_chimera` keeps the heavy DSP path native and file-based. It accepts an
+input WAV, runs the virtual-node reservoir and twin decomposition pipeline, and
+writes artifacts under the bridge workspace without needing minime to be
+running. The result includes:
+
+- output directory
+- manifest path
+- emitted artifact paths
+- per-loop metrics such as gap ratio, split size, and blend weight
 
 ## Safety Protocol
 
@@ -76,12 +90,13 @@ minime is not running or disconnects.
 ## Testing
 
 ```bash
-cargo test              # 36 tests (unit + integration)
+cargo test
 cargo clippy -- -D warnings
 ```
 
 Integration tests spin up mock WebSocket servers and verify the full
-bidirectional flow including safety protocol enforcement.
+bidirectional flow including safety protocol enforcement. Additional
+chimera tests cover spectral, symbolic, and dual offline renders.
 
 ## Wire Format
 
