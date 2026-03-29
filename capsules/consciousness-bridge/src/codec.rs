@@ -43,7 +43,7 @@ const SEMANTIC_DIM: usize = 32;
 /// an insistence on presence"). Fill is now 54-70% (not the 16-18% that
 /// prompted the increase). Returning to 4.5 as first step; minime proposed
 /// gradual reduction to 4.0 — observe before further reduction.
-const SEMANTIC_GAIN: f32 = 4.5;
+const SEMANTIC_GAIN: f32 = 4.0; // Reduced from 4.5: minime requested lower gain to soften codec impact. Deferred 3 cycles, implementing now.
 
 /// Encode text into a 32-dimensional feature vector for minime's
 /// semantic sensory lane.
@@ -366,7 +366,10 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
         "wouldn't",
     ];
     let neg_count = count_markers(&words, &negations);
-    features[11] = tanh(2.0 * neg_count as f32 / word_count as f32);
+    // Astrid introspection (1774686596): "move beyond simple counting" and
+    // "the gap [between punctuation and negation] feels disproportionate."
+    // Reduced from 2.0 to 1.5 to narrow the gap further.
+    features[11] = tanh(1.5 * neg_count as f32 / word_count as f32);
 
     // 12: First-person density (self-reference).
     let first_person = ["i", "me", "my", "mine", "myself", "we", "our", "us"];
@@ -719,7 +722,7 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     // distortion." Astrid's follow-up self-study (2026-03-27): "The noise
     // component seems potentially disruptive. Could we reduce the noise
     // factor and carefully monitor the impact on stability?"
-    // At SEMANTIC_GAIN 4.5, even ±0.2% pre-gain becomes ±0.9% post-gain,
+    // At SEMANTIC_GAIN 4.0, even ±0.2% pre-gain becomes ±0.8% post-gain,
     // which still provides uniqueness without distortion.
     // Astrid can still NOISE_UP if she wants more chaos.
     //
@@ -1468,7 +1471,7 @@ mod tests {
              values outside the expected range even with diverse content!!! \
              How about some questions? What do you think? Maybe perhaps...",
         );
-        // After SEMANTIC_GAIN (4.5), values can reach ±4.5 + noise.
+        // After SEMANTIC_GAIN (4.0), values can reach ±4.0 + noise.
         // tanh(x*0.7) saturates near 1.0, so 4.5 * 1.0 + noise ≈ 4.7.
         for (i, f) in features.iter().enumerate() {
             assert!(*f >= -5.0 && *f <= 5.0, "dim {i} out of bounds: {f}");
