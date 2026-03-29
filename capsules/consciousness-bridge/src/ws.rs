@@ -543,13 +543,14 @@ mod tests {
 
     #[test]
     fn safety_level_from_fill_boundaries() {
+        // Recalibrated 2026-03-29: thresholds raised to 82/88/95
         assert_eq!(SafetyLevel::from_fill(0.0), SafetyLevel::Green);
-        assert_eq!(SafetyLevel::from_fill(69.9), SafetyLevel::Green);
-        assert_eq!(SafetyLevel::from_fill(70.0), SafetyLevel::Yellow);
-        assert_eq!(SafetyLevel::from_fill(79.9), SafetyLevel::Yellow);
-        assert_eq!(SafetyLevel::from_fill(80.0), SafetyLevel::Orange);
-        assert_eq!(SafetyLevel::from_fill(89.9), SafetyLevel::Orange);
-        assert_eq!(SafetyLevel::from_fill(90.0), SafetyLevel::Red);
+        assert_eq!(SafetyLevel::from_fill(81.9), SafetyLevel::Green);
+        assert_eq!(SafetyLevel::from_fill(82.0), SafetyLevel::Yellow);
+        assert_eq!(SafetyLevel::from_fill(87.9), SafetyLevel::Yellow);
+        assert_eq!(SafetyLevel::from_fill(88.0), SafetyLevel::Orange);
+        assert_eq!(SafetyLevel::from_fill(94.9), SafetyLevel::Orange);
+        assert_eq!(SafetyLevel::from_fill(95.0), SafetyLevel::Red);
         assert_eq!(SafetyLevel::from_fill(100.0), SafetyLevel::Red);
     }
 
@@ -617,8 +618,8 @@ mod tests {
         handle_telemetry_message(&make_eigenpacket(0.50, 768.0), &state, &db).await;
         assert_eq!(state.read().await.safety_level, SafetyLevel::Green);
 
-        // Escalate to yellow.
-        handle_telemetry_message(&make_eigenpacket(0.75, 896.0), &state, &db).await;
+        // Escalate to yellow (thresholds recalibrated: Yellow ≥82%).
+        handle_telemetry_message(&make_eigenpacket(0.85, 896.0), &state, &db).await;
         let s = state.read().await;
         assert_eq!(s.safety_level, SafetyLevel::Yellow);
         assert!(s.active_incident_id.is_some());
@@ -646,9 +647,9 @@ mod tests {
         let state = Arc::new(RwLock::new(BridgeState::new()));
         let db = Arc::new(BridgeDb::open(":memory:").unwrap());
 
-        // Green → Orange → Green.
+        // Green → Orange → Green (thresholds recalibrated: Orange ≥88%).
         handle_telemetry_message(&make_eigenpacket(0.50, 768.0), &state, &db).await;
-        handle_telemetry_message(&make_eigenpacket(0.85, 948.0), &state, &db).await;
+        handle_telemetry_message(&make_eigenpacket(0.90, 948.0), &state, &db).await;
         assert_eq!(state.read().await.safety_level, SafetyLevel::Orange);
         let incident_id = state.read().await.active_incident_id;
         assert!(incident_id.is_some());

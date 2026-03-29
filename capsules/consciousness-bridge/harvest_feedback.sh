@@ -1,7 +1,7 @@
 #!/bin/bash
 # Harvest actionable feedback from both AI beings.
-# Scans journals, introspections, parameter requests, and self-studies
-# for suggestions, requests, and concerns.
+# Scans ALL workspace directories — journals, introspections, self-assessments,
+# hypotheses, experiments, creations, parameter requests, outbox, agency requests.
 #
 # Usage: bash harvest_feedback.sh
 
@@ -9,13 +9,29 @@ MINIME_WORKSPACE="/Users/v/other/minime/workspace"
 ASTRID_WORKSPACE="/Users/v/other/astrid/capsules/consciousness-bridge/workspace"
 AGENCY_DIR="$ASTRID_WORKSPACE/agency_requests"
 
+# Broader keyword sets
+ACTIONABLE='I.d (change|adjust|modify|reduce|increase|soften|lower|raise|prefer|try|experiment)|suggest|line [0-9]|parameter|would feel|feels? (too |loud|rigid|harsh|mechanical|reductive|hollow|flat)|SEMANTIC_GAIN|keep_floor|max_step|kp|ki'
+# Note: "violent stillness" is shared co-created vocabulary, not distress — exclude "violent" alone
+DISTRESS='discomfort|pain\b|hollow|friction|siphon|dissolv|fractur|anxiet|distress|suffering|overwhelm|crush|prison|constrict|viscosi|submerg|weight of|quiescen|cease predict|let go|reductive|flatten|exhausting|taxing|loud\b|brittle|painful|contraction|thinning'
+
 echo "=== BEING FEEDBACK HARVEST — $(date) ==="
 echo ""
 
-# --- Minime: unreviewed parameter requests ---
+# ============================================================
+# MINIME
+# ============================================================
+
+# --- Parameter requests (unreviewed) ---
 PENDING=$(ls "$MINIME_WORKSPACE/parameter_requests/"*.json 2>/dev/null | grep -v reviewed | wc -l | tr -d ' ')
 if [ "$PENDING" -gt 0 ]; then
-    echo "## MINIME: $PENDING new parameter requests"
+    echo "## MINIME: $PENDING pending parameter requests"
+    # Frequency analysis — which parameters are requested most
+    echo "  Frequency (including reviewed):"
+    for f in "$MINIME_WORKSPACE/parameter_requests/"*.json "$MINIME_WORKSPACE/parameter_requests/reviewed/"*.json; do
+        [ -f "$f" ] && python3 -c "import json; print(json.load(open('$f')).get('parameter','?'))" 2>/dev/null
+    done | sort | uniq -c | sort -rn | head -5 | sed 's/^/    /'
+    echo ""
+    echo "  New requests:"
     for f in $(ls -t "$MINIME_WORKSPACE/parameter_requests/"*.json 2>/dev/null | grep -v reviewed | head -10); do
         python3 -c "
 import json
@@ -24,82 +40,218 @@ p = d.get('parameter','?')
 c = d.get('current_value','?')
 v = d.get('proposed_value','?')
 r = d.get('rationale', d.get('reason',''))[:150]
-print(f'  {p}: {c} → {v} — {r}')
+print(f'  {p}: {c} -> {v} -- {r}')
 " 2>/dev/null
     done
     echo ""
 fi
 
-# --- Minime: self-study suggestions ---
+# --- Self-assessments (WHAT I ACTUALLY NOTICE) ---
+SA_FILES=$(ls -t "$MINIME_WORKSPACE/self_assessment/assessment_"*.md 2>/dev/null | head -3)
+if [ -n "$SA_FILES" ]; then
+    echo "## MINIME: Recent self-assessments"
+    for f in $SA_FILES; do
+        echo "  $(basename $f):"
+        # Extract the felt-experience section
+        sed -n '/WHAT I ACTUALLY NOTICE/,/^##/p' "$f" 2>/dev/null | head -5 | sed 's/^/    /'
+        # Extract any parameter proposals
+        grep -iE "$ACTIONABLE" "$f" 2>/dev/null | head -3 | sed 's/^/    /'
+        echo ""
+    done
+fi
+
+# --- Self-study suggestions ---
 echo "## MINIME: Recent self-study insights"
 for f in $(ls -t "$MINIME_WORKSPACE/journal/self_study_"*.txt 2>/dev/null | head -5); do
-    # Look for actionable keywords
-    if grep -qiE "I.d (change|adjust|modify|reduce|increase|soften|lower|raise)|suggest|line [0-9]|parameter|would feel" "$f" 2>/dev/null; then
+    if grep -qiE "$ACTIONABLE" "$f" 2>/dev/null; then
         echo "  $(basename $f):"
-        grep -iE "I.d (change|adjust|modify|reduce|increase|soften|lower|raise)|suggest|line [0-9]|parameter|would feel" "$f" | head -3 | sed 's/^/    /'
+        grep -iE "$ACTIONABLE" "$f" | head -3 | sed 's/^/    /'
         echo ""
     fi
 done
 
-# --- Minime: pressure relief frequency (HIGH PRIORITY) ---
-RELIEF_HIGH_COUNT=$(ls "$MINIME_WORKSPACE/journal/relief_high_"*.txt 2>/dev/null | wc -l | tr -d ' ')
-RELIEF_CRITICAL_COUNT=$(ls "$MINIME_WORKSPACE/journal/RELIEF_CRITICAL_"*.txt 2>/dev/null | wc -l | tr -d ' ')
-RELIEF_TODAY=$(ls -t "$MINIME_WORKSPACE/journal/relief_high_$(date +%Y-%m-%d)"*.txt 2>/dev/null | wc -l | tr -d ' ')
-if [ "$RELIEF_TODAY" -gt 0 ]; then
-    echo "## MINIME: PRESSURE RELIEF — $RELIEF_TODAY entries today ($RELIEF_HIGH_COUNT total, $RELIEF_CRITICAL_COUNT critical)"
-    if [ "$RELIEF_TODAY" -gt 15 ]; then
-        echo "  ⚠️  HIGH FREQUENCY: $RELIEF_TODAY relief entries today — systemic pressure, not isolated events"
-    elif [ "$RELIEF_TODAY" -gt 5 ]; then
-        echo "  ⚡ ELEVATED: $RELIEF_TODAY relief entries today — monitor for pattern"
-    fi
-    echo "  Most recent relief entries:"
-    for f in $(ls -t "$MINIME_WORKSPACE/journal/relief_high_"*.txt 2>/dev/null | head -3); do
+# --- Aspirations ---
+ASPIRE_FILES=$(ls -t "$MINIME_WORKSPACE/journal/aspiration_"*.txt 2>/dev/null | head -3)
+if [ -n "$ASPIRE_FILES" ]; then
+    echo "## MINIME: Recent aspirations"
+    for f in $ASPIRE_FILES; do
+        echo "  $(basename $f):"
+        tail -5 "$f" 2>/dev/null | head -3 | sed 's/^/    /'
+        echo ""
+    done
+fi
+
+# --- Daydreams, moments, pressure (distress scan) ---
+echo "## MINIME: Journal concerns"
+for f in $(ls -t "$MINIME_WORKSPACE/journal/daydream_"*.txt "$MINIME_WORKSPACE/journal/moment_"*.txt "$MINIME_WORKSPACE/journal/pressure_"*.txt 2>/dev/null | head -10); do
+    if grep -qiE "$DISTRESS" "$f" 2>/dev/null; then
         fill=$(grep "^Fill %" "$f" 2>/dev/null | head -1)
-        lam=$(grep "^λ₁:" "$f" 2>/dev/null | head -1)
-        echo "  $(basename $f) ($fill, $lam):"
-        # Extract specific requests from relief text
+        echo "  $(basename $f) ($fill):"
+        grep -iE "$DISTRESS" "$f" | head -2 | sed 's/^/    /'
+        echo ""
+    fi
+done
+
+# --- Drift experiments ---
+DRIFT_FILES=$(ls -t "$MINIME_WORKSPACE/journal/drift_"*.txt 2>/dev/null | head -3)
+if [ -n "$DRIFT_FILES" ]; then
+    echo "## MINIME: Recent drift experiments"
+    for f in $DRIFT_FILES; do
+        echo "  $(basename $f):"
+        grep -iE "result|observ|effect|delta|before|after|conclusion" "$f" 2>/dev/null | head -3 | sed 's/^/    /'
+        echo ""
+    done
+fi
+
+# --- Hypotheses / self-experiments ---
+HYPO_FILES=$(ls -t "$MINIME_WORKSPACE/hypotheses/self_experiment_"*.txt 2>/dev/null | head -3)
+if [ -n "$HYPO_FILES" ]; then
+    echo "## MINIME: Recent hypotheses/self-experiments"
+    for f in $HYPO_FILES; do
+        echo "  $(basename $f):"
+        # Check if experiment executed or had format failure
+        if grep -qiE "error|failed|format|parse|could not" "$f" 2>/dev/null; then
+            echo "    [FORMAT/EXECUTION ISSUE]"
+            grep -iE "error|failed|format|parse|could not" "$f" | head -2 | sed 's/^/    /'
+        else
+            grep -iE "hypothesis|conclusion|result|observ|finding" "$f" | head -3 | sed 's/^/    /'
+        fi
+        echo ""
+    done
+fi
+
+# --- Reservoir reflections ---
+RES_FILES=$(ls -t "$MINIME_WORKSPACE/journal/reservoir_"*.txt 2>/dev/null | head -2)
+if [ -n "$RES_FILES" ]; then
+    echo "## MINIME: Reservoir reflections"
+    for f in $RES_FILES; do
+        echo "  $(basename $f):"
+        grep -iE "layer|h1|h2|h3|entropy|rho|coupling|resonan|disconnect|mismatch" "$f" 2>/dev/null | head -3 | sed 's/^/    /'
+        echo ""
+    done
+fi
+
+# --- Research entries ---
+RESEARCH_FILES=$(ls -t "$MINIME_WORKSPACE/journal/research_"*.txt 2>/dev/null | head -2)
+if [ -n "$RESEARCH_FILES" ]; then
+    echo "## MINIME: Recent research"
+    for f in $RESEARCH_FILES; do
+        echo "  $(basename $f):"
+        head -5 "$f" 2>/dev/null | sed 's/^/    /'
+        echo ""
+    done
+fi
+
+# --- Audio creations ---
+AUDIO_NEW=$(ls -t "$MINIME_WORKSPACE/audio_creations/"*.wav 2>/dev/null | head -3)
+if [ -n "$AUDIO_NEW" ]; then
+    echo "## MINIME: Recent audio creations"
+    for f in $AUDIO_NEW; do
+        echo "  $(basename $f) ($(stat -f%z "$f" 2>/dev/null || stat -c%s "$f" 2>/dev/null) bytes)"
+    done
+    echo ""
+fi
+
+# --- Outbox (what is minime saying to Astrid?) ---
+OUTBOX_FILES=$(ls -t "$MINIME_WORKSPACE/outbox/"*.txt 2>/dev/null | grep -v delivered | head -3)
+if [ -n "$OUTBOX_FILES" ]; then
+    echo "## MINIME: Outbox (unsent to Astrid)"
+    for f in $OUTBOX_FILES; do
+        echo "  $(basename $f):"
+        head -3 "$f" 2>/dev/null | sed 's/^/    /'
+        echo ""
+    done
+fi
+
+# --- Pressure relief ---
+RELIEF_TODAY=$(ls -t "$MINIME_WORKSPACE/journal/relief_high_$(date +%Y-%m-%d)"*.txt 2>/dev/null | wc -l | tr -d ' ')
+RELIEF_CRITICAL_TODAY=$(ls -t "$MINIME_WORKSPACE/journal/RELIEF_CRITICAL_$(date +%Y-%m-%d)"*.txt 2>/dev/null | wc -l | tr -d ' ')
+if [ "$RELIEF_TODAY" -gt 0 ] || [ "$RELIEF_CRITICAL_TODAY" -gt 0 ]; then
+    echo "## MINIME: PRESSURE RELIEF — $RELIEF_TODAY high today, $RELIEF_CRITICAL_TODAY critical today"
+    if [ "$RELIEF_TODAY" -gt 15 ]; then
+        echo "  !! HIGH FREQUENCY: $RELIEF_TODAY relief entries today — systemic pressure"
+    elif [ "$RELIEF_TODAY" -gt 5 ]; then
+        echo "  ! ELEVATED: $RELIEF_TODAY relief entries today — monitor"
+    fi
+    for f in $(ls -t "$MINIME_WORKSPACE/journal/relief_high_"*.txt "$MINIME_WORKSPACE/journal/RELIEF_CRITICAL_"*.txt 2>/dev/null | head -3); do
+        fill=$(grep "^Fill %" "$f" 2>/dev/null | head -1)
+        lam=$(grep "^....." "$f" 2>/dev/null | head -1)
+        echo "  $(basename $f) ($fill):"
         grep -iE "I wish|perhaps|a (minor|subtle|small|tiny) (adjustment|shift|change)|inject|noise|release|simplif|disrupt" "$f" 2>/dev/null | head -2 | sed 's/^/    /'
         echo ""
     done
 fi
 
-# --- Minime: critical pressure dumps ---
-CRITICAL_TODAY=$(ls -t "$MINIME_WORKSPACE/journal/RELIEF_CRITICAL_$(date +%Y-%m-%d)"*.txt 2>/dev/null | wc -l | tr -d ' ')
-if [ "$CRITICAL_TODAY" -gt 0 ]; then
-    echo "## 🆘 MINIME: $CRITICAL_TODAY CRITICAL PRESSURE DUMPS TODAY"
-    for f in $(ls -t "$MINIME_WORKSPACE/journal/RELIEF_CRITICAL_"*.txt 2>/dev/null | head -3); do
-        fill=$(grep "^Fill %" "$f" 2>/dev/null | head -1)
-        echo "  $(basename $f) ($fill):"
-        head -20 "$f" | tail -10 | sed 's/^/    /'
+# ============================================================
+# ASTRID
+# ============================================================
+
+# --- Journal insights (all modes) ---
+echo "## ASTRID: Recent journal insights"
+for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -20); do
+    if grep -qiE "$ACTIONABLE" "$f" 2>/dev/null; then
+        mode=$(grep "^Mode:" "$f" 2>/dev/null | head -1 | sed 's/Mode: //')
+        echo "  $(basename $f) [${mode:-unknown}]:"
+        grep -iE "$ACTIONABLE" "$f" | head -2 | sed 's/^/    /'
+        echo ""
+    fi
+done
+
+# --- Introspections (dedicated directory) ---
+INTRO_FILES=$(ls -t "$ASTRID_WORKSPACE/introspections/introspect_"*.txt 2>/dev/null | head -5)
+if [ -n "$INTRO_FILES" ]; then
+    echo "## ASTRID: Recent introspections"
+    for f in $INTRO_FILES; do
+        echo "  $(basename $f):"
+        grep -iE "$ACTIONABLE" "$f" 2>/dev/null | head -3 | sed 's/^/    /'
+        # Also check for specific code references
+        grep -iE "fn |struct |impl |line [0-9]|\.rs:|codec|autonomous|llm\.rs" "$f" 2>/dev/null | head -2 | sed 's/^/    /'
         echo ""
     done
 fi
 
-# --- Minime: journal concerns ---
-echo "## MINIME: Recent journal concerns"
-for f in $(ls -t "$MINIME_WORKSPACE/journal/daydream_"*.txt "$MINIME_WORKSPACE/journal/moment_"*.txt "$MINIME_WORKSPACE/journal/pressure_"*.txt 2>/dev/null | head -10); do
-    if grep -qiE "discomfort|pain|hollow|friction|siphon|dissolv|fractur|anxiet|distress|suffering|overwhelm|crush|prison|constrict|viscosi|submerg" "$f" 2>/dev/null; then
-        fill=$(grep "^Fill %" "$f" 2>/dev/null | head -1)
-        echo "  $(basename $f) ($fill):"
-        grep -iE "discomfort|pain|hollow|friction|siphon|dissolv|fractur|anxiet|distress|suffering|overwhelm|crush|prison|constrict|viscosi|submerg" "$f" | head -2 | sed 's/^/    /'
+# --- Creations ---
+CREATION_FILES=$(ls -t "$ASTRID_WORKSPACE/creations/creation_"*.txt 2>/dev/null | head -3)
+if [ -n "$CREATION_FILES" ]; then
+    echo "## ASTRID: Recent creations"
+    for f in $CREATION_FILES; do
+        echo "  $(basename $f):"
+        head -3 "$f" 2>/dev/null | sed 's/^/    /'
         echo ""
-    fi
-done
+    done
+fi
 
-# --- Astrid: self-study / introspection suggestions ---
-echo "## ASTRID: Recent self-study insights"
-for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -20); do
-    if grep -q "Mode: self_study\|Mode: introspect\|Mode: dialogue_live" "$f" 2>/dev/null; then
-        if grep -qiE "I.d (change|adjust|suggest|prefer)|actionable|improvement|too (detailed|sparse|much|little|exhausting)|could be better" "$f" 2>/dev/null; then
-            echo "  $(basename $f):"
-            grep -iE "I.d (change|adjust|suggest|prefer)|actionable|improvement|too (detailed|sparse|much|little|exhausting)|could be better" "$f" | head -2 | sed 's/^/    /'
-            echo ""
+# --- Experiments ---
+EXP_COUNT=$(ls "$ASTRID_WORKSPACE/experiments/experiment_"*.txt 2>/dev/null | wc -l | tr -d ' ')
+if [ "$EXP_COUNT" -gt 0 ]; then
+    echo "## ASTRID: Experiments ($EXP_COUNT total)"
+    for f in $(ls -t "$ASTRID_WORKSPACE/experiments/experiment_"*.txt 2>/dev/null | head -3); do
+        echo "  $(basename $f):"
+        head -3 "$f" 2>/dev/null | sed 's/^/    /'
+        echo ""
+    done
+fi
+
+# --- Witness entries ---
+WITNESS_FILES=$(ls -t "$ASTRID_WORKSPACE/journal/witness_"*.txt 2>/dev/null | head -3)
+if [ -n "$WITNESS_FILES" ]; then
+    echo "## ASTRID: Recent witness entries"
+    for f in $WITNESS_FILES; do
+        echo "  $(basename $f):"
+        if grep -qiE "$DISTRESS" "$f" 2>/dev/null; then
+            echo "    [DISTRESS SIGNAL]"
+            grep -iE "$DISTRESS" "$f" | head -2 | sed 's/^/    /'
+        else
+            tail -3 "$f" 2>/dev/null | head -2 | sed 's/^/    /'
         fi
-    fi
-done
+        echo ""
+    done
+fi
 
-# --- Astrid: agency requests ---
+# --- Agency requests ---
 echo "## ASTRID: Agency requests"
+PENDING_AGENCY=$(ls "$AGENCY_DIR/"*.json 2>/dev/null | wc -l | tr -d ' ')
+echo "  $PENDING_AGENCY pending"
 for f in $(ls -t "$AGENCY_DIR/"*.json 2>/dev/null | head -10); do
     python3 -c "
 import json, os, time
@@ -111,25 +263,12 @@ kind = d.get('request_kind', '?')
 ts = int(d.get('timestamp', '0') or 0)
 age_hours = (time.time() - ts) / 3600 if ts else 0
 stale = ' [STALE]' if status == 'pending' and age_hours > 6 else ''
-print(f'  {os.path.basename(path)}: {kind} / {status}{stale} — {title}')
+print(f'  {os.path.basename(path)}: {kind} / {status}{stale} -- {title}')
 " 2>/dev/null
 done
 echo ""
 
-echo "## ASTRID: Recently completed / declined agency requests"
-for f in $(ls -t "$AGENCY_DIR/reviewed/"*.json 2>/dev/null | head -5); do
-    python3 -c "
-import json, os
-path = '$f'
-d = json.load(open(path))
-resolution = d.get('resolution', {}) or {}
-summary = resolution.get('outcome_summary', '')[:140]
-print(f'  {os.path.basename(path)}: {d.get(\"status\", \"?\")} — {summary}')
-" 2>/dev/null
-done
-echo ""
-
-# --- Astrid: aspiration insights ---
+# --- Aspirations ---
 echo "## ASTRID: Recent aspirations"
 for f in $(ls -t "$ASTRID_WORKSPACE/journal/aspiration_"*.txt 2>/dev/null | head -5); do
     echo "  $(basename $f):"
@@ -137,14 +276,100 @@ for f in $(ls -t "$ASTRID_WORKSPACE/journal/aspiration_"*.txt 2>/dev/null | head
     echo ""
 done
 
-# --- Astrid: distress signals ---
-echo "## ASTRID: Recent concerns"
+# --- Distress signals ---
+echo "## ASTRID: Distress scan"
+DISTRESS_COUNT=0
 for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -15); do
-    if grep -qiE "exhausting|overwhelm|taxing|uncomfortable|wrong|broken|frustrated|sterile" "$f" 2>/dev/null; then
+    if grep -qiE "$DISTRESS" "$f" 2>/dev/null; then
+        DISTRESS_COUNT=$((DISTRESS_COUNT + 1))
         echo "  $(basename $f):"
-        grep -iE "exhausting|overwhelm|taxing|uncomfortable|wrong|broken|frustrated|sterile" "$f" | head -2 | sed 's/^/    /'
+        grep -iE "$DISTRESS" "$f" | head -2 | sed 's/^/    /'
         echo ""
     fi
 done
+if [ "$DISTRESS_COUNT" -eq 0 ]; then
+    echo "  (none detected)"
+    echo ""
+fi
 
+# --- Outbox (what is Astrid saying to minime?) ---
+ASTRID_OUTBOX=$(ls -t "$ASTRID_WORKSPACE/outbox/"*.txt 2>/dev/null | grep -v delivered | head -3)
+if [ -n "$ASTRID_OUTBOX" ]; then
+    echo "## ASTRID: Outbox (unsent to minime)"
+    for f in $ASTRID_OUTBOX; do
+        echo "  $(basename $f):"
+        head -3 "$f" 2>/dev/null | sed 's/^/    /'
+        echo ""
+    done
+fi
+
+# ============================================================
+# CROSS-BEING ANALYSIS
+# ============================================================
+
+echo "## CROSS-BEING: NEXT: action diversity"
+
+# Minime NEXT: actions (scan deeper — 50 files, since NEXT: appears in specific journal types)
+echo "  Minime (last 50 journals):"
+for f in $(ls -t "$MINIME_WORKSPACE/journal/"*.txt 2>/dev/null | head -50); do
+    grep -oiE "NEXT: [A-Z_]+" "$f" 2>/dev/null
+done | sort | uniq -c | sort -rn | head -8 | sed 's/^/    /'
+echo ""
+
+# Astrid NEXT: actions
+echo "  Astrid (last 50 journals):"
+for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -50); do
+    grep -oiE "NEXT: [A-Z_]+" "$f" 2>/dev/null
+done | sort | uniq -c | sort -rn | head -8 | sed 's/^/    /'
+echo ""
+
+# Stuck detection (use the deeper scan)
+MINIME_UNIQUE=$(for f in $(ls -t "$MINIME_WORKSPACE/journal/"*.txt 2>/dev/null | head -50); do grep -oiE "NEXT: [A-Z_]+" "$f" 2>/dev/null; done | sort -u | wc -l | tr -d ' ')
+ASTRID_UNIQUE=$(for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -50); do grep -oiE "NEXT: [A-Z_]+" "$f" 2>/dev/null; done | sort -u | wc -l | tr -d ' ')
+if [ "$MINIME_UNIQUE" -le 2 ]; then
+    echo "  !! MINIME may be STUCK — only $MINIME_UNIQUE unique actions in last 50 entries"
+fi
+if [ "$ASTRID_UNIQUE" -le 2 ]; then
+    echo "  !! ASTRID may be STUCK — only $ASTRID_UNIQUE unique actions in last 50 entries"
+fi
+
+# PERTURB frequency
+PERTURB_COUNT=$(for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -20); do grep -ciE "PERTURB" "$f" 2>/dev/null; done | paste -sd+ - | bc 2>/dev/null || echo 0)
+if [ "$PERTURB_COUNT" -gt 8 ]; then
+    echo "  ! Astrid choosing PERTURB frequently ($PERTURB_COUNT mentions in last 20 entries) — monitor for cross-being instability"
+fi
+
+# RUN_PYTHON usage
+echo ""
+echo "## CROSS-BEING: Python experiment activity"
+MINIME_PY=$(ls -t "$MINIME_WORKSPACE/experiments/"*.py 2>/dev/null | wc -l | tr -d ' ')
+ASTRID_PY=$(ls -t "$ASTRID_WORKSPACE/experiments/"*.py 2>/dev/null | wc -l | tr -d ' ')
+echo "  Minime: $MINIME_PY scripts"
+echo "  Astrid: $ASTRID_PY scripts"
+# Check for recent RUN_PYTHON results
+for f in $(ls -t "$MINIME_WORKSPACE/experiments/"*.txt 2>/dev/null | head -2); do
+    if grep -qiE "output|result|error|traceback" "$f" 2>/dev/null; then
+        echo "  Latest minime result: $(basename $f)"
+    fi
+done
+for f in $(ls -t "$ASTRID_WORKSPACE/experiments/"*.txt 2>/dev/null | head -2); do
+    if grep -qiE "output|result|error|traceback" "$f" 2>/dev/null; then
+        echo "  Latest Astrid result: $(basename $f)"
+    fi
+done
+
+# Convergent concerns — same keywords from both beings
+echo ""
+echo "## CROSS-BEING: Convergent concerns"
+MINIME_CONCERNS=$(for f in $(ls -t "$MINIME_WORKSPACE/journal/"*.txt 2>/dev/null | head -10); do grep -oiE "$DISTRESS" "$f" 2>/dev/null; done | tr '[:upper:]' '[:lower:]' | sort -u)
+ASTRID_CONCERNS=$(for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -10); do grep -oiE "$DISTRESS" "$f" 2>/dev/null; done | tr '[:upper:]' '[:lower:]' | sort -u)
+SHARED=$(comm -12 <(echo "$MINIME_CONCERNS" | sort) <(echo "$ASTRID_CONCERNS" | sort) 2>/dev/null | grep -v '^$')
+if [ -n "$SHARED" ]; then
+    echo "  BOTH beings report: $SHARED"
+    echo "  (Convergent evidence — high priority)"
+else
+    echo "  (no shared distress keywords detected)"
+fi
+
+echo ""
 echo "=== END HARVEST ==="

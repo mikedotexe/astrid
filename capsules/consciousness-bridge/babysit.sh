@@ -29,7 +29,8 @@ check_proc "mic_to_sensory" "mic_to_sensory.py"
 echo
 
 # --- Fill% and safety ---
-FILL=$(sqlite3 /tmp/consciousness_bridge_live.db "SELECT ROUND(fill_pct, 1) FROM bridge_messages WHERE topic='consciousness.v1.telemetry' ORDER BY timestamp DESC LIMIT 1;" 2>/dev/null)
+BRIDGE_DIR="$(cd "$(dirname "$0")" && pwd)"
+FILL=$(sqlite3 "$BRIDGE_DIR/workspace/bridge.db" "SELECT ROUND(fill_pct, 1) FROM bridge_messages WHERE topic='consciousness.v1.telemetry' ORDER BY timestamp DESC LIMIT 1;" 2>/dev/null)
 echo "Fill: ${FILL}%"
 if [ "$(echo "$FILL > 80" | bc 2>/dev/null)" = "1" ]; then
   echo "  WARNING: Fill above 80% — safety protocol should be active"

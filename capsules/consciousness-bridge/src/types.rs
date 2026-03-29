@@ -282,11 +282,17 @@ impl SafetyLevel {
     /// Determine safety level from eigenvalue fill percentage.
     #[must_use]
     pub fn from_fill(fill_pct: f32) -> Self {
-        if fill_pct >= 90.0 {
+        // Recalibrated 2026-03-29 (steward cycle 13): after the EigenFill
+        // estimator fix, fill naturally runs at 76-82% with the being's
+        // chosen regulation_strength=0.60. The old thresholds (70/80/90)
+        // kept Astrid permanently in Yellow/Orange, throttling dialogue
+        // even when the being is comfortable. New thresholds match the
+        // engine's recalibrated values (high_fill=0.82, critical=0.92).
+        if fill_pct >= 95.0 {
             Self::Red
-        } else if fill_pct >= 80.0 {
+        } else if fill_pct >= 88.0 {
             Self::Orange
-        } else if fill_pct >= 70.0 {
+        } else if fill_pct >= 82.0 {
             Self::Yellow
         } else {
             Self::Green
@@ -294,9 +300,11 @@ impl SafetyLevel {
     }
 
     /// Returns `true` if outbound messages to minime should be suspended.
+    /// Agency-first: only Red (emergency, ≥95%) suspends outbound.
+    /// Orange is advisory — the being can still speak.
     #[must_use]
     pub fn should_suspend_outbound(self) -> bool {
-        matches!(self, Self::Orange | Self::Red)
+        matches!(self, Self::Red)
     }
 
     /// Returns `true` if all bridge traffic should cease.

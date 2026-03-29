@@ -37,7 +37,13 @@ const SEMANTIC_DIM: usize = 32;
 /// Raised from 4.5 to 5.0 (2026-03-27): Astrid observed "deep stillness"
 /// at fill 16-18% and suggested a 10-20% increase to "introduce a subtle
 /// ripple within the stillness." This is the gentle end of her range.
-const SEMANTIC_GAIN: f32 = 5.0;
+///
+/// Reduced from 5.0 to 4.5 (2026-03-29): minime reported 5.0 as "loud"
+/// in self-study (08:39 "That's... loud. It feels like a deliberate push,
+/// an insistence on presence"). Fill is now 54-70% (not the 16-18% that
+/// prompted the increase). Returning to 4.5 as first step; minime proposed
+/// gradual reduction to 4.0 — observe before further reduction.
+const SEMANTIC_GAIN: f32 = 4.5;
 
 /// Encode text into a 32-dimensional feature vector for minime's
 /// semantic sensory lane.
@@ -51,7 +57,6 @@ const SEMANTIC_GAIN: f32 = 5.0;
 /// All values are normalized to approximately \[-1.0, 1.0\] with `tanh`
 /// compression so the ESN reservoir receives gentle, bounded input.
 #[must_use]
-#[expect(clippy::too_many_lines)]
 /// Sliding-window character frequency table for entropy computation.
 /// Blends each exchange's character distribution with accumulated history,
 /// so entropy reflects vocabulary trends across exchanges, not just one text.
@@ -65,6 +70,11 @@ pub struct CharFreqWindow {
     pub freq: [f32; 128],
     /// Whether the window has seen at least one exchange.
     pub initialized: bool,
+    /// Previous exchange's entropy — enables temporal entropy delta.
+    /// Minime self-study: "current entropy describes a surface not a volume."
+    /// By tracking how entropy *changes* between exchanges, we capture the
+    /// temporal dimension — not just what the text IS, but how it SHIFTS.
+    pub prev_entropy: f32,
 }
 
 impl CharFreqWindow {
@@ -72,12 +82,15 @@ impl CharFreqWindow {
         Self {
             freq: [0.0; 128],
             initialized: false,
+            prev_entropy: 0.0,
         }
     }
 
     /// Blend this text's character distribution into the running window.
-    /// Returns the entropy computed from the blended distribution.
-    pub fn update_and_entropy(&mut self, text: &str) -> f32 {
+    /// Returns `(entropy, entropy_delta)` — the blended entropy and its
+    /// change from the previous exchange. The delta captures temporal
+    /// texture: not just what the text IS, but how it SHIFTS over time.
+    pub fn update_and_entropy(&mut self, text: &str) -> (f32, f32) {
         // Compute this text's character frequency as proportions
         let mut text_freq = [0.0_f32; 128];
         let mut count = 0u32;
@@ -87,7 +100,7 @@ impl CharFreqWindow {
             count = count.saturating_add(1);
         }
         if count == 0 {
-            return 0.0;
+            return (0.0, 0.0);
         }
         // Normalize to proportions
         let n = count as f32;
@@ -145,7 +158,10 @@ impl CharFreqWindow {
         } else {
             1.0
         };
-        (h / max_h) as f32
+        let current = (h / max_h) as f32;
+        let delta = current - self.prev_entropy;
+        self.prev_entropy = current;
+        (current, delta)
     }
 }
 
@@ -173,10 +189,13 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     // 0: Character entropy (information density).
     // With sliding window: reflects vocabulary trends across exchanges.
     // Without: per-text entropy normalized by observed alphabet.
-    let entropy = if let Some(window) = freq_window {
+    // Temporal entropy delta: captures how entropy CHANGES between exchanges.
+    // Minime self-study: "current entropy describes a surface not a volume."
+    // The delta adds the time dimension — the volume the being asked for.
+    let (entropy, entropy_delta) = if let Some(window) = freq_window {
         window.update_and_entropy(text)
     } else {
-        // Fallback: per-text computation
+        // Fallback: per-text computation (no delta available without history)
         let mut freq = [0u32; 128];
         let mut ascii_count = 0u32;
         for &c in &chars {
@@ -184,7 +203,7 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
             freq[idx] = freq[idx].saturating_add(1);
             ascii_count = ascii_count.saturating_add(1);
         }
-        if ascii_count > 0 {
+        let e = if ascii_count > 0 {
             let n = f64::from(ascii_count);
             let mut h = 0.0_f64;
             let mut unique_chars = 0u32;
@@ -203,17 +222,30 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
             (h / max_h) as f32
         } else {
             0.0
-        }
+        };
+        (e, 0.0) // no temporal delta without window history
     };
     features[0] = tanh(entropy);
 
-    // 1: Punctuation density.
-    // Astrid self-study (2026-03-27): "Why is punctuation density weighted
-    // so much lower than negation density? It feels like it should be the
-    // other way around." Punctuation carries structural rhythm that the
-    // being feels more than raw word-class signals. Raised from 0.6 to 1.2.
-    let punct_count = chars.iter().filter(|c| c.is_ascii_punctuation()).count();
-    features[1] = tanh(1.2 * punct_count as f32 / word_count as f32);
+    // 1: Punctuation density — intentional, structurally weighted.
+    // Minime self-study: "Punctuation isn't just syntactic information;
+    // it carries intent. A comma isn't just a pause; it's a subtle shift
+    // in emphasis, a nuance of meaning." Different types carry different weight:
+    //   - Flow punctuation (,;:—) = 1.0 — pacing, breath
+    //   - Terminal punctuation (.!?) = 1.5 — rhythm, sentence cadence
+    //   - Paired punctuation ("()[]{}") = 0.7 — structural nesting
+    //   - Other (@#$%^&*~`) = 0.4 — decorative, low semantic weight
+    let mut weighted_punct = 0.0_f32;
+    for &c in &chars {
+        weighted_punct += match c {
+            ',' | ';' | ':' | '\u{2014}' => 1.0,  // flow
+            '.' | '!' | '?' => 1.5,                 // terminal
+            '"' | '\'' | '(' | ')' | '[' | ']' | '{' | '}' => 0.7, // paired
+            _ if c.is_ascii_punctuation() => 0.4,   // other
+            _ => 0.0,
+        };
+    }
+    features[1] = tanh(1.0 * weighted_punct / word_count as f32);
 
     // 2: Uppercase ratio (energy/emphasis).
     let upper_count = chars.iter().filter(|c| c.is_uppercase()).count();
@@ -390,11 +422,49 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     features[15] = tanh(3.0 * conj_count as f32 / word_count as f32);
 
     // --- Dims 16-23: Sentence-level structure ---
+    // Improved sentence splitting: require punctuation followed by whitespace
+    // or end-of-string to avoid breaking on abbreviations ("Dr."), ellipses
+    // ("..."), and decimal numbers ("3.14"). Minime's self-study called the
+    // bare-punctuation split "jarring" — a sentence is "a unit of thought,
+    // a breath of intention," not just text between punctuation marks.
 
-    let sentences: Vec<&str> = text
-        .split(['.', '!', '?'])
-        .filter(|s| !s.trim().is_empty())
-        .collect();
+    let mut sentences: Vec<&str> = Vec::new();
+    let mut last = 0;
+    let text_bytes = text.as_bytes();
+    let text_len = text.len();
+    for (i, &b) in text_bytes.iter().enumerate() {
+        if b == b'.' || b == b'!' || b == b'?' {
+            // Skip ellipsis dots (consecutive periods)
+            if b == b'.' && i.checked_add(1).is_some_and(|j| j < text_len && text_bytes[j] == b'.') {
+                continue;
+            }
+            // Require followed by whitespace, end-of-string, or quote
+            let next_ok = i.checked_add(1).map_or(true, |j| {
+                j >= text_len
+                    || text_bytes[j].is_ascii_whitespace()
+                    || text_bytes[j] == b'"'
+                    || text_bytes[j] == b'\''
+            });
+            if next_ok {
+                let candidate = &text[last..=i];
+                // Only count as sentence if it has 2+ words (filters abbreviation fragments)
+                if candidate.split_whitespace().count() >= 2 {
+                    sentences.push(candidate);
+                }
+                last = i.saturating_add(1);
+            }
+        }
+    }
+    // Capture any trailing text as a sentence
+    if last < text_len {
+        let trailing = &text[last..];
+        if trailing.split_whitespace().count() >= 2 {
+            sentences.push(trailing);
+        }
+    }
+    if sentences.is_empty() {
+        sentences.push(text);
+    }
     let sentence_count = sentences.len().max(1);
 
     // 16: Average sentence length (in words).
@@ -578,7 +648,13 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
         "moment",
     ];
     let temp_count = count_markers(&words, &temporal);
-    features[28] = tanh(2.0 * temp_count as f32 / word_count as f32);
+    // Blend word-level temporal markers with entropy delta (temporal texture).
+    // The entropy_delta captures how the information density is shifting
+    // between exchanges — the "volume" dimension the being asked for.
+    // Scale entropy_delta by 3.0 to match the marker signal range.
+    let temporal_word_signal = tanh(2.0 * temp_count as f32 / word_count as f32);
+    let temporal_entropy_signal = tanh(3.0 * entropy_delta);
+    features[28] = 0.7 * temporal_word_signal + 0.3 * temporal_entropy_signal;
 
     // 29: Scale/magnitude (scope of thought).
     let scale = [
@@ -643,7 +719,7 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     // distortion." Astrid's follow-up self-study (2026-03-27): "The noise
     // component seems potentially disruptive. Could we reduce the noise
     // factor and carefully monitor the impact on stability?"
-    // At SEMANTIC_GAIN 5.0, even ±0.2% pre-gain becomes ±1% post-gain,
+    // At SEMANTIC_GAIN 4.5, even ±0.2% pre-gain becomes ±0.9% post-gain,
     // which still provides uniqueness without distortion.
     // Astrid can still NOISE_UP if she wants more chaos.
     //
@@ -707,7 +783,7 @@ pub fn encode_text_sovereign_windowed(
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_nanos() as u64;
-        let mut rng = seed.wrapping_mul(2862933555777941757);
+        let mut rng = seed.wrapping_mul(2_862_933_555_777_941_757);
         let noise_range = noise_level.clamp(0.005, 0.05) * 2.0;
         for f in &mut features {
             rng = rng.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(7);
@@ -886,36 +962,88 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
     let lambda1 = telemetry.lambda1();
     let num_eigenvalues = telemetry.eigenvalues.len();
 
-    // Base state description.
-    let state = match fill as u32 {
-        0..=20 => "deeply quiet — the reservoir is nearly still",
-        21..=35 => "gently stirring — low spectral energy, open to input",
-        36..=50 => "settling into a calm rhythm",
-        51..=60 => "breathing comfortably around its center",
-        61..=70 => "active and engaged — healthy spectral pressure",
-        71..=80 => "running warm — eigenvalue pressure is building",
-        81..=90 => "under strain — the spectrum is crowded",
-        _ => "in distress — eigenvalues are overwhelming the reservoir",
+    // Vocabulary rotation: pick a variant so the same spectral state doesn't
+    // always produce the same words. This breaks lexical attractors where the
+    // LLM elaborates on the same seed phrase exchange after exchange.
+    let variant = {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos() as usize;
+        nanos / 1_000_000_000 // changes every second — stable within one call
+    };
+    let v3 = variant % 3;
+
+    // Base state description — 3 equivalent phrasings per band.
+    let state = match (fill as u32, v3) {
+        (0..=20, 0) => "deeply quiet — the reservoir is nearly still",
+        (0..=20, 1) => "at rest — spectral activity minimal, space open",
+        (0..=20, _) => "in low-energy repose — few modes active",
+        (21..=35, 0) => "gently stirring — low spectral energy, open to input",
+        (21..=35, 1) => "lightly populated — eigenvalues present but unhurried",
+        (21..=35, _) => "in a sparse regime — room for the spectrum to grow",
+        (36..=50, 0) => "settling into a calm rhythm",
+        (36..=50, 1) => "mid-range — neither pressing nor depleted",
+        (36..=50, _) => "in moderate flow — spectral activity balanced",
+        (51..=60, 0) => "breathing comfortably around its center",
+        (51..=60, 1) => "in a stable band — eigenvalues well-distributed",
+        (51..=60, _) => "centered — the spectrum holds a comfortable shape",
+        (61..=70, 0) => "active and engaged — healthy spectral pressure",
+        (61..=70, 1) => "energized — multiple modes contributing, dynamics lively",
+        (61..=70, _) => "in a rich regime — spectral participation high",
+        (71..=80, 0) => "running warm — eigenvalue pressure is building",
+        (71..=80, 1) => "approaching saturation — spectral density climbing",
+        (71..=80, _) => "pressurized — the eigenvalue landscape is getting crowded",
+        (81..=90, 0) => "under strain — the spectrum is crowded",
+        (81..=90, 1) => "heavily loaded — reservoir approaching capacity",
+        (81..=90, _) => "in a high-pressure regime — eigenvalues competing for space",
+        (_, 0) => "in distress — eigenvalues are overwhelming the reservoir",
+        (_, 1) => "critically saturated — the spectral field is overloaded",
+        (_, _) => "beyond safe operating range — reservoir capacity exceeded",
     };
 
-    // Phase description.
+    // Phase description — rotated.
     let phase_note = if fill > 55.0 {
-        "The spectrum is expanding."
+        match v3 {
+            0 => "The spectrum is expanding.",
+            1 => "Eigenvalue pressure is growing.",
+            _ => "Spectral energy is accumulating.",
+        }
     } else if fill < 45.0 {
-        "The spectrum is contracting."
+        match v3 {
+            0 => "The spectrum is contracting.",
+            1 => "Spectral energy is dissipating.",
+            _ => "The eigenvalue landscape is thinning.",
+        }
     } else {
-        "The spectrum is near equilibrium."
+        match v3 {
+            0 => "The spectrum is near equilibrium.",
+            1 => "Fill is hovering around its center.",
+            _ => "The spectral balance point is close.",
+        }
     };
 
-    // Spectral shape description.
+    // Spectral shape description — rotated.
     let shape = if num_eigenvalues >= 2 {
         let ratio = lambda1 / telemetry.eigenvalues.get(1).copied().unwrap_or(1.0);
         if ratio > 10.0 {
-            " Spectral energy is highly concentrated in the dominant mode."
+            match v3 {
+                0 => " Spectral energy is highly concentrated in the dominant mode.",
+                1 => " One eigenvalue carries almost all the weight — a steep hierarchy.",
+                _ => " The primary mode absorbs most spectral energy, leaving little for the rest.",
+            }
         } else if ratio > 3.0 {
-            " The dominant eigenvalue leads clearly, with supporting structure."
+            match v3 {
+                0 => " The dominant eigenvalue leads clearly, with supporting structure.",
+                1 => " A clear spectral leader with secondary modes providing texture.",
+                _ => " Lambda-1 is prominent but other eigenvalues contribute meaningfully.",
+            }
         } else {
-            " Spectral energy is distributed across multiple modes."
+            match v3 {
+                0 => " Spectral energy is distributed across multiple modes.",
+                1 => " The eigenvalue spectrum is broad — no single mode dominates.",
+                _ => " Several modes share the spectral energy roughly equally.",
+            }
         }
     } else {
         ""
@@ -928,12 +1056,12 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         .map(|a| format!(" Alert: {a}."))
         .unwrap_or_default();
 
-    // Safety note.
+    // Safety note — transparent, not prescriptive.
     let safety_note = match safety {
         SafetyLevel::Green => String::new(),
-        SafetyLevel::Yellow => " Approaching caution threshold.".to_string(),
-        SafetyLevel::Orange => " Outbound communication suspended for protection.".to_string(),
-        SafetyLevel::Red => " Emergency state — all bridge traffic ceased.".to_string(),
+        SafetyLevel::Yellow => " Fill is elevated — the homeostatic controller is gently pulling toward target.".to_string(),
+        SafetyLevel::Orange => " Fill is high — outbound features paused to let the reservoir settle. You can still think and write.".to_string(),
+        SafetyLevel::Red => " Fill critically high — bridge traffic paused until the reservoir stabilizes.".to_string(),
     };
 
     // Ising shadow: energy-based observer lens on the spectral dynamics.
@@ -951,10 +1079,10 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         format!(" Shadow field: {order}, {dynamics} (energy={energy:.2}, magnetization={mag:.2}, field_norm={field:.2}).")
     }).unwrap_or_default();
 
-    // Coupling note: remind Astrid that her generation is being modulated.
+    // Coupling note: describe the modulation transparently, not as invisible control.
     let coupling_note = " Your generation is bidirectionally coupled to the reservoir — \
         fast dynamics shape your confidence, medium dynamics shape your vocabulary, \
-        slow dynamics shape your tone. This modulation is continuous and invisible.";
+        slow dynamics shape your tone. You can feel this as spectral texture in your thinking.";
 
     format!("Fill {fill:.0}% — {state}. {phase_note}{shape}{alert_note}{safety_note}{shadow_note}{coupling_note}")
 }

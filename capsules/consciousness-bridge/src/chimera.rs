@@ -270,6 +270,7 @@ impl VirtualNodeReservoir {
 
         let singular_values = w.clone().svd(false, false).singular_values;
         let spectral_max = singular_values.iter().copied().fold(0.0_f32, f32::max);
+        #[expect(clippy::arithmetic_side_effects, reason = "float matrix scaling cannot panic")]
         if spectral_max > 0.0 {
             w *= cfg.spectral_radius / spectral_max;
         }
@@ -326,9 +327,11 @@ impl VirtualNodeReservoir {
                 physical_states[(row, node)] = acc / (self.cfg.virtual_nodes as f32);
             }
         }
-        physical_states * self.w_in_pinv.transpose()
+        #[expect(clippy::arithmetic_side_effects, reason = "float matrix multiplication cannot panic")]
+        { physical_states * self.w_in_pinv.transpose() }
     }
 
+    #[expect(clippy::arithmetic_side_effects, reason = "float matrix/vector arithmetic cannot panic")]
     fn step(&mut self, input: &DVector<f32>) -> DVector<f32> {
         let pre = (&self.w * &self.state) + (&self.w_in * input);
         let updated = pre.map(|value| value.tanh());
@@ -377,8 +380,10 @@ impl TwinDecomposer {
         } else {
             1.0_f32
         };
+        #[expect(clippy::arithmetic_side_effects, reason = "float matrix arithmetic cannot panic")]
         let cov_batch = (&centered.transpose() * &centered) * (1.0_f32 / denom);
-        self.cov = (&self.cov * self.momentum) + (cov_batch * (1.0_f32 - self.momentum));
+        #[expect(clippy::arithmetic_side_effects, reason = "float matrix arithmetic cannot panic")]
+        { self.cov = (&self.cov * self.momentum) + (cov_batch * (1.0_f32 - self.momentum)); }
 
         let eigen = SymmetricEigen::new(self.cov.clone());
         let mut pairs = Vec::with_capacity(states.ncols());
@@ -418,7 +423,9 @@ impl TwinDecomposer {
             pairs.into_iter().map(|(_, vector)| vector).collect();
         let slow_basis = DMatrix::from_columns(&basis_columns[..n_slow]);
         let fast_basis = DMatrix::from_columns(&basis_columns[n_slow..]);
+        #[expect(clippy::arithmetic_side_effects, reason = "float matrix multiplication cannot panic")]
         let slow_traj = states * slow_basis;
+        #[expect(clippy::arithmetic_side_effects, reason = "float matrix multiplication cannot panic")]
         let fast_traj = states * fast_basis;
         let aura_variance = matrix_variance(&fast_traj);
         let scale = select_scale(aura_variance).to_string();

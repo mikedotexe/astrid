@@ -132,7 +132,7 @@ pub fn format_memory_listing(
             };
             format!(
                 "  {}. {} ({}){} — fill {:.1}%, λ₁_rel {:.2}, geom {:.2}, {}\n     id: {}",
-                index + 1,
+                index.saturating_add(1),
                 entry.role,
                 entry.timestamp_ms,
                 marker,

@@ -370,14 +370,13 @@ pub async fn collect_introspector_context(
         }),
     )
     .await
+    && let Some(text) = format_read_result(&value)
     {
-        if let Some(text) = format_read_result(&value) {
-            snippets.push(IntrospectorSnippet {
-                tool_name: "read_file".to_string(),
-                label: "Relevant source excerpt".to_string(),
-                text,
-            });
-        }
+        snippets.push(IntrospectorSnippet {
+            tool_name: "read_file".to_string(),
+            label: "Relevant source excerpt".to_string(),
+            text,
+        });
     }
 
     if let Some(value) = call_introspector_tool(
@@ -389,14 +388,13 @@ pub async fn collect_introspector_context(
         }),
     )
     .await
+    && let Some(text) = format_git_log(&value)
     {
-        if let Some(text) = format_git_log(&value) {
-            snippets.push(IntrospectorSnippet {
-                tool_name: "git_log".to_string(),
-                label: "Recent bridge history".to_string(),
-                text,
-            });
-        }
+        snippets.push(IntrospectorSnippet {
+            tool_name: "git_log".to_string(),
+            label: "Recent bridge history".to_string(),
+            text,
+        });
     }
 
     snippets.truncate(3);

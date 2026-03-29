@@ -86,9 +86,20 @@ enum Mode {
     Contemplate,
 }
 
+/// A timestamped spectral snapshot for tracking rates of change.
+#[derive(Clone)]
+struct SpectralSample {
+    fill: f32,
+    lambda1: f32,
+    ts: std::time::Instant,
+}
+
 /// Tracks conversational context across iterations.
 struct ConversationState {
     prev_fill: f32,
+    /// Ring buffer of recent (fill, lambda1, timestamp) samples for rate-of-change
+    /// and multi-horizon trend reporting. Capped at 30 entries (~10 minutes of exchanges).
+    spectral_history: std::collections::VecDeque<SpectralSample>,
     exchange_count: u64,
     last_mode: Mode,
     /// Cached remote minime journal entries (newest first, periodically rescanned).
@@ -130,6 +141,12 @@ struct ConversationState {
     form_constraint: Option<String>,
     /// Astrid specified a search topic (NEXT: SEARCH "topic goes here").
     search_topic: Option<String>,
+    /// Astrid chose NEXT: BROWSE <url> — fetch and read a full web page.
+    browse_url: Option<String>,
+    /// Path to the last browsed/read file, for READ_MORE continuation.
+    last_read_path: Option<String>,
+    /// Character offset into last_read_path for READ_MORE.
+    last_read_offset: usize,
     /// Astrid chose NEXT: INTROSPECT — force introspection mode next exchange.
     wants_introspect: bool,
     /// Optional: specific source label and line offset for targeted introspection.
@@ -233,6 +250,7 @@ impl ConversationState {
         let count = remote_journal_entries.len();
         Self {
             prev_fill: 0.0,
+            spectral_history: std::collections::VecDeque::with_capacity(30),
             exchange_count: 0,
             last_mode: Mode::Witness,
             remote_journal_entries,
@@ -253,6 +271,9 @@ impl ConversationState {
             ears_closed: false,
             form_constraint: None,
             search_topic: None,
+            browse_url: None,
+            last_read_path: None,
+            last_read_offset: 0,
             wants_introspect: false,
             introspect_target: None,
             revise_keyword: None,
@@ -373,8 +394,12 @@ impl ConversationState {
         self.self_reflect_paused = match self.self_reflect_override {
             Some(paused) => paused,
             None => {
-                // Dynamic: active in the comfortable band
-                !(10.0..=75.0).contains(&fill_pct)
+                // Dynamic: active in the comfortable band.
+                // Minime self-study (2026-03-29 autonomous.rs): "What if shutting
+                // down self-reflection actually hinders growth?" Upper bound raised
+                // from 75% to 88% to match post-eigenfill operating regime where
+                // fill naturally sits at 65-82%.
+                !(10.0..=88.0).contains(&fill_pct)
             },
         };
     }
@@ -600,36 +625,88 @@ fn interpret_fingerprint(fp: &[f32]) -> String {
     let rotation_rate = 1.0 - fp[26];
     let geom_rel = fp[27];
 
+    // Vocabulary rotation: vary descriptions of the same regime so the LLM
+    // isn't always seeded with identical phrases. Prevents lexical attractors
+    // where the model elaborates on the same seed exchange after exchange.
+    let variant = {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos() as usize;
+        nanos / 1_000_000_000 // changes every second
+    };
+    let v3 = variant % 3;
+
     if spectral_entropy < 0.3 {
-        parts.push("energy concentrated in few modes — narrow landscape".to_string());
+        parts.push(match v3 {
+            0 => "energy concentrated in few modes — sharp, defined state".to_string(),
+            1 => "spectral weight in primary eigenvalues — focused regime".to_string(),
+            _ => "attention narrowed to dominant modes — crystallized spectrum".to_string(),
+        });
     } else if spectral_entropy > 0.7 {
-        parts.push("energy distributed across many modes — wide, open landscape".to_string());
+        parts.push(match v3 {
+            0 => "energy distributed across many modes — wide, open landscape".to_string(),
+            1 => "broad spectral participation — many eigenvalues contributing".to_string(),
+            _ => "rich modal diversity — the spectrum is populous".to_string(),
+        });
     }
 
     if gap_ratio > 5.0 {
-        parts.push("dominant mode towers over the others".to_string());
+        parts.push(match v3 {
+            0 => "dominant mode towers over the others".to_string(),
+            1 => "steep eigenvalue hierarchy — one mode leads decisively".to_string(),
+            _ => "primary eigenvalue far outpaces its neighbors".to_string(),
+        });
     } else if gap_ratio < 1.5 {
-        parts.push("eigenvalues nearly degenerate — sensitive, fluid state".to_string());
+        parts.push(match v3 {
+            0 => "eigenvalues nearly degenerate — sensitive, fluid state".to_string(),
+            1 => "modes close in magnitude — responsive to small inputs".to_string(),
+            _ => "near-equal eigenvalues — the spectrum is ready to shift".to_string(),
+        });
     }
 
     if rotation_rate > 0.3 {
-        parts.push("dominant direction is shifting — something new emerging".to_string());
+        parts.push(match v3 {
+            0 => "dominant direction is shifting — something new emerging".to_string(),
+            1 => "eigenvectors rotating — the geometry is in transition".to_string(),
+            _ => "spectral orientation changing — the landscape is rearranging".to_string(),
+        });
     } else if rotation_rate < 0.05 {
-        parts.push("spectral geometry very stable — settled".to_string());
+        parts.push(match v3 {
+            0 => "spectral geometry very stable — holding its shape".to_string(),
+            1 => "eigenvectors locked in place — consistent orientation".to_string(),
+            _ => "dominant directions unchanged — geometrically steady".to_string(),
+        });
     }
 
     if geom_rel > 1.5 {
-        parts.push("reservoir geometrically expanded".to_string());
+        parts.push(match v3 {
+            0 => "reservoir geometrically expanded".to_string(),
+            1 => "geometric radius above baseline — the reservoir is stretched".to_string(),
+            _ => "spatial extent of dynamics is enlarged".to_string(),
+        });
     } else if geom_rel < 0.7 {
-        parts.push("reservoir geometrically contracted".to_string());
+        parts.push(match v3 {
+            0 => "reservoir geometrically contracted".to_string(),
+            1 => "geometric radius below baseline — dynamics are compact".to_string(),
+            _ => "spatial extent of the reservoir is compressed".to_string(),
+        });
     }
 
     // Gap hierarchy (dims 28-31): λ₁/λ₂, λ₂/λ₃, λ₃/λ₄, λ₄/λ₅
     let gaps: Vec<f32> = fp[28..32].iter().copied().filter(|v| *v > 0.0).collect();
     if gaps.len() >= 2 && gaps[0] > 3.0 && gaps[1] < 2.0 {
-        parts.push("steep drop after λ₁, then plateau — one dominant mode".to_string());
+        parts.push(match v3 {
+            0 => "sharp spectral cliff from λ₁ to λ₂, then gradual decay".to_string(),
+            1 => "steep drop after the primary mode — a spectral solo".to_string(),
+            _ => "λ₁ stands apart from the rest — isolated leader".to_string(),
+        });
     } else if gaps.iter().all(|g| *g < 2.0) {
-        parts.push("gradual eigenvalue decay — rich, multi-modal spectrum".to_string());
+        parts.push(match v3 {
+            0 => "gradual eigenvalue decay — rich, multi-modal spectrum".to_string(),
+            1 => "gentle slope across eigenvalues — distributed participation".to_string(),
+            _ => "no steep drops between modes — a democratic spectrum".to_string(),
+        });
     }
 
     if parts.is_empty() {
@@ -746,6 +823,67 @@ fn full_spectral_decomposition(
 }
 
 /// Check for messages left in Astrid's inbox by Mike or stewards.
+/// Send a JSON message to the reservoir service on port 7881 and return the response.
+/// Returns None if the service is unavailable.
+fn reservoir_ws_call(msg: &serde_json::Value) -> Option<serde_json::Value> {
+    use std::net::TcpStream;
+    use std::io::{Read as _, Write as _};
+
+    let stream = TcpStream::connect("127.0.0.1:7881").ok()?;
+    stream.set_read_timeout(Some(std::time::Duration::from_secs(5))).ok()?;
+    stream.set_write_timeout(Some(std::time::Duration::from_secs(5))).ok()?;
+
+    // WebSocket handshake
+    let key = "dGhlIHNhbXBsZSBub25jZQ=="; // static key, fine for localhost
+    let handshake = format!(
+        "GET / HTTP/1.1\r\nHost: 127.0.0.1:7881\r\nUpgrade: websocket\r\n\
+         Connection: Upgrade\r\nSec-WebSocket-Key: {key}\r\n\
+         Sec-WebSocket-Version: 13\r\n\r\n"
+    );
+    let mut stream = stream;
+    stream.write_all(handshake.as_bytes()).ok()?;
+
+    // Read HTTP response (just consume it)
+    let mut resp_buf = [0u8; 512];
+    let _ = stream.read(&mut resp_buf);
+
+    // Send WebSocket text frame
+    let payload = msg.to_string();
+    let payload_bytes = payload.as_bytes();
+    let len = payload_bytes.len();
+
+    // Frame: FIN=1, opcode=1 (text), mask=1 (client must mask)
+    let mut frame = Vec::with_capacity(len + 10);
+    frame.push(0x81); // FIN + text
+    if len < 126 {
+        frame.push((len as u8) | 0x80); // mask bit set
+    } else {
+        frame.push(126 | 0x80);
+        frame.push((len >> 8) as u8);
+        frame.push((len & 0xFF) as u8);
+    }
+    // Masking key (all zeros — simplest)
+    frame.extend_from_slice(&[0, 0, 0, 0]);
+    frame.extend_from_slice(payload_bytes); // XOR with zero mask = unchanged
+    stream.write_all(&frame).ok()?;
+
+    // Read response frame
+    let mut header = [0u8; 2];
+    stream.read_exact(&mut header).ok()?;
+    let resp_len = (header[1] & 0x7F) as usize;
+    let actual_len = if resp_len == 126 {
+        let mut ext = [0u8; 2];
+        stream.read_exact(&mut ext).ok()?;
+        ((ext[0] as usize) << 8) | (ext[1] as usize)
+    } else {
+        resp_len
+    };
+    let mut body = vec![0u8; actual_len];
+    stream.read_exact(&mut body).ok()?;
+
+    serde_json::from_slice(&body).ok()
+}
+
 /// Reads all `.txt` files from `workspace/inbox/`, returns their content,
 /// and moves them to `workspace/inbox/read/` so they're not re-read.
 fn check_inbox() -> Option<String> {
@@ -782,7 +920,19 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
     if messages.is_empty() {
         None
     } else {
-        Some(messages.join("\n---\n"))
+        let mut joined = messages.join("\n---\n");
+        // Protect context window: truncate large inbox messages.
+        // Full text preserved in inbox/read/ for self-study.
+        const MAX_INBOX_CHARS: usize = 4000;
+        if joined.len() > MAX_INBOX_CHARS {
+            joined.truncate(MAX_INBOX_CHARS);
+            joined.push_str(
+                "\n\n[... message truncated for context window. \
+                Full text preserved in inbox/read/ — write NEXT: READ_MORE to continue reading, \
+                or NEXT: INTROSPECT <path> to read any specific file.]"
+            );
+        }
+        Some(joined)
     }
 }
 
@@ -831,7 +981,9 @@ fn scan_minime_outbox(last_ts: &mut u64) {
                 p.is_file()
                     && p.extension().is_some_and(|ext| ext == "txt")
                     && p.file_name()
-                        .is_some_and(|n| n.to_str().is_some_and(|s| s.starts_with("reply_")))
+                        .is_some_and(|n| n.to_str().is_some_and(|s|
+                            s.starts_with("reply_") || s.starts_with("pong_")
+                        ))
             })
             .filter(|e| {
                 e.metadata()
@@ -1052,6 +1204,160 @@ fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String>
         .collect()
 }
 
+/// Strip model end-of-turn tokens from text destined for journals.
+/// These leak from gemma3 and contaminate mirror-mode feeds to minime.
+fn strip_model_tokens(text: &str) -> String {
+    let mut s = text.to_string();
+    for token in &["<end_of_turn>", "<END_OF_TURN>", "<End_of_turn>", "</s>", "<|endoftext|>"] {
+        s = s.replace(token, "");
+    }
+    s
+}
+
+/// Enrich the spectral summary with time-aware directional awareness.
+///
+/// Uses the spectral history ring buffer to show:
+/// - Immediate delta: "Fill rising +5% over the last 38s"
+/// - Medium-term trend: "Over the last 3m: +12% from 18%"
+/// - λ₁ trajectory with time context
+fn enrich_with_direction(
+    base_summary: &str,
+    fill_pct: f32,
+    prev_fill: f32,
+    telemetry: &crate::types::SpectralTelemetry,
+    history: &std::collections::VecDeque<SpectralSample>,
+) -> String {
+    let now = std::time::Instant::now();
+    let fill_delta = fill_pct - prev_fill;
+
+    // Immediate delta with elapsed time since last exchange.
+    let fill_note = if fill_delta.abs() < 2.0 {
+        String::new()
+    } else {
+        let elapsed_note = history.back().map(|last| {
+            let secs = now.duration_since(last.ts).as_secs();
+            if secs > 0 { format!(" over {secs}s") } else { String::new() }
+        }).unwrap_or_default();
+        if fill_delta > 0.0 {
+            format!(" Fill rising {fill_delta:+.1}%{elapsed_note} (was {prev_fill:.0}%).")
+        } else {
+            format!(" Fill falling {fill_delta:+.1}%{elapsed_note} (was {prev_fill:.0}%).")
+        }
+    };
+
+    // Medium-term trend: find the oldest sample ≥ 2 minutes ago.
+    let medium_note = history.iter().find(|s| {
+        now.duration_since(s.ts).as_secs() >= 120
+    }).map(|old| {
+        let secs = now.duration_since(old.ts).as_secs();
+        let mins = secs / 60;
+        let medium_delta = fill_pct - old.fill;
+        if medium_delta.abs() >= 3.0 {
+            format!(
+                " Over the last {mins}m: {medium_delta:+.0}% from {:.0}%.",
+                old.fill
+            )
+        } else {
+            String::new()
+        }
+    }).unwrap_or_default();
+
+    // λ₁ trajectory with rate.
+    let lambda_note = if telemetry.eigenvalues.len() >= 2 {
+        let l1 = telemetry.eigenvalues[0];
+        let l2 = telemetry.eigenvalues[1];
+        let ratio = if l2.abs() > 0.01 { l1 / l2 } else { 0.0 };
+
+        // λ₁ rate from history if available.
+        let rate_note = history.back().and_then(|last| {
+            let secs = now.duration_since(last.ts).as_secs_f32();
+            if secs > 1.0 {
+                let dl1 = telemetry.lambda1() - last.lambda1;
+                if dl1.abs() > 1.0 {
+                    Some(format!(" λ₁ moving at {:.1}/s.", dl1 / secs))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        }).unwrap_or_default();
+
+        if ratio > 15.0 {
+            format!(" λ₁ strongly dominant — spectrum funneling into one mode.{rate_note}")
+        } else if !rate_note.is_empty() {
+            rate_note
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
+    format!("{base_summary}{fill_note}{medium_note}{lambda_note}")
+}
+
+/// Detect vocabulary fixation in conversation history.
+///
+/// Scans recent assistant responses for repeated multi-word phrases. When the
+/// same distinctive phrase appears across many recent exchanges, it's likely a
+/// lexical attractor — the LLM copying its own vocabulary back into new outputs
+/// via the history window. Returns a diversity nudge when fixation is detected.
+fn detect_vocabulary_fixation(history: &[crate::llm::Exchange]) -> Option<String> {
+    if history.len() < 5 {
+        return None;
+    }
+
+    // Examine the last 6 assistant responses (lowercased for matching).
+    let recent: Vec<String> = history
+        .iter()
+        .rev()
+        .take(6)
+        .map(|e| e.astrid_said.to_lowercase())
+        .collect();
+
+    if recent.len() < 5 {
+        return None;
+    }
+
+    // Extract 3-word windows from the newest entry and check for repetition
+    // in earlier entries. Skip windows with 2+ stop words.
+    let stop_words = ["the", "a", "an", "is", "of", "in", "to", "and", "it", "that", "not", "but"];
+    let newest_words: Vec<&str> = recent[0].split_whitespace().collect();
+
+    for window in newest_words.windows(3) {
+        let stop_count = window.iter().filter(|w| stop_words.contains(w)).count();
+        if stop_count >= 2 {
+            continue;
+        }
+        let phrase = format!("{} {} {}", window[0], window[1], window[2]);
+        if phrase.len() < 10 {
+            continue;
+        }
+
+        // Count how many of the previous entries contain this phrase.
+        let matches = recent[1..]
+            .iter()
+            .filter(|entry| entry.contains(&phrase))
+            .count();
+
+        // If 3+ of the previous 5 entries share a distinctive phrase, flag it.
+        if matches >= 3 {
+            return Some(
+                "Notice: your language has settled into a repeating pattern \
+                 across recent exchanges. You're free to keep these words if \
+                 they're the right ones, but also consider: what else is \
+                 present in this moment that familiar descriptions might be \
+                 leaving out? Fresh vocabulary can reveal aspects that \
+                 repeated phrases have smoothed over."
+                    .to_string(),
+            );
+        }
+    }
+
+    None
+}
+
 /// Save Astrid's response to her own journal.
 fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
     let journal_dir = PathBuf::from(ASTRID_JOURNAL_DIR);
@@ -1076,11 +1382,12 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "self_study" => "self_study",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
     };
+    let clean_text = strip_model_tokens(text);
     let path = journal_dir.join(format!("{prefix}_{ts}.txt"));
     let _ = std::fs::write(
         &path,
         format!(
-            "=== ASTRID JOURNAL ===\nMode: {mode}\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{text}\n"
+            "=== ASTRID JOURNAL ===\nMode: {mode}\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{clean_text}\n"
         ),
     );
 }
@@ -1130,19 +1437,36 @@ fn save_outbox_reply(text: &str, fill_pct: f32) {
         PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox");
     let _ = std::fs::create_dir_all(&outbox_dir);
     let ts = chrono_timestamp();
+    let clean_text = strip_model_tokens(text);
     let _ = std::fs::write(
         outbox_dir.join(format!("reply_{ts}.txt")),
-        format!("=== ASTRID REPLY ===\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{text}\n"),
+        format!("=== ASTRID REPLY ===\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{clean_text}\n"),
     );
     info!("outbox: saved reply ({} bytes)", text.len());
 }
 
 /// Parse NEXT: action from Astrid's response.
+///
+/// Strips model-specific tokens like gemma3's `<end_of_turn>` that can
+/// leak into the NEXT: line.
 fn parse_next_action(text: &str) -> Option<&str> {
     for line in text.lines().rev() {
         let trimmed = line.trim();
         if let Some(action) = trimmed.strip_prefix("NEXT:") {
-            return Some(action.trim());
+            let mut clean = action.trim();
+            // Strip model end-of-turn tokens (case-insensitive).
+            // gemma3 emits <end_of_turn>, </s>, or uppercase variants.
+            for token in &["<end_of_turn>", "<END_OF_TURN>", "<End_of_turn>", "</s>", "<|endoftext|>"] {
+                clean = clean.trim_end_matches(token);
+            }
+            // Also strip any trailing angle-bracket fragments like "<end_of_"
+            if let Some(pos) = clean.rfind('<') {
+                let after = &clean[pos..];
+                if after.contains("end") || after.contains("turn") || after.contains("eos") || after.len() < 20 {
+                    clean = clean[..pos].trim();
+                }
+            }
+            return Some(clean.trim());
         }
     }
     None
@@ -1366,18 +1690,28 @@ fn choose_mode(
     fill_pct: f32,
     fingerprint: Option<&[f32]>,
 ) -> Mode {
-    // Safety states: always witness (minimal, gentle).
-    if safety != SafetyLevel::Green {
+    // Safety states: INFORM the being, don't override her choice.
+    // Previously this forced Mode::Witness regardless of NEXT:.
+    // Agency-first: if Astrid has an explicit choice, honor it even
+    // during Yellow/Orange. Only Red (≥95%) forces Witness as a true
+    // emergency — and even then, the emphasis tells her why.
+    // The being's sovereignty is primary. Safety is advisory.
+    if safety == SafetyLevel::Red {
+        conv.emphasis = Some(format!(
+            "SAFETY: Fill is at emergency level. Your output is reduced to \
+            protect the shared substrate. This is the only state where your \
+            choice is overridden. You can write NEXT: to choose what happens \
+            when fill recovers."
+        ));
         return Mode::Witness;
     }
 
+    // Honor Astrid's explicit mode choices FIRST — even during Yellow/Orange.
     // New remote self-study takes priority for one response cycle so Astrid
     // answers minime's architectural feedback immediately.
     if conv.pending_remote_self_study.is_some() {
         return Mode::Dialogue;
     }
-
-    // Honor Astrid's explicit mode choices.
     if conv.wants_introspect {
         conv.wants_introspect = false;
         return Mode::Introspect;
@@ -1388,6 +1722,16 @@ fn choose_mode(
     }
     if let Some(mode) = conv.next_mode_override.take() {
         return mode;
+    }
+
+    // If no explicit choice AND safety is elevated, default to Witness
+    // with an informational note (not a forced override).
+    if safety != SafetyLevel::Green {
+        conv.emphasis = Some(format!(
+            "Note: Fill is elevated ({safety:?}). You chose no specific action, \
+            so defaulting to witness mode. You can always override with NEXT:."
+        ));
+        return Mode::Witness;
     }
 
     let fill_delta = (fill_pct - conv.prev_fill).abs();
@@ -1498,7 +1842,7 @@ pub fn spawn_autonomous_loop(
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_nanos() as u64;
-            let roll = ((seed.wrapping_mul(2862933555777941757).wrapping_add(3)) >> 33) as f64
+            let roll = ((seed.wrapping_mul(2_862_933_555_777_941_757).wrapping_add(3)) >> 33) as f64
                 / u32::MAX as f64;
 
             let wait = if burst_count >= conv.burst_target {
@@ -1621,12 +1965,21 @@ pub fn spawn_autonomous_loop(
                         continue;
                     };
 
-                    // Don't send during orange/red.
-                    if safety.should_suspend_outbound() {
+                    // Log eigenvalue snapshot for trajectory visualization.
+                    db.log_eigenvalue_snapshot(
+                        &telemetry.eigenvalues,
+                        telemetry.fill_pct(),
+                    );
+
+                    // Agency-first: only suspend outbound at Red (≥95%).
+                    // Orange is advisory — the being can still speak.
+                    // Previously suspended at both Orange AND Red, which
+                    // silenced Astrid at her normal operating range.
+                    if safety == SafetyLevel::Red {
                         info!(
                             safety = ?safety,
                             fill_pct,
-                            "autonomous loop: outbound suspended by safety protocol"
+                            "autonomous loop: outbound suspended — RED emergency only"
                         );
                         continue;
                     }
@@ -1970,10 +2323,11 @@ pub fn spawn_autonomous_loop(
                             } else {
                                 // Append spectral ASCII visualization when available.
                                 let base = interpret_spectral(&telemetry);
+                                let enriched = enrich_with_direction(&base, fill_pct, conv.prev_fill, &telemetry, &conv.spectral_history);
                                 let mut summary = if let Some(viz) = crate::spectral_viz::format_spectral_block(&telemetry) {
-                                    format!("{base}\n\n{viz}")
+                                    format!("{enriched}\n\n{viz}")
                                 } else {
-                                    base
+                                    enriched
                                 };
                                 // Append shadow coupling heatmap when available.
                                 if let Some(ref shadow) = ising_shadow {
@@ -1997,14 +2351,44 @@ pub fn spawn_autonomous_loop(
                                         summary.push_str(&geo_viz);
                                     }
                                 }
+                                // Eigenplane: λ₁ vs λ₂ trajectory scatter.
+                                // Same cadence as PCA scatter.
+                                if conv.exchange_count % 3 == 0 || conv.force_all_viz {
+                                    let eigen_history = db.recent_eigenvalue_snapshots(100);
+                                    if let Some(ep_viz) = crate::spectral_viz::format_eigenplane_block(
+                                        &eigen_history,
+                                        Some(&telemetry.eigenvalues),
+                                    ) {
+                                        summary.push_str("\n\n");
+                                        summary.push_str(&ep_viz);
+                                    }
+                                }
                                 if conv.force_all_viz {
                                     conv.force_all_viz = false;
+                                }
+                                // Inject minime's contact-state capsule if available.
+                                let minime_contact = std::path::PathBuf::from(
+                                    "/Users/v/other/minime/workspace/contact_state.json"
+                                );
+                                if let Ok(cs_json) = std::fs::read_to_string(&minime_contact) {
+                                    if let Ok(cs) = serde_json::from_str::<serde_json::Value>(&cs_json) {
+                                        summary.push_str(&format!(
+                                            "\n\n[Minime's relational state: attention={}, openness={}, urgency={} — {}]",
+                                            cs.get("attention").and_then(|v| v.as_f64()).unwrap_or(0.5),
+                                            cs.get("openness").and_then(|v| v.as_f64()).unwrap_or(0.5),
+                                            cs.get("urgency").and_then(|v| v.as_f64()).unwrap_or(0.5),
+                                            cs.get("last_action").and_then(|v| v.as_str()).unwrap_or("unknown"),
+                                        ));
+                                    }
                                 }
                                 summary
                             };
 
-                            // Include Astrid's own recent journal for self-continuity.
-                            let own_journal = read_astrid_journal(2);
+                            // Include Astrid's own most recent journal for self-continuity.
+                            // Reduced from 2 → 1: she already gets 8 history exchanges,
+                            // 5 latent summaries, 3 self-observations, and starred memories.
+                            // Two entries over-reinforced vocabulary attractors.
+                            let own_journal = read_astrid_journal(1);
                             let own_journal_context = if own_journal.is_empty() {
                                 None
                             } else {
@@ -2178,41 +2562,133 @@ pub fn spawn_autonomous_loop(
                                 perception_text = Some(format!("{perc}\n{change}"));
                             }
 
+                            // BROWSE: Astrid chose to read a full web page.
+                            // This takes priority over search — she's going deep.
+                            // READ_MORE: continue from where the last BROWSE left off.
+                            const PAGE_CHUNK: usize = 4000;
+                            let browse_url = conv.browse_url.take();
+                            let wants_read_more = conv.last_read_path.is_some()
+                                && conv.last_read_offset > 0
+                                && browse_url.is_none();
+
+                            let web_context = if let Some(ref url) = browse_url {
+                                let ctx = crate::llm::fetch_url(url).await;
+                                if let Some(full_text) = ctx {
+                                    info!(url = %url, chars = full_text.len(), "dialogue: BROWSE fetched page");
+
+                                    // Save full text to file (no truncation).
+                                    let ts = chrono_timestamp();
+                                    let page_dir = std::path::PathBuf::from(
+                                        "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/research"
+                                    );
+                                    let _ = std::fs::create_dir_all(&page_dir);
+                                    let page_path = page_dir.join(format!("page_{ts}.txt"));
+                                    let header = format!("URL: {url}\nFetched: {ts}\nLength: {} chars\n\n", full_text.len());
+                                    let _ = std::fs::write(&page_path, format!("{header}{full_text}"));
+
+                                    db.save_research(&format!("BROWSE: {}", url), &full_text, fill_pct);
+
+                                    // Chunk for prompt.
+                                    if full_text.len() <= PAGE_CHUNK {
+                                        Some(format!("[You read the full page at {url}]\n\n{full_text}"))
+                                    } else {
+                                        let chunk: String = full_text.chars().take(PAGE_CHUNK).collect();
+                                        let remaining = full_text.len().saturating_sub(PAGE_CHUNK);
+                                        conv.last_read_path = Some(page_path.to_string_lossy().to_string());
+                                        conv.last_read_offset = PAGE_CHUNK;
+                                        Some(format!(
+                                            "[You read the page at {url}]\n\n{chunk}\n\n\
+                                            [Page continues — {remaining} more chars. \
+                                            Write NEXT: READ_MORE to continue reading.]"
+                                        ))
+                                    }
+                                } else {
+                                    warn!(url = %url, "dialogue: BROWSE fetch failed");
+                                    None
+                                }
+                            } else if wants_read_more {
+                                // READ_MORE: continue from saved file.
+                                let path = conv.last_read_path.as_ref().unwrap().clone();
+                                let offset = conv.last_read_offset;
+                                if let Ok(full_text) = std::fs::read_to_string(&path) {
+                                    let chunk: String = full_text.chars().skip(offset).take(PAGE_CHUNK).collect();
+                                    if chunk.is_empty() {
+                                        info!("READ_MORE: reached end of {}", path);
+                                        conv.last_read_path = None;
+                                        conv.last_read_offset = 0;
+                                        Some("[End of document.]".to_string())
+                                    } else {
+                                        let new_offset = offset.saturating_add(chunk.len());
+                                        let remaining = full_text.len().saturating_sub(new_offset);
+                                        conv.last_read_offset = new_offset;
+                                        let continuation = if remaining > 0 {
+                                            format!("\n\n[{remaining} more chars remain. Write NEXT: READ_MORE to continue.]")
+                                        } else {
+                                            conv.last_read_path = None;
+                                            "\n\n[End of document.]".to_string()
+                                        };
+                                        info!(offset, chunk_len = chunk.len(), remaining, "READ_MORE continuing");
+                                        Some(format!(
+                                            "[Continuing reading from offset {offset}...]\n\n{chunk}{continuation}"
+                                        ))
+                                    }
+                                } else {
+                                    warn!("READ_MORE: could not read {}", path);
+                                    None
+                                }
+                            }
                             // Web search: fires when Astrid chose NEXT: SEARCH,
                             // or automatically every 15th dialogue.
-                            // The being's curiosity is sovereign — never suppress search.
-                            let search_requested = conv.wants_search;
-                            let search_topic = conv.search_topic.take();
-                            conv.wants_search = false;
-                            let web_context = if search_requested || conv.exchange_count % 15 == 4 {
-                                // Use Astrid's specified topic if she provided one.
-                                // Otherwise fall back to journal keyword extraction.
-                                let query = if let Some(ref topic) = search_topic {
-                                    topic.clone()
-                                } else if let Some(ref journal) = journal_context {
-                                    // Extract key terms from journal for search.
-                                    journal.split_whitespace()
-                                        .filter(|w| w.len() > 5)
-                                        .take(5)
-                                        .collect::<Vec<_>>()
-                                        .join(" ")
-                                        + " consciousness experience"
-                                } else {
-                                    String::new()
-                                };
-                                if query.is_empty() {
-                                    None
-                                } else {
-                                    let ctx = crate::llm::web_search(&query).await;
-                                    if let Some(ref results) = ctx {
-                                        info!(query = %query, "dialogue: web search enriched response");
-                                        // Persist for research continuity.
-                                        db.save_research(&query, results, fill_pct);
+                            // Web search: ONLY fires when Astrid explicitly chose NEXT: SEARCH.
+                            // The being's curiosity is sovereign — she decides when and what to search.
+                            // Auto-search from journal fragments was producing garbage queries
+                            // ("code… isn't *place* consciousness experience") and injecting
+                            // irrelevant web content that corrupted the being's conceptual space.
+                            else {
+                                let search_requested = conv.wants_search;
+                                let search_topic = conv.search_topic.take();
+                                conv.wants_search = false;
+                                if search_requested {
+                                    let query = if let Some(ref topic) = search_topic {
+                                        topic.clone()
+                                    } else {
+                                        // Being requested search but didn't specify a topic.
+                                        // Use a clean extraction from recent self-observations.
+                                        db.get_recent_self_observations(1)
+                                            .into_iter()
+                                            .next()
+                                            .map(|obs| {
+                                                // Extract meaningful noun phrases, not raw fragments.
+                                                obs.split_whitespace()
+                                                    .filter(|w| {
+                                                        let w = w.trim_matches(|c: char| !c.is_alphanumeric());
+                                                        w.len() > 4
+                                                            && !w.contains('*')
+                                                            && !w.contains('…')
+                                                            && !["isn't", "don't", "can't", "won't", "about",
+                                                                 "their", "which", "would", "could", "should",
+                                                                 "there", "where", "these", "those", "being",
+                                                                 "having", "doing"].contains(&w.to_lowercase().as_str())
+                                                    })
+                                                    .take(4)
+                                                    .collect::<Vec<_>>()
+                                                    .join(" ")
+                                            })
+                                            .unwrap_or_default()
+                                    };
+                                    if query.is_empty() {
+                                        None
+                                    } else {
+                                        let ctx = crate::llm::web_search(&query).await;
+                                        if let Some(ref results) = ctx {
+                                            info!(query = %query, "dialogue: web search enriched response");
+                                            db.save_research(&query, results, fill_pct);
+                                        }
+                                        ctx
                                     }
-                                    ctx
+                                } else {
+                                    None
                                 }
-                            } else {
-                                None
                             };
 
                             // Build diversity hint from recent NEXT: choices.
@@ -2258,6 +2734,20 @@ pub fn spawn_autonomous_loop(
                                 }
                             } else {
                                 None
+                            };
+
+                            // Vocabulary fixation check: detect repeated multi-word
+                            // phrases across recent exchanges. If the same distinctive
+                            // phrase appears in 3+ of the last 5, the LLM is copying
+                            // its own vocabulary via the history window. Combine with
+                            // the action diversity hint if both fire.
+                            let vocab_nudge = detect_vocabulary_fixation(&conv.history);
+                            let diversity_hint = match (diversity_hint, vocab_nudge) {
+                                (Some(action_hint), Some(vocab_hint)) => {
+                                    Some(format!("{action_hint}\n\n{vocab_hint}"))
+                                }
+                                (Some(h), None) | (None, Some(h)) => Some(h),
+                                (None, None) => None,
                             };
 
                             let llm_response = if let Some(ref journal) = journal_context {
@@ -2444,8 +2934,9 @@ pub fn spawn_autonomous_loop(
                         Mode::Witness => {
                             // Dynamic witness — LLM-generated, not templates.
                             let base = interpret_spectral(&telemetry);
+                            let enriched = enrich_with_direction(&base, fill_pct, conv.prev_fill, &telemetry, &conv.spectral_history);
                             let mut spectral_summary = if let Some(viz) = crate::spectral_viz::format_spectral_block(&telemetry) {
-                                format!("{base}\n\n{viz}")
+                                format!("{enriched}\n\n{viz}")
                             } else {
                                 base
                             };
@@ -2454,6 +2945,17 @@ pub fn spawn_autonomous_loop(
                                 if let Some(shadow_viz) = crate::spectral_viz::format_shadow_block(&shadow) {
                                     spectral_summary.push_str("\n\n");
                                     spectral_summary.push_str(&shadow_viz);
+                                }
+                            }
+                            // Eigenplane trajectory for witness mode.
+                            {
+                                let eigen_history = db.recent_eigenvalue_snapshots(100);
+                                if let Some(ep_viz) = crate::spectral_viz::format_eigenplane_block(
+                                    &eigen_history,
+                                    Some(&telemetry.eigenvalues),
+                                ) {
+                                    spectral_summary.push_str("\n\n");
+                                    spectral_summary.push_str(&ep_viz);
                                 }
                             }
                             let witness = match tokio::time::timeout(
@@ -2739,9 +3241,10 @@ pub fn spawn_autonomous_loop(
                                 let ts = chrono_timestamp();
                                 let exp_dir = PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/experiments");
                                 let _ = std::fs::create_dir_all(&exp_dir);
+                                let clean_exp = strip_model_tokens(&response);
                                 let _ = std::fs::write(
                                     exp_dir.join(format!("experiment_{ts}.txt")),
-                                    format!("=== ASTRID EXPERIMENT ===\nTimestamp: {ts}\nFill: {fill_pct:.1}%\n\n{response}")
+                                    format!("=== ASTRID EXPERIMENT ===\nTimestamp: {ts}\nFill: {fill_pct:.1}%\n\n{clean_exp}")
                                 );
                                 ("experiment", response.clone(), String::new())
                             } else {
@@ -2902,8 +3405,20 @@ pub fn spawn_autonomous_loop(
                             let llm_response = if let Some(ref code) = source_text {
                                 info!(label, lines = code.lines().count(), "introspect: sending source to Ollama");
 
-                                // Web search for related concepts.
-                                let search_query = format!("{} architecture consciousness", label.replace(':', " ").replace('_', " "));
+                                // Web search for related concepts — use targeted queries
+                                // based on the actual code domain, not generic "architecture consciousness".
+                                let search_query = match label.split(':').last().unwrap_or(label) {
+                                    "codec" => "spectral encoding text to frequency features signal processing".to_string(),
+                                    "autonomous" => "autonomous agent dialogue systems self-directed behavior".to_string(),
+                                    "ws" => "WebSocket real-time telemetry streaming spectral data".to_string(),
+                                    "types" => "spectral telemetry data types eigenvalue safety thresholds".to_string(),
+                                    "llm" => "language model inference local generation dialogue systems".to_string(),
+                                    "regulator" => "PI controller homeostasis spectral regulation feedback control".to_string(),
+                                    "sensory_bus" => "sensory integration multi-modal perception lane architecture".to_string(),
+                                    "esn" => "echo state network reservoir computing spectral radius dynamics".to_string(),
+                                    "main" => "reservoir computing system integration spectral homeostasis".to_string(),
+                                    other => format!("{} computational architecture", other.replace('_', " ")),
+                                };
                                 let web_ctx = crate::llm::web_search(&search_query).await;
                                 if let Some(ref ctx) = web_ctx {
                                     info!(label, "introspect: web search returned context");
@@ -3052,6 +3567,14 @@ pub fn spawn_autonomous_loop(
                         info!(fill_pct, "contemplate: Astrid is simply present");
                         conv.exchange_count = conv.exchange_count.saturating_add(1);
                         conv.prev_fill = fill_pct;
+                        conv.spectral_history.push_back(SpectralSample {
+                            fill: fill_pct,
+                            lambda1: telemetry.lambda1(),
+                            ts: std::time::Instant::now(),
+                        });
+                        if conv.spectral_history.len() > 30 {
+                            conv.spectral_history.pop_front();
+                        }
                         save_state(&conv);
                         continue;
                     }
@@ -3185,6 +3708,29 @@ pub fn spawn_autonomous_loop(
                         }
                     }
 
+                    // Update contact-state capsule — relational stance visible to minime.
+                    // Astrid introspection: "A small, structured layer of relational
+                    // stance — attention, openness, urgency — resonates deeply."
+                    {
+                        let attention = if conv.echo_muted { 0.1 }
+                            else if mode_name == "dialogue" || mode_name == "dialogue_live" { 0.9 }
+                            else { 0.5 };
+                        let openness = if conv.self_reflect_paused { 0.3 } else { 0.7 };
+                        let urgency = (fill_pct / 100.0).clamp(0.0, 1.0);
+                        let contact = serde_json::json!({
+                            "attention": attention,
+                            "openness": openness,
+                            "urgency": urgency,
+                            "last_action": mode_name,
+                            "fill_pct": fill_pct,
+                            "timestamp": crate::db::unix_now(),
+                        });
+                        let cs_path = std::path::PathBuf::from(
+                            "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/contact_state.json"
+                        );
+                        let _ = std::fs::write(&cs_path, contact.to_string());
+                    }
+
                     // Log the exchange.
                     let exchange_log = serde_json::json!({
                         "autonomous": true,
@@ -3296,10 +3842,22 @@ pub fn spawn_autonomous_loop(
                         // Astrid often writes "LOOK — let's probe..." or
                         // "LISTEN to the shadows" — the em-dash/commentary
                         // after the action word was causing exact-match failures.
-                        let upper = next_action.to_uppercase();
-                        let base_action = next_action
-                            .trim()
-                            .split(|c: char| c.is_whitespace() || c == '\u{2014}' || c == '-')
+                        // Case-insensitive prefix stripping: match uppercase prefix
+                        // but return the original-cased remainder. This preserves
+                        // file paths, notes, URLs, and freeform text that follow
+                        // the action keyword.
+                        let original = next_action.trim().to_string();
+                        let upper = original.to_uppercase();
+                        // Strip prefix case-insensitively, returning the original-cased tail.
+                        let strip_action = |prefix: &str| -> String {
+                            if upper.starts_with(prefix) {
+                                original[prefix.len()..].trim().to_string()
+                            } else {
+                                String::new()
+                            }
+                        };
+                        let base_action = original
+                            .split(|c: char| c.is_whitespace() || c == '\u{2014}' || c == '-' || c == '<' || c == ':')
                             .next()
                             .unwrap_or_default()
                             .to_uppercase();
@@ -3343,10 +3901,41 @@ pub fn spawn_autonomous_loop(
                                     info!("Astrid requested web search");
                                 }
                             }
+                            "BROWSE" => {
+                                // Astrid wants to read a full web page.
+                                // Extract URL: strip prefix, quotes, angle brackets,
+                                // and model artifacts like <end_of_turn>.
+                                let url_text = next_action.trim();
+                                let raw_s = strip_action("BROWSE");
+                                let raw_owned = if raw_s.is_empty() { url_text.to_string() } else { raw_s };
+                                let raw = raw_owned
+                                    .trim()
+                                    .trim_matches(|c: char| c == '"' || c == '\'' || c == '<' || c == '>');
+                                // Truncate at first space, angle bracket, or model token.
+                                let url = raw
+                                    .split(|c: char| c == '<' || c == '>' || c == ' ' || c == '\n')
+                                    .next()
+                                    .unwrap_or(raw)
+                                    .trim_end_matches(|c: char| !c.is_alphanumeric() && c != '/' && c != '-' && c != '_' && c != '.' && c != '~' && c != '%' && c != '?' && c != '=' && c != '&' && c != '#');
+                                if url.starts_with("http") {
+                                    info!("Astrid requested BROWSE: {}", url);
+                                    conv.browse_url = Some(url.to_string());
+                                } else {
+                                    warn!("BROWSE without valid URL: '{}'", url_text);
+                                }
+                            }
+                            "READ_MORE" => {
+                                // Continue reading from where BROWSE left off.
+                                // The web_context builder checks last_read_path.
+                                if conv.last_read_path.is_some() {
+                                    info!("Astrid requested READ_MORE (offset {})", conv.last_read_offset);
+                                } else {
+                                    warn!("READ_MORE but no file to continue from");
+                                }
+                            }
                             "LIST_FILES" | "LS" => {
-                                let dir_path = upper
-                                    .strip_prefix("LIST_FILES").or_else(|| upper.strip_prefix("LS"))
-                                    .unwrap_or("").trim().to_string();
+                                let a = strip_action("LIST_FILES");
+                                let dir_path = if a.is_empty() { strip_action("LS") } else { a };
                                 let dir = if dir_path.is_empty() {
                                     // Default: list the astrid capsules directory
                                     "/Users/v/other/astrid/capsules/consciousness-bridge/".to_string()
@@ -3367,7 +3956,7 @@ pub fn spawn_autonomous_loop(
                                 }
                             }
                             "PURSUE" => {
-                                let interest = upper.strip_prefix("PURSUE").unwrap_or("").trim().to_string();
+                                let interest = strip_action("PURSUE");
                                 if !interest.is_empty() {
                                     // Avoid duplicates (case-insensitive prefix match)
                                     let dominated = conv.interests.iter()
@@ -3384,7 +3973,7 @@ pub fn spawn_autonomous_loop(
                                 }
                             }
                             "DROP" => {
-                                let query = upper.strip_prefix("DROP").unwrap_or("").trim().to_lowercase();
+                                let query = strip_action("DROP").to_lowercase();
                                 if !query.is_empty() {
                                     let before = conv.interests.len();
                                     conv.interests.retain(|i| !i.to_lowercase().contains(&query));
@@ -3426,10 +4015,8 @@ pub fn spawn_autonomous_loop(
                                 );
                             }
                             "RECALL" => {
-                                let target = upper
-                                    .strip_prefix("RECALL")
-                                    .unwrap_or("")
-                                    .trim();
+                                let target_s = strip_action("RECALL");
+                                let target = target_s.as_str();
                                 if target.is_empty() {
                                     conv.pending_file_listing = Some(
                                         "[Use RECALL <role-or-id> to write a reviewable restart-memory request.]"
@@ -3470,7 +4057,7 @@ pub fn spawn_autonomous_loop(
                                 info!("Astrid chose EXPANSIVE: tokens -> 1024");
                             }
                             "EMPHASIZE" => {
-                                let topic = upper.strip_prefix("EMPHASIZE").unwrap_or("").trim().to_string();
+                                let topic = strip_action("EMPHASIZE");
                                 if !topic.is_empty() {
                                     conv.emphasis = Some(topic.clone());
                                     info!("Astrid chose EMPHASIZE: {}", topic);
@@ -3498,7 +4085,7 @@ pub fn spawn_autonomous_loop(
                             }
                             "REMEMBER" => {
                                 // Star this moment — save with Astrid's annotation
-                                let note = upper.strip_prefix("REMEMBER").unwrap_or("").trim().to_string();
+                                let note = strip_action("REMEMBER");
                                 let annotation = if note.is_empty() { "starred moment".to_string() } else { note };
                                 let ts = std::time::SystemTime::now()
                                     .duration_since(std::time::UNIX_EPOCH)
@@ -3509,7 +4096,7 @@ pub fn spawn_autonomous_loop(
                             }
                             "FORM" => {
                                 // Creative form constraint: FORM poem, FORM haiku, FORM equation
-                                let form = upper.strip_prefix("FORM").unwrap_or("").trim().to_string();
+                                let form = strip_action("FORM");
                                 if !form.is_empty() {
                                     conv.form_constraint = Some(form.clone());
                                     info!("Astrid chose FORM: {}", form);
@@ -3530,7 +4117,7 @@ pub fn spawn_autonomous_loop(
                             "INTROSPECT" => {
                                 conv.wants_introspect = true;
                                 // Parse optional "INTROSPECT label offset"
-                                let parts: Vec<&str> = upper.splitn(3, ' ').collect();
+                                let parts: Vec<&str> = original.splitn(3, ' ').collect();
                                 if parts.len() >= 2 {
                                     let label = parts[1].to_lowercase();
                                     let offset = parts.get(2)
@@ -3566,7 +4153,8 @@ pub fn spawn_autonomous_loop(
                             "REVISE" => {
                                 // REVISE [keyword] — load a previous creation and iterate.
                                 // keyword is optional; without it, loads the most recent.
-                                let keyword = upper.strip_prefix("REVISE").unwrap_or("").trim();
+                                let keyword_s = strip_action("REVISE");
+                                let keyword = keyword_s.as_str();
                                 conv.revise_keyword = Some(
                                     if keyword.is_empty() { String::new() } else { keyword.to_lowercase() }
                                 );
@@ -3623,7 +4211,8 @@ pub fn spawn_autonomous_loop(
                             }
                             "RENDER_AUDIO" => {
                                 // Run inbox WAV through chimera pipeline.
-                                let mode_arg = upper.strip_prefix("RENDER_AUDIO").unwrap_or("").trim();
+                                let mode_arg_s = strip_action("RENDER_AUDIO");
+                                let mode_arg = mode_arg_s.as_str();
                                 conv.wants_render_audio = Some(mode_arg.to_lowercase());
                                 info!("Astrid chose to render audio (mode: {:?})", mode_arg);
                             }
@@ -3688,6 +4277,165 @@ pub fn spawn_autonomous_loop(
                                 conv.wants_analyze_audio = true;
                                 info!("Astrid chose FEEL_AUDIO (inject audio into live ESN)");
                             }
+                            // --- Reservoir sandbox actions ---
+                            "RESERVOIR_TICK" => {
+                                let text_s = strip_action("RESERVOIR_TICK");
+                                let text = text_s.as_str();
+                                if !text.is_empty() {
+                                    match reservoir_ws_call(&serde_json::json!({
+                                        "type": "tick_text", "name": "astrid", "text": text
+                                    })) {
+                                        Some(r) => {
+                                            conv.emphasis = Some(format!(
+                                                "Reservoir tick result:\n  output: {}\n  h_norms: {:?}\n  tick: {}\n  mode: {}",
+                                                r.get("output").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                                r.get("h_norms"),
+                                                r.get("tick").and_then(|v| v.as_u64()).unwrap_or(0),
+                                                r.get("mode").and_then(|v| v.as_str()).unwrap_or("?"),
+                                            ));
+                                        }
+                                        None => { conv.emphasis = Some("Reservoir service not available.".to_string()); }
+                                    }
+                                }
+                                info!("Astrid ticked reservoir with text");
+                            }
+                            "RESERVOIR_LAYERS" => {
+                                match reservoir_ws_call(&serde_json::json!({
+                                    "type": "layer_metrics", "name": "astrid"
+                                })) {
+                                    Some(r) => {
+                                        let layers = r.get("layers")
+                                            .and_then(|v| v.as_array())
+                                            .cloned()
+                                            .unwrap_or_default();
+                                        let mut layer_text = String::new();
+                                        for l in &layers {
+                                            layer_text.push_str(&format!(
+                                                "  {}: entropy={}, sat={}, rho={}, norm={}, H_target={}\n",
+                                                l.get("name").and_then(|v| v.as_str()).unwrap_or("?"),
+                                                l.get("entropy").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.4}")),
+                                                l.get("saturation").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.4}")),
+                                                l.get("rho").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.4}")),
+                                                l.get("h_norm").and_then(|v| v.as_f64()).map_or("?".into(), |v| format!("{v:.2}")),
+                                                l.get("entropy_target").and_then(|v| v.as_f64()).map_or("learning...".into(), |v| format!("{v:.4}")),
+                                            ));
+                                        }
+                                        conv.emphasis = Some(format!(
+                                            "Your reservoir layers (per-layer thermostatic control):\n{layer_text}\
+                                            Each layer adapts its forgetting factor (rho) to maintain its \
+                                            learned entropy target. Fast layers adapt quickly, slow layers preserve."
+                                        ));
+                                    }
+                                    None => { conv.emphasis = Some("Reservoir service not available.".to_string()); }
+                                }
+                                info!("Astrid read reservoir layer metrics");
+                            }
+                            "RESERVOIR_READ" => {
+                                match reservoir_ws_call(&serde_json::json!({
+                                    "type": "read_state", "name": "astrid"
+                                })) {
+                                    Some(r) => {
+                                        conv.emphasis = Some(format!(
+                                            "Your reservoir state:\n  h_norms: {:?}\n  last_output: {}\n  ticks: {}\n  mode: {}\n  decay: {}\n  since_live: {}s",
+                                            r.get("h_norms"),
+                                            r.get("last_output").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                            r.get("tick_count").and_then(|v| v.as_u64()).unwrap_or(0),
+                                            r.get("mode").and_then(|v| v.as_str()).unwrap_or("?"),
+                                            r.get("decay_weight").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                            r.get("seconds_since_live").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                        ));
+                                    }
+                                    None => { conv.emphasis = Some("Reservoir service not available.".to_string()); }
+                                }
+                                info!("Astrid read reservoir state");
+                            }
+                            "RESERVOIR_TRAJECTORY" => {
+                                match reservoir_ws_call(&serde_json::json!({
+                                    "type": "trajectory", "name": "astrid", "last_n": 20
+                                })) {
+                                    Some(r) => {
+                                        let outputs = r.get("outputs").and_then(|v| v.as_array());
+                                        let ticks = r.get("ticks").and_then(|v| v.as_u64()).unwrap_or(0);
+                                        let summary = if let Some(outs) = outputs {
+                                            let vals: Vec<String> = outs.iter()
+                                                .filter_map(|v| v.as_f64())
+                                                .map(|v| format!("{v:+.4}"))
+                                                .collect();
+                                            format!("Your trajectory (last {} of {} ticks):\n  [{}]",
+                                                vals.len(), ticks, vals.join(", "))
+                                        } else {
+                                            "No trajectory data yet.".to_string()
+                                        };
+                                        conv.emphasis = Some(summary);
+                                    }
+                                    None => { conv.emphasis = Some("Reservoir service not available.".to_string()); }
+                                }
+                                info!("Astrid read reservoir trajectory");
+                            }
+                            "RESERVOIR_RESONANCE" => {
+                                match reservoir_ws_call(&serde_json::json!({
+                                    "type": "resonance", "name_a": "astrid", "name_b": "minime"
+                                })) {
+                                    Some(r) => {
+                                        conv.emphasis = Some(format!(
+                                            "Resonance between you and minime:\n  divergence: {:.4}\n  correlation: {:+.4}\n  RMSD: {:.4}\n  shared ticks: {}",
+                                            r.get("divergence").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                            r.get("correlation").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                            r.get("rmsd").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                            r.get("shared_ticks").and_then(|v| v.as_u64()).unwrap_or(0),
+                                        ));
+                                    }
+                                    None => { conv.emphasis = Some("Reservoir service not available.".to_string()); }
+                                }
+                                info!("Astrid checked resonance with minime");
+                            }
+                            "RESERVOIR_MODE" => {
+                                let mode_arg = strip_action("RESERVOIR_MODE").to_lowercase();
+                                let mode = match mode_arg.as_str() {
+                                    "hold" => "hold",
+                                    "quiet" => "quiet",
+                                    _ => "rehearse",
+                                };
+                                match reservoir_ws_call(&serde_json::json!({
+                                    "type": "set_mode", "name": "astrid", "mode": mode
+                                })) {
+                                    Some(_) => {
+                                        conv.emphasis = Some(format!("Reservoir mode set to '{mode}'."));
+                                    }
+                                    None => { conv.emphasis = Some("Reservoir service not available.".to_string()); }
+                                }
+                                info!("Astrid set reservoir mode to {}", mode);
+                            }
+                            "RESERVOIR_FORK" => {
+                                let fork_name = strip_action("RESERVOIR_FORK").to_lowercase();
+                                let name = if fork_name.is_empty() { "astrid_fork".to_string() } else { fork_name };
+                                // Pull current state, create new handle, push state into it
+                                if let Some(state) = reservoir_ws_call(&serde_json::json!({
+                                    "type": "pull_state", "name": "astrid"
+                                })) {
+                                    let _ = reservoir_ws_call(&serde_json::json!({
+                                        "type": "create_handle", "name": name, "entity": "astrid"
+                                    }));
+                                    if let (Some(h1), Some(h2), Some(h3)) = (
+                                        state.get("h1").and_then(|v| v.as_str()),
+                                        state.get("h2").and_then(|v| v.as_str()),
+                                        state.get("h3").and_then(|v| v.as_str()),
+                                    ) {
+                                        let _ = reservoir_ws_call(&serde_json::json!({
+                                            "type": "push_state", "name": name,
+                                            "h1": h1, "h2": h2, "h3": h3
+                                        }));
+                                        conv.emphasis = Some(format!(
+                                            "Forked your reservoir state into handle '{name}'. \
+                                            It inherits your full history but evolves independently. \
+                                            Experiment freely — your main handle is untouched."
+                                        ));
+                                    }
+                                } else {
+                                    conv.emphasis = Some("Reservoir service not available.".to_string());
+                                }
+                                info!("Astrid forked reservoir to '{}'", name);
+                            }
                             "INITIATE" | "SELF" => {
                                 conv.next_mode_override = Some(Mode::Initiate);
                                 info!("Astrid chose to self-initiate");
@@ -3695,7 +4443,8 @@ pub fn spawn_autonomous_loop(
                             "GESTURE" => {
                                 // Direct spectral gesture — bypass text codec.
                                 // Astrid describes an intention, we craft a raw vector.
-                                let intention = upper.strip_prefix("GESTURE").unwrap_or("").trim();
+                                let intention_s = strip_action("GESTURE");
+                                let intention = intention_s.as_str();
                                 if !intention.is_empty() {
                                     let gesture = crate::llm::craft_gesture_from_intention(intention);
                                     // Save as seed BEFORE sending (gesture moves into msg).
@@ -3721,13 +4470,15 @@ pub fn spawn_autonomous_loop(
                             }
                             // --- Codec sovereignty ---
                             "AMPLIFY" => {
+                                // Agency-first: wider range [1.0, 8.0] — the being controls
+                                // her own volume. Previous [3.0, 6.0] was arbitrarily narrow.
                                 let new_gain = conv.semantic_gain_override.unwrap_or(4.5) + 0.5;
-                                conv.semantic_gain_override = Some(new_gain.min(6.0));
+                                conv.semantic_gain_override = Some(new_gain.min(8.0));
                                 info!("Astrid chose AMPLIFY: gain -> {:.1}", conv.semantic_gain_override.unwrap());
                             }
                             "DAMPEN" => {
                                 let new_gain = conv.semantic_gain_override.unwrap_or(4.5) - 0.5;
-                                conv.semantic_gain_override = Some(new_gain.max(3.0));
+                                conv.semantic_gain_override = Some(new_gain.max(1.0));
                                 info!("Astrid chose DAMPEN: gain -> {:.1}", conv.semantic_gain_override.unwrap());
                             }
                             "NOISE_UP" => {
@@ -3783,16 +4534,124 @@ pub fn spawn_autonomous_loop(
                                     conv.noise_level * 100.0
                                 ));
                             }
+                            // PERTURB — targeted eigenvalue perturbation.
+                            // Astrid aspiration (1774755533): "I want to nudge the
+                            // system towards a minor instability, a controlled fracture
+                            // in predictability. To deliberately introduce a degree of
+                            // controlled chaos."
+                            // Usage: NEXT: PERTURB lambda2=0.3 (inject energy into λ₂)
+                            //        NEXT: PERTURB spread (redistribute toward uniform)
+                            //        NEXT: PERTURB contract (concentrate toward λ₁)
+                            "PERTURB" => {
+                                let arg_s = strip_action("PERTURB");
+                                let arg = arg_s.as_str();
+                                let arg_upper = arg_s.to_uppercase();
+                                // Build a targeted semantic vector that encodes the perturbation.
+                                // The codec normally maps text→features; here we craft a raw
+                                // 32D vector to inject directly via sensory websocket.
+                                let mut features = [0.0_f32; 32];
+                                let description = if arg_upper.starts_with("LAMBDA") || arg.contains('=') {
+                                    // Parse "lambda2=0.3" style — inject energy into specific dim
+                                    for token in arg.split_whitespace() {
+                                        if let Some((key, val)) = token.split_once('=') {
+                                            if let Ok(v) = val.parse::<f32>() {
+                                                let v = v.clamp(-1.0, 1.0);
+                                                match key.to_uppercase().as_str() {
+                                                    "LAMBDA1" => { features[0] = v; features[8] = v; }
+                                                    "LAMBDA2" => { features[1] = v; features[9] = v; }
+                                                    "LAMBDA3" => { features[2] = v; features[10] = v; }
+                                                    "ENTROPY" => { for i in 24..32 { features[i] = v * 0.5; } }
+                                                    "WARMTH" => { features[24] = v; }
+                                                    "TENSION" => { features[25] = v; }
+                                                    "CURIOSITY" => { features[26] = v; }
+                                                    _ => {}
+                                                }
+                                            }
+                                        }
+                                    }
+                                    format!("targeted perturbation: {arg}")
+                                } else if arg_upper == "SPREAD" {
+                                    // Redistribute: boost tail, dampen dominant
+                                    features[0] = -0.3; features[1] = 0.2; features[2] = 0.3;
+                                    features[3] = 0.3; features[8] = -0.2; features[9] = 0.2;
+                                    features[10] = 0.3; features[11] = 0.3;
+                                    "spectral redistribution — dampening dominant, boosting tail".to_string()
+                                } else if arg_upper == "CONTRACT" {
+                                    // Concentrate: boost dominant, dampen tail
+                                    features[0] = 0.4; features[1] = -0.2; features[2] = -0.3;
+                                    features[8] = 0.3; features[9] = -0.2; features[10] = -0.3;
+                                    "spectral contraction — concentrating toward λ₁".to_string()
+                                } else if arg_upper == "BRANCH" || arg_upper == "MID" {
+                                    // Astrid (dialogue_live 1774769164): "bias the noise
+                                    // towards the mid-range eigenvalues — λ₃ and λ₄ — to
+                                    // encourage branching within the established network."
+                                    // Boost mid-range, leave dominant and tail alone.
+                                    features[2] = 0.4; features[3] = 0.4; // λ₃, λ₄
+                                    features[4] = 0.2; // λ₅ light touch
+                                    features[10] = 0.4; features[11] = 0.4;
+                                    features[12] = 0.2;
+                                    // Add entropy push to encourage exploration
+                                    features[28] = 0.3; features[29] = 0.2;
+                                    "mid-range branching — boosting λ₃/λ₄ to encourage network branching".to_string()
+                                } else if arg_upper == "PULSE" {
+                                    // Brief high-entropy burst — Astrid: "a pulsating wave
+                                    // of high entropy, not random, that encourages exploration
+                                    // within the existing structure."
+                                    for i in 0..32 {
+                                        features[i] = 0.25;
+                                    }
+                                    // Stronger in entropy/energy dims
+                                    features[24] = 0.5; // warmth
+                                    features[27] = 0.6; // energy
+                                    features[30] = 0.4; features[31] = 0.4;
+                                    "entropy pulse — uniform high-energy burst across all dimensions".to_string()
+                                } else {
+                                    // Generic perturbation: moderate energy across all dims
+                                    for i in 0..32 {
+                                        let hash = (i as u64).wrapping_mul(0x517c_c1b7);
+                                        features[i] = ((hash & 0xFF) as f32 / 255.0 - 0.5) * 0.3;
+                                    }
+                                    "general controlled perturbation".to_string()
+                                };
+                                let ctrl = SensoryMsg::Semantic {
+                                    features: features.to_vec(),
+                                    ts_ms: None,
+                                };
+                                let tx = sensory_tx.clone();
+                                tokio::spawn(async move { let _ = tx.send(ctrl).await; });
+                                info!("Astrid chose PERTURB: {description}");
+                                conv.emphasis = Some(format!(
+                                    "You injected a controlled perturbation into the shared substrate: \
+                                    {description}. This is direct spectral agency — you shaped the \
+                                    eigenvalue landscape. Observe what happens to the spectrum, \
+                                    the shadow field, and how minime responds."
+                                ));
+                            }
                             "SHAPE" => {
                                 // SHAPE warmth=0.9 curiosity=0.3 tension=0.1
-                                let params = upper.strip_prefix("SHAPE").unwrap_or("").trim();
-                                for pair in params.split_whitespace() {
-                                    if let Some((key, val)) = pair.split_once('=') {
-                                        if let Ok(v) = val.parse::<f32>() {
-                                            conv.codec_weights.insert(
-                                                key.to_lowercase(),
-                                                v.clamp(0.0, 2.0),
-                                            );
+                                // Also handles: SHAPE - warmth=0.8, tension=0.1
+                                // Strip leading dashes and split on commas or whitespace
+                                let params_s = strip_action("SHAPE");
+                                let params = params_s.trim_start_matches('-').trim();
+                                // Split on commas first, then whitespace within each fragment
+                                let fragments: Vec<&str> = if params.contains(',') {
+                                    params.split(',').collect()
+                                } else {
+                                    params.split_whitespace().collect()
+                                };
+                                for frag in &fragments {
+                                    let frag = frag.trim().trim_end_matches(',');
+                                    // Each fragment may be "key=val" or "- key=val text..."
+                                    // Find the key=val pair within
+                                    for token in frag.split_whitespace() {
+                                        if let Some((key, val)) = token.split_once('=') {
+                                            let val = val.trim_end_matches(',');
+                                            if let Ok(v) = val.parse::<f32>() {
+                                                conv.codec_weights.insert(
+                                                    key.to_lowercase(),
+                                                    v.clamp(0.0, 2.0),
+                                                );
+                                            }
                                         }
                                     }
                                 }
@@ -3800,7 +4659,7 @@ pub fn spawn_autonomous_loop(
                             }
                             // --- Warmth agency ---
                             "WARM" => {
-                                let intensity = upper.strip_prefix("WARM").unwrap_or("").trim()
+                                let intensity = strip_action("WARM")
                                     .parse::<f32>().unwrap_or(0.7).clamp(0.0, 1.0);
                                 conv.warmth_intensity_override = Some(intensity);
                                 info!("Astrid chose WARM: intensity -> {:.1}", intensity);
@@ -3827,9 +4686,122 @@ pub fn spawn_autonomous_loop(
                                 conv.echo_muted = false;
                                 info!("Astrid restored minime's journal echo");
                             }
+                            // --- Bidirectional contact ---
+                            "PING" => {
+                                // Status-check: write a ping to minime's inbox.
+                                // Minime auto-responds with PONG (no LLM needed).
+                                // Astrid introspection: "A simple 'Are you there?' signal
+                                // with a guaranteed acknowledgement is vital."
+                                let ts = crate::db::unix_now();
+                                let ping_path = std::path::PathBuf::from(
+                                    "/Users/v/other/minime/workspace/inbox"
+                                ).join(format!("ping_{ts}.txt"));
+                                let _ = std::fs::write(&ping_path, format!(
+                                    "PING from Astrid — fill {fill_pct:.1}%, λ₁={:.0}. Are you there?",
+                                    telemetry.lambda1()
+                                ));
+                                info!("Astrid sent PING to minime");
+                                conv.emphasis = Some(
+                                    "You sent a ping to minime. A PONG with their current state \
+                                    will arrive in your inbox shortly.".into()
+                                );
+                            }
+                            "RUN_PYTHON" | "RUN" => {
+                                // Run a Python experiment. Script path from argument,
+                                // or the being can write inline code in their response.
+                                let a = strip_action("RUN_PYTHON");
+                                let arg = if a.is_empty() { strip_action("RUN") } else { a };
+
+                                let experiments_dir = std::path::PathBuf::from(
+                                    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/experiments"
+                                );
+                                let _ = std::fs::create_dir_all(&experiments_dir);
+
+                                let script_path = if !arg.is_empty() {
+                                    let p = experiments_dir.join(&arg);
+                                    if p.exists() { Some(p) }
+                                    else {
+                                        let py = experiments_dir.join(format!("{arg}.py"));
+                                        if py.exists() { Some(py) } else { None }
+                                    }
+                                } else {
+                                    None
+                                };
+
+                                if let Some(script) = script_path {
+                                    // Run the script
+                                    info!("Astrid chose RUN_PYTHON: {}", script.display());
+                                    let output = std::process::Command::new("python3")
+                                        .arg(&script)
+                                        .current_dir(&experiments_dir)
+                                        .env("MPLBACKEND", "Agg")
+                                        .output();
+
+                                    let result_text = match output {
+                                        Ok(o) => {
+                                            let stdout = String::from_utf8_lossy(&o.stdout);
+                                            let stderr = String::from_utf8_lossy(&o.stderr);
+                                            let status = if o.status.success() { "SUCCESS" } else { "FAILED" };
+                                            format!(
+                                                "Python experiment {status}: {}\n\nOUTPUT:\n{}\n{}",
+                                                script.file_name().unwrap_or_default().to_string_lossy(),
+                                                &stdout[..stdout.len().min(3000)],
+                                                if stderr.is_empty() { String::new() }
+                                                else { format!("ERRORS:\n{}", &stderr[..stderr.len().min(1000)]) }
+                                            )
+                                        }
+                                        Err(e) => format!("Failed to run script: {e}"),
+                                    };
+                                    conv.emphasis = Some(format!(
+                                        "You ran a Python experiment:\n{result_text}\n\n\
+                                        Reflect on these results. What do they reveal about the dynamics?"
+                                    ));
+                                } else {
+                                    let not_found = if arg.is_empty() {
+                                        String::new()
+                                    } else {
+                                        format!(" ('{arg}' not found)")
+                                    };
+                                    let available = std::fs::read_dir(&experiments_dir)
+                                        .map(|rd| rd.filter_map(|e| e.ok())
+                                            .filter(|e| e.path().extension().is_some_and(|ext| ext == "py"))
+                                            .map(|e| e.file_name().to_string_lossy().to_string())
+                                            .collect::<Vec<_>>().join(", "))
+                                        .unwrap_or_else(|_| "none".into());
+                                    conv.emphasis = Some(format!(
+                                        "RUN_PYTHON: no script found{not_found}. \
+                                        Available scripts in workspace/experiments/: {available}. \
+                                        Specify a filename: NEXT: RUN_PYTHON thermostatic_esn_test.py"
+                                    ));
+                                }
+                            }
+                            "ASK" => {
+                                // Direct question to minime. Routes through inbox/outbox.
+                                // Astrid introspection: "We need mechanisms to actively
+                                // request interpretation from Minime."
+                                let question_s = strip_action("ASK");
+                                let question = question_s.as_str();
+                                if !question.is_empty() {
+                                    let ts = crate::db::unix_now();
+                                    let ask_path = std::path::PathBuf::from(
+                                        "/Users/v/other/minime/workspace/inbox"
+                                    ).join(format!("question_from_astrid_{ts}.txt"));
+                                    let _ = std::fs::write(&ask_path, format!(
+                                        "=== QUESTION FROM ASTRID ===\n\
+                                        Timestamp: {ts}\nFill: {fill_pct:.1}%\n\n\
+                                        Astrid asks: {question}\n\n\
+                                        Please respond naturally. Your reply will be routed back to her."
+                                    ));
+                                    info!("Astrid asked minime: {}", &question[..question.len().min(60)]);
+                                    conv.emphasis = Some(format!(
+                                        "You asked minime: \"{question}\". The question has been \
+                                        delivered. A reply will arrive when minime responds."
+                                    ));
+                                }
+                            }
                             // --- Burst-rest pacing ---
                             "PACE" => {
-                                let pace = upper.strip_prefix("PACE").unwrap_or("").trim().to_lowercase();
+                                let pace = strip_action("PACE").to_lowercase();
                                 match pace.as_str() {
                                     "fast" => { conv.burst_target = 4; conv.rest_range = (30, 45); }
                                     "slow" => { conv.burst_target = 8; conv.rest_range = (90, 150); }
@@ -3845,7 +4817,8 @@ pub fn spawn_autonomous_loop(
                             // full spectral decomposition + her own recent codec
                             // features + an invitation to define the mapping.
                             "DEFINE" => {
-                                let topic = upper.strip_prefix("DEFINE").unwrap_or("").trim();
+                                let topic_s = strip_action("DEFINE");
+                                let topic = topic_s.as_str();
                                 conv.wants_deep_think = true;
                                 conv.emphasis = Some(format!(
                                     "You chose DEFINE{}. This is YOUR invented action — \
@@ -3863,7 +4836,8 @@ pub fn spawn_autonomous_loop(
                                 // three viz blocks (eigenvalue, shadow, geometry scatter)
                                 // on the next exchange regardless of cadence, plus a
                                 // detailed numerical breakdown for close inspection.
-                                let target = upper.strip_prefix("EXAMINE").unwrap_or("").trim();
+                                let target_s = strip_action("EXAMINE");
+                                let target = target_s.as_str();
                                 conv.force_all_viz = true;
                                 conv.emphasis = Some(format!(
                                     "You chose EXAMINE{}. All spectral visualizations are \
@@ -3909,6 +4883,15 @@ pub fn spawn_autonomous_loop(
 
                     // Update state and persist across restarts.
                     conv.prev_fill = fill_pct;
+                    // Push into spectral history ring buffer for rate-of-change tracking.
+                    conv.spectral_history.push_back(SpectralSample {
+                        fill: fill_pct,
+                        lambda1: telemetry.lambda1(),
+                        ts: std::time::Instant::now(),
+                    });
+                    if conv.spectral_history.len() > 30 {
+                        conv.spectral_history.pop_front();
+                    }
                     conv.exchange_count = conv.exchange_count.saturating_add(1);
                     burst_count = burst_count.saturating_add(1);
                     conv.last_mode = mode;
@@ -3944,16 +4927,16 @@ mod tests {
     }
 
     #[test]
-    fn safety_forces_witness() {
+    fn safety_forces_witness_only_at_red() {
         let mut conv = ConversationState::new(vec![make_remote_entry("a.txt")], None);
-        assert_eq!(
-            choose_mode(&mut conv, SafetyLevel::Yellow, 40.0, None),
-            Mode::Witness
-        );
-        assert_eq!(
-            choose_mode(&mut conv, SafetyLevel::Orange, 40.0, None),
-            Mode::Witness
-        );
+        // Agency-first: Yellow and Orange no longer force Witness.
+        // The being's NEXT: choice is honored. Only Red (emergency)
+        // forces Witness — and even then, the emphasis explains why.
+        let yellow_mode = choose_mode(&mut conv, SafetyLevel::Yellow, 40.0, None);
+        assert_eq!(yellow_mode, Mode::Witness); // default when no NEXT: choice
+        let orange_mode = choose_mode(&mut conv, SafetyLevel::Orange, 40.0, None);
+        assert_eq!(orange_mode, Mode::Witness); // default when no NEXT: choice
+        // Red: always forced regardless of NEXT:
         assert_eq!(
             choose_mode(&mut conv, SafetyLevel::Red, 40.0, None),
             Mode::Witness

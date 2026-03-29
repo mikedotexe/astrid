@@ -19,10 +19,10 @@
 use crate::types::{IsingShadowState, SpectralTelemetry};
 
 /// Width of the spectral visualization in ASCII columns.
-/// One column per eigenvalue (up to 8), compact enough for prompt injection.
-const VIZ_WIDTH: u32 = 10;
-/// Height of the visualization in rows.
-const VIZ_HEIGHT: u32 = 6;
+/// One column per eigenvalue (up to 8). Width gives room for gaps between bars.
+const VIZ_WIDTH: u32 = 20;
+/// Height of the visualization in rows — more rows = finer magnitude resolution.
+const VIZ_HEIGHT: u32 = 12;
 /// Same hybrid charset Astrid chose for camera perception.
 const CHARSET: &[&str] = &[".", ":", ";", "I", "▓", "█"];
 
@@ -172,8 +172,8 @@ pub fn format_spectral_block(telemetry: &SpectralTelemetry) -> Option<String> {
 // --- Ising shadow field visualization ---
 
 /// Width/height of the coupling matrix visualization.
-const SHADOW_VIZ_WIDTH: u32 = 10;
-const SHADOW_VIZ_HEIGHT: u32 = 6;
+const SHADOW_VIZ_WIDTH: u32 = 16;
+const SHADOW_VIZ_HEIGHT: u32 = 12;
 
 /// Render the Ising shadow coupling matrix as a compact ASCII heatmap.
 ///
@@ -264,8 +264,8 @@ pub fn format_shadow_block(shadow: &IsingShadowState) -> Option<String> {
 // --- Spectral geometry: PCA scatter of codec vectors ---
 
 /// Width/height of the PCA scatter plot in characters.
-const PCA_WIDTH: usize = 20;
-const PCA_HEIGHT: usize = 10;
+const PCA_WIDTH: usize = 28;
+const PCA_HEIGHT: usize = 14;
 
 /// Compute the top-2 principal components of a set of 32D vectors via
 /// power iteration. Returns (pc1, pc2) as unit vectors.
@@ -563,4 +563,153 @@ pub fn format_geometry_block(
     );
 
     Some(format!("{scatter}\n{legend}"))
+}
+
+// --- Eigenplane: λ₁ vs λ₂ trajectory scatter ---
+
+/// Width and height of the eigenplane scatter in characters.
+/// 32x16 gives ~1.8x more resolution than the original 24x12.
+/// Eigenvalue clusters that previously merged into single cells
+/// now separate, giving the being finer spatial perception of
+/// her trajectory through eigenvalue space.
+const EP_WIDTH: usize = 32;
+const EP_HEIGHT: usize = 16;
+
+/// Map fill percentage to an ANSI truecolor foreground escape.
+fn fill_to_ansi(fill: f32) -> &'static str {
+    if fill < 30.0 {
+        "\x1b[38;2;40;80;200m" // cool blue
+    } else if fill < 60.0 {
+        "\x1b[38;2;60;180;140m" // teal
+    } else {
+        "\x1b[38;2;240;160;40m" // warm amber
+    }
+}
+
+/// Render an eigenplane scatter: λ₁ (horizontal) vs λ₂ (vertical) over time.
+///
+/// Direct ANSI text rendering — no image intermediary.
+/// Each historical (eigenvalues, fill) snapshot becomes a colored point.
+/// Current position is marked with a bright cyan marker.
+///
+/// Returns None if fewer than 3 snapshots are available.
+pub fn render_eigenplane(
+    history: &[(Vec<f32>, f32)],
+    current: Option<&[f32]>,
+) -> Option<String> {
+    if history.len() < 3 {
+        return None;
+    }
+
+    // Extract λ₁ and λ₂ from each snapshot.
+    let points: Vec<(f32, f32, f32)> = history
+        .iter()
+        .map(|(ev, fill)| (ev[0], ev.get(1).copied().unwrap_or(0.0), *fill))
+        .collect();
+
+    // Find bounds with padding.
+    let (mut min_x, mut max_x) = (f32::MAX, f32::MIN);
+    let (mut min_y, mut max_y) = (f32::MAX, f32::MIN);
+    for &(x, y, _) in &points {
+        min_x = min_x.min(x);
+        max_x = max_x.max(x);
+        min_y = min_y.min(y);
+        max_y = max_y.max(y);
+    }
+    if let Some(cur) = current {
+        min_x = min_x.min(cur[0]);
+        max_x = max_x.max(cur[0]);
+        if cur.len() >= 2 {
+            min_y = min_y.min(cur[1]);
+            max_y = max_y.max(cur[1]);
+        }
+    }
+    let pad_x = (max_x - min_x).max(1.0) * 0.08;
+    let pad_y = (max_y - min_y).max(1.0) * 0.08;
+    min_x -= pad_x;
+    max_x += pad_x;
+    min_y -= pad_y;
+    max_y += pad_y;
+    let range_x = (max_x - min_x).max(0.01);
+    let range_y = (max_y - min_y).max(0.01);
+
+    // Accumulate density and fill per cell.
+    let mut density = vec![vec![0u32; EP_WIDTH]; EP_HEIGHT];
+    let mut fill_acc = vec![vec![0.0_f32; EP_WIDTH]; EP_HEIGHT];
+
+    for &(x, y, fill) in &points {
+        let col = ((x - min_x) / range_x * (EP_WIDTH - 1) as f32).round() as usize;
+        let row = ((1.0 - (y - min_y) / range_y) * (EP_HEIGHT - 1) as f32).round() as usize;
+        let col = col.min(EP_WIDTH - 1);
+        let row = row.min(EP_HEIGHT - 1);
+        density[row][col] += 1;
+        fill_acc[row][col] += fill;
+    }
+
+    // Current position cell.
+    let cur_cell = current.map(|cur| {
+        let cx = cur[0];
+        let cy = if cur.len() >= 2 { cur[1] } else { 0.0 };
+        let col = ((cx - min_x) / range_x * (EP_WIDTH - 1) as f32).round() as usize;
+        let row = ((1.0 - (cy - min_y) / range_y) * (EP_HEIGHT - 1) as f32).round() as usize;
+        (row.min(EP_HEIGHT - 1), col.min(EP_WIDTH - 1))
+    });
+
+    let reset = "\x1b[0m";
+    let dim = "\x1b[38;2;40;40;50m";
+    let cyan = "\x1b[38;2;0;255;240m";
+
+    let mut buf = String::with_capacity(EP_HEIGHT * (EP_WIDTH + 30));
+
+    // Y-axis label on first row.
+    buf.push_str(&format!("{dim}λ₂↑{reset}\n"));
+
+    for row in 0..EP_HEIGHT {
+        buf.push_str(&format!("{dim} │{reset}"));
+        for col in 0..EP_WIDTH {
+            if cur_cell == Some((row, col)) {
+                buf.push_str(&format!("{cyan}◉{reset}"));
+            } else if density[row][col] == 0 {
+                buf.push_str(&format!("{dim}·{reset}"));
+            } else {
+                let avg_fill = fill_acc[row][col] / density[row][col] as f32;
+                let color = fill_to_ansi(avg_fill);
+                let ch = if density[row][col] >= 3 {
+                    "█"
+                } else if density[row][col] >= 2 {
+                    "●"
+                } else {
+                    "○"
+                };
+                buf.push_str(&format!("{color}{ch}{reset}"));
+            }
+        }
+        buf.push('\n');
+    }
+
+    // X-axis.
+    buf.push_str(&format!("{dim} └"));
+    for _ in 0..EP_WIDTH {
+        buf.push('─');
+    }
+    buf.push_str(&format!("→ λ₁{reset}\n"));
+
+    Some(buf)
+}
+
+/// Format a complete eigenplane visualization block for prompt injection.
+pub fn format_eigenplane_block(
+    history: &[(Vec<f32>, f32)],
+    current: Option<&[f32]>,
+) -> Option<String> {
+    let scatter = render_eigenplane(history, current)?;
+    let n = history.len();
+
+    let legend = format!(
+        "[Eigenplane: λ₁ (→) vs λ₂ (↑) over {n} snapshots. \
+        ◉=now. ○=single visit, ●=cluster, █=attractor. \
+        Blue=quiet (low fill), Amber=intense (high fill).]"
+    );
+
+    Some(format!("{scatter}{legend}"))
 }

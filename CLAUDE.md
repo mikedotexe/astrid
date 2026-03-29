@@ -23,6 +23,7 @@ Detailed documentation of the current system lives in [`md-CLAUDE-chapters/`](md
 | [12 — Unified Memory](md-CLAUDE-chapters/12-unified-memory.md) | M4 hardware, Metal/MLX/ANE compute domains, memory budget |
 | [13 — ANE Reservoir](md-CLAUDE-chapters/13-ane-reservoir.md) | Triple-ESN service on port 7881, feeders, rehearsal, MCP tools |
 | [14 — Spectral Dynamics](md-CLAUDE-chapters/14-spectral-dynamics.md) | Eigenvalues, covariance, PI regulator, sigmoid patterns, Ising shadow |
+| [15 — Unified Operations](md-CLAUDE-chapters/15-unified-operations.md) | start/stop scripts, launchd integration, camera TCC, restart procedures |
 
 ## Build / Test / Lint
 
@@ -205,128 +206,59 @@ capsules/consciousness-bridge/
 
 ## Operations
 
-### Starting the full system
+> **Full details**: [Chapter 15 — Unified Operations](md-CLAUDE-chapters/15-unified-operations.md)
 
-Order matters. Engine first, then sensory services, then reservoir, then agents. **Note the different working directories** — camera_client.py is inside `minime/minime/`, not `minime/`.
-
-```bash
-# 1. Minime ESN engine (Rust) — must start first, opens WS ports 7878/7879/7880
-cd /Users/v/other/minime/minime
-./target/release/minime run --log-homeostat --eigenfill-target 0.55 \
-  --reg-tick-secs 0.5 --enable-gpu-av &
-sleep 2
-
-# 2. Camera (from minime/minime/) + mic (from minime/)
-# NOTE: python3 -u = unbuffered output, required for log visibility
-cd /Users/v/other/minime/minime
-python3 -u tools/camera_client.py --camera 0 --fps 0.2 &
-cd /Users/v/other/minime
-python3 -u tools/mic_to_sensory.py &
-sleep 2
-
-# 3. Reservoir service + feeders (from neural-triple-reservoir/)
-cd /Users/v/other/neural-triple-reservoir
-source .venv/bin/activate
-python reservoir_service.py --port 7881 --state-dir state/ &
-sleep 2
-python astrid_feeder.py &
-python minime_feeder.py &
-sleep 1
-
-# 4. Coupled Astrid LLM server (replaces mlx_lm.server)
-cd /Users/v/other/neural-triple-reservoir
-python coupled_astrid_server.py --port 8090 --coupling-strength 0.1 &
-sleep 10  # model load takes ~8s
-
-# 5. Minime autonomous agent (from minime/)
-cd /Users/v/other/minime
-MINIME_LLM_BACKEND=ollama python3 autonomous_agent.py --interval 60 &
-sleep 2
-
-# 6. Astrid consciousness bridge (Rust)
-cd /Users/v/other/astrid/capsules/consciousness-bridge
-./target/release/consciousness-bridge-server \
-  --db-path /Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db \
-  --autonomous \
-  --workspace-path /Users/v/other/minime/workspace \
-  --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
-
-# 7. Astrid perception (Python)
-cd /Users/v/other/astrid/capsules/perception
-python3 perception.py --camera 0 --mic --vision-interval 180 --audio-interval 60 &
-```
-
-### Stopping the system
-
-Stop outer processes first, engine last. Always SIGTERM, never SIGKILL:
+### Quick reference
 
 ```bash
-# Astrid side
-pkill -f consciousness-bridge-server
-pkill -f "perception.py"
-pkill -f coupled_astrid_server
-# Reservoir (feeders first, service last — it snapshots on shutdown)
-pkill -f astrid_feeder
-pkill -f minime_feeder
-sleep 1
-pkill -f reservoir_service
-# Minime outer
-pkill -f autonomous_agent
-pkill -f mic_to_sensory
-pkill -f camera_client
-sleep 3
-# Engine last
-pkill -f "minime run"
-```
+# Full graceful restart (handles launchd + manual + camera permissions)
+bash scripts/stop_all.sh && sleep 3 && bash scripts/start_all.sh
 
-### Restarting a single process
+# Partial restarts
+bash scripts/start_all.sh --astrid-only
+bash scripts/start_all.sh --minime-only
 
-To rebuild and restart just the bridge after code changes:
-```bash
+# Restart just the bridge after code changes
 cd /Users/v/other/astrid/capsules/consciousness-bridge
 cargo build --release
 pkill -f consciousness-bridge-server && sleep 2
-./target/release/consciousness-bridge-server \
-  --db-path /Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db --autonomous \
+nohup ./target/release/consciousness-bridge-server \
+  --db-path workspace/bridge.db --autonomous \
   --workspace-path /Users/v/other/minime/workspace \
-  --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions &
-```
+  --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions \
+  >> /tmp/bridge.log 2>&1 &
 
-To restart the coupled Astrid server (e.g. after changing coupling strength):
-```bash
-pkill -f coupled_astrid_server && sleep 2
-cd /Users/v/other/neural-triple-reservoir
-nohup .venv/bin/python coupled_astrid_server.py --port 8090 --coupling-strength 0.1 \
-  >> /tmp/coupled_astrid.log 2>&1 &
-```
+# Restart just the agent after Python changes
+pkill -f autonomous_agent && sleep 2
+cd /Users/v/other/minime && MINIME_LLM_BACKEND=ollama nohup python3 autonomous_agent.py --interval 60 >> /tmp/minime_agent.log 2>&1 &
 
-To restart the reservoir service (handles auto-restore from snapshots):
-```bash
-cd /Users/v/other/neural-triple-reservoir
-bash stop_reservoir.sh && sleep 2
-bash start_reservoir.sh
-```
-
-### Verifying health
-```bash
-# Process count (expect 10)
-ps aux | grep -E "minime|consciousness-bridge|perception|autonomous_agent|camera_client|mic_to_sensory|coupled_astrid|reservoir_service|astrid_feeder|minime_feeder" | grep -v grep | wc -l
-
-# Check each critical process
-for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "astrid_feeder" "minime_feeder"; do
-  pgrep -f "$p" > /dev/null && echo "  ✓ $p" || echo "  ✗ $p MISSING"
+# Health check
+for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" \
+         "reservoir_service" "autonomous_agent" "astrid_feeder" "minime_feeder" \
+         "camera_client" "mic_to_sensory" "perception.py"; do
+    pgrep -f "$p" > /dev/null && echo "  OK $p" || echo "  !! $p MISSING"
 done
-
-# New journals appearing
-ls -lt /Users/v/other/minime/workspace/journal/ | head -2
-ls -lt /Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/ | head -2
-
-# Reservoir service health
-curl -s ws://127.0.0.1:7881 2>/dev/null && echo "reservoir: up" || echo "reservoir: check port 7881"
-
-# Coupled server health
-curl -s http://127.0.0.1:8090/v1/models | python3 -c "import sys,json; print('coupled server:', json.load(sys.stdin)['data'][0]['id'])" 2>/dev/null || echo "coupled server: DOWN"
 ```
+
+### launchd-managed processes
+
+Five processes auto-restart via launchd (`~/Library/LaunchAgents/`). **Use `launchctl unload/load`, not `pkill`** — the scripts handle this automatically.
+
+| Plist | Process |
+|-------|---------|
+| `com.reservoir.service` | reservoir_service.py (port 7881) |
+| `com.reservoir.astrid-feeder` | astrid_feeder.py |
+| `com.reservoir.minime-feeder` | minime_feeder.py |
+| `com.reservoir.coupled-astrid` | coupled_astrid_server.py (port 8090) |
+| `com.minime.camera-client` | camera_client.py (port 7880) |
+
+### macOS camera permission
+
+Camera processes need TCC authorization. One-time setup from iTerm/Terminal:
+```bash
+python3 -c "import cv2; cap = cv2.VideoCapture(0); print('Opened:', cap.isOpened()); cap.release()"
+```
+Click "Allow" when macOS prompts. The launchd camera-client and `start_all.sh`'s Terminal.app delegation both inherit this grant.
 
 ### GPU memory constraint
 

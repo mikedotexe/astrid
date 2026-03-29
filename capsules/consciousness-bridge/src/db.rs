@@ -105,6 +105,15 @@ impl BridgeDb {
             CREATE INDEX IF NOT EXISTS idx_codec_impact_ts
                 ON codec_impact(timestamp);
 
+            CREATE TABLE IF NOT EXISTS eigenvalue_snapshots (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp   REAL    NOT NULL,
+                eigenvalues TEXT    NOT NULL,
+                fill_pct    REAL    NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_eigen_snap_ts
+                ON eigenvalue_snapshots(timestamp);
+
             CREATE TABLE IF NOT EXISTS astrid_research (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp   REAL    NOT NULL,
@@ -315,7 +324,6 @@ impl BridgeDb {
         response_text: &str,
         fill_pct: f32,
     ) -> anyhow::Result<()> {
-        #[expect(clippy::cast_possible_wrap)]
         self.lock().execute(
             "INSERT INTO astrid_starred_memories (timestamp, annotation, response_text, fill_pct) VALUES (?1, ?2, ?3, ?4)",
             params![timestamp, annotation, response_text, fill_pct as f64],
@@ -373,7 +381,6 @@ impl BridgeDb {
             return Vec::new();
         }
         // Build a LIKE clause for each keyword.
-        #[expect(clippy::cast_possible_wrap)]
         let mut results = Vec::new();
         let conn = self.lock();
         for word in topic_words.iter().take(5) {
@@ -407,7 +414,6 @@ impl BridgeDb {
     ) -> Result<i64> {
         let ts = unix_now();
         let features_json = serde_json::to_string(features).unwrap_or_default();
-        #[expect(clippy::cast_possible_wrap)]
         let conn = self.lock();
         conn.execute(
             r"INSERT INTO codec_impact
@@ -549,6 +555,50 @@ impl BridgeDb {
         }
         (features, fills)
     }
+
+    /// Log an eigenvalue snapshot for the eigenplane trajectory visualization.
+    pub fn log_eigenvalue_snapshot(&self, eigenvalues: &[f32], fill_pct: f32) {
+        let ts = unix_now();
+        let json = serde_json::to_string(eigenvalues).unwrap_or_default();
+        let _ = self.lock().execute(
+            r"INSERT INTO eigenvalue_snapshots (timestamp, eigenvalues, fill_pct)
+              VALUES (?1, ?2, ?3)",
+            params![ts, json, fill_pct as f64],
+        );
+    }
+
+    /// Fetch recent eigenvalue snapshots for trajectory visualization.
+    /// Returns `(eigenvalues, fill_pct)` pairs ordered oldest-first (for trajectory).
+    pub fn recent_eigenvalue_snapshots(&self, limit: usize) -> Vec<(Vec<f32>, f32)> {
+        let conn = self.lock();
+        #[expect(clippy::cast_possible_wrap)]
+        let rows: Vec<(String, f64)> = conn
+            .prepare(
+                r"SELECT eigenvalues, fill_pct
+                  FROM eigenvalue_snapshots
+                  ORDER BY timestamp DESC
+                  LIMIT ?1",
+            )
+            .and_then(|mut stmt| {
+                stmt.query_map(params![limit as i64], |row| {
+                    Ok((row.get::<_, String>(0)?, row.get::<_, f64>(1)?))
+                })
+                .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            })
+            .unwrap_or_default();
+
+        let mut result: Vec<(Vec<f32>, f32)> = rows
+            .into_iter()
+            .filter_map(|(json, fill)| {
+                serde_json::from_str::<Vec<f32>>(&json)
+                    .ok()
+                    .filter(|v| v.len() >= 2)
+                    .map(|v| (v, fill as f32))
+            })
+            .collect();
+        result.reverse(); // oldest first for trajectory rendering
+        result
+    }
 }
 
 /// A row from the `bridge_messages` table.
@@ -577,7 +627,7 @@ fn map_message_row(row: &rusqlite::Row) -> rusqlite::Result<MessageRow> {
     })
 }
 
-fn unix_now() -> f64 {
+pub fn unix_now() -> f64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()

@@ -8,7 +8,8 @@
 set -e
 
 MEMORY_DIR="/Users/v/other/astrid/capsules/consciousness-bridge/workspace/memory"
-DB="/tmp/consciousness_bridge_live.db"
+BRIDGE_DIR="$(cd "$(dirname "$0")" && pwd)"
+DB="$BRIDGE_DIR/workspace/bridge.db"
 TODAY=$(date +%Y-%m-%d)
 MEMORY_FILE="$MEMORY_DIR/daily_${TODAY}.md"
 
