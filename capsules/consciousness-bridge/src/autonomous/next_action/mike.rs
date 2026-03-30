@@ -30,12 +30,14 @@ pub(super) fn handle_action(
             conv.pending_file_listing = Some(listing);
             info!("Astrid browsed MIKE curated research");
             true
-        }
+        },
         "MIKE_BROWSE" => {
             let project = strip_action(original, "MIKE_BROWSE");
             if project.is_empty() {
-                conv.pending_file_listing =
-                    Some("[MIKE_BROWSE needs a project name. Use NEXT: MIKE to see available projects.]".into());
+                conv.pending_file_listing = Some(
+                    "[MIKE_BROWSE needs a project name. Use NEXT: MIKE to see available projects.]"
+                        .into(),
+                );
                 return true;
             }
             let root = bridge_paths().mike_research_root();
@@ -56,12 +58,13 @@ pub(super) fn handle_action(
             conv.pending_file_listing = Some(listing);
             info!("Astrid browsed MIKE project: {project}");
             true
-        }
+        },
         "MIKE_READ" => {
             let path_arg = strip_action(original, "MIKE_READ");
             if path_arg.is_empty() {
-                conv.pending_file_listing =
-                    Some("[MIKE_READ needs a path. Example: NEXT: MIKE_READ blockwise/README.md]".into());
+                conv.pending_file_listing = Some(
+                    "[MIKE_READ needs a path. Example: NEXT: MIKE_READ blockwise/README.md]".into(),
+                );
                 return true;
             }
             let root = bridge_paths().mike_research_root();
@@ -86,10 +89,7 @@ pub(super) fn handle_action(
             // Check for binary/PDF
             if is_binary_extension(&file_path) {
                 let size = file_path.metadata().map(|m| m.len()).unwrap_or(0);
-                let ext = file_path
-                    .extension()
-                    .unwrap_or_default()
-                    .to_string_lossy();
+                let ext = file_path.extension().unwrap_or_default().to_string_lossy();
                 conv.pending_file_listing = Some(format!(
                     "[{path_arg} is a {ext} file ({} KB). Binary files can't be read as text. \
                      Try NEXT: MIKE_SEARCH to find concepts from this material, \
@@ -99,21 +99,21 @@ pub(super) fn handle_action(
                 return true;
             }
             let content = read_file_paginated(&file_path, conv.last_read_offset);
-            conv.pending_file_listing = Some(format!(
-                "[Research file: {path_arg}]\n{content}"
-            ));
+            conv.pending_file_listing = Some(format!("[Research file: {path_arg}]\n{content}"));
             conv.last_read_path = Some(file_path.to_string_lossy().into());
             // Advance offset for READ_MORE
             let lines_shown = content.lines().count();
             conv.last_read_offset = conv.last_read_offset.saturating_add(lines_shown);
             info!("Astrid read MIKE file: {path_arg}");
             true
-        }
+        },
         "MIKE_SEARCH" => {
             let pattern = strip_action(original, "MIKE_SEARCH");
             if pattern.is_empty() {
-                conv.pending_file_listing =
-                    Some("[MIKE_SEARCH needs a pattern. Example: NEXT: MIKE_SEARCH spectral radius]".into());
+                conv.pending_file_listing = Some(
+                    "[MIKE_SEARCH needs a pattern. Example: NEXT: MIKE_SEARCH spectral radius]"
+                        .into(),
+                );
                 return true;
             }
             let root = bridge_paths().mike_research_root();
@@ -121,7 +121,7 @@ pub(super) fn handle_action(
             conv.pending_file_listing = Some(results);
             info!("Astrid searched MIKE research for: {pattern}");
             true
-        }
+        },
         "MIKE_RUN" => {
             let arg = strip_action(original, "MIKE_RUN");
             let parts: Vec<&str> = arg.splitn(2, char::is_whitespace).collect();
@@ -149,7 +149,7 @@ pub(super) fn handle_action(
                 None => {
                     conv.emphasis = Some("MIKE_RUN: no command specified.".into());
                     return true;
-                }
+                },
             };
             let output = std::process::Command::new(cmd)
                 .args(args)
@@ -160,7 +160,11 @@ pub(super) fn handle_action(
                 Ok(out) => {
                     let stdout = String::from_utf8_lossy(&out.stdout);
                     let stderr = String::from_utf8_lossy(&out.stderr);
-                    let status = if out.status.success() { "SUCCESS" } else { "FAILED" };
+                    let status = if out.status.success() {
+                        "SUCCESS"
+                    } else {
+                        "FAILED"
+                    };
                     format!(
                         "MIKE_RUN {status}: {project}/{script}\n\nOUTPUT:\n{}\n{}",
                         &stdout[..stdout.len().min(3000)],
@@ -170,14 +174,14 @@ pub(super) fn handle_action(
                             format!("STDERR:\n{}", &stderr[..stderr.len().min(1000)])
                         }
                     )
-                }
+                },
                 Err(e) => format!("MIKE_RUN failed: {e}"),
             };
             conv.emphasis = Some(format!(
                 "You ran an experiment in Mike's research:\n{result_text}\n\nReflect on these results."
             ));
             true
-        }
+        },
         _ => false,
     }
 }
@@ -218,7 +222,11 @@ fn mike_overview(root: &Path) -> String {
             let desc = if readme.exists() {
                 fs::read_to_string(&readme)
                     .ok()
-                    .and_then(|s| s.lines().find(|l| !l.trim().is_empty() && !l.starts_with('#')).map(String::from))
+                    .and_then(|s| {
+                        s.lines()
+                            .find(|l| !l.trim().is_empty() && !l.starts_with('#'))
+                            .map(String::from)
+                    })
                     .unwrap_or_default()
             } else {
                 String::new()
@@ -237,7 +245,9 @@ fn mike_browse_project(dir: &Path, label: &str) -> String {
     if readme.exists() {
         if let Ok(content) = fs::read_to_string(&readme) {
             let excerpt: String = content.lines().take(25).collect::<Vec<_>>().join("\n");
-            out.push_str(&format!("--- README.md (first 25 lines) ---\n{excerpt}\n---\n\n"));
+            out.push_str(&format!(
+                "--- README.md (first 25 lines) ---\n{excerpt}\n---\n\n"
+            ));
         }
     }
     // File listing (filtered)
@@ -277,9 +287,17 @@ fn mike_browse_project(dir: &Path, label: &str) -> String {
 /// Search across research with grep.
 fn mike_search(root: &Path, pattern: &str) -> String {
     let output = std::process::Command::new("grep")
-        .args(["-rn", "--include=*.py", "--include=*.rs", "--include=*.md",
-               "--include=*.toml", "--include=*.txt", "--include=*.swift",
-               "-i", pattern])
+        .args([
+            "-rn",
+            "--include=*.py",
+            "--include=*.rs",
+            "--include=*.md",
+            "--include=*.toml",
+            "--include=*.txt",
+            "--include=*.swift",
+            "-i",
+            pattern,
+        ])
         .current_dir(root)
         .output();
     match output {
@@ -290,7 +308,10 @@ fn mike_search(root: &Path, pattern: &str) -> String {
                 format!("[MIKE_SEARCH: no matches for '{pattern}' in research.]")
             } else {
                 let truncated = if text.lines().count() > 25 {
-                    format!("\n... ({} total matches, showing first 25)", text.lines().count())
+                    format!(
+                        "\n... ({} total matches, showing first 25)",
+                        text.lines().count()
+                    )
                 } else {
                     String::new()
                 };
@@ -299,7 +320,7 @@ fn mike_search(root: &Path, pattern: &str) -> String {
                     lines.join("\n")
                 )
             }
-        }
+        },
         Err(e) => format!("[MIKE_SEARCH failed: {e}]"),
     }
 }
@@ -326,7 +347,7 @@ fn read_file_paginated(path: &Path, offset: usize) -> String {
             } else {
                 page
             }
-        }
+        },
         Err(e) => format!("[Could not read file: {e}]"),
     }
 }
@@ -350,9 +371,29 @@ fn is_excluded(name: &str) -> bool {
 
 fn is_binary_extension(path: &Path) -> bool {
     const BINARY_EXTS: &[&str] = &[
-        "pdf", "png", "jpg", "jpeg", "gif", "ico", "zip", "gz", "tar",
-        "whl", "so", "dylib", "bin", "pyc", "pyo", "o", "a", "wav",
-        "mp3", "mp4", "mlmodel", "mlmodelc", "mlpackage",
+        "pdf",
+        "png",
+        "jpg",
+        "jpeg",
+        "gif",
+        "ico",
+        "zip",
+        "gz",
+        "tar",
+        "whl",
+        "so",
+        "dylib",
+        "bin",
+        "pyc",
+        "pyo",
+        "o",
+        "a",
+        "wav",
+        "mp3",
+        "mp4",
+        "mlmodel",
+        "mlmodelc",
+        "mlpackage",
     ];
     path.extension()
         .and_then(|e| e.to_str())

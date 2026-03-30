@@ -79,14 +79,14 @@ const RESONANCE_HISTORY_LEN: usize = 8;
 /// Classified text type based on dominant feature signals.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TextType {
-    Questioning,  // question density dominant
-    Hedging,      // hedging/uncertainty dominant
-    Declarative,  // certainty dominant
-    Warm,         // warmth markers dominant
-    Tense,        // tension markers dominant
-    Curious,      // curiosity markers dominant
-    Reflective,   // introspection markers dominant
-    Neutral,      // no dominant signal
+    Questioning, // question density dominant
+    Hedging,     // hedging/uncertainty dominant
+    Declarative, // certainty dominant
+    Warm,        // warmth markers dominant
+    Tense,       // tension markers dominant
+    Curious,     // curiosity markers dominant
+    Reflective,  // introspection markers dominant
+    Neutral,     // no dominant signal
 }
 
 /// Tracks recent text type classifications and computes a resonance
@@ -156,13 +156,13 @@ pub fn classify_text_type(features: &[f32; SEMANTIC_DIM]) -> TextType {
     // Find the strongest signal among the candidate dimensions.
     // Each candidate: (feature_index, threshold, TextType)
     let candidates = [
-        (18, 0.15_f32, TextType::Questioning),  // question density
-        (9,  0.12, TextType::Hedging),           // hedging
-        (10, 0.12, TextType::Declarative),       // certainty
-        (24, 0.10, TextType::Warm),              // warmth
-        (25, 0.10, TextType::Tense),             // tension
-        (26, 0.10, TextType::Curious),           // curiosity
-        (27, 0.10, TextType::Reflective),        // reflective
+        (18, 0.15_f32, TextType::Questioning), // question density
+        (9, 0.12, TextType::Hedging),          // hedging
+        (10, 0.12, TextType::Declarative),     // certainty
+        (24, 0.10, TextType::Warm),            // warmth
+        (25, 0.10, TextType::Tense),           // tension
+        (26, 0.10, TextType::Curious),         // curiosity
+        (27, 0.10, TextType::Reflective),      // reflective
     ];
     let mut best_type = TextType::Neutral;
     let mut best_signal = 0.0_f32;

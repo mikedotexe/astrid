@@ -299,10 +299,16 @@ struct ProbeOutcome {
     effective_query: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 struct ProbeReadMoreState {
-    last_read_path: String,
+    #[serde(default)]
+    last_read_path: Option<String>,
+    #[serde(default)]
     last_read_offset: usize,
+    #[serde(default)]
+    last_research_anchor: Option<String>,
+    #[serde(default)]
+    last_read_meaning_summary: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -914,10 +920,18 @@ async fn probe_search_action(
         );
     };
 
-    match crate::llm::web_search(&query).await {
+    let anchor = query.clone();
+    match crate::llm::web_search(&query, &anchor).await {
         Some(results) => {
-            db.save_research(&query, &results, live.fill_pct.unwrap_or_default());
-            let experienced_text = crate::llm::format_dialogue_web_context(&results);
+            let mut state = load_probe_read_more_state().unwrap_or_default();
+            state.last_research_anchor = Some(results.anchor.clone());
+            save_probe_read_more_state(&state);
+            db.save_research(
+                &query,
+                &results.persisted_text(),
+                live.fill_pct.unwrap_or_default(),
+            );
+            let experienced_text = crate::llm::format_dialogue_web_context(&results.prompt_body());
             ProbeOutcome {
                 parsed_action: parsed_action.to_string(),
                 base_action,
@@ -955,15 +969,40 @@ async fn probe_browse_action(
         );
     };
 
-    let Some(full_text) = crate::llm::fetch_url(&url).await else {
+    let existing_state = load_probe_read_more_state().unwrap_or_default();
+    let browse_anchor = crate::llm::derive_browse_anchor(
+        existing_state.last_research_anchor.as_deref(),
+        None,
+        &url,
+    );
+    let Some(page) = crate::llm::fetch_url(&url, &browse_anchor).await else {
         return probe_error_action(
             parsed_action.to_string(),
             base_action,
             live.safety_level,
             format!("Failed to fetch {url}."),
-            String::new(),
+            crate::llm::format_browse_failure_context(&url, "the source could not be reached"),
         );
     };
+
+    if !page.succeeded() {
+        let mut state = existing_state;
+        state.last_read_path = None;
+        state.last_read_offset = 0;
+        state.last_read_meaning_summary = None;
+        state.last_research_anchor = Some(page.anchor.clone());
+        save_probe_read_more_state(&state);
+        let reason = page
+            .soft_failure_reason
+            .unwrap_or_else(|| "the source returned an error page".to_string());
+        return probe_error_action(
+            parsed_action.to_string(),
+            base_action,
+            live.safety_level,
+            format!("BROWSE could not read {url}: {reason}"),
+            crate::llm::format_browse_failure_context(&url, &reason),
+        );
+    }
 
     let ts = probe_timestamp();
     let page_dir = bridge_paths().research_dir();
@@ -971,30 +1010,38 @@ async fn probe_browse_action(
     let page_path = page_dir.join(format!("page_{ts}.txt"));
     let header = format!(
         "URL: {url}\nFetched: {ts}\nLength: {} chars\n\n",
-        full_text.len()
+        page.raw_text.len()
     );
-    let _ = std::fs::write(&page_path, format!("{header}{full_text}"));
+    let _ = std::fs::write(&page_path, format!("{header}{}", page.raw_text));
     db.save_research(
         &format!("BROWSE: {url}"),
-        &full_text,
+        &format!(
+            "{}\n\n{}",
+            page.meaning_summary,
+            crate::llm::trim_chars(&page.raw_text, 1200)
+        ),
         live.fill_pct.unwrap_or_default(),
     );
 
-    let browse_context = if full_text.len() <= PAGE_CHUNK {
-        clear_probe_read_more_state();
-        format!("[You read the full page at {url}]\n\n{full_text}")
+    let browse_context = if page.raw_text.len() <= PAGE_CHUNK {
+        let mut state = existing_state;
+        state.last_read_path = None;
+        state.last_read_offset = 0;
+        state.last_read_meaning_summary = None;
+        state.last_research_anchor = Some(page.anchor.clone());
+        save_probe_read_more_state(&state);
+        crate::llm::format_browse_read_context(&page, &page.raw_text, None)
     } else {
-        let chunk: String = full_text.chars().take(PAGE_CHUNK).collect();
-        let remaining = full_text.len().saturating_sub(PAGE_CHUNK);
+        let chunk: String = page.raw_text.chars().take(PAGE_CHUNK).collect();
+        let remaining = page.raw_text.len().saturating_sub(PAGE_CHUNK);
+        let initial_offset = header.len().saturating_add(chunk.len());
         save_probe_read_more_state(&ProbeReadMoreState {
-            last_read_path: page_path.to_string_lossy().to_string(),
-            last_read_offset: PAGE_CHUNK,
+            last_read_path: Some(page_path.to_string_lossy().to_string()),
+            last_read_offset: initial_offset,
+            last_research_anchor: Some(page.anchor.clone()),
+            last_read_meaning_summary: Some(page.meaning_summary.clone()),
         });
-        format!(
-            "[You read the page at {url}]\n\n{chunk}\n\n\
-             [Page continues — {remaining} more chars. \
-             Write NEXT: READ_MORE to continue reading.]"
-        )
+        crate::llm::format_browse_read_context(&page, &chunk, Some(remaining))
     };
 
     ProbeOutcome {
@@ -1025,13 +1072,23 @@ fn probe_read_more_action(safety_level: SafetyLevel) -> ProbeOutcome {
             String::new(),
         );
     };
+    let Some(last_read_path) = state.last_read_path.clone() else {
+        return probe_error_action(
+            parsed_action,
+            base_action,
+            safety_level,
+            "No probe BROWSE state is available. Run BROWSE first.".to_string(),
+            String::new(),
+        );
+    };
 
-    let path = PathBuf::from(&state.last_read_path);
+    let path = PathBuf::from(&last_read_path);
     match std::fs::read_to_string(&path) {
         Ok(full_text) => {
             let chunk: String = full_text
+                .get(state.last_read_offset..)
+                .unwrap_or("")
                 .chars()
-                .skip(state.last_read_offset)
                 .take(PAGE_CHUNK)
                 .collect();
             let context = if chunk.is_empty() {
@@ -1042,21 +1099,20 @@ fn probe_read_more_action(safety_level: SafetyLevel) -> ProbeOutcome {
                 let remaining = full_text.len().saturating_sub(new_offset);
                 if remaining > 0 {
                     save_probe_read_more_state(&ProbeReadMoreState {
-                        last_read_path: state.last_read_path.clone(),
+                        last_read_path: Some(last_read_path.clone()),
                         last_read_offset: new_offset,
+                        last_research_anchor: state.last_research_anchor.clone(),
+                        last_read_meaning_summary: state.last_read_meaning_summary.clone(),
                     });
-                    format!(
-                        "[Continuing reading from offset {}...]\n\n{chunk}\n\n\
-                         [{remaining} more chars remain. Write NEXT: READ_MORE to continue.]",
-                        state.last_read_offset
-                    )
                 } else {
                     clear_probe_read_more_state();
-                    format!(
-                        "[Continuing reading from offset {}...]\n\n{chunk}\n\n[End of document.]",
-                        state.last_read_offset
-                    )
                 }
+                crate::llm::format_read_more_context(
+                    state.last_read_offset,
+                    &chunk,
+                    remaining,
+                    state.last_read_meaning_summary.as_deref(),
+                )
             };
 
             ProbeOutcome {
@@ -1080,10 +1136,7 @@ fn probe_read_more_action(safety_level: SafetyLevel) -> ProbeOutcome {
                 parsed_action,
                 base_action,
                 safety_level,
-                format!(
-                    "Could not read probe continuation file {}.",
-                    state.last_read_path
-                ),
+                format!("Could not read probe continuation file {}.", last_read_path),
                 String::new(),
             )
         },
@@ -1314,7 +1367,18 @@ fn save_probe_read_more_state(state: &ProbeReadMoreState) {
 }
 
 fn clear_probe_read_more_state() {
-    let _ = std::fs::remove_file(probe_state_path());
+    if let Some(mut state) = load_probe_read_more_state() {
+        state.last_read_path = None;
+        state.last_read_offset = 0;
+        state.last_read_meaning_summary = None;
+        if state.last_research_anchor.is_some() {
+            save_probe_read_more_state(&state);
+        } else {
+            let _ = std::fs::remove_file(probe_state_path());
+        }
+    } else {
+        let _ = std::fs::remove_file(probe_state_path());
+    }
 }
 
 fn probe_timestamp() -> String {

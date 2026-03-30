@@ -99,10 +99,14 @@ pub(super) struct ConversationState {
     pub search_topic: Option<String>,
     /// Astrid chose NEXT: BROWSE <url> — fetch and read a full web page.
     pub browse_url: Option<String>,
+    /// Most recent research thread anchor — used to interpret follow-up browsing.
+    pub last_research_anchor: Option<String>,
     /// Path to the last browsed/read file, for READ_MORE continuation.
     pub last_read_path: Option<String>,
     /// Character offset into last_read_path for READ_MORE.
     pub last_read_offset: usize,
+    /// Meaning summary for the last browsed document — reused by READ_MORE.
+    pub last_read_meaning_summary: Option<String>,
     /// Astrid chose NEXT: INTROSPECT — force introspection mode next exchange.
     pub wants_introspect: bool,
     /// Optional: specific source label and line offset for targeted introspection.
@@ -232,8 +236,10 @@ impl ConversationState {
             form_constraint: None,
             search_topic: None,
             browse_url: None,
+            last_research_anchor: None,
             last_read_path: None,
             last_read_offset: 0,
+            last_read_meaning_summary: None,
             wants_introspect: false,
             introspect_target: None,
             revise_keyword: None,

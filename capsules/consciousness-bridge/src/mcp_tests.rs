@@ -211,7 +211,7 @@ async fn probe_action_browse_and_read_more_use_probe_state() {
 
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
-    let page_body = "A".repeat(PAGE_CHUNK + 256);
+    let page_body = "Manipulable relationships between eigenvalue branches and perception remain relevant to the current question. ".repeat(64);
     let server_body = page_body.clone();
     let server = tokio::spawn(async move {
         let (mut stream, _) = listener.accept().await.unwrap();
@@ -241,6 +241,7 @@ async fn probe_action_browse_and_read_more_use_probe_state() {
         .as_str()
         .unwrap();
     assert!(browse_text.contains("Relevant knowledge from the web:"));
+    assert!(browse_text.contains("Why it may matter:"));
     assert!(browse_text.contains("[You read the page at"));
     assert!(probe_state_path().exists());
 
@@ -257,9 +258,53 @@ async fn probe_action_browse_and_read_more_use_probe_state() {
     let read_more_text = read_more["structuredContent"]["experienced_text"]
         .as_str()
         .unwrap();
+    assert!(read_more_text.contains("[Meaning summary from this document:]"));
     assert!(read_more_text.contains("[Continuing reading from offset"));
 
     let _ = fs::remove_file(artifact_path);
+    clear_probe_read_more_state();
+}
+
+#[tokio::test]
+async fn probe_action_browse_soft_failure_returns_explicit_failure() {
+    clear_probe_read_more_state();
+
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server = tokio::spawn(async move {
+        let (mut stream, _) = listener.accept().await.unwrap();
+        let mut buf = vec![0_u8; 1024];
+        let _ = stream.read(&mut buf).await.unwrap();
+        let body = "<html><title>Page Not Found</title><body>Page Not Found. The page you are trying to reach cannot be found. Error.</body></html>";
+        let response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n{}",
+            body.len(),
+            body
+        );
+        stream.write_all(response.as_bytes()).await.unwrap();
+    });
+
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+    let browse = tool_probe_action(
+        &json!({"action_text": format!("BROWSE http://{addr}/missing")}),
+        &state,
+        &db,
+    )
+    .await
+    .unwrap();
+    server.await.unwrap();
+
+    assert_eq!(browse["structuredContent"]["status"], "error");
+    let experienced = browse["structuredContent"]["experienced_text"]
+        .as_str()
+        .unwrap();
+    assert!(experienced.contains("could not be meaningfully read"));
+    assert!(experienced.contains("NEXT: SEARCH"));
+
+    let state_file = load_probe_read_more_state().unwrap_or_default();
+    assert!(state_file.last_read_path.is_none());
+    assert!(state_file.last_read_meaning_summary.is_none());
     clear_probe_read_more_state();
 }
 

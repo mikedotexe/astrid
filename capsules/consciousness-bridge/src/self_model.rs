@@ -222,10 +222,18 @@ impl FacultySnapshot {
                         f("MEMORIES", a.clone(), "inspect minime's memory bank"),
                         f("LIST_FILES <dir>", a.clone(), "browse workspace files"),
                         f("MIKE", a.clone(), "browse Mike's curated research"),
-                        f("MIKE_BROWSE <project>", a.clone(), "explore a research project"),
+                        f(
+                            "MIKE_BROWSE <project>",
+                            a.clone(),
+                            "explore a research project",
+                        ),
                         f("MIKE_READ <path>", a.clone(), "read a research file"),
                         f("MIKE_SEARCH <pattern>", a.clone(), "search across research"),
-                        f("MIKE_RUN <project> <cmd>", a.clone(), "run a research script"),
+                        f(
+                            "MIKE_RUN <project> <cmd>",
+                            a.clone(),
+                            "run a research script",
+                        ),
                     ],
                 },
                 FacultyCategory {
@@ -242,9 +250,21 @@ impl FacultySnapshot {
                             "stochastic noise",
                         ),
                         f("EXAMINE", a.clone(), "force all visualizations"),
-                        f("EXPERIMENT <words>", a.clone(), "inject word-stimuli and observe cascade"),
-                        f("PROBE <target>", a.clone(), "gentle spectral probe (30% of PERTURB)"),
-                        f("PROPOSE <description>", a.clone(), "file a proposal for the steward"),
+                        f(
+                            "EXPERIMENT <words>",
+                            a.clone(),
+                            "inject word-stimuli and observe cascade",
+                        ),
+                        f(
+                            "PROBE <target>",
+                            a.clone(),
+                            "gentle spectral probe (30% of PERTURB)",
+                        ),
+                        f(
+                            "PROPOSE <description>",
+                            a.clone(),
+                            "file a proposal for the steward",
+                        ),
                     ],
                 },
                 FacultyCategory {

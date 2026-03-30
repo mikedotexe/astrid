@@ -255,7 +255,9 @@ pub(super) fn handle_action(
 
             // Encode the word-stimuli into a 32D semantic vector via the codec.
             let features = crate::codec::encode_text(&stimulus);
-            let gain = conv.semantic_gain_override.unwrap_or(crate::codec::SEMANTIC_GAIN);
+            let gain = conv
+                .semantic_gain_override
+                .unwrap_or(crate::codec::SEMANTIC_GAIN);
             let amplified: Vec<f32> = features.iter().map(|f| f * gain).collect();
 
             // Send to minime's sensory bus.
@@ -378,7 +380,9 @@ pub(super) fn handle_action(
                 }
             };
 
-            let gain = conv.semantic_gain_override.unwrap_or(crate::codec::SEMANTIC_GAIN);
+            let gain = conv
+                .semantic_gain_override
+                .unwrap_or(crate::codec::SEMANTIC_GAIN);
             let amplified: Vec<f32> = features.iter().map(|f| f * gain).collect();
 
             let msg = crate::types::SensoryMsg::Semantic {
@@ -425,9 +429,7 @@ pub(super) fn handle_action(
             let proposal = strip_action(original, "PROPOSE");
             if !proposal.is_empty() {
                 let ts = crate::db::unix_now();
-                let req_dir = bridge_paths()
-                    .bridge_workspace()
-                    .join("agency_requests");
+                let req_dir = bridge_paths().bridge_workspace().join("agency_requests");
                 let _ = std::fs::create_dir_all(&req_dir);
                 let req_path = req_dir.join(format!("agency_proposal_{ts}.json"));
                 let req = serde_json::json!({
@@ -439,8 +441,14 @@ pub(super) fn handle_action(
                     "status": "pending",
                     "fill_at_request": ctx.fill_pct,
                 });
-                let _ = std::fs::write(&req_path, serde_json::to_string_pretty(&req).unwrap_or_default());
-                info!("Astrid filed proposal: {}", &proposal[..proposal.len().min(80)]);
+                let _ = std::fs::write(
+                    &req_path,
+                    serde_json::to_string_pretty(&req).unwrap_or_default(),
+                );
+                info!(
+                    "Astrid filed proposal: {}",
+                    &proposal[..proposal.len().min(80)]
+                );
                 conv.emphasis = Some(format!(
                     "Your proposal has been filed to agency_requests/agency_proposal_{ts}.json. \
                     The steward will review it. You described: \"{}\"",

@@ -22,3 +22,6 @@ pub mod self_model;
 pub mod spectral_viz;
 pub mod types;
 pub mod ws;
+
+#[cfg(test)]
+mod llm_tests;

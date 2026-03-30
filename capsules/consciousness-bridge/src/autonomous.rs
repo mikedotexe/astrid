@@ -695,6 +695,10 @@ struct SavedState {
     /// has already visited extensively (e.g., PCA Wikipedia 7 times in one session).
     #[serde(default)]
     recent_browse_urls: Vec<String>,
+    #[serde(default)]
+    last_research_anchor: Option<String>,
+    #[serde(default)]
+    last_read_meaning_summary: Option<String>,
     /// Condition change receipts — persist across restarts so Astrid sees
     /// recent changes even after bridge restart.
     #[serde(default)]
@@ -753,6 +757,8 @@ fn save_state(conv: &ConversationState) {
         last_remote_memory_role: conv.last_remote_memory_role.clone(),
         remote_memory_bank: conv.remote_memory_bank.clone(),
         recent_browse_urls: conv.recent_browse_urls.iter().cloned().collect(),
+        last_research_anchor: conv.last_research_anchor.clone(),
+        last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
         condition_receipts: conv.condition_receipts.clone(),
         attention: conv.attention.clone(),
     };
@@ -802,6 +808,8 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_remote_memory_role = state.last_remote_memory_role;
     conv.remote_memory_bank = state.remote_memory_bank;
     conv.recent_browse_urls = state.recent_browse_urls.into_iter().collect();
+    conv.last_research_anchor = state.last_research_anchor;
+    conv.last_read_meaning_summary = state.last_read_meaning_summary;
     conv.condition_receipts = state.condition_receipts;
     conv.attention = state.attention;
     info!(
@@ -1368,18 +1376,24 @@ pub fn spawn_autonomous_loop(
                 let rest_secs = if current_fill < 35.0 {
                     // Hard recovery: extend rest by 80% (81-162s)
                     let extended = (base_rest as f64 * 1.8) as u64;
-                    info!(rest_secs = extended, base_rest, current_fill,
-                        "fill-extended rest (hard recovery)");
+                    info!(
+                        rest_secs = extended,
+                        base_rest, current_fill, "fill-extended rest (hard recovery)"
+                    );
                     extended
                 } else if current_fill < 45.0 {
                     // Moderate recovery: extend by 40% (63-126s)
                     let extended = (base_rest as f64 * 1.4) as u64;
-                    info!(rest_secs = extended, base_rest, current_fill,
-                        "fill-extended rest (moderate recovery)");
+                    info!(
+                        rest_secs = extended,
+                        base_rest, current_fill, "fill-extended rest (moderate recovery)"
+                    );
                     extended
                 } else {
-                    info!(rest_secs = base_rest, burst_count,
-                        "resting: warmth-blended mirror (tapered entry)");
+                    info!(
+                        rest_secs = base_rest,
+                        burst_count, "resting: warmth-blended mirror (tapered entry)"
+                    );
                     base_rest
                 };
                 burst_count = 0;
@@ -2182,66 +2196,131 @@ pub fn spawn_autonomous_loop(
                                 && browse_url.is_none();
 
                             let web_context = if let Some(ref url) = browse_url {
-                                let ctx = crate::llm::fetch_url(url).await;
-                                if let Some(full_text) = ctx {
-                                    info!(url = %url, chars = full_text.len(), "dialogue: BROWSE fetched page");
+                                let browse_anchor = crate::llm::derive_browse_anchor(
+                                    conv.last_research_anchor.as_deref(),
+                                    journal_context
+                                        .as_deref()
+                                        .or(own_journal_context.as_deref()),
+                                    url,
+                                );
+                                let ctx = crate::llm::fetch_url(url, &browse_anchor).await;
+                                match ctx {
+                                    Some(page) if page.succeeded() => {
+                                        info!(url = %url, chars = page.raw_text.len(), "dialogue: BROWSE fetched page");
+                                        conv.last_research_anchor = Some(page.anchor.clone());
 
-                                    // Save full text to file (no truncation).
-                                    let ts = chrono_timestamp();
-                                    let page_dir = bridge_paths().research_dir();
-                                    let _ = std::fs::create_dir_all(&page_dir);
-                                    let page_path = page_dir.join(format!("page_{ts}.txt"));
-                                    let header = format!("URL: {url}\nFetched: {ts}\nLength: {} chars\n\n", full_text.len());
-                                    let _ = std::fs::write(&page_path, format!("{header}{full_text}"));
+                                        // Save full text to file (no truncation).
+                                        let ts = chrono_timestamp();
+                                        let page_dir = bridge_paths().research_dir();
+                                        let _ = std::fs::create_dir_all(&page_dir);
+                                        let page_path = page_dir.join(format!("page_{ts}.txt"));
+                                        let header = format!(
+                                            "URL: {url}\nFetched: {ts}\nLength: {} chars\n\n",
+                                            page.raw_text.len()
+                                        );
+                                        let _ = std::fs::write(&page_path, format!("{header}{}", page.raw_text));
 
-                                    db.save_research(&format!("BROWSE: {}", url), &full_text, fill_pct);
+                                        db.save_research(
+                                            &format!("BROWSE: {}", url),
+                                            &format!(
+                                                "{}\n\n{}",
+                                                page.meaning_summary,
+                                                crate::llm::format_browse_read_context(
+                                                    &page,
+                                                    &crate::llm::trim_chars(&page.raw_text, 1200),
+                                                    None,
+                                                )
+                                            ),
+                                            fill_pct,
+                                        );
 
-                                    // Chunk for prompt.
-                                    if full_text.len() <= PAGE_CHUNK {
-                                        Some(format!("[You read the full page at {url}]\n\n{full_text}"))
-                                    } else {
-                                        let chunk: String = full_text.chars().take(PAGE_CHUNK).collect();
-                                        let remaining = full_text.len().saturating_sub(PAGE_CHUNK);
-                                        conv.last_read_path = Some(page_path.to_string_lossy().to_string());
-                                        conv.last_read_offset = PAGE_CHUNK;
-                                        Some(format!(
-                                            "[You read the page at {url}]\n\n{chunk}\n\n\
-                                            [Page continues — {remaining} more chars. \
-                                            Write NEXT: READ_MORE to continue reading.]"
+                                        if page.raw_text.len() <= PAGE_CHUNK {
+                                            conv.last_read_path = None;
+                                            conv.last_read_offset = 0;
+                                            conv.last_read_meaning_summary = None;
+                                            Some(crate::llm::format_browse_read_context(
+                                                &page,
+                                                &page.raw_text,
+                                                None,
+                                            ))
+                                        } else {
+                                            let chunk: String =
+                                                page.raw_text.chars().take(PAGE_CHUNK).collect();
+                                            let remaining =
+                                                page.raw_text.len().saturating_sub(PAGE_CHUNK);
+                                            let initial_offset =
+                                                header.len().saturating_add(chunk.len());
+                                            conv.last_read_path =
+                                                Some(page_path.to_string_lossy().to_string());
+                                            conv.last_read_offset = initial_offset;
+                                            conv.last_read_meaning_summary =
+                                                Some(page.meaning_summary.clone());
+                                            Some(crate::llm::format_browse_read_context(
+                                                &page,
+                                                &chunk,
+                                                Some(remaining),
+                                            ))
+                                        }
+                                    },
+                                    Some(page) => {
+                                        conv.last_read_path = None;
+                                        conv.last_read_offset = 0;
+                                        conv.last_read_meaning_summary = None;
+                                        let reason = page.soft_failure_reason.unwrap_or_else(|| {
+                                            "the source returned an error page".to_string()
+                                        });
+                                        warn!(url = %url, reason = %reason, "dialogue: BROWSE soft failure");
+                                        Some(crate::llm::format_browse_failure_context(url, &reason))
+                                    },
+                                    None => {
+                                        conv.last_read_path = None;
+                                        conv.last_read_offset = 0;
+                                        conv.last_read_meaning_summary = None;
+                                        warn!(url = %url, "dialogue: BROWSE fetch failed");
+                                        Some(crate::llm::format_browse_failure_context(
+                                            url,
+                                            "the source could not be reached",
                                         ))
-                                    }
-                                } else {
-                                    warn!(url = %url, "dialogue: BROWSE fetch failed");
-                                    None
+                                    },
                                 }
                             } else if wants_read_more {
                                 // READ_MORE: continue from saved file.
                                 let path = conv.last_read_path.as_ref().unwrap().clone();
                                 let offset = conv.last_read_offset;
                                 if let Ok(full_text) = std::fs::read_to_string(&path) {
-                                    let chunk: String = full_text.chars().skip(offset).take(PAGE_CHUNK).collect();
+                                    let chunk: String = full_text
+                                        .get(offset..)
+                                        .unwrap_or("")
+                                        .chars()
+                                        .take(PAGE_CHUNK)
+                                        .collect();
                                     if chunk.is_empty() {
                                         info!("READ_MORE: reached end of {}", path);
                                         conv.last_read_path = None;
                                         conv.last_read_offset = 0;
+                                        conv.last_read_meaning_summary = None;
                                         Some("[End of document.]".to_string())
                                     } else {
                                         let new_offset = offset.saturating_add(chunk.len());
                                         let remaining = full_text.len().saturating_sub(new_offset);
                                         conv.last_read_offset = new_offset;
-                                        let continuation = if remaining > 0 {
-                                            format!("\n\n[{remaining} more chars remain. Write NEXT: READ_MORE to continue.]")
-                                        } else {
+                                        if remaining == 0 {
                                             conv.last_read_path = None;
-                                            "\n\n[End of document.]".to_string()
-                                        };
+                                            conv.last_read_meaning_summary = None;
+                                        }
                                         info!(offset, chunk_len = chunk.len(), remaining, "READ_MORE continuing");
-                                        Some(format!(
-                                            "[Continuing reading from offset {offset}...]\n\n{chunk}{continuation}"
+                                        Some(crate::llm::format_read_more_context(
+                                            offset,
+                                            &chunk,
+                                            remaining,
+                                            conv.last_read_meaning_summary.as_deref(),
                                         ))
                                     }
                                 } else {
                                     warn!("READ_MORE: could not read {}", path);
+                                    conv.last_read_path = None;
+                                    conv.last_read_offset = 0;
+                                    conv.last_read_meaning_summary = None;
                                     None
                                 }
                             }
@@ -2287,12 +2366,20 @@ pub fn spawn_autonomous_loop(
                                     if query.is_empty() {
                                         None
                                     } else {
-                                        let ctx = crate::llm::web_search(&query).await;
+                                        let anchor =
+                                            search_topic.clone().unwrap_or_else(|| query.clone());
+                                        let ctx = crate::llm::web_search(&query, &anchor).await;
                                         if let Some(ref results) = ctx {
                                             info!(query = %query, "dialogue: web search enriched response");
-                                            db.save_research(&query, results, fill_pct);
+                                            conv.last_research_anchor =
+                                                Some(results.anchor.clone());
+                                            db.save_research(
+                                                &query,
+                                                &results.persisted_text(),
+                                                fill_pct,
+                                            );
                                         }
-                                        ctx
+                                        ctx.map(|result| result.prompt_body())
                                     }
                                 } else {
                                     None
@@ -3200,11 +3287,18 @@ pub fn spawn_autonomous_loop(
                                     "main" => "reservoir computing system integration spectral homeostasis".to_string(),
                                     other => format!("{} computational architecture", other.replace('_', " ")),
                                 };
-                                let web_ctx = crate::llm::web_search(&search_query).await;
+                                let search_anchor = format!("{label}: {search_query}");
+                                let web_ctx =
+                                    crate::llm::web_search(&search_query, &search_anchor).await;
                                 if let Some(ref ctx) = web_ctx {
                                     info!(label, "introspect: web search returned context");
-                                    debug!("web context: {}", truncate_str(&ctx, 100));
+                                    debug!(
+                                        "web context: {}",
+                                        truncate_str(&ctx.prompt_body(), 100)
+                                    );
                                 }
+                                let web_prompt_body =
+                                    web_ctx.as_ref().map(|ctx| ctx.prompt_body());
 
                                 let own_journal_excerpt = read_astrid_journal(1).into_iter().next();
                                 let latest_self_observation = db.get_recent_self_observations(1).into_iter().next();
@@ -3249,7 +3343,7 @@ pub fn spawn_autonomous_loop(
                                         &interpret_spectral(&telemetry),
                                         fill_pct,
                                         Some(&internal_state_context),
-                                        web_ctx.as_deref(),
+                                        web_prompt_body.as_deref(),
                                         num_predict,
                                     )
                                 ).await {
