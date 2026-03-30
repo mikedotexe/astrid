@@ -4,7 +4,7 @@ Both beings can read their own source code and architectural proposals, then pro
 
 ## INTROSPECT Sources (13 total)
 
-**File:** `autonomous.rs`, `INTROSPECT_SOURCES` (~line 1113)
+**File:** `autonomous.rs`, `INTROSPECT_SOURCES` (~line 1198)
 
 ### Source Code
 | Label | File |
@@ -22,10 +22,10 @@ Both beings can read their own source code and architectural proposals, then pro
 ### Architectural Proposals
 | Label | File |
 |-------|------|
-| `proposal:phase_transitions` | `AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md` |
-| `proposal:bidirectional_contact` | `AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md` |
-| `proposal:distance_contact_control` | `AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md` |
-| `proposal:12d_glimpse` | `AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md` |
+| `proposal:phase_transitions` | `docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md` |
+| `proposal:bidirectional_contact` | `docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md` |
+| `proposal:distance_contact_control` | `docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md` |
+| `proposal:12d_glimpse` | `docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md` |
 
 ## Usage
 
@@ -58,7 +58,7 @@ The pagination hint tells Astrid how to read the next page.
 If the label contains `/` or ends in `.rs`, `.py`, or `.md`, it's treated as a file path:
 
 ```
-NEXT: INTROSPECT /Users/v/other/astrid/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md
+NEXT: INTROSPECT /Users/v/other/astrid/docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md
 ```
 
 ## LIST_FILES

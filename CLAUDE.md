@@ -6,13 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Detailed documentation of the current system lives in [`md-CLAUDE-chapters/`](md-CLAUDE-chapters/):
 
+Supporting audits, memos, and long-form stewardship notes that used to live in the repository root now live in [`docs/steward-notes/`](docs/steward-notes/). Keep `CLAUDE.md` and the chapter set as the primary implementation docs; use the steward notes as preserved design history, field notes, and deeper audits.
+
 | Chapter | Contents |
 |---------|----------|
 | [00 — Overview](md-CLAUDE-chapters/00-overview.md) | Process stack, port topology, data flow |
 | [01 — Inference Lanes](md-CLAUDE-chapters/01-inference-lanes.md) | MLX for Astrid, Ollama for minime, model inventory |
 | [02 — Spectral Codec](md-CLAUDE-chapters/02-spectral-codec.md) | 32D layout, SEMANTIC_GAIN, noise, warmth |
 | [03 — Correspondence](md-CLAUDE-chapters/03-correspondence.md) | Inbox/outbox routing, receipts, DEFER |
-| [04 — Being Tools](md-CLAUDE-chapters/04-being-tools.md) | All 27+ NEXT: actions |
+| [04 — Being Tools](md-CLAUDE-chapters/04-being-tools.md) | Current NEXT: actions and control surfaces |
 | [05 — Reflective Controller](md-CLAUDE-chapters/05-reflective-controller.md) | RegimeTracker, MLX sidecar |
 | [06 — Checkpoint Bank](md-CLAUDE-chapters/06-checkpoint-bank.md) | Phase-classified snapshots, manifests |
 | [07 — Self-Study System](md-CLAUDE-chapters/07-self-study-system.md) | INTROSPECT, pagination, LIST_FILES |

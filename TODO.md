@@ -46,4 +46,4 @@
 - [x] SEMANTIC_GAIN 3.0 → 4.5
 - [x] Exploration noise 0.03 → 0.08
 - [x] 90-day retention (up from 7 days)
-- [x] CONVERSATION_HIGHLIGHTS.md
+- [x] docs/steward-notes/CONVERSATION_HIGHLIGHTS.md

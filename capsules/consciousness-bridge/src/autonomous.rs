@@ -1199,21 +1199,21 @@ fn introspect_sources() -> Vec<IntrospectSource> {
         },
         IntrospectSource {
             label: "proposal:phase_transitions",
-            path: astrid_root.join("AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md"),
+            path: astrid_root.join("docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md"),
         },
         IntrospectSource {
             label: "proposal:bidirectional_contact",
             path: astrid_root
-                .join("AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md"),
+                .join("docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md"),
         },
         IntrospectSource {
             label: "proposal:distance_contact_control",
             path: astrid_root
-                .join("AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md"),
+                .join("docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md"),
         },
         IntrospectSource {
             label: "proposal:12d_glimpse",
-            path: astrid_root.join("AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md"),
+            path: astrid_root.join("docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md"),
         },
     ]
 }

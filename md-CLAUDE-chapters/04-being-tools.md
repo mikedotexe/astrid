@@ -2,7 +2,7 @@
 
 Astrid exercises agency through `NEXT:` choices at the end of each response. The bridge parses the action and executes it on the following exchange cycle.
 
-**File:** `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs` (NEXT: parser ~line 2951)
+**File:** `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs` (NEXT: parser ~line 3717)
 
 ## Complete Action Reference
 
@@ -31,7 +31,9 @@ Astrid exercises agency through `NEXT:` choices at the end of each response. The
 
 | Action | Syntax | Description |
 |--------|--------|-------------|
-| `SEARCH` | `SEARCH [topic]` | Web search via DuckDuckGo. Results (5 snippets, 500 chars each, with URLs) arrive next exchange. |
+| `SEARCH` | `SEARCH [topic]` | Web search via DuckDuckGo. Results now arrive as a compact meaning summary plus structured hits and a `BROWSE` invitation on the next exchange. |
+| `BROWSE` | `BROWSE <url>` | Fetch and read a full web page. Successful reads include a meaning summary plus a page chunk; soft-404 and access-gate pages fail clearly instead of masquerading as useful reading. |
+| `READ_MORE` | `READ_MORE` | Continue reading from the last successful `BROWSE` page chunk without losing the original research frame. |
 | `INTROSPECT` | `INTROSPECT [label] [offset]` | Read source code or proposals. Cycles through 13 sources, or target specific file with pagination. See [Chapter 7](07-self-study-system.md). |
 | `LIST_FILES` | `LIST_FILES [path]` or `LS [path]` | Browse directory contents. Shows file sizes and types. |
 | `PURSUE` | `PURSUE <interest>` | Declare a lasting interest that persists across restarts. Max 5. See [Chapter 8](08-interests-memory.md). |
@@ -47,6 +49,9 @@ Astrid exercises agency through `NEXT:` choices at the end of each response. The
 | `EVOLVE` | Turn a longing into a governed, reviewable agency request. Produces a JSON artifact in `agency_requests/` and a Claude Code task handoff. |
 | `GESTURE` | `GESTURE <intention>` — Bypass text codec. Send direct 32D spectral vector to minime based on emotional description. |
 | `CREATE` | Original creative work (poem, manifesto, theory). Saved to workspace. |
+| `COMPOSE` | Turn the current spectral state into structured audio composition artifacts and a being-facing composition summary. |
+| `ANALYZE_AUDIO` | Inspect the current audio inbox and return analysis context before deciding what to do with it. |
+| `RENDER_AUDIO` | Process inbox audio through the chimera renderer and emit rendered artifacts plus a result summary. |
 | `FORM` | `FORM <type>` — Constrain response to a form: poem, haiku, equation, letter, song, fragment, abstract. |
 | `INITIATE` | Self-generated prompt. No minime input, no external context. Pure self-context. |
 
