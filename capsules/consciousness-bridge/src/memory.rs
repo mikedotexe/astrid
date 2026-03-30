@@ -1,13 +1,10 @@
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::paths::bridge_paths;
 use serde::{Deserialize, Serialize};
-
-pub const MINIME_MEMORY_BANK_PATH: &str =
-    "/Users/v/other/minime/workspace/spectral_memory_bank.json";
-pub const MINIME_MEMORY_REQUESTS_DIR: &str = "/Users/v/other/minime/workspace/memory_requests";
 const ROLE_ORDER: [&str; 5] = ["latest", "stable", "expanding", "contracting", "transition"];
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -78,7 +75,8 @@ fn summarize_glimpse(glimpse: &[f32]) -> String {
 }
 
 pub fn read_remote_memory_bank() -> Vec<RemoteMemorySummary> {
-    let path = Path::new(MINIME_MEMORY_BANK_PATH);
+    let memory_bank_path = bridge_paths().minime_memory_bank_path();
+    let path = memory_bank_path.as_path();
     let mut entries: Vec<RemoteMemorySummary> = fs::read_to_string(path)
         .ok()
         .and_then(|json| serde_json::from_str::<RemoteMemoryBankFile>(&json).ok())
@@ -152,7 +150,8 @@ pub fn format_memory_listing(
 }
 
 pub fn write_recall_request(requested_by: &str, target: &str) -> io::Result<PathBuf> {
-    let requests_dir = Path::new(MINIME_MEMORY_REQUESTS_DIR);
+    let requests_dir_buf = bridge_paths().minime_memory_requests_dir();
+    let requests_dir = requests_dir_buf.as_path();
     fs::create_dir_all(requests_dir)?;
     let requested_at_unix = SystemTime::now()
         .duration_since(UNIX_EPOCH)

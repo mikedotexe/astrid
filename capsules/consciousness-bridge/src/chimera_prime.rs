@@ -75,11 +75,36 @@ pub fn build_audio_esn(input_dim: usize, seed: u64) -> Result<Esn, String> {
     EsnBuilder::new(input_dim)
         .target_radius(0.95)
         .seed(seed)
-        .add_block(BlockSpec::new(64, 1).leak(1.0).density(0.05).input_scale(0.5))
-        .add_block(BlockSpec::new(64, 2).leak(0.95).density(0.05).input_scale(0.4))
-        .add_block(BlockSpec::new(48, 3).leak(0.90).density(0.05).input_scale(0.35))
-        .add_block(BlockSpec::new(48, 5).leak(0.80).density(0.04).input_scale(0.3))
-        .add_block(BlockSpec::new(32, 7).leak(0.70).density(0.04).input_scale(0.25))
+        .add_block(
+            BlockSpec::new(64, 1)
+                .leak(1.0)
+                .density(0.05)
+                .input_scale(0.5),
+        )
+        .add_block(
+            BlockSpec::new(64, 2)
+                .leak(0.95)
+                .density(0.05)
+                .input_scale(0.4),
+        )
+        .add_block(
+            BlockSpec::new(48, 3)
+                .leak(0.90)
+                .density(0.05)
+                .input_scale(0.35),
+        )
+        .add_block(
+            BlockSpec::new(48, 5)
+                .leak(0.80)
+                .density(0.04)
+                .input_scale(0.3),
+        )
+        .add_block(
+            BlockSpec::new(32, 7)
+                .leak(0.70)
+                .density(0.04)
+                .input_scale(0.25),
+        )
         .build()
         .map_err(|e| format!("prime ESN build failed: {e}"))
 }
@@ -103,7 +128,11 @@ pub fn process_trajectory(
     let n_frames = states.len();
 
     // Track per-block activation
-    let block_infos: Vec<_> = schedule.blocks.iter().map(|b| (b.start, b.size, b.period, b.leak)).collect();
+    let block_infos: Vec<_> = schedule
+        .blocks
+        .iter()
+        .map(|b| (b.start, b.size, b.period, b.leak))
+        .collect();
     let n_blocks = block_infos.len().min(5);
     let mut block_energies = vec![0.0_f64; n_blocks];
     let mut block_activations = vec![0usize; n_blocks];

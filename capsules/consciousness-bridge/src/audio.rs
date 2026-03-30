@@ -10,13 +10,12 @@
 )]
 
 use std::f32::consts::PI;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
+use crate::paths::bridge_paths;
 use crate::types::SpectralTelemetry;
 
 const SAMPLE_RATE: u32 = 16000;
-const AUDIO_CREATIONS_DIR: &str =
-    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/audio_creations";
 
 /// Generate a WAV from Astrid's current spectral state.
 ///
@@ -120,9 +119,11 @@ pub fn compose_from_spectral_state(
         if let Ok(mut prime_esn) = crate::chimera_prime::build_audio_esn(input_dim, 42) {
             // Create a short trajectory from eigenvalues repeated at different phases
             let n_prime_frames = 20;
-            let ev_input: Vec<f64> = eigenvalues.iter().take(input_dim).map(|&v| {
-                (v as f64 / ev_max as f64).clamp(-1.0, 1.0)
-            }).collect();
+            let ev_input: Vec<f64> = eigenvalues
+                .iter()
+                .take(input_dim)
+                .map(|&v| (v as f64 / ev_max as f64).clamp(-1.0, 1.0))
+                .collect();
 
             let mut trajectory = Vec::with_capacity(n_prime_frames);
             for t in 0..n_prime_frames {
@@ -135,9 +136,8 @@ pub fn compose_from_spectral_state(
                 trajectory.push(frame);
             }
 
-            let (_enriched, report) = crate::chimera_prime::process_trajectory(
-                &mut prime_esn, &trajectory, input_dim
-            );
+            let (_enriched, report) =
+                crate::chimera_prime::process_trajectory(&mut prime_esn, &trajectory, input_dim);
             Some(report)
         } else {
             None
@@ -145,7 +145,7 @@ pub fn compose_from_spectral_state(
     };
 
     // Write WAV
-    let dir = PathBuf::from(AUDIO_CREATIONS_DIR);
+    let dir = bridge_paths().audio_creations_dir();
     let _ = std::fs::create_dir_all(&dir);
     let ts = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -190,15 +190,10 @@ pub fn analyze_inbox_wav(inbox_dir: &Path) -> Option<String> {
     let mut wavs: Vec<_> = std::fs::read_dir(inbox_dir)
         .ok()?
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path().extension().is_some_and(|ext| ext == "wav")
-                && e.path().is_file()
-        })
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "wav") && e.path().is_file())
         .collect();
 
-    wavs.sort_by_key(|e| {
-        std::cmp::Reverse(e.metadata().ok().and_then(|m| m.modified().ok()))
-    });
+    wavs.sort_by_key(|e| std::cmp::Reverse(e.metadata().ok().and_then(|m| m.modified().ok())));
 
     let entry = wavs.first()?;
     let wav_path = entry.path();
@@ -229,15 +224,10 @@ pub fn render_inbox_wav_through_chimera(inbox_dir: &Path) -> Option<String> {
     let mut wavs: Vec<_> = std::fs::read_dir(&read_dir)
         .ok()?
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path().extension().is_some_and(|ext| ext == "wav")
-                && e.path().is_file()
-        })
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "wav") && e.path().is_file())
         .collect();
 
-    wavs.sort_by_key(|e| {
-        std::cmp::Reverse(e.metadata().ok().and_then(|m| m.modified().ok()))
-    });
+    wavs.sort_by_key(|e| std::cmp::Reverse(e.metadata().ok().and_then(|m| m.modified().ok())));
 
     let entry = wavs.first()?;
     let wav_path = entry.path();
@@ -248,7 +238,7 @@ pub fn render_inbox_wav_through_chimera(inbox_dir: &Path) -> Option<String> {
         input_path: wav_path.clone(),
         mode: crate::types::ChimeraMode::Dual,
         loops: 1,
-        output_root: Some(PathBuf::from(AUDIO_CREATIONS_DIR).join("chimera_renders")),
+        output_root: Some(bridge_paths().audio_creations_dir().join("chimera_renders")),
         ..Default::default()
     };
 
@@ -267,7 +257,7 @@ pub fn render_inbox_wav_through_chimera(inbox_dir: &Path) -> Option<String> {
                  Output: {}",
                 result.output_dir.display()
             ))
-        }
+        },
         Err(e) => Some(format!("Chimera render failed for {filename}: {e}")),
     }
 }

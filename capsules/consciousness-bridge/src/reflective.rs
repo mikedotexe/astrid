@@ -8,11 +8,10 @@
 //! The sidecar has its own 48-64D echo state reservoir that tracks Astrid's
 //! reflective trajectory independently from minime's 128-node ESN.
 
+use crate::paths::bridge_paths;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tracing::{debug, info, warn};
-
-const SIDECAR_SCRIPT: &str = "/Users/v/other/mlx/benchmarks/python/chat_mlx_local.py";
 
 /// Lightweight regime classification — runs every exchange in <1ms.
 /// No LLM, no subprocess. Pure computation on spectral telemetry.
@@ -248,9 +247,10 @@ impl ReflectiveReport {
 /// acceptable for INTROSPECT/OPEN_MIND (rare, ~1 in 15 exchanges).
 /// For lighter per-exchange telemetry, use `query_controller_light()` (future).
 pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
-    let script = Path::new(SIDECAR_SCRIPT);
+    let sidecar_script = bridge_paths().reflective_sidecar_script().to_path_buf();
+    let script = Path::new(&sidecar_script);
     if !script.exists() {
-        warn!("MLX sidecar script not found at {}", SIDECAR_SCRIPT);
+        warn!("MLX sidecar script not found at {}", script.display());
         return None;
     }
 
@@ -260,7 +260,7 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
 
     let result = tokio::task::spawn_blocking(move || {
         let output = std::process::Command::new("python3")
-            .arg(SIDECAR_SCRIPT)
+            .arg(&sidecar_script)
             .arg("--json")
             .arg("--hardware-profile")
             .arg("m4-mini")

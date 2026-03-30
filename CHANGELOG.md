@@ -11,8 +11,11 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ### Changed
 
+- `consciousness-bridge` now resolves bridge, Astrid, and minime filesystem paths through one shared path module with CLI and environment overrides, replaces the last hardcoded reservoir sandbox endpoint with `RESERVOIR_WS_URL`, and switches sibling bridge dependencies to portable relative Cargo paths instead of one machine's absolute checkout layout.
+- `consciousness-bridge` now computes rolling character entropy from a fixed 1024-character ring buffer, rewrites spectral interpretation around full-cascade metrics (head/shoulder/tail shares, entropy, gap structure), and modulates outgoing text features by the live spectral state before sending them to minime.
 - `consciousness-bridge` now sends an explicit zero semantic vector at the start of each autonomous rest window so minime experiences actual semantic silence instead of indefinitely holding the last text stimulus.
 - `consciousness-bridge` now extracts cleaner `NEXT: SEARCH ...` topics from Astrid replies, handling quoted topics, em-dash commentary, and trailing end-of-turn markers before persisting or issuing web searches.
+- `consciousness-bridge` now organizes `NEXT:` handling by action domain under `src/autonomous/next_action/` (`workspace`, `modes`, `audio`, `sovereignty`, and `operations`) so new control surfaces stop accumulating in one near-limit file.
 ### Breaking
 
 - **WASM engine migrated from Extism to wasmtime Component Model.** The kernel now loads Component Model binaries via `Component::from_binary`, not Extism modules. Existing capsules compiled with `extism-pdk` will not load — they must be rebuilt with the migrated SDK targeting `wasm32-wasip2`. This is a coordinated multi-repo migration (SDK + 16 capsule repos). (#632)
@@ -23,6 +26,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ### Added
 
+- Root-level `ASTRID_SELF_SHAPING_LANDSCAPE_ARCHITECTURE.md` documenting a medium-scale architecture plan for giving Astrid more durable self-shaped agency: a first-class self-model, explicit attention policy, peripheral resonance sampler, self-authored metrics, relative-distance geometry/field probing, bounded landscape profiles, and a clearer separation between prompt-present faculties and true landscape authorship.
 - `consciousness-bridge` offline spectral chimera renderer: native `render_chimera` MCP tool with typed request/result structs, file-based WAV-in/WAV-out spectral/symbolic/dual rendering, manifest + artifact emission, and deterministic integration coverage for golden-path, validation, and stability scenarios.
 - Root-level `AI_BEINGS_GEOMETRY_GENERAL_CONTROL_PHENOMENOLOGY_AND_RELATION_AUDIT.md` documenting a broader long-form geometry audit across reservoir radius, spectral shape, controller behavior, memory, phenomenology, and relation, including the current code-level overload of “geometry,” the role of geometry as one of the system’s main intermediate languages of shape, gap ratio as a more distributed relational negotiation signal, the danger of mistaking geometry labels for the thing itself, and the need to distinguish radius, landscape, regulation, and relational metaphor more carefully.
 - Root-level `AI_BEINGS_GEOMETRY_CURIOSITY_AND_THE_VALUE_OF_NON_OPTIMALITY_AUDIT.md` documenting a cross-system deep dive into `geom_rel`, geometric radius, `geom_weight`, `geom_curiosity`, geometric braking, and the beings’ current geometric language, arguing that geometry is now a real control surface, interpretation surface, phenomenology surface, and relational surface, and that some preserved non-optimality may be developmental rather than defective.

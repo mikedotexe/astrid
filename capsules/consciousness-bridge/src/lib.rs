@@ -16,6 +16,7 @@ pub mod journal;
 pub mod llm;
 pub mod mcp;
 pub mod memory;
+pub mod paths;
 pub mod reflective;
 pub mod spectral_viz;
 pub mod types;

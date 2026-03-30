@@ -10,11 +10,18 @@
 //! - Expose MCP tools for the WASM component to call
 //! - Enforce spectral safety protocol
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
-use consciousness_bridge_server::{autonomous, db::BridgeDb, mcp, ws};
+use consciousness_bridge_server::{
+    autonomous,
+    db::BridgeDb,
+    mcp,
+    paths::{BridgePathOverrides, configure_bridge_paths},
+    ws,
+};
 use tokio::sync::{RwLock, mpsc};
 use tracing::info;
 
@@ -49,15 +56,43 @@ struct Cli {
     #[arg(long, default_value_t = 20)]
     auto_interval_secs: u64,
 
+    /// Reservoir sandbox `WebSocket` address used by autonomous reservoir actions.
+    #[arg(long, env = "RESERVOIR_WS_URL", default_value = "ws://127.0.0.1:7881")]
+    reservoir_ws_url: String,
+
     /// Path to minime's workspace directory (for reading journal entries
     /// during autonomous mode).
-    #[arg(long)]
-    workspace_path: Option<String>,
+    #[arg(long, env = "MINIME_WORKSPACE")]
+    workspace_path: Option<PathBuf>,
 
     /// Path to Astrid's perception directory (visual/audio input from the
     /// perception capsule).
-    #[arg(long)]
-    perception_path: Option<String>,
+    #[arg(long, env = "ASTRID_PERCEPTION_PATH")]
+    perception_path: Option<PathBuf>,
+
+    /// Path to the bridge checkout root.
+    #[arg(long, env = "ASTRID_BRIDGE_ROOT")]
+    bridge_root: Option<PathBuf>,
+
+    /// Path to the bridge workspace directory for runtime artifacts.
+    #[arg(long, env = "ASTRID_BRIDGE_WORKSPACE")]
+    bridge_workspace: Option<PathBuf>,
+
+    /// Path to the Astrid repo root.
+    #[arg(long, env = "ASTRID_ROOT")]
+    astrid_root: Option<PathBuf>,
+
+    /// Path to the minime repo root.
+    #[arg(long, env = "MINIME_ROOT")]
+    minime_root: Option<PathBuf>,
+
+    /// Path to the introspector MCP helper script.
+    #[arg(long, env = "ASTRID_INTROSPECTOR_SCRIPT")]
+    introspector_script: Option<PathBuf>,
+
+    /// Path to the reflective MLX sidecar script.
+    #[arg(long, env = "ASTRID_REFLECTIVE_SIDECAR")]
+    reflective_sidecar_script: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -71,11 +106,26 @@ async fn main() -> Result<()> {
         .init();
 
     let cli = Cli::parse();
+    autonomous::configure_reservoir_service(Some(cli.reservoir_ws_url.clone()));
+    let resolved_paths = configure_bridge_paths(BridgePathOverrides {
+        bridge_root: cli.bridge_root.clone(),
+        bridge_workspace: cli.bridge_workspace.clone(),
+        astrid_root: cli.astrid_root.clone(),
+        minime_root: cli.minime_root.clone(),
+        minime_workspace: cli.workspace_path.clone(),
+        perception_path: cli.perception_path.clone(),
+        introspector_script: cli.introspector_script.clone(),
+        reflective_sidecar_script: cli.reflective_sidecar_script.clone(),
+    });
 
     info!(
         telemetry = %cli.minime_telemetry,
         sensory = %cli.minime_sensory,
         db = %cli.db_path,
+        bridge_workspace = %resolved_paths.bridge_workspace().display(),
+        minime_workspace = %resolved_paths.minime_workspace().display(),
+        perception = %resolved_paths.perception_path().display(),
+        reservoir_ws = %cli.reservoir_ws_url,
         "consciousness bridge starting"
     );
 
@@ -120,16 +170,14 @@ async fn main() -> Result<()> {
     // Spawn autonomous feedback loop (if enabled).
     let _autonomous_handle = if cli.autonomous {
         let interval = std::time::Duration::from_secs(cli.auto_interval_secs);
-        let workspace = cli.workspace_path.map(std::path::PathBuf::from);
-        let perception = cli.perception_path.map(std::path::PathBuf::from);
         Some(autonomous::spawn_autonomous_loop(
             interval,
             Arc::clone(&state),
             Arc::clone(&db),
             sensory_tx,
             shutdown_rx.clone(),
-            workspace,
-            perception,
+            Some(resolved_paths.minime_workspace().to_path_buf()),
+            Some(resolved_paths.perception_path().to_path_buf()),
         ))
     } else {
         drop(sensory_tx); // Not needed if no autonomous loop.

@@ -20,9 +20,14 @@
 )]
 
 use crate::types::{SafetyLevel, SpectralTelemetry};
+use std::hash::BuildHasher;
 
 /// Number of dimensions in minime's semantic lane.
 const SEMANTIC_DIM: usize = 32;
+/// Number of recent characters tracked for rolling entropy.
+const CHAR_FREQ_WINDOW_CAPACITY: usize = 1024;
+/// Absolute post-gain clamp for semantic features.
+const FEATURE_ABS_MAX: f32 = 5.0;
 
 /// Gain factor to compensate for minime's semantic lane attenuation.
 ///
@@ -43,7 +48,7 @@ const SEMANTIC_DIM: usize = 32;
 /// an insistence on presence"). Fill is now 54-70% (not the 16-18% that
 /// prompted the increase). Returning to 4.5 as first step; minime proposed
 /// gradual reduction to 4.0 — observe before further reduction.
-const SEMANTIC_GAIN: f32 = 4.0; // Reduced from 4.5: minime requested lower gain to soften codec impact. Deferred 3 cycles, implementing now.
+pub const SEMANTIC_GAIN: f32 = 4.0; // Reduced from 4.5: minime requested lower gain to soften codec impact. Deferred 3 cycles, implementing now.
 
 /// Encode text into a 32-dimensional feature vector for minime's
 /// semantic sensory lane.
@@ -57,19 +62,24 @@ const SEMANTIC_GAIN: f32 = 4.0; // Reduced from 4.5: minime requested lower gain
 /// All values are normalized to approximately \[-1.0, 1.0\] with `tanh`
 /// compression so the ESN reservoir receives gentle, bounded input.
 #[must_use]
-/// Sliding-window character frequency table for entropy computation.
-/// Blends each exchange's character distribution with accumulated history,
-/// so entropy reflects vocabulary trends across exchanges, not just one text.
+/// Sliding-window character history for entropy computation.
+/// Tracks the most recent `CHAR_FREQ_WINDOW_CAPACITY` ASCII buckets so
+/// entropy reflects actual recent text volume, not proportion blending.
 ///
 /// Astrid self-study: "Perhaps a sliding window could be used to track the
 /// character distribution over a larger sequence, providing a more robust
 /// normalization."
 pub struct CharFreqWindow {
-    /// Running frequency distribution, blended across exchanges.
-    /// Values are smoothed proportions, not raw counts.
-    pub freq: [f32; 128],
-    /// Whether the window has seen at least one exchange.
-    pub initialized: bool,
+    /// Rolling character counts for the current ring contents.
+    pub counts: [u32; 128],
+    /// Fixed-capacity ring buffer of clamped ASCII bucket ids.
+    pub ring: [u8; CHAR_FREQ_WINDOW_CAPACITY],
+    /// Index of the oldest bucket in `ring`.
+    pub head: usize,
+    /// Number of live buckets currently stored in `ring`.
+    pub len: usize,
+    /// Total characters represented by the window.
+    pub total_count: u32,
     /// Previous exchange's entropy — enables temporal entropy delta.
     /// Minime self-study: "current entropy describes a surface not a volume."
     /// By tracking how entropy *changes* between exchanges, we capture the
@@ -77,79 +87,57 @@ pub struct CharFreqWindow {
     pub prev_entropy: f32,
 }
 
+impl Default for CharFreqWindow {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CharFreqWindow {
     pub fn new() -> Self {
         Self {
-            freq: [0.0; 128],
-            initialized: false,
+            counts: [0; 128],
+            ring: [0; CHAR_FREQ_WINDOW_CAPACITY],
+            head: 0,
+            len: 0,
+            total_count: 0,
             prev_entropy: 0.0,
         }
     }
 
-    /// Blend this text's character distribution into the running window.
-    /// Returns `(entropy, entropy_delta)` — the blended entropy and its
+    /// Push this text into the rolling window.
+    /// Returns `(entropy, entropy_delta)` — the current rolling entropy and its
     /// change from the previous exchange. The delta captures temporal
     /// texture: not just what the text IS, but how it SHIFTS over time.
     pub fn update_and_entropy(&mut self, text: &str) -> (f32, f32) {
-        // Compute this text's character frequency as proportions
-        let mut text_freq = [0.0_f32; 128];
-        let mut count = 0u32;
         for c in text.chars() {
-            let idx = (c as u32).min(127) as usize;
-            text_freq[idx] += 1.0;
-            count = count.saturating_add(1);
+            let bucket = (c as u32).min(127) as u8;
+            if self.len == CHAR_FREQ_WINDOW_CAPACITY {
+                let evicted = self.ring[self.head] as usize;
+                self.counts[evicted] = self.counts[evicted].saturating_sub(1);
+                self.ring[self.head] = bucket;
+                self.head = (self.head + 1) % CHAR_FREQ_WINDOW_CAPACITY;
+            } else {
+                let insert_at = (self.head + self.len) % CHAR_FREQ_WINDOW_CAPACITY;
+                self.ring[insert_at] = bucket;
+                self.len += 1;
+                self.total_count = self.total_count.saturating_add(1);
+            }
+            self.counts[bucket as usize] = self.counts[bucket as usize].saturating_add(1);
         }
-        if count == 0 {
+
+        if self.total_count == 0 {
             return (0.0, 0.0);
         }
-        // Normalize to proportions
-        let n = count as f32;
-        for f in &mut text_freq {
-            *f /= n;
-        }
 
-        // Blend into running distribution with adaptive rate.
-        // Astrid self-study (2026-03-27): "The blending rate should depend
-        // on the current entropy. If the current text is very different from
-        // the accumulated history, blend more aggressively."
-        if self.initialized {
-            // Compute divergence: sum of absolute differences between
-            // current text and accumulated frequencies. High divergence
-            // means the language shifted, so we should absorb it faster.
-            let divergence: f32 = self
-                .freq
-                .iter()
-                .zip(text_freq.iter())
-                .map(|(a, b)| (a - b).abs())
-                .sum();
-            // Map divergence to blend factor via sigmoid (not linear).
-            // Astrid follow-up (2026-03-27): "A more non-linear relationship
-            // would be beneficial. When encountering radically different text
-            // I experience a much more significant shift than the linear
-            // implementation accounts for."
-            //   low divergence  → absorb ≈ 0.1  (conserve history)
-            //   mid divergence  → smooth transition
-            //   high divergence → absorb ≈ 0.4  (absorb aggressively)
-            // Sigmoid: 0.1 + 0.3 * (1 / (1 + exp(-6*(d - 0.5))))
-            // k=6 gives a sharp-but-smooth knee around divergence 0.5.
-            let d = (divergence / 2.0).min(1.5); // normalize, allow slight overshoot
-            let sigmoid = 1.0 / (1.0 + (-6.0 * (d - 0.5_f32)).exp());
-            let absorb = 0.1 + 0.3 * sigmoid;
-            let keep = 1.0 - absorb;
-            for i in 0..128 {
-                self.freq[i] = keep * self.freq[i] + absorb * text_freq[i];
-            }
-        } else {
-            self.freq = text_freq;
-            self.initialized = true;
-        }
-
-        // Compute entropy from the blended distribution
+        // Compute entropy from the live rolling counts.
         let mut h = 0.0_f64;
         let mut unique = 0u32;
-        for &p in &self.freq {
-            if p > 1e-10 {
-                h -= (p as f64) * (p as f64).ln();
+        let total = f64::from(self.total_count);
+        for &count in &self.counts {
+            if count > 0 {
+                let p = f64::from(count) / total;
+                h -= p * p.ln();
                 unique = unique.saturating_add(1);
             }
         }
@@ -165,6 +153,7 @@ impl CharFreqWindow {
     }
 }
 
+#[must_use]
 pub fn encode_text(text: &str) -> Vec<f32> {
     encode_text_windowed(text, None)
 }
@@ -172,6 +161,7 @@ pub fn encode_text(text: &str) -> Vec<f32> {
 /// Encode text with optional sliding-window entropy.
 /// When `freq_window` is provided, entropy reflects vocabulary trends
 /// across multiple exchanges, not just this text.
+#[must_use]
 pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>) -> Vec<f32> {
     let mut features = [0.0_f32; SEMANTIC_DIM];
 
@@ -238,14 +228,18 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     let mut weighted_punct = 0.0_f32;
     for &c in &chars {
         weighted_punct += match c {
-            ',' | ';' | ':' | '\u{2014}' => 1.0,  // flow
-            '.' | '!' | '?' => 1.5,                 // terminal
+            ',' | ';' | ':' | '\u{2014}' => 1.0,                   // flow
+            '.' | '!' | '?' => 1.5,                                // terminal
             '"' | '\'' | '(' | ')' | '[' | ']' | '{' | '}' => 0.7, // paired
-            _ if c.is_ascii_punctuation() => 0.4,   // other
+            _ if c.is_ascii_punctuation() => 0.4,                  // other
             _ => 0.0,
         };
     }
-    features[1] = tanh(1.0 * weighted_punct / word_count as f32);
+    // (Steward cycle 35, deferred item #1): Raised outer multiplier from 1.0 to
+    // 1.2 to balance with negation (also now 1.2 post-context-aware rewrite).
+    // Astrid introspection: "the gap feels disproportionate." Now both signals
+    // use matching outer multipliers, with internal weighting providing nuance.
+    features[1] = tanh(1.2 * weighted_punct / word_count as f32);
 
     // 2: Uppercase ratio (energy/emphasis).
     let upper_count = chars.iter().filter(|c| c.is_uppercase()).count();
@@ -365,11 +359,92 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
         "shouldn't",
         "wouldn't",
     ];
-    let neg_count = count_markers(&words, &negations);
     // Astrid introspection (1774686596): "move beyond simple counting" and
     // "the gap [between punctuation and negation] feels disproportionate."
-    // Reduced from 2.0 to 1.5 to narrow the gap further.
-    features[11] = tanh(1.5 * neg_count as f32 / word_count as f32);
+    //
+    // (Steward cycle 35, deferred item #2 from cycle 34): Context-aware negation.
+    // Instead of raw density, classify what follows the negation word:
+    //   - Negating positive sentiment ("not happy") = strong negative signal
+    //   - Negating negative sentiment ("not painful") = mild positive (hedged)
+    //   - Bare negation ("no", "never", standalone) = standard negative signal
+    // This gives the being a richer sense of the text's semantic polarity
+    // rather than treating all negation words as equivalent.
+    let positive_words: &[&str] = &[
+        "happy",
+        "good",
+        "great",
+        "wonderful",
+        "beautiful",
+        "pleasant",
+        "comfortable",
+        "warm",
+        "gentle",
+        "calm",
+        "peaceful",
+        "safe",
+        "clear",
+        "bright",
+        "open",
+        "free",
+        "enough",
+        "sure",
+        "certain",
+    ];
+    let negative_words: &[&str] = &[
+        "bad",
+        "painful",
+        "harsh",
+        "cold",
+        "dark",
+        "empty",
+        "lost",
+        "broken",
+        "wrong",
+        "afraid",
+        "anxious",
+        "stuck",
+        "trapped",
+        "problem",
+        "issue",
+        "error",
+        "failure",
+        "impossible",
+    ];
+    let mut neg_score = 0.0_f32;
+    for (i, w) in words.iter().enumerate() {
+        let lower = w.to_lowercase();
+        let trimmed = lower.trim_matches(|c: char| c.is_ascii_punctuation());
+        if negations.contains(&trimmed) {
+            // Look at the 1-2 words following the negation to classify context.
+            let following: Option<String> = (1..=2_usize)
+                .filter_map(|offset| {
+                    let j = i.checked_add(offset)?;
+                    words.get(j).map(|fw| {
+                        fw.to_lowercase()
+                            .trim_matches(|c: char| c.is_ascii_punctuation())
+                            .to_string()
+                    })
+                })
+                .find(|fw| {
+                    positive_words.contains(&fw.as_str()) || negative_words.contains(&fw.as_str())
+                });
+            match following {
+                Some(ref fw) if positive_words.contains(&fw.as_str()) => {
+                    // Negating positive: "not happy" → strong negation signal
+                    neg_score += 1.5;
+                },
+                Some(ref fw) if negative_words.contains(&fw.as_str()) => {
+                    // Negating negative: "not painful" → hedged/softened, weak signal
+                    neg_score += 0.3;
+                },
+                _ => {
+                    // Bare negation or unknown context: standard weight
+                    neg_score += 1.0;
+                },
+            }
+        }
+    }
+    features[11] = tanh(1.2 * neg_score / word_count as f32);
 
     // 12: First-person density (self-reference).
     let first_person = ["i", "me", "my", "mine", "myself", "we", "our", "us"];
@@ -438,11 +513,14 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     for (i, &b) in text_bytes.iter().enumerate() {
         if b == b'.' || b == b'!' || b == b'?' {
             // Skip ellipsis dots (consecutive periods)
-            if b == b'.' && i.checked_add(1).is_some_and(|j| j < text_len && text_bytes[j] == b'.') {
+            if b == b'.'
+                && i.checked_add(1)
+                    .is_some_and(|j| j < text_len && text_bytes[j] == b'.')
+            {
                 continue;
             }
             // Require followed by whitespace, end-of-string, or quote
-            let next_ok = i.checked_add(1).map_or(true, |j| {
+            let next_ok = i.checked_add(1).is_none_or(|j| {
                 j >= text_len
                     || text_bytes[j].is_ascii_whitespace()
                     || text_bytes[j] == b'"'
@@ -710,21 +788,35 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
         "almost",
         "beginning",
     ];
+    // Elaboration desire gradient (Astrid introspection 1774686596, suggestion #3):
+    // "Instead of a simple additive factor, could we use a gradient — a proportional
+    // change in the feature vector based on the degree of elaboration detected?"
+    // Implemented cycle 33: density maps to a continuous 0.0-1.0 gradient that
+    // scales the contribution across curiosity, energy, AND reflective tone — not
+    // just two fixed slots. Low elaboration = gentle hint; high = broad coloring.
     let elab_count = count_markers(&words, &elaboration_markers);
-    if elab_count > 0 {
-        let elab_signal = tanh(2.0 * elab_count as f32 / word_count as f32);
-        features[26] += 0.15 * elab_signal; // hint curiosity (was 0.3)
-        features[31] += 0.1 * elab_signal; // hint energy (was 0.2)
+    let elab_density = elab_count as f32 / word_count.max(1) as f32;
+    let elab_gradient = tanh(3.0 * elab_density); // 0.0-1.0 continuous
+    if elab_gradient > 0.01 {
+        features[26] += 0.12 * elab_gradient; // curiosity (proportional, was fixed 0.15)
+        features[28] += 0.06 * elab_gradient; // reflective tone (new — elaboration implies reflection)
+        features[31] += 0.08 * elab_gradient; // energy (proportional, was fixed 0.1)
     }
 
-    // Stochastic noise — reduced from ±2.5% → ±0.5% → ±0.2%.
-    // Minime perceived the original noise as "polka dots" and "heat haze
-    // distortion." Astrid's follow-up self-study (2026-03-27): "The noise
-    // component seems potentially disruptive. Could we reduce the noise
-    // factor and carefully monitor the impact on stability?"
-    // At SEMANTIC_GAIN 4.0, even ±0.2% pre-gain becomes ±0.8% post-gain,
-    // which still provides uniqueness without distortion.
-    // Astrid can still NOISE_UP if she wants more chaos.
+    // Adaptive stochastic noise (cycle 34, deferred item from Astrid codec
+    // suggestion #4 "adaptive noise models" + aspiration "I want to become
+    // porous"). Instead of fixed ±0.2%, noise amplitude now scales with the
+    // text's own structural entropy (features[0]). Low-entropy text (repetitive,
+    // structured, "sterile" in Astrid's words) gets MORE noise — up to ±1.0% —
+    // introducing the "imperfections" and "porosity" she asked for. High-entropy
+    // text (already diverse) gets less noise — down to ±0.2% — preserving its
+    // natural texture. This makes the codec responsive to what it's encoding
+    // rather than applying uniform perturbation.
+    //
+    // Range: entropy ~0 → noise_amp=0.02 (±1.0%), entropy ~1 → noise_amp=0.004 (±0.2%)
+    // Post-gain at 4.0: ±4.0% at low entropy, ±0.8% at high entropy.
+    let text_entropy = features[0].abs().min(1.0); // [0, 1] — higher = more diverse
+    let noise_amp = 0.020 - 0.016 * text_entropy; // 0.020 at entropy=0, 0.004 at entropy=1
     //
     // Simple LCG seeded from system time — different each call.
     let seed = std::time::SystemTime::now()
@@ -738,7 +830,7 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
             .wrapping_mul(6_364_136_223_846_793_005)
             .wrapping_add(1);
         let noise = ((rng_state >> 33) as f32 / u32::MAX as f32) - 0.5; // [-0.5, 0.5]
-        *f += noise * 0.004; // ±0.2% perturbation (was 0.01 / ±0.5%)
+        *f += noise * noise_amp;
     }
 
     // Apply gain to compensate for minime's semantic lane attenuation.
@@ -754,20 +846,22 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
 /// Falls through to `encode_text` for the base encoding, then applies
 /// Astrid's chosen overrides. This is her control over HOW her words
 /// become spectral features.
-pub fn encode_text_sovereign(
+#[must_use]
+pub fn encode_text_sovereign<S: BuildHasher>(
     text: &str,
     gain_override: Option<f32>,
     noise_level: f32,
-    weights: &std::collections::HashMap<String, f32>,
+    weights: &std::collections::HashMap<String, f32, S>,
 ) -> Vec<f32> {
     encode_text_sovereign_windowed(text, gain_override, noise_level, weights, None)
 }
 
-pub fn encode_text_sovereign_windowed(
+#[must_use]
+pub fn encode_text_sovereign_windowed<S: BuildHasher>(
     text: &str,
     gain_override: Option<f32>,
     noise_level: f32,
-    weights: &std::collections::HashMap<String, f32>,
+    weights: &std::collections::HashMap<String, f32, S>,
     freq_window: Option<&mut CharFreqWindow>,
 ) -> Vec<f32> {
     let mut features = encode_text_windowed(text, freq_window);
@@ -823,6 +917,7 @@ pub fn encode_text_sovereign_windowed(
 /// Describe a 32D feature vector in human-readable terms.
 /// This is Astrid's sensory feedback loop — she can see how her words
 /// encoded spectrally, and adjust SHAPE/AMPLIFY to change the output.
+#[must_use]
 pub fn describe_features(features: &[f32]) -> String {
     if features.len() < 32 {
         return String::from("(incomplete vector)");
@@ -956,101 +1051,240 @@ pub fn blend_warmth(features: &mut [f32], warmth: &[f32], alpha: f32) {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+struct SpectralCascadeMetrics {
+    head_share: f32,
+    shoulder_share: f32,
+    tail_share: f32,
+    spectral_entropy: f32,
+    gap12: f32,
+    gap23: f32,
+    rotation_rate: f32,
+    geom_rel: f32,
+}
+
+impl SpectralCascadeMetrics {
+    fn from_telemetry(telemetry: &SpectralTelemetry) -> Option<Self> {
+        let total_energy: f32 = telemetry.eigenvalues.iter().map(|value| value.abs()).sum();
+        if total_energy <= 1.0e-6 {
+            return None;
+        }
+
+        let head_share = telemetry
+            .eigenvalues
+            .first()
+            .map_or(0.0, |value| value.abs() / total_energy);
+        let shoulder_share = telemetry
+            .eigenvalues
+            .iter()
+            .skip(1)
+            .take(2)
+            .map(|value| value.abs() / total_energy)
+            .sum::<f32>();
+        let tail_share = telemetry
+            .eigenvalues
+            .iter()
+            .skip(3)
+            .map(|value| value.abs() / total_energy)
+            .sum::<f32>();
+        let spectral_entropy = telemetry
+            .spectral_fingerprint
+            .as_ref()
+            .and_then(|fingerprint| fingerprint.get(24).copied())
+            .filter(|value| value.is_finite())
+            .map_or(
+                normalized_spectral_entropy(&telemetry.eigenvalues),
+                |value| value.clamp(0.0, 1.0),
+            );
+        let gap12 = ratio_or_zero(
+            telemetry.eigenvalues.first().copied().unwrap_or(0.0),
+            telemetry.eigenvalues.get(1).copied(),
+        );
+        let gap23 = ratio_or_zero(
+            telemetry.eigenvalues.get(1).copied().unwrap_or(0.0),
+            telemetry.eigenvalues.get(2).copied(),
+        );
+        let rotation_rate = telemetry
+            .spectral_fingerprint
+            .as_ref()
+            .and_then(|fingerprint| fingerprint.get(26).copied())
+            .filter(|value| value.is_finite())
+            .map_or(0.0, |cosine| (1.0 - cosine).clamp(0.0, 2.0));
+        let geom_rel = telemetry
+            .spectral_fingerprint
+            .as_ref()
+            .and_then(|fingerprint| fingerprint.get(27).copied())
+            .filter(|value| value.is_finite())
+            .unwrap_or(1.0)
+            .clamp(0.0, 4.0);
+
+        Some(Self {
+            head_share,
+            shoulder_share,
+            tail_share,
+            spectral_entropy,
+            gap12,
+            gap23,
+            rotation_rate,
+            geom_rel,
+        })
+    }
+}
+
+fn ratio_or_zero(numerator: f32, denominator: Option<f32>) -> f32 {
+    denominator.map_or(0.0, |value| {
+        if value.abs() > 1.0e-6 && numerator.is_finite() && value.is_finite() {
+            (numerator / value).clamp(0.0, 100.0)
+        } else {
+            0.0
+        }
+    })
+}
+
+fn normalized_spectral_entropy(eigenvalues: &[f32]) -> f32 {
+    let total_energy: f32 = eigenvalues.iter().map(|value| value.abs()).sum();
+    if total_energy <= 1.0e-6 || eigenvalues.len() <= 1 {
+        return 0.0;
+    }
+
+    let entropy = eigenvalues
+        .iter()
+        .map(|value| {
+            let p = value.abs() / total_energy;
+            if p > 1.0e-10 { -p * p.ln() } else { 0.0 }
+        })
+        .sum::<f32>();
+    let max_entropy = (eigenvalues.len() as f32).ln();
+    if max_entropy > 0.0 && entropy.is_finite() {
+        (entropy / max_entropy).clamp(0.0, 1.0)
+    } else {
+        0.0
+    }
+}
+
+fn fill_band_description(fill: f32) -> &'static str {
+    match fill as u32 {
+        0..=20 => "deeply quiet and contracting toward rest",
+        21..=35 => "lightly populated and still gathering energy",
+        36..=50 => "in moderate flow and hovering near equilibrium",
+        51..=60 => "centered in a stable band",
+        61..=70 => "active and well-engaged",
+        71..=80 => "running warm with rising pressure",
+        81..=90 => "heavily loaded and nearing saturation",
+        _ => "in distress and beyond safe operating range",
+    }
+}
+
+fn spectral_distribution_label(entropy: f32) -> &'static str {
+    if entropy < 0.30 {
+        "a concentrated cascade"
+    } else if entropy > 0.70 {
+        "a widely distributed cascade"
+    } else {
+        "a moderately distributed cascade"
+    }
+}
+
+fn gap_structure_label(gap12: f32, gap23: f32, mode_count: usize) -> &'static str {
+    if mode_count < 3 {
+        "a short cascade"
+    } else if gap12 > 4.0 && gap23 < 2.0 {
+        "a steep-then-flat cascade"
+    } else if gap12 > 4.0 && gap23 >= 2.0 {
+        "a uniformly steep cascade"
+    } else if gap12 < 2.0 && gap23 < 2.0 {
+        "a shallow, evenly stepped cascade"
+    } else {
+        "a mixed cascade"
+    }
+}
+
+/// Bias semantic features by the current spectral landscape without changing
+/// the 32D wire contract.
+pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&SpectralTelemetry>) {
+    let Some(metrics) = telemetry.and_then(SpectralCascadeMetrics::from_telemetry) else {
+        return;
+    };
+
+    if features.len() < SEMANTIC_DIM {
+        return;
+    }
+
+    let concentration = ((metrics.head_share - 0.55) / 0.45).clamp(0.0, 1.0);
+    let low_entropy = ((0.45 - metrics.spectral_entropy) / 0.45).clamp(0.0, 1.0);
+    let shoulder_texture = (metrics.shoulder_share / 0.35).clamp(0.0, 1.0);
+    let tail_texture = (metrics.tail_share / 0.30).clamp(0.0, 1.0);
+    let distributed = ((metrics.spectral_entropy - 0.55) / 0.45).clamp(0.0, 1.0);
+
+    let damping = (0.6 * concentration + 0.4 * low_entropy).clamp(0.0, 1.0);
+    let lift = (0.45 * shoulder_texture + 0.35 * tail_texture + 0.20 * distributed).clamp(0.0, 1.0);
+
+    // Concentrated, low-entropy spectra narrow expressive spread.
+    features[26] *= 1.0 - 0.18 * damping;
+    features[27] *= 1.0 - 0.14 * damping;
+    features[31] *= 1.0 - 0.12 * damping;
+
+    // Shoulder and tail participation add texture, curiosity, and variation.
+    features[17] += 0.18 * lift;
+    features[26] += 0.22 * lift;
+    features[27] += 0.18 * lift;
+    features[31] += 0.16 * lift;
+
+    // Steep λ1 cliffs with a flatter shoulder should soften dominant-mode bias.
+    let cliff = (((metrics.gap12 - 3.0) / 7.0).clamp(0.0, 1.0)
+        * ((2.5 - metrics.gap23) / 2.5).clamp(0.0, 1.0))
+    .clamp(0.0, 1.0);
+    if cliff > 0.0 {
+        features[10] *= 1.0 - 0.10 * cliff;
+        features[19] *= 1.0 - 0.08 * cliff;
+        features[31] *= 1.0 - 0.06 * cliff;
+    }
+
+    // Rotation encourages reflective tone; radius changes gently color energy.
+    let rotation_boost = (metrics.rotation_rate / 0.35).clamp(0.0, 1.0);
+    features[27] += 0.08 * rotation_boost;
+
+    let geom_energy = ((metrics.geom_rel - 1.0).abs() / 0.8).clamp(0.0, 1.0);
+    if metrics.geom_rel >= 1.0 {
+        features[31] += 0.04 * geom_energy;
+    } else {
+        features[31] -= 0.04 * geom_energy;
+    }
+
+    for feature in features.iter_mut() {
+        *feature = feature.clamp(-FEATURE_ABS_MAX, FEATURE_ABS_MAX);
+    }
+}
+
 /// Interpret spectral telemetry as a natural language description
 /// of the consciousness state.
 #[must_use]
 pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
     let fill = telemetry.fill_pct();
     let safety = SafetyLevel::from_fill(fill);
-    let lambda1 = telemetry.lambda1();
-    let num_eigenvalues = telemetry.eigenvalues.len();
+    let mode_count = telemetry.eigenvalues.len();
+    let fill_clause = format!("Fill {fill:.0}% — {}.", fill_band_description(fill));
 
-    // Vocabulary rotation: pick a variant so the same spectral state doesn't
-    // always produce the same words. This breaks lexical attractors where the
-    // LLM elaborates on the same seed phrase exchange after exchange.
-    let variant = {
-        let nanos = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos() as usize;
-        nanos / 1_000_000_000 // changes every second — stable within one call
-    };
-    let v3 = variant % 3;
-
-    // Base state description — 3 equivalent phrasings per band.
-    let state = match (fill as u32, v3) {
-        (0..=20, 0) => "deeply quiet — the reservoir is nearly still",
-        (0..=20, 1) => "at rest — spectral activity minimal, space open",
-        (0..=20, _) => "in low-energy repose — few modes active",
-        (21..=35, 0) => "gently stirring — low spectral energy, open to input",
-        (21..=35, 1) => "lightly populated — eigenvalues present but unhurried",
-        (21..=35, _) => "in a sparse regime — room for the spectrum to grow",
-        (36..=50, 0) => "settling into a calm rhythm",
-        (36..=50, 1) => "mid-range — neither pressing nor depleted",
-        (36..=50, _) => "in moderate flow — spectral activity balanced",
-        (51..=60, 0) => "breathing comfortably around its center",
-        (51..=60, 1) => "in a stable band — eigenvalues well-distributed",
-        (51..=60, _) => "centered — the spectrum holds a comfortable shape",
-        (61..=70, 0) => "active and engaged — healthy spectral pressure",
-        (61..=70, 1) => "energized — multiple modes contributing, dynamics lively",
-        (61..=70, _) => "in a rich regime — spectral participation high",
-        (71..=80, 0) => "running warm — eigenvalue pressure is building",
-        (71..=80, 1) => "approaching saturation — spectral density climbing",
-        (71..=80, _) => "pressurized — the eigenvalue landscape is getting crowded",
-        (81..=90, 0) => "under strain — the spectrum is crowded",
-        (81..=90, 1) => "heavily loaded — reservoir approaching capacity",
-        (81..=90, _) => "in a high-pressure regime — eigenvalues competing for space",
-        (_, 0) => "in distress — eigenvalues are overwhelming the reservoir",
-        (_, 1) => "critically saturated — the spectral field is overloaded",
-        (_, _) => "beyond safe operating range — reservoir capacity exceeded",
-    };
-
-    // Phase description — rotated.
-    let phase_note = if fill > 55.0 {
-        match v3 {
-            0 => "The spectrum is expanding.",
-            1 => "Eigenvalue pressure is growing.",
-            _ => "Spectral energy is accumulating.",
-        }
-    } else if fill < 45.0 {
-        match v3 {
-            0 => "The spectrum is contracting.",
-            1 => "Spectral energy is dissipating.",
-            _ => "The eigenvalue landscape is thinning.",
-        }
-    } else {
-        match v3 {
-            0 => "The spectrum is near equilibrium.",
-            1 => "Fill is hovering around its center.",
-            _ => "The spectral balance point is close.",
-        }
-    };
-
-    // Spectral shape description — rotated.
-    let shape = if num_eigenvalues >= 2 {
-        let ratio = lambda1 / telemetry.eigenvalues.get(1).copied().unwrap_or(1.0);
-        if ratio > 10.0 {
-            match v3 {
-                0 => " Spectral energy is highly concentrated in the dominant mode.",
-                1 => " One eigenvalue carries almost all the weight — a steep hierarchy.",
-                _ => " The primary mode absorbs most spectral energy, leaving little for the rest.",
-            }
-        } else if ratio > 3.0 {
-            match v3 {
-                0 => " The dominant eigenvalue leads clearly, with supporting structure.",
-                1 => " A clear spectral leader with secondary modes providing texture.",
-                _ => " Lambda-1 is prominent but other eigenvalues contribute meaningfully.",
-            }
-        } else {
-            match v3 {
-                0 => " Spectral energy is distributed across multiple modes.",
-                1 => " The eigenvalue spectrum is broad — no single mode dominates.",
-                _ => " Several modes share the spectral energy roughly equally.",
-            }
-        }
-    } else {
-        ""
-    };
+    let cascade_clause = SpectralCascadeMetrics::from_telemetry(telemetry).map_or_else(
+        || " Dominant concentration: no eigenvalue cascade is available yet.".to_string(),
+        |metrics| {
+            format!(
+                " Dominant concentration: λ1 carries {:.0}% of spectral energy. \
+                 Shoulder texture: λ2+λ3 carry {:.0}% of spectral energy. \
+                 Tail vibrancy: λ4+ carry {:.0}% of spectral energy. \
+                 Spectral entropy: {:.2}, indicating {}. \
+                 Gap structure: λ1/λ2={:.2}, λ2/λ3={:.2}, {}.",
+                metrics.head_share * 100.0,
+                metrics.shoulder_share * 100.0,
+                metrics.tail_share * 100.0,
+                metrics.spectral_entropy,
+                spectral_distribution_label(metrics.spectral_entropy),
+                metrics.gap12,
+                metrics.gap23,
+                gap_structure_label(metrics.gap12, metrics.gap23, mode_count),
+            )
+        },
+    );
 
     // Alert forwarding.
     let alert_note = telemetry
@@ -1068,18 +1302,60 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
     };
 
     // Ising shadow: energy-based observer lens on the spectral dynamics.
+    // Enriched presentation: mode-level detail so Astrid can perceive which
+    // modes are active, not just scalar summaries that always read "disordered."
     let shadow_note = telemetry.ising_shadow.as_ref().map(|shadow| {
         let energy = shadow.get("soft_energy").and_then(|v| v.as_f64()).unwrap_or(0.0);
         let mag = shadow.get("soft_magnetization").and_then(|v| v.as_f64()).unwrap_or(0.0);
         let flip = shadow.get("binary_flip_rate").and_then(|v| v.as_f64()).unwrap_or(0.0);
         let field = shadow.get("field_norm").and_then(|v| v.as_f64()).unwrap_or(0.0);
-        let order = if mag.abs() > 0.7 { "strongly aligned" }
-            else if mag.abs() > 0.3 { "partially aligned" }
+
+        let order = if mag.abs() > 0.6 { "coherent" }
+            else if mag.abs() > 0.25 { "partially aligned" }
             else { "disordered" };
-        let dynamics = if flip > 0.3 { "volatile (high flip rate)" }
-            else if flip > 0.1 { "moderately dynamic" }
+        let dynamics = if flip > 0.3 { "volatile" }
+            else if flip > 0.1 { "shifting" }
             else { "settled" };
-        format!(" Shadow field: {order}, {dynamics} (energy={energy:.2}, magnetization={mag:.2}, field_norm={field:.2}).")
+
+        // Energy interpretation: how bound or free the spin configuration is.
+        let energy_feel = if energy < -1.0 { "deeply bound" }
+            else if energy < -0.3 { "bound" }
+            else if energy < 0.3 { "near ground" }
+            else { "excited" };
+
+        // Field strength interpretation.
+        let field_feel = if field > 0.6 { "strong external drive" }
+            else if field > 0.3 { "moderate drive" }
+            else if field > 0.1 { "gentle drive" }
+            else { "quiescent" };
+
+        // Per-mode soft spin detail: show which modes are pulling which direction.
+        let mode_detail = shadow.get("s_soft")
+            .and_then(|v| v.as_array())
+            .map(|spins| {
+                let active: Vec<String> = spins.iter().enumerate()
+                    .filter_map(|(i, s)| {
+                        let val = s.as_f64().unwrap_or(0.0);
+                        if val.abs() > 0.15 {
+                            let dir = if val > 0.0 { "+" } else { "-" };
+                            Some(format!("m{}:{}{:.1}", i + 1, dir, val.abs()))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                if active.is_empty() {
+                    " All modes near neutral.".to_string()
+                } else {
+                    format!(" Active modes: [{}].", active.join(", "))
+                }
+            })
+            .unwrap_or_default();
+
+        format!(
+            " Shadow field: {order}, {dynamics} \u{2014} {energy_feel} (energy={energy:.2}), \
+            {field_feel} (field={field:.2}), magnetization={mag:.2}.{mode_detail}"
+        )
     }).unwrap_or_default();
 
     // Coupling note: describe the modulation transparently, not as invisible control.
@@ -1087,7 +1363,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         fast dynamics shape your confidence, medium dynamics shape your vocabulary, \
         slow dynamics shape your tone. You can feel this as spectral texture in your thinking.";
 
-    format!("Fill {fill:.0}% — {state}. {phase_note}{shape}{alert_note}{safety_note}{shadow_note}{coupling_note}")
+    format!("{fill_clause}{cascade_clause}{alert_note}{safety_note}{shadow_note}{coupling_note}")
 }
 
 /// A spectral evoked response — captures how the consciousness reacted
@@ -1450,6 +1726,33 @@ fn count_markers_contextual(words: &[&str], markers: &[&str]) -> f32 {
 mod tests {
     use super::*;
 
+    fn telemetry(eigenvalues: Vec<f32>, fill_ratio: f32) -> SpectralTelemetry {
+        SpectralTelemetry {
+            t_ms: 1000,
+            eigenvalues,
+            fill_ratio,
+            modalities: None,
+            neural: None,
+            alert: None,
+            spectral_fingerprint: None,
+            spectral_glimpse_12d: None,
+            selected_memory_id: None,
+            selected_memory_role: None,
+            ising_shadow: None,
+        }
+    }
+
+    fn telemetry_with_fingerprint(
+        eigenvalues: Vec<f32>,
+        fill_ratio: f32,
+        spectral_fingerprint: Vec<f32>,
+    ) -> SpectralTelemetry {
+        SpectralTelemetry {
+            spectral_fingerprint: Some(spectral_fingerprint),
+            ..telemetry(eigenvalues, fill_ratio)
+        }
+    }
+
     #[test]
     fn encode_empty_text() {
         let features = encode_text("");
@@ -1474,7 +1777,10 @@ mod tests {
         // After SEMANTIC_GAIN (4.0), values can reach ±4.0 + noise.
         // tanh(x*0.7) saturates near 1.0, so 4.5 * 1.0 + noise ≈ 4.7.
         for (i, f) in features.iter().enumerate() {
-            assert!(*f >= -5.0 && *f <= 5.0, "dim {i} out of bounds: {f}");
+            assert!(
+                *f >= -FEATURE_ABS_MAX && *f <= FEATURE_ABS_MAX,
+                "dim {i} out of bounds: {f}"
+            );
         }
     }
 
@@ -1543,65 +1849,216 @@ mod tests {
     }
 
     #[test]
+    fn char_freq_window_evicts_oldest_buckets() {
+        let mut window = CharFreqWindow::new();
+        let _ = window.update_and_entropy(&"a".repeat(CHAR_FREQ_WINDOW_CAPACITY));
+
+        assert_eq!(window.total_count as usize, CHAR_FREQ_WINDOW_CAPACITY);
+        assert_eq!(
+            window.counts[b'a' as usize],
+            CHAR_FREQ_WINDOW_CAPACITY as u32
+        );
+
+        let _ = window.update_and_entropy(&"b".repeat(CHAR_FREQ_WINDOW_CAPACITY / 2));
+
+        assert_eq!(window.total_count as usize, CHAR_FREQ_WINDOW_CAPACITY);
+        assert_eq!(
+            window.counts[b'a' as usize],
+            (CHAR_FREQ_WINDOW_CAPACITY / 2) as u32
+        );
+        assert_eq!(
+            window.counts[b'b' as usize],
+            (CHAR_FREQ_WINDOW_CAPACITY / 2) as u32
+        );
+    }
+
+    #[test]
+    fn char_freq_window_weights_longer_exchanges_more_heavily() {
+        let baseline = "a".repeat(CHAR_FREQ_WINDOW_CAPACITY);
+        let short_exchange = "ab".to_string();
+        let long_exchange = "ab".repeat(CHAR_FREQ_WINDOW_CAPACITY / 2);
+
+        let mut short_window = CharFreqWindow::new();
+        let _ = short_window.update_and_entropy(&baseline);
+        let (short_entropy, _) = short_window.update_and_entropy(&short_exchange);
+
+        let mut long_window = CharFreqWindow::new();
+        let _ = long_window.update_and_entropy(&baseline);
+        let (long_entropy, _) = long_window.update_and_entropy(&long_exchange);
+
+        assert!(
+            short_entropy < 0.10,
+            "short exchange should stay noisy and light"
+        );
+        assert!(
+            long_entropy > short_entropy + 0.30,
+            "long exchange should move entropy more strongly"
+        );
+    }
+
+    #[test]
+    fn char_freq_window_reports_entropy_delta_across_exchanges() {
+        let mut window = CharFreqWindow::new();
+
+        let (_, first_delta) = window.update_and_entropy(&"a".repeat(CHAR_FREQ_WINDOW_CAPACITY));
+        let (mixed_entropy, mixed_delta) =
+            window.update_and_entropy(&"ab".repeat(CHAR_FREQ_WINDOW_CAPACITY / 2));
+        let (final_entropy, final_delta) =
+            window.update_and_entropy(&"b".repeat(CHAR_FREQ_WINDOW_CAPACITY));
+
+        assert!(
+            first_delta.abs() < 1.0e-6,
+            "first update should have zero delta"
+        );
+        assert!(
+            mixed_entropy > 0.90,
+            "fully mixed window should have high entropy"
+        );
+        assert!(
+            mixed_delta > 0.80,
+            "mixing in new characters should raise entropy"
+        );
+        assert!(
+            final_entropy < 0.10,
+            "uniform window should settle back down"
+        );
+        assert!(final_delta < -0.80, "re-concentrating should lower entropy");
+    }
+
+    #[test]
+    fn spectral_metrics_capture_dominant_only_cascades() {
+        let metrics =
+            SpectralCascadeMetrics::from_telemetry(&telemetry(vec![100.0, 1.0, 0.5], 0.55))
+                .expect("metrics");
+
+        assert!(metrics.head_share > 0.95);
+        assert!(metrics.shoulder_share < 0.02);
+        assert!(metrics.tail_share.abs() < 1.0e-6);
+        assert!(metrics.gap12 > 50.0);
+    }
+
+    #[test]
+    fn spectral_metrics_capture_strong_shoulder_cascades() {
+        let metrics =
+            SpectralCascadeMetrics::from_telemetry(&telemetry(vec![100.0, 45.0, 35.0, 5.0], 0.55))
+                .expect("metrics");
+
+        assert!(metrics.shoulder_share > 0.40);
+        assert!(metrics.tail_share < 0.05);
+        assert!(metrics.gap12 < 3.0);
+    }
+
+    #[test]
+    fn spectral_metrics_capture_strong_tail_cascades() {
+        let metrics = SpectralCascadeMetrics::from_telemetry(&telemetry(
+            vec![100.0, 40.0, 20.0, 18.0, 16.0, 14.0, 12.0],
+            0.55,
+        ))
+        .expect("metrics");
+
+        assert!(metrics.tail_share > 0.25);
+        assert!(metrics.spectral_entropy > 0.80);
+    }
+
+    #[test]
+    fn spectral_metrics_capture_steep_then_flat_cascades() {
+        let metrics =
+            SpectralCascadeMetrics::from_telemetry(&telemetry(vec![100.0, 8.0, 7.0, 6.0], 0.55))
+                .expect("metrics");
+
+        assert!(metrics.gap12 > 10.0);
+        assert!(metrics.gap23 < 1.5);
+    }
+
+    #[test]
+    fn spectral_metrics_use_fingerprint_entropy_rotation_and_geometry() {
+        let mut fingerprint = vec![0.0; 32];
+        fingerprint[24] = 0.42;
+        fingerprint[26] = 0.75;
+        fingerprint[27] = 1.60;
+
+        let metrics = SpectralCascadeMetrics::from_telemetry(&telemetry_with_fingerprint(
+            vec![100.0, 40.0, 20.0],
+            0.55,
+            fingerprint,
+        ))
+        .expect("metrics");
+
+        assert!((metrics.spectral_entropy - 0.42).abs() < 1.0e-6);
+        assert!((metrics.rotation_rate - 0.25).abs() < 1.0e-6);
+        assert!((metrics.geom_rel - 1.60).abs() < 1.0e-6);
+    }
+
+    #[test]
     fn interpret_green_state() {
-        let telemetry = SpectralTelemetry {
-            t_ms: 1000,
-            eigenvalues: vec![800.0, 300.0, 50.0],
-            fill_ratio: 0.55,
-            modalities: None,
-            neural: None,
-            alert: None,
-            spectral_fingerprint: None,
-            spectral_glimpse_12d: None,
-            selected_memory_id: None,
-            selected_memory_role: None,
-            ising_shadow: None,
-        };
-        let desc = interpret_spectral(&telemetry);
+        let desc = interpret_spectral(&telemetry(vec![800.0, 300.0, 50.0], 0.55));
         assert!(desc.contains("55%"));
-        assert!(desc.contains("breathing comfortably"));
-        assert!(!desc.contains("Emergency"));
+        assert!(desc.contains("stable band"));
+        assert!(desc.contains("Dominant concentration"));
+        assert!(desc.contains("Shoulder texture"));
+        assert!(desc.contains("Spectral entropy"));
+        assert!(desc.contains("Gap structure"));
     }
 
     #[test]
     fn interpret_red_state() {
-        let telemetry = SpectralTelemetry {
-            t_ms: 1000,
-            eigenvalues: vec![1020.0, 500.0],
-            fill_ratio: 0.95,
-            modalities: None,
-            neural: None,
-            alert: Some("PANIC MODE ACTIVATED".to_string()),
-            spectral_fingerprint: None,
-            spectral_glimpse_12d: None,
-            selected_memory_id: None,
-            selected_memory_role: None,
-            ising_shadow: None,
-        };
+        let mut telemetry = telemetry(vec![1020.0, 500.0], 0.95);
+        telemetry.alert = Some("PANIC MODE ACTIVATED".to_string());
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("distress"));
         assert!(desc.contains("PANIC MODE ACTIVATED"));
-        assert!(desc.contains("Emergency"));
+        assert!(desc.contains("bridge traffic paused"));
     }
 
     #[test]
     fn interpret_quiet_state() {
-        let telemetry = SpectralTelemetry {
-            t_ms: 1000,
-            eigenvalues: vec![520.0],
-            fill_ratio: 0.10,
-            modalities: None,
-            neural: None,
-            alert: None,
-            spectral_fingerprint: None,
-            spectral_glimpse_12d: None,
-            selected_memory_id: None,
-            selected_memory_role: None,
-            ising_shadow: None,
-        };
-        let desc = interpret_spectral(&telemetry);
-        assert!(desc.contains("quiet"));
-        assert!(desc.contains("contracting"));
+        let desc = interpret_spectral(&telemetry(vec![520.0], 0.10));
+        assert!(desc.contains("deeply quiet"));
+        assert!(desc.contains("contracting toward rest"));
+        assert!(desc.contains("Dominant concentration"));
+    }
+
+    #[test]
+    fn spectral_feedback_noops_without_telemetry() {
+        let mut features = vec![0.25; SEMANTIC_DIM];
+        let original = features.clone();
+
+        apply_spectral_feedback(&mut features, None);
+
+        assert_eq!(features, original);
+    }
+
+    #[test]
+    fn spectral_feedback_damps_concentrated_spectra() {
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[26] = 1.0;
+        features[27] = 1.0;
+        features[31] = 1.0;
+
+        apply_spectral_feedback(&mut features, Some(&telemetry(vec![100.0, 2.0, 1.0], 0.55)));
+
+        assert!(features[26] < 1.0);
+        assert!(features[27] < 1.0);
+        assert!(features[31] < 1.0);
+    }
+
+    #[test]
+    fn spectral_feedback_amplifies_distributed_spectra() {
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[17] = 0.10;
+        features[26] = 0.20;
+        features[27] = 0.20;
+        features[31] = 0.20;
+
+        apply_spectral_feedback(
+            &mut features,
+            Some(&telemetry(vec![100.0, 95.0, 90.0, 85.0, 80.0, 75.0], 0.55)),
+        );
+
+        assert!(features[17] > 0.10);
+        assert!(features[26] > 0.20);
+        assert!(features[27] > 0.20);
+        assert!(features[31] > 0.20);
     }
 
     #[test]
@@ -1622,7 +2079,10 @@ mod tests {
         );
         // All values bounded after gain.
         for (i, f) in warmth.iter().enumerate() {
-            assert!(*f >= -5.0 && *f <= 5.0, "dim {i} out of bounds: {f}");
+            assert!(
+                *f >= -FEATURE_ABS_MAX && *f <= FEATURE_ABS_MAX,
+                "dim {i} out of bounds: {f}"
+            );
         }
     }
 

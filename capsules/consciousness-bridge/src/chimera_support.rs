@@ -135,7 +135,10 @@ pub(super) fn read_wav_mono(path: &Path) -> Result<(Vec<f32>, u32)> {
     );
 
     let channels = usize::from(spec.channels);
-    #[expect(clippy::arithmetic_side_effects, reason = "channels.max(1) ensures non-zero divisor")]
+    #[expect(
+        clippy::arithmetic_side_effects,
+        reason = "channels.max(1) ensures non-zero divisor"
+    )]
     let mono_capacity = interleaved.len() / channels.max(1);
     let mut mono = Vec::with_capacity(mono_capacity);
     for frame in interleaved.chunks(channels) {
@@ -165,7 +168,10 @@ fn read_int_samples(
     let scale = (1_i64)
         .checked_shl(shift)
         .ok_or_else(|| anyhow!("invalid integer WAV depth: {bits_per_sample}"))
-        .and_then(|v| v.checked_sub(1_i64).ok_or_else(|| anyhow!("WAV scale underflow")))? as f32;
+        .and_then(|v| {
+            v.checked_sub(1_i64)
+                .ok_or_else(|| anyhow!("WAV scale underflow"))
+        })? as f32;
     let mut samples = Vec::new();
     for sample in reader.samples::<i32>() {
         let value = sample.context("failed to decode integer WAV sample")?;
@@ -400,7 +406,10 @@ pub(super) fn select_scale(aura_variance: f32) -> &'static str {
     }
 }
 
-#[expect(clippy::arithmetic_side_effects, reason = "MIDI pitch arithmetic on small bounded integers cannot overflow")]
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "MIDI pitch arithmetic on small bounded integers cannot overflow"
+)]
 pub(super) fn quantize_pitch(raw_midi: f32, root: i32, scale: &str) -> i32 {
     let intervals: &[i32] = match scale {
         "pentatonic" => &[0, 2, 4, 7, 9],

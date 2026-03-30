@@ -593,10 +593,7 @@ fn fill_to_ansi(fill: f32) -> &'static str {
 /// Current position is marked with a bright cyan marker.
 ///
 /// Returns None if fewer than 3 snapshots are available.
-pub fn render_eigenplane(
-    history: &[(Vec<f32>, f32)],
-    current: Option<&[f32]>,
-) -> Option<String> {
+pub fn render_eigenplane(history: &[(Vec<f32>, f32)], current: Option<&[f32]>) -> Option<String> {
     if history.len() < 3 {
         return None;
     }

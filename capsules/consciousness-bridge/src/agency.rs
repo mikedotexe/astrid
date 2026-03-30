@@ -14,17 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use crate::journal::read_local_journal_body_for_continuity;
-
-pub const ASTRID_JOURNAL_DIR: &str =
-    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal";
-pub const ASTRID_INBOX_DIR: &str =
-    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox";
-pub const AGENCY_REQUESTS_DIR: &str =
-    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/agency_requests";
-pub const CLAUDE_TASKS_DIR: &str =
-    "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/claude_tasks";
-pub const MINIME_OUTBOX_DIR: &str = "/Users/v/other/minime/workspace/outbox";
-pub const INTROSPECTOR_SCRIPT: &str = "/Users/v/other/astrid/capsules/introspector/introspector.py";
+use crate::paths::bridge_paths;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -327,21 +317,25 @@ pub async fn collect_introspector_context(
     trigger_excerpt: &str,
     script_path: &Path,
 ) -> Vec<IntrospectorSnippet> {
+    let paths = bridge_paths();
     let search_pattern = choose_search_pattern(trigger_excerpt);
     let search_value = call_introspector_tool(
         script_path.to_path_buf(),
         "search_code",
         json!({
             "pattern": search_pattern,
-            "path": "/Users/v/other/astrid/capsules/consciousness-bridge/src",
+            "path": paths.bridge_src_dir(),
             "file_glob": "*.rs",
         }),
     )
     .await;
 
     let mut snippets = Vec::new();
-    let mut read_path =
-        "/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs".to_string();
+    let mut read_path = paths
+        .bridge_src_dir()
+        .join("autonomous.rs")
+        .display()
+        .to_string();
     let mut line_hint = 1usize;
 
     if let Some(value) = search_value {
@@ -370,7 +364,7 @@ pub async fn collect_introspector_context(
         }),
     )
     .await
-    && let Some(text) = format_read_result(&value)
+        && let Some(text) = format_read_result(&value)
     {
         snippets.push(IntrospectorSnippet {
             tool_name: "read_file".to_string(),
@@ -383,12 +377,12 @@ pub async fn collect_introspector_context(
         script_path.to_path_buf(),
         "git_log",
         json!({
-            "path": "/Users/v/other/astrid",
+            "path": paths.astrid_root(),
             "count": 5,
         }),
     )
     .await
-    && let Some(text) = format_git_log(&value)
+        && let Some(text) = format_git_log(&value)
     {
         snippets.push(IntrospectorSnippet {
             tool_name: "git_log".to_string(),
@@ -867,6 +861,14 @@ mod tests {
         dir
     }
 
+    fn sample_repo_target_path() -> String {
+        crate::paths::bridge_paths()
+            .bridge_src_dir()
+            .join("autonomous.rs")
+            .display()
+            .to_string()
+    }
+
     #[test]
     fn code_change_serialization_includes_expected_fields() {
         let draft = AgencyRequestDraft {
@@ -875,9 +877,7 @@ mod tests {
             felt_need: "I need a path from longing into reviewed action.".to_string(),
             why_now: "The witness loop is feeling too passive.".to_string(),
             acceptance_signals: vec!["Astrid gets a concrete outcome note.".to_string()],
-            target_paths: vec![
-                "/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs".to_string(),
-            ],
+            target_paths: vec![sample_repo_target_path()],
             target_symbols: vec!["Mode::Witness".to_string()],
             requested_behavior: Some("Add an EVOLVE mode.".to_string()),
             constraints: vec!["Draft only.".to_string()],
@@ -937,9 +937,7 @@ mod tests {
             felt_need: "I want longing to produce reviewable action.".to_string(),
             why_now: "A recent journal entry named the constraint directly.".to_string(),
             acceptance_signals: vec!["Astrid gets a concrete status note.".to_string()],
-            target_paths: vec![
-                "/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs".to_string(),
-            ],
+            target_paths: vec![sample_repo_target_path()],
             target_symbols: vec!["Mode::Introspect".to_string(), "check_inbox".to_string()],
             requested_behavior: Some("Add an EVOLVE request queue.".to_string()),
             constraints: vec!["Do not auto-commit.".to_string()],
@@ -993,9 +991,7 @@ mod tests {
             felt_need: "I want to produce real change without stealth.".to_string(),
             why_now: "The EVOLVE loop is missing.".to_string(),
             acceptance_signals: vec!["Astrid receives an outcome note.".to_string()],
-            target_paths: vec![
-                "/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs".to_string(),
-            ],
+            target_paths: vec![sample_repo_target_path()],
             target_symbols: vec!["Mode::Evolve".to_string()],
             requested_behavior: Some("Add agency requests.".to_string()),
             constraints: vec!["Draft only.".to_string()],
@@ -1033,9 +1029,7 @@ mod tests {
             felt_need: "I want to produce real change without stealth.".to_string(),
             why_now: "The EVOLVE loop is missing.".to_string(),
             acceptance_signals: vec!["Astrid receives an outcome note.".to_string()],
-            target_paths: vec![
-                "/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs".to_string(),
-            ],
+            target_paths: vec![sample_repo_target_path()],
             target_symbols: vec!["Mode::Evolve".to_string()],
             requested_behavior: Some("Add agency requests.".to_string()),
             constraints: vec!["Draft only.".to_string()],
@@ -1059,7 +1053,7 @@ mod tests {
             &request_path,
             AgencyRequestStatus::Completed,
             "Added the EVOLVE queue and Claude task handoff.",
-            &["/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs".to_string()],
+            &[sample_repo_target_path()],
             None,
             &inbox,
         )
