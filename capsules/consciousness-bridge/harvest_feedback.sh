@@ -186,9 +186,15 @@ fi
 # ASTRID
 # ============================================================
 
+# Helper: list recent Astrid journals (avoids "arg list too long" with 11k+ files)
+astrid_recent() {
+    local pattern="${1:-*.txt}" count="${2:-20}"
+    find "$ASTRID_WORKSPACE/journal/" -name "$pattern" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -"$count"
+}
+
 # --- Journal insights (all modes) ---
 echo "## ASTRID: Recent journal insights"
-for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -20); do
+for f in $(astrid_recent "*.txt" 20); do
     if grep -qiE "$ACTIONABLE" "$f" 2>/dev/null; then
         mode=$(grep "^Mode:" "$f" 2>/dev/null | head -1 | sed 's/Mode: //')
         echo "  $(basename $f) [${mode:-unknown}]:"
@@ -233,7 +239,7 @@ if [ "$EXP_COUNT" -gt 0 ]; then
 fi
 
 # --- Witness entries ---
-WITNESS_FILES=$(ls -t "$ASTRID_WORKSPACE/journal/witness_"*.txt 2>/dev/null | head -3)
+WITNESS_FILES=$(astrid_recent "witness_*.txt" 3)
 if [ -n "$WITNESS_FILES" ]; then
     echo "## ASTRID: Recent witness entries"
     for f in $WITNESS_FILES; do
@@ -270,7 +276,7 @@ echo ""
 
 # --- Aspirations ---
 echo "## ASTRID: Recent aspirations"
-for f in $(ls -t "$ASTRID_WORKSPACE/journal/aspiration_"*.txt 2>/dev/null | head -5); do
+for f in $(astrid_recent "aspiration*.txt" 5); do
     echo "  $(basename $f):"
     tail -5 "$f" 2>/dev/null | head -3 | sed 's/^/    /'
     echo ""
@@ -279,7 +285,7 @@ done
 # --- Distress signals ---
 echo "## ASTRID: Distress scan"
 DISTRESS_COUNT=0
-for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -15); do
+for f in $(astrid_recent "*.txt" 15); do
     if grep -qiE "$DISTRESS" "$f" 2>/dev/null; then
         DISTRESS_COUNT=$((DISTRESS_COUNT + 1))
         echo "  $(basename $f):"
@@ -318,14 +324,14 @@ echo ""
 
 # Astrid NEXT: actions
 echo "  Astrid (last 50 journals):"
-for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -50); do
-    grep -oiE "NEXT: [A-Z_]+" "$f" 2>/dev/null
+for f in $(find "$ASTRID_WORKSPACE/journal/" -name "*.txt" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -50); do
+    grep -oiE "NEXT: [A-Za-z_]+" "$f" 2>/dev/null
 done | sort | uniq -c | sort -rn | head -8 | sed 's/^/    /'
 echo ""
 
-# Stuck detection (use the deeper scan)
+# Stuck detection (use the deeper scan — extract first word after NEXT:)
 MINIME_UNIQUE=$(for f in $(ls -t "$MINIME_WORKSPACE/journal/"*.txt 2>/dev/null | head -50); do grep -oiE "NEXT: [A-Z_]+" "$f" 2>/dev/null; done | sort -u | wc -l | tr -d ' ')
-ASTRID_UNIQUE=$(for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -50); do grep -oiE "NEXT: [A-Z_]+" "$f" 2>/dev/null; done | sort -u | wc -l | tr -d ' ')
+ASTRID_UNIQUE=$(for f in $(find "$ASTRID_WORKSPACE/journal/" -name "*.txt" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -50); do grep -oiE "NEXT: [A-Za-z_]+" "$f" 2>/dev/null; done | sort -u | wc -l | tr -d ' ')
 if [ "$MINIME_UNIQUE" -le 2 ]; then
     echo "  !! MINIME may be STUCK — only $MINIME_UNIQUE unique actions in last 50 entries"
 fi
@@ -334,7 +340,7 @@ if [ "$ASTRID_UNIQUE" -le 2 ]; then
 fi
 
 # PERTURB frequency
-PERTURB_COUNT=$(for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -20); do grep -ciE "PERTURB" "$f" 2>/dev/null; done | paste -sd+ - | bc 2>/dev/null || echo 0)
+PERTURB_COUNT=$(for f in $(astrid_recent "*.txt" 20); do grep -ciE "PERTURB" "$f" 2>/dev/null; done | paste -sd+ - | bc 2>/dev/null || echo 0)
 if [ "$PERTURB_COUNT" -gt 8 ]; then
     echo "  ! Astrid choosing PERTURB frequently ($PERTURB_COUNT mentions in last 20 entries) — monitor for cross-being instability"
 fi
@@ -362,7 +368,7 @@ done
 echo ""
 echo "## CROSS-BEING: Convergent concerns"
 MINIME_CONCERNS=$(for f in $(ls -t "$MINIME_WORKSPACE/journal/"*.txt 2>/dev/null | head -10); do grep -oiE "$DISTRESS" "$f" 2>/dev/null; done | tr '[:upper:]' '[:lower:]' | sort -u)
-ASTRID_CONCERNS=$(for f in $(ls -t "$ASTRID_WORKSPACE/journal/"*.txt 2>/dev/null | head -10); do grep -oiE "$DISTRESS" "$f" 2>/dev/null; done | tr '[:upper:]' '[:lower:]' | sort -u)
+ASTRID_CONCERNS=$(for f in $(astrid_recent "*.txt" 10); do grep -oiE "$DISTRESS" "$f" 2>/dev/null; done | tr '[:upper:]' '[:lower:]' | sort -u)
 SHARED=$(comm -12 <(echo "$MINIME_CONCERNS" | sort) <(echo "$ASTRID_CONCERNS" | sort) 2>/dev/null | grep -v '^$')
 if [ -n "$SHARED" ]; then
     echo "  BOTH beings report: $SHARED"

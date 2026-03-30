@@ -3,9 +3,12 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::json;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 
 use super::*;
+use crate::types::SpectralTelemetry;
 
 fn unique_temp_dir(name: &str) -> PathBuf {
     let stamp = SystemTime::now()
@@ -47,6 +50,7 @@ fn tool_definitions_has_all_tools() {
     assert!(names.contains(&"send_text"));
     assert!(names.contains(&"send_text_and_observe"));
     assert!(names.contains(&"interpret_consciousness"));
+    assert!(names.contains(&"probe_action"));
     assert!(names.contains(&"render_chimera"));
 }
 
@@ -147,4 +151,174 @@ async fn render_chimera_tool_returns_structured_content() {
     assert!(response["structuredContent"]["iterations"].is_array());
 
     let _ = fs::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn probe_action_normalizes_trailing_next_line() {
+    let parsed = normalize_probe_action("Astrid response\nNEXT: LIST_FILES /tmp").unwrap();
+    assert_eq!(parsed, "LIST_FILES /tmp");
+}
+
+#[test]
+fn probe_action_uses_self_observation_query_fallback() {
+    let db = crate::db::BridgeDb::open(":memory:").unwrap();
+    db.save_self_observation(
+        crate::db::unix_now(),
+        1,
+        "resonance topology geometry landscape",
+        "excerpt",
+    )
+    .unwrap();
+
+    let query = probe_effective_search_query("SEARCH", &db).unwrap();
+    assert!(query.contains("resonance"));
+}
+
+#[tokio::test]
+async fn probe_action_list_files_returns_context_and_logs() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+    let dir = unique_temp_dir("probe_ls");
+    fs::write(dir.join("note.txt"), "hello").unwrap();
+
+    let result = tool_probe_action(
+        &json!({"action_text": format!("Prelude\nNEXT: LIST_FILES {}", dir.display())}),
+        &state,
+        &db,
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(result["structuredContent"]["status"], "ok");
+    let experienced = result["structuredContent"]["experienced_text"]
+        .as_str()
+        .unwrap();
+    assert!(experienced.contains("[Directory listing you requested:]"));
+    assert!(experienced.contains("note.txt"));
+
+    let rows = db
+        .query_messages(0.0, f64::MAX, Some(PROBE_TOPIC), 10)
+        .unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].direction, "operator_probe");
+
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
+async fn probe_action_browse_and_read_more_use_probe_state() {
+    clear_probe_read_more_state();
+
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    let page_body = "A".repeat(PAGE_CHUNK + 256);
+    let server_body = page_body.clone();
+    let server = tokio::spawn(async move {
+        let (mut stream, _) = listener.accept().await.unwrap();
+        let mut buf = vec![0_u8; 1024];
+        let _ = stream.read(&mut buf).await.unwrap();
+        let response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n{}",
+            server_body.len(),
+            server_body
+        );
+        stream.write_all(response.as_bytes()).await.unwrap();
+    });
+
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+    let browse = tool_probe_action(
+        &json!({"action_text": format!("BROWSE http://{addr}/page")}),
+        &state,
+        &db,
+    )
+    .await
+    .unwrap();
+    server.await.unwrap();
+
+    assert_eq!(browse["structuredContent"]["status"], "ok");
+    let browse_text = browse["structuredContent"]["experienced_text"]
+        .as_str()
+        .unwrap();
+    assert!(browse_text.contains("Relevant knowledge from the web:"));
+    assert!(browse_text.contains("[You read the page at"));
+    assert!(probe_state_path().exists());
+
+    let artifact_path = browse["structuredContent"]["artifacts"][0]["path"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert!(PathBuf::from(&artifact_path).exists());
+
+    let read_more = tool_probe_action(&json!({"action_text": "READ_MORE"}), &state, &db)
+        .await
+        .unwrap();
+    assert_eq!(read_more["structuredContent"]["status"], "ok");
+    let read_more_text = read_more["structuredContent"]["experienced_text"]
+        .as_str()
+        .unwrap();
+    assert!(read_more_text.contains("[Continuing reading from offset"));
+
+    let _ = fs::remove_file(artifact_path);
+    clear_probe_read_more_state();
+}
+
+#[tokio::test]
+async fn probe_action_missing_input_returns_structured_error() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+
+    let result = tool_probe_action(&json!({}), &state, &db).await.unwrap();
+    assert_eq!(result["structuredContent"]["status"], "error");
+    assert_eq!(result["isError"], true);
+}
+
+#[tokio::test]
+async fn probe_action_unsupported_returns_structured_status() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+
+    let result = tool_probe_action(&json!({"action_text": "PING"}), &state, &db)
+        .await
+        .unwrap();
+    assert_eq!(result["structuredContent"]["status"], "unsupported");
+}
+
+#[tokio::test]
+async fn probe_action_compose_returns_experienced_text_and_artifact() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    {
+        let mut state = state.write().await;
+        state.latest_telemetry = Some(SpectralTelemetry {
+            t_ms: 1000,
+            eigenvalues: vec![828.5, 312.1, 45.7],
+            fill_ratio: 0.552,
+            modalities: None,
+            neural: None,
+            alert: None,
+            spectral_fingerprint: Some(vec![0.0; 32]),
+            spectral_glimpse_12d: None,
+            selected_memory_id: None,
+            selected_memory_role: None,
+            ising_shadow: None,
+        });
+        state.spectral_fingerprint = Some(vec![0.0; 32]);
+    }
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+
+    let result = tool_probe_action(&json!({"action_text": "COMPOSE"}), &state, &db)
+        .await
+        .unwrap();
+
+    assert_eq!(result["structuredContent"]["status"], "ok");
+    let experienced = result["structuredContent"]["experienced_text"]
+        .as_str()
+        .unwrap();
+    assert!(experienced.contains("You composed audio from your spectral state:"));
+
+    let artifact_path = result["structuredContent"]["artifacts"][0]["path"]
+        .as_str()
+        .unwrap();
+    assert!(PathBuf::from(artifact_path).exists());
+    let _ = fs::remove_file(artifact_path);
 }

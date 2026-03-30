@@ -18,6 +18,7 @@ pub mod mcp;
 pub mod memory;
 pub mod paths;
 pub mod reflective;
+pub mod self_model;
 pub mod spectral_viz;
 pub mod types;
 pub mod ws;

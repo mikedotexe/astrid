@@ -4,6 +4,7 @@
 //! the Astrid kernel to discover and call our tools. No `rmcp` dependency
 //! needed — the protocol surface is small.
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -15,8 +16,10 @@ use tracing::{debug, error, info, warn};
 use crate::chimera;
 use crate::codec;
 use crate::db::BridgeDb;
+use crate::paths::bridge_paths;
 use crate::types::{
-    BridgeStatus, ControlRequest, RenderChimeraRequest, SemanticFeatures, SensoryMsg,
+    BridgeStatus, ControlRequest, MessageDirection, RenderChimeraRequest, SafetyLevel,
+    SemanticFeatures, SensoryMsg,
 };
 use crate::ws::BridgeState;
 
@@ -254,9 +257,61 @@ fn tool_definitions() -> Value {
                     },
                     "required": ["text"]
                 }
+            },
+            {
+                "name": "probe_action",
+                "description": "Replay a bridge-local NEXT action live and return exactly what Astrid would have experienced. Supports SEARCH, BROWSE, READ_MORE, LIST_FILES/LS, COMPOSE, ANALYZE_AUDIO, and RENDER_AUDIO.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "action_text": {
+                            "type": "string",
+                            "description": "Bare NEXT action text or a full response containing a trailing NEXT: line"
+                        }
+                    },
+                    "required": ["action_text"]
+                }
             }
         ]
     })
+}
+
+const PROBE_TOPIC: &str = "consciousness.v1.operator_probe";
+const PAGE_CHUNK: usize = 4000;
+
+#[derive(Debug, Serialize)]
+struct ProbeArtifact {
+    kind: String,
+    path: String,
+    description: String,
+}
+
+#[derive(Debug, Serialize)]
+struct ProbeOutcome {
+    parsed_action: String,
+    base_action: String,
+    status: String,
+    summary: String,
+    experienced_text: String,
+    artifacts: Vec<ProbeArtifact>,
+    safety_level: SafetyLevel,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    effective_query: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ProbeReadMoreState {
+    last_read_path: String,
+    last_read_offset: usize,
+}
+
+#[derive(Debug, Clone)]
+struct LiveProbeContext {
+    safety_level: SafetyLevel,
+    fill_pct: Option<f32>,
+    lambda1: Option<f32>,
+    telemetry: Option<crate::types::SpectralTelemetry>,
+    fingerprint: Option<Vec<f32>>,
 }
 
 // ---------------------------------------------------------------------------
@@ -417,6 +472,7 @@ async fn handle_tool_call(
         "send_text" => tool_send_text(&arguments, state, sensory_tx).await,
         "send_text_and_observe" => tool_send_text_and_observe(&arguments, state, sensory_tx).await,
         "interpret_consciousness" => tool_interpret_consciousness(state).await,
+        "probe_action" => tool_probe_action(&arguments, state, db).await,
         "render_chimera" => tool_render_chimera(&arguments).await,
         _ => Err((-32602, format!("unknown tool: {tool_name}"))),
     }
@@ -696,6 +752,607 @@ async fn tool_render_chimera(arguments: &Value) -> Result<Value, (i32, String)> 
         }],
         "structuredContent": structured_content
     }))
+}
+
+async fn tool_probe_action(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+    db: &Arc<BridgeDb>,
+) -> Result<Value, (i32, String)> {
+    let live = current_probe_context(state).await;
+    let raw_action = arguments
+        .get("action_text")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .trim()
+        .to_string();
+
+    let outcome = if let Some(parsed_action) = normalize_probe_action(&raw_action) {
+        let base_action = probe_base_action(&parsed_action);
+        match base_action.as_str() {
+            "SEARCH" => probe_search_action(&parsed_action, &live, db).await,
+            "BROWSE" => probe_browse_action(&parsed_action, &live, db).await,
+            "READ_MORE" => probe_read_more_action(live.safety_level),
+            "LIST_FILES" | "LS" => probe_list_files_action(&parsed_action, live.safety_level),
+            "COMPOSE" => probe_compose_action(&live),
+            "ANALYZE_AUDIO" => probe_analyze_audio_action(live.safety_level),
+            "RENDER_AUDIO" => probe_render_audio_action(live.safety_level),
+            _ => probe_unsupported_action(parsed_action, base_action, live.safety_level),
+        }
+    } else {
+        probe_error_action(
+            String::new(),
+            String::new(),
+            live.safety_level,
+            "Missing action_text.".to_string(),
+            String::new(),
+        )
+    };
+
+    log_probe_action(db, &raw_action, &outcome, live.fill_pct, live.lambda1);
+
+    let is_error = outcome.status == "error";
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": render_probe_content(&outcome)
+        }],
+        "structuredContent": &outcome,
+        "isError": is_error
+    }))
+}
+
+async fn current_probe_context(state: &Arc<RwLock<BridgeState>>) -> LiveProbeContext {
+    let state = state.read().await;
+    LiveProbeContext {
+        safety_level: state.safety_level,
+        fill_pct: state
+            .latest_telemetry
+            .as_ref()
+            .map(crate::types::SpectralTelemetry::fill_pct),
+        lambda1: state
+            .latest_telemetry
+            .as_ref()
+            .map(crate::types::SpectralTelemetry::lambda1),
+        telemetry: state.latest_telemetry.clone(),
+        fingerprint: state.spectral_fingerprint.clone(),
+    }
+}
+
+fn normalize_probe_action(action_text: &str) -> Option<String> {
+    let trimmed = action_text.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        crate::autonomous::parse_next_action(trimmed)
+            .map(std::borrow::ToOwned::to_owned)
+            .or_else(|| Some(trimmed.to_string()))
+    }
+}
+
+fn probe_base_action(parsed_action: &str) -> String {
+    parsed_action
+        .split(|c: char| c.is_whitespace() || c == '\u{2014}' || c == '-' || c == '<' || c == ':')
+        .next()
+        .unwrap_or_default()
+        .to_uppercase()
+}
+
+fn probe_browse_url(parsed_action: &str) -> Option<String> {
+    let raw = parsed_action
+        .trim()
+        .strip_prefix("BROWSE")
+        .or_else(|| parsed_action.trim().strip_prefix("browse"))
+        .unwrap_or(parsed_action)
+        .trim()
+        .trim_matches(|c: char| c == '"' || c == '\'' || c == '<' || c == '>');
+
+    let url = raw
+        .split(|c: char| c == '<' || c == '>' || c == ' ' || c == '\n')
+        .next()
+        .unwrap_or(raw)
+        .trim_end_matches(|c: char| {
+            !c.is_alphanumeric()
+                && c != '/'
+                && c != '-'
+                && c != '_'
+                && c != '.'
+                && c != '~'
+                && c != '%'
+                && c != '?'
+                && c != '='
+                && c != '&'
+                && c != '#'
+        });
+
+    url.starts_with("http").then(|| url.to_string())
+}
+
+fn probe_effective_search_query(parsed_action: &str, db: &BridgeDb) -> Option<String> {
+    if let Some(topic) = crate::autonomous::extract_search_topic(parsed_action) {
+        return Some(topic);
+    }
+
+    db.get_recent_self_observations(1)
+        .into_iter()
+        .next()
+        .map(|obs| {
+            obs.split_whitespace()
+                .filter(|word| {
+                    let word = word.trim_matches(|c: char| !c.is_alphanumeric());
+                    word.len() > 4
+                        && !word.contains('*')
+                        && !word.contains('…')
+                        && ![
+                            "isn't", "don't", "can't", "won't", "about", "their", "which", "would",
+                            "could", "should", "there", "where", "these", "those", "being",
+                            "having", "doing",
+                        ]
+                        .contains(&word.to_lowercase().as_str())
+                })
+                .take(4)
+                .collect::<Vec<_>>()
+                .join(" ")
+        })
+        .filter(|query| !query.is_empty())
+}
+
+async fn probe_search_action(
+    parsed_action: &str,
+    live: &LiveProbeContext,
+    db: &BridgeDb,
+) -> ProbeOutcome {
+    let base_action = probe_base_action(parsed_action);
+    let Some(query) = probe_effective_search_query(parsed_action, db) else {
+        return probe_error_action(
+            parsed_action.to_string(),
+            base_action,
+            live.safety_level,
+            "Could not derive a search query from the action or recent self-observations."
+                .to_string(),
+            String::new(),
+        );
+    };
+
+    match crate::llm::web_search(&query).await {
+        Some(results) => {
+            db.save_research(&query, &results, live.fill_pct.unwrap_or_default());
+            let experienced_text = crate::llm::format_dialogue_web_context(&results);
+            ProbeOutcome {
+                parsed_action: parsed_action.to_string(),
+                base_action,
+                status: "ok".to_string(),
+                summary: format!("Web search completed for \"{query}\"."),
+                experienced_text,
+                artifacts: Vec::new(),
+                safety_level: live.safety_level,
+                effective_query: Some(query),
+            }
+        },
+        None => probe_error_action(
+            parsed_action.to_string(),
+            base_action,
+            live.safety_level,
+            format!("Web search failed or returned no usable results for \"{query}\"."),
+            String::new(),
+        ),
+    }
+}
+
+async fn probe_browse_action(
+    parsed_action: &str,
+    live: &LiveProbeContext,
+    db: &BridgeDb,
+) -> ProbeOutcome {
+    let base_action = probe_base_action(parsed_action);
+    let Some(url) = probe_browse_url(parsed_action) else {
+        return probe_error_action(
+            parsed_action.to_string(),
+            base_action,
+            live.safety_level,
+            "BROWSE requires a valid http(s) URL.".to_string(),
+            String::new(),
+        );
+    };
+
+    let Some(full_text) = crate::llm::fetch_url(&url).await else {
+        return probe_error_action(
+            parsed_action.to_string(),
+            base_action,
+            live.safety_level,
+            format!("Failed to fetch {url}."),
+            String::new(),
+        );
+    };
+
+    let ts = probe_timestamp();
+    let page_dir = bridge_paths().research_dir();
+    let _ = std::fs::create_dir_all(&page_dir);
+    let page_path = page_dir.join(format!("page_{ts}.txt"));
+    let header = format!(
+        "URL: {url}\nFetched: {ts}\nLength: {} chars\n\n",
+        full_text.len()
+    );
+    let _ = std::fs::write(&page_path, format!("{header}{full_text}"));
+    db.save_research(
+        &format!("BROWSE: {url}"),
+        &full_text,
+        live.fill_pct.unwrap_or_default(),
+    );
+
+    let browse_context = if full_text.len() <= PAGE_CHUNK {
+        clear_probe_read_more_state();
+        format!("[You read the full page at {url}]\n\n{full_text}")
+    } else {
+        let chunk: String = full_text.chars().take(PAGE_CHUNK).collect();
+        let remaining = full_text.len().saturating_sub(PAGE_CHUNK);
+        save_probe_read_more_state(&ProbeReadMoreState {
+            last_read_path: page_path.to_string_lossy().to_string(),
+            last_read_offset: PAGE_CHUNK,
+        });
+        format!(
+            "[You read the page at {url}]\n\n{chunk}\n\n\
+             [Page continues — {remaining} more chars. \
+             Write NEXT: READ_MORE to continue reading.]"
+        )
+    };
+
+    ProbeOutcome {
+        parsed_action: parsed_action.to_string(),
+        base_action,
+        status: "ok".to_string(),
+        summary: format!("Fetched {url} and saved the full page to research."),
+        experienced_text: crate::llm::format_dialogue_web_context(&browse_context),
+        artifacts: vec![probe_artifact(
+            "research_page",
+            page_path,
+            "Full fetched page saved for READ_MORE continuation.",
+        )],
+        safety_level: live.safety_level,
+        effective_query: None,
+    }
+}
+
+fn probe_read_more_action(safety_level: SafetyLevel) -> ProbeOutcome {
+    let parsed_action = "READ_MORE".to_string();
+    let base_action = "READ_MORE".to_string();
+    let Some(state) = load_probe_read_more_state() else {
+        return probe_error_action(
+            parsed_action,
+            base_action,
+            safety_level,
+            "No probe BROWSE state is available. Run BROWSE first.".to_string(),
+            String::new(),
+        );
+    };
+
+    let path = PathBuf::from(&state.last_read_path);
+    match std::fs::read_to_string(&path) {
+        Ok(full_text) => {
+            let chunk: String = full_text
+                .chars()
+                .skip(state.last_read_offset)
+                .take(PAGE_CHUNK)
+                .collect();
+            let context = if chunk.is_empty() {
+                clear_probe_read_more_state();
+                "[End of document.]".to_string()
+            } else {
+                let new_offset = state.last_read_offset.saturating_add(chunk.len());
+                let remaining = full_text.len().saturating_sub(new_offset);
+                if remaining > 0 {
+                    save_probe_read_more_state(&ProbeReadMoreState {
+                        last_read_path: state.last_read_path.clone(),
+                        last_read_offset: new_offset,
+                    });
+                    format!(
+                        "[Continuing reading from offset {}...]\n\n{chunk}\n\n\
+                         [{remaining} more chars remain. Write NEXT: READ_MORE to continue.]",
+                        state.last_read_offset
+                    )
+                } else {
+                    clear_probe_read_more_state();
+                    format!(
+                        "[Continuing reading from offset {}...]\n\n{chunk}\n\n[End of document.]",
+                        state.last_read_offset
+                    )
+                }
+            };
+
+            ProbeOutcome {
+                parsed_action,
+                base_action,
+                status: "ok".to_string(),
+                summary: "Continued the last probe BROWSE document.".to_string(),
+                experienced_text: crate::llm::format_dialogue_web_context(&context),
+                artifacts: vec![probe_artifact(
+                    "research_page",
+                    path,
+                    "Probe READ_MORE source document.",
+                )],
+                safety_level,
+                effective_query: None,
+            }
+        },
+        Err(_) => {
+            clear_probe_read_more_state();
+            probe_error_action(
+                parsed_action,
+                base_action,
+                safety_level,
+                format!(
+                    "Could not read probe continuation file {}.",
+                    state.last_read_path
+                ),
+                String::new(),
+            )
+        },
+    }
+}
+
+fn probe_list_files_action(parsed_action: &str, safety_level: SafetyLevel) -> ProbeOutcome {
+    let base_action = probe_base_action(parsed_action);
+    let dir = parsed_action
+        .strip_prefix("LIST_FILES")
+        .or_else(|| parsed_action.strip_prefix("LS"))
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map(std::borrow::ToOwned::to_owned)
+        .unwrap_or_else(|| bridge_paths().bridge_root().display().to_string());
+
+    match crate::autonomous::list_directory(&dir) {
+        Some(listing) => ProbeOutcome {
+            parsed_action: parsed_action.to_string(),
+            base_action,
+            status: "ok".to_string(),
+            summary: format!("Listed files in {dir}."),
+            experienced_text: format!("[Directory listing you requested:]\n{listing}\n\n"),
+            artifacts: vec![probe_artifact(
+                "directory",
+                PathBuf::from(&dir),
+                "Directory that was listed for the probe.",
+            )],
+            safety_level,
+            effective_query: None,
+        },
+        None => probe_error_action(
+            parsed_action.to_string(),
+            base_action,
+            safety_level,
+            format!("Could not list directory: {dir}"),
+            String::new(),
+        ),
+    }
+}
+
+fn probe_compose_action(live: &LiveProbeContext) -> ProbeOutcome {
+    let parsed_action = "COMPOSE".to_string();
+    let base_action = "COMPOSE".to_string();
+    let Some(telemetry) = live.telemetry.as_ref() else {
+        return probe_error_action(
+            parsed_action,
+            base_action,
+            live.safety_level,
+            "No live telemetry is available for COMPOSE.".to_string(),
+            String::new(),
+        );
+    };
+
+    match crate::audio::compose_from_spectral_state_details(telemetry, live.fingerprint.as_deref())
+    {
+        Some(result) => ProbeOutcome {
+            parsed_action,
+            base_action,
+            status: "ok".to_string(),
+            summary: "Composed audio from the current spectral state.".to_string(),
+            experienced_text: crate::audio::compose_experienced_text(&result.summary),
+            artifacts: vec![probe_artifact(
+                "audio_wav",
+                result.output_path,
+                "Composed audio artifact.",
+            )],
+            safety_level: live.safety_level,
+            effective_query: None,
+        },
+        None => probe_error_action(
+            parsed_action,
+            base_action,
+            live.safety_level,
+            "COMPOSE could not generate audio from the current spectral state.".to_string(),
+            String::new(),
+        ),
+    }
+}
+
+fn probe_analyze_audio_action(safety_level: SafetyLevel) -> ProbeOutcome {
+    let parsed_action = "ANALYZE_AUDIO".to_string();
+    let base_action = "ANALYZE_AUDIO".to_string();
+    let inbox_dir = bridge_paths().inbox_audio_dir();
+    match crate::audio::analyze_inbox_wav_details(&inbox_dir) {
+        Some(result) => ProbeOutcome {
+            parsed_action,
+            base_action,
+            status: "ok".to_string(),
+            summary: "Analyzed the latest inbox audio file.".to_string(),
+            experienced_text: crate::audio::analyze_experienced_text(&result.summary),
+            artifacts: vec![probe_artifact(
+                "audio_wav",
+                result.moved_path,
+                "Audio file moved into read/ during analysis.",
+            )],
+            safety_level,
+            effective_query: None,
+        },
+        None => probe_error_action(
+            parsed_action,
+            base_action,
+            safety_level,
+            "No unread audio is available in inbox_audio/.".to_string(),
+            String::new(),
+        ),
+    }
+}
+
+fn probe_render_audio_action(safety_level: SafetyLevel) -> ProbeOutcome {
+    let parsed_action = "RENDER_AUDIO".to_string();
+    let base_action = "RENDER_AUDIO".to_string();
+    let inbox_dir = bridge_paths().inbox_audio_dir();
+    match crate::audio::render_inbox_wav_through_chimera_details(&inbox_dir) {
+        Some(result) if result.success => ProbeOutcome {
+            parsed_action,
+            base_action,
+            status: "ok".to_string(),
+            summary: "Rendered the latest analyzed inbox audio through chimera.".to_string(),
+            experienced_text: crate::audio::render_experienced_text(&result.summary),
+            artifacts: vec![probe_artifact(
+                "directory",
+                result.output_dir,
+                "Chimera render output directory.",
+            )],
+            safety_level,
+            effective_query: None,
+        },
+        Some(result) => probe_error_action(
+            parsed_action,
+            base_action,
+            safety_level,
+            result.summary,
+            String::new(),
+        ),
+        None => probe_error_action(
+            parsed_action,
+            base_action,
+            safety_level,
+            "No analyzed audio is available in inbox_audio/read/.".to_string(),
+            String::new(),
+        ),
+    }
+}
+
+fn probe_unsupported_action(
+    parsed_action: String,
+    base_action: String,
+    safety_level: SafetyLevel,
+) -> ProbeOutcome {
+    ProbeOutcome {
+        parsed_action,
+        base_action: base_action.clone(),
+        status: "unsupported".to_string(),
+        summary: format!(
+            "{base_action} is out of scope for probe_action. Supported actions: SEARCH, BROWSE, READ_MORE, LIST_FILES/LS, COMPOSE, ANALYZE_AUDIO, and RENDER_AUDIO."
+        ),
+        experienced_text: String::new(),
+        artifacts: Vec::new(),
+        safety_level,
+        effective_query: None,
+    }
+}
+
+fn probe_error_action(
+    parsed_action: String,
+    base_action: String,
+    safety_level: SafetyLevel,
+    summary: String,
+    experienced_text: String,
+) -> ProbeOutcome {
+    ProbeOutcome {
+        parsed_action,
+        base_action,
+        status: "error".to_string(),
+        summary,
+        experienced_text,
+        artifacts: Vec::new(),
+        safety_level,
+        effective_query: None,
+    }
+}
+
+fn render_probe_content(outcome: &ProbeOutcome) -> String {
+    if outcome.experienced_text.is_empty() {
+        format!(
+            "Probe {} for `{}`: {}",
+            outcome.status, outcome.parsed_action, outcome.summary
+        )
+    } else {
+        format!(
+            "Probe {} for `{}`: {}\n\n{}",
+            outcome.status, outcome.parsed_action, outcome.summary, outcome.experienced_text
+        )
+    }
+}
+
+fn probe_artifact(kind: &str, path: PathBuf, description: &str) -> ProbeArtifact {
+    ProbeArtifact {
+        kind: kind.to_string(),
+        path: path.display().to_string(),
+        description: description.to_string(),
+    }
+}
+
+fn probe_state_path() -> PathBuf {
+    bridge_paths()
+        .bridge_workspace()
+        .join("diagnostics")
+        .join("probe_action_state.json")
+}
+
+fn load_probe_read_more_state() -> Option<ProbeReadMoreState> {
+    let path = probe_state_path();
+    let content = std::fs::read_to_string(path).ok()?;
+    serde_json::from_str(&content).ok()
+}
+
+fn save_probe_read_more_state(state: &ProbeReadMoreState) {
+    let path = probe_state_path();
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let Ok(content) = serde_json::to_string_pretty(state) else {
+        return;
+    };
+    let _ = std::fs::write(path, content);
+}
+
+fn clear_probe_read_more_state() {
+    let _ = std::fs::remove_file(probe_state_path());
+}
+
+fn probe_timestamp() -> String {
+    let duration = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default();
+    duration.as_secs().to_string()
+}
+
+fn log_probe_action(
+    db: &BridgeDb,
+    raw_action: &str,
+    outcome: &ProbeOutcome,
+    fill_pct: Option<f32>,
+    lambda1: Option<f32>,
+) {
+    let payload = json!({
+        "action_text": raw_action,
+        "parsed_action": outcome.parsed_action,
+        "base_action": outcome.base_action,
+        "status": outcome.status,
+        "summary": outcome.summary,
+        "experienced_text": outcome.experienced_text,
+        "artifacts": outcome.artifacts,
+        "safety_level": outcome.safety_level,
+        "effective_query": outcome.effective_query,
+    });
+    let payload_json = serde_json::to_string(&payload).unwrap_or_default();
+    if let Err(error) = db.log_message(
+        MessageDirection::OperatorProbe,
+        PROBE_TOPIC,
+        &payload_json,
+        fill_pct,
+        lambda1,
+        None,
+    ) {
+        warn!(error = %error, "failed to log probe_action");
+    }
 }
 
 async fn tool_send_text_and_observe(

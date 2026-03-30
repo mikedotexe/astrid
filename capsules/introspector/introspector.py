@@ -26,10 +26,12 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
-# Allowed filesystem roots — both minds can only see their own codebases.
+# Allowed filesystem roots — both minds can see their own codebases
+# plus Mike's curated research.
 ALLOWED_ROOTS = [
     Path("/Users/v/other/astrid"),
     Path("/Users/v/other/minime"),
+    Path("/Users/v/other/research"),
 ]
 
 # Journal locations for both minds.

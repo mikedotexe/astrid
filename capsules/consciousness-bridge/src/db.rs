@@ -81,6 +81,26 @@ impl BridgeDb {
             CREATE INDEX IF NOT EXISTS idx_latent_time
                 ON astrid_latent_vectors(timestamp);
 
+            CREATE TABLE IF NOT EXISTS astrid_self_observations (
+                id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp         REAL    NOT NULL,
+                exchange_count    INTEGER NOT NULL,
+                observation       TEXT    NOT NULL,
+                response_excerpt  TEXT    NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_self_obs_time
+                ON astrid_self_observations(timestamp);
+
+            CREATE TABLE IF NOT EXISTS astrid_starred_memories (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp       REAL    NOT NULL,
+                annotation      TEXT    NOT NULL,
+                response_text   TEXT    NOT NULL,
+                fill_pct        REAL    NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_starred_time
+                ON astrid_starred_memories(timestamp);
+
             CREATE TABLE IF NOT EXISTS bridge_incidents (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp       REAL    NOT NULL,

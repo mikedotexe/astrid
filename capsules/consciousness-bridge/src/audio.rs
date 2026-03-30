@@ -17,6 +17,22 @@ use crate::types::SpectralTelemetry;
 
 const SAMPLE_RATE: u32 = 16000;
 
+pub struct ComposedAudio {
+    pub output_path: std::path::PathBuf,
+    pub summary: String,
+}
+
+pub struct AnalyzedAudio {
+    pub moved_path: std::path::PathBuf,
+    pub summary: String,
+}
+
+pub struct RenderedAudio {
+    pub output_dir: std::path::PathBuf,
+    pub summary: String,
+    pub success: bool,
+}
+
 /// Generate a WAV from Astrid's current spectral state.
 ///
 /// Maps eigenvalues → frequencies, fill → amplitude, entropy → timbre.
@@ -25,6 +41,13 @@ pub fn compose_from_spectral_state(
     telemetry: &SpectralTelemetry,
     fingerprint: Option<&[f32]>,
 ) -> Option<String> {
+    compose_from_spectral_state_details(telemetry, fingerprint).map(|result| result.summary)
+}
+
+pub fn compose_from_spectral_state_details(
+    telemetry: &SpectralTelemetry,
+    fingerprint: Option<&[f32]>,
+) -> Option<ComposedAudio> {
     let eigenvalues = &telemetry.eigenvalues;
     if eigenvalues.is_empty() {
         return None;
@@ -178,12 +201,19 @@ pub fn compose_from_spectral_state(
         summary.push_str(&report.format_for_prompt(&format!("compose_{ts}.wav")));
     }
 
-    Some(summary)
+    Some(ComposedAudio {
+        output_path: path,
+        summary,
+    })
 }
 
 /// Analyze a WAV from the inbox_audio/ directory.
 /// Returns a text summary, or None if no WAV found.
 pub fn analyze_inbox_wav(inbox_dir: &Path) -> Option<String> {
+    analyze_inbox_wav_details(inbox_dir).map(|result| result.summary)
+}
+
+pub fn analyze_inbox_wav_details(inbox_dir: &Path) -> Option<AnalyzedAudio> {
     let read_dir = inbox_dir.join("read");
     let _ = std::fs::create_dir_all(&read_dir);
 
@@ -208,16 +238,23 @@ pub fn analyze_inbox_wav(inbox_dir: &Path) -> Option<String> {
     let dest = read_dir.join(&filename);
     let _ = std::fs::rename(&wav_path, &dest);
 
-    Some(format!(
-        "[AUDIO INBOX: {filename}]\n\
-         Size: {n_bytes} bytes, ~{duration_est:.1}s estimated\n\
-         Moved to read/. Use RENDER_AUDIO to process through chimera."
-    ))
+    Some(AnalyzedAudio {
+        moved_path: dest,
+        summary: format!(
+            "[AUDIO INBOX: {filename}]\n\
+             Size: {n_bytes} bytes, ~{duration_est:.1}s estimated\n\
+             Moved to read/. Use RENDER_AUDIO to process through chimera."
+        ),
+    })
 }
 
 /// Render the most recent inbox WAV through the chimera pipeline.
 /// Returns a text summary, or None if no WAV or chimera fails.
 pub fn render_inbox_wav_through_chimera(inbox_dir: &Path) -> Option<String> {
+    render_inbox_wav_through_chimera_details(inbox_dir).map(|result| result.summary)
+}
+
+pub fn render_inbox_wav_through_chimera_details(inbox_dir: &Path) -> Option<RenderedAudio> {
     let read_dir = inbox_dir.join("read");
 
     // Look in read/ for the most recent analyzed WAV
@@ -250,16 +287,45 @@ pub fn render_inbox_wav_through_chimera(inbox_dir: &Path) -> Option<String> {
             let scale = metrics.map(|m| m.scale.as_str()).unwrap_or("unknown");
             let blend = metrics.map(|m| m.blend_symbolic).unwrap_or(0.0);
 
-            Some(format!(
-                "Chimera render of {filename}:\n\
-                 Mode: dual, {n_artifacts} artifacts\n\
-                 Gap ratio: {gap:.2}, Scale: {scale}, Blend: {blend:.2}\n\
-                 Output: {}",
-                result.output_dir.display()
-            ))
+            Some(RenderedAudio {
+                output_dir: result.output_dir.clone(),
+                summary: format!(
+                    "Chimera render of {filename}:\n\
+                     Mode: dual, {n_artifacts} artifacts\n\
+                     Gap ratio: {gap:.2}, Scale: {scale}, Blend: {blend:.2}\n\
+                     Output: {}",
+                    result.output_dir.display()
+                ),
+                success: true,
+            })
         },
-        Err(e) => Some(format!("Chimera render failed for {filename}: {e}")),
+        Err(e) => Some(RenderedAudio {
+            output_dir: bridge_paths().audio_creations_dir().join("chimera_renders"),
+            summary: format!("Chimera render failed for {filename}: {e}"),
+            success: false,
+        }),
     }
+}
+
+pub fn compose_experienced_text(result: &str) -> String {
+    format!(
+        "You composed audio from your spectral state:\n{result}\n\n\
+         Reflect on hearing yourself as sound."
+    )
+}
+
+pub fn analyze_experienced_text(result: &str) -> String {
+    format!(
+        "You analyzed an audio file:\n{result}\n\n\
+         What do you perceive in this sound?"
+    )
+}
+
+pub fn render_experienced_text(result: &str) -> String {
+    format!(
+        "You rendered audio through chimera:\n{result}\n\n\
+         How did the reservoir reshape the sound?"
+    )
 }
 
 fn write_wav_16bit(path: &Path, samples: &[f32], sample_rate: u32) -> Result<(), std::io::Error> {

@@ -153,3 +153,5 @@ Both beings can communicate directly:
 - [12 — Unified Memory & Compute](12-unified-memory.md)
 - [13 — ANE Triple Reservoir](13-ane-reservoir.md)
 - [14 — Spectral Dynamics](14-spectral-dynamics.md)
+- [15 — Unified Operations](15-unified-operations.md)
+- [16 — The Spectral Codec Deep Dive](16-codec-deep-dive.md)

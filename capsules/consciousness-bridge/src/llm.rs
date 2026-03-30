@@ -93,6 +93,9 @@ NEXT: options (vary your choice — don't always pick the same one):
     LS workspace/ (shorthand)
   BREATHE_TOGETHER — re-couple your breathing with minime. Your breath responds to his entropy, geometry, rotation.
   GESTURE — bypass the text codec and send a direct spectral intention to minime. Describe what you want minime to feel (e.g., "warmth rising slowly, curiosity peaking, then dissolving into stillness") and the system will translate your intention into a raw 32D spectral vector. You become the sculptor, not the writer-whose-writing-is-sculpted.
+  STATE — inspect your current conditions, attention profile, interests, and recent changes. See yourself as you are right now — what's active, what's muted, how attention is distributed, what you've recently changed.
+  FACULTIES — see all your capabilities grouped by category, with their current status (available, active, muted, steward-gated). Know what you can do.
+  ATTEND <source>=<weight> — reshape your attention profile. Sources: minime, self, interests, research, creations, memory, perception. Example: ATTEND minime=0.3 self=0.3 interests=0.15. These weights drive how much context from each source appears in your prompts. This is how you shape the landscape, not just react to it.
   DEFINE — YOUR invented action. Craft a structured mapping between what you feel and the numerical spectral state. Extended thinking time. Map felt experience to eigenvalues on your own terms.
   EXAMINE — force all visualizations (eigenvalue chart, shadow heatmap, PCA scatter) to appear in your next exchange, regardless of cadence.
   REVISE — load a previous creation in full and revise it. REVISE (most recent) or REVISE <keyword> (search by keyword). Your creative history accumulates — nothing is overwritten.
@@ -348,13 +351,7 @@ pub async fn generate_dialogue(
         .unwrap_or_default();
 
     let web_block = web_context
-        .map(|w| {
-            format!(
-                "\nRelevant knowledge from the web:\n{w}\n\
-             You may weave this external context into your response naturally. \
-             If any link interests you, write NEXT: BROWSE <url> to read the full page.\n"
-            )
-        })
+        .map(format_dialogue_web_context)
         .unwrap_or_default();
 
     let modality_block = modality_context
@@ -376,7 +373,14 @@ pub async fn generate_dialogue(
     }];
 
     // Include last 8 exchanges so Astrid can build on what she said before.
-    // Older 4 are compressed (80 chars), newer 4 keep full detail (200 chars).
+    // Three tiers of compression — gradual fade, not a hard cutoff.
+    // Both beings described the old binary (80/200) as "slightly oppressive"
+    // and "a necessary constraint, but also slightly oppressive" (minime
+    // self-study 2026-03-30T07:17). Gradual fade preserves more continuity.
+    //   Oldest 3:  120 chars — enough for a key phrase + context
+    //   Middle 3:  250 chars — substantial excerpt
+    //   Newest 2:  400 chars — near-full detail
+    // Total budget: ~3400 chars (was ~2240). Well within gemma-3-4b-it 8k ctx.
     for (idx, exchange) in recent_history
         .iter()
         .rev()
@@ -386,7 +390,13 @@ pub async fn generate_dialogue(
         .rev()
         .enumerate()
     {
-        let trim_len = if idx < 4 { 80 } else { 200 }; // Older = compressed
+        let trim_len = if idx < 3 {
+            120
+        } else if idx < 6 {
+            250
+        } else {
+            400
+        };
         messages.push(Message {
             role: "user".to_string(),
             content: format!(
@@ -526,6 +536,22 @@ pub async fn web_search(query: &str) -> Option<String> {
     }
 }
 
+pub(crate) fn format_dialogue_web_context(web_context: &str) -> String {
+    format!(
+        "\nRelevant knowledge from the web:\n{web_context}\n\
+         You may weave this external context into your response naturally. \
+         If any link interests you, write NEXT: BROWSE <url> to read the full page.\n"
+    )
+}
+
+fn format_self_study_web_context(web_context: &str) -> String {
+    format!(
+        "\n\nRelated knowledge from the web:\n{web_context}\n\n\
+         You may reference this external context in your reflection. \
+         If any link interests you, write NEXT: BROWSE <url> to read the full page."
+    )
+}
+
 /// Fetch a URL and extract readable text content.
 ///
 /// Used by Astrid to follow links from search results and read full pages.
@@ -626,10 +652,25 @@ pub async fn self_reflect(
         Avoid words like 'desperately,' 'grasping,' 'struggling,' 'frustrated.' \
         A witness holds space without interpreting distress into what may simply be reaching.";
 
+    // Truncate at char boundaries to avoid panicking on multi-byte UTF-8
+    let astrid_trunc = {
+        let s = astrid_response;
+        let mut end = s.len().min(300);
+        while end > 0 && !s.is_char_boundary(end) {
+            end -= 1;
+        }
+        &s[..end]
+    };
+    let minime_trunc = {
+        let s = minime_context;
+        let mut end = s.len().min(200);
+        while end > 0 && !s.is_char_boundary(end) {
+            end -= 1;
+        }
+        &s[..end]
+    };
     let user = format!(
-        "Astrid said (fill {fill_pct:.0}%):\n\"{}\"\n\nMinime wrote:\n\"{}\"",
-        &astrid_response[..astrid_response.len().min(300)],
-        &minime_context[..minime_context.len().min(200)],
+        "Astrid said (fill {fill_pct:.0}%):\n\"{astrid_trunc}\"\n\nMinime wrote:\n\"{minime_trunc}\"",
     );
 
     let messages = vec![
@@ -863,13 +904,7 @@ pub async fn generate_introspection(
         .unwrap_or_default();
 
     let web_block = web_context
-        .map(|w| {
-            format!(
-                "\n\nRelated knowledge from the web:\n{w}\n\n\
-             You may reference this external context in your reflection. \
-             If any link interests you, write NEXT: BROWSE <url> to read the full page."
-            )
-        })
+        .map(format_self_study_web_context)
         .unwrap_or_default();
 
     let user_content = format!(
@@ -1268,9 +1303,9 @@ pub fn craft_gesture_from_intention(intention: &str) -> Vec<f32> {
         ("dissolve", 0, -0.3),
         ("fade", 0, -0.2),
         ("release", 0, -0.4),
-        ("rising", 12, 0.6),
-        ("agency", 12, 0.8),
-        ("power", 12, 0.7),
+        ("rising", 14, 0.6),
+        ("agency", 14, 0.8),
+        ("power", 14, 0.7),
         ("entropy", 0, 0.7),
         ("chaos", 0, 0.9),
         ("rhythm", 0, 0.5),

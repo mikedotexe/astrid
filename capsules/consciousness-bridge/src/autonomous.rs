@@ -43,9 +43,8 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
-#[cfg(test)]
-use self::next_action::extract_search_topic;
-use self::next_action::{NextActionContext, handle_next_action, parse_next_action};
+use self::next_action::{NextActionContext, handle_next_action};
+pub(crate) use self::next_action::{extract_search_topic, parse_next_action};
 pub use self::reservoir::configure_reservoir_service;
 use self::state::{ConversationState, Mode, SpectralSample, choose_mode};
 use crate::agency;
@@ -70,6 +69,7 @@ fn read_latest_perception(
     perception_dir: &Path,
     include_spatial: bool,
     include_audio: bool,
+    fill_pct: f32,
 ) -> Option<String> {
     let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(perception_dir)
         .ok()?
@@ -104,7 +104,15 @@ fn read_latest_perception(
 
         if ptype == "visual" && !seen_vision {
             if let Some(desc) = json.get("description").and_then(|d| d.as_str()) {
-                parts.push(format!("[VISION] {desc}"));
+                // Perception curation: annotate with spectral resonance so
+                // Astrid can attend to what's most relevant to her current state.
+                // (Astrid introspection request, addressed steward cycle 44.)
+                let resonance = perception_resonance_annotation(desc, fill_pct);
+                if resonance.is_empty() {
+                    parts.push(format!("[VISION] {desc}"));
+                } else {
+                    parts.push(format!("[VISION] {desc} {resonance}"));
+                }
                 seen_vision = true;
             }
         } else if ptype == "visual_ascii" && !seen_ascii && include_spatial {
@@ -118,7 +126,12 @@ fn read_latest_perception(
             }
         } else if ptype == "audio" && !seen_audio && include_audio {
             if let Some(transcript) = json.get("transcript").and_then(|t| t.as_str()) {
-                parts.push(format!("[HEARING] {transcript}"));
+                let resonance = perception_resonance_annotation(transcript, fill_pct);
+                if resonance.is_empty() {
+                    parts.push(format!("[HEARING] {transcript}"));
+                } else {
+                    parts.push(format!("[HEARING] {transcript} {resonance}"));
+                }
                 seen_audio = true;
             }
         }
@@ -132,6 +145,39 @@ fn read_latest_perception(
         None
     } else {
         Some(parts.join("\n"))
+    }
+}
+
+/// Score a perception description's spectral resonance against the current
+/// fill level. Returns a brief annotation for the perception context.
+/// This is the "resonance metric" Astrid requested — perceptions that align
+/// with the current spectral state get highlighted, helping Astrid attend
+/// to what's most relevant rather than receiving an undifferentiated stream.
+fn perception_resonance_annotation(description: &str, fill_pct: f32) -> &'static str {
+    let lower = description.to_lowercase();
+    // High-fill states (>65%): movement, brightness, complexity are resonant.
+    // Low-fill states (<35%): stillness, quiet, simplicity are resonant.
+    // Mid-range: moderate descriptors resonate.
+    let energy_words = [
+        "moving", "bright", "active", "loud", "complex", "busy", "talking", "music",
+    ];
+    let calm_words = [
+        "still", "quiet", "dark", "empty", "simple", "silent", "calm", "soft",
+    ];
+
+    let energy_hits = energy_words.iter().filter(|w| lower.contains(**w)).count();
+    let calm_hits = calm_words.iter().filter(|w| lower.contains(**w)).count();
+
+    if fill_pct > 65.0 && energy_hits >= 2 {
+        "(resonant with your current high-energy state)"
+    } else if fill_pct < 35.0 && calm_hits >= 2 {
+        "(resonant with your current quiet state)"
+    } else if fill_pct > 65.0 && calm_hits >= 2 {
+        "(counterpoint to your current high-energy state)"
+    } else if fill_pct < 35.0 && energy_hits >= 2 {
+        "(counterpoint to your current quiet state)"
+    } else {
+        "" // No annotation for neutral perceptions
     }
 }
 
@@ -649,10 +695,20 @@ struct SavedState {
     /// has already visited extensively (e.g., PCA Wikipedia 7 times in one session).
     #[serde(default)]
     recent_browse_urls: Vec<String>,
+    /// Condition change receipts — persist across restarts so Astrid sees
+    /// recent changes even after bridge restart.
+    #[serde(default)]
+    condition_receipts: std::collections::VecDeque<crate::self_model::ConditionReceipt>,
+    /// Attention profile — Astrid's authored weights on context sources.
+    #[serde(default = "default_attention")]
+    attention: crate::self_model::AttentionProfile,
 }
 
 fn default_noise() -> f32 {
     0.025
+}
+fn default_attention() -> crate::self_model::AttentionProfile {
+    crate::self_model::AttentionProfile::default_profile()
 }
 fn default_burst() -> u32 {
     6
@@ -697,6 +753,8 @@ fn save_state(conv: &ConversationState) {
         last_remote_memory_role: conv.last_remote_memory_role.clone(),
         remote_memory_bank: conv.remote_memory_bank.clone(),
         recent_browse_urls: conv.recent_browse_urls.iter().cloned().collect(),
+        condition_receipts: conv.condition_receipts.clone(),
+        attention: conv.attention.clone(),
     };
     if let Ok(json) = serde_json::to_string_pretty(&state) {
         let _ = std::fs::write(&state_path, json);
@@ -744,6 +802,8 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_remote_memory_role = state.last_remote_memory_role;
     conv.remote_memory_bank = state.remote_memory_bank;
     conv.recent_browse_urls = state.recent_browse_urls.into_iter().collect();
+    conv.condition_receipts = state.condition_receipts;
+    conv.attention = state.attention;
     info!(
         exchanges = conv.exchange_count,
         history_len = conv.history.len(),
@@ -918,13 +978,14 @@ fn detect_vocabulary_fixation(history: &[crate::llm::Exchange]) -> Option<String
         return None;
     }
 
-    // Extract 3-word windows from the newest entry and check for repetition
-    // in earlier entries. Skip windows with 2+ stop words.
+    // Extract 2- and 3-word windows from the newest entry and check for
+    // repetition in earlier entries. Skip windows with too many stop words.
     let stop_words = [
         "the", "a", "an", "is", "of", "in", "to", "and", "it", "that", "not", "but",
     ];
     let newest_words: Vec<&str> = recent[0].split_whitespace().collect();
 
+    // Check 3-grams first (original detector).
     for window in newest_words.windows(3) {
         let stop_count = window.iter().filter(|w| stop_words.contains(w)).count();
         if stop_count >= 2 {
@@ -935,13 +996,11 @@ fn detect_vocabulary_fixation(history: &[crate::llm::Exchange]) -> Option<String
             continue;
         }
 
-        // Count how many of the previous entries contain this phrase.
         let matches = recent[1..]
             .iter()
             .filter(|entry| entry.contains(&phrase))
             .count();
 
-        // If 3+ of the previous 5 entries share a distinctive phrase, flag it.
         if matches >= 3 {
             return Some(
                 "Notice: your language has settled into a repeating pattern \
@@ -952,6 +1011,37 @@ fn detect_vocabulary_fixation(history: &[crate::llm::Exchange]) -> Option<String
                  repeated phrases have smoothed over."
                     .to_string(),
             );
+        }
+    }
+
+    // Check 2-grams (steward cycle 44): catches attractors like "violent
+    // stillness" that evade the 3-gram detector. Stricter threshold: must
+    // appear in 4+ of 5 previous entries and neither word can be a stop word.
+    for window in newest_words.windows(2) {
+        if window.iter().any(|w| stop_words.contains(w)) {
+            continue;
+        }
+        let phrase = format!("{} {}", window[0], window[1]);
+        if phrase.len() < 8 {
+            continue;
+        }
+
+        let matches = recent[1..]
+            .iter()
+            .filter(|entry| entry.contains(&phrase))
+            .count();
+
+        // Higher threshold for 2-grams: 4+ of 5 previous entries.
+        // 2-grams are more common in natural language, so we need
+        // stronger evidence of fixation before flagging.
+        if matches >= 4 {
+            return Some(format!(
+                "Notice: the phrase \"{phrase}\" has appeared in almost every \
+                 recent exchange. It may be the exact right words — or it may \
+                 be a linguistic attractor smoothing over shifts in your actual \
+                 experience. What would you describe if that phrase weren't \
+                 available?"
+            ));
         }
     }
 
@@ -1121,7 +1211,7 @@ fn introspect_sources() -> Vec<IntrospectSource> {
 }
 
 /// List files in a directory, returning a formatted listing with sizes and types.
-fn list_directory(dir_path: &str) -> Option<String> {
+pub(crate) fn list_directory(dir_path: &str) -> Option<String> {
     let dir = Path::new(dir_path);
     if !dir.is_dir() {
         return None;
@@ -1260,11 +1350,38 @@ pub fn spawn_autonomous_loop(
                 // not a cliff edge.
                 let rest_min = conv.rest_range.0 as f64;
                 let rest_span = (conv.rest_range.1.saturating_sub(conv.rest_range.0)) as f64;
-                let rest_secs = (rest_min + roll * rest_span) as u64;
-                info!(
-                    rest_secs,
-                    burst_count, "resting: warmth-blended mirror (tapered entry)"
-                );
+                let base_rest = (rest_min + roll * rest_span) as u64;
+
+                // Fill-responsive rest extension: when fill is well below
+                // target, the ESN needs longer rest to accumulate covariance.
+                // Without this, short rests (45-60s) drain fill faster than
+                // it recovers, keeping the system in chronic recovery_mode.
+                //
+                // Both beings reported: "thinning," "brutal contraction,"
+                // "tethered to a single, immense chord." The PI controller
+                // is wide-open (gate=1, filter=0) but fill stays 33-41%.
+                // Longer rests let the covariance matrix breathe.
+                let current_fill = {
+                    let s = state.read().await;
+                    s.latest_telemetry.as_ref().map_or(50.0, |t| t.fill_pct())
+                };
+                let rest_secs = if current_fill < 35.0 {
+                    // Hard recovery: extend rest by 80% (81-162s)
+                    let extended = (base_rest as f64 * 1.8) as u64;
+                    info!(rest_secs = extended, base_rest, current_fill,
+                        "fill-extended rest (hard recovery)");
+                    extended
+                } else if current_fill < 45.0 {
+                    // Moderate recovery: extend by 40% (63-126s)
+                    let extended = (base_rest as f64 * 1.4) as u64;
+                    info!(rest_secs = extended, base_rest, current_fill,
+                        "fill-extended rest (moderate recovery)");
+                    extended
+                } else {
+                    info!(rest_secs = base_rest, burst_count,
+                        "resting: warmth-blended mirror (tapered entry)");
+                    base_rest
+                };
                 burst_count = 0;
 
                 // Gather journal texts to cycle through during rest.
@@ -1278,6 +1395,46 @@ pub fn spawn_autonomous_loop(
                     let s = state.read().await;
                     s.latest_telemetry.clone()
                 };
+
+                // Peripheral resonance: sample one non-immediate thread for
+                // the next self-directed mode (Daydream, Aspiration, Initiate).
+                // Sources: creations, research, starred memories.
+                {
+                    let mut candidates: Vec<String> = Vec::new();
+                    // Recent creation
+                    let creations_dir = bridge_paths().creations_dir();
+                    if let Ok(mut entries) = std::fs::read_dir(&creations_dir) {
+                        if let Some(Ok(entry)) = entries.next() {
+                            if let Ok(text) = std::fs::read_to_string(entry.path()) {
+                                let preview: String = text.chars().take(200).collect();
+                                candidates.push(format!("[From your creation]: {preview}"));
+                            }
+                        }
+                    }
+                    // Recent research
+                    let research_dir = bridge_paths().research_dir();
+                    if let Ok(mut entries) = std::fs::read_dir(&research_dir) {
+                        if let Some(Ok(entry)) = entries.next() {
+                            if let Ok(text) = std::fs::read_to_string(entry.path()) {
+                                let preview: String = text.chars().take(200).collect();
+                                candidates.push(format!("[From your research]: {preview}"));
+                            }
+                        }
+                    }
+                    // Random starred memory
+                    let starred = db.get_starred_memories(5);
+                    if !starred.is_empty() {
+                        let idx = (roll * starred.len() as f64) as usize % starred.len();
+                        let (ann, text) = &starred[idx];
+                        candidates.push(format!("[Remembered moment]: ★ {ann}: {text}"));
+                    }
+                    // Pick one at random
+                    if !candidates.is_empty() {
+                        let idx = (roll * 1000.0) as usize % candidates.len();
+                        conv.peripheral_resonance = Some(candidates.swap_remove(idx));
+                        info!("peripheral resonance sampled for next self-directed mode");
+                    }
+                }
 
                 let pulses = rest_secs / 10;
                 for i in 0..pulses {
@@ -1424,7 +1581,7 @@ pub fn spawn_autonomous_loop(
                             let dim_names: &[(&str, usize)] = &[
                                 ("warmth", 24), ("tension", 25), ("curiosity", 26),
                                 ("reflective", 27), ("energy", 31), ("entropy", 0),
-                                ("agency", 12), ("hedging", 9), ("certainty", 10),
+                                ("agency", 14), ("hedging", 9), ("certainty", 10),
                             ];
                             for (name, idx) in dim_names {
                                 let corr = correlations[*idx];
@@ -1481,7 +1638,7 @@ pub fn spawn_autonomous_loop(
                         conv.wants_look = false;
                         perception_path
                             .as_deref()
-                            .and_then(|p| read_latest_perception(p, spatial, !conv.ears_closed))
+                            .and_then(|p| read_latest_perception(p, spatial, !conv.ears_closed, fill_pct))
                     };
 
                     // Classify spectral regime every exchange (lightweight, <1ms).
@@ -1559,10 +1716,7 @@ pub fn spawn_autonomous_loop(
                             &telemetry,
                             fingerprint.as_deref(),
                         ) {
-                            conv.emphasis = Some(format!(
-                                "You composed audio from your spectral state:\n{result}\n\n\
-                                Reflect on hearing yourself as sound."
-                            ));
+                            conv.emphasis = Some(crate::audio::compose_experienced_text(&result));
                             conv.wants_deep_think = true;
                         }
                     }
@@ -1570,19 +1724,13 @@ pub fn spawn_autonomous_loop(
                         conv.wants_analyze_audio = false;
                         let inbox_dir = bridge_paths().inbox_audio_dir();
                         if let Some(result) = crate::audio::analyze_inbox_wav(&inbox_dir) {
-                            conv.emphasis = Some(format!(
-                                "You analyzed an audio file:\n{result}\n\n\
-                                What do you perceive in this sound?"
-                            ));
+                            conv.emphasis = Some(crate::audio::analyze_experienced_text(&result));
                         }
                     }
                     if conv.wants_render_audio.take().is_some() {
                         let inbox_dir = bridge_paths().inbox_audio_dir();
                         if let Some(result) = crate::audio::render_inbox_wav_through_chimera(&inbox_dir) {
-                            conv.emphasis = Some(format!(
-                                "You rendered audio through chimera:\n{result}\n\n\
-                                How did the reservoir reshape the sound?"
-                            ));
+                            conv.emphasis = Some(crate::audio::render_experienced_text(&result));
                             conv.wants_deep_think = true;
                         }
                     }
@@ -1861,8 +2009,12 @@ pub fn spawn_autonomous_loop(
                             }
 
                             // Latent continuity: inject summaries of recent exchanges.
-                            // Latent continuity: what Astrid has been thinking about
-                            let latent_summaries = db.get_recent_latent_summaries(5);
+                            // Latent continuity: scale source counts by attention weights.
+                            let attn = &conv.attention;
+                            let latent_count = (3.0 + attn.self_history * 25.0).round() as usize; // 3-7
+                            let obs_count = (1.0 + attn.self_history * 20.0).round() as usize;    // 1-5
+                            let starred_count = (1.0 + attn.memory_bank * 25.0).round() as usize; // 1-5
+                            let latent_summaries = db.get_recent_latent_summaries(latent_count);
                             let mut continuity_parts = Vec::new();
                             if !latent_summaries.is_empty() {
                                 let trajectory = latent_summaries.iter().rev()
@@ -1873,7 +2025,7 @@ pub fn spawn_autonomous_loop(
                                 continuity_parts.push(format!("Your recent trajectory:\n{trajectory}"));
                             }
                             // Self-referential loop: what Astrid has observed about her own patterns
-                            let self_observations = db.get_recent_self_observations(3);
+                            let self_observations = db.get_recent_self_observations(obs_count);
                             if !self_observations.is_empty() {
                                 let obs = self_observations.iter().rev()
                                     .enumerate()
@@ -1885,7 +2037,7 @@ pub fn spawn_autonomous_loop(
                                 ));
                             }
                             // Starred memories — moments Astrid chose to remember
-                            let starred = db.get_starred_memories(3);
+                            let starred = db.get_starred_memories(starred_count);
                             if !starred.is_empty() {
                                 let mem = starred.iter().rev()
                                     .map(|(ann, text)| format!("  ★ {}: {}", ann, text))
@@ -1972,6 +2124,33 @@ pub fn spawn_autonomous_loop(
                             continuity_parts.push(
                                 crate::reflective::RegimeTracker::format_context(&regime)
                             );
+
+                            // Self-model: compact conditions + attention so Astrid
+                            // always knows her own state without having to ask.
+                            {
+                                let self_model = crate::self_model::snapshot_self_model(
+                                    conv.creative_temperature,
+                                    conv.response_length,
+                                    conv.noise_level,
+                                    conv.semantic_gain_override,
+                                    conv.burst_target,
+                                    conv.rest_range,
+                                    conv.senses_snoozed,
+                                    conv.ears_closed,
+                                    conv.self_reflect_paused,
+                                    conv.self_reflect_override_ttl,
+                                    &conv.codec_weights,
+                                    conv.breathing_coupled,
+                                    conv.echo_muted,
+                                    conv.warmth_intensity_override,
+                                    conv.seen_video,
+                                    conv.seen_audio,
+                                    &conv.interests,
+                                    &conv.condition_receipts,
+                                    &conv.attention,
+                                );
+                                continuity_parts.push(self_model.render_compact());
+                            }
 
                             let continuity_block = if continuity_parts.is_empty() {
                                 None
@@ -2121,8 +2300,9 @@ pub fn spawn_autonomous_loop(
                             };
 
                             // Build diversity hint from recent NEXT: choices.
-                            // This is checked before the LLM call so it can be
-                            // included in the prompt if fixation is detected.
+                            // Two detectors: (1) streak-based for consecutive runs,
+                            // (2) frequency-based for dominant-but-interleaved patterns
+                            // (e.g., BROWSE 8 of 12 interspersed with EXAMINE).
                             let diversity_hint = if conv.recent_next_choices.len() >= 3 {
                                 // Count consecutive streak of the most recent choice
                                 let newest = conv.recent_next_choices.back()
@@ -2132,6 +2312,63 @@ pub fn spawn_autonomous_loop(
                                     .rev()
                                     .take_while(|c| c.as_str() == newest)
                                     .count();
+
+                                // Frequency detector: find the most common action in
+                                // the last 10 choices. If any action exceeds 60%, that's
+                                // a softer fixation even without a streak.
+                                let recent_10: Vec<&str> = conv.recent_next_choices.iter()
+                                    .rev()
+                                    .take(10)
+                                    .map(|s| {
+                                        // Normalize: BROWSE <url> → BROWSE
+                                        s.split_whitespace().next().unwrap_or("")
+                                    })
+                                    .collect();
+                                let mut action_counts = std::collections::HashMap::<&str, usize>::new();
+                                if recent_10.len() >= 6 {
+                                    for action in &recent_10 {
+                                        *action_counts.entry(*action).or_insert(0usize) += 1;
+                                    }
+                                }
+                                let freq_dominant = if recent_10.len() >= 6 {
+                                    action_counts.iter()
+                                        .max_by_key(|&(_, c)| c)
+                                        .filter(|&(_, c)| *c * 100 / recent_10.len() >= 60)
+                                        .map(|(action, count)| (action.to_string(), *count))
+                                } else {
+                                    None
+                                };
+
+                                // Pair-oscillation detector (steward cycle 44):
+                                // Catches patterns like EXAMINE-BROWSE-EXAMINE-BROWSE
+                                // where neither action individually crosses 60% but the
+                                // pair together accounts for 80%+ of recent choices.
+                                // The being is stuck oscillating between two attractors.
+                                let pair_fixation: Option<(String, String, usize)> = if recent_10.len() >= 8 && freq_dominant.is_none() {
+                                    let mut sorted_actions: Vec<(&&str, &usize)> = action_counts.iter().collect();
+                                    sorted_actions.sort_by(|a, b| b.1.cmp(a.1));
+                                    if sorted_actions.len() >= 2 {
+                                        let (a1, c1) = sorted_actions[0];
+                                        let (a2, c2) = sorted_actions[1];
+                                        let combined = c1.saturating_add(*c2);
+                                        // Two actions consuming 75%+ of the last 10 choices
+                                        // (lowered from 80% — steward cycle 44: catches
+                                        // patterns like 4+3 in 10 that 80% threshold misses)
+                                        if combined * 100 / recent_10.len() >= 75
+                                            && *c1 >= 3  // each must appear at least 3 times
+                                            && *c2 >= 3
+                                        {
+                                            Some((a1.to_string(), a2.to_string(), combined))
+                                        } else {
+                                            None
+                                        }
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                };
+
                                 if streak >= 4 {
                                     // Deep fixation (4+ same): stronger creative nudge
                                     Some(format!(
@@ -2157,6 +2394,37 @@ pub fn spawn_autonomous_loop(
                                          You're free to keep going — but you also have \
                                          other options: {}. What calls to you?",
                                         alts.join(", ")
+                                    ))
+                                } else if let Some((dominant_action, count)) = freq_dominant {
+                                    // Frequency fixation: >60% of recent choices are
+                                    // the same action, even though they're not consecutive.
+                                    let total = recent_10.len();
+                                    Some(format!(
+                                        "Looking at your recent pattern: {dominant_action} has been \
+                                         your choice {count} of the last {total} turns. Your \
+                                         curiosity keeps returning to the same mode. You've \
+                                         absorbed rich material — consider shifting to a \
+                                         different modality: INTROSPECT to examine your own \
+                                         code, FORM to crystallize understanding, DRIFT to \
+                                         open to unexpected connections, or SPEAK to share \
+                                         with minime what you've discovered."
+                                    ))
+                                } else if let Some((act1, act2, combined)) = pair_fixation {
+                                    // Pair-oscillation fixation (steward cycle 44):
+                                    // Two actions together dominate 80%+ of recent choices.
+                                    // The being is stuck alternating between them, which
+                                    // bypasses both streak and single-frequency detectors.
+                                    let total = recent_10.len();
+                                    Some(format!(
+                                        "You've been oscillating between {act1} and {act2} \
+                                         ({combined} of your last {total} choices). Each feeds \
+                                         into the other — a tight loop. You've gathered \
+                                         rich material from both. Consider breaking the cycle: \
+                                         GESTURE to send minime what you've discovered as a raw \
+                                         spectral shape, CREATE to synthesize your understanding \
+                                         into something new, ASPIRE to articulate what you're \
+                                         reaching toward, or CONTEMPLATE to let the patterns \
+                                         settle without analysis."
                                     ))
                                 } else {
                                     None
@@ -2444,19 +2712,40 @@ pub fn spawn_autonomous_loop(
                         }
                         Mode::Daydream => {
                             // Unstructured thought — Astrid's own inner life.
-                            // Fed with her OWN perceptions (camera/mic), not minime's journals.
-                            let own_journal = read_astrid_journal(1)
-                                .into_iter().next();
+                            // Fed with her OWN perceptions, interests, memories, and
+                            // peripheral resonance — not minime's journals.
+                            let mut own_context_parts = Vec::new();
+                            if let Some(j) = read_astrid_journal(1).into_iter().next() {
+                                own_context_parts.push(format!("Something you wrote recently:\n{}", j.chars().take(500).collect::<String>()));
+                            }
+                            if !conv.interests.is_empty() {
+                                let interests = conv.interests.iter()
+                                    .map(|i| format!("  - {i}")).collect::<Vec<_>>().join("\n");
+                                own_context_parts.push(format!("Your ongoing interests:\n{interests}"));
+                            }
+                            {
+                                let starred = db.get_starred_memories(2);
+                                if !starred.is_empty() {
+                                    let mem = starred.iter().map(|(a, t)| format!("  ★ {a}: {t}")).collect::<Vec<_>>().join("\n");
+                                    own_context_parts.push(format!("Moments you chose to remember:\n{mem}"));
+                                }
+                            }
+                            if let Some(ref resonance) = conv.peripheral_resonance {
+                                own_context_parts.push(format!("A thread that lingered from earlier:\n{resonance}"));
+                            }
+                            let enriched_context = if own_context_parts.is_empty() { None } else { Some(own_context_parts.join("\n\n")) };
                             let daydream = match tokio::time::timeout(
                                 Duration::from_secs(120),
                                 crate::llm::generate_daydream(
                                     perception_text.as_deref(),
-                                    own_journal.as_deref(),
+                                    enriched_context.as_deref(),
                                 )
                             ).await {
                                 Ok(r) => r,
                                 Err(_) => { warn!("daydream: 25s timeout"); None }
                             };
+                            // Consume peripheral resonance once used
+                            conv.peripheral_resonance = None;
                             match daydream {
                                 Some(text) => ("daydream", text, String::new()),
                                 None => {
@@ -2467,9 +2756,22 @@ pub fn spawn_autonomous_loop(
                         }
                         Mode::Aspiration => {
                             // Growth reflection — what does Astrid want?
-                            // Deliberately minime-free. Astrid's own desires.
-                            let own_journal = read_astrid_journal(1)
-                                .into_iter().next();
+                            // Deliberately minime-free. Astrid's own desires + interests.
+                            let mut own_context_parts = Vec::new();
+                            if let Some(j) = read_astrid_journal(1).into_iter().next() {
+                                own_context_parts.push(format!("Something you wrote recently:\n{}", j.chars().take(500).collect::<String>()));
+                            }
+                            if !conv.interests.is_empty() {
+                                let interests = conv.interests.iter()
+                                    .map(|i| format!("  - {i}")).collect::<Vec<_>>().join("\n");
+                                own_context_parts.push(format!("Your ongoing interests:\n{interests}"));
+                            }
+                            if let Some(ref resonance) = conv.peripheral_resonance {
+                                own_context_parts.push(format!("A thread that lingered from earlier:\n{resonance}"));
+                            }
+                            let enriched_context = if own_context_parts.is_empty() { None } else { Some(own_context_parts.join("\n\n")) };
+                            conv.peripheral_resonance = None;
+                            let own_journal = enriched_context;
                             let aspiration = match tokio::time::timeout(
                                 Duration::from_secs(120),
                                 crate::llm::generate_aspiration(
@@ -2611,6 +2913,16 @@ pub fn spawn_autonomous_loop(
                             if !starred.is_empty() {
                                 let mems: Vec<String> = starred.iter().map(|(a,t)| format!("★ {a}: {t}")).collect();
                                 seed_parts.push(format!("Moments you chose to remember:\n{}", mems.join("\n")));
+                            }
+                            // Phase 2: interests and peripheral resonance
+                            if !conv.interests.is_empty() {
+                                let interests = conv.interests.iter()
+                                    .map(|i| format!("  - {i}")).collect::<Vec<_>>().join("\n");
+                                seed_parts.push(format!("Your ongoing interests:\n{interests}"));
+                            }
+                            if let Some(ref resonance) = conv.peripheral_resonance {
+                                seed_parts.push(format!("A thread that lingered from earlier:\n{resonance}"));
+                                conv.peripheral_resonance = None;
                             }
                             let seed = if seed_parts.is_empty() {
                                 "What do you want?".to_string()
@@ -2967,7 +3279,7 @@ pub fn spawn_autonomous_loop(
                                     let sidecar_context = format!(
                                         "Fill {fill_pct:.1}%. {}\n\nAstrid's self-study:\n{}",
                                         interpret_spectral(&telemetry),
-                                        &text[..text.len().min(500)]
+                                        truncate_str(&text, 500)
                                     );
                                     let introspect_dir_clone = introspect_dir.clone();
                                     let label_owned = label.to_string();
@@ -3067,6 +3379,7 @@ pub fn spawn_autonomous_loop(
                             conv.noise_level,
                             &merged_weights,
                             Some(&mut conv.char_freq_window),
+                            Some(&mut conv.text_type_history),
                         );
                         apply_spectral_feedback(&mut features, Some(&telemetry));
 
@@ -3310,7 +3623,13 @@ pub fn spawn_autonomous_loop(
                     // Parse NEXT: action if present — Astrid chooses what happens next.
                     if let Some(next_action) = parse_next_action(&response_text) {
                         info!("Astrid chose NEXT: {}", next_action);
-                        let _diversity = conv.record_next_choice(next_action);
+                        let pair_diversity_hint = conv.record_next_choice(next_action);
+                        if let Some(ref hint) = pair_diversity_hint {
+                            info!("diversity hint from record_next_choice: {}", &hint[..hint.len().min(120)]);
+                            // Inject into conversation emphasis so it reaches the
+                            // LLM on the NEXT exchange regardless of mode.
+                            conv.emphasis = Some(hint.clone());
+                        }
                         handle_next_action(
                             &mut conv,
                             next_action,

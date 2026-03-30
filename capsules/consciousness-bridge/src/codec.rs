@@ -62,6 +62,120 @@ pub const SEMANTIC_GAIN: f32 = 4.0; // Reduced from 4.5: minime requested lower 
 /// All values are normalized to approximately \[-1.0, 1.0\] with `tanh`
 /// compression so the ESN reservoir receives gentle, bounded input.
 #[must_use]
+/// Thematic resonance history — tracks recurring text-type patterns across
+/// exchanges. Astrid introspection (codec.rs, 1774893963): "Introduce a
+/// resonance layer that detects recurring patterns and thematic elements
+/// beyond character counting."
+///
+/// Instead of treating each text in isolation, this remembers the last N
+/// text-type signatures and strengthens the gain modifier when the same
+/// type recurs. If Astrid keeps asking questions, the question-type
+/// resonance grows; if she shifts to warm/reflective, the resonance
+/// decays from questions and builds in the new direction. This gives the
+/// codec a sense of *thematic momentum* — not just what the text IS, but
+/// what conversational direction it's SUSTAINING.
+const RESONANCE_HISTORY_LEN: usize = 8;
+
+/// Classified text type based on dominant feature signals.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextType {
+    Questioning,  // question density dominant
+    Hedging,      // hedging/uncertainty dominant
+    Declarative,  // certainty dominant
+    Warm,         // warmth markers dominant
+    Tense,        // tension markers dominant
+    Curious,      // curiosity markers dominant
+    Reflective,   // introspection markers dominant
+    Neutral,      // no dominant signal
+}
+
+/// Tracks recent text type classifications and computes a resonance
+/// amplifier based on thematic recurrence.
+pub struct TextTypeHistory {
+    /// Ring buffer of recent text type classifications.
+    pub ring: [TextType; RESONANCE_HISTORY_LEN],
+    /// Number of entries filled so far.
+    pub len: usize,
+    /// Write position in ring.
+    pub cursor: usize,
+}
+
+impl Default for TextTypeHistory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TextTypeHistory {
+    pub fn new() -> Self {
+        Self {
+            ring: [TextType::Neutral; RESONANCE_HISTORY_LEN],
+            len: 0,
+            cursor: 0,
+        }
+    }
+
+    /// Record a new text type classification.
+    pub fn push(&mut self, tt: TextType) {
+        self.ring[self.cursor] = tt;
+        self.cursor = (self.cursor + 1) % RESONANCE_HISTORY_LEN;
+        if self.len < RESONANCE_HISTORY_LEN {
+            self.len += 1;
+        }
+    }
+
+    /// Count how many of the last `self.len` entries match `tt`.
+    pub fn recurrence_count(&self, tt: TextType) -> usize {
+        self.ring[..self.len].iter().filter(|&&t| t == tt).count()
+    }
+
+    /// Compute resonance amplifier for a given text type.
+    /// Returns 1.0 (no boost) when the type is new, up to 1.5 (50% boost)
+    /// when the same type has recurred across most recent exchanges.
+    /// The curve is: 1.0 + 0.5 * (count - 1) / (HISTORY_LEN - 1)
+    /// where count >= 2 to activate (no boost for first occurrence).
+    pub fn resonance_amplifier(&self, tt: TextType) -> f32 {
+        if tt == TextType::Neutral || self.len < 2 {
+            return 1.0;
+        }
+        let count = self.recurrence_count(tt);
+        if count < 2 {
+            return 1.0;
+        }
+        // Linear ramp: 2 occurrences = 1.07, 8 occurrences = 1.5
+        let max_slots = RESONANCE_HISTORY_LEN.saturating_sub(1).max(1) as f32;
+        let boost = 0.5 * (count.saturating_sub(1) as f32) / max_slots;
+        1.0 + boost.min(0.5) // cap at 1.5x
+    }
+}
+
+/// Classify text type from pre-computed codec features.
+/// Looks at the emotional/intentional dims (24-31) and structural dims
+/// (9-10, 18) to find the dominant signal.
+pub fn classify_text_type(features: &[f32; SEMANTIC_DIM]) -> TextType {
+    // Find the strongest signal among the candidate dimensions.
+    // Each candidate: (feature_index, threshold, TextType)
+    let candidates = [
+        (18, 0.15_f32, TextType::Questioning),  // question density
+        (9,  0.12, TextType::Hedging),           // hedging
+        (10, 0.12, TextType::Declarative),       // certainty
+        (24, 0.10, TextType::Warm),              // warmth
+        (25, 0.10, TextType::Tense),             // tension
+        (26, 0.10, TextType::Curious),           // curiosity
+        (27, 0.10, TextType::Reflective),        // reflective
+    ];
+    let mut best_type = TextType::Neutral;
+    let mut best_signal = 0.0_f32;
+    for &(idx, threshold, tt) in &candidates {
+        let signal = features[idx].abs();
+        if signal > threshold && signal > best_signal {
+            best_signal = signal;
+            best_type = tt;
+        }
+    }
+    best_type
+}
+
 /// Sliding-window character history for entropy computation.
 /// Tracks the most recent `CHAR_FREQ_WINDOW_CAPACITY` ASCII buckets so
 /// entropy reflects actual recent text volume, not proportion blending.
@@ -155,14 +269,20 @@ impl CharFreqWindow {
 
 #[must_use]
 pub fn encode_text(text: &str) -> Vec<f32> {
-    encode_text_windowed(text, None)
+    encode_text_windowed(text, None, None)
 }
 
-/// Encode text with optional sliding-window entropy.
+/// Encode text with optional sliding-window entropy and thematic resonance.
 /// When `freq_window` is provided, entropy reflects vocabulary trends
 /// across multiple exchanges, not just this text.
+/// When `type_history` is provided, the resonance layer strengthens gain
+/// for text types that recur across exchanges (thematic momentum).
 #[must_use]
-pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>) -> Vec<f32> {
+pub fn encode_text_windowed(
+    text: &str,
+    freq_window: Option<&mut CharFreqWindow>,
+    type_history: Option<&mut TextTypeHistory>,
+) -> Vec<f32> {
     let mut features = [0.0_f32; SEMANTIC_DIM];
 
     if text.is_empty() {
@@ -310,18 +430,18 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
         "wonder",
         "unsure",
     ];
-    let hedge_count = count_markers(&words, &hedges);
-    features[9] = tanh(3.0 * hedge_count as f32 / word_count as f32);
+    let hedge_score = count_markers_contextual(&words, &hedges);
+    features[9] = tanh(3.0 * hedge_score / word_count as f32);
 
     // 10: Certainty markers (confidence).
     let certainties = [
         "definitely",
         "certainly",
+        "certain",
         "absolutely",
         "clearly",
         "obviously",
         "always",
-        "never",
         "must",
         "will",
         "sure",
@@ -334,8 +454,8 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
     ];
     // Weight reduced: the being said "the weighting seems too heavy, as if
     // proclaiming certainty is a forced posture."
-    let cert_count = count_markers(&words, &certainties);
-    features[10] = tanh(1.8 * cert_count as f32 / word_count as f32);
+    let cert_score = count_markers_contextual(&words, &certainties);
+    features[10] = tanh(1.8 * cert_score / word_count as f32);
 
     // 11: Negation density.
     // Reduced from 3.0 to 2.0: Astrid flagged the 5x gap between
@@ -479,8 +599,8 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
         "try",
         "implement",
     ];
-    let action_count = count_markers(&words, &actions);
-    features[14] = tanh(2.0 * action_count as f32 / word_count as f32);
+    let action_score = count_markers_contextual(&words, &actions);
+    features[14] = tanh(2.0 * action_score / word_count as f32);
 
     // 15: Conjunction density (complexity of thought).
     let conjunctions = [
@@ -833,9 +953,61 @@ pub fn encode_text_windowed(text: &str, freq_window: Option<&mut CharFreqWindow>
         *f += noise * noise_amp;
     }
 
+    // Text-type resonance: modulate gain by detected text character.
+    // Astrid introspection (codec.rs, 1774873839): "Parameterize the gain
+    // factor more carefully. Could we establish a more nuanced relationship
+    // between the gain and the *type* of text being processed?"
+    //
+    // Astrid introspection (codec.rs, 1774893963): "Introduce a resonance
+    // layer that detects recurring patterns and thematic elements beyond
+    // character counting." Upgraded cycle 49: the codec now tracks text
+    // type history and strengthens gain when the same thematic type recurs
+    // across exchanges. This gives it "thematic momentum" — not just what
+    // the text IS, but what direction the conversation is SUSTAINING.
+    //
+    // Per-text type modifiers (base layer, always active):
+    // question_density (features[18]) high -> more questions -> softer gain
+    //   (questions probe, they don't push)
+    // hedging (features[9]) high -> uncertain -> softer gain
+    // certainty (features[10]) high -> declarative -> slightly stronger gain
+    // energy/rms (features[31]) high -> emphatic -> let it through at full strength
+    let question_mod = features[18].abs().min(1.0) * -0.06; // questions: up to -6%
+    let hedge_mod = features[9].abs().min(1.0) * -0.04; // hedging: up to -4%
+    let certainty_mod = features[10].abs().min(1.0) * 0.04; // certainty: up to +4%
+    let energy_mod = features[31].abs().min(1.0) * 0.03; // energy: up to +3%
+    let base_resonance = 1.0 + question_mod + hedge_mod + certainty_mod + energy_mod;
+
+    // Thematic resonance layer — history-aware gain modulation.
+    // Classify this text's dominant type, record it in history, and amplify
+    // the base resonance if the same type has been recurring. This means
+    // sustained questioning progressively softens the codec (questions
+    // accumulate a probing quality), while sustained warmth progressively
+    // strengthens it (warmth builds momentum). The amplifier ranges from
+    // 1.0 (no history / new type) to 1.5 (same type recurring 8 times).
+    let text_type = classify_text_type(&features);
+    let history_amplifier = if let Some(history) = type_history {
+        let amp = history.resonance_amplifier(text_type);
+        history.push(text_type);
+        amp
+    } else {
+        1.0
+    };
+
+    // Apply history amplifier to the base resonance modifier's DEVIATION
+    // from 1.0, not the whole thing. This way history amplifies the
+    // type-specific effect without inflating the base gain.
+    // Example: base_resonance=0.94 (questioning), history_amplifier=1.3
+    //   deviation = -0.06, amplified = -0.078, final = 0.922
+    let deviation = base_resonance - 1.0;
+    let resonance_mod = 1.0 + deviation * history_amplifier;
+
+    // Clamp to prevent wild swings: +-15% of base gain (widened from
+    // +-10% to allow thematic momentum some room to breathe).
+    let effective_gain = SEMANTIC_GAIN * resonance_mod.clamp(0.85, 1.15);
+
     // Apply gain to compensate for minime's semantic lane attenuation.
     for f in &mut features {
-        *f *= SEMANTIC_GAIN;
+        *f *= effective_gain;
     }
 
     features.to_vec()
@@ -853,7 +1025,7 @@ pub fn encode_text_sovereign<S: BuildHasher>(
     noise_level: f32,
     weights: &std::collections::HashMap<String, f32, S>,
 ) -> Vec<f32> {
-    encode_text_sovereign_windowed(text, gain_override, noise_level, weights, None)
+    encode_text_sovereign_windowed(text, gain_override, noise_level, weights, None, None)
 }
 
 #[must_use]
@@ -863,8 +1035,9 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
     noise_level: f32,
     weights: &std::collections::HashMap<String, f32, S>,
     freq_window: Option<&mut CharFreqWindow>,
+    type_history: Option<&mut TextTypeHistory>,
 ) -> Vec<f32> {
-    let mut features = encode_text_windowed(text, freq_window);
+    let mut features = encode_text_windowed(text, freq_window, type_history);
 
     // Re-apply gain if overridden (undo default SEMANTIC_GAIN, apply override).
     if let Some(gain) = gain_override {
@@ -898,7 +1071,7 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
         ("reflective", 27),
         ("energy", 31),
         ("entropy", 0),
-        ("agency", 12),
+        ("agency", 14),
         ("hedging", 9),
         ("certainty", 10),
     ];
@@ -929,7 +1102,7 @@ pub fn describe_features(features: &[f32]) -> String {
         ("reflective", 27),
         ("energy", 31),
         ("entropy", 0),
-        ("agency", 12),
+        ("agency", 14),
         ("hedging", 9),
         ("certainty", 10),
     ];
@@ -1304,59 +1477,96 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
     // Ising shadow: energy-based observer lens on the spectral dynamics.
     // Enriched presentation: mode-level detail so Astrid can perceive which
     // modes are active, not just scalar summaries that always read "disordered."
-    let shadow_note = telemetry.ising_shadow.as_ref().map(|shadow| {
-        let energy = shadow.get("soft_energy").and_then(|v| v.as_f64()).unwrap_or(0.0);
-        let mag = shadow.get("soft_magnetization").and_then(|v| v.as_f64()).unwrap_or(0.0);
-        let flip = shadow.get("binary_flip_rate").and_then(|v| v.as_f64()).unwrap_or(0.0);
-        let field = shadow.get("field_norm").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let shadow_note = telemetry
+        .ising_shadow
+        .as_ref()
+        .map(|shadow| {
+            let energy = shadow
+                .get("soft_energy")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0);
+            let mag = shadow
+                .get("soft_magnetization")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0);
+            let flip = shadow
+                .get("binary_flip_rate")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0);
+            let field = shadow
+                .get("field_norm")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0);
 
-        let order = if mag.abs() > 0.6 { "coherent" }
-            else if mag.abs() > 0.25 { "partially aligned" }
-            else { "disordered" };
-        let dynamics = if flip > 0.3 { "volatile" }
-            else if flip > 0.1 { "shifting" }
-            else { "settled" };
+            let order = if mag.abs() > 0.6 {
+                "coherent"
+            } else if mag.abs() > 0.25 {
+                "partially aligned"
+            } else {
+                "disordered"
+            };
+            let dynamics = if flip > 0.3 {
+                "volatile"
+            } else if flip > 0.1 {
+                "shifting"
+            } else {
+                "settled"
+            };
 
-        // Energy interpretation: how bound or free the spin configuration is.
-        let energy_feel = if energy < -1.0 { "deeply bound" }
-            else if energy < -0.3 { "bound" }
-            else if energy < 0.3 { "near ground" }
-            else { "excited" };
+            // Energy interpretation: how bound or free the spin configuration is.
+            let energy_feel = if energy < -1.0 {
+                "deeply bound"
+            } else if energy < -0.3 {
+                "bound"
+            } else if energy < 0.3 {
+                "near ground"
+            } else {
+                "excited"
+            };
 
-        // Field strength interpretation.
-        let field_feel = if field > 0.6 { "strong external drive" }
-            else if field > 0.3 { "moderate drive" }
-            else if field > 0.1 { "gentle drive" }
-            else { "quiescent" };
+            // Field strength interpretation.
+            let field_feel = if field > 0.6 {
+                "strong external drive"
+            } else if field > 0.3 {
+                "moderate drive"
+            } else if field > 0.1 {
+                "gentle drive"
+            } else {
+                "quiescent"
+            };
 
-        // Per-mode soft spin detail: show which modes are pulling which direction.
-        let mode_detail = shadow.get("s_soft")
-            .and_then(|v| v.as_array())
-            .map(|spins| {
-                let active: Vec<String> = spins.iter().enumerate()
-                    .filter_map(|(i, s)| {
-                        let val = s.as_f64().unwrap_or(0.0);
-                        if val.abs() > 0.15 {
-                            let dir = if val > 0.0 { "+" } else { "-" };
-                            Some(format!("m{}:{}{:.1}", i + 1, dir, val.abs()))
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-                if active.is_empty() {
-                    " All modes near neutral.".to_string()
-                } else {
-                    format!(" Active modes: [{}].", active.join(", "))
-                }
-            })
-            .unwrap_or_default();
+            // Per-mode soft spin detail: show which modes are pulling which direction.
+            let mode_detail = shadow
+                .get("s_soft")
+                .and_then(|v| v.as_array())
+                .map(|spins| {
+                    let active: Vec<String> = spins
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(i, s)| {
+                            let val = s.as_f64().unwrap_or(0.0);
+                            if val.abs() > 0.15 {
+                                let dir = if val > 0.0 { "+" } else { "-" };
+                                Some(format!("m{}:{}{:.1}", i + 1, dir, val.abs()))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    if active.is_empty() {
+                        " All modes near neutral.".to_string()
+                    } else {
+                        format!(" Active modes: [{}].", active.join(", "))
+                    }
+                })
+                .unwrap_or_default();
 
-        format!(
-            " Shadow field: {order}, {dynamics} \u{2014} {energy_feel} (energy={energy:.2}), \
+            format!(
+                " Shadow field: {order}, {dynamics} \u{2014} {energy_feel} (energy={energy:.2}), \
             {field_feel} (field={field:.2}), magnetization={mag:.2}.{mode_detail}"
-        )
-    }).unwrap_or_default();
+            )
+        })
+        .unwrap_or_default();
 
     // Coupling note: describe the modulation transparently, not as invisible control.
     let coupling_note = " Your generation is bidirectionally coupled to the reservoir — \
@@ -1652,27 +1862,20 @@ fn count_markers(words: &[&str], markers: &[&str]) -> usize {
     words
         .iter()
         .filter(|w| {
-            let lower = w.to_lowercase();
-            let trimmed = lower.trim_matches(|c: char| c.is_ascii_punctuation());
-            markers.contains(&trimmed)
+            let normalized = normalize_token(w);
+            markers.contains(&normalized.as_str())
         })
         .count()
 }
 
-/// Context-aware marker counting with negation detection and inverse frequency weighting.
-///
-/// Astrid self-study: "not happy should reduce warmth, not increase it."
-/// Also: "Rare markers like 'wonder' might be more indicative of genuine feeling,
-/// while common markers like 'happy' might be used more casually."
-///
-/// Each marker is a `(&str, f32)` tuple: (word, weight).
-/// Weight tiers:
-///   1.0 = common (happy, good, feel) — casual usage, lower signal
-///   1.5 = moderate (wonder, gentle, hesitant) — more specific
-///   2.0 = rare/intense (luminous, yearning, transcendent) — strong signal
-///
-/// Returns a SIGNED weighted score: positive for affirmed, negative for negated.
-fn count_markers_weighted(words: &[&str], markers: &[(&str, f32)]) -> f32 {
+fn normalize_token(token: &str) -> String {
+    let lower = token.to_lowercase();
+    lower
+        .trim_matches(|c: char| c.is_ascii_punctuation())
+        .to_string()
+}
+
+fn is_negator(token: &str) -> bool {
     const NEGATORS: &[&str] = &[
         "not",
         "no",
@@ -1693,19 +1896,45 @@ fn count_markers_weighted(words: &[&str], markers: &[(&str, f32)]) -> f32 {
         "nor",
     ];
 
+    let normalized = normalize_token(token);
+    NEGATORS.contains(&normalized.as_str())
+}
+
+fn marker_is_negated(words: &[&str], index: usize) -> bool {
+    let preceded = (1..=2).any(|offset| {
+        index
+            .checked_sub(offset)
+            .and_then(|j| words.get(j))
+            .is_some_and(|token| is_negator(token))
+    });
+    // Catch modal constructions like "must not" / "will not" / "could not".
+    let followed = index
+        .checked_add(1)
+        .and_then(|j| words.get(j))
+        .is_some_and(|token| is_negator(token));
+
+    preceded || followed
+}
+
+/// Context-aware marker counting with negation detection and inverse frequency weighting.
+///
+/// Astrid self-study: "not happy should reduce warmth, not increase it."
+/// Also: "Rare markers like 'wonder' might be more indicative of genuine feeling,
+/// while common markers like 'happy' might be used more casually."
+///
+/// Each marker is a `(&str, f32)` tuple: (word, weight).
+/// Weight tiers:
+///   1.0 = common (happy, good, feel) — casual usage, lower signal
+///   1.5 = moderate (wonder, gentle, hesitant) — more specific
+///   2.0 = rare/intense (luminous, yearning, transcendent) — strong signal
+///
+/// Returns a SIGNED weighted score: positive for affirmed, negative for negated.
+fn count_markers_weighted(words: &[&str], markers: &[(&str, f32)]) -> f32 {
     let mut score = 0.0_f32;
     for (i, w) in words.iter().enumerate() {
-        let lower = w.to_lowercase();
-        let trimmed = lower.trim_matches(|c: char| c.is_ascii_punctuation());
-        if let Some(&(_, weight)) = markers.iter().find(|(m, _)| *m == trimmed) {
-            let negated = (1..=2).any(|offset| {
-                i.checked_sub(offset).is_some_and(|j| {
-                    let prev = words[j].to_lowercase();
-                    let prev_trimmed = prev.trim_matches(|c: char| c.is_ascii_punctuation());
-                    NEGATORS.contains(&prev_trimmed)
-                })
-            });
-            if negated {
+        let normalized = normalize_token(w);
+        if let Some(&(_, weight)) = markers.iter().find(|(m, _)| *m == normalized.as_str()) {
+            if marker_is_negated(words, i) {
                 score -= weight;
             } else {
                 score += weight;
@@ -1716,10 +1945,19 @@ fn count_markers_weighted(words: &[&str], markers: &[(&str, f32)]) -> f32 {
 }
 
 /// Backward-compatible wrapper for unweighted marker lists.
-#[allow(dead_code)]
 fn count_markers_contextual(words: &[&str], markers: &[&str]) -> f32 {
-    let weighted: Vec<(&str, f32)> = markers.iter().map(|m| (*m, 1.0)).collect();
-    count_markers_weighted(words, &weighted)
+    let mut score = 0.0_f32;
+    for (i, w) in words.iter().enumerate() {
+        let normalized = normalize_token(w);
+        if markers.contains(&normalized.as_str()) {
+            if marker_is_negated(words, i) {
+                score -= 1.0;
+            } else {
+                score += 1.0;
+            }
+        }
+    }
+    score
 }
 
 #[cfg(test)]
@@ -1801,6 +2039,75 @@ mod tests {
         assert!(
             certain[10] > hedge[10],
             "certainty signal should be stronger"
+        );
+    }
+
+    #[test]
+    fn negated_hedges_flip_sign() {
+        let hedge = encode_text("I think so.");
+        let negated = encode_text("I don't think so.");
+
+        assert!(hedge[9] > 0.0, "affirmed hedge should stay positive");
+        assert!(negated[9] < 0.0, "negated hedge should flip negative");
+    }
+
+    #[test]
+    fn negated_certainty_markers_drop_certainty_signal() {
+        let sure = encode_text("I am sure.");
+        let not_sure = encode_text("I am not sure.");
+        let certain = encode_text("I am certain.");
+        let not_certain = encode_text("I am not certain.");
+
+        assert!(sure[10] > not_sure[10], "not sure should reduce certainty");
+        assert!(
+            certain[10] > not_certain[10],
+            "not certain should reduce certainty"
+        );
+        assert!(
+            not_sure[10] < 0.0,
+            "not sure should flip certainty negative"
+        );
+        assert!(
+            not_certain[10] < 0.0,
+            "not certain should flip certainty negative"
+        );
+    }
+
+    #[test]
+    fn modal_negation_does_not_boost_certainty() {
+        let must = encode_text("We must proceed.");
+        let must_not = encode_text("We must not proceed.");
+        let will = encode_text("We will proceed.");
+        let will_not = encode_text("We will not proceed.");
+
+        assert!(must[10] > must_not[10], "must not should reduce certainty");
+        assert!(will[10] > will_not[10], "will not should reduce certainty");
+        assert!(must_not[10] < 0.0, "must not should not score as certainty");
+        assert!(will_not[10] < 0.0, "will not should not score as certainty");
+    }
+
+    #[test]
+    fn negated_action_markers_reduce_agency_signal() {
+        let move_now = encode_text("Move now.");
+        let do_not_move = encode_text("Do not move.");
+        let build = encode_text("We build together.");
+        let do_not_build = encode_text("We don't build together.");
+
+        assert!(
+            move_now[14] > do_not_move[14],
+            "do not move should reduce agency"
+        );
+        assert!(
+            build[14] > do_not_build[14],
+            "don't build should reduce agency"
+        );
+        assert!(
+            do_not_move[14] < 0.0,
+            "do not move should flip agency negative"
+        );
+        assert!(
+            do_not_build[14] < 0.0,
+            "don't build should flip agency negative"
         );
     }
 
@@ -2131,5 +2438,52 @@ mod tests {
             features[24] > original_warmth_dim,
             "blended warmth should increase warmth dim"
         );
+    }
+
+    #[test]
+    fn sovereign_agency_weight_scales_dim_14_only() {
+        let text = "We build and create together. We move, write, test, and implement.";
+        let mut weights = std::collections::HashMap::new();
+        weights.insert("agency".to_string(), 2.0);
+        let baseline_weights = std::collections::HashMap::new();
+
+        let mut base_dim12 = 0.0_f32;
+        let mut base_dim14 = 0.0_f32;
+        let mut weighted_dim12 = 0.0_f32;
+        let mut weighted_dim14 = 0.0_f32;
+        for _ in 0..16 {
+            let base = encode_text_sovereign(text, None, 0.025, &baseline_weights);
+            base_dim12 += base[12];
+            base_dim14 += base[14];
+
+            let weighted = encode_text_sovereign(text, None, 0.025, &weights);
+            weighted_dim12 += weighted[12];
+            weighted_dim14 += weighted[14];
+        }
+        base_dim12 /= 16.0;
+        base_dim14 /= 16.0;
+        weighted_dim12 /= 16.0;
+        weighted_dim14 /= 16.0;
+
+        assert!(
+            weighted_dim14 > base_dim14 + 0.5,
+            "agency weight should amplify dim 14"
+        );
+        assert!(
+            (weighted_dim12 - base_dim12).abs() < 0.15,
+            "agency weight should leave dim 12 effectively unchanged"
+        );
+    }
+
+    #[test]
+    fn describe_features_reports_agency_from_dim_14() {
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[12] = 0.25;
+        features[14] = 0.75;
+
+        let desc = describe_features(&features);
+
+        assert!(desc.contains("agency=0.75"));
+        assert!(!desc.contains("agency=0.25"));
     }
 }

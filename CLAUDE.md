@@ -24,6 +24,7 @@ Detailed documentation of the current system lives in [`md-CLAUDE-chapters/`](md
 | [13 — ANE Reservoir](md-CLAUDE-chapters/13-ane-reservoir.md) | Triple-ESN service on port 7881, feeders, rehearsal, MCP tools |
 | [14 — Spectral Dynamics](md-CLAUDE-chapters/14-spectral-dynamics.md) | Eigenvalues, covariance, PI regulator, sigmoid patterns, Ising shadow |
 | [15 — Unified Operations](md-CLAUDE-chapters/15-unified-operations.md) | start/stop scripts, launchd integration, camera TCC, restart procedures |
+| [16 — Codec Deep Dive](md-CLAUDE-chapters/16-codec-deep-dive.md) | 32D dimension layout, four layers, gain history, warmth vectors, being-driven evolution |
 
 ## Build / Test / Lint
 

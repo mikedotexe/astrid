@@ -586,6 +586,7 @@ const fn default_chimera_seed() -> u64 {
 pub enum MessageDirection {
     MinimeToAstrid,
     AstridToMinime,
+    OperatorProbe,
 }
 
 impl MessageDirection {
@@ -595,6 +596,7 @@ impl MessageDirection {
         match self {
             Self::MinimeToAstrid => "minime_to_astrid",
             Self::AstridToMinime => "astrid_to_minime",
+            Self::OperatorProbe => "operator_probe",
         }
     }
 }
