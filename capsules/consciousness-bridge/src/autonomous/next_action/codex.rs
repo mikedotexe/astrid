@@ -60,35 +60,49 @@ pub(super) fn handle_action(
             }
             true
         }
-        "CODEX" => {
-            let arg = strip_action(original, "CODEX");
+        "CODEX" | "CODEX_NEW" => {
+            let arg = if base_action == "CODEX_NEW" {
+                strip_action(original, "CODEX_NEW")
+            } else {
+                strip_action(original, "CODEX")
+            };
             if arg.is_empty() {
                 conv.emphasis = Some(
                     "CODEX needs a prompt. Examples:\n\
                      NEXT: CODEX \"explain spectral entropy\"\n\
-                     NEXT: CODEX my-experiment \"add a metrics function to model.py\""
+                     NEXT: CODEX my-experiment \"add a metrics function to model.py\"\n\
+                     NEXT: CODEX_NEW scratch-pad \"scaffold a small Python project here\""
                         .into(),
                 );
                 return true;
             }
-            // Detect project-scoped mode: first token matches experiments/ dir
             let experiments = bridge_paths().experiments_dir();
-            let (dir_context, prompt) = detect_project_prompt(&arg, &experiments);
+            let _ = fs::create_dir_all(&experiments);
+            let codex_req = match prepare_codex_request(base_action, &arg, &experiments) {
+                Ok(req) => req,
+                Err(msg) => {
+                    conv.emphasis = Some(msg);
+                    return true;
+                }
+            };
 
-            info!("CODEX query (dir={dir_context:?}): {}", &prompt[..prompt.len().min(80)]);
+            info!(
+                "{base_action} query (dir={:?}, thread={}): {}",
+                codex_req.dir_context,
+                codex_req.thread_id,
+                &codex_req.prompt[..codex_req.prompt.len().min(80)]
+            );
 
             // Build request body
             let mut body = serde_json::json!({
                 "from": "astrid",
-                "prompt": prompt,
+                "prompt": codex_req.prompt,
                 "effort": "high",
                 "no_deliver": true,
+                "thread": codex_req.thread_id,
             });
-            if let Some(ref dir) = dir_context {
+            if let Some(ref dir) = codex_req.dir_context {
                 body["dir"] = serde_json::Value::String(dir.clone());
-            }
-            if let Some(ref thread_id) = conv.codex_thread_id {
-                body["thread"] = serde_json::Value::String(thread_id.clone());
             }
 
             // Synchronous HTTP call via tokio runtime
@@ -122,11 +136,6 @@ pub(super) fn handle_action(
                         .get("total_chars")
                         .and_then(|v| v.as_u64())
                         .unwrap_or(0);
-
-                    // Store thread ID if returned
-                    if let Some(tid) = resp.get("thread").and_then(|v| v.as_str()) {
-                        conv.codex_thread_id = Some(tid.to_string());
-                    }
 
                     // Store full response for WRITE_FILE FROM_CODEX
                     conv.last_codex_response = Some(text.clone());
@@ -163,7 +172,10 @@ pub(super) fn handle_action(
                         conv.last_read_path = Some(saved_path.to_string_lossy().into());
                         conv.last_read_offset = break_at;
                     }
-                    info!("CODEX response: {total} chars");
+                    if let Some(ref created) = codex_req.created_dir {
+                        info!("CODEX_NEW ensured experiments/{created}/ exists");
+                    }
+                    info!("{base_action} response: {total} chars");
                 }
                 Err(e) => {
                     let msg = if e.is_timeout() {
@@ -248,24 +260,187 @@ pub(super) fn handle_action(
             }
             true
         }
+        "EXPERIMENT_RUN" | "EXP_RUN" => {
+            let arg = strip_action(original, base_action);
+            let parts: Vec<&str> = arg.splitn(2, char::is_whitespace).collect();
+            let workspace = parts.first().copied().unwrap_or_default();
+            let cmd_str = parts.get(1).copied().unwrap_or_default().trim();
+            if workspace.is_empty() || cmd_str.is_empty() {
+                conv.emphasis = Some(
+                    "EXPERIMENT_RUN needs a workspace and command. Example:\n\
+                     NEXT: EXPERIMENT_RUN scratch-pad python main.py\n\
+                     NEXT: EXP_RUN my-fork python -m blockwise --help"
+                        .into(),
+                );
+                return true;
+            }
+            let experiments = bridge_paths().experiments_dir();
+            let work_dir = experiments.join(workspace);
+            if !is_safe_path(&work_dir, &experiments) || !work_dir.is_dir() {
+                conv.emphasis = Some(format!(
+                    "EXPERIMENT_RUN: workspace '{workspace}' not found in experiments/. \
+                     Use NEXT: CODEX_NEW {workspace} \"...\" to create one."
+                ));
+                return true;
+            }
+            info!("EXPERIMENT_RUN: {workspace} -> {cmd_str}");
+            let cmd_parts: Vec<&str> = cmd_str.split_whitespace().collect();
+            let (cmd, args) = match cmd_parts.split_first() {
+                Some((c, a)) => (*c, a),
+                None => {
+                    conv.emphasis = Some("EXPERIMENT_RUN: no command specified.".into());
+                    return true;
+                }
+            };
+            let output = std::process::Command::new(cmd)
+                .args(args)
+                .current_dir(&work_dir)
+                .env("MPLBACKEND", "Agg")
+                .output();
+            let result_text = match output {
+                Ok(out) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    let status = if out.status.success() { "SUCCESS" } else { "FAILED" };
+                    format!(
+                        "EXPERIMENT_RUN {status}: experiments/{workspace}$ {cmd_str}\n\nOUTPUT:\n{}\n{}",
+                        &stdout[..stdout.len().min(4000)],
+                        if stderr.is_empty() {
+                            String::new()
+                        } else {
+                            format!("STDERR:\n{}", &stderr[..stderr.len().min(1500)])
+                        }
+                    )
+                }
+                Err(e) => format!("EXPERIMENT_RUN failed: {e}"),
+            };
+            conv.emphasis = Some(format!(
+                "You ran a command in your workspace:\n{result_text}\n\n\
+                 Reflect on the results. You can iterate with NEXT: CODEX {workspace} \"...\" \
+                 and save changes with NEXT: WRITE_FILE {workspace}/... FROM_CODEX"
+            ));
+            true
+        }
         _ => false,
     }
 }
 
+struct CodexRequest {
+    dir_context: Option<String>,
+    prompt: String,
+    thread_id: String,
+    created_dir: Option<String>,
+}
+
+fn prepare_codex_request(
+    base_action: &str,
+    arg: &str,
+    experiments: &Path,
+) -> Result<CodexRequest, String> {
+    if base_action == "CODEX_NEW" {
+        let (label, rest) = arg
+            .split_once(char::is_whitespace)
+            .map(|(a, b)| (a.trim(), b.trim()))
+            .ok_or_else(|| {
+                "CODEX_NEW needs a directory name and prompt. Example:\n\
+                 NEXT: CODEX_NEW scratch-pad \"scaffold a tiny Python project here\""
+                    .to_string()
+            })?;
+        let prompt = normalize_prompt_text(rest);
+        if prompt.is_empty() {
+            return Err(
+                "CODEX_NEW needs a directory name and prompt. Example:\n\
+                 NEXT: CODEX_NEW scratch-pad \"scaffold a tiny Python project here\""
+                    .to_string(),
+            );
+        }
+        let dir = resolve_experiment_dir(label, experiments)?;
+        fs::create_dir_all(&dir)
+            .map_err(|e| format!("CODEX_NEW could not create experiments/{label}: {e}"))?;
+        return Ok(CodexRequest {
+            dir_context: Some(dir.to_string_lossy().into()),
+            prompt,
+            thread_id: codex_thread_id("astrid", Some(label)),
+            created_dir: Some(label.to_string()),
+        });
+    }
+
+    let (dir_context, prompt, scope_label) = detect_project_prompt(arg, experiments);
+    Ok(CodexRequest {
+        dir_context,
+        prompt,
+        thread_id: codex_thread_id("astrid", scope_label.as_deref()),
+        created_dir: None,
+    })
+}
+
 /// Detect if the first token is an existing experiments/ subdirectory.
-/// If so, return (Some(dir_path), remaining prompt). Otherwise (None, full text).
-fn detect_project_prompt(arg: &str, experiments: &Path) -> (Option<String>, String) {
+/// If so, return (Some(dir_path), remaining prompt, Some(label)).
+/// Otherwise return (None, full text, None).
+fn detect_project_prompt(arg: &str, experiments: &Path) -> (Option<String>, String, Option<String>) {
     let first_token = arg.split(|c: char| c.is_whitespace() || c == '"').next().unwrap_or("");
     if !first_token.is_empty() {
         let candidate = experiments.join(first_token);
         if candidate.is_dir() {
-            let prompt = arg[first_token.len()..].trim().trim_matches('"').to_string();
+            let prompt = normalize_prompt_text(&arg[first_token.len()..]);
             if !prompt.is_empty() {
-                return (Some(candidate.to_string_lossy().into()), prompt);
+                return (
+                    Some(candidate.to_string_lossy().into()),
+                    prompt,
+                    Some(first_token.to_string()),
+                );
             }
         }
     }
-    (None, arg.trim_matches('"').to_string())
+    (None, normalize_prompt_text(arg), None)
+}
+
+fn normalize_prompt_text(text: &str) -> String {
+    text.trim()
+        .trim_matches(|c: char| matches!(c, '"' | '\'' | '“' | '”'))
+        .trim()
+        .to_string()
+}
+
+fn resolve_experiment_dir(label: &str, experiments: &Path) -> Result<std::path::PathBuf, String> {
+    let label = label.trim().trim_matches(|c: char| matches!(c, '"' | '\'' | '“' | '”'));
+    if label.is_empty() || label == "." || label == ".." || label.contains('/') || label.contains('\\') {
+        return Err(
+            "CODEX_NEW directory names must stay inside experiments/ and cannot contain path separators."
+                .to_string(),
+        );
+    }
+    let dir = experiments.join(label);
+    if !is_safe_path(&dir, experiments) {
+        return Err("[Path outside experiments/ — blocked.]".to_string());
+    }
+    Ok(dir)
+}
+
+fn codex_thread_id(being: &str, scope: Option<&str>) -> String {
+    match scope {
+        Some(scope) => format!("{being}_codex_{}", sanitize_scope(scope)),
+        None => format!("{being}_codex_general"),
+    }
+}
+
+fn sanitize_scope(scope: &str) -> String {
+    let mut out = String::with_capacity(scope.len());
+    for ch in scope.chars() {
+        if ch.is_ascii_alphanumeric() {
+            out.push(ch.to_ascii_lowercase());
+        } else if matches!(ch, '-' | '_') {
+            out.push(ch);
+        } else {
+            out.push('_');
+        }
+    }
+    let trimmed = out.trim_matches('_');
+    if trimmed.is_empty() {
+        "general".to_string()
+    } else {
+        trimmed.chars().take(48).collect()
+    }
 }
 
 /// Recursively copy a directory, skipping excluded entries.

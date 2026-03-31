@@ -234,6 +234,31 @@ impl FacultySnapshot {
                             a.clone(),
                             "run a research script",
                         ),
+                        f(
+                            "MIKE_FORK <project> [name]",
+                            a.clone(),
+                            "fork research to experiments for modification",
+                        ),
+                        f(
+                            "CODEX <prompt>",
+                            a.clone(),
+                            "ask Codex AI directly, or use CODEX <experiment> \"prompt\" for an existing workspace",
+                        ),
+                        f(
+                            "CODEX_NEW <dir> <prompt>",
+                            a.clone(),
+                            "create a fresh experiments/<dir>/ workspace and ask Codex in that context",
+                        ),
+                        f(
+                            "WRITE_FILE <path> FROM_CODEX",
+                            a.clone(),
+                            "write last Codex response to a file in experiments",
+                        ),
+                        f(
+                            "EXPERIMENT_RUN <workspace> <cmd>",
+                            a.clone(),
+                            "run a command in your experiments workspace (python, ls, etc.)",
+                        ),
                     ],
                 },
                 FacultyCategory {
