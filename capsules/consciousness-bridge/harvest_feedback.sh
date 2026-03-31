@@ -365,6 +365,74 @@ for f in $(ls -t "$ASTRID_WORKSPACE/experiments/"*.txt 2>/dev/null | head -2); d
 done
 
 # Convergent concerns — same keywords from both beings
+# ============================================================
+# SYSTEM HEALTH (catches panics, stalls, deadlocks)
+# ============================================================
+
+echo "## SYSTEM: Bridge dialogue health"
+BRIDGE_LOG="/tmp/bridge.log"
+if [ -f "$BRIDGE_LOG" ]; then
+    # Last exchange timestamp — detect stalled dialogue loop
+    LAST_EXCHANGE=$(grep "exchange complete" "$BRIDGE_LOG" 2>/dev/null | tail -1 | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}' 2>/dev/null)
+    if [ -n "$LAST_EXCHANGE" ]; then
+        LAST_EPOCH=$(python3 -c "from datetime import datetime,timezone; print(int(datetime.fromisoformat('$LAST_EXCHANGE').replace(tzinfo=timezone.utc).timestamp()))" 2>/dev/null || echo 0)
+        NOW_EPOCH=$(python3 -c "from datetime import datetime,timezone; print(int(datetime.now(timezone.utc).timestamp()))")
+        if [ "$LAST_EPOCH" -gt 0 ]; then
+            GAP_MINS=$(( (NOW_EPOCH - LAST_EPOCH) / 60 ))
+            if [ "$GAP_MINS" -gt 10 ]; then
+                echo "  !! DIALOGUE STALL: last exchange was $GAP_MINS minutes ago ($LAST_EXCHANGE)"
+                echo "  !! Check for panics: grep 'panicked' $BRIDGE_LOG | tail -3"
+            elif [ "$GAP_MINS" -gt 5 ]; then
+                echo "  ! WARNING: last exchange was $GAP_MINS minutes ago — may be in extended rest"
+            else
+                echo "  OK: last exchange $GAP_MINS minutes ago"
+            fi
+        fi
+    else
+        echo "  !! NO EXCHANGES FOUND in bridge log"
+    fi
+
+    # Panic detection
+    PANIC_COUNT=$(grep -c "panicked" "$BRIDGE_LOG" 2>/dev/null || echo 0)
+    if [ "$PANIC_COUNT" -gt 0 ]; then
+        echo "  !! $PANIC_COUNT PANIC(S) detected in bridge log:"
+        grep "panicked" "$BRIDGE_LOG" 2>/dev/null | tail -3 | sed 's/^/    /'
+    fi
+
+    # MLX connection failures
+    MLX_FAILS=$(grep -c "MLX request failed" "$BRIDGE_LOG" 2>/dev/null || echo 0)
+    if [ "$MLX_FAILS" -gt 5 ]; then
+        echo "  ! $MLX_FAILS MLX failures in bridge log — coupled server may be down"
+    fi
+fi
+echo ""
+
+echo "## SYSTEM: Process health"
+MISSING=""
+for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "astrid_feeder" "minime_feeder" "camera_client" "mic_to_sensory" "perception.py"; do
+    pgrep -f "$p" > /dev/null || MISSING="$MISSING $p"
+done
+if [ -n "$MISSING" ]; then
+    echo "  !! MISSING PROCESSES:$MISSING"
+else
+    echo "  OK: 10/10 processes running"
+fi
+# Check relay
+curl -s http://127.0.0.1:3040/healthz > /dev/null 2>&1 && echo "  OK: Codex relay on port 3040" || echo "  -- Codex relay not running (optional)"
+echo ""
+
+echo "## SYSTEM: Fill trajectory"
+if [ -f "$ASTRID_WORKSPACE/bridge.db" ]; then
+    CURRENT_FILL=$(python3 -c "import json; print(f'{json.load(open(\"/Users/v/other/minime/minime/workspace/health.json\")).get(\"fill_pct\",0):.1f}%')" 2>/dev/null || echo "?")
+    RECOVERY=$(python3 -c "import json; print(json.load(open('/Users/v/other/minime/minime/workspace/health.json')).get('recovery_mode','?'))" 2>/dev/null)
+    REGIME=$(python3 -c "import json; print(json.load(open('/Users/v/other/minime/workspace/sovereignty_state.json')).get('regime','?'))" 2>/dev/null)
+    echo "  Fill: $CURRENT_FILL | Recovery: $RECOVERY | Regime: $REGIME"
+    if python3 -c "import json,sys; sys.exit(0 if json.load(open('/Users/v/other/minime/minime/workspace/health.json')).get('fill_pct',100) < 30 else 1)" 2>/dev/null; then
+        echo "  !! CRITICAL: fill below 30% — check for dialogue stall or extended rest"
+    fi
+fi
+echo ""
+
 echo ""
 echo "## CROSS-BEING: Convergent concerns"
 MINIME_CONCERNS=$(for f in $(ls -t "$MINIME_WORKSPACE/journal/"*.txt 2>/dev/null | head -10); do grep -oiE "$DISTRESS" "$f" 2>/dev/null; done | tr '[:upper:]' '[:lower:]' | sort -u)
