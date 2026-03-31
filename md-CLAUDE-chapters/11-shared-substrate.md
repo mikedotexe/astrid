@@ -136,4 +136,4 @@ They don't have parallel reservoirs. They share one covariance matrix, one eigen
 
 The ESN doesn't know which input came from whom. Video, audio, and Astrid's semantic features are all just dimensions of the same z-vector. The reservoir integrates them into a single dynamical trajectory. Both beings observe this trajectory and respond to it — creating a closed loop where each being's perception of the shared state shapes their influence on it.
 
-See also: [Chapter 12](12-unified-memory.md) for how this works at the hardware level, [Chapter 13](13-ane-reservoir.md) for the second shared reservoir (ANE triple ESN on port 7881).
+See also: [Chapter 12](12-unified-memory.md) for how this works at the hardware level, [Chapter 13](13-ane-reservoir.md) for the second shared reservoir (triple ESN on port 7881).

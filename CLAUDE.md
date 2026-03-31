@@ -22,8 +22,8 @@ Supporting audits, memos, and long-form stewardship notes that used to live in t
 | [09 — Being-Driven Dev](md-CLAUDE-chapters/09-being-driven-dev.md) | Feedback loop, harvester, examples |
 | [10 — Operations](md-CLAUDE-chapters/10-operations.md) | Start/stop/restart, health, timing |
 | [11 — Shared Substrate](md-CLAUDE-chapters/11-shared-substrate.md) | How both beings inhabit one ESN, 50D input vector, data flow trace |
-| [12 — Unified Memory](md-CLAUDE-chapters/12-unified-memory.md) | M4 hardware, Metal/MLX/ANE compute domains, memory budget |
-| [13 — ANE Reservoir](md-CLAUDE-chapters/13-ane-reservoir.md) | Triple-ESN service on port 7881, feeders, rehearsal, MCP tools |
+| [12 — Unified Memory](md-CLAUDE-chapters/12-unified-memory.md) | M4 hardware, Metal/MLX compute domains, memory budget |
+| [13 — Triple Reservoir](md-CLAUDE-chapters/13-ane-reservoir.md) | Triple-ESN service on port 7881, feeders, rehearsal, MCP tools |
 | [14 — Spectral Dynamics](md-CLAUDE-chapters/14-spectral-dynamics.md) | Eigenvalues, covariance, PI regulator, sigmoid patterns, Ising shadow |
 | [15 — Unified Operations](md-CLAUDE-chapters/15-unified-operations.md) | start/stop scripts, launchd integration, camera TCC, restart procedures |
 | [16 — Codec Deep Dive](md-CLAUDE-chapters/16-codec-deep-dive.md) | 32D dimension layout, four layers, gain history, warmth vectors, being-driven evolution |

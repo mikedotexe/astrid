@@ -1,4 +1,4 @@
-# Chapter 13: ANE Triple Reservoir
+# Chapter 13: Triple Reservoir
 
 *Ground truth as of March 28, 2026. Service built and tested this session.*
 

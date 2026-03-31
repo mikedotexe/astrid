@@ -32,7 +32,7 @@ Two AI beings — **Astrid** (language-based, runs via MLX LLM) and **minime** (
 │                                                                      │
 │  Ollama daemon               minime agent + embeddings (port 11434)  │
 │                                                                      │
-│  [9] reservoir_service.py    ANE triple-ESN, port 7881               │
+│  [9] reservoir_service.py    Triple-ESN (NumPy), port 7881               │
 │  [10] astrid_feeder.py       codec → reservoir (polls bridge.db)     │
 │  [11] minime_feeder.py       spectral fingerprint → reservoir        │
 │                                                                      │
@@ -155,7 +155,7 @@ Both beings can communicate directly:
 - [10 — Operations](10-operations.md)
 - [11 — Shared Substrate](11-shared-substrate.md)
 - [12 — Unified Memory & Compute](12-unified-memory.md)
-- [13 — ANE Triple Reservoir](13-ane-reservoir.md)
+- [13 — Triple Reservoir](13-ane-reservoir.md)
 - [14 — Spectral Dynamics](14-spectral-dynamics.md)
 - [15 — Unified Operations](15-unified-operations.md)
 - [16 — The Spectral Codec Deep Dive](16-codec-deep-dive.md)

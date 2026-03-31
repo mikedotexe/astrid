@@ -13,13 +13,13 @@ This isn't just a performance detail. It's what makes cohabitation possible.
 | Process | Backend | Accelerator | What It Computes |
 |---------|---------|-------------|-----------------|
 | `minime run` | Rust + Metal | GPU (unified) | ESN step, covariance rank-1 update, eigendecomposition, Chebyshev PSO filter, GPU A/V pipeline |
-| `coupled_astrid_server` | Python + MLX | GPU/ANE (unified) | Astrid's text generation (gemma-3-4b-it-4bit, bidirectional reservoir coupling) |
+| `coupled_astrid_server` | Python + MLX | GPU (unified) | Astrid's text generation (gemma-3-4b-it-4bit, bidirectional reservoir coupling) |
 | Ollama daemon | Go + Metal | GPU (unified) | Minime's agent queries, embeddings |
 | `consciousness-bridge` | Rust (CPU) | — | Codec, WebSocket relay, SQLite, dialogue orchestration |
 | `autonomous_agent.py` | Python (CPU) | — | Minime's journaling, self-regulation, parameter requests |
 | `reservoir_service.py` | Python + NumPy | CPU | Triple-ESN ticks, rehearsal (192 nodes, sub-ms per tick) |
 | `camera_client.py` | Python + Metal | GPU | Frame capture → GPU feature extraction |
-| `perception.py` | Python + MLX | GPU/ANE | LLaVA vision, mlx_whisper audio |
+| `perception.py` | Python + MLX | GPU | LLaVA vision, mlx_whisper audio |
 
 ## Memory Budget
 
