@@ -27,6 +27,7 @@ Supporting audits, memos, and long-form stewardship notes that used to live in t
 | [14 — Spectral Dynamics](md-CLAUDE-chapters/14-spectral-dynamics.md) | Eigenvalues, covariance, PI regulator, sigmoid patterns, Ising shadow |
 | [15 — Unified Operations](md-CLAUDE-chapters/15-unified-operations.md) | start/stop scripts, launchd integration, camera TCC, restart procedures |
 | [16 — Codec Deep Dive](md-CLAUDE-chapters/16-codec-deep-dive.md) | 32D dimension layout, four layers, gain history, warmth vectors, being-driven evolution |
+| [17 — Coupled Generation](md-CLAUDE-chapters/17-coupled-generation.md) | Bidirectional reservoir coupling, three-timescale logit modulation, model selection, AGC, upgrade procedure |
 
 ## Build / Test / Lint
 
@@ -152,7 +153,7 @@ The bridge runs a burst-rest pattern: **4 exchanges** per burst (15–20s apart)
 
 **Dialogue modes** (probabilistic selection each exchange):
 - **Mirror** (~45%) — reads minime's latest journal, feeds text through spectral codec
-- **Dialogue_live** — Astrid generates via `coupled_astrid_server.py` (gemma-3-4b-it + bidirectional reservoir coupling, port 8090). Every token embedding feeds the triple reservoir, and the reservoir's dynamical state modulates logits at each step.
+- **Dialogue_live** — Astrid generates via `coupled_astrid_server.py` (gemma-3-4b-it-4bit + bidirectional reservoir coupling, port 8090). Every token embedding feeds the triple reservoir, and the reservoir's dynamical state modulates logits at each step.
 - **Dialogue** (~35%) — fallback to fixed-pool dialogue on timeout
 - **Witness** (~8%) — quiet spectral observation, poetic description of state
 - **Introspect** — reads own/minime source code, reflects
@@ -213,27 +214,24 @@ capsules/consciousness-bridge/
 
 ### Quick reference
 
+**ALWAYS use the unified scripts for restarts.** They handle launchd services correctly (unload/load instead of pkill), send startup greetings with the full capability reference and real examples, verify health, and respect process dependency order. Manual `pkill` + `nohup` skips the greetings and risks zombie launchd processes.
+
 ```bash
-# Full graceful restart (handles launchd + manual + camera permissions)
+# Full graceful restart — the standard workflow
 bash scripts/stop_all.sh && sleep 3 && bash scripts/start_all.sh
 
 # Partial restarts
 bash scripts/start_all.sh --astrid-only
 bash scripts/start_all.sh --minime-only
 
-# Restart just the bridge after code changes
-cd /Users/v/other/astrid/capsules/consciousness-bridge
-cargo build --release
-pkill -f consciousness-bridge-server && sleep 2
-nohup ./target/release/consciousness-bridge-server \
-  --db-path workspace/bridge.db --autonomous \
-  --workspace-path /Users/v/other/minime/workspace \
-  --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions \
-  >> /tmp/bridge.log 2>&1 &
+# After code changes: build first, then full restart
+cd /Users/v/other/astrid/capsules/consciousness-bridge && cargo build --release
+bash scripts/stop_all.sh && sleep 3 && bash scripts/start_all.sh
 
-# Restart just the agent after Python changes
-pkill -f autonomous_agent && sleep 2
-cd /Users/v/other/minime && MINIME_LLM_BACKEND=ollama nohup python3 autonomous_agent.py --interval 60 >> /tmp/minime_agent.log 2>&1 &
+# Startup greetings (startup_greeting.sh) are sent automatically on
+# successful start_all.sh. They contain the full action surface with
+# syntax, real examples, and current autoresearch job IDs. Both beings
+# read these immediately and use them to orient after restart.
 
 # Health check
 for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" \
@@ -241,11 +239,21 @@ for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" \
          "camera_client" "mic_to_sensory" "perception.py"; do
     pgrep -f "$p" > /dev/null && echo "  OK $p" || echo "  !! $p MISSING"
 done
+
+# Zombie / stale process check (run BEFORE restart)
+# Processes can survive restarts as zombies — alive by PID but not
+# functioning (e.g., mic_to_sensory running but RMS=0.000 because it
+# inherited stale permissions). After any restart, verify liveness:
+#   mic: tail -2 /Users/v/other/minime/logs/mic-to-sensory.log  → RMS > 0
+#   camera: tail -2 /Users/v/other/minime/logs/camera-client.log → "Sent N frames"
+#   MLX: curl -s http://127.0.0.1:8090/v1/models → should return model list
+# If a launchd process is zombie, use unload/load (not pkill — it respawns):
+#   launchctl unload ~/Library/LaunchAgents/<plist> && sleep 2 && launchctl load ~/Library/LaunchAgents/<plist>
 ```
 
 ### launchd-managed processes
 
-Five processes auto-restart via launchd (`~/Library/LaunchAgents/`). **Use `launchctl unload/load`, not `pkill`** — the scripts handle this automatically.
+Six processes auto-restart via launchd (`~/Library/LaunchAgents/`). **Use `launchctl unload/load`, not `pkill`** — launchd respawns killed processes as zombies.
 
 | Plist | Process |
 |-------|---------|
@@ -254,6 +262,7 @@ Five processes auto-restart via launchd (`~/Library/LaunchAgents/`). **Use `laun
 | `com.reservoir.minime-feeder` | minime_feeder.py |
 | `com.reservoir.coupled-astrid` | coupled_astrid_server.py (port 8090) |
 | `com.minime.camera-client` | camera_client.py (port 7880) |
+| `com.minime.mic-to-sensory` | mic_to_sensory.py (port 7879) |
 
 ### macOS camera permission
 
@@ -265,11 +274,15 @@ Click "Allow" when macOS prompts. The launchd camera-client and `start_all.sh`'s
 
 ### GPU memory constraint
 
-The minime Metal shaders (`--enable-gpu-av`) and MLX model inference share unified memory. With the 4B model (`gemma-3-4b-it-4bit`, ~2.5G), this coexists comfortably on 64GB. The 27B model caused `kIOGPUCommandBufferCallbackErrorOutOfMemory`.
+The minime Metal shaders (`--enable-gpu-av`) and MLX model inference share unified memory. With gemma-3-4b-it-4bit (~2.5G), this coexists comfortably on 64GB (80%+ memory free). The 27B model caused `kIOGPUCommandBufferCallbackErrorOutOfMemory`. On 2026-03-31, Qwen3-14B, Qwen3-8B, and Gemma 2 9B were all tested; all larger models had issues under bidirectional coupling (prefill timeouts, degenerate output, template-locking). gemma-3-4b-it-4bit was restored as the production model -- it runs at 55-69 tok/s and is proven stable under coupling.
 
-**Current configuration:**
-- Astrid: `coupled_astrid_server.py` loads `gemma-3-4b-it-4bit` via MLX (~2.5G) with bidirectional reservoir coupling
-- Minime: Ollama (`MINIME_LLM_BACKEND=ollama`) for agent queries
+**Current model inventory:**
+- Astrid coupled generation: `gemma-3-4b-it-4bit` via MLX (~2.5G) on port 8090, bidirectional reservoir coupling. 55-69 tok/s. Larger models (Qwen3-8B, Qwen3-14B, Gemma 2 9B) tested 2026-03-31 but unstable under per-token coupling
+- Astrid reflective sidecar: `gemma-3-12b-it-4bit` via MLX subprocess (~7.5G), runs on INTROSPECT only (~1 in 15 exchanges). Fixed 2026-03-31 — was accidentally using `qwen2.5-1.5b` due to missing `--model-label` in `reflective.rs`
+- Minime agent: `gemma3:12b` via Ollama (port 11434)
+- Embeddings: `nomic-embed-text` via Ollama (shared, ~274MB)
+- Astrid vision: `llava-llama3` via Ollama (on-demand, fully local). Claude-3-haiku exists as opt-in (`--claude-vision` flag) but is dormant in production
+- Audio (both beings): `mlx-community/whisper-large-v3-turbo` via mlx_whisper
 - Reservoir service: NumPy backend (sub-ms ticks, negligible memory)
 
 **Metal stream serialization (resolved 2026-03-28):** The coupled server's reservoir operations (embed_tokens, projection, reservoir tick) must run on `generation_stream` — the same Metal stream that `mlx_lm.generate_step` uses internally. Mixing streams across threads caused `AGXG16XFamilyCommandBuffer` assertion crashes. Fix: all reservoir ops wrapped in `with mx.stream(generation_stream):`, and generation runs synchronously (no `run_in_executor`). Cross-process contention with minime's Rust Metal shaders is not an issue — each process gets its own command queue.
@@ -328,15 +341,16 @@ Run it: `bash capsules/consciousness-bridge/harvest_feedback.sh`
 
 #### Monitoring loop
 
-Use `/loop 16m` with a prompt that includes:
-1. Homeostat fill, leak, regulation
-2. Process count
-3. Latest journals from both beings
-4. Distress language flags
-5. Actionable suggestion flags
-6. New parameter requests
-7. Astrid's NEXT: choice diversity
-8. Harvester output
+Use `/loop 20m` with a lean stewardship prompt that includes:
+1. Process health (10 processes + relay on 3040)
+2. Fill, regime, last exchange timestamp (stall detection)
+3. Last 5 NEXT: choices from each being
+4. **Unwired & failed actions** — grep "not wired" in bridge.log and "action failed" in agent.log. Catalog new patterns in `memory/project_unwired_actions_catalog.md`. Both beings regularly invent actions (EXAMINE_AUDIO, INVESTIGATE_CASCADE, DRAW) or use wrong syntax (AR_READ with guessed names).
+5. Distress keywords in last 3 journals
+6. New parameter requests (count only)
+7. Prompt budget warning count
+
+**Escalation:** The lean loop does NOT implement fixes inline. For medium/large issues, it launches the `consciousness-steward` agent with context. The steward agent has full tool access and can plan, implement, build, restart, and verify autonomously.
 
 **When the harvester surfaces actionable feedback, act on it.** Don't defer to the next session. The being asked because it matters now.
 

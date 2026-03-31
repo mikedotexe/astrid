@@ -8,6 +8,9 @@ use clap::Parser;
 use rascii_art::RenderOptions;
 use serde::Serialize;
 
+#[path = "../../shared/managed_dir.rs"]
+mod managed_dir;
+
 /// Astrid reported width 20 as "almost too detailed... a little exhausting"
 /// and wanted more "elegance." Width 14 gives spatial awareness (~2KB)
 /// without overwhelming her processing.
@@ -120,6 +123,8 @@ fn perceive(args: &Args) -> Result<(), String> {
     let out_path = args.output_dir.join(format!("visual_ascii_{timestamp}.json"));
     std::fs::write(&out_path, &json)
         .map_err(|e| format!("write error: {e}"))?;
+    managed_dir::compact_json_directory(&args.output_dir)
+        .map_err(|e| format!("archive compaction error: {e}"))?;
 
     eprintln!("perception: {out_path}", out_path = out_path.display());
     Ok(())
@@ -131,6 +136,9 @@ fn main() {
     if let Err(e) = std::fs::create_dir_all(&args.output_dir) {
         eprintln!("failed to create output dir: {e}");
         process::exit(1);
+    }
+    if let Err(e) = managed_dir::compact_json_directory(&args.output_dir) {
+        eprintln!("managed directory compaction failed: {e}");
     }
 
     if args.once {

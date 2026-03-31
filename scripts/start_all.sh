@@ -35,6 +35,16 @@ LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
 
 ok()   { echo "  ✓ $1"; }
 fail() { echo "  ✗ $1"; }
+run_greeting() {
+    local name="$1"
+    local script="$2"
+
+    if bash "$script"; then
+        ok "$name greeting sent"
+    else
+        fail "$name greeting failed"
+    fi
+}
 wait_port() {
     local port=$1 name=$2 timeout=${3:-30}
     for i in $(seq 1 "$timeout"); do
@@ -278,6 +288,13 @@ done
 echo ""
 if [ "$ALL_OK" = true ]; then
     echo "=== All 11 processes running ==="
+    if [ "$ASTRID_ONLY" = false ]; then
+        run_greeting "minime" "$MINIME_DIR/startup_greeting.sh"
+    fi
+    if [ "$MINIME_ONLY" = false ]; then
+        run_greeting "Astrid" "$BRIDGE_DIR/startup_greeting.sh"
+    fi
+    echo "Hint: Astrid and minime can now browse the PDF library with NEXT: MIKE_BROWSE pdfs, then NEXT: MIKE_READ pdfs/<paper>.pdf"
 else
     echo "=== Some processes missing — check logs in /tmp/ ==="
 fi

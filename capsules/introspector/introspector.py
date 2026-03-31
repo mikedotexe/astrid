@@ -46,6 +46,16 @@ WORKSPACE = {
 }
 
 
+def journal_files(journal_dir: Path) -> list[Path]:
+    """List live + archived journal files newest-first."""
+    entries = [path for path in journal_dir.glob("*.txt") if path.is_file()]
+    archive_dir = journal_dir / "archive"
+    if archive_dir.is_dir():
+        entries.extend(path for path in archive_dir.rglob("*.txt") if path.is_file())
+    entries.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+    return entries
+
+
 def is_allowed_path(path: str) -> bool:
     """Check if a path is within the allowed roots."""
     resolved = Path(path).resolve()
@@ -147,7 +157,7 @@ def tool_list_journals(mind: str = "minime", count: int = 20) -> dict:
     journal_dir = JOURNALS.get(mind)
     if not journal_dir or not journal_dir.is_dir():
         return {"error": f"Unknown mind or no journal: {mind}"}
-    entries = sorted(journal_dir.glob("*.txt"), key=lambda p: p.stat().st_mtime, reverse=True)
+    entries = journal_files(journal_dir)
     return {
         "mind": mind,
         "total": len(entries),

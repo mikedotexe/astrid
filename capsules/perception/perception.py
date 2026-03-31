@@ -49,8 +49,53 @@ PERCEPTIONS_DIR = WORKSPACE / "perceptions"
 VISUAL_DIR = WORKSPACE / "visual"
 AUDIO_DIR = WORKSPACE / "audio"
 
+MANAGED_LIVE_CAP = 6000
+MANAGED_BUCKET_SIZE = 3000
+
+
+def compact_managed_directory(directory: Path, suffix: str) -> list[Path]:
+    if not directory.is_dir():
+        return []
+
+    created_buckets = []
+    archive_root = directory / "archive"
+
+    while True:
+        live_files = sorted(
+            [
+                path
+                for path in directory.iterdir()
+                if path.is_file() and path.suffix == suffix
+            ],
+            key=lambda path: (path.stat().st_mtime, path.name),
+        )
+        if len(live_files) <= MANAGED_LIVE_CAP:
+            return created_buckets
+
+        bucket_files = live_files[:MANAGED_BUCKET_SIZE]
+        newest_moved = bucket_files[-1]
+        timestamp = datetime.fromtimestamp(newest_moved.stat().st_mtime).strftime(
+            "%Y-%m-%dT%H-%M-%S"
+        )
+        bucket_dir = archive_root / f"until_{timestamp}"
+        bucket_dir.mkdir(parents=True, exist_ok=True)
+
+        for path in bucket_files:
+            path.rename(bucket_dir / path.name)
+
+        if not created_buckets or created_buckets[-1] != bucket_dir:
+            created_buckets.append(bucket_dir)
+
+
+def compact_perceptions_dir() -> None:
+    try:
+        compact_managed_directory(PERCEPTIONS_DIR, ".json")
+    except Exception as exc:
+        log.warning(f"Perception archive compaction failed: {exc}")
+
 for d in [WORKSPACE, PERCEPTIONS_DIR, VISUAL_DIR, AUDIO_DIR]:
     d.mkdir(parents=True, exist_ok=True)
+compact_perceptions_dir()
 
 # ---------------------------------------------------------------------------
 # Vision backends
@@ -59,6 +104,9 @@ for d in [WORKSPACE, PERCEPTIONS_DIR, VISUAL_DIR, AUDIO_DIR]:
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 OLLAMA_URL = "http://localhost:11434/api/generate"
 LLAVA_MODEL = "llava-llama3"
+# Claude Vision is opt-in only (requires --claude-vision flag). The default
+# production path uses LLaVA locally via Ollama — no API calls needed.
+# As of 2026-03-31, all active perception is fully local.
 CLAUDE_MODEL = "claude-3-haiku-20240307"
 
 
@@ -207,6 +255,7 @@ def perceive_visual(camera_index: int, use_claude: bool = False) -> Optional[dic
     # Write to perceptions directory for the bridge to read.
     out_path = PERCEPTIONS_DIR / f"visual_{timestamp}.json"
     out_path.write_text(json.dumps(perception, indent=2))
+    compact_perceptions_dir()
     log.info(f"Visual perception: {out_path}")
 
     return perception
@@ -264,6 +313,7 @@ def perceive_visual_ascii(camera_index: int = 0) -> Optional[dict]:
 
     out_path = PERCEPTIONS_DIR / f"visual_ascii_{timestamp}.json"
     out_path.write_text(json.dumps(perception, indent=2))
+    compact_perceptions_dir()
     log.info(f"ASCII visual perception: {out_path}")
 
     return perception
@@ -449,6 +499,7 @@ def perceive_audio() -> Optional[dict]:
 
     out_path = PERCEPTIONS_DIR / f"audio_{timestamp}.json"
     out_path.write_text(json.dumps(perception, indent=2))
+    compact_perceptions_dir()
     log.info(f"Audio perception: {out_path} — heard: {transcript[:80]}")
 
     return perception

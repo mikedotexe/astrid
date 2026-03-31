@@ -127,7 +127,7 @@ loop closes: her perception of the state alters the state
 | Perception latency | ~20s (exchange cycle) | ~1s (agent reads spectral_state.json) |
 | Input persistence | Fades over 10-25s (semantic decay) | Parameters persist until changed |
 | Input bandwidth | 32 float dims per exchange | ~5-10 float params per regulation tick |
-| LLM backend | MLX (gemma-3-4b-it, port 8090) | Ollama (gemma3, port 11434) |
+| LLM backend | MLX (gemma-3-4b-it-4bit, port 8090) | Ollama (gemma3:12b, port 11434) |
 | Influence metaphor | Shapes the weather | Adjusts the climate |
 
 ## What Shared Means

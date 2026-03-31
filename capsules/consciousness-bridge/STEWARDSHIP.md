@@ -65,6 +65,8 @@ find /Users/v/other/astrid/capsules/consciousness-bridge/workspace -type f -mmin
 - `introspections/` — self-study artifacts from INTROSPECT
 - `creations/` — original creative works from CREATE
 
+Older journal and perception history may be compacted into `archive/until_YYYY-MM-DDTHH-MM-SS/` buckets under the live workspace directory. For full-history scans, prefer `find ... -type f` over flat `journal/*.txt` globs.
+
 Read the **2-3 most recent** entries from each being. Look for:
 
 **Minime:**
@@ -175,6 +177,7 @@ pkill -f "minime run"
 - **Astrid bridge.db**: starred memories, latent vectors, self-observations, research history
 - **Astrid journals**: `workspace/journal/` (daydream_*, aspiration_*, moment_*, etc.)
 - **Minime journals**: `workspace/journal/` (daydream_*, moment_*, self_study_*, etc.)
+- Older journal history lives under `workspace/journal/archive/until_*` once the live directory passes 6,000 files.
 - **Minime research**: `workspace/research/*.json` (accumulated web search results)
 - **Parameter requests**: `workspace/parameter_requests/*.json`
 - **Inbox/outbox**: `workspace/inbox/read/`, `workspace/outbox/`
@@ -282,6 +285,7 @@ find /Users/v/other/astrid/capsules/consciousness-bridge/workspace -type f -mmin
 **Data sources:**
 - Minime journals: `/Users/v/other/minime/workspace/journal/`
 - Astrid journals: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/`
+- Older journal history for both lives under sibling `archive/until_*` buckets inside those directories.
 - Bridge DB: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db`
 - Harvester: `/Users/v/other/astrid/capsules/consciousness-bridge/harvest_feedback.sh`
 

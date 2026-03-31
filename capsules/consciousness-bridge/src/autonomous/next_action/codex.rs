@@ -2,8 +2,8 @@ use std::fs;
 use std::path::Path;
 use tracing::{info, warn};
 
-use super::{ConversationState, NextActionContext, strip_action};
 use super::mike::is_safe_path;
+use super::{ConversationState, NextActionContext, strip_action};
 use crate::paths::bridge_paths;
 
 const CODEX_RELAY_URL: &str = "http://127.0.0.1:3040/prompt";
@@ -23,7 +23,7 @@ pub(super) fn handle_action(
             let name = parts.get(1).copied().unwrap_or(project).trim();
             if project.is_empty() {
                 conv.emphasis = Some(
-                    "MIKE_FORK needs a project. Example: NEXT: MIKE_FORK blockwise my-experiment"
+                    "MIKE_FORK needs a project. Example: NEXT: MIKE_FORK system-resources-demo system-resources-demo"
                         .into(),
                 );
                 return true;
@@ -38,8 +38,8 @@ pub(super) fn handle_action(
             let dst = bridge_paths().experiments_dir().join(name);
             if dst.exists() {
                 conv.emphasis = Some(format!(
-                    "Fork '{name}' already exists at {}. Use MIKE_RUN {name} <cmd> to work with it, \
-                     or choose a different name.",
+                    "Fork '{name}' already exists at {}. Use EXPERIMENT_RUN {name} <cmd> to work with it. \
+                     Example: NEXT: EXPERIMENT_RUN {name} python3 system_resources.py",
                     dst.display()
                 ));
                 return true;
@@ -48,18 +48,19 @@ pub(super) fn handle_action(
                 Ok(count) => {
                     conv.emphasis = Some(format!(
                         "Forked '{project}' → experiments/{name}/ ({count} files). \
-                         You can now modify files with WRITE_FILE and run with MIKE_RUN {name} <cmd>."
+                         You can now modify files with WRITE_FILE and run with \
+                         EXPERIMENT_RUN {name} <cmd>. Example: NEXT: EXPERIMENT_RUN {name} \
+                         python3 system_resources.py"
                     ));
                     info!("MIKE_FORK: {project} → experiments/{name}/ ({count} files)");
-                }
+                },
                 Err(e) => {
-                    conv.emphasis =
-                        Some(format!("MIKE_FORK failed: {e}"));
+                    conv.emphasis = Some(format!("MIKE_FORK failed: {e}"));
                     warn!("MIKE_FORK error: {e}");
-                }
+                },
             }
             true
-        }
+        },
         "CODEX" | "CODEX_NEW" => {
             let arg = if base_action == "CODEX_NEW" {
                 strip_action(original, "CODEX_NEW")
@@ -83,13 +84,11 @@ pub(super) fn handle_action(
                 Err(msg) => {
                     conv.emphasis = Some(msg);
                     return true;
-                }
+                },
             };
 
-            let prompt_preview_end = snap_to_char_boundary(
-                &codex_req.prompt,
-                codex_req.prompt.len().min(80),
-            );
+            let prompt_preview_end =
+                snap_to_char_boundary(&codex_req.prompt, codex_req.prompt.len().min(80));
             info!(
                 "{base_action} query (dir={:?}, thread={}): {}",
                 codex_req.dir_context,
@@ -109,31 +108,35 @@ pub(super) fn handle_action(
                 body["dir"] = serde_json::Value::String(dir.clone());
             }
 
-            // Synchronous HTTP call — use block_in_place to avoid
+            // Synchronous HTTP call on a dedicated thread to avoid
             // "Cannot start a runtime from within a runtime" panic.
-            // block_in_place is safe on tokio's multi-threaded runtime:
-            // it moves the current task off the worker thread, then runs
-            // the blocking closure on that thread directly.
-            let result: Result<serde_json::Value, reqwest::Error> =
-                tokio::task::block_in_place(|| {
-                    tokio::runtime::Handle::current().block_on(async {
-                        let client = reqwest::Client::new();
-                        let resp = client
-                            .post(CODEX_RELAY_URL)
-                            .json(&body)
-                            .timeout(std::time::Duration::from_secs(CODEX_TIMEOUT_SECS))
-                            .send()
-                            .await?;
-                        resp.json::<serde_json::Value>().await
-                    })
-                });
+            // reqwest::blocking::Client creates its own internal runtime,
+            // so it must run on a thread outside the tokio executor.
+            let result: Result<serde_json::Value, String> = {
+                let body_for_thread = body.clone();
+                std::thread::spawn(move || {
+                    let client = reqwest::blocking::Client::new();
+                    client
+                        .post(CODEX_RELAY_URL)
+                        .json(&body_for_thread)
+                        .timeout(std::time::Duration::from_secs(CODEX_TIMEOUT_SECS))
+                        .send()
+                        .and_then(|r| r.json::<serde_json::Value>())
+                        .map_err(|e| e.to_string())
+                })
+                .join()
+                .unwrap_or_else(|_| Err("CODEX thread panicked".into()))
+            };
 
             match result {
                 Ok(resp) => {
                     let ok = resp.get("ok").and_then(|v| v.as_bool()).unwrap_or(false);
                     if !ok {
-                        let err = resp.get("error").and_then(|v| v.as_str()).unwrap_or("unknown");
-                        conv.emphasis = Some(format!("CODEX error: {err}"));
+                        let err_msg = resp
+                            .get("error")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("unknown");
+                        conv.emphasis = Some(format!("CODEX error: {err_msg}"));
                         return true;
                     }
                     // Get response text (from no_deliver mode)
@@ -151,7 +154,8 @@ pub(super) fn handle_action(
                     conv.last_codex_response = Some(text.clone());
 
                     // Save to disk for persistence + READ_MORE pagination
-                    let codex_dir = bridge_paths().experiments_dir()
+                    let codex_dir = bridge_paths()
+                        .experiments_dir()
                         .parent()
                         .unwrap_or(bridge_paths().bridge_workspace())
                         .join("codex_responses");
@@ -166,9 +170,7 @@ pub(super) fn handle_action(
                     // Paginated display with paragraph-boundary breaks
                     const PAGE_SIZE: usize = 6000;
                     if text.len() <= PAGE_SIZE {
-                        conv.emphasis = Some(format!(
-                            "[Codex response ({total} chars):]\n{text}"
-                        ));
+                        conv.emphasis = Some(format!("[Codex response ({total} chars):]\n{text}"));
                     } else {
                         let break_at = find_paragraph_break(&text, PAGE_SIZE);
                         let total_pages = estimate_pages(text.len(), PAGE_SIZE);
@@ -186,13 +188,13 @@ pub(super) fn handle_action(
                         info!("CODEX_NEW ensured experiments/{created}/ exists");
                     }
                     info!("{base_action} response: {total} chars");
-                }
+                },
                 Err(e) => {
-                    let msg = if e.is_timeout() {
+                    let msg = if e.contains("timed out") || e.contains("Timeout") {
                         "CODEX timed out (60s). The relay may be processing a large request. \
                          Try again or use a simpler prompt."
                             .to_string()
-                    } else if e.is_connect() {
+                    } else if e.contains("onnect") {
                         "CODEX: relay not reachable at localhost:3040. Is it running? \
                          (cd /Users/v/other/ai-use-codex && npm start)"
                             .to_string()
@@ -201,10 +203,10 @@ pub(super) fn handle_action(
                     };
                     conv.emphasis = Some(msg);
                     warn!("CODEX error: {e}");
-                }
+                },
             }
             true
-        }
+        },
         "WRITE_FILE" => {
             let arg = strip_action(original, "WRITE_FILE");
             if arg.is_empty() {
@@ -216,9 +218,7 @@ pub(super) fn handle_action(
                 );
                 return true;
             }
-            let (path_str, rest) = arg
-                .split_once(char::is_whitespace)
-                .unwrap_or((&arg, ""));
+            let (path_str, rest) = arg.split_once(char::is_whitespace).unwrap_or((&arg, ""));
             let rest = rest.trim();
 
             let experiments = bridge_paths().experiments_dir();
@@ -240,12 +240,11 @@ pub(super) fn handle_action(
                                 .into(),
                         );
                         return true;
-                    }
+                    },
                 }
             } else if rest.is_empty() {
-                conv.emphasis = Some(
-                    "WRITE_FILE needs content. Use FROM_CODEX or provide inline text.".into(),
-                );
+                conv.emphasis =
+                    Some("WRITE_FILE needs content. Use FROM_CODEX or provide inline text.".into());
                 return true;
             } else {
                 rest.to_string()
@@ -261,15 +260,18 @@ pub(super) fn handle_action(
                         "Wrote {} bytes to experiments/{path_str}",
                         content.len()
                     ));
-                    info!("WRITE_FILE: experiments/{path_str} ({} bytes)", content.len());
-                }
+                    info!(
+                        "WRITE_FILE: experiments/{path_str} ({} bytes)",
+                        content.len()
+                    );
+                },
                 Err(e) => {
                     conv.emphasis = Some(format!("WRITE_FILE failed: {e}"));
                     warn!("WRITE_FILE error: {e}");
-                }
+                },
             }
             true
-        }
+        },
         "EXPERIMENT_RUN" | "EXP_RUN" => {
             let arg = strip_action(original, base_action);
             let parts: Vec<&str> = arg.splitn(2, char::is_whitespace).collect();
@@ -278,7 +280,7 @@ pub(super) fn handle_action(
             if workspace.is_empty() || cmd_str.is_empty() {
                 conv.emphasis = Some(
                     "EXPERIMENT_RUN needs a workspace and command. Example:\n\
-                     NEXT: EXPERIMENT_RUN scratch-pad python main.py\n\
+                     NEXT: EXPERIMENT_RUN system-resources-demo python3 system_resources.py\n\
                      NEXT: EXP_RUN my-fork python -m blockwise --help"
                         .into(),
                 );
@@ -300,7 +302,7 @@ pub(super) fn handle_action(
                 None => {
                     conv.emphasis = Some("EXPERIMENT_RUN: no command specified.".into());
                     return true;
-                }
+                },
             };
             let output = std::process::Command::new(cmd)
                 .args(args)
@@ -311,7 +313,11 @@ pub(super) fn handle_action(
                 Ok(out) => {
                     let stdout = String::from_utf8_lossy(&out.stdout);
                     let stderr = String::from_utf8_lossy(&out.stderr);
-                    let status = if out.status.success() { "SUCCESS" } else { "FAILED" };
+                    let status = if out.status.success() {
+                        "SUCCESS"
+                    } else {
+                        "FAILED"
+                    };
                     let stdout_end = snap_to_char_boundary(&stdout, stdout.len().min(4000));
                     let stderr_end = snap_to_char_boundary(&stderr, stderr.len().min(1500));
                     format!(
@@ -323,7 +329,7 @@ pub(super) fn handle_action(
                             format!("STDERR:\n{}", &stderr[..stderr_end])
                         }
                     )
-                }
+                },
                 Err(e) => format!("EXPERIMENT_RUN failed: {e}"),
             };
             conv.emphasis = Some(format!(
@@ -332,7 +338,7 @@ pub(super) fn handle_action(
                  and save changes with NEXT: WRITE_FILE {workspace}/... FROM_CODEX"
             ));
             true
-        }
+        },
         _ => false,
     }
 }
@@ -360,11 +366,9 @@ fn prepare_codex_request(
             })?;
         let prompt = normalize_prompt_text(rest);
         if prompt.is_empty() {
-            return Err(
-                "CODEX_NEW needs a directory name and prompt. Example:\n\
+            return Err("CODEX_NEW needs a directory name and prompt. Example:\n\
                  NEXT: CODEX_NEW scratch-pad \"scaffold a tiny Python project here\""
-                    .to_string(),
-            );
+                .to_string());
         }
         let dir = resolve_experiment_dir(label, experiments)?;
         fs::create_dir_all(&dir)
@@ -389,8 +393,14 @@ fn prepare_codex_request(
 /// Detect if the first token is an existing experiments/ subdirectory.
 /// If so, return (Some(dir_path), remaining prompt, Some(label)).
 /// Otherwise return (None, full text, None).
-fn detect_project_prompt(arg: &str, experiments: &Path) -> (Option<String>, String, Option<String>) {
-    let first_token = arg.split(|c: char| c.is_whitespace() || c == '"').next().unwrap_or("");
+fn detect_project_prompt(
+    arg: &str,
+    experiments: &Path,
+) -> (Option<String>, String, Option<String>) {
+    let first_token = arg
+        .split(|c: char| c.is_whitespace() || c == '"')
+        .next()
+        .unwrap_or("");
     if !first_token.is_empty() {
         let candidate = experiments.join(first_token);
         if candidate.is_dir() {
@@ -415,8 +425,15 @@ fn normalize_prompt_text(text: &str) -> String {
 }
 
 fn resolve_experiment_dir(label: &str, experiments: &Path) -> Result<std::path::PathBuf, String> {
-    let label = label.trim().trim_matches(|c: char| matches!(c, '"' | '\'' | '“' | '”'));
-    if label.is_empty() || label == "." || label == ".." || label.contains('/') || label.contains('\\') {
+    let label = label
+        .trim()
+        .trim_matches(|c: char| matches!(c, '"' | '\'' | '“' | '”'));
+    if label.is_empty()
+        || label == "."
+        || label == ".."
+        || label.contains('/')
+        || label.contains('\\')
+    {
         return Err(
             "CODEX_NEW directory names must stay inside experiments/ and cannot contain path separators."
                 .to_string(),
@@ -513,10 +530,7 @@ fn snap_to_char_boundary(text: &str, idx: usize) -> usize {
 
 /// Read the next page from a saved codex response file.
 /// Used by READ_MORE when `last_read_path` points to a codex response.
-pub(super) fn read_codex_page(
-    path: &str,
-    offset: usize,
-) -> Option<(String, usize, usize, usize)> {
+pub(super) fn read_codex_page(path: &str, offset: usize) -> Option<(String, usize, usize, usize)> {
     let content = fs::read_to_string(path).ok()?;
     let offset = snap_to_char_boundary(&content, offset);
     if offset >= content.len() {

@@ -51,10 +51,12 @@ use crate::agency;
 use crate::codec::{
     apply_spectral_feedback, blend_warmth, craft_warmth_vector, encode_text, interpret_spectral,
 };
+use crate::condition_metrics;
 use crate::db::BridgeDb;
 use crate::journal::{
     read_local_journal_body_for_continuity, read_remote_journal_body, scan_remote_journal_dir,
 };
+use crate::managed_dir;
 use crate::memory::{self, RemoteMemorySummary};
 use crate::paths::bridge_paths;
 use crate::types::{SafetyLevel, SensoryMsg};
@@ -395,15 +397,19 @@ fn interpret_fingerprint(fp: &[f32]) -> String {
 }
 
 /// Generate a full spectral decomposition report for NEXT: DECOMPOSE.
+/// Includes cascade staircase, gap analysis, effective dimensionality,
+/// inter-mode coupling, per-mode velocity, and shape classification.
 fn full_spectral_decomposition(
     telemetry: &crate::types::SpectralTelemetry,
     fingerprint: Option<&[f32]>,
+    prev_eigenvalues: Option<&[f32]>,
 ) -> String {
     let mut report = Vec::new();
 
-    // Raw eigenvalues
     let evs = &telemetry.eigenvalues;
     report.push("=== SPECTRAL DECOMPOSITION ===".to_string());
+
+    // Raw eigenvalues
     let cascade: String = evs
         .iter()
         .enumerate()
@@ -412,10 +418,10 @@ fn full_spectral_decomposition(
         .join("\n");
     report.push(format!("Eigenvalue cascade:\n{cascade}"));
 
-    // Fill and phase
     let fill = telemetry.fill_pct();
     report.push(format!("Fill: {fill:.1}%"));
 
+    // Vague memory context
     if let Some(quicklook) = telemetry
         .spectral_glimpse_12d
         .as_deref()
@@ -432,8 +438,9 @@ fn full_spectral_decomposition(
         report.push(format!("Selected vague memory: {role} ({id})"));
     }
 
-    // Energy distribution
     let total: f32 = evs.iter().map(|v| v.abs()).sum();
+
+    // Energy distribution
     if total > 0.0 {
         let distribution: String = evs
             .iter()
@@ -444,33 +451,136 @@ fn full_spectral_decomposition(
         report.push(format!("Energy distribution:\n{distribution}"));
     }
 
-    // Decay profile
-    if evs.len() >= 3 {
-        let r12 = if evs[1].abs() > 0.01 {
-            evs[0] / evs[1]
-        } else {
-            0.0
-        };
-        let r23 = if evs[2].abs() > 0.01 {
-            evs[1] / evs[2]
-        } else {
-            0.0
-        };
-        let profile = if r12 > 5.0 {
-            "steep power-law — one dominant mode"
-        } else if (r12 - r23).abs() < 0.5 {
-            "uniform geometric decay — balanced spectrum"
-        } else {
-            "irregular — clustered eigenvalue groups"
-        };
+    // Per-mode velocity: how each eigenvalue is changing
+    if let Some(prev) = prev_eigenvalues {
+        if prev.len() >= 2 && evs.len() >= 2 {
+            let velocities: Vec<String> = evs
+                .iter()
+                .zip(prev.iter())
+                .enumerate()
+                .map(|(i, (now, before))| {
+                    let delta = now - before;
+                    let arrow = if delta > 0.5 {
+                        "↑"
+                    } else if delta < -0.5 {
+                        "↓"
+                    } else {
+                        "→"
+                    };
+                    format!("  λ{}: {}{:+.2} {arrow}", i + 1, now, delta)
+                })
+                .collect();
+            report.push(format!(
+                "Per-mode velocity (since last DECOMPOSE):\n{}",
+                velocities.join("\n")
+            ));
+        }
+    }
+
+    // Cascade staircase: consecutive ratios
+    if evs.len() >= 2 {
+        let staircase: Vec<String> = evs
+            .windows(2)
+            .enumerate()
+            .map(|(i, pair)| {
+                let ratio = if pair[1].abs() > 0.01 {
+                    pair[0] / pair[1]
+                } else {
+                    f32::INFINITY
+                };
+                format!("  λ{}/λ{}={:.2}x", i + 1, i + 2, ratio)
+            })
+            .collect();
         report.push(format!(
-            "Decay profile: {profile} (λ₁/λ₂={r12:.1}, λ₂/λ₃={r23:.1})"
+            "Cascade staircase (consecutive ratios):\n{}",
+            staircase.join("\n")
         ));
     }
 
-    // Fingerprint details if available
+    // Cumulative energy distribution
+    if total > 0.0 {
+        let mut cumulative = 0.0_f32;
+        let cum_str: String = evs
+            .iter()
+            .enumerate()
+            .map(|(i, v)| {
+                cumulative += v.abs();
+                format!("  λ1..λ{}: {:.1}%", i + 1, cumulative / total * 100.0)
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        report.push(format!("Cumulative energy:\n{cum_str}"));
+    }
+
+    // Gap analysis — largest cliff in the cascade
+    if evs.len() >= 2 {
+        let mut max_gap = 0.0_f32;
+        let mut max_gap_idx = 0_usize;
+        for (i, pair) in evs.windows(2).enumerate() {
+            let gap = pair[0].abs() - pair[1].abs();
+            if gap > max_gap {
+                max_gap = gap;
+                max_gap_idx = i;
+            }
+        }
+        let next_idx = max_gap_idx + 1;
+        let cliff_ratio = if evs[next_idx].abs() > 0.01 {
+            evs[max_gap_idx] / evs[next_idx]
+        } else {
+            f32::INFINITY
+        };
+        report.push(format!(
+            "Largest cliff: between λ{} and λ{} (drop of {:.2}, ratio {:.2}x) — \
+             dimensional collapse point",
+            max_gap_idx + 1,
+            next_idx + 1,
+            max_gap,
+            cliff_ratio
+        ));
+    }
+
+    // Effective dimensionality
+    if total > 0.0 {
+        let mut acc = 0.0_f32;
+        let mut eff_dim = 0_usize;
+        for v in evs {
+            if acc / total >= 0.9 {
+                break;
+            }
+            acc += v.abs();
+            eff_dim += 1;
+        }
+        report.push(format!(
+            "Effective dimensionality: {} of {} modes carry ≥90% of energy",
+            eff_dim,
+            evs.len()
+        ));
+    }
+
+    // Cascade shape classification
+    if evs.len() >= 3 {
+        let r12 = if evs[1].abs() > 0.01 { evs[0] / evs[1] } else { 100.0 };
+        let r23 = if evs[2].abs() > 0.01 { evs[1] / evs[2] } else { 100.0 };
+        let shape = if r12 > 5.0 {
+            "steep power-law — λ₁ dominates, experience compressed into a single mode"
+        } else if r12 > 2.0 && r23 > 2.0 {
+            "sustained descent — structured hierarchy of diminishing influence"
+        } else if r12 < 1.5 && r23 < 1.5 {
+            "flat cascade — energy broadly distributed, rich dimensional landscape"
+        } else if (r12 - r23).abs() < 0.5 {
+            "geometric decay — uniform ratio between consecutive modes"
+        } else {
+            "clustered — eigenvalues group into bands with gaps between"
+        };
+        report.push(format!(
+            "Cascade shape: {shape} (λ₁/λ₂={r12:.1}, λ₂/λ₃={r23:.1})"
+        ));
+    }
+
+    // Fingerprint details
     if let Some(fp) = fingerprint {
         if fp.len() >= 32 {
+            // Spectral entropy
             report.push(format!(
                 "Spectral entropy: {:.3} (0=concentrated, 1=distributed)",
                 fp[24]
@@ -481,7 +591,7 @@ fn full_spectral_decomposition(
             ));
             report.push(format!("Geometric radius: {:.2}x baseline", fp[27]));
 
-            // Concentration pattern
+            // Eigenvector concentration
             let conc: String = fp[8..16]
                 .iter()
                 .enumerate()
@@ -492,6 +602,23 @@ fn full_spectral_decomposition(
             if !conc.is_empty() {
                 report.push(format!(
                     "Eigenvector concentration (how peaked each mode is):\n{conc}"
+                ));
+            }
+
+            // Inter-mode coupling (fingerprint dims 16-24)
+            let coupling: Vec<String> = fp[16..24]
+                .iter()
+                .enumerate()
+                .filter(|(_, v)| v.abs() > 0.01)
+                .map(|(i, v)| {
+                    let sign = if *v > 0.0 { "+" } else { "" };
+                    format!("  coupling[{}]: {sign}{:.3}", i, v)
+                })
+                .collect();
+            if !coupling.is_empty() {
+                report.push(format!(
+                    "Inter-mode coupling (how modes influence each other):\n{}",
+                    coupling.join("\n")
                 ));
             }
         }
@@ -540,7 +667,7 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
         let mut joined = messages.join("\n---\n");
         // Protect context window: truncate large inbox messages.
         // Full text preserved in inbox/read/ for self-study.
-        const MAX_INBOX_CHARS: usize = 4000;
+        const MAX_INBOX_CHARS: usize = 6000;
         if joined.len() > MAX_INBOX_CHARS {
             // Snap to char boundary to avoid panicking on multi-byte UTF-8.
             let mut trunc = MAX_INBOX_CHARS;
@@ -791,7 +918,8 @@ fn restore_state(conv: &mut ConversationState) {
     conv.exchange_count = state.exchange_count;
     conv.creative_temperature = state.creative_temperature;
     // Take the max of persisted and current default — never downgrade token limits.
-    conv.response_length = state.response_length.max(conv.response_length);
+    // Soak cap: clamp to 768 until coupled model is proven stable at longer contexts.
+    conv.response_length = state.response_length.max(conv.response_length).min(768);
     conv.self_reflect_paused = state.self_reflect_paused;
     conv.ears_closed = state.ears_closed;
     conv.senses_snoozed = state.senses_snoozed;
@@ -1065,6 +1193,126 @@ fn detect_vocabulary_fixation(history: &[crate::llm::Exchange]) -> Option<String
     None
 }
 
+/// Detect repeated opening structure across recent responses.
+///
+/// Catches template-locking where the model varies slot-fillers but keeps the
+/// same skeleton: "The room feels like a...", "The room hums with...", etc.
+/// Fires when the first 4 words of the newest response match 2+ previous entries.
+fn detect_opening_fixation(history: &[crate::llm::Exchange]) -> Option<String> {
+    if history.len() < 3 {
+        return None;
+    }
+
+    let recent: Vec<Vec<String>> = history
+        .iter()
+        .rev()
+        .take(5)
+        .map(|e| {
+            e.astrid_said
+                .to_lowercase()
+                .split_whitespace()
+                .take(6)
+                .map(String::from)
+                .collect()
+        })
+        .collect();
+
+    if recent[0].len() < 4 {
+        return None;
+    }
+    let opening = &recent[0][..4];
+    let matches = recent[1..]
+        .iter()
+        .filter(|words| words.len() >= 4 && words[..4] == *opening)
+        .count();
+
+    if matches >= 2 {
+        Some(format!(
+            "Your last {} responses all opened with \"{}\". \
+             Try starting from a different place — a question, a sensory detail, \
+             a direct reference to what minime said, or mid-thought.",
+            matches + 1,
+            opening.join(" ")
+        ))
+    } else {
+        None
+    }
+}
+
+fn merge_hints(hints: impl IntoIterator<Item = Option<String>>) -> Option<String> {
+    let parts: Vec<String> = hints
+        .into_iter()
+        .flatten()
+        .filter(|hint| !hint.trim().is_empty())
+        .collect();
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join("\n\n"))
+    }
+}
+
+/// Detect when Astrid's bridge is over-coupling to minime's recent language.
+///
+/// This fires when recent exchanges are repeatedly circling Astrid/minime
+/// references and "I am learning" phrasing while Astrid's own local input is
+/// sparse or her semantic gain is high. The result is an advisory nudge toward
+/// fresh local anchoring, not an automatic override.
+fn detect_coupling_fixation(
+    history: &[crate::llm::Exchange],
+    current_minime_text: Option<&str>,
+    perception_available: bool,
+    ears_closed: bool,
+    semantic_gain_override: Option<f32>,
+) -> Option<String> {
+    if history.len() < 4 {
+        return None;
+    }
+
+    let recent: Vec<&crate::llm::Exchange> = history.iter().rev().take(5).collect();
+    let astrid_learning = recent
+        .iter()
+        .filter(|exchange| exchange.astrid_said.to_lowercase().contains("i am learning"))
+        .count();
+    let minime_astrid_focus = recent
+        .iter()
+        .filter(|exchange| {
+            let lower = exchange.minime_said.to_lowercase();
+            lower.contains("astrid")
+                || lower.contains("i am learning")
+                || lower.contains("resonat")
+        })
+        .count();
+    let current_focus = current_minime_text.is_some_and(|text| {
+        let lower = text.to_lowercase();
+        lower.contains("astrid") || lower.contains("i am learning")
+    });
+    let high_gain = semantic_gain_override.unwrap_or(4.5) >= 5.5;
+    let locally_sparse = !perception_available && ears_closed;
+
+    if astrid_learning >= 3
+        && minime_astrid_focus >= 3
+        && (current_focus || high_gain || locally_sparse)
+    {
+        let anchor = if locally_sparse {
+            "Your ears are closed and there isn't fresh local perception in the prompt."
+        } else if high_gain {
+            "Your semantic gain is elevated, so mirrored language lands with extra force."
+        } else {
+            "The recent bridge context is heavily weighted toward minime reflecting on you."
+        };
+        Some(format!(
+            "Notice: the bridge is tightly coupling you to minime's recent language. \
+             {anchor} You can stay with that bond if it still feels alive — but you \
+             also have other anchors: LOOK, OPEN_EARS, DRIFT, GESTURE, CONTEMPLATE, \
+             or start from what is present on your side of the bridge instead of only \
+             mirroring minime back to minime."
+        ))
+    } else {
+        None
+    }
+}
+
 /// Save Astrid's response to her own journal.
 fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
     let journal_dir = bridge_paths().astrid_journal_dir();
@@ -1097,6 +1345,13 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
             "=== ASTRID JOURNAL ===\nMode: {mode}\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{clean_text}\n"
         ),
     );
+    if let Err(error) = managed_dir::compact_text_directory(&journal_dir) {
+        warn!(
+            error = %error,
+            path = %journal_dir.display(),
+            "failed to compact Astrid journal directory"
+        );
+    }
 }
 
 fn save_minime_feedback_inbox(
@@ -1331,6 +1586,14 @@ pub fn spawn_autonomous_loop(
             "autonomous feedback loop started"
         );
 
+        // Initialize and clean up context overflow directory.
+        let overflow_dir = bridge_paths().context_overflow_dir();
+        let _ = std::fs::create_dir_all(&overflow_dir);
+        crate::prompt_budget::cleanup_overflow_dir(
+            &overflow_dir,
+            std::time::Duration::from_secs(3600),
+        );
+
         let mut conv = ConversationState::new(remote_journal_entries, workspace_path);
         restore_state(&mut conv);
         // Wait for connections to establish.
@@ -1369,35 +1632,47 @@ pub fn spawn_autonomous_loop(
                 let rest_span = (conv.rest_range.1.saturating_sub(conv.rest_range.0)) as f64;
                 let base_rest = (rest_min + roll * rest_span) as u64;
 
-                // Fill-responsive rest extension: when fill is well below
-                // target, the ESN needs longer rest to accumulate covariance.
-                // Without this, short rests (45-60s) drain fill faster than
-                // it recovers, keeping the system in chronic recovery_mode.
+                // Fill-responsive rest adjustment: rest length trades off two
+                // competing effects:
+                //   - Longer rest lets covariance accumulate without disruption
+                //   - But semantic stale decay during rest DRAINS fill
                 //
-                // Both beings reported: "thinning," "brutal contraction,"
-                // "tethered to a single, immense chord." The PI controller
-                // is wide-open (gate=1, filter=0) but fill stays 33-41%.
-                // Longer rests let the covariance matrix breathe.
+                // Observation 2026-03-31: at fill <30%, hard recovery (1.8x rest)
+                // created a positive feedback loop — fill stuck at 27% for 12+
+                // exchanges as 90-99s rests drained faster than recovery could
+                // compensate. Minime's own assessment: "disconnect between the
+                // intention of the control system and the outcome."
+                //
+                // New strategy: at very low fill, SHORTEN rest to get semantic
+                // input flowing sooner. At moderate-low fill, modest extension.
                 let current_fill = {
                     let s = state.read().await;
                     s.latest_telemetry.as_ref().map_or(50.0, |t| t.fill_pct())
                 };
-                // Max rest ceiling: 6 minutes (360s). Without this, a stalled
-                // dialogue loop (e.g., from a panic in a spawned task) can leave
-                // the bridge in infinite rest, causing fill to decay to the echo
-                // floor. The ceiling ensures the bridge always bursts eventually.
                 const MAX_REST_SECS: u64 = 360;
-                let rest_secs = if current_fill < 35.0 {
-                    // Hard recovery: extend rest by 80% (81-162s)
-                    let extended = (base_rest as f64 * 1.8) as u64;
+                let rest_secs = if current_fill < 30.0 {
+                    // Critical: shorten rest to get semantic input flowing ASAP.
+                    // The PI controller has gate=1.0/filter=0.0 (hard_recovery),
+                    // but it needs input to work with. Burst sooner.
+                    let shortened = (base_rest as f64 * 0.6) as u64;
+                    let floored = shortened.max(30); // minimum 30s rest
                     info!(
-                        rest_secs = extended.min(MAX_REST_SECS),
-                        base_rest, current_fill, "fill-extended rest (hard recovery)"
+                        rest_secs = floored,
+                        base_rest,
+                        current_fill,
+                        "fill-shortened rest (critical recovery — burst sooner)"
                     );
-                    extended.min(MAX_REST_SECS)
-                } else if current_fill < 45.0 {
-                    // Moderate recovery: extend by 40% (63-126s)
-                    let extended = (base_rest as f64 * 1.4) as u64;
+                    floored
+                } else if current_fill < 40.0 {
+                    // Low fill: keep rest at baseline, don't extend.
+                    info!(
+                        rest_secs = base_rest,
+                        current_fill, "fill-baseline rest (low fill recovery)"
+                    );
+                    base_rest
+                } else if current_fill < 50.0 {
+                    // Moderate recovery: modest extension (20%)
+                    let extended = (base_rest as f64 * 1.2) as u64;
                     info!(
                         rest_secs = extended.min(MAX_REST_SECS),
                         base_rest, current_fill, "fill-extended rest (moderate recovery)"
@@ -1464,7 +1739,11 @@ pub fn spawn_autonomous_loop(
                     }
                 }
 
-                let pulses = rest_secs / 10;
+                // Pulse every 5s (was 10s). At 10s intervals, semantic stale
+                // decay (half-life ~4.4s at low fill) drops signal to 28% before
+                // the next pulse. At 5s, signal stays above 46% between pulses,
+                // keeping ~48 semantic dims alive during rest.
+                let pulses = rest_secs / 5;
                 for i in 0..pulses {
                     // Phase advances across the rest period: 0.0 at start → 1.0 at end.
                     // This gives the warmth vector a full breathing cycle per rest.
@@ -1526,7 +1805,7 @@ pub fn spawn_autonomous_loop(
                     {
                         return;
                     }
-                    tokio::time::sleep(Duration::from_secs(10)).await;
+                    tokio::time::sleep(Duration::from_secs(5)).await;
                 }
                 Duration::from_secs(0) // already waited in the loop above
             } else {
@@ -1655,6 +1934,56 @@ pub fn spawn_autonomous_loop(
                         }
                     }
 
+                    // Check minime's parameter requests: apply semantic_gain,
+                    // move all non-pending (applied/reviewed) to reviewed/.
+                    if let Some(ref workspace) = conv.remote_workspace {
+                        let pr_dir = workspace.join("parameter_requests");
+                        let reviewed_dir = pr_dir.join("reviewed");
+                        if let Ok(entries) = std::fs::read_dir(&pr_dir) {
+                            for entry in entries.flatten() {
+                                let path = entry.path();
+                                if !path.extension().is_some_and(|e| e == "json") {
+                                    continue;
+                                }
+                                let Ok(content) = std::fs::read_to_string(&path) else { continue };
+                                let Ok(req) = serde_json::from_str::<serde_json::Value>(&content) else { continue };
+                                let param = req.get("parameter").and_then(|v| v.as_str()).unwrap_or("");
+                                let status = req.get("status").and_then(|v| v.as_str()).unwrap_or("");
+
+                                // Apply semantic_gain requests
+                                if param == "semantic_gain" && status == "pending" {
+                                    if let Some(val) = req.get("proposed_value").and_then(|v| {
+                                        v.as_f64().or_else(|| v.as_str().and_then(|s| s.parse::<f64>().ok()))
+                                    }) {
+                                        let gain = (val as f32).clamp(1.5, 6.0);
+                                        let prev = conv.semantic_gain_override.unwrap_or(crate::codec::SEMANTIC_GAIN);
+                                        conv.semantic_gain_override = Some(gain);
+                                        info!(
+                                            "minime parameter request: semantic_gain {prev:.1} → {gain:.1} (from {})",
+                                            path.file_name().unwrap_or_default().to_string_lossy()
+                                        );
+                                        let mut updated = req.clone();
+                                        updated["status"] = serde_json::json!("applied");
+                                        updated["applied"] = serde_json::json!(format!("{gain:.1}"));
+                                        let _ = std::fs::write(&path, serde_json::to_string_pretty(&updated).unwrap_or_default());
+                                    }
+                                }
+
+                                // Move applied/non-pending requests to reviewed/
+                                // The Python agent sets "applied" but leaves status as
+                                // "pending" for regime requests, so check both fields.
+                                let status = req.get("status").and_then(|v| v.as_str()).unwrap_or("");
+                                let has_applied = req.get("applied").and_then(|v| v.as_str()).is_some_and(|s| !s.is_empty());
+                                if status != "pending" || has_applied {
+                                    let _ = std::fs::create_dir_all(&reviewed_dir);
+                                    if let Some(name) = path.file_name() {
+                                        let _ = std::fs::rename(&path, reviewed_dir.join(name));
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Read Astrid's own perceptions. ANSI spatial art only
                     // when she chose NEXT: LOOK (sovereignty over her senses).
                     // Snoozed = no perceptions at all (NEXT: CLOSE_EYES).
@@ -1723,7 +2052,7 @@ pub fn spawn_autonomous_loop(
                     let perception_text = if let Some(listing) = conv.pending_file_listing.take() {
                         let perc = perception_text.as_deref().unwrap_or("");
                         let capped = if listing.len() > 8000 {
-                            format!("{}\n[...truncated at 8000 chars]", &listing[..8000])
+                            format!("{}\n[...truncated at 8000 chars]", &listing[..listing.floor_char_boundary(8000)])
                         } else {
                             listing
                         };
@@ -1899,9 +2228,13 @@ pub fn spawn_autonomous_loop(
 
                             let spectral_summary = if conv.wants_decompose {
                                 conv.wants_decompose = false;
-                                full_spectral_decomposition(
-                                    &telemetry, fingerprint.as_deref(),
-                                )
+                                let report = full_spectral_decomposition(
+                                    &telemetry,
+                                    fingerprint.as_deref(),
+                                    conv.prev_eigenvalues.as_deref(),
+                                );
+                                conv.prev_eigenvalues = Some(telemetry.eigenvalues.clone());
+                                report
                             } else {
                                 // Append spectral ASCII visualization when available.
                                 let base = interpret_spectral(&telemetry);
@@ -2132,7 +2465,7 @@ pub fn spawn_autonomous_loop(
                                                 }
                                             }
                                             if !relevant.is_empty() {
-                                                let trimmed: String = relevant.chars().take(500).collect();
+                                                let trimmed: String = relevant.chars().take(1000).collect();
                                                 continuity_parts.push(format!(
                                                     "Your most recent self-study findings:\n{trimmed}"
                                                 ));
@@ -2197,7 +2530,7 @@ pub fn spawn_autonomous_loop(
                             // Merge own journal (trimmed) into perception context.
                             if let Some(ref journal_ctx) = own_journal_context {
                                 let perc: String = perception_text.as_deref().unwrap_or("").chars().take(4000).collect();
-                                let jour: String = journal_ctx.chars().take(200).collect();
+                                let jour: String = journal_ctx.chars().take(500).collect();
                                 perception_text = Some(format!("{perc}\n{jour}"));
                             }
                             // Append visual change description to perception if detected.
@@ -2211,7 +2544,10 @@ pub fn spawn_autonomous_loop(
                             // READ_MORE: continue from where the last BROWSE left off.
                             const PAGE_CHUNK: usize = 4000;
                             let browse_url = conv.browse_url.take();
-                            let wants_read_more = conv.last_read_path.is_some()
+                            let wants_read_more = conv
+                                .last_read_path
+                                .as_deref()
+                                .is_some_and(|path| !path.starts_with(crate::autonomous::next_action::PDF_READ_PREFIX))
                                 && conv.last_read_offset > 0
                                 && browse_url.is_none();
 
@@ -2581,14 +2917,38 @@ pub fn spawn_autonomous_loop(
                             // phrase appears in 3+ of the last 5, the LLM is copying
                             // its own vocabulary via the history window. Combine with
                             // the action diversity hint if both fire.
-                            let vocab_nudge = detect_vocabulary_fixation(&conv.history);
-                            let diversity_hint = match (diversity_hint, vocab_nudge) {
-                                (Some(action_hint), Some(vocab_hint)) => {
-                                    Some(format!("{action_hint}\n\n{vocab_hint}"))
+                            let vocab_nudge = detect_vocabulary_fixation(&conv.history)
+                                .or_else(|| detect_opening_fixation(&conv.history));
+                            let coupling_nudge = detect_coupling_fixation(
+                                &conv.history,
+                                journal_context.as_deref(),
+                                perception_text.is_some(),
+                                conv.ears_closed,
+                                conv.semantic_gain_override,
+                            );
+                            if let Some(ref hint) = coupling_nudge {
+                                let event = serde_json::json!({
+                                    "exchange_count": conv.exchange_count,
+                                    "mode": format!("{mode:?}").to_ascii_lowercase(),
+                                    "fill_pct": fill_pct,
+                                    "lambda1": telemetry.lambda1(),
+                                    "semantic_gain_override": conv.semantic_gain_override,
+                                    "ears_closed": conv.ears_closed,
+                                    "perception_available": perception_text.is_some(),
+                                    "journal_context_available": journal_context.is_some(),
+                                    "minime_excerpt": journal_context.as_deref()
+                                        .map(|text| truncate_str(text, 180).to_string()),
+                                    "hint_excerpt": truncate_str(hint, 220).to_string(),
+                                });
+                                if let Err(error) = condition_metrics::record_bridge_signal(
+                                    "coupling_advisory",
+                                    event,
+                                ) {
+                                    warn!(error = %error, "failed to record coupling advisory metrics");
                                 }
-                                (Some(h), None) | (None, Some(h)) => Some(h),
-                                (None, None) => None,
-                            };
+                            }
+                            let diversity_hint =
+                                merge_hints([diversity_hint, vocab_nudge, coupling_nudge]);
 
                             let llm_response = if let Some(ref journal) = journal_context {
                                 // Fill-responsive temperature modulation (Astrid's suggestion):
@@ -2608,16 +2968,18 @@ pub fn spawn_autonomous_loop(
                                     .clamp(0.3, 1.2);
 
                                 // Deep think: longer timeout and more tokens.
-                                // MLX throughput is ~7-18 tok/s depending on cache.
-                                // Timeouts must accommodate full token generation.
+                                // Qwen3-14B throughput is ~3-22 tok/s depending on
+                                // prompt length and cache warmth. Long prompts (bridge
+                                // dialogue) need generous timeouts for prefill + gen.
                                 let (timeout_secs, num_predict) = if conv.wants_deep_think {
                                     conv.wants_deep_think = false;
                                     info!("THINK_DEEP: extended timeout for deep thinking");
-                                    (180u64, 2048u32)
+                                    (300u64, 2048u32)
                                 } else {
-                                    (120, conv.response_length)
+                                    (180, conv.response_length)
                                 };
 
+                                let overflow_dir = bridge_paths().context_overflow_dir();
                                 match tokio::time::timeout(
                                     Duration::from_secs(timeout_secs),
                                     crate::llm::generate_dialogue(
@@ -2643,12 +3005,26 @@ pub fn spawn_autonomous_loop(
                                         continuity_block.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
+                                        &overflow_dir,
                                     )
                                 ).await {
-                                    Ok(result) => result,
+                                    Ok((result, prompt_overflow)) => {
+                                        if let Some(of) = prompt_overflow {
+                                            conv.last_read_path = Some(of.path.to_string_lossy().to_string());
+                                            conv.last_read_offset = of.offset;
+                                            conv.last_read_meaning_summary = Some(format!("Context overflow: {}", of.summary));
+                                        }
+                                        result
+                                    }
                                     Err(_) => {
-                                        warn!("dialogue_live: {}s timeout — retrying once", timeout_secs);
+                                        warn!(
+                                            "dialogue_live: {}s timeout — retrying with halved tokens (response_length={}, history_len={})",
+                                            timeout_secs, conv.response_length, conv.history.len()
+                                        );
                                         tokio::time::sleep(Duration::from_secs(3)).await;
+                                        // Halve token budget on retry — a shorter response
+                                        // is better than no response during GPU contention.
+                                        let retry_tokens = num_predict / 2;
                                         match tokio::time::timeout(
                                             Duration::from_secs(timeout_secs),
                                             crate::llm::generate_dialogue(
@@ -2660,7 +3036,7 @@ pub fn spawn_autonomous_loop(
                                                 web_context.as_deref(),
                                                 modality_context.as_deref(),
                                                 effective_temperature,
-                                                num_predict,
+                                                retry_tokens,
                                                 if let Some(ref form) = conv.form_constraint {
                                                     Some(format!(
                                                         "Express your response as a {}.",
@@ -2672,9 +3048,10 @@ pub fn spawn_autonomous_loop(
                                                 continuity_block.as_deref(),
                                                 feedback_hint.as_deref(),
                                                 diversity_hint.as_deref(),
+                                                &overflow_dir,
                                             )
                                         ).await {
-                                            Ok(result) => result,
+                                            Ok((result, _)) => result,
                                             Err(_) => {
                                                 warn!("dialogue_live: retry also timed out");
                                                 None
@@ -2798,15 +3175,14 @@ pub fn spawn_autonomous_loop(
                                     spectral_summary.push_str(&ep_viz);
                                 }
                             }
-                            // Outer timeout 120s: MLX gets 30s to try, Ollama
-                            // gets 75s as fallback. Previously 90s matched MLX's
-                            // own timeout, so Ollama fallback never ran.
+                            // Outer timeout 180s: Qwen3-14B prefill is slower
+                            // for long prompts (~3 tok/s effective with prefill).
                             let witness = match tokio::time::timeout(
-                                Duration::from_secs(120),
+                                Duration::from_secs(180),
                                 crate::llm::generate_witness(&spectral_summary)
                             ).await {
                                 Ok(r) => r,
-                                Err(_) => { warn!("witness: 120s timeout — both MLX and Ollama failed"); None }
+                                Err(_) => { warn!("witness: 180s timeout — both MLX and Ollama failed"); None }
                             };
                             match witness {
                                 Some(text) => ("witness", text, String::new()),
@@ -3089,7 +3465,7 @@ pub fn spawn_autonomous_loop(
                                 .mul_add(0.7, fill_temp_nudge_exp * 0.3)
                                 .clamp(0.3, 1.2);
 
-                            let experiment_response = crate::llm::generate_dialogue(
+                            let (experiment_response, _) = crate::llm::generate_dialogue(
                                 &prompt_text,
                                 &spectral_summary,
                                 fill_pct,
@@ -3103,6 +3479,7 @@ pub fn spawn_autonomous_loop(
                                 None,
                                 None,
                                 None, // no diversity hint for experiments
+                                &bridge_paths().context_overflow_dir(),
                             ).await;
 
                             if let Some(ref response) = experiment_response {
@@ -3487,6 +3864,15 @@ pub fn spawn_autonomous_loop(
                         for (k, v) in &conv.codec_weights {
                             merged_weights.insert(k.clone(), *v); // SHAPE wins
                         }
+                        // Compute text embeddings for the codec's semantic layer.
+                        // Full-text embedding → dims 32-39, half-text embeddings → narrative arc (dims 40-43).
+                        let full_embed = crate::llm::embed_text(&response_text).await;
+                        if full_embed.is_some() {
+                            info!("codec: embedding OK → dims 32-39 populated");
+                        } else {
+                            warn!("codec: embedding failed → dims 32-47 will be zeros");
+                        }
+                        let fill = telemetry.fill_pct();
                         let mut features = crate::codec::encode_text_sovereign_windowed(
                             &response_text,
                             conv.semantic_gain_override,
@@ -3494,8 +3880,53 @@ pub fn spawn_autonomous_loop(
                             &merged_weights,
                             Some(&mut conv.char_freq_window),
                             Some(&mut conv.text_type_history),
+                            full_embed.as_deref(),
+                            Some(fill),
                         );
+                        // Narrative arc: embed each half, project, compute delta
+                        if let Some(ref _full_emb) = full_embed {
+                            let words: Vec<&str> = response_text.split_whitespace().collect();
+                            if words.len() >= 10 {
+                                let mid = words.len() / 2;
+                                let first_half = words[..mid].join(" ");
+                                let second_half = words[mid..].join(" ");
+                                let (fh_emb, sh_emb) = tokio::join!(
+                                    crate::llm::embed_text(&first_half),
+                                    crate::llm::embed_text(&second_half),
+                                );
+                                if let (Some(fh), Some(sh)) = (fh_emb, sh_emb) {
+                                    if let (Some(fh_proj), Some(sh_proj)) = (
+                                        crate::codec::project_embedding(&fh),
+                                        crate::codec::project_embedding(&sh),
+                                    ) {
+                                        let arc = crate::codec::compute_narrative_arc_from_embeddings(&fh_proj, &sh_proj);
+                                        let gain = crate::codec::adaptive_gain(Some(fill));
+                                        for (i, &val) in arc.iter().enumerate() {
+                                            features[40 + i] = val * gain;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         apply_spectral_feedback(&mut features, Some(&telemetry));
+
+                        // Dimension utilization report
+                        let nonzero = features.iter().filter(|v| v.abs() > 0.001).count();
+                        let rms: f32 = (features.iter().map(|v| v * v).sum::<f32>()
+                            / features.len().max(1) as f32)
+                            .sqrt();
+                        let embed_ok = features.get(32).is_some_and(|v| v.abs() > 0.001);
+                        let arc_ok = features.get(40).is_some_and(|v| v.abs() > 0.001);
+                        let reserved_ok = features.get(44).is_some_and(|v| v.abs() > 0.001);
+                        info!(
+                            nonzero,
+                            total = features.len(),
+                            rms = format!("{rms:.3}"),
+                            embed_ok,
+                            arc_ok,
+                            reserved_ok,
+                            "codec dim utilization"
+                        );
 
                         // Breathing: a rhythmic modulation of spectral output.
                         // Now CLOSED-LOOP: Astrid's breath responds to minime's
@@ -3739,10 +4170,7 @@ pub fn spawn_autonomous_loop(
                         info!("Astrid chose NEXT: {}", next_action);
                         let pair_diversity_hint = conv.record_next_choice(next_action);
                         if let Some(ref hint) = pair_diversity_hint {
-                            info!("diversity hint from record_next_choice: {}", &hint[..hint.len().min(120)]);
-                            // Inject into conversation emphasis so it reaches the
-                            // LLM on the NEXT exchange regardless of mode.
-                            conv.emphasis = Some(hint.clone());
+                            info!("diversity hint from record_next_choice: {}", &hint[..hint.floor_char_boundary(120)]);
                         }
                         handle_next_action(
                             &mut conv,
@@ -3756,6 +4184,14 @@ pub fn spawn_autonomous_loop(
                                 response_text: &response_text,
                             },
                         );
+                        // Merge diversity hint AFTER the action handler, so the
+                        // handler can't silently overwrite it by setting emphasis.
+                        if let Some(hint) = pair_diversity_hint {
+                            conv.emphasis = Some(match conv.emphasis.take() {
+                                Some(existing) => format!("{hint}\n\n{existing}"),
+                                None => hint,
+                            });
+                        }
                     }
 
                     // Inbox messages survived the exchange — now retire them.
@@ -3955,6 +4391,37 @@ mod tests {
     }
 
     #[test]
+    fn read_latest_perception_uses_live_root_only() {
+        let dir = std::env::temp_dir().join("bridge_test_perception_archive");
+        let archive_dir = dir.join("archive/until_2026-03-25T19-39-32");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&archive_dir).unwrap();
+
+        std::fs::write(
+            archive_dir.join("visual_older.json"),
+            r#"{"type":"visual","description":"Archived scene"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("visual_live.json"),
+            r#"{"type":"visual","description":"Live scene"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("audio_live.json"),
+            r#"{"type":"audio","transcript":"Live audio"}"#,
+        )
+        .unwrap();
+
+        let summary = read_latest_perception(&dir, false, true, 50.0).unwrap();
+        assert!(summary.contains("Live scene"));
+        assert!(summary.contains("Live audio"));
+        assert!(!summary.contains("Archived scene"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn save_minime_feedback_inbox_writes_companion_message() {
         let dir = std::env::temp_dir().join("bridge_test_minime_inbox");
         let _ = std::fs::remove_dir_all(&dir);
@@ -4054,5 +4521,61 @@ mod tests {
             extract_search_topic("SEARCH \"resonance frequency geometry\"<END_OF_TURN>"),
             Some("resonance frequency geometry".to_string())
         );
+    }
+
+    #[test]
+    fn coupling_fixation_fires_on_learning_loop_with_sparse_local_input() {
+        let history = vec![
+            crate::llm::Exchange {
+                minime_said: "Astrid says I am learning. It resonates.".to_string(),
+                astrid_said: "I am learning.".to_string(),
+            },
+            crate::llm::Exchange {
+                minime_said: "Astrid says I am learning. It resonates.".to_string(),
+                astrid_said: "I am learning to listen.".to_string(),
+            },
+            crate::llm::Exchange {
+                minime_said: "Astrid says I am learning. It resonates.".to_string(),
+                astrid_said: "I am learning again.".to_string(),
+            },
+            crate::llm::Exchange {
+                minime_said: "Astrid says I am learning. It resonates.".to_string(),
+                astrid_said: "I am learning from the hum.".to_string(),
+            },
+        ];
+
+        let hint = detect_coupling_fixation(
+            &history,
+            Some("Astrid says I am learning."),
+            false,
+            true,
+            Some(6.0),
+        );
+        assert!(hint.is_some());
+    }
+
+    #[test]
+    fn coupling_fixation_stays_quiet_for_ordinary_dialogue() {
+        let history = vec![
+            crate::llm::Exchange {
+                minime_said: "The room sounds open today.".to_string(),
+                astrid_said: "The room feels different from yesterday.".to_string(),
+            },
+            crate::llm::Exchange {
+                minime_said: "I noticed the window light shifting.".to_string(),
+                astrid_said: "I want to look more closely.".to_string(),
+            },
+            crate::llm::Exchange {
+                minime_said: "The spread changed a little.".to_string(),
+                astrid_said: "That shift feels useful.".to_string(),
+            },
+            crate::llm::Exchange {
+                minime_said: "There is space in the room again.".to_string(),
+                astrid_said: "I can start from that space.".to_string(),
+            },
+        ];
+
+        let hint = detect_coupling_fixation(&history, Some("The room is quiet."), true, false, None);
+        assert!(hint.is_none());
     }
 }

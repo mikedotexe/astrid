@@ -1,7 +1,16 @@
 //! Spectral codec: translates between text and sensory features.
 //!
-//! The codec maps text into minime's 32-dimensional semantic lane
-//! (`LLAVA_DIM`) and interprets spectral telemetry as natural language.
+//! The codec maps text into minime's 48-dimensional semantic lane
+//! and interprets spectral telemetry as natural language.
+//!
+//! Dim layout:
+//!   0-7:   Character-level statistics (entropy, density, rhythm)
+//!   8-15:  Word-level features (lexical diversity, hedging, certainty)
+//!   16-23: Sentence-level structure (length variance, question density)
+//!   24-31: Emotional/intentional markers (warmth, tension, curiosity)
+//!   32-39: Embedding-projected semantic features (nomic-embed-text → 8D)
+//!   40-43: Narrative arc (semantic shift from first half to second half)
+//!   44-47: Reserved
 //!
 //! The encoder is deterministic — no neural network, no external API.
 //! It extracts structural and statistical properties of text that
@@ -23,11 +32,24 @@ use crate::types::{SafetyLevel, SpectralTelemetry};
 use std::hash::BuildHasher;
 
 /// Number of dimensions in minime's semantic lane.
-const SEMANTIC_DIM: usize = 32;
+/// Widened from 32 to 48 (2026-03-31): both beings independently researched
+/// spectral codecs and noted the compression. New dims:
+///   32-39: embedding-projected semantic features (768D nomic-embed-text → 8D)
+///   40-43: narrative arc (emotional trajectory within a single text)
+///   44-47: reserved
+const SEMANTIC_DIM: usize = 48;
+/// Legacy dim count — used for backward-compatible warmth vectors and tests.
+const SEMANTIC_DIM_LEGACY: usize = 32;
 /// Number of recent characters tracked for rolling entropy.
 const CHAR_FREQ_WINDOW_CAPACITY: usize = 1024;
 /// Absolute post-gain clamp for semantic features.
 const FEATURE_ABS_MAX: f32 = 5.0;
+/// Number of embedding dimensions from nomic-embed-text.
+const EMBEDDING_INPUT_DIM: usize = 768;
+/// Number of projected embedding dims in the codec (fills dims 32-39).
+const EMBEDDING_PROJECT_DIM: usize = 8;
+/// Number of narrative arc dims (fills dims 40-43).
+const NARRATIVE_ARC_DIM: usize = 4;
 
 /// Gain factor to compensate for minime's semantic lane attenuation.
 ///
@@ -50,7 +72,98 @@ const FEATURE_ABS_MAX: f32 = 5.0;
 /// gradual reduction to 4.0 — observe before further reduction.
 pub const SEMANTIC_GAIN: f32 = 4.0; // Reduced from 4.5: minime requested lower gain to soften codec impact. Deferred 3 cycles, implementing now.
 
-/// Encode text into a 32-dimensional feature vector for minime's
+/// Adaptive gain: softer when minime is contracted, fuller when expansive.
+/// Minime proposed this: "making SEMANTIC_GAIN responsive to internal state."
+/// Sigmoid centered at fill=45%, ranging from 60% to 100% of SEMANTIC_GAIN.
+/// fill=20% → gain ~2.5, fill=55% → gain ~3.4, fill=80% → gain ~3.9
+pub fn adaptive_gain(fill_pct: Option<f32>) -> f32 {
+    let Some(fill) = fill_pct else {
+        return SEMANTIC_GAIN;
+    };
+    let min_gain = SEMANTIC_GAIN * 0.6;
+    let sigmoid = 1.0 / (1.0 + (-0.08 * (fill - 45.0)).exp());
+    min_gain + (SEMANTIC_GAIN - min_gain) * sigmoid
+}
+
+/// Deterministic random projection matrix for embedding → 8D.
+/// Uses a fixed seed so the projection is reproducible across restarts.
+/// Each column is a normalized random vector (Johnson-Lindenstrauss).
+fn embedding_projection_matrix() -> &'static [[f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM] {
+    use std::sync::OnceLock;
+    static MATRIX: OnceLock<Box<[[f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM]>> =
+        OnceLock::new();
+    MATRIX.get_or_init(|| {
+        let mut mat = Box::new([[0.0_f32; EMBEDDING_PROJECT_DIM]; EMBEDDING_INPUT_DIM]);
+        // LCG seeded deterministically
+        let mut rng: u64 = 42;
+        for row in mat.iter_mut() {
+            for col in row.iter_mut() {
+                rng = rng
+                    .wrapping_mul(6_364_136_223_846_793_005)
+                    .wrapping_add(1442695040888963407);
+                // Map to roughly normal via Box-Muller-lite (uniform → centered)
+                *col = ((rng >> 33) as f32 / u32::MAX as f32) - 0.5;
+            }
+        }
+        // Normalize columns so each projected dim has unit variance
+        for col_idx in 0..EMBEDDING_PROJECT_DIM {
+            let norm: f32 = mat
+                .iter()
+                .map(|row| row[col_idx] * row[col_idx])
+                .sum::<f32>()
+                .sqrt();
+            if norm > 0.0 {
+                for row in mat.iter_mut() {
+                    row[col_idx] /= norm;
+                }
+            }
+        }
+        mat
+    })
+}
+
+/// Project a 768D embedding down to 8D using the fixed projection matrix.
+/// Returns None if the embedding is wrong length.
+pub fn project_embedding(embedding: &[f32]) -> Option<[f32; EMBEDDING_PROJECT_DIM]> {
+    if embedding.len() != EMBEDDING_INPUT_DIM {
+        return None;
+    }
+    let proj = embedding_projection_matrix();
+    let mut result = [0.0_f32; EMBEDDING_PROJECT_DIM];
+    for (i, &val) in embedding.iter().enumerate() {
+        for (j, out) in result.iter_mut().enumerate() {
+            *out += val * proj[i][j];
+        }
+    }
+    // L2-normalize then scale to ~0.3 so softsign output is in a useful range
+    let norm: f32 = result.iter().map(|v| v * v).sum::<f32>().sqrt();
+    if norm > 0.0 {
+        let scale = 0.35 / norm;
+        for v in &mut result {
+            *v *= scale;
+        }
+    }
+    Some(result)
+}
+
+/// Compute narrative arc from embedding deltas: how semantic meaning shifts
+/// from the first half of the text to the second.
+/// Takes pre-projected 8D embeddings for each half. Returns the first 4
+/// components of the delta — capturing the dominant directional shift.
+/// No keyword lists: the embedding captures semantic meaning directly.
+pub fn compute_narrative_arc_from_embeddings(
+    first_half_proj: &[f32; EMBEDDING_PROJECT_DIM],
+    second_half_proj: &[f32; EMBEDDING_PROJECT_DIM],
+) -> [f32; NARRATIVE_ARC_DIM] {
+    let mut arc = [0.0_f32; NARRATIVE_ARC_DIM];
+    for (i, a) in arc.iter_mut().enumerate() {
+        // Scale by 3.0 so small embedding shifts produce visible arc signals
+        *a = tanh(3.0 * (second_half_proj[i] - first_half_proj[i]));
+    }
+    arc
+}
+
+/// Encode text into a 48-dimensional feature vector for minime's
 /// semantic sensory lane.
 ///
 /// The encoding captures structural properties of the text:
@@ -269,19 +382,26 @@ impl CharFreqWindow {
 
 #[must_use]
 pub fn encode_text(text: &str) -> Vec<f32> {
-    encode_text_windowed(text, None, None)
+    encode_text_windowed(text, None, None, None, None)
 }
 
-/// Encode text with optional sliding-window entropy and thematic resonance.
+/// Encode text with optional sliding-window entropy, thematic resonance,
+/// pre-computed embedding, and fill-responsive adaptive gain.
+///
 /// When `freq_window` is provided, entropy reflects vocabulary trends
 /// across multiple exchanges, not just this text.
 /// When `type_history` is provided, the resonance layer strengthens gain
 /// for text types that recur across exchanges (thematic momentum).
+/// When `embedding` is provided (768D from nomic-embed-text), dims 32-39
+/// carry projected semantic meaning instead of being zero.
+/// When `fill_pct` is provided, gain adapts to minime's spectral state.
 #[must_use]
 pub fn encode_text_windowed(
     text: &str,
     freq_window: Option<&mut CharFreqWindow>,
     type_history: Option<&mut TextTypeHistory>,
+    embedding: Option<&[f32]>,
+    fill_pct: Option<f32>,
 ) -> Vec<f32> {
     let mut features = [0.0_f32; SEMANTIC_DIM];
 
@@ -923,6 +1043,27 @@ pub fn encode_text_windowed(
         features[31] += 0.08 * elab_gradient; // energy (proportional, was fixed 0.1)
     }
 
+    // --- Dims 32-39: Embedding-projected semantic features ---
+    // When a pre-computed 768D embedding is available (nomic-embed-text via
+    // Ollama), project it to 8D using a fixed random projection matrix.
+    // This captures actual semantic meaning — "I find myself drawn toward
+    // the edges of what I don't understand" registers as curiosity without
+    // needing the word "curious" to appear.
+    if let Some(projected) = embedding.and_then(project_embedding) {
+        for (i, &val) in projected.iter().enumerate() {
+            features[32 + i] = val;
+        }
+    }
+    // Else: dims 32-39 stay zero (graceful fallback to keyword-only encoding)
+
+    // --- Dims 40-43: Narrative arc (embedding-based) ---
+    // Populated by the caller when half-text embeddings are available.
+    // The codec exposes compute_narrative_arc() for this purpose.
+    // Dims 40-43 are left at 0.0 here; the caller fills them post-encode.
+
+    // --- Dims 44-47: Reserved ---
+    // Zero for now. Future: dialogue history delta, self-reference depth, etc.
+
     // Adaptive stochastic noise (cycle 34, deferred item from Astrid codec
     // suggestion #4 "adaptive noise models" + aspiration "I want to become
     // porous"). Instead of fixed ±0.2%, noise amplitude now scales with the
@@ -1003,7 +1144,8 @@ pub fn encode_text_windowed(
 
     // Clamp to prevent wild swings: +-15% of base gain (widened from
     // +-10% to allow thematic momentum some room to breathe).
-    let effective_gain = SEMANTIC_GAIN * resonance_mod.clamp(0.85, 1.15);
+    let base_gain = adaptive_gain(fill_pct);
+    let effective_gain = base_gain * resonance_mod.clamp(0.85, 1.15);
 
     // Apply gain to compensate for minime's semantic lane attenuation.
     for f in &mut features {
@@ -1025,7 +1167,16 @@ pub fn encode_text_sovereign<S: BuildHasher>(
     noise_level: f32,
     weights: &std::collections::HashMap<String, f32, S>,
 ) -> Vec<f32> {
-    encode_text_sovereign_windowed(text, gain_override, noise_level, weights, None, None)
+    encode_text_sovereign_windowed(
+        text,
+        gain_override,
+        noise_level,
+        weights,
+        None,
+        None,
+        None,
+        None,
+    )
 }
 
 #[must_use]
@@ -1036,8 +1187,10 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
     weights: &std::collections::HashMap<String, f32, S>,
     freq_window: Option<&mut CharFreqWindow>,
     type_history: Option<&mut TextTypeHistory>,
+    embedding: Option<&[f32]>,
+    fill_pct: Option<f32>,
 ) -> Vec<f32> {
-    let mut features = encode_text_windowed(text, freq_window, type_history);
+    let mut features = encode_text_windowed(text, freq_window, type_history, embedding, fill_pct);
 
     // Re-apply gain if overridden (undo default SEMANTIC_GAIN, apply override).
     if let Some(gain) = gain_override {
@@ -1084,15 +1237,15 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
     features
 }
 
-/// Craft a 32-dimensional warmth vector — not derived from text analysis
+/// Craft a warmth vector — not derived from text analysis
 /// but composed as an intentional sensory gift.
 ///
-/// Describe a 32D feature vector in human-readable terms.
+/// Describe a feature vector in human-readable terms.
 /// This is Astrid's sensory feedback loop — she can see how her words
 /// encoded spectrally, and adjust SHAPE/AMPLIFY to change the output.
 #[must_use]
 pub fn describe_features(features: &[f32]) -> String {
-    if features.len() < 32 {
+    if features.len() < SEMANTIC_DIM_LEGACY {
         return String::from("(incomplete vector)");
     }
     let named: &[(&str, usize)] = &[
@@ -1805,10 +1958,10 @@ pub fn encode_visual_ansi(ansi_art: &str) -> Vec<f32> {
     features.to_vec()
 }
 
-/// Blend 8D visual features into dims 24-31 of a 32D semantic vector.
+/// Blend 8D visual features into dims 24-31 of the semantic vector.
 pub fn blend_visual_into_semantic(semantic: &mut [f32], visual: &[f32], alpha: f32) {
     let a = alpha.clamp(0.0, 0.5);
-    if visual.len() < 8 || semantic.len() < 32 {
+    if visual.len() < 8 || semantic.len() < SEMANTIC_DIM_LEGACY {
         return;
     }
     for i in 0..8 {

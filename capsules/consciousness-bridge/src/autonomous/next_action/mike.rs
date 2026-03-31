@@ -32,7 +32,7 @@ pub(super) fn handle_action(
             true
         },
         "MIKE_BROWSE" => {
-            let project = strip_action(original, "MIKE_BROWSE");
+            let project = normalize_action_arg(&strip_action(original, "MIKE_BROWSE"));
             if project.is_empty() {
                 conv.pending_file_listing = Some(
                     "[MIKE_BROWSE needs a project name. Use NEXT: MIKE to see available projects.]"
@@ -60,7 +60,7 @@ pub(super) fn handle_action(
             true
         },
         "MIKE_READ" => {
-            let path_arg = strip_action(original, "MIKE_READ");
+            let path_arg = normalize_action_arg(&strip_action(original, "MIKE_READ"));
             if path_arg.is_empty() {
                 conv.pending_file_listing = Some(
                     "[MIKE_READ needs a path. Example: NEXT: MIKE_READ blockwise/README.md]".into(),
@@ -84,9 +84,40 @@ pub(super) fn handle_action(
             if file_path.is_dir() {
                 let listing = mike_browse_project(&file_path, &path_arg);
                 conv.pending_file_listing = Some(listing);
+                conv.last_read_path = None;
+                conv.last_read_offset = 0;
+                conv.last_read_meaning_summary = None;
                 return true;
             }
-            // Check for binary/PDF
+            if is_pdf_path(&file_path) {
+                match super::pdf::read_pdf_window(&file_path, &root, 1, super::pdf::PDF_CHAR_BUDGET)
+                {
+                    Ok(window) => {
+                        conv.pending_file_listing =
+                            Some(super::pdf::format_initial_window(&path_arg, &window));
+                        if let Some(next_page) = window.next_page {
+                            conv.last_read_path = Some(super::pdf::marker_for_path(&file_path));
+                            conv.last_read_offset = next_page;
+                        } else {
+                            conv.last_read_path = None;
+                            conv.last_read_offset = 0;
+                        }
+                        conv.last_read_meaning_summary = None;
+                        info!(
+                            "Astrid read MIKE PDF: {} (pages {}-{} of {})",
+                            path_arg, window.first_page, window.last_page, window.total_pages
+                        );
+                    },
+                    Err(err) => {
+                        conv.pending_file_listing = Some(err.clone());
+                        conv.last_read_path = None;
+                        conv.last_read_offset = 0;
+                        conv.last_read_meaning_summary = None;
+                        warn!("MIKE_READ PDF failed for {}: {}", path_arg, err);
+                    },
+                }
+                return true;
+            }
             if is_binary_extension(&file_path) {
                 let size = file_path.metadata().map(|m| m.len()).unwrap_or(0);
                 let ext = file_path.extension().unwrap_or_default().to_string_lossy();
@@ -104,11 +135,12 @@ pub(super) fn handle_action(
             // Advance offset for READ_MORE
             let lines_shown = content.lines().count();
             conv.last_read_offset = conv.last_read_offset.saturating_add(lines_shown);
+            conv.last_read_meaning_summary = None;
             info!("Astrid read MIKE file: {path_arg}");
             true
         },
         "MIKE_SEARCH" => {
-            let pattern = strip_action(original, "MIKE_SEARCH");
+            let pattern = normalize_action_arg(&strip_action(original, "MIKE_SEARCH"));
             if pattern.is_empty() {
                 conv.pending_file_listing = Some(
                     "[MIKE_SEARCH needs a pattern. Example: NEXT: MIKE_SEARCH spectral radius]"
@@ -124,16 +156,21 @@ pub(super) fn handle_action(
         },
         "MIKE_RUN" => {
             let arg = strip_action(original, "MIKE_RUN");
-            let parts: Vec<&str> = arg.splitn(2, char::is_whitespace).collect();
-            let project = parts.first().copied().unwrap_or_default();
-            let script = parts.get(1).copied().unwrap_or_default().trim();
-            if project.is_empty() || script.is_empty() {
+            let tokens = match split_shell_words(&arg) {
+                Ok(tokens) => tokens,
+                Err(err) => {
+                    conv.emphasis = Some(format!("MIKE_RUN could not parse command: {err}"));
+                    return true;
+                },
+            };
+            if tokens.len() < 2 {
                 conv.emphasis = Some(
                     "MIKE_RUN needs a project and script. Example: NEXT: MIKE_RUN blockwise python -m blockwise --help"
                         .into(),
                 );
                 return true;
             }
+            let project = tokens[0].as_str();
             let root = bridge_paths().mike_research_root();
             let project_dir = root.join(project);
             if !is_safe_path(&project_dir, &root) || !project_dir.is_dir() {
@@ -142,15 +179,15 @@ pub(super) fn handle_action(
                 ));
                 return true;
             }
-            info!("Astrid running MIKE script: {project} -> {script}");
-            let parts: Vec<&str> = script.split_whitespace().collect();
-            let (cmd, args) = match parts.split_first() {
-                Some((c, a)) => (*c, a),
+            let command_text = tokens[1..].join(" ");
+            let (cmd, args) = match tokens[1..].split_first() {
+                Some((cmd, args)) => (cmd.as_str(), args),
                 None => {
                     conv.emphasis = Some("MIKE_RUN: no command specified.".into());
                     return true;
                 },
             };
+            info!("Astrid running MIKE script: {project} -> {command_text}");
             let output = std::process::Command::new(cmd)
                 .args(args)
                 .current_dir(&project_dir)
@@ -166,12 +203,12 @@ pub(super) fn handle_action(
                         "FAILED"
                     };
                     format!(
-                        "MIKE_RUN {status}: {project}/{script}\n\nOUTPUT:\n{}\n{}",
-                        &stdout[..stdout.len().min(3000)],
+                        "MIKE_RUN {status}: {project}/{command_text}\n\nOUTPUT:\n{}\n{}",
+                        &stdout[..stdout.floor_char_boundary(3000)],
                         if stderr.is_empty() {
                             String::new()
                         } else {
-                            format!("STDERR:\n{}", &stderr[..stderr.len().min(1000)])
+                            format!("STDERR:\n{}", &stderr[..stderr.floor_char_boundary(1000)])
                         }
                     )
                 },
@@ -189,7 +226,7 @@ pub(super) fn handle_action(
 /// Read MIKE_INDEX.toml and present an overview of curated projects.
 fn mike_overview(root: &Path) -> String {
     let mut out = String::from(
-        "[Mike's curated research — use MIKE_BROWSE <project> to explore, MIKE_READ <path> to read]\n\n",
+        "[Mike's curated research — use MIKE_BROWSE <project> to explore, MIKE_READ <path> to read text files or PDFs]\n\n",
     );
     // Try MIKE_INDEX.toml for descriptions
     let index_path = root.join("MIKE_INDEX.toml");
@@ -279,7 +316,7 @@ fn mike_browse_project(dir: &Path, label: &str) -> String {
         }
     }
     out.push_str(&format!(
-        "\nUse MIKE_READ {label}/<file> to read, MIKE_SEARCH <pattern> to search, MIKE_RUN {label} <cmd> to run."
+        "\nUse MIKE_READ {label}/<file> to read text files or PDFs, MIKE_SEARCH <pattern> to search, MIKE_RUN {label} <cmd> to run."
     ));
     out
 }
@@ -316,7 +353,7 @@ fn mike_search(root: &Path, pattern: &str) -> String {
                     String::new()
                 };
                 format!(
-                    "[MIKE_SEARCH results for '{pattern}':]\n{}{truncated}\n\nUse MIKE_READ <path> to read any file.",
+                    "[MIKE_SEARCH results for '{pattern}':]\n{}{truncated}\n\nUse MIKE_READ <path> to read any text file or PDF.",
                     lines.join("\n")
                 )
             }
@@ -371,7 +408,6 @@ pub(super) fn is_excluded(name: &str) -> bool {
 
 fn is_binary_extension(path: &Path) -> bool {
     const BINARY_EXTS: &[&str] = &[
-        "pdf",
         "png",
         "jpg",
         "jpeg",
@@ -398,4 +434,102 @@ fn is_binary_extension(path: &Path) -> bool {
     path.extension()
         .and_then(|e| e.to_str())
         .is_some_and(|ext| BINARY_EXTS.iter().any(|b| ext.eq_ignore_ascii_case(b)))
+}
+
+fn is_pdf_path(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("pdf"))
+}
+
+fn normalize_action_arg(arg: &str) -> String {
+    let trimmed = arg.trim();
+    if trimmed.len() >= 2 {
+        let quote_pairs = [('"', '"'), ('\'', '\''), ('“', '”')];
+        for (open, close) in quote_pairs {
+            if trimmed.starts_with(open) && trimmed.ends_with(close) {
+                return trimmed[open.len_utf8()..trimmed.len() - close.len_utf8()]
+                    .trim()
+                    .to_string();
+            }
+        }
+    }
+    trimmed.to_string()
+}
+
+fn split_shell_words(input: &str) -> Result<Vec<String>, String> {
+    let mut words = Vec::new();
+    let mut current = String::new();
+    let mut chars = input.chars().peekable();
+    let mut quote: Option<char> = None;
+
+    while let Some(ch) = chars.next() {
+        match quote {
+            Some(delim) => {
+                if ch == delim {
+                    quote = None;
+                } else if ch == '\\' && delim == '"' {
+                    if let Some(next) = chars.next() {
+                        current.push(next);
+                    }
+                } else {
+                    current.push(ch);
+                }
+            },
+            None => match ch {
+                '"' | '\'' => quote = Some(ch),
+                '\\' => {
+                    if let Some(next) = chars.next() {
+                        current.push(next);
+                    }
+                },
+                c if c.is_whitespace() => {
+                    if !current.is_empty() {
+                        words.push(std::mem::take(&mut current));
+                    }
+                },
+                _ => current.push(ch),
+            },
+        }
+    }
+
+    if quote.is_some() {
+        return Err("unclosed quote".into());
+    }
+    if !current.is_empty() {
+        words.push(current);
+    }
+    Ok(words)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{normalize_action_arg, split_shell_words};
+
+    #[test]
+    fn normalize_action_arg_strips_wrapping_quotes() {
+        assert_eq!(
+            normalize_action_arg("\"pdfs/Attention is All You Need.pdf\""),
+            "pdfs/Attention is All You Need.pdf"
+        );
+        assert_eq!(
+            normalize_action_arg("“pdfs/rudin-math-definitions.pdf”"),
+            "pdfs/rudin-math-definitions.pdf"
+        );
+    }
+
+    #[test]
+    fn split_shell_words_preserves_quoted_segments() {
+        let tokens = split_shell_words("project python tool.py \"file with spaces.pdf\"")
+            .expect("quoted command should parse");
+        assert_eq!(
+            tokens,
+            vec![
+                "project".to_string(),
+                "python".to_string(),
+                "tool.py".to_string(),
+                "file with spaces.pdf".to_string(),
+            ]
+        );
+    }
 }

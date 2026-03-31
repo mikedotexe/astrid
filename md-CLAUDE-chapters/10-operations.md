@@ -44,6 +44,8 @@ cd /Users/v/other/astrid/capsules/perception
 python3 perception.py --camera 0 --mic --vision-interval 180 --audio-interval 60 &
 
 # 7. Startup greeting
+# Now automated by scripts/start_all.sh after a successful startup.
+# Run manually only if you want to regenerate Astrid's inbox note:
 cd /Users/v/other/astrid/capsules/consciousness-bridge
 bash startup_greeting.sh
 ```

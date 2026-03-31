@@ -6,6 +6,7 @@ pub struct BridgePathOverrides {
     pub bridge_root: Option<PathBuf>,
     pub bridge_workspace: Option<PathBuf>,
     pub astrid_root: Option<PathBuf>,
+    pub autoresearch_root: Option<PathBuf>,
     pub minime_root: Option<PathBuf>,
     pub minime_workspace: Option<PathBuf>,
     pub perception_path: Option<PathBuf>,
@@ -18,6 +19,7 @@ pub struct BridgePaths {
     bridge_root: PathBuf,
     bridge_workspace: PathBuf,
     astrid_root: PathBuf,
+    autoresearch_root: PathBuf,
     minime_root: PathBuf,
     minime_workspace: PathBuf,
     perception_path: PathBuf,
@@ -65,6 +67,12 @@ impl BridgePaths {
             .or_else(|| env_path("ASTRID_ROOT"))
             .unwrap_or_else(|| default_astrid_root(&bridge_root));
 
+        let autoresearch_root = overrides
+            .autoresearch_root
+            .clone()
+            .or_else(|| env_path("ASTRID_AUTORESEARCH_ROOT"))
+            .unwrap_or_else(|| default_autoresearch_root(&astrid_root));
+
         let minime_workspace_hint = overrides
             .minime_workspace
             .clone()
@@ -103,6 +111,7 @@ impl BridgePaths {
             bridge_root,
             bridge_workspace,
             astrid_root,
+            autoresearch_root,
             minime_root,
             minime_workspace,
             perception_path,
@@ -124,6 +133,11 @@ impl BridgePaths {
     #[must_use]
     pub fn astrid_root(&self) -> &Path {
         &self.astrid_root
+    }
+
+    #[must_use]
+    pub fn autoresearch_root(&self) -> &Path {
+        &self.autoresearch_root
     }
 
     #[must_use]
@@ -154,6 +168,11 @@ impl BridgePaths {
     #[must_use]
     pub fn bridge_src_dir(&self) -> PathBuf {
         self.bridge_root.join("src")
+    }
+
+    #[must_use]
+    pub fn context_overflow_dir(&self) -> PathBuf {
+        self.bridge_workspace.join("context_overflow")
     }
 
     #[must_use]
@@ -290,6 +309,13 @@ fn default_minime_root(astrid_root: &Path) -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("minime"))
 }
 
+fn default_autoresearch_root(astrid_root: &Path) -> PathBuf {
+    astrid_root
+        .parent()
+        .map(|root| root.join("autoresearch"))
+        .unwrap_or_else(|| PathBuf::from("autoresearch"))
+}
+
 fn parent_dir(path: &PathBuf) -> Option<PathBuf> {
     path.parent().map(Path::to_path_buf)
 }
@@ -310,6 +336,7 @@ mod tests {
             Path::new("/tmp/astrid/capsules/consciousness-bridge/workspace")
         );
         assert_eq!(paths.astrid_root(), Path::new("/tmp/astrid"));
+        assert_eq!(paths.autoresearch_root(), Path::new("/tmp/autoresearch"));
         assert_eq!(paths.minime_root(), Path::new("/tmp/minime"));
         assert_eq!(paths.minime_workspace(), Path::new("/tmp/minime/workspace"));
     }
@@ -319,6 +346,7 @@ mod tests {
         let paths = BridgePaths::resolve(BridgePathOverrides {
             bridge_root: Some(PathBuf::from("/tmp/astrid/capsules/consciousness-bridge")),
             bridge_workspace: Some(PathBuf::from("/runtime/bridge-workspace")),
+            autoresearch_root: Some(PathBuf::from("/runtime/autoresearch")),
             minime_workspace: Some(PathBuf::from("/runtime/minime-workspace")),
             perception_path: Some(PathBuf::from("/runtime/perception")),
             introspector_script: Some(PathBuf::from("/runtime/introspector.py")),
@@ -329,6 +357,10 @@ mod tests {
         assert_eq!(
             paths.bridge_workspace(),
             Path::new("/runtime/bridge-workspace")
+        );
+        assert_eq!(
+            paths.autoresearch_root(),
+            Path::new("/runtime/autoresearch")
         );
         assert_eq!(
             paths.minime_workspace(),

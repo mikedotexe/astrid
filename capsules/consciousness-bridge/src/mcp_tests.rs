@@ -367,3 +367,28 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
     assert!(PathBuf::from(artifact_path).exists());
     let _ = fs::remove_file(artifact_path);
 }
+
+#[tokio::test]
+async fn probe_action_autoresearch_list_returns_context_when_repo_exists() {
+    if !crate::paths::bridge_paths().autoresearch_root().exists() {
+        return;
+    }
+
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+
+    let result = tool_probe_action(&json!({"action_text": "AR_LIST"}), &state, &db)
+        .await
+        .unwrap();
+
+    assert_eq!(result["structuredContent"]["status"], "ok");
+    let experienced = result["structuredContent"]["experienced_text"]
+        .as_str()
+        .unwrap();
+    assert!(experienced.contains("[Autoresearch]"));
+
+    let artifact_path = result["structuredContent"]["artifacts"][0]["path"]
+        .as_str()
+        .unwrap();
+    assert!(PathBuf::from(artifact_path).exists());
+}

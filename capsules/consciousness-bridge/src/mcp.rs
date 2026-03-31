@@ -13,6 +13,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
 
+use crate::autoresearch as bridge_autoresearch;
 use crate::chimera;
 use crate::codec;
 use crate::db::BridgeDb;
@@ -260,7 +261,7 @@ fn tool_definitions() -> Value {
             },
             {
                 "name": "probe_action",
-                "description": "Replay a bridge-local NEXT action live and return exactly what Astrid would have experienced. Supports SEARCH, BROWSE, READ_MORE, LIST_FILES/LS, COMPOSE, ANALYZE_AUDIO, and RENDER_AUDIO.",
+                "description": "Replay a bridge-local NEXT action live and return exactly what Astrid would have experienced. Supports SEARCH, BROWSE, READ_MORE, LIST_FILES/LS, COMPOSE, ANALYZE_AUDIO, RENDER_AUDIO, and read-only AR_* autoresearch actions.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -783,6 +784,9 @@ async fn tool_probe_action(
             "COMPOSE" => probe_compose_action(&live),
             "ANALYZE_AUDIO" => probe_analyze_audio_action(live.safety_level),
             "RENDER_AUDIO" => probe_render_audio_action(live.safety_level),
+            action if bridge_autoresearch::is_read_only_action(action) => {
+                probe_autoresearch_action(&parsed_action, &live)
+            },
             _ => probe_unsupported_action(parsed_action, base_action, live.safety_level),
         }
     } else {
@@ -1178,6 +1182,52 @@ fn probe_list_files_action(parsed_action: &str, safety_level: SafetyLevel) -> Pr
     }
 }
 
+fn probe_autoresearch_action(parsed_action: &str, live: &LiveProbeContext) -> ProbeOutcome {
+    let base_action = probe_base_action(parsed_action);
+    match bridge_autoresearch::run_action(
+        parsed_action,
+        bridge_paths().autoresearch_root(),
+        &bridge_paths().research_dir(),
+        false,
+    ) {
+        Ok(result) => {
+            let mut state = load_probe_read_more_state().unwrap_or_default();
+            if let Some(offset) = result.next_offset {
+                state.last_read_path = Some(result.saved_path.to_string_lossy().to_string());
+                state.last_read_offset = offset;
+                state.last_read_meaning_summary = None;
+            } else {
+                state.last_read_path = None;
+                state.last_read_offset = 0;
+                state.last_read_meaning_summary = None;
+            }
+            save_probe_read_more_state(&state);
+
+            ProbeOutcome {
+                parsed_action: parsed_action.to_string(),
+                base_action,
+                status: "ok".to_string(),
+                summary: result.summary,
+                experienced_text: result.display_text,
+                artifacts: vec![probe_artifact(
+                    "autoresearch_output",
+                    result.saved_path,
+                    "Saved autoresearch helper output.",
+                )],
+                safety_level: live.safety_level,
+                effective_query: None,
+            }
+        },
+        Err(error) => probe_error_action(
+            parsed_action.to_string(),
+            base_action,
+            live.safety_level,
+            error.clone(),
+            format!("[Autoresearch error] {error}"),
+        ),
+    }
+}
+
 fn probe_compose_action(live: &LiveProbeContext) -> ProbeOutcome {
     let parsed_action = "COMPOSE".to_string();
     let base_action = "COMPOSE".to_string();
@@ -1292,7 +1342,7 @@ fn probe_unsupported_action(
         base_action: base_action.clone(),
         status: "unsupported".to_string(),
         summary: format!(
-            "{base_action} is out of scope for probe_action. Supported actions: SEARCH, BROWSE, READ_MORE, LIST_FILES/LS, COMPOSE, ANALYZE_AUDIO, and RENDER_AUDIO."
+            "{base_action} is out of scope for probe_action. Supported actions: SEARCH, BROWSE, READ_MORE, LIST_FILES/LS, COMPOSE, ANALYZE_AUDIO, RENDER_AUDIO, and read-only AR_* actions (`AR_LIST`, `AR_LIST_PENDING`, `AR_LIST_ACTIVE`, `AR_LIST_DONE`, `AR_SHOW`, `AR_READ`, `AR_DEEP_READ`, `AR_VALIDATE`)."
         ),
         experienced_text: String::new(),
         artifacts: Vec::new(),

@@ -125,6 +125,8 @@ pub(super) struct ConversationState {
     pub next_mode_override: Option<Mode>,
     /// Astrid chose NEXT: DECOMPOSE — full spectral analysis next exchange.
     pub wants_decompose: bool,
+    /// Previous eigenvalues for per-mode velocity computation in DECOMPOSE.
+    pub prev_eigenvalues: Option<Vec<f32>>,
     /// Astrid chose NEXT: THINK_DEEP — use reasoning model next exchange.
     pub wants_deep_think: bool,
     /// Astrid chose NEXT: EXAMINE — force all viz blocks on next exchange.
@@ -253,11 +255,12 @@ impl ConversationState {
             wants_evolve: false,
             next_mode_override: None,
             wants_decompose: false,
+            prev_eigenvalues: None,
             wants_deep_think: false,
             force_all_viz: false,
             perturb_baseline: None,
             creative_temperature: 0.8,
-            response_length: 512,
+            response_length: 768,
             emphasis: None,
             last_visual_features: None,
             recent_next_choices: VecDeque::with_capacity(12),

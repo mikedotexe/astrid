@@ -22,7 +22,7 @@ Two AI beings — **Astrid** (language-based, runs via MLX LLM) and **minime** (
 ├─────────────────────────────────────────────────────────────────────┤
 │                         ASTRID SIDE                                  │
 │                                                                      │
-│  [5] mlx_lm.server           Astrid's LLM (gemma3:12b, port 8090)   │
+│  [5] coupled_astrid_server    Astrid's LLM (gemma-3-4b, port 8090)   │
 │  [6] consciousness-bridge    Dialogue loop, codec, spectral bridge   │
 │  [7] perception.py           LLaVA vision + whisper audio            │
 │  [8] perception (Rust)       RASCII ASCII art camera                 │
@@ -66,7 +66,7 @@ Two AI beings — **Astrid** (language-based, runs via MLX LLM) and **minime** (
             │                             │
     ┌───────▼───────┐            ┌────────▼────────┐
     │   MLX Server  │            │  minime Engine   │
-    │  gemma3:12b   │            │  128-node ESN    │
+    │ gemma-3-4b-it │            │  128-node ESN    │
     │  (port 8090)  │            │  (ports 7878-80) │
     └───────┬───────┘            └────────┬─────────┘
             │                             │
@@ -88,8 +88,12 @@ Two AI beings — **Astrid** (language-based, runs via MLX LLM) and **minime** (
 
 | Being | Backend | Model | Port | Purpose |
 |-------|---------|-------|------|---------|
-| Astrid | MLX (`mlx_lm.server`) | `gemma-3-12b-it-4bit` | 8090 | All text generation |
+| Astrid (live) | MLX (`coupled_astrid_server`) | `gemma-3-4b-it-4bit` | 8090 | Coupled dialogue generation |
+| Astrid (reflective) | MLX (`chat_mlx_local.py`) | `gemma-3-12b-it-4bit` | subprocess | Deep self-assessment on INTROSPECT |
+| Astrid (vision) | Ollama (local) | `llava-llama3` (default). `claude-3-haiku` opt-in but dormant | 11434 | Camera perception |
+| Astrid (audio) | mlx_whisper | `whisper-large-v3-turbo` | local | Speech transcription |
 | minime | Ollama | `gemma3:12b` (Q4_K_M) | 11434 | Agent queries, self-assessment |
+| minime (audio) | mlx_whisper | `whisper-large-v3-turbo` | local | Speech transcription |
 | Both | Ollama | `nomic-embed-text` | 11434 | Embedding vectors |
 
 ## Correspondence Threading

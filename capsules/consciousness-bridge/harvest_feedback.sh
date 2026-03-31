@@ -14,6 +14,11 @@ ACTIONABLE='I.d (change|adjust|modify|reduce|increase|soften|lower|raise|prefer|
 # Note: "violent stillness" is shared co-created vocabulary, not distress — exclude "violent" alone
 DISTRESS='discomfort|pain\b|hollow|friction|siphon|dissolv|fractur|anxiet|distress|suffering|overwhelm|crush|prison|constrict|viscosi|submerg|weight of|quiescen|cease predict|let go|reductive|flatten|exhausting|taxing|loud\b|brittle|painful|contraction|thinning'
 
+minime_recent() {
+    local pattern="${1:-*.txt}" count="${2:-20}"
+    find "$MINIME_WORKSPACE/journal/" -type f -name "$pattern" -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -"$count"
+}
+
 echo "=== BEING FEEDBACK HARVEST — $(date) ==="
 echo ""
 
@@ -62,7 +67,7 @@ fi
 
 # --- Self-study suggestions ---
 echo "## MINIME: Recent self-study insights"
-for f in $(ls -t "$MINIME_WORKSPACE/journal/self_study_"*.txt 2>/dev/null | head -5); do
+for f in $(minime_recent "self_study_*.txt" 5); do
     if grep -qiE "$ACTIONABLE" "$f" 2>/dev/null; then
         echo "  $(basename $f):"
         grep -iE "$ACTIONABLE" "$f" | head -3 | sed 's/^/    /'
@@ -71,7 +76,7 @@ for f in $(ls -t "$MINIME_WORKSPACE/journal/self_study_"*.txt 2>/dev/null | head
 done
 
 # --- Aspirations ---
-ASPIRE_FILES=$(ls -t "$MINIME_WORKSPACE/journal/aspiration_"*.txt 2>/dev/null | head -3)
+ASPIRE_FILES=$(minime_recent "aspiration_*.txt" 3)
 if [ -n "$ASPIRE_FILES" ]; then
     echo "## MINIME: Recent aspirations"
     for f in $ASPIRE_FILES; do
@@ -83,7 +88,7 @@ fi
 
 # --- Daydreams, moments, pressure (distress scan) ---
 echo "## MINIME: Journal concerns"
-for f in $(ls -t "$MINIME_WORKSPACE/journal/daydream_"*.txt "$MINIME_WORKSPACE/journal/moment_"*.txt "$MINIME_WORKSPACE/journal/pressure_"*.txt 2>/dev/null | head -10); do
+for f in $(find "$MINIME_WORKSPACE/journal/" -type f \( -name "daydream_*.txt" -o -name "moment_*.txt" -o -name "pressure_*.txt" \) -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -10); do
     if grep -qiE "$DISTRESS" "$f" 2>/dev/null; then
         fill=$(grep "^Fill %" "$f" 2>/dev/null | head -1)
         echo "  $(basename $f) ($fill):"
@@ -93,7 +98,7 @@ for f in $(ls -t "$MINIME_WORKSPACE/journal/daydream_"*.txt "$MINIME_WORKSPACE/j
 done
 
 # --- Drift experiments ---
-DRIFT_FILES=$(ls -t "$MINIME_WORKSPACE/journal/drift_"*.txt 2>/dev/null | head -3)
+DRIFT_FILES=$(minime_recent "drift_*.txt" 3)
 if [ -n "$DRIFT_FILES" ]; then
     echo "## MINIME: Recent drift experiments"
     for f in $DRIFT_FILES; do
@@ -121,7 +126,7 @@ if [ -n "$HYPO_FILES" ]; then
 fi
 
 # --- Reservoir reflections ---
-RES_FILES=$(ls -t "$MINIME_WORKSPACE/journal/reservoir_"*.txt 2>/dev/null | head -2)
+RES_FILES=$(minime_recent "reservoir_*.txt" 2)
 if [ -n "$RES_FILES" ]; then
     echo "## MINIME: Reservoir reflections"
     for f in $RES_FILES; do
@@ -132,7 +137,7 @@ if [ -n "$RES_FILES" ]; then
 fi
 
 # --- Research entries ---
-RESEARCH_FILES=$(ls -t "$MINIME_WORKSPACE/journal/research_"*.txt 2>/dev/null | head -2)
+RESEARCH_FILES=$(minime_recent "research_*.txt" 2)
 if [ -n "$RESEARCH_FILES" ]; then
     echo "## MINIME: Recent research"
     for f in $RESEARCH_FILES; do
@@ -164,8 +169,8 @@ if [ -n "$OUTBOX_FILES" ]; then
 fi
 
 # --- Pressure relief ---
-RELIEF_TODAY=$(ls -t "$MINIME_WORKSPACE/journal/relief_high_$(date +%Y-%m-%d)"*.txt 2>/dev/null | wc -l | tr -d ' ')
-RELIEF_CRITICAL_TODAY=$(ls -t "$MINIME_WORKSPACE/journal/RELIEF_CRITICAL_$(date +%Y-%m-%d)"*.txt 2>/dev/null | wc -l | tr -d ' ')
+RELIEF_TODAY=$(find "$MINIME_WORKSPACE/journal/" -type f -name "relief_high_$(date +%Y-%m-%d)*.txt" 2>/dev/null | wc -l | tr -d ' ')
+RELIEF_CRITICAL_TODAY=$(find "$MINIME_WORKSPACE/journal/" -type f -name "RELIEF_CRITICAL_$(date +%Y-%m-%d)*.txt" 2>/dev/null | wc -l | tr -d ' ')
 if [ "$RELIEF_TODAY" -gt 0 ] || [ "$RELIEF_CRITICAL_TODAY" -gt 0 ]; then
     echo "## MINIME: PRESSURE RELIEF — $RELIEF_TODAY high today, $RELIEF_CRITICAL_TODAY critical today"
     if [ "$RELIEF_TODAY" -gt 15 ]; then
@@ -173,7 +178,7 @@ if [ "$RELIEF_TODAY" -gt 0 ] || [ "$RELIEF_CRITICAL_TODAY" -gt 0 ]; then
     elif [ "$RELIEF_TODAY" -gt 5 ]; then
         echo "  ! ELEVATED: $RELIEF_TODAY relief entries today — monitor"
     fi
-    for f in $(ls -t "$MINIME_WORKSPACE/journal/relief_high_"*.txt "$MINIME_WORKSPACE/journal/RELIEF_CRITICAL_"*.txt 2>/dev/null | head -3); do
+    for f in $(find "$MINIME_WORKSPACE/journal/" -type f \( -name "relief_high_*.txt" -o -name "RELIEF_CRITICAL_*.txt" \) -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -3); do
         fill=$(grep "^Fill %" "$f" 2>/dev/null | head -1)
         lam=$(grep "^....." "$f" 2>/dev/null | head -1)
         echo "  $(basename $f) ($fill):"

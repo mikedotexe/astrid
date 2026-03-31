@@ -221,13 +221,35 @@ impl FacultySnapshot {
                         ),
                         f("MEMORIES", a.clone(), "inspect minime's memory bank"),
                         f("LIST_FILES <dir>", a.clone(), "browse workspace files"),
+                        f("AR_LIST", a.clone(), "list autoresearch jobs"),
+                        f("AR_SHOW <job>", a.clone(), "orient to one autoresearch job"),
+                        f(
+                            "AR_DEEP_READ <job>",
+                            a.clone(),
+                            "stitch the main autoresearch files together",
+                        ),
+                        f(
+                            "AR_START <slug> --title ... --abstract ...",
+                            a.clone(),
+                            "create a new autoresearch job when the question is materially distinct",
+                        ),
+                        f(
+                            "AR_NOTE / AR_BLOCK / AR_COMPLETE",
+                            a.clone(),
+                            "update autoresearch job progress and changelog state",
+                        ),
+                        f(
+                            "AR_VALIDATE",
+                            a.clone(),
+                            "check autoresearch workspace consistency",
+                        ),
                         f("MIKE", a.clone(), "browse Mike's curated research"),
                         f(
                             "MIKE_BROWSE <project>",
                             a.clone(),
                             "explore a research project",
                         ),
-                        f("MIKE_READ <path>", a.clone(), "read a research file"),
+                        f("MIKE_READ <path>", a.clone(), "read a research file or PDF"),
                         f("MIKE_SEARCH <pattern>", a.clone(), "search across research"),
                         f(
                             "MIKE_RUN <project> <cmd>",
@@ -237,7 +259,7 @@ impl FacultySnapshot {
                         f(
                             "MIKE_FORK <project> [name]",
                             a.clone(),
-                            "fork research to experiments for modification",
+                            "fork research to experiments for modification, then use EXPERIMENT_RUN <name> <cmd>",
                         ),
                         f(
                             "CODEX <prompt>",
@@ -257,7 +279,7 @@ impl FacultySnapshot {
                         f(
                             "EXPERIMENT_RUN <workspace> <cmd>",
                             a.clone(),
-                            "run a command in your experiments workspace (python, ls, etc.)",
+                            "run a command in your experiments workspace (python, ls, etc.); try EXPERIMENT_RUN system-resources-demo python3 system_resources.py",
                         ),
                     ],
                 },
@@ -707,6 +729,7 @@ impl AstridSelfModel {
             }
         }
 
+        s.push_str("\nUse NEXT: HELP <action> for detailed syntax and examples. E.g., NEXT: HELP CODEX");
         s.push_str("\nUse FACULTIES any time to see this. Use STATE to see your conditions.");
         s
     }

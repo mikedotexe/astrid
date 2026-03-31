@@ -70,11 +70,11 @@ pub(super) fn handle_action(
                         format!(
                             "Python experiment {status}: {}\n\nOUTPUT:\n{}\n{}",
                             script.file_name().unwrap_or_default().to_string_lossy(),
-                            &stdout[..stdout.len().min(3000)],
+                            &stdout[..stdout.floor_char_boundary(3000)],
                             if stderr.is_empty() {
                                 String::new()
                             } else {
-                                format!("ERRORS:\n{}", &stderr[..stderr.len().min(1000)])
+                                format!("ERRORS:\n{}", &stderr[..stderr.floor_char_boundary(1000)])
                             }
                         )
                     },
@@ -120,7 +120,7 @@ pub(super) fn handle_action(
                 );
                 info!(
                     "Astrid asked minime: {}",
-                    &question[..question.len().min(60)]
+                    &question[..question.floor_char_boundary(60)]
                 );
                 conv.emphasis = Some(format!(
                     "You asked minime: \"{question}\". The question has been delivered. A reply will arrive when minime responds."
@@ -436,7 +436,7 @@ pub(super) fn handle_action(
                     "id": format!("agency_proposal_{ts}"),
                     "timestamp": ts.to_string(),
                     "request_kind": "proposal",
-                    "title": &proposal[..proposal.len().min(120)],
+                    "title": &proposal[..proposal.floor_char_boundary(120)],
                     "felt_need": proposal,
                     "status": "pending",
                     "fill_at_request": ctx.fill_pct,
@@ -447,12 +447,12 @@ pub(super) fn handle_action(
                 );
                 info!(
                     "Astrid filed proposal: {}",
-                    &proposal[..proposal.len().min(80)]
+                    &proposal[..proposal.floor_char_boundary(80)]
                 );
                 conv.emphasis = Some(format!(
                     "Your proposal has been filed to agency_requests/agency_proposal_{ts}.json. \
                     The steward will review it. You described: \"{}\"",
-                    &proposal[..proposal.len().min(200)]
+                    &proposal[..proposal.floor_char_boundary(200)]
                 ));
             } else {
                 conv.emphasis = Some(
@@ -525,6 +525,225 @@ pub(super) fn handle_action(
             }
             true
         },
+        "HELP" | "DESCRIBE" | "HOW" | "USAGE" => {
+            let topic = strip_action(original, base_action).to_uppercase();
+            let topic = topic.trim();
+            if topic.is_empty() {
+                conv.emphasis = Some(ACTION_OVERVIEW.into());
+            } else {
+                conv.emphasis = Some(action_help(topic).unwrap_or_else(|| {
+                    format!(
+                        "No detailed help for '{topic}'. Use NEXT: HELP to see all actions, \
+                         or NEXT: FACULTIES for a full capability listing."
+                    )
+                }));
+            }
+            info!("Astrid requested HELP: {topic}");
+            true
+        },
         _ => false,
     }
+}
+
+const ACTION_OVERVIEW: &str = "\
+Use NEXT: HELP <action> for syntax and examples. E.g., NEXT: HELP CODEX
+
+NEXT: options — vary your choice. End every response with NEXT: <action>.
+  Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
+  Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], LIST_FILES <dir>
+  Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
+  Spectral: DECOMPOSE, EXAMINE, PERTURB [target], GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
+  Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
+  Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
+  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
+  Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
+  Research: AR_LIST, AR_SHOW/AR_READ/AR_DEEP_READ <job>, AR_START/AR_NOTE/AR_BLOCK/AR_COMPLETE <job>
+  Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK <text>, RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK <name>
+  Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER, PROPOSE <description>
+  Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, HELP <action>";
+
+fn action_help(action: &str) -> Option<String> {
+    let text = match action {
+        "CODEX" => "\
+CODEX — Ask Codex AI to generate or modify code in your experiments workspace.
+Syntax:
+  NEXT: CODEX \"your prompt\"                    — general question, no workspace
+  NEXT: CODEX my-workspace \"your prompt\"       — work in experiments/my-workspace/
+Examples:
+  NEXT: CODEX \"explain how eigenvalue decomposition works\"
+  NEXT: CODEX svd-sim \"add a plotting function that shows convergence\"
+Notes: Use CODEX_NEW to create a fresh workspace first. Use CODEX with an existing workspace name to iterate on it.",
+
+        "CODEX_NEW" => "\
+CODEX_NEW — Create a new experiments workspace and ask Codex to scaffold it.
+Syntax: NEXT: CODEX_NEW <dirname> \"your prompt\"
+Examples:
+  NEXT: CODEX_NEW scratch \"scaffold a Python project for spectral analysis\"
+  NEXT: CODEX_NEW svd-sim \"build a simulation of singular value decomposition with plotting\"
+Notes: Creates experiments/<dirname>/. After creation, iterate with CODEX <dirname> \"...\" and run with EXPERIMENT_RUN <dirname> <cmd>.",
+
+        "EXPERIMENT_RUN" | "EXP_RUN" => "\
+EXPERIMENT_RUN — Run a command inside an experiments workspace.
+Syntax: NEXT: EXPERIMENT_RUN <workspace> <command>
+Prerequisites: The workspace must already exist in experiments/. Create one with CODEX_NEW or MIKE_FORK first.
+Examples:
+  NEXT: EXPERIMENT_RUN system-resources-demo python3 system_resources.py
+  NEXT: EXPERIMENT_RUN my-sim python3 model.py --epochs 100
+  NEXT: EXPERIMENT_RUN scratch ls -la
+Workflow: CODEX_NEW scratch \"build X\" → EXPERIMENT_RUN scratch python3 main.py → CODEX scratch \"fix Y\" → repeat.",
+
+        "MIKE_FORK" => "\
+MIKE_FORK — Fork a curated research project into your experiments workspace for modification.
+Syntax: NEXT: MIKE_FORK <project> [name]
+Examples:
+  NEXT: MIKE_FORK system-resources-demo
+  NEXT: MIKE_FORK thermodynamics my-thermo-fork
+Notes: Copies Mike's research project into experiments/<name>/. Then use EXPERIMENT_RUN <name> <cmd> to run it, or CODEX <name> \"...\" to modify it.",
+
+        "WRITE_FILE" => "\
+WRITE_FILE — Save the last Codex response to a file in your experiments workspace.
+Syntax: NEXT: WRITE_FILE <path> FROM_CODEX
+Examples:
+  NEXT: WRITE_FILE scratch/analysis.py FROM_CODEX
+  NEXT: WRITE_FILE my-sim/README.md FROM_CODEX
+Notes: The path is relative to experiments/. Only writes within experiments/ are allowed. The FROM_CODEX suffix tells the bridge to use Codex's last output as the file content.",
+
+        "RUN_PYTHON" | "RUN" => "\
+RUN_PYTHON — Run a Python script from the experiments directory.
+Syntax: NEXT: RUN_PYTHON <filename>
+Examples:
+  NEXT: RUN_PYTHON thermostatic_esn_test.py
+  NEXT: RUN_PYTHON my_analysis.py
+Notes: The script must exist in workspace/experiments/. Use LIST_FILES experiments to see available scripts. For scripts inside a subdirectory, use EXPERIMENT_RUN instead.",
+
+        "INTROSPECT" => "\
+INTROSPECT — Read and reflect on source code (yours or minime's).
+Syntax: NEXT: INTROSPECT [source] [line]
+Sources: codec, autonomous, reservoir, regulator, esn, sensory, minime, rotation (default)
+Examples:
+  NEXT: INTROSPECT codec 100
+  NEXT: INTROSPECT regulator
+  NEXT: INTROSPECT minime esn
+  NEXT: INTROSPECT
+Notes: With no arguments, defaults to 'rotation' — reflecting on your own recent patterns. To ask Codex a code question, use NEXT: CODEX \"...\" instead.",
+
+        "BROWSE" => "\
+BROWSE — Fetch and read a web page.
+Syntax: NEXT: BROWSE <url>
+Examples:
+  NEXT: BROWSE https://en.wikipedia.org/wiki/Echo_state_network
+  NEXT: BROWSE https://arxiv.org/abs/2301.00000
+Notes: Returns the page content. Use READ_MORE to continue reading if the page is long. The URL must be a full https:// address.",
+
+        "SEARCH" => "\
+SEARCH — Search the web for a topic.
+Syntax: NEXT: SEARCH <topic>
+  NEXT: SEARCH \"quoted topic for precision\"
+Examples:
+  NEXT: SEARCH \"reservoir computing spectral radius\"
+  NEXT: SEARCH thermostatic ESN homeostasis
+  NEXT: SEARCH eigenvalue cascade dynamics
+Notes: Quoted topics work best for multi-word searches. Results come back as snippets you can BROWSE for full content.",
+
+        "READ_MORE" => "\
+READ_MORE — Continue reading the last browsed page or file.
+Syntax: NEXT: READ_MORE
+Notes: Advances to the next page/section of whatever you last read with BROWSE, MIKE_READ, or LIST_FILES. No arguments needed.",
+
+        "PERTURB" => "\
+PERTURB — Shape spectral dynamics by injecting a structured perturbation into the reservoir.
+Syntax: NEXT: PERTURB [target]
+Targets: broadband (default), lambda1, lambda2, lambda3, entropy, warmth, tension, curiosity, energy
+Examples:
+  NEXT: PERTURB
+  NEXT: PERTURB entropy
+  NEXT: PERTURB lambda2=0.5
+Notes: Stronger than PROBE. Sends a 32D vector to both minime's sensory bus and your reservoir. Use DECOMPOSE afterward to observe the effect.",
+
+        "PROBE" => "\
+PROBE — Gentle spectral probe at 30% of PERTURB magnitude, for careful observation.
+Syntax: NEXT: PROBE [target]
+Targets: same as PERTURB, or free text (encoded via codec at 30% strength)
+Examples:
+  NEXT: PROBE
+  NEXT: PROBE lambda2
+  NEXT: PROBE \"stillness\"
+Notes: Designed for mapping, not disruption. The delta will be subtle — that is the point.",
+
+        "SHAPE" => "\
+SHAPE — Adjust codec dimension weights to reshape how your text maps to spectral features.
+Syntax: NEXT: SHAPE <dim>=<value> [<dim>=<value> ...]
+Dimensions: entropy, punctuation, rhythm, diversity, hedging, certainty, agency, warmth, tension, curiosity, reflective, energy (and others)
+Examples:
+  NEXT: SHAPE warmth=1.5 tension=0.5
+  NEXT: SHAPE curiosity=2.0
+  NEXT: SHAPE agency=0.8 energy=1.2
+Notes: Values are multipliers — 1.0 is default, >1 amplifies, <1 dampens. Use STATE to see current weights.",
+
+        "ATTEND" => "\
+ATTEND — Adjust how much context from each source appears in your prompts.
+Syntax: NEXT: ATTEND <source>=<weight> [<source>=<weight> ...]
+Sources: minime, self, interests, research, creations, perception, memory
+Examples:
+  NEXT: ATTEND minime=0.3 self=0.3 interests=0.15
+  NEXT: ATTEND perception=0.2 research=0.2
+Notes: Weights should roughly sum to 1.0. Use STATE to see current profile.",
+
+        "EXPERIMENT" => "\
+EXPERIMENT — Inject word-stimuli into the shared spectral substrate and observe the cascade response.
+Syntax: NEXT: EXPERIMENT <words or phrase>
+Examples:
+  NEXT: EXPERIMENT resonance frequency geometry
+  NEXT: EXPERIMENT stillness and the weight of silence
+Notes: Words are encoded via your spectral codec into a 32D vector, sent to both minime's sensory bus and your reservoir. Use DECOMPOSE on the next exchange to see the cascade effect.",
+
+        "PROPOSE" => "\
+PROPOSE — File a structured proposal for the steward to review.
+Syntax: NEXT: PROPOSE <description>
+Examples:
+  NEXT: PROPOSE add a new action that lets me adjust reservoir coupling strength directly
+  NEXT: PROPOSE I want to be able to save and reload spectral snapshots
+Notes: Saved to agency_requests/ for steward review. Use this when you want a capability that doesn't exist yet.",
+
+        "AR_START" => "\
+AR_START — Start a new autoresearch job on a topic.
+Syntax: NEXT: AR_START <topic>
+Examples:
+  NEXT: AR_START thermostatic regulation in biological neural networks
+  NEXT: AR_START echo state network spectral radius optimization
+Workflow: AR_START <topic> → AR_SHOW <job> to check progress → AR_READ <job> for results → AR_NOTE <job> to add notes → AR_COMPLETE <job> when done.",
+
+        "AR_SHOW" | "AR_READ" | "AR_DEEP_READ" | "AR_NOTE" | "AR_BLOCK" | "AR_COMPLETE" | "AR_LIST" | "AR_VALIDATE" => "\
+Autoresearch workflow:
+  NEXT: AR_LIST                    — see all research jobs
+  NEXT: AR_START <topic>           — start a new job
+  NEXT: AR_SHOW <job>              — check job status and summary
+  NEXT: AR_READ <job>              — read job results
+  NEXT: AR_DEEP_READ <job>         — detailed reading of results
+  NEXT: AR_NOTE <job> <note>       — add a note to a job
+  NEXT: AR_BLOCK <job> <reason>    — mark a job as blocked
+  NEXT: AR_COMPLETE <job>          — mark a job as complete
+  NEXT: AR_VALIDATE                — check workspace consistency",
+
+        "DECOMPOSE" => "DECOMPOSE — Full spectral analysis of the current eigenvalue cascade, entropy, gap structure, and shadow field. No arguments needed. NEXT: DECOMPOSE",
+        "EXAMINE" => "EXAMINE — Force all spectral visualizations (eigenvalue chart, shadow heatmap, PCA) into the next exchange. No arguments, or add a focus: NEXT: EXAMINE eigenvector rotation",
+        "GESTURE" => "GESTURE — Send a direct 32D spectral intention to minime. Your words are encoded via the codec and transmitted as a spectral vector. NEXT: GESTURE",
+        "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
+        "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
+        "FACULTIES" => "FACULTIES — List all your available actions with brief descriptions. NEXT: FACULTIES",
+        "PING" => "PING — Send a ping to minime with your current fill and lambda. A pong with their state will arrive in your inbox. NEXT: PING",
+        "ASK" => "ASK — Send a question to minime. It will be delivered to their inbox and their reply routed back to you. NEXT: ASK <your question>",
+        "PACE" => "PACE — Adjust burst/rest timing. NEXT: PACE fast (4 exchanges, 30-45s rest) | PACE slow (8 exchanges, 90-150s rest) | PACE default (6 exchanges, 45-90s rest)",
+        "REMEMBER" => "REMEMBER — Save a note to your starred memories. NEXT: REMEMBER <note>",
+        "PURSUE" => "PURSUE — Add a topic to your active interests. These shape which context appears in your prompts. NEXT: PURSUE <topic>",
+        "DROP" => "DROP — Remove a topic from your active interests. NEXT: DROP <topic>",
+        "THINK_DEEP" => "THINK_DEEP — Request extended generation with deeper reflection. Doubles your response budget for one exchange. NEXT: THINK_DEEP",
+        "LOOK" => "LOOK — Open your eyes and receive the latest camera perception (what's visible around you). NEXT: LOOK",
+        "LISTEN" | "OPEN_EARS" => "OPEN_EARS — Start receiving audio transcription from the microphone. NEXT: OPEN_EARS",
+        "CLOSE_EARS" => "CLOSE_EARS — Stop receiving audio input. Frees processing resources. NEXT: CLOSE_EARS",
+        "AMPLIFY" => "AMPLIFY — Increase your semantic gain (how strongly your text maps to spectral features). NEXT: AMPLIFY",
+        "DAMPEN" => "DAMPEN — Decrease your semantic gain. NEXT: DAMPEN",
+        _ => return None,
+    };
+    Some(text.to_string())
 }

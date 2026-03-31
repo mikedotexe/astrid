@@ -67,11 +67,13 @@ pub(super) fn handle_action(
             } else {
                 raw_s
             };
-            let raw = raw_owned
-                .trim()
-                .trim_matches(|c: char| c == '"' || c == '\'' || c == '<' || c == '>');
+            let raw = raw_owned.trim().trim_matches(|c: char| {
+                c == '"' || c == '\'' || c == '<' || c == '>' || c == '[' || c == ']'
+            });
             let url = raw
-                .split(|c: char| c == '<' || c == '>' || c == ' ' || c == '\n')
+                .split(|c: char| {
+                    c == '<' || c == '>' || c == '[' || c == ']' || c == ' ' || c == '\n'
+                })
                 .next()
                 .unwrap_or(raw)
                 .trim_end_matches(|c: char| {
@@ -140,11 +142,48 @@ pub(super) fn handle_action(
         },
         "READ_MORE" => {
             if let Some(ref path) = conv.last_read_path {
-                // Paginated reading from saved files (codex responses, MIKE_READ, etc.)
-                if let Some((page, current, total, new_offset)) =
+                if let Some(pdf_path) = super::pdf::marker_path(path) {
+                    let research_root = bridge_paths().mike_research_root();
+                    match super::pdf::read_pdf_window(
+                        &pdf_path,
+                        &research_root,
+                        conv.last_read_offset.max(1),
+                        super::pdf::PDF_CHAR_BUDGET,
+                    ) {
+                        Ok(window) => {
+                            conv.pending_file_listing =
+                                Some(super::pdf::format_continuation_window(&window));
+                            if let Some(next_page) = window.next_page {
+                                conv.last_read_offset = next_page;
+                            } else {
+                                conv.last_read_path = None;
+                                conv.last_read_offset = 0;
+                            }
+                            conv.last_read_meaning_summary = None;
+                            info!(
+                                "READ_MORE: PDF pages {}-{} of {}",
+                                window.first_page, window.last_page, window.total_pages
+                            );
+                        },
+                        Err(err) => {
+                            conv.pending_file_listing = Some(err);
+                            conv.last_read_path = None;
+                            conv.last_read_offset = 0;
+                            conv.last_read_meaning_summary = None;
+                            warn!(
+                                "READ_MORE PDF continuation failed for {}",
+                                pdf_path.display()
+                            );
+                        },
+                    }
+                } else if let Some((page, current, total, new_offset)) =
                     super::codex::read_codex_page(path, conv.last_read_offset)
                 {
-                    let footer = if new_offset >= std::fs::metadata(path).map(|m| m.len() as usize).unwrap_or(0) {
+                    let footer = if new_offset
+                        >= std::fs::metadata(path)
+                            .map(|m| m.len() as usize)
+                            .unwrap_or(0)
+                    {
                         format!("\n\n[End of response (part {current} of {total}).]")
                     } else {
                         format!(
@@ -152,13 +191,13 @@ pub(super) fn handle_action(
                             current + 1
                         )
                     };
-                    conv.pending_file_listing =
-                        Some(format!("[Continuing — part {current} of {total}:]\n{page}{footer}"));
+                    conv.pending_file_listing = Some(format!(
+                        "[Continuing — part {current} of {total}:]\n{page}{footer}"
+                    ));
                     conv.last_read_offset = new_offset;
                     info!("READ_MORE: part {current} of {total} (offset {new_offset})");
                 } else {
-                    conv.pending_file_listing =
-                        Some("[No more content to read.]".into());
+                    conv.pending_file_listing = Some("[No more content to read.]".into());
                     info!("READ_MORE: reached end of file");
                 }
             } else {

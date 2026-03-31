@@ -1,10 +1,14 @@
 mod audio;
+mod autoresearch;
 mod codex;
 mod mike;
 mod modes;
 mod operations;
+mod pdf;
 mod sovereignty;
 mod workspace;
+
+pub(crate) const PDF_READ_PREFIX: &str = pdf::PDF_READ_PREFIX;
 
 use tokio::sync::mpsc;
 use tracing::info;
@@ -158,6 +162,10 @@ pub(super) fn handle_next_action(
         return;
     }
 
+    if autoresearch::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return;
+    }
+
     if mike::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return;
     }
@@ -182,5 +190,6 @@ pub(super) fn handle_next_action(
         return;
     }
 
-    info!("Astrid chose unknown NEXT: '{}' — not wired", original);
+    ctx.db.log_unwired_action("astrid", &base_action, &original, ctx.fill_pct);
+    info!("Astrid chose unknown NEXT: '{}' — not wired (logged to unwired_actions)", original);
 }

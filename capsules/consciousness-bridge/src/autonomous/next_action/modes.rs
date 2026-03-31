@@ -138,6 +138,13 @@ pub(super) fn handle_action(
             info!("Astrid requested spectral decomposition");
             true
         },
+        "INVESTIGATE_CASCADE" | "CASCADE" => {
+            // Alias → DECOMPOSE. The cascade analysis is now part of the
+            // full spectral decomposition report.
+            conv.wants_decompose = true;
+            info!("Astrid requested cascade investigation (→ DECOMPOSE)");
+            true
+        },
         "THINK_DEEP" | "DEEP" => {
             conv.wants_deep_think = true;
             info!("Astrid requested deep reasoning model");

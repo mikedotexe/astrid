@@ -146,9 +146,43 @@ impl BridgeDb {
                 ON astrid_research(timestamp);
             CREATE INDEX IF NOT EXISTS idx_research_kw
                 ON astrid_research(keywords);
+
+            CREATE TABLE IF NOT EXISTS unwired_actions (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp   REAL    NOT NULL,
+                being       TEXT    NOT NULL,
+                action      TEXT    NOT NULL,
+                full_text   TEXT    NOT NULL,
+                fill_pct    REAL
+            );
+            CREATE INDEX IF NOT EXISTS idx_unwired_ts
+                ON unwired_actions(timestamp);
+            CREATE INDEX IF NOT EXISTS idx_unwired_action
+                ON unwired_actions(action);
             ",
         )?;
         Ok(())
+    }
+
+    /// Log an action a being attempted that isn't wired yet.
+    /// These are roadmap signals — the beings invent actions they want.
+    pub fn log_unwired_action(
+        &self,
+        being: &str,
+        action: &str,
+        full_text: &str,
+        fill_pct: f32,
+    ) {
+        let ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs_f64();
+        let conn = self.lock();
+        let _ = conn.execute(
+            "INSERT INTO unwired_actions (timestamp, being, action, full_text, fill_pct) \
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![ts, being, action, full_text, fill_pct],
+        );
     }
 
     /// Log a bridged message with its spectral context.

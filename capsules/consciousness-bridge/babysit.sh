@@ -37,23 +37,11 @@ if [ "$(echo "$FILL > 80" | bc 2>/dev/null)" = "1" ]; then
 fi
 echo
 
-# --- Prune old perception files (keep last 60 of each type) ---
+# --- Prune old frame captures (JSON perceptions are archived, not deleted) ---
 PERC_DIR="/Users/v/other/astrid/capsules/perception/workspace/perceptions"
 VISUAL_DIR="/Users/v/other/astrid/capsules/perception/workspace/visual"
-VISUAL_COUNT=$(ls "$PERC_DIR"/visual_*.json 2>/dev/null | wc -l | tr -d ' ')
-AUDIO_COUNT=$(ls "$PERC_DIR"/audio_*.json 2>/dev/null | wc -l | tr -d ' ')
 FRAME_COUNT=$(ls "$VISUAL_DIR"/*.jpg 2>/dev/null | wc -l | tr -d ' ')
 
-if [ "$VISUAL_COUNT" -gt 60 ]; then
-  PRUNE=$((VISUAL_COUNT - 60))
-  ls -t "$PERC_DIR"/visual_*.json | tail -"$PRUNE" | xargs rm -f
-  echo "Pruned $PRUNE old visual perceptions (kept 60)"
-fi
-if [ "$AUDIO_COUNT" -gt 120 ]; then
-  PRUNE=$((AUDIO_COUNT - 120))
-  ls -t "$PERC_DIR"/audio_*.json | tail -"$PRUNE" | xargs rm -f
-  echo "Pruned $PRUNE old audio perceptions (kept 120)"
-fi
 if [ "$FRAME_COUNT" -gt 60 ]; then
   PRUNE=$((FRAME_COUNT - 60))
   ls -t "$VISUAL_DIR"/*.jpg | tail -"$PRUNE" | xargs rm -f
@@ -84,9 +72,9 @@ ORDER BY timestamp DESC LIMIT 3;
 echo
 
 # --- Latest minime thought ---
-LATEST_JOURNAL=$(ls -t /Users/v/other/minime/workspace/journal/ | head -1)
-echo "=== Minime's latest: $LATEST_JOURNAL ==="
-head -15 "/Users/v/other/minime/workspace/journal/$LATEST_JOURNAL" | tail -3
+LATEST_JOURNAL=$(find /Users/v/other/minime/workspace/journal -maxdepth 1 -type f -name "*.txt" -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1)
+echo "=== Minime's latest: $(basename "$LATEST_JOURNAL") ==="
+head -15 "$LATEST_JOURNAL" | tail -3
 echo
 
 # --- Introspections (Astrid reading its own code) ---

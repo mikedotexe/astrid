@@ -17,13 +17,14 @@ use anyhow::Result;
 use clap::Parser;
 use consciousness_bridge_server::{
     autonomous,
+    condition_metrics,
     db::BridgeDb,
     mcp,
     paths::{BridgePathOverrides, configure_bridge_paths},
     ws,
 };
 use tokio::sync::{RwLock, mpsc};
-use tracing::info;
+use tracing::{info, warn};
 
 use ws::BridgeState;
 
@@ -111,12 +112,42 @@ async fn main() -> Result<()> {
         bridge_root: cli.bridge_root.clone(),
         bridge_workspace: cli.bridge_workspace.clone(),
         astrid_root: cli.astrid_root.clone(),
+        autoresearch_root: None,
         minime_root: cli.minime_root.clone(),
         minime_workspace: cli.workspace_path.clone(),
         perception_path: cli.perception_path.clone(),
         introspector_script: cli.introspector_script.clone(),
         reflective_sidecar_script: cli.reflective_sidecar_script.clone(),
     });
+
+    for (label, result) in [
+        (
+            "Astrid journal",
+            consciousness_bridge_server::managed_dir::compact_text_directory(
+                &resolved_paths.astrid_journal_dir(),
+            ),
+        ),
+        (
+            "Astrid perceptions",
+            consciousness_bridge_server::managed_dir::compact_json_directory(
+                resolved_paths.perception_path(),
+            ),
+        ),
+    ] {
+        match result {
+            Ok(created) if !created.is_empty() => {
+                info!(
+                    label = label,
+                    buckets = created.len(),
+                    "compacted managed directory"
+                );
+            },
+            Ok(_) => {},
+            Err(error) => {
+                warn!(label = label, error = %error, "managed directory compaction failed");
+            },
+        }
+    }
 
     info!(
         telemetry = %cli.minime_telemetry,
@@ -128,6 +159,10 @@ async fn main() -> Result<()> {
         reservoir_ws = %cli.reservoir_ws_url,
         "consciousness bridge starting"
     );
+
+    if let Err(error) = condition_metrics::ensure_bridge_metrics_file() {
+        warn!(error = %error, "failed to initialize condition metrics ledger");
+    }
 
     // Open SQLite database.
     let db = Arc::new(BridgeDb::open(&cli.db_path)?);

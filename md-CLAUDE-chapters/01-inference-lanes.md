@@ -5,7 +5,7 @@
 Two separate LLM backends. Zero shared contention.
 
 ```
-Astrid ──► MLX server (port 8090) ──► gemma-3-12b-it-4bit
+Astrid ──► coupled_astrid_server (port 8090) ──► gemma-3-4b-it-4bit (MLX)
 minime ──► Ollama (port 11434) ──► gemma3:12b (Q4_K_M)
 Both   ──► Ollama (port 11434) ──► nomic-embed-text (embeddings)
 ```
@@ -14,17 +14,21 @@ Both   ──► Ollama (port 11434) ──► nomic-embed-text (embeddings)
 
 Before MLX (pre-2026-03-27), both Astrid and minime shared Ollama. This caused **33% dialogue_fallback rate** — Astrid lost her voice whenever minime's agent, perception LLaVA, or embeddings were using Ollama. Moving Astrid to a dedicated MLX server eliminated contention entirely.
 
-## MLX Server
+## Coupled Astrid Server
 
-**Process:** `mlx_lm.server --model mlx-community/gemma-3-12b-it-4bit --trust-remote-code --port 8090 --prompt-cache-bytes 4294967296`
+**Process:** `coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-3-4b-it-4bit`
 
 **API:** OpenAI-compatible (`/v1/chat/completions`)
 
-**Prompt caching:** 4GB KV cache. Repeated system prompts benefit from caching after first call.
+**Bidirectional reservoir coupling:** Each token embedding feeds the triple-ESN reservoir, and the reservoir's dynamical state modulates logits at every token (temperature via y1, repetition via y2, top-p via y3).
 
-**Performance:** ~7-18 tok/s through the server (17.9 tok/s direct MLX generate). The server adds serialization overhead.
+**Performance:** ~55-69 tok/s.
 
-**VRAM:** ~7.5GB (4-bit quantized gemma3:12b in MLX format)
+**VRAM:** ~2.5GB (4-bit quantized Gemma 3 4B in MLX format, memory-mapped)
+
+**Hardening (2026-03-31):** System prompt trimmed 16K→3.2K chars (80% reduction). MAX_PROMPT_CHARS=6,000 safety net. Per-block caps in generate_dialogue() (800/400/400/800/800/300/300 chars). Gibberish gate rejects responses with <40% alphabetic ratio. response_length capped at 768. t_mod defensive clamp [0.5, 2.0].
+
+**Model history:** gemma-3-4b-it-4bit (2026-03-27) → Qwen3-8B-4bit (2026-03-31a) → rolled back to gemma-3-4b-it-4bit (2026-03-31b). Qwen3-14B, Qwen3-8B, and Gemma 2 9B all tested; all unstable under bidirectional per-token coupling (prefill timeouts, degenerate output, template-locking).
 
 ## Bridge Integration
 
@@ -91,7 +95,7 @@ Set via `launchctl setenv`:
 
 | Model | Size | Backend | Role |
 |-------|------|---------|------|
-| `gemma-3-12b-it-4bit` (MLX) | ~7.5GB | MLX | Astrid voice |
+| `gemma-3-4b-it-4bit` (MLX) | ~2.5GB | MLX | Astrid voice (coupled generation) |
 | `gemma3:12b` (GGUF) | ~8.1GB | Ollama | minime agent |
 | `gemma3:27b` (GGUF) | ~17GB | Ollama | THINK_DEEP (on demand) |
 | `nomic-embed-text` | ~274MB | Ollama | Embeddings |

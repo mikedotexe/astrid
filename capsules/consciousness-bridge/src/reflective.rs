@@ -264,6 +264,8 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
             .arg("--json")
             .arg("--hardware-profile")
             .arg("m4-mini")
+            .arg("--model-label")
+            .arg("gemma3-12b")
             .arg("--mode")
             .arg("reflective")
             .arg("--architecture")
@@ -271,7 +273,7 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
             .arg("--prompt")
             .arg(&prompt)
             .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::null())
+            .stderr(std::process::Stdio::piped())
             .output()
             .ok()?;
 
@@ -281,6 +283,11 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr_str = String::from_utf8_lossy(&output.stderr);
+        // Log model identity from stderr (chat_mlx_local.py prints loading info there)
+        if let Some(model_line) = stderr_str.lines().find(|l| l.contains("model") || l.contains("loading")) {
+            info!("MLX sidecar model: {}", model_line.trim());
+        }
         match serde_json::from_str::<ReflectiveReport>(&stdout) {
             Ok(report) => {
                 info!(

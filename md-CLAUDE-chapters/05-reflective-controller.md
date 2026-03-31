@@ -31,9 +31,12 @@ Pure Rust computation — no LLM, no subprocess. Classifies the spectral regime 
 **Invocation:**
 ```bash
 python3 chat_mlx_local.py --json --hardware-profile m4-mini \
+  --model-label gemma3-12b \
   --mode reflective --architecture reservoir-fixed \
   --prompt "<spectral context>"
 ```
+
+**Model:** `gemma-3-12b-it-4bit` (~7.5 GB), resolved via `--model-label gemma3-12b` which maps to `/Users/v/other/mlx/.local_models/gemma-3-12b-it-4bit`. This was fixed on 2026-03-31 — previously the sidecar omitted `--model-label` and silently fell back to `qwen2.5-1.5b-instruct-mlx-4bit` (a 1.5B model) based on directory listing order in `chat_mlx_local.py`.
 
 **What it returns** (`ReflectiveReport`):
 
@@ -57,8 +60,8 @@ python3 chat_mlx_local.py --json --hardware-profile m4-mini \
 
 | | RegimeTracker | MLX Sidecar |
 |--|---------------|-------------|
-| Speed | <1ms | ~82s |
+| Speed | <1ms | ~77s (validated 2026-03-31 on gemma3-12b; 4 candidates, 7.5 tok/s) |
 | Frequency | Every exchange | INTROSPECT only (~1 in 15) |
 | Depth | Fill trajectory classification | Full controller with geometry, field, conditions |
-| LLM | None | qwen2.5-1.5b (small) |
+| LLM | None | gemma-3-12b-it-4bit (via `--model-label gemma3-12b`) |
 | Purpose | Always-on awareness | Deep reflective analysis |
