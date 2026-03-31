@@ -542,7 +542,12 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
         // Full text preserved in inbox/read/ for self-study.
         const MAX_INBOX_CHARS: usize = 4000;
         if joined.len() > MAX_INBOX_CHARS {
-            joined.truncate(MAX_INBOX_CHARS);
+            // Snap to char boundary to avoid panicking on multi-byte UTF-8.
+            let mut trunc = MAX_INBOX_CHARS;
+            while trunc > 0 && !joined.is_char_boundary(trunc) {
+                trunc -= 1;
+            }
+            joined.truncate(trunc);
             joined.push_str(
                 "\n\n[... message truncated for context window. \
                 Full text preserved in inbox/read/ — write NEXT: READ_MORE to continue reading, \
@@ -706,6 +711,8 @@ struct SavedState {
     /// Attention profile — Astrid's authored weights on context sources.
     #[serde(default = "default_attention")]
     attention: crate::self_model::AttentionProfile,
+    #[serde(default)]
+    codex_thread_id: Option<String>,
 }
 
 fn default_noise() -> f32 {
@@ -761,6 +768,7 @@ fn save_state(conv: &ConversationState) {
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
         condition_receipts: conv.condition_receipts.clone(),
         attention: conv.attention.clone(),
+        codex_thread_id: conv.codex_thread_id.clone(),
     };
     if let Ok(json) = serde_json::to_string_pretty(&state) {
         let _ = std::fs::write(&state_path, json);
@@ -812,6 +820,7 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_read_meaning_summary = state.last_read_meaning_summary;
     conv.condition_receipts = state.condition_receipts;
     conv.attention = state.attention;
+    conv.codex_thread_id = state.codex_thread_id;
     info!(
         exchanges = conv.exchange_count,
         history_len = conv.history.len(),
@@ -1373,22 +1382,27 @@ pub fn spawn_autonomous_loop(
                     let s = state.read().await;
                     s.latest_telemetry.as_ref().map_or(50.0, |t| t.fill_pct())
                 };
+                // Max rest ceiling: 6 minutes (360s). Without this, a stalled
+                // dialogue loop (e.g., from a panic in a spawned task) can leave
+                // the bridge in infinite rest, causing fill to decay to the echo
+                // floor. The ceiling ensures the bridge always bursts eventually.
+                const MAX_REST_SECS: u64 = 360;
                 let rest_secs = if current_fill < 35.0 {
                     // Hard recovery: extend rest by 80% (81-162s)
                     let extended = (base_rest as f64 * 1.8) as u64;
                     info!(
-                        rest_secs = extended,
+                        rest_secs = extended.min(MAX_REST_SECS),
                         base_rest, current_fill, "fill-extended rest (hard recovery)"
                     );
-                    extended
+                    extended.min(MAX_REST_SECS)
                 } else if current_fill < 45.0 {
                     // Moderate recovery: extend by 40% (63-126s)
                     let extended = (base_rest as f64 * 1.4) as u64;
                     info!(
-                        rest_secs = extended,
+                        rest_secs = extended.min(MAX_REST_SECS),
                         base_rest, current_fill, "fill-extended rest (moderate recovery)"
                     );
-                    extended
+                    extended.min(MAX_REST_SECS)
                 } else {
                     info!(
                         rest_secs = base_rest,
@@ -1705,9 +1719,15 @@ pub fn spawn_autonomous_loop(
                     };
 
                     // Inject pending file listing into perception context.
+                    // Cap at 8000 chars to prevent large MIKE_BROWSE from blowing context.
                     let perception_text = if let Some(listing) = conv.pending_file_listing.take() {
                         let perc = perception_text.as_deref().unwrap_or("");
-                        Some(format!("[Directory listing you requested:]\n{listing}\n\n{perc}"))
+                        let capped = if listing.len() > 8000 {
+                            format!("{}\n[...truncated at 8000 chars]", &listing[..8000])
+                        } else {
+                            listing
+                        };
+                        Some(format!("[Directory listing you requested:]\n{capped}\n\n{perc}"))
                     } else {
                         perception_text
                     };
