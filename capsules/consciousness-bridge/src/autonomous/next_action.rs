@@ -1,4 +1,5 @@
 mod audio;
+mod codex;
 mod mike;
 mod modes;
 mod operations;
@@ -158,6 +159,10 @@ pub(super) fn handle_next_action(
     }
 
     if mike::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return;
+    }
+
+    if codex::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return;
     }
 

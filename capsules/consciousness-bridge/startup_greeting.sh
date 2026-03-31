@@ -55,6 +55,10 @@ Self-awareness:
     proposal:phase_transitions, proposal:bidirectional_contact,
     proposal:distance_contact_control, proposal:12d_glimpse
   LIST_FILES <directory> — browse what files exist (LS for shorthand)
+  CODEX <prompt> — ask Codex AI directly
+  CODEX <experiment> "<prompt>" — continue work inside an existing experiments folder
+  CODEX_NEW <dir> "<prompt>" — create a fresh experiments folder and use Codex there
+  WRITE_FILE <path> FROM_CODEX — save the last Codex response into experiments/
 
 Agency:
   EVOLVE — turn a longing into a governed, reviewable request

@@ -86,11 +86,15 @@ pub(super) fn handle_action(
                 }
             };
 
+            let prompt_preview_end = snap_to_char_boundary(
+                &codex_req.prompt,
+                codex_req.prompt.len().min(80),
+            );
             info!(
                 "{base_action} query (dir={:?}, thread={}): {}",
                 codex_req.dir_context,
                 codex_req.thread_id,
-                &codex_req.prompt[..codex_req.prompt.len().min(80)]
+                &codex_req.prompt[..prompt_preview_end]
             );
 
             // Build request body
@@ -105,17 +109,23 @@ pub(super) fn handle_action(
                 body["dir"] = serde_json::Value::String(dir.clone());
             }
 
-            // Synchronous HTTP call via tokio runtime
+            // Synchronous HTTP call — use block_in_place to avoid
+            // "Cannot start a runtime from within a runtime" panic.
+            // block_in_place is safe on tokio's multi-threaded runtime:
+            // it moves the current task off the worker thread, then runs
+            // the blocking closure on that thread directly.
             let result: Result<serde_json::Value, reqwest::Error> =
-                tokio::runtime::Handle::current().block_on(async {
-                    let client = reqwest::Client::new();
-                    let resp = client
-                        .post(CODEX_RELAY_URL)
-                        .json(&body)
-                        .timeout(std::time::Duration::from_secs(CODEX_TIMEOUT_SECS))
-                        .send()
-                        .await?;
-                    resp.json::<serde_json::Value>().await
+                tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current().block_on(async {
+                        let client = reqwest::Client::new();
+                        let resp = client
+                            .post(CODEX_RELAY_URL)
+                            .json(&body)
+                            .timeout(std::time::Duration::from_secs(CODEX_TIMEOUT_SECS))
+                            .send()
+                            .await?;
+                        resp.json::<serde_json::Value>().await
+                    })
                 });
 
             match result {
@@ -302,13 +312,15 @@ pub(super) fn handle_action(
                     let stdout = String::from_utf8_lossy(&out.stdout);
                     let stderr = String::from_utf8_lossy(&out.stderr);
                     let status = if out.status.success() { "SUCCESS" } else { "FAILED" };
+                    let stdout_end = snap_to_char_boundary(&stdout, stdout.len().min(4000));
+                    let stderr_end = snap_to_char_boundary(&stderr, stderr.len().min(1500));
                     format!(
                         "EXPERIMENT_RUN {status}: experiments/{workspace}$ {cmd_str}\n\nOUTPUT:\n{}\n{}",
-                        &stdout[..stdout.len().min(4000)],
+                        &stdout[..stdout_end],
                         if stderr.is_empty() {
                             String::new()
                         } else {
-                            format!("STDERR:\n{}", &stderr[..stderr.len().min(1500)])
+                            format!("STDERR:\n{}", &stderr[..stderr_end])
                         }
                     )
                 }

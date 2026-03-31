@@ -204,6 +204,10 @@ pub(super) struct ConversationState {
     /// One non-immediate thread sampled during rest — injected into next
     /// self-directed mode (Daydream, Aspiration, Initiate).
     pub peripheral_resonance: Option<String>,
+    /// Last response from Codex relay — consumed by WRITE_FILE FROM_CODEX.
+    pub last_codex_response: Option<String>,
+    /// Thread ID for multi-turn Codex conversations.
+    pub codex_thread_id: Option<String>,
 }
 
 impl ConversationState {
@@ -286,6 +290,8 @@ impl ConversationState {
             condition_receipts: VecDeque::with_capacity(crate::self_model::MAX_RECEIPTS),
             attention: crate::self_model::AttentionProfile::default_profile(),
             peripheral_resonance: None,
+            last_codex_response: None,
+            codex_thread_id: None,
         }
     }
 

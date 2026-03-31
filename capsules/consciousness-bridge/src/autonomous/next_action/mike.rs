@@ -352,8 +352,8 @@ fn read_file_paginated(path: &Path, offset: usize) -> String {
     }
 }
 
-/// Validate a path stays within the research root.
-fn is_safe_path(path: &Path, root: &Path) -> bool {
+/// Validate a path stays within a given root directory.
+pub(super) fn is_safe_path(path: &Path, root: &Path) -> bool {
     match (path.canonicalize(), root.canonicalize()) {
         (Ok(resolved), Ok(root_resolved)) => resolved.starts_with(&root_resolved),
         // If path doesn't exist yet, check the parent
@@ -365,7 +365,7 @@ fn is_safe_path(path: &Path, root: &Path) -> bool {
     }
 }
 
-fn is_excluded(name: &str) -> bool {
+pub(super) fn is_excluded(name: &str) -> bool {
     EXCLUDED.iter().any(|e| name == *e) || name.starts_with('.')
 }
 

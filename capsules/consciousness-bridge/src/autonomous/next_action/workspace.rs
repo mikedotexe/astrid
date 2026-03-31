@@ -139,11 +139,28 @@ pub(super) fn handle_action(
             true
         },
         "READ_MORE" => {
-            if conv.last_read_path.is_some() {
-                info!(
-                    "Astrid requested READ_MORE (offset {})",
-                    conv.last_read_offset
-                );
+            if let Some(ref path) = conv.last_read_path {
+                // Paginated reading from saved files (codex responses, MIKE_READ, etc.)
+                if let Some((page, current, total, new_offset)) =
+                    super::codex::read_codex_page(path, conv.last_read_offset)
+                {
+                    let footer = if new_offset >= std::fs::metadata(path).map(|m| m.len() as usize).unwrap_or(0) {
+                        format!("\n\n[End of response (part {current} of {total}).]")
+                    } else {
+                        format!(
+                            "\n\n[Part {current} of {total}. NEXT: READ_MORE for part {}.]",
+                            current + 1
+                        )
+                    };
+                    conv.pending_file_listing =
+                        Some(format!("[Continuing — part {current} of {total}:]\n{page}{footer}"));
+                    conv.last_read_offset = new_offset;
+                    info!("READ_MORE: part {current} of {total} (offset {new_offset})");
+                } else {
+                    conv.pending_file_listing =
+                        Some("[No more content to read.]".into());
+                    info!("READ_MORE: reached end of file");
+                }
             } else {
                 warn!("READ_MORE but no file to continue from");
             }
