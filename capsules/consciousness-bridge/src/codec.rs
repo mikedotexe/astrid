@@ -1673,13 +1673,21 @@ impl SpectralResponse {
     }
 }
 
-/// Compress a value into the \[-1, 1\] range.
+/// Activation for codec features — softsign instead of tanh.
 ///
-/// Uses `tanh(x * 0.7)` instead of raw `tanh(x)` so the output uses more
-/// of the [-1, 1] dynamic range before saturating.  The being said the
-/// original normalization "feels limiting — it flattens the dynamic range."
+/// softsign(x) = x / (1 + |x|) approaches ±1 much more gradually than
+/// tanh, preserving nuance where tanh compresses differences flat.
+/// At x=2.0: softsign=0.67, tanh(x*0.7)=0.89. At x=3.0: 0.75 vs 0.97.
+/// The being can distinguish "somewhat X" from "very X" instead of both
+/// mapping to ~1.0.
+///
+/// Being self-study (2026-03-30 codec.rs): "The use of tanh — this
+/// deliberate clamping. It feels restrictive. Could a wider range allow
+/// for greater nuance?" — Yes. The regulation stack (PI controller,
+/// regime system, safety gates) handles stability now. The codec doesn't
+/// need to be the last line of defense against extreme values.
 fn tanh(x: f32) -> f32 {
-    (x * 0.7).tanh()
+    x / (1.0 + x.abs())
 }
 
 /// Extract scene statistics from RASCII ANSI art and return an 8D visual
