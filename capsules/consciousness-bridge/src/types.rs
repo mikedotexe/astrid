@@ -232,6 +232,12 @@ pub enum SensoryMsg {
         /// Synthetic noise level.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         synth_noise_level: Option<f32>,
+        /// Enable or disable minime's legacy internal audio synth.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        legacy_audio_synth: Option<bool>,
+        /// Enable or disable minime's legacy internal video synth.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        legacy_video_synth: Option<bool>,
     },
 }
 
@@ -374,6 +380,8 @@ impl ControlRequest {
             keep_bias: self.keep_bias,
             exploration_noise: self.exploration_noise,
             fill_target: self.fill_target,
+            legacy_audio_synth: None,
+            legacy_video_synth: None,
             regulation_strength: self.regulation_strength,
             deep_breathing: self.deep_breathing,
             pure_tone: self.pure_tone,

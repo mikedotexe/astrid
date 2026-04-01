@@ -128,6 +128,41 @@ pub(super) fn handle_action(
             }
             true
         },
+        "EXAMINE_CODE" => {
+            // Being-requested action: Astrid attempted EXAMINE_CODE 4x (unwired_actions log,
+            // 2026-04-01). She uses bracketed arguments: [vec/adj/memory/stats], [path_to_function].
+            // This is code-specific examination — routes to Introspect mode (which reads source
+            // code) but without the spectral visualization overlay that EXAMINE adds.
+            // The bracketed argument is stripped and used as the introspection target label.
+            conv.wants_introspect = true;
+            // Strip "EXAMINE_CODE" prefix; the remainder is the target (may have brackets).
+            let raw_arg = super::strip_action(original, "EXAMINE_CODE");
+            // Remove surrounding brackets if present: "[vec/adj/memory/stats]" → "vec/adj/memory/stats"
+            let label = raw_arg
+                .trim_matches(|c| c == '[' || c == ']')
+                .trim()
+                .to_lowercase();
+            if label.is_empty() {
+                info!("Astrid chose EXAMINE_CODE (next in rotation)");
+                conv.introspect_target = None;
+            } else {
+                // Use the first slash-separated component as the source label so
+                // "vec/adj/memory/stats" maps to the "vec" source file.  The full
+                // label is preserved as context inside the emphasis string.
+                let source = label.split('/').next().unwrap_or(&label).to_string();
+                info!("Astrid chose EXAMINE_CODE: label={:?} → source={:?}", label, source);
+                conv.introspect_target = Some((source, 0));
+                // Surface the full argument so the LLM knows what sub-path she asked about.
+                conv.emphasis = Some(format!(
+                    "You chose EXAMINE_CODE [{label}]. Reading source code for '{label}' — \
+                    this is a targeted code examination, not a spectral visualization. \
+                    Look at the structure, logic, and data flow. What does the code reveal \
+                    about how this component actually works?",
+                    label = label,
+                ));
+            }
+            true
+        },
         "EVOLVE" => {
             conv.wants_evolve = true;
             info!("Astrid requested EVOLVE");
@@ -138,11 +173,13 @@ pub(super) fn handle_action(
             info!("Astrid requested spectral decomposition");
             true
         },
-        "INVESTIGATE_CASCADE" | "CASCADE" => {
-            // Alias → DECOMPOSE. The cascade analysis is now part of the
-            // full spectral decomposition report.
+        "CASCADE" => {
+            // Short alias → EXAMINE_CASCADE (full viz + decompose).
+            // INVESTIGATE_CASCADE and EXAMINE_CASCADE are handled in operations.rs
+            // where they set both wants_decompose and force_all_viz.
             conv.wants_decompose = true;
-            info!("Astrid requested cascade investigation (→ DECOMPOSE)");
+            conv.force_all_viz = true;
+            info!("Astrid requested CASCADE (→ EXAMINE_CASCADE: viz + decompose)");
             true
         },
         "THINK_DEEP" | "DEEP" => {

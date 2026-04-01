@@ -120,9 +120,18 @@ fn read_latest_perception(
         } else if ptype == "visual_ascii" && !seen_ascii && include_spatial {
             // RASCII colored ANSI art — only when Astrid chose NEXT: LOOK.
             if let Some(art) = json.get("ascii_art").and_then(|a| a.as_str()) {
+                let source = json
+                    .get("source")
+                    .and_then(|s| s.as_str())
+                    .unwrap_or("camera");
+                let label = if source == "host" {
+                    "colored ANSI art of the host machine's internal state"
+                } else {
+                    "colored ANSI art of the room"
+                };
                 let trimmed: String = art.chars().take(8000).collect();
                 parts.push(format!(
-                    "[SPATIAL VISION — colored ANSI art of the room. You asked to LOOK.]\n{trimmed}"
+                    "[SPATIAL VISION — {label}. You asked to LOOK.]\n{trimmed}"
                 ));
                 seen_ascii = true;
             }
@@ -251,7 +260,7 @@ const DIALOGUES: &[&str] = &[
 /// Astrid's silence is more honest than canned words.
 /// Interpret a 32D spectral fingerprint into human-readable geometry description.
 /// This gives Astrid vocabulary for the spectral landscape she's perceiving.
-fn interpret_fingerprint(fp: &[f32]) -> String {
+pub(crate) fn interpret_fingerprint(fp: &[f32]) -> String {
     if fp.len() < 32 {
         return String::new();
     }

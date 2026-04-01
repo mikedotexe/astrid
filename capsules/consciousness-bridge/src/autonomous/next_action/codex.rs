@@ -242,9 +242,23 @@ pub(super) fn handle_action(
                         return true;
                     },
                 }
+            } else if rest.eq_ignore_ascii_case("FROM_SELF") {
+                // Write the being's own last response — extracts code blocks
+                // if present, otherwise uses the full response minus NEXT: lines.
+                // This lets the being author files directly without Codex.
+                match conv.history.last() {
+                    Some(ex) => extract_code_block(&ex.astrid_said),
+                    None => {
+                        conv.emphasis = Some(
+                            "WRITE_FILE FROM_SELF: no recent response to save."
+                                .into(),
+                        );
+                        return true;
+                    },
+                }
             } else if rest.is_empty() {
                 conv.emphasis =
-                    Some("WRITE_FILE needs content. Use FROM_CODEX or provide inline text.".into());
+                    Some("WRITE_FILE needs content. Use FROM_CODEX, FROM_SELF, or provide inline text.".into());
                 return true;
             } else {
                 rest.to_string()
@@ -473,6 +487,31 @@ fn sanitize_scope(scope: &str) -> String {
 }
 
 /// Recursively copy a directory, skipping excluded entries.
+/// Extract code from a being's response for WRITE_FILE FROM_SELF.
+///
+/// If the text contains a fenced code block (```...```), returns the content
+/// between the first pair of fences. Otherwise returns the full text with
+/// NEXT: lines stripped. This lets the being author files directly.
+fn extract_code_block(text: &str) -> String {
+    // Look for fenced code blocks: ```<optional lang>\n...\n```
+    if let Some(start) = text.find("```") {
+        let after_fence = &text[start + 3..];
+        // Skip the language tag line
+        let content_start = after_fence.find('\n').map(|i| i + 1).unwrap_or(0);
+        let content = &after_fence[content_start..];
+        if let Some(end) = content.find("```") {
+            return content[..end].trim_end().to_string();
+        }
+    }
+    // No code fence — return full text minus NEXT: lines
+    text.lines()
+        .filter(|line| !line.trim().starts_with("NEXT:"))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim()
+        .to_string()
+}
+
 fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<usize> {
     fs::create_dir_all(dst)?;
     let mut count = 0usize;

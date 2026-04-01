@@ -80,6 +80,8 @@ pub(super) fn handle_action(
                     synth_gain: None,
                     keep_bias: None,
                     fill_target: None,
+                    legacy_audio_synth: None,
+                    legacy_video_synth: None,
                     regulation_strength: None,
                     deep_breathing: None,
                     pure_tone: None,
@@ -110,8 +112,8 @@ pub(super) fn handle_action(
             ));
             true
         },
-        "PERTURB" => {
-            let arg = strip_action(original, "PERTURB");
+        "PERTURB" | "PULSE" => {
+            let arg = strip_action(original, base_action);
             let arg_upper = arg.to_uppercase();
             let mut features = [0.0_f32; 32];
             let description = if arg_upper.starts_with("LAMBDA") || arg.contains('=') {

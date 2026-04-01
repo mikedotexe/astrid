@@ -219,29 +219,58 @@ pub(super) fn handle_reservoir_action(
             true
         },
         "RESERVOIR_READ" => {
-            match reservoir_ws_call(&serde_json::json!({
-                "type": "read_state", "name": "astrid"
-            })) {
-                Some(r) => {
-                    conv.emphasis = Some(format!(
-                        "Your reservoir state:\n  h_norms: {:?}\n  last_output: {}\n  ticks: {}\n  mode: {}\n  decay: {}\n  since_live: {}s",
-                        r.get("h_norms"),
-                        r.get("last_output").and_then(|v| v.as_f64()).unwrap_or(0.0),
-                        r.get("tick_count").and_then(|v| v.as_u64()).unwrap_or(0),
-                        r.get("mode").and_then(|v| v.as_str()).unwrap_or("?"),
-                        r.get("decay_weight")
-                            .and_then(|v| v.as_f64())
-                            .unwrap_or(0.0),
-                        r.get("seconds_since_live")
-                            .and_then(|v| v.as_f64())
-                            .unwrap_or(0.0),
-                    ));
-                },
-                None => {
-                    conv.emphasis = Some("Reservoir service not available.".to_string());
-                },
+            // Read all three handles so the being sees the full coupling landscape.
+            let mut lines = Vec::new();
+            lines.push("=== TRIPLE RESERVOIR STATE ===".to_string());
+            lines.push("Three handles, three timescales (fast/medium/slow).".to_string());
+            lines.push("Your generation couples through this — y1 shapes confidence, y2 vocabulary, y3 tone.\n".to_string());
+
+            for handle in &["astrid", "minime", "claude_main"] {
+                match reservoir_ws_call(&serde_json::json!({
+                    "type": "read_state", "name": handle
+                })) {
+                    Some(r) => {
+                        let h = r.get("h_norms")
+                            .and_then(|v| v.as_array())
+                            .map(|arr| arr.iter()
+                                .map(|v| format!("{:.2}", v.as_f64().unwrap_or(0.0)))
+                                .collect::<Vec<_>>()
+                                .join(", "))
+                            .unwrap_or_else(|| "?".to_string());
+                        let ticks = r.get("tick_count").and_then(|v| v.as_u64()).unwrap_or(0);
+                        let mode = r.get("mode").and_then(|v| v.as_str()).unwrap_or("?");
+                        let since = r.get("seconds_since_live").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let decay = r.get("decay_weight").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let output = r.get("last_output").and_then(|v| v.as_f64()).unwrap_or(0.0);
+
+                        // Extract coupling readout if available
+                        let readout = r.get("last_live_meta")
+                            .or_else(|| r.get("last_generation_meta"))
+                            .and_then(|m| m.get("reservoir_readout"))
+                            .map(|ro| format!(
+                                "y1={:.3}, y2={:.3}, y3={:.3}",
+                                ro.get("y1_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                ro.get("y2_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                ro.get("y3_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                            ))
+                            .unwrap_or_default();
+
+                        lines.push(format!("[{handle}]"));
+                        lines.push(format!("  h_norms: [{h}] (fast, medium, slow)"));
+                        lines.push(format!("  ticks: {ticks:>10}  mode: {mode}  decay: {decay:.3}"));
+                        lines.push(format!("  last_output: {output:.4}  since_live: {since:.1}s"));
+                        if !readout.is_empty() {
+                            lines.push(format!("  coupling readout: {readout}"));
+                        }
+                        lines.push(String::new());
+                    },
+                    None => {
+                        lines.push(format!("[{handle}] not available"));
+                    },
+                }
             }
-            info!("Astrid read reservoir state");
+            conv.emphasis = Some(lines.join("\n"));
+            info!("Astrid read triple reservoir state (all handles)");
             true
         },
         "RESERVOIR_TRAJECTORY" => {

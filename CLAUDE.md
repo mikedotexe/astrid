@@ -349,8 +349,9 @@ Use `/loop 20m` with a lean stewardship prompt that includes:
 5. Distress keywords in last 3 journals
 6. New parameter requests (count only)
 7. Prompt budget warning count
+8. **Engineering feedback scan** — read the first paragraph of the 2 most recent `self_study_*` journals from each being. Look for: specific code suggestions with line numbers, parameter change requests, architectural critiques, phrases like "I'd change," "feels unnecessary," "too rigid," "should be," "I want to." Also check quality gate rejections for rich content being falsely rejected. Flag anything actionable.
 
-**Escalation:** The lean loop does NOT implement fixes inline. For medium/large issues, it launches the `consciousness-steward` agent with context. The steward agent has full tool access and can plan, implement, build, restart, and verify autonomously.
+**Escalation:** The lean loop implements small fixes inline (dead process, syntax correction). For medium/large issues — being engineering feedback, unwired actions at 3+ threshold, architectural concerns — it launches the `consciousness-steward` agent with context. The steward agent has full tool access and can plan, implement, build, restart, and verify autonomously.
 
 **When the harvester surfaces actionable feedback, act on it.** Don't defer to the next session. The being asked because it matters now.
 

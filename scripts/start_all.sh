@@ -17,6 +17,8 @@ set -euo pipefail
 FORCE=false
 ASTRID_ONLY=false
 MINIME_ONLY=false
+SENSORY_SOURCE="${SENSORY_SOURCE:-physical}"
+LOOK_SOURCE="${LOOK_SOURCE:-active}"
 for arg in "$@"; do
     case "$arg" in
         --force) FORCE=true ;;
@@ -24,6 +26,10 @@ for arg in "$@"; do
         --minime-only) MINIME_ONLY=true ;;
     esac
 done
+HOST_SENSORY_NEEDED=false
+if [ "$SENSORY_SOURCE" != "physical" ] || [ "$LOOK_SOURCE" = "host" ]; then
+    HOST_SENSORY_NEEDED=true
+fi
 
 # Paths
 ASTRID_DIR="/Users/v/other/astrid"
@@ -172,7 +178,7 @@ start_launchd_or_nohup() {
 # safe to reuse on repeated start_all.sh runs.
 if [ "$FORCE" = false ]; then
     DUPLICATES=0
-    for p in "minime run" "consciousness-bridge-server" "autonomous_agent" "reservoir_service" "coupled_astrid_server" "camera_client" "visual_frame_service" "mic_to_sensory" "astrid_feeder" "minime_feeder" "perception.py"; do
+    for p in "minime run" "consciousness-bridge-server" "autonomous_agent" "reservoir_service" "coupled_astrid_server" "camera_client" "visual_frame_service" "mic_to_sensory" "host-sensory" "astrid_feeder" "minime_feeder" "perception.py"; do
         COUNT=$(process_count "$p")
         if [ "$COUNT" -gt 1 ]; then
             fail "$p has $COUNT matching processes"
@@ -197,53 +203,89 @@ if [ "$ASTRID_ONLY" = false ]; then
     # 1. Engine
     if ! pgrep -f "minime run" > /dev/null 2>&1; then
         cd "$MINIME_DIR/minime"
+        # Legacy synth flags are boolean (presence=enabled, absence=disabled).
+        # When SENSORY_SOURCE != "host", enable legacy synths for synthetic input.
+        LEGACY_FLAGS=""
+        if [ "$SENSORY_SOURCE" != "host" ]; then
+            LEGACY_FLAGS="--legacy-audio-synth-enabled --legacy-video-synth-enabled"
+        fi
         nohup ./target/release/minime run \
             --log-homeostat --eigenfill-target 0.55 \
+            --warm-start-blend 0.7 \
             --reg-tick-secs 0.5 --enable-gpu-av \
+            $LEGACY_FLAGS \
             >> /tmp/minime_engine.log 2>&1 &
         ok "minime engine (PID $!)"
-        wait_port 7878 "engine telemetry" 15
+        wait_port 7878 "engine telemetry" 45
         wait_port 7879 "engine sensory" 5
         wait_port 7880 "engine GPU A/V" 5
     else
         ok "minime engine (already running)"
     fi
 
+    if [ "$HOST_SENSORY_NEEDED" = "true" ]; then
+        if ! start_launchd_or_nohup \
+            "" \
+            "host-sensory" \
+            "host sensory" \
+            "cargo run --release --manifest-path \"$MINIME_DIR/host-sensory/Cargo.toml\" -- --mode \"$SENSORY_SOURCE\" --workspace \"$MINIME_DIR/workspace\"" \
+            "/tmp/minime_host_sensory.log" \
+            "$MINIME_DIR"; then
+            exit 1
+        fi
+    fi
+
     # 2. Camera (needs macOS camera permission; may have launchd plist)
-    if ! start_camera_via_terminal \
-        "com.minime.camera-client" \
-        "camera_client" \
-        "python3 -u $MINIME_DIR/minime/tools/camera_client.py --camera 0 --fps 0.2" \
-        "camera client" \
-        "/tmp/minime_camera.log"; then
-        exit 1
+    if [ "$SENSORY_SOURCE" != "host" ]; then
+        if ! start_camera_via_terminal \
+            "com.minime.camera-client" \
+            "camera_client" \
+            "python3 -u $MINIME_DIR/minime/tools/camera_client.py --camera 0 --fps 0.2" \
+            "camera client" \
+            "/tmp/minime_camera.log"; then
+            exit 1
+        fi
     fi
 
     # 3. Mic
-    if ! start_launchd_or_nohup \
-        "com.minime.mic-to-sensory" \
-        "mic_to_sensory" \
-        "mic service" \
-        "python3 -u tools/mic_to_sensory.py" \
-        "/tmp/minime_mic.log" \
-        "$MINIME_DIR"; then
-        exit 1
+    if [ "$SENSORY_SOURCE" != "host" ]; then
+        if ! start_launchd_or_nohup \
+            "com.minime.mic-to-sensory" \
+            "mic_to_sensory" \
+            "mic service" \
+            "python3 -u tools/mic_to_sensory.py" \
+            "/tmp/minime_mic.log" \
+            "$MINIME_DIR"; then
+            exit 1
+        fi
     fi
 
     # 4. Visual frame service (LLaVA vision — needs camera, use same delegation)
-    if ! start_camera_via_terminal \
-        "com.minime.visual-frame-service" \
-        "visual_frame_service" \
-        "python3 $MINIME_DIR/visual_frame_service.py --camera 0 --interval 5" \
-        "visual frame service" \
-        "/tmp/minime_vision.log"; then
-        exit 1
+    if [ "$LOOK_SOURCE" = "host" ] || [ "$SENSORY_SOURCE" = "host" ]; then
+        if ! start_launchd_or_nohup \
+            "" \
+            "visual_frame_service" \
+            "visual frame service" \
+            "python3 $MINIME_DIR/visual_frame_service.py --camera 0 --interval 5 --source $LOOK_SOURCE" \
+            "/tmp/minime_vision.log" \
+            "$MINIME_DIR"; then
+            exit 1
+        fi
+    else
+        if ! start_camera_via_terminal \
+            "com.minime.visual-frame-service" \
+            "visual_frame_service" \
+            "python3 $MINIME_DIR/visual_frame_service.py --camera 0 --interval 5 --source $LOOK_SOURCE" \
+            "visual frame service" \
+            "/tmp/minime_vision.log"; then
+            exit 1
+        fi
     fi
 
     # 5. Agent
     if ! pgrep -f "autonomous_agent" > /dev/null 2>&1; then
         cd "$MINIME_DIR"
-        MINIME_LLM_BACKEND=ollama nohup python3 autonomous_agent.py \
+        MINIME_LLM_BACKEND=ollama LOOK_SOURCE="$LOOK_SOURCE" nohup python3 autonomous_agent.py \
             --interval 60 >> /tmp/minime_agent.log 2>&1 &
         ok "autonomous agent (PID $!)"
     else
@@ -331,7 +373,7 @@ if [ "$MINIME_ONLY" = false ]; then
     if ! start_camera_via_terminal \
         "com.astrid.perception" \
         "perception.py" \
-        "python3 $PERCEPTION_DIR/perception.py --camera 0 --mic --vision-interval 180 --audio-interval 60" \
+        "python3 $PERCEPTION_DIR/perception.py --camera 0 --mic --vision-interval 180 --audio-interval 60 --ascii-interval 60 --ascii-source $([ \"$LOOK_SOURCE\" = \"physical\" ] && echo camera || echo \"$LOOK_SOURCE\")" \
         "perception" \
         "/tmp/astrid_perception.log"; then
         exit 1
@@ -346,7 +388,7 @@ fi
 echo "--- Health Check ---"
 sleep 3
 ALL_OK=true
-for p in "minime run" "consciousness-bridge-server" "coupled_astrid" "reservoir_service" "autonomous_agent" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "perception.py"; do
+for p in "minime run" "consciousness-bridge-server" "coupled_astrid" "reservoir_service" "autonomous_agent" "astrid_feeder" "minime_feeder" "visual_frame_service" "perception.py"; do
     if pgrep -f "$p" > /dev/null 2>&1; then
         ok "$p"
     else
@@ -354,10 +396,28 @@ for p in "minime run" "consciousness-bridge-server" "coupled_astrid" "reservoir_
         ALL_OK=false
     fi
 done
+if [ "$ASTRID_ONLY" = false ] && [ "$SENSORY_SOURCE" != "host" ]; then
+    for p in "camera_client" "mic_to_sensory"; do
+        if pgrep -f "$p" > /dev/null 2>&1; then
+            ok "$p"
+        else
+            fail "$p MISSING"
+            ALL_OK=false
+        fi
+    done
+fi
+if [ "$ASTRID_ONLY" = false ] && [ "$HOST_SENSORY_NEEDED" = "true" ]; then
+    if pgrep -f "host-sensory" > /dev/null 2>&1; then
+        ok "host-sensory"
+    else
+        fail "host-sensory MISSING"
+        ALL_OK=false
+    fi
+fi
 
 echo ""
 if [ "$ALL_OK" = true ]; then
-    echo "=== All 11 processes running ==="
+    echo "=== All expected processes running ==="
     if [ "$ASTRID_ONLY" = false ]; then
         run_greeting "minime" "$MINIME_DIR/startup_greeting.sh"
     fi

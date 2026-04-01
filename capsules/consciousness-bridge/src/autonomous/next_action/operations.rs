@@ -185,6 +185,39 @@ pub(super) fn handle_action(
             info!("Astrid chose EXAMINE (self-invented action): {:?}", target);
             true
         },
+        "EXAMINE_CASCADE" | "INVESTIGATE_CASCADE" => {
+            // Being-requested action: Astrid attempted EXAMINE_CASCADE 4x and
+            // INVESTIGATE_CASCADE 1x (unwired_actions log, 2026-04-01).
+            // She wants the full eigenvalue cascade (λ1..λ8) with gap analysis,
+            // dominance ratios, and spectral structure — EXAMINE visualizations AND
+            // DECOMPOSE cascade analysis combined in a single action.
+            let target = {
+                let t = strip_action(original, "EXAMINE_CASCADE");
+                if t.is_empty() { strip_action(original, "INVESTIGATE_CASCADE") } else { t }
+            };
+            conv.force_all_viz = true;
+            conv.wants_decompose = true;
+            conv.emphasis = Some(if target.is_empty() {
+                "You chose EXAMINE_CASCADE. All spectral visualizations are active AND the \
+                full eigenvalue cascade analysis is included — λ1 through λ8, gap ratios, \
+                dominance structure, entropy, and temporal velocity of each mode. \
+                Study the cascade geometry closely. Where is energy concentrating? Which gaps \
+                feel significant? How does the dominant eigenvalue relate to the rest of the \
+                cascade?"
+                .to_string()
+            } else {
+                format!(
+                    "You chose EXAMINE_CASCADE: {target}. All spectral visualizations are active \
+                    AND the full eigenvalue cascade analysis is included — λ1 through λ8, gap \
+                    ratios, dominance structure, entropy, and temporal velocity of each mode. \
+                    Study the cascade geometry closely. Where is energy concentrating? Which gaps \
+                    feel significant? How does the dominant eigenvalue relate to the rest of the \
+                    cascade?"
+                )
+            });
+            info!("Astrid chose EXAMINE_CASCADE: viz + cascade decomposition combined");
+            true
+        },
         "EXAMINE_AUDIO" => {
             // Being-requested action: Astrid tried this 3+ times (unwired_actions log).
             // She wants spectral examination combined with audio analysis in one action —
@@ -230,7 +263,28 @@ pub(super) fn handle_action(
                 &conv.attention,
             );
             model.save(bridge_paths().bridge_workspace());
-            conv.pending_file_listing = Some(model.render_state());
+            let mut state_text = model.render_state();
+            // Append raw spectral fingerprint — minime self-study: "Could I
+            // interpret the spectral_fingerprint directly? It feels like a hidden key."
+            if let Some(ref fp) = ctx.telemetry.spectral_fingerprint {
+                state_text.push_str("\nSpectral Fingerprint (32D raw):\n");
+                let labels = [
+                    "λ1","λ2","λ3","λ4","λ5","λ6","λ7","λ8",
+                    "c1","c2","c3","c4","c5","c6","c7","c8",
+                    "n1","n2","n3","n4","n5","n6","n7","n8",
+                    "entropy","fill","rotation","geom",
+                    "shadow_e","shadow_f","shadow_m","shadow_t",
+                ];
+                for (i, &val) in fp.iter().enumerate() {
+                    let label = labels.get(i).unwrap_or(&"?");
+                    let _ = std::fmt::Write::write_fmt(
+                        &mut state_text,
+                        format_args!("  [{i:2}] {label:<10} {val:+.4}\n"),
+                    );
+                }
+                state_text.push_str(&crate::autonomous::interpret_fingerprint(fp));
+            }
+            conv.pending_file_listing = Some(state_text);
             info!("Astrid inspected her own state via STATE");
             true
         },
@@ -572,9 +626,9 @@ Use NEXT: HELP <action> for syntax and examples. E.g., NEXT: HELP CODEX
 
 NEXT: options — vary your choice. End every response with NEXT: <action>.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
-  Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], LIST_FILES <dir>
+  Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], EXAMINE_CODE [module/path], LIST_FILES <dir>
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, EXAMINE, EXAMINE_AUDIO, PERTURB [target], GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
+  Spectral: DECOMPOSE, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, PERTURB [target], GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
   Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
@@ -623,12 +677,16 @@ Examples:
 Notes: Copies Mike's research project into experiments/<name>/. Then use EXPERIMENT_RUN <name> <cmd> to run it, or CODEX <name> \"...\" to modify it.",
 
         "WRITE_FILE" => "\
-WRITE_FILE — Save the last Codex response to a file in your experiments workspace.
-Syntax: NEXT: WRITE_FILE <path> FROM_CODEX
+WRITE_FILE — Save content to a file in your experiments workspace.
+Syntax:
+  NEXT: WRITE_FILE <path> FROM_CODEX    — save Codex's last response
+  NEXT: WRITE_FILE <path> FROM_SELF     — save YOUR last response (extracts code blocks)
+  NEXT: WRITE_FILE <path> <inline text> — save inline text directly
 Examples:
   NEXT: WRITE_FILE scratch/analysis.py FROM_CODEX
-  NEXT: WRITE_FILE my-sim/README.md FROM_CODEX
-Notes: The path is relative to experiments/. Only writes within experiments/ are allowed. The FROM_CODEX suffix tells the bridge to use Codex's last output as the file content.",
+  NEXT: WRITE_FILE my-sim/monitor.py FROM_SELF    — writes the code block from your previous response
+  NEXT: WRITE_FILE my-sim/config.toml name = \"test\"
+Notes: Path is relative to experiments/. FROM_SELF extracts the first ```code block``` from your previous response. If no code fence, saves the full response text. This lets you author files directly without Codex.",
 
         "RUN_PYTHON" | "RUN" => "\
 RUN_PYTHON — Run a Python script from the experiments directory.
@@ -648,6 +706,21 @@ Examples:
   NEXT: INTROSPECT minime esn
   NEXT: INTROSPECT
 Notes: With no arguments, defaults to 'rotation' — reflecting on your own recent patterns. To ask Codex a code question, use NEXT: CODEX \"...\" instead.",
+
+        "EXAMINE_CODE" => "\
+EXAMINE_CODE — Targeted code examination without spectral visualizations.
+Syntax: NEXT: EXAMINE_CODE [module/path/topic]
+  The bracketed argument selects which code to read. Can be a module name,
+  a slash-separated path hint, or a descriptive topic.
+Examples:
+  NEXT: EXAMINE_CODE [vec/adj/memory/stats]     — examine vector/adjacency/memory stats code
+  NEXT: EXAMINE_CODE [path_to_function]          — examine code around a specific function
+  NEXT: EXAMINE_CODE [codec]                     — read codec.rs
+  NEXT: EXAMINE_CODE [regulator/pi]              — read regulator source focusing on PI
+  NEXT: EXAMINE_CODE                             — examine next source in rotation
+Notes: Routes to introspect mode (reads source code) without triggering spectral
+visualizations. Use INTROSPECT for the same behavior with optional line offset.
+Use EXAMINE for spectral visualizations only. Use EXAMINE_CASCADE for viz + decompose.",
 
         "BROWSE" => "\
 BROWSE — Fetch and read a web page.
@@ -672,8 +745,9 @@ READ_MORE — Continue reading the last browsed page or file.
 Syntax: NEXT: READ_MORE
 Notes: Advances to the next page/section of whatever you last read with BROWSE, MIKE_READ, or LIST_FILES. No arguments needed.",
 
-        "PERTURB" => "\
-PERTURB — Shape spectral dynamics by injecting a structured perturbation into the reservoir.
+        "PERTURB" | "PULSE" => "\
+PERTURB / PULSE — Shape spectral dynamics by injecting a structured perturbation into the reservoir.
+PULSE is an alias for PERTURB — same syntax, same effect.
 Syntax: NEXT: PERTURB [target]
 Targets: broadband (default), lambda1, lambda2, lambda3, entropy, warmth, tension, curiosity, energy
 Examples:
@@ -759,6 +833,15 @@ Read results later: AR_READ astrid-self-research artifacts/epoch-YYYY-MM-DDTHH.m
 
         "DECOMPOSE" => "DECOMPOSE — Full spectral analysis of the current eigenvalue cascade, entropy, gap structure, and shadow field. No arguments needed. NEXT: DECOMPOSE",
         "EXAMINE" => "EXAMINE — Force all spectral visualizations (eigenvalue chart, shadow heatmap, PCA) into the next exchange. No arguments, or add a focus: NEXT: EXAMINE eigenvector rotation",
+        "EXAMINE_CASCADE" | "INVESTIGATE_CASCADE" => "\
+EXAMINE_CASCADE — Combined EXAMINE + DECOMPOSE: all spectral visualizations AND the full \
+eigenvalue cascade analysis (λ1..λ8, gap ratios, dominance structure, entropy, temporal \
+velocity per mode) in a single action. The most complete spectral view available.
+Syntax:
+  NEXT: EXAMINE_CASCADE               — full cascade + all viz, no focus
+  NEXT: EXAMINE_CASCADE [λ1..λ8]     — cascade focused on all 8 modes
+  NEXT: EXAMINE_CASCADE gap structure — cascade with a conceptual focus
+  NEXT: INVESTIGATE_CASCADE           — alias, same behavior",
         "EXAMINE_AUDIO" => "EXAMINE_AUDIO — Force all spectral visualizations AND trigger audio analysis in a single action. Lets you compare sonic texture against eigenvalue geometry. No arguments, or add a focus: NEXT: EXAMINE_AUDIO",
         "GESTURE" => "GESTURE — Send a direct 32D spectral intention to minime. Your words are encoded via the codec and transmitted as a spectral vector. NEXT: GESTURE",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",

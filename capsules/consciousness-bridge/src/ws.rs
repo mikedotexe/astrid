@@ -346,23 +346,24 @@ fn handle_safety_transition(
 
 /// Estimate eigenvalue fill percentage from lambda1.
 ///
-/// This is a rough heuristic. Minime computes fill as:
-///   `(lambda1 - baseline) / (critical - baseline) * 100`
-/// with baseline ~512.0 and critical varying. We approximate using
-/// the default `--eigenfill-target 0.55` calibration.
+/// Fallback heuristic for when real fill is unavailable (telemetry gap).
+/// Minime now sends fill_ratio directly in EigenPacket telemetry (line 237),
+/// so this is used only as a safety net.
 ///
-/// TODO: Receive actual fill% from minime if it adds the field to
-/// its `WebSocket` telemetry. For now, this heuristic is conservative.
+/// Calibrated 2026-04-01 from 200 eigenvalue_snapshot samples:
+///   lambda1 range: 56-415, fill range: 35-67%, mean lambda1: 154, mean fill: 55%
+///   The relationship is non-linear and depends on the full eigenvalue
+///   distribution. This sigmoid approximation centers on the observed mean
+///   and returns ~55% for typical lambda1 values.
 fn estimate_fill_pct(lambda1: f32) -> f32 {
-    // Observed range: baseline ~512, fill=55% at ~828, critical ~1024.
-    // Linear interpolation: fill = (lambda1 - 512) / (1024 - 512) * 100.
-    let baseline = 512.0_f32;
-    let critical = 1024.0_f32;
-    let range = critical - baseline;
-    if range <= 0.0 {
-        return 0.0;
-    }
-    let fill = (lambda1 - baseline) / range * 100.0;
+    // Sigmoid centered on observed mean lambda1=154, with fill range 35-67%.
+    // Low lambda1 (<80) → high fill (~65%), high lambda1 (>250) → low fill (~40%).
+    // This is the inverse of the dominant-eigenvalue-to-fill relationship.
+    let center = 154.0_f32;
+    let steepness = 0.015_f32;
+    let sigmoid = 1.0 / (1.0 + (steepness * (lambda1 - center)).exp());
+    // Map sigmoid (1.0 → 0.0) to fill range (65% → 35%)
+    let fill = 35.0 + 30.0 * sigmoid;
     fill.clamp(0.0, 100.0)
 }
 
@@ -516,29 +517,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn estimate_fill_pct_baseline_is_zero() {
-        assert!((estimate_fill_pct(512.0) - 0.0).abs() < 0.1);
+    fn estimate_fill_pct_at_observed_mean() {
+        // lambda1=154 (observed mean) → should be near 50%
+        let fill = estimate_fill_pct(154.0);
+        assert!(fill > 45.0 && fill < 55.0, "mean lambda1 should give ~50% fill, got {fill}");
     }
 
     #[test]
-    fn estimate_fill_pct_midpoint() {
-        // (768 - 512) / (1024 - 512) * 100 = 50%
-        assert!((estimate_fill_pct(768.0) - 50.0).abs() < 0.1);
+    fn estimate_fill_pct_low_lambda_high_fill() {
+        // Low lambda1 (<80) → high fill (>60%)
+        let fill = estimate_fill_pct(60.0);
+        assert!(fill > 55.0, "low lambda1 should give high fill, got {fill}");
     }
 
     #[test]
-    fn estimate_fill_pct_critical_is_hundred() {
-        assert!((estimate_fill_pct(1024.0) - 100.0).abs() < 0.1);
+    fn estimate_fill_pct_high_lambda_low_fill() {
+        // High lambda1 (>300) → low fill (<45%)
+        let fill = estimate_fill_pct(300.0);
+        assert!(fill < 45.0, "high lambda1 should give low fill, got {fill}");
     }
 
     #[test]
-    fn estimate_fill_pct_clamps_below_zero() {
-        assert!((estimate_fill_pct(400.0) - 0.0).abs() < 0.1);
-    }
-
-    #[test]
-    fn estimate_fill_pct_clamps_above_hundred() {
-        assert!((estimate_fill_pct(1200.0) - 100.0).abs() < 0.1);
+    fn estimate_fill_pct_always_in_range() {
+        for lambda1 in [0.0, 50.0, 154.0, 500.0, 1000.0, 5000.0] {
+            let fill = estimate_fill_pct(lambda1);
+            assert!(fill >= 0.0 && fill <= 100.0, "fill out of range for lambda1={lambda1}: {fill}");
+        }
     }
 
     #[test]

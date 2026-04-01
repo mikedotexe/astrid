@@ -48,13 +48,145 @@ pub(crate) fn is_mutating_action(base_action: &str) -> bool {
     MUTATING_ACTIONS.contains(&base_action)
 }
 
+/// Strip a leading "jobs/" prefix that the being sometimes writes by mistake.
+fn strip_jobs_prefix(slug: &str) -> &str {
+    slug.strip_prefix("jobs/").unwrap_or(slug)
+}
+
+/// Return true if the token looks like a file path rather than a job slug.
+/// Catches both paths with slashes (`ct_core/include/file.h`) and bare
+/// filenames with common extensions (`spectral-tuning.pdf`).
+fn looks_like_file_path(token: &str) -> bool {
+    // Path with directory separator
+    if let Some(last) = token.rsplit('/').next() {
+        if token.contains('/') && last.contains('.') {
+            return true;
+        }
+    }
+    // Bare filename with common extension (no slash needed).
+    // Minime repeatedly tries AR_READ with .pdf extensions.
+    const EXTS: &[&str] = &[".pdf", ".py", ".rs", ".txt", ".json", ".md", ".h", ".toml", ".csv"];
+    let lower = token.to_ascii_lowercase();
+    EXTS.iter().any(|ext| lower.ends_with(ext))
+}
+
+/// Scan `autoresearch_root/jobs/*/job.toml` and return the slug of the
+/// most recently updated active job, or `None` if none is found.
+fn find_most_recent_active_job(autoresearch_root: &Path) -> Option<String> {
+    let jobs_dir = autoresearch_root.join("jobs");
+    let entries = fs::read_dir(&jobs_dir).ok()?;
+    let mut best: Option<(String, String)> = None; // (updated_at, slug)
+    for entry in entries.flatten() {
+        if !entry.path().is_dir() {
+            continue;
+        }
+        let toml_path = entry.path().join("job.toml");
+        let Ok(text) = fs::read_to_string(&toml_path) else {
+            continue;
+        };
+        let mut status = String::new();
+        let mut updated_at = String::new();
+        for line in text.lines() {
+            if line.starts_with("status") {
+                status = line
+                    .splitn(2, '=')
+                    .nth(1)
+                    .unwrap_or("")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();
+            } else if line.starts_with("updated_at") {
+                updated_at = line
+                    .splitn(2, '=')
+                    .nth(1)
+                    .unwrap_or("")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();
+            }
+        }
+        if status != "active" {
+            continue;
+        }
+        let slug = entry.file_name().to_string_lossy().into_owned();
+        let is_better = best
+            .as_ref()
+            .map(|(prev_updated, _)| updated_at >= *prev_updated)
+            .unwrap_or(true);
+        if is_better {
+            best = Some((updated_at, slug));
+        }
+    }
+    best.map(|(_, slug)| slug)
+}
+
+/// Rewrite the action text so that:
+///  1. "jobs/" prefixes on slugs are stripped.
+///  2. File-path arguments produce a clear error.
+///  3. Missing slug arguments for AR_SHOW/AR_READ/AR_DEEP_READ default to
+///     the most recently updated active job.
+///
+/// Returns the (possibly modified) action text, or an Err with a helpful
+/// message.
+fn normalize_action_text(
+    action_text: &str,
+    autoresearch_root: &Path,
+) -> Result<String, String> {
+    let trimmed = action_text.trim();
+    let Some(base_token) = trimmed.split_whitespace().next() else {
+        return Ok(action_text.to_string());
+    };
+    let base = base_token.to_uppercase();
+
+    // Only the slug-bearing read actions need normalization.
+    if !matches!(base.as_str(), "AR_SHOW" | "AR_READ" | "AR_DEEP_READ") {
+        return Ok(action_text.to_string());
+    }
+
+    let rest = trimmed.get(base_token.len()..).unwrap_or("").trim();
+
+    if rest.is_empty() {
+        // No slug at all — fall back to the most recent active job.
+        let slug = find_most_recent_active_job(autoresearch_root).ok_or_else(|| {
+            format!("{base} needs a job slug. Use AR_LIST_ACTIVE to see active jobs.")
+        })?;
+        tracing::info!("AR syntax: {base} called with no slug; defaulting to '{slug}'");
+        return Ok(format!("{base} {slug}"));
+    }
+
+    // Grab the first token (the slug candidate).
+    let slug_raw = rest.split_whitespace().next().unwrap_or(rest);
+    let slug_stripped = strip_jobs_prefix(slug_raw);
+
+    if looks_like_file_path(slug_stripped) {
+        return Err(format!(
+            "'{slug_stripped}' looks like a file path, not a job slug. \
+             Use AR_LIST to see available jobs."
+        ));
+    }
+
+    if slug_stripped == slug_raw {
+        // Nothing changed — pass through unchanged.
+        return Ok(action_text.to_string());
+    }
+
+    // Rewrite: replace the "jobs/"-prefixed slug token with the stripped one.
+    let suffix = rest.get(slug_raw.len()..).unwrap_or("").trim();
+    if suffix.is_empty() {
+        Ok(format!("{base} {slug_stripped}"))
+    } else {
+        Ok(format!("{base} {slug_stripped} {suffix}"))
+    }
+}
+
 pub(crate) fn run_action(
     action_text: &str,
     autoresearch_root: &Path,
     save_dir: &Path,
     allow_mutations: bool,
 ) -> Result<ActionOutput, String> {
-    let spec = parse_action(action_text, allow_mutations)?;
+    let normalized = normalize_action_text(action_text, autoresearch_root)?;
+    let spec = parse_action(&normalized, allow_mutations)?;
     if !autoresearch_root.exists() {
         return Err(format!(
             "Autoresearch root not found at {}.",

@@ -50,6 +50,7 @@ echo ""
 echo "--- Stopping Minime ---"
 stop_process "autonomous_agent"
 stop_process "visual_frame_service"
+stop_process "host-sensory"
 stop_process "mic_to_sensory" "com.minime.mic-to-sensory.plist"
 stop_process "camera_client" "com.minime.camera-client.plist"
 
@@ -70,7 +71,7 @@ echo ""
 # Verify everything is actually stopped
 sleep 2
 REMAINING=0
-for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "perception.py"; do
+for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "host-sensory" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "perception.py"; do
     if pgrep -f "$p" > /dev/null 2>&1; then
         echo "  !! $p still running (PID $(pgrep -f "$p" | head -1))"
         REMAINING=$((REMAINING + 1))

@@ -46,13 +46,12 @@ NEXT: options — vary your choice. End every response with NEXT: <action>.
   Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, INBOX_AUDIO, AUDIO_BLOCKS, RENDER_AUDIO, AR_VALIDATE"#;
 
-// M4 64GB, gemma-3-4b-it-4bit (~2.5GB), 128K context window.
-// Coupled generation: 17-72 tok/s observed. 20K chars ≈ 5K tokens.
-// Prefill at ~50 tok/s = 100s + 768 gen at ~30 tok/s = 26s → ~126s.
-// With 210s timeout, comfortable margin even for heavy reservoir coupling.
-const DIALOGUE_PROMPT_BUDGET_SHORT: usize = 20_000;
-const DIALOGUE_PROMPT_BUDGET_MEDIUM: usize = 16_000;
-const DIALOGUE_PROMPT_BUDGET_DEEP: usize = 12_000;
+// M4 64GB, gemma-3-4b-it-4bit (~2.5GB), 128K context window (512K chars).
+// Coupled generation: 17-72 tok/s observed. Even 48K chars = 12K tokens =
+// only 9% of context. At 50 tok/s prefill = 240s, within 360s THINK_DEEP.
+const DIALOGUE_PROMPT_BUDGET_SHORT: usize = 32_000;
+const DIALOGUE_PROMPT_BUDGET_MEDIUM: usize = 24_000;
+const DIALOGUE_PROMPT_BUDGET_DEEP: usize = 16_000;
 const DIALOGUE_JOURNAL_CAP: usize = 2_400;
 const DIALOGUE_SPECTRAL_CAP: usize = 2_000;
 const DIALOGUE_PERCEPTION_CAP: usize = 2_400;
@@ -191,10 +190,10 @@ async fn mlx_chat(
 
     // Safety net: if total prompt exceeds budget, truncate the longest
     // non-system message. Prevents prefill timeouts on any caller.
-    // 24K chars ≈ 6K tokens prefill at ~50 tok/s = 120s + 768 gen tokens
-    // at ~30 tok/s = 26s → total ~146s. With 210s timeout and 128K context
-    // window, this gives the beings maximum context per exchange.
-    const MAX_PROMPT_CHARS: usize = 24_000;
+    // M4 64GB, gemma-3-4b-it-4bit, 128K context (512K chars).
+    // 48K chars = 12K tokens = 9% of context. At 50 tok/s prefill = 240s,
+    // within 360s THINK_DEEP timeout. Generous headroom.
+    const MAX_PROMPT_CHARS: usize = 48_000;
     let mut messages = messages;
     if prompt_chars > MAX_PROMPT_CHARS {
         let excess = prompt_chars.saturating_sub(MAX_PROMPT_CHARS);
@@ -393,15 +392,13 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
         .iter()
         .rev()
         .take(8)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
         .enumerate()
         .map(|(idx, exchange)| {
-            let trim_len = if idx < 2 {
-                600
-            } else if idx < 5 {
-                400
-            } else {
-                200
-            };
+            // Match the gradient in generate_dialogue: oldest=150, newest=1200
+            let trim_len = 150 + (idx * 150).min(1050);
             exchange.minime_said.len().min(trim_len) + exchange.astrid_said.len().min(trim_len)
         })
         .sum();
@@ -434,11 +431,9 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
 }
 
 fn clamp_dialogue_tokens(requested_tokens: u32, prompt_chars: usize) -> u32 {
-    // Only clamp at very high prompt sizes to stay within timeout.
-    // 20K+ chars = heavy prefill; reduce gen tokens to compensate.
-    if prompt_chars > 22_000 {
-        requested_tokens.min(384).max(192)
-    } else if prompt_chars > 18_000 {
+    // Only clamp near the safety ceiling. 48K chars = 12K tokens prefill,
+    // still only 9% of 128K context. Clamp gen tokens only at extreme sizes.
+    if prompt_chars > 40_000 {
         requested_tokens.min(512).max(256)
     } else {
         requested_tokens
@@ -511,7 +506,10 @@ fn is_valid_dialogue_output(text: &str) -> bool {
         return false;
     }
 
-    if max_symbol_run >= 4 {
+    // Raised from 4 to 6: Astrid naturally uses ellipsis + smart quotes
+    // ('...') and markdown emphasis (*word*) which create 4-5 symbol runs.
+    // Genuine garbage like "--0.))* _--" has runs of 6+.
+    if max_symbol_run >= 6 {
         return false;
     }
 
@@ -607,13 +605,12 @@ pub async fn generate_dialogue(
         .rev()
         .enumerate()
     {
-        let trim_len = if idx < 3 {
-            200
-        } else if idx < 6 {
-            400
-        } else {
-            600
-        };
+        // Relevance-weighted history: smooth gradient from oldest (short) to
+        // newest (full). Astrid self-study: "Instead of just truncating the
+        // longest message, perhaps prioritize retaining the most relevant
+        // information from earlier exchanges — a decaying attention mechanism."
+        // 8 exchanges: idx 0=oldest→150, idx 7=newest→1200.
+        let trim_len = 150 + (idx * 150).min(1050);
         messages.push(Message {
             role: "user".to_string(),
             content: format!(
