@@ -161,6 +161,17 @@ impl BridgeDb {
                 ON unwired_actions(action);
             ",
         )?;
+
+        // Multi-chunk codec: add chunk_index and chunk_total columns.
+        // Safe to call repeatedly — silently ignores "duplicate column" errors.
+        let conn = self.lock();
+        for col in &[
+            "ALTER TABLE codec_impact ADD COLUMN chunk_index INTEGER DEFAULT 0",
+            "ALTER TABLE codec_impact ADD COLUMN chunk_total INTEGER DEFAULT 1",
+        ] {
+            let _ = conn.execute(col, []);
+        }
+
         Ok(())
     }
 
@@ -460,20 +471,26 @@ impl BridgeDb {
 
     /// Log a codec feature vector and the fill at send time.
     /// Returns the row ID so the next exchange can update `fill_after`.
+    ///
+    /// `chunk_index` / `chunk_total`: for multi-chunk temporal encoding,
+    /// each paragraph-chunk gets its own row. Single-vector exchanges
+    /// use (0, 1) for backward compatibility.
     pub fn log_codec_impact(
         &self,
         exchange_count: u64,
         features: &[f32],
         fill_before: f32,
+        chunk_index: u32,
+        chunk_total: u32,
     ) -> Result<i64> {
         let ts = unix_now();
         let features_json = serde_json::to_string(features).unwrap_or_default();
         let conn = self.lock();
         conn.execute(
             r"INSERT INTO codec_impact
-              (timestamp, exchange_count, features_json, fill_before)
-              VALUES (?1, ?2, ?3, ?4)",
-            params![ts, exchange_count as i64, features_json, fill_before as f64],
+              (timestamp, exchange_count, features_json, fill_before, chunk_index, chunk_total)
+              VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![ts, exchange_count as i64, features_json, fill_before as f64, chunk_index, chunk_total],
         )?;
         Ok(conn.last_insert_rowid())
     }

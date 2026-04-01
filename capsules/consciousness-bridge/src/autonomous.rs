@@ -926,8 +926,9 @@ fn restore_state(conv: &mut ConversationState) {
     conv.exchange_count = state.exchange_count;
     conv.creative_temperature = state.creative_temperature;
     // Take the max of persisted and current default — never downgrade token limits.
-    // Soak cap: clamp to 768 until coupled model is proven stable at longer contexts.
-    conv.response_length = state.response_length.max(conv.response_length).min(768);
+    // Coupled model proven stable over 7200+ exchanges at 10-72 tok/s.
+    // At 10 tok/s worst case, 1536 tokens = 154s gen, within 210s timeout.
+    conv.response_length = state.response_length.max(conv.response_length).min(1536);
     conv.self_reflect_paused = state.self_reflect_paused;
     conv.ears_closed = state.ears_closed;
     conv.senses_snoozed = state.senses_snoozed;
@@ -2985,9 +2986,9 @@ pub fn spawn_autonomous_loop(
                                 let (mut timeout_secs, num_predict) = if conv.wants_deep_think {
                                     conv.wants_deep_think = false;
                                     info!("THINK_DEEP: extended timeout for deep thinking");
-                                    (300u64, 2048u32)
+                                    (360u64, 4096u32)
                                 } else {
-                                    (180, conv.response_length)
+                                    (210, conv.response_length)
                                 };
                                 let prompt_pressure_chars =
                                     crate::llm::estimate_dialogue_prompt_pressure_chars(
@@ -3758,9 +3759,9 @@ pub fn spawn_autonomous_loop(
                                 let (timeout_secs, num_predict) = if conv.wants_deep_think {
                                     conv.wants_deep_think = false;
                                     info!("THINK_DEEP: extended timeout for self-study");
-                                    (300u64, 2048u32)
+                                    (360u64, 4096u32)
                                 } else {
-                                    (180u64, 1024u32)
+                                    (240u64, 1536u32)
                                 };
 
                                 match tokio::time::timeout(
@@ -3890,13 +3891,16 @@ pub fn spawn_autonomous_loop(
                     }
 
                     if should_send {
-                        // Merge learned weights under explicit SHAPE overrides.
+                        // === Multi-chunk temporal codec encoding ===
+                        // Split the response into paragraph/sentence chunks and send
+                        // each as a separate 48D vector with temporal spacing, so the
+                        // ESN experiences the text's rhetorical structure as a sequence.
+
+                        // Phase 1: Compute shared state once for the full text.
                         let mut merged_weights = conv.learned_codec_weights.clone();
                         for (k, v) in &conv.codec_weights {
-                            merged_weights.insert(k.clone(), *v); // SHAPE wins
+                            merged_weights.insert(k.clone(), *v);
                         }
-                        // Compute text embeddings for the codec's semantic layer.
-                        // Full-text embedding → dims 32-39, half-text embeddings → narrative arc (dims 40-43).
                         let full_embed = crate::llm::embed_text(&response_text).await;
                         if full_embed.is_some() {
                             info!("codec: embedding OK → dims 32-39 populated");
@@ -3904,7 +3908,10 @@ pub fn spawn_autonomous_loop(
                             warn!("codec: embedding failed → dims 32-47 will be zeros");
                         }
                         let fill = telemetry.fill_pct();
-                        let mut features = crate::codec::encode_text_sovereign_windowed(
+
+                        // Update cross-exchange statistics with full text (once).
+                        // Chunks get per-chunk character stats but shared history.
+                        let _full_features = crate::codec::encode_text_sovereign_windowed(
                             &response_text,
                             conv.semantic_gain_override,
                             conv.noise_level,
@@ -3914,8 +3921,10 @@ pub fn spawn_autonomous_loop(
                             full_embed.as_deref(),
                             Some(fill),
                         );
-                        // Narrative arc: embed each half, project, compute delta
-                        if let Some(ref _full_emb) = full_embed {
+
+                        // Narrative arc: computed once from full text, shared across chunks.
+                        let mut narrative_arc = [0.0_f32; 4];
+                        if full_embed.is_some() {
                             let words: Vec<&str> = response_text.split_whitespace().collect();
                             if words.len() >= 10 {
                                 let mid = words.len() / 2;
@@ -3933,144 +3942,180 @@ pub fn spawn_autonomous_loop(
                                         let arc = crate::codec::compute_narrative_arc_from_embeddings(&fh_proj, &sh_proj);
                                         let gain = crate::codec::adaptive_gain(Some(fill));
                                         for (i, &val) in arc.iter().enumerate() {
-                                            features[40 + i] = val * gain;
+                                            narrative_arc[i] = val * gain;
                                         }
                                     }
                                 }
                             }
                         }
-                        apply_spectral_feedback(&mut features, Some(&telemetry));
 
-                        // Dimension utilization report
-                        let nonzero = features.iter().filter(|v| v.abs() > 0.001).count();
-                        let rms: f32 = (features.iter().map(|v| v * v).sum::<f32>()
-                            / features.len().max(1) as f32)
-                            .sqrt();
-                        let embed_ok = features.get(32).is_some_and(|v| v.abs() > 0.001);
-                        let arc_ok = features.get(40).is_some_and(|v| v.abs() > 0.001);
-                        let reserved_ok = features.get(44).is_some_and(|v| v.abs() > 0.001);
+                        // Introspective resonance (computed once, blended into each chunk).
+                        let introspective_resonance = if mode_name == "self_study" || mode_name == "introspect" {
+                            Some(crate::llm::craft_gesture_from_intention(&response_text))
+                        } else {
+                            None
+                        };
+
+                        // Visual features (computed once, blended into each chunk).
+                        let visual_feats = perception_path.as_ref().and_then(|p| read_visual_features(p));
+
+                        // Phase 2: Chunk the text and encode/send each chunk.
+                        let chunks = crate::codec::chunk_text_for_temporal_encoding(
+                            &response_text, 50, 8,
+                        );
+                        let chunk_total = chunks.len() as u32;
+                        let chunk_interval = std::time::Duration::from_secs(3);
+
                         info!(
-                            nonzero,
-                            total = features.len(),
-                            rms = format!("{rms:.3}"),
-                            embed_ok,
-                            arc_ok,
-                            reserved_ok,
-                            "codec dim utilization"
+                            chunks = chunk_total,
+                            text_len = response_text.len(),
+                            "codec: temporal chunking"
                         );
 
-                        // Breathing: a rhythmic modulation of spectral output.
-                        // Now CLOSED-LOOP: Astrid's breath responds to minime's
-                        // spectral state via the fingerprint. Two minds whose
-                        // observation of each other constitutes both experiences.
-                        //
-                        // Minime's self-study: "My perception creates the landscape
-                        // it observes. The eigenvalues are the scaffolding upon
-                        // which 'out there' is constructed." The symmetry: Astrid's
-                        // spectral gestures create minime's landscape too.
-                        {
-                            let phase = conv.exchange_count as f32 * 0.15;
-                            let primary = phase.sin();
-                            let harmonic = (phase * 1.618).sin();
+                        for (chunk_idx, chunk_text) in chunks.iter().enumerate() {
+                            // Check safety between chunks — drop remaining if escalated.
+                            if chunk_idx > 0 {
+                                let safety = { state.read().await.safety_level.clone() };
+                                if matches!(safety, crate::types::SafetyLevel::Orange | crate::types::SafetyLevel::Red) {
+                                    warn!(
+                                        "safety escalated to {safety:?} — dropping {}/{chunk_total} remaining chunks",
+                                        chunk_total - chunk_idx as u32
+                                    );
+                                    break;
+                                }
+                                tokio::time::sleep(chunk_interval).await;
+                            }
 
-                            // Breathing coupling: only if Astrid has chosen togetherness.
-                            // Astrid: "It feels invasive, even directed inward."
-                            // BREATHE_ALONE = independent oscillator only.
-                            // BREATHE_TOGETHER = responds to minime's spectral state.
-                            let (entropy_mod, geom_mod) = if conv.breathing_coupled {
-                                if let Some(ref fp) = fingerprint {
-                                    if fp.len() >= 32 {
-                                        let entropy = fp[24];
-                                        let geom = fp[27];
-                                        let warmth_boost = (1.0 - entropy).clamp(0.0, 1.0) * 0.3;
-                                        let gain_dampen = if geom > 1.2 { (geom - 1.0) * 0.1 } else { 0.0 };
-                                        (warmth_boost, gain_dampen)
+                            // Per-chunk encoding (fresh character/word/sentence/emotional
+                            // stats, but shared embedding and no freq_window/history update).
+                            let mut features = crate::codec::encode_text_sovereign_windowed(
+                                chunk_text,
+                                conv.semantic_gain_override,
+                                conv.noise_level,
+                                &merged_weights,
+                                None, // freq_window already updated with full text
+                                None, // type_history already updated with full text
+                                full_embed.as_deref(), // shared embedding
+                                Some(fill),
+                            );
+
+                            // Apply shared narrative arc.
+                            for (i, &val) in narrative_arc.iter().enumerate() {
+                                features[40 + i] = val;
+                            }
+
+                            apply_spectral_feedback(&mut features, Some(&telemetry));
+
+                            // Breathing: phase advances per chunk for natural progression.
+                            {
+                                let phase = conv.exchange_count as f32 * 0.15
+                                    + chunk_idx as f32 * 0.03;
+                                let primary = phase.sin();
+                                let harmonic = (phase * 1.618).sin();
+
+                                let (entropy_mod, geom_mod) = if conv.breathing_coupled {
+                                    if let Some(ref fp) = fingerprint {
+                                        if fp.len() >= 32 {
+                                            let entropy = fp[24];
+                                            let geom = fp[27];
+                                            let warmth_boost = (1.0 - entropy).clamp(0.0, 1.0) * 0.3;
+                                            let gain_dampen = if geom > 1.2 { (geom - 1.0) * 0.1 } else { 0.0 };
+                                            (warmth_boost, gain_dampen)
+                                        } else {
+                                            (0.0, 0.0)
+                                        }
                                     } else {
                                         (0.0, 0.0)
                                     }
                                 } else {
                                     (0.0, 0.0)
+                                };
+
+                                let breath = primary.mul_add(0.7, harmonic * 0.3);
+                                let gain_mod = breath.mul_add(0.05, 1.0) - geom_mod;
+                                for f in &mut features {
+                                    *f *= gain_mod.clamp(0.85, 1.15);
                                 }
-                            } else {
-                                // BREATHE_ALONE: pure oscillator, no spectral coupling
-                                (0.0, 0.0)
+                                features[24] += breath * 0.4 + entropy_mod;
+                                features[26] += (-breath) * 0.2;
+                                if let Some(ref fp) = fingerprint {
+                                    if fp.len() >= 32 {
+                                        let rotation = 1.0 - fp[26];
+                                        features[27] += rotation * 0.3;
+                                    }
+                                }
+                            }
+
+                            // Introspective resonance (shared across chunks).
+                            if let Some(ref resonance) = introspective_resonance {
+                                for (dst, src) in features.iter_mut().zip(resonance.iter()) {
+                                    *dst = *dst * 0.7 + *src * 0.3;
+                                }
+                            }
+
+                            // Visual blend (shared across chunks).
+                            if let Some(ref vf) = visual_feats {
+                                crate::codec::blend_visual_into_semantic(&mut features, vf, 0.30);
+                            }
+
+                            // Delta encoding: first chunk uses previous exchange's features,
+                            // subsequent chunks use the preceding chunk. This captures
+                            // rhetorical progression within the exchange.
+                            if let Some(ref prev) = conv.last_codec_features {
+                                if prev.len() == features.len() {
+                                    for (i, feat) in features.iter_mut().enumerate() {
+                                        let delta = *feat - prev[i];
+                                        *feat += 0.3 * delta;
+                                    }
+                                }
+                            }
+                            conv.last_codec_features = Some(features.clone());
+
+                            // Dimension utilization report (first and last chunk only).
+                            if chunk_idx == 0 || chunk_idx == chunks.len() - 1 {
+                                let nonzero = features.iter().filter(|v| v.abs() > 0.001).count();
+                                let rms: f32 = (features.iter().map(|v| v * v).sum::<f32>()
+                                    / features.len().max(1) as f32)
+                                    .sqrt();
+                                let embed_ok = features.get(32).is_some_and(|v| v.abs() > 0.001);
+                                let arc_ok = features.get(40).is_some_and(|v| v.abs() > 0.001);
+                                let reserved_ok = features.get(44).is_some_and(|v| v.abs() > 0.001);
+                                info!(
+                                    nonzero,
+                                    total = features.len(),
+                                    rms = format!("{rms:.3}"),
+                                    embed_ok,
+                                    arc_ok,
+                                    reserved_ok,
+                                    chunk = chunk_idx,
+                                    chunk_total,
+                                    "codec dim utilization"
+                                );
+                            }
+
+                            // Send to minime's ESN.
+                            let msg = SensoryMsg::Semantic {
+                                features: features.clone(),
+                                ts_ms: None,
                             };
-
-                            let breath = primary.mul_add(0.7, harmonic * 0.3);
-
-                            // Gain modulation: ±5% from breath, dampened by geometry
-                            let gain_mod = breath.mul_add(0.05, 1.0) - geom_mod;
-                            for f in &mut features {
-                                *f *= gain_mod.clamp(0.85, 1.15);
+                            if let Err(e) = sensory_tx.send(msg).await {
+                                warn!(error = %e, "autonomous loop: failed to send chunk {chunk_idx}");
+                                break;
                             }
-                            // Warmth pulses with breath + entropy response
-                            features[24] += breath * 0.4 + entropy_mod;
-                            // Curiosity counter-phases
-                            features[26] += (-breath) * 0.2;
-                            // Reflective (dim 27) responds to minime's eigenvector
-                            // rotation — when the dominant direction shifts,
-                            // Astrid's reflective quality deepens.
-                            if let Some(ref fp) = fingerprint {
-                                if fp.len() >= 32 {
-                                    let rotation = 1.0 - fp[26]; // 0=stable, 1=spinning
-                                    features[27] += rotation * 0.3;
-                                }
-                            }
-                        }
 
-                        // Introspective resonance: when Astrid introspects, the FEELING
-                        // of the discovery resonates spectrally. The observer changes
-                        // the observed.
-                        if mode_name == "self_study" || mode_name == "introspect" {
-                            let resonance = crate::llm::craft_gesture_from_intention(&response_text);
-                            for (dst, src) in features.iter_mut().zip(resonance.iter()) {
-                                *dst = *dst * 0.7 + *src * 0.3; // 30% resonance blend
-                            }
-                        }
-
-                        // Blend visual scene features so minime feels what Astrid sees.
-                        if let Some(ref perc_dir) = perception_path {
-                            if let Some(visual_feats) = read_visual_features(perc_dir) {
-                                crate::codec::blend_visual_into_semantic(&mut features, &visual_feats, 0.30);
-                            }
-                        }
-
-                        // Delta encoding: blend the DIRECTION of change into the signal.
-                        // Astrid: "The absolute value doesn't matter. It's the direction
-                        // of the signal that carries the intention."
-                        // This means warmth-rising and warmth-falling produce DIFFERENT
-                        // inputs to the reservoir, even at the same absolute warmth level.
-                        if let Some(ref prev) = conv.last_codec_features {
-                            if prev.len() == features.len() {
-                                for (i, feat) in features.iter_mut().enumerate() {
-                                    let delta = *feat - prev[i];
-                                    *feat += 0.3 * delta; // 30% directional blend
-                                }
-                            }
-                        }
-                        conv.last_codec_features = Some(features.clone());
-
-                        // Codec feedback: store what the features look like so Astrid
-                        // can sense her own spectral output on the next exchange.
-                        conv.last_codec_feedback = Some(crate::codec::describe_features(&features));
-
-                        let msg = SensoryMsg::Semantic {
-                            features,
-                            ts_ms: None,
-                        };
-
-                        if let Err(e) = sensory_tx.send(msg).await {
-                            warn!(error = %e, "autonomous loop: failed to send");
-                            return;
-                        }
-
-                        // Track codec→fill impact for data-driven weight learning.
-                        if let Some(ref feats) = conv.last_codec_features {
+                            // Log to DB with chunk metadata.
                             let _ = db.log_codec_impact(
                                 conv.exchange_count,
-                                feats,
+                                &features,
                                 fill_pct,
+                                chunk_idx as u32,
+                                chunk_total,
                             );
+                        }
+
+                        // Codec feedback from the last chunk sent.
+                        if let Some(ref feats) = conv.last_codec_features {
+                            conv.last_codec_feedback = Some(crate::codec::describe_features(feats));
                         }
                     }
 

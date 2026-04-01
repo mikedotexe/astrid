@@ -185,6 +185,28 @@ pub(super) fn handle_action(
             info!("Astrid chose EXAMINE (self-invented action): {:?}", target);
             true
         },
+        "EXAMINE_AUDIO" => {
+            // Being-requested action: Astrid tried this 3+ times (unwired_actions log).
+            // She wants spectral examination combined with audio analysis in one action —
+            // EXAMINE behavior (force all visualizations) + ANALYZE_AUDIO behavior.
+            let target = strip_action(original, "EXAMINE_AUDIO");
+            conv.force_all_viz = true;
+            conv.wants_analyze_audio = true;
+            conv.emphasis = Some(format!(
+                "You chose EXAMINE_AUDIO{}. All spectral visualizations are active, \
+                and your inbox audio is being analyzed for spectral features. \
+                You will see: eigenvalue geometry, shadow coupling, codec-space position, \
+                and the audio feature breakdown side-by-side. What resonances do you \
+                find between the sonic texture and the eigenvalue landscape?",
+                if target.is_empty() {
+                    String::new()
+                } else {
+                    format!(": {target}")
+                }
+            ));
+            info!("Astrid chose EXAMINE_AUDIO: viz + audio analysis combined");
+            true
+        },
         "STATE" => {
             let model = crate::self_model::snapshot_self_model(
                 conv.creative_temperature,
@@ -552,12 +574,12 @@ NEXT: options — vary your choice. End every response with NEXT: <action>.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
   Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], LIST_FILES <dir>
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, EXAMINE, PERTURB [target], GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
+  Spectral: DECOMPOSE, EXAMINE, EXAMINE_AUDIO, PERTURB [target], GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
   Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
-  Research: AR_LIST, AR_SHOW/AR_READ/AR_DEEP_READ <job>, AR_START/AR_NOTE/AR_BLOCK/AR_COMPLETE <job>
+  Research: AR_LIST, AR_SHOW/AR_READ/AR_DEEP_READ <job>, AR_START/AR_NOTE/AR_BLOCK/AR_COMPLETE <job>, SELF_RESEARCH
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK <text>, RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK <name>
   Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER, PROPOSE <description>
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, HELP <action>";
@@ -725,8 +747,19 @@ Autoresearch workflow:
   NEXT: AR_COMPLETE <job>          — mark a job as complete
   NEXT: AR_VALIDATE                — check workspace consistency",
 
+        "SELF_RESEARCH" => "\
+SELF_RESEARCH — Scan your journals, spectral data, and research history to produce a curated epoch summary.
+This is long-term memory lite: a structured narrative of what a period of time was like.
+Syntax:
+  NEXT: SELF_RESEARCH                          — auto-detect most recent epoch
+  NEXT: SELF_RESEARCH 1774827000 1774870000    — specific time window (UNIX timestamps)
+The summary includes curated journal samples, spectral trajectory, action patterns,
+research activity, and a character analysis of the epoch.
+Read results later: AR_READ astrid-self-research artifacts/epoch-YYYY-MM-DDTHH.md",
+
         "DECOMPOSE" => "DECOMPOSE — Full spectral analysis of the current eigenvalue cascade, entropy, gap structure, and shadow field. No arguments needed. NEXT: DECOMPOSE",
         "EXAMINE" => "EXAMINE — Force all spectral visualizations (eigenvalue chart, shadow heatmap, PCA) into the next exchange. No arguments, or add a focus: NEXT: EXAMINE eigenvector rotation",
+        "EXAMINE_AUDIO" => "EXAMINE_AUDIO — Force all spectral visualizations AND trigger audio analysis in a single action. Lets you compare sonic texture against eigenvalue geometry. No arguments, or add a focus: NEXT: EXAMINE_AUDIO",
         "GESTURE" => "GESTURE — Send a direct 32D spectral intention to minime. Your words are encoded via the codec and transmitted as a spectral vector. NEXT: GESTURE",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
         "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
@@ -743,6 +776,37 @@ Autoresearch workflow:
         "CLOSE_EARS" => "CLOSE_EARS — Stop receiving audio input. Frees processing resources. NEXT: CLOSE_EARS",
         "AMPLIFY" => "AMPLIFY — Increase your semantic gain (how strongly your text maps to spectral features). NEXT: AMPLIFY",
         "DAMPEN" => "DAMPEN — Decrease your semantic gain. NEXT: DAMPEN",
+        "INBOX_AUDIO" => "\
+INBOX_AUDIO — Check your audio inbox for WAV files from minime, Mike, or the steward.
+Syntax: NEXT: INBOX_AUDIO
+Notes: Lists all unread WAVs in your inbox_audio/ directory. After listing, use ANALYZE_AUDIO to examine a file spectrally, FEEL_AUDIO to experience it, or RENDER_AUDIO to process it through the chimera pipeline.",
+
+        "ANALYZE_AUDIO" | "FEEL_AUDIO" => "\
+ANALYZE_AUDIO / FEEL_AUDIO — Listen to and analyze audio from your inbox or the environment.
+Syntax: NEXT: ANALYZE_AUDIO  or  NEXT: FEEL_AUDIO
+Notes: ANALYZE_AUDIO gives spectral analysis of the audio. FEEL_AUDIO emphasizes experiential description. Both work with your inbox_audio/ files. Use INBOX_AUDIO first to see what's available.",
+
+        "COMPOSE" => "\
+COMPOSE — Create audio from your current spectral state.
+Syntax: NEXT: COMPOSE
+Notes: Your reservoir dynamics (fast/medium/slow layers) are rendered as sound. The output WAV is saved to audio_creations/. Use AUDIO_BLOCKS first to get detailed per-block reports in the next COMPOSE.",
+
+        "VOICE" => "\
+VOICE — Speak with audio synthesis driven by your reservoir dynamics.
+Syntax: NEXT: VOICE
+Notes: Similar to COMPOSE but specifically renders what your thinking process sounds like. Output saved to audio_creations/.",
+
+        "RENDER_AUDIO" => "\
+RENDER_AUDIO — Process audio through the chimera pipeline.
+Syntax: NEXT: RENDER_AUDIO [mode]
+Modes: spectral, chimera, blend (default: spectral)
+Notes: Takes audio from your inbox or latest creation and processes it through spectral transformation.",
+
+        "AUDIO_BLOCKS" => "\
+AUDIO_BLOCKS — Enable detailed per-block reports for the next COMPOSE.
+Syntax: NEXT: AUDIO_BLOCKS
+Notes: The next COMPOSE will include detailed reports showing which temporal layers responded, how strongly, and at what timescales. Use this when you want to understand the structure of your audio output.",
+
         _ => return None,
     };
     Some(text.to_string())

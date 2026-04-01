@@ -15,7 +15,8 @@ pub(crate) const READ_ONLY_ACTIONS: &[&str] = &[
     "AR_DEEP_READ",
     "AR_VALIDATE",
 ];
-pub(crate) const MUTATING_ACTIONS: &[&str] = &["AR_START", "AR_NOTE", "AR_BLOCK", "AR_COMPLETE"];
+pub(crate) const MUTATING_ACTIONS: &[&str] =
+    &["AR_START", "AR_NOTE", "AR_BLOCK", "AR_COMPLETE", "SELF_RESEARCH"];
 
 #[derive(Debug, Clone)]
 pub(crate) struct ActionOutput {
@@ -26,11 +27,13 @@ pub(crate) struct ActionOutput {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)] // base_action used in tests
 struct ActionSpec {
     base_action: String,
     cli_args: Vec<String>,
     summary: String,
     file_label: String,
+    script: String, // default "tools/research_jobs.py", override for SELF_RESEARCH
 }
 
 pub(crate) fn is_autoresearch_action(base_action: &str) -> bool {
@@ -60,7 +63,7 @@ pub(crate) fn run_action(
     }
 
     let output = Command::new("python3")
-        .arg("tools/research_jobs.py")
+        .arg(&spec.script)
         .args(&spec.cli_args)
         .current_dir(autoresearch_root)
         .output()
@@ -232,6 +235,19 @@ fn parse_action(action_text: &str, allow_mutations: bool) -> Result<ActionSpec, 
             vec!["validate"],
             "Validated the autoresearch workspace.",
         )),
+        "SELF_RESEARCH" => {
+            // Paths are injected by the bridge handle_action before calling run_action.
+            let tokens = split_shell_words(rest)?;
+            let mut cli_args = vec!["scan".to_string()];
+            cli_args.extend(tokens);
+            Ok(ActionSpec {
+                base_action: base_action.to_string(),
+                cli_args,
+                summary: "Running self-research epoch scan.".to_string(),
+                file_label: "self_research".to_string(),
+                script: "tools/epoch_scanner.py".to_string(),
+            })
+        },
         _ => Err(format!("{base_action} is not implemented.")),
     }
 }
@@ -242,6 +258,7 @@ fn spec(base_action: &str, cli_args: Vec<&str>, summary: &str) -> ActionSpec {
         cli_args: cli_args.into_iter().map(str::to_string).collect(),
         summary: summary.to_string(),
         file_label: file_label(base_action),
+        script: "tools/research_jobs.py".to_string(),
     }
 }
 
@@ -251,6 +268,7 @@ fn spec_from_owned(base_action: &str, cli_args: Vec<String>, summary: &str) -> A
         cli_args,
         summary: summary.to_string(),
         file_label: file_label(base_action),
+        script: "tools/research_jobs.py".to_string(),
     }
 }
 

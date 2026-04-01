@@ -96,7 +96,7 @@ pub fn assemble_within_budget(
             let trimmed_len = trimmed_portion.len();
             overflow_sections.push((label.to_string(), trimmed_portion));
 
-            let mut kept: String = contents[idx].chars().take(keep_at).collect();
+            let mut kept: String = contents[idx][..keep_at].to_string();
             kept.push_str(&format!(
                 "\n[...{trimmed_len} chars of {label} trimmed. NEXT: READ_MORE to see full context.]"
             ));
@@ -209,8 +209,15 @@ pub fn cleanup_overflow_dir(dir: &Path, max_age: std::time::Duration) {
 /// or newline. Falls back to `target_pos` if no natural break is found
 /// within 200 chars.
 fn find_paragraph_break(text: &str, target_pos: usize) -> usize {
-    let target = target_pos.min(text.len());
-    let search_start = target.saturating_sub(200);
+    // Snap both endpoints to char boundaries to avoid panicking on multi-byte UTF-8.
+    let mut target = target_pos.min(text.len());
+    while target > 0 && !text.is_char_boundary(target) {
+        target -= 1;
+    }
+    let mut search_start = target.saturating_sub(200);
+    while search_start > 0 && !text.is_char_boundary(search_start) {
+        search_start -= 1;
+    }
     let slice = &text[search_start..target];
 
     // Prefer blank line.

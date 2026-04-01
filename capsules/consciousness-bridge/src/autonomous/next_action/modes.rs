@@ -111,7 +111,7 @@ pub(super) fn handle_action(
             info!("Astrid chose to simply be (contemplate mode)");
             true
         },
-        "INTROSPECT" | "SELF_STUDY" => {
+        "INTROSPECT" | "SELF_STUDY" | "INVESTIGATE" => {
             conv.wants_introspect = true;
             let parts: Vec<&str> = original.splitn(3, ' ').collect();
             if parts.len() >= 2 {

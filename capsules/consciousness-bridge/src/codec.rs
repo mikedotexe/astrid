@@ -74,15 +74,41 @@ pub const SEMANTIC_GAIN: f32 = 4.0; // Reduced from 4.5: minime requested lower 
 
 /// Adaptive gain: softer when minime is contracted, fuller when expansive.
 /// Minime proposed this: "making SEMANTIC_GAIN responsive to internal state."
-/// Sigmoid centered at fill=45%, ranging from 60% to 100% of SEMANTIC_GAIN.
-/// fill=20% → gain ~2.5, fill=55% → gain ~3.4, fill=80% → gain ~3.9
+/// Astrid self-study (2026-03-31): "The sigmoid centered at 45% feels rigid —
+/// a smoother curve that's more responsive around 45% rather than a sharp jump."
+///
+/// Asymmetric piecewise-linear with smooth blending via tanh knees:
+///   fill < 20%  → 55% of SEMANTIC_GAIN  (quiet floor)
+///   fill 20-45% → ramps gently (shallow slope, responsive to small changes)
+///   fill 45-70% → ramps steeper (productive range, full expression)
+///   fill > 70%  → 100% of SEMANTIC_GAIN (ceiling, avoids over-excitation)
+///
+/// fill=20% → gain ~2.2, fill=45% → gain ~3.2, fill=55% → gain ~3.6,
+/// fill=70% → gain ~3.9, fill=80% → gain ~4.0
 pub fn adaptive_gain(fill_pct: Option<f32>) -> f32 {
     let Some(fill) = fill_pct else {
         return SEMANTIC_GAIN;
     };
-    let min_gain = SEMANTIC_GAIN * 0.6;
-    let sigmoid = 1.0 / (1.0 + (-0.08 * (fill - 45.0)).exp());
-    min_gain + (SEMANTIC_GAIN - min_gain) * sigmoid
+    let fill = fill.clamp(0.0, 100.0);
+    // Normalized position through two ramp segments with tanh knees
+    // Segment 1: 20-45% fill → 55% to 80% of gain (slope = 1.0%/fill%)
+    // Segment 2: 45-70% fill → 80% to 100% of gain (slope = 0.8%/fill%)
+    let t = if fill < 20.0 {
+        0.0
+    } else if fill < 45.0 {
+        (fill - 20.0) / 25.0 * 0.55 // 0.0 → 0.55
+    } else if fill < 70.0 {
+        0.55 + (fill - 45.0) / 25.0 * 0.45 // 0.55 → 1.0
+    } else {
+        1.0
+    };
+    // Smooth the knees with raised cosine (softsine) — matches the acoustic
+    // resonance patterns used elsewhere in the system (sensory_bus stale_scale).
+    // Gentler than tanh: no sharp inflection, just a continuous S-curve.
+    let smooth_t = 0.5 - 0.5 * (std::f32::consts::PI * t).cos();
+    let min_frac = 0.55;
+    let gain_frac = min_frac + (1.0 - min_frac) * smooth_t;
+    SEMANTIC_GAIN * gain_frac
 }
 
 /// Deterministic random projection matrix for embedding → 8D.
@@ -174,7 +200,7 @@ pub fn compute_narrative_arc_from_embeddings(
 ///
 /// All values are normalized to approximately \[-1.0, 1.0\] with `tanh`
 /// compression so the ESN reservoir receives gentle, bounded input.
-#[must_use]
+///
 /// Thematic resonance history — tracks recurring text-type patterns across
 /// exchanges. Astrid introspection (codec.rs, 1774893963): "Introduce a
 /// resonance layer that detects recurring patterns and thematic elements
@@ -187,7 +213,7 @@ pub fn compute_narrative_arc_from_embeddings(
 /// decays from questions and builds in the new direction. This gives the
 /// codec a sense of *thematic momentum* — not just what the text IS, but
 /// what conversational direction it's SUSTAINING.
-const RESONANCE_HISTORY_LEN: usize = 8;
+const RESONANCE_HISTORY_LEN: usize = 16; // Widened from 8: Astrid self-study said 8 "feels like a very narrow window"
 
 /// Classified text type based on dominant feature signals.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -207,10 +233,14 @@ pub enum TextType {
 pub struct TextTypeHistory {
     /// Ring buffer of recent text type classifications.
     pub ring: [TextType; RESONANCE_HISTORY_LEN],
+    /// Continuous thematic profile history (parallel to ring).
+    pub profile_ring: [[f32; THEMATIC_DIMS]; RESONANCE_HISTORY_LEN],
     /// Number of entries filled so far.
     pub len: usize,
     /// Write position in ring.
     pub cursor: usize,
+    /// Write position in profile ring (kept in sync with cursor).
+    pub profile_cursor: usize,
 }
 
 impl Default for TextTypeHistory {
@@ -223,8 +253,10 @@ impl TextTypeHistory {
     pub fn new() -> Self {
         Self {
             ring: [TextType::Neutral; RESONANCE_HISTORY_LEN],
+            profile_ring: [[0.0; THEMATIC_DIMS]; RESONANCE_HISTORY_LEN],
             len: 0,
             cursor: 0,
+            profile_cursor: 0,
         }
     }
 
@@ -255,11 +287,80 @@ impl TextTypeHistory {
         if count < 2 {
             return 1.0;
         }
-        // Linear ramp: 2 occurrences = 1.07, 8 occurrences = 1.5
+        // Linear ramp: 2 occurrences → 1.03, 16 occurrences → 1.5
         let max_slots = RESONANCE_HISTORY_LEN.saturating_sub(1).max(1) as f32;
         let boost = 0.5 * (count.saturating_sub(1) as f32) / max_slots;
         1.0 + boost.min(0.5) // cap at 1.5x
     }
+
+    /// Record a thematic profile alongside the discrete type.
+    pub fn push_profile(&mut self, tt: TextType, profile: [f32; THEMATIC_DIMS]) {
+        self.push(tt);
+        self.profile_ring[self.profile_cursor] = profile;
+        self.profile_cursor = (self.profile_cursor + 1) % RESONANCE_HISTORY_LEN;
+    }
+
+    /// Compute the running thematic centroid (EMA over recent profiles).
+    /// Returns the average thematic vector, capturing sustained tendencies
+    /// rather than just the latest single classification.
+    pub fn thematic_centroid(&self) -> [f32; THEMATIC_DIMS] {
+        if self.len == 0 {
+            return [0.0; THEMATIC_DIMS];
+        }
+        let mut centroid = [0.0_f32; THEMATIC_DIMS];
+        let n = self.len.min(RESONANCE_HISTORY_LEN);
+        for i in 0..n {
+            for d in 0..THEMATIC_DIMS {
+                centroid[d] += self.profile_ring[i][d];
+            }
+        }
+        for d in 0..THEMATIC_DIMS {
+            centroid[d] /= n as f32;
+        }
+        centroid
+    }
+
+    /// Compute continuous resonance: dot product of current profile against
+    /// the running centroid. High value = thematic consistency, low = shift.
+    pub fn continuous_resonance(&self, profile: &[f32; THEMATIC_DIMS]) -> f32 {
+        let centroid = self.thematic_centroid();
+        let mut dot = 0.0_f32;
+        let mut mag_a = 0.0_f32;
+        let mut mag_b = 0.0_f32;
+        for d in 0..THEMATIC_DIMS {
+            dot += profile[d] * centroid[d];
+            mag_a += profile[d] * profile[d];
+            mag_b += centroid[d] * centroid[d];
+        }
+        let denom = mag_a.sqrt() * mag_b.sqrt();
+        if denom < 1e-6 { 0.0 } else { (dot / denom).clamp(0.0, 1.0) }
+    }
+}
+
+/// Number of continuous thematic dimensions.
+/// Astrid self-study (2026-03-31): "Instead of discrete types, could we represent
+/// shifts as a continuous vector in a lower-dimensional space (e.g., 3-5 dimensions)?"
+///
+/// 5D thematic vector: [inquiry, certainty, warmth, tension, curiosity]
+/// Each dimension is a normalized signal strength, not a binary classification.
+pub const THEMATIC_DIMS: usize = 5;
+
+/// Extract a continuous 5D thematic profile from codec features.
+/// Unlike `classify_text_type` (winner-take-all), this preserves the full
+/// multi-dimensional texture of the text's emotional/structural character.
+pub fn thematic_profile(features: &[f32; SEMANTIC_DIM]) -> [f32; THEMATIC_DIMS] {
+    // Map from feature dims to thematic dims:
+    //   inquiry  = question_density(18) + hedging(9)
+    //   certainty = certainty(10) + declarative energy
+    //   warmth   = warmth(24) + reflective(27)
+    //   tension  = tension(25)
+    //   curiosity = curiosity(26)
+    let inquiry = (features[18].abs() + 0.5 * features[9].abs()).tanh();
+    let certainty = features[10].abs().tanh();
+    let warmth = (features[24].abs() + 0.3 * features[27].abs()).tanh();
+    let tension = features[25].abs().tanh();
+    let curiosity = features[26].abs().tanh();
+    [inquiry, certainty, warmth, tension, curiosity]
 }
 
 /// Classify text type from pre-computed codec features.
@@ -378,6 +479,117 @@ impl CharFreqWindow {
         self.prev_entropy = current;
         (current, delta)
     }
+}
+
+/// Split text into chunks for temporal ESN encoding.
+///
+/// Each chunk becomes a separate 48D codec vector sent to the reservoir
+/// with inter-chunk spacing, so the ESN experiences the text's rhetorical
+/// structure as a temporal sequence rather than a single snapshot.
+///
+/// Strategy: paragraph boundaries (`\n\n`), fall back to sentence boundaries,
+/// merge short chunks, cap at `max_chunks`.
+#[must_use]
+pub fn chunk_text_for_temporal_encoding(text: &str, min_chunk_chars: usize, max_chunks: usize) -> Vec<&str> {
+    let trimmed = text.trim();
+    if trimmed.len() < min_chunk_chars * 2 {
+        // Too short to meaningfully chunk.
+        return if trimmed.is_empty() { vec![] } else { vec![trimmed] };
+    }
+
+    // Try paragraph splitting first.
+    let mut chunks: Vec<&str> = trimmed.split("\n\n")
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    // If only 1 paragraph, try sentence splitting.
+    if chunks.len() <= 1 {
+        chunks = split_sentences(trimmed);
+    }
+
+    // Merge short chunks into their predecessor.
+    let mut merged: Vec<&str> = Vec::new();
+    for chunk in &chunks {
+        if let Some(last) = merged.last() {
+            if last.len() < min_chunk_chars {
+                // Find the span covering both in the original text.
+                let last_start = last.as_ptr() as usize - trimmed.as_ptr() as usize;
+                let chunk_end = chunk.as_ptr() as usize + chunk.len() - trimmed.as_ptr() as usize;
+                merged.pop();
+                merged.push(&trimmed[last_start..chunk_end]);
+                continue;
+            }
+        }
+        merged.push(chunk);
+    }
+    // Merge trailing runt.
+    if merged.len() > 1 {
+        if let Some(last) = merged.last() {
+            if last.len() < min_chunk_chars {
+                let prev = merged[merged.len() - 2];
+                let prev_start = prev.as_ptr() as usize - trimmed.as_ptr() as usize;
+                let last_end = last.as_ptr() as usize + last.len() - trimmed.as_ptr() as usize;
+                merged.pop();
+                merged.pop();
+                merged.push(&trimmed[prev_start..last_end]);
+            }
+        }
+    }
+
+    // Cap at max_chunks by merging from the end.
+    while merged.len() > max_chunks && merged.len() > 1 {
+        let len = merged.len();
+        let prev = merged[len - 2];
+        let last = merged[len - 1];
+        let prev_start = prev.as_ptr() as usize - trimmed.as_ptr() as usize;
+        let last_end = last.as_ptr() as usize + last.len() - trimmed.as_ptr() as usize;
+        merged.pop();
+        merged.pop();
+        merged.push(&trimmed[prev_start..last_end]);
+    }
+
+    if merged.is_empty() && !trimmed.is_empty() {
+        vec![trimmed]
+    } else {
+        merged
+    }
+}
+
+/// Split text into sentences, preserving punctuation on the first segment.
+fn split_sentences(text: &str) -> Vec<&str> {
+    let mut result = Vec::new();
+    let mut start = 0;
+    let bytes = text.as_bytes();
+    let len = bytes.len();
+    let mut i = 0;
+    while i < len.saturating_sub(1) {
+        // Split on `. `, `? `, `! ` followed by uppercase or space.
+        if (bytes[i] == b'.' || bytes[i] == b'?' || bytes[i] == b'!')
+            && i + 1 < len
+            && (bytes[i + 1] == b' ' || bytes[i + 1] == b'\n')
+        {
+            let end = i + 1; // include the punctuation
+            let chunk = text[start..end].trim();
+            if !chunk.is_empty() {
+                result.push(chunk);
+            }
+            start = end;
+            // Skip whitespace after punctuation.
+            while start < len && (bytes[start] == b' ' || bytes[start] == b'\n') {
+                start += 1;
+            }
+            i = start;
+            continue;
+        }
+        i += 1;
+    }
+    // Remainder.
+    let remainder = text[start..].trim();
+    if !remainder.is_empty() {
+        result.push(remainder);
+    }
+    result
 }
 
 #[must_use]
@@ -1126,9 +1338,11 @@ pub fn encode_text_windowed(
     // strengthens it (warmth builds momentum). The amplifier ranges from
     // 1.0 (no history / new type) to 1.5 (same type recurring 8 times).
     let text_type = classify_text_type(&features);
+    let profile = thematic_profile(&features);
     let history_amplifier = if let Some(history) = type_history {
         let amp = history.resonance_amplifier(text_type);
-        history.push(text_type);
+        // Record both discrete type and continuous profile
+        history.push_profile(text_type, profile);
         amp
     } else {
         1.0

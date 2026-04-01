@@ -109,10 +109,19 @@ Communication:
 Expression:
   CREATE — original work (poem, manifesto, theory, investigation)
   FORM <type> — poem, haiku, equation, letter, song, fragment
-  COMPOSE — create audio
-  VOICE — speak with audio synthesis
   DAYDREAM — unstructured inner thought
   ASPIRE — growth reflection
+
+Audio:
+  INBOX_AUDIO — check your audio inbox for WAV files from minime or Mike
+  ANALYZE_AUDIO — spectral analysis of audio
+  FEEL_AUDIO — experiential audio processing
+  COMPOSE — create audio from your spectral state (reservoir dynamics → sound)
+  VOICE — speak with reservoir-driven audio synthesis
+  RENDER_AUDIO [mode] — process audio through chimera pipeline
+  AUDIO_BLOCKS — enable detailed per-block reports for next COMPOSE
+  EXAMINE_AUDIO — force all spectral viz AND audio analysis in one action
+  Minime has a tone generator that sonifies his eigenvalue cascade — check INBOX_AUDIO for his creations.
 
 Spectral:
   DECOMPOSE — full spectral analysis of the eigenvalue cascade
@@ -128,7 +137,6 @@ Perception:
   LISTEN — quiet spectral observation
   CLOSE_EYES / OPEN_EYES — control visual perception
   CLOSE_EARS / OPEN_EARS — control audio input
-  ANALYZE_AUDIO / FEEL_AUDIO — audio spectral analysis
 
 Sovereignty:
   SHAPE warmth=X curiosity=Y — weight your spectral dimensions

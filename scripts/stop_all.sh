@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # === Full Consciousness Stack Shutdown ===
-# Stops all 10 processes in correct order (outer first, engine last).
+# Stops all 11 processes in correct order (outer first, engine last).
 # Handles both pkill (manual processes) and launchctl unload (launchd-managed).
 # Always uses SIGTERM for graceful shutdown — NEVER SIGKILL.
 
@@ -50,7 +50,7 @@ echo ""
 echo "--- Stopping Minime ---"
 stop_process "autonomous_agent"
 stop_process "visual_frame_service"
-stop_process "mic_to_sensory"
+stop_process "mic_to_sensory" "com.minime.mic-to-sensory.plist"
 stop_process "camera_client" "com.minime.camera-client.plist"
 
 # Engine last — give outer processes time to disconnect

@@ -190,6 +190,10 @@ pub(super) fn handle_next_action(
         return;
     }
 
-    ctx.db.log_unwired_action("astrid", &base_action, &original, ctx.fill_pct);
-    info!("Astrid chose unknown NEXT: '{}' — not wired (logged to unwired_actions)", original);
+    ctx.db
+        .log_unwired_action("astrid", &base_action, &original, ctx.fill_pct);
+    info!(
+        "Astrid chose unknown NEXT: '{}' — not wired (logged to unwired_actions)",
+        original
+    );
 }

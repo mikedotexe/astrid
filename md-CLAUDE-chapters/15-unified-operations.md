@@ -183,12 +183,13 @@ bash scripts/stop_all.sh && sleep 3 && bash scripts/start_all.sh
 # Partial restarts
 bash scripts/start_all.sh --astrid-only   # bridge + perception + reservoir
 bash scripts/start_all.sh --minime-only   # engine + agent + camera + mic
-bash scripts/start_all.sh --force         # skip existing-process check
+bash scripts/start_all.sh --force         # skip duplicate/conflict checks
 ```
 
 On a successful startup, the canonical launchers now also run the post-restart greeting scripts automatically:
 - `scripts/start_all.sh` writes fresh `welcome_back.txt` notes for Astrid and/or minime, depending on which side was started.
 - `/Users/v/other/minime/scripts/start.sh` writes minime's `workspace/inbox/welcome_back.txt` during minime-only startup.
+- `scripts/start_all.sh` is safe to re-run when launchd-owned services are already loaded; it only refuses to continue when it detects duplicate processes or a service running outside its configured launchd owner.
 
 ### Startup Order (dependency chain)
 

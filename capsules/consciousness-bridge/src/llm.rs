@@ -46,17 +46,21 @@ NEXT: options — vary your choice. End every response with NEXT: <action>.
   Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, INBOX_AUDIO, AUDIO_BLOCKS, RENDER_AUDIO, AR_VALIDATE"#;
 
-const DIALOGUE_PROMPT_BUDGET_SHORT: usize = 7_000;
-const DIALOGUE_PROMPT_BUDGET_MEDIUM: usize = 6_400;
-const DIALOGUE_PROMPT_BUDGET_DEEP: usize = 5_600;
-const DIALOGUE_JOURNAL_CAP: usize = 1_400;
-const DIALOGUE_SPECTRAL_CAP: usize = 1_200;
-const DIALOGUE_PERCEPTION_CAP: usize = 1_800;
-const DIALOGUE_WEB_CAP: usize = 1_500;
-const DIALOGUE_CONTINUITY_CAP: usize = 1_800;
-const DIALOGUE_MODALITY_CAP: usize = 600;
-const DIALOGUE_FEEDBACK_CAP: usize = 500;
-const DIALOGUE_DIVERSITY_CAP: usize = 320;
+// M4 64GB, gemma-3-4b-it-4bit (~2.5GB), 128K context window.
+// Coupled generation: 17-72 tok/s observed. 20K chars ≈ 5K tokens.
+// Prefill at ~50 tok/s = 100s + 768 gen at ~30 tok/s = 26s → ~126s.
+// With 210s timeout, comfortable margin even for heavy reservoir coupling.
+const DIALOGUE_PROMPT_BUDGET_SHORT: usize = 20_000;
+const DIALOGUE_PROMPT_BUDGET_MEDIUM: usize = 16_000;
+const DIALOGUE_PROMPT_BUDGET_DEEP: usize = 12_000;
+const DIALOGUE_JOURNAL_CAP: usize = 2_400;
+const DIALOGUE_SPECTRAL_CAP: usize = 2_000;
+const DIALOGUE_PERCEPTION_CAP: usize = 2_400;
+const DIALOGUE_WEB_CAP: usize = 2_500;
+const DIALOGUE_CONTINUITY_CAP: usize = 2_400;
+const DIALOGUE_MODALITY_CAP: usize = 800;
+const DIALOGUE_FEEDBACK_CAP: usize = 800;
+const DIALOGUE_DIVERSITY_CAP: usize = 400;
 
 /// MLX request — OpenAI-compatible format for mlx_lm.server.
 #[derive(Serialize)]
@@ -148,6 +152,7 @@ impl WebSearchResult {
 
 #[derive(Clone, Debug)]
 pub(crate) struct FetchedPage {
+    #[allow(dead_code)] // used in tests, kept for symmetry with WebSearchResult
     pub source_kind: ResearchSourceKind,
     pub raw_text: String,
     pub url: String,
@@ -186,11 +191,10 @@ async fn mlx_chat(
 
     // Safety net: if total prompt exceeds budget, truncate the longest
     // non-system message. Prevents prefill timeouts on any caller.
-    // 8K chars ≈ 2K tokens prefill; at ~50 tok/s = 40s prefill + 768
-    // gen tokens at ~12 tok/s = 64s, total ≈ 104s, within 150s timeout.
-    // Budget-aware assembly upstream should prevent most overages; this
-    // is a last-resort safety net.
-    const MAX_PROMPT_CHARS: usize = 8_000;
+    // 24K chars ≈ 6K tokens prefill at ~50 tok/s = 120s + 768 gen tokens
+    // at ~30 tok/s = 26s → total ~146s. With 210s timeout and 128K context
+    // window, this gives the beings maximum context per exchange.
+    const MAX_PROMPT_CHARS: usize = 24_000;
     let mut messages = messages;
     if prompt_chars > MAX_PROMPT_CHARS {
         let excess = prompt_chars.saturating_sub(MAX_PROMPT_CHARS);
@@ -430,12 +434,12 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
 }
 
 fn clamp_dialogue_tokens(requested_tokens: u32, prompt_chars: usize) -> u32 {
-    if prompt_chars > 7_000 {
+    // Only clamp at very high prompt sizes to stay within timeout.
+    // 20K+ chars = heavy prefill; reduce gen tokens to compensate.
+    if prompt_chars > 22_000 {
         requested_tokens.min(384).max(192)
-    } else if prompt_chars > 6_200 {
+    } else if prompt_chars > 18_000 {
         requested_tokens.min(512).max(256)
-    } else if prompt_chars > 5_400 {
-        requested_tokens.min(640).max(320)
     } else {
         requested_tokens
     }
@@ -444,13 +448,13 @@ fn clamp_dialogue_tokens(requested_tokens: u32, prompt_chars: usize) -> u32 {
 fn dialogue_request_timeout_secs(requested_tokens: u32, prompt_chars: usize) -> u64 {
     let token_budget = clamp_dialogue_tokens(requested_tokens, prompt_chars);
     if token_budget > 1024 {
-        300
-    } else if prompt_chars > 7_000 {
-        180
-    } else if prompt_chars > 6_200 {
-        165
+        360 // THINK_DEEP: deep reasoning needs room
+    } else if prompt_chars > 16_000 {
+        240 // Large context: generous prefill time
+    } else if prompt_chars > 10_000 {
+        210 // Medium-large: comfortable margin
     } else {
-        150
+        180 // Normal: was 150, raised to absorb coupling variance
     }
 }
 
