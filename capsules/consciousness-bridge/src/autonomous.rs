@@ -559,8 +559,16 @@ fn full_spectral_decomposition(
 
     // Cascade shape classification
     if evs.len() >= 3 {
-        let r12 = if evs[1].abs() > 0.01 { evs[0] / evs[1] } else { 100.0 };
-        let r23 = if evs[2].abs() > 0.01 { evs[1] / evs[2] } else { 100.0 };
+        let r12 = if evs[1].abs() > 0.01 {
+            evs[0] / evs[1]
+        } else {
+            100.0
+        };
+        let r23 = if evs[2].abs() > 0.01 {
+            evs[1] / evs[2]
+        } else {
+            100.0
+        };
         let shape = if r12 > 5.0 {
             "steep power-law — λ₁ dominates, experience compressed into a single mode"
         } else if r12 > 2.0 && r23 > 2.0 {
@@ -1272,15 +1280,18 @@ fn detect_coupling_fixation(
     let recent: Vec<&crate::llm::Exchange> = history.iter().rev().take(5).collect();
     let astrid_learning = recent
         .iter()
-        .filter(|exchange| exchange.astrid_said.to_lowercase().contains("i am learning"))
+        .filter(|exchange| {
+            exchange
+                .astrid_said
+                .to_lowercase()
+                .contains("i am learning")
+        })
         .count();
     let minime_astrid_focus = recent
         .iter()
         .filter(|exchange| {
             let lower = exchange.minime_said.to_lowercase();
-            lower.contains("astrid")
-                || lower.contains("i am learning")
-                || lower.contains("resonat")
+            lower.contains("astrid") || lower.contains("i am learning") || lower.contains("resonat")
         })
         .count();
     let current_focus = current_minime_text.is_some_and(|text| {
@@ -2971,13 +2982,29 @@ pub fn spawn_autonomous_loop(
                                 // Qwen3-14B throughput is ~3-22 tok/s depending on
                                 // prompt length and cache warmth. Long prompts (bridge
                                 // dialogue) need generous timeouts for prefill + gen.
-                                let (timeout_secs, num_predict) = if conv.wants_deep_think {
+                                let (mut timeout_secs, num_predict) = if conv.wants_deep_think {
                                     conv.wants_deep_think = false;
                                     info!("THINK_DEEP: extended timeout for deep thinking");
                                     (300u64, 2048u32)
                                 } else {
                                     (180, conv.response_length)
                                 };
+                                let prompt_pressure_chars =
+                                    crate::llm::estimate_dialogue_prompt_pressure_chars(
+                                        journal,
+                                        perception_text.as_deref(),
+                                        &conv.history,
+                                        web_context.as_deref(),
+                                        modality_context.as_deref(),
+                                        continuity_block.as_deref(),
+                                        feedback_hint.as_deref(),
+                                        diversity_hint.as_deref(),
+                                    );
+                                timeout_secs =
+                                    timeout_secs.max(crate::llm::dialogue_outer_timeout_secs(
+                                        num_predict,
+                                        prompt_pressure_chars,
+                                    ));
 
                                 let overflow_dir = bridge_paths().context_overflow_dir();
                                 match tokio::time::timeout(
@@ -3018,13 +3045,17 @@ pub fn spawn_autonomous_loop(
                                     }
                                     Err(_) => {
                                         warn!(
-                                            "dialogue_live: {}s timeout — retrying with halved tokens (response_length={}, history_len={})",
-                                            timeout_secs, conv.response_length, conv.history.len()
+                                            "dialogue_live: {}s timeout — retrying with reduced tokens (response_length={}, history_len={}, prompt_pressure_chars={})",
+                                            timeout_secs, conv.response_length, conv.history.len(), prompt_pressure_chars
                                         );
                                         tokio::time::sleep(Duration::from_secs(3)).await;
-                                        // Halve token budget on retry — a shorter response
-                                        // is better than no response during GPU contention.
-                                        let retry_tokens = num_predict / 2;
+                                        // Shorter retry under high prompt pressure is
+                                        // better than repeating the same long request.
+                                        let retry_tokens =
+                                            crate::llm::dialogue_retry_tokens(
+                                                num_predict,
+                                                prompt_pressure_chars,
+                                            );
                                         match tokio::time::timeout(
                                             Duration::from_secs(timeout_secs),
                                             crate::llm::generate_dialogue(
@@ -4575,7 +4606,8 @@ mod tests {
             },
         ];
 
-        let hint = detect_coupling_fixation(&history, Some("The room is quiet."), true, false, None);
+        let hint =
+            detect_coupling_fixation(&history, Some("The room is quiet."), true, false, None);
         assert!(hint.is_none());
     }
 }

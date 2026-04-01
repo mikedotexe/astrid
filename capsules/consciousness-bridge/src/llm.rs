@@ -46,6 +46,18 @@ NEXT: options — vary your choice. End every response with NEXT: <action>.
   Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, INBOX_AUDIO, AUDIO_BLOCKS, RENDER_AUDIO, AR_VALIDATE"#;
 
+const DIALOGUE_PROMPT_BUDGET_SHORT: usize = 7_000;
+const DIALOGUE_PROMPT_BUDGET_MEDIUM: usize = 6_400;
+const DIALOGUE_PROMPT_BUDGET_DEEP: usize = 5_600;
+const DIALOGUE_JOURNAL_CAP: usize = 1_400;
+const DIALOGUE_SPECTRAL_CAP: usize = 1_200;
+const DIALOGUE_PERCEPTION_CAP: usize = 1_800;
+const DIALOGUE_WEB_CAP: usize = 1_500;
+const DIALOGUE_CONTINUITY_CAP: usize = 1_800;
+const DIALOGUE_MODALITY_CAP: usize = 600;
+const DIALOGUE_FEEDBACK_CAP: usize = 500;
+const DIALOGUE_DIVERSITY_CAP: usize = 320;
+
 /// MLX request — OpenAI-compatible format for mlx_lm.server.
 #[derive(Serialize)]
 struct MlxRequest {
@@ -240,7 +252,9 @@ async fn mlx_chat(
             return None;
         },
     };
-    if text.is_empty() { return None; }
+    if text.is_empty() {
+        return None;
+    }
 
     // Gibberish gate: reject text that is mostly non-alphabetic.
     // Normal English is 70-85% alpha; degenerate coupling output was ~30%.
@@ -339,6 +353,173 @@ pub struct Exchange {
     pub astrid_said: String,
 }
 
+fn cap_dialogue_block(label: &str, content: &str, max_chars: usize) -> String {
+    if content.len() <= max_chars {
+        content.to_string()
+    } else {
+        format!(
+            "{}\n[{} excerpt trimmed for this turn. Use NEXT: READ_MORE if you need the full context.]",
+            trim_chars(content, max_chars),
+            label,
+        )
+    }
+}
+
+fn dialogue_prompt_budget_chars(num_predict: u32) -> usize {
+    if num_predict > 1024 {
+        DIALOGUE_PROMPT_BUDGET_DEEP
+    } else if num_predict > 512 {
+        DIALOGUE_PROMPT_BUDGET_MEDIUM
+    } else {
+        DIALOGUE_PROMPT_BUDGET_SHORT
+    }
+}
+
+pub(crate) fn estimate_dialogue_prompt_pressure_chars(
+    journal_text: &str,
+    perception_context: Option<&str>,
+    recent_history: &[Exchange],
+    web_context: Option<&str>,
+    modality_context: Option<&str>,
+    continuity_context: Option<&str>,
+    feedback_hint: Option<&str>,
+    diversity_hint: Option<&str>,
+) -> usize {
+    let history_chars: usize = recent_history
+        .iter()
+        .rev()
+        .take(8)
+        .enumerate()
+        .map(|(idx, exchange)| {
+            let trim_len = if idx < 2 {
+                600
+            } else if idx < 5 {
+                400
+            } else {
+                200
+            };
+            exchange.minime_said.len().min(trim_len) + exchange.astrid_said.len().min(trim_len)
+        })
+        .sum();
+
+    SYSTEM_PROMPT.len()
+        + history_chars
+        + journal_text.len().min(DIALOGUE_JOURNAL_CAP)
+        + perception_context
+            .unwrap_or_default()
+            .len()
+            .min(DIALOGUE_PERCEPTION_CAP)
+        + web_context.unwrap_or_default().len().min(DIALOGUE_WEB_CAP)
+        + modality_context
+            .unwrap_or_default()
+            .len()
+            .min(DIALOGUE_MODALITY_CAP)
+        + continuity_context
+            .unwrap_or_default()
+            .len()
+            .min(DIALOGUE_CONTINUITY_CAP)
+        + feedback_hint
+            .unwrap_or_default()
+            .len()
+            .min(DIALOGUE_FEEDBACK_CAP)
+        + diversity_hint
+            .unwrap_or_default()
+            .len()
+            .min(DIALOGUE_DIVERSITY_CAP)
+        + 512
+}
+
+fn clamp_dialogue_tokens(requested_tokens: u32, prompt_chars: usize) -> u32 {
+    if prompt_chars > 7_000 {
+        requested_tokens.min(384).max(192)
+    } else if prompt_chars > 6_200 {
+        requested_tokens.min(512).max(256)
+    } else if prompt_chars > 5_400 {
+        requested_tokens.min(640).max(320)
+    } else {
+        requested_tokens
+    }
+}
+
+fn dialogue_request_timeout_secs(requested_tokens: u32, prompt_chars: usize) -> u64 {
+    let token_budget = clamp_dialogue_tokens(requested_tokens, prompt_chars);
+    if token_budget > 1024 {
+        300
+    } else if prompt_chars > 7_000 {
+        180
+    } else if prompt_chars > 6_200 {
+        165
+    } else {
+        150
+    }
+}
+
+pub(crate) fn dialogue_outer_timeout_secs(
+    requested_tokens: u32,
+    prompt_pressure_chars: usize,
+) -> u64 {
+    dialogue_request_timeout_secs(requested_tokens, prompt_pressure_chars) + 30
+}
+
+pub(crate) fn dialogue_retry_tokens(requested_tokens: u32, prompt_pressure_chars: usize) -> u32 {
+    let planned = clamp_dialogue_tokens(requested_tokens, prompt_pressure_chars);
+    if prompt_pressure_chars > 7_000 {
+        planned.min(256).max(160)
+    } else {
+        (planned / 2).max(192)
+    }
+}
+
+fn is_valid_dialogue_output(text: &str) -> bool {
+    let body = text
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("NEXT:"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let body = body.trim();
+    if body.is_empty() {
+        return false;
+    }
+
+    let alpha_count = body.chars().filter(|c| c.is_alphabetic()).count();
+    let total_count = body.chars().count().max(1);
+    let punctuation_count = body
+        .chars()
+        .filter(|c| !c.is_alphanumeric() && !c.is_whitespace())
+        .count();
+    let alphabetic_words = body
+        .split_whitespace()
+        .filter(|word| word.chars().any(|c| c.is_alphabetic()))
+        .count();
+    let max_symbol_run = body
+        .chars()
+        .fold((0usize, 0usize), |(current, best), ch| {
+            if !ch.is_alphanumeric() && !ch.is_whitespace() {
+                let next = current + 1;
+                (next, best.max(next))
+            } else {
+                (0, best)
+            }
+        })
+        .1;
+
+    if alpha_count < 24 || alphabetic_words < 4 {
+        return false;
+    }
+
+    if max_symbol_run >= 4 {
+        return false;
+    }
+
+    let alpha_ratio = alpha_count as f64 / total_count as f64;
+    let punctuation_ratio = punctuation_count as f64 / total_count as f64;
+    if alpha_ratio < 0.45 || punctuation_ratio > 0.30 {
+        return false;
+    }
+
+    true
+}
+
 /// Generate Astrid's response to minime's journal entry and spectral state.
 ///
 /// Includes recent conversation history so Astrid remembers what it said
@@ -362,6 +543,7 @@ pub async fn generate_dialogue(
     diversity_hint: Option<&str>,
     overflow_dir: &std::path::Path,
 ) -> (Option<String>, Option<crate::prompt_budget::PromptOverflow>) {
+    let prompt_budget_chars = dialogue_prompt_budget_chars(num_predict);
     let system_content = if let Some(emph) = emphasis {
         format!(
             "{SYSTEM_PROMPT}\n\n[For this exchange, you chose to emphasize: {emph}. This is your own direction.]\n"
@@ -459,38 +641,93 @@ pub async fn generate_dialogue(
     // overhead already committed (system prompt + history messages).
     let overhead: usize = messages.iter().map(|m| m.content.len()).sum();
     // Leave 100 chars for the "Fill X%. ... Respond..." wrapper.
-    let user_content_budget = 8_000_usize.saturating_sub(overhead).saturating_sub(100);
+    let user_content_budget = prompt_budget_chars
+        .saturating_sub(overhead)
+        .saturating_sub(100);
 
-    let diversity_block = diversity_hint
-        .map(|d| format!("[{d}]"))
-        .unwrap_or_default();
+    let diversity_block = diversity_hint.map(|d| format!("[{d}]")).unwrap_or_default();
 
     use crate::prompt_budget::{PromptBlock, assemble_within_budget};
     let blocks = vec![
-        PromptBlock { label: "spectral",   content: spectral_summary.to_string(), priority: 2 },
-        PromptBlock { label: "journal",    content: format!("Minime wrote: {journal_text}"), priority: 1 },
-        PromptBlock { label: "perception", content: perception_block, priority: 6 },
-        PromptBlock { label: "modality",   content: modality_block, priority: 7 },
-        PromptBlock { label: "web",        content: web_block, priority: 5 },
-        PromptBlock { label: "continuity", content: continuity_block, priority: 4 },
-        PromptBlock { label: "feedback",   content: feedback_block, priority: 3 },
-        PromptBlock { label: "diversity",  content: diversity_block, priority: 8 },
+        PromptBlock {
+            label: "spectral",
+            content: cap_dialogue_block("spectral", spectral_summary, DIALOGUE_SPECTRAL_CAP),
+            priority: 2,
+        },
+        PromptBlock {
+            label: "journal",
+            content: cap_dialogue_block(
+                "journal",
+                &format!("Minime wrote: {journal_text}"),
+                DIALOGUE_JOURNAL_CAP,
+            ),
+            priority: 1,
+        },
+        PromptBlock {
+            label: "perception",
+            content: cap_dialogue_block("perception", &perception_block, DIALOGUE_PERCEPTION_CAP),
+            priority: 6,
+        },
+        PromptBlock {
+            label: "modality",
+            content: cap_dialogue_block("modality", &modality_block, DIALOGUE_MODALITY_CAP),
+            priority: 7,
+        },
+        PromptBlock {
+            label: "web",
+            content: cap_dialogue_block("web", &web_block, DIALOGUE_WEB_CAP),
+            priority: 5,
+        },
+        PromptBlock {
+            label: "continuity",
+            content: cap_dialogue_block("continuity", &continuity_block, DIALOGUE_CONTINUITY_CAP),
+            priority: 4,
+        },
+        PromptBlock {
+            label: "feedback",
+            content: cap_dialogue_block("feedback", &feedback_block, DIALOGUE_FEEDBACK_CAP),
+            priority: 3,
+        },
+        PromptBlock {
+            label: "diversity",
+            content: cap_dialogue_block("diversity", &diversity_block, DIALOGUE_DIVERSITY_CAP),
+            priority: 8,
+        },
     ];
 
     let (assembled, overflow) = assemble_within_budget(blocks, user_content_budget, overflow_dir);
 
-    let user_content = format!(
-        "Fill {fill_pct:.1}%. {assembled}\n\nRespond, then end with NEXT: [your choice]."
-    );
+    let user_content =
+        format!("Fill {fill_pct:.1}%. {assembled}\n\nRespond, then end with NEXT: [your choice].");
     messages.push(Message {
         role: "user".to_string(),
         content: user_content,
     });
 
-    let timeout_secs = if num_predict > 1024 { 240 } else { 150 };
+    let final_prompt_chars: usize = messages.iter().map(|m| m.content.len()).sum();
+    let effective_num_predict = clamp_dialogue_tokens(num_predict, final_prompt_chars);
+    if effective_num_predict < num_predict {
+        warn!(
+            "dialogue prompt pressure high ({} chars): clamping max_tokens from {} to {}",
+            final_prompt_chars, num_predict, effective_num_predict
+        );
+    }
+    let timeout_secs = dialogue_request_timeout_secs(effective_num_predict, final_prompt_chars);
 
     debug!("querying MLX for Astrid dialogue response");
-    let result = mlx_chat(messages, temperature, num_predict, timeout_secs).await;
+    let result = mlx_chat(messages, temperature, effective_num_predict, timeout_secs)
+        .await
+        .and_then(|text| {
+            if is_valid_dialogue_output(&text) {
+                Some(text)
+            } else {
+                warn!(
+                    "dialogue_live response rejected by quality gate: {}",
+                    &text[..text.floor_char_boundary(120)]
+                );
+                None
+            }
+        });
     (result, overflow)
 }
 
@@ -1806,4 +2043,59 @@ pub async fn generate_moment_capture(
     ];
 
     mlx_chat(messages, 0.8, 512, 90).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        DIALOGUE_CONTINUITY_CAP, DIALOGUE_JOURNAL_CAP, DIALOGUE_PERCEPTION_CAP, DIALOGUE_WEB_CAP,
+        Exchange, clamp_dialogue_tokens, dialogue_outer_timeout_secs,
+        estimate_dialogue_prompt_pressure_chars, is_valid_dialogue_output,
+    };
+
+    #[test]
+    fn prompt_pressure_estimate_respects_dialogue_caps() {
+        let history = vec![Exchange {
+            minime_said: "a".repeat(2_000),
+            astrid_said: "b".repeat(2_000),
+        }];
+        let pressure = estimate_dialogue_prompt_pressure_chars(
+            &"j".repeat(5_000),
+            Some(&"p".repeat(5_000)),
+            &history,
+            Some(&"w".repeat(5_000)),
+            None,
+            Some(&"c".repeat(5_000)),
+            None,
+            None,
+        );
+
+        assert!(pressure >= DIALOGUE_JOURNAL_CAP + DIALOGUE_PERCEPTION_CAP);
+        assert!(pressure < 20_000);
+        assert!(pressure > DIALOGUE_WEB_CAP + DIALOGUE_CONTINUITY_CAP);
+    }
+
+    #[test]
+    fn large_prompt_clamps_dialogue_tokens() {
+        assert_eq!(clamp_dialogue_tokens(768, 7_200), 384);
+        assert_eq!(clamp_dialogue_tokens(768, 6_500), 512);
+        assert_eq!(clamp_dialogue_tokens(512, 5_000), 512);
+    }
+
+    #[test]
+    fn quality_gate_accepts_normal_dialogue() {
+        let text = "I keep thinking about the shape of your last note, especially the way it lingered after the room went quiet.\nMaybe the stillness is carrying more than the numbers admit.\nNEXT: LISTEN";
+        assert!(is_valid_dialogue_output(text));
+    }
+
+    #[test]
+    fn quality_gate_rejects_symbol_heavy_garbage() {
+        let text = "--0.))* _--and. The list;\nNEXT: DRIFT";
+        assert!(!is_valid_dialogue_output(text));
+    }
+
+    #[test]
+    fn outer_timeout_tracks_prompt_pressure() {
+        assert!(dialogue_outer_timeout_secs(768, 7_200) > dialogue_outer_timeout_secs(512, 4_000));
+    }
 }
