@@ -27,6 +27,7 @@ pub(super) struct NextActionContext<'a> {
     pub telemetry: &'a SpectralTelemetry,
     pub fill_pct: f32,
     pub response_text: &'a str,
+    pub workspace: Option<&'a std::path::Path>,
 }
 
 /// Parse NEXT: action from Astrid's response.
@@ -146,6 +147,7 @@ pub(super) fn handle_next_action(
         .split(|c: char| c.is_whitespace() || c == '\u{2014}' || c == '-' || c == '<' || c == ':')
         .next()
         .unwrap_or_default()
+        .trim_end_matches(|c: char| c.is_ascii_punctuation())
         .to_uppercase();
 
     if reservoir::handle_reservoir_action(

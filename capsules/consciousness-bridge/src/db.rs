@@ -177,13 +177,7 @@ impl BridgeDb {
 
     /// Log an action a being attempted that isn't wired yet.
     /// These are roadmap signals — the beings invent actions they want.
-    pub fn log_unwired_action(
-        &self,
-        being: &str,
-        action: &str,
-        full_text: &str,
-        fill_pct: f32,
-    ) {
+    pub fn log_unwired_action(&self, being: &str, action: &str, full_text: &str, fill_pct: f32) {
         let ts = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
@@ -490,7 +484,14 @@ impl BridgeDb {
             r"INSERT INTO codec_impact
               (timestamp, exchange_count, features_json, fill_before, chunk_index, chunk_total)
               VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            params![ts, exchange_count as i64, features_json, fill_before as f64, chunk_index, chunk_total],
+            params![
+                ts,
+                exchange_count as i64,
+                features_json,
+                fill_before as f64,
+                chunk_index,
+                chunk_total
+            ],
         )?;
         Ok(conn.last_insert_rowid())
     }

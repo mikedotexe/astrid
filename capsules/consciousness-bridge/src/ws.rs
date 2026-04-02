@@ -520,7 +520,10 @@ mod tests {
     fn estimate_fill_pct_at_observed_mean() {
         // lambda1=154 (observed mean) → should be near 50%
         let fill = estimate_fill_pct(154.0);
-        assert!(fill > 45.0 && fill < 55.0, "mean lambda1 should give ~50% fill, got {fill}");
+        assert!(
+            fill > 45.0 && fill < 55.0,
+            "mean lambda1 should give ~50% fill, got {fill}"
+        );
     }
 
     #[test]
@@ -541,7 +544,10 @@ mod tests {
     fn estimate_fill_pct_always_in_range() {
         for lambda1 in [0.0, 50.0, 154.0, 500.0, 1000.0, 5000.0] {
             let fill = estimate_fill_pct(lambda1);
-            assert!(fill >= 0.0 && fill <= 100.0, "fill out of range for lambda1={lambda1}: {fill}");
+            assert!(
+                fill >= 0.0 && fill <= 100.0,
+                "fill out of range for lambda1={lambda1}: {fill}"
+            );
         }
     }
 

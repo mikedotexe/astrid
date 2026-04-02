@@ -285,7 +285,10 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr_str = String::from_utf8_lossy(&output.stderr);
         // Log model identity from stderr (chat_mlx_local.py prints loading info there)
-        if let Some(model_line) = stderr_str.lines().find(|l| l.contains("model") || l.contains("loading")) {
+        if let Some(model_line) = stderr_str
+            .lines()
+            .find(|l| l.contains("model") || l.contains("loading"))
+        {
             info!("MLX sidecar model: {}", model_line.trim());
         }
         match serde_json::from_str::<ReflectiveReport>(&stdout) {

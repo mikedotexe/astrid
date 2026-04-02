@@ -28,6 +28,7 @@ Supporting audits, memos, and long-form stewardship notes that used to live in t
 | [15 — Unified Operations](md-CLAUDE-chapters/15-unified-operations.md) | start/stop scripts, launchd integration, camera TCC, restart procedures |
 | [16 — Codec Deep Dive](md-CLAUDE-chapters/16-codec-deep-dive.md) | 32D dimension layout, four layers, gain history, warmth vectors, being-driven evolution |
 | [17 — Coupled Generation](md-CLAUDE-chapters/17-coupled-generation.md) | Bidirectional reservoir coupling, three-timescale logit modulation, model selection, AGC, upgrade procedure |
+| [18 — Golden Reset](md-CLAUDE-chapters/18-golden-reset.md) | How 20+ parameter changes broke fill, database-driven diagnosis, bold rollback to proven values |
 
 ## Build / Test / Lint
 

@@ -268,10 +268,8 @@ mod tests {
 
     #[test]
     fn over_budget_trims_lowest_priority_first() {
-        let dir = std::env::temp_dir().join(format!(
-            "prompt_budget_test_trim_{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("prompt_budget_test_trim_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
 
         let blocks = vec![
@@ -317,10 +315,8 @@ mod tests {
 
     #[test]
     fn cap_with_overflow_spills_long_content() {
-        let dir = std::env::temp_dir().join(format!(
-            "prompt_budget_test_spill_{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("prompt_budget_test_spill_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
 
         // Content must be substantially over budget so the notice doesn't

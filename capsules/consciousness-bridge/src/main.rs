@@ -16,8 +16,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use consciousness_bridge_server::{
-    autonomous,
-    condition_metrics,
+    autonomous, condition_metrics,
     db::BridgeDb,
     mcp,
     paths::{BridgePathOverrides, configure_bridge_paths},

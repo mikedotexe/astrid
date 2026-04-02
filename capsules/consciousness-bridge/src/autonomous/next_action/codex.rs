@@ -249,16 +249,16 @@ pub(super) fn handle_action(
                 match conv.history.last() {
                     Some(ex) => extract_code_block(&ex.astrid_said),
                     None => {
-                        conv.emphasis = Some(
-                            "WRITE_FILE FROM_SELF: no recent response to save."
-                                .into(),
-                        );
+                        conv.emphasis =
+                            Some("WRITE_FILE FROM_SELF: no recent response to save.".into());
                         return true;
                     },
                 }
             } else if rest.is_empty() {
-                conv.emphasis =
-                    Some("WRITE_FILE needs content. Use FROM_CODEX, FROM_SELF, or provide inline text.".into());
+                conv.emphasis = Some(
+                    "WRITE_FILE needs content. Use FROM_CODEX, FROM_SELF, or provide inline text."
+                        .into(),
+                );
                 return true;
             } else {
                 rest.to_string()

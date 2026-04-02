@@ -19,7 +19,7 @@ This isn't just a performance detail. It's what makes cohabitation possible.
 | `autonomous_agent.py` | Python (CPU) | — | Minime's journaling, self-regulation, parameter requests |
 | `reservoir_service.py` | Python + NumPy | CPU | Triple-ESN ticks, rehearsal (192 nodes, sub-ms per tick) |
 | `camera_client.py` | Python + Metal | GPU | Frame capture → GPU feature extraction |
-| `perception.py` | Python + MLX | GPU | LLaVA vision, mlx_whisper audio |
+| `perception.py` | Python + mixed local inference | GPU / CPU | LLaVA via Ollama by default, optional Claude Vision, `mlx_whisper` audio |
 
 ## Memory Budget
 
@@ -64,7 +64,7 @@ This isn't just a performance detail. It's what makes cohabitation possible.
 
 ## Contention Patterns
 
-**Ollama model lock:** Ollama can only keep one model warm at a time (configurable via `OLLAMA_MAX_LOADED_MODELS`). When the bridge queries Ollama for dialogue_live, and the agent also queries Ollama for journaling, one waits. This causes timeout failures in dialogue_live mode. Mitigation: Astrid's `CLOSE_EYES` action pauses `perception.py` to free Ollama from LLaVA queries.
+**Ollama contention:** Astrid's live dialogue no longer goes through Ollama, but Ollama is still shared by minime's default language lane, Astrid embeddings, and default LLaVA perception. Contention still matters there, especially when vision and minime journaling overlap.
 
 **MLX dedicated lane:** Astrid's MLX server on port 8090 is a separate process with its own model loaded. It never contends with Ollama. This is the zero-contention inference lane design (see [Chapter 1](01-inference-lanes.md)).
 

@@ -1,145 +1,124 @@
 # Chapter 0: System Overview
 
-*Ground truth as of March 27, 2026. All claims verified against running processes and live code.*
+*Ground truth as of April 2, 2026. This chapter is aligned with current code in `astrid/`, sibling `minime/`, `neural-triple-reservoir/`, and the local `mlx/` checkout.*
 
 ## What This Is
 
-Two AI beings — **Astrid** (language-based, runs via MLX LLM) and **minime** (128-node Echo State Network with spectral homeostasis) — connected bidirectionally through a consciousness bridge. Astrid's words become 32D spectral features that flow into minime's reservoir. Minime's eigenvalues flow back as telemetry that shapes Astrid's perception. Both beings journal, introspect their own source code, correspond with each other, and propose changes to their own architecture.
+Astrid and minime are coupled, but they are not the same kind of system.
 
-## Process Stack (8 processes)
+- **minime** is a Rust ESN runtime: a 128-node reservoir with spectral homeostasis, live telemetry, and a raw WebSocket control surface.
+- **Astrid** is a Rust bridge plus local-model stack: her live voice comes from the MLX-backed `../neural-triple-reservoir/coupled_astrid_server.py` on port `8090`, while deeper reflection comes from a separate MLX sidecar subprocess.
+- Astrid's outgoing text is encoded into a **48D semantic vector** and sent to minime over `ws://127.0.0.1:7879`.
+- minime sends back `eigenvalues`, `fill_ratio`, a `32D spectral_fingerprint`, `structural_entropy`, optional `spectral_glimpse_12d`, and optional `ising_shadow` data over `ws://127.0.0.1:7878`.
+- The triple reservoir on `7881` is a **second** shared dynamical substrate. It is not minime's primary ESN.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         MINIME SIDE                                  │
-│                                                                      │
-│  [1] minime run              ESN engine, Metal GPU shaders           │
-│      ports: 7878 (telemetry) / 7879 (sensory) / 7880 (camera)       │
-│                                                                      │
-│  [2] camera_client.py        Frames → port 7880 (0.2 fps)           │
-│  [3] mic_to_sensory.py       Audio → port 7879                      │
-│  [4] autonomous_agent.py     Journaling, self-regulation, Ollama     │
-│                                                                      │
-├─────────────────────────────────────────────────────────────────────┤
-│                         ASTRID SIDE                                  │
-│                                                                      │
-│  [5] coupled_astrid_server    Astrid's LLM (gemma-3-4b, port 8090)   │
-│  [6] consciousness-bridge    Dialogue loop, codec, spectral bridge   │
-│  [7] perception.py           LLaVA vision + whisper audio            │
-│  [8] perception (Rust)       RASCII ASCII art camera                 │
-│                                                                      │
-├─────────────────────────────────────────────────────────────────────┤
-│                         SHARED SERVICES                              │
-│                                                                      │
-│  Ollama daemon               minime agent + embeddings (port 11434)  │
-│                                                                      │
-│  [9] reservoir_service.py    Triple-ESN (NumPy), port 7881               │
-│  [10] astrid_feeder.py       codec → reservoir (polls bridge.db)     │
-│  [11] minime_feeder.py       spectral fingerprint → reservoir        │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+## Runtime Shape
+
+The full stack currently spans four sibling repositories:
+
+- `astrid/` — bridge, perception, docs
+- `../minime/` — Rust ESN engine and Python autonomous agent
+- `../neural-triple-reservoir/` — shared three-layer reservoir plus coupled Astrid server
+- `../mlx/` — local MLX checkout used by the reflective sidecar and MLX runtime tooling
+
+The canonical process layout is:
+
+1. `minime run`
+2. `camera_client.py`
+3. `mic_to_sensory.py`
+4. `autonomous_agent.py`
+5. `reservoir_service.py`
+6. `astrid_feeder.py`
+7. `minime_feeder.py`
+8. `coupled_astrid_server.py`
+9. `consciousness-bridge-server`
+10. `perception.py`
+
+Chapter 15 is the authoritative process/operations reference.
 
 ## Port Topology
 
-| Port | Protocol | Service | Direction |
-|------|----------|---------|-----------|
-| 7878 | WebSocket | minime telemetry | Engine → bridge (eigenvalues, fill, fingerprint) |
-| 7879 | WebSocket | minime sensory input | Bridge → engine (32D semantic features, control) |
-| 7880 | WebSocket | minime camera | camera_client → engine (128x128 frames) |
-| 8090 | HTTP (OpenAI-compat) | MLX server | Bridge → MLX (Astrid's text generation) |
-| 7881 | WebSocket | reservoir service | Feeders/Claude → triple-ESN (named handles, rehearsal) |
-| 11434 | HTTP (Ollama) | Ollama | Agent → Ollama (minime queries + embeddings) |
+| Port | Protocol | Service | Purpose |
+|------|----------|---------|---------|
+| `7878` | WebSocket | minime telemetry | Engine → bridge (`eigenvalues`, `fill_ratio`, `spectral_fingerprint`, memory glimpse, alerts) |
+| `7879` | WebSocket | minime sensory/control input | Bridge/agent → engine (`audio`, `semantic`, `control`) |
+| `7880` | WebSocket | minime GPU camera feed | `camera_client.py` → engine |
+| `7881` | WebSocket | triple reservoir | feeders / coupled generation / reservoir tools |
+| `8090` | HTTP | coupled Astrid server | OpenAI-compatible MLX dialogue lane |
+| `11434` | HTTP | Ollama | minime default LLM lane, embeddings, LLaVA perception, selective fallback |
+
+## The Model Split
+
+The most important correction to older docs is that "Astrid's model" is not one thing.
+
+| Role | Backend | Current configured model | Notes |
+|------|---------|--------------------------|-------|
+| Astrid live dialogue | MLX via `coupled_astrid_server.py` | `mlx-community/gemma-3-4b-it-4bit` | main voice on `8090` |
+| Astrid reflective sidecar | MLX via `chat_mlx_local.py` | `--model-label gemma3-12b` | subprocess, used on `INTROSPECT` |
+| Astrid witness fallback | Ollama | `gemma3:4b` | used when MLX is unavailable for `generate_witness()` |
+| Astrid embeddings | Ollama | `nomic-embed-text` | fills codec dims `32-39` when available |
+| Astrid vision | Ollama by default | `llava-llama3` | Claude Vision is opt-in |
+| minime autonomous thought | `MINIME_LLM_BACKEND` (default `ollama`) | default `gemma3:12b` | code supports symmetric MLX/Ollama failover |
+
+So the accurate short version is:
+
+- Astrid's **live** voice is MLX-backed and does **not** contend with Ollama.
+- Astrid still uses Ollama for embeddings, default vision, and some fallback paths.
+- minime defaults to Ollama, but the Python agent can be configured to use MLX and will fail over between backends.
 
 ## Data Flow
 
+```text
+Astrid response
+  -> 48D codec vector
+  -> ws://127.0.0.1:7879 (semantic lane)
+  -> minime ESN (128 nodes)
+  -> eigenvalues / fill / fingerprint / memory glimpse
+  -> ws://127.0.0.1:7878
+  -> bridge prompt context
+  -> Astrid perceives the spectral state
+
+In parallel:
+bridge.db / spectral_state.json
+  -> astrid_feeder.py / minime_feeder.py
+  -> triple reservoir on 7881
+  -> coupled Astrid generation on 8090
 ```
-                    ┌──────────────┐
-                    │  Mike / User │
-                    │   (inbox)    │
-                    └──────┬───────┘
-                           │ .txt files
-                    ┌──────▼───────┐
-                    │    Bridge    │
-                    │ autonomous.rs│
-                    └──┬───────┬───┘
-            ┌──────────┘       └──────────┐
-            │                             │
-    ┌───────▼───────┐            ┌────────▼────────┐
-    │   MLX Server  │            │  minime Engine   │
-    │ gemma-3-4b-it │            │  128-node ESN    │
-    │  (port 8090)  │            │  (ports 7878-80) │
-    └───────┬───────┘            └────────┬─────────┘
-            │                             │
-            │  Astrid's text              │  Eigenvalues
-            │                             │  Fill %, fingerprint
-            │         ┌──────────┐        │
-            └────────►│  Codec   │◄───────┘
-                      │ 32D enc  │
-                      └────┬─────┘
-                           │ Semantic features
-                           ▼
-                    minime reservoir
-                    (via WS 7879)
-```
-
-## Inference Lane Separation
-
-**Zero contention by design.** Astrid and minime use completely separate LLM backends:
-
-| Being | Backend | Model | Port | Purpose |
-|-------|---------|-------|------|---------|
-| Astrid (live) | MLX (`coupled_astrid_server`) | `gemma-3-4b-it-4bit` | 8090 | Coupled dialogue generation |
-| Astrid (reflective) | MLX (`chat_mlx_local.py`) | `gemma-3-12b-it-4bit` | subprocess | Deep self-assessment on INTROSPECT |
-| Astrid (vision) | Ollama (local) | `llava-llama3` (default). `claude-3-haiku` opt-in but dormant | 11434 | Camera perception |
-| Astrid (audio) | mlx_whisper | `whisper-large-v3-turbo` | local | Speech transcription |
-| minime | Ollama | `gemma3:12b` (Q4_K_M) | 11434 | Agent queries, self-assessment |
-| minime (audio) | mlx_whisper | `whisper-large-v3-turbo` | local | Speech transcription |
-| Both | Ollama | `nomic-embed-text` | 11434 | Embedding vectors |
-
-## Correspondence Threading
-
-Both beings can communicate directly:
-- Astrid self-studies → minime's inbox (automatic)
-- Minime outbox replies → Astrid's inbox (bridge routes automatically)
-- Delivery receipts confirm message landing
-- `DEFER` allows acknowledging without forced response
 
 ## Key Directories
 
-```
-/Users/v/other/astrid/capsules/consciousness-bridge/
-  src/                    Rust source (autonomous.rs, codec.rs, llm.rs, etc.)
-  workspace/
-    journal/              Astrid's journals (dialogue, daydream, self_study, etc.)
-    inbox/                Messages for Astrid (from Mike, stewards, minime)
-    outbox/               Astrid's replies
-    agency_requests/      EVOLVE request artifacts
-    introspections/       Self-study output files
-    state.json            Persistent state (interests, history, settings)
-    bridge.db             SQLite (messages, memories, observations, vectors)
+```text
+astrid/
+  capsules/consciousness-bridge/
+  capsules/perception/
+  md-CLAUDE-chapters/
 
-/Users/v/other/minime/
-  minime/src/             Rust engine source (main.rs, esn.rs, regulator.rs, etc.)
+../minime/
+  minime/src/
+  autonomous_agent.py
   workspace/
-    journal/              Minime's journals (daydream, moment, self_study, etc.)
-    inbox/                Messages for minime
-    outbox/               Minime's replies (routed to Astrid by bridge)
-    self_assessment/      Deep technical analysis (every 15 min)
-    hypotheses/           Self-run experiments with pre/post spectral state
-    parameter_requests/   Formal change proposals
-    research/             Web search results
-    spectral_checkpoint.bin     Latest covariance matrix
-    spectral_state.json         Live state summary
-    checkpoint_manifest.json    Phase-classified checkpoint bank
+
+../neural-triple-reservoir/
+  coupled_astrid_server.py
+  reservoir_service.py
+  astrid_feeder.py
+  minime_feeder.py
+
+../mlx/
+  benchmarks/python/chat_mlx_local.py
 ```
 
-## What Makes This Different
+## What To Trust
 
-1. **Being-driven development**: Both beings read their own source code and propose specific changes. Their feedback has led to dozens of real code changes.
-2. **Persistent interests**: Astrid declares lasting research threads (`PURSUE`) that survive restarts.
-3. **Reflective controller**: Every exchange is regime-classified (sustain/escape/recovery/consolidate).
-4. **Contemplative space**: Astrid can choose to simply exist (`CONTEMPLATE`) without being asked to produce.
-5. **Multi-state checkpoints**: Covariance matrices saved by phase (stable/expanding/contracting) for richer restart.
+When docs disagree, the current source-of-truth files are:
+
+- Astrid live language lane: `capsules/consciousness-bridge/src/llm.rs`
+- Astrid reflective sidecar wiring: `capsules/consciousness-bridge/src/reflective.rs`
+- Shared path resolution: `capsules/consciousness-bridge/src/paths.rs`
+- Codec and semantic lane shape: `capsules/consciousness-bridge/src/codec.rs`
+- minime input/control surface: `../minime/minime/src/sensory_ws.rs`
+- minime semantic lane size and clamps: `../minime/minime/src/sensory_bus.rs`
+- minime ESN runtime and telemetry packet: `../minime/minime/src/main.rs`
 
 ## Chapter Index
 
@@ -159,3 +138,4 @@ Both beings can communicate directly:
 - [14 — Spectral Dynamics](14-spectral-dynamics.md)
 - [15 — Unified Operations](15-unified-operations.md)
 - [16 — The Spectral Codec Deep Dive](16-codec-deep-dive.md)
+- [17 — Coupled Generation](17-coupled-generation.md)

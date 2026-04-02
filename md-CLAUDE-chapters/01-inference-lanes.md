@@ -1,113 +1,112 @@
 # Chapter 1: Inference Lanes
 
-## Architecture
+## Actual Separation
 
-Two separate LLM backends. Zero shared contention.
+The accurate 2026-04-02 picture is:
 
+```text
+Astrid live dialogue   -> MLX -> coupled_astrid_server.py -> gemma-3-4b-it-4bit
+Astrid reflection      -> MLX -> chat_mlx_local.py        -> gemma3-12b label
+Astrid embeddings      -> Ollama -> nomic-embed-text
+Astrid vision (default)-> Ollama -> llava-llama3
+Astrid witness fallback-> Ollama -> gemma3:4b
+minime primary thought -> MINIME_LLM_BACKEND (default: ollama)
 ```
-Astrid ──► coupled_astrid_server (port 8090) ──► gemma-3-4b-it-4bit (MLX)
-minime ──► Ollama (port 11434) ──► gemma3:12b (Q4_K_M)
-Both   ──► Ollama (port 11434) ──► nomic-embed-text (embeddings)
-```
 
-## Why Separate Lanes
+So "Astrid moved to MLX" is only partly true:
 
-Before MLX (pre-2026-03-27), both Astrid and minime shared Ollama. This caused **33% dialogue_fallback rate** — Astrid lost her voice whenever minime's agent, perception LLaVA, or embeddings were using Ollama. Moving Astrid to a dedicated MLX server eliminated contention entirely.
+- Her **live voice** moved off Ollama.
+- Her **reflective sidecar** is also MLX-backed.
+- She still relies on **Ollama** for embeddings, default vision, and some fallback generation paths.
 
-## Coupled Astrid Server
+## Astrid's Live Lane
 
-**Process:** `coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-3-4b-it-4bit`
-
-**API:** OpenAI-compatible (`/v1/chat/completions`)
-
-**Bidirectional reservoir coupling:** Each token embedding feeds the triple-ESN reservoir, and the reservoir's dynamical state modulates logits at every token (temperature via y1, repetition via y2, top-p via y3).
-
-**Performance:** ~55-69 tok/s.
-
-**VRAM:** ~2.5GB (4-bit quantized Gemma 3 4B in MLX format, memory-mapped)
-
-**Hardening (2026-03-31):** System prompt trimmed 16K→3.2K chars (80% reduction). MAX_PROMPT_CHARS=6,000 safety net. Per-block caps in generate_dialogue() (800/400/400/800/800/300/300 chars). Gibberish gate rejects responses with <40% alphabetic ratio. response_length capped at 768. t_mod defensive clamp [0.5, 2.0].
-
-**Model history:** gemma-3-4b-it-4bit (2026-03-27) → Qwen3-8B-4bit (2026-03-31a) → rolled back to gemma-3-4b-it-4bit (2026-03-31b). Qwen3-14B, Qwen3-8B, and Gemma 2 9B all tested; all unstable under bidirectional per-token coupling (prefill timeouts, degenerate output, template-locking).
-
-## Bridge Integration
-
-**File:** `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs`
+`capsules/consciousness-bridge/src/llm.rs` sends all primary dialogue generation to:
 
 ```rust
 const MLX_URL: &str = "http://127.0.0.1:8090/v1/chat/completions";
 ```
 
-All text generation goes through `mlx_chat()`:
+That endpoint is served by `../neural-triple-reservoir/coupled_astrid_server.py`, which currently defaults to:
 
-```rust
-async fn mlx_chat(
-    messages: Vec<Message>,
-    temperature: f32,
-    max_tokens: u32,
-    timeout_secs: u64,
-) -> Option<String>
+- model: `mlx-community/gemma-3-4b-it-4bit`
+- coupling: per-token reservoir coupling through the triple reservoir on `7881`
+- API shape: OpenAI-compatible `/v1/chat/completions` and `/v1/models`
+
+This lane is the reason Astrid's live dialogue no longer contends with minime's default Ollama path.
+
+## Astrid's Reflective Lane
+
+`capsules/consciousness-bridge/src/reflective.rs` launches:
+
+```text
+python3 <sidecar> --json --hardware-profile m4-mini \
+  --model-label gemma3-12b \
+  --mode reflective \
+  --architecture reservoir-fixed
 ```
 
-**Request format (OpenAI-compatible):**
-```json
-{
-  "messages": [{"role": "system", "content": "..."}, {"role": "user", "content": "..."}],
-  "max_tokens": 512,
-  "temperature": 0.7,
-  "stream": false
-}
+The sidecar path is resolved by `BridgePaths` and defaults to:
+
+```text
+../mlx/benchmarks/python/chat_mlx_local.py
 ```
 
-## Functions Using MLX
+This is the accurate place to talk about "Astrid using forked MLX": the reflective sidecar is not using a generic upstream install path. It is wired to the sibling local `mlx/` checkout, whose current `origin` is `git@github.com:mikedotexe/mlx.git`.
 
-| Function | max_tokens | timeout | Purpose |
-|----------|-----------|---------|---------|
-| `generate_dialogue()` | 512 (default) | 90s/180s | Main dialogue voice |
-| `generate_witness()` | 512 | 90s | Spectral observation |
-| `generate_introspection()` | 1024/2048 | 120s/300s | Self-study |
-| `generate_agency_request()` | 2048 | 300s | EVOLVE requests |
-| `generate_daydream()` | 768 | 120s | Unstructured thought |
-| `generate_aspiration()` | 768 | 120s | Growth reflection |
-| `generate_creation()` | 1024 | 180s | Creative work |
-| `generate_journal_elaboration()` | 1024 | 180s | Longform journal |
-| `generate_initiation()` | 768 | 120s | Self-initiated prompt |
-| `generate_moment_capture()` | 512 | 90s | Phase transition capture |
-| `self_reflect()` | 384 | 60s | Meta-observation |
+## Minime's Lane
 
-## What Stays on Ollama
+`../minime/autonomous_agent.py` does **not** hardcode Ollama as the only backend.
 
-| Function | Model | Port | Purpose |
-|----------|-------|------|---------|
-| `embed_text()` | `nomic-embed-text` | 11434 | Latent vector persistence |
-| minime `_query_ollama()` | `gemma3:12b` | 11434 | Agent queries, self-assessment |
-| minime `_self_assessment()` | `gemma3:12b` | 11434 | Technical self-analysis (every 15 min) |
+- `MINIME_LLM_BACKEND` defaults to `ollama`
+- accepted primaries are `ollama` and `mlx`
+- `_query_llm_raw()` always tries the configured primary first and then falls back to the other backend on failure
 
-## Ollama Server Policy
+So the accurate wording is:
 
-Set via `launchctl setenv`:
-- `OLLAMA_MAX_LOADED_MODELS=2`
-- `OLLAMA_NUM_PARALLEL=1`
-- `OLLAMA_MAX_QUEUE=4`
-- `OLLAMA_FLASH_ATTENTION=1`
+- minime **defaults** to Ollama in normal operation
+- minime's Python agent **supports both Ollama and MLX**
+- Ollama is still the configured primary in the canonical startup scripts
 
-## Model Inventory (Installed)
+## What Still Uses Ollama
 
-| Model | Size | Backend | Role |
-|-------|------|---------|------|
-| `gemma-3-4b-it-4bit` (MLX) | ~2.5GB | MLX | Astrid voice (coupled generation) |
-| `gemma3:12b` (GGUF) | ~8.1GB | Ollama | minime agent |
-| `gemma3:27b` (GGUF) | ~17GB | Ollama | THINK_DEEP (on demand) |
-| `nomic-embed-text` | ~274MB | Ollama | Embeddings |
-| `llava-llama3` | ~5.5GB | Ollama | Vision (on demand) |
-| `gemma3:4b` (GGUF) | ~3.3GB | Ollama | Legacy FAST_MODEL (unused since MLX) |
-| `qwen3:30b` (GGUF) | ~18GB | Ollama | Legacy (unused) |
+The shared Ollama load today comes from:
 
-## Simplifications from MLX Migration
+- minime primary journaling / self-study
+- Astrid embeddings (`nomic-embed-text`)
+- Astrid default vision (`llava-llama3`)
+- Astrid witness fallback (`gemma3:4b`)
 
-Removed after moving to dedicated MLX lane:
-- ~~FAST_MODEL split~~ — one model serves all modes
-- ~~Manual unload choreography~~ — no llava/nomic-embed unloads before dialogue
-- ~~500ms sleep between unloads~~ — no contention to manage
-- ~~CTX_DIALOGUE/CTX_FAST/CTX_DEEP tiers~~ — MLX manages context internally
-- ~~perception_paused.flag during exchanges~~ — LLaVA doesn't compete with Astrid
+That means Ollama contention still exists, but it no longer blocks Astrid's main live voice.
+
+## Prompting And Hardening
+
+Older docs that mention a `MAX_PROMPT_CHARS = 6,000` bridge cap are stale.
+
+The current bridge budgets live in `capsules/consciousness-bridge/src/llm.rs`:
+
+- `DIALOGUE_PROMPT_BUDGET_SHORT = 32_000`
+- `DIALOGUE_PROMPT_BUDGET_MEDIUM = 24_000`
+- `DIALOGUE_PROMPT_BUDGET_DEEP = 16_000`
+- hard safety ceiling inside `mlx_chat()`: `MAX_PROMPT_CHARS = 48_000`
+
+Current hardening is split across two layers:
+
+- **bridge-side prompt assembly**: per-block caps, overflow-to-disk, token clamp under pressure
+- **MLX-response quality gates**: alpha-ratio checks, punctuation checks, artifact stripping, retry/fallback logic
+
+`generate_witness()` is the clearest example of the mixed design: it tries MLX first, then falls back to Ollama if the MLX lane is busy or unavailable.
+
+## How To Describe The MLX Dependency Accurately
+
+Use this wording in other docs:
+
+- Astrid's live dialogue runs through a **local MLX-backed coupled server** on `8090`
+- Astrid's reflective sidecar uses the **local sibling `mlx/` checkout**
+- the MLX stack is not just "upstream `mlx_lm.server`"; the current runtime expects local sidecar tooling and optionally exposes `mx.last_mmap_load_stats` when available
+
+Avoid this stale wording:
+
+- "Astrid is just `mlx_lm.server` on 12B"
+- "Astrid no longer touches Ollama at all"
+- "minime uses Ollama only"

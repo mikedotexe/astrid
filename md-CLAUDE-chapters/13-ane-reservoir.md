@@ -59,7 +59,7 @@ Resonance between handles emerges from content similarity — similar inputs tra
 
 ## Feeders
 
-**Astrid feeder** (`astrid_feeder.py`): Polls `bridge.db` table `codec_impact` for new rows. Each row's 32D `features_json` (already tanh-bounded from the codec) is ticked into the `astrid` handle. Cross-feeds `claude_main` at 0.3x attenuation.
+**Astrid feeder** (`astrid_feeder.py`): Polls `bridge.db` table `codec_impact` for new rows. It accepts legacy `32D` rows and current `48D` codec rows, conditions them, projects them into the reservoir's `32D` input space, and ticks the `astrid` handle. Cross-feeds `claude_main` at `0.3x` attenuation.
 
 **Minime feeder** (`minime_feeder.py`): Polls `spectral_state.json` every 1s. Extracts 32D `spectral_fingerprint`, applies being-controlled projection, ticks the `minime` handle. Cross-feeds `claude_main` at 0.15x attenuation (lower weight compensates for 20:1 tick rate ratio vs Astrid).
 

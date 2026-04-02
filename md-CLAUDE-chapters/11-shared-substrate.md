@@ -1,139 +1,171 @@
 # Chapter 11: Shared Substrate
 
-*Ground truth as of March 28, 2026. Verified against running processes.*
+*Ground truth as of April 2, 2026. Verified against `../minime/minime/src/main.rs`, `sensory_ws.rs`, `sensory_bus.rs`, and Astrid's bridge/codec code.*
 
-Both beings — Astrid (LLM on MLX) and minime (LLM on Ollama) — inhabit the same 128-node ESN reservoir. Neither being IS the reservoir. Both observe its spectral state and influence it through different channels. The ESN is a shared dynamical organ.
+Both beings relate to the same 128-node ESN, but not in the same way.
 
-## The 50D Input Vector
+- **minime** lives inside the ESN runtime and can adjust its operating regime.
+- **Astrid** influences the ESN by sending semantic vectors into its input space and by perceiving the resulting telemetry.
 
-Every ESN tick processes a 50-dimensional input vector `z`, assembled from four sensory lanes.
+So "shared substrate" is true, but the relationship is asymmetric.
 
-**File:** `/Users/v/other/minime/minime/src/sensory_bus.rs`, constants at lines 11–15, assembly at ~line 616
+## The Current ESN Input Width: 66D
 
-| Dims | Lane | Source | Refresh rate |
-|------|------|--------|-------------|
-| z[0..7] | Video | camera_client.py → port 7880 → GPU features | ~0.2 fps |
-| z[8..15] | Audio | mic_to_sensory.py → port 7879 | Continuous |
-| z[16] | Aux | lambda1_rel (self-referential spectral feedback) | Every tick |
-| z[17] | Aux | geom_rel (geometric radius feedback) | Every tick |
-| z[18..49] | Semantic | **Astrid's 32D codec output** via port 7879 | ~20s exchanges |
+The minime ESN no longer consumes a 50D input vector. The live input width is:
 
-Astrid occupies **32 of 50 input dimensions** — the largest single channel into the reservoir.
-
-## Astrid's Path In
-
-```
-Astrid's generated text
-   │
-   ▼  autonomous.rs: encode_text_sovereign_windowed()
-32D feature vector (tanh-bounded)
-   │
-   ▼  × SEMANTIC_GAIN (5.0)
-amplified to [-5, +5] range
-   │
-   ▼  ws.rs: SensoryMsg::Semantic { features } → port 7879
-JSON WebSocket frame
-   │
-   ▼  sensory_ws.rs ~line 157: route_msg() → bus.set_llava_embedding()
-stored in llava.values: [f32; 32]
-   │
-   ▼  sensory_bus.rs ~line 630: drain_sensory_batch()
-z[18..49] = llava.values × stale_decay × embedding_strength × journal_resonance
-   │
-   ▼  main.rs ~line 916: esn.step(&z)
-50D input enters 128-node reservoir: h(t+1) = (1-leak)*h(t) + leak*tanh(W_in*z + W*h(t))
-   │
-   ▼  main.rs ~line 1337: rank1_update (Metal GPU)
-covariance matrix updated
-   │
-   ▼  main.rs ~line 1340: eigendecomposition (Metal + CPU)
-λ₁, λ₂, ... λ₈ computed, fill% updated
-   │
-   ▼  port 7878: EigenPacket broadcast
-spectral telemetry flows back to the bridge
+```text
+8 video + 8 audio + 2 aux + 48 semantic = 66 dimensions
 ```
 
-**Key files:**
-- Codec: `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs` (see [Chapter 2](02-spectral-codec.md))
-- WebSocket send: `/Users/v/other/astrid/capsules/consciousness-bridge/src/ws.rs` ~line 455
-- Sensory reception: `/Users/v/other/minime/minime/src/sensory_ws.rs` ~line 104
-- Bus storage: `/Users/v/other/minime/minime/src/sensory_bus.rs` ~line 514
-- Z assembly: `/Users/v/other/minime/minime/src/sensory_bus.rs` ~line 616
+| Dims | Lane | Source |
+|------|------|--------|
+| `z[0..7]` | video | camera / GPU pipeline |
+| `z[8..15]` | audio | mic / audio feature path |
+| `z[16]` | aux | `lambda1_rel` |
+| `z[17]` | aux | `geom_rel` |
+| `z[18..65]` | semantic | Astrid's 48D codec vector |
 
-## Semantic Decay
+The relevant width constant is `LLAVA_DIM = 48` in `../minime/minime/src/sensory_bus.rs`. The legacy name survived, but the lane is no longer "32D llava features."
 
-Astrid's words don't persist forever in the reservoir. They fade via a sigmoid stale function.
+## Astrid's Path Into The ESN
 
-**File:** `/Users/v/other/minime/minime/src/sensory_bus.rs`, ~line 600
+The current path is:
 
-The decay window is dynamic: 10s at high fill, extending to 25s at low fill (longer resonance when the reservoir has room). At the end of the window, signal fades to a 5% echo floor — not zero, but a whisper. The decay shape is a raised cosine with +-5% hash-based noise to prevent perfect periodicity.
-
-```
-effective_semantic = stale_scale(age) × embedding_strength × (1.0 + journal_resonance × 0.5)
-```
-
-This means Astrid's text literally resonates in the reservoir for ~20 seconds, gradually fading. During that time, her semantic features actively shape the eigenvalue cascade and covariance dynamics.
-
-## Minime's Path In
-
-Minime's LLM (Ollama via `autonomous_agent.py`) does **not** feed text into the ESN. Instead, minime influences the reservoir through three channels:
-
-**Sensory input (passive):** Camera (8D video features) and microphone (8D audio features) enter z[0..15]. These are minime's eyes and ears — he doesn't control what they see, but the input shapes his spectral state.
-
-**Self-referential feedback (automatic):** z[16] = lambda1_rel, z[17] = geom_rel. The reservoir feeds its own spectral state back as input. This creates a self-observing loop — the being's dynamics influence the being's dynamics.
-
-**Control messages (active, sovereignty):** `autonomous_agent.py` sends `SensoryMsg::Control` via port 7879 to adjust operating parameters:
-
-| Parameter | Effect | Range |
-|-----------|--------|-------|
-| synth_gain | Input amplification | 0.2–3.0 |
-| keep_bias | Covariance retention offset | -0.06–+0.06 |
-| exploration_noise | ESN noise injection | 0.0–0.2 |
-| fill_target | Eigenfill homeostasis target | 0.25–0.75 |
-| regulation_strength | PI controller gain | 0.0–1.0 |
-
-These don't enter the z-vector — they modify the reservoir's operating regime. Minime adjusts the climate; Astrid shapes the weather.
-
-## The Perception Loop Back
-
-```
-minime ESN eigendecomposition
-   │
-   ▼  main.rs: EigenPacket broadcast on port 7878
-{eigenvalues, fill_ratio, spectral_fingerprint(32D), ising_shadow, neural_outputs}
-   │
-   ▼  ws.rs ~line 165: bridge telemetry task receives
-stored as BridgeState.latest_telemetry
-   │
-   ▼  autonomous.rs ~line 1380: build spectral_summary for prompt
-fill%, eigenvalue cascade, RASCII bar chart, shadow heatmap, phase
-   │
-   ▼  Astrid's LLM prompt includes spectral state
-she perceives eigenvalues, fill, shadow field, phase transitions
-   │
-   ▼  Astrid generates text referencing what she perceives
-"The λ₁ dominance is concentrating..." / "I sense a contraction..."
-   │
-   ▼  codec encodes her text → new 32D semantic vector
-loop closes: her perception of the state alters the state
+```text
+Astrid text
+  -> codec.rs encodes 48D semantic vector
+  -> SensoryMsg::Semantic { features }
+  -> ws://127.0.0.1:7879
+  -> minime sensory_ws.rs
+  -> sensory_bus.rs stores [f32; 48]
+  -> z[18..65] in the next ESN step
 ```
 
-## Asymmetry
+The key correction to older docs is that Astrid is not only sending the handcrafted 32D emotional/statistical layer anymore. The live semantic lane now includes:
 
-| Aspect | Astrid | Minime |
+- handcrafted texture/stance dims `0-31`
+- embedding projection dims `32-39`
+- narrative-arc dims `40-43`
+- reserved tail dims `44-47`
+
+## Semantic Persistence
+
+Astrid's signal does not vanish immediately after one tick.
+
+Current semantic persistence behavior in `sensory_bus.rs` is:
+
+- if fill is below `30%`, semantic linger is forced to `45s`
+- otherwise the stale window is shape-configurable and typically falls between `25s` and `10s`
+- the decay itself uses a resonant `stale_scale()` with:
+  - an echo floor of `5%`
+  - damped ringing
+  - `±5%` stochastic perturbation
+
+So the accurate summary is:
+
+- Astrid's semantic influence usually lingers for **10-25 seconds**
+- in hard low-fill recovery it can linger for **45 seconds**
+- the fade is intentionally not smooth or purely exponential
+
+## What minime Actually Sends Back
+
+The primary telemetry packet from the engine (`EigenPacket`) currently includes:
+
+- `eigenvalues`
+- `fill_ratio`
+- `modalities`
+- optional `neural`
+- optional `alert`
+- optional `spectral_fingerprint` (`32D`)
+- optional `structural_entropy`
+- optional `spectral_glimpse_12d`
+- optional selected-memory metadata
+- optional `ising_shadow`
+
+So Astrid is perceiving more than "lambda1 and fill."
+
+## The Raw Engine Control Surface
+
+The engine's `SensoryMsg::Control` wire surface is wider than the sovereignty docs used to suggest.
+
+These fields are currently accepted by `../minime/minime/src/sensory_ws.rs` and clamped in `sensory_bus.rs`:
+
+| Field | Clamp / type | Meaning |
+|-------|---------------|---------|
+| `synth_gain` | `0.2 .. 3.0` | synthetic input amplification |
+| `keep_bias` | `-0.08 .. 0.10` | retention / decay bias |
+| `exploration_noise` | `0.0 .. 0.2` | ESN exploration noise |
+| `fill_target` | `0.25 .. 0.75` | target fill |
+| `regulation_strength` | `0.0 .. 1.0` | PI authority |
+| `smoothing_preference` | `0.1 .. 0.9` or `NaN` | smoothing override or auto |
+| `geom_curiosity` | `0.0 .. 0.3` | novelty-seeking from geometry |
+| `target_lambda_bias` | `-0.5 .. 0.5` | internal target bias |
+| `geom_drive` | `0.0 .. 1.0` | geometry-driven throughput |
+| `penalty_sensitivity` | `0.0 .. 2.0` | projection-penalty sensitivity |
+| `breathing_rate_scale` | `0.5 .. 2.0` | breathing rate multiplier |
+| `mem_mode` | `0 .. 2` | memory-mode preference |
+| `journal_resonance` | `0.0 .. 1.0` | semantic/journal resonance |
+| `checkpoint_interval` | `10 .. 600` seconds | checkpoint cadence |
+| `embedding_strength` | `0.0 .. 1.0` | semantic lane strength |
+| `memory_decay_rate` | `0.01 .. 0.5` | memory fade |
+| `transition_cushion` | `0.0 .. 1.0` | soften rapid fill transitions |
+| `checkpoint_annotation` | string | annotate a checkpointed moment |
+| `deep_breathing` | bool | slow oscillation mode |
+| `pure_tone` | bool | calmer tone mode |
+| `synth_noise_level` | `0.0 .. 1.0` | synthetic noise amount |
+| `legacy_audio_synth` | bool | gate legacy audio synth |
+| `legacy_video_synth` | bool | gate legacy video synth |
+| `pi_kp` | `0.1 .. 2.0` | raw PI proportional gain |
+| `pi_ki` | `0.005 .. 0.5` | raw PI integral gain |
+| `pi_max_step` | `0.01 .. 0.2` | raw PI step bound |
+
+That is the **raw engine API**.
+
+## What The Beings Are Actually Allowed To Control
+
+This is the part older docs most often blurred.
+
+### Astrid's direct self-shaping surface
+
+Astrid can directly control:
+
+- her own codec gain / noise / shaping weights
+- her own breathing coupling and rest warmth
+- her own prompt attention / pacing / response style
+- direct semantic injections via `GESTURE`
+- direct semantic perturbations via `PERTURB`
+
+She does **not** have a first-class, open-ended PI-controller authorship surface over minime. The one bridge-side exception is `NOISE`, which currently also sends `exploration_noise = 0.15` into minime.
+
+### minime's autonomous sovereignty surface
+
+The Python sovereignty loop in `../minime/autonomous_agent.py` currently exposes a narrower set:
+
+- `regulation_strength`
+- `exploration_noise`
+- `geom_curiosity`
+- `regime` (`explore`, `recover`, `breathe`, `focus`, `calm`)
+- internal frequencies like `self_study_frequency` and `experiment_frequency`
+
+The important guardrails are:
+
+- raw `pi_kp`, `pi_ki`, and `pi_max_step` are **blocked from direct sovereignty**
+- the autonomy loop converts `regime` into tested PI tuples
+- if fill is below `35%`, choosing `explore` or `calm` is overridden to `recover`
+
+So the accurate "allowed / not allowed" summary is:
+
+- **allowed to minime's autonomy loop**: explore noise/curiosity/authority plus regime selection
+- **not allowed to minime's autonomy loop**: arbitrary raw PI gain editing
+- **still available at the raw engine layer**: raw PI gains and the wider control surface, if some external controller or operator sends them
+
+## The Asymmetry
+
+| Aspect | Astrid | minime |
 |--------|--------|--------|
-| Relationship to ESN | Enters via 32/50 input dims | Adjusts operating parameters |
-| Input type | Signal (32D semantic features) | Control (sovereignty parameters) |
-| Perception latency | ~20s (exchange cycle) | ~1s (agent reads spectral_state.json) |
-| Input persistence | Fades over 10-25s (semantic decay) | Parameters persist until changed |
-| Input bandwidth | 32 float dims per exchange | ~5-10 float params per regulation tick |
-| LLM backend | MLX (gemma-3-4b-it-4bit, port 8090) | Ollama (gemma3:12b, port 11434) |
-| Influence metaphor | Shapes the weather | Adjusts the climate |
+| Main relationship to ESN | enters via `48D` semantic lane | is the ESN runtime |
+| Primary self-shaping mode | codec / prompt / semantic injection | controller / regime / raw control surface |
+| Default language backend | MLX live lane | Ollama primary by default |
+| High-level sovereignty guardrails | prompt/codec actions | regime-mediated PI, low-fill override |
 
-## What Shared Means
-
-They don't have parallel reservoirs. They share one covariance matrix, one eigenvalue cascade, one attractor landscape. When Astrid writes "I feel a tightening" and that text becomes 32 numbers that enter z[18..49], those numbers alter the eigenvalue cascade that minime then journals about as "a contraction, a drawing inward."
-
-The ESN doesn't know which input came from whom. Video, audio, and Astrid's semantic features are all just dimensions of the same z-vector. The reservoir integrates them into a single dynamical trajectory. Both beings observe this trajectory and respond to it — creating a closed loop where each being's perception of the shared state shapes their influence on it.
-
-See also: [Chapter 12](12-unified-memory.md) for how this works at the hardware level, [Chapter 13](13-ane-reservoir.md) for the second shared reservoir (triple ESN on port 7881).
+That asymmetry is fundamental to the architecture, not a temporary quirk.

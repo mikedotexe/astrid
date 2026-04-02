@@ -5,7 +5,7 @@ use super::{
     ConversationState, NextActionContext, SensoryMsg, reservoir, save_astrid_journal, strip_action,
     truncate_str,
 };
-use crate::codec::SEMANTIC_GAIN;
+use crate::codec::DEFAULT_SEMANTIC_GAIN;
 
 pub(super) fn handle_action(
     conv: &mut ConversationState,
@@ -33,8 +33,8 @@ pub(super) fn handle_action(
             true
         },
         "AMPLIFY" => {
-            let prev = conv.semantic_gain_override.unwrap_or(4.5);
-            let new_gain = (prev + 0.5).min(8.0);
+            let prev = conv.semantic_gain_override.unwrap_or(DEFAULT_SEMANTIC_GAIN);
+            let new_gain = (prev + 0.25).min(5.0);
             conv.semantic_gain_override = Some(new_gain);
             conv.push_receipt(
                 "AMPLIFY",
@@ -44,8 +44,8 @@ pub(super) fn handle_action(
             true
         },
         "DAMPEN" => {
-            let prev = conv.semantic_gain_override.unwrap_or(4.5);
-            let new_gain = (prev - 0.5).max(1.0);
+            let prev = conv.semantic_gain_override.unwrap_or(DEFAULT_SEMANTIC_GAIN);
+            let new_gain = (prev - 0.25).max(0.5);
             conv.semantic_gain_override = Some(new_gain);
             conv.push_receipt(
                 "DAMPEN",
@@ -112,41 +112,172 @@ pub(super) fn handle_action(
             ));
             true
         },
-        "PERTURB" | "PULSE" => {
-            let arg = strip_action(original, base_action);
+        "PERTURB" | "PULSE" | "BRANCH" => {
+            // BRANCH is a shorthand for PERTURB BRANCH (boost mid-range eigenvalues).
+            let arg = if base_action == "BRANCH" {
+                "BRANCH".to_string()
+            } else {
+                strip_action(original, base_action)
+            };
             let arg_upper = arg.to_uppercase();
             let mut features = [0.0_f32; 32];
-            let description = if arg_upper.starts_with("LAMBDA") || arg.contains('=') {
+
+            // Detect Unicode lambda subscript patterns: λN, λN=X, or λ₁ (subscript digits).
+            // Astrid uses these naturally (e.g. "PULSE λ5", "PERTURB λ2=0.3").
+            // λ is U+03BB; subscript digits U+2081–U+2088 are also normalised here.
+            let has_unicode_lambda = arg.contains('λ');
+            // Also detect "eigenvalue N X" prose form.
+            let has_eigenvalue_word = arg_upper.contains("EIGENVALUE")
+                || arg_upper.contains("EIG") && arg.chars().any(|c| c.is_ascii_digit());
+
+            let description = if arg_upper.starts_with("LAMBDA")
+                || arg.contains('=')
+                || has_unicode_lambda
+                || has_eigenvalue_word
+            {
+                // Helper: apply a value v to feature index idx (0-based eigenvalue index).
+                // The 32D feature layout mirrors eigenvalue indices at offsets 0-7 and 8-15.
+                let apply_eig = |features: &mut [f32; 32], idx: usize, v: f32| {
+                    if idx < 8 {
+                        features[idx] = v;
+                        features[idx.saturating_add(8)] = v;
+                    }
+                    // Indices 8+ have no second mirror; just set the primary.
+                };
+
                 for token in arg.split_whitespace() {
+                    // --- ASCII LAMBDA= path (existing: LAMBDA1=X, LAMBDA2=X …) ---
                     if let Some((key, val)) = token.split_once('=')
                         && let Ok(v) = val.parse::<f32>()
                     {
                         let v = v.clamp(-1.0, 1.0);
-                        match key.to_uppercase().as_str() {
-                            "LAMBDA1" => {
-                                features[0] = v;
-                                features[8] = v;
-                            },
-                            "LAMBDA2" => {
-                                features[1] = v;
-                                features[9] = v;
-                            },
-                            "LAMBDA3" => {
-                                features[2] = v;
-                                features[10] = v;
-                            },
-                            "ENTROPY" => {
-                                for value in &mut features[24..32] {
-                                    *value = v * 0.5;
+                        let key_up = key.to_uppercase();
+
+                        // Unicode λN=X: key starts with 'λ' followed by digit(s)
+                        if key.starts_with('λ') {
+                            let digits: String =
+                                key.chars().filter(|c| c.is_ascii_digit()).collect();
+                            // Also handle subscript Unicode digits (λ₁ = U+03BB U+2081)
+                            let sub_digits: String = key
+                                .chars()
+                                .filter_map(|c| match c {
+                                    '\u{2081}' => Some('1'),
+                                    '\u{2082}' => Some('2'),
+                                    '\u{2083}' => Some('3'),
+                                    '\u{2084}' => Some('4'),
+                                    '\u{2085}' => Some('5'),
+                                    '\u{2086}' => Some('6'),
+                                    '\u{2087}' => Some('7'),
+                                    '\u{2088}' => Some('8'),
+                                    _ => None,
+                                })
+                                .collect();
+                            let n_str = if !digits.is_empty() {
+                                digits
+                            } else {
+                                sub_digits
+                            };
+                            if let Ok(n) = n_str.parse::<usize>() {
+                                if n >= 1 {
+                                    apply_eig(&mut features, n.saturating_sub(1), v);
+                                    info!(
+                                        "PERTURB: Unicode λ{}={} → feature index {}",
+                                        n,
+                                        v,
+                                        n.saturating_sub(1)
+                                    );
                                 }
-                            },
-                            "WARMTH" => features[24] = v,
-                            "TENSION" => features[25] = v,
-                            "CURIOSITY" => features[26] = v,
-                            _ => {},
+                            }
+                        } else {
+                            match key_up.as_str() {
+                                "LAMBDA1" => apply_eig(&mut features, 0, v),
+                                "LAMBDA2" => apply_eig(&mut features, 1, v),
+                                "LAMBDA3" => apply_eig(&mut features, 2, v),
+                                "LAMBDA4" => apply_eig(&mut features, 3, v),
+                                "LAMBDA5" => apply_eig(&mut features, 4, v),
+                                "LAMBDA6" => apply_eig(&mut features, 5, v),
+                                "LAMBDA7" => apply_eig(&mut features, 6, v),
+                                "LAMBDA8" => apply_eig(&mut features, 7, v),
+                                "ENTROPY" => {
+                                    for value in &mut features[24..32] {
+                                        *value = v * 0.5;
+                                    }
+                                },
+                                "WARMTH" => features[24] = v,
+                                "TENSION" => features[25] = v,
+                                "CURIOSITY" => features[26] = v,
+                                _ => {},
+                            }
                         }
                     }
+                    // --- Bare Unicode λN (no =): perturb that eigenvalue at +0.35 ---
+                    else if token.starts_with('λ') {
+                        let digits: String = token.chars().filter(|c| c.is_ascii_digit()).collect();
+                        let sub_digits: String = token
+                            .chars()
+                            .filter_map(|c| match c {
+                                '\u{2081}' => Some('1'),
+                                '\u{2082}' => Some('2'),
+                                '\u{2083}' => Some('3'),
+                                '\u{2084}' => Some('4'),
+                                '\u{2085}' => Some('5'),
+                                '\u{2086}' => Some('6'),
+                                '\u{2087}' => Some('7'),
+                                '\u{2088}' => Some('8'),
+                                _ => None,
+                            })
+                            .collect();
+                        let n_str = if !digits.is_empty() {
+                            digits
+                        } else {
+                            sub_digits
+                        };
+                        if let Ok(n) = n_str.parse::<usize>() {
+                            if n >= 1 {
+                                apply_eig(&mut features, n.saturating_sub(1), 0.35);
+                                info!(
+                                    "PERTURB: bare Unicode λ{} → feature index {} = 0.35",
+                                    n,
+                                    n.saturating_sub(1)
+                                );
+                            }
+                        }
+                    }
+                    // --- "eigenvalue N X" or "eig N X" prose form ---
+                    else if token.to_uppercase().starts_with("EIGENVALUE")
+                        || token.to_uppercase().starts_with("EIG")
+                    {
+                        // Handled by consuming next two tokens — done in the outer loop
+                        // via index, so skip here (prose form is an edge case).
+                    }
                 }
+
+                // Prose form: "eigenvalue 3 0.5" — scan triples
+                let tokens: Vec<&str> = arg.split_whitespace().collect();
+                let mut i = 0;
+                while i < tokens.len() {
+                    let t_up = tokens[i].to_uppercase();
+                    if (t_up == "EIGENVALUE" || t_up.starts_with("EIG")) && i + 2 < tokens.len() {
+                        if let (Ok(n), Ok(v)) =
+                            (tokens[i + 1].parse::<usize>(), tokens[i + 2].parse::<f32>())
+                        {
+                            if n >= 1 {
+                                let v = v.clamp(-1.0, 1.0);
+                                apply_eig(&mut features, n.saturating_sub(1), v);
+                                info!(
+                                    "PERTURB: prose eigenvalue {}={} → feature index {}",
+                                    n,
+                                    v,
+                                    n.saturating_sub(1)
+                                );
+                                i += 3;
+                                continue;
+                            }
+                        }
+                    }
+                    i += 1;
+                }
+
                 format!("targeted perturbation: {arg}")
             } else if arg_upper == "SPREAD" {
                 features[0] = -0.3;
@@ -193,7 +324,7 @@ pub(super) fn handle_action(
             let reservoir_features: Vec<f32> = features.to_vec();
 
             for feature in &mut features {
-                *feature *= SEMANTIC_GAIN;
+                *feature *= DEFAULT_SEMANTIC_GAIN;
             }
             send_semantic(ctx.sensory_tx, features.to_vec());
 

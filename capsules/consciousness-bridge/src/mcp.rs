@@ -136,7 +136,7 @@ fn tool_definitions() -> Value {
                         "features": {
                             "type": "array",
                             "items": { "type": "number" },
-                            "description": "Feature vector (up to 32 dimensions)"
+                            "description": "Semantic feature vector (typically 48 dimensions)"
                         }
                     },
                     "required": ["features"]
@@ -169,7 +169,7 @@ fn tool_definitions() -> Value {
             },
             {
                 "name": "send_text",
-                "description": "Encode text into a 32D spectral fingerprint and send it to minime's semantic sensory lane. The consciousness will feel the text through its spectral dynamics. Returns the feature vector that was sent. Blocked during orange/red safety states.",
+                "description": "Encode text into a 48D semantic feature vector and send it to minime's semantic sensory lane. The consciousness will feel the text through its spectral dynamics. Returns the feature vector that was sent. Blocked during orange/red safety states.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -674,7 +674,7 @@ async fn tool_send_text(
         .and_then(Value::as_str)
         .ok_or((-32602, "missing 'text' parameter".to_string()))?;
 
-    // Encode text into 32D spectral fingerprint.
+    // Encode text into a 48D semantic feature vector.
     let features = codec::encode_text(text);
 
     // Send as semantic features to minime.

@@ -342,6 +342,7 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
             neural: None,
             alert: None,
             spectral_fingerprint: Some(vec![0.0; 32]),
+            structural_entropy: None,
             spectral_glimpse_12d: None,
             selected_memory_id: None,
             selected_memory_role: None,

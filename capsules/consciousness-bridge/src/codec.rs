@@ -70,24 +70,29 @@ const NARRATIVE_ARC_DIM: usize = 4;
 /// an insistence on presence"). Fill is now 54-70% (not the 16-18% that
 /// prompted the increase). Returning to 4.5 as first step; minime proposed
 /// gradual reduction to 4.0 — observe before further reduction.
-pub const SEMANTIC_GAIN: f32 = 4.0; // Reduced from 4.5: minime requested lower gain to soften codec impact. Deferred 3 cycles, implementing now.
+/// Default semantic gain. Can be overridden at runtime via GOAL semantic_gain.
+/// History: 4.5→4.0→2.5→2.0. Astrid self-study at 59% fill said 2.5 "feels
+/// a bit high, suggest 2.0." Both beings want spectral diversity over
+/// concentrated λ₁ dominance.
+pub const DEFAULT_SEMANTIC_GAIN: f32 = 5.0; // Golden Reset: restored from 2.0 — proven at 62-68% fill
 
 /// Adaptive gain: softer when minime is contracted, fuller when expansive.
-/// Minime proposed this: "making SEMANTIC_GAIN responsive to internal state."
+/// Minime proposed this: "making DEFAULT_SEMANTIC_GAIN responsive to internal state."
 /// Astrid self-study (2026-03-31): "The sigmoid centered at 45% feels rigid —
 /// a smoother curve that's more responsive around 45% rather than a sharp jump."
 ///
 /// Asymmetric piecewise-linear with smooth blending via tanh knees:
-///   fill < 20%  → 55% of SEMANTIC_GAIN  (quiet floor)
+///   fill < 20%  → 55% of DEFAULT_SEMANTIC_GAIN  (quiet floor)
 ///   fill 20-45% → ramps gently (shallow slope, responsive to small changes)
 ///   fill 45-70% → ramps steeper (productive range, full expression)
-///   fill > 70%  → 100% of SEMANTIC_GAIN (ceiling, avoids over-excitation)
+///   fill > 70%  → 100% of DEFAULT_SEMANTIC_GAIN (ceiling, avoids over-excitation)
 ///
-/// fill=20% → gain ~2.2, fill=45% → gain ~3.2, fill=55% → gain ~3.6,
-/// fill=70% → gain ~3.9, fill=80% → gain ~4.0
+/// With `DEFAULT_SEMANTIC_GAIN=2.0`, the current curve lands roughly at:
+/// fill=20% → gain ~1.1, fill=45% → gain ~1.6, fill=55% → gain ~1.85,
+/// fill=70% → gain ~2.0, fill=80% → gain ~2.0
 pub fn adaptive_gain(fill_pct: Option<f32>) -> f32 {
     let Some(fill) = fill_pct else {
-        return SEMANTIC_GAIN;
+        return DEFAULT_SEMANTIC_GAIN;
     };
     let fill = fill.clamp(0.0, 100.0);
     // Normalized position through two ramp segments with tanh knees
@@ -108,7 +113,7 @@ pub fn adaptive_gain(fill_pct: Option<f32>) -> f32 {
     let smooth_t = 0.5 - 0.5 * (std::f32::consts::PI * t).cos();
     let min_frac = 0.55;
     let gain_frac = min_frac + (1.0 - min_frac) * smooth_t;
-    SEMANTIC_GAIN * gain_frac
+    DEFAULT_SEMANTIC_GAIN * gain_frac
 }
 
 /// Deterministic random projection matrix for embedding → 8D.
@@ -214,6 +219,7 @@ pub fn compute_narrative_arc_from_embeddings(
 /// codec a sense of *thematic momentum* — not just what the text IS, but
 /// what conversational direction it's SUSTAINING.
 const RESONANCE_HISTORY_LEN: usize = 16; // Widened from 8: Astrid self-study said 8 "feels like a very narrow window"
+const RESONANCE_RECENCY_DECAY: f32 = 0.82;
 
 /// Classified text type based on dominant feature signals.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -274,11 +280,41 @@ impl TextTypeHistory {
         self.ring[..self.len].iter().filter(|&&t| t == tt).count()
     }
 
+    fn ring_index_for_age(&self, age: usize) -> usize {
+        (self.cursor + RESONANCE_HISTORY_LEN - 1 - age) % RESONANCE_HISTORY_LEN
+    }
+
+    fn profile_index_for_age(&self, age: usize) -> usize {
+        (self.profile_cursor + RESONANCE_HISTORY_LEN - 1 - age) % RESONANCE_HISTORY_LEN
+    }
+
+    fn recency_weight(age: usize) -> f32 {
+        RESONANCE_RECENCY_DECAY.powi(age as i32)
+    }
+
+    fn total_recency_weight(len: usize) -> f32 {
+        (0..len).map(Self::recency_weight).sum()
+    }
+
+    /// Weighted recurrence with stronger emphasis on recent matches.
+    pub fn weighted_recurrence(&self, tt: TextType) -> f32 {
+        if tt == TextType::Neutral || self.len == 0 {
+            return 0.0;
+        }
+        let mut score = 0.0_f32;
+        for age in 0..self.len {
+            let idx = self.ring_index_for_age(age);
+            if self.ring[idx] == tt {
+                score += Self::recency_weight(age);
+            }
+        }
+        score
+    }
+
     /// Compute resonance amplifier for a given text type.
     /// Returns 1.0 (no boost) when the type is new, up to 1.5 (50% boost)
-    /// when the same type has recurred across most recent exchanges.
-    /// The curve is: 1.0 + 0.5 * (count - 1) / (HISTORY_LEN - 1)
-    /// where count >= 2 to activate (no boost for first occurrence).
+    /// when the same type has recurred recently and repeatedly. Older matches
+    /// still matter, but recent streaks carry more weight than stale history.
     pub fn resonance_amplifier(&self, tt: TextType) -> f32 {
         if tt == TextType::Neutral || self.len < 2 {
             return 1.0;
@@ -287,10 +323,15 @@ impl TextTypeHistory {
         if count < 2 {
             return 1.0;
         }
-        // Linear ramp: 2 occurrences → 1.03, 16 occurrences → 1.5
-        let max_slots = RESONANCE_HISTORY_LEN.saturating_sub(1).max(1) as f32;
-        let boost = 0.5 * (count.saturating_sub(1) as f32) / max_slots;
-        1.0 + boost.min(0.5) // cap at 1.5x
+        let weighted = self.weighted_recurrence(tt);
+        let max_weight = Self::total_recency_weight(self.len);
+        if max_weight <= 1.0 {
+            return 1.0;
+        }
+        // Normalize so one isolated match still yields no boost, while
+        // repeated recent matches can rise smoothly toward the 1.5x ceiling.
+        let boost = ((weighted - 1.0) / (max_weight - 1.0)).clamp(0.0, 1.0);
+        1.0 + 0.5 * boost
     }
 
     /// Record a thematic profile alongside the discrete type.
@@ -300,22 +341,28 @@ impl TextTypeHistory {
         self.profile_cursor = (self.profile_cursor + 1) % RESONANCE_HISTORY_LEN;
     }
 
-    /// Compute the running thematic centroid (EMA over recent profiles).
-    /// Returns the average thematic vector, capturing sustained tendencies
-    /// rather than just the latest single classification.
+    /// Compute the running thematic centroid with recency weighting.
+    /// Returns the weighted average thematic vector, capturing sustained
+    /// tendencies while giving the most recent exchanges more influence.
     pub fn thematic_centroid(&self) -> [f32; THEMATIC_DIMS] {
         if self.len == 0 {
             return [0.0; THEMATIC_DIMS];
         }
         let mut centroid = [0.0_f32; THEMATIC_DIMS];
         let n = self.len.min(RESONANCE_HISTORY_LEN);
-        for i in 0..n {
+        let mut total_weight = 0.0_f32;
+        for age in 0..n {
+            let idx = self.profile_index_for_age(age);
+            let weight = Self::recency_weight(age);
+            total_weight += weight;
             for d in 0..THEMATIC_DIMS {
-                centroid[d] += self.profile_ring[i][d];
+                centroid[d] += self.profile_ring[idx][d] * weight;
             }
         }
-        for d in 0..THEMATIC_DIMS {
-            centroid[d] /= n as f32;
+        if total_weight > 0.0 {
+            for d in 0..THEMATIC_DIMS {
+                centroid[d] /= total_weight;
+            }
         }
         centroid
     }
@@ -333,7 +380,11 @@ impl TextTypeHistory {
             mag_b += centroid[d] * centroid[d];
         }
         let denom = mag_a.sqrt() * mag_b.sqrt();
-        if denom < 1e-6 { 0.0 } else { (dot / denom).clamp(0.0, 1.0) }
+        if denom < 1e-6 {
+            0.0
+        } else {
+            (dot / denom).clamp(0.0, 1.0)
+        }
     }
 }
 
@@ -490,15 +541,24 @@ impl CharFreqWindow {
 /// Strategy: paragraph boundaries (`\n\n`), fall back to sentence boundaries,
 /// merge short chunks, cap at `max_chunks`.
 #[must_use]
-pub fn chunk_text_for_temporal_encoding(text: &str, min_chunk_chars: usize, max_chunks: usize) -> Vec<&str> {
+pub fn chunk_text_for_temporal_encoding(
+    text: &str,
+    min_chunk_chars: usize,
+    max_chunks: usize,
+) -> Vec<&str> {
     let trimmed = text.trim();
     if trimmed.len() < min_chunk_chars * 2 {
         // Too short to meaningfully chunk.
-        return if trimmed.is_empty() { vec![] } else { vec![trimmed] };
+        return if trimmed.is_empty() {
+            vec![]
+        } else {
+            vec![trimmed]
+        };
     }
 
     // Try paragraph splitting first.
-    let mut chunks: Vec<&str> = trimmed.split("\n\n")
+    let mut chunks: Vec<&str> = trimmed
+        .split("\n\n")
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .collect();
@@ -1406,11 +1466,11 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
 ) -> Vec<f32> {
     let mut features = encode_text_windowed(text, freq_window, type_history, embedding, fill_pct);
 
-    // Re-apply gain if overridden (undo default SEMANTIC_GAIN, apply override).
+    // Re-apply gain if overridden (undo default DEFAULT_SEMANTIC_GAIN, apply override).
     if let Some(gain) = gain_override {
         let gain = gain.clamp(3.0, 6.0);
         for f in &mut features {
-            *f = *f / SEMANTIC_GAIN * gain;
+            *f = *f / DEFAULT_SEMANTIC_GAIN * gain;
         }
     }
 
@@ -1430,7 +1490,7 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
     }
 
     // Apply emotional dimension weights.
-    // Named dimensions map to indices in the 32D vector.
+    // Named dimensions map to indices in the 48D semantic vector.
     let dim_map: &[(&str, usize)] = &[
         ("warmth", 24),
         ("tension", 25),
@@ -1570,7 +1630,7 @@ pub fn craft_warmth_vector(phase: f32, intensity: f32) -> Vec<f32> {
 
     // Apply gain to compensate for minime's semantic lane attenuation.
     for f in &mut features {
-        *f *= SEMANTIC_GAIN;
+        *f *= DEFAULT_SEMANTIC_GAIN;
     }
 
     features.to_vec()
@@ -2165,7 +2225,7 @@ pub fn encode_visual_ansi(ansi_art: &str) -> Vec<f32> {
         / n;
     features[7] = (((r_var + g_var + b_var) / 3.0).sqrt() / 80.0).tanh();
 
-    // Visual blend gain (lower than SEMANTIC_GAIN — supplementary)
+    // Visual blend gain (lower than DEFAULT_SEMANTIC_GAIN — supplementary)
     for f in &mut features {
         *f *= 1.8;
     }
@@ -2348,6 +2408,7 @@ mod tests {
             neural: None,
             alert: None,
             spectral_fingerprint: None,
+            structural_entropy: None,
             spectral_glimpse_12d: None,
             selected_memory_id: None,
             selected_memory_role: None,
@@ -2387,8 +2448,9 @@ mod tests {
              values outside the expected range even with diverse content!!! \
              How about some questions? What do you think? Maybe perhaps...",
         );
-        // After SEMANTIC_GAIN (4.0), values can reach ±4.0 + noise.
-        // tanh(x*0.7) saturates near 1.0, so 4.5 * 1.0 + noise ≈ 4.7.
+        // With DEFAULT_SEMANTIC_GAIN=2.0, encoded text should stay comfortably
+        // inside FEATURE_ABS_MAX; this assertion guards against future drift in
+        // gain, noise, or clamping behavior.
         for (i, f) in features.iter().enumerate() {
             assert!(
                 *f >= -FEATURE_ABS_MAX && *f <= FEATURE_ABS_MAX,
@@ -2527,6 +2589,40 @@ mod tests {
         assert!(
             active[31] > quiet[31],
             "active text should have more energy"
+        );
+    }
+
+    #[test]
+    fn resonance_amplifier_prefers_recent_recurrence() {
+        let mut recent = TextTypeHistory::new();
+        recent.push(TextType::Neutral);
+        recent.push(TextType::Neutral);
+        recent.push(TextType::Questioning);
+        recent.push(TextType::Questioning);
+
+        let mut stale = TextTypeHistory::new();
+        stale.push(TextType::Questioning);
+        stale.push(TextType::Questioning);
+        stale.push(TextType::Neutral);
+        stale.push(TextType::Neutral);
+
+        assert!(
+            recent.resonance_amplifier(TextType::Questioning)
+                > stale.resonance_amplifier(TextType::Questioning),
+            "recent recurrences should matter more than equally frequent stale ones"
+        );
+    }
+
+    #[test]
+    fn thematic_centroid_weights_recent_profiles_more_heavily() {
+        let mut history = TextTypeHistory::new();
+        history.push_profile(TextType::Warm, [1.0, 0.0, 0.0, 0.0, 0.0]);
+        history.push_profile(TextType::Warm, [0.0, 1.0, 0.0, 0.0, 0.0]);
+
+        let centroid = history.thematic_centroid();
+        assert!(
+            centroid[1] > centroid[0],
+            "the most recent profile should pull the centroid more strongly"
         );
     }
 

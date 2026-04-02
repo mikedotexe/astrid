@@ -45,7 +45,7 @@ Each page shows up to **400 lines** (was 150, increased for MLX's generous timeo
 // Source: astrid:codec (capsules/.../src/codec.rs)
 // Showing lines 1-400 of 620
 
-   1  //! 32D text-to-spectral feature encoder.
+   1  //! Spectral codec: translates between text and sensory features.
    2  //! ...
  400  ...
 // ... 220 more lines. To continue reading: INTROSPECT astrid:codec 400

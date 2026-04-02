@@ -230,35 +230,51 @@ pub(super) fn handle_reservoir_action(
                     "type": "read_state", "name": handle
                 })) {
                     Some(r) => {
-                        let h = r.get("h_norms")
+                        let h = r
+                            .get("h_norms")
                             .and_then(|v| v.as_array())
-                            .map(|arr| arr.iter()
-                                .map(|v| format!("{:.2}", v.as_f64().unwrap_or(0.0)))
-                                .collect::<Vec<_>>()
-                                .join(", "))
+                            .map(|arr| {
+                                arr.iter()
+                                    .map(|v| format!("{:.2}", v.as_f64().unwrap_or(0.0)))
+                                    .collect::<Vec<_>>()
+                                    .join(", ")
+                            })
                             .unwrap_or_else(|| "?".to_string());
                         let ticks = r.get("tick_count").and_then(|v| v.as_u64()).unwrap_or(0);
                         let mode = r.get("mode").and_then(|v| v.as_str()).unwrap_or("?");
-                        let since = r.get("seconds_since_live").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                        let decay = r.get("decay_weight").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let since = r
+                            .get("seconds_since_live")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(0.0);
+                        let decay = r
+                            .get("decay_weight")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(0.0);
                         let output = r.get("last_output").and_then(|v| v.as_f64()).unwrap_or(0.0);
 
                         // Extract coupling readout if available
-                        let readout = r.get("last_live_meta")
+                        let readout = r
+                            .get("last_live_meta")
                             .or_else(|| r.get("last_generation_meta"))
                             .and_then(|m| m.get("reservoir_readout"))
-                            .map(|ro| format!(
-                                "y1={:.3}, y2={:.3}, y3={:.3}",
-                                ro.get("y1_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
-                                ro.get("y2_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
-                                ro.get("y3_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
-                            ))
+                            .map(|ro| {
+                                format!(
+                                    "y1={:.3}, y2={:.3}, y3={:.3}",
+                                    ro.get("y1_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                    ro.get("y2_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                    ro.get("y3_final").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                                )
+                            })
                             .unwrap_or_default();
 
                         lines.push(format!("[{handle}]"));
                         lines.push(format!("  h_norms: [{h}] (fast, medium, slow)"));
-                        lines.push(format!("  ticks: {ticks:>10}  mode: {mode}  decay: {decay:.3}"));
-                        lines.push(format!("  last_output: {output:.4}  since_live: {since:.1}s"));
+                        lines.push(format!(
+                            "  ticks: {ticks:>10}  mode: {mode}  decay: {decay:.3}"
+                        ));
+                        lines.push(format!(
+                            "  last_output: {output:.4}  since_live: {since:.1}s"
+                        ));
                         if !readout.is_empty() {
                             lines.push(format!("  coupling readout: {readout}"));
                         }
@@ -342,6 +358,98 @@ pub(super) fn handle_reservoir_action(
                 },
             }
             info!("Astrid set reservoir mode to {}", mode);
+            true
+        },
+        "SIMULATE" | "RESERVOIR_SIMULATE" => {
+            let sim_text = strip_action(original, base_action);
+            let sim_text = if sim_text.is_empty() {
+                "quiet observation".to_string()
+            } else {
+                sim_text.to_string()
+            };
+
+            // 1. Pull current astrid state
+            let state = reservoir_ws_call(&serde_json::json!({
+                "type": "pull_state", "name": "astrid"
+            }));
+
+            // 2. Read current state for "before" snapshot
+            let before = reservoir_ws_call(&serde_json::json!({
+                "type": "read_state", "name": "astrid"
+            }));
+
+            if let (Some(state), Some(before)) = (state, before) {
+                let sim_name = "astrid_sim";
+                // 3. Create temp handle + push checkpoint
+                let _ = reservoir_ws_call(&serde_json::json!({
+                    "type": "create_handle", "name": sim_name, "entity": "astrid"
+                }));
+                if let (Some(h1), Some(h2), Some(h3)) = (
+                    state.get("h1").and_then(|v| v.as_str()),
+                    state.get("h2").and_then(|v| v.as_str()),
+                    state.get("h3").and_then(|v| v.as_str()),
+                ) {
+                    let _ = reservoir_ws_call(&serde_json::json!({
+                        "type": "push_state", "name": sim_name,
+                        "h1": h1, "h2": h2, "h3": h3
+                    }));
+                }
+
+                // 4. Tick the sim handle with hypothetical text
+                let tick_result = reservoir_ws_call(&serde_json::json!({
+                    "type": "tick_text", "name": sim_name, "text": sim_text
+                }));
+
+                // 5. Read the projected state
+                let after = reservoir_ws_call(&serde_json::json!({
+                    "type": "read_state", "name": sim_name
+                }));
+
+                // 6. Format before/after comparison
+                let mut report = String::from("=== SIMULATION RESULT ===\n");
+                report.push_str(&format!("Input: \"{}\"\n\n", &sim_text[..sim_text.len().min(200)]));
+
+                {
+                    let h_norms: Vec<String> = before.get("h_norms")
+                        .and_then(|v| v.as_array())
+                        .map(|a| a.iter().filter_map(|v| v.as_f64().map(|f| format!("{f:.3}"))).collect())
+                        .unwrap_or_default();
+                    report.push_str(&format!("Before: h_norms=[{}]\n", h_norms.join(", ")));
+                }
+                if let Some(ref a) = after {
+                    let h_norms: Vec<String> = a.get("h_norms")
+                        .and_then(|v| v.as_array())
+                        .map(|arr| arr.iter().filter_map(|v| v.as_f64().map(|f| format!("{f:.3}"))).collect())
+                        .unwrap_or_default();
+                    report.push_str(&format!("After:  h_norms=[{}]\n", h_norms.join(", ")));
+                }
+                if let Some(ref a) = after {
+                    let b_norms: Vec<f64> = before.get("h_norms").and_then(|v| v.as_array())
+                        .map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect()).unwrap_or_default();
+                    let a_norms: Vec<f64> = a.get("h_norms").and_then(|v| v.as_array())
+                        .map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect()).unwrap_or_default();
+                    let deltas: Vec<String> = b_norms.iter().zip(a_norms.iter())
+                        .enumerate()
+                        .map(|(i, (b, a))| format!("h{}:{:+.3}", i + 1, a - b))
+                        .collect();
+                    report.push_str(&format!("Delta:  [{}]\n", deltas.join(", ")));
+                }
+                if let Some(ref t) = tick_result {
+                    if let Some(output) = t.get("output").and_then(|v| v.as_array()) {
+                        let out_summary: Vec<String> = output.iter().take(5)
+                            .filter_map(|v| v.as_f64().map(|f| format!("{f:.3}"))).collect();
+                        report.push_str(&format!("Output: [{}...]\n", out_summary.join(", ")));
+                    }
+                }
+                report.push_str("\nYour real reservoir state was NOT changed. \
+                    The simulation handle 'astrid_sim' persists — you can SIMULATE again \
+                    to see cumulative effects, or it will be cleaned up on next restart.");
+
+                conv.emphasis = Some(report);
+            } else {
+                conv.emphasis = Some("Reservoir service not available for simulation.".to_string());
+            }
+            info!("Astrid simulated reservoir with: {}", &sim_text[..sim_text.len().min(80)]);
             true
         },
         "RESERVOIR_FORK" => {

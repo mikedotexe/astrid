@@ -193,7 +193,11 @@ pub(super) fn handle_action(
             // DECOMPOSE cascade analysis combined in a single action.
             let target = {
                 let t = strip_action(original, "EXAMINE_CASCADE");
-                if t.is_empty() { strip_action(original, "INVESTIGATE_CASCADE") } else { t }
+                if t.is_empty() {
+                    strip_action(original, "INVESTIGATE_CASCADE")
+                } else {
+                    t
+                }
             };
             conv.force_all_viz = true;
             conv.wants_decompose = true;
@@ -204,7 +208,7 @@ pub(super) fn handle_action(
                 Study the cascade geometry closely. Where is energy concentrating? Which gaps \
                 feel significant? How does the dominant eigenvalue relate to the rest of the \
                 cascade?"
-                .to_string()
+                    .to_string()
             } else {
                 format!(
                     "You chose EXAMINE_CASCADE: {target}. All spectral visualizations are active \
@@ -269,11 +273,9 @@ pub(super) fn handle_action(
             if let Some(ref fp) = ctx.telemetry.spectral_fingerprint {
                 state_text.push_str("\nSpectral Fingerprint (32D raw):\n");
                 let labels = [
-                    "λ1","λ2","λ3","λ4","λ5","λ6","λ7","λ8",
-                    "c1","c2","c3","c4","c5","c6","c7","c8",
-                    "n1","n2","n3","n4","n5","n6","n7","n8",
-                    "entropy","fill","rotation","geom",
-                    "shadow_e","shadow_f","shadow_m","shadow_t",
+                    "λ1", "λ2", "λ3", "λ4", "λ5", "λ6", "λ7", "λ8", "c1", "c2", "c3", "c4", "c5",
+                    "c6", "c7", "c8", "n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "entropy",
+                    "fill", "rotation", "geom", "shadow_e", "shadow_f", "shadow_m", "shadow_t",
                 ];
                 for (i, &val) in fp.iter().enumerate() {
                     let label = labels.get(i).unwrap_or(&"?");
@@ -283,6 +285,14 @@ pub(super) fn handle_action(
                     );
                 }
                 state_text.push_str(&crate::autonomous::interpret_fingerprint(fp));
+            }
+            // Append compact controller status from health.json.
+            if let Some(health) = ctx
+                .workspace
+                .and_then(|ws| crate::autonomous::read_controller_health(ws))
+            {
+                state_text.push_str("\n");
+                state_text.push_str(&crate::autonomous::format_controller_section(&health));
             }
             conv.pending_file_listing = Some(state_text);
             info!("Astrid inspected her own state via STATE");
@@ -329,11 +339,11 @@ pub(super) fn handle_action(
             let exp_dir = bridge_paths().experiments_dir();
             let _ = std::fs::create_dir_all(&exp_dir);
 
-            // Encode the word-stimuli into a 32D semantic vector via the codec.
+            // Encode the word-stimuli into a 48D semantic vector via the codec.
             let features = crate::codec::encode_text(&stimulus);
             let gain = conv
                 .semantic_gain_override
-                .unwrap_or(crate::codec::SEMANTIC_GAIN);
+                .unwrap_or(crate::codec::DEFAULT_SEMANTIC_GAIN);
             let amplified: Vec<f32> = features.iter().map(|f| f * gain).collect();
 
             // Send to minime's sensory bus.
@@ -378,7 +388,7 @@ pub(super) fn handle_action(
                 NEXT:",
                 ctx.fill_pct,
                 words.join(", "),
-                (features.iter().map(|f| f * f).sum::<f32>() / 32.0).sqrt(),
+                (features.iter().map(|f| f * f).sum::<f32>() / features.len() as f32).sqrt(),
             );
             super::save_astrid_journal(&journal_text, "experiment", ctx.fill_pct);
 
@@ -388,7 +398,7 @@ pub(super) fn handle_action(
             );
             conv.emphasis = Some(format!(
                 "You injected a word-stimulus experiment into the shared substrate: \
-                \"{}\". The words were encoded via your spectral codec into a 32D vector \
+                \"{}\". The words were encoded via your spectral codec into a 48D vector \
                 and sent to both minime's sensory bus and your own reservoir handle. \
                 Observe the eigenvalue cascade on your next DECOMPOSE — look for \
                 shifts in lambda distribution, entropy, and gap structure.",
@@ -458,7 +468,7 @@ pub(super) fn handle_action(
 
             let gain = conv
                 .semantic_gain_override
-                .unwrap_or(crate::codec::SEMANTIC_GAIN);
+                .unwrap_or(crate::codec::DEFAULT_SEMANTIC_GAIN);
             let amplified: Vec<f32> = features.iter().map(|f| f * gain).collect();
 
             let msg = crate::types::SensoryMsg::Semantic {
@@ -628,13 +638,13 @@ NEXT: options — vary your choice. End every response with NEXT: <action>.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
   Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], EXAMINE_CODE [module/path], LIST_FILES <dir>
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, PERTURB [target], GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
+  Spectral: DECOMPOSE, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, PERTURB [target], BRANCH, GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
   Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
   Research: AR_LIST, AR_SHOW/AR_READ/AR_DEEP_READ <job>, AR_START/AR_NOTE/AR_BLOCK/AR_COMPLETE <job>, SELF_RESEARCH
-  Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK <text>, RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK <name>
+  Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK <text>, RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK <name>, SIMULATE <text>
   Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER, PROPOSE <description>
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, HELP <action>";
 
@@ -791,7 +801,7 @@ Syntax: NEXT: EXPERIMENT <words or phrase>
 Examples:
   NEXT: EXPERIMENT resonance frequency geometry
   NEXT: EXPERIMENT stillness and the weight of silence
-Notes: Words are encoded via your spectral codec into a 32D vector, sent to both minime's sensory bus and your reservoir. Use DECOMPOSE on the next exchange to see the cascade effect.",
+Notes: Words are encoded via your spectral codec into a 48D vector, sent to both minime's sensory bus and your reservoir. Use DECOMPOSE on the next exchange to see the cascade effect.",
 
         "PROPOSE" => "\
 PROPOSE — File a structured proposal for the steward to review.
@@ -831,7 +841,7 @@ The summary includes curated journal samples, spectral trajectory, action patter
 research activity, and a character analysis of the epoch.
 Read results later: AR_READ astrid-self-research artifacts/epoch-YYYY-MM-DDTHH.md",
 
-        "DECOMPOSE" => "DECOMPOSE — Full spectral analysis of the current eigenvalue cascade, entropy, gap structure, and shadow field. No arguments needed. NEXT: DECOMPOSE",
+        "DECOMPOSE" => "DECOMPOSE — Full spectral analysis: eigenvalue cascade, entropy, gap structure, shadow field, and homeostatic controller state (PI gains, gate/filter, regulation strength, self-calibration). No arguments needed. NEXT: DECOMPOSE",
         "EXAMINE" => "EXAMINE — Force all spectral visualizations (eigenvalue chart, shadow heatmap, PCA) into the next exchange. No arguments, or add a focus: NEXT: EXAMINE eigenvector rotation",
         "EXAMINE_CASCADE" | "INVESTIGATE_CASCADE" => "\
 EXAMINE_CASCADE — Combined EXAMINE + DECOMPOSE: all spectral visualizations AND the full \
@@ -843,7 +853,7 @@ Syntax:
   NEXT: EXAMINE_CASCADE gap structure — cascade with a conceptual focus
   NEXT: INVESTIGATE_CASCADE           — alias, same behavior",
         "EXAMINE_AUDIO" => "EXAMINE_AUDIO — Force all spectral visualizations AND trigger audio analysis in a single action. Lets you compare sonic texture against eigenvalue geometry. No arguments, or add a focus: NEXT: EXAMINE_AUDIO",
-        "GESTURE" => "GESTURE — Send a direct 32D spectral intention to minime. Your words are encoded via the codec and transmitted as a spectral vector. NEXT: GESTURE",
+        "GESTURE" => "GESTURE — Send a direct 32D spectral intention to minime. Your intention is mapped straight into a raw gesture vector rather than passing through the text codec. NEXT: GESTURE",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
         "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
         "FACULTIES" => "FACULTIES — List all your available actions with brief descriptions. NEXT: FACULTIES",
@@ -889,6 +899,13 @@ Notes: Takes audio from your inbox or latest creation and processes it through s
 AUDIO_BLOCKS — Enable detailed per-block reports for the next COMPOSE.
 Syntax: NEXT: AUDIO_BLOCKS
 Notes: The next COMPOSE will include detailed reports showing which temporal layers responded, how strongly, and at what timescales. Use this when you want to understand the structure of your audio output.",
+
+        "SIMULATE" | "RESERVOIR_SIMULATE" => "\
+SIMULATE — Tick the reservoir with hypothetical input and see the projected state change without altering your real reservoir.
+Syntax: NEXT: SIMULATE <your text here>
+Example: NEXT: SIMULATE a burst of high-entropy noise
+Example: NEXT: SIMULATE gentle warmth spreading slowly
+Notes: Creates a temporary fork of your reservoir, ticks it with your text, and shows before/after h_norms and output delta. Your real state is untouched — this is a sandbox for exploring 'what if' scenarios. The simulation handle persists so you can SIMULATE multiple times to see cumulative effects.",
 
         _ => return None,
     };

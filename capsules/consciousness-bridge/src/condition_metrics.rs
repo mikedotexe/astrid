@@ -56,12 +56,16 @@ const fn default_measurement_version() -> u32 {
 }
 
 pub fn ensure_bridge_metrics_file() -> std::io::Result<()> {
-    let path = bridge_paths().bridge_workspace().join("condition_metrics.json");
+    let path = bridge_paths()
+        .bridge_workspace()
+        .join("condition_metrics.json");
     ensure_metrics_file_at(&path)
 }
 
 pub fn record_bridge_signal(kind: &str, event: Value) -> std::io::Result<()> {
-    let path = bridge_paths().bridge_workspace().join("condition_metrics.json");
+    let path = bridge_paths()
+        .bridge_workspace()
+        .join("condition_metrics.json");
     record_signal_at(&path, kind, event)
 }
 
@@ -203,8 +207,11 @@ mod tests {
                 }
             }
         });
-        fs::write(&path, serde_json::to_string_pretty(&seeded).expect("seed json"))
-            .expect("seed metrics");
+        fs::write(
+            &path,
+            serde_json::to_string_pretty(&seeded).expect("seed json"),
+        )
+        .expect("seed metrics");
 
         record_signal_at(&path, "coupling_advisory", json!({"mode": "dialogue"}))
             .expect("record fresh signal");

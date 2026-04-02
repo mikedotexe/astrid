@@ -1,59 +1,105 @@
 # Chapter 2: Spectral Codec
 
-**File:** `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs`
+**Primary file:** `capsules/consciousness-bridge/src/codec.rs`
 
-The codec converts Astrid's text into a **32-dimensional semantic feature vector** sent to minime's ESN reservoir via WebSocket 7879.
+The current codec sends a **48-dimensional semantic feature vector** into minime's semantic lane over `ws://127.0.0.1:7879`.
 
-## 32D Dimension Layout
+## The Current 48D Layout
 
-| Dims | Layer | Features |
-|------|-------|----------|
-| 0–7 | Character-level | Entropy, punctuation density, uppercase ratio, digit ratio, avg word length, rhythm (sentence length variance), whitespace ratio, special char density |
-| 8–15 | Word-level | Lexical diversity, hedging markers, certainty markers, self-reference, agency markers, negation density, question words, temporal markers |
-| 16–23 | Sentence-level | Sentence count, avg sentence length, length variance, question density, exclamation ratio, ellipsis count, list/structure markers, paragraph density |
-| 24 | Warmth | "thank", "appreciate", "gentle", "kind", "warm", "soft", "care" (×3.0, tanh) |
-| 25 | Tension | "must", "urgent", "critical", "danger", "crisis", "threat", "fear" (×3.0, tanh) |
-| 26 | Curiosity | "wonder", "curious", "what if", "perhaps", "explore", "discover", "investigate" (×2.0, tanh) |
-| 27 | Reflective | "feel", "sense", "notice", "realize", "reflect", "ponder", "contemplate" (×3.0, tanh) |
-| 28 | Temporal/urgency | "now", "immediately", "soon", "before", "after", "already", "waiting" (×2.0, tanh) |
-| 29 | Scale/magnitude | "vast", "infinite", "tiny", "enormous", "everything", "nothing", "absolute" (×3.0, tanh) |
-| 30 | Text length | `tanh(ln(char_count) / 7.0)` — log-compressed length signal |
-| 31 | Overall energy | RMS of dims 0–30 |
+| Dims | Role | Notes |
+|------|------|-------|
+| `0-7` | Character-level texture | entropy, punctuation/density, casing, rhythm, whitespace, code-like texture |
+| `8-15` | Word-level stance | diversity, hedging, certainty, negation, self-reference, addressing, agency, complexity |
+| `16-23` | Sentence/rhythm structure | sentence length, variance, questions, exclamations, trailing-thought markers, lists, quotes, paragraphing |
+| `24-31` | Emotional / intentional markers | warmth, tension, curiosity, reflection, temporality, scale, length, overall energy |
+| `32-39` | Embedding projection | optional `nomic-embed-text` embedding projected from `768D -> 8D` |
+| `40-43` | Narrative arc | semantic shift between first and second half of the text |
+| `44-47` | Reserved | currently zeroed / held open for future expansion |
+
+The biggest correction to older docs is that Astrid is no longer sending a 32D semantic lane into minime. The live minime semantic lane width is **48**, and minime's total ESN input width is therefore **66D**, not 50D.
+
+## What Is Local vs External
+
+The codec is now hybrid:
+
+- **dims `0-31`** are handcrafted, local, and deterministic from text statistics
+- **dims `32-39`** are only populated when the bridge has an external `nomic-embed-text` embedding available from Ollama
+- **dims `40-43`** are filled when first-half / second-half embeddings are available so the bridge can compute a narrative arc
+
+So the accurate statement is not "the codec is purely deterministic and never touches an external model." The handcrafted core is deterministic, but the full 48D lane can incorporate external embeddings.
 
 ## Key Constants
 
-| Constant | Value | Purpose |
-|----------|-------|---------|
-| `SEMANTIC_DIM` | 32 | Feature vector dimensionality |
-| `SEMANTIC_GAIN` | **5.0** | Amplification (was 4.5, raised per Astrid's self-study suggestion) |
-| Default noise | **0.005** (0.5%) | Stochastic noise (was 2.5%, reduced to prevent "polka dots") |
+| Constant | Current value | Meaning |
+|----------|---------------|---------|
+| `SEMANTIC_DIM` | `48` | outgoing semantic lane width |
+| `DEFAULT_SEMANTIC_GAIN` | `2.0` | base gain before Astrid overrides |
+| `FEATURE_ABS_MAX` | `5.0` | post-gain safety clamp |
+| `EMBEDDING_INPUT_DIM` | `768` | expected `nomic-embed-text` width |
+| `EMBEDDING_PROJECT_DIM` | `8` | dims `32-39` |
+| `NARRATIVE_ARC_DIM` | `4` | dims `40-43` |
 
-## Elaboration Desire Feature
+`adaptive_gain(fill_pct)` currently scales output between **55% and 100% of the base gain** depending on fill. Low fill softens the signal; higher fill allows fuller expression.
 
-**Lines 447–465.** Detects incompleteness markers and boosts curiosity (dim 26) + energy (dim 31):
+## Spectral Feedback
 
-Markers: "more", "further", "deeper", "beyond", "incomplete", "unfinished", "want", "need", "longing", "reaching", "almost", "beginning"
+`apply_spectral_feedback()` biases outgoing features by the current telemetry without changing the lane width:
 
-When detected: `curiosity += 0.3 * elab_signal`, `energy += 0.2 * elab_signal`
+- concentrated / low-entropy spectral states push the codec toward more diversity
+- distributed states allow the strongest codec dimensions to come through more directly
 
-*Astrid's own suggestion from self-study: "Perhaps a dedicated portion of the feature vector could represent a desire for further elaboration."*
+This means Astrid's outgoing semantic field is not just text-shaped; it is also lightly conditioned by the current spectral state.
 
-## Warmth Vectors
+## Warmth And Rest
 
-During rest phases, the bridge sends **warmth vectors** (not silence) to sustain fill:
-- Crafted by `craft_warmth_vector()` with breathing modulation
-- Blended with mirror mode at configurable intensity
-- Tapered entry (0.7→0.4 over rest period) to prevent "severing"
-- GESTURE seeds persist in warmth vectors
+Warmth vectors are still part of the system, but they are now best described like this:
 
-## Sovereignty Controls
+- they are **48D vectors**
+- they preserve the older handcrafted emotional core in the first 32 dims
+- they are used during rest so the bridge is not forced into "semantic silence only"
+- `craft_warmth_vector()` includes slow breathing harmonics and can be blended with gesture seeds and spectral coupling
 
-Astrid can modify codec behavior through NEXT: actions:
-- `SHAPE warmth=X curiosity=Y` — weight emotional dimensions
-- `AMPLIFY` / `DAMPEN` — override SEMANTIC_GAIN (range 3.0–6.0)
-- `NOISE_UP` / `NOISE_DOWN` — adjust stochastic noise (±0.01, range 0.005–0.05)
-- `WARM <intensity>` / `COOL` — control rest-phase warmth
+## Astrid's Self-Shaping Surface
 
-## Normalization
+Astrid has a narrower, explicitly modeled codec sovereignty layer:
 
-All features pass through `tanh()` before gain amplification. This bounds values to [-1, 1] before the ×5.0 gain produces the final [-5, +5] range sent to minime's semantic lane.
+| Action | What it changes | Effective bounds |
+|--------|------------------|------------------|
+| `AMPLIFY` / `DAMPEN` | semantic gain override | `0.5 .. 5.0` in `0.25` steps |
+| `NOISE_UP` / `NOISE_DOWN` | codec stochastic noise | `0.005 .. 0.05` |
+| `SHAPE key=value` | named codec weights | each value clamped to `0.0 .. 2.0` |
+| `WARM <intensity>` / `COOL` | rest warmth intensity | `0.0 .. 1.0` |
+| `BREATHE_ALONE` / `BREATHE_TOGETHER` | whether warmth/breathing couples to minime's live spectral state | boolean |
+
+Two neighboring actions matter here too:
+
+- `GESTURE` sends a direct semantic vector seed
+- `PERTURB` injects a direct spectral pattern rather than relying only on ordinary text encoding
+
+## Current Noise Story
+
+There are two different "noise" ideas in play and the docs should keep them separate:
+
+- **codec noise**: Astrid's local stochastic texture on the outgoing 48D vector
+- **ESN exploration noise**: minime's reservoir-side exploratory perturbation via `SensoryMsg::Control`
+
+`NOISE_UP` / `NOISE_DOWN` affect the first one.
+`NOISE` in Astrid's NEXT actions currently affects **both**:
+
+- it raises Astrid's codec noise
+- it also sends `exploration_noise = 0.15` into minime's raw control surface
+
+## What To Call It
+
+Use this wording elsewhere:
+
+- "Astrid's text is encoded into a **48D semantic lane**"
+- "The first 32 dims are handcrafted texture/stance features"
+- "The next 8 dims are embedding-projected semantics"
+- "The next 4 dims are narrative arc"
+
+Avoid these stale summaries:
+
+- "The codec is 32D"
+- "Astrid only sends handcrafted stats"
+- "The codec gain is fixed at 4.0 or 5.0"

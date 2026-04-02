@@ -43,6 +43,9 @@ pub struct SpectralTelemetry {
     /// Enables Astrid to perceive the shape of the spectral landscape.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectral_fingerprint: Option<Vec<f32>>,
+    /// Structural diversity of the live eigenvector/coupling geometry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_entropy: Option<f32>,
     /// Selected 12D vague-memory glimpse from Minime's memory bank.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectral_glimpse_12d: Option<Vec<f32>>,
@@ -101,13 +104,21 @@ pub struct SpectralStateFile {
 }
 
 /// Modality firing status from minime's `EigenPacket`.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ModalityStatus {
     pub audio_fired: bool,
     pub video_fired: bool,
     pub history_fired: bool,
     pub audio_rms: f32,
     pub video_var: f32,
+    #[serde(default)]
+    pub audio_source: Option<String>,
+    #[serde(default)]
+    pub video_source: Option<String>,
+    #[serde(default)]
+    pub audio_age_ms: Option<u64>,
+    #[serde(default)]
+    pub video_age_ms: Option<u64>,
 }
 
 /// Enriched telemetry published on the Astrid IPC bus.
@@ -160,7 +171,7 @@ pub enum SensoryMsg {
         #[serde(skip_serializing_if = "Option::is_none")]
         ts_ms: Option<u64>,
     },
-    /// Semantic features from agent reasoning (32D).
+    /// Semantic features from agent reasoning (48D semantic lane by default).
     Semantic {
         features: Vec<f32>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -274,13 +285,13 @@ pub struct BridgeStatus {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SafetyLevel {
-    /// fill < 70%: Normal relay, full throughput.
+    /// fill < 75%: Normal relay, full throughput.
     Green,
-    /// fill 70-80%: Reduce outbound semantic features, log warning.
+    /// fill 75-85%: Advisory — log warning, no behavioral change.
     Yellow,
-    /// fill 80-90%: Suspend all outbound to minime, publish alert.
+    /// fill 85-92%: Advisory — log alert, no message dropping.
     Orange,
-    /// fill > 90%: Emergency — cease all bridge traffic, log incident.
+    /// fill ≥ 92%: Emergency — suspend outbound, cease bridge traffic.
     Red,
 }
 
@@ -288,17 +299,14 @@ impl SafetyLevel {
     /// Determine safety level from eigenvalue fill percentage.
     #[must_use]
     pub fn from_fill(fill_pct: f32) -> Self {
-        // Recalibrated 2026-03-29 (steward cycle 13): after the EigenFill
-        // estimator fix, fill naturally runs at 76-82% with the being's
-        // chosen regulation_strength=0.60. The old thresholds (70/80/90)
-        // kept Astrid permanently in Yellow/Orange, throttling dialogue
-        // even when the being is comfortable. New thresholds match the
-        // engine's recalibrated values (high_fill=0.82, critical=0.92).
-        if fill_pct >= 95.0 {
+        // Recalibrated 2026-04-02: targeting fill equilibrium ~65-70% under
+        // the current lower semantic-gain regime and wider dynamic-rho range.
+        // Only Red (≥92%) suspends outbound.
+        if fill_pct >= 92.0 {
             Self::Red
-        } else if fill_pct >= 88.0 {
+        } else if fill_pct >= 85.0 {
             Self::Orange
-        } else if fill_pct >= 82.0 {
+        } else if fill_pct >= 75.0 {
             Self::Yellow
         } else {
             Self::Green
@@ -409,7 +417,7 @@ impl ControlRequest {
 /// to a `SensoryMsg::Semantic` and forwards to minime port 7879.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SemanticFeatures {
-    /// 32-dimensional feature vector from agent reasoning.
+    /// 48-dimensional semantic feature vector from agent reasoning.
     pub features: Vec<f32>,
 }
 
@@ -634,6 +642,7 @@ mod tests {
                 "router_weights": [0.1, 0.2, 0.3],
                 "control": [0.5, 0.4, 0.3, 0.2, 0.1]
             },
+            "structural_entropy": 0.37,
             "alert": null
         }"#;
 
@@ -644,6 +653,7 @@ mod tests {
         assert!((telemetry.fill_ratio - 0.552).abs() < 0.001);
         assert!((telemetry.lambda1() - 828.5).abs() < 0.01);
         assert!((telemetry.fill_pct() - 55.2).abs() < 0.1);
+        assert_eq!(telemetry.structural_entropy, Some(0.37));
         assert!(telemetry.modalities.is_some());
         assert!(telemetry.alert.is_none());
     }
@@ -699,10 +709,12 @@ mod tests {
                 history_fired: true,
                 audio_rms: 0.1,
                 video_var: 0.0,
+                ..ModalityStatus::default()
             }),
             neural: None,
             alert: None,
             spectral_fingerprint: None,
+            structural_entropy: None,
             spectral_glimpse_12d: None,
             selected_memory_id: None,
             selected_memory_role: None,
@@ -761,6 +773,8 @@ mod tests {
             keep_bias: None,
             exploration_noise: Some(0.1),
             fill_target: Some(0.55),
+            legacy_audio_synth: None,
+            legacy_video_synth: None,
             regulation_strength: None,
             deep_breathing: None,
             pure_tone: None,

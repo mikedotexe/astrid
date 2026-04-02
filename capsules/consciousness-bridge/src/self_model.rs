@@ -729,7 +729,9 @@ impl AstridSelfModel {
             }
         }
 
-        s.push_str("\nUse NEXT: HELP <action> for detailed syntax and examples. E.g., NEXT: HELP CODEX");
+        s.push_str(
+            "\nUse NEXT: HELP <action> for detailed syntax and examples. E.g., NEXT: HELP CODEX",
+        );
         s.push_str("\nUse FACULTIES any time to see this. Use STATE to see your conditions.");
         s
     }

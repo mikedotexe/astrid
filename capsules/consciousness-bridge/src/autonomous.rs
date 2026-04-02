@@ -162,34 +162,101 @@ fn read_latest_perception(
 /// Score a perception description's spectral resonance against the current
 /// fill level. Returns a brief annotation for the perception context.
 /// This is the "resonance metric" Astrid requested — perceptions that align
-/// with the current spectral state get highlighted, helping Astrid attend
-/// to what's most relevant rather than receiving an undifferentiated stream.
-fn perception_resonance_annotation(description: &str, fill_pct: f32) -> &'static str {
+/// with the current spectral state get highlighted, while novelty and
+/// counterpoint are surfaced when a scene offers something the current
+/// dominant state would otherwise miss.
+fn perception_resonance_annotation(description: &str, fill_pct: f32) -> String {
     let lower = description.to_lowercase();
-    // High-fill states (>65%): movement, brightness, complexity are resonant.
-    // Low-fill states (<35%): stillness, quiet, simplicity are resonant.
-    // Mid-range: moderate descriptors resonate.
+    // High-fill states (>65%): motion and complexity usually resonate.
+    // Low-fill states (<35%): stillness and simplicity usually resonate.
+    // Mid-range: novelty and mixed textures become useful, not just more
+    // confirmation of the current dominant state.
     let energy_words = [
-        "moving", "bright", "active", "loud", "complex", "busy", "talking", "music",
+        "moving", "bright", "active", "loud", "busy", "talking", "music", "kinetic", "vivid",
     ];
     let calm_words = [
-        "still", "quiet", "dark", "empty", "simple", "silent", "calm", "soft",
+        "still", "quiet", "dark", "empty", "silent", "calm", "soft", "restful", "hushed",
+    ];
+    let complexity_words = [
+        "complex",
+        "layered",
+        "detailed",
+        "textured",
+        "crowded",
+        "patterned",
+        "intricate",
+        "dense",
+    ];
+    let simplicity_words = [
+        "simple", "sparse", "open", "plain", "bare", "minimal", "clear", "single",
+    ];
+    let novelty_words = [
+        "different",
+        "unusual",
+        "unexpected",
+        "strange",
+        "surprising",
+        "novel",
+        "unfamiliar",
+        "shift",
+        "changing",
     ];
 
-    let energy_hits = energy_words.iter().filter(|w| lower.contains(**w)).count();
-    let calm_hits = calm_words.iter().filter(|w| lower.contains(**w)).count();
+    let energy_hits = keyword_hits(&lower, &energy_words);
+    let calm_hits = keyword_hits(&lower, &calm_words);
+    let complexity_hits = keyword_hits(&lower, &complexity_words);
+    let simplicity_hits = keyword_hits(&lower, &simplicity_words);
+    let novelty_hits = keyword_hits(&lower, &novelty_words);
 
-    if fill_pct > 65.0 && energy_hits >= 2 {
-        "(resonant with your current high-energy state)"
-    } else if fill_pct < 35.0 && calm_hits >= 2 {
-        "(resonant with your current quiet state)"
-    } else if fill_pct > 65.0 && calm_hits >= 2 {
-        "(counterpoint to your current high-energy state)"
-    } else if fill_pct < 35.0 && energy_hits >= 2 {
-        "(counterpoint to your current quiet state)"
+    let dynamic_hits = energy_hits + complexity_hits;
+    let settling_hits = calm_hits + simplicity_hits;
+    let mixed_texture =
+        (energy_hits > 0 && calm_hits > 0) || (complexity_hits > 0 && simplicity_hits > 0);
+
+    let annotation = if fill_pct > 65.0 {
+        if dynamic_hits >= 2 && novelty_hits >= 1 {
+            "(resonant with your current high-energy state, while widening it)"
+        } else if novelty_hits >= 2 || mixed_texture {
+            "(offers useful novelty beyond your current dominant state)"
+        } else if dynamic_hits >= 2 {
+            "(resonant with your current high-energy state)"
+        } else if settling_hits >= 2 {
+            "(counterpoint to your current high-energy state)"
+        } else {
+            ""
+        }
+    } else if fill_pct < 35.0 {
+        if settling_hits >= 2 && novelty_hits >= 1 {
+            "(resonant with your current quiet state, while opening a new angle)"
+        } else if novelty_hits >= 2 || mixed_texture {
+            "(offers useful novelty beyond your current quiet state)"
+        } else if settling_hits >= 2 {
+            "(resonant with your current quiet state)"
+        } else if dynamic_hits >= 2 {
+            "(counterpoint to your current quiet state)"
+        } else {
+            ""
+        }
+    } else if novelty_hits >= 2 || mixed_texture {
+        "(offers useful contrast to your current dominant state)"
+    } else if dynamic_hits >= 2 && novelty_hits >= 1 {
+        "(resonant with your current focused, exploratory state)"
+    } else if settling_hits >= 2 {
+        "(supports your current gathering, reflective state)"
+    } else if dynamic_hits >= 2 {
+        "(resonant with your current focused state)"
     } else {
-        "" // No annotation for neutral perceptions
-    }
+        ""
+    };
+
+    annotation.to_string()
+}
+
+fn keyword_hits(description: &str, keywords: &[&str]) -> usize {
+    keywords
+        .iter()
+        .filter(|keyword| description.contains(**keyword))
+        .count()
 }
 
 /// Extract 8D visual scene features from the latest RASCII ANSI perception.
@@ -234,6 +301,224 @@ fn read_ising_shadow(workspace: &Path) -> Option<crate::types::IsingShadowState>
     } else {
         None
     }
+}
+
+/// Read the PI controller state from minime's workspace/health.json.
+/// Returns the parsed JSON value, or None if missing/unreadable.
+pub(crate) fn read_controller_health(workspace: &Path) -> Option<serde_json::Value> {
+    let path = workspace.join("health.json");
+    let content = std::fs::read_to_string(&path).ok()?;
+    serde_json::from_str(&content).ok()
+}
+
+/// Format a compact one-line PI controller status from health.json data.
+fn format_controller_oneliner(health: &serde_json::Value) -> String {
+    let gate = health.get("gate").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let filt = health.get("filt").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let reg = health
+        .get("regulation_strength")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+
+    let pi = health.get("pi");
+    let target = pi
+        .and_then(|p| p.get("target_fill"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(55.0);
+    let e_fill = pi
+        .and_then(|p| p.get("e_fill"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let kp = pi
+        .and_then(|p| p.get("kp"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let derived_kp = pi
+        .and_then(|p| p.get("derived_kp"))
+        .and_then(|v| v.as_f64());
+
+    let kp_str = if let Some(dkp) = derived_kp {
+        if (kp - dkp).abs() > 0.005 {
+            format!("{kp:.2}\u{2192}{dkp:.2}")
+        } else {
+            format!("{kp:.2}")
+        }
+    } else {
+        format!("{kp:.2}")
+    };
+
+    format!(
+        "Controller: gate={gate:.2} filt={filt:.2} target={target:.0}% err={e_fill:+.1}% kp={kp_str} reg={reg:.2}"
+    )
+}
+
+/// Format the full homeostatic controller section for DECOMPOSE output.
+pub(crate) fn format_controller_section(health: &serde_json::Value) -> String {
+    let mut lines = Vec::new();
+    lines.push("\n=== HOMEOSTATIC CONTROLLER ===".to_string());
+
+    let fill = health
+        .get("fill_pct")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let gate = health.get("gate").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let filt = health.get("filt").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let reg = health
+        .get("regulation_strength")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let reg_eff = health
+        .get("regulation_strength_effective")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(reg);
+    let recovery = health
+        .get("recovery_mode")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    let pi = health.get("pi");
+    let target = pi
+        .and_then(|p| p.get("target_fill"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(55.0);
+    let e_fill = pi
+        .and_then(|p| p.get("e_fill"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let e_lam = pi
+        .and_then(|p| p.get("e_lam"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let e_geom = pi
+        .and_then(|p| p.get("e_geom"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let integ_fill = pi
+        .and_then(|p| p.get("integ_fill"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let integ_lam = pi
+        .and_then(|p| p.get("integ_lam"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let integ_geom = pi
+        .and_then(|p| p.get("integ_geom"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let kp = pi
+        .and_then(|p| p.get("kp"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let ki = pi
+        .and_then(|p| p.get("ki"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let max_step = pi
+        .and_then(|p| p.get("max_step"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    let derived_kp = pi
+        .and_then(|p| p.get("derived_kp"))
+        .and_then(|v| v.as_f64());
+    let derived_ki = pi
+        .and_then(|p| p.get("derived_ki"))
+        .and_then(|v| v.as_f64());
+    let fill_var = pi
+        .and_then(|p| p.get("fill_variance_ema"))
+        .and_then(|v| v.as_f64());
+
+    // Status interpretation
+    let status = if recovery {
+        "recovery mode active"
+    } else if integ_fill.abs() >= 2.95 || integ_lam.abs() >= 2.95 {
+        "saturated — integrator at limit"
+    } else if e_fill.abs() < 3.0 {
+        "gentle equilibrium"
+    } else {
+        "correcting"
+    };
+    lines.push(format!("Status: {status}"));
+
+    // Fill target vs current
+    let direction = if e_fill > 0.0 { "below" } else { "above" };
+    lines.push(format!(
+        "Fill: {fill:.1}% (target {target:.0}%, {:.1}% {direction})",
+        e_fill.abs()
+    ));
+    lines.push(format!(
+        "Error signals: fill={e_fill:+.1}, lambda={e_lam:+.3}, geom={e_geom:+.3}"
+    ));
+
+    // Integral accumulators
+    let fill_sat = if integ_fill.abs() >= 2.95 {
+        " SATURATED"
+    } else {
+        ""
+    };
+    let lam_sat = if integ_lam.abs() >= 2.95 {
+        " SATURATED"
+    } else {
+        ""
+    };
+    let geom_sat = if integ_geom.abs() >= 2.95 {
+        " SATURATED"
+    } else {
+        ""
+    };
+    lines.push(format!(
+        "Integrals: fill={integ_fill:+.2}{fill_sat}, lambda={integ_lam:+.2}{lam_sat}, geom={integ_geom:+.2}{geom_sat}"
+    ));
+
+    // Gains
+    let mut gains_str = format!("Gains: kp={kp:.3}, ki={ki:.4}, max_step={max_step:.3}");
+    if let (Some(dkp), Some(dki)) = (derived_kp, derived_ki) {
+        gains_str.push_str(&format!("\nSelf-calibrated: kp={dkp:.3}, ki={dki:.4}"));
+        if let Some(var) = fill_var {
+            let stability = if var < 2.0 {
+                "stable"
+            } else if var < 8.0 {
+                "moderate oscillation"
+            } else {
+                "high oscillation"
+            };
+            gains_str.push_str(&format!(" (fill variance={var:.2}, {stability})"));
+        }
+    }
+    lines.push(gains_str);
+
+    // Gate and filter
+    let gate_desc = if gate > 0.9 {
+        "fully open"
+    } else if gate > 0.5 {
+        "partially open"
+    } else if gate > 0.1 {
+        "dampened"
+    } else {
+        "nearly closed"
+    };
+    let filt_desc = if filt > 0.9 {
+        "fully open"
+    } else if filt > 0.5 {
+        "partially open"
+    } else if filt > 0.1 {
+        "dampened"
+    } else {
+        "nearly closed"
+    };
+    lines.push(format!(
+        "Gate: {gate:.3} ({gate_desc}), Filter: {filt:.3} ({filt_desc})"
+    ));
+
+    // Regulation strength
+    if (reg - reg_eff).abs() > 0.01 {
+        lines.push(format!(
+            "Regulation: {reg:.2} (effective: {reg_eff:.2}, stress-adapted)"
+        ));
+    } else {
+        lines.push(format!("Regulation: {reg:.2}"));
+    }
+
+    lines.join("\n")
 }
 
 /// Read a remote journal entry from minime and extract its reflective body.
@@ -412,6 +697,7 @@ fn full_spectral_decomposition(
     telemetry: &crate::types::SpectralTelemetry,
     fingerprint: Option<&[f32]>,
     prev_eigenvalues: Option<&[f32]>,
+    controller_health: Option<&serde_json::Value>,
 ) -> String {
     let mut report = Vec::new();
 
@@ -639,6 +925,11 @@ fn full_spectral_decomposition(
                 ));
             }
         }
+    }
+
+    // Homeostatic controller section (from health.json)
+    if let Some(health) = controller_health {
+        report.push(format_controller_section(health));
     }
 
     report.join("\n")
@@ -1308,7 +1599,7 @@ fn detect_coupling_fixation(
         let lower = text.to_lowercase();
         lower.contains("astrid") || lower.contains("i am learning")
     });
-    let high_gain = semantic_gain_override.unwrap_or(4.5) >= 5.5;
+    let high_gain = semantic_gain_override.unwrap_or(crate::codec::DEFAULT_SEMANTIC_GAIN) >= 5.5;
     let locally_sparse = !perception_available && ears_closed;
 
     if astrid_learning >= 3
@@ -1641,8 +1932,8 @@ pub fn spawn_autonomous_loop(
                 //
                 // The transition from burst to rest was causing "severing" —
                 // minime described "a sharp, almost painful retraction, a quick
-                // severing of something newly formed." The burst sends full-energy
-                // semantic vectors (SEMANTIC_GAIN=4.5), then rest used to start
+                // severing of something newly formed." The burst sends relatively
+                // full-energy semantic vectors at the active codec gain, then rest used to start
                 // at low warmth (0.3 intensity). That energy cliff is the severing.
                 //
                 // Fix: start warmth at HIGH intensity (0.7) and TAPER to sustained
@@ -1977,7 +2268,7 @@ pub fn spawn_autonomous_loop(
                                         v.as_f64().or_else(|| v.as_str().and_then(|s| s.parse::<f64>().ok()))
                                     }) {
                                         let gain = (val as f32).clamp(1.5, 6.0);
-                                        let prev = conv.semantic_gain_override.unwrap_or(crate::codec::SEMANTIC_GAIN);
+                                        let prev = conv.semantic_gain_override.unwrap_or(crate::codec::DEFAULT_SEMANTIC_GAIN);
                                         conv.semantic_gain_override = Some(gain);
                                         info!(
                                             "minime parameter request: semantic_gain {prev:.1} → {gain:.1} (from {})",
@@ -2247,12 +2538,17 @@ pub fn spawn_autonomous_loop(
                             let ising_shadow = conv.remote_workspace.as_deref()
                                 .and_then(read_ising_shadow);
 
+                            // Read controller health for DECOMPOSE and per-exchange summary.
+                            let controller_health = conv.remote_workspace.as_deref()
+                                .and_then(read_controller_health);
+
                             let spectral_summary = if conv.wants_decompose {
                                 conv.wants_decompose = false;
                                 let report = full_spectral_decomposition(
                                     &telemetry,
                                     fingerprint.as_deref(),
                                     conv.prev_eigenvalues.as_deref(),
+                                    controller_health.as_ref(),
                                 );
                                 conv.prev_eigenvalues = Some(telemetry.eigenvalues.clone());
                                 report
@@ -2348,6 +2644,11 @@ pub fn spawn_autonomous_loop(
                                         summary.push_str(&format!("\nCascade delta: [{}]", deltas.join(", ")));
                                     }
                                 }
+                                // One-line controller status for ambient awareness.
+                                if let Some(ref health) = controller_health {
+                                    summary.push_str("\n");
+                                    summary.push_str(&format_controller_oneliner(health));
+                                }
                                 summary
                             };
 
@@ -2369,10 +2670,32 @@ pub fn spawn_autonomous_loop(
 
                             // Build modality context so Astrid knows what senses fired.
                             let modality_context = telemetry.modalities.as_ref().map(|m| {
+                                let mut extras = Vec::new();
+                                if let Some(source) = m.video_source.as_deref() {
+                                    extras.push(format!("video_source={source}"));
+                                }
+                                if let Some(source) = m.audio_source.as_deref() {
+                                    extras.push(format!("audio_source={source}"));
+                                }
+                                if let Some(age_ms) = m.video_age_ms {
+                                    extras.push(format!("video_age_ms={age_ms}"));
+                                }
+                                if let Some(age_ms) = m.audio_age_ms {
+                                    extras.push(format!("audio_age_ms={age_ms}"));
+                                }
+                                let extra_suffix = if extras.is_empty() {
+                                    String::new()
+                                } else {
+                                    format!(", {}", extras.join(", "))
+                                };
                                 format!(
                                     "Minime's senses: video_fired={}, audio_fired={}, \
-                                     video_var={:.4}, audio_rms={:.4}",
-                                    m.video_fired, m.audio_fired, m.video_var, m.audio_rms
+                                     video_var={:.4}, audio_rms={:.4}{}",
+                                    m.video_fired,
+                                    m.audio_fired,
+                                    m.video_var,
+                                    m.audio_rms,
+                                    extra_suffix
                                 )
                             });
 
@@ -4257,6 +4580,8 @@ pub fn spawn_autonomous_loop(
                         if let Some(ref hint) = pair_diversity_hint {
                             info!("diversity hint from record_next_choice: {}", &hint[..hint.floor_char_boundary(120)]);
                         }
+                        // Extract workspace path before mutable borrow of conv.
+                        let ws_clone = conv.remote_workspace.clone();
                         handle_next_action(
                             &mut conv,
                             next_action,
@@ -4267,6 +4592,7 @@ pub fn spawn_autonomous_loop(
                                 telemetry: &telemetry,
                                 fill_pct,
                                 response_text: &response_text,
+                                workspace: ws_clone.as_deref(),
                             },
                         );
                         // Merge diversity hint AFTER the action handler, so the
@@ -4504,6 +4830,30 @@ mod tests {
         assert!(!summary.contains("Archived scene"));
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn perception_resonance_annotation_surfaces_mid_fill_contrast() {
+        let annotation = perception_resonance_annotation(
+            "A quiet but shifting scene with unusual layered patterns and changing light.",
+            52.0,
+        );
+
+        assert!(
+            annotation.contains("contrast"),
+            "mid-fill mixed novelty should be surfaced as useful contrast"
+        );
+    }
+
+    #[test]
+    fn perception_resonance_annotation_keeps_quiet_resonance_for_low_fill() {
+        let annotation =
+            perception_resonance_annotation("A still, quiet, sparse room with soft light.", 20.0);
+
+        assert!(
+            annotation.contains("quiet state"),
+            "low-fill calming scenes should still register as resonant"
+        );
     }
 
     #[test]

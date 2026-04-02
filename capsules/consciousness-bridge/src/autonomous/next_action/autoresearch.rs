@@ -73,7 +73,10 @@ pub(super) fn handle_action(
 }
 
 /// Find an existing self-research job directory for the given being.
-fn find_self_research_job_dir(ar_root: &std::path::Path, being: &str) -> Option<std::path::PathBuf> {
+fn find_self_research_job_dir(
+    ar_root: &std::path::Path,
+    being: &str,
+) -> Option<std::path::PathBuf> {
     let jobs_dir = ar_root.join("jobs");
     let suffix = format!("-{being}-self-research");
     if let Ok(entries) = std::fs::read_dir(&jobs_dir) {

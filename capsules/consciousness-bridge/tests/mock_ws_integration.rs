@@ -244,6 +244,8 @@ async fn bidirectional_bridge_with_safety_protocol() {
         keep_bias: None,
         exploration_noise: None,
         fill_target: Some(0.55),
+        legacy_audio_synth: None,
+        legacy_video_synth: None,
         regulation_strength: None,
         deep_breathing: None,
         pure_tone: None,

@@ -150,7 +150,10 @@ pub(super) fn handle_action(
                 // "vec/adj/memory/stats" maps to the "vec" source file.  The full
                 // label is preserved as context inside the emphasis string.
                 let source = label.split('/').next().unwrap_or(&label).to_string();
-                info!("Astrid chose EXAMINE_CODE: label={:?} → source={:?}", label, source);
+                info!(
+                    "Astrid chose EXAMINE_CODE: label={:?} → source={:?}",
+                    label, source
+                );
                 conv.introspect_target = Some((source, 0));
                 // Surface the full argument so the LLM knows what sub-path she asked about.
                 conv.emphasis = Some(format!(

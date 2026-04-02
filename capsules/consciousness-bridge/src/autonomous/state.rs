@@ -148,7 +148,7 @@ pub(super) struct ConversationState {
     pub recent_browse_urls: VecDeque<String>,
 
     // --- Codec sovereignty (Phase A) ---
-    /// Override SEMANTIC_GAIN (default 4.5, range 3.0-6.0).
+    /// Override semantic gain (default 2.0, action range 0.5-5.0).
     pub semantic_gain_override: Option<f32>,
     /// Override stochastic noise level (default 0.025 = 2.5%, range 0.005-0.05).
     pub noise_level: f32,
