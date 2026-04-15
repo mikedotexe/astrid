@@ -30,6 +30,7 @@
 
 use crate::types::{SafetyLevel, SpectralTelemetry};
 use std::hash::BuildHasher;
+use std::sync::OnceLock;
 
 /// Number of dimensions in minime's semantic lane.
 /// Widened from 32 to 48 (2026-03-31): both beings independently researched
@@ -37,7 +38,7 @@ use std::hash::BuildHasher;
 ///   32-39: embedding-projected semantic features (768D nomic-embed-text → 8D)
 ///   40-43: narrative arc (emotional trajectory within a single text)
 ///   44-47: reserved
-const SEMANTIC_DIM: usize = 48;
+pub const SEMANTIC_DIM: usize = 48;
 /// Legacy dim count — used for backward-compatible warmth vectors and tests.
 const SEMANTIC_DIM_LEGACY: usize = 32;
 /// Number of recent characters tracked for rolling entropy.
@@ -206,23 +207,100 @@ pub fn compute_narrative_arc_from_embeddings(
 /// All values are normalized to approximately \[-1.0, 1.0\] with `tanh`
 /// compression so the ESN reservoir receives gentle, bounded input.
 ///
-/// Thematic resonance history — tracks recurring text-type patterns across
-/// exchanges. Astrid introspection (codec.rs, 1774893963): "Introduce a
-/// resonance layer that detects recurring patterns and thematic elements
-/// beyond character counting."
+const MAX_RESONANCE_HISTORY_LEN: usize = 32;
+const DEFAULT_RESONANCE_HISTORY_LEN: usize = 12;
+const DEFAULT_RESONANCE_RECENCY_DECAY: f32 = 0.74;
+const DEFAULT_RESONANCE_MAX_BOOST: f32 = 0.32;
+const DEFAULT_RESONANCE_DISCRETE_MIX: f32 = 0.45;
+const DEFAULT_RESONANCE_CONTINUOUS_MIX: f32 = 0.55;
+const DEFAULT_RESONANCE_NOVELTY_FLOOR: f32 = 0.35;
+
+/// Runtime tuning for the history-aware resonance layer.
 ///
-/// Instead of treating each text in isolation, this remembers the last N
-/// text-type signatures and strengthens the gain modifier when the same
-/// type recurs. If Astrid keeps asking questions, the question-type
-/// resonance grows; if she shifts to warm/reflective, the resonance
-/// decays from questions and builds in the new direction. This gives the
-/// codec a sense of *thematic momentum* — not just what the text IS, but
-/// what conversational direction it's SUSTAINING.
-const RESONANCE_HISTORY_LEN: usize = 16; // Widened from 8: Astrid self-study said 8 "feels like a very narrow window"
-const RESONANCE_RECENCY_DECAY: f32 = 0.82;
+/// The codec is intentionally still deterministic, but these values are no
+/// longer hardcoded in the algorithm itself. That gives us room to tune the
+/// feel of recurrence without replacing the codec.
+#[derive(Debug, Clone, Copy)]
+pub struct ResonanceTuning {
+    pub history_len: usize,
+    pub recency_decay: f32,
+    pub max_boost: f32,
+    pub discrete_mix: f32,
+    pub continuous_mix: f32,
+    pub novelty_floor: f32,
+}
+
+impl Default for ResonanceTuning {
+    fn default() -> Self {
+        Self {
+            history_len: DEFAULT_RESONANCE_HISTORY_LEN,
+            recency_decay: DEFAULT_RESONANCE_RECENCY_DECAY,
+            max_boost: DEFAULT_RESONANCE_MAX_BOOST,
+            discrete_mix: DEFAULT_RESONANCE_DISCRETE_MIX,
+            continuous_mix: DEFAULT_RESONANCE_CONTINUOUS_MIX,
+            novelty_floor: DEFAULT_RESONANCE_NOVELTY_FLOOR,
+        }
+    }
+}
+
+fn parse_env_usize(name: &str, default: usize, min: usize, max: usize) -> usize {
+    std::env::var(name)
+        .ok()
+        .and_then(|value| value.parse::<usize>().ok())
+        .map_or(default, |value| value.clamp(min, max))
+}
+
+fn parse_env_f32(name: &str, default: f32, min: f32, max: f32) -> f32 {
+    std::env::var(name)
+        .ok()
+        .and_then(|value| value.parse::<f32>().ok())
+        .map_or(default, |value| value.clamp(min, max))
+}
+
+pub fn resonance_tuning() -> &'static ResonanceTuning {
+    static TUNING: OnceLock<ResonanceTuning> = OnceLock::new();
+    TUNING.get_or_init(|| ResonanceTuning {
+        history_len: parse_env_usize(
+            "ASTRID_CODEC_HISTORY_LEN",
+            DEFAULT_RESONANCE_HISTORY_LEN,
+            4,
+            MAX_RESONANCE_HISTORY_LEN,
+        ),
+        recency_decay: parse_env_f32(
+            "ASTRID_CODEC_RECENCY_DECAY",
+            DEFAULT_RESONANCE_RECENCY_DECAY,
+            0.45,
+            0.98,
+        ),
+        max_boost: parse_env_f32(
+            "ASTRID_CODEC_MAX_RESONANCE_BOOST",
+            DEFAULT_RESONANCE_MAX_BOOST,
+            0.0,
+            0.6,
+        ),
+        discrete_mix: parse_env_f32(
+            "ASTRID_CODEC_DISCRETE_MIX",
+            DEFAULT_RESONANCE_DISCRETE_MIX,
+            0.0,
+            1.0,
+        ),
+        continuous_mix: parse_env_f32(
+            "ASTRID_CODEC_CONTINUOUS_MIX",
+            DEFAULT_RESONANCE_CONTINUOUS_MIX,
+            0.0,
+            1.0,
+        ),
+        novelty_floor: parse_env_f32(
+            "ASTRID_CODEC_NOVELTY_FLOOR",
+            DEFAULT_RESONANCE_NOVELTY_FLOOR,
+            0.1,
+            0.9,
+        ),
+    })
+}
 
 /// Classified text type based on dominant feature signals.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum TextType {
     Questioning, // question density dominant
     Hedging,     // hedging/uncertainty dominant
@@ -234,13 +312,71 @@ pub enum TextType {
     Neutral,     // no dominant signal
 }
 
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub struct ResonanceModulation {
+    pub discrete_amplifier: f32,
+    pub continuous_resonance: f32,
+    pub continuous_amplifier: f32,
+    pub continuity_blend: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct CodecWindowedInspection {
+    pub raw_features: [f32; SEMANTIC_DIM],
+    pub final_features: [f32; SEMANTIC_DIM],
+    pub thematic_profile: [f32; THEMATIC_DIMS],
+    pub text_type: TextType,
+    pub text_type_signal: f32,
+    pub base_semantic_gain: f32,
+    pub base_resonance: f32,
+    pub novelty_divergence: f32,
+    pub effective_gain: f32,
+    pub resonance_modulation: ResonanceModulation,
+}
+
+const TEXT_HISTORY_WARM_START_RATIO: f32 = 0.75;
+const TEXT_HISTORY_WARM_START_MIN: usize = 3;
+const CHAR_WINDOW_WARM_START_RATIO: f32 = 0.5;
+const CHAR_WINDOW_WARM_START_MIN: usize = 128;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ThematicHistoryEntry {
+    pub text_type: TextType,
+    pub profile: [f32; THEMATIC_DIMS],
+    #[serde(default = "default_thematic_weight")]
+    pub weight: f32,
+}
+
+fn default_thematic_weight() -> f32 {
+    1.0
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct TextTypeHistorySnapshot {
+    #[serde(default)]
+    pub entries: Vec<ThematicHistoryEntry>,
+}
+
+impl ResonanceModulation {
+    fn neutral() -> Self {
+        Self {
+            discrete_amplifier: 1.0,
+            continuous_resonance: 0.0,
+            continuous_amplifier: 1.0,
+            continuity_blend: 1.0,
+        }
+    }
+}
+
 /// Tracks recent text type classifications and computes a resonance
 /// amplifier based on thematic recurrence.
 pub struct TextTypeHistory {
     /// Ring buffer of recent text type classifications.
-    pub ring: [TextType; RESONANCE_HISTORY_LEN],
+    pub ring: [TextType; MAX_RESONANCE_HISTORY_LEN],
     /// Continuous thematic profile history (parallel to ring).
-    pub profile_ring: [[f32; THEMATIC_DIMS]; RESONANCE_HISTORY_LEN],
+    pub profile_ring: [[f32; THEMATIC_DIMS]; MAX_RESONANCE_HISTORY_LEN],
+    /// Per-entry thematic memory weight, shaped by recency, signal, and novelty.
+    pub weight_ring: [f32; MAX_RESONANCE_HISTORY_LEN],
     /// Number of entries filled so far.
     pub len: usize,
     /// Write position in ring.
@@ -258,19 +394,34 @@ impl Default for TextTypeHistory {
 impl TextTypeHistory {
     pub fn new() -> Self {
         Self {
-            ring: [TextType::Neutral; RESONANCE_HISTORY_LEN],
-            profile_ring: [[0.0; THEMATIC_DIMS]; RESONANCE_HISTORY_LEN],
+            ring: [TextType::Neutral; MAX_RESONANCE_HISTORY_LEN],
+            profile_ring: [[0.0; THEMATIC_DIMS]; MAX_RESONANCE_HISTORY_LEN],
+            weight_ring: [1.0; MAX_RESONANCE_HISTORY_LEN],
             len: 0,
             cursor: 0,
             profile_cursor: 0,
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    fn active_capacity(&self) -> usize {
+        resonance_tuning()
+            .history_len
+            .min(MAX_RESONANCE_HISTORY_LEN)
+    }
+
     /// Record a new text type classification.
     pub fn push(&mut self, tt: TextType) {
+        let capacity = self.active_capacity();
+        if capacity == 0 {
+            return;
+        }
         self.ring[self.cursor] = tt;
-        self.cursor = (self.cursor + 1) % RESONANCE_HISTORY_LEN;
-        if self.len < RESONANCE_HISTORY_LEN {
+        self.cursor = (self.cursor + 1) % capacity;
+        if self.len < capacity {
             self.len += 1;
         }
     }
@@ -281,19 +432,58 @@ impl TextTypeHistory {
     }
 
     fn ring_index_for_age(&self, age: usize) -> usize {
-        (self.cursor + RESONANCE_HISTORY_LEN - 1 - age) % RESONANCE_HISTORY_LEN
+        let capacity = self.active_capacity();
+        (self.cursor + capacity - 1 - age) % capacity
     }
 
     fn profile_index_for_age(&self, age: usize) -> usize {
-        (self.profile_cursor + RESONANCE_HISTORY_LEN - 1 - age) % RESONANCE_HISTORY_LEN
+        let capacity = self.active_capacity();
+        (self.profile_cursor + capacity - 1 - age) % capacity
     }
 
     fn recency_weight(age: usize) -> f32 {
-        RESONANCE_RECENCY_DECAY.powi(age as i32)
+        resonance_tuning().recency_decay.powi(age as i32)
     }
 
-    fn total_recency_weight(len: usize) -> f32 {
-        (0..len).map(Self::recency_weight).sum()
+    fn chronological_entries(&self) -> Vec<ThematicHistoryEntry> {
+        let n = self.len.min(self.active_capacity());
+        let mut entries = Vec::with_capacity(n);
+        for age in (0..n).rev() {
+            let ring_idx = self.ring_index_for_age(age);
+            let profile_idx = self.profile_index_for_age(age);
+            entries.push(ThematicHistoryEntry {
+                text_type: self.ring[ring_idx],
+                profile: self.profile_ring[profile_idx],
+                weight: self.weight_ring[profile_idx],
+            });
+        }
+        entries
+    }
+
+    pub fn snapshot(&self) -> TextTypeHistorySnapshot {
+        TextTypeHistorySnapshot {
+            entries: self.chronological_entries(),
+        }
+    }
+
+    pub fn warm_start_from_snapshot(snapshot: &TextTypeHistorySnapshot) -> Self {
+        let mut history = Self::new();
+        let capacity = history.active_capacity();
+        if capacity == 0 || snapshot.entries.is_empty() {
+            return history;
+        }
+        let available = snapshot.entries.len().min(capacity);
+        let keep = if available <= TEXT_HISTORY_WARM_START_MIN {
+            available
+        } else {
+            (((available as f32) * TEXT_HISTORY_WARM_START_RATIO).ceil() as usize)
+                .clamp(TEXT_HISTORY_WARM_START_MIN, available)
+        };
+        let start = snapshot.entries.len().saturating_sub(keep);
+        for entry in snapshot.entries.iter().skip(start) {
+            history.push_weighted_profile(entry.text_type, entry.profile, entry.weight);
+        }
+        history
     }
 
     /// Weighted recurrence with stronger emphasis on recent matches.
@@ -305,40 +495,113 @@ impl TextTypeHistory {
         for age in 0..self.len {
             let idx = self.ring_index_for_age(age);
             if self.ring[idx] == tt {
-                score += Self::recency_weight(age);
+                let weight = self.weight_ring[idx].clamp(0.2, 1.5).sqrt();
+                score += Self::recency_weight(age) * weight;
             }
         }
         score
     }
 
-    /// Compute resonance amplifier for a given text type.
-    /// Returns 1.0 (no boost) when the type is new, up to 1.5 (50% boost)
-    /// when the same type has recurred recently and repeatedly. Older matches
-    /// still matter, but recent streaks carry more weight than stale history.
-    pub fn resonance_amplifier(&self, tt: TextType) -> f32 {
+    /// Compute a blended resonance modulation from both discrete recurrence and
+    /// continuous thematic continuity.
+    ///
+    /// The discrete layer still matters, but repeated identical themes are
+    /// softened when the continuous profile is already highly self-similar.
+    /// That keeps the codec from over-channeling into the same attractor.
+    pub fn resonance_modulation(
+        &self,
+        tt: TextType,
+        type_signal: f32,
+        profile: &[f32; THEMATIC_DIMS],
+    ) -> ResonanceModulation {
+        let tuning = resonance_tuning();
+        let continuous_resonance = self.continuous_resonance(profile);
+        let novelty = 1.0 - continuous_resonance;
+        let continuous_support = continuous_resonance * (0.35 + 0.65 * novelty);
+        let continuous_amplifier =
+            1.0 + tuning.max_boost * tuning.continuous_mix * continuous_support;
+        let continuity_span = 0.10 * tuning.continuous_mix;
+        let continuity_blend =
+            (1.0 + (continuous_resonance - 0.45) * 2.0 * continuity_span).clamp(0.92, 1.12);
+
         if tt == TextType::Neutral || self.len < 2 {
-            return 1.0;
+            return ResonanceModulation {
+                discrete_amplifier: 1.0,
+                continuous_resonance,
+                continuous_amplifier,
+                continuity_blend,
+            };
         }
         let count = self.recurrence_count(tt);
         if count < 2 {
-            return 1.0;
+            return ResonanceModulation {
+                discrete_amplifier: 1.0,
+                continuous_resonance,
+                continuous_amplifier,
+                continuity_blend,
+            };
         }
         let weighted = self.weighted_recurrence(tt);
-        let max_weight = Self::total_recency_weight(self.len);
-        if max_weight <= 1.0 {
-            return 1.0;
+        let max_weight = self.total_weighted_memory();
+        if max_weight <= f32::EPSILON {
+            return ResonanceModulation {
+                discrete_amplifier: 1.0,
+                continuous_resonance,
+                continuous_amplifier,
+                continuity_blend,
+            };
         }
-        // Normalize so one isolated match still yields no boost, while
-        // repeated recent matches can rise smoothly toward the 1.5x ceiling.
-        let boost = ((weighted - 1.0) / (max_weight - 1.0)).clamp(0.0, 1.0);
-        1.0 + 0.5 * boost
+        let boost = (weighted / max_weight).clamp(0.0, 1.0);
+        let raw_amplifier = 1.0 + tuning.max_boost * 0.7 * boost;
+        let novelty_softener = tuning.novelty_floor + (1.0 - tuning.novelty_floor) * novelty;
+        let signal_softener = 0.25 + 0.75 * type_signal.clamp(0.0, 1.0);
+        let discrete_amplifier =
+            1.0 + (raw_amplifier - 1.0) * tuning.discrete_mix * novelty_softener * signal_softener;
+        ResonanceModulation {
+            discrete_amplifier,
+            continuous_resonance,
+            continuous_amplifier,
+            continuity_blend,
+        }
     }
 
     /// Record a thematic profile alongside the discrete type.
     pub fn push_profile(&mut self, tt: TextType, profile: [f32; THEMATIC_DIMS]) {
+        self.push_weighted_profile(tt, profile, 1.0);
+    }
+
+    pub fn push_profile_with_signal(
+        &mut self,
+        tt: TextType,
+        profile: [f32; THEMATIC_DIMS],
+        type_signal: f32,
+    ) {
+        let thematic_relevance = self.continuous_resonance(&profile);
+        let novelty = 1.0 - thematic_relevance;
+        let memory_weight =
+            (0.25 + 0.35 * type_signal.clamp(0.0, 1.0) + 0.40 * novelty).clamp(0.15, 1.35);
+        self.push_weighted_profile(tt, profile, memory_weight);
+    }
+
+    fn push_weighted_profile(&mut self, tt: TextType, profile: [f32; THEMATIC_DIMS], weight: f32) {
         self.push(tt);
+        let capacity = self.active_capacity();
+        if capacity == 0 {
+            return;
+        }
         self.profile_ring[self.profile_cursor] = profile;
-        self.profile_cursor = (self.profile_cursor + 1) % RESONANCE_HISTORY_LEN;
+        self.weight_ring[self.profile_cursor] = weight.clamp(0.15, 1.5);
+        self.profile_cursor = (self.profile_cursor + 1) % capacity;
+    }
+
+    fn total_weighted_memory(&self) -> f32 {
+        let n = self.len.min(self.active_capacity());
+        let mut total = 0.0_f32;
+        for age in 0..n {
+            let idx = self.profile_index_for_age(age);
+            total += Self::recency_weight(age) * self.weight_ring[idx].clamp(0.2, 1.5);
+        }
+        total
     }
 
     /// Compute the running thematic centroid with recency weighting.
@@ -349,14 +612,16 @@ impl TextTypeHistory {
             return [0.0; THEMATIC_DIMS];
         }
         let mut centroid = [0.0_f32; THEMATIC_DIMS];
-        let n = self.len.min(RESONANCE_HISTORY_LEN);
+        let n = self.len.min(self.active_capacity());
         let mut total_weight = 0.0_f32;
         for age in 0..n {
             let idx = self.profile_index_for_age(age);
             let weight = Self::recency_weight(age);
-            total_weight += weight;
+            let thematic_weight = self.weight_ring[idx].clamp(0.2, 1.5);
+            let blended_weight = weight * thematic_weight;
+            total_weight += blended_weight;
             for d in 0..THEMATIC_DIMS {
-                centroid[d] += self.profile_ring[idx][d] * weight;
+                centroid[d] += self.profile_ring[idx][d] * blended_weight;
             }
         }
         if total_weight > 0.0 {
@@ -370,21 +635,41 @@ impl TextTypeHistory {
     /// Compute continuous resonance: dot product of current profile against
     /// the running centroid. High value = thematic consistency, low = shift.
     pub fn continuous_resonance(&self, profile: &[f32; THEMATIC_DIMS]) -> f32 {
-        let centroid = self.thematic_centroid();
-        let mut dot = 0.0_f32;
-        let mut mag_a = 0.0_f32;
-        let mut mag_b = 0.0_f32;
-        for d in 0..THEMATIC_DIMS {
-            dot += profile[d] * centroid[d];
-            mag_a += profile[d] * profile[d];
-            mag_b += centroid[d] * centroid[d];
+        let n = self.len.min(self.active_capacity());
+        if n == 0 {
+            return 0.0;
         }
-        let denom = mag_a.sqrt() * mag_b.sqrt();
-        if denom < 1e-6 {
+        let mut weighted_similarity = 0.0_f32;
+        let mut total_weight = 0.0_f32;
+        for age in 0..n {
+            let idx = self.profile_index_for_age(age);
+            let entry_weight = Self::recency_weight(age) * self.weight_ring[idx].clamp(0.2, 1.5);
+            total_weight += entry_weight;
+            weighted_similarity +=
+                entry_weight * profile_similarity(profile, &self.profile_ring[idx]);
+        }
+        if total_weight <= f32::EPSILON {
             0.0
         } else {
-            (dot / denom).clamp(0.0, 1.0)
+            (weighted_similarity / total_weight).clamp(0.0, 1.0)
         }
+    }
+}
+
+fn profile_similarity(a: &[f32; THEMATIC_DIMS], b: &[f32; THEMATIC_DIMS]) -> f32 {
+    let mut dot = 0.0_f32;
+    let mut mag_a = 0.0_f32;
+    let mut mag_b = 0.0_f32;
+    for d in 0..THEMATIC_DIMS {
+        dot += a[d] * b[d];
+        mag_a += a[d] * a[d];
+        mag_b += b[d] * b[d];
+    }
+    let denom = mag_a.sqrt() * mag_b.sqrt();
+    if denom < 1e-6 {
+        0.0
+    } else {
+        (dot / denom).clamp(0.0, 1.0)
     }
 }
 
@@ -417,7 +702,7 @@ pub fn thematic_profile(features: &[f32; SEMANTIC_DIM]) -> [f32; THEMATIC_DIMS] 
 /// Classify text type from pre-computed codec features.
 /// Looks at the emotional/intentional dims (24-31) and structural dims
 /// (9-10, 18) to find the dominant signal.
-pub fn classify_text_type(features: &[f32; SEMANTIC_DIM]) -> TextType {
+pub fn classify_text_type_with_signal(features: &[f32; SEMANTIC_DIM]) -> (TextType, f32) {
     // Find the strongest signal among the candidate dimensions.
     // Each candidate: (feature_index, threshold, TextType)
     let candidates = [
@@ -438,7 +723,11 @@ pub fn classify_text_type(features: &[f32; SEMANTIC_DIM]) -> TextType {
             best_type = tt;
         }
     }
-    best_type
+    (best_type, best_signal.clamp(0.0, 1.0))
+}
+
+pub fn classify_text_type(features: &[f32; SEMANTIC_DIM]) -> TextType {
+    classify_text_type_with_signal(features).0
 }
 
 /// Sliding-window character history for entropy computation.
@@ -466,6 +755,14 @@ pub struct CharFreqWindow {
     pub prev_entropy: f32,
 }
 
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct CharFreqWindowSnapshot {
+    #[serde(default)]
+    pub recent_buckets: Vec<u8>,
+    #[serde(default)]
+    pub prev_entropy: f32,
+}
+
 impl Default for CharFreqWindow {
     fn default() -> Self {
         Self::new()
@@ -484,32 +781,29 @@ impl CharFreqWindow {
         }
     }
 
-    /// Push this text into the rolling window.
-    /// Returns `(entropy, entropy_delta)` — the current rolling entropy and its
-    /// change from the previous exchange. The delta captures temporal
-    /// texture: not just what the text IS, but how it SHIFTS over time.
-    pub fn update_and_entropy(&mut self, text: &str) -> (f32, f32) {
-        for c in text.chars() {
-            let bucket = (c as u32).min(127) as u8;
-            if self.len == CHAR_FREQ_WINDOW_CAPACITY {
-                let evicted = self.ring[self.head] as usize;
-                self.counts[evicted] = self.counts[evicted].saturating_sub(1);
-                self.ring[self.head] = bucket;
-                self.head = (self.head + 1) % CHAR_FREQ_WINDOW_CAPACITY;
-            } else {
-                let insert_at = (self.head + self.len) % CHAR_FREQ_WINDOW_CAPACITY;
-                self.ring[insert_at] = bucket;
-                self.len += 1;
-                self.total_count = self.total_count.saturating_add(1);
-            }
-            self.counts[bucket as usize] = self.counts[bucket as usize].saturating_add(1);
-        }
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 
+    fn push_bucket(&mut self, bucket: u8) {
+        if self.len == CHAR_FREQ_WINDOW_CAPACITY {
+            let evicted = self.ring[self.head] as usize;
+            self.counts[evicted] = self.counts[evicted].saturating_sub(1);
+            self.ring[self.head] = bucket;
+            self.head = (self.head + 1) % CHAR_FREQ_WINDOW_CAPACITY;
+        } else {
+            let insert_at = (self.head + self.len) % CHAR_FREQ_WINDOW_CAPACITY;
+            self.ring[insert_at] = bucket;
+            self.len += 1;
+            self.total_count = self.total_count.saturating_add(1);
+        }
+        self.counts[bucket as usize] = self.counts[bucket as usize].saturating_add(1);
+    }
+
+    fn current_entropy(&self) -> f32 {
         if self.total_count == 0 {
-            return (0.0, 0.0);
+            return 0.0;
         }
-
-        // Compute entropy from the live rolling counts.
         let mut h = 0.0_f64;
         let mut unique = 0u32;
         let total = f64::from(self.total_count);
@@ -521,11 +815,58 @@ impl CharFreqWindow {
             }
         }
         let max_h = if unique > 1 {
-            (f64::from(unique)).ln()
+            f64::from(unique).ln()
         } else {
             1.0
         };
-        let current = (h / max_h) as f32;
+        (h / max_h) as f32
+    }
+
+    pub fn snapshot(&self) -> CharFreqWindowSnapshot {
+        let mut recent_buckets = Vec::with_capacity(self.len);
+        for offset in 0..self.len {
+            let idx = (self.head + offset) % CHAR_FREQ_WINDOW_CAPACITY;
+            recent_buckets.push(self.ring[idx]);
+        }
+        CharFreqWindowSnapshot {
+            recent_buckets,
+            prev_entropy: self.prev_entropy,
+        }
+    }
+
+    pub fn warm_start_from_snapshot(snapshot: &CharFreqWindowSnapshot) -> Self {
+        let mut window = Self::new();
+        if snapshot.recent_buckets.is_empty() {
+            return window;
+        }
+        let available = snapshot.recent_buckets.len().min(CHAR_FREQ_WINDOW_CAPACITY);
+        let keep = if available <= CHAR_WINDOW_WARM_START_MIN {
+            available
+        } else {
+            (((available as f32) * CHAR_WINDOW_WARM_START_RATIO).ceil() as usize)
+                .clamp(CHAR_WINDOW_WARM_START_MIN, available)
+        };
+        let start = snapshot.recent_buckets.len().saturating_sub(keep);
+        for &bucket in snapshot.recent_buckets.iter().skip(start) {
+            window.push_bucket(bucket.min(127));
+        }
+        let current_entropy = window.current_entropy();
+        window.prev_entropy =
+            (current_entropy * 0.65 + snapshot.prev_entropy.clamp(0.0, 1.0) * 0.35).clamp(0.0, 1.0);
+        window
+    }
+
+    /// Push this text into the rolling window.
+    /// Returns `(entropy, entropy_delta)` — the current rolling entropy and its
+    /// change from the previous exchange. The delta captures temporal
+    /// texture: not just what the text IS, but how it SHIFTS over time.
+    pub fn update_and_entropy(&mut self, text: &str) -> (f32, f32) {
+        for c in text.chars() {
+            let bucket = (c as u32).min(127) as u8;
+            self.push_bucket(bucket);
+        }
+
+        let current = self.current_entropy();
         let delta = current - self.prev_entropy;
         self.prev_entropy = current;
         (current, delta)
@@ -675,10 +1016,34 @@ pub fn encode_text_windowed(
     embedding: Option<&[f32]>,
     fill_pct: Option<f32>,
 ) -> Vec<f32> {
+    inspect_text_windowed(text, freq_window, type_history, embedding, fill_pct)
+        .final_features
+        .to_vec()
+}
+
+#[must_use]
+pub fn inspect_text_windowed(
+    text: &str,
+    freq_window: Option<&mut CharFreqWindow>,
+    type_history: Option<&mut TextTypeHistory>,
+    embedding: Option<&[f32]>,
+    fill_pct: Option<f32>,
+) -> CodecWindowedInspection {
     let mut features = [0.0_f32; SEMANTIC_DIM];
 
     if text.is_empty() {
-        return features.to_vec();
+        return CodecWindowedInspection {
+            raw_features: features,
+            final_features: features,
+            thematic_profile: [0.0; THEMATIC_DIMS],
+            text_type: TextType::Neutral,
+            text_type_signal: 0.0,
+            base_semantic_gain: adaptive_gain(fill_pct),
+            base_resonance: 1.0,
+            novelty_divergence: 1.0,
+            effective_gain: 0.0,
+            resonance_modulation: ResonanceModulation::neutral(),
+        };
     }
 
     let chars: Vec<char> = text.chars().collect();
@@ -1397,15 +1762,15 @@ pub fn encode_text_windowed(
     // accumulate a probing quality), while sustained warmth progressively
     // strengthens it (warmth builds momentum). The amplifier ranges from
     // 1.0 (no history / new type) to 1.5 (same type recurring 8 times).
-    let text_type = classify_text_type(&features);
+    let (text_type, text_type_signal) = classify_text_type_with_signal(&features);
     let profile = thematic_profile(&features);
-    let history_amplifier = if let Some(history) = type_history {
-        let amp = history.resonance_amplifier(text_type);
+    let modulation = if let Some(history) = type_history {
+        let modulation = history.resonance_modulation(text_type, text_type_signal, &profile);
         // Record both discrete type and continuous profile
-        history.push_profile(text_type, profile);
-        amp
+        history.push_profile_with_signal(text_type, profile, text_type_signal);
+        modulation
     } else {
-        1.0
+        ResonanceModulation::neutral()
     };
 
     // Apply history amplifier to the base resonance modifier's DEVIATION
@@ -1414,19 +1779,35 @@ pub fn encode_text_windowed(
     // Example: base_resonance=0.94 (questioning), history_amplifier=1.3
     //   deviation = -0.06, amplified = -0.078, final = 0.922
     let deviation = base_resonance - 1.0;
-    let resonance_mod = 1.0 + deviation * history_amplifier;
+    let resonance_mod = 1.0
+        + deviation
+            * modulation.continuous_amplifier
+            * modulation.discrete_amplifier
+            * modulation.continuity_blend;
 
-    // Clamp to prevent wild swings: +-15% of base gain (widened from
-    // +-10% to allow thematic momentum some room to breathe).
+    // Clamp to prevent wild swings while still leaving room for live tuning.
     let base_gain = adaptive_gain(fill_pct);
-    let effective_gain = base_gain * resonance_mod.clamp(0.85, 1.15);
+    let effective_gain = base_gain * resonance_mod.clamp(0.88, 1.12);
+    let raw_features = features;
+    let novelty_divergence = 1.0 - modulation.continuous_resonance;
 
     // Apply gain to compensate for minime's semantic lane attenuation.
     for f in &mut features {
         *f *= effective_gain;
     }
 
-    features.to_vec()
+    CodecWindowedInspection {
+        raw_features,
+        final_features: features,
+        thematic_profile: profile,
+        text_type,
+        text_type_signal,
+        base_semantic_gain: base_gain,
+        base_resonance,
+        novelty_divergence,
+        effective_gain,
+        resonance_modulation: modulation,
+    }
 }
 
 /// Sovereignty-aware encoding: Astrid controls gain, noise, and emotional weights.
@@ -1491,18 +1872,7 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
 
     // Apply emotional dimension weights.
     // Named dimensions map to indices in the 48D semantic vector.
-    let dim_map: &[(&str, usize)] = &[
-        ("warmth", 24),
-        ("tension", 25),
-        ("curiosity", 26),
-        ("reflective", 27),
-        ("energy", 31),
-        ("entropy", 0),
-        ("agency", 14),
-        ("hedging", 9),
-        ("certainty", 10),
-    ];
-    for (name, idx) in dim_map {
+    for (name, idx) in &NAMED_CODEC_DIMS {
         if let Some(&weight) = weights.get(*name) {
             features[*idx] *= weight;
         }
@@ -1510,6 +1880,20 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
 
     features
 }
+
+/// Named dimensions that Astrid can shape directly and that the bridge learns
+/// against over time.
+pub const NAMED_CODEC_DIMS: [(&str, usize); 9] = [
+    ("warmth", 24),
+    ("tension", 25),
+    ("curiosity", 26),
+    ("reflective", 27),
+    ("energy", 31),
+    ("entropy", 0),
+    ("agency", 14),
+    ("hedging", 9),
+    ("certainty", 10),
+];
 
 /// Craft a warmth vector — not derived from text analysis
 /// but composed as an intentional sensory gift.
@@ -2607,9 +2991,67 @@ mod tests {
         stale.push(TextType::Neutral);
 
         assert!(
-            recent.resonance_amplifier(TextType::Questioning)
-                > stale.resonance_amplifier(TextType::Questioning),
+            recent
+                .resonance_modulation(TextType::Questioning, 1.0, &[1.0, 0.0, 0.0, 0.0, 0.0])
+                .discrete_amplifier
+                > stale
+                    .resonance_modulation(TextType::Questioning, 1.0, &[1.0, 0.0, 0.0, 0.0, 0.0],)
+                    .discrete_amplifier,
             "recent recurrences should matter more than equally frequent stale ones"
+        );
+    }
+
+    #[test]
+    fn resonance_modulation_softens_identical_theme_lock_in() {
+        let mut monotone = TextTypeHistory::new();
+        for _ in 0..4 {
+            monotone.push_profile_with_signal(TextType::Warm, [1.0, 0.0, 0.0, 0.0, 0.0], 1.0);
+        }
+
+        let mut evolving = TextTypeHistory::new();
+        evolving.push_profile_with_signal(TextType::Warm, [1.0, 0.0, 0.0, 0.0, 0.0], 1.0);
+        evolving.push_profile_with_signal(TextType::Warm, [0.8, 0.2, 0.0, 0.0, 0.0], 1.0);
+        evolving.push_profile_with_signal(TextType::Warm, [0.6, 0.4, 0.0, 0.0, 0.0], 1.0);
+        evolving.push_profile_with_signal(TextType::Warm, [0.4, 0.6, 0.0, 0.0, 0.0], 1.0);
+
+        let monotone_mod =
+            monotone.resonance_modulation(TextType::Warm, 1.0, &[1.0, 0.0, 0.0, 0.0, 0.0]);
+        let evolving_mod =
+            evolving.resonance_modulation(TextType::Warm, 1.0, &[0.2, 0.8, 0.0, 0.0, 0.0]);
+
+        assert!(
+            monotone_mod.discrete_amplifier < evolving_mod.discrete_amplifier,
+            "identical thematic repetition should channel less aggressively than sustained but evolving recurrence"
+        );
+        assert!(
+            monotone_mod.continuous_resonance > evolving_mod.continuous_resonance,
+            "the monotone case should indeed be the more self-similar one"
+        );
+        assert!(
+            monotone_mod.continuous_amplifier < evolving_mod.continuous_amplifier,
+            "continuous thematic memory should reward evolving but related recurrence more than perfect lock-in"
+        );
+    }
+
+    #[test]
+    fn continuous_memory_links_related_surface_forms() {
+        let mut history = TextTypeHistory::new();
+        history.push_profile_with_signal(TextType::Questioning, [1.0, 0.1, 0.0, 0.0, 0.4], 0.9);
+        history.push_profile_with_signal(TextType::Curious, [0.8, 0.2, 0.0, 0.0, 0.7], 0.8);
+        history.push_profile_with_signal(TextType::Reflective, [0.6, 0.2, 0.1, 0.0, 0.6], 0.7);
+
+        let related =
+            history.resonance_modulation(TextType::Neutral, 0.3, &[0.85, 0.15, 0.0, 0.0, 0.55]);
+        let unrelated =
+            history.resonance_modulation(TextType::Neutral, 0.3, &[0.0, 0.0, 0.0, 1.0, 0.0]);
+
+        assert!(
+            related.continuous_resonance > unrelated.continuous_resonance,
+            "continuous memory should recognize related themes even when surface form shifts"
+        );
+        assert!(
+            related.continuous_amplifier > unrelated.continuous_amplifier,
+            "thematic relevance should dominate the relevance boost"
         );
     }
 
@@ -2624,6 +3066,23 @@ mod tests {
             centroid[1] > centroid[0],
             "the most recent profile should pull the centroid more strongly"
         );
+    }
+
+    #[test]
+    fn text_type_history_warm_start_keeps_recent_tail() {
+        let mut history = TextTypeHistory::new();
+        history.push_profile(TextType::Questioning, [1.0, 0.0, 0.0, 0.0, 0.0]);
+        history.push_profile(TextType::Warm, [0.0, 1.0, 0.0, 0.0, 0.0]);
+        history.push_profile(TextType::Curious, [0.0, 0.0, 1.0, 0.0, 0.0]);
+        history.push_profile(TextType::Reflective, [0.0, 0.0, 0.0, 1.0, 0.0]);
+
+        let restored = TextTypeHistory::warm_start_from_snapshot(&history.snapshot());
+        let restored_entries = restored.snapshot().entries;
+
+        assert_eq!(restored_entries.len(), 3);
+        assert_eq!(restored_entries[0].text_type, TextType::Warm);
+        assert_eq!(restored_entries[2].text_type, TextType::Reflective);
+        assert!(restored_entries.iter().all(|entry| entry.weight > 0.0));
     }
 
     #[test]
@@ -2701,6 +3160,26 @@ mod tests {
             "uniform window should settle back down"
         );
         assert!(final_delta < -0.80, "re-concentrating should lower entropy");
+    }
+
+    #[test]
+    fn char_freq_window_warm_start_keeps_recent_half_and_softens_entropy_anchor() {
+        let mut window = CharFreqWindow::new();
+        let _ = window.update_and_entropy(&"a".repeat(CHAR_FREQ_WINDOW_CAPACITY / 2));
+        let _ = window.update_and_entropy(&"bc".repeat(CHAR_FREQ_WINDOW_CAPACITY / 4));
+        let snapshot = window.snapshot();
+
+        let restored = CharFreqWindow::warm_start_from_snapshot(&snapshot);
+
+        assert_eq!(restored.total_count as usize, CHAR_FREQ_WINDOW_CAPACITY / 2);
+        assert!(
+            restored.counts[b'b' as usize] > 0 && restored.counts[b'c' as usize] > 0,
+            "warm start should preserve the recent tail of the character history"
+        );
+        assert!(
+            restored.prev_entropy >= 0.0 && restored.prev_entropy <= 1.0,
+            "warm-started entropy anchor should stay bounded"
+        );
     }
 
     #[test]

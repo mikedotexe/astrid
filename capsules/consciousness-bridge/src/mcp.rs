@@ -835,7 +835,7 @@ fn normalize_probe_action(action_text: &str) -> Option<String> {
         None
     } else {
         crate::autonomous::parse_next_action(trimmed)
-            .map(std::borrow::ToOwned::to_owned)
+            .map(crate::autonomous::canonicalize_next_action_text)
             .or_else(|| Some(trimmed.to_string()))
     }
 }

@@ -149,6 +149,61 @@ pub fn format_memory_listing(
     )
 }
 
+/// Look up a memory by exact ID or role substring.
+pub fn find_memory<'a>(
+    bank: &'a [RemoteMemorySummary],
+    query: &str,
+) -> Option<&'a RemoteMemorySummary> {
+    // Exact ID match first
+    if let Some(mem) = bank.iter().find(|e| e.id == query) {
+        return Some(mem);
+    }
+    // Role substring match (e.g. "stable", "latest")
+    let q = query.to_lowercase();
+    bank.iter().find(|e| e.role.to_lowercase() == q)
+}
+
+/// Rich detail view of a single memory for EXAMINE_MEMORY.
+pub fn format_memory_detail(mem: &RemoteMemorySummary) -> String {
+    let g = &mem.spectral_glimpse_12d;
+    let glimpse_detail = if g.len() >= 12 {
+        format!(
+            "\
+  Spectral glimpse (12D):
+    [0] dominant:    {:.3}
+    [1] shoulder:    {:.3}
+    [2] tail:        {:.3}
+    [3] dim3:        {:.3}
+    [4] dim4:        {:.3}
+    [5] dim5:        {:.3}
+    [6] dim6:        {:.3}
+    [7] entropy:     {:.3}
+    [8] gap:         {:.3}
+    [9] rotation:    {:.3}
+    [10] geom:       {:.3}
+    [11] dim11:      {:.3}",
+            g[0], g[1], g[2], g[3], g[4], g[5], g[6], g[7], g[8], g[9], g[10], g[11],
+        )
+    } else {
+        "  Spectral glimpse: shape unavailable".to_string()
+    };
+
+    format!(
+        "\
+[Vague memory examination: {}]
+  Role: {}
+  Timestamp: {}ms
+  Fill: {:.1}%
+  Lambda1 relative: {:.3}
+  Spread: {:.1}
+  Geometric radius: {:.3}
+{glimpse_detail}
+
+Compare this snapshot to your current spectral state above.",
+        mem.id, mem.role, mem.timestamp_ms, mem.fill_pct, mem.lambda1_rel, mem.spread, mem.geom_rel,
+    )
+}
+
 pub fn write_recall_request(requested_by: &str, target: &str) -> io::Result<PathBuf> {
     let requests_dir_buf = bridge_paths().minime_memory_requests_dir();
     let requests_dir = requests_dir_buf.as_path();

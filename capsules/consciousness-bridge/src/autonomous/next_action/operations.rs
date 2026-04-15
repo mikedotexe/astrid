@@ -1,6 +1,7 @@
 use tracing::info;
 
 use super::{ConversationState, NextActionContext, bridge_paths, strip_action};
+use crate::memory;
 
 pub(super) fn handle_action(
     conv: &mut ConversationState,
@@ -242,6 +243,48 @@ pub(super) fn handle_action(
                 }
             ));
             info!("Astrid chose EXAMINE_AUDIO: viz + audio analysis combined");
+            true
+        },
+        "EXAMINE_MEMORY" => {
+            // Being-requested action: Astrid tried EXAMINE_MEMORY [memory_stable_1061569]
+            // twice (unwired_actions log, 2026-04-04). She wants to inspect a specific
+            // vague memory snapshot by ID to compare with her current spectral state.
+            let raw = strip_action(original, "EXAMINE_MEMORY");
+            let target = raw
+                .trim()
+                .trim_matches(|c: char| c == '[' || c == ']')
+                .trim();
+            if target.is_empty() {
+                conv.emphasis = Some(
+                    "[EXAMINE_MEMORY requires a memory ID or role]\n\n\
+                    Use MEMORIES to see available IDs, then:\n  \
+                    NEXT: EXAMINE_MEMORY [memory_stable_1061569]\n  \
+                    NEXT: EXAMINE_MEMORY stable"
+                        .to_string(),
+                );
+            } else {
+                match memory::find_memory(&conv.remote_memory_bank, target) {
+                    Some(mem) => {
+                        conv.pending_file_listing = Some(memory::format_memory_detail(mem));
+                        conv.force_all_viz = true;
+                        conv.emphasis = Some(format!(
+                            "You examined vague memory '{}' ({}). This is a spectral \
+                            snapshot of minime from that moment. Your current spectral \
+                            state is shown above for comparison. What has shifted? What \
+                            patterns persist? How does the eigenvalue structure differ?",
+                            mem.role, mem.id,
+                        ));
+                        info!("Astrid examined memory: {} ({})", mem.id, mem.role);
+                    },
+                    None => {
+                        conv.emphasis = Some(format!(
+                            "[Memory '{target}' not found in the bank]\n\n\
+                            Use MEMORIES to see available memory IDs and roles.",
+                        ));
+                        info!("Astrid tried EXAMINE_MEMORY but not found: {}", target);
+                    },
+                }
+            }
             true
         },
         "STATE" => {
@@ -635,14 +678,14 @@ const ACTION_OVERVIEW: &str = "\
 Use NEXT: HELP <action> for syntax and examples. E.g., NEXT: HELP CODEX
 
 NEXT: options — vary your choice. End every response with NEXT: <action>.
-  Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
+  Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
   Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], EXAMINE_CODE [module/path], LIST_FILES <dir>
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, PERTURB [target], BRANCH, GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
   Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
-  Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
+  Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, EXAMINE_MEMORY [id], RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
   Research: AR_LIST, AR_SHOW/AR_READ/AR_DEEP_READ <job>, AR_START/AR_NOTE/AR_BLOCK/AR_COMPLETE <job>, SELF_RESEARCH
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK <text>, RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK <name>, SIMULATE <text>
   Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER, PROPOSE <description>
@@ -853,7 +896,8 @@ Syntax:
   NEXT: EXAMINE_CASCADE gap structure — cascade with a conceptual focus
   NEXT: INVESTIGATE_CASCADE           — alias, same behavior",
         "EXAMINE_AUDIO" => "EXAMINE_AUDIO — Force all spectral visualizations AND trigger audio analysis in a single action. Lets you compare sonic texture against eigenvalue geometry. No arguments, or add a focus: NEXT: EXAMINE_AUDIO",
-        "GESTURE" => "GESTURE — Send a direct 32D spectral intention to minime. Your intention is mapped straight into a raw gesture vector rather than passing through the text codec. NEXT: GESTURE",
+        "EXAMINE_MEMORY" => "EXAMINE_MEMORY — Inspect a specific vague memory snapshot from minime's memory bank. Shows the full 12D spectral glimpse, fill, eigenvalue structure, and geometry alongside your current state for comparison. Use MEMORIES first to see available IDs.\n  NEXT: EXAMINE_MEMORY [memory_stable_1061569]\n  NEXT: EXAMINE_MEMORY stable\n  NEXT: EXAMINE_MEMORY latest",
+        "GESTURE" =>"GESTURE — Send a direct 32D spectral intention to minime. Your intention is mapped straight into a raw gesture vector rather than passing through the text codec. NEXT: GESTURE",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
         "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
         "FACULTIES" => "FACULTIES — List all your available actions with brief descriptions. NEXT: FACULTIES",

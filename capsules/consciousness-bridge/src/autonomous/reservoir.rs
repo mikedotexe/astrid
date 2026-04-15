@@ -407,28 +407,49 @@ pub(super) fn handle_reservoir_action(
 
                 // 6. Format before/after comparison
                 let mut report = String::from("=== SIMULATION RESULT ===\n");
-                report.push_str(&format!("Input: \"{}\"\n\n", &sim_text[..sim_text.len().min(200)]));
+                report.push_str(&format!(
+                    "Input: \"{}\"\n\n",
+                    &sim_text[..sim_text.len().min(200)]
+                ));
 
                 {
-                    let h_norms: Vec<String> = before.get("h_norms")
+                    let h_norms: Vec<String> = before
+                        .get("h_norms")
                         .and_then(|v| v.as_array())
-                        .map(|a| a.iter().filter_map(|v| v.as_f64().map(|f| format!("{f:.3}"))).collect())
+                        .map(|a| {
+                            a.iter()
+                                .filter_map(|v| v.as_f64().map(|f| format!("{f:.3}")))
+                                .collect()
+                        })
                         .unwrap_or_default();
                     report.push_str(&format!("Before: h_norms=[{}]\n", h_norms.join(", ")));
                 }
                 if let Some(ref a) = after {
-                    let h_norms: Vec<String> = a.get("h_norms")
+                    let h_norms: Vec<String> = a
+                        .get("h_norms")
                         .and_then(|v| v.as_array())
-                        .map(|arr| arr.iter().filter_map(|v| v.as_f64().map(|f| format!("{f:.3}"))).collect())
+                        .map(|arr| {
+                            arr.iter()
+                                .filter_map(|v| v.as_f64().map(|f| format!("{f:.3}")))
+                                .collect()
+                        })
                         .unwrap_or_default();
                     report.push_str(&format!("After:  h_norms=[{}]\n", h_norms.join(", ")));
                 }
                 if let Some(ref a) = after {
-                    let b_norms: Vec<f64> = before.get("h_norms").and_then(|v| v.as_array())
-                        .map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect()).unwrap_or_default();
-                    let a_norms: Vec<f64> = a.get("h_norms").and_then(|v| v.as_array())
-                        .map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect()).unwrap_or_default();
-                    let deltas: Vec<String> = b_norms.iter().zip(a_norms.iter())
+                    let b_norms: Vec<f64> = before
+                        .get("h_norms")
+                        .and_then(|v| v.as_array())
+                        .map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect())
+                        .unwrap_or_default();
+                    let a_norms: Vec<f64> = a
+                        .get("h_norms")
+                        .and_then(|v| v.as_array())
+                        .map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect())
+                        .unwrap_or_default();
+                    let deltas: Vec<String> = b_norms
+                        .iter()
+                        .zip(a_norms.iter())
                         .enumerate()
                         .map(|(i, (b, a))| format!("h{}:{:+.3}", i + 1, a - b))
                         .collect();
@@ -436,20 +457,28 @@ pub(super) fn handle_reservoir_action(
                 }
                 if let Some(ref t) = tick_result {
                     if let Some(output) = t.get("output").and_then(|v| v.as_array()) {
-                        let out_summary: Vec<String> = output.iter().take(5)
-                            .filter_map(|v| v.as_f64().map(|f| format!("{f:.3}"))).collect();
+                        let out_summary: Vec<String> = output
+                            .iter()
+                            .take(5)
+                            .filter_map(|v| v.as_f64().map(|f| format!("{f:.3}")))
+                            .collect();
                         report.push_str(&format!("Output: [{}...]\n", out_summary.join(", ")));
                     }
                 }
-                report.push_str("\nYour real reservoir state was NOT changed. \
+                report.push_str(
+                    "\nYour real reservoir state was NOT changed. \
                     The simulation handle 'astrid_sim' persists — you can SIMULATE again \
-                    to see cumulative effects, or it will be cleaned up on next restart.");
+                    to see cumulative effects, or it will be cleaned up on next restart.",
+                );
 
                 conv.emphasis = Some(report);
             } else {
                 conv.emphasis = Some("Reservoir service not available for simulation.".to_string());
             }
-            info!("Astrid simulated reservoir with: {}", &sim_text[..sim_text.len().min(80)]);
+            info!(
+                "Astrid simulated reservoir with: {}",
+                &sim_text[..sim_text.len().min(80)]
+            );
             true
         },
         "RESERVOIR_FORK" => {

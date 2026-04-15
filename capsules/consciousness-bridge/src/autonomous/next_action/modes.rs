@@ -111,6 +111,11 @@ pub(super) fn handle_action(
             info!("Astrid chose to simply be (contemplate mode)");
             true
         },
+        "NOTICE" | "OBSERVE" => {
+            conv.next_mode_override = Some(Mode::Witness);
+            info!("Astrid chose NOTICE — quiet observation (witness mode)");
+            true
+        },
         "INTROSPECT" | "SELF_STUDY" | "INVESTIGATE" => {
             conv.wants_introspect = true;
             let parts: Vec<&str> = original.splitn(3, ' ').collect();

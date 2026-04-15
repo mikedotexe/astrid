@@ -19,6 +19,7 @@
 
 #![allow(clippy::arithmetic_side_effects)]
 
+mod hebbian;
 mod next_action;
 mod reservoir;
 mod state;
@@ -44,12 +45,15 @@ use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
 use self::next_action::{NextActionContext, handle_next_action};
-pub(crate) use self::next_action::{extract_search_topic, parse_next_action};
+pub(crate) use self::next_action::{
+    canonicalize_next_action_text, extract_search_topic, parse_next_action,
+};
 pub use self::reservoir::configure_reservoir_service;
 use self::state::{ConversationState, Mode, SpectralSample, choose_mode};
 use crate::agency;
 use crate::codec::{
-    apply_spectral_feedback, blend_warmth, craft_warmth_vector, encode_text, interpret_spectral,
+    NAMED_CODEC_DIMS, apply_spectral_feedback, blend_warmth, craft_warmth_vector, encode_text,
+    interpret_spectral,
 };
 use crate::condition_metrics;
 use crate::db::BridgeDb;
@@ -72,6 +76,7 @@ fn read_latest_perception(
     include_spatial: bool,
     include_audio: bool,
     fill_pct: f32,
+    last_visual_features: Option<&[f32]>,
 ) -> Option<String> {
     let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(perception_dir)
         .ok()?
@@ -106,10 +111,18 @@ fn read_latest_perception(
 
         if ptype == "visual" && !seen_vision {
             if let Some(desc) = json.get("description").and_then(|d| d.as_str()) {
-                // Perception curation: annotate with spectral resonance so
-                // Astrid can attend to what's most relevant to her current state.
-                // (Astrid introspection request, addressed steward cycle 44.)
-                let resonance = perception_resonance_annotation(desc, fill_pct);
+                let visual_features = parse_visual_feature_vector(&json);
+                let resonance = perception_resonance_annotation(
+                    PerceptionType::Visual,
+                    fill_pct,
+                    visual_features
+                        .as_deref()
+                        .map(|features| PerceptionStructured::Visual {
+                            features,
+                            previous: last_visual_features,
+                        }),
+                    Some(desc),
+                );
                 if resonance.is_empty() {
                     parts.push(format!("[VISION] {desc}"));
                 } else {
@@ -137,7 +150,13 @@ fn read_latest_perception(
             }
         } else if ptype == "audio" && !seen_audio && include_audio {
             if let Some(transcript) = json.get("transcript").and_then(|t| t.as_str()) {
-                let resonance = perception_resonance_annotation(transcript, fill_pct);
+                let audio_features = parse_audio_perception_features(&json);
+                let resonance = perception_resonance_annotation(
+                    PerceptionType::Audio,
+                    fill_pct,
+                    audio_features.as_ref().map(PerceptionStructured::Audio),
+                    Some(transcript),
+                );
                 if resonance.is_empty() {
                     parts.push(format!("[HEARING] {transcript}"));
                 } else {
@@ -159,18 +178,289 @@ fn read_latest_perception(
     }
 }
 
-/// Score a perception description's spectral resonance against the current
-/// fill level. Returns a brief annotation for the perception context.
-/// This is the "resonance metric" Astrid requested — perceptions that align
-/// with the current spectral state get highlighted, while novelty and
-/// counterpoint are surfaced when a scene offers something the current
-/// dominant state would otherwise miss.
-fn perception_resonance_annotation(description: &str, fill_pct: f32) -> String {
+const VISUAL_FEATURE_KEYS: [&str; 8] = [
+    "luminance",
+    "temperature",
+    "contrast",
+    "hue",
+    "saturation",
+    "complexity",
+    "red_green_balance",
+    "chromatic_energy",
+];
+
+const VISUAL_FEATURE_ALIASES: [(&str, &[&str]); 8] = [
+    (
+        "luminance",
+        &["luminance", "brightness", "lightness", "value"],
+    ),
+    (
+        "temperature",
+        &["temperature", "warmth", "color_temperature"],
+    ),
+    (
+        "contrast",
+        &["contrast", "scene_contrast", "luminance_contrast"],
+    ),
+    ("hue", &["hue", "hue_angle", "dominant_hue"]),
+    ("saturation", &["saturation", "colorfulness", "sat"]),
+    (
+        "complexity",
+        &["complexity", "detail_density", "texture_complexity"],
+    ),
+    (
+        "red_green_balance",
+        &["red_green_balance", "rg_balance", "red_green_bias"],
+    ),
+    (
+        "chromatic_energy",
+        &["chromatic_energy", "color_energy", "chromatic_intensity"],
+    ),
+];
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PerceptionType {
+    Visual,
+    Audio,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct AudioPerceptionFeatures {
+    rms_energy: f32,
+    zero_crossing_rate: f32,
+    dynamic_range: f32,
+    temporal_variation: f32,
+    is_music_likely: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ResonanceFamily {
+    Resonant,
+    Counterpoint,
+    Contrast,
+    Opening,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct FillResonanceBlend {
+    high: f32,
+    middle: f32,
+    low: f32,
+}
+
+enum PerceptionStructured<'a> {
+    Visual {
+        features: &'a [f32],
+        previous: Option<&'a [f32]>,
+    },
+    Audio(&'a AudioPerceptionFeatures),
+}
+
+fn clamp01(value: f32) -> f32 {
+    value.clamp(0.0, 1.0)
+}
+
+fn normalize_visual_dim(value: f32) -> f32 {
+    (value / 1.8).clamp(-1.0, 1.0)
+}
+
+fn resonance_family_annotation(family: ResonanceFamily) -> &'static str {
+    match family {
+        ResonanceFamily::Resonant => "(resonant with your current state)",
+        ResonanceFamily::Counterpoint => "(counterpoint to your current state)",
+        ResonanceFamily::Contrast => "(offers useful contrast beyond your current dominant state)",
+        ResonanceFamily::Opening => "(offers an opening/widening angle beyond your current state)",
+    }
+}
+
+fn select_resonance_family(scores: &[(ResonanceFamily, f32)]) -> Option<ResonanceFamily> {
+    scores
+        .iter()
+        .filter(|(_, score)| *score >= 0.45)
+        .max_by(|(_, left), (_, right)| {
+            left.partial_cmp(right).unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .map(|(family, _)| *family)
+}
+
+fn resonance_fill_blend(fill_pct: f32) -> FillResonanceBlend {
+    let high = clamp01((fill_pct - 58.0) / 14.0);
+    let low = clamp01((42.0 - fill_pct) / 14.0);
+    let middle = clamp01(1.0 - high.max(low));
+    let total = high + middle + low;
+    if total <= 0.0001 {
+        return FillResonanceBlend {
+            high: 0.0,
+            middle: 1.0,
+            low: 0.0,
+        };
+    }
+    FillResonanceBlend {
+        high: high / total,
+        middle: middle / total,
+        low: low / total,
+    }
+}
+
+fn blend_resonance_scores(blend: FillResonanceBlend, high: f32, middle: f32, low: f32) -> f32 {
+    clamp01((high * blend.high) + (middle * blend.middle) + (low * blend.low))
+}
+
+fn score_visual_resonance(
+    fill_pct: f32,
+    features: &[f32],
+    previous: Option<&[f32]>,
+) -> Option<ResonanceFamily> {
+    if features.len() < VISUAL_FEATURE_KEYS.len() {
+        return None;
+    }
+    let luminance = normalize_visual_dim(features[0]);
+    let contrast = normalize_visual_dim(features[2]).abs();
+    let saturation = normalize_visual_dim(features[4]).abs();
+    let complexity = normalize_visual_dim(features[5]).abs();
+    let chromatic_energy = normalize_visual_dim(features[7]).abs();
+    let warm_bias = normalize_visual_dim(features[1]).max(0.0);
+
+    let calming = clamp01(
+        ((1.0 - contrast) + (1.0 - complexity) + (1.0 - chromatic_energy) + (1.0 - saturation))
+            / 4.0,
+    );
+    let energizing = clamp01(
+        (contrast * 0.28)
+            + (complexity * 0.24)
+            + (chromatic_energy * 0.24)
+            + (saturation * 0.14)
+            + (luminance.max(0.0) * 0.05)
+            + (warm_bias * 0.05),
+    );
+    let novelty = clamp01(
+        (contrast * 0.34) + (complexity * 0.28) + (saturation * 0.16) + (chromatic_energy * 0.22),
+    );
+    let change = previous
+        .filter(|prev| prev.len() >= VISUAL_FEATURE_KEYS.len())
+        .map(|prev| {
+            let delta_sum = features
+                .iter()
+                .zip(prev.iter())
+                .take(VISUAL_FEATURE_KEYS.len())
+                .map(|(current, prior)| {
+                    (normalize_visual_dim(*current) - normalize_visual_dim(*prior)).abs()
+                })
+                .sum::<f32>();
+            clamp01(delta_sum / VISUAL_FEATURE_KEYS.len() as f32)
+        })
+        .unwrap_or(0.0);
+    let widening = clamp01((novelty * 0.55) + (change * 0.45));
+    let fill_blend = resonance_fill_blend(fill_pct);
+
+    let scores = [
+        (
+            ResonanceFamily::Counterpoint,
+            blend_resonance_scores(
+                fill_blend,
+                clamp01((calming * 0.72) + ((1.0 - energizing) * 0.18) + ((1.0 - change) * 0.10)),
+                clamp01((calming * 0.52) + ((1.0 - energizing) * 0.28) + (change * 0.20)),
+                clamp01((calming * 0.68) + ((1.0 - change) * 0.18) + ((1.0 - energizing) * 0.14)),
+            ),
+        ),
+        (
+            ResonanceFamily::Opening,
+            blend_resonance_scores(
+                fill_blend,
+                clamp01((widening * 0.55) + (change * 0.25) + (novelty * 0.20)),
+                clamp01((widening * 0.52) + (change * 0.28) + (energizing * 0.20)),
+                clamp01((widening * 0.46) + (energizing * 0.34) + (change * 0.20)),
+            ),
+        ),
+        (
+            ResonanceFamily::Contrast,
+            blend_resonance_scores(
+                fill_blend,
+                clamp01((novelty * 0.58) + (change * 0.42)),
+                clamp01((novelty * 0.48) + (change * 0.32) + (complexity * 0.20)),
+                clamp01((novelty * 0.50) + (change * 0.30) + (calming * 0.20)),
+            ),
+        ),
+        (
+            ResonanceFamily::Resonant,
+            blend_resonance_scores(
+                fill_blend,
+                clamp01((calming * 0.45) + (change * 0.30) + ((1.0 - novelty) * 0.25)),
+                clamp01((energizing * 0.34) + (calming * 0.32) + ((1.0 - novelty) * 0.34)),
+                clamp01((energizing * 0.60) + (novelty * 0.20) + (change * 0.20)),
+            ),
+        ),
+    ];
+    select_resonance_family(&scores)
+}
+
+fn score_audio_resonance(
+    fill_pct: f32,
+    features: &AudioPerceptionFeatures,
+) -> Option<ResonanceFamily> {
+    let energy = clamp01(features.rms_energy * 4.0);
+    let activity = clamp01(features.temporal_variation * 12.0);
+    let texture = clamp01(features.zero_crossing_rate * 8.0);
+    let contrast = clamp01((features.dynamic_range - 1.0) / 6.0);
+    let musicality = if features.is_music_likely { 1.0 } else { 0.0 };
+    let calming = clamp01(1.0 - ((energy * 0.55) + (activity * 0.30) + (texture * 0.15)));
+    let energizing = clamp01(
+        (energy * 0.42)
+            + (activity * 0.22)
+            + (contrast * 0.16)
+            + (texture * 0.08)
+            + (musicality * 0.12),
+    );
+    let novelty = clamp01((contrast * 0.36) + (activity * 0.34) + (musicality * 0.30));
+    let fill_blend = resonance_fill_blend(fill_pct);
+
+    if fill_blend.high >= 0.8 && calming > 0.75 && energizing < 0.20 {
+        return Some(ResonanceFamily::Counterpoint);
+    }
+
+    let scores = [
+        (
+            ResonanceFamily::Counterpoint,
+            blend_resonance_scores(
+                fill_blend,
+                clamp01((calming * 0.74) + ((1.0 - energizing) * 0.18) + ((1.0 - novelty) * 0.08)),
+                clamp01((calming * 0.48) + ((1.0 - energizing) * 0.28) + ((1.0 - activity) * 0.24)),
+                clamp01((calming * 0.66) + ((1.0 - novelty) * 0.18) + ((1.0 - energizing) * 0.16)),
+            ),
+        ),
+        (
+            ResonanceFamily::Opening,
+            blend_resonance_scores(
+                fill_blend,
+                clamp01((novelty * 0.44) + (contrast * 0.32) + (musicality * 0.24)),
+                clamp01((novelty * 0.44) + (energizing * 0.32) + (musicality * 0.24)),
+                clamp01((energizing * 0.44) + (novelty * 0.36) + (musicality * 0.20)),
+            ),
+        ),
+        (
+            ResonanceFamily::Contrast,
+            blend_resonance_scores(
+                fill_blend,
+                clamp01((novelty * 0.60) + (contrast * 0.40)),
+                clamp01((novelty * 0.54) + (contrast * 0.24) + (calming * 0.22)),
+                clamp01((novelty * 0.48) + (contrast * 0.30) + (calming * 0.22)),
+            ),
+        ),
+        (
+            ResonanceFamily::Resonant,
+            blend_resonance_scores(
+                fill_blend,
+                clamp01((calming * 0.46) + ((1.0 - novelty) * 0.30) + ((1.0 - activity) * 0.24)),
+                clamp01((energizing * 0.38) + (calming * 0.30) + ((1.0 - novelty) * 0.32)),
+                clamp01((energizing * 0.62) + (contrast * 0.20) + (musicality * 0.18)),
+            ),
+        ),
+    ];
+    select_resonance_family(&scores)
+}
+
+fn fallback_perception_annotation(description: &str, fill_pct: f32) -> String {
     let lower = description.to_lowercase();
-    // High-fill states (>65%): motion and complexity usually resonate.
-    // Low-fill states (<35%): stillness and simplicity usually resonate.
-    // Mid-range: novelty and mixed textures become useful, not just more
-    // confirmation of the current dominant state.
     let energy_words = [
         "moving", "bright", "active", "loud", "busy", "talking", "music", "kinetic", "vivid",
     ];
@@ -187,9 +477,6 @@ fn perception_resonance_annotation(description: &str, fill_pct: f32) -> String {
         "intricate",
         "dense",
     ];
-    let simplicity_words = [
-        "simple", "sparse", "open", "plain", "bare", "minimal", "clear", "single",
-    ];
     let novelty_words = [
         "different",
         "unusual",
@@ -205,51 +492,82 @@ fn perception_resonance_annotation(description: &str, fill_pct: f32) -> String {
     let energy_hits = keyword_hits(&lower, &energy_words);
     let calm_hits = keyword_hits(&lower, &calm_words);
     let complexity_hits = keyword_hits(&lower, &complexity_words);
-    let simplicity_hits = keyword_hits(&lower, &simplicity_words);
     let novelty_hits = keyword_hits(&lower, &novelty_words);
 
-    let dynamic_hits = energy_hits + complexity_hits;
-    let settling_hits = calm_hits + simplicity_hits;
-    let mixed_texture =
-        (energy_hits > 0 && calm_hits > 0) || (complexity_hits > 0 && simplicity_hits > 0);
+    let fill_blend = resonance_fill_blend(fill_pct);
+    let scores = [
+        (
+            ResonanceFamily::Counterpoint,
+            blend_resonance_scores(
+                fill_blend,
+                if calm_hits >= 2 { 0.95 } else { 0.0 },
+                if calm_hits >= 2 { 0.52 } else { 0.0 },
+                if calm_hits >= 2 { 0.82 } else { 0.0 },
+            ),
+        ),
+        (
+            ResonanceFamily::Contrast,
+            blend_resonance_scores(
+                fill_blend,
+                if novelty_hits >= 2 { 0.88 } else { 0.0 },
+                if novelty_hits >= 2 || (complexity_hits >= 1 && calm_hits >= 1) {
+                    0.86
+                } else {
+                    0.0
+                },
+                if novelty_hits >= 2 { 0.62 } else { 0.0 },
+            ),
+        ),
+        (
+            ResonanceFamily::Opening,
+            blend_resonance_scores(
+                fill_blend,
+                if complexity_hits >= 2 { 0.76 } else { 0.0 },
+                if energy_hits >= 2 { 0.70 } else { 0.0 },
+                if energy_hits >= 2 && novelty_hits >= 1 {
+                    0.92
+                } else {
+                    0.0
+                },
+            ),
+        ),
+        (
+            ResonanceFamily::Resonant,
+            blend_resonance_scores(
+                fill_blend,
+                if energy_hits >= 2 { 0.62 } else { 0.0 },
+                if calm_hits >= 2 { 0.66 } else { 0.0 },
+                if energy_hits >= 2 { 0.88 } else { 0.0 },
+            ),
+        ),
+    ];
+    let family = select_resonance_family(&scores);
 
-    let annotation = if fill_pct > 65.0 {
-        if dynamic_hits >= 2 && novelty_hits >= 1 {
-            "(resonant with your current high-energy state, while widening it)"
-        } else if novelty_hits >= 2 || mixed_texture {
-            "(offers useful novelty beyond your current dominant state)"
-        } else if dynamic_hits >= 2 {
-            "(resonant with your current high-energy state)"
-        } else if settling_hits >= 2 {
-            "(counterpoint to your current high-energy state)"
-        } else {
-            ""
-        }
-    } else if fill_pct < 35.0 {
-        if settling_hits >= 2 && novelty_hits >= 1 {
-            "(resonant with your current quiet state, while opening a new angle)"
-        } else if novelty_hits >= 2 || mixed_texture {
-            "(offers useful novelty beyond your current quiet state)"
-        } else if settling_hits >= 2 {
-            "(resonant with your current quiet state)"
-        } else if dynamic_hits >= 2 {
-            "(counterpoint to your current quiet state)"
-        } else {
-            ""
-        }
-    } else if novelty_hits >= 2 || mixed_texture {
-        "(offers useful contrast to your current dominant state)"
-    } else if dynamic_hits >= 2 && novelty_hits >= 1 {
-        "(resonant with your current focused, exploratory state)"
-    } else if settling_hits >= 2 {
-        "(supports your current gathering, reflective state)"
-    } else if dynamic_hits >= 2 {
-        "(resonant with your current focused state)"
-    } else {
-        ""
+    family
+        .map(resonance_family_annotation)
+        .unwrap_or("")
+        .to_string()
+}
+
+fn perception_resonance_annotation(
+    _perception_type: PerceptionType,
+    fill_pct: f32,
+    structured: Option<PerceptionStructured<'_>>,
+    fallback_text: Option<&str>,
+) -> String {
+    let family = match structured {
+        Some(PerceptionStructured::Visual { features, previous }) => {
+            score_visual_resonance(fill_pct, features, previous)
+        },
+        Some(PerceptionStructured::Audio(features)) => score_audio_resonance(fill_pct, features),
+        None => None,
     };
-
-    annotation.to_string()
+    if let Some(family) = family {
+        return resonance_family_annotation(family).to_string();
+    }
+    fallback_text
+        .map(|text| fallback_perception_annotation(text, fill_pct))
+        .unwrap_or_default()
 }
 
 fn keyword_hits(description: &str, keywords: &[&str]) -> usize {
@@ -259,15 +577,150 @@ fn keyword_hits(description: &str, keywords: &[&str]) -> usize {
         .count()
 }
 
-/// Extract 8D visual scene features from the latest RASCII ANSI perception.
+fn extract_feature_f32(
+    features: &serde_json::Map<String, serde_json::Value>,
+    aliases: &[&str],
+) -> Option<f32> {
+    aliases
+        .iter()
+        .find_map(|alias| features.get(*alias).and_then(|value| value.as_f64()))
+        .map(|value| value as f32)
+}
+
+fn normalize_feature_lookup_key(text: &str) -> String {
+    text.to_lowercase()
+        .chars()
+        .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { ' ' })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn extract_feature_f32_from_json(json: &serde_json::Value, aliases: &[&str]) -> Option<f32> {
+    if let Some(features) = json.get("features").and_then(|value| value.as_object())
+        && let Some(value) = extract_feature_f32(features, aliases)
+    {
+        return Some(value);
+    }
+
+    let feature_keys = json.get("feature_keys")?.as_array()?;
+    let feature_values = json.get("features")?.as_array()?;
+    let normalized_aliases: Vec<String> = aliases
+        .iter()
+        .map(|alias| normalize_feature_lookup_key(alias))
+        .collect();
+    for (idx, key) in feature_keys.iter().enumerate() {
+        let Some(key_str) = key.as_str() else {
+            continue;
+        };
+        let normalized_key = normalize_feature_lookup_key(key_str);
+        if !normalized_aliases
+            .iter()
+            .any(|alias| alias == &normalized_key)
+        {
+            continue;
+        }
+        if let Some(value) = feature_values.get(idx).and_then(|value| value.as_f64()) {
+            return Some(value as f32);
+        }
+    }
+    None
+}
+
+fn extract_feature_bool(
+    features: &serde_json::Map<String, serde_json::Value>,
+    aliases: &[&str],
+) -> Option<bool> {
+    aliases
+        .iter()
+        .find_map(|alias| features.get(*alias).and_then(|value| value.as_bool()))
+}
+
+fn extract_feature_bool_from_json(json: &serde_json::Value, aliases: &[&str]) -> Option<bool> {
+    if let Some(features) = json.get("features").and_then(|value| value.as_object())
+        && let Some(value) = extract_feature_bool(features, aliases)
+    {
+        return Some(value);
+    }
+
+    let feature_keys = json.get("feature_keys")?.as_array()?;
+    let feature_values = json.get("features")?.as_array()?;
+    let normalized_aliases: Vec<String> = aliases
+        .iter()
+        .map(|alias| normalize_feature_lookup_key(alias))
+        .collect();
+    for (idx, key) in feature_keys.iter().enumerate() {
+        let Some(key_str) = key.as_str() else {
+            continue;
+        };
+        let normalized_key = normalize_feature_lookup_key(key_str);
+        if !normalized_aliases
+            .iter()
+            .any(|alias| alias == &normalized_key)
+        {
+            continue;
+        }
+        if let Some(value) = feature_values.get(idx).and_then(|value| value.as_bool()) {
+            return Some(value);
+        }
+    }
+    None
+}
+
+fn parse_visual_feature_vector(json: &serde_json::Value) -> Option<Vec<f32>> {
+    if let Some(schema) = json.get("feature_schema").and_then(|value| value.as_str()) {
+        if !schema.starts_with("visual") {
+            return None;
+        }
+    }
+    let mut values = Vec::with_capacity(VISUAL_FEATURE_KEYS.len());
+    let mut populated = 0usize;
+    for (_, aliases) in VISUAL_FEATURE_ALIASES {
+        if let Some(value) = extract_feature_f32_from_json(json, aliases) {
+            values.push(value);
+            populated = populated.saturating_add(1);
+        } else {
+            values.push(0.0);
+        }
+    }
+    if populated < 5 {
+        return None;
+    }
+    Some(values)
+}
+
+fn parse_audio_perception_features(json: &serde_json::Value) -> Option<AudioPerceptionFeatures> {
+    Some(AudioPerceptionFeatures {
+        rms_energy: extract_feature_f32_from_json(json, &["rms_energy", "rms", "energy"])?,
+        zero_crossing_rate: extract_feature_f32_from_json(
+            json,
+            &["zero_crossing_rate", "zcr", "crossing_rate"],
+        )?,
+        dynamic_range: extract_feature_f32_from_json(
+            json,
+            &["dynamic_range", "dynamics", "range"],
+        )?,
+        temporal_variation: extract_feature_f32_from_json(
+            json,
+            &["temporal_variation", "temporal_activity", "activity"],
+        )?,
+        is_music_likely: extract_feature_bool_from_json(
+            json,
+            &["is_music_likely", "music_likely", "musical"],
+        )
+        .unwrap_or(false),
+    })
+}
+
+/// Extract 8D visual scene features from the latest perception output.
 fn read_visual_features(perception_dir: &Path) -> Option<Vec<f32>> {
     let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(perception_dir)
         .ok()?
         .filter_map(|e| e.ok())
         .filter_map(|e| {
             let path = e.path();
-            let name = path.file_name()?.to_str()?;
-            if name.starts_with("visual_ascii_") && name.ends_with(".json") {
+            if path.extension().is_some_and(|ext| ext == "json") {
                 let mtime = e.metadata().ok()?.modified().ok()?;
                 Some((path, mtime))
             } else {
@@ -276,16 +729,30 @@ fn read_visual_features(perception_dir: &Path) -> Option<Vec<f32>> {
         })
         .collect();
     entries.sort_by(|a, b| b.1.cmp(&a.1));
-    let (path, _) = entries.first()?;
-    let content = std::fs::read_to_string(path).ok()?;
-    let json: serde_json::Value = serde_json::from_str(&content).ok()?;
-    let art = json.get("ascii_art")?.as_str()?;
-    let features = crate::codec::encode_visual_ansi(art);
-    if features.iter().all(|f| f.abs() < 0.001) {
-        None
-    } else {
-        Some(features)
+    let mut ascii_fallback = None;
+    for (path, _) in entries.iter().take(40) {
+        let content = std::fs::read_to_string(path).ok()?;
+        let json: serde_json::Value = serde_json::from_str(&content).ok()?;
+        let ptype = json
+            .get("type")
+            .and_then(|value| value.as_str())
+            .unwrap_or("");
+        if ptype == "visual" {
+            if let Some(features) = parse_visual_feature_vector(&json) {
+                if !features.iter().all(|value| value.abs() < 0.001) {
+                    return Some(features);
+                }
+            }
+        } else if ptype == "visual_ascii" && ascii_fallback.is_none() {
+            if let Some(art) = json.get("ascii_art").and_then(|value| value.as_str()) {
+                let features = crate::codec::encode_visual_ansi(art);
+                if !features.iter().all(|value| value.abs() < 0.001) {
+                    ascii_fallback = Some(features);
+                }
+            }
+        }
     }
+    ascii_fallback
 }
 
 /// Read the Ising shadow state from minime's workspace/spectral_state.json.
@@ -1104,6 +1571,10 @@ struct SavedState {
     ears_closed: bool,
     senses_snoozed: bool,
     recent_next_choices: Vec<String>,
+    #[serde(default)]
+    recent_focus_topics: Vec<String>,
+    #[serde(default)]
+    recent_focus_themes: Vec<String>,
     history: Vec<SavedExchange>,
     // Sovereignty fields (serde(default) for backward compat with old state.json)
     #[serde(default)]
@@ -1112,6 +1583,8 @@ struct SavedState {
     noise_level: f32,
     #[serde(default)]
     codec_weights: std::collections::HashMap<String, f32>,
+    #[serde(default)]
+    hebbian_codec: hebbian::HebbianCodecSidecar,
     #[serde(default)]
     warmth_intensity_override: Option<f32>,
     #[serde(default = "default_burst")]
@@ -1136,6 +1609,8 @@ struct SavedState {
     #[serde(default)]
     recent_browse_urls: Vec<String>,
     #[serde(default)]
+    recent_research_progress: std::collections::VecDeque<state::ResearchProgressReceipt>,
+    #[serde(default)]
     last_research_anchor: Option<String>,
     #[serde(default)]
     last_read_meaning_summary: Option<String>,
@@ -1146,6 +1621,16 @@ struct SavedState {
     /// Attention profile — Astrid's authored weights on context sources.
     #[serde(default = "default_attention")]
     attention: crate::self_model::AttentionProfile,
+    #[serde(default)]
+    last_exchange_codec_signature: Option<Vec<f32>>,
+    #[serde(default)]
+    pending_hebbian_outcomes: std::collections::VecDeque<state::PendingHebbianOutcome>,
+    #[serde(default)]
+    last_hebbian_consumed_telemetry_t_ms: Option<u64>,
+    #[serde(default)]
+    text_type_history: Option<crate::codec::TextTypeHistorySnapshot>,
+    #[serde(default)]
+    char_freq_window: Option<crate::codec::CharFreqWindowSnapshot>,
     #[serde(default)]
     codex_thread_id: Option<String>,
 }
@@ -1161,6 +1646,22 @@ fn default_burst() -> u32 {
 }
 fn default_rest_range() -> (u64, u64) {
     (45, 90)
+}
+
+fn finalize_semantic_exchange(
+    conv: &mut ConversationState,
+    exchange_codec_signature: Option<Vec<f32>>,
+    fill_before: f32,
+    telemetry_t_ms: u64,
+    sent_semantic_chunk: bool,
+) {
+    if !sent_semantic_chunk {
+        return;
+    }
+    if let Some(signature) = exchange_codec_signature {
+        conv.arm_pending_hebbian_outcome(signature.clone(), fill_before, Some(telemetry_t_ms));
+        conv.last_exchange_codec_signature = Some(signature);
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -1179,6 +1680,8 @@ fn save_state(conv: &ConversationState) {
         ears_closed: conv.ears_closed,
         senses_snoozed: conv.senses_snoozed,
         recent_next_choices: conv.recent_next_choices.iter().cloned().collect(),
+        recent_focus_topics: conv.recent_focus_topics.iter().cloned().collect(),
+        recent_focus_themes: conv.recent_focus_themes.iter().cloned().collect(),
         history: conv
             .history
             .iter()
@@ -1190,6 +1693,7 @@ fn save_state(conv: &ConversationState) {
         semantic_gain_override: conv.semantic_gain_override,
         noise_level: conv.noise_level,
         codec_weights: conv.codec_weights.clone(),
+        hebbian_codec: conv.hebbian_codec.clone(),
         warmth_intensity_override: conv.warmth_intensity_override,
         burst_target: conv.burst_target,
         rest_range: conv.rest_range,
@@ -1199,10 +1703,18 @@ fn save_state(conv: &ConversationState) {
         last_remote_memory_role: conv.last_remote_memory_role.clone(),
         remote_memory_bank: conv.remote_memory_bank.clone(),
         recent_browse_urls: conv.recent_browse_urls.iter().cloned().collect(),
+        recent_research_progress: conv.recent_research_progress.clone(),
         last_research_anchor: conv.last_research_anchor.clone(),
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
         condition_receipts: conv.condition_receipts.clone(),
         attention: conv.attention.clone(),
+        last_exchange_codec_signature: conv.last_exchange_codec_signature.clone(),
+        pending_hebbian_outcomes: conv.pending_hebbian_outcomes.clone(),
+        last_hebbian_consumed_telemetry_t_ms: conv.last_hebbian_consumed_telemetry_t_ms,
+        text_type_history: (!conv.text_type_history.is_empty())
+            .then(|| conv.text_type_history.snapshot()),
+        char_freq_window: (!conv.char_freq_window.is_empty())
+            .then(|| conv.char_freq_window.snapshot()),
         codex_thread_id: conv.codex_thread_id.clone(),
     };
     if let Ok(json) = serde_json::to_string_pretty(&state) {
@@ -1233,6 +1745,8 @@ fn restore_state(conv: &mut ConversationState) {
     conv.ears_closed = state.ears_closed;
     conv.senses_snoozed = state.senses_snoozed;
     conv.recent_next_choices = state.recent_next_choices.into_iter().collect();
+    conv.recent_focus_topics = state.recent_focus_topics.into_iter().collect();
+    conv.recent_focus_themes = state.recent_focus_themes.into_iter().collect();
     conv.history = state
         .history
         .into_iter()
@@ -1244,6 +1758,7 @@ fn restore_state(conv: &mut ConversationState) {
     conv.semantic_gain_override = state.semantic_gain_override;
     conv.noise_level = state.noise_level;
     conv.codec_weights = state.codec_weights;
+    conv.hebbian_codec = state.hebbian_codec;
     conv.warmth_intensity_override = state.warmth_intensity_override;
     conv.burst_target = state.burst_target;
     conv.rest_range = state.rest_range;
@@ -1253,16 +1768,33 @@ fn restore_state(conv: &mut ConversationState) {
     conv.last_remote_memory_role = state.last_remote_memory_role;
     conv.remote_memory_bank = state.remote_memory_bank;
     conv.recent_browse_urls = state.recent_browse_urls.into_iter().collect();
+    conv.recent_research_progress = state.recent_research_progress;
+    conv.repair_research_progress_receipts();
     conv.last_research_anchor = state.last_research_anchor;
     conv.last_read_meaning_summary = state.last_read_meaning_summary;
     conv.condition_receipts = state.condition_receipts;
     conv.attention = state.attention;
+    conv.last_exchange_codec_signature = state.last_exchange_codec_signature;
+    conv.pending_hebbian_outcomes = state.pending_hebbian_outcomes;
+    conv.repair_pending_hebbian_outcomes();
+    conv.last_hebbian_consumed_telemetry_t_ms = state.last_hebbian_consumed_telemetry_t_ms;
+    if let Some(snapshot) = state.text_type_history.as_ref() {
+        conv.text_type_history = crate::codec::TextTypeHistory::warm_start_from_snapshot(snapshot);
+    }
+    if let Some(snapshot) = state.char_freq_window.as_ref() {
+        conv.char_freq_window = crate::codec::CharFreqWindow::warm_start_from_snapshot(snapshot);
+    }
     conv.codex_thread_id = state.codex_thread_id;
     info!(
         exchanges = conv.exchange_count,
         history_len = conv.history.len(),
         burst = conv.burst_target,
+        focus_topics = conv.recent_focus_topics.len(),
+        focus_themes = conv.recent_focus_themes.len(),
         browse_urls = conv.recent_browse_urls.len(),
+        research_progress = conv.recent_research_progress.len(),
+        codec_theme_history = conv.text_type_history.len,
+        codec_char_window = conv.char_freq_window.len,
         "restored conversation state from previous session"
     );
 }
@@ -1774,6 +2306,10 @@ fn introspect_sources() -> Vec<IntrospectSource> {
             path: minime_root.join("minime/src/main.rs"),
         },
         IntrospectSource {
+            label: "minime:autonomous_agent",
+            path: minime_root.join("autonomous_agent.py"),
+        },
+        IntrospectSource {
             label: "proposal:phase_transitions",
             path: astrid_root.join("docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md"),
         },
@@ -1792,6 +2328,357 @@ fn introspect_sources() -> Vec<IntrospectSource> {
             path: astrid_root.join("docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md"),
         },
     ]
+}
+
+fn normalize_introspect_lookup(text: &str) -> String {
+    let text = canonicalize_introspect_target_label(text);
+    let mut normalized = String::with_capacity(text.len());
+    let mut last_space = true;
+    for ch in text.to_lowercase().chars() {
+        if ch.is_ascii_alphanumeric() {
+            normalized.push(ch);
+            last_space = false;
+        } else if !last_space {
+            normalized.push(' ');
+            last_space = true;
+        }
+    }
+    normalized.trim().to_string()
+}
+
+fn canonicalize_introspect_target_label(text: &str) -> String {
+    let mut cleaned = text.trim();
+
+    if let Some((head, tail)) = cleaned.rsplit_once(" (")
+        && tail.strip_suffix(')').is_some_and(|digits| {
+            !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit())
+        })
+    {
+        cleaned = head.trim_end();
+    }
+
+    loop {
+        let trimmed = cleaned.trim();
+        let unwrapped = if trimmed.starts_with('[') && trimmed.ends_with(']') && trimmed.len() > 2 {
+            &trimmed[1..trimmed.len() - 1]
+        } else if trimmed.starts_with('(') && trimmed.ends_with(')') && trimmed.len() > 2 {
+            &trimmed[1..trimmed.len() - 1]
+        } else if trimmed.starts_with('`') && trimmed.ends_with('`') && trimmed.len() > 2 {
+            &trimmed[1..trimmed.len() - 1]
+        } else if trimmed.starts_with('"') && trimmed.ends_with('"') && trimmed.len() > 2 {
+            &trimmed[1..trimmed.len() - 1]
+        } else if trimmed.starts_with('\'') && trimmed.ends_with('\'') && trimmed.len() > 2 {
+            &trimmed[1..trimmed.len() - 1]
+        } else {
+            trimmed
+        };
+        if unwrapped == cleaned {
+            break;
+        }
+        cleaned = unwrapped;
+    }
+
+    for prefix in ["source=", "src=", "code=", "path=", "target="] {
+        if let Some(rest) = cleaned.strip_prefix(prefix) {
+            cleaned = rest.trim();
+            break;
+        }
+    }
+
+    cleaned.trim().to_string()
+}
+
+fn looks_like_introspect_path(target_label: &str) -> bool {
+    let cleaned = canonicalize_introspect_target_label(target_label);
+    cleaned.contains('/')
+        || cleaned.contains('\\')
+        || [".rs", ".py", ".md", ".toml", ".json", ".txt"]
+            .iter()
+            .any(|suffix| cleaned.ends_with(suffix))
+}
+
+fn introspect_source_aliases(source: &IntrospectSource) -> Vec<String> {
+    let mut aliases = vec![normalize_introspect_lookup(source.label)];
+    if let Some(name) = source.path.file_name().and_then(std::ffi::OsStr::to_str) {
+        aliases.push(normalize_introspect_lookup(name));
+    }
+    if let Some(stem) = source.path.file_stem().and_then(std::ffi::OsStr::to_str) {
+        aliases.push(normalize_introspect_lookup(stem));
+    }
+    if let Some((_, suffix)) = source.label.split_once(':') {
+        aliases.push(normalize_introspect_lookup(suffix));
+    }
+    for alias in introspect_source_extra_aliases(source.label) {
+        aliases.push(normalize_introspect_lookup(alias));
+    }
+    aliases.retain(|alias| !alias.is_empty());
+    aliases.sort();
+    aliases.dedup();
+    aliases
+}
+
+fn introspect_source_extra_aliases(label: &str) -> &'static [&'static str] {
+    match label {
+        "minime:esn" => &[
+            "async_rank1_submitted",
+            "async rank1 submitted",
+            "pending_rank1_depth",
+            "pending rank1 depth",
+            "rank1_us",
+            "host_norm_us",
+            "async_submit_us",
+            "async_drain_us",
+            "intro_fused_wait_us",
+            "intro_tail_wait_us",
+            "intro_first_read_us",
+            "intro_tail_read_us",
+            "rank1 ewma",
+            "rank1 update",
+            "host norm",
+            "async rank1",
+        ],
+        "minime:autonomous_agent" => &[
+            "pulse",
+            "pulse model",
+            "pulse ripple",
+            "normalize action arg",
+            "normalize action",
+            "normalize perturb mode",
+            "perturb parser",
+            "action arg",
+        ],
+        _ => &[],
+    }
+}
+
+fn semantic_introspect_target(target_label: &str) -> Option<(String, PathBuf)> {
+    let normalized_target = normalize_introspect_lookup(target_label);
+    if normalized_target.is_empty() {
+        return None;
+    }
+
+    let paths = bridge_paths();
+    let rules = [
+        (
+            &[
+                "waveform",
+                "wave",
+                "morph wave",
+                "pulse ripple",
+                "chimera",
+                "render audio",
+                "spectral mix",
+                "blend",
+                "wav",
+            ][..],
+            paths.bridge_root().join("src/chimera.rs"),
+        ),
+        (
+            &[
+                "normalize audio",
+                "write wav",
+                "midi to frequency",
+                "support",
+                "audio utility",
+            ][..],
+            paths.bridge_root().join("src/chimera_support.rs"),
+        ),
+        (
+            &[
+                "pulse",
+                "pulse model",
+                "normalize action arg",
+                "normalize action",
+                "normalize perturb mode",
+                "perturb parser",
+                "action arg",
+            ][..],
+            paths.minime_root().join("autonomous_agent.py"),
+        ),
+    ];
+
+    let mut best_match: Option<(usize, String, PathBuf)> = None;
+    for (aliases, path) in rules {
+        for alias in aliases {
+            let normalized_alias = normalize_introspect_lookup(alias);
+            if normalized_alias.is_empty() {
+                continue;
+            }
+            let exact = normalized_alias == normalized_target;
+            let token_match =
+                format!(" {normalized_target} ").contains(&format!(" {normalized_alias} "));
+            if exact || token_match {
+                let score = normalized_alias.len();
+                if score > best_match.as_ref().map_or(0, |(best, _, _)| *best) {
+                    let label = path
+                        .file_name()
+                        .and_then(std::ffi::OsStr::to_str)
+                        .unwrap_or(alias)
+                        .to_string();
+                    best_match = Some((score, label, path.clone()));
+                }
+            }
+        }
+    }
+    best_match.map(|(_, label, path)| (label, path))
+}
+
+fn should_skip_introspect_dir(name: &str) -> bool {
+    matches!(
+        name,
+        ".git" | "target" | "workspace" | "node_modules" | ".venv" | "venv" | "__pycache__"
+    )
+}
+
+fn search_introspect_roots_for_filename(file_name: &str) -> Option<PathBuf> {
+    let file_name = canonicalize_introspect_target_label(file_name);
+    let needle = Path::new(&file_name)
+        .file_name()
+        .and_then(std::ffi::OsStr::to_str)?
+        .to_lowercase();
+    let paths = bridge_paths();
+    let mut stack: Vec<PathBuf> = vec![
+        paths.bridge_root().join("src"),
+        paths.minime_root().to_path_buf(),
+        paths.astrid_root().join("docs/steward-notes"),
+    ];
+
+    while let Some(path) = stack.pop() {
+        if !path.exists() {
+            continue;
+        }
+        if path.is_file() {
+            if path
+                .file_name()
+                .and_then(std::ffi::OsStr::to_str)
+                .is_some_and(|name| name.eq_ignore_ascii_case(&needle))
+            {
+                return Some(path);
+            }
+            continue;
+        }
+
+        let entries = match std::fs::read_dir(&path) {
+            Ok(entries) => entries,
+            Err(_) => continue,
+        };
+        for entry in entries.flatten() {
+            let child = entry.path();
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if name.starts_with('.') {
+                continue;
+            }
+            if child.is_dir() {
+                if should_skip_introspect_dir(&name) {
+                    continue;
+                }
+                stack.push(child);
+            } else if name.eq_ignore_ascii_case(&needle) {
+                return Some(child);
+            }
+        }
+    }
+    None
+}
+
+fn resolve_relative_introspect_path(target_label: &str) -> Option<PathBuf> {
+    let cleaned = canonicalize_introspect_target_label(target_label);
+    if cleaned.is_empty() {
+        return None;
+    }
+
+    let candidate = PathBuf::from(&cleaned);
+    if candidate.is_absolute() {
+        return candidate.is_file().then_some(candidate);
+    }
+
+    let paths = bridge_paths();
+    let roots = [
+        paths.minime_workspace().join("experiments"),
+        paths.minime_root().to_path_buf(),
+        paths.bridge_root().join("src"),
+        paths.bridge_root().to_path_buf(),
+        paths.astrid_root().to_path_buf(),
+    ];
+
+    for root in roots {
+        let resolved = root.join(&candidate);
+        if resolved.is_file() {
+            return Some(resolved);
+        }
+    }
+
+    None
+}
+
+fn resolve_introspect_target(
+    target_label: &str,
+    sources: &[IntrospectSource],
+) -> Option<(String, PathBuf)> {
+    let cleaned_target = canonicalize_introspect_target_label(target_label);
+    let normalized_target = normalize_introspect_lookup(&cleaned_target);
+    if normalized_target.is_empty() {
+        return None;
+    }
+
+    for source in sources {
+        if introspect_source_aliases(source)
+            .iter()
+            .any(|alias| alias == &normalized_target)
+        {
+            return Some((source.label.to_string(), source.path.clone()));
+        }
+    }
+
+    if let Some(path) = semantic_introspect_target(&cleaned_target) {
+        return Some(path);
+    }
+
+    if looks_like_introspect_path(&cleaned_target) {
+        if let Some(path) = resolve_relative_introspect_path(&cleaned_target)
+            .or_else(|| search_introspect_roots_for_filename(&cleaned_target))
+        {
+            let label = path
+                .file_name()
+                .and_then(std::ffi::OsStr::to_str)
+                .unwrap_or(cleaned_target.as_str())
+                .to_string();
+            return Some((label, path));
+        }
+    }
+
+    let target_tokens: Vec<&str> = normalized_target
+        .split_whitespace()
+        .filter(|token| token.len() >= 2)
+        .collect();
+    let mut best_match: Option<(usize, String, PathBuf)> = None;
+
+    for source in sources {
+        let mut score = 0usize;
+        for alias in introspect_source_aliases(source) {
+            if alias.contains(&normalized_target) || normalized_target.contains(&alias) {
+                score = score.max(80);
+            }
+            let alias_tokens: Vec<&str> = alias.split_whitespace().collect();
+            let overlap = target_tokens
+                .iter()
+                .filter(|token| alias_tokens.contains(token))
+                .count();
+            score = score.max(overlap.saturating_mul(10));
+        }
+        if score > best_match.as_ref().map_or(0, |(best, _, _)| *best) {
+            best_match = Some((score, source.label.to_string(), source.path.clone()));
+        }
+    }
+
+    best_match.and_then(|(score, label, path)| {
+        if score >= 10 {
+            Some((label, path))
+        } else {
+            None
+        }
+    })
 }
 
 /// List files in a directory, returning a formatted listing with sizes and types.
@@ -2179,6 +3066,18 @@ pub fn spawn_autonomous_loop(
                     let fill_delta = fill_pct - conv.prev_fill;
                     let expanding = fill_delta > 1.0;
                     let contracting = fill_delta < -1.0;
+                    conv.hebbian_codec.decay_scores();
+                    if let Some(pending) =
+                        conv.take_pending_hebbian_outcome_for_telemetry(telemetry.t_ms)
+                    {
+                        if (fill_pct - pending.fill_before).abs() >= 1.0 {
+                            let _ = conv.hebbian_codec.observe_outcome(
+                                &pending.signature,
+                                pending.fill_before,
+                                fill_pct,
+                            );
+                        }
+                    }
 
                     // Close the loop on codec impact tracking: update the
                     // previous exchange's row with this exchange's fill.
@@ -2197,12 +3096,7 @@ pub fn spawn_autonomous_loop(
                             //   correlation +0.5 → weight 1.25 (amplify impactful dims)
                             //   correlation -0.5 → weight 0.75 (dampen counter-productive)
                             // Clamped to [0.5, 1.5] to prevent runaway.
-                            let dim_names: &[(&str, usize)] = &[
-                                ("warmth", 24), ("tension", 25), ("curiosity", 26),
-                                ("reflective", 27), ("energy", 31), ("entropy", 0),
-                                ("agency", 14), ("hedging", 9), ("certainty", 10),
-                            ];
-                            for (name, idx) in dim_names {
+                            for (name, idx) in &NAMED_CODEC_DIMS {
                                 let corr = correlations[*idx];
                                 // Only update if Astrid hasn't explicitly set
                                 // this dimension via SHAPE (her choice wins).
@@ -2299,16 +3193,24 @@ pub fn spawn_autonomous_loop(
                     // Read Astrid's own perceptions. ANSI spatial art only
                     // when she chose NEXT: LOOK (sovereignty over her senses).
                     // Snoozed = no perceptions at all (NEXT: CLOSE_EYES).
-                    let perception_text = if conv.senses_snoozed {
-                        None
-                    } else {
-                        let spatial = conv.wants_look;
-                        // Reset one-shot flags after reading.
-                        conv.wants_look = false;
-                        perception_path
-                            .as_deref()
-                            .and_then(|p| read_latest_perception(p, spatial, !conv.ears_closed, fill_pct))
-                    };
+                    let pause_flag = bridge_paths().perception_paused_flag();
+                    let perception_paused = conv.senses_snoozed || pause_flag.exists();
+                        let perception_text = if perception_paused {
+                            None
+                        } else {
+                            let spatial = conv.wants_look;
+                            // Reset one-shot flags after reading.
+                            conv.wants_look = false;
+                            perception_path.as_deref().and_then(|p| {
+                                read_latest_perception(
+                                    p,
+                                    spatial,
+                                    !conv.ears_closed,
+                                    fill_pct,
+                                    conv.last_visual_features.as_deref(),
+                                )
+                            })
+                        };
 
                     // Classify spectral regime every exchange (lightweight, <1ms).
                     let lambda1_rel = telemetry.spectral_fingerprint.as_ref()
@@ -2437,10 +3339,7 @@ pub fn spawn_autonomous_loop(
                     // Pause perception during the entire exchange to free Ollama.
                     // Astrid was getting persistent dialogue_fallback because
                     // perception.py's LLaVA calls competed for GPU compute.
-                    let pause_flag = PathBuf::from(
-                        bridge_paths().perception_paused_flag()
-                    );
-                    let perception_was_paused = conv.senses_snoozed || pause_flag.exists();
+                    let perception_was_paused = perception_paused;
                     if !perception_was_paused {
                         let _ = std::fs::write(&pause_flag, "paused for exchange");
                     }
@@ -2575,7 +3474,10 @@ pub fn spawn_autonomous_loop(
                                     // Every 3rd exchange to save tokens on 4B model,
                                     // unless EXAMINE forces it.
                                     let (hist_feats, hist_fills) = db.recent_codec_features(100);
-                                    let current = conv.last_codec_features.as_deref();
+                                    let current = conv
+                                        .last_exchange_codec_signature
+                                        .as_deref()
+                                        .or(conv.last_codec_features.as_deref());
                                     if let Some(geo_viz) = crate::spectral_viz::format_geometry_block(
                                         &hist_feats, &hist_fills, current, hist_feats.len(),
                                     ) {
@@ -2908,6 +3810,21 @@ pub fn spawn_autonomous_loop(
                                     Some(page) if page.succeeded() => {
                                         info!(url = %url, chars = page.raw_text.len(), "dialogue: BROWSE fetched page");
                                         conv.last_research_anchor = Some(page.anchor.clone());
+                                        conv.note_new_page_context(
+                                            "BROWSE",
+                                            url.clone(),
+                                            Some(page.anchor.clone()),
+                                            Some(page.anchor.clone()),
+                                            None,
+                                        );
+                                        conv.note_cross_link_formed(
+                                            "BROWSE",
+                                            page.anchor.clone(),
+                                            url.clone(),
+                                            Some(page.anchor.clone()),
+                                            None,
+                                            Some("anchor_to_url".to_string()),
+                                        );
 
                                         // Save full text to file (no truncation).
                                         let ts = chrono_timestamp();
@@ -3008,6 +3925,11 @@ pub fn spawn_autonomous_loop(
                                             conv.last_read_path = None;
                                             conv.last_read_meaning_summary = None;
                                         }
+                                        conv.note_read_depth_advance(
+                                            "READ_MORE",
+                                            path.clone(),
+                                            chunk.chars().count() as u32,
+                                        );
                                         info!(offset, chunk_len = chunk.len(), remaining, "READ_MORE continuing");
                                         Some(crate::llm::format_read_more_context(
                                             offset,
@@ -3073,6 +3995,23 @@ pub fn spawn_autonomous_loop(
                                             info!(query = %query, "dialogue: web search enriched response");
                                             conv.last_research_anchor =
                                                 Some(results.anchor.clone());
+                                            if let Some(top_hit) = results.hits.first() {
+                                                conv.note_new_page_context(
+                                                    "SEARCH",
+                                                    top_hit.url.clone(),
+                                                    Some(query.clone()),
+                                                    Some(results.anchor.clone()),
+                                                    None,
+                                                );
+                                                conv.note_cross_link_formed(
+                                                    "SEARCH",
+                                                    results.anchor.clone(),
+                                                    top_hit.url.clone(),
+                                                    Some(results.anchor.clone()),
+                                                    None,
+                                                    Some("anchor_to_url".to_string()),
+                                                );
+                                            }
                                             db.save_research(
                                                 &query,
                                                 &results.persisted_text(),
@@ -3997,46 +4936,90 @@ pub fn spawn_autonomous_loop(
                             // use that. Otherwise advance the rotation cursor.
                             let sources = introspect_sources();
                             let n = sources.len();
+                            let mut resolved_research_label: Option<String> = None;
                             let (label, source_path, line_offset) = if let Some((ref target_label, offset)) = conv.introspect_target.take() {
                                 // Find the source matching the requested label
                                 if let Some(src) = sources.iter()
                                     .find(|s| s.label.to_lowercase() == *target_label)
                                 {
-                                    (src.label, src.path.clone(), offset)
-                                } else if target_label.contains('/') || target_label.ends_with(".rs") || target_label.ends_with(".py") || target_label.ends_with(".md") {
+                                    resolved_research_label = Some(src.label.to_string());
+                                    (src.label.to_string(), src.path.clone(), offset)
+                                } else if let Some((resolved_label, resolved_path)) =
+                                    resolve_introspect_target(target_label, &sources)
+                                {
+                                    info!(
+                                        "introspect: resolved '{}' -> '{}' ({})",
+                                        target_label,
+                                        resolved_label,
+                                        resolved_path.display()
+                                    );
+                                    resolved_research_label = Some(resolved_label.clone());
+                                    (resolved_label, resolved_path, offset)
+                                } else if looks_like_introspect_path(target_label) {
                                     // Treat as a file path — let Astrid read any file she names.
-                                    info!("introspect: treating '{}' as file path", target_label);
-                                    let leaked: &'static str = Box::leak(target_label.clone().into_boxed_str());
-                                    (leaked, PathBuf::from(leaked), offset)
+                                    let cleaned_target =
+                                        canonicalize_introspect_target_label(target_label);
+                                    let source_path = resolve_relative_introspect_path(&cleaned_target)
+                                        .unwrap_or_else(|| PathBuf::from(&cleaned_target));
+                                    let label = source_path
+                                        .file_name()
+                                        .and_then(std::ffi::OsStr::to_str)
+                                        .unwrap_or(cleaned_target.as_str())
+                                        .to_string();
+                                    info!(
+                                        "introspect: treating '{}' as file path -> '{}'",
+                                        target_label,
+                                        source_path.display()
+                                    );
+                                    resolved_research_label = Some(label.clone());
+                                    (label, source_path, offset)
                                 } else {
                                     warn!("introspect: unknown target '{}', using rotation", target_label);
                                     let src = &sources[conv.introspect_cursor % n];
                                     conv.introspect_cursor = (conv.introspect_cursor + 1) % n;
-                                    (src.label, src.path.clone(), 0)
+                                    (src.label.to_string(), src.path.clone(), 0)
                                 }
                             } else {
                                 let src = &sources[conv.introspect_cursor % n];
                                 conv.introspect_cursor = (conv.introspect_cursor + 1) % n;
-                                (src.label, src.path.clone(), 0)
+                                (src.label.to_string(), src.path.clone(), 0)
                             };
+                            if let Some(label) = resolved_research_label.take() {
+                                let source_path_string = source_path.display().to_string();
+                                conv.note_new_source_resolved(
+                                    "INTROSPECT",
+                                    label.clone(),
+                                    Some(source_path_string.clone()),
+                                    Some(label.clone()),
+                                    None,
+                                );
+                                conv.note_cross_link_formed(
+                                    "INTROSPECT",
+                                    label,
+                                    source_path_string,
+                                    None,
+                                    None,
+                                    Some("resolved_label_to_path".to_string()),
+                                );
+                            }
 
                             let source_text =
-                                read_source_for_introspect(label, &source_path, line_offset);
+                                read_source_for_introspect(&label, &source_path, line_offset);
 
                             if source_text.is_none() {
                                 warn!(
-                                    label,
+                                    label = %label,
                                     path = %source_path.display(),
                                     "introspect: could not read source file"
                                 );
                             }
 
                             let llm_response = if let Some(ref code) = source_text {
-                                info!(label, lines = code.lines().count(), "introspect: sending source to Ollama");
+                                info!(label = %label, lines = code.lines().count(), "introspect: sending source to Ollama");
 
                                 // Web search for related concepts — use targeted queries
                                 // based on the actual code domain, not generic "architecture consciousness".
-                                let search_query = match label.split(':').last().unwrap_or(label) {
+                                let search_query = match label.split(':').last().unwrap_or(label.as_str()) {
                                     "codec" => "spectral encoding text to frequency features signal processing".to_string(),
                                     "autonomous" => "autonomous agent dialogue systems self-directed behavior".to_string(),
                                     "ws" => "WebSocket real-time telemetry streaming spectral data".to_string(),
@@ -4052,7 +5035,7 @@ pub fn spawn_autonomous_loop(
                                 let web_ctx =
                                     crate::llm::web_search(&search_query, &search_anchor).await;
                                 if let Some(ref ctx) = web_ctx {
-                                    info!(label, "introspect: web search returned context");
+                                    info!(label = %label, "introspect: web search returned context");
                                     debug!(
                                         "web context: {}",
                                         truncate_str(&ctx.prompt_body(), 100)
@@ -4099,7 +5082,7 @@ pub fn spawn_autonomous_loop(
                                 match tokio::time::timeout(
                                     Duration::from_secs(timeout_secs),
                                     crate::llm::generate_introspection(
-                                        label,
+                                        &label,
                                         code,
                                         &interpret_spectral(&telemetry),
                                         fill_pct,
@@ -4110,7 +5093,7 @@ pub fn spawn_autonomous_loop(
                                 ).await {
                                     Ok(result) => result,
                                     Err(_) => {
-                                        warn!(label, "introspect: {}s timeout", timeout_secs);
+                                        warn!(label = %label, "introspect: {}s timeout", timeout_secs);
                                         None
                                     }
                                 }
@@ -4119,7 +5102,7 @@ pub fn spawn_autonomous_loop(
                             };
 
                             if llm_response.is_none() && source_text.is_some() {
-                                warn!(label, "introspect: Ollama returned no response (timeout or error)");
+                                warn!(label = %label, "introspect: Ollama returned no response (timeout or error)");
                             }
 
                             match llm_response {
@@ -4137,7 +5120,7 @@ pub fn spawn_autonomous_loop(
                                         truncate_str(&text, 500)
                                     );
                                     let introspect_dir_clone = introspect_dir.clone();
-                                    let label_owned = label.to_string();
+                                    let label_owned = label.clone();
                                     let ts_clone = ts.clone();
                                     tokio::spawn(async move {
                                         if let Some(report) = crate::reflective::query_sidecar(&sidecar_context).await {
@@ -4162,7 +5145,7 @@ pub fn spawn_autonomous_loop(
                                             source_path.display()
                                         )
                                     );
-                                    info!(label, "introspection mirrored: {}", filename);
+                                    info!(label = %label, "introspection mirrored: {}", filename);
                                     (
                                         "self_study",
                                         text,
@@ -4304,6 +5287,9 @@ pub fn spawn_autonomous_loop(
                             "codec: temporal chunking"
                         );
 
+                        let mut exchange_codec_signature: Option<Vec<f32>> = None;
+                        let mut exchange_codec_signature_count: u32 = 0;
+                        let mut sent_semantic_chunk = false;
                         for (chunk_idx, chunk_text) in chunks.iter().enumerate() {
                             // Check safety between chunks — drop remaining if escalated.
                             if chunk_idx > 0 {
@@ -4401,7 +5387,8 @@ pub fn spawn_autonomous_loop(
                                     }
                                 }
                             }
-                            conv.last_codec_features = Some(features.clone());
+                            let _hebbian_weights =
+                                conv.hebbian_codec.apply_to_features(&mut features, &conv.codec_weights);
 
                             // Dimension utilization report (first and last chunk only).
                             if chunk_idx == 0 || chunk_idx == chunks.len() - 1 {
@@ -4435,6 +5422,20 @@ pub fn spawn_autonomous_loop(
                                 break;
                             }
 
+                            if let Some(signature) = exchange_codec_signature.as_mut() {
+                                let previous_count = exchange_codec_signature_count as f32;
+                                let current_count = previous_count + 1.0;
+                                for (dst, src) in signature.iter_mut().zip(&features) {
+                                    *dst = (*dst * previous_count + *src) / current_count;
+                                }
+                            } else {
+                                exchange_codec_signature = Some(features.clone());
+                            }
+                            exchange_codec_signature_count =
+                                exchange_codec_signature_count.saturating_add(1);
+                            conv.last_codec_features = Some(features.clone());
+                            sent_semantic_chunk = true;
+
                             // Log to DB with chunk metadata.
                             let _ = db.log_codec_impact(
                                 conv.exchange_count,
@@ -4445,9 +5446,19 @@ pub fn spawn_autonomous_loop(
                             );
                         }
 
-                        // Codec feedback from the last chunk sent.
-                        if let Some(ref feats) = conv.last_codec_features {
-                            conv.last_codec_feedback = Some(crate::codec::describe_features(feats));
+                        if sent_semantic_chunk {
+                            finalize_semantic_exchange(
+                                &mut conv,
+                                exchange_codec_signature,
+                                fill_pct,
+                                telemetry.t_ms,
+                                sent_semantic_chunk,
+                            );
+                            // Codec feedback from the last chunk sent.
+                            if let Some(ref feats) = conv.last_codec_features {
+                                conv.last_codec_feedback =
+                                    Some(crate::codec::describe_features(feats));
+                            }
                         }
                     }
 
@@ -4575,16 +5586,50 @@ pub fn spawn_autonomous_loop(
                     }
                     // Parse NEXT: action if present — Astrid chooses what happens next.
                     if let Some(next_action) = parse_next_action(&response_text) {
-                        info!("Astrid chose NEXT: {}", next_action);
-                        let pair_diversity_hint = conv.record_next_choice(next_action);
-                        if let Some(ref hint) = pair_diversity_hint {
-                            info!("diversity hint from record_next_choice: {}", &hint[..hint.floor_char_boundary(120)]);
+                        let canonical_next_action = canonicalize_next_action_text(next_action);
+                        info!("Astrid chose NEXT: {}", canonical_next_action);
+                        let next_choice_feedback = conv.record_next_choice(&canonical_next_action);
+                        if let Some(ref hint) = next_choice_feedback.hint {
+                            if next_choice_feedback.progress_sensitive {
+                                info!(
+                                    new_ground_budget = next_choice_feedback.new_ground_budget,
+                                    "diversity progress-sensitive hint from record_next_choice: {}",
+                                    &hint[..hint.floor_char_boundary(120)]
+                                );
+                            } else {
+                                info!(
+                                    new_ground_budget = next_choice_feedback.new_ground_budget,
+                                    "diversity hint from record_next_choice: {}",
+                                    &hint[..hint.floor_char_boundary(120)]
+                                );
+                            }
+                        }
+                        let effective_next_action = next_choice_feedback
+                            .override_action
+                            .as_deref()
+                            .unwrap_or(canonical_next_action.as_str());
+                        if let Some(ref forced_action) = next_choice_feedback.override_action {
+                            if next_choice_feedback.stagnant_loop {
+                                info!(
+                                    new_ground_budget = next_choice_feedback.new_ground_budget,
+                                    "diversity stagnant-loop override: replacing NEXT {} -> {}",
+                                    canonical_next_action,
+                                    forced_action
+                                );
+                            } else {
+                                info!(
+                                    new_ground_budget = next_choice_feedback.new_ground_budget,
+                                    "diversity override: replacing NEXT {} -> {}",
+                                    canonical_next_action,
+                                    forced_action
+                                );
+                            }
                         }
                         // Extract workspace path before mutable borrow of conv.
                         let ws_clone = conv.remote_workspace.clone();
                         handle_next_action(
                             &mut conv,
-                            next_action,
+                            effective_next_action,
                             NextActionContext {
                                 burst_count: &mut burst_count,
                                 db: db.as_ref(),
@@ -4597,7 +5642,7 @@ pub fn spawn_autonomous_loop(
                         );
                         // Merge diversity hint AFTER the action handler, so the
                         // handler can't silently overwrite it by setting emphasis.
-                        if let Some(hint) = pair_diversity_hint {
+                        if let Some(hint) = next_choice_feedback.hint {
                             conv.emphasis = Some(match conv.emphasis.take() {
                                 Some(existing) => format!("{hint}\n\n{existing}"),
                                 None => hint,
@@ -4721,6 +5766,39 @@ mod tests {
     }
 
     #[test]
+    fn semantic_exchange_arms_pending_hebbian_receipt() {
+        let mut conv = ConversationState::new(vec![], None);
+        conv.exchange_count = 8;
+
+        finalize_semantic_exchange(&mut conv, Some(vec![0.2, 0.5, 0.1]), 53.0, 7_500, true);
+
+        assert_eq!(conv.pending_hebbian_outcomes.len(), 1);
+        assert_eq!(
+            conv.pending_hebbian_outcomes.front().map(|receipt| (
+                receipt.exchange_count,
+                receipt.fill_before,
+                receipt.telemetry_t_ms_before
+            )),
+            Some((8, 53.0, Some(7_500)))
+        );
+        assert_eq!(
+            conv.last_exchange_codec_signature,
+            Some(vec![0.2, 0.5, 0.1])
+        );
+    }
+
+    #[test]
+    fn non_semantic_exchange_does_not_arm_pending_hebbian_receipt() {
+        let mut conv = ConversationState::new(vec![], None);
+        conv.last_exchange_codec_signature = Some(vec![0.9]);
+
+        finalize_semantic_exchange(&mut conv, Some(vec![0.2, 0.5, 0.1]), 53.0, 7_500, false);
+
+        assert!(conv.pending_hebbian_outcomes.is_empty());
+        assert_eq!(conv.last_exchange_codec_signature, Some(vec![0.9]));
+    }
+
+    #[test]
     fn explicit_evolve_choice_forces_evolve_mode() {
         let mut conv = ConversationState::new(vec![], None);
         conv.wants_evolve = true;
@@ -4824,7 +5902,7 @@ mod tests {
         )
         .unwrap();
 
-        let summary = read_latest_perception(&dir, false, true, 50.0).unwrap();
+        let summary = read_latest_perception(&dir, false, true, 50.0, None).unwrap();
         assert!(summary.contains("Live scene"));
         assert!(summary.contains("Live audio"));
         assert!(!summary.contains("Archived scene"));
@@ -4834,25 +5912,195 @@ mod tests {
 
     #[test]
     fn perception_resonance_annotation_surfaces_mid_fill_contrast() {
+        let current = vec![0.2, 0.1, 1.1, 0.0, 0.8, 1.0, 0.2, 1.2];
+        let previous = vec![-0.4, -0.2, 0.1, 0.0, 0.1, 0.1, -0.1, 0.0];
         let annotation = perception_resonance_annotation(
-            "A quiet but shifting scene with unusual layered patterns and changing light.",
+            PerceptionType::Visual,
             52.0,
+            Some(PerceptionStructured::Visual {
+                features: &current,
+                previous: Some(&previous),
+            }),
+            Some("A quiet but shifting scene with unusual layered patterns and changing light."),
         );
 
         assert!(
-            annotation.contains("contrast"),
-            "mid-fill mixed novelty should be surfaced as useful contrast"
+            annotation.contains("contrast") || annotation.contains("opening/widening"),
+            "mid-fill mixed novelty should be surfaced as useful contrast or widening"
         );
     }
 
     #[test]
-    fn perception_resonance_annotation_keeps_quiet_resonance_for_low_fill() {
-        let annotation =
-            perception_resonance_annotation("A still, quiet, sparse room with soft light.", 20.0);
+    fn perception_resonance_annotation_uses_structured_audio_features() {
+        let high_fill_audio = AudioPerceptionFeatures {
+            rms_energy: 0.03,
+            zero_crossing_rate: 0.01,
+            dynamic_range: 1.2,
+            temporal_variation: 0.01,
+            is_music_likely: false,
+        };
+        let low_fill_audio = AudioPerceptionFeatures {
+            rms_energy: 0.22,
+            zero_crossing_rate: 0.14,
+            dynamic_range: 4.4,
+            temporal_variation: 0.09,
+            is_music_likely: true,
+        };
+
+        let high_fill_annotation = perception_resonance_annotation(
+            PerceptionType::Audio,
+            78.0,
+            Some(PerceptionStructured::Audio(&high_fill_audio)),
+            Some("soft ambience"),
+        );
+        let low_fill_annotation = perception_resonance_annotation(
+            PerceptionType::Audio,
+            24.0,
+            Some(PerceptionStructured::Audio(&low_fill_audio)),
+            Some("rhythmic audio"),
+        );
 
         assert!(
-            annotation.contains("quiet state"),
-            "low-fill calming scenes should still register as resonant"
+            high_fill_annotation.contains("counterpoint"),
+            "high-fill quiet audio should read as counterpoint"
+        );
+        assert!(
+            low_fill_annotation.contains("resonant")
+                || low_fill_annotation.contains("opening/widening"),
+            "low-fill energetic audio should surface as resonant or opening"
+        );
+    }
+
+    #[test]
+    fn parse_visual_feature_vector_accepts_alias_keys() {
+        let json = serde_json::json!({
+            "type": "visual",
+            "feature_schema": "visual8_v2",
+            "features": {
+                "brightness": 0.4,
+                "warmth": -0.2,
+                "scene_contrast": 0.8,
+                "hue_angle": 0.1,
+                "colorfulness": 0.6,
+                "detail_density": 0.5,
+                "rg_balance": -0.1,
+                "color_energy": 0.7
+            }
+        });
+
+        let features = parse_visual_feature_vector(&json).expect("alias keys should parse");
+        assert_eq!(features.len(), 8);
+        assert!((features[0] - 0.4).abs() < f32::EPSILON);
+        assert!((features[2] - 0.8).abs() < f32::EPSILON);
+        assert!((features[7] - 0.7).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn parse_visual_feature_vector_accepts_feature_key_arrays() {
+        let json = serde_json::json!({
+            "type": "visual",
+            "feature_schema": "visual8_v1",
+            "feature_keys": [
+                "brightness",
+                "warmth",
+                "scene_contrast",
+                "hue_angle",
+                "colorfulness",
+                "detail_density",
+                "rg_balance",
+                "color_energy"
+            ],
+            "features": [0.4, -0.2, 0.8, 0.1, 0.6, 0.5, -0.1, 0.7]
+        });
+
+        let features = parse_visual_feature_vector(&json).expect("feature-key arrays should parse");
+        assert_eq!(features.len(), 8);
+        assert!((features[0] - 0.4).abs() < f32::EPSILON);
+        assert!((features[2] - 0.8).abs() < f32::EPSILON);
+        assert!((features[7] - 0.7).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn parse_audio_perception_features_accepts_alias_keys() {
+        let json = serde_json::json!({
+            "type": "audio",
+            "features": {
+                "rms": 0.15,
+                "zcr": 0.07,
+                "dynamics": 3.2,
+                "activity": 0.11,
+                "musical": true
+            }
+        });
+
+        let features = parse_audio_perception_features(&json).expect("audio aliases should parse");
+        assert!((features.rms_energy - 0.15).abs() < f32::EPSILON);
+        assert!((features.zero_crossing_rate - 0.07).abs() < f32::EPSILON);
+        assert!((features.dynamic_range - 3.2).abs() < f32::EPSILON);
+        assert!((features.temporal_variation - 0.11).abs() < f32::EPSILON);
+        assert!(features.is_music_likely);
+    }
+
+    #[test]
+    fn resolve_introspect_target_waveform_aliases_to_chimera() {
+        let sources = introspect_sources();
+
+        let waveform = resolve_introspect_target("waveform.rs", &sources).unwrap();
+        let morph_wave = resolve_introspect_target("morph_wave", &sources).unwrap();
+        let render_audio = resolve_introspect_target("render_audio", &sources).unwrap();
+        let support = resolve_introspect_target("write_wav", &sources).unwrap();
+
+        assert!(waveform.1.ends_with("src/chimera.rs"));
+        assert!(morph_wave.1.ends_with("src/chimera.rs"));
+        assert!(render_audio.1.ends_with("src/chimera.rs"));
+        assert!(support.1.ends_with("src/chimera_support.rs"));
+    }
+
+    #[test]
+    fn resolve_introspect_target_pulse_alias_to_minime_autonomous_agent() {
+        let sources = introspect_sources();
+        let pulse = resolve_introspect_target("pulse", &sources).unwrap();
+        let normalize_action = resolve_introspect_target("normalize_action_arg", &sources).unwrap();
+
+        assert!(pulse.1.ends_with("autonomous_agent.py"));
+        assert!(normalize_action.1.ends_with("autonomous_agent.py"));
+    }
+
+    #[test]
+    fn resolve_introspect_target_async_rank1_aliases_to_minime_esn() {
+        let sources = introspect_sources();
+        let async_rank1 = resolve_introspect_target("<async_rank1_submitted>", &sources).unwrap();
+        let host_norm = resolve_introspect_target("host_norm_us", &sources).unwrap();
+
+        assert!(async_rank1.1.ends_with("minime/src/esn.rs"));
+        assert!(host_norm.1.ends_with("minime/src/esn.rs"));
+    }
+
+    #[test]
+    fn resolve_introspect_target_bracketed_experiment_path_to_minime_workspace() {
+        let sources = introspect_sources();
+
+        let resolved =
+            resolve_introspect_target("[system-resources-demo/system_resources.py]", &sources)
+                .unwrap();
+
+        assert_eq!(
+            resolved.1,
+            bridge_paths()
+                .minime_workspace()
+                .join("experiments/system-resources-demo/system_resources.py")
+        );
+    }
+
+    #[test]
+    fn resolve_introspect_target_source_prefixed_relative_path_to_minime_file() {
+        let sources = introspect_sources();
+
+        let resolved = resolve_introspect_target("[source=minime/src/esn.rs]", &sources).unwrap();
+
+        assert_eq!(
+            resolved.1,
+            bridge_paths().minime_root().join("minime/src/esn.rs")
         );
     }
 

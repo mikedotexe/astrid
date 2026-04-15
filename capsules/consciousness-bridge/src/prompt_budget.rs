@@ -7,6 +7,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use serde::Serialize;
+
 /// A labeled block of prompt content with its priority.
 pub struct PromptBlock {
     /// Human-readable label (e.g. "spectral", "journal").
@@ -27,6 +29,25 @@ pub struct PromptOverflow {
     pub summary: String,
 }
 
+/// Structured report about how the prompt budget was applied.
+#[derive(Debug, Clone, Serialize)]
+pub struct PromptBudgetReport {
+    pub budget: usize,
+    pub total_before: usize,
+    pub total_after: usize,
+    pub trimmed_blocks: Vec<PromptTrimmedBlock>,
+}
+
+/// One block that was partially or fully trimmed.
+#[derive(Debug, Clone, Serialize)]
+pub struct PromptTrimmedBlock {
+    pub label: String,
+    pub original_chars: usize,
+    pub kept_chars: usize,
+    pub removed_chars: usize,
+    pub fully_removed: bool,
+}
+
 /// Assemble blocks within a character budget.
 ///
 /// Blocks are concatenated in their original order. If the total exceeds
@@ -41,7 +62,7 @@ pub fn assemble_within_budget(
     blocks: Vec<PromptBlock>,
     budget: usize,
     overflow_dir: &Path,
-) -> (String, Option<PromptOverflow>) {
+) -> (String, Option<PromptOverflow>, Option<PromptBudgetReport>) {
     // Filter out empty blocks and compute total.
     let blocks: Vec<PromptBlock> = blocks
         .into_iter()
@@ -57,7 +78,7 @@ pub fn assemble_within_budget(
             .map(|b| b.content)
             .collect::<Vec<_>>()
             .join("\n");
-        return (assembled, None);
+        return (assembled, None, None);
     }
 
     // Need to trim. Build a priority-sorted index (highest priority number = trimmed first).
@@ -68,6 +89,7 @@ pub fn assemble_within_budget(
     let mut contents: Vec<String> = blocks.iter().map(|b| b.content.clone()).collect();
     let mut overflow_sections: Vec<(String, String)> = Vec::new(); // (label, spilled_text)
     let mut remaining_excess = total.saturating_sub(budget);
+    let mut trimmed_blocks: Vec<PromptTrimmedBlock> = Vec::new();
 
     for &idx in &trim_order {
         if remaining_excess == 0 {
@@ -88,6 +110,13 @@ pub fn assemble_within_budget(
             contents[idx] = format!(
                 "[{label} context ({block_len} chars) moved to overflow. NEXT: READ_MORE to see it.]"
             );
+            trimmed_blocks.push(PromptTrimmedBlock {
+                label: label.to_string(),
+                original_chars: block_len,
+                kept_chars: 0,
+                removed_chars: block_len,
+                fully_removed: true,
+            });
         } else {
             // Partially trim this block.
             let keep_chars = block_len.saturating_sub(remaining_excess);
@@ -102,6 +131,13 @@ pub fn assemble_within_budget(
             ));
             remaining_excess = remaining_excess.saturating_sub(block_len.saturating_sub(keep_at));
             contents[idx] = kept;
+            trimmed_blocks.push(PromptTrimmedBlock {
+                label: label.to_string(),
+                original_chars: block_len,
+                kept_chars: keep_at,
+                removed_chars: trimmed_len,
+                fully_removed: false,
+            });
         }
     }
 
@@ -144,7 +180,14 @@ pub fn assemble_within_budget(
         })
     };
 
-    (assembled, overflow)
+    let report = Some(PromptBudgetReport {
+        budget,
+        total_before: total,
+        total_after: assembled.len(),
+        trimmed_blocks,
+    });
+
+    (assembled, overflow, report)
 }
 
 /// Cap a string with overflow to disk. Returns (capped_content, optional overflow).
@@ -259,10 +302,11 @@ mod tests {
             },
         ];
         let dir = std::env::temp_dir().join("prompt_budget_test_under");
-        let (assembled, overflow) = assemble_within_budget(blocks, 100, &dir);
+        let (assembled, overflow, report) = assemble_within_budget(blocks, 100, &dir);
         assert!(assembled.contains("hello"));
         assert!(assembled.contains("world"));
         assert!(overflow.is_none());
+        assert!(report.is_none());
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -290,7 +334,7 @@ mod tests {
             },
         ];
         // Budget 800: total 1500, excess 700. "low" (priority 5) trimmed first.
-        let (assembled, overflow) = assemble_within_budget(blocks, 800, &dir);
+        let (assembled, overflow, report) = assemble_within_budget(blocks, 800, &dir);
 
         // High-priority content should be fully preserved.
         assert!(assembled.contains(&"A".repeat(500)));
@@ -300,6 +344,13 @@ mod tests {
         let of = overflow.expect("overflow should exist");
         assert!(of.path.exists());
         assert!(of.summary.contains("low"));
+        let report = report.expect("budget report should exist");
+        assert!(
+            report
+                .trimmed_blocks
+                .iter()
+                .any(|block| block.label == "low")
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }

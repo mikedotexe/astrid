@@ -1,3 +1,6 @@
+use std::fs;
+use std::path::Path;
+
 use tracing::{info, warn};
 
 use super::{
@@ -5,6 +8,211 @@ use super::{
 };
 use crate::memory;
 use crate::paths::bridge_paths;
+
+const READ_MORE_PAGE_CHUNK: usize = 4000;
+
+fn clamp_to_char_boundary(text: &str, offset: usize) -> usize {
+    let mut safe = offset.min(text.len());
+    while safe > 0 && !text.is_char_boundary(safe) {
+        safe = safe.saturating_sub(1);
+    }
+    safe
+}
+
+fn advance_by_chars(text: &str, start: usize, char_count: usize) -> usize {
+    let start = clamp_to_char_boundary(text, start);
+    if char_count == 0 || start >= text.len() {
+        return start;
+    }
+    text[start..]
+        .char_indices()
+        .nth(char_count)
+        .map(|(index, _)| start.saturating_add(index))
+        .unwrap_or(text.len())
+}
+
+fn looks_like_raw_pdf_dump(content: &str, body_start: usize) -> bool {
+    let body_start = clamp_to_char_boundary(content, body_start);
+    let preview = content[body_start..].chars().take(512).collect::<String>();
+    preview.starts_with("%PDF-")
+}
+
+fn normalize_read_more_hint(text: &str) -> String {
+    text.to_lowercase()
+        .chars()
+        .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { ' ' })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn score_read_more_candidate(hint: &str, candidate: &str, rank: usize) -> f32 {
+    if hint.is_empty() {
+        return (32usize.saturating_sub(rank)) as f32;
+    }
+
+    let hint_norm = normalize_read_more_hint(hint);
+    let candidate_norm = normalize_read_more_hint(candidate);
+    if hint_norm.is_empty() || candidate_norm.is_empty() {
+        return 0.0;
+    }
+
+    let mut score = (24usize.saturating_sub(rank)) as f32;
+    if candidate_norm.contains(&hint_norm) || hint_norm.contains(&candidate_norm) {
+        score += 80.0;
+    }
+
+    let hint_tokens = hint_norm
+        .split_whitespace()
+        .filter(|token| token.len() >= 3)
+        .collect::<Vec<_>>();
+    let candidate_tokens = candidate_norm
+        .split_whitespace()
+        .filter(|token| token.len() >= 3)
+        .collect::<Vec<_>>();
+    let overlap = hint_tokens
+        .iter()
+        .filter(|token| candidate_tokens.contains(token))
+        .count();
+    score + (overlap as f32 * 18.0)
+}
+
+fn parse_saved_page_header(content: &str) -> (usize, Option<String>) {
+    let header_end = content.find("\n\n").unwrap_or(0);
+    if header_end == 0 {
+        return (0, None);
+    }
+    let header = &content[..header_end];
+    let url = header.lines().find_map(|line| {
+        line.strip_prefix("URL:")
+            .map(|value| value.trim().to_string())
+    });
+    (header_end.saturating_add(2), url)
+}
+
+fn is_codex_saved_response(path: &Path) -> bool {
+    let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+        return false;
+    };
+    if name.starts_with("codex_") {
+        return true;
+    }
+    path.components()
+        .any(|component| component.as_os_str() == "codex_responses")
+}
+
+fn recover_read_more_target(
+    conv: &ConversationState,
+    hint: &str,
+) -> Option<(String, usize, String)> {
+    let mut candidates: Vec<(String, usize, String, bool)> = Vec::new();
+
+    if let Some(path) = conv.last_read_path.clone() {
+        if Path::new(&path).exists() {
+            candidates.push((
+                path.clone(),
+                conv.last_read_offset,
+                path,
+                conv.last_read_offset > 0,
+            ));
+        }
+    }
+
+    let research_dir = bridge_paths().research_dir();
+    if let Ok(entries) = fs::read_dir(&research_dir) {
+        let mut page_files = entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.is_file()
+                    && path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .is_some_and(|name| name.starts_with("page_") && name.ends_with(".txt"))
+            })
+            .collect::<Vec<_>>();
+        page_files.sort_by_key(|path| fs::metadata(path).and_then(|meta| meta.modified()).ok());
+        page_files.reverse();
+
+        for page_path in page_files.into_iter().take(8) {
+            let Ok(content) = fs::read_to_string(&page_path) else {
+                continue;
+            };
+            let (header_len, url) = parse_saved_page_header(&content);
+            if looks_like_raw_pdf_dump(&content, header_len) {
+                continue;
+            }
+            let body_start = clamp_to_char_boundary(&content, header_len);
+            let body_len = content[body_start..].chars().count();
+            let offset = advance_by_chars(&content, body_start, READ_MORE_PAGE_CHUNK.min(body_len));
+            let label = match url {
+                Some(url) => format!("{} {}", page_path.display(), url),
+                None => page_path.display().to_string(),
+            };
+            candidates.push((
+                page_path.to_string_lossy().into_owned(),
+                offset,
+                label,
+                body_len > READ_MORE_PAGE_CHUNK,
+            ));
+        }
+    }
+
+    let overflow_dir = bridge_paths().context_overflow_dir();
+    if let Ok(entries) = fs::read_dir(&overflow_dir) {
+        let mut overflow_files = entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.is_file()
+                    && path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .is_some_and(|name| {
+                            name.starts_with("context_overflow_") && name.ends_with(".txt")
+                        })
+            })
+            .collect::<Vec<_>>();
+        overflow_files.sort_by_key(|path| fs::metadata(path).and_then(|meta| meta.modified()).ok());
+        overflow_files.reverse();
+
+        for overflow_path in overflow_files.into_iter().take(6) {
+            let Ok(content) = fs::read_to_string(&overflow_path) else {
+                continue;
+            };
+            let offset = advance_by_chars(&content, 0, READ_MORE_PAGE_CHUNK);
+            candidates.push((
+                overflow_path.to_string_lossy().into_owned(),
+                offset,
+                overflow_path.display().to_string(),
+                content.chars().count() > READ_MORE_PAGE_CHUNK,
+            ));
+        }
+    }
+
+    if candidates.is_empty() {
+        return None;
+    }
+
+    let hint_norm = normalize_read_more_hint(hint);
+    let mut best: Option<(f32, String, usize, String, bool)> = None;
+    for (rank, (path, offset, label, can_continue)) in candidates.into_iter().enumerate() {
+        let score = score_read_more_candidate(&hint_norm, &label, rank);
+        if hint_norm.is_empty() || score >= 18.0 {
+            if best.as_ref().is_none_or(|current| score > current.0) {
+                best = Some((score, path, offset, label, can_continue));
+            }
+        }
+    }
+
+    let (_, path, offset, label, can_continue) = best?;
+    if can_continue {
+        Some((path, offset, label))
+    } else {
+        Some((path, usize::MAX, label))
+    }
+}
 
 pub(super) fn handle_action(
     conv: &mut ConversationState,
@@ -141,8 +349,35 @@ pub(super) fn handle_action(
             true
         },
         "READ_MORE" => {
-            if let Some(ref path) = conv.last_read_path {
-                if let Some(pdf_path) = super::pdf::marker_path(path) {
+            let hint = strip_action(original, "READ_MORE");
+            if conv.last_read_path.is_none() {
+                match recover_read_more_target(conv, &hint) {
+                    Some((path, offset, label)) if offset != usize::MAX => {
+                        conv.last_read_path = Some(path);
+                        conv.last_read_offset = offset;
+                        conv.last_read_meaning_summary = None;
+                        info!("READ_MORE recalled recent source: {}", label);
+                    },
+                    Some((_path, _offset, label)) => {
+                        conv.pending_file_listing = Some(format!(
+                            "[You've already reached the end of the most recent readable source: {label}. Open something new with BROWSE, MIKE_READ, AR_READ, LIST_FILES, or CODEX.]"
+                        ));
+                        info!("READ_MORE recall found only completed source: {}", label);
+                        return true;
+                    },
+                    None => {
+                        conv.pending_file_listing = Some(
+                            "[There's no active source to continue right now. Use BROWSE, MIKE_READ, AR_READ, LIST_FILES, or CODEX first.]"
+                                .to_string(),
+                        );
+                        info!("READ_MORE: no continuation source available");
+                        return true;
+                    },
+                }
+            }
+
+            if let Some(path) = conv.last_read_path.clone() {
+                if let Some(pdf_path) = super::pdf::marker_path(&path) {
                     let research_root = bridge_paths().mike_research_root();
                     match super::pdf::read_pdf_window(
                         &pdf_path,
@@ -176,32 +411,85 @@ pub(super) fn handle_action(
                             );
                         },
                     }
-                } else if let Some((page, current, total, new_offset)) =
-                    super::codex::read_codex_page(path, conv.last_read_offset)
-                {
-                    let footer = if new_offset
-                        >= std::fs::metadata(path)
-                            .map(|m| m.len() as usize)
-                            .unwrap_or(0)
+                } else if is_codex_saved_response(Path::new(&path)) {
+                    if let Some((page, current, total, new_offset)) =
+                        super::codex::read_codex_page(&path, conv.last_read_offset)
                     {
-                        format!("\n\n[End of response (part {current} of {total}).]")
+                        let footer = if new_offset
+                            >= fs::metadata(&path).map(|m| m.len() as usize).unwrap_or(0)
+                        {
+                            format!("\n\n[End of response (part {current} of {total}).]")
+                        } else {
+                            format!(
+                                "\n\n[Part {current} of {total}. NEXT: READ_MORE for part {}.]",
+                                current + 1
+                            )
+                        };
+                        conv.pending_file_listing = Some(format!(
+                            "[Continuing — part {current} of {total}:]\n{page}{footer}"
+                        ));
+                        conv.last_read_offset = new_offset;
+                        info!("READ_MORE: part {current} of {total} (offset {new_offset})");
                     } else {
-                        format!(
-                            "\n\n[Part {current} of {total}. NEXT: READ_MORE for part {}.]",
-                            current + 1
-                        )
-                    };
-                    conv.pending_file_listing = Some(format!(
-                        "[Continuing — part {current} of {total}:]\n{page}{footer}"
-                    ));
-                    conv.last_read_offset = new_offset;
-                    info!("READ_MORE: part {current} of {total} (offset {new_offset})");
+                        conv.pending_file_listing = Some("[No more content to read.]".into());
+                        info!("READ_MORE: reached end of codex response");
+                    }
                 } else {
-                    conv.pending_file_listing = Some("[No more content to read.]".into());
-                    info!("READ_MORE: reached end of file");
+                    match fs::read_to_string(&path) {
+                        Ok(full_text) => {
+                            let (header_len, url) = parse_saved_page_header(&full_text);
+                            if looks_like_raw_pdf_dump(&full_text, header_len) {
+                                let source_hint = url.unwrap_or_else(|| path.clone());
+                                conv.pending_file_listing = Some(format!(
+                                    "[This saved source contains raw PDF bytes rather than readable extracted text: {source_hint}. Re-open the PDF directly with MIKE_READ or BROWSE instead of continuing this cached dump.]"
+                                ));
+                                conv.last_read_path = None;
+                                conv.last_read_offset = 0;
+                                conv.last_read_meaning_summary = None;
+                                warn!("READ_MORE: refused raw PDF dump {}", path);
+                                return true;
+                            }
+                            let offset = clamp_to_char_boundary(&full_text, conv.last_read_offset);
+                            let new_offset =
+                                advance_by_chars(&full_text, offset, READ_MORE_PAGE_CHUNK);
+                            let chunk = full_text[offset..new_offset].to_string();
+                            if chunk.is_empty() {
+                                conv.pending_file_listing =
+                                    Some("[No more content to read.]".into());
+                                conv.last_read_path = None;
+                                conv.last_read_offset = 0;
+                                conv.last_read_meaning_summary = None;
+                                info!("READ_MORE: reached end of saved text");
+                            } else {
+                                let remaining = full_text[new_offset..].chars().count();
+                                conv.pending_file_listing =
+                                    Some(crate::llm::format_read_more_context(
+                                        offset,
+                                        &chunk,
+                                        remaining,
+                                        conv.last_read_meaning_summary.as_deref(),
+                                    ));
+                                conv.last_read_offset = new_offset;
+                                if remaining == 0 {
+                                    conv.last_read_path = None;
+                                    conv.last_read_meaning_summary = None;
+                                }
+                                info!(
+                                    "READ_MORE continuing saved text: offset={} remaining={}",
+                                    new_offset, remaining
+                                );
+                            }
+                        },
+                        Err(error) => {
+                            conv.pending_file_listing =
+                                Some(format!("[Could not continue reading {}: {}]", path, error));
+                            conv.last_read_path = None;
+                            conv.last_read_offset = 0;
+                            conv.last_read_meaning_summary = None;
+                            warn!("READ_MORE: could not read {}", path);
+                        },
+                    }
                 }
-            } else {
-                warn!("READ_MORE but no file to continue from");
             }
             true
         },
@@ -335,5 +623,72 @@ pub(super) fn handle_action(
             true
         },
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        ConversationState, advance_by_chars, clamp_to_char_boundary, looks_like_raw_pdf_dump,
+        parse_saved_page_header, recover_read_more_target,
+    };
+    use crate::paths::bridge_paths;
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn advance_by_chars_stays_on_char_boundaries() {
+        let content = "URL: https://example.test\n\nalpha βeta gamma";
+        let (header_len, _) = parse_saved_page_header(content);
+        let offset = advance_by_chars(content, header_len, 7);
+        assert!(content.is_char_boundary(offset));
+        assert_eq!(&content[offset..], "eta gamma");
+        let shifted = clamp_to_char_boundary(content, offset.saturating_add(1));
+        assert!(content.is_char_boundary(shifted));
+    }
+
+    #[test]
+    fn detects_raw_pdf_dump_body() {
+        let content = "URL: https://example.test/file.pdf\n\n%PDF-1.5 %���� raw payload";
+        let (header_len, _) = parse_saved_page_header(content);
+        assert!(looks_like_raw_pdf_dump(content, header_len));
+    }
+
+    #[test]
+    fn recover_read_more_target_skips_raw_pdf_dump_candidates() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let hint = format!("raw skip token {unique}");
+        let research_dir = bridge_paths().research_dir();
+        let raw_path = research_dir.join(format!("page_{unique}_raw.txt"));
+        let text_path = research_dir.join(format!("page_{unique}_text.txt"));
+
+        fs::write(
+            &raw_path,
+            format!(
+                "URL: https://example.test/{unique}.pdf\n\n%PDF-1.5 %���� raw payload for {hint}"
+            ),
+        )
+        .expect("write raw pdf dump fixture");
+        fs::write(
+            &text_path,
+            format!(
+                "URL: https://example.test/{unique}.html\n\n{hint}\n\n{}\n",
+                "meaningful text ".repeat(600)
+            ),
+        )
+        .expect("write readable page fixture");
+
+        let conv = ConversationState::new(Vec::new(), None);
+        let recovered = recover_read_more_target(&conv, &hint);
+
+        let _ = fs::remove_file(&raw_path);
+        let _ = fs::remove_file(&text_path);
+
+        let (path, _, label) = recovered.expect("recover readable source");
+        assert_eq!(path, text_path.to_string_lossy());
+        assert!(label.contains(&text_path.display().to_string()));
     }
 }

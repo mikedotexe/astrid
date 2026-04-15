@@ -15,8 +15,13 @@ pub(crate) const READ_ONLY_ACTIONS: &[&str] = &[
     "AR_DEEP_READ",
     "AR_VALIDATE",
 ];
-pub(crate) const MUTATING_ACTIONS: &[&str] =
-    &["AR_START", "AR_NOTE", "AR_BLOCK", "AR_COMPLETE", "SELF_RESEARCH"];
+pub(crate) const MUTATING_ACTIONS: &[&str] = &[
+    "AR_START",
+    "AR_NOTE",
+    "AR_BLOCK",
+    "AR_COMPLETE",
+    "SELF_RESEARCH",
+];
 
 #[derive(Debug, Clone)]
 pub(crate) struct ActionOutput {
@@ -65,7 +70,9 @@ fn looks_like_file_path(token: &str) -> bool {
     }
     // Bare filename with common extension (no slash needed).
     // Minime repeatedly tries AR_READ with .pdf extensions.
-    const EXTS: &[&str] = &[".pdf", ".py", ".rs", ".txt", ".json", ".md", ".h", ".toml", ".csv"];
+    const EXTS: &[&str] = &[
+        ".pdf", ".py", ".rs", ".txt", ".json", ".md", ".h", ".toml", ".csv",
+    ];
     let lower = token.to_ascii_lowercase();
     EXTS.iter().any(|ext| lower.ends_with(ext))
 }
@@ -128,10 +135,7 @@ fn find_most_recent_active_job(autoresearch_root: &Path) -> Option<String> {
 ///
 /// Returns the (possibly modified) action text, or an Err with a helpful
 /// message.
-fn normalize_action_text(
-    action_text: &str,
-    autoresearch_root: &Path,
-) -> Result<String, String> {
+fn normalize_action_text(action_text: &str, autoresearch_root: &Path) -> Result<String, String> {
     let trimmed = action_text.trim();
     let Some(base_token) = trimmed.split_whitespace().next() else {
         return Ok(action_text.to_string());

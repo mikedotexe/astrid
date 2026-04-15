@@ -101,3 +101,24 @@ fn web_search_prompt_body_puts_meaning_first() {
     assert!(prompt_body.contains("Top results:"));
     assert!(prompt_body.contains("https://example.com/paper"));
 }
+
+#[test]
+fn strip_model_artifacts_reports_removed_tokens() {
+    let (stripped, report) =
+        llm::strip_model_artifacts_with_report("hello<end_of_turn> [INST]world<|im_end|>");
+
+    assert_eq!(stripped, "hello world");
+    let report = report.expect("artifact cleanup report should exist");
+    assert_eq!(report.removed_total, 3);
+    assert_eq!(
+        report.before_chars,
+        "hello<end_of_turn> [INST]world<|im_end|>".len()
+    );
+    assert_eq!(report.after_chars, stripped.len());
+    assert!(
+        report
+            .removed_tokens
+            .iter()
+            .any(|token| token.token == "<end_of_turn>" && token.count == 1)
+    );
+}

@@ -8,6 +8,9 @@
 use serde::{Deserialize, Serialize};
 use tracing::{debug, warn};
 
+use crate::paths::bridge_paths;
+use crate::prompt_budget::PromptBudgetReport;
+
 /// MLX server endpoint — Astrid's dedicated inference lane.
 /// OpenAI-compatible API served by mlx_lm.server on port 8090.
 const MLX_URL: &str = "http://127.0.0.1:8090/v1/chat/completions";
@@ -261,7 +264,17 @@ async fn mlx_chat(
 
     // Strip leaked model tokens early so they don't pollute downstream ratio
     // checks or end up stored in journals.
-    let text = strip_model_artifacts(&raw_text).trim().to_string();
+    let (stripped_text, strip_report) = strip_model_artifacts_with_report(&raw_text);
+    if let Some(report) = strip_report {
+        warn!(
+            removed_total = report.removed_total,
+            before_chars = report.before_chars,
+            after_chars = report.after_chars,
+            "mlx_chat stripped leaked model artifact tokens"
+        );
+        append_llm_diagnostic_jsonl("model_artifact_cleanup.jsonl", &report);
+    }
+    let text = stripped_text.trim().to_string();
     if text.is_empty() {
         return None;
     }
@@ -489,12 +502,100 @@ const MODEL_ARTIFACT_TOKENS: &[&str] = &[
     "[INST]",
 ];
 
-fn strip_model_artifacts(text: &str) -> String {
-    let mut result = text.to_string();
-    for token in MODEL_ARTIFACT_TOKENS {
-        result = result.replace(token, "");
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct StripModelArtifactsReport {
+    pub removed_total: usize,
+    pub before_chars: usize,
+    pub after_chars: usize,
+    pub removed_tokens: Vec<StripModelArtifactTokenCount>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct StripModelArtifactTokenCount {
+    pub token: String,
+    pub count: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct DialoguePromptBudgetDiagnostic {
+    timestamp: String,
+    requested_tokens: u32,
+    effective_tokens: u32,
+    budget_profile: &'static str,
+    prompt_budget_chars: usize,
+    overhead_chars: usize,
+    user_content_budget: usize,
+    final_prompt_chars: usize,
+    timeout_secs: u64,
+    overflow_summary: Option<String>,
+    overflow_path: Option<String>,
+    budget_report: Option<PromptBudgetReport>,
+}
+
+fn append_llm_diagnostic_jsonl(file_name: &str, value: &impl Serialize) {
+    let dir = bridge_paths().bridge_workspace().join("diagnostics");
+    if std::fs::create_dir_all(&dir).is_err() {
+        return;
     }
-    result
+    let path = dir.join(file_name);
+    let Ok(line) = serde_json::to_string(value) else {
+        return;
+    };
+    let mut file = match std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    {
+        Ok(file) => file,
+        Err(_) => return,
+    };
+    use std::io::Write as _;
+    let _ = writeln!(file, "{line}");
+}
+
+fn dialogue_prompt_budget_profile(num_predict: u32) -> &'static str {
+    if num_predict > 1024 {
+        "deep"
+    } else if num_predict > 512 {
+        "medium"
+    } else {
+        "short"
+    }
+}
+
+pub(crate) fn strip_model_artifacts_with_report(
+    text: &str,
+) -> (String, Option<StripModelArtifactsReport>) {
+    let mut result = text.to_string();
+    let mut removed_tokens = Vec::new();
+    for token in MODEL_ARTIFACT_TOKENS {
+        let count = result.matches(token).count();
+        if count > 0 {
+            removed_tokens.push(StripModelArtifactTokenCount {
+                token: (*token).to_string(),
+                count,
+            });
+            result = result.replace(token, "");
+        }
+    }
+    if removed_tokens.is_empty() {
+        return (result, None);
+    }
+    let removed_total = removed_tokens.iter().map(|entry| entry.count).sum();
+    let after_chars = result.len();
+    (
+        result,
+        Some(StripModelArtifactsReport {
+            removed_total,
+            before_chars: text.len(),
+            after_chars,
+            removed_tokens,
+        }),
+    )
+}
+
+fn strip_model_artifacts(text: &str) -> String {
+    strip_model_artifacts_with_report(text).0
 }
 
 fn is_valid_dialogue_output(text: &str) -> bool {
@@ -748,7 +849,8 @@ pub async fn generate_dialogue(
         },
     ];
 
-    let (assembled, overflow) = assemble_within_budget(blocks, user_content_budget, overflow_dir);
+    let (assembled, overflow, budget_report) =
+        assemble_within_budget(blocks, user_content_budget, overflow_dir);
 
     let user_content =
         format!("Fill {fill_pct:.1}%. {assembled}\n\nRespond, then end with NEXT: [your choice].");
@@ -766,6 +868,27 @@ pub async fn generate_dialogue(
         );
     }
     let timeout_secs = dialogue_request_timeout_secs(effective_num_predict, final_prompt_chars);
+    let budget_diag = DialoguePromptBudgetDiagnostic {
+        timestamp: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+            .to_string(),
+        requested_tokens: num_predict,
+        effective_tokens: effective_num_predict,
+        budget_profile: dialogue_prompt_budget_profile(num_predict),
+        prompt_budget_chars,
+        overhead_chars: overhead,
+        user_content_budget,
+        final_prompt_chars,
+        timeout_secs,
+        overflow_summary: overflow.as_ref().map(|value| value.summary.clone()),
+        overflow_path: overflow
+            .as_ref()
+            .map(|value| value.path.display().to_string()),
+        budget_report,
+    };
+    append_llm_diagnostic_jsonl("dialogue_prompt_budget.jsonl", &budget_diag);
 
     debug!("querying MLX for Astrid dialogue response");
     let result = mlx_chat(messages, temperature, effective_num_predict, timeout_secs)
