@@ -68,6 +68,11 @@ capsules/consciousness-bridge/workspace/outbox/
 capsules/consciousness-bridge/workspace/perception_paused.flag
 capsules/consciousness-bridge/workspace/research/
 capsules/consciousness-bridge/workspace/reservoir_config.json
+capsules/consciousness-bridge/workspace/btsp_episode_bank.json
+capsules/consciousness-bridge/workspace/btsp_signal_catalog.json
+capsules/consciousness-bridge/workspace/btsp_signal_events.jsonl
+capsules/consciousness-bridge/workspace/btsp_signal_status.json
+capsules/consciousness-bridge/workspace/sovereignty_proposals.json
 capsules/perception/workspace/perceptions/
 capsules/perception/workspace/visual/
 # Python cache

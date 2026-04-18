@@ -206,6 +206,31 @@ impl BridgePaths {
     }
 
     #[must_use]
+    pub fn btsp_episode_bank_path(&self) -> PathBuf {
+        self.bridge_workspace.join("btsp_episode_bank.json")
+    }
+
+    #[must_use]
+    pub fn btsp_signal_catalog_path(&self) -> PathBuf {
+        self.bridge_workspace.join("btsp_signal_catalog.json")
+    }
+
+    #[must_use]
+    pub fn btsp_signal_events_path(&self) -> PathBuf {
+        self.bridge_workspace.join("btsp_signal_events.jsonl")
+    }
+
+    #[must_use]
+    pub fn btsp_signal_status_path(&self) -> PathBuf {
+        self.bridge_workspace.join("btsp_signal_status.json")
+    }
+
+    #[must_use]
+    pub fn sovereignty_proposals_path(&self) -> PathBuf {
+        self.bridge_workspace.join("sovereignty_proposals.json")
+    }
+
+    #[must_use]
     pub fn experiments_dir(&self) -> PathBuf {
         self.bridge_workspace.join("experiments")
     }

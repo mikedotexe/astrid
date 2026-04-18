@@ -19,6 +19,7 @@
 
 #![allow(clippy::arithmetic_side_effects)]
 
+mod btsp;
 mod hebbian;
 mod next_action;
 mod reservoir;
@@ -1475,6 +1476,9 @@ fn retire_inbox_at(inbox_dir: &Path) {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
             if path.is_file() && path.extension().is_some_and(|ext| ext == "txt") {
+                if let Ok(content) = std::fs::read_to_string(&path) {
+                    btsp::record_astrid_inbox_read(&path, &content);
+                }
                 if let Some(name) = path.file_name() {
                     let _ = std::fs::rename(&path, read_dir.join(name));
                 }
@@ -2397,6 +2401,28 @@ fn looks_like_introspect_path(target_label: &str) -> bool {
             .any(|suffix| cleaned.ends_with(suffix))
 }
 
+fn introspect_path_candidates(target_label: &str) -> Vec<String> {
+    let cleaned = canonicalize_introspect_target_label(target_label);
+    if cleaned.is_empty() || !looks_like_introspect_path(&cleaned) {
+        return Vec::new();
+    }
+
+    let mut candidates = vec![cleaned.clone()];
+    for separator in [" — ", " -- ", " - "] {
+        if let Some((prefix, _)) = cleaned.split_once(separator) {
+            let candidate = prefix.trim();
+            if candidate.is_empty()
+                || !looks_like_introspect_path(candidate)
+                || candidates.iter().any(|existing| existing == candidate)
+            {
+                continue;
+            }
+            candidates.push(candidate.to_string());
+        }
+    }
+    candidates
+}
+
 fn introspect_source_aliases(source: &IntrospectSource) -> Vec<String> {
     let mut aliases = vec![normalize_introspect_lookup(source.label)];
     if let Some(name) = source.path.file_name().and_then(std::ffi::OsStr::to_str) {
@@ -2635,17 +2661,21 @@ fn resolve_introspect_target(
         return Some(path);
     }
 
-    if looks_like_introspect_path(&cleaned_target) {
-        if let Some(path) = resolve_relative_introspect_path(&cleaned_target)
-            .or_else(|| search_introspect_roots_for_filename(&cleaned_target))
-        {
-            let label = path
-                .file_name()
-                .and_then(std::ffi::OsStr::to_str)
-                .unwrap_or(cleaned_target.as_str())
-                .to_string();
-            return Some((label, path));
+    let path_candidates = introspect_path_candidates(&cleaned_target);
+    if !path_candidates.is_empty() {
+        for candidate in &path_candidates {
+            if let Some(path) = resolve_relative_introspect_path(candidate)
+                .or_else(|| search_introspect_roots_for_filename(candidate))
+            {
+                let label = path
+                    .file_name()
+                    .and_then(std::ffi::OsStr::to_str)
+                    .unwrap_or(candidate.as_str())
+                    .to_string();
+                return Some((label, path));
+            }
         }
+        return None;
     }
 
     let target_tokens: Vec<&str> = normalized_target
@@ -3140,6 +3170,10 @@ pub fn spawn_autonomous_loop(
                         }
                     }
 
+                    let controller_health =
+                        conv.remote_workspace.as_deref().and_then(read_controller_health);
+                    btsp::refresh_runtime(&conv, controller_health.as_ref());
+
                     // Check minime's parameter requests: apply semantic_gain,
                     // move all non-pending (applied/reviewed) to reviewed/.
                     if let Some(ref workspace) = conv.remote_workspace {
@@ -3418,7 +3452,7 @@ pub fn spawn_autonomous_loop(
                                     })
                                 })
                                 .unwrap_or_default();
-                            let feedback_hint = selected_remote_entry.as_ref()
+                            let mut feedback_hint = selected_remote_entry.as_ref()
                                 .filter(|entry| entry.is_self_study())
                                 .map(|entry| {
                                     let source = entry.source_label.as_deref().unwrap_or("unknown source");
@@ -3436,10 +3470,6 @@ pub fn spawn_autonomous_loop(
                             // Read Ising shadow from minime's workspace for viz.
                             let ising_shadow = conv.remote_workspace.as_deref()
                                 .and_then(read_ising_shadow);
-
-                            // Read controller health for DECOMPOSE and per-exchange summary.
-                            let controller_health = conv.remote_workspace.as_deref()
-                                .and_then(read_controller_health);
 
                             let spectral_summary = if conv.wants_decompose {
                                 conv.wants_decompose = false;
@@ -3770,6 +3800,10 @@ pub fn spawn_autonomous_loop(
                             } else {
                                 Some(continuity_parts.join("\n\n"))
                             };
+                            feedback_hint = merge_hints([
+                                feedback_hint,
+                                btsp::render_astrid_prompt_block(),
+                            ]);
 
                             // Use perception loaded above (available to all modes).
                             let mut perception_text = perception_text.clone();
@@ -4710,6 +4744,9 @@ pub fn spawn_autonomous_loop(
                                 seed_parts.push(format!("A thread that lingered from earlier:\n{resonance}"));
                                 conv.peripheral_resonance = None;
                             }
+                            if let Some(btsp_seed) = btsp::render_astrid_initiation_seed() {
+                                seed_parts.push(btsp_seed);
+                            }
                             let seed = if seed_parts.is_empty() {
                                 "What do you want?".to_string()
                             } else {
@@ -5627,6 +5664,7 @@ pub fn spawn_autonomous_loop(
                         }
                         // Extract workspace path before mutable borrow of conv.
                         let ws_clone = conv.remote_workspace.clone();
+                        btsp::record_astrid_next_action(effective_next_action, fill_pct);
                         handle_next_action(
                             &mut conv,
                             effective_next_action,
@@ -6093,6 +6131,24 @@ mod tests {
     }
 
     #[test]
+    fn resolve_introspect_target_path_with_prose_tail_to_minime_workspace() {
+        let sources = introspect_sources();
+
+        let resolved = resolve_introspect_target(
+            "system-resources-demo/system_resources.py — specifically line 109-129",
+            &sources,
+        )
+        .unwrap();
+
+        assert_eq!(
+            resolved.1,
+            bridge_paths()
+                .minime_workspace()
+                .join("experiments/system-resources-demo/system_resources.py")
+        );
+    }
+
+    #[test]
     fn resolve_introspect_target_source_prefixed_relative_path_to_minime_file() {
         let sources = introspect_sources();
 
@@ -6102,6 +6158,16 @@ mod tests {
             resolved.1,
             bridge_paths().minime_root().join("minime/src/esn.rs")
         );
+    }
+
+    #[test]
+    fn resolve_introspect_target_explicit_missing_path_does_not_fuzzy_rotate() {
+        let sources = introspect_sources();
+
+        let resolved =
+            resolve_introspect_target("missing-demo/missing.py — focus on codec", &sources);
+
+        assert!(resolved.is_none());
     }
 
     #[test]

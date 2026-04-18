@@ -146,20 +146,13 @@ pub(super) fn handle_action(
             let label = raw_arg
                 .trim_matches(|c| c == '[' || c == ']')
                 .trim()
-                .to_lowercase();
+                .to_string();
             if label.is_empty() {
                 info!("Astrid chose EXAMINE_CODE (next in rotation)");
                 conv.introspect_target = None;
             } else {
-                // Use the first slash-separated component as the source label so
-                // "vec/adj/memory/stats" maps to the "vec" source file.  The full
-                // label is preserved as context inside the emphasis string.
-                let source = label.split('/').next().unwrap_or(&label).to_string();
-                info!(
-                    "Astrid chose EXAMINE_CODE: label={:?} → source={:?}",
-                    label, source
-                );
-                conv.introspect_target = Some((source, 0));
+                info!("Astrid chose EXAMINE_CODE: label={:?}", label);
+                conv.introspect_target = Some((label.clone(), 0));
                 // Surface the full argument so the LLM knows what sub-path she asked about.
                 conv.emphasis = Some(format!(
                     "You chose EXAMINE_CODE [{label}]. Reading source code for '{label}' — \
@@ -264,5 +257,66 @@ pub(super) fn handle_action(
             true
         },
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ConversationState, NextActionContext, handle_action};
+    use crate::db::BridgeDb;
+    use crate::types::SpectralTelemetry;
+    use tokio::sync::mpsc;
+
+    fn telemetry() -> SpectralTelemetry {
+        SpectralTelemetry {
+            t_ms: 0,
+            eigenvalues: vec![1.0],
+            fill_ratio: 0.5,
+            modalities: None,
+            neural: None,
+            alert: None,
+            spectral_fingerprint: None,
+            structural_entropy: None,
+            spectral_glimpse_12d: None,
+            selected_memory_id: None,
+            selected_memory_role: None,
+            ising_shadow: None,
+        }
+    }
+
+    #[test]
+    fn examine_code_preserves_full_target_label() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, _sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let mut ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 50.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        let handled = handle_action(
+            &mut conv,
+            "EXAMINE_CODE",
+            "EXAMINE_CODE system-resources-demo/system_resources.py",
+            &mut ctx,
+        );
+
+        assert!(handled);
+        assert_eq!(
+            conv.introspect_target,
+            Some(("system-resources-demo/system_resources.py".to_string(), 0))
+        );
+        assert!(
+            conv.emphasis
+                .as_deref()
+                .is_some_and(|text| text.contains("system-resources-demo/system_resources.py"))
+        );
     }
 }
