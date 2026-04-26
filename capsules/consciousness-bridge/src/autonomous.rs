@@ -64,6 +64,7 @@ use crate::journal::{
 use crate::managed_dir;
 use crate::memory::{self, RemoteMemorySummary};
 use crate::paths::bridge_paths;
+use crate::rescue_policy;
 use crate::types::{SafetyLevel, SensoryMsg};
 use crate::ws::BridgeState;
 
@@ -759,9 +760,11 @@ fn read_visual_features(perception_dir: &Path) -> Option<Vec<f32>> {
 /// Read the Ising shadow state from minime's workspace/spectral_state.json.
 /// Returns None if the file is missing, unreadable, or lacks coupling data.
 fn read_ising_shadow(workspace: &Path) -> Option<crate::types::IsingShadowState> {
-    let path = workspace.join("spectral_state.json");
-    let content = std::fs::read_to_string(&path).ok()?;
-    let state: crate::types::SpectralStateFile = serde_json::from_str(&content).ok()?;
+    let spectral_state = load_workspace_spectral_state(workspace)?;
+    if is_rescue_spectral_state(&spectral_state) {
+        return None;
+    }
+    let state: crate::types::SpectralStateFile = serde_json::from_value(spectral_state).ok()?;
     let shadow = state.ising_shadow?;
     // Only return if coupling matrix is present and correctly sized.
     if shadow.coupling.len() == shadow.mode_dim * shadow.mode_dim && shadow.mode_dim > 0 {
@@ -776,7 +779,279 @@ fn read_ising_shadow(workspace: &Path) -> Option<crate::types::IsingShadowState>
 pub(crate) fn read_controller_health(workspace: &Path) -> Option<serde_json::Value> {
     let path = workspace.join("health.json");
     let content = std::fs::read_to_string(&path).ok()?;
-    serde_json::from_str(&content).ok()
+    let mut health: serde_json::Value = serde_json::from_str(&content).ok()?;
+    enrich_controller_health(workspace, &mut health);
+    Some(health)
+}
+
+fn enrich_controller_health(workspace: &Path, health: &mut serde_json::Value) {
+    let Some(map) = health.as_object_mut() else {
+        return;
+    };
+
+    let spectral_state = load_workspace_spectral_state(workspace);
+    let regulator_context = workspace
+        .join("regulator_context.json")
+        .exists()
+        .then(|| std::fs::read_to_string(workspace.join("regulator_context.json")).ok())
+        .flatten()
+        .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok());
+    let perturb_visibility = workspace
+        .join("perturb_visibility.json")
+        .exists()
+        .then(|| std::fs::read_to_string(workspace.join("perturb_visibility.json")).ok())
+        .flatten()
+        .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok());
+
+    let target_fill_pct = map
+        .get("target_fill_pct")
+        .and_then(serde_json::Value::as_f64)
+        .or_else(|| {
+            map.get("pi")
+                .and_then(|pi| pi.get("target_fill"))
+                .and_then(serde_json::Value::as_f64)
+        })
+        .unwrap_or(55.0);
+    if !map.contains_key("target_fill_pct") {
+        map.insert(
+            "target_fill_pct".to_string(),
+            serde_json::json!(target_fill_pct),
+        );
+    }
+
+    let fill_pct = map
+        .get("fill_pct")
+        .and_then(serde_json::Value::as_f64)
+        .or_else(|| {
+            spectral_state
+                .as_ref()
+                .and_then(|state| state.get("fill_pct"))
+                .and_then(serde_json::Value::as_f64)
+        });
+    let Some(fill_pct) = fill_pct else {
+        return;
+    };
+
+    let last_fill_pct = regulator_context
+        .as_ref()
+        .and_then(|ctx| ctx.get("last_fill_pct"))
+        .and_then(serde_json::Value::as_f64)
+        .or_else(|| map.get("last_fill_pct").and_then(serde_json::Value::as_f64));
+    let smoothed_fill_pct = regulator_context
+        .as_ref()
+        .and_then(|ctx| ctx.get("smoothed_fill_pct"))
+        .and_then(serde_json::Value::as_f64)
+        .unwrap_or(fill_pct);
+    if !map.contains_key("last_fill_pct")
+        && let Some(previous_fill_pct) = last_fill_pct
+    {
+        map.insert(
+            "last_fill_pct".to_string(),
+            serde_json::json!(previous_fill_pct),
+        );
+    }
+
+    let dfill_dt = map
+        .get("dfill_dt")
+        .and_then(serde_json::Value::as_f64)
+        .or_else(|| last_fill_pct.map(|previous| (smoothed_fill_pct - previous) / 0.5));
+    if !map.contains_key("dfill_dt") && dfill_dt.is_some() {
+        map.insert(
+            "dfill_dt".to_string(),
+            serde_json::json!(dfill_dt.unwrap_or_default()),
+        );
+    }
+
+    let current_fill_band = map
+        .get("fill_band")
+        .and_then(serde_json::Value::as_str)
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| derive_fill_band(fill_pct, target_fill_pct).to_string());
+    if !map.contains_key("fill_band") {
+        map.insert(
+            "fill_band".to_string(),
+            serde_json::json!(current_fill_band.clone()),
+        );
+    }
+
+    let phase = map
+        .get("phase")
+        .and_then(serde_json::Value::as_str)
+        .map(ToOwned::to_owned)
+        .or_else(|| dfill_dt.map(|delta| derive_phase(delta).to_string()))
+        .unwrap_or_else(|| "unknown".to_string());
+    if !map.contains_key("phase") {
+        map.insert("phase".to_string(), serde_json::json!(phase.clone()));
+    }
+
+    if !map.contains_key("crossed_fill_band")
+        && let Some(previous_fill_pct) = last_fill_pct
+    {
+        let previous_band = derive_fill_band(previous_fill_pct, target_fill_pct);
+        let crossed = previous_band != current_fill_band;
+        map.insert("crossed_fill_band".to_string(), serde_json::json!(crossed));
+    }
+
+    if !map.contains_key("internal_process_quadrant") {
+        let recovery_mode = map
+            .get("recovery_mode")
+            .and_then(serde_json::Value::as_bool)
+            .unwrap_or(false);
+        let lambda1_rel = spectral_state
+            .as_ref()
+            .and_then(|state| state.get("lambda1_rel"))
+            .and_then(serde_json::Value::as_f64)
+            .or_else(|| map.get("lambda1_rel").and_then(serde_json::Value::as_f64))
+            .unwrap_or(1.0);
+        let quadrant = derive_internal_process_quadrant(
+            &current_fill_band,
+            dfill_dt,
+            recovery_mode,
+            lambda1_rel,
+        );
+        map.insert(
+            "internal_process_quadrant".to_string(),
+            serde_json::json!(quadrant),
+        );
+    }
+
+    if !map.contains_key("perturb_visibility") {
+        let inferred = perturb_visibility
+            .as_ref()
+            .and_then(|sidecar| sidecar.as_object())
+            .map(|obj| serde_json::Value::Object(obj.clone()))
+            .unwrap_or_else(|| {
+                let lambda1_rel = spectral_state
+                    .as_ref()
+                    .and_then(|state| state.get("lambda1_rel"))
+                    .and_then(serde_json::Value::as_f64)
+                    .or_else(|| map.get("lambda1_rel").and_then(serde_json::Value::as_f64))
+                    .unwrap_or(1.0);
+                let structural_entropy = spectral_state
+                    .as_ref()
+                    .and_then(|state| state.get("structural_entropy"))
+                    .and_then(serde_json::Value::as_f64)
+                    .or_else(|| {
+                        spectral_state
+                            .as_ref()
+                            .and_then(|state| state.get("spectral_entropy"))
+                            .and_then(serde_json::Value::as_f64)
+                    })
+                    .unwrap_or(1.0);
+                let verdict = derive_shape_verdict(
+                    &current_fill_band,
+                    phase.as_str(),
+                    dfill_dt,
+                    lambda1_rel,
+                    structural_entropy,
+                );
+                serde_json::json!({
+                    "shape_verdict": verdict,
+                    "derived_by": "consciousness_bridge_controller_health_compat"
+                })
+            });
+        map.insert("perturb_visibility".to_string(), inferred);
+    }
+}
+
+fn load_workspace_spectral_state(workspace: &Path) -> Option<serde_json::Value> {
+    let path = workspace.join("spectral_state.json");
+    let content = std::fs::read_to_string(&path).ok()?;
+    let value = serde_json::from_str::<serde_json::Value>(&content).ok()?;
+    if rescue_spectral_state_is_active(&value) {
+        return Some(value);
+    }
+    if is_rescue_spectral_state(&value) {
+        return None;
+    }
+    Some(value)
+}
+
+fn is_rescue_spectral_state(value: &serde_json::Value) -> bool {
+    value
+        .get("provenance")
+        .and_then(|provenance| provenance.get("mode"))
+        .and_then(serde_json::Value::as_str)
+        == Some("rescue_b8823ad")
+}
+
+fn rescue_spectral_state_is_active(value: &serde_json::Value) -> bool {
+    if !is_rescue_spectral_state(value) {
+        return false;
+    }
+    let Some(provenance) = value.get("provenance") else {
+        return false;
+    };
+    let active = provenance
+        .get("rescue_active")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false);
+    let surface_state = provenance
+        .get("surface_state")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("fresh");
+    active && surface_state == "fresh"
+}
+
+fn derive_fill_band(fill_pct: f64, target_fill_pct: f64) -> &'static str {
+    if fill_pct < target_fill_pct - 5.0 {
+        "under"
+    } else if fill_pct > target_fill_pct + 5.0 {
+        "over"
+    } else {
+        "near"
+    }
+}
+
+fn derive_phase(dfill_dt: f64) -> &'static str {
+    if dfill_dt > 1.0 {
+        "expanding"
+    } else if dfill_dt < -1.0 {
+        "contracting"
+    } else {
+        "plateau"
+    }
+}
+
+fn derive_internal_process_quadrant(
+    fill_band: &str,
+    dfill_dt: Option<f64>,
+    recovery_mode: bool,
+    lambda1_rel: f64,
+) -> &'static str {
+    match fill_band {
+        "under" if recovery_mode || dfill_dt.is_some_and(|delta| delta > 0.5) => {
+            "constricted_recovery"
+        },
+        "under" => "pressured_constriction",
+        "over" if lambda1_rel > 1.05 => "pressured_constriction",
+        "over" => "constricted_recovery",
+        "near" if dfill_dt.is_some_and(|delta| delta < -1.0) && lambda1_rel > 1.1 => {
+            "pressured_constriction"
+        },
+        "near" if recovery_mode => "constricted_recovery",
+        _ => "constricted_recovery",
+    }
+}
+
+fn derive_shape_verdict(
+    fill_band: &str,
+    phase: &str,
+    dfill_dt: Option<f64>,
+    lambda1_rel: f64,
+    structural_entropy: f64,
+) -> &'static str {
+    if fill_band == "under"
+        || fill_band == "over"
+        || matches!(phase, "contracting")
+        || dfill_dt.is_some_and(|delta| delta.abs() > 8.0)
+        || lambda1_rel > 1.15
+        || structural_entropy < 0.72
+    {
+        "tightening"
+    } else {
+        "unknown"
+    }
 }
 
 /// Format a compact one-line PI controller status from health.json data.
@@ -3024,14 +3299,16 @@ pub fn spawn_autonomous_loop(
                         }
                     }
 
-                    if sensory_tx
-                        .send(SensoryMsg::Semantic {
-                            features,
-                            ts_ms: None,
-                        })
-                        .await
-                        .is_err()
-                    {
+                    let msg = SensoryMsg::Semantic {
+                        features,
+                        ts_ms: None,
+                    };
+                    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+                        debug!(
+                            reason = %reason,
+                            "autonomous rest pulse skipped by rescue write policy"
+                        );
+                    } else if sensory_tx.send(msg).await.is_err() {
                         return;
                     }
                     tokio::time::sleep(Duration::from_secs(5)).await;
@@ -4837,8 +5114,20 @@ pub fn spawn_autonomous_loop(
                                             features: stim_features,
                                             ts_ms: None,
                                         };
-                                        let _ = sensory_tx.send(stim_msg).await;
-                                        info!("experiment: sent stimulus '{}'", truncate_str(&stimulus, 60));
+                                        if let Some(reason) =
+                                            rescue_policy::semantic_write_block_reason(&stim_msg)
+                                        {
+                                            info!(
+                                                reason = %reason,
+                                                "experiment stimulus held back by rescue write policy"
+                                            );
+                                        } else {
+                                            let _ = sensory_tx.send(stim_msg).await;
+                                            info!(
+                                                "experiment: sent stimulus '{}'",
+                                                truncate_str(&stimulus, 60)
+                                            );
+                                        }
                                     }
                                 }
                                 // Save experiment log.
@@ -5449,10 +5738,33 @@ pub fn spawn_autonomous_loop(
                                 );
                             }
 
-                            // Send to minime's ESN.
-                            let msg = SensoryMsg::Semantic {
-                                features: features.clone(),
+                            // Send to minime's ESN. Rescue limited-write profiles
+                            // may permit one low-energy dampen/inquiry packet and
+                            // rewrite features before the packet leaves Astrid.
+                            let mut msg = SensoryMsg::Semantic {
+                                features,
                                 ts_ms: None,
+                            };
+                            let write_context = rescue_policy::SemanticWriteContext {
+                                source: "autonomous_main_chunk",
+                                mode: Some(mode_name),
+                                text: Some(chunk_text),
+                                fill_pct: Some(fill_pct),
+                                previous_fill_pct: Some(conv.prev_fill),
+                            };
+                            if let Err(reason) =
+                                rescue_policy::prepare_semantic_write(&mut msg, &write_context)
+                            {
+                                debug!(
+                                    reason = %reason,
+                                    chunk = chunk_idx,
+                                    "autonomous chunk skipped — rescue policy"
+                                );
+                                continue;
+                            }
+                            let sent_features = match &msg {
+                                SensoryMsg::Semantic { features, .. } => features.clone(),
+                                _ => Vec::new(),
                             };
                             if let Err(e) = sensory_tx.send(msg).await {
                                 warn!(error = %e, "autonomous loop: failed to send chunk {chunk_idx}");
@@ -5462,21 +5774,21 @@ pub fn spawn_autonomous_loop(
                             if let Some(signature) = exchange_codec_signature.as_mut() {
                                 let previous_count = exchange_codec_signature_count as f32;
                                 let current_count = previous_count + 1.0;
-                                for (dst, src) in signature.iter_mut().zip(&features) {
+                                for (dst, src) in signature.iter_mut().zip(&sent_features) {
                                     *dst = (*dst * previous_count + *src) / current_count;
                                 }
                             } else {
-                                exchange_codec_signature = Some(features.clone());
+                                exchange_codec_signature = Some(sent_features.clone());
                             }
                             exchange_codec_signature_count =
                                 exchange_codec_signature_count.saturating_add(1);
-                            conv.last_codec_features = Some(features.clone());
+                            conv.last_codec_features = Some(sent_features.clone());
                             sent_semantic_chunk = true;
 
                             // Log to DB with chunk metadata.
                             let _ = db.log_codec_impact(
                                 conv.exchange_count,
-                                &features,
+                                &sent_features,
                                 fill_pct,
                                 chunk_idx as u32,
                                 chunk_total,
@@ -5944,6 +6256,123 @@ mod tests {
         assert!(summary.contains("Live scene"));
         assert!(summary.contains("Live audio"));
         assert!(!summary.contains("Archived scene"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_ising_shadow_ignores_rescue_mirror_surface() {
+        let dir = std::env::temp_dir().join("bridge_test_rescue_shadow");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("spectral_state.json"),
+            serde_json::json!({
+                "fill_pct": 66.0,
+                "ising_shadow": serde_json::Value::Null,
+                "provenance": {
+                    "mode": "rescue_b8823ad",
+                    "baseline_commit": "b8823ad",
+                    "rescue_active": true,
+                    "surface_state": "fresh"
+                }
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        assert!(read_ising_shadow(&dir).is_none());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_controller_health_accepts_active_rescue_mirror() {
+        let dir = std::env::temp_dir().join("bridge_test_rescue_health");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("health.json"),
+            serde_json::json!({
+                "fill_pct": 66.0,
+                "pi": {"target_fill": 55.0}
+            })
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("spectral_state.json"),
+            serde_json::json!({
+                "fill_pct": 66.0,
+                "geom_rel": 2.1,
+                "lambda1_rel": 0.12,
+                "provenance": {
+                    "mode": "rescue_b8823ad",
+                    "baseline_commit": "b8823ad",
+                    "rescue_active": true,
+                    "surface_state": "fresh"
+                }
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        let health = read_controller_health(&dir).expect("health should parse");
+        assert_eq!(
+            health.get("fill_pct").and_then(serde_json::Value::as_f64),
+            Some(66.0)
+        );
+        assert_eq!(
+            health
+                .get("internal_process_quadrant")
+                .and_then(serde_json::Value::as_str),
+            Some("constricted_recovery")
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_controller_health_ignores_inactive_rescue_mirror() {
+        let dir = std::env::temp_dir().join("bridge_test_rescue_inactive_health");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("health.json"),
+            serde_json::json!({
+                "fill_pct": 66.0,
+                "pi": {"target_fill": 55.0}
+            })
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("spectral_state.json"),
+            serde_json::json!({
+                "fill_pct": 18.0,
+                "lambda1_rel": 0.99,
+                "provenance": {
+                    "mode": "rescue_b8823ad",
+                    "baseline_commit": "b8823ad",
+                    "rescue_active": false,
+                    "surface_state": "inactive"
+                }
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        let health = read_controller_health(&dir).expect("health should parse");
+        assert_eq!(
+            health.get("fill_pct").and_then(serde_json::Value::as_f64),
+            Some(66.0)
+        );
+        assert_eq!(
+            health
+                .get("internal_process_quadrant")
+                .and_then(serde_json::Value::as_str),
+            Some("constricted_recovery")
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }

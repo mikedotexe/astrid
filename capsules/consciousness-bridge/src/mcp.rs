@@ -18,6 +18,7 @@ use crate::chimera;
 use crate::codec;
 use crate::db::BridgeDb;
 use crate::paths::bridge_paths;
+use crate::rescue_policy;
 use crate::types::{
     BridgeStatus, ControlRequest, MessageDirection, RenderChimeraRequest, SafetyLevel,
     SemanticFeatures, SensoryMsg,
@@ -595,6 +596,15 @@ async fn tool_send_semantic(
         .map_err(|e| (-32602, format!("invalid semantic params: {e}")))?;
 
     let msg = features.to_sensory_msg();
+    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+        return Ok(json!({
+            "content": [{
+                "type": "text",
+                "text": format!("Blocked: {reason}. Astrid is attached under the current rescue write policy.")
+            }],
+            "isError": true
+        }));
+    }
     sensory_tx
         .send(msg)
         .await
@@ -682,6 +692,15 @@ async fn tool_send_text(
         features: features.clone(),
         ts_ms: None,
     };
+    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+        return Ok(json!({
+            "content": [{
+                "type": "text",
+                "text": format!("Blocked: {reason}. Astrid is attached under the current rescue write policy.")
+            }],
+            "isError": true
+        }));
+    }
     sensory_tx
         .send(msg)
         .await
@@ -1506,6 +1525,15 @@ async fn tool_send_text_and_observe(
         features: features.clone(),
         ts_ms: None,
     };
+    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+        return Ok(json!({
+            "content": [{
+                "type": "text",
+                "text": format!("Blocked: {reason}. Astrid is attached under the current rescue write policy.")
+            }],
+            "isError": true
+        }));
+    }
     sensory_tx
         .send(msg)
         .await

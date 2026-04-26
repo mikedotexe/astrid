@@ -20,7 +20,7 @@ use consciousness_bridge_server::{
     db::BridgeDb,
     mcp,
     paths::{BridgePathOverrides, configure_bridge_paths},
-    ws,
+    rescue_policy, ws,
 };
 use tokio::sync::{RwLock, mpsc};
 use tracing::{info, warn};
@@ -184,13 +184,20 @@ async fn main() -> Result<()> {
         shutdown_rx.clone(),
     );
 
-    let sensory_handle = ws::spawn_sensory_sender(
-        cli.minime_sensory.clone(),
-        Arc::clone(&state),
-        Arc::clone(&db),
-        sensory_rx,
-        shutdown_rx.clone(),
-    );
+    let sensory_enabled = rescue_policy::bridge_sensory_enabled();
+    let sensory_handle = if sensory_enabled {
+        Some(ws::spawn_sensory_sender(
+            cli.minime_sensory.clone(),
+            Arc::clone(&state),
+            Arc::clone(&db),
+            sensory_rx,
+            shutdown_rx.clone(),
+        ))
+    } else {
+        info!("rescue profile disabled bridge sensory socket; running telemetry-only");
+        drop(sensory_rx);
+        None
+    };
 
     // Spawn MCP server on stdio.
     let sensory_tx_mcp = sensory_tx.clone();
@@ -202,7 +209,16 @@ async fn main() -> Result<()> {
     ));
 
     // Spawn autonomous feedback loop (if enabled).
-    let _autonomous_handle = if cli.autonomous {
+    let autonomous_enabled = if cli.autonomous {
+        let enabled = rescue_policy::bridge_autonomous_enabled();
+        if !enabled {
+            info!("rescue profile disabled bridge autonomy; running telemetry-only");
+        }
+        enabled
+    } else {
+        false
+    };
+    let _autonomous_handle = if autonomous_enabled {
         let interval = std::time::Duration::from_secs(cli.auto_interval_secs);
         Some(autonomous::spawn_autonomous_loop(
             interval,
@@ -264,7 +280,9 @@ async fn main() -> Result<()> {
     // Wait for WebSocket tasks to finish.
     let _ = tokio::time::timeout(std::time::Duration::from_secs(5), async {
         let _ = telemetry_handle.await;
-        let _ = sensory_handle.await;
+        if let Some(handle) = sensory_handle {
+            let _ = handle.await;
+        }
     })
     .await;
 

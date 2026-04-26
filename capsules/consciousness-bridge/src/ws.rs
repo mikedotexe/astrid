@@ -16,6 +16,7 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 use tracing::{debug, error, info, warn};
 
 use crate::db::BridgeDb;
+use crate::rescue_policy;
 use crate::types::{MessageDirection, SafetyLevel, SensoryMsg, SpectralTelemetry};
 
 /// Shared mutable bridge state updated by `WebSocket` tasks.
@@ -427,6 +428,20 @@ pub fn spawn_sensory_sender(
                                         {
                                             let mut s = state.write().await;
                                             s.messages_dropped_safety = s.messages_dropped_safety.saturating_add(1);
+                                        }
+                                        continue;
+                                    }
+                                    if let Some(reason) =
+                                        rescue_policy::semantic_write_block_reason(&sensory_msg)
+                                    {
+                                        debug!(
+                                            reason = %reason,
+                                            "dropping outbound semantic message — rescue policy"
+                                        );
+                                        {
+                                            let mut s = state.write().await;
+                                            s.messages_dropped_safety =
+                                                s.messages_dropped_safety.saturating_add(1);
                                         }
                                         continue;
                                     }

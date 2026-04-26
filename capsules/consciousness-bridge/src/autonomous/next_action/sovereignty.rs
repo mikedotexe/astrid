@@ -6,6 +6,7 @@ use super::{
     truncate_str,
 };
 use crate::codec::DEFAULT_SEMANTIC_GAIN;
+use crate::rescue_policy;
 
 pub(super) fn handle_action(
     conv: &mut ConversationState,
@@ -448,6 +449,13 @@ fn send_semantic(sensory_tx: &mpsc::Sender<SensoryMsg>, features: Vec<f32>) {
         features,
         ts_ms: None,
     };
+    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+        info!(
+            reason = %reason,
+            "Astrid held sovereignty semantic gesture under rescue write policy"
+        );
+        return;
+    }
     let tx = sensory_tx.clone();
     tokio::spawn(async move {
         let _ = tx.send(msg).await;

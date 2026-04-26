@@ -26,6 +26,7 @@ pub mod memory;
 pub mod paths;
 pub mod prompt_budget;
 pub mod reflective;
+pub mod rescue_policy;
 pub mod self_model;
 pub mod spectral_viz;
 pub mod types;

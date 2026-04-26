@@ -2,6 +2,7 @@ use tracing::info;
 
 use super::{ConversationState, NextActionContext, bridge_paths, strip_action};
 use crate::memory;
+use crate::rescue_policy;
 
 pub(super) fn handle_action(
     conv: &mut ConversationState,
@@ -394,10 +395,17 @@ pub(super) fn handle_action(
                 features: amplified,
                 ts_ms: None,
             };
-            let tx = ctx.sensory_tx.clone();
-            tokio::spawn(async move {
-                let _ = tx.send(msg).await;
-            });
+            if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+                info!(
+                    reason = %reason,
+                    "Astrid held EXPERIMENT semantic stimulus under rescue write policy"
+                );
+            } else {
+                let tx = ctx.sensory_tx.clone();
+                tokio::spawn(async move {
+                    let _ = tx.send(msg).await;
+                });
+            }
 
             // Also tick Astrid's own reservoir handle for coupled experience.
             let tick_msg = serde_json::json!({
@@ -518,10 +526,17 @@ pub(super) fn handle_action(
                 features: amplified,
                 ts_ms: None,
             };
-            let tx = ctx.sensory_tx.clone();
-            tokio::spawn(async move {
-                let _ = tx.send(msg).await;
-            });
+            if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+                info!(
+                    reason = %reason,
+                    "Astrid held PROBE semantic stimulus under rescue write policy"
+                );
+            } else {
+                let tx = ctx.sensory_tx.clone();
+                tokio::spawn(async move {
+                    let _ = tx.send(msg).await;
+                });
+            }
 
             // Tick reservoir too.
             let tick_msg = serde_json::json!({
