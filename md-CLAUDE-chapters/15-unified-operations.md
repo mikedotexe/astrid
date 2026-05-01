@@ -113,19 +113,21 @@ bash scripts/start_all.sh --force
 `start_all.sh` is the canonical path because it:
 
 - syncs repository-owned launchd plists
-- sets launchd environment variables
-- starts launchd-managed services where available
-- falls back to `nohup` where needed
+- bootstraps/kickstarts launchd labels
+- reports repo/installed/loaded drift
+- keeps startup greetings short, calm, and idempotent
 
-The minime engine and agent are currently designed around launchd wrappers.
+The Minime engine and agent are designed around launchd wrappers. Rescue engine labels are opt-in emergency tools, not the cold-boot default.
 
 Important defaults baked into those wrappers today:
 
 - `../minime/scripts/launchd_minime_engine.sh`
-  - default `EIGENFILL_TARGET=0.65`
+  - default `EIGENFILL_TARGET=0.68`
   - default `WARM_START_BLEND=0.55`
 - `../minime/scripts/launchd_autonomous_agent.sh`
   - default `AGENT_INTERVAL=60`
+
+Use `bash scripts/launchd_inventory.sh` to see repo/installed plist parity, loaded label state, and opt-in rescue labels that are loaded only for the current session.
 
 ## Current Backend Summary
 

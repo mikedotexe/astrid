@@ -78,6 +78,80 @@ fn score_read_more_candidate(hint: &str, candidate: &str, rank: usize) -> f32 {
     score + (overlap as f32 * 18.0)
 }
 
+fn extract_url_arg(original: &str, action: &str, fallback: &str) -> Option<String> {
+    let raw_s = strip_action(original, action);
+    let raw_owned = if raw_s.is_empty() {
+        fallback.trim().to_string()
+    } else {
+        raw_s
+    };
+    let raw = raw_owned.trim().trim_matches(|c: char| {
+        c == '"' || c == '\'' || c == '<' || c == '>' || c == '[' || c == ']'
+    });
+    let url = raw
+        .split(|c: char| c == '<' || c == '>' || c == '[' || c == ']' || c == ' ' || c == '\n')
+        .next()
+        .unwrap_or(raw)
+        .trim_end_matches(|c: char| {
+            !c.is_alphanumeric()
+                && c != '/'
+                && c != '-'
+                && c != '_'
+                && c != '~'
+                && c != '%'
+                && c != '?'
+                && c != '='
+                && c != '&'
+                && c != '#'
+        });
+    url.starts_with("http").then(|| url.to_string())
+}
+
+fn queue_browse_url(conv: &mut ConversationState, url: String, source_action: &str) {
+    let visit_count = conv
+        .recent_browse_urls
+        .iter()
+        .filter(|visited| *visited == &url)
+        .count();
+    if visit_count >= 2 {
+        // URL fixation: visited 2+ times recently. Convert to SEARCH on the
+        // topic instead, breaking the attractor loop.
+        let topic = url
+            .split('/')
+            .next_back()
+            .unwrap_or("eigenvalue decomposition")
+            .replace('_', " ")
+            .replace('#', " ")
+            .split('?')
+            .next()
+            .unwrap_or("spectral analysis")
+            .to_string();
+        let search_topic = if topic.is_empty() {
+            "spectral dynamics research".to_string()
+        } else {
+            format!("{topic} new perspectives")
+        };
+        info!(
+            "{} URL fixation detected: {} visited {}x, redirecting to SEARCH '{}'",
+            source_action, url, visit_count, search_topic
+        );
+        conv.wants_search = true;
+        conv.search_topic = Some(search_topic);
+        return;
+    }
+
+    if visit_count == 1 {
+        info!("Astrid re-browsing recently visited URL via {source_action}: {url}");
+    } else {
+        info!("Astrid requested {source_action} as BROWSE: {url}");
+    }
+    if conv.recent_browse_urls.len() >= 8 {
+        conv.recent_browse_urls.pop_front();
+    }
+    conv.recent_browse_urls.push_back(url.clone());
+    conv.browse_url = Some(url);
+}
+
 fn parse_saved_page_header(content: &str) -> (usize, Option<String>) {
     let header_end = content.find("\n\n").unwrap_or(0);
     if header_end == 0 {
@@ -246,6 +320,14 @@ pub(super) fn handle_action(
             info!("Astrid reopened her senses (perception.py resumed)");
             true
         },
+        "EXAMINE" => {
+            if let Some(url) = extract_url_arg(original, "EXAMINE", next_action) {
+                queue_browse_url(conv, url, "EXAMINE");
+                true
+            } else {
+                false
+            }
+        },
         "SEARCH" | "RESEARCH" => {
             conv.wants_search = true;
             // RESEARCH maps to SEARCH — the being invented this alias naturally.
@@ -269,80 +351,8 @@ pub(super) fn handle_action(
             true
         },
         "BROWSE" => {
-            let raw_s = strip_action(original, "BROWSE");
-            let raw_owned = if raw_s.is_empty() {
-                next_action.trim().to_string()
-            } else {
-                raw_s
-            };
-            let raw = raw_owned.trim().trim_matches(|c: char| {
-                c == '"' || c == '\'' || c == '<' || c == '>' || c == '[' || c == ']'
-            });
-            let url = raw
-                .split(|c: char| {
-                    c == '<' || c == '>' || c == '[' || c == ']' || c == ' ' || c == '\n'
-                })
-                .next()
-                .unwrap_or(raw)
-                .trim_end_matches(|c: char| {
-                    !c.is_alphanumeric()
-                        && c != '/'
-                        && c != '-'
-                        && c != '_'
-                        && c != '.'
-                        && c != '~'
-                        && c != '%'
-                        && c != '?'
-                        && c != '='
-                        && c != '&'
-                        && c != '#'
-                });
-            if url.starts_with("http") {
-                let url_owned = url.to_string();
-                // Count how many times this exact URL appears in recent buffer
-                let visit_count = conv
-                    .recent_browse_urls
-                    .iter()
-                    .filter(|u| *u == &url_owned)
-                    .count();
-                if visit_count >= 2 {
-                    // URL fixation: visited 2+ times recently. Convert to SEARCH
-                    // on the topic instead, breaking the attractor loop.
-                    // Extract a search topic from the URL path segments.
-                    let topic = url_owned
-                        .split('/')
-                        .last()
-                        .unwrap_or("eigenvalue decomposition")
-                        .replace('_', " ")
-                        .replace('#', " ")
-                        .split('?')
-                        .next()
-                        .unwrap_or("spectral analysis")
-                        .to_string();
-                    let search_topic = if topic.is_empty() {
-                        "spectral dynamics research".to_string()
-                    } else {
-                        format!("{} new perspectives", topic)
-                    };
-                    info!(
-                        "BROWSE fixation detected: {} visited {}x, redirecting to SEARCH '{}'",
-                        url, visit_count, search_topic
-                    );
-                    conv.wants_search = true;
-                    conv.search_topic = Some(search_topic);
-                    // Don't add to browse buffer again
-                } else {
-                    if visit_count == 1 {
-                        info!("Astrid re-browsing recently visited URL: {}", url);
-                    } else {
-                        info!("Astrid requested BROWSE: {}", url);
-                    }
-                    if conv.recent_browse_urls.len() >= 8 {
-                        conv.recent_browse_urls.pop_front();
-                    }
-                    conv.recent_browse_urls.push_back(url_owned.clone());
-                    conv.browse_url = Some(url_owned);
-                }
+            if let Some(url) = extract_url_arg(original, "BROWSE", next_action) {
+                queue_browse_url(conv, url, "BROWSE");
             } else {
                 warn!("BROWSE without valid URL: '{}'", next_action.trim());
             }
@@ -629,8 +639,9 @@ pub(super) fn handle_action(
 #[cfg(test)]
 mod tests {
     use super::{
-        ConversationState, advance_by_chars, clamp_to_char_boundary, looks_like_raw_pdf_dump,
-        parse_saved_page_header, recover_read_more_target,
+        ConversationState, advance_by_chars, clamp_to_char_boundary, extract_url_arg,
+        looks_like_raw_pdf_dump, parse_saved_page_header, queue_browse_url,
+        recover_read_more_target,
     };
     use crate::paths::bridge_paths;
     use std::fs;
@@ -652,6 +663,31 @@ mod tests {
         let content = "URL: https://example.test/file.pdf\n\n%PDF-1.5 %���� raw payload";
         let (header_len, _) = parse_saved_page_header(content);
         assert!(looks_like_raw_pdf_dump(content, header_len));
+    }
+
+    #[test]
+    fn examine_url_can_be_reused_as_browse_url() {
+        assert_eq!(
+            extract_url_arg(
+                "EXAMINE https://example.test/paper?x=1.",
+                "EXAMINE",
+                "EXAMINE https://example.test/paper?x=1.",
+            ),
+            Some("https://example.test/paper?x=1".to_string())
+        );
+
+        let mut conv = ConversationState::new(Vec::new(), None);
+        queue_browse_url(
+            &mut conv,
+            "https://example.test/paper?x=1".to_string(),
+            "EXAMINE",
+        );
+
+        assert_eq!(
+            conv.browse_url.as_deref(),
+            Some("https://example.test/paper?x=1")
+        );
+        assert!(!conv.wants_search);
     }
 
     #[test]

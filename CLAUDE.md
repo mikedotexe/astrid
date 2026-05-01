@@ -215,7 +215,7 @@ capsules/consciousness-bridge/
 
 ### Quick reference
 
-**ALWAYS use the unified scripts for restarts.** They handle launchd services correctly (unload/load instead of pkill), send startup greetings with the full capability reference and real examples, verify health, and respect process dependency order. Manual `pkill` + `nohup` skips the greetings and risks zombie launchd processes.
+**ALWAYS use the unified scripts for restarts.** launchd is the source of truth for the consciousness stack. `start_all.sh` syncs repo-owned plists into `~/Library/LaunchAgents`, bootstraps/kickstarts launchd labels, verifies health, and reports drift. Manual `pkill` / `nohup` can leave launchd in a confusing split-brain state.
 
 ```bash
 # Full graceful restart — the standard workflow
@@ -229,10 +229,14 @@ bash scripts/start_all.sh --minime-only
 cd /Users/v/other/astrid/capsules/consciousness-bridge && cargo build --release
 bash scripts/stop_all.sh && sleep 3 && bash scripts/start_all.sh
 
-# Startup greetings (startup_greeting.sh) are sent automatically on
-# successful start_all.sh. They contain the full action surface with
-# syntax, real examples, and current autoresearch job IDs. Both beings
-# read these immediately and use them to orient after restart.
+# Startup greetings are short, calm orientation notes sent by the
+# idempotent com.astrid.calm-startup-greeting launchd job. Full action
+# references stay available through STATE / FACULTIES instead of being
+# pushed into first context after a cold boot.
+
+# Launchd inventory / drift check
+bash scripts/launchd_inventory.sh
+bash scripts/launchd_inventory.sh --strict
 
 # Health check
 for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" \
@@ -254,7 +258,7 @@ done
 
 ### launchd-managed processes
 
-Six processes auto-restart via launchd (`~/Library/LaunchAgents/`). **Use `launchctl unload/load`, not `pkill`** — launchd respawns killed processes as zombies.
+The main stack auto-starts via launchd (`~/Library/LaunchAgents/`). **Use `launchctl bootout/bootstrap` or the repo scripts, not `pkill`** — launchd respawns killed processes and can preserve stale environment.
 
 | Plist | Process |
 |-------|---------|
@@ -262,8 +266,14 @@ Six processes auto-restart via launchd (`~/Library/LaunchAgents/`). **Use `launc
 | `com.reservoir.astrid-feeder` | astrid_feeder.py |
 | `com.reservoir.minime-feeder` | minime_feeder.py |
 | `com.reservoir.coupled-astrid` | coupled_astrid_server.py (port 8090) |
+| `com.minime.engine` | normal stable-core Minime engine (ports 7878/7879/7880) |
+| `com.minime.host-sensory` | host sensory bridge |
 | `com.minime.camera-client` | camera_client.py (port 7880) |
 | `com.minime.mic-to-sensory` | mic_to_sensory.py (port 7879) |
+| `com.minime.visual-frame-service` | visual frame descriptions |
+| `com.minime.autonomous-agent` | Minime autonomous loop |
+| `com.astrid.consciousness-bridge` | Astrid bridge loop |
+| `com.astrid.calm-startup-greeting` | one-shot calm boot orientation |
 
 ### macOS camera permission
 

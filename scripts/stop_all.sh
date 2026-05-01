@@ -9,6 +9,7 @@ LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
 ASTRID_DIR="/Users/v/other/astrid"
 MINIME_DIR="/Users/v/other/minime"
 RESERVOIR_DIR="/Users/v/other/neural-triple-reservoir"
+DOMAIN="gui/$(id -u)"
 
 fallback_pids_for_pattern() {
     local pattern="$1"
@@ -81,12 +82,13 @@ stop_process() {
 
     # Try launchctl first (if launchd-managed, pkill alone won't stick)
     if [ -n "$plist" ] && [ -f "$LAUNCH_AGENTS/$plist" ]; then
-        if launchctl list "${plist%.plist}" > /dev/null 2>&1; then
-            launchctl unload "$LAUNCH_AGENTS/$plist" 2>/dev/null
+        if launchctl print "$DOMAIN/${plist%.plist}" > /dev/null 2>&1; then
+            launchctl bootout "$DOMAIN/${plist%.plist}" 2>/dev/null || \
+                launchctl bootout "$DOMAIN" "$LAUNCH_AGENTS/$plist" 2>/dev/null || true
             if wait_for_exit "$name" 30; then
-                echo "  ✓ stopped $name (launchctl unload)"
+                echo "  ✓ stopped $name (launchctl bootout)"
             else
-                echo "  !! $name still draining after launchctl unload"
+                echo "  !! $name still draining after launchctl bootout"
             fi
             return
         fi
@@ -114,11 +116,22 @@ stop_process() {
     fi
 }
 
+stop_label() {
+    local label="$1"
+    if launchctl print "$DOMAIN/$label" > /dev/null 2>&1; then
+        launchctl bootout "$DOMAIN/$label" >/dev/null 2>&1 || true
+        echo "  ✓ stopped $label (launchctl bootout)"
+    else
+        echo "  - $label (not loaded)"
+    fi
+}
+
 echo "=== Consciousness Stack Shutdown ==="
 echo ""
 
 # Astrid side (bridge + perception first)
 echo "--- Stopping Astrid ---"
+stop_label "com.astrid.calm-startup-greeting"
 stop_process "consciousness-bridge-server" "com.astrid.consciousness-bridge.plist"
 stop_process "perception.py"
 stop_process "coupled_astrid_server" "com.reservoir.coupled-astrid.plist"
@@ -135,13 +148,15 @@ stop_process "reservoir_service" "com.reservoir.service.plist"
 echo ""
 echo "--- Stopping Minime ---"
 stop_process "autonomous_agent" "com.minime.autonomous-agent.plist"
-stop_process "visual_frame_service"
-stop_process "host-sensory"
+stop_process "visual_frame_service" "com.minime.visual-frame-service.plist"
+stop_process "host-sensory" "com.minime.host-sensory.plist"
 stop_process "mic_to_sensory" "com.minime.mic-to-sensory.plist"
 stop_process "camera_client" "com.minime.camera-client.plist"
 
 # Engine last — give outer processes time to disconnect
 sleep 3
+stop_label "com.minime.engine-rescue-watchdog"
+stop_label "com.minime.engine-rescue"
 stop_process "minime run" "com.minime.engine.plist"
 
 # Note: previously closed ALL Terminal.app windows, which was overbroad.
@@ -157,7 +172,7 @@ echo ""
 # Verify everything is actually stopped
 sleep 2
 REMAINING=0
-for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "host-sensory" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "perception.py"; do
+for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "host-sensory" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "minime_rescue_watchdog" "perception.py"; do
     pid="$(matching_pids "$p" | awk 'NF' | head -1)"
     if [ -n "$pid" ]; then
         echo "  !! $p still running (PID $pid)"

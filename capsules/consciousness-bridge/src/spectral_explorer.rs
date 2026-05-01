@@ -376,8 +376,22 @@ fn format_transition_event(transition: &TransitionEventV1) -> String {
 }
 
 fn format_semantic_energy(semantic: &SemanticEnergyV1) -> String {
+    let note = if semantic.regulator_drive_energy <= f32::EPSILON
+        && semantic.input_active
+        && semantic.input_energy > f32::EPSILON
+    {
+        "live input visible; not admitted to regulator drive"
+    } else if semantic.regulator_drive_energy <= f32::EPSILON
+        && semantic.input_energy > f32::EPSILON
+    {
+        "decayed semantic residue; not live kernel or regulator drive"
+    } else if semantic.regulator_drive_energy <= f32::EPSILON {
+        "semantic lane quiet; zero regulator drive is expected"
+    } else {
+        "regulator drive is separate from input/kernel energy"
+    };
     format!(
-        "  Semantic energy: input={:.3} active={} fresh_ms={} stale_ms={} kernel={:.3} delta={:+.3} kernel_active={} regulator_drive={:.3} admission={} (regulator_drive=0 does not mean no semantic content)",
+        "  Semantic energy: input={:.3} input_active={} input_age_ms={} active_window_ms={} kernel={:.3} delta={:+.3} kernel_active={} regulator_drive={:.3} admission={} ({note})",
         semantic.input_energy,
         semantic.input_active,
         option_u64(semantic.input_fresh_ms),
@@ -581,7 +595,7 @@ mod tests {
         assert!(output.contains("internal_fill=+4.000"));
         assert!(output.contains("stable-core is active"));
         assert!(output.contains("Semantic energy"));
-        assert!(output.contains("regulator_drive=0 does not mean no semantic content"));
+        assert!(output.contains("live input visible; not admitted to regulator drive"));
         assert!(output.contains("Eigenvector field"));
         assert!(output.contains("transition kind=breathing_phase"));
         assert!(output.contains("target_baseline_lambda1_rel"));

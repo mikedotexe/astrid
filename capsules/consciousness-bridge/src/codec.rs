@@ -2570,9 +2570,24 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
     let semantic_clause = telemetry
         .semantic_energy_view()
         .map(|semantic| {
+            let note = if semantic.regulator_drive_energy <= f32::EPSILON
+                && semantic.input_active
+                && semantic.input_energy > f32::EPSILON
+            {
+                "live input visible; not admitted to regulator drive"
+            } else if semantic.regulator_drive_energy <= f32::EPSILON
+                && semantic.input_energy > f32::EPSILON
+            {
+                "decayed semantic residue; not live kernel or regulator drive"
+            } else if semantic.regulator_drive_energy <= f32::EPSILON {
+                "semantic lane quiet; zero regulator drive is expected"
+            } else {
+                "regulator drive is separate from input/kernel energy"
+            };
             format!(
-                " Semantic energy: input {:.3}, kernel {:.3}, regulator drive {:.3}, admission {}; zero regulator drive does not mean no meaning.",
+                " Semantic energy: input {:.3} (active {}), kernel {:.3}, regulator drive {:.3}, admission {}; {note}.",
                 semantic.input_energy,
+                semantic.input_active,
                 semantic.kernel_energy,
                 semantic.regulator_drive_energy,
                 surface_label(&semantic.admission),

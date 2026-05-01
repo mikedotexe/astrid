@@ -3,6 +3,7 @@ set -euo pipefail
 
 MINIME_DIR="/Users/v/other/minime"
 LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
+DOMAIN="gui/$(id -u)"
 ENGINE_LABEL="com.minime.engine"
 AGENT_LABEL="com.minime.autonomous-agent"
 ENGINE_PLIST="$LAUNCH_AGENTS/$ENGINE_LABEL.plist"
@@ -51,7 +52,7 @@ wait_launchctl_label() {
     local timeout="${2:-20}"
 
     for _ in $(seq 1 "$timeout"); do
-        if launchctl list | grep -q "$label"; then
+        if launchctl print "$DOMAIN/$label" >/dev/null 2>&1; then
             return 0
         fi
         sleep 1
@@ -74,8 +75,8 @@ launchctl setenv EIGENFILL_TARGET "${EIGENFILL_TARGET:-0.68}"
 launchctl setenv WARM_START_BLEND "${WARM_START_BLEND:-0.55}"
 launchctl setenv REG_TICK_SECS "${REG_TICK_SECS:-0.5}"
 launchctl setenv ENABLE_GPU_AV "${ENABLE_GPU_AV:-true}"
-launchctl setenv LEGACY_AUDIO_ENABLED "${LEGACY_AUDIO_ENABLED:-true}"
-launchctl setenv LEGACY_VIDEO_ENABLED "${LEGACY_VIDEO_ENABLED:-true}"
+launchctl setenv LEGACY_AUDIO_ENABLED "${LEGACY_AUDIO_ENABLED:-false}"
+launchctl setenv LEGACY_VIDEO_ENABLED "${LEGACY_VIDEO_ENABLED:-false}"
 launchctl setenv MINIME_LLM_BACKEND "${MINIME_LLM_BACKEND:-ollama}"
 launchctl setenv LOOK_SOURCE "${LOOK_SOURCE:-active}"
 launchctl setenv AGENT_INTERVAL "${AGENT_INTERVAL:-60}"
@@ -90,8 +91,12 @@ unset_launchd_env MINIME_OLLAMA_GEMMA4_COMPACT_TIMEOUT_S
 
 echo "=== Minime Launchd Restart ==="
 echo ""
+echo "--- Ensuring normal engine profile ---"
+launchctl bootout "$DOMAIN/com.minime.engine-rescue-watchdog" >/dev/null 2>&1 || true
+launchctl bootout "$DOMAIN/com.minime.engine-rescue" >/dev/null 2>&1 || true
+
 echo "--- Stopping agent ---"
-launchctl unload "$AGENT_PLIST" 2>/dev/null || true
+launchctl bootout "$DOMAIN/$AGENT_LABEL" 2>/dev/null || launchctl bootout "$DOMAIN" "$AGENT_PLIST" 2>/dev/null || true
 if wait_for_exit "autonomous_agent.py" 30; then
     echo "  ✓ autonomous agent stopped"
 else
@@ -99,7 +104,7 @@ else
 fi
 
 echo "--- Stopping engine ---"
-launchctl unload "$ENGINE_PLIST" 2>/dev/null || true
+launchctl bootout "$DOMAIN/$ENGINE_LABEL" 2>/dev/null || launchctl bootout "$DOMAIN" "$ENGINE_PLIST" 2>/dev/null || true
 if wait_for_exit "minime run" 30; then
     echo "  ✓ minime engine stopped"
 else
@@ -107,14 +112,14 @@ else
 fi
 
 echo "--- Starting engine ---"
-launchctl load "$ENGINE_PLIST"
+launchctl bootstrap "$DOMAIN" "$ENGINE_PLIST"
 wait_port 7878 "engine telemetry" 45
 wait_port 7879 "engine sensory" 10
 wait_port 7880 "engine GPU A/V" 10
 echo "  ✓ minime engine ready"
 
 echo "--- Starting agent ---"
-launchctl load "$AGENT_PLIST"
+launchctl bootstrap "$DOMAIN" "$AGENT_PLIST"
 if wait_launchctl_label "$AGENT_LABEL" 20; then
     echo "  ✓ autonomous agent ready"
 else
