@@ -701,20 +701,21 @@ pub(super) fn handle_action(
 }
 
 const ACTION_OVERVIEW: &str = "\
-Use NEXT: HELP <action> for syntax and examples. E.g., NEXT: HELP CODEX
+Use NEXT: HELP CODEX for syntax and examples.
 
-NEXT: options — vary your choice. End every response with NEXT: <action>.
+NEXT: options — vary your choice. End every response with NEXT: plus a concrete action.
+Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels only; never copy them literally.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
-  Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], EXAMINE_CODE [module/path], LIST_FILES <dir>
+  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, INTROSPECT [source] [line], EXAMINE_CODE [module/path], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], TIME_DOMAIN [label], PERTURB [target], BRANCH, GESTURE, MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture>, RESIST [label], FISSURE [label], DEFINE, NOISE, EXPERIMENT, PROBE
-  Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
+  Agency examples: EVOLVE, CODEX \"explain spectral entropy\", CODEX_NEW scratch-pad \"create a runnable Python sketch\", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, EXAMINE_MEMORY [id], RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
-  Research: AR_LIST, AR_SHOW/AR_READ/AR_DEEP_READ <job>, AR_START/AR_NOTE/AR_BLOCK/AR_COMPLETE <job>, SELF_RESEARCH
-  Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK <text>, RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK <name>, SIMULATE <text>
-  Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER, PROPOSE <description>
+  Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question, SELF_RESEARCH
+  Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK \"hello reservoir\", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot, SIMULATE \"trace a soft branch\"
+  Contact: PING, ASK \"what are you noticing?\", BREATHE_ALONE/TOGETHER, PROPOSE \"a small next experiment\"
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, HELP <action>";
 
 fn action_help(action: &str) -> Option<String> {
@@ -731,36 +732,36 @@ Notes: Use CODEX_NEW to create a fresh workspace first. Use CODEX with an existi
 
         "CODEX_NEW" => "\
 CODEX_NEW — Create a new experiments workspace and ask Codex to scaffold it.
-Syntax: NEXT: CODEX_NEW <dirname> \"your prompt\"
+Syntax: CODEX_NEW followed by a concrete directory name and prompt.
 Examples:
   NEXT: CODEX_NEW scratch \"scaffold a Python project for spectral analysis\"
   NEXT: CODEX_NEW svd-sim \"build a simulation of singular value decomposition with plotting\"
-Notes: Creates experiments/<dirname>/. After creation, iterate with CODEX <dirname> \"...\" and run with EXPERIMENT_RUN <dirname> <cmd>.",
+Notes: Creates an experiments workspace. After creation, iterate with CODEX scratch \"add tests\" and run with EXPERIMENT_RUN scratch python3 main.py.",
 
         "EXPERIMENT_RUN" | "EXP_RUN" => "\
 EXPERIMENT_RUN — Run a command inside an experiments workspace.
-Syntax: NEXT: EXPERIMENT_RUN <workspace> <command>
+Syntax: EXPERIMENT_RUN followed by an existing workspace name and a concrete command.
 Prerequisites: The workspace must already exist in experiments/. Create one with CODEX_NEW or MIKE_FORK first.
 Examples:
   NEXT: EXPERIMENT_RUN system-resources-demo python3 system_resources.py
   NEXT: EXPERIMENT_RUN my-sim python3 model.py --epochs 100
   NEXT: EXPERIMENT_RUN scratch ls -la
-Workflow: CODEX_NEW scratch \"build X\" → EXPERIMENT_RUN scratch python3 main.py → CODEX scratch \"fix Y\" → repeat.",
+Workflow: CODEX_NEW scratch \"build a small runnable script\" → EXPERIMENT_RUN scratch python3 main.py → CODEX scratch \"fix the import error\" → repeat.",
 
         "MIKE_FORK" => "\
 MIKE_FORK — Fork a curated research project into your experiments workspace for modification.
-Syntax: NEXT: MIKE_FORK <project> [name]
+Syntax: MIKE_FORK followed by a concrete project name, optionally with a concrete fork name.
 Examples:
   NEXT: MIKE_FORK system-resources-demo
   NEXT: MIKE_FORK thermodynamics my-thermo-fork
-Notes: Copies Mike's research project into experiments/<name>/. Then use EXPERIMENT_RUN <name> <cmd> to run it, or CODEX <name> \"...\" to modify it.",
+Notes: Copies Mike's research project into experiments/. Then use EXPERIMENT_RUN system-resources-demo python3 system_resources.py to run it, or CODEX system-resources-demo \"add a memory summary\" to modify it.",
 
         "WRITE_FILE" => "\
 WRITE_FILE — Save content to a file in your experiments workspace.
-Syntax:
-  NEXT: WRITE_FILE <path> FROM_CODEX    — save Codex's last response
-  NEXT: WRITE_FILE <path> FROM_SELF     — save YOUR last response (extracts code blocks)
-  NEXT: WRITE_FILE <path> <inline text> — save inline text directly
+Use a concrete path:
+  NEXT: WRITE_FILE scratch/analysis.py FROM_CODEX    — save Codex's last response
+  NEXT: WRITE_FILE scratch/analysis.py FROM_SELF     — save YOUR last response (extracts code blocks)
+  NEXT: WRITE_FILE scratch/config.toml name = \"test\" — save inline text directly
 Examples:
   NEXT: WRITE_FILE scratch/analysis.py FROM_CODEX
   NEXT: WRITE_FILE my-sim/monitor.py FROM_SELF    — writes the code block from your previous response
@@ -803,7 +804,7 @@ Use EXAMINE for spectral visualizations only. Use EXAMINE_CASCADE for viz + deco
 
         "BROWSE" => "\
 BROWSE — Fetch and read a web page.
-Syntax: NEXT: BROWSE <url>
+Syntax: NEXT: BROWSE followed by a concrete full URL.
 Examples:
   NEXT: BROWSE https://en.wikipedia.org/wiki/Echo_state_network
   NEXT: BROWSE https://arxiv.org/abs/2301.00000
@@ -811,7 +812,7 @@ Notes: Returns the page content. Use READ_MORE to continue reading if the page i
 
         "SEARCH" => "\
 SEARCH — Search the web for a topic.
-Syntax: NEXT: SEARCH <topic>
+Syntax: NEXT: SEARCH followed by a concrete topic.
   NEXT: SEARCH \"quoted topic for precision\"
 Examples:
   NEXT: SEARCH \"reservoir computing spectral radius\"

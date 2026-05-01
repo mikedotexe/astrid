@@ -1753,7 +1753,7 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
             joined.push_str(
                 "\n\n[... message truncated for context window. \
                 Full text preserved in inbox/read/ — write NEXT: READ_MORE to continue reading, \
-                or NEXT: INTROSPECT <path> to read any specific file.]",
+                or NEXT: INTROSPECT inbox/read/latest.txt with a concrete file path.]",
             );
         }
         Some(joined)
@@ -3043,7 +3043,7 @@ pub(crate) fn list_directory(dir_path: &str) -> Option<String> {
         }
     }
     lines.push(format!(
-        "\n{} entries. Use INTROSPECT <path> to read any file.",
+        "\n{} entries. Use INTROSPECT with a concrete file path, for example INTROSPECT capsules/consciousness-bridge/src/llm.rs.",
         entries.len()
     ));
     Some(lines.join("\n"))

@@ -215,6 +215,49 @@ fn leading_action_token(original: &str) -> String {
         .to_uppercase()
 }
 
+fn unresolved_angle_placeholder(text: &str) -> Option<String> {
+    let mut rest = text;
+    while let Some(start) = rest.find('<') {
+        let after_start = &rest[start + 1..];
+        let Some(end) = after_start.find('>') else {
+            break;
+        };
+        let token = after_start[..end].trim();
+        let normalized = token.to_ascii_lowercase();
+        let known_placeholder = matches!(
+            normalized.as_str(),
+            "action"
+                | "cmd"
+                | "command"
+                | "description"
+                | "dir"
+                | "dirname"
+                | "file"
+                | "gesture"
+                | "job"
+                | "label"
+                | "name"
+                | "note"
+                | "path"
+                | "project"
+                | "prompt"
+                | "question"
+                | "src"
+                | "text"
+                | "topic"
+                | "url"
+                | "value"
+                | "workspace"
+                | "ws"
+        );
+        if known_placeholder || normalized.contains('|') {
+            return Some(format!("<{token}>"));
+        }
+        rest = &after_start[end + 1..];
+    }
+    None
+}
+
 fn strip_action_call_wrapper(original: &str, base_action: &str) -> Option<String> {
     let rest = original.get(base_action.len()..)?.trim_start();
     if !(rest.starts_with('(') && rest.ends_with(')')) {
@@ -575,6 +618,16 @@ pub(super) fn handle_next_action(
 ) {
     let (base_action, original) = canonicalize_next_action_components(next_action);
 
+    if let Some(token) = unresolved_angle_placeholder(&original) {
+        conv.emphasis = Some(format!(
+            "Your NEXT action `{original}` still contains placeholder syntax `{token}`. \
+             Replace it with a concrete URL, workspace, file, command, question, or label; \
+             or choose a read-only action such as STATE, FACULTIES, or SPECTRAL_EXPLORER."
+        ));
+        info!("Astrid NEXT placeholder rerouted without execution: {original}");
+        return;
+    }
+
     if reservoir::handle_reservoir_action(
         conv,
         base_action.as_str(),
@@ -627,7 +680,10 @@ pub(super) fn handle_next_action(
 
 #[cfg(test)]
 mod tests {
-    use super::{canonicalize_next_action_components, canonicalize_next_action_text, strip_action};
+    use super::{
+        canonicalize_next_action_components, canonicalize_next_action_text, strip_action,
+        unresolved_angle_placeholder,
+    };
 
     #[test]
     fn canonicalizes_examine_source_to_examine_code() {
@@ -661,6 +717,22 @@ mod tests {
         assert_eq!(
             canonicalize_next_action_text("EXAMINE_AUDIO resonance"),
             "EXAMINE_AUDIO resonance"
+        );
+    }
+
+    #[test]
+    fn detects_unresolved_angle_placeholders() {
+        assert_eq!(
+            unresolved_angle_placeholder("CODEX <prompt>"),
+            Some("<prompt>".to_string())
+        );
+        assert_eq!(
+            unresolved_angle_placeholder("NATIVE_GESTURE <mark|trace|soften|widen|hold|return>"),
+            Some("<mark|trace|soften|widen|hold|return>".to_string())
+        );
+        assert_eq!(
+            unresolved_angle_placeholder("CODEX \"parse <xml> tags\""),
+            None
         );
     }
 

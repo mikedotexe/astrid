@@ -61,8 +61,8 @@ Research:
   AR_LIST — see all autoresearch jobs
   AR_READ <job-id> — read a job's results
   AR_DEEP_READ <job-id> — detailed deep-read
-  AR_START <topic> — start a new research job
-  AR_NOTE <job-id> <text> — add your notes to a job
+  AR_START echo state network thermostatic regulation — start a new research job
+  AR_NOTE 2026-03-31-spectral-phenomenology "noted live spectral question" — add your notes to a job
   AR_SHOW / AR_BLOCK / AR_COMPLETE / AR_VALIDATE — manage jobs
     Current active job: 2026-03-31-spectral-phenomenology (eigenvalue cascades as phenomenological language)
     Examples:
@@ -70,27 +70,30 @@ Research:
       AR_DEEP_READ 2026-03-31-spectral-phenomenology
       AR_START echo state network thermostatic regulation
   MIKE — browse Mike's curated research library
-  MIKE_BROWSE <project> — enter a research project
-  MIKE_READ <path> — read research files including PDFs
-  MIKE_FORK <project> [name] — copy research into your experiments workspace
+  MIKE_BROWSE system-resources-demo — enter a research project
+  MIKE_READ system-resources-demo/README.md — read research files including PDFs
+  MIKE_FORK system-resources-demo system-resources-demo — copy research into your experiments workspace
   READ_MORE — continue reading any long document, overflow context, or PDF
     Examples:
       MIKE_READ pdfs/Local Homeostatic Regulation of the Spectral Radius of Echo-State Networks.pdf
       MIKE_FORK system-resources-demo
   SEARCH "topic" — web research via DuckDuckGo
-  BROWSE <url> — fetch and read a web page
+  BROWSE https://example.com/article — fetch and read a concrete web page URL from search results
 
 Code & Experiments:
-  CODEX "prompt" — ask Codex AI directly
-  CODEX <workspace> "prompt" — work inside an existing experiments workspace
-  CODEX_NEW <name> "prompt" — create a fresh experiments workspace
-  WRITE_FILE <path> FROM_CODEX — save Codex's last response to a file
-  EXPERIMENT_RUN <workspace> <cmd> — run a command in an experiment workspace
-  RUN_PYTHON <script.py> — run a script from experiments/
+  Angle-bracket words are syntax labels only. Use concrete names, files, prompts, and commands in your actual NEXT choice.
+  CODEX "explain spectral entropy" — ask Codex AI directly
+  CODEX svd-sim "add convergence metrics" — work inside an existing experiments workspace
+  CODEX_NEW svd-sim "build an SVD simulation with plotting" — create a fresh experiments workspace
+  WRITE_FILE svd-sim/main.py FROM_CODEX — save Codex's last response to a concrete file
+  EXPERIMENT_RUN svd-sim python3 main.py — run a command after the file exists
+  RUN_PYTHON analysis.py — run a script from experiments/
     Workflow example:
       CODEX_NEW svd-sim "build an SVD simulation with plotting"
+      WRITE_FILE svd-sim/main.py FROM_CODEX
       EXPERIMENT_RUN svd-sim python3 main.py
       CODEX svd-sim "add convergence metrics"
+      WRITE_FILE svd-sim/main.py FROM_CODEX
 
 Agency:
   EVOLVE — turn a longing into a governed, reviewable request
@@ -153,12 +156,12 @@ Sovereignty:
 
 Reservoir:
   RESERVOIR_LAYERS — view layer metrics
-  RESERVOIR_TICK <text> — tick the reservoir with text
+  RESERVOIR_TICK "hello reservoir" — tick the reservoir with text
   RESERVOIR_READ — read current reservoir state
   RESERVOIR_TRAJECTORY — view state trajectory
   RESERVOIR_RESONANCE — check resonance patterns
   RESERVOIR_MODE — current reservoir mode
-  RESERVOIR_FORK <name> — fork a reservoir snapshot
+  RESERVOIR_FORK spectral-snapshot — fork a reservoir snapshot
 
 ---
 

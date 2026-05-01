@@ -38,7 +38,7 @@ pub(super) fn handle_action(
             let dst = bridge_paths().experiments_dir().join(name);
             if dst.exists() {
                 conv.emphasis = Some(format!(
-                    "Fork '{name}' already exists at {}. Use EXPERIMENT_RUN {name} <cmd> to work with it. \
+                    "Fork '{name}' already exists at {}. Use concrete commands to work with it. \
                      Example: NEXT: EXPERIMENT_RUN {name} python3 system_resources.py",
                     dst.display()
                 ));
@@ -49,7 +49,7 @@ pub(super) fn handle_action(
                     conv.emphasis = Some(format!(
                         "Forked '{project}' → experiments/{name}/ ({count} files). \
                          You can now modify files with WRITE_FILE and run with \
-                         EXPERIMENT_RUN {name} <cmd>. Example: NEXT: EXPERIMENT_RUN {name} \
+                         concrete EXPERIMENT_RUN commands. Example: NEXT: EXPERIMENT_RUN {name} \
                          python3 system_resources.py"
                     ));
                     info!("MIKE_FORK: {project} → experiments/{name}/ ({count} files)");
@@ -178,7 +178,8 @@ pub(super) fn handle_action(
                             "[Codex response — part 1 of {total_pages} ({total} chars total):]\n\
                              {}\n\n\
                              [Part 1 of {total_pages}. NEXT: READ_MORE for part 2. \
-                             Save complete response: NEXT: WRITE_FILE <path> FROM_CODEX]",
+                             To save the complete response, choose a concrete path such as \
+                             NEXT: WRITE_FILE scratch/codex_response.md FROM_CODEX]",
                             &text[..break_at]
                         ));
                         conv.last_read_path = Some(saved_path.to_string_lossy().into());

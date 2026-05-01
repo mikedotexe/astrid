@@ -9,6 +9,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Hardened Astrid action affordance examples against copied angle-bracket placeholders. The bridge now reroutes unresolved placeholder NEXT actions without execution, and core help/FACULTIES/Mike/Codex examples use concrete runnable actions instead of copyable template slots.
 - Restored Astrid's live semantic codec default gain to the documented quiet 2.0 setting after Minime self-study reported renewed λ₁ pressure from the emergency-era high-gain reset, and made explicit semantic-gain overrides replace the active adaptive gain directly.
 - Changed Astrid/Minime limited-write post-send monitoring so transient watchdog `warmup` / degraded-monitoring states pause further writes without rolling the live bridge profile back to observe-only; hard restart and adverse physiology states still trigger rollback.
 - Added Astrid's read-only `SPECTRAL_EXPLORER` V1 with typed spectral fingerprint parsing, corrected legacy slot labels, present-state/memory/control-pressure text views, and compatibility for Minime's dual-emitted `spectral_fingerprint_v1`, `lambda1_rel`, and active-mode telemetry fields.

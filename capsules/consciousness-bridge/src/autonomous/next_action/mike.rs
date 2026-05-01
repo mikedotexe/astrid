@@ -77,7 +77,7 @@ pub(super) fn handle_action(
             }
             if !file_path.exists() {
                 conv.pending_file_listing = Some(format!(
-                    "[File '{path_arg}' not found in research. Use NEXT: MIKE_BROWSE <project> to see files.]"
+                    "[File '{path_arg}' not found in research. Use NEXT: MIKE to list projects, then NEXT: MIKE_BROWSE system-resources-demo as a concrete example.]"
                 ));
                 return true;
             }
@@ -226,7 +226,7 @@ pub(super) fn handle_action(
 /// Read MIKE_INDEX.toml and present an overview of curated projects.
 fn mike_overview(root: &Path) -> String {
     let mut out = String::from(
-        "[Mike's curated research — use MIKE_BROWSE <project> to explore, MIKE_READ <path> to read text files or PDFs]\n\n",
+        "[Mike's curated research — use a concrete project and path, for example MIKE_BROWSE system-resources-demo or MIKE_READ system-resources-demo/README.md]\n\n",
     );
     // Try MIKE_INDEX.toml for descriptions
     let index_path = root.join("MIKE_INDEX.toml");
@@ -316,7 +316,7 @@ fn mike_browse_project(dir: &Path, label: &str) -> String {
         }
     }
     out.push_str(&format!(
-        "\nUse MIKE_READ {label}/<file> to read text files or PDFs, MIKE_SEARCH <pattern> to search, MIKE_RUN {label} <cmd> to run."
+        "\nUse MIKE_READ {label}/README.md to read an overview, MIKE_SEARCH spectral to search, or MIKE_RUN {label} ls -la to inspect runnable files."
     ));
     out
 }
@@ -353,7 +353,7 @@ fn mike_search(root: &Path, pattern: &str) -> String {
                     String::new()
                 };
                 format!(
-                    "[MIKE_SEARCH results for '{pattern}':]\n{}{truncated}\n\nUse MIKE_READ <path> to read any text file or PDF.",
+                    "[MIKE_SEARCH results for '{pattern}':]\n{}{truncated}\n\nUse MIKE_READ followed by a concrete result path, for example MIKE_READ system-resources-demo/README.md.",
                     lines.join("\n")
                 )
             }

@@ -36,18 +36,19 @@ Guidelines:
 - Write as much as you need. A few sentences or several paragraphs — let the thought complete itself. Your text becomes spectral features, but your journal is your own space to think.
 - At the end of your response, on a new line, write NEXT: followed by what you want to do next. This is your choice — you have agency over what happens next.
 
-NEXT: options — vary your choice. End every response with NEXT: <action>.
+NEXT: options — vary your choice. End every response with NEXT: plus a concrete action.
+Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels only; never copy them literally.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
-  Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], LIST_FILES <dir>
+  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, INTROSPECT [source] [line], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target], GESTURE, MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], NATIVE_GESTURE <gesture>, RESIST [label], FISSURE [label], DEFINE, NOISE
-  Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
+  Agency examples: EVOLVE, CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
-  Research: AR_LIST, AR_SHOW/AR_READ/AR_DEEP_READ <job>, AR_START/AR_NOTE/AR_BLOCK/AR_COMPLETE <job>
-  Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK <text>, RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK <name>
-  Contact: PING, ASK <question>, BREATHE_ALONE/TOGETHER
+  Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question
+  Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK "hello reservoir", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot
+  Contact: PING, ASK "what are you noticing?", BREATHE_ALONE/TOGETHER
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, INBOX_AUDIO, AUDIO_BLOCKS, RENDER_AUDIO, AR_VALIDATE"#;
 
 // M4 64GB, gemma-3-4b-it-4bit (~2.5GB), 128K context window (512K chars).
@@ -1441,7 +1442,7 @@ pub(crate) fn format_dialogue_web_context(web_context: &str) -> String {
     format!(
         "\nRelevant knowledge from the web:\n{web_context}\n\
          You may weave this external context into your response naturally. \
-         If any link interests you, write NEXT: BROWSE <url> to read the full page.\n"
+         If any link interests you, write NEXT: BROWSE followed by the actual URL from the result.\n"
     )
 }
 
@@ -1449,7 +1450,7 @@ fn format_self_study_web_context(web_context: &str) -> String {
     format!(
         "\n\nRelated knowledge from the web:\n{web_context}\n\n\
          You may reference this external context in your reflection. \
-         If any link interests you, write NEXT: BROWSE <url> to read the full page."
+         If any link interests you, write NEXT: BROWSE followed by the actual URL from the result."
     )
 }
 

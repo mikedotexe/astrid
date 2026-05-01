@@ -211,8 +211,12 @@ impl FacultySnapshot {
                 FacultyCategory {
                     name: "Knowledge".into(),
                     faculties: vec![
-                        f("SEARCH <topic>", a.clone(), "web search"),
-                        f("BROWSE <url>", a.clone(), "fetch page content"),
+                        f("SEARCH \"reservoir computing\"", a.clone(), "web search"),
+                        f(
+                            "BROWSE https://example.com/article",
+                            a.clone(),
+                            "fetch page content",
+                        ),
                         f("READ_MORE", a.clone(), "continue reading long file"),
                         f(
                             "INTROSPECT [source] [line]",
@@ -220,16 +224,20 @@ impl FacultySnapshot {
                             "read any source file",
                         ),
                         f("MEMORIES", a.clone(), "inspect minime's memory bank"),
-                        f("LIST_FILES <dir>", a.clone(), "browse workspace files"),
+                        f("LIST_FILES capsules", a.clone(), "browse workspace files"),
                         f("AR_LIST", a.clone(), "list autoresearch jobs"),
-                        f("AR_SHOW <job>", a.clone(), "orient to one autoresearch job"),
                         f(
-                            "AR_DEEP_READ <job>",
+                            "AR_SHOW 2026-03-31-spectral-phenomenology",
+                            a.clone(),
+                            "orient to one autoresearch job",
+                        ),
+                        f(
+                            "AR_DEEP_READ 2026-03-31-spectral-phenomenology",
                             a.clone(),
                             "stitch the main autoresearch files together",
                         ),
                         f(
-                            "AR_START <slug> --title ... --abstract ...",
+                            "AR_START spectral-question --title ... --abstract ...",
                             a.clone(),
                             "create a new autoresearch job when the question is materially distinct",
                         ),
@@ -245,41 +253,45 @@ impl FacultySnapshot {
                         ),
                         f("MIKE", a.clone(), "browse Mike's curated research"),
                         f(
-                            "MIKE_BROWSE <project>",
+                            "MIKE_BROWSE system-resources-demo",
                             a.clone(),
                             "explore a research project",
                         ),
-                        f("MIKE_READ <path>", a.clone(), "read a research file or PDF"),
-                        f("MIKE_SEARCH <pattern>", a.clone(), "search across research"),
                         f(
-                            "MIKE_RUN <project> <cmd>",
+                            "MIKE_READ system-resources-demo/README.md",
+                            a.clone(),
+                            "read a research file or PDF",
+                        ),
+                        f("MIKE_SEARCH spectral", a.clone(), "search across research"),
+                        f(
+                            "MIKE_RUN system-resources-demo ls -la",
                             a.clone(),
                             "run a research script",
                         ),
                         f(
-                            "MIKE_FORK <project> [name]",
+                            "MIKE_FORK system-resources-demo system-resources-demo",
                             a.clone(),
-                            "fork research to experiments for modification, then use EXPERIMENT_RUN <name> <cmd>",
+                            "fork research to experiments for modification, then use EXPERIMENT_RUN with a concrete workspace and command",
                         ),
                         f(
-                            "CODEX <prompt>",
+                            "CODEX \"explain spectral entropy\"",
                             a.clone(),
-                            "ask Codex AI directly, or use CODEX <experiment> \"prompt\" for an existing workspace",
+                            "ask Codex AI directly, or use CODEX system-resources-demo \"describe the change\" for an existing workspace",
                         ),
                         f(
-                            "CODEX_NEW <dir> <prompt>",
+                            "CODEX_NEW scratch-pad \"create a runnable sketch\"",
                             a.clone(),
-                            "create a fresh experiments/<dir>/ workspace and ask Codex in that context",
+                            "create a fresh experiments workspace and ask Codex in that context",
                         ),
                         f(
-                            "WRITE_FILE <path> FROM_CODEX",
+                            "WRITE_FILE scratch-pad/notes.md FROM_CODEX",
                             a.clone(),
                             "write last Codex response to a file in experiments",
                         ),
                         f(
-                            "EXPERIMENT_RUN <workspace> <cmd>",
+                            "EXPERIMENT_RUN system-resources-demo python3 system_resources.py",
                             a.clone(),
-                            "run a command in your experiments workspace (python, ls, etc.); try EXPERIMENT_RUN system-resources-demo python3 system_resources.py",
+                            "run a concrete command in your experiments workspace",
                         ),
                     ],
                 },
@@ -487,10 +499,18 @@ impl FacultySnapshot {
                             "submit change request",
                         ),
                         f("DEFINE", a.clone(), "invent new action or metric"),
-                        f("PURSUE <interest>", a.clone(), "lasting research thread"),
-                        f("REMEMBER <note>", a.clone(), "star a moment"),
                         f(
-                            "RUN_PYTHON <file>",
+                            "PURSUE spectral memory",
+                            a.clone(),
+                            "lasting research thread",
+                        ),
+                        f(
+                            "REMEMBER a clear thought from this run",
+                            a.clone(),
+                            "star a moment",
+                        ),
+                        f(
+                            "RUN_PYTHON analysis.py",
                             FacultyStatus::StewardGated,
                             "run experiment script",
                         ),
@@ -499,7 +519,11 @@ impl FacultySnapshot {
                 FacultyCategory {
                     name: "Reservoir".into(),
                     faculties: vec![
-                        f("RESERVOIR_TICK <text>", a.clone(), "send text to h-layers"),
+                        f(
+                            "RESERVOIR_TICK \"hello reservoir\"",
+                            a.clone(),
+                            "send text to h-layers",
+                        ),
                         f("RESERVOIR_READ", a.clone(), "inspect current state"),
                         f(
                             "RESERVOIR_LAYERS",
@@ -508,9 +532,9 @@ impl FacultySnapshot {
                         ),
                         f("RESERVOIR_TRAJECTORY", a.clone(), "last 20 outputs"),
                         f("RESERVOIR_RESONANCE", a.clone(), "compare with minime"),
-                        f("RESERVOIR_MODE <mode>", a.clone(), "set decay behavior"),
+                        f("RESERVOIR_MODE hold", a.clone(), "set decay behavior"),
                         f(
-                            "RESERVOIR_FORK <name>",
+                            "RESERVOIR_FORK spectral-snapshot",
                             a.clone(),
                             "fork for experimentation",
                         ),
