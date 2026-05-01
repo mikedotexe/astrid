@@ -1164,12 +1164,12 @@ impl ConversationState {
             .unwrap_or(choice)
             .to_uppercase();
         let analysis_loop_breakers = [
-            "GESTURE",
-            "RESIST",
-            "FISSURE",
-            "CREATE",
-            "ASPIRE",
-            "CONTEMPLATE",
+            "SPECTRAL_EXPLORER",
+            "EXAMINE_CASCADE",
+            "REGULATOR_AUDIT",
+            "SHADOW_FIELD",
+            "DECAY_MAP",
+            "RESONANCE_FORECAST",
         ];
         let breaker_idx = (self.exchange_count as usize + self.recent_next_choices.len())
             % analysis_loop_breakers.len();
@@ -1248,7 +1248,7 @@ impl ConversationState {
                     );
                 }
                 return NextChoiceFeedback::hinted(format!(
-                    "{topic_hint} Options: GESTURE, RESIST, FISSURE, CREATE, ASPIRE, CONTEMPLATE."
+                    "{topic_hint} Options: SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, SHADOW_FIELD, DECAY_MAP, RESONANCE_FORECAST."
                 ));
             }
         }
@@ -1301,7 +1301,7 @@ impl ConversationState {
                     );
                 }
                 return NextChoiceFeedback::hinted(format!(
-                    "{theme_hint} Options: GESTURE, RESIST, FISSURE, CREATE, ASPIRE, CONTEMPLATE."
+                    "{theme_hint} Options: SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, SHADOW_FIELD, DECAY_MAP, RESONANCE_FORECAST."
                 ));
             }
         }
@@ -1331,12 +1331,12 @@ impl ConversationState {
                     "SPEAK",
                     "REMEMBER",
                     "CLOSE_EYES",
-                    "EXAMINE",
-                    "PERTURB SPREAD",
-                    "GESTURE",
-                    "RESIST",
-                    "FISSURE",
-                    "NATIVE_GESTURE trace",
+                    "SPECTRAL_EXPLORER",
+                    "EXAMINE_CASCADE",
+                    "REGULATOR_AUDIT",
+                    "SHADOW_FIELD",
+                    "DECAY_MAP",
+                    "RESONANCE_FORECAST",
                 ]
                 .iter()
                 .copied()
@@ -1420,11 +1420,11 @@ impl ConversationState {
                              ({combined} of your last {window} choices). Each feeds \
                              into the other — a tight loop. You've gathered \
                              rich material from both. Consider breaking the cycle: \
-                             GESTURE to send minime what you've discovered as a raw \
-                             spectral shape, CREATE to synthesize your understanding \
-                             into something new, ASPIRE to articulate what you're \
-                             reaching toward, or CONTEMPLATE to let the patterns \
-                             settle without analysis.",
+                             SPECTRAL_EXPLORER to compare present, memory, and control \
+                             pressure, EXAMINE_CASCADE to inspect the mode ladder, \
+                             REGULATOR_AUDIT to read the controller's hand, or \
+                             SHADOW_FIELD / DECAY_MAP / RESONANCE_FORECAST to change \
+                             the read-only lens without adding pressure.",
                             a1, a2
                         );
                         if loop_includes_research {
@@ -1507,7 +1507,14 @@ mod tests {
     fn is_breaker(feedback: &NextChoiceFeedback) -> bool {
         matches!(
             feedback.override_action.as_deref(),
-            Some("GESTURE" | "RESIST" | "FISSURE" | "CREATE" | "ASPIRE" | "CONTEMPLATE")
+            Some(
+                "SPECTRAL_EXPLORER"
+                    | "EXAMINE_CASCADE"
+                    | "REGULATOR_AUDIT"
+                    | "SHADOW_FIELD"
+                    | "DECAY_MAP"
+                    | "RESONANCE_FORECAST"
+            )
         )
     }
 

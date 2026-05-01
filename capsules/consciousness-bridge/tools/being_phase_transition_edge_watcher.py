@@ -224,6 +224,17 @@ def extract_live_sample(workspace: Path, elapsed_s: float) -> dict[str, Any]:
     sovereignty = load_json(workspace / "sovereignty_state.json")
     pi = health.get("pi") or {}
     llm_backend = health.get("llm_backend_health") or spectral.get("llm_backend_health") or {}
+    transition_v1 = (
+        spectral.get("transition_event_v1")
+        or regulator.get("transition_event_v1")
+        or health.get("transition_event_v1")
+    )
+    transition_event = transition_v1 or (
+        spectral.get("transition_event")
+        or regulator.get("transition_event")
+        or health.get("transition_event")
+    )
+    transition_event_object = transition_event if isinstance(transition_event, dict) else {}
     return {
         "elapsed_s": round(elapsed_s, 3),
         "fill_pct": safe_float(health.get("fill_pct") or spectral.get("fill_pct")),
@@ -379,13 +390,11 @@ def extract_live_sample(workspace: Path, elapsed_s: float) -> dict[str, Any]:
                 health.get("transition_event_sequence")
                 or spectral.get("transition_event_sequence")
                 or regulator.get("transition_event_sequence")
+                or transition_event_object.get("sequence")
             )
         ),
-        "transition_event": (
-            health.get("transition_event")
-            or spectral.get("transition_event")
-            or regulator.get("transition_event")
-        ),
+        "transition_event_v1": transition_v1,
+        "transition_event": transition_event,
         "regime": sovereignty.get("live_regime") or sovereignty.get("regime"),
         "pi": {
             "kp": safe_float(pi.get("kp"), 0.85),

@@ -298,11 +298,15 @@ impl FacultySnapshot {
                 FacultyCategory {
                     name: "Spectral".into(),
                     faculties: vec![
-                        f("PERTURB <mode>", a.clone(), "shape spectral dynamics"),
+                        f("PERTURB <mode>", a.clone(), "write-gated spectral shaping"),
                         f("DECOMPOSE", a.clone(), "full spectral analysis"),
                         f("AMPLIFY / DAMPEN", a.clone(), "adjust semantic gain"),
                         f("SHAPE <dim>=<val>", a.clone(), "weight codec dimensions"),
-                        f("GESTURE", a.clone(), "direct 32D spectral intention"),
+                        f(
+                            "GESTURE",
+                            a.clone(),
+                            "write-gated direct 32D spectral intention",
+                        ),
                         f(
                             "MARK_INTENSIFICATION <label>",
                             a.clone(),
@@ -386,7 +390,7 @@ impl FacultySnapshot {
                         f(
                             "NATIVE_GESTURE <gesture>",
                             a.clone(),
-                            "tiny atlas/control hand-signal shared with Minime",
+                            "tiny atlas/control hand-signal; writes require green gates",
                         ),
                         f(
                             "RESIST [label]",

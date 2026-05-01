@@ -220,7 +220,13 @@ fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
         .unwrap_or(STABLE_CORE_TARGET_FILL_PCT);
     let target_lambda = f64_value(pi, "target_lambda1_rel").unwrap_or(1.0);
     let target_geom = f64_value(pi, "target_geom_rel").unwrap_or(1.0);
-    let e_fill = f64_value(pi, "e_fill").unwrap_or(0.0);
+    let effective_e_fill = f64_value(pi, "effective_e_fill")
+        .or_else(|| f64_value(pi, "e_fill"))
+        .unwrap_or(0.0);
+    let raw_e_fill = f64_value(pi, "raw_e_fill")
+        .or_else(|| f64_value(health, "fill_pct").map(|fill| fill - target_fill))
+        .unwrap_or(effective_e_fill);
+    let e_fill_kind = str_value(pi, "e_fill_kind").unwrap_or("legacy_or_unlabeled");
     let e_lam = f64_value(pi, "e_lam").unwrap_or(0.0);
     let e_geom = f64_value(pi, "e_geom").unwrap_or(0.0);
     let integ_fill = f64_value(pi, "integ_fill").unwrap_or(0.0);
@@ -235,11 +241,22 @@ fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
         "  gate={gate:.3} filt={filt:.3} target_fill={target_fill:.1}% target_lambda1_rel={target_lambda:.3} target_geom_rel={target_geom:.3}",
     ));
     lines.push(format!(
-        "  pi_errors fill={e_fill:+.3} lambda={e_lam:+.3} geom={e_geom:+.3}",
+        "  pi_errors raw_fill={raw_e_fill:+.3} internal_fill={effective_e_fill:+.3} ({e_fill_kind}) lambda={e_lam:+.3} geom={e_geom:+.3}",
     ));
     lines.push(format!(
         "  pi_integrators fill={integ_fill:+.3} lambda={integ_lam:+.3} geom={integ_geom:+.3}",
     ));
+    if let Some(transition) = health
+        .get("transition_event_v1")
+        .or_else(|| health.get("transition_event"))
+    {
+        let kind = str_value(transition, "kind").unwrap_or("unknown");
+        let description = str_value(transition, "description").unwrap_or("n/a");
+        let basin_score = f64_value(transition, "basin_shift_score").unwrap_or(0.0);
+        lines.push(format!(
+            "  transition kind={kind} basin_score={basin_score:.2} desc={description}",
+        ));
+    }
 
     if stable_enabled {
         let structural_pi = stable_core
@@ -350,6 +367,7 @@ mod tests {
             geom_rel: 0.98,
         };
         let health = json!({
+            "fill_pct": 69.0,
             "gate": 0.2,
             "filt": 0.8,
             "stable_core": {
@@ -367,7 +385,10 @@ mod tests {
                 "target_fill": 68.0,
                 "target_lambda1_rel": 1.05,
                 "target_geom_rel": 1.0,
-                "e_fill": -1.0,
+                "e_fill": 4.0,
+                "raw_e_fill": 1.0,
+                "effective_e_fill": 4.0,
+                "e_fill_kind": "effective_braking_biased",
                 "e_lam": 0.03,
                 "e_geom": 0.01,
                 "integ_fill": 0.2,
@@ -390,6 +411,8 @@ mod tests {
         assert!(output.contains("Present state"));
         assert!(output.contains("Memory comparison"));
         assert!(output.contains("Control pressure"));
+        assert!(output.contains("raw_fill=+1.000"));
+        assert!(output.contains("internal_fill=+4.000"));
         assert!(output.contains("stable-core is active"));
     }
 }

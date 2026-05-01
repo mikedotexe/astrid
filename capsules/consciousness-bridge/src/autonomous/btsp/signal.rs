@@ -219,17 +219,33 @@ pub(super) fn detect_live_signals(controller_health: Option<&Value>) -> Vec<Stri
         return Vec::new();
     };
     let mut signals = Vec::new();
-    if let Some(transition) = health.get("transition_event") {
+    let typed_transition = health
+        .get("transition_event_v1")
+        .filter(|transition| transition.is_object());
+    if let Some(transition) = typed_transition.or_else(|| health.get("transition_event")) {
         let description = transition
             .get("description")
             .and_then(Value::as_str)
             .unwrap_or_default();
-        if transition
+        let kind = transition
             .get("kind")
             .and_then(Value::as_str)
-            .is_some_and(|kind| kind == "phase_transition")
-            || !description.is_empty()
-        {
+            .unwrap_or_default();
+        let legacy_kind = transition
+            .get("legacy_kind")
+            .and_then(Value::as_str)
+            .unwrap_or(kind);
+        if typed_transition.is_some() {
+            match kind {
+                "basin_transition" => signals.push(format!("basin_transition:{description}")),
+                "breathing_phase" => signals.push(format!("breathing_phase:{description}")),
+                _ if legacy_kind == "phase_transition" || kind == "phase_transition" => {
+                    signals.push(format!("phase_transition:{description}"));
+                },
+                _ if !description.is_empty() => signals.push(format!("{kind}:{description}")),
+                _ => {},
+            }
+        } else if kind == "phase_transition" || !description.is_empty() {
             signals.push(format!("phase_transition:{description}"));
         }
         if transition

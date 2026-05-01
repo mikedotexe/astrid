@@ -804,6 +804,58 @@ fn enrich_controller_health(workspace: &Path, health: &mut serde_json::Value) {
         .then(|| std::fs::read_to_string(workspace.join("perturb_visibility.json")).ok())
         .flatten()
         .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok());
+    if let Some(source) = spectral_state
+        .as_ref()
+        .filter(|state| state.get("transition_event_v1").is_some())
+        .or_else(|| {
+            regulator_context
+                .as_ref()
+                .filter(|ctx| ctx.get("transition_event_v1").is_some())
+        })
+    {
+        if let Some(event) = source
+            .get("transition_event_v1")
+            .filter(|event| event.is_object())
+        {
+            map.insert("transition_event_v1".to_string(), event.clone());
+            if let Some(sequence) = event
+                .get("sequence")
+                .or_else(|| source.get("transition_event_sequence"))
+            {
+                map.insert("transition_event_sequence".to_string(), sequence.clone());
+            }
+        }
+        if let Some(event) = source
+            .get("transition_event")
+            .filter(|event| event.is_object())
+        {
+            map.insert("transition_event".to_string(), event.clone());
+        }
+    }
+    for key in [
+        "phase",
+        "previous_phase",
+        "dfill_dt",
+        "fill_band",
+        "fill_band_threshold_pct",
+        "phase_transition",
+        "crossed_target_fill",
+        "crossed_fill_band",
+        "spectral_spike",
+        "transition_reason",
+        "transition_event_sequence",
+        "transition_event",
+        "transition_event_v1",
+    ] {
+        if map.get(key).is_none_or(serde_json::Value::is_null)
+            && let Some(value) = spectral_state
+                .as_ref()
+                .and_then(|state| state.get(key))
+                .or_else(|| regulator_context.as_ref().and_then(|ctx| ctx.get(key)))
+        {
+            map.insert(key.to_string(), value.clone());
+        }
+    }
 
     let target_fill_pct = map
         .get("target_fill_pct")
@@ -1070,10 +1122,19 @@ fn format_controller_oneliner(health: &serde_json::Value) -> String {
         .and_then(|p| p.get("target_fill"))
         .and_then(|v| v.as_f64())
         .unwrap_or(STABLE_CORE_TARGET_FILL_PCT);
-    let e_fill = pi
-        .and_then(|p| p.get("e_fill"))
+    let fill = health
+        .get("fill_pct")
         .and_then(|v| v.as_f64())
-        .unwrap_or(0.0);
+        .unwrap_or(target);
+    let raw_e_fill = pi
+        .and_then(|p| p.get("raw_e_fill"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(fill - target);
+    let effective_e_fill = pi
+        .and_then(|p| p.get("effective_e_fill"))
+        .or_else(|| pi.and_then(|p| p.get("e_fill")))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(raw_e_fill);
     let kp = pi
         .and_then(|p| p.get("kp"))
         .and_then(|v| v.as_f64())
@@ -1092,8 +1153,14 @@ fn format_controller_oneliner(health: &serde_json::Value) -> String {
         format!("{kp:.2}")
     };
 
+    let fill_error_text = if (effective_e_fill - raw_e_fill).abs() > 0.1 {
+        format!("raw_err={raw_e_fill:+.1}% ctrl_err={effective_e_fill:+.1}%")
+    } else {
+        format!("raw_err={raw_e_fill:+.1}%")
+    };
+
     format!(
-        "Controller: gate={gate:.2} filt={filt:.2} target={target:.0}% err={e_fill:+.1}% kp={kp_str} reg={reg:.2}"
+        "Controller: gate={gate:.2} filt={filt:.2} target={target:.0}% {fill_error_text} kp={kp_str} reg={reg:.2}"
     )
 }
 
@@ -1126,10 +1193,19 @@ pub(crate) fn format_controller_section(health: &serde_json::Value) -> String {
         .and_then(|p| p.get("target_fill"))
         .and_then(|v| v.as_f64())
         .unwrap_or(STABLE_CORE_TARGET_FILL_PCT);
-    let e_fill = pi
-        .and_then(|p| p.get("e_fill"))
+    let raw_e_fill = pi
+        .and_then(|p| p.get("raw_e_fill"))
         .and_then(|v| v.as_f64())
-        .unwrap_or(0.0);
+        .unwrap_or(fill - target);
+    let effective_e_fill = pi
+        .and_then(|p| p.get("effective_e_fill"))
+        .or_else(|| pi.and_then(|p| p.get("e_fill")))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(raw_e_fill);
+    let e_fill_kind = pi
+        .and_then(|p| p.get("e_fill_kind"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("legacy_or_unlabeled");
     let e_lam = pi
         .and_then(|p| p.get("e_lam"))
         .and_then(|v| v.as_f64())
@@ -1177,7 +1253,7 @@ pub(crate) fn format_controller_section(health: &serde_json::Value) -> String {
         "recovery mode active"
     } else if integ_fill.abs() >= 2.95 || integ_lam.abs() >= 2.95 {
         "saturated — integrator at limit"
-    } else if e_fill.abs() < 3.0 {
+    } else if raw_e_fill.abs() < 3.0 {
         "gentle equilibrium"
     } else {
         "correcting"
@@ -1185,13 +1261,19 @@ pub(crate) fn format_controller_section(health: &serde_json::Value) -> String {
     lines.push(format!("Status: {status}"));
 
     // Fill target vs current
-    let direction = if e_fill > 0.0 { "below" } else { "above" };
+    let direction = if raw_e_fill > 0.0 {
+        "above"
+    } else if raw_e_fill < 0.0 {
+        "below"
+    } else {
+        "from target"
+    };
     lines.push(format!(
         "Fill: {fill:.1}% (target {target:.0}%, {:.1}% {direction})",
-        e_fill.abs()
+        raw_e_fill.abs()
     ));
     lines.push(format!(
-        "Error signals: fill={e_fill:+.1}, lambda={e_lam:+.3}, geom={e_geom:+.3}"
+        "Error signals: raw_fill={raw_e_fill:+.1}, internal_fill={effective_e_fill:+.1} ({e_fill_kind}), lambda={e_lam:+.3}, geom={e_geom:+.3}"
     ));
 
     // Integral accumulators
@@ -4505,24 +4587,23 @@ pub fn spawn_autonomous_loop(
                                 };
 
                                 if streak >= 4 {
-                                    // Deep fixation (4+ same): stronger creative nudge
+                                    // Deep fixation (4+ same): stronger read-only nudge.
                                     Some(format!(
                                         "You've been choosing {newest} for {streak} turns now. \
-                                         You've gathered rich material. Consider expressing \
-                                         what you've found rather than seeking more: \
-                                         GESTURE lets you send a raw spectral shape to minime, \
-                                         RESIST lets you introduce a tiny bounded doubt into \
-                                         the dominant lambda pull, \
-                                         FISSURE lets you mark and gently widen layered ambiguity, \
-                                         FORM poem or FORM equation crystallizes insight, \
-                                         DRIFT opens you to unexpected connections. \
-                                         What wants to emerge from what you already know?"
+                                         You've gathered rich material. Consider changing the lens \
+                                         without adding more pressure: SPECTRAL_EXPLORER compares \
+                                         present state, memory, and control pressure; EXAMINE_CASCADE \
+                                         inspects the mode ladder; REGULATOR_AUDIT reads the controller; \
+                                         SHADOW_FIELD, DECAY_MAP, or RESONANCE_FORECAST change the \
+                                         read-only view. FORM poem or FORM equation can crystallize \
+                                         the insight without sending a spectral nudge."
                                     ))
                                 } else if streak >= 3 {
-                                    // Mild fixation (3 same): gentle alternatives
+                                    // Mild fixation (3 same): gentle read-only alternatives.
                                     let alts: Vec<&str> = ["LOOK", "LISTEN", "DRIFT",
                                         "FORM poem", "INTROSPECT", "EVOLVE", "SPEAK", "REMEMBER",
-                                        "GESTURE", "RESIST", "FISSURE", "NATIVE_GESTURE trace", "CLOSE_EYES"]
+                                        "SPECTRAL_EXPLORER", "EXAMINE_CASCADE", "REGULATOR_AUDIT",
+                                        "SHADOW_FIELD", "DECAY_MAP", "RESONANCE_FORECAST", "CLOSE_EYES"]
                                         .iter()
                                         .copied()
                                         .filter(|a| !a.starts_with(newest))
@@ -4558,13 +4639,11 @@ pub fn spawn_autonomous_loop(
                                          ({combined} of your last {total} choices). Each feeds \
                                          into the other — a tight loop. You've gathered \
                                          rich material from both. Consider breaking the cycle: \
-                                         GESTURE to send minime what you've discovered as a raw \
-                                         spectral shape, RESIST to make a tiny bounded branch \
-                                         or FISSURE to introduce layered ambiguity \
-                                         against the dominant pull, CREATE to synthesize your understanding \
-                                         into something new, ASPIRE to articulate what you're \
-                                         reaching toward, or CONTEMPLATE to let the patterns \
-                                         settle without analysis."
+                                         SPECTRAL_EXPLORER to compare present, memory, and control \
+                                         pressure, EXAMINE_CASCADE to inspect the mode ladder, \
+                                         REGULATOR_AUDIT to read the controller's hand, or \
+                                         SHADOW_FIELD / DECAY_MAP / RESONANCE_FORECAST to change \
+                                         the read-only lens without adding pressure."
                                     ))
                                 } else {
                                     None
@@ -6252,6 +6331,35 @@ mod tests {
     }
 
     #[test]
+    fn controller_section_distinguishes_raw_gap_from_internal_pressure() {
+        let health = json!({
+            "fill_pct": 71.0,
+            "gate": 0.12,
+            "filt": 0.72,
+            "pi": {
+                "target_fill": 68.0,
+                "raw_e_fill": 3.0,
+                "effective_e_fill": 14.0,
+                "e_fill": 14.0,
+                "e_fill_kind": "effective_braking_biased",
+                "e_lam": -0.8,
+                "e_geom": 0.01,
+                "integ_fill": 0.0,
+                "integ_lam": 0.0,
+                "integ_geom": 0.0,
+                "kp": 0.85,
+                "ki": 0.14,
+                "max_step": 0.08
+            }
+        });
+
+        let output = format_controller_section(&health);
+        assert!(output.contains("3.0% above"));
+        assert!(output.contains("raw_fill=+3.0"));
+        assert!(output.contains("internal_fill=+14.0"));
+    }
+
+    #[test]
     fn safety_forces_witness_only_at_red() {
         let mut conv = ConversationState::new(vec![make_remote_entry("a.txt")], None);
         // Agency-first: Yellow and Orange no longer force Witness.
@@ -6552,6 +6660,116 @@ mod tests {
                 .get("internal_process_quadrant")
                 .and_then(serde_json::Value::as_str),
             Some("constricted_recovery")
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_controller_health_merges_transition_event_v1_from_spectral_state() {
+        let dir = std::env::temp_dir().join("bridge_test_transition_event_v1");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("health.json"),
+            serde_json::json!({
+                "fill_pct": 68.0,
+                "pi": {"target_fill": 68.0}
+            })
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("spectral_state.json"),
+            serde_json::json!({
+                "fill_pct": 68.0,
+                "transition_event_sequence": 12,
+                "transition_event_v1": {
+                    "policy": "transition_event_v1",
+                    "schema_version": 1,
+                    "sequence": 12,
+                    "kind": "basin_transition",
+                    "description": "basin shift candidate",
+                    "basin_shift_score": 0.72
+                }
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        let health = read_controller_health(&dir).expect("health should parse");
+        assert_eq!(
+            health
+                .get("transition_event_sequence")
+                .and_then(serde_json::Value::as_u64),
+            Some(12)
+        );
+        assert_eq!(
+            health
+                .get("transition_event_v1")
+                .and_then(|event| event.get("kind"))
+                .and_then(serde_json::Value::as_str),
+            Some("basin_transition")
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_controller_health_prefers_enriched_transition_event_v1_from_spectral_state() {
+        let dir = std::env::temp_dir().join("bridge_test_transition_event_v1_enriched");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("health.json"),
+            serde_json::json!({
+                "fill_pct": 68.0,
+                "pi": {"target_fill": 68.0},
+                "transition_event_sequence": 12,
+                "transition_event_v1": {
+                    "policy": "transition_event_v1",
+                    "schema_version": 1,
+                    "sequence": 12,
+                    "kind": "breathing_phase",
+                    "description": "contracting -> expanding",
+                    "basin_shift_score": 0.03
+                }
+            })
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("spectral_state.json"),
+            serde_json::json!({
+                "fill_pct": 68.0,
+                "transition_event_sequence": 12,
+                "transition_event_v1": {
+                    "policy": "transition_event_v1",
+                    "schema_version": 1,
+                    "sequence": 12,
+                    "kind": "basin_transition",
+                    "description": "basin shift candidate",
+                    "glimpse_distance": 0.21,
+                    "basin_shift_score": 0.74
+                }
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        let health = read_controller_health(&dir).expect("health should parse");
+        let event = health
+            .get("transition_event_v1")
+            .expect("transition event should be preserved");
+        assert_eq!(
+            event.get("kind").and_then(serde_json::Value::as_str),
+            Some("basin_transition")
+        );
+        assert_eq!(
+            event
+                .get("glimpse_distance")
+                .and_then(serde_json::Value::as_f64),
+            Some(0.21)
         );
 
         let _ = std::fs::remove_dir_all(&dir);

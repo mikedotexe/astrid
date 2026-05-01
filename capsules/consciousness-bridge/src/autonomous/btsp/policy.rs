@@ -203,9 +203,8 @@ pub(super) fn proposal_signal_fingerprint(proposal: &ActiveSovereigntyProposal) 
     if !proposal.signal_fingerprint.is_empty() {
         return proposal.signal_fingerprint.clone();
     }
-    let transition = normalize_component(extract_live_signal_value(
+    let transition = normalize_component(extract_transition_signal_value(
         &proposal.matched_live_signals,
-        "phase_transition:",
     ));
     let crossing = normalize_component(extract_live_signal_value(
         &proposal.matched_live_signals,
@@ -353,8 +352,15 @@ fn ratio_at_least(
 }
 
 fn live_transition_descriptor(controller_health: Option<&Value>) -> Option<&str> {
-    controller_health
-        .and_then(|health| health.get("transition_event"))
+    let health = controller_health?;
+    if let Some(typed) = health.get("transition_event_v1") {
+        return typed
+            .get("kind")
+            .and_then(Value::as_str)
+            .or_else(|| typed.get("description").and_then(Value::as_str));
+    }
+    health
+        .get("transition_event")
         .and_then(|transition| transition.get("description"))
         .and_then(Value::as_str)
 }
@@ -363,6 +369,17 @@ fn fill_band_crossing(controller_health: Option<&Value>) -> Option<&str> {
     let Some(health) = controller_health else {
         return None;
     };
+    if health
+        .get("transition_event_v1")
+        .and_then(|transition| transition.get("crossed_fill_band"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        return health
+            .get("transition_event_v1")
+            .and_then(|transition| transition.get("fill_band"))
+            .and_then(Value::as_str);
+    }
     if health
         .get("transition_event")
         .and_then(|transition| transition.get("crossed_fill_band"))
@@ -418,4 +435,10 @@ fn extract_live_signal_value<'a>(live_signals: &'a [String], prefix: &str) -> Op
     live_signals
         .iter()
         .find_map(|signal| signal.strip_prefix(prefix))
+}
+
+fn extract_transition_signal_value(live_signals: &[String]) -> Option<&str> {
+    ["basin_transition:", "phase_transition:", "breathing_phase:"]
+        .iter()
+        .find_map(|prefix| extract_live_signal_value(live_signals, prefix))
 }

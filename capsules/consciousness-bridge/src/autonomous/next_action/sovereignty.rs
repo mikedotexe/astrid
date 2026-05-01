@@ -765,7 +765,22 @@ pub(super) fn handle_action(
             }
 
             if !features.is_empty() {
-                send_semantic(ctx.sensory_tx, features.clone());
+                if let Err(reason) = send_semantic(ctx.sensory_tx, features.clone()) {
+                    record_native_gesture(
+                        &workspace,
+                        "astrid",
+                        &gesture,
+                        label.as_deref(),
+                        false,
+                        &reason,
+                        ctx,
+                        &features,
+                        &control,
+                    );
+                    conv.push_receipt("NATIVE_GESTURE_HELD", vec![format!("{gesture}: {reason}")]);
+                    info!("Astrid native gesture held: {gesture} ({reason})");
+                    return true;
+                }
             }
             if let Some(msg) = control_to_sensory(&gesture) {
                 send_control(ctx.sensory_tx, msg);
@@ -817,16 +832,35 @@ pub(super) fn handle_action(
             if !intention.is_empty() {
                 let gesture = crate::llm::craft_gesture_from_intention(&intention);
                 conv.last_gesture_seed = Some(gesture.clone());
-                send_semantic(ctx.sensory_tx, gesture);
-                info!(
-                    "Astrid sent spectral gesture: {}",
-                    truncate_str(&intention, 60)
-                );
-                save_astrid_journal(
-                    &format!("[Spectral gesture: {}]", intention),
-                    "gesture",
-                    ctx.fill_pct,
-                );
+                match send_semantic(ctx.sensory_tx, gesture) {
+                    Ok(()) => {
+                        info!(
+                            "Astrid sent spectral gesture: {}",
+                            truncate_str(&intention, 60)
+                        );
+                        save_astrid_journal(
+                            &format!("[Spectral gesture: {}]", intention),
+                            "gesture",
+                            ctx.fill_pct,
+                        );
+                    },
+                    Err(reason) => {
+                        conv.push_receipt(
+                            "GESTURE_HELD",
+                            vec![format!("semantic gesture held: {reason}")],
+                        );
+                        info!(
+                            reason = %reason,
+                            "Astrid held spectral gesture: {}",
+                            truncate_str(&intention, 60)
+                        );
+                        save_astrid_journal(
+                            &format!("[Spectral gesture held: {} -- {}]", intention, reason),
+                            "gesture_held",
+                            ctx.fill_pct,
+                        );
+                    },
+                }
             }
             true
         },
@@ -1124,7 +1158,12 @@ pub(super) fn handle_action(
             for feature in &mut features {
                 *feature *= DEFAULT_SEMANTIC_GAIN;
             }
-            send_semantic(ctx.sensory_tx, features.to_vec());
+            if let Err(reason) = send_semantic(ctx.sensory_tx, features.to_vec()) {
+                conv.push_receipt(
+                    "PERTURB_SEMANTIC_HELD",
+                    vec![format!("semantic input held: {reason}")],
+                );
+            }
 
             let tick_msg = serde_json::json!({
                 "type": "tick",
@@ -1241,7 +1280,7 @@ fn send_control(sensory_tx: &mpsc::Sender<SensoryMsg>, msg: SensoryMsg) {
     });
 }
 
-fn send_semantic(sensory_tx: &mpsc::Sender<SensoryMsg>, features: Vec<f32>) {
+fn send_semantic(sensory_tx: &mpsc::Sender<SensoryMsg>, features: Vec<f32>) -> Result<(), String> {
     let msg = SensoryMsg::Semantic {
         features,
         ts_ms: None,
@@ -1251,10 +1290,11 @@ fn send_semantic(sensory_tx: &mpsc::Sender<SensoryMsg>, features: Vec<f32>) {
             reason = %reason,
             "Astrid held sovereignty semantic gesture under rescue write policy"
         );
-        return;
+        return Err(reason);
     }
     let tx = sensory_tx.clone();
     tokio::spawn(async move {
         let _ = tx.send(msg).await;
     });
+    Ok(())
 }

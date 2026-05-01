@@ -74,6 +74,45 @@ fn detect_live_signals_catches_transition_and_tightening() {
 }
 
 #[test]
+fn typed_breathing_phase_does_not_masquerade_as_basin_transition() {
+    let health = json!({
+        "fill_band": "near",
+        "transition_event_v1": {
+            "kind": "breathing_phase",
+            "legacy_kind": "phase_transition",
+            "description": "contracting -> expanding"
+        }
+    });
+    let signals = signal::detect_live_signals(Some(&health));
+    assert!(
+        signals
+            .iter()
+            .any(|signal| signal.starts_with("breathing_phase:"))
+    );
+    assert!(
+        !signals
+            .iter()
+            .any(|signal| signal.starts_with("phase_transition:"))
+    );
+}
+
+#[test]
+fn typed_basin_transition_enters_signal_fingerprint_as_transition_class() {
+    let fingerprint = test_fingerprint(
+        &["grinding_family"],
+        json!({
+            "fill_band": "near",
+            "transition_event_v1": {
+                "kind": "basin_transition",
+                "legacy_kind": "phase_transition",
+                "description": "basin shift candidate"
+            }
+        }),
+    );
+    assert!(fingerprint.contains("transition=basin_transition"));
+}
+
+#[test]
 fn seeded_episode_contains_bilateral_candidates() {
     let episode = seed_episode();
     let minime = episode

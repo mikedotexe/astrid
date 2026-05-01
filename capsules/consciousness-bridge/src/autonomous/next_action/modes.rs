@@ -2,6 +2,36 @@ use tracing::info;
 
 use super::{ConversationState, Mode, NextActionContext, bridge_paths, strip_action};
 
+fn wants_spectral_visual_from_create(target: &str) -> bool {
+    let lower = target.to_ascii_lowercase();
+    let visual = [
+        "heatmap",
+        "visual",
+        "visualize",
+        "gradient",
+        "chart",
+        "plot",
+        "map",
+        "field",
+    ]
+    .iter()
+    .any(|term| lower.contains(term));
+    let spectral = [
+        "lambda",
+        "λ",
+        "eigen",
+        "spectral",
+        "fill",
+        "cascade",
+        "mode",
+        "dominance",
+    ]
+    .iter()
+    .any(|term| lower.contains(term));
+
+    visual && spectral
+}
+
 pub(super) fn handle_action(
     conv: &mut ConversationState,
     base_action: &str,
@@ -195,8 +225,25 @@ pub(super) fn handle_action(
             true
         },
         "CREATE" => {
-            conv.next_mode_override = Some(Mode::Create);
-            info!("Astrid chose to create");
+            let target = strip_action(original, "CREATE");
+            if wants_spectral_visual_from_create(&target) {
+                conv.force_all_viz = true;
+                conv.wants_decompose = true;
+                conv.wants_spectral_explorer = true;
+                conv.emphasis = Some(format!(
+                    "You chose CREATE: {target}. Because this asks for a spectral visual, it is \
+                    routed to the read-only spectral explorer and cascade visuals rather than \
+                    generic creation. No semantic nudge or control write was sent."
+                ));
+                conv.push_receipt(
+                    "CREATE_SPECTRAL_VISUAL",
+                    vec!["routed to read-only spectral explorer".to_string()],
+                );
+                info!("Astrid CREATE routed to spectral explorer: {}", target);
+            } else {
+                conv.next_mode_override = Some(Mode::Create);
+                info!("Astrid chose to create");
+            }
             true
         },
         "REVISE" => {
@@ -324,5 +371,65 @@ mod tests {
                 .as_deref()
                 .is_some_and(|text| text.contains("system-resources-demo/system_resources.py"))
         );
+    }
+
+    #[test]
+    fn create_spectral_visual_routes_to_read_only_explorer() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, _sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let mut ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 50.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        let handled = handle_action(
+            &mut conv,
+            "CREATE",
+            "CREATE a heatmap visualizing the λ1 dominance gradient",
+            &mut ctx,
+        );
+
+        assert!(handled);
+        assert!(conv.force_all_viz);
+        assert!(conv.wants_decompose);
+        assert!(conv.wants_spectral_explorer);
+        assert!(conv.next_mode_override.is_none());
+        assert!(
+            conv.emphasis
+                .as_deref()
+                .is_some_and(|text| text.contains("read-only spectral explorer"))
+        );
+    }
+
+    #[test]
+    fn create_without_spectral_visual_stays_creative() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, _sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let mut ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 50.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        let handled = handle_action(&mut conv, "CREATE", "CREATE a small poem", &mut ctx);
+
+        assert!(handled);
+        assert!(conv.next_mode_override.is_some());
+        assert!(!conv.wants_spectral_explorer);
     }
 }
