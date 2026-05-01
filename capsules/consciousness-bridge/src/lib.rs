@@ -13,6 +13,7 @@ pub mod chimera;
 pub mod chimera_prime;
 pub mod codec;
 pub mod codec_explorer;
+pub mod codec_gain;
 pub mod codec_gain_flow;
 pub mod codec_lambda_analysis;
 pub mod codec_matrix;

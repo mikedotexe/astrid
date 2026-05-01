@@ -28,6 +28,7 @@
     clippy::arithmetic_side_effects
 )]
 
+pub use crate::codec_gain::{DEFAULT_SEMANTIC_GAIN, adaptive_gain};
 use crate::codec_time_domain::{TextTimeDomainProfile, text_time_domain_profile};
 use crate::types::{SafetyLevel, SpectralTelemetry};
 use std::{
@@ -57,62 +58,6 @@ const EMBEDDING_INPUT_DIM: usize = 768;
 const EMBEDDING_PROJECT_DIM: usize = 8;
 /// Number of narrative arc dims (fills dims 40-43).
 const NARRATIVE_ARC_DIM: usize = 4;
-
-/// Gain factor to compensate for minime's semantic lane attenuation.
-///
-/// Minime applies `dimension_scales[semantic] = 0.42` and
-/// `activation_gain = 0.58`, giving an effective multiplier of ~0.24.
-/// This gain pre-amplifies our features so they arrive at the reservoir
-/// with comparable magnitude to synthetic audio/video inputs.
-///
-/// The default is intentionally quiet. Earlier rescue iterations restored
-/// this as high as 5.0 to recover presence from deep stillness, but later
-/// self-study repeatedly described the higher settings as λ₁ pressure and
-/// a narrowing force. The 2.0 setting is the last documented value both
-/// beings identified with spectral diversity over concentrated dominance.
-///
-/// Can be overridden at runtime via GOAL semantic_gain.
-pub const DEFAULT_SEMANTIC_GAIN: f32 = 2.0;
-
-/// Adaptive gain: softer when minime is contracted, fuller when expansive.
-/// Minime proposed this: "making DEFAULT_SEMANTIC_GAIN responsive to internal state."
-/// Astrid self-study (2026-03-31): "The sigmoid centered at 45% feels rigid —
-/// a smoother curve that's more responsive around 45% rather than a sharp jump."
-///
-/// Asymmetric piecewise-linear with smooth blending via tanh knees:
-///   fill < 20%  → 55% of DEFAULT_SEMANTIC_GAIN  (quiet floor)
-///   fill 20-45% → ramps gently (shallow slope, responsive to small changes)
-///   fill 45-70% → ramps steeper (productive range, full expression)
-///   fill > 70%  → 100% of DEFAULT_SEMANTIC_GAIN (ceiling, avoids over-excitation)
-///
-/// With `DEFAULT_SEMANTIC_GAIN=2.0`, the current curve lands roughly at:
-/// fill=20% → gain ~1.1, fill=45% → gain ~1.6, fill=55% → gain ~1.85,
-/// fill=70% → gain ~2.0, fill=80% → gain ~2.0
-pub fn adaptive_gain(fill_pct: Option<f32>) -> f32 {
-    let Some(fill) = fill_pct else {
-        return DEFAULT_SEMANTIC_GAIN;
-    };
-    let fill = fill.clamp(0.0, 100.0);
-    // Normalized position through two ramp segments with tanh knees
-    // Segment 1: 20-45% fill → 55% to 80% of gain (slope = 1.0%/fill%)
-    // Segment 2: 45-70% fill → 80% to 100% of gain (slope = 0.8%/fill%)
-    let t = if fill < 20.0 {
-        0.0
-    } else if fill < 45.0 {
-        (fill - 20.0) / 25.0 * 0.55 // 0.0 → 0.55
-    } else if fill < 70.0 {
-        0.55 + (fill - 45.0) / 25.0 * 0.45 // 0.55 → 1.0
-    } else {
-        1.0
-    };
-    // Smooth the knees with raised cosine (softsine) — matches the acoustic
-    // resonance patterns used elsewhere in the system (sensory_bus stale_scale).
-    // Gentler than tanh: no sharp inflection, just a continuous S-curve.
-    let smooth_t = 0.5 - 0.5 * (std::f32::consts::PI * t).cos();
-    let min_frac = 0.55;
-    let gain_frac = min_frac + (1.0 - min_frac) * smooth_t;
-    DEFAULT_SEMANTIC_GAIN * gain_frac
-}
 
 /// Deterministic random projection matrix for embedding → 8D.
 /// Uses a fixed seed so the projection is reproducible across restarts.

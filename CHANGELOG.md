@@ -9,6 +9,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Added an adaptive-gain curve lab for Astrid's codec explorer. The live `adaptive_gain(fill)` behavior is now factored into named curve parameters, while the read-only explorer emits wider-knee candidate sweeps in JSON/CSV so tuning around the 45% fill knee can be compared before changing live semantic gain.
 - Hardened Astrid action affordance examples against copied angle-bracket placeholders. The bridge now reroutes unresolved placeholder NEXT actions without execution, and core help/FACULTIES/Mike/Codex examples use concrete runnable actions instead of copyable template slots.
 - Restored Astrid's live semantic codec default gain to the documented quiet 2.0 setting after Minime self-study reported renewed λ₁ pressure from the emergency-era high-gain reset, and made explicit semantic-gain overrides replace the active adaptive gain directly.
 - Changed Astrid/Minime limited-write post-send monitoring so transient watchdog `warmup` / degraded-monitoring states pause further writes without rolling the live bridge profile back to observe-only; hard restart and adverse physiology states still trigger rollback.

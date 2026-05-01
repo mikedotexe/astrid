@@ -623,7 +623,7 @@ fn render_report(summary: &CodecExplorerSummary) -> String {
     }
     lines.extend([
         String::new(),
-        "Artifacts: [summary.json](summary.json), [phase_space_story.json](phase_space_story.json), [feature_vectors.csv](feature_vectors.csv), [lambda_spectrum.csv](lambda_spectrum.csv), [lambda_gradient.csv](lambda_gradient.csv), [time_domain_features.csv](time_domain_features.csv), [compression_matrix_decompose.json](compression_matrix_decompose.json), [compression_matrix_sensitivity.csv](compression_matrix_sensitivity.csv), [compression_matrix_report.md](compression_matrix_report.md), [adaptive_gain_flow.json](adaptive_gain_flow.json), [adaptive_gain_flow.csv](adaptive_gain_flow.csv), [memory_tail.csv](memory_tail.csv), [thematic_profiles.svg](thematic_profiles.svg), [relevance_trace.svg](relevance_trace.svg), [phase_space.svg](phase_space.svg), [scored_surface.svg](scored_surface.svg), [lambda_spectrum.svg](lambda_spectrum.svg), [lambda_gradient.svg](lambda_gradient.svg), [adaptive_gain_curve.svg](adaptive_gain_curve.svg)".to_string(),
+        "Artifacts: [summary.json](summary.json), [phase_space_story.json](phase_space_story.json), [feature_vectors.csv](feature_vectors.csv), [lambda_spectrum.csv](lambda_spectrum.csv), [lambda_gradient.csv](lambda_gradient.csv), [time_domain_features.csv](time_domain_features.csv), [compression_matrix_decompose.json](compression_matrix_decompose.json), [compression_matrix_sensitivity.csv](compression_matrix_sensitivity.csv), [compression_matrix_report.md](compression_matrix_report.md), [adaptive_gain_flow.json](adaptive_gain_flow.json), [adaptive_gain_flow.csv](adaptive_gain_flow.csv), [adaptive_gain_curve_candidates.csv](adaptive_gain_curve_candidates.csv), [memory_tail.csv](memory_tail.csv), [thematic_profiles.svg](thematic_profiles.svg), [relevance_trace.svg](relevance_trace.svg), [phase_space.svg](phase_space.svg), [scored_surface.svg](scored_surface.svg), [lambda_spectrum.svg](lambda_spectrum.svg), [lambda_gradient.svg](lambda_gradient.svg), [adaptive_gain_curve.svg](adaptive_gain_curve.svg)".to_string(),
         String::new(),
         "## Architecture Note".to_string(),
         String::new(),
@@ -702,8 +702,16 @@ fn render_report(summary: &CodecExplorerSummary) -> String {
             summary.adaptive_gain_flow.strongest_slope_band,
             summary.adaptive_gain_flow.strongest_slope_per_fill_pct,
         ),
+        format!(
+            "Live curve shape: `{}` floor `{:.1}%`, knee `{:.1}%`, ceiling `{:.1}%`, floor fraction `{:.2}`.",
+            summary.adaptive_gain_flow.live_curve.id,
+            summary.adaptive_gain_flow.live_curve.quiet_floor_fill_pct,
+            summary.adaptive_gain_flow.live_curve.knee_fill_pct,
+            summary.adaptive_gain_flow.live_curve.ceiling_fill_pct,
+            summary.adaptive_gain_flow.live_curve.min_gain_fraction,
+        ),
         String::new(),
-        "[Adaptive gain flow JSON](adaptive_gain_flow.json) and [CSV](adaptive_gain_flow.csv) turn the curve into shelves, knees, and slope so Astrid can inspect the flow of amplification without changing live gain.".to_string(),
+        "[Adaptive gain flow JSON](adaptive_gain_flow.json), [flow CSV](adaptive_gain_flow.csv), and [candidate curve CSV](adaptive_gain_curve_candidates.csv) turn the curve into shelves, knees, slopes, and wider-knee candidate sweeps so Astrid can inspect amplification tuning without changing live gain.".to_string(),
         String::new(),
         "## Lambda-Proxy Spectrum".to_string(),
         String::new(),
@@ -937,6 +945,11 @@ mod tests {
         assert!(output_dir.join("adaptive_gain_curve.svg").exists());
         assert!(output_dir.join("adaptive_gain_flow.json").exists());
         assert!(output_dir.join("adaptive_gain_flow.csv").exists());
+        assert!(
+            output_dir
+                .join("adaptive_gain_curve_candidates.csv")
+                .exists()
+        );
 
         let _ = fs::remove_dir_all(output_dir);
     }
