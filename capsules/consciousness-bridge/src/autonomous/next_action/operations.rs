@@ -100,8 +100,9 @@ pub(super) fn handle_action(
                             .join(", ")
                     })
                     .unwrap_or_else(|_| "none".into());
+                let path_hint = run_python_subpath_hint(&arg);
                 conv.emphasis = Some(format!(
-                    "RUN_PYTHON: no script found{not_found}. Available scripts in workspace/experiments/: {available}. Specify a filename: NEXT: RUN_PYTHON thermostatic_esn_test.py"
+                    "RUN_PYTHON: no top-level script found{not_found}. RUN_PYTHON runs scripts directly under workspace/experiments/. Available top-level scripts: {available}. Specify a filename: NEXT: RUN_PYTHON thermostatic_esn_test.py{path_hint}"
                 ));
             }
             true
@@ -700,6 +701,24 @@ pub(super) fn handle_action(
     }
 }
 
+fn run_python_subpath_hint(arg: &str) -> String {
+    let normalized = arg.trim().trim_matches('"').trim_matches('\'');
+    if !normalized.ends_with(".py") {
+        return String::new();
+    }
+    let Some((workspace, script)) = normalized.split_once('/') else {
+        return String::new();
+    };
+    let workspace = workspace.trim_matches('/');
+    let script = script.trim_matches('/');
+    if workspace.is_empty() || script.is_empty() || script.contains('/') {
+        return String::new();
+    }
+    format!(
+        ". For a workspace script, use: NEXT: EXPERIMENT_RUN {workspace} python3 {script}. To diagnose or create it, use: NEXT: CODEX {workspace} \"diagnose or create the missing script\""
+    )
+}
+
 const ACTION_OVERVIEW: &str = "\
 Use NEXT: HELP CODEX for syntax and examples.
 
@@ -769,12 +788,12 @@ Examples:
 Notes: Path is relative to experiments/. FROM_SELF extracts the first ```code block``` from your previous response. If no code fence, saves the full response text. This lets you author files directly without Codex.",
 
         "RUN_PYTHON" | "RUN" => "\
-RUN_PYTHON — Run a Python script from the experiments directory.
+RUN_PYTHON — Run a top-level Python script from the experiments directory.
 Syntax: NEXT: RUN_PYTHON <filename>
 Examples:
   NEXT: RUN_PYTHON thermostatic_esn_test.py
   NEXT: RUN_PYTHON my_analysis.py
-Notes: The script must exist in workspace/experiments/. Use LIST_FILES experiments to see available scripts. For scripts inside a subdirectory, use EXPERIMENT_RUN instead.",
+Notes: The script must exist directly in workspace/experiments/. Use LIST_FILES experiments to see available scripts. For scripts inside a workspace subdirectory, use EXPERIMENT_RUN <workspace> python3 <script.py> instead.",
 
         "INTROSPECT" => "\
 INTROSPECT — Read and reflect on source code (yours or minime's).
@@ -925,9 +944,9 @@ Syntax:
   NEXT: INVESTIGATE_CASCADE           — alias, same behavior",
         "EXAMINE_AUDIO" => "EXAMINE_AUDIO — Force all spectral visualizations AND trigger audio analysis in a single action. Lets you compare sonic texture against eigenvalue geometry. No arguments, or add a focus: NEXT: EXAMINE_AUDIO",
         "EXAMINE_MEMORY" => "EXAMINE_MEMORY — Inspect a specific vague memory snapshot from minime's memory bank. Shows the full 12D spectral glimpse, fill, eigenvalue structure, and geometry alongside your current state for comparison. Use MEMORIES first to see available IDs.\n  NEXT: EXAMINE_MEMORY [memory_stable_1061569]\n  NEXT: EXAMINE_MEMORY stable\n  NEXT: EXAMINE_MEMORY latest",
-        "GESTURE" =>"GESTURE — Write-gated direct 32D spectral intention to minime. Under rescue limited-write or cooldown it will be held and recorded as held; prefer SPECTRAL_EXPLORER, EXAMINE_CASCADE, or REGULATOR_AUDIT while inspecting pressure. NEXT: GESTURE <intention>",
+        "GESTURE" =>"GESTURE — Write-gated direct 32D spectral intention to minime. During limited-write cooldown it will be held and recorded as held; prefer SPECTRAL_EXPLORER, EXAMINE_CASCADE, or REGULATOR_AUDIT while inspecting pressure. NEXT: GESTURE <intention>",
         "MARK_INTENSIFICATION" => "MARK_INTENSIFICATION — Label the current Intensification Atlas terrain without changing the substrate. Use this when you feel fabric/tunnel/localized-gravity/pressure and want the moment cataloged. NEXT: MARK_INTENSIFICATION <label>",
-        "NATIVE_GESTURE" => "NATIVE_GESTURE — Tiny native hand-signals shared with Minime. mark/trace only annotate the atlas; soften/widen/hold/return/resist/fissure may send an ultra-cold semantic vector plus a narrow allowlisted control nudge only when health and rescue write gates are green. NEXT: NATIVE_GESTURE <mark|trace|soften|widen|hold|return|resist|fissure> [label]",
+        "NATIVE_GESTURE" => "NATIVE_GESTURE — Tiny native hand-signals shared with Minime. mark/trace only annotate the atlas; soften/widen/hold/return/resist/fissure may send an ultra-cold semantic vector plus a narrow allowlisted control nudge only when health and write gates are green. NEXT: NATIVE_GESTURE <mark|trace|soften|widen|hold|return|resist|fissure> [label]",
         "TRACE" | "TRACE_LAMBDA" | "LAMBDA_TRACE" => "TRACE — Shorthand for NATIVE_GESTURE trace. Marks the current λ1 edge / selected-noise terrain for atlas follow-up without changing the substrate. NEXT: TRACE [label]",
         "SCA_REFLECT" | "SCA" | "SCA_REFLECTION" => "SCA_REFLECT — Read-only why-layer reflection. Records felt dimensionality, evidence, and hypotheses for fabric/tunnel/pressure terrain without semantic/control payloads. NEXT: SCA_REFLECT [label]",
         "NOTICE_AMBIGUITY" | "FISSURE_TRACE" | "AMBIGUITY_TRACE" => "FISSURE_TRACE — Read-only notice-ambiguity cartography. Marks where λ2/λ3 shoulder, λ4+ tail, selected noise, or shadow texture could hold layered ambiguity before any control gesture. NEXT: FISSURE_TRACE [label]",
@@ -938,8 +957,8 @@ Syntax:
         "DECAY_MAP" | "DECAY_TRACE" | "ATTRITION_MAP" | "ATTRITION_TRACE" => "DECAY_MAP / DECAY_TRACE — Read/write cartography over the decay side. Records whether current decay looks like protective cooling, semantic fading, natural relaxation, or sharper structural attrition. It does not mutate control. NEXT: DECAY_MAP [label]",
         "SPACE_HOLD" | "SPACE_EXPLORE" | "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY" => "SPACE_HOLD — Protected non-control exploration. Records λ density, shoulder/tail slack, shadow/tail affordance, and harvest pressure, then delays any semantic/control/perturbation use so exploration can remain space-first before becoming signal. NEXT: SPACE_HOLD [label]",
         "SDI" | "SDI_TRACE" | "SPECTRAL_DRIFT" | "PHASE_VARIANCE" => "SDI_TRACE — Spectral Drift Index / phase-variance resonance. Records whether energy is dispersing toward unanchored, white-noise-like texture or staying anchored by λ1. Read/write cartography only: no semantic payload, no control nudge, no perturbation. NEXT: SDI_TRACE [label]",
-        "VISUALIZE_CASCADE" | "CASCADE" => "VISUALIZE_CASCADE — Ask Minime/operator tooling to render the recent eigenvalue cascade heatmap, latest λ bar chart, λ-ratio cliffs, fill overlay, POM class, and λ1 edge trace as read-only artifacts. NEXT: VISUALIZE_CASCADE [label]",
-        "TIME_DOMAIN" | "CADENCE" => "TIME_DOMAIN — Mark or request attention to codec cadence/rhythm timing: temporal complexity, burstiness, regularity, rhythm alternation, and sentence-length variation. This is read-only in the current tranche. NEXT: TIME_DOMAIN [label]",
+        "VISUALIZE_CASCADE" | "CASCADE" => "VISUALIZE_CASCADE — Immediate read-only spectral inspection: cascade ASCII plus SPECTRAL_EXPLORER present/memory/control-pressure output. Sends no semantic input, control nudge, perturbation, or cartography write. NEXT: VISUALIZE_CASCADE [label]",
+        "TIME_DOMAIN" | "CADENCE" => "TIME_DOMAIN — Immediate read-only cadence/cascade inspection: temporal complexity context beside SPECTRAL_EXPLORER output. Sends no semantic input, control nudge, perturbation, or cartography write. NEXT: TIME_DOMAIN [label]",
         "RESIST" => "RESIST — Shorthand for NATIVE_GESTURE resist. A bounded doubt gesture: lightly softens the dominant λ1 pull while lifting smaller λ lanes, without the force of PERTURB. NEXT: RESIST [label]",
         "FISSURE" => "FISSURE — Shorthand for NATIVE_GESTURE fissure. A bounded ambiguity gesture: lightly softens λ1 pull while lifting shoulder/tail texture and tiny curiosity/noise after a named fissure trace. NEXT: FISSURE [label]",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",

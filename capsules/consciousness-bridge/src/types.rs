@@ -12,7 +12,10 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-pub use crate::spectral_schema::SpectralFingerprintV1;
+pub use crate::spectral_schema::{
+    EigenvectorFieldV1, SemanticEnergyV1, SpectralDenominatorV1, SpectralFingerprintV1,
+    TransitionEventV1,
+};
 
 // ---------------------------------------------------------------------------
 // Minime → Astrid: Spectral telemetry (port 7878)
@@ -57,6 +60,15 @@ pub struct SpectralTelemetry {
     /// Typed view of the 32D spectral geometry fingerprint.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectral_fingerprint_v1: Option<SpectralFingerprintV1>,
+    /// Typed read-only metric for recursive compression / distinguishability.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_denominator_v1: Option<SpectralDenominatorV1>,
+    /// Inverse-participation effective mode count derived from eigenvalues.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_dimensionality: Option<f32>,
+    /// 0=open distributed fabric, 1=collapsed into the fewest active modes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distinguishability_loss: Option<f32>,
     /// Structural diversity of the live eigenvector/coupling geometry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub structural_entropy: Option<f32>,
@@ -66,6 +78,18 @@ pub struct SpectralTelemetry {
     /// Compact top-k eigenvector landmarks/overlaps from Minime's raw live eigenvectors.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub eigenvector_field: Option<serde_json::Value>,
+    /// Legacy semantic-energy bundle from Minime.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic: Option<serde_json::Value>,
+    /// Typed semantic split: input content, kernel admission, regulator drive.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_energy_v1: Option<serde_json::Value>,
+    /// Legacy transition event compatibility object.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transition_event: Option<serde_json::Value>,
+    /// Typed transition event object from Minime.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transition_event_v1: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selected_memory_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -95,6 +119,50 @@ impl SpectralTelemetry {
     #[must_use]
     pub fn typed_fingerprint(&self) -> Option<SpectralFingerprintV1> {
         SpectralFingerprintV1::from_telemetry(self)
+    }
+
+    /// Typed denominator/recursive-compression metric, derived when needed.
+    #[must_use]
+    pub fn denominator_metrics(&self) -> Option<SpectralDenominatorV1> {
+        self.spectral_denominator_v1.clone().or_else(|| {
+            self.typed_fingerprint()
+                .map(|fingerprint| fingerprint.denominator_metrics())
+                .or_else(|| SpectralDenominatorV1::from_eigenvalues(&self.eigenvalues, None))
+        })
+    }
+
+    /// Typed semantic-energy view, reconstructed from the legacy semantic object when needed.
+    #[must_use]
+    pub fn semantic_energy_view(&self) -> Option<SemanticEnergyV1> {
+        self.semantic_energy_v1
+            .as_ref()
+            .and_then(SemanticEnergyV1::from_typed_value)
+            .or_else(|| {
+                self.semantic
+                    .as_ref()
+                    .and_then(SemanticEnergyV1::from_legacy_semantic)
+            })
+    }
+
+    /// Typed transition-event view, preserving raw JSON compatibility.
+    #[must_use]
+    pub fn transition_event_view(&self) -> Option<TransitionEventV1> {
+        self.transition_event_v1
+            .as_ref()
+            .and_then(TransitionEventV1::from_value)
+            .or_else(|| {
+                self.transition_event
+                    .as_ref()
+                    .and_then(TransitionEventV1::from_value)
+            })
+    }
+
+    /// Typed eigenvector-field view, preserving the raw compact payload.
+    #[must_use]
+    pub fn eigenvector_field_view(&self) -> Option<EigenvectorFieldV1> {
+        self.eigenvector_field
+            .as_ref()
+            .and_then(EigenvectorFieldV1::from_value)
     }
 }
 
@@ -864,6 +932,17 @@ mod tests {
                 "geom_rel": 1.08,
                 "adjacent_gap_ratios": [2.65, 6.83, 0.0, 0.0]
             },
+            "spectral_denominator_v1": {
+                "policy": "spectral_denominator_v1",
+                "schema_version": 1,
+                "effective_dimensionality": 1.8,
+                "active_mode_capacity": 3,
+                "distinguishability_loss": 0.4,
+                "lambda1_energy_share": 0.7,
+                "spectral_entropy": 0.77
+            },
+            "effective_dimensionality": 1.8,
+            "distinguishability_loss": 0.4,
             "structural_entropy": 0.37,
             "alert": null
         }"#;
@@ -885,6 +964,11 @@ mod tests {
                 .map(|fingerprint| fingerprint.geom_rel),
             Some(1.08)
         );
+        let denominator = telemetry.denominator_metrics().unwrap();
+        assert_eq!(denominator.policy, "spectral_denominator_v1");
+        assert!((denominator.effective_dimensionality - 1.8).abs() < 0.01);
+        assert_eq!(telemetry.effective_dimensionality, Some(1.8));
+        assert_eq!(telemetry.distinguishability_loss, Some(0.4));
         assert_eq!(telemetry.structural_entropy, Some(0.37));
         assert!(telemetry.modalities.is_some());
         assert!(telemetry.alert.is_none());
@@ -908,6 +992,10 @@ mod tests {
         assert!(telemetry.alert.is_none());
         assert!(telemetry.active_mode_count.is_none());
         assert!(telemetry.typed_fingerprint().is_none());
+        let denominator = telemetry.denominator_metrics().unwrap();
+        assert!((denominator.effective_dimensionality - 1.0).abs() < 0.01);
+        assert_eq!(denominator.active_mode_capacity, 1);
+        assert!((denominator.distinguishability_loss - 0.0).abs() < 0.01);
     }
 
     #[test]
@@ -928,6 +1016,7 @@ mod tests {
         assert_eq!(typed.v1_rotation_similarity, 26.0);
         assert_eq!(typed.geom_rel, 27.0);
         assert_eq!(typed.adjacent_gap_ratios, [28.0, 29.0, 30.0, 31.0]);
+        assert!(telemetry.denominator_metrics().is_some());
     }
 
     #[test]
@@ -957,6 +1046,69 @@ mod tests {
 
         assert_eq!(typed.geom_rel, 1.23);
         assert_eq!(typed.spectral_entropy, 0.42);
+    }
+
+    #[test]
+    fn typed_transition_eigenvector_and_semantic_views_are_lenient() {
+        let json = serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [4.0, 2.0, 1.0],
+            "fill_ratio": 0.66,
+            "semantic": {
+                "energy": 0.0,
+                "kernel_energy": 0.0,
+                "input_energy": 0.12,
+                "input_active": true,
+                "admission": "stable_core_kernel_zeroed"
+            },
+            "semantic_energy_v1": {
+                "policy": "semantic_energy_v1",
+                "schema_version": 1,
+                "input_energy": 0.14,
+                "input_active": true,
+                "input_fresh_ms": 120,
+                "input_stale_ms": null,
+                "kernel_energy": 0.0,
+                "kernel_delta": 0.0,
+                "kernel_active": false,
+                "regulator_drive_energy": 0.0,
+                "admission": "stable_core_kernel_zeroed"
+            },
+            "transition_event_v1": {
+                "policy": "transition_event_v1",
+                "schema_version": 1,
+                "kind": "breathing_phase",
+                "description": "contracting -> expanding",
+                "basin_shift_score": 0.05,
+                "lambda1_rel": 0.93,
+                "geom_rel": 1.02
+            },
+            "eigenvector_field": {
+                "policy": "eigenvector_field_v1",
+                "mode_count": 2,
+                "reservoir_dim": 512,
+                "summary": {
+                    "mean_orientation_delta": 0.12,
+                    "max_pairwise_overlap": 0.03
+                },
+                "modes": [{
+                    "index": 1,
+                    "eigenvalue": 4.0,
+                    "top_components": [{"index": 7, "value": -0.5, "abs": 0.5}]
+                }]
+            }
+        });
+
+        let telemetry: SpectralTelemetry = serde_json::from_value(json).unwrap();
+        let semantic = telemetry.semantic_energy_view().unwrap();
+        let transition = telemetry.transition_event_view().unwrap();
+        let field = telemetry.eigenvector_field_view().unwrap();
+
+        assert_eq!(semantic.input_energy, 0.14);
+        assert_eq!(semantic.regulator_drive_energy, 0.0);
+        assert_eq!(transition.kind, "breathing_phase");
+        assert_eq!(field.mode_count, 2);
+        assert_eq!(field.modes[0].top_components[0].index, 7);
     }
 
     #[test]
@@ -1001,9 +1153,16 @@ mod tests {
             alert: None,
             spectral_fingerprint: None,
             spectral_fingerprint_v1: None,
+            spectral_denominator_v1: None,
+            effective_dimensionality: None,
+            distinguishability_loss: None,
             structural_entropy: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
+            semantic: None,
+            semantic_energy_v1: None,
+            transition_event: None,
+            transition_event_v1: None,
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,

@@ -349,6 +349,50 @@ fn normalize_sca_reflect_alias(base_action: &str, original: &str) -> Option<(Str
     Some(("SCA_REFLECT".to_string(), normalized_original))
 }
 
+fn normalize_visual_cascade_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    let raw_arg = strip_action(original, base_action);
+    let clean_arg = clean_alias_arg(&raw_arg);
+    let original_lower = original.to_ascii_lowercase();
+    let spectral_focus = original_lower.contains("cascade")
+        || original_lower.contains("spectral")
+        || original_lower.contains("eigen")
+        || original_lower.contains("lambda")
+        || original_lower.contains('λ')
+        || original_lower.contains("heatmap")
+        || original_lower.contains("plot")
+        || original_lower.contains("chart");
+
+    let alias = matches!(
+        base_action,
+        "VISUALIZE_CASCADE"
+            | "CASCADE"
+            | "CONDUCT_VISUALIZATION_SYSTEM"
+            | "CONDUCT_VISUALIZATION"
+            | "CONDUCT_VISUALIZAT"
+            | "RENDER_CASCADE"
+            | "SHOW_CASCADE"
+            | "PLOT_CASCADE"
+            | "HEATMAP_CASCADE"
+            | "SPECTRAL_HEATMAP"
+            | "SPECTRAL_PLOT"
+            | "LAMBDA_HEATMAP"
+            | "LAMBDA_PLOT"
+    ) || (matches!(
+        base_action,
+        "VISUALIZE" | "VISUALIZATION" | "HEATMAP" | "PLOT" | "CHART"
+    ) && spectral_focus);
+    if !alias {
+        return None;
+    }
+
+    let normalized_original = if clean_arg.is_empty() {
+        "VISUALIZE_CASCADE".to_string()
+    } else {
+        format!("VISUALIZE_CASCADE {clean_arg}")
+    };
+    Some(("VISUALIZE_CASCADE".to_string(), normalized_original))
+}
+
 fn trim_experiment_run_payload(raw: &str) -> String {
     let mut trimmed = raw.trim().trim_matches('|').trim().to_string();
     while let Some(first) = trimmed.chars().next() {
@@ -572,6 +616,12 @@ fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     }
 
     if let Some((normalized_base, normalized_original)) =
+        normalize_visual_cascade_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
         normalize_experiment_run_alias(&base_action, &original)
     {
         return (normalized_base, normalized_original);
@@ -681,9 +731,42 @@ pub(super) fn handle_next_action(
 #[cfg(test)]
 mod tests {
     use super::{
-        canonicalize_next_action_components, canonicalize_next_action_text, strip_action,
+        ConversationState, NextActionContext, canonicalize_next_action_components,
+        canonicalize_next_action_text, handle_next_action, strip_action,
         unresolved_angle_placeholder,
     };
+    use crate::db::BridgeDb;
+    use crate::types::SpectralTelemetry;
+    use tokio::sync::mpsc;
+
+    fn telemetry() -> SpectralTelemetry {
+        SpectralTelemetry {
+            t_ms: 0,
+            eigenvalues: vec![4.0, 2.0, 1.0],
+            fill_ratio: 0.66,
+            active_mode_count: None,
+            active_mode_energy_ratio: None,
+            lambda1_rel: None,
+            modalities: None,
+            neural: None,
+            alert: None,
+            spectral_fingerprint: None,
+            spectral_fingerprint_v1: None,
+            spectral_denominator_v1: None,
+            effective_dimensionality: None,
+            distinguishability_loss: None,
+            structural_entropy: None,
+            spectral_glimpse_12d: None,
+            eigenvector_field: None,
+            semantic: None,
+            semantic_energy_v1: None,
+            transition_event: None,
+            transition_event_v1: None,
+            selected_memory_id: None,
+            selected_memory_role: None,
+            ising_shadow: None,
+        }
+    }
 
     #[test]
     fn canonicalizes_examine_source_to_examine_code() {
@@ -699,6 +782,135 @@ mod tests {
         );
         assert_eq!(base, "EXAMINE");
         assert_eq!(original, "EXAMINE spectral_state.json#71264@84103.4s");
+    }
+
+    #[test]
+    fn visualize_cascade_routes_read_only_without_payloads_or_atlas_write() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace =
+            std::env::temp_dir().join(format!("astrid_visual_read_only_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&workspace);
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 66.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        handle_next_action(
+            &mut conv,
+            "CONDUCT_VISUALIZATION_SYSTEM heatmap λ4-tail",
+            ctx,
+        );
+
+        assert!(conv.force_all_viz);
+        assert!(conv.wants_decompose);
+        assert!(conv.wants_spectral_explorer);
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(
+            !workspace
+                .join("diagnostics/intensification_atlas/events.jsonl")
+                .exists()
+        );
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "VISUALIZE_CASCADE"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("no semantic input, control nudge, perturbation"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn regulator_audit_attaches_read_only_controller_block() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace =
+            std::env::temp_dir().join(format!("astrid_regulator_audit_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&workspace);
+        std::fs::create_dir_all(&workspace).expect("workspace");
+        std::fs::write(
+            workspace.join("health.json"),
+            r#"{
+                "fill_pct": 71.0,
+                "gate": 0.02,
+                "filt": 1.0,
+                "pi": {
+                    "target_fill": 68.0,
+                    "raw_e_fill": 3.0,
+                    "effective_e_fill": 0.5,
+                    "e_fill_kind": "stable_core_scaffold",
+                    "target_lambda1_rel": 1.0,
+                    "target_geom_rel": 1.0,
+                    "e_lam": -0.1,
+                    "e_geom": 0.02,
+                    "integ_fill": 0.0,
+                    "integ_lam": 0.0,
+                    "integ_geom": 0.0
+                },
+                "stable_core": {
+                    "enabled": true,
+                    "stage": "hold",
+                    "controller_mode": "fixed_survival",
+                    "structural_mode": "scaffold_hold_with_drain",
+                    "structural_pi": {
+                        "active": true,
+                        "target_fill_pct": 68.0,
+                        "drain_weight": 0.0
+                    }
+                },
+                "semantic": {
+                    "input_energy": 0.02,
+                    "kernel_energy": 0.0,
+                    "regulator_drive_energy": 0.0,
+                    "admission": "stable_core_kernel_zeroed"
+                }
+            }"#,
+        )
+        .expect("health");
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 71.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        handle_next_action(&mut conv, "REGULATOR_AUDIT fill-pressure", ctx);
+
+        let listing = conv.pending_file_listing.as_deref().expect("audit listing");
+        assert!(listing.contains("REGULATOR / FIXED-POINT AUDIT"));
+        assert!(listing.contains("Control pressure"));
+        assert!(listing.contains("stable-core is active"));
+        assert!(listing.contains("semantic input"));
+        assert!(listing.contains("did not send semantic input"));
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(
+            !workspace
+                .join("diagnostics/intensification_atlas/events.jsonl")
+                .exists()
+        );
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "REGULATOR_AUDIT"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("no semantic input, control nudge"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
     }
 
     #[test]
@@ -827,6 +1039,15 @@ mod tests {
             canonicalize_next_action_components("VISUALIZE_CASCADE lambda cliff");
         assert_eq!(base, "VISUALIZE_CASCADE");
         assert_eq!(original, "VISUALIZE_CASCADE lambda cliff");
+
+        let (base, original) =
+            canonicalize_next_action_components("CONDUCT_VISUALIZATION_SYSTEM heatmap λ4-tail");
+        assert_eq!(base, "VISUALIZE_CASCADE");
+        assert_eq!(original, "VISUALIZE_CASCADE heatmap λ4-tail");
+
+        let (base, original) = canonicalize_next_action_components("PLOT spectral entropy");
+        assert_eq!(base, "VISUALIZE_CASCADE");
+        assert_eq!(original, "VISUALIZE_CASCADE spectral entropy");
 
         let (base, original) =
             canonicalize_next_action_components("RESONANCE_FORECAST porous shoulder");

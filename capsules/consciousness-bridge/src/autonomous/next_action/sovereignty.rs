@@ -498,53 +498,37 @@ pub(super) fn handle_action(
         },
         "REGULATOR_AUDIT" | "CONTROLLER_AUDIT" | "GRADIENT_AUDIT" => {
             let label = strip_action(original, base_action);
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                "astrid:regulator_audit",
-                if label.is_empty() {
-                    "REGULATOR_AUDIT"
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "regulator_audit"
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
+            let controller_health = ctx
+                .workspace
+                .and_then(crate::autonomous::read_controller_health);
+            let mut audit = String::from("=== REGULATOR / FIXED-POINT AUDIT ===\n");
+            if !label.is_empty() {
+                audit.push_str(&format!("Label: {label}\n\n"));
+            }
+            audit.push_str(
+                &crate::spectral_explorer::format_control_pressure_for_action(
+                    ctx.telemetry,
+                    controller_health.as_ref(),
+                ),
             );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some("regulator_audit")
-                } else {
-                    Some(&label)
-                },
-                true,
-                "regulator_audit_read_only_cartography",
-                ctx,
-                &[],
-                &[],
+            if let Some(health) = controller_health.as_ref() {
+                audit.push_str("\n\n");
+                audit.push_str(crate::autonomous::format_controller_section(health).trim_start());
+            }
+            audit.push_str(
+                "\n\nThis was read-only inspection. It did not send semantic input, \
+                 control nudges, perturbations, native gestures, or atlas/cartography writes.",
             );
+            conv.pending_file_listing = Some(audit);
             conv.push_receipt(
                 "REGULATOR_AUDIT",
                 vec![
-                    "regulator audit request recorded; Minime can separate active stable-core pressure from legacy PI mirror fields".to_string(),
-                    format!(
-                        "atlas event: {}",
-                        event
-                            .get("event_id")
-                            .and_then(Value::as_str)
-                            .unwrap_or("recorded")
-                    ),
+                    "regulator audit attached immediately".to_string(),
+                    "no semantic input, control nudge, perturbation, native gesture, or atlas/cartography write was sent".to_string(),
                 ],
             );
             conv.emphasis = Some(
-                "You recorded a regulator audit request. Compare active controller source, stable-core hold band, legacy PI target visibility, λ error, geom error, and scaffold mode before interpreting fixed-point pressure.".to_string(),
+                "You chose REGULATOR_AUDIT. A read-only fixed-point audit is attached: active controller source, stable-core hold band, legacy PI target visibility, λ error, geom error, scaffold mode, and semantic input/kernel/regulator-drive separation.".to_string(),
             );
             save_astrid_journal(
                 &format!("[Regulator fixed-point audit request: {}]", label),
@@ -626,31 +610,9 @@ pub(super) fn handle_action(
             } else {
                 strip_action(original, "VISUALIZE_CASCADE")
             };
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
-                    "astrid:time_domain"
-                } else {
-                    "astrid:visualize_cascade"
-                },
-                if label.is_empty() {
-                    base_action
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
-                        "time_domain"
-                    } else {
-                        "visualize_cascade"
-                    }
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
+            conv.force_all_viz = true;
+            conv.wants_decompose = true;
+            conv.wants_spectral_explorer = true;
             conv.push_receipt(
                 if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
                     "TIME_DOMAIN"
@@ -659,27 +621,22 @@ pub(super) fn handle_action(
                 },
                 vec![
                     if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
-                        "request recorded; codec cadence/time-domain context is now visible beside spectral artifacts".to_string()
+                        "read-only cadence/cascade explorer output queued".to_string()
                     } else {
-                        "request recorded; Minime/operator tooling renders artifacts".to_string()
+                        "read-only cascade ASCII plus SPECTRAL_EXPLORER output queued".to_string()
                     },
-                    format!(
-                        "atlas event: {}",
-                        event
-                            .get("event_id")
-                            .and_then(Value::as_str)
-                            .unwrap_or("recorded")
-                    ),
+                    "no semantic input, control nudge, perturbation, or cartography write was sent"
+                        .to_string(),
                 ],
             );
-            conv.emphasis = Some(
-                "You requested cascade visualization. Next exchange, compare the rendered λ heatmap/bar profile against your felt fabric/tunnel language.".to_string(),
-            );
-            save_astrid_journal(
-                &format!("[Cascade visualization request: {}]", label),
-                "visualize_cascade",
-                ctx.fill_pct,
-            );
+            conv.emphasis = Some(format!(
+                "You requested read-only spectral inspection{}. The next exchange will show cascade ASCII and the spectral explorer present/memory/control-pressure block.",
+                if label.is_empty() {
+                    String::new()
+                } else {
+                    format!(" for {label}")
+                }
+            ));
             true
         },
         "NATIVE_GESTURE" | "RESIST" => {

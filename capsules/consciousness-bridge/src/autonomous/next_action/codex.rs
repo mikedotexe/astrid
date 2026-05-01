@@ -310,17 +310,16 @@ pub(super) fn handle_action(
                 ));
                 return true;
             }
-            info!("EXPERIMENT_RUN: {workspace} -> {cmd_str}");
-            let cmd_parts: Vec<&str> = cmd_str.split_whitespace().collect();
-            let (cmd, args) = match cmd_parts.split_first() {
-                Some((c, a)) => (*c, a),
-                None => {
-                    conv.emphasis = Some("EXPERIMENT_RUN: no command specified.".into());
+            let prepared = match prepare_experiment_command(&work_dir, workspace, cmd_str) {
+                Ok(prepared) => prepared,
+                Err(message) => {
+                    conv.emphasis = Some(message);
                     return true;
                 },
             };
-            let output = std::process::Command::new(cmd)
-                .args(args)
+            info!("EXPERIMENT_RUN: {workspace} -> {}", prepared.display);
+            let output = std::process::Command::new(&prepared.program)
+                .args(&prepared.args)
                 .current_dir(&work_dir)
                 .env("MPLBACKEND", "Agg")
                 .output();
@@ -335,8 +334,14 @@ pub(super) fn handle_action(
                     };
                     let stdout_end = snap_to_char_boundary(&stdout, stdout.len().min(4000));
                     let stderr_end = snap_to_char_boundary(&stderr, stderr.len().min(1500));
+                    let note = prepared
+                        .note
+                        .as_ref()
+                        .map(|note| format!("{note}\n\n"))
+                        .unwrap_or_default();
                     format!(
-                        "EXPERIMENT_RUN {status}: experiments/{workspace}$ {cmd_str}\n\nOUTPUT:\n{}\n{}",
+                        "{note}EXPERIMENT_RUN {status}: experiments/{workspace}$ {}\n\nOUTPUT:\n{}\n{}",
+                        prepared.display,
                         &stdout[..stdout_end],
                         if stderr.is_empty() {
                             String::new()
@@ -345,7 +350,11 @@ pub(super) fn handle_action(
                         }
                     )
                 },
-                Err(e) => format!("EXPERIMENT_RUN failed: {e}"),
+                Err(e) => format!(
+                    "EXPERIMENT_RUN failed before launch: {e}\n\n\
+                     For a workspace script, use: NEXT: EXPERIMENT_RUN {workspace} python3 <script.py>\n\
+                     To diagnose or create it, use: NEXT: CODEX {workspace} \"diagnose or create the missing script\""
+                ),
             };
             conv.emphasis = Some(format!(
                 "You ran a command in your workspace:\n{result_text}\n\n\
@@ -513,6 +522,109 @@ fn extract_code_block(text: &str) -> String {
         .to_string()
 }
 
+#[derive(Debug)]
+struct PreparedExperimentCommand {
+    program: String,
+    args: Vec<String>,
+    display: String,
+    note: Option<String>,
+}
+
+fn prepare_experiment_command(
+    work_dir: &Path,
+    workspace: &str,
+    cmd_str: &str,
+) -> Result<PreparedExperimentCommand, String> {
+    let mut parts = cmd_str
+        .split_whitespace()
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    let Some(program) = parts.first().cloned() else {
+        return Err("EXPERIMENT_RUN: no command specified.".to_string());
+    };
+
+    if program.ends_with(".py") {
+        if work_dir.join(&program).is_file() {
+            let mut args = Vec::with_capacity(parts.len());
+            args.push(program);
+            args.extend(parts.drain(1..));
+            let display = format!("python3 {}", args.join(" "));
+            return Ok(PreparedExperimentCommand {
+                program: "python3".to_string(),
+                args,
+                display,
+                note: Some("Normalized bare Python script to `python3 <script.py>`.".to_string()),
+            });
+        }
+        return Err(missing_experiment_script_message(
+            work_dir, workspace, &program,
+        ));
+    }
+
+    if is_python_program(&program)
+        && parts
+            .get(1)
+            .is_some_and(|script| script.ends_with(".py") && !work_dir.join(script).is_file())
+    {
+        return Err(missing_experiment_script_message(
+            work_dir, workspace, &parts[1],
+        ));
+    }
+
+    let args = parts.into_iter().skip(1).collect::<Vec<_>>();
+    Ok(PreparedExperimentCommand {
+        display: cmd_str.to_string(),
+        program,
+        args,
+        note: None,
+    })
+}
+
+fn is_python_program(program: &str) -> bool {
+    Path::new(program)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name == "python" || name == "python3")
+}
+
+fn missing_experiment_script_message(work_dir: &Path, workspace: &str, script: &str) -> String {
+    let scripts = available_python_scripts(work_dir);
+    let available = if scripts.is_empty() {
+        "No top-level Python scripts are present in that workspace.".to_string()
+    } else {
+        format!(
+            "Available top-level Python scripts: {}.",
+            scripts.join(", ")
+        )
+    };
+    format!(
+        "EXPERIMENT_RUN: `{script}` does not exist in experiments/{workspace}/.\n\
+         {available}\n\
+         For a workspace script, use: NEXT: EXPERIMENT_RUN {workspace} python3 <script.py>\n\
+         To diagnose or create it, use: NEXT: CODEX {workspace} \"diagnose or create the missing script\""
+    )
+}
+
+fn available_python_scripts(work_dir: &Path) -> Vec<String> {
+    let Ok(entries) = fs::read_dir(work_dir) else {
+        return Vec::new();
+    };
+    let mut scripts = entries
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let path = entry.path();
+            if !path.is_file() {
+                return None;
+            }
+            let name = path.file_name()?.to_str()?;
+            name.ends_with(".py").then(|| name.to_string())
+        })
+        .collect::<Vec<_>>();
+    scripts.sort();
+    scripts.truncate(5);
+    scripts
+}
+
 fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<usize> {
     fs::create_dir_all(dst)?;
     let mut count = 0usize;
@@ -582,4 +694,55 @@ pub(super) fn read_codex_page(path: &str, offset: usize) -> Option<(String, usiz
     let total_pages = estimate_pages(content.len(), PAGE_SIZE);
     let current_page = offset / PAGE_SIZE + 2; // +2 because page 1 was shown by CODEX
     Some((page.to_string(), current_page, total_pages, break_at))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::prepare_experiment_command;
+
+    fn temp_workspace(name: &str) -> std::path::PathBuf {
+        let path = std::env::temp_dir().join(format!("{name}_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&path);
+        std::fs::create_dir_all(&path).expect("temp workspace");
+        path
+    }
+
+    #[test]
+    fn experiment_run_normalizes_existing_bare_python_script() {
+        let work_dir = temp_workspace("astrid_exp_run_existing_py");
+        std::fs::write(work_dir.join("system_resources.py"), "print('ok')\n").expect("script");
+
+        let prepared =
+            prepare_experiment_command(&work_dir, "system-resources-demo", "system_resources.py")
+                .expect("prepared");
+
+        assert_eq!(prepared.program, "python3");
+        assert_eq!(prepared.args, vec!["system_resources.py"]);
+        assert_eq!(prepared.display, "python3 system_resources.py");
+        assert!(
+            prepared
+                .note
+                .as_deref()
+                .is_some_and(|note| note.contains("Normalized bare Python script"))
+        );
+        let _ = std::fs::remove_dir_all(work_dir);
+    }
+
+    #[test]
+    fn experiment_run_preflights_missing_python_script() {
+        let work_dir = temp_workspace("astrid_exp_run_missing_py");
+        std::fs::write(work_dir.join("system_resources.py"), "print('ok')\n").expect("script");
+
+        let err = prepare_experiment_command(
+            &work_dir,
+            "system-resources-demo",
+            "being_experiment_20260501_133818.py",
+        )
+        .expect_err("missing script should be blocked before launch");
+
+        assert!(err.contains("does not exist in experiments/system-resources-demo/"));
+        assert!(err.contains("system_resources.py"));
+        assert!(err.contains("diagnose or create the missing script"));
+        let _ = std::fs::remove_dir_all(work_dir);
+    }
 }

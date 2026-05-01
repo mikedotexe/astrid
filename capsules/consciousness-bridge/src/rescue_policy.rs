@@ -826,8 +826,15 @@ fn load_limited_write_health(
         peak_fill_pct_60s: f32_optional(&value, &["rescue", "peak_fill_pct_60s"])
             .or_else(|| f32_optional(&value, &["stable_core", "peak_fill_pct_60s"]))
             .unwrap_or(fill_pct),
-        semantic_active: bool_optional(&value, &["semantic", "active"]).unwrap_or(false),
-        semantic_energy: f32_optional(&value, &["semantic", "energy"]).unwrap_or(0.0),
+        semantic_active: bool_optional(&value, &["semantic_energy_v1", "kernel_active"])
+            .or_else(|| bool_optional(&value, &["semantic", "kernel_active"]))
+            .or_else(|| bool_optional(&value, &["semantic", "active"]))
+            .unwrap_or(false),
+        semantic_energy: f32_optional(&value, &["semantic_energy_v1", "regulator_drive_energy"])
+            .or_else(|| f32_optional(&value, &["semantic", "regulator_drive_energy"]))
+            .or_else(|| f32_optional(&value, &["semantic", "kernel_energy"]))
+            .or_else(|| f32_optional(&value, &["semantic", "energy"]))
+            .unwrap_or(0.0),
         live_audio_divisor: i64_required(&value, &["sensory", "live_audio_divisor"])?,
         live_video_divisor: i64_required(&value, &["sensory", "live_video_divisor"])?,
         semantic_mute_active: bool_optional(

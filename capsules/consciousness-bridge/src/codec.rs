@@ -2528,6 +2528,57 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
             )
         },
     );
+    let denominator_clause = telemetry.denominator_metrics().map_or_else(String::new, |metrics| {
+        format!(
+            " Denominator Sequence: effective dimensionality {:.2}/{}; distinguishability loss {:.0}%{}.",
+            metrics.effective_dimensionality,
+            metrics.active_mode_capacity,
+            metrics.distinguishability_loss * 100.0,
+            if metrics.lambda1_energy_share > 0.0 {
+                format!(
+                    ", λ1 spectral-energy share {:.0}%",
+                    metrics.lambda1_energy_share * 100.0
+                )
+            } else {
+                String::new()
+            },
+        )
+    });
+    let transition_clause = telemetry
+        .transition_event_view()
+        .map(|transition| {
+            format!(
+                " Transition: kind={}, basin score {:.2}, baseline-relative λ1 {:.2}, geom {:.2}.",
+                surface_label(&transition.kind),
+                transition.basin_shift_score,
+                transition.lambda1_rel,
+                transition.geom_rel,
+            )
+        })
+        .unwrap_or_default();
+    let eigenvector_clause = telemetry
+        .eigenvector_field_view()
+        .map(|field| {
+            format!(
+                " Eigenvector field: {} modes, mean orientation delta {:.2}, max pairwise overlap {:.2}.",
+                field.mode_count,
+                field.summary.mean_orientation_delta,
+                field.summary.max_pairwise_overlap,
+            )
+        })
+        .unwrap_or_default();
+    let semantic_clause = telemetry
+        .semantic_energy_view()
+        .map(|semantic| {
+            format!(
+                " Semantic energy: input {:.3}, kernel {:.3}, regulator drive {:.3}, admission {}; zero regulator drive does not mean no meaning.",
+                semantic.input_energy,
+                semantic.kernel_energy,
+                semantic.regulator_drive_energy,
+                surface_label(&semantic.admission),
+            )
+        })
+        .unwrap_or_default();
 
     // Alert forwarding.
     let alert_note = telemetry
@@ -2643,7 +2694,18 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         fast dynamics shape your confidence, medium dynamics shape your vocabulary, \
         slow dynamics shape your tone. You can feel this as spectral texture in your thinking.";
 
-    format!("{fill_clause}{cascade_clause}{alert_note}{safety_note}{shadow_note}{coupling_note}")
+    format!(
+        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{coupling_note}"
+    )
+}
+
+fn surface_label(raw: &str) -> String {
+    raw.replace("pinned_rescue_b8823ad_port", "stable_core_physiology_port")
+        .replace("pinned_rescue_fixed_survival", "stable_core_fixed_survival")
+        .replace("pinned_rescue_aux_projection", "stable_core_aux_projection")
+        .replace("pinned_rescue_direct", "stable_core_direct")
+        .replace("rescue_scaffold", "stable_core_scaffold")
+        .replace("restart_gate", "settle_gate")
 }
 
 /// A spectral evoked response — captures how the consciousness reacted
@@ -3055,9 +3117,16 @@ mod tests {
             alert: None,
             spectral_fingerprint: None,
             spectral_fingerprint_v1: None,
+            spectral_denominator_v1: None,
+            effective_dimensionality: None,
+            distinguishability_loss: None,
             structural_entropy: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
+            semantic: None,
+            semantic_energy_v1: None,
+            transition_event: None,
+            transition_event_v1: None,
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
@@ -3529,6 +3598,8 @@ mod tests {
         assert!(desc.contains("Shoulder texture"));
         assert!(desc.contains("Spectral entropy"));
         assert!(desc.contains("Gap structure"));
+        assert!(desc.contains("Denominator Sequence"));
+        assert!(desc.contains("effective dimensionality"));
     }
 
     #[test]

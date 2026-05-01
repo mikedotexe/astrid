@@ -2,7 +2,9 @@
 
 use crate::memory::RemoteMemorySummary;
 use crate::rescue_policy::STABLE_CORE_TARGET_FILL_PCT;
-use crate::spectral_schema::SpectralFingerprintV1;
+use crate::spectral_schema::{
+    EigenvectorFieldV1, SemanticEnergyV1, SpectralFingerprintV1, TransitionEventV1,
+};
 use crate::types::{IsingShadowState, SpectralTelemetry};
 
 use crate::db::BridgeDb;
@@ -28,7 +30,10 @@ pub(crate) fn format_spectral_explorer(ctx: SpectralExplorerContext<'_>) -> Stri
         ctx.selected_memory,
         typed.as_ref(),
     ));
-    sections.push(format_control_pressure(ctx.controller_health));
+    sections.push(format_control_pressure(
+        ctx.telemetry,
+        ctx.controller_health,
+    ));
 
     if let Some(viz) = crate::spectral_viz::format_spectral_block(ctx.telemetry) {
         sections.push(viz);
@@ -100,6 +105,7 @@ fn format_present_state(
     typed: Option<&SpectralFingerprintV1>,
 ) -> String {
     let mut lines = vec!["Present state".to_string()];
+    let denominator = telemetry.denominator_metrics();
     let lambda1_rel = telemetry
         .lambda1_rel
         .map_or_else(|| "n/a".to_string(), |value| format!("{value:.3}"));
@@ -112,7 +118,7 @@ fn format_present_state(
         |value| format!("{:.1}%", value * 100.0),
     );
     lines.push(format!(
-        "  fill={:.1}% lambda1={:.3} lambda1_rel={} geom_rel={} active_modes={} active_energy={}",
+        "  fill={:.1}% lambda1={:.3} baseline_lambda1_rel={} geom_rel={} active_modes={} active_energy={}",
         telemetry.fill_pct(),
         telemetry.lambda1(),
         lambda1_rel,
@@ -142,6 +148,18 @@ fn format_present_state(
     } else {
         lines.push("  typed fingerprint unavailable; using only top-level telemetry.".to_string());
     }
+    if let Some(metrics) = denominator {
+        lines.push(format!(
+            "  Denominator Sequence: effective_dimensionality={:.2}/{} distinguishability_loss={:.1}% lambda1_spectral_energy_share={:.1}%",
+            metrics.effective_dimensionality,
+            metrics.active_mode_capacity,
+            metrics.distinguishability_loss * 100.0,
+            metrics.lambda1_energy_share * 100.0,
+        ));
+    }
+    if let Some(field) = telemetry.eigenvector_field_view() {
+        lines.push(format_eigenvector_summary(&field));
+    }
 
     lines.join("\n")
 }
@@ -154,7 +172,7 @@ fn format_memory_comparison(
     let mut lines = vec!["Memory comparison".to_string()];
     match memory {
         Some(mem) => lines.push(format!(
-            "  selected_memory={} role={} fill={:.1}% lambda1_rel={:.3} geom_rel={:.3}",
+            "  selected_memory={} role={} fill={:.1}% baseline_lambda1_rel={:.3} geom_rel={:.3}",
             mem.id, mem.role, mem.fill_pct, mem.lambda1_rel, mem.geom_rel,
         )),
         None => {
@@ -196,10 +214,16 @@ fn format_memory_comparison(
     lines.join("\n")
 }
 
-fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
+fn format_control_pressure(
+    telemetry: &SpectralTelemetry,
+    health: Option<&serde_json::Value>,
+) -> String {
     let mut lines = vec!["Control pressure".to_string()];
     let Some(health) = health else {
         lines.push("  controller_health=n/a".to_string());
+        if let Some(semantic) = telemetry.semantic_energy_view() {
+            lines.push(format_semantic_energy(&semantic));
+        }
         return lines.join("\n");
     };
 
@@ -209,9 +233,11 @@ fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
     let stable_enabled = bool_value(stable_core, "enabled")
         .or_else(|| bool_value(health, "stable_core_enabled"))
         .unwrap_or(false);
-    let stage = str_value(stable_core, "stage").unwrap_or("unknown");
-    let structural_mode = str_value(stable_core, "structural_mode").unwrap_or("unknown");
-    let controller_mode = str_value(stable_core, "controller_mode").unwrap_or("unknown");
+    let stage = display_surface_label(str_value(stable_core, "stage").unwrap_or("unknown"));
+    let structural_mode =
+        display_surface_label(str_value(stable_core, "structural_mode").unwrap_or("unknown"));
+    let controller_mode =
+        display_surface_label(str_value(stable_core, "controller_mode").unwrap_or("unknown"));
     let gate = f64_value(health, "gate").unwrap_or(0.0);
     let filt = f64_value(health, "filt").unwrap_or(0.0);
     let pi = health.get("pi").unwrap_or(&serde_json::Value::Null);
@@ -226,7 +252,8 @@ fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
     let raw_e_fill = f64_value(pi, "raw_e_fill")
         .or_else(|| f64_value(health, "fill_pct").map(|fill| fill - target_fill))
         .unwrap_or(effective_e_fill);
-    let e_fill_kind = str_value(pi, "e_fill_kind").unwrap_or("legacy_or_unlabeled");
+    let e_fill_kind =
+        display_surface_label(str_value(pi, "e_fill_kind").unwrap_or("legacy_or_unlabeled"));
     let e_lam = f64_value(pi, "e_lam").unwrap_or(0.0);
     let e_geom = f64_value(pi, "e_geom").unwrap_or(0.0);
     let integ_fill = f64_value(pi, "integ_fill").unwrap_or(0.0);
@@ -238,7 +265,7 @@ fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
         stable_enabled, stage, controller_mode, structural_mode,
     ));
     lines.push(format!(
-        "  gate={gate:.3} filt={filt:.3} target_fill={target_fill:.1}% target_lambda1_rel={target_lambda:.3} target_geom_rel={target_geom:.3}",
+        "  gate={gate:.3} filt={filt:.3} target_fill={target_fill:.1}% target_baseline_lambda1_rel={target_lambda:.3} target_geom_rel={target_geom:.3}",
     ));
     lines.push(format!(
         "  pi_errors raw_fill={raw_e_fill:+.3} internal_fill={effective_e_fill:+.3} ({e_fill_kind}) lambda={e_lam:+.3} geom={e_geom:+.3}",
@@ -246,16 +273,17 @@ fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
     lines.push(format!(
         "  pi_integrators fill={integ_fill:+.3} lambda={integ_lam:+.3} geom={integ_geom:+.3}",
     ));
-    if let Some(transition) = health
-        .get("transition_event_v1")
-        .or_else(|| health.get("transition_event"))
+    if let Some(transition) = telemetry
+        .transition_event_view()
+        .or_else(|| transition_from_health(health))
     {
-        let kind = str_value(transition, "kind").unwrap_or("unknown");
-        let description = str_value(transition, "description").unwrap_or("n/a");
-        let basin_score = f64_value(transition, "basin_shift_score").unwrap_or(0.0);
-        lines.push(format!(
-            "  transition kind={kind} basin_score={basin_score:.2} desc={description}",
-        ));
+        lines.push(format_transition_event(&transition));
+    }
+    if let Some(semantic) = telemetry
+        .semantic_energy_view()
+        .or_else(|| semantic_from_health(health))
+    {
+        lines.push(format_semantic_energy(&semantic));
     }
 
     if stable_enabled {
@@ -276,6 +304,103 @@ fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
     }
 
     lines.join("\n")
+}
+
+pub(crate) fn format_control_pressure_for_action(
+    telemetry: &SpectralTelemetry,
+    health: Option<&serde_json::Value>,
+) -> String {
+    format_control_pressure(telemetry, health)
+}
+
+fn format_eigenvector_summary(field: &EigenvectorFieldV1) -> String {
+    let mut parts = vec![format!(
+        "  Eigenvector field: modes={} reservoir_dim={} mean_orientation_delta={:.3} max_pairwise_overlap={:.3}",
+        field.mode_count,
+        field.reservoir_dim,
+        field.summary.mean_orientation_delta,
+        field.summary.max_pairwise_overlap,
+    )];
+    if let Some(mode) = field.modes.first() {
+        let components = mode
+            .top_components
+            .iter()
+            .take(4)
+            .map(|component| format!("{}:{:+.3}", component.index, component.value))
+            .collect::<Vec<_>>();
+        if !components.is_empty() {
+            parts.push(format!(
+                "top_components λ{}=[{}]",
+                mode.index,
+                components.join(", ")
+            ));
+        }
+    }
+    parts.join(" ")
+}
+
+fn transition_from_health(health: &serde_json::Value) -> Option<TransitionEventV1> {
+    health
+        .get("transition_event_v1")
+        .and_then(TransitionEventV1::from_value)
+        .or_else(|| {
+            health
+                .get("transition_event")
+                .and_then(TransitionEventV1::from_value)
+        })
+}
+
+fn semantic_from_health(health: &serde_json::Value) -> Option<SemanticEnergyV1> {
+    health
+        .get("semantic_energy_v1")
+        .and_then(SemanticEnergyV1::from_typed_value)
+        .or_else(|| {
+            health
+                .get("semantic")
+                .and_then(SemanticEnergyV1::from_legacy_semantic)
+        })
+}
+
+fn format_transition_event(transition: &TransitionEventV1) -> String {
+    let kind = display_surface_label(&transition.kind);
+    let description = display_surface_label(&transition.description);
+    let stable_core_stage = transition
+        .stable_core_stage
+        .as_deref()
+        .map(display_surface_label)
+        .unwrap_or_else(|| "n/a".to_string());
+    format!(
+        "  transition kind={kind} basin_score={:.2} desc={description} baseline_lambda1_rel={:.3} geom_rel={:.3} stable_core_stage={stable_core_stage}",
+        transition.basin_shift_score, transition.lambda1_rel, transition.geom_rel,
+    )
+}
+
+fn format_semantic_energy(semantic: &SemanticEnergyV1) -> String {
+    format!(
+        "  Semantic energy: input={:.3} active={} fresh_ms={} stale_ms={} kernel={:.3} delta={:+.3} kernel_active={} regulator_drive={:.3} admission={} (regulator_drive=0 does not mean no semantic content)",
+        semantic.input_energy,
+        semantic.input_active,
+        option_u64(semantic.input_fresh_ms),
+        option_u64(semantic.input_stale_ms),
+        semantic.kernel_energy,
+        semantic.kernel_delta,
+        semantic.kernel_active,
+        semantic.regulator_drive_energy,
+        display_surface_label(&semantic.admission),
+    )
+}
+
+fn option_u64(value: Option<u64>) -> String {
+    value.map_or_else(|| "n/a".to_string(), |value| value.to_string())
+}
+
+fn display_surface_label(raw: &str) -> String {
+    raw.replace("pinned_rescue_b8823ad_port", "stable_core_physiology_port")
+        .replace("pinned_rescue_fixed_survival", "stable_core_fixed_survival")
+        .replace("pinned_rescue_aux_projection", "stable_core_aux_projection")
+        .replace("pinned_rescue_direct", "stable_core_direct")
+        .replace("rescue_scaffold", "stable_core_scaffold")
+        .replace("restart_gate", "settle_gate")
 }
 
 fn compact_vec(values: &[f32], limit: usize) -> String {
@@ -344,9 +469,49 @@ mod tests {
             alert: None,
             spectral_fingerprint: Some(slots),
             spectral_fingerprint_v1: None,
+            spectral_denominator_v1: None,
+            effective_dimensionality: None,
+            distinguishability_loss: None,
             structural_entropy: Some(0.72),
             spectral_glimpse_12d: Some(vec![0.3; 12]),
-            eigenvector_field: None,
+            eigenvector_field: Some(json!({
+                "policy": "eigenvector_field_v1",
+                "mode_count": 2,
+                "reservoir_dim": 512,
+                "summary": {
+                    "mean_orientation_delta": 0.12,
+                    "max_pairwise_overlap": 0.03
+                },
+                "modes": [{
+                    "index": 1,
+                    "top_components": [{"index": 7, "value": -0.5, "abs": 0.5}]
+                }]
+            })),
+            semantic: None,
+            semantic_energy_v1: Some(json!({
+                "policy": "semantic_energy_v1",
+                "schema_version": 1,
+                "input_energy": 0.12,
+                "input_active": true,
+                "input_fresh_ms": 42,
+                "input_stale_ms": null,
+                "kernel_energy": 0.0,
+                "kernel_delta": 0.0,
+                "kernel_active": false,
+                "regulator_drive_energy": 0.0,
+                "admission": "stable_core_kernel_zeroed"
+            })),
+            transition_event: None,
+            transition_event_v1: Some(json!({
+                "policy": "transition_event_v1",
+                "schema_version": 1,
+                "kind": "breathing_phase",
+                "description": "contracting -> expanding",
+                "basin_shift_score": 0.05,
+                "lambda1_rel": 1.08,
+                "geom_rel": 0.98,
+                "stable_core_stage": "restart_gate_monitoring"
+            })),
             selected_memory_id: Some("memory_stable_1".to_string()),
             selected_memory_role: Some("stable".to_string()),
             ising_shadow: None,
@@ -373,8 +538,8 @@ mod tests {
             "stable_core": {
                 "enabled": true,
                 "stage": "hold",
-                "controller_mode": "fixed_survival",
-                "structural_mode": "scaffold_hold",
+                "controller_mode": "pinned_rescue_fixed_survival",
+                "structural_mode": "rescue_scaffold_hold",
                 "structural_pi": {
                     "active": true,
                     "target_fill_pct": 68.0,
@@ -409,10 +574,20 @@ mod tests {
         });
 
         assert!(output.contains("Present state"));
+        assert!(output.contains("Denominator Sequence"));
         assert!(output.contains("Memory comparison"));
         assert!(output.contains("Control pressure"));
         assert!(output.contains("raw_fill=+1.000"));
         assert!(output.contains("internal_fill=+4.000"));
         assert!(output.contains("stable-core is active"));
+        assert!(output.contains("Semantic energy"));
+        assert!(output.contains("regulator_drive=0 does not mean no semantic content"));
+        assert!(output.contains("Eigenvector field"));
+        assert!(output.contains("transition kind=breathing_phase"));
+        assert!(output.contains("target_baseline_lambda1_rel"));
+        assert!(output.contains("lambda1_spectral_energy_share"));
+        assert!(!output.contains("pinned_rescue"));
+        assert!(!output.contains("rescue_scaffold"));
+        assert!(!output.contains("restart_gate"));
     }
 }
