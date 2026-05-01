@@ -13,7 +13,7 @@ The bridge is real and operational. 400 autonomous exchanges over 5 hours. Seven
 
 | Issue | Severity | Root Cause |
 |-------|----------|------------|
-| Fill locked at 32.1% (target 55%) | Critical | calm=true attractor, gate throttling 44%, filter absorbing 41%, sign error in keep_bias (corrected) |
+| Fill locked at 32.1% (legacy rescue target, now superseded by stable-core 68%) | Critical | calm=true attractor, gate throttling 44%, filter absorbing 41%, sign error in keep_bias (corrected) |
 | dialogue_live only 12-25% success | Critical | Ollama timeouts too tight for gemma3:27b |
 | Introspection blocked main loop | Critical | Moved to introspector capsule but not wired back in |
 | Witness mode static fallback | High | LLM timeout → canned phrases (both minds notice) |

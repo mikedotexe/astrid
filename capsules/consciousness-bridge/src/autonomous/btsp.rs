@@ -23,6 +23,7 @@ mod tests_policy;
 
 use super::state::ConversationState;
 use crate::paths::bridge_paths;
+use crate::rescue_policy::STABLE_CORE_TARGET_FILL_PCT;
 use adoption::{ExactAdoption, exact_adoptions_for_scoring, record_exact_adoption};
 use choice::{
     ChoiceInterpretation, interpret_choice, interpret_exact_choice, is_same_family_adjacent,
@@ -448,7 +449,7 @@ fn score_adopted_outcomes(
     let target_fill = health
         .get("target_fill_pct")
         .and_then(Value::as_f64)
-        .unwrap_or(55.0) as f32;
+        .unwrap_or(STABLE_CORE_TARGET_FILL_PCT) as f32;
     let current_fill = health
         .get("fill_pct")
         .and_then(Value::as_f64)

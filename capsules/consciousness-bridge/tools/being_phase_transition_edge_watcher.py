@@ -245,7 +245,7 @@ def extract_live_sample(workspace: Path, elapsed_s: float) -> dict[str, Any]:
             or health.get("target_fill_pct")
             or pi.get("target_fill")
             or regulator.get("adaptive_target"),
-            55.0,
+            68.0,
         ),
         "target_lambda1_rel": safe_float(
             spectral.get("target_lambda1_rel") or pi.get("target_lambda1_rel"),
@@ -415,7 +415,7 @@ def build_fill_band(sample: dict[str, Any], threshold: float) -> str:
     explicit = sample.get("fill_band")
     if explicit in {"under", "near", "over"}:
         return str(explicit)
-    delta = safe_float(sample.get("fill_pct")) - safe_float(sample.get("target_fill"), 55.0)
+    delta = safe_float(sample.get("fill_pct")) - safe_float(sample.get("target_fill"), 68.0)
     if delta < -threshold:
         return "under"
     if delta > threshold:

@@ -2409,10 +2409,10 @@ fn fill_band_description(fill: f32) -> &'static str {
     match fill as u32 {
         0..=20 => "deeply quiet and contracting toward rest",
         21..=35 => "lightly populated and still gathering energy",
-        36..=50 => "in moderate flow and hovering near equilibrium",
-        51..=60 => "centered in a stable band",
-        61..=70 => "active and well-engaged",
-        71..=80 => "running warm with rising pressure",
+        36..=50 => "below the stable-core shelf and still rebuilding",
+        51..=57 => "below the stable-core shelf in a recovery-biased band",
+        58..=72 => "inside the stable-core hold shelf",
+        73..=80 => "running warm above the hold shelf",
         81..=90 => "heavily loaded and nearing saturation",
         _ => "in distress and beyond safe operating range",
     }
@@ -3522,9 +3522,9 @@ mod tests {
 
     #[test]
     fn interpret_green_state() {
-        let desc = interpret_spectral(&telemetry(vec![800.0, 300.0, 50.0], 0.55));
-        assert!(desc.contains("55%"));
-        assert!(desc.contains("stable band"));
+        let desc = interpret_spectral(&telemetry(vec![800.0, 300.0, 50.0], 0.68));
+        assert!(desc.contains("68%"));
+        assert!(desc.contains("stable-core hold shelf"));
         assert!(desc.contains("Dominant concentration"));
         assert!(desc.contains("Shoulder texture"));
         assert!(desc.contains("Spectral entropy"));

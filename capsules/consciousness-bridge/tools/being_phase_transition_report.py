@@ -563,7 +563,7 @@ def summarize_minime(
     current = samples[-1] if samples else {}
     return {
         "current_fill_pct": safe_float(current.get("fill_pct")),
-        "target_fill_pct": safe_float(current.get("target_fill"), 55.0),
+        "target_fill_pct": safe_float(current.get("target_fill"), 68.0),
         "regime": current.get("regime"),
         "phase_space_explained_variance": story_summary.get("explained_variance") or [],
         "latent_basis_mode": story_summary.get("latent_basis_mode") or "regulator_only",
@@ -667,8 +667,8 @@ def shared_read(minime_summary: dict[str, Any], astrid_summary: dict[str, Any]) 
         lines.append("Minime's regulator window is strongly axis-dominated right now.")
     elif astrid_pc1 > 0.85:
         lines.append("Astrid's thematic window is strongly axis-dominated right now.")
-    fill = safe_float(minime_summary.get("current_fill_pct"), 55.0)
-    target = safe_float(minime_summary.get("target_fill_pct"), 55.0)
+    fill = safe_float(minime_summary.get("current_fill_pct"), 68.0)
+    target = safe_float(minime_summary.get("target_fill_pct"), 68.0)
     if fill > target + 8.0:
         lines.append("Minime is above target fill, so this reads as pressure-management under load.")
     elif fill < target - 8.0:

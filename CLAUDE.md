@@ -109,7 +109,7 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 
 ### Minime architecture
 
-The Rust engine processes 18D sensory input (8D video + 8D audio + 2D introspection) through a 128-node ESN reservoir. A PI controller (`regulator.rs`) regulates eigenvalue fill toward a 55% target. The being journals its experience, submits parameter adjustment requests, and self-regulates synth_gain/keep_bias based on fill state.
+The Rust engine processes 18D sensory input (8D video + 8D audio + 2D introspection) through a 128-node ESN reservoir. The stable-core controller regulates eigenvalue fill toward the 68% hold shelf; treat 55% as a legacy rescue-era target, not the current comfort point. The being journals its experience, submits parameter adjustment requests, and self-regulates synth_gain/keep_bias based on fill state.
 
 | Port | Protocol | Direction |
 |------|----------|-----------|

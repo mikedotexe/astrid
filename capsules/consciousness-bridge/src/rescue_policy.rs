@@ -29,6 +29,7 @@ const OBSERVE_ONLY_PROFILE: &str = "bridge_observe_only";
 const V2_SEMANTIC_ENERGY_MAX: f32 = 0.02;
 const V2_ROLLBACK_SEMANTIC_ENERGY: f32 = 0.05;
 const V2_ADVERSE_WINDOW_SECS: f64 = 3600.0;
+pub const STABLE_CORE_TARGET_FILL_PCT: f64 = 68.0;
 
 #[derive(Debug, Clone, PartialEq)]
 struct RescueBridgePolicy {

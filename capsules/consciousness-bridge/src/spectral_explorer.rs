@@ -1,6 +1,7 @@
 #![allow(clippy::arithmetic_side_effects)]
 
 use crate::memory::RemoteMemorySummary;
+use crate::rescue_policy::STABLE_CORE_TARGET_FILL_PCT;
 use crate::spectral_schema::SpectralFingerprintV1;
 use crate::types::{IsingShadowState, SpectralTelemetry};
 
@@ -216,7 +217,7 @@ fn format_control_pressure(health: Option<&serde_json::Value>) -> String {
     let pi = health.get("pi").unwrap_or(&serde_json::Value::Null);
     let target_fill = f64_value(pi, "target_fill")
         .or_else(|| f64_value(health, "target_fill_pct"))
-        .unwrap_or(55.0);
+        .unwrap_or(STABLE_CORE_TARGET_FILL_PCT);
     let target_lambda = f64_value(pi, "target_lambda1_rel").unwrap_or(1.0);
     let target_geom = f64_value(pi, "target_geom_rel").unwrap_or(1.0);
     let e_fill = f64_value(pi, "e_fill").unwrap_or(0.0);
@@ -358,12 +359,12 @@ mod tests {
                 "structural_mode": "scaffold_hold",
                 "structural_pi": {
                     "active": true,
-                    "target_fill_pct": 55.0,
+                    "target_fill_pct": 68.0,
                     "drain_weight": 0.1
                 }
             },
             "pi": {
-                "target_fill": 55.0,
+                "target_fill": 68.0,
                 "target_lambda1_rel": 1.05,
                 "target_geom_rel": 1.0,
                 "e_fill": -1.0,

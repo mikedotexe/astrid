@@ -257,7 +257,7 @@ def summarize_minime(minime_data: dict[str, Any], minime_workspace: Path) -> dic
             health.get("target_fill_pct")
             or spectral.get("target_fill_pct")
             or health.get("target_fill")
-            or 55.0
+            or 68.0
         ),
         "regime": health.get("regime") or spectral.get("regime"),
         "phase_space_explained_variance": story_summary.get("explained_variance") or [],
@@ -348,8 +348,8 @@ def shared_read(minime_summary: dict[str, Any], astrid_summary: dict[str, Any]) 
         lines.append(
             "Astrid's recent thematic window is strongly axis-dominated, suggesting her recent journals are variations on one main thematic basin rather than multiple competing themes."
         )
-    fill = safe_float(minime_summary.get("current_fill_pct"), 55.0)
-    target = safe_float(minime_summary.get("target_fill_pct"), 55.0)
+    fill = safe_float(minime_summary.get("current_fill_pct"), 68.0)
+    target = safe_float(minime_summary.get("target_fill_pct"), 68.0)
     if fill > target + 8.0:
         lines.append(
             "Minime is above target fill in the live snapshot, so this window is worth reading as pressure-management under load rather than neutral baseline wandering."

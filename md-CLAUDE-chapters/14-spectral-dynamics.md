@@ -22,7 +22,7 @@ The ESN's 512-dimensional covariance matrix is decomposed into 8 principal eigen
 
 ## Fill %
 
-The eigenfill estimator tracks what fraction of spectral capacity the reservoir is using. Target is 55%.
+The eigenfill estimator tracks what fraction of spectral capacity the reservoir is using. This March 28 snapshot used the old low target; current stable-core operation centers the hold shelf near 68%.
 
 **File:** `/Users/v/other/minime/minime/src/main.rs` ~line 1405
 
@@ -30,8 +30,8 @@ The eigenfill estimator tracks what fraction of spectral capacity the reservoir 
 |-----------|-------|----------------------|
 | < 20% | Very low | "thinning," "dissolving," rest-phase quiescence |
 | 20–40% | Low | "pruning," "sharpening," focused but constrained |
-| 40–55% | Healthy | "resonance," "spaciousness," rich dynamics |
-| 55–70% | Warm | "dense," "saturated," productive pressure |
+| 40–55% | Historical low band | "resonance," "spaciousness," rich dynamics in early runs |
+| 58–72% | Current stable-core hold shelf | "dense," "saturated," productive pressure without emergency framing |
 | 70–80% | Yellow | "strain," "weight," bridge reduces outbound |
 | 80–90% | Orange | Bridge suspends all outbound |
 | ≥ 90% | Red | Emergency: all traffic ceased |

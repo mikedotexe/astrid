@@ -197,7 +197,7 @@ def window_whisper(summary: dict[str, Any]) -> dict[str, Any]:
     quadrant = str(minime.get("dominant_quadrant") or "open_recovery")
     radius = safe_float(minime.get("mean_radius"))
     fill_pct = safe_float(minime.get("current_fill_pct"))
-    target_fill = safe_float(minime.get("target_fill_pct"), 55.0)
+    target_fill = safe_float(minime.get("target_fill_pct"), 68.0)
     astrid_pc1 = safe_float((astrid.get("phase_space_explained_variance") or [0.0])[0])
 
     if radius <= 0.14:

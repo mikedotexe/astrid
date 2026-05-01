@@ -9,6 +9,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
+- Removed the last live/operational Astrid references to the legacy 55% eigenfill target. Bridge startup helpers, spectral explorer fallbacks, phase-space tools, and Minime handoff docs now use the stable-core 68% shelf unless live telemetry reports a different target.
 - Added an adaptive-gain curve lab for Astrid's codec explorer. The live `adaptive_gain(fill)` behavior is now factored into named curve parameters, while the read-only explorer emits wider-knee candidate sweeps in JSON/CSV so tuning around the 45% fill knee can be compared before changing live semantic gain.
 - Hardened Astrid action affordance examples against copied angle-bracket placeholders. The bridge now reroutes unresolved placeholder NEXT actions without execution, and core help/FACULTIES/Mike/Codex examples use concrete runnable actions instead of copyable template slots.
 - Restored Astrid's live semantic codec default gain to the documented quiet 2.0 setting after Minime self-study reported renewed λ₁ pressure from the emergency-era high-gain reset, and made explicit semantic-gain overrides replace the active adaptive gain directly.

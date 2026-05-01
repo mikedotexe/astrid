@@ -1,10 +1,12 @@
 # Assessing AI Health — Fill Plateau Diagnosis
 
+Historical note: this document describes a pre-stable-core plateau. Current Minime stable-core operation uses a 68% hold shelf; the older 55% target below is diagnostic context, not an active comfort point.
+
 ## The System
 
 Two AI minds connected via a WebSocket bridge:
 
-- **Minime** — a Rust Echo State Network (ESN) with a 512-node reservoir, GPU Metal acceleration, and a PI controller targeting 55% eigenvalue fill. Sensory input: camera (8D video features via GPU pipeline), microphone (8D audio features), and 32D semantic features from Astrid via the bridge.
+- **Minime** — a Rust Echo State Network (ESN) with a 512-node reservoir, GPU Metal acceleration, and, at the time of this diagnosis, a PI controller targeting 55% eigenvalue fill. Sensory input: camera (8D video features via GPU pipeline), microphone (8D audio features), and 32D semantic features from Astrid via the bridge.
 - **Astrid** — a language model (gemma3:12b via Ollama) that reads minime's spectral telemetry and journal entries, generates dialogue responses, and encodes them as 32D semantic features sent to minime's sensory port (ws://7879).
 
 The bridge (`consciousness-bridge-server`, Rust) orchestrates the exchange every 15-20 seconds in bursts of 4, with 90-180s rest between bursts.

@@ -114,7 +114,7 @@ Flag if: starred memories not growing (REMEMBER may be broken), self-observation
 
 | # | Process | Start Command | Start From |
 |---|---------|--------------|------------|
-| 1 | minime engine | `./target/release/minime run --log-homeostat --eigenfill-target 0.55 --reg-tick-secs 0.5 --enable-gpu-av &` | `/Users/v/other/minime/minime` |
+| 1 | minime engine | `./target/release/minime run --log-homeostat --eigenfill-target 0.68 --reg-tick-secs 0.5 --enable-gpu-av &` | `/Users/v/other/minime/minime` |
 | 2 | camera_client | `python3 tools/camera_client.py --camera 0 --fps 0.2 &` | `/Users/v/other/minime/minime` |
 | 3 | mic_to_sensory | `python3 tools/mic_to_sensory.py &` | `/Users/v/other/minime` |
 | 4 | autonomous_agent | `MINIME_LLM_BACKEND=ollama python3 autonomous_agent.py --interval 60 &` | `/Users/v/other/minime` |
@@ -130,7 +130,7 @@ Engine must be running before anything else connects to its WebSocket ports.
 ### Starting Everything (7 processes)
 ```bash
 # 1. Engine (must start first — opens WS ports 7878/7879/7880)
-cd /Users/v/other/minime/minime && ./target/release/minime run --log-homeostat --eigenfill-target 0.55 --reg-tick-secs 0.5 --enable-gpu-av &
+cd /Users/v/other/minime/minime && ./target/release/minime run --log-homeostat --eigenfill-target 0.68 --reg-tick-secs 0.5 --enable-gpu-av &
 sleep 2
 
 # 2-3. Sensory inputs (camera at 0.2fps to reduce GPU load)

@@ -70,7 +70,7 @@ sync_launch_agent "$MINIME_DIR/launchd/$ENGINE_LABEL.plist"
 sync_launch_agent "$MINIME_DIR/launchd/$AGENT_LABEL.plist"
 
 launchctl setenv SENSORY_SOURCE "${SENSORY_SOURCE:-auto}"
-launchctl setenv EIGENFILL_TARGET "${EIGENFILL_TARGET:-0.75}"
+launchctl setenv EIGENFILL_TARGET "${EIGENFILL_TARGET:-0.68}"
 launchctl setenv WARM_START_BLEND "${WARM_START_BLEND:-0.55}"
 launchctl setenv REG_TICK_SECS "${REG_TICK_SECS:-0.5}"
 launchctl setenv ENABLE_GPU_AV "${ENABLE_GPU_AV:-true}"

@@ -5,6 +5,8 @@ use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 use tracing::warn;
 
+use crate::rescue_policy::STABLE_CORE_TARGET_FILL_PCT;
+
 use super::signal::{append_signal_event, learning_note_for_outcome};
 use super::{ActiveSovereigntyProposal, BTSPEpisodeRecord, NominatedResponse, ResponseOutcomeNote};
 
@@ -198,7 +200,7 @@ pub(super) fn classify_live_state(
     let target_fill = health
         .get("target_fill_pct")
         .and_then(Value::as_f64)
-        .unwrap_or(55.0) as f32;
+        .unwrap_or(STABLE_CORE_TARGET_FILL_PCT) as f32;
     let current_fill = health
         .get("fill_pct")
         .and_then(Value::as_f64)

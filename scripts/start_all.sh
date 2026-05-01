@@ -335,7 +335,7 @@ if [ "$ASTRID_ONLY" = false ]; then
             ENGINE_GPU_FLAG="--enable-gpu-av"
         fi
         set_launchd_env SENSORY_SOURCE "$SENSORY_SOURCE"
-        set_launchd_env EIGENFILL_TARGET "0.55"
+        set_launchd_env EIGENFILL_TARGET "0.68"
         set_launchd_env WARM_START_BLEND "0.55"
         set_launchd_env REG_TICK_SECS "0.5"
         set_launchd_env ENABLE_GPU_AV "$ENABLE_GPU_AV"
@@ -347,7 +347,7 @@ if [ "$ASTRID_ONLY" = false ]; then
             "minime run" \
             "minime engine" \
             "\"$MINIME_DIR/minime/target/release/minime\" run \
-                --log-homeostat --eigenfill-target 0.55 \
+                --log-homeostat --eigenfill-target 0.68 \
                 --warm-start-blend 0.55 \
                 --reg-tick-secs 0.5 $ENGINE_GPU_FLAG \
                 --legacy-audio-synth-enabled \"$LEGACY_AUDIO_ENABLED\" \

@@ -99,7 +99,7 @@ def derive_window(bundle_dir: Path) -> dict[str, Any]:
     minime = dict(summary.get("minime") or {})
     astrid = dict(summary.get("astrid") or {})
     fill = safe_float(minime.get("current_fill_pct"))
-    target = safe_float(minime.get("target_fill_pct"), 55.0)
+    target = safe_float(minime.get("target_fill_pct"), 68.0)
     return {
         "bundle_dir": str(bundle_dir),
         "generated_at": summary.get("generated_at") or bundle_dir.name,

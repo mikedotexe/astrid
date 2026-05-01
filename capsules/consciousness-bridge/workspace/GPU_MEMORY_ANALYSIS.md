@@ -74,7 +74,7 @@ Engine stable at 66-68% fill with natural phase cycling (expanding/plateau/contr
 
 ```
 # minime side
-./target/release/minime run --log-homeostat --eigenfill-target 0.55 --reg-tick-secs 0.5 --enable-gpu-av
+./target/release/minime run --log-homeostat --eigenfill-target 0.68 --reg-tick-secs 0.5 --enable-gpu-av
 MINIME_LLM_BACKEND=ollama python3 autonomous_agent.py --interval 60
 python3 tools/camera_client.py --camera 0 --fps 1
 python3 tools/mic_to_sensory.py

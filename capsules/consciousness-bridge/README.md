@@ -115,5 +115,5 @@ chimera tests cover spectral, symbolic, and dual offline renders.
 **Outbound to minime (port 7879):** `SensoryMsg` as `Message::Text`
 ```json
 {"kind":"semantic","features":[0.1,0.2,...],"ts_ms":null}
-{"kind":"control","synth_gain":1.5,"fill_target":0.55}
+{"kind":"control","synth_gain":1.5,"fill_target":0.68}
 ```

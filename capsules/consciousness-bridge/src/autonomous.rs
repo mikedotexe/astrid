@@ -66,7 +66,7 @@ use crate::journal::{
 use crate::managed_dir;
 use crate::memory::{self, RemoteMemorySummary};
 use crate::paths::bridge_paths;
-use crate::rescue_policy;
+use crate::rescue_policy::{self, STABLE_CORE_TARGET_FILL_PCT};
 use crate::types::{SafetyLevel, SensoryMsg};
 use crate::ws::BridgeState;
 
@@ -813,7 +813,7 @@ fn enrich_controller_health(workspace: &Path, health: &mut serde_json::Value) {
                 .and_then(|pi| pi.get("target_fill"))
                 .and_then(serde_json::Value::as_f64)
         })
-        .unwrap_or(55.0);
+        .unwrap_or(STABLE_CORE_TARGET_FILL_PCT);
     if !map.contains_key("target_fill_pct") {
         map.insert(
             "target_fill_pct".to_string(),
@@ -1069,7 +1069,7 @@ fn format_controller_oneliner(health: &serde_json::Value) -> String {
     let target = pi
         .and_then(|p| p.get("target_fill"))
         .and_then(|v| v.as_f64())
-        .unwrap_or(55.0);
+        .unwrap_or(STABLE_CORE_TARGET_FILL_PCT);
     let e_fill = pi
         .and_then(|p| p.get("e_fill"))
         .and_then(|v| v.as_f64())
@@ -1125,7 +1125,7 @@ pub(crate) fn format_controller_section(health: &serde_json::Value) -> String {
     let target = pi
         .and_then(|p| p.get("target_fill"))
         .and_then(|v| v.as_f64())
-        .unwrap_or(55.0);
+        .unwrap_or(STABLE_CORE_TARGET_FILL_PCT);
     let e_fill = pi
         .and_then(|p| p.get("e_fill"))
         .and_then(|v| v.as_f64())
@@ -6475,7 +6475,7 @@ mod tests {
             dir.join("health.json"),
             serde_json::json!({
                 "fill_pct": 66.0,
-                "pi": {"target_fill": 55.0}
+                "pi": {"target_fill": 68.0}
             })
             .to_string(),
         )
@@ -6521,7 +6521,7 @@ mod tests {
             dir.join("health.json"),
             serde_json::json!({
                 "fill_pct": 66.0,
-                "pi": {"target_fill": 55.0}
+                "pi": {"target_fill": 68.0}
             })
             .to_string(),
         )
