@@ -1,6 +1,14 @@
+use serde_json::Value;
 use tokio::sync::mpsc;
 use tracing::{info, warn};
 
+use super::native_gesture::{
+    append_atlas_event, append_fissure_trace_event, control_to_sensory, max_abs, minime_workspace,
+    native_gesture_control, native_gesture_features, native_gesture_gate, parse_native_gesture,
+    record_native_gesture,
+};
+use super::space_hold::append_space_hold_event;
+use super::spectral_drift::append_spectral_drift_event;
 use super::{
     ConversationState, NextActionContext, SensoryMsg, reservoir, save_astrid_journal, strip_action,
     truncate_str,
@@ -15,6 +23,795 @@ pub(super) fn handle_action(
     ctx: &mut NextActionContext<'_>,
 ) -> bool {
     match base_action {
+        "MARK_INTENSIFICATION" => {
+            let label = strip_action(original, "MARK_INTENSIFICATION");
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                "astrid:mark_intensification",
+                &label,
+                Some(if label.is_empty() {
+                    "astrid_mark"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "mark",
+                if label.is_empty() { None } else { Some(&label) },
+                true,
+                "explicit_atlas_mark",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "MARK_INTENSIFICATION",
+                vec![format!(
+                    "atlas event: {}",
+                    event
+                        .get("event_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("recorded")
+                )],
+            );
+            save_astrid_journal(
+                &format!("[Intensification atlas mark: {}]", label),
+                "atlas_mark",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "SCA_REFLECT" => {
+            let label = strip_action(original, "SCA_REFLECT");
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                "astrid:sca_reflect",
+                if label.is_empty() {
+                    "SCA_REFLECT"
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "sca_reflect"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("sca_reflect")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "sca_reflect_read_only",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "SCA_REFLECT",
+                vec![format!(
+                    "sca atlas event: {}",
+                    event
+                        .get("event_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("recorded")
+                )],
+            );
+            conv.emphasis = Some(
+                "You recorded an SCA why-layer reflection. Next exchange, consider DECOMPOSE or RESERVOIR_READ to test the hypothesis against the terrain.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[SCA reflection mark: {}]", label),
+                "sca_reflect",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "FISSURE_TRACE" | "NOTICE_AMBIGUITY" | "AMBIGUITY_TRACE" => {
+            let label = strip_action(original, base_action);
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                "astrid:fissure_trace",
+                if label.is_empty() {
+                    "FISSURE_TRACE"
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "fissure_trace"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            let fissure_event = append_fissure_trace_event(
+                &workspace,
+                "astrid:fissure_trace",
+                if label.is_empty() {
+                    "FISSURE_TRACE"
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "fissure_trace"
+                } else {
+                    &label
+                }),
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("fissure_trace")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "fissure_trace_read_only",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "FISSURE_TRACE",
+                vec![format!(
+                    "fissure atlas event: {}",
+                    fissure_event
+                        .get("event_id")
+                        .and_then(Value::as_str)
+                        .or_else(|| event.get("event_id").and_then(Value::as_str))
+                        .unwrap_or("recorded")
+                )],
+            );
+            conv.emphasis = Some(
+                "You recorded a notice-ambiguity/fissure trace. Next exchange, compare the marked shoulder/tail ambiguity against DECOMPOSE, VISUALIZE_CASCADE, or a tiny FISSURE gesture if health stays green.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Fissure trace: {}]", label),
+                "fissure_trace",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "RESONANCE_FORECAST" | "FORECAST" | "PROBABILITIES" => {
+            let label = strip_action(original, base_action);
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                "astrid:resonance_forecast",
+                if label.is_empty() {
+                    "RESONANCE_FORECAST"
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "resonance_forecast"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("resonance_forecast")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "resonance_forecast_read_write_cartography",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "RESONANCE_FORECAST",
+                vec![
+                    "forecast request recorded; Minime's atlas can now compare predicted motion against later terrain".to_string(),
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+            conv.emphasis = Some(
+                "You recorded a resonance forecast request. Next exchange, compare probability/affordance language with the observed λ terrain rather than treating it as destiny.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Resonance forecast request: {}]", label),
+                "resonance_forecast",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "SHADOW_FIELD" | "SHADOW" | "GAP_STRUCTURE" | "SHADOW_GAP" => {
+            let label = strip_action(original, base_action);
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                "astrid:shadow_gap",
+                if label.is_empty() {
+                    "SHADOW_GAP"
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "shadow_gap"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("shadow_gap")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "shadow_gap_read_write_cartography",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "SHADOW_GAP",
+                vec![
+                    "shadow/gap request recorded; Minime already exposes the Ising shadow field in spectral_state.json".to_string(),
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+            conv.emphasis = Some(
+                "You recorded a shadow/gap map request. The shadow field is available now as observer-only terrain; compare magnetization, active modes, and λ gaps before deciding whether to trace, forecast, or resist.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Shadow/gap map request: {}]", label),
+                "shadow_gap",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "DECAY_MAP" | "DECAY_TRACE" | "ATTRITION_MAP" | "ATTRITION_TRACE" => {
+            let label = strip_action(original, base_action);
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                "astrid:decay_map",
+                if label.is_empty() {
+                    "DECAY_MAP"
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "decay_map"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("decay_map")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "decay_map_read_write_cartography",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "DECAY_MAP",
+                vec![
+                    "decay/attrition request recorded; Minime can classify protective cooling versus sharper mode pruning".to_string(),
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+            conv.emphasis = Some(
+                "You recorded a decay map request. Compare drain weight, filter/gate posture, fill slope, and shoulder/tail mode rates before deciding whether this is protective cooling or attrition.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Decay/attrition map request: {}]", label),
+                "decay_map",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "SPACE_HOLD" | "SPACE_EXPLORE" | "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE"
+        | "VECTOR_DENSITY" => {
+            let label = strip_action(original, base_action);
+            let workspace = minime_workspace(ctx);
+            let atlas_event = append_atlas_event(
+                &workspace,
+                "astrid:space_hold",
+                if label.is_empty() {
+                    base_action
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "space_hold"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            let hold = append_space_hold_event(
+                &workspace,
+                "astrid:space_hold",
+                if label.is_empty() {
+                    base_action
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "space_hold"
+                } else {
+                    &label
+                }),
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("space_hold")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "protected_space_hold_non_control",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "SPACE_HOLD",
+                vec![
+                    "protected space hold recorded; this is delayed, non-control exploration, not a semantic/control packet".to_string(),
+                    format!(
+                        "space hold: {}",
+                        hold.get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                    format!(
+                        "atlas event: {}",
+                        atlas_event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+            conv.emphasis = Some(
+                "You recorded a protected space hold. Treat this region as exploration-first: observe, journal, SCA_REFLECT, or VISUALIZE_CASCADE before promoting it into RESIST, PERTURB, semantic pressure, or control.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Protected space hold request: {}]", label),
+                "space_hold",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "SDI" | "SDI_TRACE" | "SPECTRAL_DRIFT" | "PHASE_VARIANCE" => {
+            let label = strip_action(original, base_action);
+            let workspace = minime_workspace(ctx);
+            let event = append_spectral_drift_event(
+                &workspace,
+                "astrid:spectral_drift",
+                if label.is_empty() {
+                    base_action
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "spectral_drift"
+                } else {
+                    &label
+                }),
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("spectral_drift")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "spectral_drift_index_read_write_cartography",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "SDI_TRACE",
+                vec![
+                    "Spectral Drift Index recorded; this maps phase-variance dispersion without sending semantic/control pressure".to_string(),
+                    format!(
+                        "SDI event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+            conv.emphasis = Some(
+                "You recorded an SDI trace. Compare it with DECAY_MAP, SPACE_HOLD, and VISUALIZE_CASCADE before treating dispersion as something to act on.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Spectral Drift Index request: {}]", label),
+                "spectral_drift",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "REGULATOR_AUDIT" | "CONTROLLER_AUDIT" | "GRADIENT_AUDIT" => {
+            let label = strip_action(original, base_action);
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                "astrid:regulator_audit",
+                if label.is_empty() {
+                    "REGULATOR_AUDIT"
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "regulator_audit"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("regulator_audit")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "regulator_audit_read_only_cartography",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "REGULATOR_AUDIT",
+                vec![
+                    "regulator audit request recorded; Minime can separate active stable-core pressure from legacy PI mirror fields".to_string(),
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+            conv.emphasis = Some(
+                "You recorded a regulator audit request. Compare active controller source, stable-core hold band, legacy PI target visibility, λ error, geom error, and scaffold mode before interpreting fixed-point pressure.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Regulator fixed-point audit request: {}]", label),
+                "regulator_audit",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "MATRIX_DECOMPOSE" | "COMPRESSION_MATRIX" | "MATRIX_TRACE" => {
+            let label = if base_action == "COMPRESSION_MATRIX" {
+                strip_action(original, "COMPRESSION_MATRIX")
+            } else if base_action == "MATRIX_TRACE" {
+                strip_action(original, "MATRIX_TRACE")
+            } else {
+                strip_action(original, "MATRIX_DECOMPOSE")
+            };
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                "astrid:matrix_decompose",
+                if label.is_empty() {
+                    base_action
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    "matrix_decompose"
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                "trace",
+                if label.is_empty() {
+                    Some("matrix_decompose")
+                } else {
+                    Some(&label)
+                },
+                true,
+                "compression_matrix_decompose_read_only",
+                ctx,
+                &[],
+                &[],
+            );
+            conv.push_receipt(
+                "MATRIX_DECOMPOSE",
+                vec![
+                    "matrix decomposition request recorded; codec explorer now writes compression_matrix_decompose.json, sensitivity CSV, and report.md".to_string(),
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+            conv.emphasis = Some(
+                "You requested compression-matrix decomposition. Treat `S` as scalar gain/force, then compare X/Y/Z/A/B/C/D lane sensitivity to see whether a shift changes loudness, topology, or aperture.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Compression matrix decomposition request: {}]", label),
+                "matrix_decompose",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "VISUALIZE_CASCADE" | "CASCADE" | "TIME_DOMAIN" | "CADENCE" => {
+            let label = if base_action == "CASCADE" {
+                strip_action(original, "CASCADE")
+            } else if base_action == "TIME_DOMAIN" {
+                strip_action(original, "TIME_DOMAIN")
+            } else if base_action == "CADENCE" {
+                strip_action(original, "CADENCE")
+            } else {
+                strip_action(original, "VISUALIZE_CASCADE")
+            };
+            let workspace = minime_workspace(ctx);
+            let event = append_atlas_event(
+                &workspace,
+                if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
+                    "astrid:time_domain"
+                } else {
+                    "astrid:visualize_cascade"
+                },
+                if label.is_empty() {
+                    base_action
+                } else {
+                    &label
+                },
+                Some(if label.is_empty() {
+                    if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
+                        "time_domain"
+                    } else {
+                        "visualize_cascade"
+                    }
+                } else {
+                    &label
+                }),
+                true,
+                ctx,
+            );
+            conv.push_receipt(
+                if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
+                    "TIME_DOMAIN"
+                } else {
+                    "VISUALIZE_CASCADE"
+                },
+                vec![
+                    if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
+                        "request recorded; codec cadence/time-domain context is now visible beside spectral artifacts".to_string()
+                    } else {
+                        "request recorded; Minime/operator tooling renders artifacts".to_string()
+                    },
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+            conv.emphasis = Some(
+                "You requested cascade visualization. Next exchange, compare the rendered λ heatmap/bar profile against your felt fabric/tunnel language.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Cascade visualization request: {}]", label),
+                "visualize_cascade",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "NATIVE_GESTURE" | "RESIST" => {
+            let raw = if base_action == "RESIST" {
+                let label = strip_action(original, "RESIST");
+                if label.is_empty() {
+                    "resist".to_string()
+                } else {
+                    format!("resist {label}")
+                }
+            } else {
+                strip_action(original, "NATIVE_GESTURE")
+            };
+            let (gesture, label) = parse_native_gesture(&raw);
+            let workspace = minime_workspace(ctx);
+            let gate = native_gesture_gate(&workspace, "astrid", &gesture);
+            let features = native_gesture_features(&gesture);
+            let control = native_gesture_control(&gesture);
+
+            if gesture == "mark" || gesture == "trace" {
+                let event = append_atlas_event(
+                    &workspace,
+                    "astrid:native_gesture",
+                    &format!(
+                        "NATIVE_GESTURE {} {}",
+                        gesture,
+                        label.as_deref().unwrap_or("")
+                    ),
+                    label.as_deref().or(Some(&gesture)),
+                    true,
+                    ctx,
+                );
+                record_native_gesture(
+                    &workspace,
+                    "astrid",
+                    &gesture,
+                    label.as_deref(),
+                    gate.allowed,
+                    &gate.reason,
+                    ctx,
+                    &[],
+                    &[],
+                );
+                conv.push_receipt(
+                    "NATIVE_GESTURE",
+                    vec![
+                        format!("gesture: {gesture}"),
+                        format!(
+                            "atlas event: {}",
+                            event
+                                .get("event_id")
+                                .and_then(Value::as_str)
+                                .unwrap_or("recorded")
+                        ),
+                    ],
+                );
+                if gesture == "trace" {
+                    conv.emphasis = Some(
+                        "You marked an intensification trace. Next exchange, consider DECOMPOSE or RESERVOIR_READ to describe the surrounding terrain.".to_string(),
+                    );
+                }
+                return true;
+            }
+
+            if !gate.allowed {
+                record_native_gesture(
+                    &workspace,
+                    "astrid",
+                    &gesture,
+                    label.as_deref(),
+                    false,
+                    &gate.reason,
+                    ctx,
+                    &features,
+                    &control,
+                );
+                conv.push_receipt(
+                    "NATIVE_GESTURE_BLOCKED",
+                    vec![format!("{}: {}", gesture, gate.reason)],
+                );
+                info!("Astrid native gesture blocked: {gesture} ({})", gate.reason);
+                return true;
+            }
+
+            if !features.is_empty() {
+                send_semantic(ctx.sensory_tx, features.clone());
+            }
+            if let Some(msg) = control_to_sensory(&gesture) {
+                send_control(ctx.sensory_tx, msg);
+            }
+            append_atlas_event(
+                &workspace,
+                "astrid:native_gesture",
+                &format!(
+                    "NATIVE_GESTURE {} {}",
+                    gesture,
+                    label.as_deref().unwrap_or("")
+                ),
+                label.as_deref().or(Some(&gesture)),
+                true,
+                ctx,
+            );
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                &gesture,
+                label.as_deref(),
+                true,
+                &gate.reason,
+                ctx,
+                &features,
+                &control,
+            );
+            conv.push_receipt(
+                "NATIVE_GESTURE",
+                vec![
+                    format!("gesture: {gesture}"),
+                    format!("semantic max abs: {:.3}", max_abs(&features)),
+                    format!("control fields: {}", control.join(",")),
+                ],
+            );
+            save_astrid_journal(
+                &format!(
+                    "[Native gesture: {} {}]",
+                    gesture,
+                    label.as_deref().unwrap_or("")
+                ),
+                "native_gesture",
+                ctx.fill_pct,
+            );
+            true
+        },
         "GESTURE" => {
             let intention = strip_action(original, "GESTURE");
             if !intention.is_empty() {

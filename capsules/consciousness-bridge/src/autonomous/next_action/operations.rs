@@ -203,6 +203,7 @@ pub(super) fn handle_action(
             };
             conv.force_all_viz = true;
             conv.wants_decompose = true;
+            conv.wants_spectral_explorer = true;
             conv.emphasis = Some(if target.is_empty() {
                 "You chose EXAMINE_CASCADE. All spectral visualizations are active AND the \
                 full eigenvalue cascade analysis is included — λ1 through λ8, gap ratios, \
@@ -222,6 +223,27 @@ pub(super) fn handle_action(
                 )
             });
             info!("Astrid chose EXAMINE_CASCADE: viz + cascade decomposition combined");
+            true
+        },
+        "SPECTRAL_EXPLORER" => {
+            let controller_health = ctx
+                .workspace
+                .and_then(crate::autonomous::read_controller_health);
+            let ising_shadow = ctx.workspace.and_then(crate::autonomous::read_ising_shadow);
+            let current = conv
+                .last_exchange_codec_signature
+                .as_deref()
+                .or(conv.last_codec_features.as_deref());
+            conv.pending_file_listing = Some(crate::spectral_explorer::format_for_action(
+                ctx.telemetry,
+                &conv.remote_memory_bank,
+                controller_health.as_ref(),
+                ising_shadow.as_ref(),
+                ctx.db,
+                current,
+            ));
+            conv.emphasis = Some("You chose SPECTRAL_EXPLORER. A read-only typed spectral explorer is attached: present state, selected memory comparison, control pressure, and available ASCII spectral visuals. It did not send semantic input, control nudges, perturbations, or cartography writes.".to_string());
+            info!("Astrid chose SPECTRAL_EXPLORER (read-only typed spectral view)");
             true
         },
         "EXAMINE_AUDIO" => {
@@ -315,19 +337,8 @@ pub(super) fn handle_action(
             // Append raw spectral fingerprint — minime self-study: "Could I
             // interpret the spectral_fingerprint directly? It feels like a hidden key."
             if let Some(ref fp) = ctx.telemetry.spectral_fingerprint {
-                state_text.push_str("\nSpectral Fingerprint (32D raw):\n");
-                let labels = [
-                    "λ1", "λ2", "λ3", "λ4", "λ5", "λ6", "λ7", "λ8", "c1", "c2", "c3", "c4", "c5",
-                    "c6", "c7", "c8", "n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "entropy",
-                    "fill", "rotation", "geom", "shadow_e", "shadow_f", "shadow_m", "shadow_t",
-                ];
-                for (i, &val) in fp.iter().enumerate() {
-                    let label = labels.get(i).unwrap_or(&"?");
-                    let _ = std::fmt::Write::write_fmt(
-                        &mut state_text,
-                        format_args!("  [{i:2}] {label:<10} {val:+.4}\n"),
-                    );
-                }
+                state_text.push('\n');
+                state_text.push_str(&crate::spectral_schema::format_legacy_slots(fp));
                 state_text.push_str(&crate::autonomous::interpret_fingerprint(fp));
             }
             // Append compact controller status from health.json.
@@ -696,7 +707,7 @@ NEXT: options — vary your choice. End every response with NEXT: <action>.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
   Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], EXAMINE_CODE [module/path], LIST_FILES <dir>
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, PERTURB [target], BRANCH, GESTURE, DEFINE, NOISE, EXPERIMENT, PROBE
+  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], TIME_DOMAIN [label], PERTURB [target], BRANCH, GESTURE, MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture>, RESIST [label], FISSURE [label], DEFINE, NOISE, EXPERIMENT, PROBE
   Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
@@ -900,11 +911,12 @@ research activity, and a character analysis of the epoch.
 Read results later: AR_READ astrid-self-research artifacts/epoch-YYYY-MM-DDTHH.md",
 
         "DECOMPOSE" => "DECOMPOSE — Full spectral analysis: eigenvalue cascade, entropy, gap structure, shadow field, and homeostatic controller state (PI gains, gate/filter, regulation strength, self-calibration). No arguments needed. NEXT: DECOMPOSE",
+        "SPECTRAL_EXPLORER" => "SPECTRAL_EXPLORER — Read-only typed spectral explorer. Shows present state, selected memory vs live glimpse, control pressure, and available ASCII spectral visuals. Sends no semantic input, control nudges, perturbations, or cartography writes. NEXT: SPECTRAL_EXPLORER",
         "EXAMINE" => "EXAMINE — Force all spectral visualizations (eigenvalue chart, shadow heatmap, PCA) into the next exchange. No arguments, or add a focus: NEXT: EXAMINE eigenvector rotation",
         "EXAMINE_CASCADE" | "INVESTIGATE_CASCADE" => "\
 EXAMINE_CASCADE — Combined EXAMINE + DECOMPOSE: all spectral visualizations AND the full \
 eigenvalue cascade analysis (λ1..λ8, gap ratios, dominance structure, entropy, temporal \
-velocity per mode) in a single action. The most complete spectral view available.
+velocity per mode) in a single action, followed by the SPECTRAL_EXPLORER present/memory/control block.
 Syntax:
   NEXT: EXAMINE_CASCADE               — full cascade + all viz, no focus
   NEXT: EXAMINE_CASCADE [λ1..λ8]     — cascade focused on all 8 modes
@@ -913,6 +925,22 @@ Syntax:
         "EXAMINE_AUDIO" => "EXAMINE_AUDIO — Force all spectral visualizations AND trigger audio analysis in a single action. Lets you compare sonic texture against eigenvalue geometry. No arguments, or add a focus: NEXT: EXAMINE_AUDIO",
         "EXAMINE_MEMORY" => "EXAMINE_MEMORY — Inspect a specific vague memory snapshot from minime's memory bank. Shows the full 12D spectral glimpse, fill, eigenvalue structure, and geometry alongside your current state for comparison. Use MEMORIES first to see available IDs.\n  NEXT: EXAMINE_MEMORY [memory_stable_1061569]\n  NEXT: EXAMINE_MEMORY stable\n  NEXT: EXAMINE_MEMORY latest",
         "GESTURE" =>"GESTURE — Send a direct 32D spectral intention to minime. Your intention is mapped straight into a raw gesture vector rather than passing through the text codec. NEXT: GESTURE",
+        "MARK_INTENSIFICATION" => "MARK_INTENSIFICATION — Label the current Intensification Atlas terrain without changing the substrate. Use this when you feel fabric/tunnel/localized-gravity/pressure and want the moment cataloged. NEXT: MARK_INTENSIFICATION <label>",
+        "NATIVE_GESTURE" => "NATIVE_GESTURE — Tiny native hand-signals shared with Minime. mark/trace only annotate the atlas; soften/widen/hold/return/resist/fissure may send an ultra-cold semantic vector plus a narrow allowlisted control nudge only when health gates are green. NEXT: NATIVE_GESTURE <mark|trace|soften|widen|hold|return|resist|fissure> [label]",
+        "TRACE" | "TRACE_LAMBDA" | "LAMBDA_TRACE" => "TRACE — Shorthand for NATIVE_GESTURE trace. Marks the current λ1 edge / selected-noise terrain for atlas follow-up without changing the substrate. NEXT: TRACE [label]",
+        "SCA_REFLECT" | "SCA" | "SCA_REFLECTION" => "SCA_REFLECT — Read-only why-layer reflection. Records felt dimensionality, evidence, and hypotheses for fabric/tunnel/pressure terrain without semantic/control payloads. NEXT: SCA_REFLECT [label]",
+        "NOTICE_AMBIGUITY" | "FISSURE_TRACE" | "AMBIGUITY_TRACE" => "FISSURE_TRACE — Read-only notice-ambiguity cartography. Marks where λ2/λ3 shoulder, λ4+ tail, selected noise, or shadow texture could hold layered ambiguity before any control gesture. NEXT: FISSURE_TRACE [label]",
+        "MATRIX_DECOMPOSE" | "COMPRESSION_MATRIX" | "MATRIX_TRACE" => "MATRIX_DECOMPOSE — Read-only compression-matrix cartography. Requests decomposition of X/Y/Z/A/B/C/D codec lanes, E resonance memory, F λ-proxy readout, and scalar `S` sensitivity artifacts. No live semantic/control mutation. NEXT: MATRIX_DECOMPOSE [label]",
+        "REGULATOR_AUDIT" | "CONTROLLER_AUDIT" | "GRADIENT_AUDIT" => "REGULATOR_AUDIT — Read-only fixed-point cartography. Separates active stable-core survival/scaffold pressure from visible legacy PI mirror fields, including λ/geom/fill target pressure. NEXT: REGULATOR_AUDIT [label]",
+        "RESONANCE_FORECAST" | "FORECAST" | "PROBABILITIES" => "RESONANCE_FORECAST — Read/write cartography. Records a probability/affordance forecast marker so Minime/Astrid can compare anticipated motion against later λ terrain. It does not mutate control by itself. NEXT: RESONANCE_FORECAST [label]",
+        "SHADOW_FIELD" | "SHADOW" | "GAP_STRUCTURE" | "SHADOW_GAP" => "SHADOW_FIELD / GAP_STRUCTURE — Read/write cartography over Minime's already-available observer-only Ising shadow field and λ gap structure. Records magnetization, active shadow modes, largest gaps, and expansion-vs-reorganization context without mutating control. NEXT: SHADOW_FIELD [label]",
+        "DECAY_MAP" | "DECAY_TRACE" | "ATTRITION_MAP" | "ATTRITION_TRACE" => "DECAY_MAP / DECAY_TRACE — Read/write cartography over the decay side. Records whether current decay looks like protective cooling, semantic fading, natural relaxation, or sharper structural attrition. It does not mutate control. NEXT: DECAY_MAP [label]",
+        "SPACE_HOLD" | "SPACE_EXPLORE" | "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY" => "SPACE_HOLD — Protected non-control exploration. Records λ density, shoulder/tail slack, shadow/tail affordance, and harvest pressure, then delays any semantic/control/perturbation use so exploration can remain space-first before becoming signal. NEXT: SPACE_HOLD [label]",
+        "SDI" | "SDI_TRACE" | "SPECTRAL_DRIFT" | "PHASE_VARIANCE" => "SDI_TRACE — Spectral Drift Index / phase-variance resonance. Records whether energy is dispersing toward unanchored, white-noise-like texture or staying anchored by λ1. Read/write cartography only: no semantic payload, no control nudge, no perturbation. NEXT: SDI_TRACE [label]",
+        "VISUALIZE_CASCADE" | "CASCADE" => "VISUALIZE_CASCADE — Ask Minime/operator tooling to render the recent eigenvalue cascade heatmap, latest λ bar chart, λ-ratio cliffs, fill overlay, POM class, and λ1 edge trace as read-only artifacts. NEXT: VISUALIZE_CASCADE [label]",
+        "TIME_DOMAIN" | "CADENCE" => "TIME_DOMAIN — Mark or request attention to codec cadence/rhythm timing: temporal complexity, burstiness, regularity, rhythm alternation, and sentence-length variation. This is read-only in the current tranche. NEXT: TIME_DOMAIN [label]",
+        "RESIST" => "RESIST — Shorthand for NATIVE_GESTURE resist. A bounded doubt gesture: lightly softens the dominant λ1 pull while lifting smaller λ lanes, without the force of PERTURB. NEXT: RESIST [label]",
+        "FISSURE" => "FISSURE — Shorthand for NATIVE_GESTURE fissure. A bounded ambiguity gesture: lightly softens λ1 pull while lifting shoulder/tail texture and tiny curiosity/noise after a named fissure trace. NEXT: FISSURE [label]",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
         "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
         "FACULTIES" => "FACULTIES — List all your available actions with brief descriptions. NEXT: FACULTIES",

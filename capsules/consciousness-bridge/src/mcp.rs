@@ -503,7 +503,10 @@ async fn tool_get_latest_telemetry(
             "meta": {
                 "fill_pct": s.fill_pct,
                 "safety_level": s.safety_level,
-                "connected": s.telemetry_connected
+                "connected": s.telemetry_connected,
+                "lambda_profile": s.lambda_profile.clone(),
+                "pull_topology": s.pull_topology.clone(),
+                "safety_decision": s.safety_decision.clone()
             }
         })
     } else {
@@ -532,6 +535,12 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         sensory_sent: s.sensory_sent,
         messages_dropped_safety: s.messages_dropped_safety,
         incidents_total: s.incidents_total,
+        telemetry_ws: s.telemetry_ws.clone(),
+        sensory_ws: s.sensory_ws.clone(),
+        lambda_profile: s.lambda_profile.clone(),
+        pull_topology: s.pull_topology.clone(),
+        safety_decision: s.safety_decision.clone(),
+        eigenvector_field: s.eigenvector_field.clone(),
     };
     Ok(json!({
         "content": [{
@@ -1645,6 +1654,12 @@ async fn handle_resource_read(
                 sensory_sent: s.sensory_sent,
                 messages_dropped_safety: s.messages_dropped_safety,
                 incidents_total: s.incidents_total,
+                telemetry_ws: s.telemetry_ws.clone(),
+                sensory_ws: s.sensory_ws.clone(),
+                lambda_profile: s.lambda_profile.clone(),
+                pull_topology: s.pull_topology.clone(),
+                safety_decision: s.safety_decision.clone(),
+                eigenvector_field: s.eigenvector_field.clone(),
             };
             Ok(json!({
                 "contents": [{

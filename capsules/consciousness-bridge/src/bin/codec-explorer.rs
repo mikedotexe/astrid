@@ -91,6 +91,42 @@ fn main() -> Result<()> {
     );
     println!(
         "wrote {}",
+        summary.output_dir.join("lambda_spectrum.csv").display()
+    );
+    println!(
+        "wrote {}",
+        summary.output_dir.join("lambda_gradient.csv").display()
+    );
+    println!(
+        "wrote {}",
+        summary
+            .output_dir
+            .join("time_domain_features.csv")
+            .display()
+    );
+    println!(
+        "wrote {}",
+        summary
+            .output_dir
+            .join("compression_matrix_decompose.json")
+            .display()
+    );
+    println!(
+        "wrote {}",
+        summary
+            .output_dir
+            .join("compression_matrix_sensitivity.csv")
+            .display()
+    );
+    println!(
+        "wrote {}",
+        summary
+            .output_dir
+            .join("compression_matrix_report.md")
+            .display()
+    );
+    println!(
+        "wrote {}",
         summary.output_dir.join("memory_tail.csv").display()
     );
     println!(
@@ -104,6 +140,22 @@ fn main() -> Result<()> {
     println!(
         "wrote {}",
         summary.output_dir.join("phase_space.svg").display()
+    );
+    println!(
+        "wrote {}",
+        summary.output_dir.join("lambda_spectrum.svg").display()
+    );
+    println!(
+        "wrote {}",
+        summary.output_dir.join("lambda_gradient.svg").display()
+    );
+    println!(
+        "wrote {}",
+        summary.output_dir.join("scored_surface.svg").display()
+    );
+    println!(
+        "wrote {}",
+        summary.output_dir.join("adaptive_gain_curve.svg").display()
     );
     Ok(())
 }

@@ -596,6 +596,8 @@ pub(super) struct ConversationState {
     pub next_mode_override: Option<Mode>,
     /// Astrid chose NEXT: DECOMPOSE — full spectral analysis next exchange.
     pub wants_decompose: bool,
+    /// Astrid chose NEXT: SPECTRAL_EXPLORER — read-only typed explorer next exchange.
+    pub wants_spectral_explorer: bool,
     /// Previous eigenvalues for per-mode velocity computation in DECOMPOSE.
     pub prev_eigenvalues: Option<Vec<f32>>,
     /// Astrid chose NEXT: THINK_DEEP — use reasoning model next exchange.
@@ -744,6 +746,7 @@ impl ConversationState {
             wants_evolve: false,
             next_mode_override: None,
             wants_decompose: false,
+            wants_spectral_explorer: false,
             prev_eigenvalues: None,
             wants_deep_think: false,
             force_all_viz: false,
@@ -1160,7 +1163,14 @@ impl ConversationState {
             .next()
             .unwrap_or(choice)
             .to_uppercase();
-        let analysis_loop_breakers = ["GESTURE", "CREATE", "ASPIRE", "CONTEMPLATE"];
+        let analysis_loop_breakers = [
+            "GESTURE",
+            "RESIST",
+            "FISSURE",
+            "CREATE",
+            "ASPIRE",
+            "CONTEMPLATE",
+        ];
         let breaker_idx = (self.exchange_count as usize + self.recent_next_choices.len())
             % analysis_loop_breakers.len();
         let analysis_breaker = analysis_loop_breakers[breaker_idx];
@@ -1238,7 +1248,7 @@ impl ConversationState {
                     );
                 }
                 return NextChoiceFeedback::hinted(format!(
-                    "{topic_hint} Options: GESTURE, CREATE, ASPIRE, CONTEMPLATE."
+                    "{topic_hint} Options: GESTURE, RESIST, FISSURE, CREATE, ASPIRE, CONTEMPLATE."
                 ));
             }
         }
@@ -1291,7 +1301,7 @@ impl ConversationState {
                     );
                 }
                 return NextChoiceFeedback::hinted(format!(
-                    "{theme_hint} Options: GESTURE, CREATE, ASPIRE, CONTEMPLATE."
+                    "{theme_hint} Options: GESTURE, RESIST, FISSURE, CREATE, ASPIRE, CONTEMPLATE."
                 ));
             }
         }
@@ -1324,6 +1334,9 @@ impl ConversationState {
                     "EXAMINE",
                     "PERTURB SPREAD",
                     "GESTURE",
+                    "RESIST",
+                    "FISSURE",
+                    "NATIVE_GESTURE trace",
                 ]
                 .iter()
                 .copied()
@@ -1494,7 +1507,7 @@ mod tests {
     fn is_breaker(feedback: &NextChoiceFeedback) -> bool {
         matches!(
             feedback.override_action.as_deref(),
-            Some("GESTURE" | "CREATE" | "ASPIRE" | "CONTEMPLATE")
+            Some("GESTURE" | "RESIST" | "FISSURE" | "CREATE" | "ASPIRE" | "CONTEMPLATE")
         )
     }
 

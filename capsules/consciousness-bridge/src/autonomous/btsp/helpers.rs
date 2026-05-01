@@ -217,7 +217,12 @@ pub(super) fn classify_live_state(
         .and_then(Value::as_str)
         .unwrap_or("unknown");
 
-    let prior_fill = before_fill.unwrap_or(current_fill);
+    let prior_fill = before_fill.unwrap_or_else(|| {
+        health
+            .get("last_fill_pct")
+            .and_then(Value::as_f64)
+            .unwrap_or(current_fill as f64) as f32
+    });
     let prior_gap = (target_fill - prior_fill).abs();
     let current_gap = (target_fill - current_fill).abs();
     let target_nearness = if current_gap + 0.75 < prior_gap {

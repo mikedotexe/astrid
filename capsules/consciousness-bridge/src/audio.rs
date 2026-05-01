@@ -13,6 +13,7 @@ use std::f32::consts::PI;
 use std::path::Path;
 
 use crate::paths::bridge_paths;
+use crate::spectral_schema::SpectralFingerprintV1;
 use crate::types::SpectralTelemetry;
 
 const SAMPLE_RATE: u32 = 16000;
@@ -56,16 +57,17 @@ pub fn compose_from_spectral_state_details(
     let fill = telemetry.fill_pct();
     let num_ev = eigenvalues.len().min(8);
 
-    // Entropy from fingerprint
-    let entropy = fingerprint
-        .and_then(|fp| fp.get(24).copied())
-        .unwrap_or(0.5)
-        .clamp(0.0, 1.0);
+    let typed_fingerprint = telemetry
+        .typed_fingerprint()
+        .or_else(|| fingerprint.and_then(SpectralFingerprintV1::from_legacy_slots));
 
-    // Gap ratio from fingerprint
-    let gap_ratio = fingerprint
-        .and_then(|fp| fp.get(25).copied())
-        .unwrap_or(1.0)
+    let entropy = typed_fingerprint
+        .as_ref()
+        .map_or(0.5, |fp| fp.spectral_entropy)
+        .clamp(0.0, 1.0);
+    let gap_ratio = typed_fingerprint
+        .as_ref()
+        .map_or(1.0, |fp| fp.lambda1_lambda2_gap)
         .max(1.0);
 
     let duration_s = 5.0_f32;

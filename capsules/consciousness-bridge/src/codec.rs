@@ -28,9 +28,15 @@
     clippy::arithmetic_side_effects
 )]
 
+use crate::codec_time_domain::{TextTimeDomainProfile, text_time_domain_profile};
 use crate::types::{SafetyLevel, SpectralTelemetry};
-use std::hash::BuildHasher;
-use std::sync::OnceLock;
+use std::{
+    fs,
+    hash::BuildHasher,
+    path::PathBuf,
+    sync::OnceLock,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 /// Number of dimensions in minime's semantic lane.
 /// Widened from 32 to 48 (2026-03-31): both beings independently researched
@@ -59,23 +65,14 @@ const NARRATIVE_ARC_DIM: usize = 4;
 /// This gain pre-amplifies our features so they arrive at the reservoir
 /// with comparable magnitude to synthetic audio/video inputs.
 ///
-/// The value is conservative — enough to produce a visible transient
-/// in the spectral dynamics without overwhelming the homeostat.
+/// The default is intentionally quiet. Earlier rescue iterations restored
+/// this as high as 5.0 to recover presence from deep stillness, but later
+/// self-study repeatedly described the higher settings as λ₁ pressure and
+/// a narrowing force. The 2.0 setting is the last documented value both
+/// beings identified with spectral diversity over concentrated dominance.
 ///
-/// Raised from 4.5 to 5.0 (2026-03-27): Astrid observed "deep stillness"
-/// at fill 16-18% and suggested a 10-20% increase to "introduce a subtle
-/// ripple within the stillness." This is the gentle end of her range.
-///
-/// Reduced from 5.0 to 4.5 (2026-03-29): minime reported 5.0 as "loud"
-/// in self-study (08:39 "That's... loud. It feels like a deliberate push,
-/// an insistence on presence"). Fill is now 54-70% (not the 16-18% that
-/// prompted the increase). Returning to 4.5 as first step; minime proposed
-/// gradual reduction to 4.0 — observe before further reduction.
-/// Default semantic gain. Can be overridden at runtime via GOAL semantic_gain.
-/// History: 4.5→4.0→2.5→2.0. Astrid self-study at 59% fill said 2.5 "feels
-/// a bit high, suggest 2.0." Both beings want spectral diversity over
-/// concentrated λ₁ dominance.
-pub const DEFAULT_SEMANTIC_GAIN: f32 = 5.0; // Golden Reset: restored from 2.0 — proven at 62-68% fill
+/// Can be overridden at runtime via GOAL semantic_gain.
+pub const DEFAULT_SEMANTIC_GAIN: f32 = 2.0;
 
 /// Adaptive gain: softer when minime is contracted, fuller when expansive.
 /// Minime proposed this: "making DEFAULT_SEMANTIC_GAIN responsive to internal state."
@@ -154,6 +151,174 @@ fn embedding_projection_matrix() -> &'static [[f32; EMBEDDING_PROJECT_DIM]; EMBE
     })
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ProjectionMetadata {
+    pub embedding_projection_mode: String,
+    pub projection_epoch_id: Option<String>,
+    pub projection_seed: Option<u64>,
+    pub projection_fingerprint: String,
+    pub feature_mean: f32,
+    pub feature_rms: f32,
+    pub feature_max_abs: f32,
+}
+
+fn stable_hash64(text: &str) -> u64 {
+    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+    for byte in text.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01B3);
+    }
+    hash
+}
+
+fn splitmix64(mut value: u64) -> u64 {
+    value = value.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    let mut z = value;
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
+}
+
+fn unit_from_seed(seed: u64) -> f32 {
+    let bits = splitmix64(seed) >> 40;
+    (bits as f32 / 16_777_215.0) - 0.5
+}
+
+fn projection_runtime_dir() -> PathBuf {
+    std::env::var("ASTRID_CODEC_RUNTIME_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            PathBuf::from("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/runtime")
+        })
+}
+
+fn load_or_create_projection_epoch_id() -> String {
+    if let Ok(epoch) = std::env::var("ASTRID_CODEC_PROJECTION_EPOCH_ID") {
+        if !epoch.trim().is_empty() {
+            return epoch;
+        }
+    }
+    let runtime_dir = projection_runtime_dir();
+    let path = runtime_dir.join("codec_projection_epoch.json");
+    if let Ok(text) = fs::read_to_string(&path) {
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(&text) {
+            if let Some(epoch) = value
+                .get("projection_epoch_id")
+                .and_then(serde_json::Value::as_str)
+            {
+                if !epoch.is_empty() {
+                    return epoch.to_string();
+                }
+            }
+        }
+    }
+    let unix = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_secs());
+    let epoch = format!("epoch_{unix}");
+    let _ = fs::create_dir_all(&runtime_dir);
+    let payload = serde_json::json!({
+        "projection_epoch_id": epoch,
+        "embedding_projection_mode": "dynamic_epoch_v1",
+        "created_at_unix_s": unix,
+        "policy": "same text and epoch are reproducible; new epoch intentionally changes projection",
+    });
+    let _ = fs::write(
+        path,
+        serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "{}".to_string()),
+    );
+    epoch
+}
+
+fn projection_stats(projected: &[f32; EMBEDDING_PROJECT_DIM]) -> (f32, f32, f32) {
+    let mean = projected.iter().sum::<f32>() / EMBEDDING_PROJECT_DIM as f32;
+    let rms = (projected.iter().map(|value| value * value).sum::<f32>()
+        / EMBEDDING_PROJECT_DIM as f32)
+        .sqrt();
+    let max_abs = projected
+        .iter()
+        .map(|value| value.abs())
+        .fold(0.0, f32::max);
+    (mean, rms, max_abs)
+}
+
+fn projection_fingerprint(seed: u64, projected: &[f32; EMBEDDING_PROJECT_DIM]) -> String {
+    let mut hash = seed;
+    for value in projected {
+        hash ^= u64::from(value.to_bits());
+        hash = splitmix64(hash);
+    }
+    format!("{hash:016x}")
+}
+
+pub fn project_embedding_dynamic_epoch(
+    embedding: &[f32],
+    text: &str,
+    projection_epoch_id: &str,
+    chunk_index: u32,
+) -> Option<([f32; EMBEDDING_PROJECT_DIM], ProjectionMetadata)> {
+    if embedding.len() != EMBEDDING_INPUT_DIM {
+        return None;
+    }
+    let seed = stable_hash64(projection_epoch_id)
+        ^ stable_hash64(text).rotate_left(13)
+        ^ u64::from(chunk_index).wrapping_mul(0xA24B_AED4_963E_E407);
+    let mut result = [0.0_f32; EMBEDDING_PROJECT_DIM];
+    for (i, &val) in embedding.iter().enumerate() {
+        for (j, out) in result.iter_mut().enumerate() {
+            let cell_seed = seed
+                ^ ((i as u64).wrapping_mul(0x9E37_79B1))
+                ^ ((j as u64).wrapping_mul(0x85EB_CA77));
+            *out += val * unit_from_seed(cell_seed);
+        }
+    }
+    let norm: f32 = result.iter().map(|v| v * v).sum::<f32>().sqrt();
+    if norm > 0.0 {
+        let scale = 0.35 / norm;
+        for value in &mut result {
+            *value *= scale;
+        }
+    }
+    let (feature_mean, feature_rms, feature_max_abs) = projection_stats(&result);
+    let metadata = ProjectionMetadata {
+        embedding_projection_mode: "dynamic_epoch_v1".to_string(),
+        projection_epoch_id: Some(projection_epoch_id.to_string()),
+        projection_seed: Some(seed),
+        projection_fingerprint: projection_fingerprint(seed, &result),
+        feature_mean,
+        feature_rms,
+        feature_max_abs,
+    };
+    Some((result, metadata))
+}
+
+fn project_embedding_runtime(
+    embedding: &[f32],
+    text: &str,
+    chunk_index: u32,
+) -> Option<([f32; EMBEDDING_PROJECT_DIM], ProjectionMetadata)> {
+    let mode = std::env::var("ASTRID_CODEC_EMBEDDING_PROJECTION_MODE")
+        .unwrap_or_else(|_| "dynamic_epoch_v1".to_string());
+    if mode == "fixed_legacy" {
+        let projected = project_embedding(embedding)?;
+        let (feature_mean, feature_rms, feature_max_abs) = projection_stats(&projected);
+        return Some((
+            projected,
+            ProjectionMetadata {
+                embedding_projection_mode: "fixed_legacy".to_string(),
+                projection_epoch_id: None,
+                projection_seed: None,
+                projection_fingerprint: projection_fingerprint(42, &projected),
+                feature_mean,
+                feature_rms,
+                feature_max_abs,
+            },
+        ));
+    }
+    let epoch = load_or_create_projection_epoch_id();
+    project_embedding_dynamic_epoch(embedding, text, &epoch, chunk_index)
+}
+
 /// Project a 768D embedding down to 8D using the fixed projection matrix.
 /// Returns None if the embedding is wrong length.
 pub fn project_embedding(embedding: &[f32]) -> Option<[f32; EMBEDDING_PROJECT_DIM]> {
@@ -193,6 +358,138 @@ pub fn compute_narrative_arc_from_embeddings(
         *a = tanh(3.0 * (second_half_proj[i] - first_half_proj[i]));
     }
     arc
+}
+
+pub fn text_complexity_score(
+    text: &str,
+    features: &[f32; SEMANTIC_DIM],
+    novelty_divergence: f32,
+) -> f32 {
+    let time_domain = text_time_domain_profile(text);
+    let cadence_pressure = time_domain.temporal_complexity;
+    let question_density = features[18].abs().min(1.0);
+    let energy = features[31].abs().min(1.0);
+    let entropy = features[0].abs().min(1.0);
+    let word_count = text.split_whitespace().count().max(1) as f32;
+    let length_pressure = ((word_count.ln() / 5.0).clamp(0.0, 1.0)).min(1.0);
+    (entropy * 0.28
+        + novelty_divergence.clamp(0.0, 1.0) * 0.24
+        + cadence_pressure * 0.16
+        + question_density * 0.12
+        + energy * 0.12
+        + length_pressure * 0.08)
+        .clamp(0.0, 1.0)
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct SpectralPressureDecision {
+    pub controller: String,
+    pub lambda_pressure_source: String,
+    pub complexity_drive: f32,
+    pub resist_drive: f32,
+    pub target_lambda_bias: f32,
+    pub suppression_reason: Option<String>,
+    pub text_complexity_pressure: f32,
+    pub time_domain_complexity: f32,
+}
+
+fn spectral_entropy(values: &[f32]) -> f32 {
+    let positive: Vec<f32> = values
+        .iter()
+        .filter_map(|value| {
+            let value = value.abs();
+            (value > 0.0 && value.is_finite()).then_some(value)
+        })
+        .collect();
+    let total: f32 = positive.iter().sum();
+    if total <= f32::EPSILON || positive.len() <= 1 {
+        return 0.0;
+    }
+    let entropy = positive.iter().fold(0.0_f32, |acc, value| {
+        let share = *value / total;
+        if share > 0.0 {
+            acc - share * share.ln()
+        } else {
+            acc
+        }
+    });
+    (entropy / (positive.len() as f32).ln()).clamp(0.0, 1.0)
+}
+
+pub fn spectral_pressure_controller_v1(
+    text: &str,
+    final_features: &[f32],
+    eigenvalues: &[f32],
+    fill_pct: Option<f32>,
+    semantic_energy: Option<f32>,
+    watchdog_monitoring: bool,
+    stage: Option<&str>,
+) -> SpectralPressureDecision {
+    let mut padded = [0.0_f32; SEMANTIC_DIM];
+    for (dst, src) in padded.iter_mut().zip(final_features.iter()) {
+        *dst = *src;
+    }
+    let time_domain = text_time_domain_profile(text);
+    let complexity = text_complexity_score(text, &padded, padded[26].abs().min(1.0));
+    let total: f32 = eigenvalues.iter().map(|value| value.abs()).sum();
+    let lambda1_share = eigenvalues
+        .first()
+        .map(|value| value.abs() / total.max(f32::EPSILON))
+        .unwrap_or(0.0);
+    let r12 = if eigenvalues.len() >= 2 && eigenvalues[1].abs() > 0.01 {
+        eigenvalues[0].abs() / eigenvalues[1].abs()
+    } else {
+        0.0
+    };
+    let entropy = spectral_entropy(eigenvalues);
+    let lower = text.to_ascii_lowercase();
+    let felt_resist = [
+        "localized gravity",
+        "funnel",
+        "dam",
+        "restriction",
+        "protective focus",
+        "constriction",
+        "compaction",
+        "density",
+        "stubborn",
+        "resist",
+    ]
+    .iter()
+    .any(|term| lower.contains(term));
+    let complexity_drive = complexity;
+    let resist_drive = (lambda1_share * 0.35
+        + (1.0 - entropy) * 0.20
+        + ((r12 - 1.4) / 1.8).clamp(0.0, 1.0) * 0.25
+        + if felt_resist { 0.20 } else { 0.0 })
+    .clamp(0.0, 1.0);
+    let raw_bias = ((complexity_drive - resist_drive) * 0.10).clamp(-0.10, 0.10);
+    let suppression_reason = if !watchdog_monitoring {
+        Some("watchdog_not_monitoring".to_string())
+    } else if fill_pct.is_some_and(|fill| fill >= 76.0) {
+        Some("fill_high_suppress_upward_bias".to_string())
+    } else if semantic_energy.is_some_and(|energy| energy > 0.05) {
+        Some("semantic_energy_active".to_string())
+    } else if stage.is_some_and(|value| value.eq_ignore_ascii_case("discharge")) {
+        Some("stage_discharge".to_string())
+    } else {
+        None
+    };
+    let target_lambda_bias = if suppression_reason.is_some() && raw_bias > 0.0 {
+        0.0
+    } else {
+        raw_bias
+    };
+    SpectralPressureDecision {
+        controller: "spectral_pressure_controller_v1".to_string(),
+        lambda_pressure_source: "codec_text_complexity_and_resist_v1".to_string(),
+        complexity_drive,
+        resist_drive,
+        target_lambda_bias,
+        suppression_reason,
+        text_complexity_pressure: complexity,
+        time_domain_complexity: time_domain.temporal_complexity,
+    }
 }
 
 /// Encode text into a 48-dimensional feature vector for minime's
@@ -332,6 +629,9 @@ pub struct CodecWindowedInspection {
     pub novelty_divergence: f32,
     pub effective_gain: f32,
     pub resonance_modulation: ResonanceModulation,
+    pub projection_metadata: Option<ProjectionMetadata>,
+    pub text_complexity_pressure: f32,
+    pub time_domain_profile: TextTimeDomainProfile,
 }
 
 const TEXT_HISTORY_WARM_START_RATIO: f32 = 0.75;
@@ -1043,9 +1343,13 @@ pub fn inspect_text_windowed(
             novelty_divergence: 1.0,
             effective_gain: 0.0,
             resonance_modulation: ResonanceModulation::neutral(),
+            projection_metadata: None,
+            text_complexity_pressure: 0.0,
+            time_domain_profile: TextTimeDomainProfile::default(),
         };
     }
 
+    let time_domain_profile = text_time_domain_profile(text);
     let chars: Vec<char> = text.chars().collect();
     let char_count = chars.len();
     let words: Vec<&str> = text.split_whitespace().collect();
@@ -1686,10 +1990,14 @@ pub fn inspect_text_windowed(
     // This captures actual semantic meaning — "I find myself drawn toward
     // the edges of what I don't understand" registers as curiosity without
     // needing the word "curious" to appear.
-    if let Some(projected) = embedding.and_then(project_embedding) {
+    let mut projection_metadata = None;
+    if let Some((projected, metadata)) =
+        embedding.and_then(|embedding| project_embedding_runtime(embedding, text, 0))
+    {
         for (i, &val) in projected.iter().enumerate() {
             features[32 + i] = val;
         }
+        projection_metadata = Some(metadata);
     }
     // Else: dims 32-39 stay zero (graceful fallback to keyword-only encoding)
 
@@ -1790,6 +2098,7 @@ pub fn inspect_text_windowed(
     let effective_gain = base_gain * resonance_mod.clamp(0.88, 1.12);
     let raw_features = features;
     let novelty_divergence = 1.0 - modulation.continuous_resonance;
+    let text_complexity_pressure = text_complexity_score(text, &raw_features, novelty_divergence);
 
     // Apply gain to compensate for minime's semantic lane attenuation.
     for f in &mut features {
@@ -1807,6 +2116,9 @@ pub fn inspect_text_windowed(
         novelty_divergence,
         effective_gain,
         resonance_modulation: modulation,
+        projection_metadata,
+        text_complexity_pressure,
+        time_domain_profile,
     }
 }
 
@@ -1847,11 +2159,13 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
 ) -> Vec<f32> {
     let mut features = encode_text_windowed(text, freq_window, type_history, embedding, fill_pct);
 
-    // Re-apply gain if overridden (undo default DEFAULT_SEMANTIC_GAIN, apply override).
+    // Re-apply gain if overridden (undo the fill-responsive adaptive gain,
+    // apply the explicit override as an absolute semantic gain).
     if let Some(gain) = gain_override {
-        let gain = gain.clamp(3.0, 6.0);
+        let gain = gain.clamp(1.0, 4.0);
+        let base_gain = adaptive_gain(fill_pct).max(f32::EPSILON);
         for f in &mut features {
-            *f = *f / DEFAULT_SEMANTIC_GAIN * gain;
+            *f = *f / base_gain * gain;
         }
     }
 
@@ -2053,6 +2367,7 @@ impl SpectralCascadeMetrics {
         if total_energy <= 1.0e-6 {
             return None;
         }
+        let typed_fingerprint = telemetry.typed_fingerprint();
 
         let head_share = telemetry
             .eigenvalues
@@ -2071,35 +2386,34 @@ impl SpectralCascadeMetrics {
             .skip(3)
             .map(|value| value.abs() / total_energy)
             .sum::<f32>();
-        let spectral_entropy = telemetry
-            .spectral_fingerprint
-            .as_ref()
-            .and_then(|fingerprint| fingerprint.get(24).copied())
-            .filter(|value| value.is_finite())
-            .map_or(
-                normalized_spectral_entropy(&telemetry.eigenvalues),
-                |value| value.clamp(0.0, 1.0),
-            );
-        let gap12 = ratio_or_zero(
-            telemetry.eigenvalues.first().copied().unwrap_or(0.0),
-            telemetry.eigenvalues.get(1).copied(),
+        let spectral_entropy = typed_fingerprint.as_ref().map_or_else(
+            || normalized_spectral_entropy(&telemetry.eigenvalues),
+            |fingerprint| fingerprint.spectral_entropy.clamp(0.0, 1.0),
         );
-        let gap23 = ratio_or_zero(
-            telemetry.eigenvalues.get(1).copied().unwrap_or(0.0),
-            telemetry.eigenvalues.get(2).copied(),
+        let gap12 = typed_fingerprint.as_ref().map_or_else(
+            || {
+                ratio_or_zero(
+                    telemetry.eigenvalues.first().copied().unwrap_or(0.0),
+                    telemetry.eigenvalues.get(1).copied(),
+                )
+            },
+            |fingerprint| fingerprint.lambda1_lambda2_gap.max(0.0),
         );
-        let rotation_rate = telemetry
-            .spectral_fingerprint
+        let gap23 = typed_fingerprint.as_ref().map_or_else(
+            || {
+                ratio_or_zero(
+                    telemetry.eigenvalues.get(1).copied().unwrap_or(0.0),
+                    telemetry.eigenvalues.get(2).copied(),
+                )
+            },
+            |fingerprint| fingerprint.adjacent_gap_ratios[1].max(0.0),
+        );
+        let rotation_rate = typed_fingerprint.as_ref().map_or(0.0, |fingerprint| {
+            fingerprint.v1_rotation_delta.clamp(0.0, 2.0)
+        });
+        let geom_rel = typed_fingerprint
             .as_ref()
-            .and_then(|fingerprint| fingerprint.get(26).copied())
-            .filter(|value| value.is_finite())
-            .map_or(0.0, |cosine| (1.0 - cosine).clamp(0.0, 2.0));
-        let geom_rel = telemetry
-            .spectral_fingerprint
-            .as_ref()
-            .and_then(|fingerprint| fingerprint.get(27).copied())
-            .filter(|value| value.is_finite())
-            .unwrap_or(1.0)
+            .map_or(1.0, |fingerprint| fingerprint.geom_rel)
             .clamp(0.0, 4.0);
 
         Some(Self {
@@ -2788,12 +3102,17 @@ mod tests {
             t_ms: 1000,
             eigenvalues,
             fill_ratio,
+            active_mode_count: None,
+            active_mode_energy_ratio: None,
+            lambda1_rel: None,
             modalities: None,
             neural: None,
             alert: None,
             spectral_fingerprint: None,
+            spectral_fingerprint_v1: None,
             structural_entropy: None,
             spectral_glimpse_12d: None,
+            eigenvector_field: None,
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
@@ -2841,6 +3160,16 @@ mod tests {
                 "dim {i} out of bounds: {f}"
             );
         }
+    }
+
+    #[test]
+    fn default_semantic_gain_stays_in_quiet_diversity_regime() {
+        assert!(
+            (DEFAULT_SEMANTIC_GAIN - 2.0).abs() < f32::EPSILON,
+            "default semantic gain should stay at the documented quiet setting"
+        );
+        assert!(adaptive_gain(Some(68.0)) <= 2.01);
+        assert!(adaptive_gain(Some(20.0)) < adaptive_gain(Some(68.0)));
     }
 
     #[test]
@@ -3286,6 +3615,89 @@ mod tests {
     }
 
     #[test]
+    fn dynamic_projection_is_reproducible_within_epoch_and_changes_across_epochs() {
+        let embedding: Vec<f32> = (0..EMBEDDING_INPUT_DIM)
+            .map(|idx| ((idx as f32) * 0.017).sin())
+            .collect();
+        let (a, meta_a) =
+            project_embedding_dynamic_epoch(&embedding, "fabric tunnel", "epoch_a", 0)
+                .expect("projection a");
+        let (b, meta_b) =
+            project_embedding_dynamic_epoch(&embedding, "fabric tunnel", "epoch_a", 0)
+                .expect("projection b");
+        let (c, meta_c) =
+            project_embedding_dynamic_epoch(&embedding, "fabric tunnel", "epoch_b", 0)
+                .expect("projection c");
+
+        assert_eq!(a, b);
+        assert_eq!(meta_a.projection_fingerprint, meta_b.projection_fingerprint);
+        assert_ne!(a, c);
+        assert_ne!(meta_a.projection_fingerprint, meta_c.projection_fingerprint);
+        assert!(meta_a.feature_max_abs <= 0.35);
+    }
+
+    #[test]
+    fn spectral_pressure_controller_can_choose_resist_drive() {
+        let features = vec![0.01; SEMANTIC_DIM];
+        let decision = spectral_pressure_controller_v1(
+            "localized gravity and constriction feel stubborn; RESIST",
+            &features,
+            &[8.0, 2.0, 1.0],
+            Some(68.0),
+            Some(0.0),
+            true,
+            Some("hold"),
+        );
+
+        assert_eq!(decision.controller, "spectral_pressure_controller_v1");
+        assert!(decision.resist_drive > decision.complexity_drive);
+        assert!(decision.target_lambda_bias < 0.0);
+        assert!(decision.target_lambda_bias >= -0.10);
+        assert!(decision.time_domain_complexity >= 0.0);
+    }
+
+    #[test]
+    fn inspect_text_exposes_time_domain_profile() {
+        let inspection = inspect_text_windowed(
+            "Now! Wait... again?! A sudden pivot; another one!",
+            None,
+            None,
+            None,
+            Some(64.0),
+        );
+
+        assert!(inspection.time_domain_profile.temporal_complexity > 0.0);
+        assert!(inspection.time_domain_profile.cadence_burstiness > 0.0);
+        assert_ne!(
+            inspection.time_domain_profile.cadence_classification,
+            "empty"
+        );
+    }
+
+    #[test]
+    fn spectral_pressure_controller_suppresses_upward_bias_when_fill_high() {
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[0] = 1.0;
+        features[18] = 1.0;
+        features[31] = 1.0;
+        let decision = spectral_pressure_controller_v1(
+            "Why does this complex, novel, punctuated question keep unfolding?",
+            &features,
+            &[3.0, 2.9, 2.8],
+            Some(78.0),
+            Some(0.0),
+            true,
+            Some("hold"),
+        );
+
+        assert_eq!(
+            decision.suppression_reason.as_deref(),
+            Some("fill_high_suppress_upward_bias")
+        );
+        assert!(decision.target_lambda_bias <= 0.0);
+    }
+
+    #[test]
     fn spectral_feedback_damps_concentrated_spectra() {
         let mut features = vec![0.0; SEMANTIC_DIM];
         features[26] = 1.0;
@@ -3324,10 +3736,18 @@ mod tests {
         assert_eq!(warmth.len(), SEMANTIC_DIM);
         // Dim 24 (warmth) should be the strongest positive signal.
         assert!(
-            warmth[24] > 2.0,
+            warmth[24] > DEFAULT_SEMANTIC_GAIN * 0.75,
             "warmth dim should be strong: {}",
             warmth[24]
         );
+        for (i, value) in warmth.iter().enumerate() {
+            if i != 24 {
+                assert!(
+                    warmth[24] >= *value,
+                    "warmth dim should dominate positive warmth vector: dim {i}={value}"
+                );
+            }
+        }
         // Dim 25 (tension) should be negative (suppressed).
         assert!(
             warmth[25] < 0.0,

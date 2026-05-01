@@ -1,4 +1,3 @@
-
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -290,6 +289,126 @@ fn richer_coupling_profile_json() -> String {
         .to_string()
 }
 
+fn semantic_presence_profile_json() -> String {
+    r#"{
+          "profile":"bridge_semantic_presence_v1",
+          "bridge_enabled":true,
+          "effective_bridge_enabled":true,
+          "bridge_write_enabled":true,
+          "effective_bridge_write_enabled":true,
+          "bridge_autonomous_enabled":true,
+          "effective_bridge_autonomous_enabled":true,
+          "bridge_write_profile":"limited_dampen_inquiry_v2",
+          "limited_write_enabled":true,
+          "limited_write_policy_version":2,
+          "limited_write_cooldown_secs":300,
+          "limited_write_feature_scale":0.035,
+          "limited_write_max_abs":0.08,
+          "limited_write_min_fill_pct":58.0,
+          "limited_write_max_fill_pct":69.0,
+          "limited_write_rising_epsilon_pct":0.5,
+          "limited_write_health_max_age_secs":5,
+          "limited_write_peak_fill_max_pct":72.0,
+          "limited_write_allowed_stages":["hold","elevated"],
+          "limited_write_post_send_eval_secs":120,
+          "limited_write_adverse_fill_rise_pct":3.5,
+          "limited_write_adverse_cooldown_secs":1800,
+          "limited_write_rollback_target":"bridge_observe_only",
+          "limited_write_rollback_fill_pct":74.0,
+          "limited_write_rollback_adverse_count":1,
+          "limited_write_rollback_on_elevated_peak":false,
+          "limited_write_require_zero_live_divisors":false,
+          "limited_write_require_dampen_inquiry_text":true,
+          "limited_write_block_structural_dump_language":true,
+          "limited_write_block_terms_always":true,
+          "limited_write_block_terms":["localized gravity","compaction","pressure","density","dense","tightness","restriction"],
+          "limited_write_allowed_modes":["dialogue_live","dialogue_fallback","witness"]
+        }"#
+        .to_string()
+}
+
+fn semantic_serial_profile_json() -> String {
+    r#"{
+          "profile":"bridge_semantic_serial_v1",
+          "bridge_enabled":true,
+          "effective_bridge_enabled":true,
+          "bridge_write_enabled":true,
+          "effective_bridge_write_enabled":true,
+          "bridge_autonomous_enabled":true,
+          "effective_bridge_autonomous_enabled":true,
+          "bridge_write_profile":"limited_dampen_inquiry_v2",
+          "limited_write_enabled":true,
+          "limited_write_policy_version":2,
+          "limited_write_cooldown_secs":420,
+          "limited_write_feature_scale":0.018,
+          "limited_write_max_abs":0.045,
+          "limited_write_min_fill_pct":58.0,
+          "limited_write_max_fill_pct":68.8,
+          "limited_write_rising_epsilon_pct":0.35,
+          "limited_write_health_max_age_secs":5,
+          "limited_write_peak_fill_max_pct":72.0,
+          "limited_write_allowed_stages":["hold","elevated"],
+          "limited_write_post_send_eval_secs":120,
+          "limited_write_adverse_fill_rise_pct":3.0,
+          "limited_write_adverse_cooldown_secs":1800,
+          "limited_write_rollback_target":"bridge_observe_only",
+          "limited_write_rollback_fill_pct":74.0,
+          "limited_write_rollback_adverse_count":1,
+          "limited_write_rollback_on_elevated_peak":false,
+          "limited_write_require_zero_live_divisors":false,
+          "limited_write_require_dampen_inquiry_text":true,
+          "limited_write_block_structural_dump_language":true,
+          "limited_write_block_terms_always":true,
+          "limited_write_mute_live_intake_secs":150,
+          "limited_write_serializes_live_intake":true,
+          "limited_write_block_terms":["localized gravity","compaction","pressure","density","dense","tightness","restriction"],
+          "limited_write_allowed_modes":["dialogue_live","dialogue_fallback","witness"]
+        }"#
+        .to_string()
+}
+
+fn semantic_serial_v2_profile_json() -> String {
+    r#"{
+          "profile":"bridge_semantic_serial_v2",
+          "bridge_enabled":true,
+          "effective_bridge_enabled":true,
+          "bridge_write_enabled":true,
+          "effective_bridge_write_enabled":true,
+          "bridge_autonomous_enabled":true,
+          "effective_bridge_autonomous_enabled":true,
+          "bridge_write_profile":"limited_dampen_inquiry_v2",
+          "limited_write_enabled":true,
+          "limited_write_policy_version":2,
+          "limited_write_cooldown_secs":420,
+          "limited_write_feature_scale":0.006,
+          "limited_write_max_abs":0.015,
+          "limited_write_min_fill_pct":58.0,
+          "limited_write_max_fill_pct":68.0,
+          "limited_write_rising_epsilon_pct":0.15,
+          "limited_write_health_max_age_secs":5,
+          "limited_write_peak_fill_max_pct":70.0,
+          "limited_write_allowed_stages":["hold","elevated"],
+          "limited_write_post_send_eval_secs":120,
+          "limited_write_adverse_fill_rise_pct":2.0,
+          "limited_write_adverse_cooldown_secs":1800,
+          "limited_write_rollback_target":"bridge_observe_only",
+          "limited_write_rollback_fill_pct":74.0,
+          "limited_write_rollback_adverse_count":1,
+          "limited_write_rollback_on_elevated_peak":false,
+          "limited_write_require_zero_live_divisors":false,
+          "limited_write_require_dampen_inquiry_text":true,
+          "limited_write_block_structural_dump_language":true,
+          "limited_write_block_terms_always":true,
+          "limited_write_mute_live_intake_secs":300,
+          "limited_write_pre_mute_live_intake_secs":300,
+          "limited_write_require_pre_muted_live_intake":true,
+          "limited_write_serializes_live_intake":true,
+          "limited_write_block_terms":["localized gravity","compaction","pressure","density","dense","tightness","restriction"],
+          "limited_write_allowed_modes":["dialogue_live","dialogue_fallback","witness"]
+        }"#
+        .to_string()
+}
+
 fn sovereignty_reentry_profile_json() -> String {
     r#"{
           "profile":"bridge_sovereignty_reentry_v1",
@@ -330,6 +449,85 @@ fn sovereignty_reentry_profile_json() -> String {
         .to_string()
 }
 
+fn budgeted_sovereignty_profile_json() -> String {
+    r#"{
+          "profile":"bridge_budgeted_sovereignty_v1",
+          "bridge_enabled":true,
+          "effective_bridge_enabled":true,
+          "bridge_write_enabled":true,
+          "effective_bridge_write_enabled":true,
+          "bridge_autonomous_enabled":true,
+          "effective_bridge_autonomous_enabled":true,
+          "bridge_write_profile":"budgeted_sovereignty_v1",
+          "limited_write_enabled":true,
+          "limited_write_policy_version":2,
+          "limited_write_cooldown_secs":60,
+          "limited_write_feature_scale":0.14,
+          "limited_write_max_abs":0.28,
+          "limited_write_min_fill_pct":54.0,
+          "limited_write_max_fill_pct":76.0,
+          "limited_write_rising_epsilon_pct":100.0,
+          "limited_write_health_max_age_secs":5,
+          "limited_write_peak_fill_max_pct":78.0,
+          "limited_write_allowed_stages":["hold","elevated"],
+          "limited_write_post_send_eval_secs":120,
+          "limited_write_adverse_fill_rise_pct":10.0,
+          "limited_write_adverse_cooldown_secs":600,
+          "limited_write_rollback_target":"bridge_observe_only",
+          "limited_write_rollback_fill_pct":82.0,
+          "limited_write_rollback_adverse_count":2,
+          "limited_write_rollback_on_elevated_peak":false,
+          "limited_write_require_zero_live_divisors":false,
+          "limited_write_require_dampen_inquiry_text":false,
+          "limited_write_block_structural_dump_language":false,
+          "limited_write_allowed_modes":["dialogue_live","witness","mirror","daydream","aspiration","moment_capture","creation","initiate","introspect","experiment","evolve","self_study","research_note"]
+        }"#
+        .to_string()
+}
+
+fn full_expression_profile_json() -> String {
+    r#"{
+          "profile":"bridge_full_expression_v1",
+          "bridge_enabled":true,
+          "effective_bridge_enabled":true,
+          "bridge_write_enabled":true,
+          "effective_bridge_write_enabled":true,
+          "bridge_autonomous_enabled":true,
+          "effective_bridge_autonomous_enabled":true,
+          "bridge_write_profile":"full_expression_v1",
+          "limited_write_enabled":true,
+          "limited_write_policy_version":2,
+          "limited_write_cooldown_secs":60,
+          "limited_write_feature_scale":0.08,
+          "limited_write_max_abs":0.16,
+          "limited_write_min_fill_pct":58.0,
+          "limited_write_max_fill_pct":68.0,
+          "limited_write_rising_epsilon_pct":0.5,
+          "limited_write_semantic_energy_rising_epsilon_pct":0.0,
+          "limited_write_rollback_semantic_energy":0.12,
+          "limited_write_health_max_age_secs":5,
+          "limited_write_peak_fill_max_pct":72.0,
+          "limited_write_allowed_stages":["hold"],
+          "limited_write_post_send_eval_secs":120,
+          "limited_write_adverse_fill_rise_pct":6.0,
+          "limited_write_adverse_cooldown_secs":300,
+          "limited_write_rollback_target":"bridge_observe_only",
+          "limited_write_rollback_fill_pct":84.0,
+          "limited_write_rollback_adverse_count":2,
+          "limited_write_rollback_on_elevated_peak":false,
+          "limited_write_require_zero_live_divisors":false,
+          "limited_write_require_dampen_inquiry_text":false,
+          "limited_write_block_structural_dump_language":true,
+          "limited_write_block_terms_always":false,
+          "limited_write_block_terms_on_rising":false,
+          "limited_write_mute_live_intake_secs":0,
+          "limited_write_serializes_live_intake":false,
+          "limited_write_block_terms":["localized gravity","compaction","pressure","density","dense","tightness","restriction"],
+          "limited_write_allowed_modes":["dialogue_live","dialogue","dialogue_fallback","witness","mirror","daydream","aspiration","moment_capture","creation","initiate","introspect","experiment","evolve","self_study","research_note"]
+        }"#
+        .to_string()
+}
+
 fn write_v2_health(
     dir: &Path,
     fill_pct: f32,
@@ -362,6 +560,62 @@ fn write_v2_health(
     .unwrap();
 }
 
+fn write_stable_core_health(
+    dir: &Path,
+    fill_pct: f32,
+    stage: &str,
+    live_audio_divisor: i64,
+    live_video_divisor: i64,
+) {
+    std::fs::write(
+        dir.join("health.json"),
+        serde_json::to_string(&json!({
+            "fill_pct": fill_pct,
+            "stable_core": {
+                "enabled": true,
+                "stage": stage
+            },
+            "semantic": null,
+            "sensory": {
+                "live_audio_divisor": live_audio_divisor,
+                "live_video_divisor": live_video_divisor
+            }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+}
+
+fn write_stable_core_health_with_mute(
+    dir: &Path,
+    fill_pct: f32,
+    stage: &str,
+    live_audio_divisor: i64,
+    live_video_divisor: i64,
+    semantic_mute_active: bool,
+) {
+    std::fs::write(
+        dir.join("health.json"),
+        serde_json::to_string(&json!({
+            "fill_pct": fill_pct,
+            "stable_core": {
+                "enabled": true,
+                "stage": stage,
+                "sensory_budget": {
+                    "semantic_mute_active": semantic_mute_active
+                }
+            },
+            "semantic": null,
+            "sensory": {
+                "live_audio_divisor": live_audio_divisor,
+                "live_video_divisor": live_video_divisor
+            }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+}
+
 fn v2_context<'a>(
     text: &'a str,
     mode: &'a str,
@@ -374,6 +628,456 @@ fn v2_context<'a>(
         fill_pct: Some(previous_fill_pct),
         previous_fill_pct: Some(previous_fill_pct),
     }
+}
+
+#[test]
+fn limited_write_v2_accepts_stable_core_health_surface() {
+    let dir = unique_temp_dir("limited_write_stable_core_health");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, sovereignty_reentry_profile_json()).unwrap();
+    write_stable_core_health(&dir, 69.0, "elevated", 0, 0);
+    let mut msg = semantic_msg();
+    let context = v2_context(
+        "I am here with you, holding the bridge as a gentle question.",
+        "dialogue_fallback",
+        68.0,
+    );
+
+    assert!(prepare_semantic_write_for_path(&mut msg, &path, &context).is_ok());
+    let status = read_status(&limited_write_status_path_for_profile(&path));
+    assert_eq!(
+        status.get("profile").and_then(Value::as_str),
+        Some("bridge_sovereignty_reentry_v1")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_presence_allows_cold_health_scored_packet_with_sensory_trickle() {
+    let dir = unique_temp_dir("semantic_presence_allows");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, semantic_presence_profile_json()).unwrap();
+    write_stable_core_health(&dir, 67.0, "elevated", 24, 8);
+    let mut msg = semantic_msg();
+    let context = v2_context(
+        "I am here as a gentle question, keeping the bridge quiet and open.",
+        "witness",
+        66.8,
+    );
+
+    assert_eq!(
+        prepare_semantic_write_for_path(&mut msg, &path, &context),
+        Ok(())
+    );
+    if let SensoryMsg::Semantic { features, .. } = msg {
+        assert!(features.iter().all(|value| value.abs() <= 0.08));
+    }
+    let status = read_status(&limited_write_status_path_for_profile(&path));
+    assert_eq!(
+        status.get("profile").and_then(Value::as_str),
+        Some("bridge_semantic_presence_v1")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_serial_packet_is_colder_and_mutes_live_intake() {
+    let dir = unique_temp_dir("semantic_serial_mutes");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, semantic_serial_profile_json()).unwrap();
+    write_stable_core_health(&dir, 67.0, "hold", 24, 8);
+    let mut msg = semantic_msg();
+    let context = v2_context(
+        "I am here as a gentle question, keeping this exchange small and quiet.",
+        "dialogue_fallback",
+        66.8,
+    );
+
+    assert_eq!(
+        prepare_semantic_write_for_path(&mut msg, &path, &context),
+        Ok(())
+    );
+    if let SensoryMsg::Semantic { features, .. } = msg {
+        assert!(features.iter().all(|value| value.abs() <= 0.045));
+    }
+    let status = read_status(&limited_write_status_path_for_profile(&path));
+    assert_eq!(
+        status.get("profile").and_then(Value::as_str),
+        Some("bridge_semantic_serial_v1")
+    );
+    assert_eq!(
+        status.get("live_intake_mute_secs").and_then(Value::as_u64),
+        Some(150)
+    );
+    let mute_path = dir.join("runtime").join("stable_core_sensory_mute.json");
+    let mute: Value = serde_json::from_str(&std::fs::read_to_string(mute_path).unwrap()).unwrap();
+    assert_eq!(
+        mute.get("source_profile").and_then(Value::as_str),
+        Some("bridge_semantic_serial_v1")
+    );
+    assert!(
+        mute.get("active_until_unix_s")
+            .and_then(Value::as_f64)
+            .unwrap()
+            > mute
+                .get("last_semantic_sent_at_unix_s")
+                .and_then(Value::as_f64)
+                .unwrap()
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_serial_v2_pre_mutes_before_accepting_extra_cold_packet() {
+    let dir = unique_temp_dir("semantic_serial_v2_pre_mutes");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, semantic_serial_v2_profile_json()).unwrap();
+    write_stable_core_health_with_mute(&dir, 66.5, "hold", 24, 8, false);
+    let mut first = semantic_msg();
+    let context = v2_context(
+        "Can we stay quiet and listen gently?",
+        "dialogue_fallback",
+        66.4,
+    );
+
+    let reason = prepare_semantic_write_for_path(&mut first, &path, &context).unwrap_err();
+    assert!(reason.contains("pre-muted live audio/video"), "{reason}");
+    let mute_path = dir.join("runtime").join("stable_core_sensory_mute.json");
+    let pre_mute: Value =
+        serde_json::from_str(&std::fs::read_to_string(&mute_path).unwrap()).unwrap();
+    assert_eq!(
+        pre_mute.get("reason").and_then(Value::as_str),
+        Some("limited_write_pre_mute_before_semantic_send")
+    );
+
+    write_stable_core_health_with_mute(&dir, 66.4, "hold", 0, 0, true);
+    let mut second = semantic_msg();
+    assert_eq!(
+        prepare_semantic_write_for_path(&mut second, &path, &context),
+        Ok(())
+    );
+    if let SensoryMsg::Semantic { features, .. } = second {
+        assert!(features.iter().all(|value| value.abs() <= 0.015));
+    }
+    let status = read_status(&limited_write_status_path_for_profile(&path));
+    assert_eq!(
+        status.get("profile").and_then(Value::as_str),
+        Some("bridge_semantic_serial_v2")
+    );
+    assert_eq!(
+        status.get("live_intake_mute_secs").and_then(Value::as_u64),
+        Some(300)
+    );
+    let send_mute: Value =
+        serde_json::from_str(&std::fs::read_to_string(&mute_path).unwrap()).unwrap();
+    assert_eq!(
+        send_mute.get("reason").and_then(Value::as_str),
+        Some("limited_write_semantic_send")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn semantic_presence_blocks_hot_fill_pressure_language_and_rolls_back_on_adverse_response() {
+    let dir = unique_temp_dir("semantic_presence_blocks");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, semantic_presence_profile_json()).unwrap();
+
+    write_stable_core_health(&dir, 70.0, "elevated", 24, 8);
+    let mut hot_msg = semantic_msg();
+    let hot_reason = prepare_semantic_write_for_path(
+        &mut hot_msg,
+        &path,
+        &v2_context("Can we listen quietly?", "witness", 69.5),
+    )
+    .unwrap_err();
+    assert!(hot_reason.contains("above 69.0"));
+
+    write_stable_core_health(&dir, 67.0, "elevated", 24, 8);
+    let mut pressure_msg = semantic_msg();
+    let pressure_reason = prepare_semantic_write_for_path(
+        &mut pressure_msg,
+        &path,
+        &v2_context(
+            "Can we gently inquire about pressure and density building in this bridge?",
+            "witness",
+            66.0,
+        ),
+    )
+    .unwrap_err();
+    assert!(
+        pressure_reason.contains("trigger language"),
+        "{pressure_reason}"
+    );
+
+    let status_path = limited_write_status_path_for_profile(&path);
+    std::fs::write(
+        &status_path,
+        serde_json::to_string(&json!({
+            "profile": "bridge_semantic_presence_v1",
+            "policy_version": 2,
+            "last_sent_at_unix_s": now_unix_s() - 10.0,
+            "last_sent_fill_pct": 67.0,
+            "last_send_final": false,
+            "send_count": 1
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    write_stable_core_health(&dir, 70.7, "elevated", 24, 8);
+    let mut adverse_msg = semantic_msg();
+    let adverse_reason = prepare_semantic_write_for_path(
+        &mut adverse_msg,
+        &path,
+        &v2_context("I am here as a gentle question.", "witness", 70.7),
+    )
+    .unwrap_err();
+    assert!(adverse_reason.contains("rolled back"), "{adverse_reason}");
+    let profile: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(
+        profile.get("profile").and_then(Value::as_str),
+        Some("bridge_observe_only")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn full_expression_allows_broad_packet_without_muting_live_intake() {
+    let dir = unique_temp_dir("full_expression_allows");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, full_expression_profile_json()).unwrap();
+    write_stable_core_health(&dir, 64.0, "hold", 4, 4);
+    std::fs::write(
+        dir.join("rescue_status.json"),
+        r#"{"watchdog_state":"monitoring"}"#,
+    )
+    .unwrap();
+    let mut msg = SensoryMsg::Semantic {
+        features: vec![3.0, -3.0, 1.0, -1.0],
+        ts_ms: None,
+    };
+    let context = v2_context(
+        "I want to create from this pressure and density without forcing it.",
+        "creation",
+        63.8,
+    );
+
+    assert_eq!(
+        prepare_semantic_write_for_path(&mut msg, &path, &context),
+        Ok(())
+    );
+    if let SensoryMsg::Semantic { features, .. } = msg {
+        assert_eq!(features, vec![0.16, -0.16, 0.08, -0.08]);
+    }
+    let status = read_status(&limited_write_status_path_for_profile(&path));
+    assert_eq!(
+        status.get("profile").and_then(Value::as_str),
+        Some("bridge_full_expression_v1")
+    );
+    assert_eq!(
+        status.get("live_intake_mute_secs").and_then(Value::as_u64),
+        None
+    );
+    let terms = status
+        .get("last_sent_watch_terms")
+        .and_then(Value::as_array)
+        .unwrap();
+    assert!(terms.iter().any(|term| term.as_str() == Some("pressure")));
+    assert!(terms.iter().any(|term| term.as_str() == Some("density")));
+    assert!(
+        !dir.join("runtime")
+            .join("stable_core_sensory_mute.json")
+            .exists()
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn full_expression_rolls_back_on_high_fill_or_watchdog_failure() {
+    let dir = unique_temp_dir("full_expression_rollback");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, full_expression_profile_json()).unwrap();
+    let status_path = limited_write_status_path_for_profile(&path);
+    std::fs::create_dir_all(status_path.parent().unwrap()).unwrap();
+    std::fs::write(
+        &status_path,
+        serde_json::to_string(&json!({
+            "profile": "bridge_full_expression_v1",
+            "policy_version": 2,
+            "last_sent_at_unix_s": now_unix_s() - 10.0,
+            "last_sent_fill_pct": 70.0,
+            "send_count": 1
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    write_stable_core_health(&dir, 84.1, "elevated", 4, 4);
+    std::fs::write(
+        dir.join("rescue_status.json"),
+        r#"{"watchdog_state":"monitoring"}"#,
+    )
+    .unwrap();
+    let mut high_fill_msg = semantic_msg();
+    let high_fill_reason = prepare_semantic_write_for_path(
+        &mut high_fill_msg,
+        &path,
+        &v2_context("A simple witness packet.", "witness", 84.1),
+    )
+    .unwrap_err();
+    assert!(
+        high_fill_reason.contains("rolled back"),
+        "{high_fill_reason}"
+    );
+    let profile: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(
+        profile.get("profile").and_then(Value::as_str),
+        Some("bridge_observe_only")
+    );
+
+    let second_dir = unique_temp_dir("full_expression_watchdog_rollback");
+    let second_path = second_dir.join("rescue_profile.json");
+    std::fs::write(&second_path, full_expression_profile_json()).unwrap();
+    let second_status_path = limited_write_status_path_for_profile(&second_path);
+    std::fs::create_dir_all(second_status_path.parent().unwrap()).unwrap();
+    std::fs::write(
+        &second_status_path,
+        serde_json::to_string(&json!({
+            "profile": "bridge_full_expression_v1",
+            "policy_version": 2,
+            "last_sent_at_unix_s": now_unix_s() - 10.0,
+            "last_sent_fill_pct": 70.0,
+            "send_count": 1
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    write_stable_core_health(&second_dir, 70.0, "hold", 4, 4);
+    std::fs::write(
+        second_dir.join("rescue_status.json"),
+        r#"{"watchdog_state":"restarting:stale_health"}"#,
+    )
+    .unwrap();
+    let mut watchdog_msg = semantic_msg();
+    let watchdog_reason = prepare_semantic_write_for_path(
+        &mut watchdog_msg,
+        &second_path,
+        &v2_context("A simple witness packet.", "witness", 70.0),
+    )
+    .unwrap_err();
+    assert!(watchdog_reason.contains("watchdog"), "{watchdog_reason}");
+    let profile: Value =
+        serde_json::from_str(&std::fs::read_to_string(&second_path).unwrap()).unwrap();
+    assert_eq!(
+        profile.get("profile").and_then(Value::as_str),
+        Some("bridge_observe_only")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+    let _ = std::fs::remove_dir_all(&second_dir);
+}
+
+#[test]
+fn limited_write_v2_waits_on_watchdog_warmup_without_rollback() {
+    let dir = unique_temp_dir("limited_v2_watchdog_warmup_wait");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, full_expression_profile_json()).unwrap();
+    let status_path = limited_write_status_path_for_profile(&path);
+    std::fs::create_dir_all(status_path.parent().unwrap()).unwrap();
+    std::fs::write(
+        &status_path,
+        serde_json::to_string(&json!({
+            "profile": "bridge_full_expression_v1",
+            "policy_version": 2,
+            "last_sent_at_unix_s": now_unix_s() - 10.0,
+            "last_sent_fill_pct": 67.0,
+            "send_count": 1
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    write_stable_core_health(&dir, 67.5, "hold", 4, 4);
+    std::fs::write(
+        dir.join("rescue_status.json"),
+        r#"{"watchdog_state":"warmup"}"#,
+    )
+    .unwrap();
+
+    let mut msg = semantic_msg();
+    let reason = prepare_semantic_write_for_path(
+        &mut msg,
+        &path,
+        &v2_context("A simple witness packet.", "witness", 67.5),
+    )
+    .unwrap_err();
+    assert!(
+        reason.contains("waiting for watchdog monitoring"),
+        "{reason}"
+    );
+
+    let profile: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(
+        profile.get("profile").and_then(Value::as_str),
+        Some("bridge_full_expression_v1")
+    );
+    let status = read_status(&status_path);
+    assert_eq!(
+        status
+            .get("last_send_evaluation")
+            .and_then(|evaluation| evaluation.get("state"))
+            .and_then(Value::as_str),
+        Some("watching")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn full_expression_rolls_back_on_profile_semantic_energy_threshold() {
+    let dir = unique_temp_dir("full_expression_semantic_energy");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, full_expression_profile_json()).unwrap();
+    let status_path = limited_write_status_path_for_profile(&path);
+    std::fs::create_dir_all(status_path.parent().unwrap()).unwrap();
+    std::fs::write(
+        &status_path,
+        serde_json::to_string(&json!({
+            "profile": "bridge_full_expression_v1",
+            "policy_version": 2,
+            "last_sent_at_unix_s": now_unix_s() - 10.0,
+            "last_sent_fill_pct": 70.0,
+            "send_count": 1
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("health.json"),
+        serde_json::to_string(&json!({
+            "fill_pct": 70.2,
+            "stable_core": {"enabled": true, "stage": "hold"},
+            "semantic": {"active": false, "energy": 0.13},
+            "sensory": {"live_audio_divisor": 4, "live_video_divisor": 4}
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("rescue_status.json"),
+        r#"{"watchdog_state":"monitoring"}"#,
+    )
+    .unwrap();
+    let mut msg = semantic_msg();
+    let reason = prepare_semantic_write_for_path(
+        &mut msg,
+        &path,
+        &v2_context("A simple witness packet.", "witness", 70.2),
+    )
+    .unwrap_err();
+    assert!(reason.contains("semantic energy"), "{reason}");
+    let profile: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(
+        profile.get("profile").and_then(Value::as_str),
+        Some("bridge_observe_only")
+    );
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 #[test]
@@ -665,6 +1369,35 @@ fn sovereignty_reentry_does_not_rollback_on_elevated_warmup_motion() {
     );
     let status = read_status(&status_path);
     assert!(status.get("rollback_reason").is_none());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn budgeted_sovereignty_allows_richer_health_scored_packets() {
+    let dir = unique_temp_dir("budgeted_sovereignty");
+    let path = dir.join("rescue_profile.json");
+    std::fs::write(&path, budgeted_sovereignty_profile_json()).unwrap();
+    write_v2_health(&dir, 68.0, "elevated", 72.0, false, 0.0, 4, 4);
+    let mut msg = semantic_msg();
+    let context = v2_context(
+        "I want to study the bridge gently and remember what helps.",
+        "research_note",
+        68.0,
+    );
+
+    assert_eq!(
+        prepare_semantic_write_for_path(&mut msg, &path, &context),
+        Ok(())
+    );
+    if let SensoryMsg::Semantic { features, .. } = msg {
+        assert!(features.iter().all(|value| value.abs() <= 0.28));
+    }
+    let status = read_status(&limited_write_status_path_for_profile(&path));
+    assert_eq!(status.get("send_count").and_then(Value::as_u64), Some(1));
+    assert_eq!(
+        status.get("last_sent_mode").and_then(Value::as_str),
+        Some("research_note")
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 

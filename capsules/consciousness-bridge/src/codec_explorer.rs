@@ -10,6 +10,15 @@ use crate::codec::{
     NAMED_CODEC_DIMS, SEMANTIC_DIM, THEMATIC_DIMS, TextType, TextTypeHistory,
     TextTypeHistorySnapshot, inspect_text_windowed, resonance_tuning,
 };
+use crate::codec_gain_flow::{
+    AdaptiveGainFlowReport, build_adaptive_gain_flow, write_adaptive_gain_flow_bundle,
+};
+use crate::codec_lambda_analysis::{
+    LambdaSpectrumReport, TimeDomainFeatureReport, lambda_spectrum, write_lambda_analysis_bundle,
+};
+use crate::codec_matrix::{
+    CompressionMatrixReport, build_compression_matrix_report, write_compression_matrix_bundle,
+};
 use crate::codec_phase_space::{
     CodecExplorerPhaseSpace, build_phase_space_report, write_phase_space_story,
     write_phase_space_svg,
@@ -74,6 +83,8 @@ pub struct CodecExplorerEntryReport {
     pub detected_text_type: TextType,
     pub text_type_signal: f32,
     pub feature_vector: Vec<f32>,
+    pub lambda_spectrum: LambdaSpectrumReport,
+    pub time_domain: TimeDomainFeatureReport,
     pub thematic_profile: [f32; THEMATIC_DIMS],
     pub named_dimensions: Vec<RankedDimension>,
     pub strongest_dimensions: Vec<RankedDimension>,
@@ -88,10 +99,12 @@ pub struct CodecExplorerSummary {
     pub input_count: usize,
     pub fill_pct: Option<f32>,
     pub initial_memory_tail: Vec<MemoryTailEntryReport>,
+    pub adaptive_gain_flow: AdaptiveGainFlowReport,
     pub phase_space: CodecExplorerPhaseSpace,
     pub entries: Vec<CodecExplorerEntryReport>,
     pub final_memory_tail: Vec<MemoryTailEntryReport>,
     pub architecture_note: Vec<String>,
+    pub compression_matrix: CompressionMatrixReport,
 }
 
 pub fn run_codec_explorer(options: CodecExplorerOptions) -> Result<CodecExplorerSummary> {
@@ -117,14 +130,22 @@ pub fn run_codec_explorer(options: CodecExplorerOptions) -> Result<CodecExplorer
     }
 
     let phase_space = build_phase_space_report(&entries);
+    let matrix_text = options
+        .inputs
+        .iter()
+        .map(|input| input.text.as_str())
+        .collect::<Vec<_>>()
+        .join("\n\n");
     let summary = CodecExplorerSummary {
         output_dir: options.output_dir.clone(),
         input_count: entries.len(),
         fill_pct: options.fill_pct,
         initial_memory_tail,
+        adaptive_gain_flow: build_adaptive_gain_flow(options.fill_pct),
         phase_space,
         final_memory_tail: memory_tail_report(&type_history),
         architecture_note: architecture_note_lines(),
+        compression_matrix: build_compression_matrix_report(&matrix_text, options.fill_pct),
         entries,
     };
     write_bundle(&summary)?;
@@ -191,6 +212,8 @@ fn build_entry_report(
         detected_text_type: inspection.text_type,
         text_type_signal: inspection.text_type_signal,
         feature_vector: inspection.final_features.to_vec(),
+        lambda_spectrum: lambda_spectrum(&inspection.final_features),
+        time_domain: inspection.time_domain_profile.clone(),
         thematic_profile: inspection.thematic_profile,
         named_dimensions,
         strongest_dimensions,
@@ -346,6 +369,9 @@ fn write_bundle(summary: &CodecExplorerSummary) -> Result<()> {
     write_relevance_svg(summary)?;
     write_phase_space_svg(&summary.output_dir, &summary.phase_space)?;
     write_scored_surface_bundle(summary)?;
+    write_adaptive_gain_flow_bundle(&summary.output_dir, &summary.adaptive_gain_flow)?;
+    write_lambda_analysis_bundle(summary)?;
+    write_compression_matrix_bundle(&summary.output_dir, &summary.compression_matrix)?;
     let report_path = summary.output_dir.join("report.md");
     fs::write(&report_path, render_report(summary))
         .with_context(|| format!("writing {}", report_path.display()))?;
@@ -597,7 +623,7 @@ fn render_report(summary: &CodecExplorerSummary) -> String {
     }
     lines.extend([
         String::new(),
-        "Artifacts: [summary.json](summary.json), [phase_space_story.json](phase_space_story.json), [feature_vectors.csv](feature_vectors.csv), [memory_tail.csv](memory_tail.csv), [thematic_profiles.svg](thematic_profiles.svg), [relevance_trace.svg](relevance_trace.svg), [phase_space.svg](phase_space.svg), [scored_surface.svg](scored_surface.svg), [adaptive_gain_curve.svg](adaptive_gain_curve.svg)".to_string(),
+        "Artifacts: [summary.json](summary.json), [phase_space_story.json](phase_space_story.json), [feature_vectors.csv](feature_vectors.csv), [lambda_spectrum.csv](lambda_spectrum.csv), [lambda_gradient.csv](lambda_gradient.csv), [time_domain_features.csv](time_domain_features.csv), [compression_matrix_decompose.json](compression_matrix_decompose.json), [compression_matrix_sensitivity.csv](compression_matrix_sensitivity.csv), [compression_matrix_report.md](compression_matrix_report.md), [adaptive_gain_flow.json](adaptive_gain_flow.json), [adaptive_gain_flow.csv](adaptive_gain_flow.csv), [memory_tail.csv](memory_tail.csv), [thematic_profiles.svg](thematic_profiles.svg), [relevance_trace.svg](relevance_trace.svg), [phase_space.svg](phase_space.svg), [scored_surface.svg](scored_surface.svg), [lambda_spectrum.svg](lambda_spectrum.svg), [lambda_gradient.svg](lambda_gradient.svg), [adaptive_gain_curve.svg](adaptive_gain_curve.svg)".to_string(),
         String::new(),
         "## Architecture Note".to_string(),
         String::new(),
@@ -660,6 +686,48 @@ fn render_report(summary: &CodecExplorerSummary) -> String {
         String::new(),
         "The adaptive gain curve makes `adaptive_gain(fill)` inspectable instead of implicit, so we can see how the codec quiets low-fill states, strengthens the operational middle, and caps at the default semantic gain ceiling.".to_string(),
         String::new(),
+        "## Adaptive Gain Flow".to_string(),
+        String::new(),
+        format!(
+            "Current gain read: band `{}` | gain `{:.3}` (`{:.2}x` default) | slope `{:.4}` gain/fill% | read: {}",
+            summary.adaptive_gain_flow.current_band,
+            summary.adaptive_gain_flow.current_gain,
+            summary.adaptive_gain_flow.current_normalized_gain,
+            summary.adaptive_gain_flow.current_slope_per_fill_pct,
+            summary.adaptive_gain_flow.current_flow_read,
+        ),
+        format!(
+            "Strongest curve movement is around fill `{:.1}%` in band `{}` with slope `{:.4}` gain/fill%.",
+            summary.adaptive_gain_flow.strongest_slope_fill_pct,
+            summary.adaptive_gain_flow.strongest_slope_band,
+            summary.adaptive_gain_flow.strongest_slope_per_fill_pct,
+        ),
+        String::new(),
+        "[Adaptive gain flow JSON](adaptive_gain_flow.json) and [CSV](adaptive_gain_flow.csv) turn the curve into shelves, knees, and slope so Astrid can inspect the flow of amplification without changing live gain.".to_string(),
+        String::new(),
+        "## Lambda-Proxy Spectrum".to_string(),
+        String::new(),
+        "![Lambda-proxy spectrum](lambda_spectrum.svg)".to_string(),
+        String::new(),
+        "The lambda-proxy heatmap uses DCT energy over the live 48D semantic feature vector. It is an offline codec concentration read, not Minime's reservoir eigen-spectrum, and is meant to answer whether a text is concentrating into one dominant semantic mode before we touch live lambda shaping.".to_string(),
+        String::new(),
+        "![Lambda gradient](lambda_gradient.svg)".to_string(),
+        String::new(),
+        "The lambda-gradient trace reads consecutive entries as movement: concentration, widening, or holding. It is the explorer's first response to Astrid's request to see how amplification and dampening shift the fabric, not just how large the signal is.".to_string(),
+        String::new(),
+        "## Compression Matrix Decomposition".to_string(),
+        String::new(),
+        format!(
+            "The matrix decomposition names Astrid's requested variables as codec surfaces: X/Y/Z/A/B/C/D for 48D lane regions, E for resonance memory, F for λ-proxy readout, and S for scalar gain sensitivity. Latest read: λ{} share `{:.2}`, shoulder `{:.2}`, tail `{:.2}`, entropy `{:.2}`.",
+            summary.compression_matrix.lambda_spectrum.dominant_mode,
+            summary.compression_matrix.lambda_spectrum.dominant_share,
+            summary.compression_matrix.lambda_spectrum.shoulder_share,
+            summary.compression_matrix.lambda_spectrum.tail_share,
+            summary.compression_matrix.lambda_spectrum.normalized_entropy
+        ),
+        String::new(),
+        "[Full compression matrix report](compression_matrix_report.md) and [sensitivity CSV](compression_matrix_sensitivity.csv) show whether changing scalar `S` mostly changes loudness or whether lane-local changes widen/contract the aperture.".to_string(),
+        String::new(),
         "## Entry Reports".to_string(),
         String::new(),
     ]);
@@ -675,6 +743,22 @@ fn render_report(summary: &CodecExplorerSummary) -> String {
             entry.text_type_signal,
             entry.resonance.final_effective_gain,
             entry.resonance.final_modulation
+        ));
+        lines.push(format!(
+            "Lambda-proxy: dominant `λ{}` share `{:.2}` | shoulder `{:.2}` | tail `{:.2}` | entropy `{:.2}`",
+            entry.lambda_spectrum.dominant_mode,
+            entry.lambda_spectrum.dominant_share,
+            entry.lambda_spectrum.shoulder_share,
+            entry.lambda_spectrum.tail_share,
+            entry.lambda_spectrum.normalized_entropy,
+        ));
+        lines.push(format!(
+            "Time-domain: cadence `{}` | complexity `{:.3}` | burstiness `{:.3}` | regularity `{:.3}` | rhythm alternation `{:.3}`",
+            entry.time_domain.cadence_classification,
+            entry.time_domain.temporal_complexity,
+            entry.time_domain.cadence_burstiness,
+            entry.time_domain.regularity_score,
+            entry.time_domain.rhythm_alternation_rate,
         ));
         lines.push(String::new());
         lines.push(entry.explanation.clone());
@@ -830,10 +914,29 @@ mod tests {
         .expect("codec explorer should run");
 
         assert_eq!(summary.phase_space.trajectory.len(), 3);
+        assert_eq!(summary.adaptive_gain_flow.current_fill_pct, Some(55.0));
         assert!(output_dir.join("phase_space_story.json").exists());
         assert!(output_dir.join("phase_space.svg").exists());
         assert!(output_dir.join("scored_surface.svg").exists());
+        assert!(output_dir.join("lambda_spectrum.svg").exists());
+        assert!(output_dir.join("lambda_spectrum.csv").exists());
+        assert!(output_dir.join("lambda_gradient.svg").exists());
+        assert!(output_dir.join("lambda_gradient.csv").exists());
+        assert!(output_dir.join("time_domain_features.csv").exists());
+        assert!(
+            output_dir
+                .join("compression_matrix_decompose.json")
+                .exists()
+        );
+        assert!(
+            output_dir
+                .join("compression_matrix_sensitivity.csv")
+                .exists()
+        );
+        assert!(output_dir.join("compression_matrix_report.md").exists());
         assert!(output_dir.join("adaptive_gain_curve.svg").exists());
+        assert!(output_dir.join("adaptive_gain_flow.json").exists());
+        assert!(output_dir.join("adaptive_gain_flow.csv").exists());
 
         let _ = fs::remove_dir_all(output_dir);
     }

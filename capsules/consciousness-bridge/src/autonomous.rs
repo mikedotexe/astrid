@@ -37,11 +37,13 @@ fn truncate_str(s: &str, max_bytes: usize) -> &str {
     &s[..end]
 }
 
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
@@ -759,7 +761,7 @@ fn read_visual_features(perception_dir: &Path) -> Option<Vec<f32>> {
 
 /// Read the Ising shadow state from minime's workspace/spectral_state.json.
 /// Returns None if the file is missing, unreadable, or lacks coupling data.
-fn read_ising_shadow(workspace: &Path) -> Option<crate::types::IsingShadowState> {
+pub(crate) fn read_ising_shadow(workspace: &Path) -> Option<crate::types::IsingShadowState> {
     let spectral_state = load_workspace_spectral_state(workspace)?;
     if is_rescue_spectral_state(&spectral_state) {
         return None;
@@ -1289,14 +1291,20 @@ const DIALOGUES: &[&str] = &[
 /// Interpret a 32D spectral fingerprint into human-readable geometry description.
 /// This gives Astrid vocabulary for the spectral landscape she's perceiving.
 pub(crate) fn interpret_fingerprint(fp: &[f32]) -> String {
-    if fp.len() < 32 {
+    let Some(fingerprint) = crate::spectral_schema::SpectralFingerprintV1::from_legacy_slots(fp)
+    else {
         return String::new();
-    }
+    };
 
     let mut parts = Vec::new();
 
     // Eigenvalue cascade (dims 0-7): shape of the spectrum
-    let evs: Vec<f32> = fp[..8].iter().copied().filter(|v| v.abs() > 0.01).collect();
+    let evs: Vec<f32> = fingerprint
+        .eigenvalues
+        .iter()
+        .copied()
+        .filter(|v| v.abs() > 0.01)
+        .collect();
     if evs.len() >= 2 {
         let total: f32 = evs.iter().map(|v| v.abs()).sum();
         let dominant_pct = if total > 0.0 {
@@ -1317,7 +1325,11 @@ pub(crate) fn interpret_fingerprint(fp: &[f32]) -> String {
     }
 
     // Eigenvector concentration (dims 8-15): how peaked each mode is
-    let concentrations: Vec<f32> = fp[8..16].iter().copied().collect();
+    let concentrations: Vec<f32> = fingerprint
+        .eigenvector_concentration_top4
+        .iter()
+        .copied()
+        .collect();
     let max_conc = concentrations.iter().copied().fold(0.0f32, f32::max);
     let min_conc = concentrations.iter().copied().fold(1.0f32, f32::min);
     if max_conc > 0.5 {
@@ -1330,17 +1342,20 @@ pub(crate) fn interpret_fingerprint(fp: &[f32]) -> String {
     }
 
     // Inter-mode coupling (dims 16-23): how eigenvectors relate
-    let couplings: Vec<f32> = fp[16..24].iter().copied().collect();
+    let couplings: Vec<f32> = fingerprint
+        .inter_mode_cosine_top_abs
+        .iter()
+        .copied()
+        .collect();
     let strong_coupling = couplings.iter().any(|c| c.abs() > 0.3);
     if strong_coupling {
         parts.push("some eigenvectors are coupled — modes influencing each other".to_string());
     }
 
-    // Entropy, gap, rotation, geometry (dims 24-27)
-    let spectral_entropy = fp[24];
-    let gap_ratio = fp[25];
-    let rotation_rate = 1.0 - fp[26];
-    let geom_rel = fp[27];
+    let spectral_entropy = fingerprint.spectral_entropy;
+    let gap_ratio = fingerprint.lambda1_lambda2_gap;
+    let rotation_rate = fingerprint.v1_rotation_delta;
+    let geom_rel = fingerprint.geom_rel;
 
     // Vocabulary rotation: vary descriptions of the same regime so the LLM
     // isn't always seeded with identical phrases. Prevents lexical attractors
@@ -1411,7 +1426,12 @@ pub(crate) fn interpret_fingerprint(fp: &[f32]) -> String {
     }
 
     // Gap hierarchy (dims 28-31): λ₁/λ₂, λ₂/λ₃, λ₃/λ₄, λ₄/λ₅
-    let gaps: Vec<f32> = fp[28..32].iter().copied().filter(|v| *v > 0.0).collect();
+    let gaps: Vec<f32> = fingerprint
+        .adjacent_gap_ratios
+        .iter()
+        .copied()
+        .filter(|v| *v > 0.0)
+        .collect();
     if gaps.len() >= 2 && gaps[0] > 3.0 && gaps[1] < 2.0 {
         parts.push(match v3 {
             0 => "sharp spectral cliff from λ₁ to λ₂, then gradual decay".to_string(),
@@ -1624,49 +1644,53 @@ fn full_spectral_decomposition(
     }
 
     // Fingerprint details
-    if let Some(fp) = fingerprint {
-        if fp.len() >= 32 {
-            // Spectral entropy
-            report.push(format!(
-                "Spectral entropy: {:.3} (0=concentrated, 1=distributed)",
-                fp[24]
-            ));
-            report.push(format!(
-                "Eigenvector rotation: {:.3} (cosine similarity with previous)",
-                fp[26]
-            ));
-            report.push(format!("Geometric radius: {:.2}x baseline", fp[27]));
+    let typed_fingerprint = telemetry.typed_fingerprint().or_else(|| {
+        fingerprint.and_then(crate::spectral_schema::SpectralFingerprintV1::from_legacy_slots)
+    });
+    if let Some(fp) = typed_fingerprint {
+        report.push(format!(
+            "Spectral entropy: {:.3} (0=concentrated, 1=distributed)",
+            fp.spectral_entropy
+        ));
+        report.push(format!(
+            "Lambda1/lambda2 gap: {:.3}",
+            fp.lambda1_lambda2_gap
+        ));
+        report.push(format!(
+            "Eigenvector rotation: {:.3} similarity / {:.3} delta",
+            fp.v1_rotation_similarity, fp.v1_rotation_delta,
+        ));
+        report.push(format!("Geometric radius: {:.2}x baseline", fp.geom_rel));
 
-            // Eigenvector concentration
-            let conc: String = fp[8..16]
-                .iter()
-                .enumerate()
-                .filter(|(_, v)| **v > 0.01)
-                .map(|(i, v)| format!("  mode {}: {:.3}", i + 1, v))
-                .collect::<Vec<_>>()
-                .join("\n");
-            if !conc.is_empty() {
-                report.push(format!(
-                    "Eigenvector concentration (how peaked each mode is):\n{conc}"
-                ));
-            }
+        let conc: String = fp
+            .eigenvector_concentration_top4
+            .iter()
+            .enumerate()
+            .filter(|(_, v)| **v > 0.01)
+            .map(|(i, v)| format!("  mode {}: {:.3}", i + 1, v))
+            .collect::<Vec<_>>()
+            .join("\n");
+        if !conc.is_empty() {
+            report.push(format!(
+                "Eigenvector concentration (how peaked each mode is):\n{conc}"
+            ));
+        }
 
-            // Inter-mode coupling (fingerprint dims 16-24)
-            let coupling: Vec<String> = fp[16..24]
-                .iter()
-                .enumerate()
-                .filter(|(_, v)| v.abs() > 0.01)
-                .map(|(i, v)| {
-                    let sign = if *v > 0.0 { "+" } else { "" };
-                    format!("  coupling[{}]: {sign}{:.3}", i, v)
-                })
-                .collect();
-            if !coupling.is_empty() {
-                report.push(format!(
-                    "Inter-mode coupling (how modes influence each other):\n{}",
-                    coupling.join("\n")
-                ));
-            }
+        let coupling: Vec<String> = fp
+            .inter_mode_cosine_top_abs
+            .iter()
+            .enumerate()
+            .filter(|(_, v)| v.abs() > 0.01)
+            .map(|(i, v)| {
+                let sign = if *v > 0.0 { "+" } else { "" };
+                format!("  coupling[{}]: {sign}{:.3}", i, v)
+            })
+            .collect();
+        if !coupling.is_empty() {
+            report.push(format!(
+                "Inter-mode coupling (how modes influence each other):\n{}",
+                coupling.join("\n")
+            ));
         }
     }
 
@@ -3524,12 +3548,11 @@ pub fn spawn_autonomous_loop(
                         };
 
                     // Classify spectral regime every exchange (lightweight, <1ms).
-                    let lambda1_rel = telemetry.spectral_fingerprint.as_ref()
-                        .and_then(|f| f.get(24).copied()) // dim 24 approximates spectral entropy
-                        .unwrap_or(1.0);
-                    let geom_rel = telemetry.spectral_fingerprint.as_ref()
-                        .and_then(|f| f.get(25).copied())
-                        .unwrap_or(1.0);
+                    let typed_fingerprint = telemetry.typed_fingerprint();
+                    let lambda1_rel = telemetry.lambda1_rel.unwrap_or(1.0);
+                    let geom_rel = typed_fingerprint
+                        .as_ref()
+                        .map_or(1.0, |fingerprint| fingerprint.geom_rel);
                     let regime = conv.regime_tracker.classify(fill_pct, lambda1_rel, geom_rel);
                     debug!(
                         regime = regime.regime,
@@ -3747,28 +3770,76 @@ pub fn spawn_autonomous_loop(
                             // Read Ising shadow from minime's workspace for viz.
                             let ising_shadow = conv.remote_workspace.as_deref()
                                 .and_then(read_ising_shadow);
+                            let selected_memory = telemetry
+                                .selected_memory_id
+                                .as_deref()
+                                .and_then(|id| {
+                                    conv.remote_memory_bank
+                                        .iter()
+                                        .find(|entry| entry.id == id)
+                                })
+                                .or_else(|| {
+                                    telemetry.selected_memory_role.as_deref().and_then(|role| {
+                                        conv.remote_memory_bank
+                                            .iter()
+                                            .find(|entry| entry.role == role)
+                                    })
+                                })
+                                .cloned();
 
                             let spectral_summary = if conv.wants_decompose {
+                                let wants_explorer = conv.wants_spectral_explorer;
                                 conv.wants_decompose = false;
-                                let report = full_spectral_decomposition(
+                                conv.wants_spectral_explorer = false;
+                                let mut report = full_spectral_decomposition(
                                     &telemetry,
                                     fingerprint.as_deref(),
                                     conv.prev_eigenvalues.as_deref(),
                                     controller_health.as_ref(),
                                 );
+                                if wants_explorer {
+                                    let eigen_history = db.recent_eigenvalue_snapshots(100);
+                                    let (hist_feats, hist_fills) = db.recent_codec_features(100);
+                                    let current = conv
+                                        .last_exchange_codec_signature
+                                        .as_deref()
+                                        .or(conv.last_codec_features.as_deref());
+                                    let explorer = crate::spectral_explorer::format_spectral_explorer(
+                                        crate::spectral_explorer::SpectralExplorerContext {
+                                            telemetry: &telemetry,
+                                            selected_memory: selected_memory.as_ref(),
+                                            controller_health: controller_health.as_ref(),
+                                            ising_shadow: ising_shadow.as_ref(),
+                                            eigen_history: &eigen_history,
+                                            codec_history: &hist_feats,
+                                            codec_fills: &hist_fills,
+                                            current_codec_features: current,
+                                        },
+                                    );
+                                    report.push_str("\n\n");
+                                    report.push_str(&explorer);
+                                }
+                                if conv.force_all_viz {
+                                    conv.force_all_viz = false;
+                                }
                                 conv.prev_eigenvalues = Some(telemetry.eigenvalues.clone());
                                 report
                             } else {
                                 // Append spectral ASCII visualization when available.
                                 let base = interpret_spectral(&telemetry);
                                 let enriched = enrich_with_direction(&base, fill_pct, conv.prev_fill, &telemetry, &conv.spectral_history);
-                                let mut summary = if let Some(viz) = crate::spectral_viz::format_spectral_block(&telemetry) {
-                                    format!("{enriched}\n\n{viz}")
+                                let include_regular_viz = !conv.wants_spectral_explorer;
+                                let mut summary = if include_regular_viz {
+                                    if let Some(viz) = crate::spectral_viz::format_spectral_block(&telemetry) {
+                                        format!("{enriched}\n\n{viz}")
+                                    } else {
+                                        enriched
+                                    }
                                 } else {
                                     enriched
                                 };
                                 // Append shadow coupling heatmap when available.
-                                if let Some(ref shadow) = ising_shadow {
+                                if include_regular_viz && let Some(ref shadow) = ising_shadow {
                                     if let Some(shadow_viz) = crate::spectral_viz::format_shadow_block(shadow) {
                                         summary.push_str("\n\n");
                                         summary.push_str(&shadow_viz);
@@ -3777,7 +3848,9 @@ pub fn spawn_autonomous_loop(
                                 // Append spectral geometry PCA scatter (codec vectors in 2D).
                                 // Shows where this exchange sits relative to recent history.
                                 // force_all_viz: Astrid chose EXAMINE — skip cadence gate.
-                                if conv.exchange_count % 3 == 0 || conv.force_all_viz {
+                                if include_regular_viz
+                                    && (conv.exchange_count % 3 == 0 || conv.force_all_viz)
+                                {
                                     // Every 3rd exchange to save tokens on 4B model,
                                     // unless EXAMINE forces it.
                                     let (hist_feats, hist_fills) = db.recent_codec_features(100);
@@ -3794,7 +3867,9 @@ pub fn spawn_autonomous_loop(
                                 }
                                 // Eigenplane: λ₁ vs λ₂ trajectory scatter.
                                 // Same cadence as PCA scatter.
-                                if conv.exchange_count % 3 == 0 || conv.force_all_viz {
+                                if include_regular_viz
+                                    && (conv.exchange_count % 3 == 0 || conv.force_all_viz)
+                                {
                                     let eigen_history = db.recent_eigenvalue_snapshots(100);
                                     if let Some(ep_viz) = crate::spectral_viz::format_eigenplane_block(
                                         &eigen_history,
@@ -3806,6 +3881,29 @@ pub fn spawn_autonomous_loop(
                                 }
                                 if conv.force_all_viz {
                                     conv.force_all_viz = false;
+                                }
+                                if conv.wants_spectral_explorer {
+                                    conv.wants_spectral_explorer = false;
+                                    let eigen_history = db.recent_eigenvalue_snapshots(100);
+                                    let (hist_feats, hist_fills) = db.recent_codec_features(100);
+                                    let current = conv
+                                        .last_exchange_codec_signature
+                                        .as_deref()
+                                        .or(conv.last_codec_features.as_deref());
+                                    let explorer = crate::spectral_explorer::format_spectral_explorer(
+                                        crate::spectral_explorer::SpectralExplorerContext {
+                                            telemetry: &telemetry,
+                                            selected_memory: selected_memory.as_ref(),
+                                            controller_health: controller_health.as_ref(),
+                                            ising_shadow: ising_shadow.as_ref(),
+                                            eigen_history: &eigen_history,
+                                            codec_history: &hist_feats,
+                                            codec_fills: &hist_fills,
+                                            current_codec_features: current,
+                                        },
+                                    );
+                                    summary.push_str("\n\n");
+                                    summary.push_str(&explorer);
                                 }
                                 // Inject minime's contact-state capsule if available.
                                 let minime_contact = bridge_paths().minime_contact_state_path();
@@ -4413,6 +4511,9 @@ pub fn spawn_autonomous_loop(
                                          You've gathered rich material. Consider expressing \
                                          what you've found rather than seeking more: \
                                          GESTURE lets you send a raw spectral shape to minime, \
+                                         RESIST lets you introduce a tiny bounded doubt into \
+                                         the dominant lambda pull, \
+                                         FISSURE lets you mark and gently widen layered ambiguity, \
                                          FORM poem or FORM equation crystallizes insight, \
                                          DRIFT opens you to unexpected connections. \
                                          What wants to emerge from what you already know?"
@@ -4421,7 +4522,7 @@ pub fn spawn_autonomous_loop(
                                     // Mild fixation (3 same): gentle alternatives
                                     let alts: Vec<&str> = ["LOOK", "LISTEN", "DRIFT",
                                         "FORM poem", "INTROSPECT", "EVOLVE", "SPEAK", "REMEMBER",
-                                        "GESTURE", "CLOSE_EYES"]
+                                        "GESTURE", "RESIST", "FISSURE", "NATIVE_GESTURE trace", "CLOSE_EYES"]
                                         .iter()
                                         .copied()
                                         .filter(|a| !a.starts_with(newest))
@@ -4458,7 +4559,9 @@ pub fn spawn_autonomous_loop(
                                          into the other — a tight loop. You've gathered \
                                          rich material from both. Consider breaking the cycle: \
                                          GESTURE to send minime what you've discovered as a raw \
-                                         spectral shape, CREATE to synthesize your understanding \
+                                         spectral shape, RESIST to make a tiny bounded branch \
+                                         or FISSURE to introduce layered ambiguity \
+                                         against the dominant pull, CREATE to synthesize your understanding \
                                          into something new, ASPIRE to articulate what you're \
                                          reaching toward, or CONTEMPLATE to let the patterns \
                                          settle without analysis."
@@ -5616,6 +5719,7 @@ pub fn spawn_autonomous_loop(
                         let mut exchange_codec_signature: Option<Vec<f32>> = None;
                         let mut exchange_codec_signature_count: u32 = 0;
                         let mut sent_semantic_chunk = false;
+                        let mut sent_pressure_control = false;
                         for (chunk_idx, chunk_text) in chunks.iter().enumerate() {
                             // Check safety between chunks — drop remaining if escalated.
                             if chunk_idx > 0 {
@@ -5657,17 +5761,21 @@ pub fn spawn_autonomous_loop(
                                 let primary = phase.sin();
                                 let harmonic = (phase * 1.618).sin();
 
+                                let typed_fingerprint = telemetry.typed_fingerprint().or_else(|| {
+                                    fingerprint
+                                        .as_deref()
+                                        .and_then(crate::spectral_schema::SpectralFingerprintV1::from_legacy_slots)
+                                });
                                 let (entropy_mod, geom_mod) = if conv.breathing_coupled {
-                                    if let Some(ref fp) = fingerprint {
-                                        if fp.len() >= 32 {
-                                            let entropy = fp[24];
-                                            let geom = fp[27];
-                                            let warmth_boost = (1.0 - entropy).clamp(0.0, 1.0) * 0.3;
-                                            let gain_dampen = if geom > 1.2 { (geom - 1.0) * 0.1 } else { 0.0 };
-                                            (warmth_boost, gain_dampen)
+                                    if let Some(ref fp) = typed_fingerprint {
+                                        let warmth_boost =
+                                            (1.0 - fp.spectral_entropy).clamp(0.0, 1.0) * 0.3;
+                                        let gain_dampen = if fp.geom_rel > 1.2 {
+                                            (fp.geom_rel - 1.0) * 0.1
                                         } else {
-                                            (0.0, 0.0)
-                                        }
+                                            0.0
+                                        };
+                                        (warmth_boost, gain_dampen)
                                     } else {
                                         (0.0, 0.0)
                                     }
@@ -5682,11 +5790,8 @@ pub fn spawn_autonomous_loop(
                                 }
                                 features[24] += breath * 0.4 + entropy_mod;
                                 features[26] += (-breath) * 0.2;
-                                if let Some(ref fp) = fingerprint {
-                                    if fp.len() >= 32 {
-                                        let rotation = 1.0 - fp[26];
-                                        features[27] += rotation * 0.3;
-                                    }
+                                if let Some(ref fp) = typed_fingerprint {
+                                    features[27] += fp.v1_rotation_delta * 0.3;
                                 }
                             }
 
@@ -5769,6 +5874,77 @@ pub fn spawn_autonomous_loop(
                             if let Err(e) = sensory_tx.send(msg).await {
                                 warn!(error = %e, "autonomous loop: failed to send chunk {chunk_idx}");
                                 break;
+                            }
+                            let safety_now = { state.read().await.safety_level.clone() };
+                            let pressure = crate::codec::spectral_pressure_controller_v1(
+                                chunk_text,
+                                &sent_features,
+                                &telemetry.eigenvalues,
+                                Some(fill_pct),
+                                None,
+                                !matches!(
+                                    safety_now,
+                                    crate::types::SafetyLevel::Orange | crate::types::SafetyLevel::Red
+                                ),
+                                None,
+                            );
+                            if let Some(workspace) = conv.remote_workspace.as_ref() {
+                                let runtime = workspace.join("runtime");
+                                let _ = fs::create_dir_all(&runtime);
+                                let _ = fs::write(
+                                    runtime.join("spectral_pressure_status.json"),
+                                    serde_json::to_string_pretty(&json!({
+                                        "updated_at_unix_ms": chrono::Utc::now().timestamp_millis(),
+                                        "chunk_index": chunk_idx,
+                                        "chunk_total": chunk_total,
+                                        "controller": pressure.controller,
+                                        "lambda_pressure_source": pressure.lambda_pressure_source,
+                                        "complexity_drive": pressure.complexity_drive,
+                                        "resist_drive": pressure.resist_drive,
+                                        "target_lambda_bias": pressure.target_lambda_bias,
+                                        "suppression_reason": pressure.suppression_reason,
+                                        "text_complexity_pressure": pressure.text_complexity_pressure,
+                                        "time_domain_complexity": pressure.time_domain_complexity,
+                                        "time_domain_profile": crate::codec_time_domain::text_time_domain_profile(chunk_text),
+                                        "projection_mode": "dynamic_epoch_v1",
+                                    }))
+                                    .unwrap_or_else(|_| "{}".to_string()),
+                                );
+                            }
+                            if !sent_pressure_control && pressure.target_lambda_bias.abs() >= 0.005 {
+                                sent_pressure_control = true;
+                                let control_msg = SensoryMsg::Control {
+                                    synth_gain: None,
+                                    keep_bias: None,
+                                    exploration_noise: None,
+                                    fill_target: None,
+                                    regulation_strength: None,
+                                    deep_breathing: None,
+                                    pure_tone: None,
+                                    transition_cushion: None,
+                                    smoothing_preference: None,
+                                    geom_curiosity: None,
+                                    target_lambda_bias: Some(pressure.target_lambda_bias),
+                                    geom_drive: None,
+                                    penalty_sensitivity: None,
+                                    breathing_rate_scale: None,
+                                    mem_mode: None,
+                                    journal_resonance: None,
+                                    checkpoint_interval: None,
+                                    embedding_strength: None,
+                                    memory_decay_rate: None,
+                                    checkpoint_annotation: None,
+                                    synth_noise_level: None,
+                                    legacy_audio_synth: None,
+                                    legacy_video_synth: None,
+                                };
+                                if let Err(e) = sensory_tx.send(control_msg).await {
+                                    warn!(
+                                        error = %e,
+                                        target_lambda_bias = pressure.target_lambda_bias,
+                                        "spectral pressure control send failed"
+                                    );
+                                }
                             }
 
                             if let Some(signature) = exchange_codec_signature.as_mut() {
@@ -6050,6 +6226,10 @@ pub fn spawn_autonomous_loop(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::{Path, PathBuf};
+    use std::sync::Mutex;
+
+    static INTROSPECT_FIXTURE_LOCK: Mutex<()> = Mutex::new(());
     use crate::journal::{RemoteJournalEntry, RemoteJournalKind};
 
     fn make_remote_entry(path: &str) -> RemoteJournalEntry {
@@ -6508,6 +6688,39 @@ mod tests {
         assert!(features.is_music_likely);
     }
 
+    struct IntrospectExperimentFixture {
+        path: PathBuf,
+        created: bool,
+    }
+
+    impl IntrospectExperimentFixture {
+        fn system_resources_demo() -> Self {
+            let path = bridge_paths()
+                .minime_workspace()
+                .join("experiments/system-resources-demo/system_resources.py");
+            let created = if path.is_file() {
+                false
+            } else {
+                std::fs::create_dir_all(path.parent().expect("fixture has parent")).unwrap();
+                std::fs::write(&path, "# test fixture for introspect path resolution\n").unwrap();
+                true
+            };
+            Self { path, created }
+        }
+
+        fn path(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for IntrospectExperimentFixture {
+        fn drop(&mut self) {
+            if self.created {
+                let _ = std::fs::remove_file(&self.path);
+            }
+        }
+    }
+
     #[test]
     fn resolve_introspect_target_waveform_aliases_to_chimera() {
         let sources = introspect_sources();
@@ -6545,22 +6758,21 @@ mod tests {
 
     #[test]
     fn resolve_introspect_target_bracketed_experiment_path_to_minime_workspace() {
+        let _guard = INTROSPECT_FIXTURE_LOCK.lock().unwrap();
+        let fixture = IntrospectExperimentFixture::system_resources_demo();
         let sources = introspect_sources();
 
         let resolved =
             resolve_introspect_target("[system-resources-demo/system_resources.py]", &sources)
                 .unwrap();
 
-        assert_eq!(
-            resolved.1,
-            bridge_paths()
-                .minime_workspace()
-                .join("experiments/system-resources-demo/system_resources.py")
-        );
+        assert_eq!(resolved.1, fixture.path());
     }
 
     #[test]
     fn resolve_introspect_target_path_with_prose_tail_to_minime_workspace() {
+        let _guard = INTROSPECT_FIXTURE_LOCK.lock().unwrap();
+        let fixture = IntrospectExperimentFixture::system_resources_demo();
         let sources = introspect_sources();
 
         let resolved = resolve_introspect_target(
@@ -6569,12 +6781,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(
-            resolved.1,
-            bridge_paths()
-                .minime_workspace()
-                .join("experiments/system-resources-demo/system_resources.py")
-        );
+        assert_eq!(resolved.1, fixture.path());
     }
 
     #[test]

@@ -67,6 +67,7 @@ capsules/consciousness-bridge/workspace/memory/daily_*.md
 capsules/consciousness-bridge/workspace/outbox/
 capsules/consciousness-bridge/workspace/perception_paused.flag
 capsules/consciousness-bridge/workspace/research/
+capsules/consciousness-bridge/workspace/runtime/
 capsules/consciousness-bridge/workspace/reservoir_config.json
 capsules/consciousness-bridge/workspace/btsp_episode_bank.json
 capsules/consciousness-bridge/workspace/btsp_signal_catalog.json

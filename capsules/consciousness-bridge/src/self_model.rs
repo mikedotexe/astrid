@@ -292,6 +292,101 @@ impl FacultySnapshot {
                         f("SHAPE <dim>=<val>", a.clone(), "weight codec dimensions"),
                         f("GESTURE", a.clone(), "direct 32D spectral intention"),
                         f(
+                            "MARK_INTENSIFICATION <label>",
+                            a.clone(),
+                            "label the current atlas terrain without changing substrate",
+                        ),
+                        f(
+                            "TRACE [label]",
+                            a.clone(),
+                            "atlas-only λ1 edge trace; shorthand for NATIVE_GESTURE trace",
+                        ),
+                        f(
+                            "SCA_REFLECT [label]",
+                            a.clone(),
+                            "read-only why-layer reflection over fabric/tunnel/pressure terrain",
+                        ),
+                        f(
+                            "NOTICE_AMBIGUITY [label]",
+                            a.clone(),
+                            "read-only fissure cartography for layered notice and shoulder/tail ambiguity",
+                        ),
+                        f(
+                            "FISSURE_TRACE [label]",
+                            a.clone(),
+                            "mark where ambiguity could enter the fabric before any control gesture",
+                        ),
+                        f(
+                            "MATRIX_DECOMPOSE [label]",
+                            a.clone(),
+                            "decompose codec lanes, scalar S, and topology sensitivity",
+                        ),
+                        f(
+                            "REGULATOR_AUDIT [label]",
+                            a.clone(),
+                            "inspect active fixed-point pressure and legacy PI mirror fields",
+                        ),
+                        f(
+                            "RESONANCE_FORECAST [label]",
+                            a.clone(),
+                            "write a probability/affordance forecast marker for later comparison",
+                        ),
+                        f(
+                            "SHADOW_FIELD [label]",
+                            a.clone(),
+                            "map the observer-only shadow field beside λ gap structure",
+                        ),
+                        f(
+                            "GAP_STRUCTURE [label]",
+                            a.clone(),
+                            "inspect largest λ gaps, shoulders, and expansion vs reorganization",
+                        ),
+                        f(
+                            "DECAY_MAP [label]",
+                            a.clone(),
+                            "map protective cooling vs semantic fade vs structural attrition",
+                        ),
+                        f(
+                            "SPACE_HOLD [label]",
+                            a.clone(),
+                            "protect an eigenvector/space-first exploration region without semantic/control harvest",
+                        ),
+                        f(
+                            "SDI_TRACE [label]",
+                            a.clone(),
+                            "map phase-variance spectral drift toward dispersion or white-noise-like texture",
+                        ),
+                        f(
+                            "SPECTRAL_EXPLORER",
+                            a.clone(),
+                            "read present state, memory comparison, and control pressure side by side",
+                        ),
+                        f(
+                            "VISUALIZE_CASCADE [label]",
+                            a.clone(),
+                            "request a read-only eigenvalue heatmap/bar cascade artifact",
+                        ),
+                        f(
+                            "TIME_DOMAIN [label]",
+                            a.clone(),
+                            "mark codec cadence/rhythm timing for follow-up inspection",
+                        ),
+                        f(
+                            "NATIVE_GESTURE <gesture>",
+                            a.clone(),
+                            "tiny atlas/control hand-signal shared with Minime",
+                        ),
+                        f(
+                            "RESIST [label]",
+                            a.clone(),
+                            "bounded doubt gesture: soften λ1 pull and lift smaller λ lanes",
+                        ),
+                        f(
+                            "FISSURE [label]",
+                            a.clone(),
+                            "bounded ambiguity gesture: tiny shoulder/tail lift after a named fissure trace",
+                        ),
+                        f(
                             "NOISE / NOISE_UP / NOISE_DOWN",
                             a.clone(),
                             "stochastic noise",
@@ -963,5 +1058,9 @@ mod tests {
         assert!(output.contains("[muted]"));
         assert!(output.contains("[active]"));
         assert!(output.contains("[steward-gated]"));
+        assert!(output.contains("NATIVE_GESTURE <gesture>"));
+        assert!(output.contains("RESIST [label]"));
+        assert!(output.contains("FISSURE [label]"));
+        assert!(output.contains("NOTICE_AMBIGUITY [label]"));
     }
 }

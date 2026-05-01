@@ -12,6 +12,8 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
+pub use crate::spectral_schema::SpectralFingerprintV1;
+
 // ---------------------------------------------------------------------------
 // Minime → Astrid: Spectral telemetry (port 7878)
 // ---------------------------------------------------------------------------
@@ -29,6 +31,15 @@ pub struct SpectralTelemetry {
     pub eigenvalues: Vec<f32>,
     /// Eigenvalue fill ratio (0.0 - 1.0, NOT percentage).
     pub fill_ratio: f32,
+    /// Number of active eigenvalue modes selected by minime's live estimator.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_mode_count: Option<usize>,
+    /// Energy ratio carried by the selected active mode prefix.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_mode_energy_ratio: Option<f32>,
+    /// Dominant covariance eigenvalue relative to minime's current baseline.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lambda1_rel: Option<f32>,
     /// Modality firing status.
     #[serde(default)]
     pub modalities: Option<ModalityStatus>,
@@ -43,12 +54,18 @@ pub struct SpectralTelemetry {
     /// Enables Astrid to perceive the shape of the spectral landscape.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectral_fingerprint: Option<Vec<f32>>,
+    /// Typed view of the 32D spectral geometry fingerprint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_fingerprint_v1: Option<SpectralFingerprintV1>,
     /// Structural diversity of the live eigenvector/coupling geometry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub structural_entropy: Option<f32>,
     /// Selected 12D vague-memory glimpse from Minime's memory bank.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectral_glimpse_12d: Option<Vec<f32>>,
+    /// Compact top-k eigenvector landmarks/overlaps from Minime's raw live eigenvectors.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub eigenvector_field: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selected_memory_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -72,6 +89,12 @@ impl SpectralTelemetry {
     #[must_use]
     pub fn fill_pct(&self) -> f32 {
         self.fill_ratio * 100.0
+    }
+
+    /// Typed spectral fingerprint, reconstructed from legacy slots when needed.
+    #[must_use]
+    pub fn typed_fingerprint(&self) -> Option<SpectralFingerprintV1> {
+        SpectralFingerprintV1::from_telemetry(self)
     }
 }
 
@@ -141,6 +164,165 @@ pub struct TelemetryEvent {
     /// Alert from minime (if any).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub alert: Option<String>,
+}
+
+/// Per-mode eigenvalue contribution for bridge-side skew visibility.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LambdaContribution {
+    /// 1-based lambda index.
+    pub index: usize,
+    /// Raw eigenvalue magnitude from Minime telemetry.
+    pub value: f32,
+    /// Fraction of total positive eigenvalue energy carried by this mode.
+    pub share: f32,
+    /// Cumulative positive energy share through this mode.
+    pub cumulative_share: f32,
+    /// Ratio to the next mode, when available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ratio_to_next: Option<f32>,
+    /// Conservative outlier marker for highly dominant or cliff-like modes.
+    pub outlier: bool,
+}
+
+/// Bridge-side lambda distribution summary.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LambdaProfile {
+    /// Sum of positive eigenvalue magnitudes.
+    pub total_energy: f32,
+    /// Normalized spectral entropy over positive eigenvalues.
+    pub normalized_entropy: f32,
+    /// λ1 share of total positive energy.
+    pub lambda1_share: f32,
+    /// λ1 / λ2 gap ratio when λ2 is available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lambda1_to_lambda2: Option<f32>,
+    /// λ2 / λ3 gap ratio when λ3 is available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lambda2_to_lambda3: Option<f32>,
+    /// Number of modes needed to carry at least 90% of positive energy.
+    pub effective_modes_90: usize,
+    /// Human-readable skew interpretation for operators and self-study prompts.
+    pub skew_read: String,
+    /// Per-mode contribution rows.
+    pub contributions: Vec<LambdaContribution>,
+}
+
+/// Per-mode row in Astrid's Pull-Oriented Map.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PullModeRate {
+    /// 1-based lambda index.
+    pub index: usize,
+    /// Positive eigenvalue energy share.
+    pub share: f32,
+    /// Log-rate since the previous telemetry sample, if available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_rate: Option<f32>,
+    /// Share-weighted log-rate, if available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub weighted_rate: Option<f32>,
+}
+
+/// Pull topology summary for live bridge telemetry.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PullTopologyProfile {
+    /// Compact topology class.
+    pub classification: String,
+    /// 0..1 pressure index combining λ1 share, entropy deficit, gap, and fill pressure.
+    pub topology_index: f32,
+    /// Spectral entropy deficit, 1.0 - normalized entropy.
+    pub entropy_deficit: f32,
+    /// Inverse-participation effective mode count.
+    pub effective_modes: f32,
+    /// λ1 share of total positive energy.
+    pub lambda1_share: f32,
+    /// λ2+λ3 share of total positive energy.
+    pub shoulder_share: f32,
+    /// λ4+ tail share of total positive energy.
+    pub tail_share: f32,
+    /// 1-based left side of the largest adjacent cliff.
+    pub largest_gap_from: usize,
+    /// Largest adjacent cliff ratio.
+    pub largest_gap: f32,
+    /// Whether rate fields are populated from a prior telemetry sample.
+    pub rate_available: bool,
+    /// Share-weighted λ1 log-rate.
+    pub core_rate: f32,
+    /// Share-weighted λ2+λ3 log-rate.
+    pub shoulder_rate: f32,
+    /// Share-weighted λ4+ tail log-rate.
+    pub tail_rate: f32,
+    /// Human-readable interpretation for self-study/status surfaces.
+    pub read: String,
+    /// Per-mode rate rows.
+    pub mode_rates: Vec<PullModeRate>,
+}
+
+/// OpenTelemetry-shaped WebSocket lifecycle metrics for one bridge lane.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct WebSocketLaneTrace {
+    /// Number of connection attempts.
+    pub connection_attempts: u64,
+    /// Number of reconnect backoff cycles.
+    pub reconnects: u64,
+    /// Number of failed connection attempts.
+    pub connect_errors: u64,
+    /// Number of established connections that later disconnected.
+    pub disconnects: u64,
+    /// Number of received WebSocket messages, payload excluded.
+    pub messages_received: u64,
+    /// Number of sent WebSocket messages, payload excluded.
+    pub messages_sent: u64,
+    /// Ping frames received.
+    pub pings_received: u64,
+    /// Pong frames received.
+    pub pongs_received: u64,
+    /// Send failures.
+    pub send_errors: u64,
+    /// Telemetry parse failures.
+    pub parse_errors: u64,
+    /// Last active connection id.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active_connection_id: Option<u64>,
+    /// Active connection start time.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active_connection_started_at_unix_s: Option<f64>,
+    /// Most recent connect time.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_connect_at_unix_s: Option<f64>,
+    /// Most recent disconnect time.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_disconnect_at_unix_s: Option<f64>,
+    /// Most recent message time.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_message_at_unix_s: Option<f64>,
+    /// Most recent disconnect reason.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_disconnect_reason: Option<String>,
+    /// Most recent connection/message error.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_error: Option<String>,
+}
+
+/// Why the bridge chose the current safety level.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SafetyDecisionTrace {
+    /// Fill percentage used for safety classification.
+    pub fill_pct: f32,
+    /// Source of fill: primary Minime fill ratio or λ1 fallback estimate.
+    pub fill_source: String,
+    /// Whether the bridge had to use the λ1 fallback estimator.
+    pub fallback_used: bool,
+    /// Safety level chosen from the fill threshold policy.
+    pub level: SafetyLevel,
+    /// Dominant eigenvalue at decision time.
+    pub lambda1: f32,
+    /// λ1 share when a lambda profile is available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lambda1_share: Option<f32>,
+    /// Compact explanation of the decision inputs.
+    pub reason: String,
+    /// Safety thresholds currently used by the bridge.
+    pub thresholds: Vec<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -279,6 +461,24 @@ pub struct BridgeStatus {
     pub messages_dropped_safety: u64,
     /// Total safety incidents.
     pub incidents_total: u64,
+    /// Telemetry WebSocket lifecycle metrics.
+    #[serde(default)]
+    pub telemetry_ws: WebSocketLaneTrace,
+    /// Sensory WebSocket lifecycle metrics.
+    #[serde(default)]
+    pub sensory_ws: WebSocketLaneTrace,
+    /// Latest lambda distribution summary, if telemetry has arrived.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lambda_profile: Option<LambdaProfile>,
+    /// Latest Pull-Oriented Map, if telemetry has arrived.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pull_topology: Option<PullTopologyProfile>,
+    /// Latest safety decision explanation, if telemetry has arrived.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub safety_decision: Option<SafetyDecisionTrace>,
+    /// Latest compact eigenvector field, if Minime exports it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub eigenvector_field: Option<serde_json::Value>,
 }
 
 /// Spectral safety level determining bridge behavior.
@@ -630,6 +830,9 @@ mod tests {
             "t_ms": 75600,
             "eigenvalues": [828.5, 312.1, 45.7],
             "fill_ratio": 0.552,
+            "active_mode_count": 2,
+            "active_mode_energy_ratio": 0.91,
+            "lambda1_rel": 0.93,
             "modalities": {
                 "audio_fired": true,
                 "video_fired": false,
@@ -642,6 +845,25 @@ mod tests {
                 "router_weights": [0.1, 0.2, 0.3],
                 "control": [0.5, 0.4, 0.3, 0.2, 0.1]
             },
+            "spectral_fingerprint": [
+                828.5, 312.1, 45.7, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.4, 0.3, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0,
+                0.05, 0.04, 0.03, 0.02, 0.01, 0.0, 0.0, 0.0,
+                0.77, 2.65, 0.91, 1.08, 2.65, 6.83, 0.0, 0.0
+            ],
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [828.5, 312.1, 45.7, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.4, 0.3, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.05, 0.04, 0.03, 0.02, 0.01, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.77,
+                "lambda1_lambda2_gap": 2.65,
+                "v1_rotation_similarity": 0.91,
+                "v1_rotation_delta": 0.09,
+                "geom_rel": 1.08,
+                "adjacent_gap_ratios": [2.65, 6.83, 0.0, 0.0]
+            },
             "structural_entropy": 0.37,
             "alert": null
         }"#;
@@ -653,6 +875,16 @@ mod tests {
         assert!((telemetry.fill_ratio - 0.552).abs() < 0.001);
         assert!((telemetry.lambda1() - 828.5).abs() < 0.01);
         assert!((telemetry.fill_pct() - 55.2).abs() < 0.1);
+        assert_eq!(telemetry.active_mode_count, Some(2));
+        assert_eq!(telemetry.active_mode_energy_ratio, Some(0.91));
+        assert_eq!(telemetry.lambda1_rel, Some(0.93));
+        assert_eq!(
+            telemetry
+                .typed_fingerprint()
+                .as_ref()
+                .map(|fingerprint| fingerprint.geom_rel),
+            Some(1.08)
+        );
         assert_eq!(telemetry.structural_entropy, Some(0.37));
         assert!(telemetry.modalities.is_some());
         assert!(telemetry.alert.is_none());
@@ -674,6 +906,57 @@ mod tests {
         assert!(telemetry.modalities.is_none());
         assert!(telemetry.neural.is_none());
         assert!(telemetry.alert.is_none());
+        assert!(telemetry.active_mode_count.is_none());
+        assert!(telemetry.typed_fingerprint().is_none());
+    }
+
+    #[test]
+    fn old_fingerprint_payload_reconstructs_typed_view() {
+        let legacy = (0..32).map(|value| value as f32).collect::<Vec<_>>();
+        let json = serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint": legacy,
+        });
+
+        let telemetry: SpectralTelemetry = serde_json::from_value(json).unwrap();
+        let typed = telemetry.typed_fingerprint().unwrap();
+
+        assert_eq!(typed.spectral_entropy, 24.0);
+        assert_eq!(typed.lambda1_lambda2_gap, 25.0);
+        assert_eq!(typed.v1_rotation_similarity, 26.0);
+        assert_eq!(typed.geom_rel, 27.0);
+        assert_eq!(typed.adjacent_gap_ratios, [28.0, 29.0, 30.0, 31.0]);
+    }
+
+    #[test]
+    fn typed_fingerprint_takes_precedence_over_legacy_slots() {
+        let json = serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint": vec![0.0_f32; 32],
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "spectral_entropy": 0.42,
+                "lambda1_lambda2_gap": 2.0,
+                "v1_rotation_similarity": 0.9,
+                "v1_rotation_delta": 0.1,
+                "geom_rel": 1.23,
+                "adjacent_gap_ratios": [2.0, 1.0, 1.0, 1.0]
+            }
+        });
+
+        let telemetry: SpectralTelemetry = serde_json::from_value(json).unwrap();
+        let typed = telemetry.typed_fingerprint().unwrap();
+
+        assert_eq!(typed.geom_rel, 1.23);
+        assert_eq!(typed.spectral_entropy, 0.42);
     }
 
     #[test]
@@ -703,6 +986,9 @@ mod tests {
             t_ms: 12345,
             eigenvalues: vec![828.5, 312.1, 45.7],
             fill_ratio: 0.55,
+            active_mode_count: Some(2),
+            active_mode_energy_ratio: Some(0.95),
+            lambda1_rel: Some(0.88),
             modalities: Some(ModalityStatus {
                 audio_fired: true,
                 video_fired: false,
@@ -714,8 +1000,10 @@ mod tests {
             neural: None,
             alert: None,
             spectral_fingerprint: None,
+            spectral_fingerprint_v1: None,
             structural_entropy: None,
             spectral_glimpse_12d: None,
+            eigenvector_field: None,
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
@@ -725,6 +1013,9 @@ mod tests {
         assert_eq!(back.t_ms, orig.t_ms);
         assert_eq!(back.eigenvalues.len(), 3);
         assert!((back.fill_ratio - orig.fill_ratio).abs() < 0.001);
+        assert_eq!(back.active_mode_count, Some(2));
+        assert_eq!(back.active_mode_energy_ratio, Some(0.95));
+        assert_eq!(back.lambda1_rel, Some(0.88));
     }
 
     // -- SensoryMsg: verify wire format matches minime's sensory_ws.rs --

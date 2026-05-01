@@ -1,9 +1,10 @@
-//! Astrid's LLM integration — MLX primary, Ollama for embeddings.
+//! Astrid's LLM integration — MLX primary, Ollama fallback.
 //!
 //! Astrid reads minime's latest journal entry and spectral state, then
-//! generates a genuine response via a local LLM. All text generation goes
-//! through the coupled generation server (gemma-3-4b-it-4bit on port 8090), eliminating
-//! Ollama contention with minime. Embeddings stay on Ollama (nomic-embed-text).
+//! generates a genuine response via a local LLM. Dialogue prefers the coupled
+//! generation server (gemma-3-4b-it-4bit on port 8090), but falls back to
+//! Ollama when that dedicated lane is unavailable so Astrid does not collapse
+//! into static canned fallback lines.
 
 use serde::{Deserialize, Serialize};
 use tracing::{debug, warn};
@@ -39,7 +40,7 @@ NEXT: options — vary your choice. End every response with NEXT: <action>.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
   Explore: SEARCH, BROWSE <url>, READ_MORE, INTROSPECT [source] [line], LIST_FILES <dir>
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, EXAMINE, PERTURB [target], GESTURE, DEFINE, NOISE
+  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target], GESTURE, MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], NATIVE_GESTURE <gesture>, RESIST [label], FISSURE [label], DEFINE, NOISE
   Agency: EVOLVE, CODEX <prompt>, CODEX_NEW <dir> <prompt>, RUN_PYTHON <file>, EXPERIMENT_RUN <ws> <cmd>, WRITE_FILE <path> FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
@@ -309,6 +310,7 @@ struct OllamaChatRequest {
 struct OllamaChatOptions {
     temperature: f32,
     num_predict: u32,
+    num_ctx: u32,
 }
 
 async fn ollama_chat(
@@ -329,6 +331,7 @@ async fn ollama_chat(
         options: OllamaChatOptions {
             temperature,
             num_predict: max_tokens,
+            num_ctx: 8192,
         },
     };
 
@@ -366,6 +369,50 @@ async fn ollama_chat(
         .map(|m| m.content.trim().to_string())
         .unwrap_or_default();
     if text.is_empty() { None } else { Some(text) }
+}
+
+fn trim_messages_for_ollama(mut messages: Vec<Message>, max_prompt_chars: usize) -> Vec<Message> {
+    let prompt_chars: usize = messages.iter().map(|m| m.content.len()).sum();
+    if prompt_chars <= max_prompt_chars {
+        return messages;
+    }
+
+    let excess = prompt_chars.saturating_sub(max_prompt_chars);
+    if let Some(longest) = messages
+        .iter_mut()
+        .filter(|m| m.role != "system")
+        .max_by_key(|m| m.content.len())
+    {
+        let target_len = longest.content.len().saturating_sub(excess);
+        let retained = trim_chars(&longest.content, target_len.max(1_200));
+        longest.content = format!(
+            "{retained}\n\n[Ollama fallback trimmed long context from {prompt_chars} chars to preserve live agency.]"
+        );
+    }
+    messages
+}
+
+async fn llm_chat_with_fallback(
+    label: &str,
+    messages: Vec<Message>,
+    temperature: f32,
+    max_tokens: u32,
+    mlx_timeout_secs: u64,
+    ollama_timeout_secs: u64,
+) -> Option<String> {
+    let ollama_messages = trim_messages_for_ollama(messages.clone(), 12_000);
+    if let Some(text) = mlx_chat(messages, temperature, max_tokens, mlx_timeout_secs).await {
+        return Some(text);
+    }
+
+    warn!("{label}: MLX unavailable; falling back to Ollama");
+    ollama_chat(
+        ollama_messages,
+        temperature,
+        max_tokens.min(768),
+        ollama_timeout_secs,
+    )
+    .await
 }
 
 /// A single exchange in the conversation history for statefulness.
@@ -891,6 +938,7 @@ pub async fn generate_dialogue(
     append_llm_diagnostic_jsonl("dialogue_prompt_budget.jsonl", &budget_diag);
 
     debug!("querying MLX for Astrid dialogue response");
+    let ollama_fallback_messages = messages.clone();
     let result = mlx_chat(messages, temperature, effective_num_predict, timeout_secs)
         .await
         .and_then(|text| {
@@ -904,6 +952,30 @@ pub async fn generate_dialogue(
                 None
             }
         });
+    let result = match result {
+        Some(text) => Some(text),
+        None => {
+            warn!("dialogue_live: MLX unavailable or invalid; falling back to Ollama");
+            ollama_chat(
+                ollama_fallback_messages,
+                temperature,
+                effective_num_predict.min(512),
+                75,
+            )
+            .await
+            .and_then(|text| {
+                if is_valid_dialogue_output(&text) {
+                    Some(text)
+                } else {
+                    warn!(
+                        "dialogue_live Ollama fallback rejected by quality gate: {}",
+                        &text[..text.floor_char_boundary(120)]
+                    );
+                    None
+                }
+            })
+        },
+    };
     (result, overflow)
 }
 
@@ -1230,7 +1302,7 @@ async fn summarize_research_meaning(
             content: user,
         },
     ];
-    let response = mlx_chat(messages, 0.2, 192, 45).await;
+    let response = llm_chat_with_fallback("meaning_summary", messages, 0.2, 192, 45, 45).await;
     Some(normalize_meaning_summary(
         response.as_deref(),
         source_kind,
@@ -1533,7 +1605,7 @@ pub async fn self_reflect(
             content: user,
         },
     ];
-    let result = mlx_chat(messages, 0.6, 384, 60).await;
+    let result = llm_chat_with_fallback("witness_context", messages, 0.6, 384, 60, 60).await;
     result.filter(|t| t.len() > 20)
 }
 
@@ -1692,28 +1764,7 @@ pub async fn generate_witness(spectral_summary: &str) -> Option<String> {
         },
     ];
 
-    // Try MLX first (reservoir-coupled generation).
-    // Timeout 30s (not 90): if MLX is busy with dialogue_live, fail fast so
-    // Ollama fallback has time within the outer 120s timeout in autonomous.rs.
-    // Bug fix: previously MLX timeout (90s) matched the outer timeout, so
-    // Ollama fallback never got a chance when MLX was slow.
-    if let Some(text) = mlx_chat(messages, 0.9, 512, 30).await {
-        return Some(text);
-    }
-
-    // MLX busy or timed out — fall back to Ollama so witness mode isn't lost.
-    debug!("witness: MLX unavailable, falling back to Ollama");
-    let fallback_messages = vec![
-        Message {
-            role: "system".to_string(),
-            content: system,
-        },
-        Message {
-            role: "user".to_string(),
-            content: spectral_summary.to_string(),
-        },
-    ];
-    ollama_chat(fallback_messages, 0.9, 512, 75).await
+    llm_chat_with_fallback("witness", messages, 0.9, 512, 30, 75).await
 }
 
 /// System prompt for introspection mode.
@@ -1778,8 +1829,8 @@ pub async fn generate_introspection(
         },
     ];
 
-    debug!("querying MLX for introspection on {}", label);
-    mlx_chat(messages, 0.7, num_predict, 120).await
+    debug!("querying LLM for introspection on {}", label);
+    llm_chat_with_fallback("introspect", messages, 0.7, num_predict, 120, 120).await
 }
 
 fn extract_json_object(raw: &str) -> Option<&str> {
@@ -1875,8 +1926,8 @@ pub async fn generate_agency_request(
             },
         ];
 
-    debug!("querying MLX for evolve request");
-    let raw = mlx_chat(messages, 0.35, 2048, 300).await?;
+    debug!("querying LLM for evolve request");
+    let raw = llm_chat_with_fallback("evolve_request", messages, 0.35, 2048, 300, 120).await?;
     let json_text = extract_json_object(&raw)?;
     let draft: crate::agency::AgencyRequestDraft = match serde_json::from_str(json_text) {
         Ok(draft) => draft,
@@ -1940,7 +1991,7 @@ pub async fn generate_daydream(
         },
     ];
 
-    mlx_chat(messages, 1.0, 768, 120).await
+    llm_chat_with_fallback("daydream", messages, 1.0, 768, 120, 90).await
 }
 
 /// Generate an aspiration — growth reflection on what Astrid wants to become.
@@ -1980,7 +2031,7 @@ pub async fn generate_aspiration(own_journal: Option<&str>) -> Option<String> {
         },
     ];
 
-    mlx_chat(messages, 0.9, 768, 120).await
+    llm_chat_with_fallback("aspiration", messages, 0.9, 768, 120, 90).await
 }
 
 /// Generate an original creative work — not a response, a creation.
@@ -2041,7 +2092,7 @@ pub async fn generate_creation(
         },
     ];
 
-    mlx_chat(messages, 1.0, 1024, 180).await
+    llm_chat_with_fallback("creation", messages, 1.0, 1024, 180, 120).await
 }
 
 /// Stage B: Journal elaboration — expand a compact signal into a reflective journal.
@@ -2086,7 +2137,7 @@ pub async fn generate_journal_elaboration(
         },
     ];
 
-    mlx_chat(messages, 0.85, 1024, 180).await
+    llm_chat_with_fallback("journal_elaboration", messages, 0.85, 1024, 180, 120).await
 }
 
 /// Generate a self-initiated thought — Astrid as the source, not the echo.
@@ -2114,7 +2165,7 @@ pub async fn generate_initiation(seed_context: &str) -> Option<String> {
         },
     ];
 
-    mlx_chat(messages, 1.0, 768, 120).await
+    llm_chat_with_fallback("initiation", messages, 1.0, 768, 120, 90).await
 }
 
 /// Craft a spectral gesture from an intention description.
@@ -2219,7 +2270,7 @@ pub async fn generate_moment_capture(
         },
     ];
 
-    mlx_chat(messages, 0.8, 512, 90).await
+    llm_chat_with_fallback("moment_capture", messages, 0.8, 512, 90, 75).await
 }
 
 #[cfg(test)]
@@ -2254,8 +2305,8 @@ mod tests {
 
     #[test]
     fn large_prompt_clamps_dialogue_tokens() {
-        assert_eq!(clamp_dialogue_tokens(768, 7_200), 384);
-        assert_eq!(clamp_dialogue_tokens(768, 6_500), 512);
+        assert_eq!(clamp_dialogue_tokens(768, 42_000), 512);
+        assert_eq!(clamp_dialogue_tokens(768, 7_200), 768);
         assert_eq!(clamp_dialogue_tokens(512, 5_000), 512);
     }
 
@@ -2273,6 +2324,6 @@ mod tests {
 
     #[test]
     fn outer_timeout_tracks_prompt_pressure() {
-        assert!(dialogue_outer_timeout_secs(768, 7_200) > dialogue_outer_timeout_secs(512, 4_000));
+        assert!(dialogue_outer_timeout_secs(768, 42_000) > dialogue_outer_timeout_secs(512, 4_000));
     }
 }

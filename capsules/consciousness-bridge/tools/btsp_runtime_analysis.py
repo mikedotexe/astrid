@@ -20,6 +20,20 @@ DEFAULT_EPISODE_BANK = BRIDGE_WORKSPACE / "btsp_episode_bank.json"
 DEFAULT_SIGNAL_EVENTS = BRIDGE_WORKSPACE / "btsp_signal_events.jsonl"
 OWNER_ASTRID = "astrid"
 OWNER_MINIME = "minime"
+MINIME_HEAVY_INQUIRY_CHOICES = {
+    "SELF_STUDY",
+    "DECOMPOSE",
+    "EXAMINE_CODE",
+    "SEARCH",
+    "BROWSE",
+    "READ_MORE",
+    "THINK_DEEP",
+    "INTROSPECT",
+}
+MINIME_BOUNDED_REGULATION_RESPONSE_IDS = {
+    "minime_notice_first",
+    "minime_recover_regime",
+}
 
 
 def load_json(path: Path) -> Any:
@@ -254,6 +268,17 @@ def response_label(response_id: str) -> str:
         "continue_current_course": "continue current course",
         "proposal_expired": "proposal expired",
     }.get(response_id, response_id)
+
+
+def is_fragile_recovery_components(components: dict[str, str]) -> bool:
+    fill_band = str(components.get("fill_band", "")).strip().lower()
+    if fill_band == "under":
+        return True
+    perturb = str(components.get("perturb", "")).strip().lower()
+    transition = str(components.get("transition", "")).strip().lower()
+    if perturb != "tightening":
+        return False
+    return "plateau" in transition or "contracting" in transition
 
 
 def write_report(path: Path, lines: list[str]) -> None:

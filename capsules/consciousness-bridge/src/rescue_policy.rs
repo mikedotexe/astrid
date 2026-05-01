@@ -20,7 +20,10 @@ use self::value_fields::{bool_field, f32_field, string_array_field, string_field
 
 const LIMITED_WRITE_PROFILE: &str = "limited_dampen_inquiry";
 const LIMITED_WRITE_PROFILE_V2: &str = "limited_dampen_inquiry_v2";
+const BUDGETED_SOVEREIGNTY_PROFILE: &str = "budgeted_sovereignty_v1";
+const FULL_EXPRESSION_PROFILE: &str = "full_expression_v1";
 const LIMITED_WRITE_STATUS_FILE: &str = "bridge_limited_write_status.json";
+const LIMITED_WRITE_SENSORY_MUTE_FILE: &str = "stable_core_sensory_mute.json";
 const LIMITED_WRITE_SOURCE: &str = "autonomous_main_chunk";
 const OBSERVE_ONLY_PROFILE: &str = "bridge_observe_only";
 const V2_SEMANTIC_ENERGY_MAX: f32 = 0.02;
@@ -42,6 +45,8 @@ struct RescueBridgePolicy {
     limited_write_min_fill_pct: f32,
     limited_write_max_fill_pct: f32,
     limited_write_rising_epsilon_pct: f32,
+    limited_write_semantic_energy_rising_epsilon_pct: f32,
+    limited_write_rollback_semantic_energy: f32,
     limited_write_health_max_age_secs: u64,
     limited_write_peak_fill_max_pct: f32,
     limited_write_required_stage: Option<String>,
@@ -56,6 +61,11 @@ struct RescueBridgePolicy {
     limited_write_require_zero_live_divisors: bool,
     limited_write_require_dampen_inquiry_text: bool,
     limited_write_block_structural_dump_language: bool,
+    limited_write_block_terms_always: bool,
+    limited_write_block_terms_on_rising: bool,
+    limited_write_mute_live_intake_secs: u64,
+    limited_write_pre_mute_live_intake_secs: u64,
+    limited_write_require_pre_muted_live_intake: bool,
     limited_write_block_terms: Vec<String>,
     limited_write_allowed_modes: Vec<String>,
 }
@@ -93,7 +103,12 @@ impl RescueBridgePolicy {
         let bridge_write_profile = string_field(value, "bridge_write_profile")
             .unwrap_or_else(|| "unrestricted".to_string());
         let is_limited_write_v2 = bridge_write_profile == LIMITED_WRITE_PROFILE_V2
-            || profile_name == "bridge_limited_write_v2";
+            || bridge_write_profile == BUDGETED_SOVEREIGNTY_PROFILE
+            || bridge_write_profile == FULL_EXPRESSION_PROFILE
+            || profile_name == "bridge_limited_write_v2"
+            || profile_name == "bridge_budgeted_sovereignty_v1"
+            || profile_name == "bridge_full_expression_v1"
+            || profile_name == "stable_core_v1";
         let limited_write_enabled = bool_field(value, "limited_write_enabled").unwrap_or(false)
             || bridge_write_profile == LIMITED_WRITE_PROFILE
             || is_limited_write_v2
@@ -132,6 +147,17 @@ impl RescueBridgePolicy {
                 .unwrap_or(68.0),
             limited_write_rising_epsilon_pct: f32_field(value, "limited_write_rising_epsilon_pct")
                 .unwrap_or(0.5),
+            limited_write_semantic_energy_rising_epsilon_pct: f32_field(
+                value,
+                "limited_write_semantic_energy_rising_epsilon_pct",
+            )
+            .or_else(|| f32_field(value, "limited_write_rising_epsilon_pct"))
+            .unwrap_or(0.5),
+            limited_write_rollback_semantic_energy: f32_field(
+                value,
+                "limited_write_rollback_semantic_energy",
+            )
+            .unwrap_or(V2_ROLLBACK_SEMANTIC_ENERGY),
             limited_write_health_max_age_secs: u64_field(
                 value,
                 "limited_write_health_max_age_secs",
@@ -184,6 +210,28 @@ impl RescueBridgePolicy {
                 "limited_write_block_structural_dump_language",
             )
             .unwrap_or(true),
+            limited_write_block_terms_always: bool_field(value, "limited_write_block_terms_always")
+                .unwrap_or(false),
+            limited_write_block_terms_on_rising: bool_field(
+                value,
+                "limited_write_block_terms_on_rising",
+            )
+            .unwrap_or(true),
+            limited_write_mute_live_intake_secs: u64_field(
+                value,
+                "limited_write_mute_live_intake_secs",
+            )
+            .unwrap_or(0),
+            limited_write_pre_mute_live_intake_secs: u64_field(
+                value,
+                "limited_write_pre_mute_live_intake_secs",
+            )
+            .unwrap_or(0),
+            limited_write_require_pre_muted_live_intake: bool_field(
+                value,
+                "limited_write_require_pre_muted_live_intake",
+            )
+            .unwrap_or(false),
             limited_write_block_terms: string_array_field(value, "limited_write_block_terms")
                 .unwrap_or_else(default_limited_write_block_terms),
             limited_write_allowed_modes: string_array_field(value, "limited_write_allowed_modes")
@@ -232,14 +280,20 @@ impl RescueBridgePolicy {
             && self.limited_write_enabled
             && matches!(
                 self.bridge_write_profile.as_str(),
-                LIMITED_WRITE_PROFILE | LIMITED_WRITE_PROFILE_V2
+                LIMITED_WRITE_PROFILE
+                    | LIMITED_WRITE_PROFILE_V2
+                    | BUDGETED_SOVEREIGNTY_PROFILE
+                    | FULL_EXPRESSION_PROFILE
             )
     }
 
     fn limited_write_v2_active(&self) -> bool {
         self.limited_write_active()
             && self.limited_write_policy_version == 2
-            && self.bridge_write_profile == LIMITED_WRITE_PROFILE_V2
+            && matches!(
+                self.bridge_write_profile.as_str(),
+                LIMITED_WRITE_PROFILE_V2 | BUDGETED_SOVEREIGNTY_PROFILE | FULL_EXPRESSION_PROFILE
+            )
     }
 
     fn limited_write_block_reason(
@@ -327,7 +381,19 @@ impl RescueBridgePolicy {
         }
 
         let text = context.text.unwrap_or_default();
+        let lower = text.to_lowercase();
         if self.limited_write_v2_active() {
+            if self.limited_write_block_terms_always {
+                if let Some(term) = self
+                    .limited_write_block_terms
+                    .iter()
+                    .find(|term| lower.contains(&term.to_lowercase()))
+                {
+                    return Some(format!(
+                        "limited-write profile blocks trigger language '{term}'"
+                    ));
+                }
+            }
             if let Some(reason) = self.v2_health_block_reason(context, health.as_ref()?) {
                 return Some(reason);
             }
@@ -345,17 +411,48 @@ impl RescueBridgePolicy {
                     "limited-write v2 allows only dampening or inquiry-shaped text".to_string(),
                 );
             }
+            if self.limited_write_require_pre_muted_live_intake {
+                let health = health.as_ref()?;
+                if !health.semantic_mute_active
+                    || health.live_audio_divisor != 0
+                    || health.live_video_divisor != 0
+                {
+                    write_limited_write_sensory_mute(
+                        status_path,
+                        self,
+                        now,
+                        self.limited_write_pre_mute_live_intake_secs
+                            .max(self.limited_write_mute_live_intake_secs),
+                        "limited_write_pre_mute_before_semantic_send",
+                    );
+                    return Some(
+                        "limited-write v2 pre-muted live audio/video before semantic send"
+                            .to_string(),
+                    );
+                }
+            }
         } else if !looks_like_dampen_or_inquiry(text, mode) {
             return Some(
                 "limited-write profile allows only dampening or inquiry-shaped text".to_string(),
             );
         }
 
+        if self.limited_write_block_terms_always {
+            if let Some(term) = self
+                .limited_write_block_terms
+                .iter()
+                .find(|term| lower.contains(&term.to_lowercase()))
+            {
+                return Some(format!(
+                    "limited-write profile blocks trigger language '{term}'"
+                ));
+            }
+        }
+
         let fill_rising = context
             .previous_fill_pct
             .is_some_and(|previous| fill_pct - previous > self.limited_write_rising_epsilon_pct);
-        if fill_rising {
-            let lower = text.to_lowercase();
+        if fill_rising && self.limited_write_block_terms_on_rising {
             if let Some(term) = self
                 .limited_write_block_terms
                 .iter()
@@ -412,6 +509,13 @@ impl RescueBridgePolicy {
         context: &SemanticWriteContext<'_>,
         health: &LimitedWriteHealth,
     ) -> Option<String> {
+        if let Some(watchdog_state) = health.watchdog_state.as_deref() {
+            if watchdog_state != "monitoring" {
+                return Some(format!(
+                    "limited-write v2 requires watchdog monitoring; saw '{watchdog_state}'"
+                ));
+            }
+        }
         if !self
             .limited_write_allowed_stages
             .iter()
@@ -495,6 +599,33 @@ impl RescueBridgePolicy {
 
         let fill_delta = health.fill_pct - last_sent_fill_pct;
         if elapsed <= eval_window {
+            if let Some(watchdog_state) = health.watchdog_state.as_deref() {
+                if watchdog_state != "monitoring" {
+                    if matches!(watchdog_state, "warmup" | "monitoring:degraded") {
+                        if !already_final {
+                            status["last_send_evaluation"] = json!({
+                                "state": "watching",
+                                "sent_at_unix_s": last_sent_at,
+                                "evaluated_at_unix_s": now,
+                                "seconds_since_send": elapsed,
+                                "health_fill_pct": health.fill_pct,
+                                "watchdog_state": watchdog_state
+                            });
+                            write_status(status_path, status);
+                        }
+                        return Some(format!(
+                            "limited-write v2 waiting for watchdog monitoring; saw '{watchdog_state}'"
+                        ));
+                    }
+                    return self.rollback_v2(
+                        profile_path,
+                        status_path,
+                        status,
+                        &format!("post-write watchdog state became '{watchdog_state}'"),
+                        now,
+                    );
+                }
+            }
             if health.fill_pct >= self.limited_write_rollback_fill_pct {
                 return self.rollback_v2(
                     profile_path,
@@ -523,8 +654,8 @@ impl RescueBridgePolicy {
                     now,
                 );
             }
-            if health.semantic_energy > V2_ROLLBACK_SEMANTIC_ENERGY
-                && fill_delta > self.limited_write_rising_epsilon_pct
+            if health.semantic_energy > self.limited_write_rollback_semantic_energy
+                && fill_delta > self.limited_write_semantic_energy_rising_epsilon_pct
             {
                 return self.rollback_v2(
                     profile_path,
@@ -623,6 +754,8 @@ struct LimitedWriteHealth {
     semantic_energy: f32,
     live_audio_divisor: i64,
     live_video_divisor: i64,
+    semantic_mute_active: bool,
+    watchdog_state: Option<String>,
     age_secs: f64,
 }
 
@@ -637,6 +770,13 @@ fn health_path_for_profile(profile_path: &Path) -> PathBuf {
         .parent()
         .unwrap_or_else(|| Path::new("."))
         .join("health.json")
+}
+
+fn rescue_status_path_for_profile(profile_path: &Path) -> PathBuf {
+    profile_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join("rescue_status.json")
 }
 
 fn load_limited_write_health(
@@ -664,14 +804,37 @@ fn load_limited_write_health(
         .map_err(|_| "limited-write v2 could not read health.json".to_string())?;
     let value: Value = serde_json::from_str(&payload)
         .map_err(|_| "limited-write v2 could not parse health.json".to_string())?;
+    let rescue_status_path = rescue_status_path_for_profile(profile_path);
+    let watchdog_state = std::fs::read_to_string(&rescue_status_path)
+        .ok()
+        .and_then(|payload| serde_json::from_str::<Value>(&payload).ok())
+        .and_then(|value| {
+            value
+                .get("watchdog_state")
+                .and_then(Value::as_str)
+                .map(ToString::to_string)
+        });
+    let fill_pct = f32_required(&value, &["fill_pct"])?;
     Ok(LimitedWriteHealth {
-        fill_pct: f32_required(&value, &["fill_pct"])?,
-        stage: str_required(&value, &["rescue", "stage"])?,
-        peak_fill_pct_60s: f32_required(&value, &["rescue", "peak_fill_pct_60s"])?,
-        semantic_active: bool_required(&value, &["semantic", "active"])?,
-        semantic_energy: f32_required(&value, &["semantic", "energy"])?,
+        fill_pct,
+        stage: str_optional(&value, &["rescue", "stage"])
+            .or_else(|| str_optional(&value, &["stable_core", "stage"]))
+            .ok_or_else(|| {
+                "limited-write v2 health.json missing rescue.stage or stable_core.stage".to_string()
+            })?,
+        peak_fill_pct_60s: f32_optional(&value, &["rescue", "peak_fill_pct_60s"])
+            .or_else(|| f32_optional(&value, &["stable_core", "peak_fill_pct_60s"]))
+            .unwrap_or(fill_pct),
+        semantic_active: bool_optional(&value, &["semantic", "active"]).unwrap_or(false),
+        semantic_energy: f32_optional(&value, &["semantic", "energy"]).unwrap_or(0.0),
         live_audio_divisor: i64_required(&value, &["sensory", "live_audio_divisor"])?,
         live_video_divisor: i64_required(&value, &["sensory", "live_video_divisor"])?,
+        semantic_mute_active: bool_optional(
+            &value,
+            &["stable_core", "sensory_budget", "semantic_mute_active"],
+        )
+        .unwrap_or(false),
+        watchdog_state,
         age_secs,
     })
 }
@@ -685,9 +848,7 @@ fn value_at_path<'a>(value: &'a Value, path: &[&str]) -> Option<&'a Value> {
 }
 
 fn f32_required(value: &Value, path: &[&str]) -> Result<f32, String> {
-    value_at_path(value, path)
-        .and_then(Value::as_f64)
-        .map(|value| value as f32)
+    f32_optional(value, path)
         .ok_or_else(|| format!("limited-write v2 health.json missing {}", path.join(".")))
 }
 
@@ -697,17 +858,20 @@ fn i64_required(value: &Value, path: &[&str]) -> Result<i64, String> {
         .ok_or_else(|| format!("limited-write v2 health.json missing {}", path.join(".")))
 }
 
-fn bool_required(value: &Value, path: &[&str]) -> Result<bool, String> {
+fn f32_optional(value: &Value, path: &[&str]) -> Option<f32> {
     value_at_path(value, path)
-        .and_then(Value::as_bool)
-        .ok_or_else(|| format!("limited-write v2 health.json missing {}", path.join(".")))
+        .and_then(Value::as_f64)
+        .map(|value| value as f32)
 }
 
-fn str_required(value: &Value, path: &[&str]) -> Result<String, String> {
+fn bool_optional(value: &Value, path: &[&str]) -> Option<bool> {
+    value_at_path(value, path).and_then(Value::as_bool)
+}
+
+fn str_optional(value: &Value, path: &[&str]) -> Option<String> {
     value_at_path(value, path)
         .and_then(Value::as_str)
         .map(ToString::to_string)
-        .ok_or_else(|| format!("limited-write v2 health.json missing {}", path.join(".")))
 }
 
 fn limited_write_status_path_for_profile(profile_path: &Path) -> PathBuf {
@@ -716,6 +880,13 @@ fn limited_write_status_path_for_profile(profile_path: &Path) -> PathBuf {
         .unwrap_or_else(|| Path::new("."))
         .join("runtime")
         .join(LIMITED_WRITE_STATUS_FILE)
+}
+
+fn limited_write_sensory_mute_path_for_status(status_path: &Path) -> PathBuf {
+    status_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join(LIMITED_WRITE_SENSORY_MUTE_FILE)
 }
 
 fn now_unix_s() -> f64 {
@@ -739,6 +910,34 @@ fn write_status(path: &Path, status: &Value) {
     if let Ok(payload) = serde_json::to_string_pretty(status) {
         let _ = std::fs::write(path, payload);
     }
+}
+
+fn write_limited_write_sensory_mute(
+    status_path: &Path,
+    policy: &RescueBridgePolicy,
+    now: f64,
+    duration_secs: u64,
+    reason: &str,
+) -> Option<f64> {
+    if duration_secs == 0 {
+        return None;
+    }
+    let mute_until = now + duration_secs as f64;
+    let mute_path = limited_write_sensory_mute_path_for_status(status_path);
+    if let Some(parent) = mute_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let payload = json!({
+        "active_until_unix_s": mute_until,
+        "duration_secs": duration_secs,
+        "reason": reason,
+        "source_profile": policy.profile_name,
+        "last_semantic_sent_at_unix_s": now,
+    });
+    if let Ok(pretty) = serde_json::to_string_pretty(&payload) {
+        let _ = std::fs::write(mute_path, pretty);
+    }
+    Some(mute_until)
 }
 
 fn status_matches_policy(status: &Value, policy: &RescueBridgePolicy) -> bool {
@@ -771,6 +970,16 @@ fn increment_adverse_count(status: &mut Value, now: f64) -> u64 {
     count
 }
 
+fn matched_watch_terms(text: &str, policy: &RescueBridgePolicy) -> Vec<String> {
+    let lower = text.to_lowercase();
+    policy
+        .limited_write_block_terms
+        .iter()
+        .filter(|term| lower.contains(&term.to_lowercase()))
+        .cloned()
+        .collect()
+}
+
 fn rollback_profile_to_observe_only(
     profile_path: &Path,
     target: &str,
@@ -793,6 +1002,11 @@ fn rollback_profile_to_observe_only(
         .map_err(|error| format!("serialize rollback archive failed: {error}"))?;
     std::fs::write(&archive_path, pretty_original)
         .map_err(|error| format!("write rollback archive failed: {error}"))?;
+    let rolled_back_from_profile = profile
+        .get("profile")
+        .and_then(Value::as_str)
+        .unwrap_or("bridge_limited_write_v2")
+        .to_string();
 
     let Some(object) = profile.as_object_mut() else {
         return Err("profile root is not a JSON object".to_string());
@@ -811,7 +1025,7 @@ fn rollback_profile_to_observe_only(
     object.insert("limited_write_enabled".to_string(), json!(false));
     object.insert(
         "rolled_back_from_profile".to_string(),
-        json!("bridge_limited_write_v2"),
+        json!(rolled_back_from_profile),
     );
     object.insert("rolled_back_to_profile".to_string(), json!(target));
     object.insert("rollback_reason".to_string(), json!(reason));
@@ -874,8 +1088,23 @@ fn record_limited_write_sent(
         status["last_sent_health_age_secs"] = json!(health.age_secs);
     }
     status["last_sent_text_preview"] = json!(text_preview);
+    status["last_sent_watch_terms"] = json!(matched_watch_terms(
+        context.text.unwrap_or_default(),
+        policy
+    ));
     status["cooldown_secs"] = json!(cooldown_secs);
     status["cooldown_until_unix_s"] = json!(now + cooldown_secs as f64);
+    if let Some(mute_until) = write_limited_write_sensory_mute(
+        path,
+        policy,
+        now,
+        policy.limited_write_mute_live_intake_secs,
+        "limited_write_semantic_send",
+    ) {
+        status["live_intake_mute_secs"] = json!(policy.limited_write_mute_live_intake_secs);
+        status["live_intake_mute_until_unix_s"] = json!(mute_until);
+        status["live_intake_mute_file"] = json!(LIMITED_WRITE_SENSORY_MUTE_FILE);
+    }
     if policy.limited_write_v2_active() {
         status["last_send_evaluation"] = json!({
             "state": "pending",

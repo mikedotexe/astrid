@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use tracing::info;
 
 mod adoption;
+mod causality;
 mod choice;
 mod conversion;
 mod helpers;

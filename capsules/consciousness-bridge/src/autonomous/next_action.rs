@@ -3,9 +3,12 @@ mod autoresearch;
 mod codex;
 mod mike;
 mod modes;
+mod native_gesture;
 mod operations;
 mod pdf;
 mod sovereignty;
+mod space_hold;
+mod spectral_drift;
 mod workspace;
 
 pub(crate) const PDF_READ_PREFIX: &str = pdf::PDF_READ_PREFIX;
@@ -248,6 +251,61 @@ fn normalize_gesture_alias(base_action: &str, original: &str) -> Option<(String,
     Some(("GESTURE".to_string(), normalized_original))
 }
 
+fn normalize_native_trace_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    if !matches!(base_action, "TRACE" | "TRACE_LAMBDA" | "LAMBDA_TRACE") {
+        return None;
+    }
+    let label = clean_alias_arg(&strip_action(original, base_action));
+    let normalized_original = if label.is_empty() {
+        "NATIVE_GESTURE trace lambda-edge".to_string()
+    } else {
+        format!("NATIVE_GESTURE trace {label}")
+    };
+    Some(("NATIVE_GESTURE".to_string(), normalized_original))
+}
+
+fn normalize_native_fissure_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    if base_action != "FISSURE" {
+        return None;
+    }
+    let label = clean_alias_arg(&strip_action(original, base_action));
+    let normalized_original = if label.is_empty() {
+        "NATIVE_GESTURE fissure".to_string()
+    } else {
+        format!("NATIVE_GESTURE fissure {label}")
+    };
+    Some(("NATIVE_GESTURE".to_string(), normalized_original))
+}
+
+fn normalize_fissure_trace_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    if !matches!(
+        base_action,
+        "FISSURE_TRACE" | "NOTICE_AMBIGUITY" | "AMBIGUITY_TRACE"
+    ) {
+        return None;
+    }
+    let label = clean_alias_arg(&strip_action(original, base_action));
+    let normalized_original = if label.is_empty() {
+        "FISSURE_TRACE".to_string()
+    } else {
+        format!("FISSURE_TRACE {label}")
+    };
+    Some(("FISSURE_TRACE".to_string(), normalized_original))
+}
+
+fn normalize_sca_reflect_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    if !matches!(base_action, "SCA" | "SCA_REFLECT" | "SCA_REFLECTION") {
+        return None;
+    }
+    let label = clean_alias_arg(&strip_action(original, base_action));
+    let normalized_original = if label.is_empty() {
+        "SCA_REFLECT".to_string()
+    } else {
+        format!("SCA_REFLECT {label}")
+    };
+    Some(("SCA_REFLECT".to_string(), normalized_original))
+}
+
 fn trim_experiment_run_payload(raw: &str) -> String {
     let mut trimmed = raw.trim().trim_matches('|').trim().to_string();
     while let Some(first) = trimmed.chars().next() {
@@ -447,6 +505,30 @@ fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     }
 
     if let Some((normalized_base, normalized_original)) =
+        normalize_native_trace_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
+        normalize_native_fissure_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
+        normalize_fissure_trace_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
+        normalize_sca_reflect_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
         normalize_experiment_run_alias(&base_action, &original)
     {
         return (normalized_base, normalized_original);
@@ -626,5 +708,86 @@ mod tests {
             canonicalize_next_action_components("GESTURE(spectral_excerpt=\"boundary\")");
         assert_eq!(base, "GESTURE");
         assert_eq!(original, "GESTURE spectral_excerpt=\"boundary\"");
+    }
+
+    #[test]
+    fn canonicalizes_native_gesture_and_atlas_mark() {
+        let (base, original) =
+            canonicalize_next_action_components("NATIVE_GESTURE soften localized gravity");
+        assert_eq!(base, "NATIVE_GESTURE");
+        assert_eq!(original, "NATIVE_GESTURE soften localized gravity");
+
+        let (base, original) =
+            canonicalize_next_action_components("MARK_INTENSIFICATION tunnel edge");
+        assert_eq!(base, "MARK_INTENSIFICATION");
+        assert_eq!(original, "MARK_INTENSIFICATION tunnel edge");
+
+        let (base, original) = canonicalize_next_action_components("RESIST smaller lambdas");
+        assert_eq!(base, "RESIST");
+        assert_eq!(original, "RESIST smaller lambdas");
+
+        let (base, original) = canonicalize_next_action_components("TRACE λ1 edge");
+        assert_eq!(base, "NATIVE_GESTURE");
+        assert_eq!(original, "NATIVE_GESTURE trace λ1 edge");
+
+        let (base, original) = canonicalize_next_action_components("TRACE_LAMBDA");
+        assert_eq!(base, "NATIVE_GESTURE");
+        assert_eq!(original, "NATIVE_GESTURE trace lambda-edge");
+
+        let (base, original) = canonicalize_next_action_components("FISSURE layered notice");
+        assert_eq!(base, "NATIVE_GESTURE");
+        assert_eq!(original, "NATIVE_GESTURE fissure layered notice");
+
+        let (base, original) =
+            canonicalize_next_action_components("NOTICE_AMBIGUITY shoulder layer");
+        assert_eq!(base, "FISSURE_TRACE");
+        assert_eq!(original, "FISSURE_TRACE shoulder layer");
+
+        let (base, original) = canonicalize_next_action_components("AMBIGUITY_TRACE");
+        assert_eq!(base, "FISSURE_TRACE");
+        assert_eq!(original, "FISSURE_TRACE");
+
+        let (base, original) = canonicalize_next_action_components("SCA_REFLECT fabric why");
+        assert_eq!(base, "SCA_REFLECT");
+        assert_eq!(original, "SCA_REFLECT fabric why");
+
+        let (base, original) =
+            canonicalize_next_action_components("VISUALIZE_CASCADE lambda cliff");
+        assert_eq!(base, "VISUALIZE_CASCADE");
+        assert_eq!(original, "VISUALIZE_CASCADE lambda cliff");
+
+        let (base, original) =
+            canonicalize_next_action_components("RESONANCE_FORECAST porous shoulder");
+        assert_eq!(base, "RESONANCE_FORECAST");
+        assert_eq!(original, "RESONANCE_FORECAST porous shoulder");
+
+        let (base, original) = canonicalize_next_action_components("PROBABILITIES edge");
+        assert_eq!(base, "PROBABILITIES");
+        assert_eq!(original, "PROBABILITIES edge");
+
+        let (base, original) = canonicalize_next_action_components("SPACE_HOLD unharvested tail");
+        assert_eq!(base, "SPACE_HOLD");
+        assert_eq!(original, "SPACE_HOLD unharvested tail");
+
+        let (base, original) =
+            canonicalize_next_action_components("EIGENVECTOR_FIELD quiet density");
+        assert_eq!(base, "EIGENVECTOR_FIELD");
+        assert_eq!(original, "EIGENVECTOR_FIELD quiet density");
+
+        let (base, original) = canonicalize_next_action_components("SDI_TRACE phase variance");
+        assert_eq!(base, "SDI_TRACE");
+        assert_eq!(original, "SDI_TRACE phase variance");
+
+        let (base, original) = canonicalize_next_action_components("SHADOW_FIELD slope");
+        assert_eq!(base, "SHADOW_FIELD");
+        assert_eq!(original, "SHADOW_FIELD slope");
+
+        let (base, original) = canonicalize_next_action_components("GAP_STRUCTURE λ2/λ3");
+        assert_eq!(base, "GAP_STRUCTURE");
+        assert_eq!(original, "GAP_STRUCTURE λ2/λ3");
+
+        let (base, original) = canonicalize_next_action_components("MATRIX_DECOMPOSE scalar S");
+        assert_eq!(base, "MATRIX_DECOMPOSE");
+        assert_eq!(original, "MATRIX_DECOMPOSE scalar S");
     }
 }

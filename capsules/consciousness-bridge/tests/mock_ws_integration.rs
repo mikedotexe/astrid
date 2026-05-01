@@ -5,6 +5,7 @@
 //! the bridge processes, logs, and reacts to the data correctly.
 
 use std::net::SocketAddr;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -26,6 +27,32 @@ fn eigenpacket_json(fill_ratio: f32, lambda1: f32, alert: Option<&str>) -> Strin
     format!(
         r#"{{"t_ms":5000,"eigenvalues":[{lambda1},300.0],"fill_ratio":{fill_ratio},"modalities":{{"audio_fired":false,"video_fired":false,"history_fired":true,"audio_rms":0.0,"video_var":0.0}},{alert_field}}}"#,
     )
+}
+
+struct TempWorkspace {
+    path: PathBuf,
+}
+
+impl TempWorkspace {
+    fn new(name: &str) -> Self {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("{name}_{}_{}", std::process::id(), unique));
+        std::fs::create_dir_all(&path).unwrap();
+        Self { path }
+    }
+
+    fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for TempWorkspace {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.path);
+    }
 }
 
 /// Start a mock minime telemetry server on a random port.
@@ -160,7 +187,25 @@ async fn start_mock_sensory_server() -> (SocketAddr, tokio::sync::mpsc::Receiver
 /// - Safety protocol blocks outbound during red state
 #[tokio::test]
 async fn bidirectional_bridge_with_safety_protocol() {
+    use consciousness_bridge_server::paths::{BridgePathOverrides, configure_bridge_paths};
     use consciousness_bridge_server::types::{SafetyLevel, SensoryMsg};
+
+    let policy_workspace = TempWorkspace::new("consciousness_bridge_mock_policy");
+    std::fs::write(
+        policy_workspace.path().join("rescue_profile.json"),
+        serde_json::json!({
+            "profile": "full_live",
+            "bridge_write_enabled": true,
+            "bridge_autonomous_enabled": true
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let configured = configure_bridge_paths(BridgePathOverrides {
+        minime_workspace: Some(policy_workspace.path().to_path_buf()),
+        ..Default::default()
+    });
+    assert_eq!(configured.minime_workspace(), policy_workspace.path());
 
     // Start both mock servers.
     let (telemetry_addr, telemetry_tx) = start_mock_telemetry_server().await;

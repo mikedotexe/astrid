@@ -112,6 +112,7 @@ fn base_status() -> SignalStatus {
         astrid_translation_guidance: None,
         astrid_translation_progress: None,
         astrid_shadow_policy: None,
+        causality_audit: None,
         updated_at_unix_s: 0,
     }
 }

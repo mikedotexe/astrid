@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 use crate::journal::{read_local_journal_body_for_continuity, read_remote_journal_body};
 use crate::paths::bridge_paths;
 
+use super::causality::{CausalityAuditStatus, load_latest_causality_audit};
 use super::conversion::{ConversionState, derive_conversion_state};
 use super::helpers::{atomic_write_json, load_json_or_default, now_unix_s, trim_chars};
 use super::policy::{CooldownState, LearnedPolicyEntry, shared_learned_read_line};
@@ -95,6 +96,8 @@ pub(super) struct SignalStatus {
     pub astrid_translation_progress: Option<AstridTranslationProgress>,
     #[serde(default)]
     pub astrid_shadow_policy: Option<AstridShadowPolicy>,
+    #[serde(default)]
+    pub causality_audit: Option<CausalityAuditStatus>,
     pub updated_at_unix_s: u64,
 }
 
@@ -207,6 +210,7 @@ pub(super) fn decorate_signal_status(
         status.conversion_state.as_ref(),
         status.astrid_translation_guidance.as_ref(),
     );
+    status.causality_audit = load_latest_causality_audit();
     status
 }
 
@@ -674,6 +678,7 @@ fn build_evaluation_from_artifacts(
                 astrid_translation_guidance: None,
                 astrid_translation_progress: None,
                 astrid_shadow_policy: None,
+                causality_audit: None,
                 updated_at_unix_s: now_unix_s(),
             }
         } else {
@@ -710,6 +715,7 @@ fn build_evaluation_from_artifacts(
                 astrid_translation_guidance: None,
                 astrid_translation_progress: None,
                 astrid_shadow_policy: None,
+                causality_audit: None,
                 updated_at_unix_s: now_unix_s(),
             }
         };
@@ -783,6 +789,7 @@ fn build_evaluation_from_artifacts(
             astrid_translation_guidance: None,
             astrid_translation_progress: None,
             astrid_shadow_policy: None,
+            causality_audit: None,
             updated_at_unix_s: now_unix_s(),
         };
         return SignalEvaluation {
@@ -854,6 +861,7 @@ fn build_evaluation_from_artifacts(
             astrid_translation_guidance: None,
             astrid_translation_progress: None,
             astrid_shadow_policy: None,
+            causality_audit: None,
             updated_at_unix_s: now_unix_s(),
         },
         matched: Some(matched),

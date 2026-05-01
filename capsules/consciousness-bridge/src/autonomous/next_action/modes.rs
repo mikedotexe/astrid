@@ -180,6 +180,7 @@ pub(super) fn handle_action(
             // where they set both wants_decompose and force_all_viz.
             conv.wants_decompose = true;
             conv.force_all_viz = true;
+            conv.wants_spectral_explorer = true;
             info!("Astrid requested CASCADE (→ EXAMINE_CASCADE: viz + decompose)");
             true
         },
@@ -272,12 +273,17 @@ mod tests {
             t_ms: 0,
             eigenvalues: vec![1.0],
             fill_ratio: 0.5,
+            active_mode_count: None,
+            active_mode_energy_ratio: None,
+            lambda1_rel: None,
             modalities: None,
             neural: None,
             alert: None,
             spectral_fingerprint: None,
+            spectral_fingerprint_v1: None,
             structural_entropy: None,
             spectral_glimpse_12d: None,
+            eigenvector_field: None,
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
