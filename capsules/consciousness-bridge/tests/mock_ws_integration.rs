@@ -308,6 +308,9 @@ async fn bidirectional_bridge_with_safety_protocol() {
         memory_decay_rate: None,
         checkpoint_annotation: None,
         synth_noise_level: None,
+        pi_kp: None,
+        pi_ki: None,
+        pi_max_step: None,
     };
     bridge_sensory_tx.send(control_msg).await.unwrap();
 

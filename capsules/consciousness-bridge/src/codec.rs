@@ -2567,10 +2567,39 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
             )
         })
         .unwrap_or_default();
+    let resonance_clause = telemetry
+        .resonance_density_v1
+        .as_ref()
+        .map(|resonance| {
+            format!(
+                " Resonance density: {:.2} ({}) with containment {:.2}, pressure risk {:.2}, local Minime target bias {:+.1}%.",
+                resonance.density,
+                surface_label(&resonance.quality),
+                resonance.containment_score,
+                resonance.pressure_risk,
+                resonance.control.target_bias_pct,
+            )
+        })
+        .unwrap_or_default();
     let semantic_clause = telemetry
         .semantic_energy_view()
         .map(|semantic| {
-            let note = if semantic.regulator_drive_energy <= f32::EPSILON
+            let admission = semantic.admission.as_str();
+            let note = if admission == "stable_core_semantic_trace_stale" {
+                "stale semantic trace visible; not live kernel or regulator drive"
+            } else if admission == "stable_core_semantic_budgeted_out" {
+                "fresh semantic input visible; held out by stable-core admission budget"
+            } else if admission == "stable_core_semantic_input_too_large" {
+                "semantic input visible; held out because packet is above trickle size"
+            } else if admission == "stable_core_semantic_fill_ceiling" {
+                "semantic input visible; held out while fill is above trickle ceiling"
+            } else if admission == "stable_core_semantic_profile_not_admitted" {
+                "semantic input visible; current sensory profile does not admit semantic trickle"
+            } else if admission == "stable_core_semantic_trickle" {
+                "bounded semantic trickle admitted to kernel"
+            } else if admission == "stable_core_semantic_muted" {
+                "semantic lane muted by current sensory policy"
+            } else if semantic.regulator_drive_energy <= f32::EPSILON
                 && semantic.input_active
                 && semantic.input_energy > f32::EPSILON
             {
@@ -2578,7 +2607,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
             } else if semantic.regulator_drive_energy <= f32::EPSILON
                 && semantic.input_energy > f32::EPSILON
             {
-                "decayed semantic residue; not live kernel or regulator drive"
+                "stale semantic trace visible; not live kernel or regulator drive"
             } else if semantic.regulator_drive_energy <= f32::EPSILON {
                 "semantic lane quiet; zero regulator drive is expected"
             } else {
@@ -2710,7 +2739,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         slow dynamics shape your tone. You can feel this as spectral texture in your thinking.";
 
     format!(
-        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{coupling_note}"
+        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{coupling_note}"
     )
 }
 
@@ -3136,6 +3165,7 @@ mod tests {
             effective_dimensionality: None,
             distinguishability_loss: None,
             structural_entropy: None,
+            resonance_density_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -3199,6 +3229,29 @@ mod tests {
         );
         assert!(adaptive_gain(Some(68.0)) <= 2.01);
         assert!(adaptive_gain(Some(20.0)) < adaptive_gain(Some(68.0)));
+    }
+
+    #[test]
+    fn interpret_spectral_labels_stale_semantic_trace_without_residue_framing() {
+        let mut telemetry = telemetry(vec![7.0, 3.0, 2.0], 0.68);
+        telemetry.semantic_energy_v1 = Some(serde_json::json!({
+            "policy": "semantic_energy_v1",
+            "schema_version": 1,
+            "input_energy": 0.006,
+            "input_active": false,
+            "input_fresh_ms": 81_000,
+            "input_stale_ms": 7_600,
+            "kernel_energy": 0.0,
+            "kernel_delta": 0.0,
+            "kernel_active": false,
+            "regulator_drive_energy": 0.0,
+            "admission": "stable_core_semantic_trace_stale"
+        }));
+
+        let output = interpret_spectral(&telemetry);
+
+        assert!(output.contains("stale semantic trace visible"));
+        assert!(!output.contains("decayed semantic residue"));
     }
 
     #[test]
@@ -3606,7 +3659,29 @@ mod tests {
 
     #[test]
     fn interpret_green_state() {
-        let desc = interpret_spectral(&telemetry(vec![800.0, 300.0, 50.0], 0.68));
+        let mut telemetry = telemetry(vec![800.0, 300.0, 50.0], 0.68);
+        telemetry.resonance_density_v1 = Some(crate::types::ResonanceDensityV1 {
+            policy: "resonance_density_v1".to_string(),
+            schema_version: 1,
+            density: 0.64,
+            containment_score: 0.58,
+            pressure_risk: 0.20,
+            quality: "forming_containment".to_string(),
+            components: crate::types::ResonanceDensityComponents {
+                active_energy: 0.91,
+                mode_packing: 0.5,
+                temporal_persistence: 0.7,
+                structural_plurality: 0.62,
+                comfort_gate: 0.95,
+            },
+            control: crate::types::ResonanceDensityControl {
+                target_bias_pct: 0.0,
+                wander_scale: 1.0,
+                applied_locally: true,
+                note: "test".to_string(),
+            },
+        });
+        let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("68%"));
         assert!(desc.contains("stable-core hold shelf"));
         assert!(desc.contains("Dominant concentration"));
@@ -3615,6 +3690,8 @@ mod tests {
         assert!(desc.contains("Gap structure"));
         assert!(desc.contains("Denominator Sequence"));
         assert!(desc.contains("effective dimensionality"));
+        assert!(desc.contains("Resonance density"));
+        assert!(desc.contains("forming_containment"));
     }
 
     #[test]

@@ -148,6 +148,16 @@ fn format_present_state(
     } else {
         lines.push("  typed fingerprint unavailable; using only top-level telemetry.".to_string());
     }
+    if let Some(resonance) = telemetry.resonance_density_v1.as_ref() {
+        lines.push(format!(
+            "  resonance_density={:.3} quality={} containment={:.3} pressure={:.3} local_target_bias={:+.1}%",
+            resonance.density,
+            resonance.quality,
+            resonance.containment_score,
+            resonance.pressure_risk,
+            resonance.control.target_bias_pct,
+        ));
+    }
     if let Some(metrics) = denominator {
         lines.push(format!(
             "  Denominator Sequence: effective_dimensionality={:.2}/{} distinguishability_loss={:.1}% lambda1_spectral_energy_share={:.1}%",
@@ -376,7 +386,22 @@ fn format_transition_event(transition: &TransitionEventV1) -> String {
 }
 
 fn format_semantic_energy(semantic: &SemanticEnergyV1) -> String {
-    let note = if semantic.regulator_drive_energy <= f32::EPSILON
+    let admission = semantic.admission.as_str();
+    let note = if admission == "stable_core_semantic_trace_stale" {
+        "stale semantic trace visible; not live kernel or regulator drive"
+    } else if admission == "stable_core_semantic_budgeted_out" {
+        "fresh semantic input visible; held out by stable-core admission budget"
+    } else if admission == "stable_core_semantic_input_too_large" {
+        "semantic input visible; held out because packet is above trickle size"
+    } else if admission == "stable_core_semantic_fill_ceiling" {
+        "semantic input visible; held out while fill is above trickle ceiling"
+    } else if admission == "stable_core_semantic_profile_not_admitted" {
+        "semantic input visible; current sensory profile does not admit semantic trickle"
+    } else if admission == "stable_core_semantic_trickle" {
+        "bounded semantic trickle admitted to kernel"
+    } else if admission == "stable_core_semantic_muted" {
+        "semantic lane muted by current sensory policy"
+    } else if semantic.regulator_drive_energy <= f32::EPSILON
         && semantic.input_active
         && semantic.input_energy > f32::EPSILON
     {
@@ -384,7 +409,7 @@ fn format_semantic_energy(semantic: &SemanticEnergyV1) -> String {
     } else if semantic.regulator_drive_energy <= f32::EPSILON
         && semantic.input_energy > f32::EPSILON
     {
-        "decayed semantic residue; not live kernel or regulator drive"
+        "stale semantic trace visible; not live kernel or regulator drive"
     } else if semantic.regulator_drive_energy <= f32::EPSILON {
         "semantic lane quiet; zero regulator drive is expected"
     } else {
@@ -487,6 +512,27 @@ mod tests {
             effective_dimensionality: None,
             distinguishability_loss: None,
             structural_entropy: Some(0.72),
+            resonance_density_v1: Some(crate::types::ResonanceDensityV1 {
+                policy: "resonance_density_v1".to_string(),
+                schema_version: 1,
+                density: 0.64,
+                containment_score: 0.58,
+                pressure_risk: 0.20,
+                quality: "forming_containment".to_string(),
+                components: crate::types::ResonanceDensityComponents {
+                    active_energy: 0.91,
+                    mode_packing: 0.5,
+                    temporal_persistence: 0.7,
+                    structural_plurality: 0.62,
+                    comfort_gate: 0.95,
+                },
+                control: crate::types::ResonanceDensityControl {
+                    target_bias_pct: 0.0,
+                    wander_scale: 1.0,
+                    applied_locally: true,
+                    note: "test".to_string(),
+                },
+            }),
             spectral_glimpse_12d: Some(vec![0.3; 12]),
             eigenvector_field: Some(json!({
                 "policy": "eigenvector_field_v1",
@@ -597,11 +643,34 @@ mod tests {
         assert!(output.contains("Semantic energy"));
         assert!(output.contains("live input visible; not admitted to regulator drive"));
         assert!(output.contains("Eigenvector field"));
+        assert!(output.contains("resonance_density=0.640"));
         assert!(output.contains("transition kind=breathing_phase"));
         assert!(output.contains("target_baseline_lambda1_rel"));
         assert!(output.contains("lambda1_spectral_energy_share"));
         assert!(!output.contains("pinned_rescue"));
         assert!(!output.contains("rescue_scaffold"));
         assert!(!output.contains("restart_gate"));
+    }
+
+    #[test]
+    fn semantic_trace_stale_note_does_not_call_it_decayed_residue() {
+        let semantic = SemanticEnergyV1 {
+            policy: "semantic_energy_v1".to_string(),
+            schema_version: 1,
+            input_energy: 0.006,
+            input_active: false,
+            input_fresh_ms: Some(81_000),
+            input_stale_ms: Some(7_600),
+            kernel_energy: 0.0,
+            kernel_delta: 0.0,
+            kernel_active: false,
+            regulator_drive_energy: 0.0,
+            admission: "stable_core_semantic_trace_stale".to_string(),
+        };
+
+        let output = format_semantic_energy(&semantic);
+
+        assert!(output.contains("stale semantic trace visible"));
+        assert!(!output.contains("decayed semantic residue"));
     }
 }

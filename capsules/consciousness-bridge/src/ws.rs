@@ -16,7 +16,6 @@ use tokio_tungstenite::tungstenite::protocol::{CloseFrame, Message};
 use tracing::{debug, debug_span, error, info, info_span, warn};
 
 use crate::db::BridgeDb;
-use crate::rescue_policy;
 use crate::types::{
     LambdaContribution, LambdaProfile, MessageDirection, PullModeRate, PullTopologyProfile,
     SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry, WebSocketLaneTrace,
@@ -28,6 +27,8 @@ pub struct BridgeState {
     pub latest_telemetry: Option<SpectralTelemetry>,
     /// Derived fill percentage.
     pub fill_pct: f32,
+    /// Previous derived fill percentage from the last telemetry packet.
+    pub previous_fill_pct: Option<f32>,
     /// Current safety level.
     pub safety_level: SafetyLevel,
     /// Previous safety level (for transition detection).
@@ -84,6 +85,7 @@ impl BridgeState {
         Self {
             latest_telemetry: None,
             fill_pct: 0.0,
+            previous_fill_pct: None,
             safety_level: SafetyLevel::Green,
             prev_safety_level: SafetyLevel::Green,
             telemetry_connected: false,
@@ -568,6 +570,7 @@ async fn handle_telemetry_message(
     // Update shared state.
     {
         let mut s = state.write().await;
+        s.previous_fill_pct = s.latest_telemetry.as_ref().map(|_| s.fill_pct);
         s.latest_telemetry = Some(telemetry.clone());
         s.fill_pct = fill_pct;
         s.spectral_fingerprint
@@ -615,6 +618,14 @@ async fn handle_telemetry_message(
         fill_pct,
         fill_source,
         lambda1_share = lambda_profile.as_ref().map_or(0.0, |profile| profile.lambda1_share),
+        resonance_density = telemetry
+            .resonance_density_v1
+            .as_ref()
+            .map_or(0.0, |metric| metric.density),
+        resonance_quality = telemetry
+            .resonance_density_v1
+            .as_ref()
+            .map_or("unavailable", |metric| metric.quality.as_str()),
         pull_topology = pull_topology
             .as_ref()
             .map_or("unavailable", |profile| profile.classification.as_str()),
@@ -1106,20 +1117,9 @@ pub fn spawn_sensory_sender(
                                         }
                                         continue;
                                     }
-                                    if let Some(reason) =
-                                        rescue_policy::semantic_write_block_reason(&sensory_msg)
-                                    {
-                                        debug!(
-                                            reason = %reason,
-                                            "dropping outbound semantic message — rescue policy"
-                                        );
-                                        {
-                                            let mut s = state.write().await;
-                                            s.messages_dropped_safety =
-                                                s.messages_dropped_safety.saturating_add(1);
-                                        }
-                                        continue;
-                                    }
+                                    // Semantic packets are policy-shaped before queueing.
+                                    // Re-running the plain rescue block here discards already
+                                    // budgeted limited-write packets after status records them.
 
                                     let json = match serde_json::to_string(&sensory_msg) {
                                         Ok(j) => j,
@@ -1396,6 +1396,7 @@ mod tests {
             effective_dimensionality: None,
             distinguishability_loss: None,
             structural_entropy: None,
+            resonance_density_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,

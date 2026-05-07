@@ -5,7 +5,9 @@
 //! these are not public API.
 #![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
+pub mod action_continuity;
 pub mod agency;
+pub mod attractor_atlas;
 pub mod audio;
 pub mod autonomous;
 pub mod autoresearch;

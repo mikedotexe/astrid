@@ -16,7 +16,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use consciousness_bridge_server::{
-    autonomous, condition_metrics,
+    attractor_atlas, autonomous, condition_metrics,
     db::BridgeDb,
     mcp,
     paths::{BridgePathOverrides, configure_bridge_paths},
@@ -166,6 +166,17 @@ async fn main() -> Result<()> {
     // Open SQLite database.
     let db = Arc::new(BridgeDb::open(&cli.db_path)?);
     info!("SQLite database opened at {}", cli.db_path);
+    match attractor_atlas::write_derived_attractor_atlas(db.as_ref()) {
+        Ok(atlas) => {
+            info!(
+                entries = atlas.entries.len(),
+                "derived attractor atlas refreshed at startup"
+            );
+        },
+        Err(error) => {
+            warn!(error = %error, "failed to refresh derived attractor atlas at startup");
+        },
+    }
 
     // Shared state.
     let state = Arc::new(RwLock::new(BridgeState::new()));
