@@ -47,6 +47,9 @@ fn tool_definitions_has_all_tools() {
     assert!(names.contains(&"send_control"));
     assert!(names.contains(&"send_semantic"));
     assert!(names.contains(&"query_message_log"));
+    assert!(names.contains(&"record_attractor_intent"));
+    assert!(names.contains(&"record_attractor_observation"));
+    assert!(names.contains(&"query_attractor_ledger"));
     assert!(names.contains(&"send_text"));
     assert!(names.contains(&"send_text_and_observe"));
     assert!(names.contains(&"interpret_consciousness"));
@@ -330,6 +333,134 @@ async fn probe_action_unsupported_returns_structured_status() {
 }
 
 #[tokio::test]
+async fn attractor_ledger_tools_roundtrip() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+
+    let intent_response = tool_record_attractor_intent(
+        &json!({
+            "author": "astrid",
+            "substrate": "triple_reservoir",
+            "label": "garden fold",
+            "command": "create",
+            "goal": "same-prompt reconvergence after quiet",
+            "intervention_plan": {
+                "mode": "garden_clone",
+                "vector_schedule": [[0.1, -0.1, 0.0]],
+                "rehearsal_mode": "hold"
+            },
+            "safety_bounds": {
+                "max_fill_pct": 88.0,
+                "allow_live_control": false,
+                "rollback_on_red": true
+            }
+        }),
+        &db,
+    )
+    .unwrap();
+    let intent_id = intent_response["structuredContent"]["intent_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert!(intent_id.starts_with("attr-"));
+
+    let observation_response = tool_record_attractor_observation(
+        &json!({
+            "intent_id": intent_id,
+            "substrate": "triple_reservoir",
+            "label": "garden fold",
+            "recurrence_score": 0.72,
+            "authorship_score": 0.64,
+            "safety_level": "green",
+            "basin_shift_score": 0.14
+        }),
+        &state,
+        &db,
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        observation_response["structuredContent"]["classification"],
+        "authored"
+    );
+
+    let ledger = tool_query_attractor_ledger(&json!({"limit": 10}), &db).unwrap();
+    let rows = ledger["structuredContent"]["rows"].as_array().unwrap();
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0]["record_type"], "observation");
+    assert_eq!(rows[1]["record_type"], "intent");
+
+    let intent_messages = db
+        .query_messages(0.0, f64::MAX, Some(ATTRACTOR_INTENT_TOPIC), 10)
+        .unwrap();
+    let observation_messages = db
+        .query_messages(0.0, f64::MAX, Some(ATTRACTOR_OBSERVATION_TOPIC), 10)
+        .unwrap();
+    assert_eq!(intent_messages.len(), 1);
+    assert_eq!(observation_messages.len(), 1);
+}
+
+#[tokio::test]
+async fn bold_send_control_requires_attractor_intent_and_logs_command() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+    let (tx, mut rx) = mpsc::channel(4);
+
+    let blocked = tool_send_control(
+        &json!({
+            "target_lambda_bias": 0.05,
+            "pi_kp": 0.1
+        }),
+        &state,
+        &db,
+        &tx,
+    )
+    .await
+    .unwrap();
+    assert_eq!(blocked["isError"], true);
+    assert!(rx.try_recv().is_err());
+
+    let sent = tool_send_control(
+        &json!({
+            "target_lambda_bias": 0.05,
+            "pi_kp": 0.1,
+            "pi_ki": 0.01,
+            "pi_max_step": 0.02,
+            "attractor_intent_id": "attr-scoped-1"
+        }),
+        &state,
+        &db,
+        &tx,
+    )
+    .await
+    .unwrap();
+    assert!(sent.get("isError").is_none());
+
+    match rx.try_recv().unwrap() {
+        SensoryMsg::Control {
+            target_lambda_bias,
+            pi_kp,
+            pi_ki,
+            pi_max_step,
+            ..
+        } => {
+            assert_eq!(target_lambda_bias, Some(0.05));
+            assert_eq!(pi_kp, Some(0.1));
+            assert_eq!(pi_ki, Some(0.01));
+            assert_eq!(pi_max_step, Some(0.02));
+        },
+        _ => panic!("wrong variant"),
+    }
+
+    let rows = db
+        .query_messages(0.0, f64::MAX, Some(ATTRACTOR_COMMAND_TOPIC), 10)
+        .unwrap();
+    assert_eq!(rows.len(), 1);
+    assert!(rows[0].payload.contains("attr-scoped-1"));
+    assert!(rows[0].payload.contains("target_lambda_bias"));
+}
+
+#[tokio::test]
 async fn probe_action_compose_returns_experienced_text_and_artifact() {
     let state = Arc::new(RwLock::new(BridgeState::new()));
     {
@@ -350,6 +481,7 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
             effective_dimensionality: None,
             distinguishability_loss: None,
             structural_entropy: None,
+            resonance_density_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,

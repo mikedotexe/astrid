@@ -1,6 +1,18 @@
+use serde_json::json;
 use tracing::info;
+use tracing::warn;
 
 use super::{ConversationState, Mode, NextActionContext, bridge_paths, strip_action};
+
+#[cfg(not(test))]
+fn record_astrid_motif_cooldown_signal(event: serde_json::Value) -> std::io::Result<()> {
+    crate::condition_metrics::record_bridge_signal("astrid_motif_cooldown", event)
+}
+
+#[cfg(test)]
+fn record_astrid_motif_cooldown_signal(_event: serde_json::Value) -> std::io::Result<()> {
+    Ok(())
+}
 
 fn wants_spectral_visual_from_create(target: &str) -> bool {
     let lower = target.to_ascii_lowercase();
@@ -79,6 +91,40 @@ pub(super) fn handle_action(
                 conv.emphasis = Some(topic.clone());
                 info!("Astrid chose EMPHASIZE: {}", topic);
             }
+            true
+        },
+        "RELEASE" | "MARK_RESOLVED" => {
+            let target = strip_action(original, base_action);
+            let target_ok = target.is_empty()
+                || target.eq_ignore_ascii_case("current")
+                || target.eq_ignore_ascii_case("internal-topology")
+                || target.eq_ignore_ascii_case("internal_topology");
+            if !target_ok {
+                return false;
+            }
+            let resolved = base_action == "MARK_RESOLVED";
+            let event = conv.release_astrid_motif_cooldown(resolved);
+            let status = event
+                .as_ref()
+                .map(|event| event.status.as_str())
+                .unwrap_or("no_active_cooldown");
+            conv.push_receipt(
+                base_action,
+                vec![format!("internal-topology lexical cooldown: {status}")],
+            );
+            if let Err(error) = record_astrid_motif_cooldown_signal(json!({
+                "event": if resolved { "resolved" } else { "released" },
+                "cooldown_class": "internal_topology",
+                "status": status,
+                "source": "next_action",
+                "target": if target.is_empty() { "current" } else { target.as_str() },
+            })) {
+                warn!(error = %error, "failed to record Astrid motif cooldown release");
+            }
+            info!(
+                action = base_action,
+                status, "Astrid lexical cooldown handled locally"
+            );
             true
         },
         "QUIET_MIND" => {
@@ -332,6 +378,7 @@ mod tests {
             effective_dimensionality: None,
             distinguishability_loss: None,
             structural_entropy: None,
+            resonance_density_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,

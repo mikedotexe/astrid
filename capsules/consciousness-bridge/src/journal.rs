@@ -13,6 +13,8 @@ use std::path::{Path, PathBuf};
 pub enum RemoteJournalKind {
     /// A code-reading / architectural self-study entry.
     SelfStudy,
+    /// A read-only spectral visualization bundle from minime.
+    SpectralVisualization,
     /// Any other minime journal artifact.
     Ordinary,
 }
@@ -29,6 +31,14 @@ impl RemoteJournalEntry {
     #[must_use]
     pub fn is_self_study(&self) -> bool {
         matches!(self.kind, RemoteJournalKind::SelfStudy)
+    }
+
+    #[must_use]
+    pub fn is_priority_feedback(&self) -> bool {
+        matches!(
+            self.kind,
+            RemoteJournalKind::SelfStudy | RemoteJournalKind::SpectralVisualization
+        )
     }
 }
 
@@ -80,16 +90,20 @@ fn parse_remote_journal_entry(path: &Path) -> RemoteJournalEntry {
         .unwrap_or_default();
     let content = std::fs::read_to_string(path).ok();
     let kind = classify_remote_journal(filename, content.as_deref());
-    let source_label = if matches!(kind, RemoteJournalKind::SelfStudy) {
-        content
-            .as_deref()
-            .and_then(extract_source_label)
-            .or_else(|| {
-                extract_self_study_label_from_header(content.as_deref().unwrap_or_default())
-            })
-    } else {
-        None
-    };
+    let source_label =
+        match kind {
+            RemoteJournalKind::SelfStudy => content
+                .as_deref()
+                .and_then(extract_source_label)
+                .or_else(|| {
+                    extract_self_study_label_from_header(content.as_deref().unwrap_or_default())
+                }),
+            RemoteJournalKind::SpectralVisualization => content.as_deref().and_then(|text| {
+                extract_label_value(text, "Label:")
+                    .map(|label| format!("spectral cascade visualization: {label}"))
+            }),
+            RemoteJournalKind::Ordinary => None,
+        };
 
     RemoteJournalEntry {
         path: path.to_path_buf(),
@@ -103,10 +117,17 @@ fn classify_remote_journal(filename: &str, content: Option<&str>) -> RemoteJourn
         return RemoteJournalKind::SelfStudy;
     }
 
+    if filename.starts_with("visualize_cascade_") {
+        return RemoteJournalKind::SpectralVisualization;
+    }
+
     if let Some(text) = content {
         let first_line = text.lines().next().unwrap_or_default();
         if first_line.contains("SELF-STUDY") {
             return RemoteJournalKind::SelfStudy;
+        }
+        if first_line.contains("SPECTRAL CASCADE VISUALIZATION") {
+            return RemoteJournalKind::SpectralVisualization;
         }
     }
 
@@ -114,12 +135,7 @@ fn classify_remote_journal(filename: &str, content: Option<&str>) -> RemoteJourn
 }
 
 fn extract_source_label(content: &str) -> Option<String> {
-    content
-        .lines()
-        .find_map(|line| line.trim().strip_prefix("Source:"))
-        .map(str::trim)
-        .filter(|line| !line.is_empty())
-        .map(ToOwned::to_owned)
+    extract_label_value(content, "Source:")
 }
 
 fn extract_self_study_label_from_header(content: &str) -> Option<String> {
@@ -128,6 +144,15 @@ fn extract_self_study_label_from_header(content: &str) -> Option<String> {
         .next()
         .and_then(|line| line.trim().strip_prefix("=== SELF-STUDY:"))
         .map(|rest| rest.trim().trim_end_matches('=').trim())
+        .filter(|line| !line.is_empty())
+        .map(ToOwned::to_owned)
+}
+
+fn extract_label_value(content: &str, prefix: &str) -> Option<String> {
+    content
+        .lines()
+        .find_map(|line| line.trim().strip_prefix(prefix))
+        .map(str::trim)
         .filter(|line| !line.is_empty())
         .map(ToOwned::to_owned)
 }
@@ -263,6 +288,43 @@ mod tests {
         assert_eq!(
             parsed.source_label.as_deref(),
             Some("minime/src/regulator.rs")
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn scan_remote_journal_dir_marks_visualization_priority_feedback() {
+        let dir = std::env::temp_dir().join("bridge_remote_visualization_scan");
+        let journal_dir = dir.join("journal");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&journal_dir).unwrap();
+
+        let visual_path = journal_dir.join("visualize_cascade_2026-05-03T08-31-44.txt");
+        std::fs::write(
+            &visual_path,
+            "=== SPECTRAL CASCADE VISUALIZATION ===\n\
+             Timestamp: 2026-05-03T08:31:44\n\
+             Label: minime\n\
+             Status: ok\n\n\
+             Artifacts:\n\
+             {\"heatmap_png\":\"/tmp/eigenvalue_heatmap.png\"}\n\n\
+             This was read-only visualization.",
+        )
+        .unwrap();
+
+        let entries = scan_remote_journal_dir(&dir);
+        let parsed = entries
+            .iter()
+            .find(|entry| entry.path == visual_path)
+            .expect("visualization journal should be scanned");
+
+        assert_eq!(parsed.kind, RemoteJournalKind::SpectralVisualization);
+        assert!(parsed.is_priority_feedback());
+        assert!(!parsed.is_self_study());
+        assert_eq!(
+            parsed.source_label.as_deref(),
+            Some("spectral cascade visualization: minime")
         );
 
         let _ = std::fs::remove_dir_all(&dir);

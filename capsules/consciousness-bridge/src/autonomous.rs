@@ -47,7 +47,7 @@ use serde_json::json;
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
-use self::next_action::{NextActionContext, handle_next_action};
+use self::next_action::{NextActionContext, attractor_suggestion_prompt_note, handle_next_action};
 pub(crate) use self::next_action::{
     canonicalize_next_action_text, extract_search_topic, parse_next_action,
 };
@@ -1961,6 +1961,8 @@ struct SavedState {
     #[serde(default)]
     recent_focus_themes: Vec<String>,
     history: Vec<SavedExchange>,
+    #[serde(default)]
+    astrid_motif_cooldown: Option<state::AstridMotifCooldown>,
     // Sovereignty fields (serde(default) for backward compat with old state.json)
     #[serde(default)]
     semantic_gain_override: Option<f32>,
@@ -2075,6 +2077,7 @@ fn save_state(conv: &ConversationState) {
                 astrid_said: e.astrid_said.clone(),
             })
             .collect(),
+        astrid_motif_cooldown: conv.astrid_motif_cooldown.clone(),
         semantic_gain_override: conv.semantic_gain_override,
         noise_level: conv.noise_level,
         codec_weights: conv.codec_weights.clone(),
@@ -2140,6 +2143,7 @@ fn restore_state(conv: &mut ConversationState) {
             astrid_said: e.astrid_said,
         })
         .collect();
+    conv.astrid_motif_cooldown = state.astrid_motif_cooldown;
     conv.semantic_gain_override = state.semantic_gain_override;
     conv.noise_level = state.noise_level;
     conv.codec_weights = state.codec_weights;
@@ -2232,6 +2236,33 @@ fn strip_model_tokens(text: &str) -> String {
         s = s.replace(token, "");
     }
     s
+}
+
+fn compact_journal_signal_anchor(signal_text: &str) -> String {
+    let clean = strip_model_tokens(signal_text);
+    let compact = clean
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with("NEXT:"))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let anchor = truncate_str(&compact, 420).trim();
+    if anchor.is_empty() {
+        "(compact signal omitted)".to_string()
+    } else if compact.len() > anchor.len() {
+        format!("{anchor}...")
+    } else {
+        anchor.to_string()
+    }
+}
+
+fn format_longform_journal_text(signal_text: &str, elaboration: &str) -> String {
+    let anchor = compact_journal_signal_anchor(signal_text);
+    let journal = strip_model_tokens(elaboration);
+    format!(
+        "Signal anchor: {anchor}\n\n--- JOURNAL ---\n{}",
+        journal.trim()
+    )
 }
 
 /// - Immediate delta: "Fill rising +5% over the last 38s"
@@ -3172,6 +3203,42 @@ fn read_source_for_introspect(label: &str, path: &Path, line_offset: usize) -> O
     Some(format!("{header}{page}{footer}"))
 }
 
+const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
+const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
+
+async fn run_semantic_heartbeat_loop(
+    sensory_tx: mpsc::Sender<SensoryMsg>,
+    mut shutdown: tokio::sync::watch::Receiver<bool>,
+) {
+    let mut phase_step: u32 = 0;
+    loop {
+        tokio::select! {
+            _ = shutdown.changed() => {
+                info!("semantic heartbeat loop shutting down");
+                return;
+            }
+            () = tokio::time::sleep(SEMANTIC_HEARTBEAT_INTERVAL) => {}
+        }
+
+        let phase = (phase_step % 64) as f32 / 64.0;
+        phase_step = phase_step.wrapping_add(1);
+        let mut msg = SensoryMsg::Semantic {
+            features: craft_warmth_vector(phase, SEMANTIC_HEARTBEAT_INTENSITY),
+            ts_ms: None,
+        };
+        if let Err(reason) = rescue_policy::prepare_semantic_heartbeat(&mut msg) {
+            debug!(
+                reason = %reason,
+                "semantic heartbeat skipped by rescue write policy"
+            );
+            continue;
+        }
+        if sensory_tx.send(msg).await.is_err() {
+            return;
+        }
+    }
+}
+
 /// Spawn the autonomous feedback loop task.
 /// Spawn the autonomous feedback loop task.
 pub fn spawn_autonomous_loop(
@@ -3195,6 +3262,10 @@ pub fn spawn_autonomous_loop(
             remote_journal_entries = remote_journal_entries.len(),
             "autonomous feedback loop started"
         );
+        let _semantic_heartbeat = tokio::spawn(run_semantic_heartbeat_loop(
+            sensory_tx.clone(),
+            shutdown.clone(),
+        ));
 
         // Initialize and clean up context overflow directory.
         let overflow_dir = bridge_paths().context_overflow_dir();
@@ -3405,14 +3476,14 @@ pub fn spawn_autonomous_loop(
                         }
                     }
 
-                    let msg = SensoryMsg::Semantic {
+                    let mut msg = SensoryMsg::Semantic {
                         features,
                         ts_ms: None,
                     };
-                    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+                    if let Err(reason) = rescue_policy::prepare_semantic_heartbeat(&mut msg) {
                         debug!(
                             reason = %reason,
-                            "autonomous rest pulse skipped by rescue write policy"
+                            "autonomous semantic heartbeat skipped by rescue write policy"
                         );
                     } else if sensory_tx.send(msg).await.is_err() {
                         return;
@@ -3543,7 +3614,7 @@ pub fn spawn_autonomous_loop(
                                 new_journals,
                                 source = pending.source_label.as_deref().unwrap_or("unknown"),
                                 file = %pending.path.display(),
-                                "autonomous: detected new minime journals; queued self-study for immediate dialogue"
+                                "autonomous: detected new minime journals; queued priority feedback for immediate dialogue"
                             );
                         } else {
                             info!(
@@ -3556,6 +3627,12 @@ pub fn spawn_autonomous_loop(
                     let controller_health =
                         conv.remote_workspace.as_deref().and_then(read_controller_health);
                     btsp::refresh_runtime(&conv, controller_health.as_ref());
+                    if let Some(path) = btsp::export_minime_prompt_block_once() {
+                        info!(
+                            path = %path.display(),
+                            "btsp: exported owner-specific proposal block to minime inbox"
+                        );
+                    }
 
                     // Check minime's parameter requests: apply semantic_gain,
                     // move all non-pending (applied/reviewed) to reviewed/.
@@ -3834,17 +3911,27 @@ pub fn spawn_autonomous_loop(
                                     })
                                 })
                                 .unwrap_or_default();
-                            let mut feedback_hint = selected_remote_entry.as_ref()
-                                .filter(|entry| entry.is_self_study())
-                                .map(|entry| {
-                                    let source = entry.source_label.as_deref().unwrap_or("unknown source");
-                                    format!(
+                            let mut feedback_hint = selected_remote_entry.as_ref().and_then(|entry| {
+                                let source = entry.source_label.as_deref().unwrap_or("unknown source");
+                                if entry.is_self_study() {
+                                    Some(format!(
                                         "The text above is minime's self-study from {source}. \
                                          Treat it as immediate architectural feedback grounded in \
                                          minime's present condition. Respond directly to the felt \
                                          experience, code reading, suggestions, and open questions."
-                                    )
-                                });
+                                    ))
+                                } else if entry.is_priority_feedback() {
+                                    Some(format!(
+                                        "The text above is minime's {source}. Treat it as immediate \
+                                         read-only operational feedback about spectral shape and \
+                                         visualization artifacts. Respond directly to visible structure, \
+                                         artifact paths, and suggested next inspections; do not convert \
+                                         it into a rescue imperative."
+                                    ))
+                                } else {
+                                    None
+                                }
+                            });
                             if conv.pending_remote_self_study.is_some() && journal_context.is_none() {
                                 warn!("pending minime self-study could not be parsed; clearing queue");
                                 conv.pending_remote_self_study = None;
@@ -4252,6 +4339,10 @@ pub fn spawn_autonomous_loop(
                                 continuity_parts.push(self_model.render_compact());
                             }
 
+                            if let Some(thread_summary) = crate::action_continuity::prompt_summary() {
+                                continuity_parts.push(thread_summary);
+                            }
+
                             let continuity_block = if continuity_parts.is_empty() {
                                 None
                             } else {
@@ -4260,6 +4351,7 @@ pub fn spawn_autonomous_loop(
                             feedback_hint = merge_hints([
                                 feedback_hint,
                                 btsp::render_astrid_prompt_block(),
+                                attractor_suggestion_prompt_note(),
                             ]);
 
                             // Use perception loaded above (available to all modes).
@@ -4702,6 +4794,7 @@ pub fn spawn_autonomous_loop(
                                 conv.ears_closed,
                                 conv.semantic_gain_override,
                             );
+                            let motif_nudge = conv.astrid_motif_cooldown_hint();
                             if let Some(ref hint) = coupling_nudge {
                                 let event = serde_json::json!({
                                     "exchange_count": conv.exchange_count,
@@ -4724,7 +4817,7 @@ pub fn spawn_autonomous_loop(
                                 }
                             }
                             let diversity_hint =
-                                merge_hints([diversity_hint, vocab_nudge, coupling_nudge]);
+                                merge_hints([diversity_hint, vocab_nudge, coupling_nudge, motif_nudge]);
 
                             let llm_response = if let Some(ref journal) = journal_context {
                                 // Fill-responsive temperature modulation (Astrid's suggestion):
@@ -4871,7 +4964,8 @@ pub fn spawn_autonomous_loop(
                                     let used_pending_self_study = selected_remote_entry.as_ref()
                                         .zip(conv.pending_remote_self_study.as_ref())
                                         .is_some_and(|(selected, pending)| {
-                                            selected.path == pending.path && pending.is_self_study()
+                                            selected.path == pending.path
+                                                && pending.is_priority_feedback()
                                         });
                                     conv.history.push(crate::llm::Exchange {
                                         minime_said: minime_summary,
@@ -4880,6 +4974,32 @@ pub fn spawn_autonomous_loop(
                                     // Keep only last 8 exchanges to bound memory.
                                     if conv.history.len() > 8 {
                                         conv.history.drain(..conv.history.len() - 8);
+                                    }
+                                    if let Some(event) =
+                                        conv.update_astrid_motif_cooldown_from_history()
+                                    {
+                                        let metric = serde_json::json!({
+                                            "event": event.event,
+                                            "cooldown_class": event.cooldown_class,
+                                            "status": event.status,
+                                            "observed_count": event.observed_count,
+                                            "cooldown_until_unix_s": event.cooldown_until_unix_s,
+                                            "exchange_count": conv.exchange_count,
+                                            "prompt_replay_suppressed": conv
+                                                .astrid_motif_cooldown
+                                                .as_ref()
+                                                .map(|cooldown| cooldown.prompt_replay_suppressed)
+                                                .unwrap_or(false),
+                                        });
+                                        if let Err(error) = condition_metrics::record_bridge_signal(
+                                            "astrid_motif_cooldown",
+                                            metric,
+                                        ) {
+                                            warn!(
+                                                error = %error,
+                                                "failed to record Astrid motif cooldown metrics"
+                                            );
+                                        }
                                     }
 
                                     // Latent vector: embed Astrid's response for continuity.
@@ -6016,6 +6136,9 @@ pub fn spawn_autonomous_loop(
                                     synth_noise_level: None,
                                     legacy_audio_synth: None,
                                     legacy_video_synth: None,
+                                    pi_kp: None,
+                                    pi_ki: None,
+                                    pi_max_step: None,
                                 };
                                 if let Err(e) = sensory_tx.send(control_msg).await {
                                     warn!(
@@ -6135,8 +6258,10 @@ pub fn spawn_autonomous_loop(
                                 &summary_for_journal,
                                 &mode_for_journal,
                             ).await {
+                                let journal_text =
+                                    format_longform_journal_text(&signal_for_journal, &elaboration);
                                 save_astrid_journal(
-                                    &format!("{signal_for_journal}\n\n--- JOURNAL ---\n{elaboration}"),
+                                    &journal_text,
                                     &format!("{mode_for_journal}_longform"),
                                     fill_for_journal,
                                 );
@@ -6232,7 +6357,7 @@ pub fn spawn_autonomous_loop(
                         // Extract workspace path before mutable borrow of conv.
                         let ws_clone = conv.remote_workspace.clone();
                         btsp::record_astrid_next_action(effective_next_action, fill_pct);
-                        handle_next_action(
+                        let next_outcome = handle_next_action(
                             &mut conv,
                             effective_next_action,
                             NextActionContext {
@@ -6245,6 +6370,18 @@ pub fn spawn_autonomous_loop(
                                 workspace: ws_clone.as_deref(),
                             },
                         );
+                        if let Err(err) = crate::action_continuity::record_astrid_next_action(
+                            db.as_ref(),
+                            next_action,
+                            &canonical_next_action,
+                            effective_next_action,
+                            &next_outcome,
+                            fill_pct,
+                            &telemetry,
+                            &response_text,
+                        ) {
+                            warn!("action continuity record failed: {err:#}");
+                        }
                         // Merge diversity hint AFTER the action handler, so the
                         // handler can't silently overwrite it by setting emphasis.
                         if let Some(hint) = next_choice_feedback.hint {
@@ -6515,6 +6652,22 @@ mod tests {
         assert!(!entries[0].contains("Mode: self_study"));
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn longform_journal_uses_compact_anchor_instead_of_replaying_signal() {
+        let signal = format!(
+            "{}\nNEXT: READ_MORE\n{}",
+            "The honey signal is dense. ".repeat(30),
+            "UNIQUE_TAIL_SHOULD_NOT_REPLAY ".repeat(12)
+        );
+
+        let text = format_longform_journal_text(&signal, "A slower private reflection remains.");
+
+        assert!(text.starts_with("Signal anchor: "));
+        assert!(text.contains("--- JOURNAL ---\nA slower private reflection remains."));
+        assert!(!text.contains("NEXT: READ_MORE"));
+        assert!(!text.contains("UNIQUE_TAIL_SHOULD_NOT_REPLAY"));
     }
 
     #[test]

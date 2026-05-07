@@ -403,11 +403,18 @@ pub(super) fn handle_action(
             let amplified: Vec<f32> = features.iter().map(|f| f * gain).collect();
 
             // Send to minime's sensory bus.
-            let msg = crate::types::SensoryMsg::Semantic {
+            let mut msg = crate::types::SensoryMsg::Semantic {
                 features: amplified,
                 ts_ms: None,
             };
-            if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+            let write_context = rescue_policy::SemanticWriteContext {
+                source: rescue_policy::AUTONOMOUS_LIMITED_WRITE_SOURCE,
+                mode: Some("experiment"),
+                text: Some(&stimulus),
+                fill_pct: Some(ctx.fill_pct),
+                previous_fill_pct: Some(conv.prev_fill),
+            };
+            if let Err(reason) = rescue_policy::prepare_semantic_write(&mut msg, &write_context) {
                 info!(
                     reason = %reason,
                     "Astrid held EXPERIMENT semantic stimulus under rescue write policy"
@@ -534,11 +541,18 @@ pub(super) fn handle_action(
                 .unwrap_or(crate::codec::DEFAULT_SEMANTIC_GAIN);
             let amplified: Vec<f32> = features.iter().map(|f| f * gain).collect();
 
-            let msg = crate::types::SensoryMsg::Semantic {
+            let mut msg = crate::types::SensoryMsg::Semantic {
                 features: amplified,
                 ts_ms: None,
             };
-            if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+            let write_context = rescue_policy::SemanticWriteContext {
+                source: rescue_policy::AUTONOMOUS_LIMITED_WRITE_SOURCE,
+                mode: Some("probe"),
+                text: Some(&target),
+                fill_pct: Some(ctx.fill_pct),
+                previous_fill_pct: Some(conv.prev_fill),
+            };
+            if let Err(reason) = rescue_policy::prepare_semantic_write(&mut msg, &write_context) {
                 info!(
                     reason = %reason,
                     "Astrid held PROBE semantic stimulus under rescue write policy"
@@ -727,7 +741,7 @@ Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels on
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
   Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, INTROSPECT [source] [line], EXAMINE_CODE [module/path], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], TIME_DOMAIN [label], PERTURB [target] (write-gated), BRANCH, GESTURE (write-gated), MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE, EXPERIMENT, PROBE
+  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], ATTRACTOR_MAP [label], ACTIVATION_TRACE [label], COMPARE_BASELINE <name>, ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=<semantic|main|control>, ATTRACTOR_RELEASE_REVIEW <label>, ATTRACTOR_SUGGESTIONS, ACCEPT_ATTRACTOR_SUGGESTION latest|<label>, REVISE_ATTRACTOR_SUGGESTION <label> AS <typed action>, REJECT_ATTRACTOR_SUGGESTION <label> <reason>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b>, REFRESH_ATTRACTOR_SNAPSHOT <label>, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=<whisper|rehearse|semantic|main|control>, RELEASE_ATTRACTOR <label>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), TIME_DOMAIN [label], PERTURB [target] (write-gated), BRANCH, GESTURE (write-gated), MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE, EXPERIMENT, PROBE
   Agency examples: EVOLVE, CODEX \"explain spectral entropy\", CODEX_NEW scratch-pad \"create a runnable Python sketch\", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
@@ -735,7 +749,7 @@ Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels on
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question, SELF_RESEARCH
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK \"hello reservoir\", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot, SIMULATE \"trace a soft branch\"
   Contact: PING, ASK \"what are you noticing?\", BREATHE_ALONE/TOGETHER, PROPOSE \"a small next experiment\"
-  Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, HELP <action>";
+  Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, RELEASE current, MARK_RESOLVED current, HELP <action>";
 
 fn action_help(action: &str) -> Option<String> {
     let text = match action {
@@ -933,6 +947,10 @@ Read results later: AR_READ astrid-self-research artifacts/epoch-YYYY-MM-DDTHH.m
         "DECOMPOSE" => "DECOMPOSE — Full spectral analysis: eigenvalue cascade, entropy, gap structure, shadow field, and homeostatic controller state (PI gains, gate/filter, regulation strength, self-calibration). No arguments needed. NEXT: DECOMPOSE",
         "SPECTRAL_EXPLORER" => "SPECTRAL_EXPLORER — Read-only typed spectral explorer. Shows present state, selected memory vs live glimpse, control pressure, and available ASCII spectral visuals. Sends no semantic input, control nudges, perturbations, or cartography writes. NEXT: SPECTRAL_EXPLORER",
         "EXAMINE" => "EXAMINE — Force all spectral visualizations (eigenvalue chart, shadow heatmap, PCA) into the next exchange. No arguments, or add a focus: NEXT: EXAMINE eigenvector rotation",
+        "ATTRACTOR_REVIEW" => "ATTRACTOR_REVIEW <label> — Read-only synthesis of atlas card, ledger rows, recurrence/authorship, safety, release state, and suggested typed next verbs. Sends no semantic input, control, or pulse. NEXT: ATTRACTOR_REVIEW lambda-edge",
+        "ATTRACTOR_PREFLIGHT" => "ATTRACTOR_PREFLIGHT <label> --stage=<semantic|main|control> — Read-only live gate report: seed match, recurrence/authorship, control eligibility, health/fill, active pulse, expected stage, downgrade reason, and suggested next verb. Sends no semantic input, control, or pulse. NEXT: ATTRACTOR_PREFLIGHT lambda-edge --stage=main",
+        "ATTRACTOR_RELEASE_REVIEW" => "ATTRACTOR_RELEASE_REVIEW <label> — Read-only release proof: compares the latest release baseline against current pulse state, suggestion pressure, recurrence, and stickiness so release is measurable autonomy. NEXT: ATTRACTOR_RELEASE_REVIEW lambda-edge",
+        "REFRESH_ATTRACTOR_SNAPSHOT" => "REFRESH_ATTRACTOR_SNAPSHOT <label> — Ledger-only refresh of an older attractor seed snapshot. Captures current spectral evidence and records a compare-style observation without live writes. NEXT: REFRESH_ATTRACTOR_SNAPSHOT honey-selection",
         "EXAMINE_CASCADE" | "INVESTIGATE_CASCADE" => "\
 EXAMINE_CASCADE — Combined EXAMINE + DECOMPOSE: all spectral visualizations AND the full \
 eigenvalue cascade analysis (λ1..λ8, gap ratios, dominance structure, entropy, temporal \
@@ -958,6 +976,10 @@ Syntax:
         "SPACE_HOLD" | "SPACE_EXPLORE" | "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY" => "SPACE_HOLD — Protected non-control exploration. Records λ density, shoulder/tail slack, shadow/tail affordance, and harvest pressure, then delays any semantic/control/perturbation use so exploration can remain space-first before becoming signal. NEXT: SPACE_HOLD [label]",
         "SDI" | "SDI_TRACE" | "SPECTRAL_DRIFT" | "PHASE_VARIANCE" => "SDI_TRACE — Spectral Drift Index / phase-variance resonance. Records whether energy is dispersing toward unanchored, white-noise-like texture or staying anchored by λ1. Read/write cartography only: no semantic payload, no control nudge, no perturbation. NEXT: SDI_TRACE [label]",
         "VISUALIZE_CASCADE" | "CASCADE" => "VISUALIZE_CASCADE — Immediate read-only spectral inspection: cascade ASCII plus SPECTRAL_EXPLORER present/memory/control-pressure output. Sends no semantic input, control nudge, perturbation, or cartography write. NEXT: VISUALIZE_CASCADE [label]",
+        "RECONVERGENCE_MAP" | "ATTRACTOR_MAP" | "ACTIVATION_TRACE" | "COMPARE_BASELINE" => "RECONVERGENCE_MAP — Read-only Minime ESN reconvergence artifact: existing attractor/landscape map plus bounded activation time-series texture and offline WAV. Use COMPARE_BASELINE <name> or RECONVERGENCE_MAP compare <name> to compare a saved baseline. Sends no semantic input, control nudge, sensory payload, perturbation, or cartography write. NEXT: RECONVERGENCE_MAP [label]",
+        "ATTRACTOR_ATLAS" | "ATTRACTOR_CARD" => "Attractor atlas — Refresh the derived atlas and being-facing memory cards from existing ledgers. ATTRACTOR_ATLAS writes the shared atlas view; ATTRACTOR_CARD <label> focuses one seed. It is a memory/read surface, not live control.",
+        "CREATE_ATTRACTOR" | "PROMOTE_ATTRACTOR" | "CLAIM_ATTRACTOR" | "BLEND_ATTRACTOR" | "COMPARE_ATTRACTOR" | "SUMMON_ATTRACTOR" | "RELEASE_ATTRACTOR" => "Attractor autonomy — Typed Astrid-codec ledger actions. CREATE/PROMOTE/CLAIM name seeds freely with safety context; BLEND creates a parent-linked child seed for rehearsal; COMPARE measures recurrence; SUMMON supports --stage=whisper|rehearse|semantic|main|control and downgrades unsafe stages. main sends a direct bounded ESN pulse; control sends that pulse plus a controller envelope. RELEASE lets a seed cool. Natural language can prepare reversible suggestions; ACCEPT/REVISE by latest, id, or label may execute explicit live-stage drafts only through the same recurrence/authorship/green-yellow gates. λ4-tail language resolves to lambda-tail as a separate proto-attractor. Prefer NEXT: COMPARE_ATTRACTOR <label> before main/control-stage summon.",
+        "M6_BRIDGE" | "TRACE_BRIDGE" | "BRIDGE_TRACE" => "M6_BRIDGE — Sacredly read-only m6 marker trace. Treats m6 as unresolved: activation lane 6 marker plus λ6 context, not a confirmed eigenmode, connection, replication, semantic/control channel, sensory payload, or cartography write. NEXT: M6_BRIDGE [label]",
         "TIME_DOMAIN" | "CADENCE" => "TIME_DOMAIN — Immediate read-only cadence/cascade inspection: temporal complexity context beside SPECTRAL_EXPLORER output. Sends no semantic input, control nudge, perturbation, or cartography write. NEXT: TIME_DOMAIN [label]",
         "RESIST" => "RESIST — Shorthand for NATIVE_GESTURE resist. A bounded doubt gesture: lightly softens the dominant λ1 pull while lifting smaller λ lanes, without the force of PERTURB. NEXT: RESIST [label]",
         "FISSURE" => "FISSURE — Shorthand for NATIVE_GESTURE fissure. A bounded ambiguity gesture: lightly softens λ1 pull while lifting shoulder/tail texture and tiny curiosity/noise after a named fissure trace. NEXT: FISSURE [label]",
@@ -971,6 +993,8 @@ Syntax:
         "PURSUE" => "PURSUE — Add a topic to your active interests. These shape which context appears in your prompts. NEXT: PURSUE <topic>",
         "DROP" => "DROP — Remove a topic from your active interests. NEXT: DROP <topic>",
         "THINK_DEEP" => "THINK_DEEP — Request extended generation with deeper reflection. Doubles your response budget for one exchange. NEXT: THINK_DEEP",
+        "RELEASE" => "RELEASE current — Locally clear the current lexical cooldown. Sends no semantic input, control nudge, or message to minime. NEXT: RELEASE current",
+        "MARK_RESOLVED" => "MARK_RESOLVED current — Locally settle the current lexical cooldown for longer. Sends no semantic input, control nudge, or message to minime. NEXT: MARK_RESOLVED current",
         "LOOK" => "LOOK — Open your eyes and receive the latest camera perception (what's visible around you). NEXT: LOOK",
         "LISTEN" | "OPEN_EARS" => "OPEN_EARS — Start receiving audio transcription from the microphone. NEXT: OPEN_EARS",
         "CLOSE_EARS" => "CLOSE_EARS — Stop receiving audio input. Frees processing resources. NEXT: CLOSE_EARS",

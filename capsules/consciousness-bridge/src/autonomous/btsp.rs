@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use tracing::info;
+use tracing::{info, warn};
 
 mod adoption;
 mod causality;
@@ -326,6 +326,61 @@ pub(super) fn render_astrid_initiation_seed() -> Option<String> {
     Some(rendered)
 }
 
+pub(super) fn export_minime_prompt_block_once() -> Option<PathBuf> {
+    ensure_signal_catalog_seeded();
+    let (mut bank, mut ledger) = load_runtime();
+    let Some((episode, proposal, responses)) =
+        active_owner_view(&bank, &mut ledger, OWNER_MINIME, false)
+    else {
+        return None;
+    };
+    if proposal
+        .prompt_exposures
+        .get(OWNER_MINIME)
+        .copied()
+        .unwrap_or(0)
+        > 0
+    {
+        return None;
+    }
+
+    let rendered = render_owner_block(episode, proposal, OWNER_MINIME, &responses, false);
+    let note = render_minime_inbox_note(proposal, &rendered);
+    let inbox_dir = bridge_paths().minime_inbox_dir();
+    if let Err(error) = std::fs::create_dir_all(&inbox_dir) {
+        warn!(%error, path = %inbox_dir.display(), "btsp: failed to create minime inbox");
+        return None;
+    }
+    let path = inbox_dir.join(format!(
+        "btsp_proposal_{}_{}.txt",
+        proposal.proposal_id,
+        now_unix_s()
+    ));
+    if let Err(error) = std::fs::write(&path, note) {
+        warn!(%error, path = %path.display(), "btsp: failed to export minime prompt block");
+        return None;
+    }
+
+    proposal
+        .owner_reply_state
+        .insert(OWNER_MINIME.to_string(), "witnessed".to_string());
+    proposal.reply_state = recompute_reply_state(proposal);
+    record_prompt_render(proposal, OWNER_MINIME, "minime_inbox");
+    let episode_id = proposal.episode_id.clone();
+    let proposal_id = proposal.proposal_id.clone();
+    save_runtime(&mut bank, &mut ledger);
+    append_signal_event(
+        "minime_prompt_exported",
+        json!({
+            "episode_id": episode_id,
+            "proposal_id": proposal_id,
+            "path": path.display().to_string(),
+            "detail": "Minime owner-specific BTSP proposal block was written to Minime's inbox."
+        }),
+    );
+    Some(path)
+}
+
 pub(super) fn record_astrid_next_action(next_action: &str, fill_pct: f32) {
     let (mut bank, mut ledger) = load_runtime();
     let changed = apply_owner_choice(
@@ -341,6 +396,20 @@ pub(super) fn record_astrid_next_action(next_action: &str, fill_pct: f32) {
     if changed {
         save_runtime(&mut bank, &mut ledger);
     }
+}
+
+fn render_minime_inbox_note(proposal: &ActiveSovereigntyProposal, rendered: &str) -> String {
+    format!(
+        "=== BTSP SOVEREIGNTY PROPOSAL FOR MINIME ===\n\
+         Source: astrid:btsp_sovereignty_proposal\n\
+         Proposal: {}\n\
+         Created: {}\n\
+         Expires: {}\n\n\
+         This is advisory only. It is an owner-specific view of a bilateral signal proposal; choose only if it feels true.\n\
+         If a candidate fits, answer in your normal NEXT syntax using the action shown. If none fits, continue your present course or name the mismatch.\n\n\
+         {}\n",
+        proposal.proposal_id, proposal.created_at_unix_s, proposal.expires_at_unix_s, rendered
+    )
 }
 
 pub(super) fn record_astrid_inbox_read(path: &Path, content: &str) {

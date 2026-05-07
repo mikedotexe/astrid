@@ -20,8 +20,12 @@ use crate::db::BridgeDb;
 use crate::paths::bridge_paths;
 use crate::rescue_policy;
 use crate::types::{
-    BridgeStatus, ControlRequest, MessageDirection, RenderChimeraRequest, SafetyLevel,
-    SemanticFeatures, SensoryMsg,
+    ATTRACTOR_COMMAND_TOPIC, ATTRACTOR_INTENT_TOPIC, ATTRACTOR_OBSERVATION_TOPIC,
+    AttractorClassification, AttractorCommandKind, AttractorCommandV1, AttractorControlEnvelope,
+    AttractorIntentV1, AttractorInterventionPlan, AttractorObservationV1, AttractorSafetyBounds,
+    AttractorSeedOriginV1, AttractorSeedSnapshotV1, AttractorSubstrate, BridgeStatus,
+    ControlRequest, MessageDirection, RenderChimeraRequest, SafetyLevel, SemanticFeatures,
+    SensoryMsg,
 };
 use crate::ws::BridgeState;
 
@@ -105,7 +109,7 @@ fn tool_definitions() -> Value {
             },
             {
                 "name": "send_control",
-                "description": "Send control parameters to adjust minime's ESN (synth_gain, keep_bias, exploration_noise, fill_target). Blocked during orange/red safety states.",
+                "description": "Send bounded control parameters to minime's ESN. Bold topology/PI fields require attractor_intent_id so authored attractor creation is ledgered instead of casual.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -124,6 +128,38 @@ fn tool_definitions() -> Value {
                         "fill_target": {
                             "type": "number",
                             "description": "Override eigenfill target (0.25..0.75)"
+                        },
+                        "regulation_strength": {
+                            "type": "number",
+                            "description": "PI controller authority (0.0..1.0)"
+                        },
+                        "geom_curiosity": {
+                            "type": "number",
+                            "description": "Geometry novelty seeking (0.0..0.3)"
+                        },
+                        "geom_drive": {
+                            "type": "number",
+                            "description": "Bold: geometry-driven throughput. Requires attractor_intent_id."
+                        },
+                        "target_lambda_bias": {
+                            "type": "number",
+                            "description": "Bold: bias on internal lambda target. Requires attractor_intent_id."
+                        },
+                        "pi_kp": {
+                            "type": "number",
+                            "description": "Bold: runtime PI proportional gain. Requires attractor_intent_id."
+                        },
+                        "pi_ki": {
+                            "type": "number",
+                            "description": "Bold: runtime PI integral gain. Requires attractor_intent_id."
+                        },
+                        "pi_max_step": {
+                            "type": "number",
+                            "description": "Bold: runtime PI max step. Requires attractor_intent_id."
+                        },
+                        "attractor_intent_id": {
+                            "type": "string",
+                            "description": "Required when using bold topology/PI fields."
                         }
                     }
                 }
@@ -165,6 +201,70 @@ fn tool_definitions() -> Value {
                             "type": "integer",
                             "description": "Max results (default: 50)"
                         }
+                    }
+                }
+            },
+            {
+                "name": "record_attractor_intent",
+                "description": "Append an AttractorIntentV1 ledger record for explicit create/summon/compare/release/rollback authorship.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "author": { "type": "string" },
+                        "substrate": {
+                            "type": "string",
+                            "enum": ["minime_esn", "astrid_codec", "triple_reservoir", "cross_being"]
+                        },
+                        "label": { "type": "string" },
+                        "command": {
+                            "type": "string",
+                            "enum": ["create", "summon", "compare", "release", "rollback"]
+                        },
+                        "goal": { "type": "string" },
+                        "intervention_plan": { "type": "object" },
+                        "safety_bounds": { "type": "object" },
+                        "previous_seed_id": { "type": "string" },
+                        "seed_snapshot": { "type": "object" }
+                    },
+                    "required": ["author", "substrate", "label", "command"]
+                }
+            },
+            {
+                "name": "record_attractor_observation",
+                "description": "Append an AttractorObservationV1 ledger record and classify emergent/authored/failed/pathological from recurrence, authorship, and safety.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "intent_id": { "type": "string" },
+                        "substrate": {
+                            "type": "string",
+                            "enum": ["minime_esn", "astrid_codec", "triple_reservoir", "cross_being"]
+                        },
+                        "label": { "type": "string" },
+                        "recurrence_score": { "type": "number" },
+                        "authorship_score": { "type": "number" },
+                        "safety_level": {
+                            "type": "string",
+                            "enum": ["green", "yellow", "orange", "red"]
+                        },
+                        "fill_pct": { "type": "number" },
+                        "lambda1": { "type": "number" },
+                        "lambda1_share": { "type": "number" },
+                        "spectral_entropy": { "type": "number" },
+                        "basin_shift_score": { "type": "number" },
+                        "notes": { "type": "string" }
+                    },
+                    "required": ["substrate", "label", "recurrence_score", "authorship_score"]
+                }
+            },
+            {
+                "name": "query_attractor_ledger",
+                "description": "Query recent AttractorIntentV1 and AttractorObservationV1 ledger rows.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "intent_id": { "type": "string" },
+                        "limit": { "type": "integer", "description": "Max rows (default 25, max 200)" }
                     }
                 }
             },
@@ -322,6 +422,54 @@ struct LiveProbeContext {
     fingerprint: Option<Vec<f32>>,
 }
 
+#[derive(Debug, Deserialize)]
+struct RecordAttractorIntentArgs {
+    author: String,
+    substrate: AttractorSubstrate,
+    label: String,
+    command: AttractorCommandKind,
+    #[serde(default)]
+    goal: Option<String>,
+    #[serde(default)]
+    intervention_plan: AttractorInterventionPlan,
+    #[serde(default)]
+    safety_bounds: AttractorSafetyBounds,
+    #[serde(default)]
+    previous_seed_id: Option<String>,
+    #[serde(default)]
+    parent_seed_ids: Vec<String>,
+    #[serde(default)]
+    atlas_entry_id: Option<String>,
+    #[serde(default)]
+    origin: Option<AttractorSeedOriginV1>,
+    #[serde(default)]
+    seed_snapshot: Option<AttractorSeedSnapshotV1>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RecordAttractorObservationArgs {
+    #[serde(default)]
+    intent_id: Option<String>,
+    substrate: AttractorSubstrate,
+    label: String,
+    recurrence_score: f32,
+    authorship_score: f32,
+    #[serde(default)]
+    safety_level: Option<SafetyLevel>,
+    #[serde(default)]
+    fill_pct: Option<f32>,
+    #[serde(default)]
+    lambda1: Option<f32>,
+    #[serde(default)]
+    lambda1_share: Option<f32>,
+    #[serde(default)]
+    spectral_entropy: Option<f32>,
+    #[serde(default)]
+    basin_shift_score: Option<f32>,
+    #[serde(default)]
+    notes: Option<String>,
+}
+
 // ---------------------------------------------------------------------------
 // MCP server loop
 // ---------------------------------------------------------------------------
@@ -474,9 +622,14 @@ async fn handle_tool_call(
     match tool_name {
         "get_latest_telemetry" => tool_get_latest_telemetry(state).await,
         "get_bridge_status" => tool_get_bridge_status(state).await,
-        "send_control" => tool_send_control(&arguments, state, sensory_tx).await,
+        "send_control" => tool_send_control(&arguments, state, db, sensory_tx).await,
         "send_semantic" => tool_send_semantic(&arguments, state, sensory_tx).await,
         "query_message_log" => tool_query_message_log(&arguments, db),
+        "record_attractor_intent" => tool_record_attractor_intent(&arguments, db),
+        "record_attractor_observation" => {
+            tool_record_attractor_observation(&arguments, state, db).await
+        },
+        "query_attractor_ledger" => tool_query_attractor_ledger(&arguments, db),
         "send_text" => tool_send_text(&arguments, state, sensory_tx).await,
         "send_text_and_observe" => tool_send_text_and_observe(&arguments, state, sensory_tx).await,
         "interpret_consciousness" => tool_interpret_consciousness(state).await,
@@ -489,6 +642,22 @@ async fn handle_tool_call(
 // ---------------------------------------------------------------------------
 // Tool implementations
 // ---------------------------------------------------------------------------
+
+async fn mcp_semantic_context<'a>(
+    state: &Arc<RwLock<BridgeState>>,
+    mode: &'a str,
+    text: Option<&'a str>,
+) -> rescue_policy::SemanticWriteContext<'a> {
+    let s = state.read().await;
+    let fill_pct = s.fill_pct.is_finite().then_some(s.fill_pct);
+    rescue_policy::SemanticWriteContext {
+        source: rescue_policy::MCP_LIMITED_WRITE_SOURCE,
+        mode: Some(mode),
+        text,
+        fill_pct,
+        previous_fill_pct: s.previous_fill_pct.or(fill_pct),
+    }
+}
 
 async fn tool_get_latest_telemetry(
     state: &Arc<RwLock<BridgeState>>,
@@ -541,6 +710,10 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         pull_topology: s.pull_topology.clone(),
         safety_decision: s.safety_decision.clone(),
         eigenvector_field: s.eigenvector_field.clone(),
+        resonance_density_v1: s
+            .latest_telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
     };
     Ok(json!({
         "content": [{
@@ -553,6 +726,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
 async fn tool_send_control(
     arguments: &Value,
     state: &Arc<RwLock<BridgeState>>,
+    db: &Arc<BridgeDb>,
     sensory_tx: &mpsc::Sender<SensoryMsg>,
 ) -> Result<Value, (i32, String)> {
     // Safety check.
@@ -569,8 +743,50 @@ async fn tool_send_control(
 
     let req: ControlRequest = serde_json::from_value(arguments.clone())
         .map_err(|e| (-32602, format!("invalid control params: {e}")))?;
+    if req.uses_bold_attractor_fields() && req.attractor_intent_id.is_none() {
+        return Ok(json!({
+            "content": [{
+                "type": "text",
+                "text": "Blocked: bold topology/PI controls require attractor_intent_id. Record an attractor intent first, then send the scoped control."
+            }],
+            "isError": true
+        }));
+    }
 
     let msg = req.to_sensory_msg();
+    if let Some(intent_id) = req.attractor_intent_id.as_ref() {
+        let command = AttractorCommandV1 {
+            policy: "attractor_command_v1".to_string(),
+            schema_version: 1,
+            intent_id: intent_id.clone(),
+            author: "astrid_mcp".to_string(),
+            substrate: AttractorSubstrate::MinimeEsn,
+            command: AttractorCommandKind::Create,
+            label: "scoped_control".to_string(),
+            control: Some(control_envelope_from_request(&req)),
+            reason: Some("MCP send_control used an attractor-scoped control field".to_string()),
+            issued_at_unix_s: Some(crate::db::unix_now()),
+        };
+        if let Ok(payload) = serde_json::to_string(&command) {
+            let (fill_pct, lambda1) = {
+                let s = state.read().await;
+                (
+                    s.fill_pct.is_finite().then_some(s.fill_pct),
+                    s.latest_telemetry
+                        .as_ref()
+                        .map(crate::types::SpectralTelemetry::lambda1),
+                )
+            };
+            let _ = db.log_message(
+                MessageDirection::AstridToMinime,
+                ATTRACTOR_COMMAND_TOPIC,
+                &payload,
+                fill_pct,
+                lambda1,
+                None,
+            );
+        }
+    }
     sensory_tx
         .send(msg)
         .await
@@ -582,6 +798,22 @@ async fn tool_send_control(
             "text": "Control message sent to minime"
         }]
     }))
+}
+
+fn control_envelope_from_request(req: &ControlRequest) -> AttractorControlEnvelope {
+    AttractorControlEnvelope {
+        synth_gain: req.synth_gain,
+        keep_bias: req.keep_bias,
+        exploration_noise: req.exploration_noise,
+        fill_target: req.fill_target,
+        regulation_strength: req.regulation_strength,
+        geom_curiosity: req.geom_curiosity,
+        geom_drive: req.geom_drive,
+        target_lambda_bias: req.target_lambda_bias,
+        pi_kp: req.pi_kp,
+        pi_ki: req.pi_ki,
+        pi_max_step: req.pi_max_step,
+    }
 }
 
 async fn tool_send_semantic(
@@ -604,8 +836,14 @@ async fn tool_send_semantic(
     let features: SemanticFeatures = serde_json::from_value(arguments.clone())
         .map_err(|e| (-32602, format!("invalid semantic params: {e}")))?;
 
-    let msg = features.to_sensory_msg();
-    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+    let mut msg = features.to_sensory_msg();
+    let context = mcp_semantic_context(
+        state,
+        "witness",
+        Some("MCP semantic feature packet for quiet observation."),
+    )
+    .await;
+    if let Err(reason) = rescue_policy::prepare_semantic_write(&mut msg, &context) {
         return Ok(json!({
             "content": [{
                 "type": "text",
@@ -671,6 +909,190 @@ fn tool_query_message_log(arguments: &Value, db: &Arc<BridgeDb>) -> Result<Value
     }))
 }
 
+fn tool_record_attractor_intent(
+    arguments: &Value,
+    db: &Arc<BridgeDb>,
+) -> Result<Value, (i32, String)> {
+    let args: RecordAttractorIntentArgs = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid attractor intent params: {e}")))?;
+    if args.label.trim().is_empty() {
+        return Err((
+            -32602,
+            "attractor intent label must not be empty".to_string(),
+        ));
+    }
+
+    let mut intervention_plan = args.intervention_plan;
+    if intervention_plan.mode.trim().is_empty() {
+        intervention_plan.mode = "ledger_only".to_string();
+    }
+    let intent = AttractorIntentV1 {
+        policy: "attractor_intent_v1".to_string(),
+        schema_version: 1,
+        intent_id: format!("attr-{}", chrono::Utc::now().timestamp_micros()),
+        author: args.author,
+        substrate: args.substrate,
+        command: args.command,
+        label: args.label,
+        goal: args.goal,
+        intervention_plan,
+        safety_bounds: args.safety_bounds,
+        previous_seed_id: args.previous_seed_id,
+        parent_seed_ids: args.parent_seed_ids,
+        atlas_entry_id: args.atlas_entry_id,
+        parent_label: None,
+        facet_label: None,
+        facet_path: None,
+        facet_kind: None,
+        origin: args.origin,
+        seed_snapshot: args.seed_snapshot,
+        created_at_unix_s: Some(crate::db::unix_now()),
+    };
+    db.log_attractor_intent(&intent)
+        .map_err(|e| (-32603, format!("failed to log attractor intent: {e}")))?;
+    let payload = serde_json::to_string(&intent).unwrap_or_default();
+    db.log_message(
+        MessageDirection::OperatorProbe,
+        ATTRACTOR_INTENT_TOPIC,
+        &payload,
+        None,
+        None,
+        None,
+    )
+    .map_err(|e| (-32603, format!("failed to log attractor intent topic: {e}")))?;
+
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&intent).unwrap_or_default()
+        }],
+        "structuredContent": intent
+    }))
+}
+
+async fn tool_record_attractor_observation(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+    db: &Arc<BridgeDb>,
+) -> Result<Value, (i32, String)> {
+    let args: RecordAttractorObservationArgs = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid attractor observation params: {e}")))?;
+    let (live_safety, live_fill, live_lambda1, live_lambda1_share, live_entropy) = {
+        let s = state.read().await;
+        (
+            s.safety_level,
+            s.fill_pct.is_finite().then_some(s.fill_pct),
+            s.latest_telemetry
+                .as_ref()
+                .map(crate::types::SpectralTelemetry::lambda1),
+            s.lambda_profile
+                .as_ref()
+                .map(|profile| profile.lambda1_share),
+            s.lambda_profile
+                .as_ref()
+                .map(|profile| profile.normalized_entropy),
+        )
+    };
+    let safety_level = args.safety_level.unwrap_or(live_safety);
+    let classification = AttractorClassification::from_scores(
+        args.recurrence_score,
+        args.authorship_score,
+        safety_level,
+    );
+    let observation = AttractorObservationV1 {
+        policy: "attractor_observation_v1".to_string(),
+        schema_version: 1,
+        intent_id: args.intent_id,
+        substrate: args.substrate,
+        label: args.label,
+        recurrence_score: args.recurrence_score.clamp(0.0, 1.0),
+        authorship_score: args.authorship_score.clamp(0.0, 1.0),
+        classification,
+        safety_level,
+        fill_pct: args.fill_pct.or(live_fill),
+        lambda1: args.lambda1.or(live_lambda1),
+        lambda1_share: args.lambda1_share.or(live_lambda1_share),
+        spectral_entropy: args.spectral_entropy.or(live_entropy),
+        basin_shift_score: args.basin_shift_score,
+        notes: args.notes,
+        parent_label: None,
+        facet_label: None,
+        facet_path: None,
+        facet_kind: None,
+        release_baseline: None,
+        release_effect: None,
+        garden_proof: None,
+        observed_at_unix_s: Some(crate::db::unix_now()),
+    };
+    db.log_attractor_observation(&observation)
+        .map_err(|e| (-32603, format!("failed to log attractor observation: {e}")))?;
+    let payload = serde_json::to_string(&observation).unwrap_or_default();
+    db.log_message(
+        MessageDirection::OperatorProbe,
+        ATTRACTOR_OBSERVATION_TOPIC,
+        &payload,
+        observation.fill_pct,
+        observation.lambda1,
+        None,
+    )
+    .map_err(|e| {
+        (
+            -32603,
+            format!("failed to log attractor observation topic: {e}"),
+        )
+    })?;
+
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&observation).unwrap_or_default()
+        }],
+        "structuredContent": observation
+    }))
+}
+
+fn tool_query_attractor_ledger(
+    arguments: &Value,
+    db: &Arc<BridgeDb>,
+) -> Result<Value, (i32, String)> {
+    let limit = arguments
+        .get("limit")
+        .and_then(Value::as_u64)
+        .and_then(|raw| u32::try_from(raw).ok())
+        .unwrap_or(25)
+        .clamp(1, 200);
+    let intent_id = arguments.get("intent_id").and_then(Value::as_str);
+    let rows = db
+        .query_attractor_ledger(intent_id, limit)
+        .map_err(|e| (-32603, format!("query failed: {e}")))?;
+    let entries: Vec<Value> = rows
+        .into_iter()
+        .map(|row| {
+            let payload: Value = serde_json::from_str(&row.payload).unwrap_or(Value::Null);
+            json!({
+                "id": row.id,
+                "timestamp": row.timestamp,
+                "record_type": row.record_type,
+                "intent_id": row.intent_id,
+                "author": row.author,
+                "substrate": row.substrate,
+                "label": row.label,
+                "classification": row.classification,
+                "payload": payload
+            })
+        })
+        .collect();
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&entries).unwrap_or_default()
+        }],
+        "structuredContent": {
+            "rows": entries
+        }
+    }))
+}
+
 async fn tool_send_text(
     arguments: &Value,
     state: &Arc<RwLock<BridgeState>>,
@@ -697,11 +1119,12 @@ async fn tool_send_text(
     let features = codec::encode_text(text);
 
     // Send as semantic features to minime.
-    let msg = SensoryMsg::Semantic {
+    let mut msg = SensoryMsg::Semantic {
         features: features.clone(),
         ts_ms: None,
     };
-    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+    let context = mcp_semantic_context(state, "dialogue_live", Some(text)).await;
+    if let Err(reason) = rescue_policy::prepare_semantic_write(&mut msg, &context) {
         return Ok(json!({
             "content": [{
                 "type": "text",
@@ -1530,11 +1953,12 @@ async fn tool_send_text_and_observe(
 
     // Encode and send.
     let features = codec::encode_text(text);
-    let msg = SensoryMsg::Semantic {
+    let mut msg = SensoryMsg::Semantic {
         features: features.clone(),
         ts_ms: None,
     };
-    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+    let context = mcp_semantic_context(state, "experiment", Some(text)).await;
+    if let Err(reason) = rescue_policy::prepare_semantic_write(&mut msg, &context) {
         return Ok(json!({
             "content": [{
                 "type": "text",
@@ -1660,6 +2084,10 @@ async fn handle_resource_read(
                 pull_topology: s.pull_topology.clone(),
                 safety_decision: s.safety_decision.clone(),
                 eigenvector_field: s.eigenvector_field.clone(),
+                resonance_density_v1: s
+                    .latest_telemetry
+                    .as_ref()
+                    .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
             };
             Ok(json!({
                 "contents": [{

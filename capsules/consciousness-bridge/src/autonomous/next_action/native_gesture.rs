@@ -725,6 +725,9 @@ pub(super) fn control_to_sensory(gesture: &str) -> Option<SensoryMsg> {
         synth_noise_level: None,
         legacy_audio_synth: None,
         legacy_video_synth: None,
+        pi_kp: None,
+        pi_ki: None,
+        pi_max_step: None,
     };
     match &mut msg {
         SensoryMsg::Control {

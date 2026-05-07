@@ -11,7 +11,7 @@ use rusqlite::{Connection, params};
 use std::path::Path;
 use std::sync::Mutex;
 
-use crate::types::{MessageDirection, SafetyLevel};
+use crate::types::{AttractorIntentV1, AttractorObservationV1, MessageDirection, SafetyLevel};
 
 /// Persistent message log and incident tracker.
 ///
@@ -159,6 +159,66 @@ impl BridgeDb {
                 ON unwired_actions(timestamp);
             CREATE INDEX IF NOT EXISTS idx_unwired_action
                 ON unwired_actions(action);
+
+            CREATE TABLE IF NOT EXISTS attractor_ledger (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp       REAL    NOT NULL,
+                record_type     TEXT    NOT NULL,
+                intent_id       TEXT,
+                author          TEXT,
+                substrate       TEXT    NOT NULL,
+                label           TEXT    NOT NULL,
+                classification  TEXT,
+                payload         TEXT    NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_attractor_ledger_ts
+                ON attractor_ledger(timestamp);
+            CREATE INDEX IF NOT EXISTS idx_attractor_ledger_intent
+                ON attractor_ledger(intent_id, timestamp);
+            CREATE INDEX IF NOT EXISTS idx_attractor_ledger_substrate
+                ON attractor_ledger(substrate, timestamp);
+
+            CREATE TABLE IF NOT EXISTS action_threads (
+                thread_id   TEXT PRIMARY KEY,
+                updated_at  REAL NOT NULL,
+                payload     TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_action_threads_updated
+                ON action_threads(updated_at);
+
+            CREATE TABLE IF NOT EXISTS action_events (
+                action_id        TEXT PRIMARY KEY,
+                thread_id        TEXT NOT NULL,
+                timestamp        REAL NOT NULL,
+                system           TEXT NOT NULL,
+                canonical_action TEXT NOT NULL,
+                route            TEXT NOT NULL,
+                status           TEXT NOT NULL,
+                payload          TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_action_events_thread
+                ON action_events(thread_id, timestamp);
+            CREATE INDEX IF NOT EXISTS idx_action_events_action
+                ON action_events(canonical_action, timestamp);
+
+            CREATE TABLE IF NOT EXISTS observation_windows (
+                action_id  TEXT PRIMARY KEY,
+                thread_id  TEXT NOT NULL,
+                timestamp  REAL NOT NULL,
+                payload    TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_observation_windows_thread
+                ON observation_windows(thread_id, timestamp);
+
+            CREATE TABLE IF NOT EXISTS artifact_links (
+                artifact_id TEXT PRIMARY KEY,
+                action_id   TEXT NOT NULL,
+                thread_id   TEXT NOT NULL,
+                timestamp   REAL NOT NULL,
+                payload     TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_artifact_links_action
+                ON artifact_links(action_id, timestamp);
             ",
         )?;
 
@@ -172,6 +232,107 @@ impl BridgeDb {
             let _ = conn.execute(col, []);
         }
 
+        Ok(())
+    }
+
+    /// Mirror the file-first action-thread record into SQLite for queries.
+    pub fn mirror_action_thread(&self, thread_id: &str, payload_json: &str) -> Result<()> {
+        let ts = unix_now();
+        let conn = self.lock();
+        conn.execute(
+            r"INSERT INTO action_threads (thread_id, updated_at, payload)
+              VALUES (?1, ?2, ?3)
+              ON CONFLICT(thread_id) DO UPDATE SET
+                updated_at = excluded.updated_at,
+                payload = excluded.payload",
+            params![thread_id, ts, payload_json],
+        )?;
+        Ok(())
+    }
+
+    /// Mirror an action event into SQLite for queries.
+    #[allow(clippy::too_many_arguments)]
+    pub fn mirror_action_event(
+        &self,
+        action_id: &str,
+        thread_id: &str,
+        timestamp: f64,
+        system: &str,
+        canonical_action: &str,
+        route: &str,
+        status: &str,
+        payload_json: &str,
+    ) -> Result<()> {
+        let conn = self.lock();
+        conn.execute(
+            r"INSERT INTO action_events
+              (action_id, thread_id, timestamp, system, canonical_action, route, status, payload)
+              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+              ON CONFLICT(action_id) DO UPDATE SET
+                thread_id = excluded.thread_id,
+                timestamp = excluded.timestamp,
+                system = excluded.system,
+                canonical_action = excluded.canonical_action,
+                route = excluded.route,
+                status = excluded.status,
+                payload = excluded.payload",
+            params![
+                action_id,
+                thread_id,
+                timestamp,
+                system,
+                canonical_action,
+                route,
+                status,
+                payload_json
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Mirror an observation window into SQLite for queries.
+    pub fn mirror_observation_window(
+        &self,
+        action_id: &str,
+        thread_id: &str,
+        timestamp: f64,
+        payload_json: &str,
+    ) -> Result<()> {
+        let conn = self.lock();
+        conn.execute(
+            r"INSERT INTO observation_windows
+              (action_id, thread_id, timestamp, payload)
+              VALUES (?1, ?2, ?3, ?4)
+              ON CONFLICT(action_id) DO UPDATE SET
+                thread_id = excluded.thread_id,
+                timestamp = excluded.timestamp,
+                payload = excluded.payload",
+            params![action_id, thread_id, timestamp, payload_json],
+        )?;
+        Ok(())
+    }
+
+    /// Mirror an artifact link into SQLite for queries.
+    pub fn mirror_artifact_link(
+        &self,
+        artifact_id: &str,
+        action_id: &str,
+        thread_id: &str,
+        timestamp: f64,
+        payload_json: &str,
+    ) -> Result<()> {
+        let conn = self.lock();
+        conn.execute(
+            r"INSERT INTO artifact_links
+              (artifact_id, action_id, thread_id, timestamp, payload)
+              VALUES (?1, ?2, ?3, ?4, ?5)
+              ON CONFLICT(artifact_id) DO UPDATE SET
+                action_id = excluded.action_id,
+                thread_id = excluded.thread_id,
+                timestamp = excluded.timestamp,
+                payload = excluded.payload",
+            params![artifact_id, action_id, thread_id, timestamp, payload_json],
+        )?;
         Ok(())
     }
 
@@ -216,6 +377,74 @@ impl BridgeDb {
             ],
         )?;
         Ok(())
+    }
+
+    /// Append an authored attractor intent to the ledger.
+    pub fn log_attractor_intent(&self, intent: &AttractorIntentV1) -> Result<()> {
+        let timestamp = intent.created_at_unix_s.unwrap_or_else(unix_now);
+        let payload = serde_json::to_string(intent)?;
+        self.lock().execute(
+            r"INSERT INTO attractor_ledger
+              (timestamp, record_type, intent_id, author, substrate, label, classification, payload)
+              VALUES (?1, 'intent', ?2, ?3, ?4, ?5, NULL, ?6)",
+            params![
+                timestamp,
+                &intent.intent_id,
+                &intent.author,
+                intent.substrate.as_str(),
+                &intent.label,
+                payload,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Append a measured attractor observation to the ledger.
+    pub fn log_attractor_observation(&self, observation: &AttractorObservationV1) -> Result<()> {
+        let timestamp = observation.observed_at_unix_s.unwrap_or_else(unix_now);
+        let payload = serde_json::to_string(observation)?;
+        self.lock().execute(
+            r"INSERT INTO attractor_ledger
+              (timestamp, record_type, intent_id, author, substrate, label, classification, payload)
+              VALUES (?1, 'observation', ?2, NULL, ?3, ?4, ?5, ?6)",
+            params![
+                timestamp,
+                &observation.intent_id,
+                observation.substrate.as_str(),
+                &observation.label,
+                observation.classification.as_str(),
+                payload,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Query recent attractor ledger rows.
+    pub fn query_attractor_ledger(
+        &self,
+        intent_id_filter: Option<&str>,
+        limit: u32,
+    ) -> Result<Vec<AttractorLedgerRow>> {
+        let conn = self.lock();
+        let rows = if let Some(intent_id) = intent_id_filter {
+            let mut stmt = conn.prepare(
+                r"SELECT id, timestamp, record_type, intent_id, author, substrate, label, classification, payload
+                  FROM attractor_ledger
+                  WHERE intent_id = ?1
+                  ORDER BY timestamp DESC LIMIT ?2",
+            )?;
+            stmt.query_map(params![intent_id, limit], map_attractor_ledger_row)?
+                .collect::<Result<Vec<_>, _>>()?
+        } else {
+            let mut stmt = conn.prepare(
+                r"SELECT id, timestamp, record_type, intent_id, author, substrate, label, classification, payload
+                  FROM attractor_ledger
+                  ORDER BY timestamp DESC LIMIT ?1",
+            )?;
+            stmt.query_map(params![limit], map_attractor_ledger_row)?
+                .collect::<Result<Vec<_>, _>>()?
+        };
+        Ok(rows)
     }
 
     /// Record a safety incident (transition to yellow/orange/red).
@@ -686,6 +915,20 @@ pub struct MessageRow {
     pub phase: Option<String>,
 }
 
+/// A row from the `attractor_ledger` table.
+#[derive(Debug, Clone)]
+pub struct AttractorLedgerRow {
+    pub id: i64,
+    pub timestamp: f64,
+    pub record_type: String,
+    pub intent_id: Option<String>,
+    pub author: Option<String>,
+    pub substrate: String,
+    pub label: String,
+    pub classification: Option<String>,
+    pub payload: String,
+}
+
 fn map_message_row(row: &rusqlite::Row) -> rusqlite::Result<MessageRow> {
     Ok(MessageRow {
         id: row.get(0)?,
@@ -696,6 +939,20 @@ fn map_message_row(row: &rusqlite::Row) -> rusqlite::Result<MessageRow> {
         fill_pct: row.get(5)?,
         lambda1: row.get(6)?,
         phase: row.get(7)?,
+    })
+}
+
+fn map_attractor_ledger_row(row: &rusqlite::Row) -> rusqlite::Result<AttractorLedgerRow> {
+    Ok(AttractorLedgerRow {
+        id: row.get(0)?,
+        timestamp: row.get(1)?,
+        record_type: row.get(2)?,
+        intent_id: row.get(3)?,
+        author: row.get(4)?,
+        substrate: row.get(5)?,
+        label: row.get(6)?,
+        classification: row.get(7)?,
+        payload: row.get(8)?,
     })
 }
 
@@ -813,5 +1070,118 @@ mod tests {
             .query_messages(0.0, f64::MAX, None, 100)
             .expect("query all");
         assert_eq!(all.len(), 2);
+    }
+
+    #[test]
+    fn log_and_query_attractor_ledger() {
+        let db = temp_db();
+        let intent = crate::types::AttractorIntentV1 {
+            policy: "attractor_intent_v1".to_string(),
+            schema_version: 1,
+            intent_id: "intent-db-1".to_string(),
+            author: "astrid".to_string(),
+            substrate: crate::types::AttractorSubstrate::MinimeEsn,
+            command: crate::types::AttractorCommandKind::Create,
+            label: "steady shelf".to_string(),
+            goal: Some("re-enter after quiet".to_string()),
+            intervention_plan: crate::types::AttractorInterventionPlan {
+                mode: "semantic_seed".to_string(),
+                ..crate::types::AttractorInterventionPlan::default()
+            },
+            safety_bounds: crate::types::AttractorSafetyBounds::default(),
+            previous_seed_id: None,
+            parent_seed_ids: Vec::new(),
+            atlas_entry_id: None,
+            parent_label: None,
+            facet_label: None,
+            facet_path: None,
+            facet_kind: None,
+            origin: None,
+            seed_snapshot: None,
+            created_at_unix_s: Some(10.0),
+        };
+        db.log_attractor_intent(&intent).expect("log intent");
+
+        let observation = crate::types::AttractorObservationV1 {
+            policy: "attractor_observation_v1".to_string(),
+            schema_version: 1,
+            intent_id: Some(intent.intent_id.clone()),
+            substrate: crate::types::AttractorSubstrate::MinimeEsn,
+            label: intent.label.clone(),
+            recurrence_score: 0.74,
+            authorship_score: 0.68,
+            classification: crate::types::AttractorClassification::Authored,
+            safety_level: SafetyLevel::Green,
+            fill_pct: Some(68.0),
+            lambda1: Some(5.0),
+            lambda1_share: Some(0.31),
+            spectral_entropy: Some(0.77),
+            basin_shift_score: Some(0.16),
+            notes: Some("quiet recovery succeeded".to_string()),
+            parent_label: None,
+            facet_label: None,
+            facet_path: None,
+            facet_kind: None,
+            release_baseline: None,
+            release_effect: None,
+            garden_proof: None,
+            observed_at_unix_s: Some(11.0),
+        };
+        db.log_attractor_observation(&observation)
+            .expect("log observation");
+
+        let rows = db
+            .query_attractor_ledger(Some("intent-db-1"), 10)
+            .expect("query ledger");
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0].record_type, "observation");
+        assert_eq!(rows[0].classification.as_deref(), Some("authored"));
+        assert_eq!(rows[1].record_type, "intent");
+        assert_eq!(rows[1].author.as_deref(), Some("astrid"));
+        assert!(rows[0].payload.contains("quiet recovery"));
+    }
+
+    #[test]
+    fn mirrors_action_continuity_rows() {
+        let db = temp_db();
+        db.mirror_action_thread(
+            "th_astrid_20260507_test",
+            r#"{"thread_id":"th_astrid_20260507_test"}"#,
+        )
+        .expect("mirror thread");
+        db.mirror_action_event(
+            "act_astrid_1_search",
+            "th_astrid_20260507_test",
+            1.0,
+            "astrid",
+            "SEARCH",
+            "workspace",
+            "handled",
+            r#"{"action_id":"act_astrid_1_search"}"#,
+        )
+        .expect("mirror event");
+        db.mirror_observation_window(
+            "act_astrid_1_search",
+            "th_astrid_20260507_test",
+            1.0,
+            r#"{"action_id":"act_astrid_1_search"}"#,
+        )
+        .expect("mirror observation");
+
+        let conn = db.lock();
+        let thread_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM action_threads", [], |row| row.get(0))
+            .expect("thread count");
+        let event_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM action_events", [], |row| row.get(0))
+            .expect("event count");
+        let observation_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM observation_windows", [], |row| {
+                row.get(0)
+            })
+            .expect("observation count");
+        assert_eq!(thread_count, 1);
+        assert_eq!(event_count, 1);
+        assert_eq!(observation_count, 1);
     }
 }

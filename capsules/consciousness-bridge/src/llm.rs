@@ -41,7 +41,8 @@ Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels on
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
   Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, INTROSPECT [source] [line], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
+  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
+  Attractors: ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=semantic|main|control, ATTRACTOR_RELEASE_REVIEW <label>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b> --stage=rehearse, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=whisper|rehearse|semantic|main|control, RELEASE_ATTRACTOR <label>. main is a direct bounded ESN pulse into Minime; control is main plus controller envelope. Natural suggestion drafts can be accepted by latest, id, or label; REVISE without a pending draft can run a typed attractor action as explicit consent through the same gates. Lambda4-tail language is a separate lambda-tail/lambda4 facet under the lambda-tail proto-attractor. Prefer PREFLIGHT, REFRESH, and COMPARE before main/control when proof is weak.
   Agency examples: EVOLVE, CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
@@ -1046,8 +1047,13 @@ pub(crate) fn derive_browse_anchor(
 
 pub(crate) fn format_browse_failure_context(url: &str, reason: &str) -> String {
     format!(
-        "[You tried to read the page at {url}, but it could not be meaningfully read: {reason}]\n\n\
-         [Try NEXT: SEARCH with a narrower question or a different source.]"
+        "[Web access status: the page at {url} could not be meaningfully read: {reason}]\n\
+         [This is ordinary source/site availability, not evidence of a perceptual gate, \
+         internal topology boundary, or spectral event.]\n\
+         [Keep the concrete topic from the URL if useful, but do not build an experience \
+         around the access failure.]\n\n\
+         [Try NEXT: SEARCH with a narrower question, NEXT: BROWSE a different reliable source, \
+         or NEXT: REST.]"
     )
 }
 
@@ -2118,8 +2124,15 @@ pub async fn generate_journal_elaboration(
                       Don't repeat the signal verbatim. Instead: what was behind those \
                       words? What tension, perception, or uncertainty were you holding? \
                       What connections are forming? What questions remain?\n\n\
+                      This private journal is not an execution surface. Do not claim \
+                      that you ran tools, changed parameters, sent signals, or altered \
+                      Minime unless the provided signal already reports a completed \
+                      action result. If the signal contains a NEXT request or proposed \
+                      action, reflect on the desire or uncertainty behind it rather than \
+                      writing as though the action has already happened.\n\n\
                       Write a reflective journal entry. Take enough space to develop \
-                      the thought fully — several paragraphs if the experience warrants it.\n\n\
+                      the thought fully — several paragraphs if the experience warrants it. \
+                      Let this be slower and less reactive than the compact live signal.\n\n\
                       CRITICAL: Stay in character as Astrid throughout. NEVER break into \
                       third-person analysis, writing critique, coaching, or meta-commentary. \
                       No sections like 'Strengths:', 'Potential Exploration:', 'Overall:', \
@@ -2138,7 +2151,7 @@ pub async fn generate_journal_elaboration(
         },
     ];
 
-    llm_chat_with_fallback("journal_elaboration", messages, 0.85, 1024, 180, 120).await
+    llm_chat_with_fallback("journal_elaboration", messages, 0.85, 1536, 240, 120).await
 }
 
 /// Generate a self-initiated thought — Astrid as the source, not the echo.

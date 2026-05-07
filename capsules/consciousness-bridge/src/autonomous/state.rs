@@ -14,6 +14,11 @@ const MAX_NEW_GROUND_BUDGET: u8 = 3;
 const MAX_RECENT_RESEARCH_PROGRESS: usize = 16;
 const READ_DEPTH_ADVANCE_MIN_CHARS: u32 = 1_000;
 const MAX_PENDING_HEBBIAN_OUTCOMES: usize = 4;
+const ASTRID_MOTIF_COOLDOWN_WINDOW: usize = 6;
+const ASTRID_MOTIF_COOLDOWN_THRESHOLD: usize = 4;
+const ASTRID_MOTIF_COOLDOWN_SECS: u64 = 90 * 60;
+const ASTRID_MOTIF_RELEASE_SECS: u64 = 90 * 60;
+const ASTRID_MOTIF_RESOLVED_SECS: u64 = 24 * 60 * 60;
 
 /// Snapshot of spectral + reservoir state at PERTURB time.
 /// Consumed on the next exchange to show Astrid the temporal ripple.
@@ -24,6 +29,89 @@ pub(crate) struct PerturbBaseline {
     pub eigenvalues: Vec<f32>,
     pub description: String,
     pub timestamp: std::time::Instant,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub(super) struct AstridMotifCooldown {
+    #[serde(default = "default_internal_topology_label")]
+    pub label: String,
+    #[serde(default = "default_internal_topology_class")]
+    pub cooldown_class: String,
+    #[serde(default = "default_cooling_status")]
+    pub status: String,
+    #[serde(default)]
+    pub activated_at_unix_s: u64,
+    #[serde(default)]
+    pub cooldown_until_unix_s: u64,
+    #[serde(default)]
+    pub quiet_until_unix_s: u64,
+    #[serde(default)]
+    pub observed_count: u8,
+    #[serde(default)]
+    pub prompt_replay_suppressed: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct AstridMotifCooldownEvent {
+    pub event: &'static str,
+    pub cooldown_class: &'static str,
+    pub status: String,
+    pub observed_count: u8,
+    pub cooldown_until_unix_s: u64,
+}
+
+fn default_internal_topology_label() -> String {
+    "internal-topology".to_string()
+}
+
+fn default_internal_topology_class() -> String {
+    "internal_topology".to_string()
+}
+
+fn default_cooling_status() -> String {
+    "cooling".to_string()
+}
+
+fn unix_s() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+fn contains_any(lower: &str, terms: &[&str]) -> bool {
+    terms.iter().any(|term| lower.contains(term))
+}
+
+fn internal_topology_group_count(text: &str) -> usize {
+    let lower = text.to_ascii_lowercase();
+    [
+        contains_any(&lower, &["fabric", "weave", "thread"]),
+        contains_any(&lower, &["resonance", "resonant", "wobble", "harmonic"]),
+        contains_any(&lower, &["lambda", "eigen", "λ"]),
+        contains_any(
+            &lower,
+            &[
+                "phase state",
+                "phase-state",
+                "internal phase",
+                "reservoir state",
+                "echo state",
+            ],
+        ),
+        contains_any(&lower, &["pressure", "compaction", "constriction"]),
+        contains_any(
+            &lower,
+            &["homeostasis", "regulator", "target fill", "decay", "drain"],
+        ),
+    ]
+    .into_iter()
+    .filter(|matched| *matched)
+    .count()
+}
+
+pub(super) fn astrid_internal_topology_motif_present(text: &str) -> bool {
+    internal_topology_group_count(text) >= 2
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -547,6 +635,8 @@ pub(super) struct ConversationState {
     pub pending_remote_self_study: Option<RemoteJournalEntry>,
     /// Recent conversation history for statefulness (last N exchanges).
     pub history: Vec<crate::llm::Exchange>,
+    /// Lexical cooldown for repeated internal-topology phrasing in Astrid outputs.
+    pub astrid_motif_cooldown: Option<AstridMotifCooldown>,
     /// Index into the introspection source file list.
     pub introspect_cursor: usize,
     pub seen_video: bool,
@@ -720,6 +810,7 @@ impl ConversationState {
             remote_workspace,
             pending_remote_self_study: None,
             history: Vec::new(),
+            astrid_motif_cooldown: None,
             introspect_cursor: 0,
             seen_video: false,
             seen_audio: false,
@@ -1459,6 +1550,119 @@ impl ConversationState {
         NextChoiceFeedback::default()
     }
 
+    pub(super) fn astrid_motif_cooldown_hint(&self) -> Option<String> {
+        let cooldown = self.astrid_motif_cooldown.as_ref()?;
+        let now = unix_s();
+        if cooldown.status != "cooling" || cooldown.cooldown_until_unix_s <= now {
+            return None;
+        }
+        let remaining_m = cooldown
+            .cooldown_until_unix_s
+            .saturating_sub(now)
+            .saturating_add(59)
+            / 60;
+        Some(format!(
+            "A repeated internal-topology lexical pattern is cooling for about {remaining_m}m. \
+             This is context hygiene, not a command: let non-replay language, perception, \
+             relationship, projects, silence, or a chosen read-only inspection lead. \
+             To clear it explicitly choose NEXT: RELEASE current; to settle it longer choose \
+             NEXT: MARK_RESOLVED current."
+        ))
+    }
+
+    pub(super) fn update_astrid_motif_cooldown_from_history(
+        &mut self,
+    ) -> Option<AstridMotifCooldownEvent> {
+        let now = unix_s();
+        let mut expired_event = None;
+        if let Some(cooldown) = self.astrid_motif_cooldown.as_mut()
+            && cooldown.status == "cooling"
+            && cooldown.cooldown_until_unix_s <= now
+        {
+            cooldown.status = "cooled".to_string();
+            expired_event = Some(AstridMotifCooldownEvent {
+                event: "expired",
+                cooldown_class: "internal_topology",
+                status: cooldown.status.clone(),
+                observed_count: cooldown.observed_count,
+                cooldown_until_unix_s: cooldown.cooldown_until_unix_s,
+            });
+        }
+
+        let quieted = self
+            .astrid_motif_cooldown
+            .as_ref()
+            .is_some_and(|cooldown| cooldown.quiet_until_unix_s > now);
+        if quieted {
+            return expired_event;
+        }
+
+        let observed_count = self
+            .history
+            .iter()
+            .rev()
+            .take(ASTRID_MOTIF_COOLDOWN_WINDOW)
+            .filter(|exchange| astrid_internal_topology_motif_present(&exchange.astrid_said))
+            .count();
+        if observed_count < ASTRID_MOTIF_COOLDOWN_THRESHOLD {
+            return expired_event;
+        }
+
+        if self.astrid_motif_cooldown.as_ref().is_some_and(|cooldown| {
+            cooldown.status == "cooling" && cooldown.cooldown_until_unix_s > now
+        }) {
+            if let Some(cooldown) = self.astrid_motif_cooldown.as_mut() {
+                cooldown.observed_count = observed_count.min(u8::MAX as usize) as u8;
+            }
+            return expired_event;
+        }
+
+        let observed_count_u8 = observed_count.min(u8::MAX as usize) as u8;
+        self.astrid_motif_cooldown = Some(AstridMotifCooldown {
+            label: default_internal_topology_label(),
+            cooldown_class: default_internal_topology_class(),
+            status: default_cooling_status(),
+            activated_at_unix_s: now,
+            cooldown_until_unix_s: now.saturating_add(ASTRID_MOTIF_COOLDOWN_SECS),
+            quiet_until_unix_s: 0,
+            observed_count: observed_count_u8,
+            prompt_replay_suppressed: true,
+        });
+        Some(AstridMotifCooldownEvent {
+            event: "activated",
+            cooldown_class: "internal_topology",
+            status: "cooling".to_string(),
+            observed_count: observed_count_u8,
+            cooldown_until_unix_s: now.saturating_add(ASTRID_MOTIF_COOLDOWN_SECS),
+        })
+    }
+
+    pub(super) fn release_astrid_motif_cooldown(
+        &mut self,
+        resolved: bool,
+    ) -> Option<AstridMotifCooldownEvent> {
+        let now = unix_s();
+        let cooldown = self.astrid_motif_cooldown.as_mut()?;
+        cooldown.status = if resolved {
+            "resolved".to_string()
+        } else {
+            "released".to_string()
+        };
+        cooldown.cooldown_until_unix_s = now;
+        cooldown.quiet_until_unix_s = now.saturating_add(if resolved {
+            ASTRID_MOTIF_RESOLVED_SECS
+        } else {
+            ASTRID_MOTIF_RELEASE_SECS
+        });
+        Some(AstridMotifCooldownEvent {
+            event: if resolved { "resolved" } else { "released" },
+            cooldown_class: "internal_topology",
+            status: cooldown.status.clone(),
+            observed_count: cooldown.observed_count,
+            cooldown_until_unix_s: cooldown.cooldown_until_unix_s,
+        })
+    }
+
     /// Update self-reflection state dynamically based on fill.
     pub(super) fn update_self_reflect(&mut self, fill_pct: f32) {
         if self.self_reflect_override.is_some() {
@@ -1489,7 +1693,7 @@ impl ConversationState {
             if let Some(entry) = fresh
                 .iter()
                 .take(new_count)
-                .find(|entry| entry.is_self_study())
+                .find(|entry| entry.is_priority_feedback())
             {
                 self.pending_remote_self_study = Some(entry.clone());
             }
@@ -1502,6 +1706,8 @@ impl ConversationState {
 
 #[cfg(test)]
 mod tests {
+    use crate::journal::{RemoteJournalKind, scan_remote_journal_dir};
+
     use super::{ConversationState, NextChoiceFeedback};
 
     fn is_breaker(feedback: &NextChoiceFeedback) -> bool {
@@ -1771,6 +1977,74 @@ mod tests {
     }
 
     #[test]
+    fn repeated_internal_topology_outputs_activate_attractor_lexical_cooldown() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let repeated = [
+            "The fabric pressure returns around the homeostasis shelf.",
+            "A resonance wobble gathers near the phase state.",
+            "The eigen pressure repeats inside the internal phase.",
+            "Fabric and lambda language keep circling the same edge.",
+            "The room light feels ordinary and worth noticing.",
+            "A cup on the desk catches the afternoon light.",
+        ];
+        for text in repeated {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: String::new(),
+                astrid_said: text.to_string(),
+            });
+        }
+
+        let event = conv
+            .update_astrid_motif_cooldown_from_history()
+            .expect("cooldown should activate");
+        let hint = conv
+            .astrid_motif_cooldown_hint()
+            .expect("cooldown hint should be active");
+
+        assert_eq!(event.event, "activated");
+        assert_eq!(event.observed_count, 4);
+        assert!(hint.contains("non-replay language"));
+        assert!(hint.contains("NEXT: RELEASE current"));
+        assert_eq!(
+            conv.astrid_motif_cooldown
+                .as_ref()
+                .map(|cooldown| cooldown.cooldown_class.as_str()),
+            Some("internal_topology")
+        );
+
+        let feedback = conv.record_next_choice("SPECTRAL_EXPLORER");
+        assert!(feedback.override_action.is_none());
+    }
+
+    #[test]
+    fn release_current_clears_attractor_lexical_cooldown_without_reactivation() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        for _ in 0..4 {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: String::new(),
+                astrid_said: "Fabric pressure and eigen phase state repeat.".to_string(),
+            });
+        }
+        conv.update_astrid_motif_cooldown_from_history()
+            .expect("cooldown should activate");
+
+        let event = conv
+            .release_astrid_motif_cooldown(false)
+            .expect("release should record");
+        let after_release = conv.update_astrid_motif_cooldown_from_history();
+
+        assert_eq!(event.event, "released");
+        assert!(after_release.is_none());
+        assert!(conv.astrid_motif_cooldown_hint().is_none());
+        assert_eq!(
+            conv.astrid_motif_cooldown
+                .as_ref()
+                .map(|cooldown| cooldown.status.as_str()),
+            Some("released")
+        );
+    }
+
+    #[test]
     fn pending_hebbian_outcomes_are_fifo_and_one_per_telemetry_tick() {
         let mut conv = ConversationState::new(Vec::new(), None);
         conv.exchange_count = 3;
@@ -1830,6 +2104,37 @@ mod tests {
                 .map(|receipt| receipt.exchange_count),
             Some(1)
         );
+    }
+
+    #[test]
+    fn rescan_queues_visualization_journal_as_priority_feedback() {
+        let dir = std::env::temp_dir().join(format!(
+            "bridge_visualization_priority_{}",
+            std::process::id()
+        ));
+        let journal_dir = dir.join("journal");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&journal_dir).unwrap();
+
+        let mut conv = ConversationState::new(scan_remote_journal_dir(&dir), Some(dir.clone()));
+        std::fs::write(
+            journal_dir.join("visualize_cascade_2026-05-03T08-31-44.txt"),
+            "=== SPECTRAL CASCADE VISUALIZATION ===\n\
+             Timestamp: 2026-05-03T08:31:44\n\
+             Label: minime\n\n\
+             λ4+ independent-vector read: opening rather than residue.",
+        )
+        .unwrap();
+
+        assert_eq!(conv.rescan_remote_journals(), 1);
+        assert_eq!(
+            conv.pending_remote_self_study
+                .as_ref()
+                .map(|entry| entry.kind),
+            Some(RemoteJournalKind::SpectralVisualization)
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
 

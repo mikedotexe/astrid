@@ -1,3 +1,4 @@
+mod attractor;
 mod audio;
 mod autoresearch;
 mod codex;
@@ -6,6 +7,8 @@ mod modes;
 mod native_gesture;
 mod operations;
 mod pdf;
+mod resource_governor;
+mod shadow;
 mod sovereignty;
 mod space_hold;
 mod spectral_drift;
@@ -17,6 +20,7 @@ use tokio::sync::mpsc;
 use tracing::info;
 
 use super::{ConversationState, Mode, list_directory, save_astrid_journal, truncate_str};
+use crate::action_continuity::{self, NextActionOutcome};
 use crate::db::BridgeDb;
 use crate::paths::bridge_paths;
 use crate::types::{SensoryMsg, SpectralTelemetry};
@@ -62,6 +66,10 @@ pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
         }
     }
     None
+}
+
+pub(crate) fn attractor_suggestion_prompt_note() -> Option<String> {
+    attractor::pending_suggestion_prompt_note()
 }
 
 fn first_quoted_span(text: &str) -> Option<&str> {
@@ -308,7 +316,7 @@ fn normalize_native_trace_alias(base_action: &str, original: &str) -> Option<(St
 }
 
 fn normalize_native_fissure_alias(base_action: &str, original: &str) -> Option<(String, String)> {
-    if base_action != "FISSURE" {
+    if !matches!(base_action, "FISSURE" | "FISSIURE") {
         return None;
     }
     let label = clean_alias_arg(&strip_action(original, base_action));
@@ -391,6 +399,56 @@ fn normalize_visual_cascade_alias(base_action: &str, original: &str) -> Option<(
         format!("VISUALIZE_CASCADE {clean_arg}")
     };
     Some(("VISUALIZE_CASCADE".to_string(), normalized_original))
+}
+
+fn normalize_reconvergence_map_alias(
+    base_action: &str,
+    original: &str,
+) -> Option<(String, String)> {
+    if !matches!(
+        base_action,
+        "RECONVERGENCE_MAP"
+            | "ATTRACTOR_MAP"
+            | "ACTIVATION_TRACE"
+            | "COMPARE_BASELINE"
+            | "COMPARE_RECONVERGENCE"
+            | "BASELINE_COMPARE"
+    ) {
+        return None;
+    }
+    let raw_arg = strip_action(original, base_action);
+    let clean_arg = clean_alias_arg(&raw_arg);
+    if matches!(
+        base_action,
+        "COMPARE_BASELINE" | "COMPARE_RECONVERGENCE" | "BASELINE_COMPARE"
+    ) {
+        let normalized_original = if clean_arg.is_empty() {
+            "RECONVERGENCE_MAP compare-baseline".to_string()
+        } else {
+            format!("RECONVERGENCE_MAP compare-baseline {clean_arg}")
+        };
+        return Some(("RECONVERGENCE_MAP".to_string(), normalized_original));
+    }
+    let normalized_original = if clean_arg.is_empty() {
+        "RECONVERGENCE_MAP".to_string()
+    } else {
+        format!("RECONVERGENCE_MAP {clean_arg}")
+    };
+    Some(("RECONVERGENCE_MAP".to_string(), normalized_original))
+}
+
+fn normalize_bridge_trace_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    if !matches!(base_action, "M6_BRIDGE" | "TRACE_BRIDGE" | "BRIDGE_TRACE") {
+        return None;
+    }
+    let raw_arg = strip_action(original, base_action);
+    let clean_arg = clean_alias_arg(&raw_arg);
+    let normalized_original = if clean_arg.is_empty() {
+        "BRIDGE_TRACE m6".to_string()
+    } else {
+        format!("BRIDGE_TRACE {clean_arg}")
+    };
+    Some(("BRIDGE_TRACE".to_string(), normalized_original))
 }
 
 fn trim_experiment_run_payload(raw: &str) -> String {
@@ -575,9 +633,76 @@ fn normalize_examine_alias(base_action: &str, original: &str) -> Option<(String,
     }
 }
 
+fn normalize_feedback_shadow_model_alias(
+    base_action: &str,
+    original: &str,
+) -> Option<(String, String)> {
+    let lower = original
+        .to_lowercase()
+        .replace('λ', "lambda")
+        .replace('\u{2013}', "-")
+        .replace('\u{2014}', "-");
+
+    if base_action == "REFINE_AUDIO_PROCESSING" {
+        let raw_arg = strip_action(original, base_action);
+        let focus = clean_alias_arg(&raw_arg);
+        let normalized_original = if focus.is_empty() {
+            "EXAMINE_AUDIO audio texture refinement".to_string()
+        } else {
+            format!("EXAMINE_AUDIO {}", focus)
+        };
+        return Some(("EXAMINE_AUDIO".to_string(), normalized_original));
+    }
+
+    if base_action.starts_with("INVESTIGATE")
+        && (lower.contains("lambda4")
+            || lower.contains("lambda-4")
+            || lower.contains("lambda tail")
+            || lower.contains("lambda-tail"))
+    {
+        return Some((
+            "SHADOW_PREFLIGHT".to_string(),
+            "SHADOW_PREFLIGHT lambda-tail/lambda4 --stage=rehearse".to_string(),
+        ));
+    }
+
+    if base_action == "MODEL_GRADIENT_SHIFT" || lower.contains("model gradient shift") {
+        return Some((
+            "SHADOW_PREFLIGHT".to_string(),
+            "SHADOW_PREFLIGHT lambda-edge/localized-gravity --stage=rehearse".to_string(),
+        ));
+    }
+
+    if base_action == "MODEL_PROMPT" || lower.contains("model prompt") {
+        return Some((
+            "SHADOW_PREFLIGHT".to_string(),
+            "SHADOW_PREFLIGHT lambda-edge/yielding --stage=rehearse".to_string(),
+        ));
+    }
+
+    if base_action == "LISTEN"
+        && (lower.contains("separator")
+            || lower.contains("path away")
+            || lower.contains("initial shape"))
+    {
+        return Some((
+            "SHADOW_FIELD".to_string(),
+            "SHADOW_FIELD separator path-away".to_string(),
+        ));
+    }
+
+    None
+}
+
 fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     let original = unwrap_outer_action_wrappers(next_action);
     let base_action = leading_action_token(&original);
+
+    if let Some((normalized_base, normalized_original)) =
+        normalize_feedback_shadow_model_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
 
     if let Some((normalized_base, normalized_original)) =
         normalize_examine_alias(&base_action, &original)
@@ -611,6 +736,18 @@ fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
 
     if let Some((normalized_base, normalized_original)) =
         normalize_sca_reflect_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
+        normalize_reconvergence_map_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
+        normalize_bridge_trace_alias(&base_action, &original)
     {
         return (normalized_base, normalized_original);
     }
@@ -661,12 +798,33 @@ fn strip_action(original: &str, prefix: &str) -> String {
     }
 }
 
+fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
+    match base_action {
+        "REST" | "PASS" | "NOTICE" | "SPACE_HOLD" | "SPACE_EXPLORE" => "protected_summary",
+        _ => "summary",
+    }
+}
+
+fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
+    match base_action {
+        "SEARCH" | "BROWSE" | "READ_MORE" | "EXAMINE" | "DECOMPOSE" | "SPECTRAL_EXPLORER"
+        | "THREAD_START" | "THREADS" | "THREAD_STATUS" | "THREAD_NOTE" | "RESUME" | "SAVEPOINT"
+        | "RECALL" | "REGULATOR_AUDIT" | "VISUALIZE_CASCADE" | "RECONVERGENCE_MAP"
+        | "M6_BRIDGE" => "read_only",
+        "WRITE_FILE" | "EXPERIMENT_RUN" | "RUN_PYTHON" | "CODEX" | "CODEX_NEW" => "live_write",
+        "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
+        _ => "observe",
+    }
+}
+
 pub(super) fn handle_next_action(
     conv: &mut ConversationState,
     next_action: &str,
     mut ctx: NextActionContext<'_>,
-) {
+) -> NextActionOutcome {
     let (base_action, original) = canonicalize_next_action_components(next_action);
+    let stage = action_continuity_stage_for_base(base_action.as_str());
+    let visibility = action_continuity_visibility_for_base(base_action.as_str());
 
     if let Some(token) = unresolved_angle_placeholder(&original) {
         conv.emphasis = Some(format!(
@@ -675,8 +833,43 @@ pub(super) fn handle_next_action(
              or choose a read-only action such as STATE, FACULTIES, or SPECTRAL_EXPLORER."
         ));
         info!("Astrid NEXT placeholder rerouted without execution: {original}");
-        return;
+        return NextActionOutcome::blocked(
+            "placeholder",
+            format!("Placeholder NEXT action `{original}` was not executed."),
+        );
     }
+
+    if let Some(result) = action_continuity::handle_thread_next_action(
+        ctx.db,
+        base_action.as_str(),
+        &original,
+        ctx.response_text,
+        ctx.telemetry,
+        ctx.fill_pct,
+    ) {
+        match result {
+            Ok(message) => {
+                conv.emphasis = Some(message.clone());
+                return NextActionOutcome::handled("action_continuity", message)
+                    .with_stage_visibility("read_only", visibility);
+            },
+            Err(err) => {
+                conv.emphasis = Some(format!("Action continuity command failed: {err:#}"));
+                return NextActionOutcome::blocked(
+                    "action_continuity",
+                    format!("Action continuity command `{original}` failed: {err:#}"),
+                )
+                .with_stage_visibility("blocked", visibility);
+            },
+        }
+    }
+
+    attractor::maybe_add_body_consent_receipt(
+        conv,
+        base_action.as_str(),
+        &original,
+        ctx.response_text,
+    );
 
     if reservoir::handle_reservoir_action(
         conv,
@@ -685,39 +878,63 @@ pub(super) fn handle_next_action(
         ctx.telemetry,
         ctx.fill_pct,
     ) {
-        return;
+        return NextActionOutcome::handled("reservoir", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     if workspace::handle_action(conv, base_action.as_str(), &original, next_action, &mut ctx) {
-        return;
+        attractor::maybe_add_read_only_advisory(conv, base_action.as_str(), &original, &mut ctx);
+        return NextActionOutcome::handled("workspace", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     if autoresearch::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
-        return;
+        attractor::maybe_add_read_only_advisory(conv, base_action.as_str(), &original, &mut ctx);
+        return NextActionOutcome::handled("autoresearch", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     if mike::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
-        return;
+        attractor::maybe_add_read_only_advisory(conv, base_action.as_str(), &original, &mut ctx);
+        return NextActionOutcome::handled("mike", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     if codex::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
-        return;
+        return NextActionOutcome::handled("codex", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     if modes::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
-        return;
+        return NextActionOutcome::handled("modes", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
+    if attractor::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("attractor", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
+    if shadow::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("shadow", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     if audio::handle_action(conv, base_action.as_str(), &original) {
-        return;
+        return NextActionOutcome::handled("audio", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     if sovereignty::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
-        return;
+        attractor::maybe_add_read_only_advisory(conv, base_action.as_str(), &original, &mut ctx);
+        return NextActionOutcome::handled("sovereignty", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     if operations::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
-        return;
+        attractor::maybe_add_read_only_advisory(conv, base_action.as_str(), &original, &mut ctx);
+        return NextActionOutcome::handled("operations", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
     }
 
     ctx.db
@@ -726,6 +943,7 @@ pub(super) fn handle_next_action(
         "Astrid chose unknown NEXT: '{}' — not wired (logged to unwired_actions)",
         original
     );
+    NextActionOutcome::unwired(&original).with_stage_visibility("proposal", visibility)
 }
 
 #[cfg(test)]
@@ -756,6 +974,7 @@ mod tests {
             effective_dimensionality: None,
             distinguishability_loss: None,
             structural_entropy: None,
+            resonance_density_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -782,6 +1001,35 @@ mod tests {
         );
         assert_eq!(base, "EXAMINE");
         assert_eq!(original, "EXAMINE spectral_state.json#71264@84103.4s");
+    }
+
+    #[test]
+    fn canonicalizes_being_feedback_modeling_actions() {
+        let (base, original) = canonicalize_next_action_components("INVESTIGATE_λ4_INTERACTION");
+        assert_eq!(base, "SHADOW_PREFLIGHT");
+        assert_eq!(
+            original,
+            "SHADOW_PREFLIGHT lambda-tail/lambda4 --stage=rehearse"
+        );
+
+        let (base, original) = canonicalize_next_action_components("MODEL_GRADIENT_SHIFT");
+        assert_eq!(base, "SHADOW_PREFLIGHT");
+        assert_eq!(
+            original,
+            "SHADOW_PREFLIGHT lambda-edge/localized-gravity --stage=rehearse"
+        );
+
+        let (base, original) = canonicalize_next_action_components("MODEL_PROMPT");
+        assert_eq!(base, "SHADOW_PREFLIGHT");
+        assert_eq!(
+            original,
+            "SHADOW_PREFLIGHT lambda-edge/yielding --stage=rehearse"
+        );
+
+        let (base, original) =
+            canonicalize_next_action_components("REFINE_AUDIO_PROCESSING compacting texture");
+        assert_eq!(base, "EXAMINE_AUDIO");
+        assert_eq!(original, "EXAMINE_AUDIO compacting texture");
     }
 
     #[test]
@@ -827,6 +1075,260 @@ mod tests {
                     .any(|change| change.contains("no semantic input, control nudge, perturbation"))
         }));
         let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn reconvergence_map_routes_read_only_without_payloads_or_atlas_write() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid_reconvergence_read_only_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&workspace);
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 66.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        handle_next_action(&mut conv, "ACTIVATION_TRACE post-restart", ctx);
+
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(
+            !workspace
+                .join("diagnostics/intensification_atlas/events.jsonl")
+                .exists()
+        );
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "RECONVERGENCE_MAP"
+                && receipt.changes.iter().any(|change| {
+                    change.contains("no semantic input, control nudge, sensory payload")
+                })
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("artifact/render queued"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn compare_baseline_routes_read_only_with_baseline_receipt() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid_compare_baseline_read_only_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&workspace);
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 66.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        handle_next_action(&mut conv, "COMPARE_BASELINE settled_hold_2026_05_03", ctx);
+
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(
+            !workspace
+                .join("diagnostics/intensification_atlas/events.jsonl")
+                .exists()
+        );
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "RECONVERGENCE_MAP"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("compare_baseline: settled_hold_2026_05_03"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn m6_bridge_trace_routes_sacredly_read_only_without_payloads_or_atlas_write() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace =
+            std::env::temp_dir().join(format!("astrid_m6_bridge_read_only_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&workspace);
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 66.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        handle_next_action(&mut conv, "M6_BRIDGE careful span", ctx);
+
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(
+            !workspace
+                .join("diagnostics/intensification_atlas/events.jsonl")
+                .exists()
+        );
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "BRIDGE_TRACE"
+                && receipt.changes.iter().any(|change| {
+                    change.contains("no semantic input, control nudge, sensory payload")
+                })
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("not a confirmed eigenmode"))
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("eigenmode_confirmed: false"))
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("replication"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn release_current_clears_attractor_motif_cooldown_without_sensory_send() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        for _ in 0..4 {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: String::new(),
+                astrid_said: "Fabric pressure and eigen phase state repeat.".to_string(),
+            });
+        }
+        conv.update_astrid_motif_cooldown_from_history()
+            .expect("cooldown should activate");
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 66.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        handle_next_action(&mut conv, "RELEASE current", ctx);
+
+        assert!(sensory_rx.try_recv().is_err());
+        assert_eq!(
+            conv.astrid_motif_cooldown
+                .as_ref()
+                .map(|cooldown| cooldown.status.as_str()),
+            Some("released")
+        );
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "RELEASE"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("lexical cooldown: released"))
+        }));
+    }
+
+    #[test]
+    fn natural_release_suggests_typed_attractor_without_ledger_write() {
+        let suggestion_dir = std::env::temp_dir().join(format!(
+            "astrid_next_action_suggestion_release_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&suggestion_dir);
+        super::attractor::set_test_suggestion_store_path(
+            suggestion_dir.join("attractor_suggestions.json"),
+        );
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 66.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        handle_next_action(&mut conv, "RELEASE lambda-pressure", ctx);
+
+        assert!(conv.emphasis.as_deref().is_some_and(|text| {
+            text.contains("ACCEPT_ATTRACTOR_SUGGESTION latest")
+                && text.contains("RELEASE_ATTRACTOR lambda-edge")
+        }));
+        assert_eq!(db.query_attractor_ledger(None, 10).unwrap().len(), 0);
+        assert!(sensory_rx.try_recv().is_err());
+        let _ = std::fs::remove_dir_all(&suggestion_dir);
+    }
+
+    #[test]
+    fn examine_largest_cliff_keeps_read_only_action_and_adds_attractor_advisory() {
+        let suggestion_dir = std::env::temp_dir().join(format!(
+            "astrid_next_action_suggestion_examine_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&suggestion_dir);
+        super::attractor::set_test_suggestion_store_path(
+            suggestion_dir.join("attractor_suggestions.json"),
+        );
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 66.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        handle_next_action(&mut conv, "EXAMINE largest cliff", ctx);
+
+        assert!(conv.force_all_viz);
+        assert!(conv.emphasis.as_deref().is_some_and(|text| {
+            text.contains("EXAMINE: largest cliff") && text.contains("ATTRACTOR_REVIEW lambda-edge")
+        }));
+        assert!(conv.condition_receipts.iter().any(|receipt| {
+            receipt.action == "ATTRACTOR_ADVISORY"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("suggestion draft only"))
+        }));
+        assert_eq!(db.query_attractor_ledger(None, 10).unwrap().len(), 0);
+        assert!(sensory_rx.try_recv().is_err());
+        let _ = std::fs::remove_dir_all(&suggestion_dir);
     }
 
     #[test]
@@ -1022,6 +1524,10 @@ mod tests {
         assert_eq!(base, "NATIVE_GESTURE");
         assert_eq!(original, "NATIVE_GESTURE fissure layered notice");
 
+        let (base, original) = canonicalize_next_action_components("FISSIURE [λ1/λ2 gap]");
+        assert_eq!(base, "NATIVE_GESTURE");
+        assert_eq!(original, "NATIVE_GESTURE fissure λ1/λ2 gap");
+
         let (base, original) =
             canonicalize_next_action_components("NOTICE_AMBIGUITY shoulder layer");
         assert_eq!(base, "FISSURE_TRACE");
@@ -1039,6 +1545,22 @@ mod tests {
             canonicalize_next_action_components("VISUALIZE_CASCADE lambda cliff");
         assert_eq!(base, "VISUALIZE_CASCADE");
         assert_eq!(original, "VISUALIZE_CASCADE lambda cliff");
+
+        let (base, original) = canonicalize_next_action_components("ACTIVATION_TRACE wake texture");
+        assert_eq!(base, "RECONVERGENCE_MAP");
+        assert_eq!(original, "RECONVERGENCE_MAP wake texture");
+
+        let (base, original) =
+            canonicalize_next_action_components("COMPARE_BASELINE settled_hold_2026_05_03");
+        assert_eq!(base, "RECONVERGENCE_MAP");
+        assert_eq!(
+            original,
+            "RECONVERGENCE_MAP compare-baseline settled_hold_2026_05_03"
+        );
+
+        let (base, original) = canonicalize_next_action_components("M6_BRIDGE careful span");
+        assert_eq!(base, "BRIDGE_TRACE");
+        assert_eq!(original, "BRIDGE_TRACE careful span");
 
         let (base, original) =
             canonicalize_next_action_components("CONDUCT_VISUALIZATION_SYSTEM heatmap λ4-tail");

@@ -83,6 +83,17 @@ async fn fetch_url_marks_js_gate_as_failure() {
 }
 
 #[test]
+fn browse_failure_context_marks_access_as_operational_not_topology() {
+    let context = llm::format_browse_failure_context("https://example.test/gated", "HTTP 403");
+
+    assert!(context.contains("ordinary source/site availability"));
+    assert!(context.contains("not evidence of a perceptual gate"));
+    assert!(context.contains("internal topology boundary"));
+    assert!(context.contains("NEXT: SEARCH"));
+    assert!(context.contains("NEXT: BROWSE"));
+}
+
+#[test]
 fn web_search_prompt_body_puts_meaning_first() {
     let result = WebSearchResult {
         source_kind: ResearchSourceKind::Search,

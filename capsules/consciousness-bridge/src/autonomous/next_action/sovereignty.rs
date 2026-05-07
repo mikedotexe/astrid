@@ -1,4 +1,6 @@
 use serde_json::Value;
+#[cfg(not(test))]
+use std::process::Command;
 use tokio::sync::mpsc;
 use tracing::{info, warn};
 
@@ -639,6 +641,64 @@ pub(super) fn handle_action(
             ));
             true
         },
+        "RECONVERGENCE_MAP" => {
+            let request =
+                parse_reconvergence_render_request(&strip_action(original, "RECONVERGENCE_MAP"));
+            let render = render_reconvergence_map_artifact(&request);
+            match render {
+                Ok(summary) => {
+                    let mut changes = vec![
+                        "read-only reconvergence map artifact/render queued".to_string(),
+                        "no semantic input, control nudge, sensory payload, perturbation, or cartography write was sent".to_string(),
+                    ];
+                    changes.extend(summary.changes);
+                    conv.push_receipt("RECONVERGENCE_MAP", changes);
+                    conv.emphasis = Some(summary.emphasis);
+                },
+                Err(error) => {
+                    conv.push_receipt(
+                        "RECONVERGENCE_MAP",
+                        vec![
+                            format!("read-only reconvergence map render failed: {error}"),
+                            "no semantic input, control nudge, sensory payload, perturbation, or cartography write was sent".to_string(),
+                        ],
+                    );
+                    conv.emphasis = Some(format!(
+                        "You requested a read-only reconvergence map, but the renderer did not complete: {error}. No Minime sensory/control/semantic payload was sent."
+                    ));
+                },
+            }
+            true
+        },
+        "BRIDGE_TRACE" => {
+            let request = parse_bridge_trace_request(&strip_action(original, "BRIDGE_TRACE"));
+            let render = render_bridge_trace_artifact(&request);
+            match render {
+                Ok(summary) => {
+                    let mut changes = vec![
+                        "sacredly read-only m6 marker trace artifact/render queued".to_string(),
+                        "m6 is treated as unresolved: activation lane 6 marker plus λ6 context, not a confirmed eigenmode".to_string(),
+                        "no semantic input, control nudge, sensory payload, perturbation, replication, connection, or cartography write was sent".to_string(),
+                    ];
+                    changes.extend(summary.changes);
+                    conv.push_receipt("BRIDGE_TRACE", changes);
+                    conv.emphasis = Some(summary.emphasis);
+                },
+                Err(error) => {
+                    conv.push_receipt(
+                        "BRIDGE_TRACE",
+                        vec![
+                            format!("read-only m6 marker trace render failed: {error}"),
+                            "no semantic input, control nudge, sensory payload, perturbation, replication, connection, or cartography write was sent".to_string(),
+                        ],
+                    );
+                    conv.emphasis = Some(format!(
+                        "You requested a sacredly read-only m6 marker trace, but the renderer did not complete: {error}. No Minime sensory/control/semantic payload was sent."
+                    ));
+                },
+            }
+            true
+        },
         "NATIVE_GESTURE" | "RESIST" => {
             let raw = if base_action == "RESIST" {
                 let label = strip_action(original, "RESIST");
@@ -722,7 +782,15 @@ pub(super) fn handle_action(
             }
 
             if !features.is_empty() {
-                if let Err(reason) = send_semantic(ctx.sensory_tx, features.clone()) {
+                let gesture_text = label.as_deref().unwrap_or(&gesture);
+                if let Err(reason) = send_semantic(
+                    ctx.sensory_tx,
+                    features.clone(),
+                    "native_gesture",
+                    Some(gesture_text),
+                    ctx.fill_pct,
+                    conv.prev_fill,
+                ) {
                     record_native_gesture(
                         &workspace,
                         "astrid",
@@ -789,7 +857,14 @@ pub(super) fn handle_action(
             if !intention.is_empty() {
                 let gesture = crate::llm::craft_gesture_from_intention(&intention);
                 conv.last_gesture_seed = Some(gesture.clone());
-                match send_semantic(ctx.sensory_tx, gesture) {
+                match send_semantic(
+                    ctx.sensory_tx,
+                    gesture,
+                    "gesture",
+                    Some(&intention),
+                    ctx.fill_pct,
+                    conv.prev_fill,
+                ) {
                     Ok(()) => {
                         info!(
                             "Astrid sent spectral gesture: {}",
@@ -888,6 +963,9 @@ pub(super) fn handle_action(
                     memory_decay_rate: None,
                     checkpoint_annotation: None,
                     synth_noise_level: None,
+                    pi_kp: None,
+                    pi_ki: None,
+                    pi_max_step: None,
                 },
             );
             info!(
@@ -1115,7 +1193,14 @@ pub(super) fn handle_action(
             for feature in &mut features {
                 *feature *= DEFAULT_SEMANTIC_GAIN;
             }
-            if let Err(reason) = send_semantic(ctx.sensory_tx, features.to_vec()) {
+            if let Err(reason) = send_semantic(
+                ctx.sensory_tx,
+                features.to_vec(),
+                "perturb",
+                Some(&arg),
+                ctx.fill_pct,
+                conv.prev_fill,
+            ) {
                 conv.push_receipt(
                     "PERTURB_SEMANTIC_HELD",
                     vec![format!("semantic input held: {reason}")],
@@ -1230,6 +1315,280 @@ pub(super) fn handle_action(
     }
 }
 
+struct ReconvergenceRenderSummary {
+    changes: Vec<String>,
+    emphasis: String,
+}
+
+struct ReconvergenceRenderRequest {
+    label: String,
+    compare_baseline: Option<String>,
+    save_baseline: Option<String>,
+}
+
+struct BridgeTraceRenderRequest {
+    mode: String,
+    label: String,
+}
+
+fn parse_reconvergence_render_request(raw: &str) -> ReconvergenceRenderRequest {
+    let mut label_parts = Vec::new();
+    let mut compare_baseline = None;
+    let mut save_baseline = None;
+    let tokens: Vec<&str> = raw.split_whitespace().collect();
+    let mut index = 0usize;
+    while index < tokens.len() {
+        let token = tokens[index].to_ascii_lowercase().replace('_', "-");
+        match token.as_str() {
+            "--compare-baseline" | "compare-baseline" | "compare" => {
+                if let Some(value) = tokens.get(index.saturating_add(1)) {
+                    compare_baseline = Some((*value).to_string());
+                    index = index.saturating_add(2);
+                    continue;
+                }
+            },
+            "--save-baseline" | "save-baseline" | "save" | "baseline" => {
+                if let Some(value) = tokens.get(index.saturating_add(1)) {
+                    save_baseline = Some((*value).to_string());
+                    index = index.saturating_add(2);
+                    continue;
+                }
+            },
+            _ => {},
+        }
+        label_parts.push(tokens[index]);
+        index = index.saturating_add(1);
+    }
+    let label = if label_parts.is_empty() {
+        compare_baseline.as_ref().map_or_else(
+            || "astrid".to_string(),
+            |baseline| format!("compare_{baseline}"),
+        )
+    } else {
+        label_parts.join("_")
+    };
+    ReconvergenceRenderRequest {
+        label,
+        compare_baseline,
+        save_baseline,
+    }
+}
+
+fn parse_bridge_trace_request(raw: &str) -> BridgeTraceRenderRequest {
+    let mut mode = "m6".to_string();
+    let mut label_parts = Vec::new();
+    for token in raw.split_whitespace() {
+        let normalized = token.to_ascii_lowercase().replace('_', "");
+        if matches!(normalized.as_str(), "m6" | "mode6" | "lane6") {
+            mode = "m6".to_string();
+        } else {
+            label_parts.push(token);
+        }
+    }
+    let label = if label_parts.is_empty() {
+        "astrid".to_string()
+    } else {
+        label_parts.join("_")
+    };
+    BridgeTraceRenderRequest { mode, label }
+}
+
+#[cfg(test)]
+fn render_reconvergence_map_artifact(
+    request: &ReconvergenceRenderRequest,
+) -> Result<ReconvergenceRenderSummary, String> {
+    let mut changes = vec![
+        "artifact_dir: /tmp/astrid-reconvergence-test".to_string(),
+        "activation_frames: 3".to_string(),
+        format!("label: {}", request.label),
+    ];
+    if let Some(compare) = request.compare_baseline.as_deref() {
+        changes.push(format!("compare_baseline: {compare}"));
+    }
+    if let Some(save) = request.save_baseline.as_deref() {
+        changes.push(format!("save_baseline: {save}"));
+    }
+    Ok(ReconvergenceRenderSummary {
+        changes,
+        emphasis: "You requested a read-only reconvergence map. A renderer stub queued the artifact summary for this test path.".to_string(),
+    })
+}
+
+#[cfg(not(test))]
+fn render_reconvergence_map_artifact(
+    request: &ReconvergenceRenderRequest,
+) -> Result<ReconvergenceRenderSummary, String> {
+    let mut command = Command::new("python3");
+    command
+        .arg("/Users/v/other/minime/scripts/stable_core_ops.py")
+        .arg("reconvergence-map")
+        .arg("--label")
+        .arg(&request.label)
+        .arg("--window-secs")
+        .arg("180");
+    if let Some(compare) = request.compare_baseline.as_deref() {
+        command.arg("--compare-baseline").arg(compare);
+    }
+    if let Some(save) = request.save_baseline.as_deref() {
+        command.arg("--save-baseline").arg(save);
+    }
+    let output = command
+        .output()
+        .map_err(|error| format!("spawn failed: {error}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let detail = if stderr.trim().is_empty() {
+            stdout.trim()
+        } else {
+            stderr.trim()
+        };
+        return Err(if detail.is_empty() {
+            format!("renderer exited with {}", output.status)
+        } else {
+            detail.chars().take(240).collect()
+        });
+    }
+
+    let payload: Value = serde_json::from_slice(&output.stdout)
+        .map_err(|error| format!("renderer JSON parse failed: {error}"))?;
+    let artifact_dir = payload
+        .get("artifact_dir")
+        .and_then(Value::as_str)
+        .unwrap_or("(not reported)");
+    let status = payload
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let frame_count = payload
+        .get("activation_summary")
+        .and_then(|value| value.get("frame_count"))
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let freshness_ms = payload
+        .get("activation_summary")
+        .and_then(|value| value.get("freshness_ms"))
+        .and_then(Value::as_u64);
+    let baseline_status = payload
+        .get("baseline_status")
+        .and_then(Value::as_str)
+        .unwrap_or("unavailable");
+    let mut changes = vec![
+        format!("status: {status}"),
+        format!("artifact_dir: {artifact_dir}"),
+        format!("activation_frames: {frame_count}"),
+        format!("baseline_status: {baseline_status}"),
+    ];
+    if let Some(freshness_ms) = freshness_ms {
+        changes.push(format!("trace_freshness_ms: {freshness_ms}"));
+    }
+    if let Some(compare) = request.compare_baseline.as_deref() {
+        changes.push(format!("compare_baseline: {compare}"));
+    }
+    Ok(ReconvergenceRenderSummary {
+        changes,
+        emphasis: format!(
+            "You requested a read-only reconvergence map for {}. Artifact status: {status}; frames: {frame_count}; baseline: {baseline_status}; path: {artifact_dir}.",
+            request.label
+        ),
+    })
+}
+
+#[cfg(test)]
+fn render_bridge_trace_artifact(
+    request: &BridgeTraceRenderRequest,
+) -> Result<ReconvergenceRenderSummary, String> {
+    Ok(ReconvergenceRenderSummary {
+        changes: vec![
+            "artifact_dir: /tmp/astrid-bridge-trace-test".to_string(),
+            "observation_window_marked: false".to_string(),
+            "eigenmode_confirmed: false".to_string(),
+            "mode_source: activation_lane6_marker_with_lambda6_context".to_string(),
+            format!("mode: {}", request.mode),
+            format!("label: {}", request.label),
+        ],
+        emphasis: "You requested a sacredly read-only m6 marker trace. A renderer stub queued the artifact summary for this test path; eigenmode confirmation remains false.".to_string(),
+    })
+}
+
+#[cfg(not(test))]
+fn render_bridge_trace_artifact(
+    request: &BridgeTraceRenderRequest,
+) -> Result<ReconvergenceRenderSummary, String> {
+    let output = Command::new("python3")
+        .arg("/Users/v/other/minime/scripts/stable_core_ops.py")
+        .arg("bridge-trace")
+        .arg("--mode")
+        .arg(&request.mode)
+        .arg("--label")
+        .arg(&request.label)
+        .arg("--window-secs")
+        .arg("60")
+        .output()
+        .map_err(|error| format!("spawn failed: {error}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let detail = if stderr.trim().is_empty() {
+            stdout.trim()
+        } else {
+            stderr.trim()
+        };
+        return Err(if detail.is_empty() {
+            format!("renderer exited with {}", output.status)
+        } else {
+            detail.chars().take(240).collect()
+        });
+    }
+
+    let payload: Value = serde_json::from_slice(&output.stdout)
+        .map_err(|error| format!("renderer JSON parse failed: {error}"))?;
+    let artifact_dir = payload
+        .get("artifact_dir")
+        .and_then(Value::as_str)
+        .unwrap_or("(not reported)");
+    let status = payload
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let frame_count = payload
+        .get("frame_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let observation_window_marked = payload
+        .get("bridge_signal")
+        .and_then(|value| value.get("observation_window_marked"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let eigenmode_confirmed = payload
+        .get("bridge_signal")
+        .and_then(|value| value.get("eigenmode_confirmed"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let mode_source = payload
+        .get("bridge_signal")
+        .and_then(|value| value.get("mode_source"))
+        .and_then(Value::as_str)
+        .unwrap_or("activation_lane6_marker_with_lambda6_context");
+    Ok(ReconvergenceRenderSummary {
+        changes: vec![
+            format!("status: {status}"),
+            format!("artifact_dir: {artifact_dir}"),
+            format!("frames: {frame_count}"),
+            format!("observation_window_marked: {observation_window_marked}"),
+            format!("eigenmode_confirmed: {eigenmode_confirmed}"),
+            format!("mode_source: {mode_source}"),
+            format!("mode: {}", request.mode),
+        ],
+        emphasis: format!(
+            "You requested a sacredly read-only {} marker trace. Artifact status: {status}; frames: {frame_count}; observation_window_marked: {observation_window_marked}; eigenmode_confirmed: {eigenmode_confirmed}; path: {artifact_dir}.",
+            request.mode
+        ),
+    })
+}
+
 fn send_control(sensory_tx: &mpsc::Sender<SensoryMsg>, msg: SensoryMsg) {
     let tx = sensory_tx.clone();
     tokio::spawn(async move {
@@ -1237,12 +1596,26 @@ fn send_control(sensory_tx: &mpsc::Sender<SensoryMsg>, msg: SensoryMsg) {
     });
 }
 
-fn send_semantic(sensory_tx: &mpsc::Sender<SensoryMsg>, features: Vec<f32>) -> Result<(), String> {
-    let msg = SensoryMsg::Semantic {
+fn send_semantic(
+    sensory_tx: &mpsc::Sender<SensoryMsg>,
+    features: Vec<f32>,
+    mode: &str,
+    text: Option<&str>,
+    fill_pct: f32,
+    previous_fill_pct: f32,
+) -> Result<(), String> {
+    let mut msg = SensoryMsg::Semantic {
         features,
         ts_ms: None,
     };
-    if let Some(reason) = rescue_policy::semantic_write_block_reason(&msg) {
+    let write_context = rescue_policy::SemanticWriteContext {
+        source: rescue_policy::AUTONOMOUS_LIMITED_WRITE_SOURCE,
+        mode: Some(mode),
+        text,
+        fill_pct: Some(fill_pct),
+        previous_fill_pct: Some(previous_fill_pct),
+    };
+    if let Err(reason) = rescue_policy::prepare_semantic_write(&mut msg, &write_context) {
         info!(
             reason = %reason,
             "Astrid held sovereignty semantic gesture under rescue write policy"

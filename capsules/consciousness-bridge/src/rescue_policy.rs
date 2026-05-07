@@ -23,12 +23,17 @@ const LIMITED_WRITE_PROFILE_V2: &str = "limited_dampen_inquiry_v2";
 const BUDGETED_SOVEREIGNTY_PROFILE: &str = "budgeted_sovereignty_v1";
 const FULL_EXPRESSION_PROFILE: &str = "full_expression_v1";
 const LIMITED_WRITE_STATUS_FILE: &str = "bridge_limited_write_status.json";
+const SEMANTIC_HEARTBEAT_STATUS_FILE: &str = "bridge_semantic_heartbeat_status.json";
 const LIMITED_WRITE_SENSORY_MUTE_FILE: &str = "stable_core_sensory_mute.json";
-const LIMITED_WRITE_SOURCE: &str = "autonomous_main_chunk";
+pub(crate) const AUTONOMOUS_LIMITED_WRITE_SOURCE: &str = "autonomous_main_chunk";
+pub(crate) const MCP_LIMITED_WRITE_SOURCE: &str = "mcp_tool";
+const LIMITED_WRITE_SOURCE: &str = AUTONOMOUS_LIMITED_WRITE_SOURCE;
 const OBSERVE_ONLY_PROFILE: &str = "bridge_observe_only";
 const V2_SEMANTIC_ENERGY_MAX: f32 = 0.02;
 const V2_ROLLBACK_SEMANTIC_ENERGY: f32 = 0.05;
 const V2_ADVERSE_WINDOW_SECS: f64 = 3600.0;
+const SEMANTIC_HEARTBEAT_FEATURE_SCALE: f32 = 0.025;
+const SEMANTIC_HEARTBEAT_MAX_ABS: f32 = 0.018;
 pub const STABLE_CORE_TARGET_FILL_PCT: f64 = 68.0;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -318,9 +323,9 @@ impl RescueBridgePolicy {
         if !self.limited_write_active() {
             return None;
         }
-        if context.source != LIMITED_WRITE_SOURCE {
+        if !limited_write_source_allowed(context.source) {
             return Some(format!(
-                "limited-write profile only allows source '{LIMITED_WRITE_SOURCE}'"
+                "limited-write profile only allows source '{LIMITED_WRITE_SOURCE}' or '{MCP_LIMITED_WRITE_SOURCE}'"
             ));
         }
 
@@ -473,6 +478,62 @@ impl RescueBridgePolicy {
         let max_abs = self.limited_write_max_abs.clamp(0.0, 5.0);
         for feature in features {
             *feature = (*feature * scale).clamp(-max_abs, max_abs);
+        }
+    }
+
+    fn heartbeat_block_reason(&self, profile_path: &Path) -> Option<String> {
+        if !self.bridge_enabled {
+            return Some(format!(
+                "rescue profile '{}' has bridge ingress disabled",
+                self.profile_name
+            ));
+        }
+        if !self.bridge_write_enabled && !self.bridge_autonomous_enabled {
+            return Some(format!(
+                "rescue profile '{}' blocks semantic heartbeat ingress",
+                self.profile_name
+            ));
+        }
+        if !self.limited_write_v2_active() {
+            return None;
+        }
+
+        let health =
+            match load_limited_write_health(profile_path, self.limited_write_health_max_age_secs) {
+                Ok(health) => health,
+                Err(reason) => return Some(reason),
+            };
+        if health.semantic_mute_active {
+            return Some("semantic heartbeat blocked while semantic mute is active".to_string());
+        }
+        if health.stage == "discharge" {
+            return Some("semantic heartbeat blocked during discharge".to_string());
+        }
+        if health.fill_pct >= self.limited_write_peak_fill_max_pct
+            || health.peak_fill_pct_60s >= self.limited_write_peak_fill_max_pct
+        {
+            return Some(format!(
+                "semantic heartbeat blocked when 60s peak guard is {:.1}% or higher",
+                self.limited_write_peak_fill_max_pct
+            ));
+        }
+        if let Some(watchdog_state) = health.watchdog_state.as_deref() {
+            if !(watchdog_state == "monitoring"
+                || watchdog_state == "warmup"
+                || watchdog_state == "monitoring:degraded")
+            {
+                return Some(format!(
+                    "semantic heartbeat blocked by watchdog state '{watchdog_state}'"
+                ));
+            }
+        }
+        None
+    }
+
+    fn apply_semantic_heartbeat_shape(features: &mut [f32]) {
+        for feature in features {
+            *feature = (*feature * SEMANTIC_HEARTBEAT_FEATURE_SCALE)
+                .clamp(-SEMANTIC_HEARTBEAT_MAX_ABS, SEMANTIC_HEARTBEAT_MAX_ABS);
         }
     }
 
@@ -639,10 +700,10 @@ impl RescueBridgePolicy {
                     now,
                 );
             }
-            let rollback_stage = health.stage == "discharge"
-                || (self.limited_write_rollback_on_elevated_peak
-                    && health.stage == "elevated"
-                    && health.fill_pct >= self.limited_write_peak_fill_max_pct);
+            let rollback_stage = self.limited_write_rollback_on_elevated_peak
+                && (health.stage == "discharge"
+                    || (health.stage == "elevated"
+                        && health.fill_pct >= self.limited_write_peak_fill_max_pct));
             if rollback_stage {
                 return self.rollback_v2(
                     profile_path,
@@ -890,6 +951,14 @@ fn limited_write_status_path_for_profile(profile_path: &Path) -> PathBuf {
         .join(LIMITED_WRITE_STATUS_FILE)
 }
 
+fn semantic_heartbeat_status_path_for_profile(profile_path: &Path) -> PathBuf {
+    profile_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join("runtime")
+        .join(SEMANTIC_HEARTBEAT_STATUS_FILE)
+}
+
 fn limited_write_sensory_mute_path_for_status(status_path: &Path) -> PathBuf {
     status_path
         .parent()
@@ -902,6 +971,10 @@ fn now_unix_s() -> f64 {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs_f64()
+}
+
+fn limited_write_source_allowed(source: &str) -> bool {
+    matches!(source, LIMITED_WRITE_SOURCE | MCP_LIMITED_WRITE_SOURCE)
 }
 
 fn read_status(path: &Path) -> Value {
@@ -1057,6 +1130,46 @@ fn record_limited_write_block(path: &Path, policy: &RescueBridgePolicy, reason: 
     write_status(path, &status);
 }
 
+fn record_semantic_heartbeat_block(path: &Path, policy: &RescueBridgePolicy, reason: &str) {
+    let mut status = read_status(path);
+    if !status.is_object() {
+        status = json!({});
+    }
+    status["profile"] = json!(policy.profile_name);
+    status["policy_version"] = json!(policy.limited_write_policy_version);
+    status["last_block_at_unix_s"] = json!(now_unix_s());
+    status["last_block_reason"] = json!(reason);
+    write_status(path, &status);
+}
+
+fn record_semantic_heartbeat_sent(
+    path: &Path,
+    policy: &RescueBridgePolicy,
+    health: Option<&LimitedWriteHealth>,
+) {
+    let mut status = read_status(path);
+    if !status.is_object() {
+        status = json!({});
+    }
+    let send_count = status
+        .get("send_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0)
+        .saturating_add(1);
+    status["profile"] = json!(policy.profile_name);
+    status["policy_version"] = json!(policy.limited_write_policy_version);
+    status["send_count"] = json!(send_count);
+    status["last_sent_at_unix_s"] = json!(now_unix_s());
+    status["feature_scale"] = json!(SEMANTIC_HEARTBEAT_FEATURE_SCALE);
+    status["max_abs"] = json!(SEMANTIC_HEARTBEAT_MAX_ABS);
+    if let Some(health) = health {
+        status["last_sent_fill_pct"] = json!(health.fill_pct);
+        status["last_sent_stage"] = json!(health.stage);
+        status["last_sent_health_age_secs"] = json!(health.age_secs);
+    }
+    write_status(path, &status);
+}
+
 fn record_limited_write_sent(
     path: &Path,
     policy: &RescueBridgePolicy,
@@ -1205,6 +1318,33 @@ pub(crate) fn prepare_semantic_write_for_path(
     Ok(())
 }
 
+pub(crate) fn prepare_semantic_heartbeat_for_path(
+    msg: &mut SensoryMsg,
+    path: &Path,
+) -> Result<(), String> {
+    if !matches!(msg, SensoryMsg::Semantic { .. }) {
+        return Ok(());
+    }
+    let Some(policy) = load_policy(path) else {
+        return Ok(());
+    };
+    let status_path = semantic_heartbeat_status_path_for_profile(path);
+    if let Some(reason) = policy.heartbeat_block_reason(path) {
+        record_semantic_heartbeat_block(&status_path, &policy, &reason);
+        return Err(reason);
+    }
+    let health = if policy.limited_write_v2_active() {
+        load_limited_write_health(path, policy.limited_write_health_max_age_secs).ok()
+    } else {
+        None
+    };
+    if let SensoryMsg::Semantic { features, .. } = msg {
+        RescueBridgePolicy::apply_semantic_heartbeat_shape(features);
+    }
+    record_semantic_heartbeat_sent(&status_path, &policy, health.as_ref());
+    Ok(())
+}
+
 pub(crate) fn prepare_semantic_write(
     msg: &mut SensoryMsg,
     context: &SemanticWriteContext<'_>,
@@ -1213,6 +1353,13 @@ pub(crate) fn prepare_semantic_write(
         .minime_workspace()
         .join("rescue_profile.json");
     prepare_semantic_write_for_path(msg, &path, context)
+}
+
+pub(crate) fn prepare_semantic_heartbeat(msg: &mut SensoryMsg) -> Result<(), String> {
+    let path = bridge_paths()
+        .minime_workspace()
+        .join("rescue_profile.json");
+    prepare_semantic_heartbeat_for_path(msg, &path)
 }
 
 #[cfg(test)]

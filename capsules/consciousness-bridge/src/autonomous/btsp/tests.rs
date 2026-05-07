@@ -130,6 +130,56 @@ fn seeded_episode_contains_bilateral_candidates() {
 }
 
 #[test]
+fn minime_inbox_note_preserves_owner_specific_advisory_context() {
+    let proposal = ActiveSovereigntyProposal {
+        proposal_id: "proposal_for_minime".to_string(),
+        episode_id: EPISODE_ID.to_string(),
+        episode_name: EPISODE_NAME.to_string(),
+        matched_cues: vec!["grinding".to_string()],
+        matched_live_signals: vec!["breathing_phase:contracting -> expanding".to_string()],
+        matched_signal_families: vec!["grinding_family".to_string()],
+        matched_signal_roles: vec!["early_warning".to_string()],
+        signal_score: 0.8,
+        confidence: 0.8,
+        audience: "bilateral".to_string(),
+        candidate_response_ids: seeded_response_ids(),
+        reply_state: "unseen".to_string(),
+        selected_response_id: None,
+        latest_selected_response_id: None,
+        selected_response_ids_by_owner: HashMap::new(),
+        owner_reply_state: HashMap::new(),
+        outcome_status: "pending".to_string(),
+        created_at_unix_s: 10,
+        expires_at_unix_s: 20,
+        matched_at_exchange: 1,
+        latest_match_at_unix_s: 10,
+        prompt_exposures: HashMap::new(),
+        related_choice: None,
+        signal_fingerprint: "families=grinding_family".to_string(),
+        last_choice_interpretation: None,
+        choice_interpretations: Vec::new(),
+        exact_adoptions: Vec::new(),
+        adoption_contexts: HashMap::new(),
+        outcomes: Vec::new(),
+        refusals: Vec::new(),
+        counteroffers: Vec::new(),
+        last_negotiation_event_at_unix_s: 0,
+        shadow_equivalences: Vec::new(),
+    };
+
+    let note = render_minime_inbox_note(
+        &proposal,
+        "Candidate responses for you:\n- NOTICE - name the tightening",
+    );
+
+    assert!(note.contains("Source: astrid:btsp_sovereignty_proposal"));
+    assert!(note.contains("Proposal: proposal_for_minime"));
+    assert!(note.contains("advisory only"));
+    assert!(note.contains("Candidate responses for you"));
+    assert!(note.contains("NEXT syntax"));
+}
+
+#[test]
 fn active_proposal_detection_respects_final_states() {
     let ledger = ProposalLedger {
         proposals: vec![ActiveSovereigntyProposal {
