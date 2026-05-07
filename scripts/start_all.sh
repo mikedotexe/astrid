@@ -214,6 +214,7 @@ check_duplicate_processes() {
         "camera_client" \
         "visual_frame_service" \
         "mic_to_sensory" \
+        "perception.py" \
         "astrid_feeder" \
         "minime_feeder"
     do
@@ -304,6 +305,9 @@ if [ "$MINIME_ONLY" = false ]; then
     echo "--- Astrid ---"
     ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.consciousness-bridge.plist" "consciousness bridge"
     EXPECTED_LABELS+=("com.astrid.consciousness-bridge")
+
+    ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist" "Astrid host-state perception"
+    EXPECTED_LABELS+=("com.astrid.perception-host-ascii")
 
     ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.calm-startup-greeting.plist" "calm startup greeting" "oneshot"
     echo ""

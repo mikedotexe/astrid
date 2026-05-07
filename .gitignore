@@ -59,6 +59,10 @@ capsules/consciousness-bridge/workspace/condition_metrics.json
 capsules/consciousness-bridge/workspace/context_overflow/
 capsules/consciousness-bridge/workspace/diagnostics/
 capsules/consciousness-bridge/workspace/experiments/
+capsules/consciousness-bridge/workspace/attractor_assessment/
+capsules/consciousness-bridge/workspace/attractor_atlas/
+capsules/consciousness-bridge/workspace/attractor_suggestions.json
+capsules/consciousness-bridge/workspace/resource_budget.json
 capsules/consciousness-bridge/workspace/inbox/
 capsules/consciousness-bridge/workspace/inbox_audio/
 capsules/consciousness-bridge/workspace/introspections/
@@ -74,6 +78,7 @@ capsules/consciousness-bridge/workspace/btsp_signal_catalog.json
 capsules/consciousness-bridge/workspace/btsp_signal_events.jsonl
 capsules/consciousness-bridge/workspace/btsp_signal_status.json
 capsules/consciousness-bridge/workspace/sovereignty_proposals.json
+capsules/perception/workspace/audio/
 capsules/perception/workspace/perceptions/
 capsules/perception/workspace/visual/
 # Python cache

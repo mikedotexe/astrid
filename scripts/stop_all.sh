@@ -45,7 +45,7 @@ fallback_pids_for_pattern() {
             lsof -t -nP /tmp/minime_vision.log 2>/dev/null || true
             ;;
         "perception.py")
-            lsof -t -nP /tmp/astrid_perception.log 2>/dev/null || true
+            lsof -t -nP /tmp/astrid_perception.log /tmp/astrid-perception-host-ascii.log 2>/dev/null || true
             ;;
         "host-sensory")
             lsof -t -nP /tmp/minime_host_sensory.log 2>/dev/null || true
@@ -133,7 +133,7 @@ echo ""
 echo "--- Stopping Astrid ---"
 stop_label "com.astrid.calm-startup-greeting"
 stop_process "consciousness-bridge-server" "com.astrid.consciousness-bridge.plist"
-stop_process "perception.py"
+stop_process "perception.py" "com.astrid.perception-host-ascii.plist"
 stop_process "coupled_astrid_server" "com.reservoir.coupled-astrid.plist"
 
 # Reservoir (feeders first, service last — it snapshots on shutdown)

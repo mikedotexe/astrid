@@ -32,6 +32,7 @@ prod_plists=(
     "$RESERVOIR_DIR/launchd/com.reservoir.astrid-feeder.plist"
     "$RESERVOIR_DIR/launchd/com.reservoir.minime-feeder.plist"
     "$ASTRID_DIR/launchd/com.astrid.consciousness-bridge.plist"
+    "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist"
     "$ASTRID_DIR/launchd/com.astrid.calm-startup-greeting.plist"
 )
 
@@ -47,6 +48,7 @@ persistent_labels=(
     com.reservoir.astrid-feeder
     com.reservoir.minime-feeder
     com.astrid.consciousness-bridge
+    com.astrid.perception-host-ascii
 )
 
 opt_in_plists=(
