@@ -198,6 +198,32 @@ else
 fi
 
 echo ""
+echo "--- Astrid perception environment ---"
+astrid_perception_plist="$LAUNCH_AGENTS/com.astrid.perception-host-ascii.plist"
+if [ -f "$astrid_perception_plist" ]; then
+    look_source="$(plist_value "$astrid_perception_plist" "EnvironmentVariables.LOOK_SOURCE")"
+    camera_index="$(plist_value "$astrid_perception_plist" "EnvironmentVariables.ASTRID_CAMERA_INDEX")"
+    enable_mic="$(plist_value "$astrid_perception_plist" "EnvironmentVariables.ASTRID_ENABLE_MIC")"
+    if [ "$look_source" = "active" ]; then
+        ok "Astrid LOOK_SOURCE=$look_source"
+    else
+        fail "Astrid LOOK_SOURCE=${look_source:-unset} (expected active)"
+    fi
+    if [ "$camera_index" = "0" ]; then
+        ok "Astrid camera index=$camera_index"
+    else
+        fail "Astrid camera index=${camera_index:-unset} (expected 0)"
+    fi
+    if [ "$enable_mic" = "1" ]; then
+        ok "Astrid mic enabled by default"
+    else
+        fail "Astrid mic flag=${enable_mic:-unset} (expected 1)"
+    fi
+else
+    fail "com.astrid.perception-host-ascii plist missing"
+fi
+
+echo ""
 echo "Summary: failures=$FAILURES warnings=$WARNINGS"
 if [ "$STRICT" = true ] && [ "$FAILURES" -gt 0 ]; then
     exit 1

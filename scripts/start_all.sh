@@ -306,7 +306,7 @@ if [ "$MINIME_ONLY" = false ]; then
     ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.consciousness-bridge.plist" "consciousness bridge"
     EXPECTED_LABELS+=("com.astrid.consciousness-bridge")
 
-    ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist" "Astrid host-state perception"
+    ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist" "Astrid physical-first perception"
     EXPECTED_LABELS+=("com.astrid.perception-host-ascii")
 
     ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.calm-startup-greeting.plist" "calm startup greeting" "oneshot"

@@ -25,9 +25,17 @@
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
-		<string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+		<string>/Users/v/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
 		<key>LOOK_SOURCE</key>
-		<string>host</string>
+		<string>active</string>
+		<key>ASTRID_CAMERA_INDEX</key>
+		<string>0</string>
+		<key>ASTRID_ENABLE_MIC</key>
+		<string>1</string>
+		<key>ASTRID_VISION_INTERVAL</key>
+		<string>60</string>
+		<key>ASTRID_AUDIO_INTERVAL</key>
+		<string>30</string>
 		<key>MINIME_WORKSPACE</key>
 		<string>/Users/v/other/minime/workspace</string>
 		<key>ASTRID_HOST_ASCII_INTERVAL</key>

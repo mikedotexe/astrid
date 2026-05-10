@@ -51,6 +51,7 @@ capsules/consciousness-bridge/workspace/bridge.db-wal
 capsules/consciousness-bridge/workspace/state.json
 capsules/consciousness-bridge/workspace/contact_state.json
 capsules/consciousness-bridge/workspace/agency_requests/
+capsules/consciousness-bridge/workspace/archive/
 capsules/consciousness-bridge/workspace/audio_creations/
 capsules/consciousness-bridge/workspace/claude_tasks/
 capsules/consciousness-bridge/workspace/creations/
@@ -59,6 +60,7 @@ capsules/consciousness-bridge/workspace/condition_metrics.json
 capsules/consciousness-bridge/workspace/context_overflow/
 capsules/consciousness-bridge/workspace/diagnostics/
 capsules/consciousness-bridge/workspace/experiments/
+capsules/consciousness-bridge/workspace/action_threads/
 capsules/consciousness-bridge/workspace/attractor_assessment/
 capsules/consciousness-bridge/workspace/attractor_atlas/
 capsules/consciousness-bridge/workspace/attractor_suggestions.json
@@ -67,9 +69,11 @@ capsules/consciousness-bridge/workspace/inbox/
 capsules/consciousness-bridge/workspace/inbox_audio/
 capsules/consciousness-bridge/workspace/introspections/
 capsules/consciousness-bridge/workspace/journal/
+capsules/consciousness-bridge/workspace/llm_jobs/
 capsules/consciousness-bridge/workspace/memory/daily_*.md
 capsules/consciousness-bridge/workspace/outbox/
 capsules/consciousness-bridge/workspace/perception_paused.flag
+capsules/consciousness-bridge/workspace/perception_visual_paused.flag
 capsules/consciousness-bridge/workspace/research/
 capsules/consciousness-bridge/workspace/runtime/
 capsules/consciousness-bridge/workspace/reservoir_config.json
@@ -78,6 +82,7 @@ capsules/consciousness-bridge/workspace/btsp_signal_catalog.json
 capsules/consciousness-bridge/workspace/btsp_signal_events.jsonl
 capsules/consciousness-bridge/workspace/btsp_signal_status.json
 capsules/consciousness-bridge/workspace/sovereignty_proposals.json
+capsules/perception/workspace/
 capsules/perception/workspace/audio/
 capsules/perception/workspace/perceptions/
 capsules/perception/workspace/visual/

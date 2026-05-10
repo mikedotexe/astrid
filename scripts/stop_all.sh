@@ -166,6 +166,8 @@ stop_process "minime run" "com.minime.engine.plist"
 # Clean up PID files and stale flags
 rm -f /tmp/minime_pids/*.pid 2>/dev/null
 rm -f /Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_paused.flag 2>/dev/null
+rm -f /Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_visual_paused.flag 2>/dev/null
+rm -f /Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_audio_paused.flag 2>/dev/null
 
 echo ""
 

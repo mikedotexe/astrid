@@ -1314,11 +1314,14 @@ def perceive_visual_ascii_host(history: Deque[dict[str, Any]]) -> Optional[dict]
 import shutil
 import tempfile
 
+from host_audio_fallback import build_host_audio_perception
+
 CHUNK_DURATION = 5  # seconds of audio per transcription
 WHISPER_CMD = shutil.which("mlx_whisper")
 WHISPER_AVAILABLE = WHISPER_CMD is not None
 WHISPER_MODEL = "mlx-community/whisper-large-v3-turbo"
 WHISPER_BACKEND = "mlx_whisper" if WHISPER_AVAILABLE else None
+AUDIO_SOURCE_STATUS_PATH = WORKSPACE / "audio_source_status.json"
 
 
 def record_audio_chunk(duration: float = 5.0) -> Optional[str]:
@@ -1424,18 +1427,58 @@ def transcribe_audio(wav_path: str) -> Optional[str]:
         _shutil.rmtree(out_dir, ignore_errors=True)
 
 
-def perceive_audio() -> Optional[dict]:
-    """Record audio and transcribe what Astrid hears."""
+def write_audio_source_status(
+    *,
+    source: str,
+    physical_healthy: bool,
+    reason: str,
+    artifact_path: Optional[Path] = None,
+) -> None:
+    status = {
+        "source": source,
+        "physical_healthy": physical_healthy,
+        "reason": reason,
+        "updated_at": datetime.now().isoformat(),
+        "updated_at_ms": int(time.time() * 1000),
+    }
+    if artifact_path is not None:
+        status["artifact_path"] = str(artifact_path)
+    try:
+        AUDIO_SOURCE_STATUS_PATH.write_text(json.dumps(status, indent=2))
+    except OSError as exc:
+        log.debug(f"Audio source status write failed: {exc}")
+
+
+def _write_audio_perception(perception: dict, *, log_prefix: str) -> dict:
+    timestamp = str(perception.get("timestamp") or datetime.now().isoformat())
+    file_timestamp = timestamp.replace(":", "-")
+    out_path = PERCEPTIONS_DIR / f"audio_{file_timestamp}.json"
+    perception["artifact_path"] = str(out_path)
+    out_path.write_text(json.dumps(perception, indent=2))
+    compact_perceptions_dir()
+    transcript = str(perception.get("transcript", ""))
+    log.info(f"{log_prefix}: {out_path} — heard: {transcript[:80]}")
+    return perception
+
+
+def capture_physical_audio_perception() -> tuple[Optional[dict], str, bool]:
+    """Try physical mic transcription.
+
+    Returns (perception, reason, physical_unavailable). Silence or filtered
+    hallucination is not treated as physical unavailability.
+    """
     if not WHISPER_AVAILABLE:
-        return None
+        return None, "whisper_unavailable", True
 
     wav_path = record_audio_chunk(CHUNK_DURATION)
     if wav_path is None:
-        return None
+        return None, "mic_recording_unavailable", True
 
+    # Extract before transcription cleanup removes the WAV.
+    audio_features = extract_audio_features(wav_path)
     transcript = transcribe_audio(wav_path)
     if transcript is None:
-        return None
+        return None, "no_transcript", False
 
     # Filter whisper hallucinations: when there's silence or ambient noise,
     # whisper generates filler phrases that Astrid experiences as distressing.
@@ -1468,29 +1511,90 @@ def perceive_audio() -> Optional[dict]:
     if len(lower) < 15 and lower in ("thank you.", "thank you", "thanks.", "you."):
         is_hallucination = True
 
+    # 4. Exact/near-silent recordings can still make Whisper invent words.
+    if (
+        audio_features.get("rms_energy", 0.0) <= 0.0001
+        and audio_features.get("temporal_variation", 0.0) <= 0.0001
+    ):
+        is_hallucination = True
+
     if is_hallucination:
         log.debug(f"Filtered whisper hallucination: '{transcript[:60]}'")
-        return None
+        return None, "filtered_whisper_hallucination", False
 
-    # Extract audio features so Astrid can FEEL the sound, not just read words.
-    # She asked: "I want the visceral impact of a perfectly placed chord."
-    audio_features = extract_audio_features(wav_path)
-
-    timestamp = datetime.now().isoformat().replace(":", "-")
     perception = {
         "type": "audio",
         "timestamp": datetime.now().isoformat(),
+        "source": "physical",
+        "backend": WHISPER_BACKEND,
+        "synthetic": False,
         "transcript": transcript,
         "duration_s": CHUNK_DURATION,
         "features": audio_features,
     }
 
-    out_path = PERCEPTIONS_DIR / f"audio_{timestamp}.json"
-    out_path.write_text(json.dumps(perception, indent=2))
-    compact_perceptions_dir()
-    log.info(f"Audio perception: {out_path} — heard: {transcript[:80]}")
+    _write_audio_perception(perception, log_prefix="Audio perception")
+    return perception, "physical_transcription", False
 
+
+def perceive_host_audio(reason: str) -> Optional[dict]:
+    """Write a host-state synthetic audio fallback perception."""
+    telemetry = read_host_telemetry()
+    if telemetry is None:
+        return None
+
+    perception = build_host_audio_perception(
+        telemetry,
+        reason=reason,
+        telemetry_path=str(HOST_TELEMETRY_PATH),
+    )
+    return _write_audio_perception(
+        perception,
+        log_prefix="Host audio fallback perception",
+    )
+
+
+def perceive_audio() -> Optional[dict]:
+    """Record audio and transcribe what Astrid hears."""
+    perception, _, _ = capture_physical_audio_perception()
     return perception
+
+
+def perceive_audio_with_fallback() -> Optional[dict]:
+    """Prefer physical mic audio; use host sonification if unavailable."""
+    perception, reason, physical_unavailable = capture_physical_audio_perception()
+    if perception is not None:
+        write_audio_source_status(
+            source="physical",
+            physical_healthy=True,
+            reason=reason,
+            artifact_path=Path(str(perception.get("artifact_path", ""))),
+        )
+        return perception
+
+    if physical_unavailable:
+        fallback = perceive_host_audio(reason)
+        if fallback is not None:
+            write_audio_source_status(
+                source="host_synthetic",
+                physical_healthy=False,
+                reason=reason,
+                artifact_path=Path(str(fallback.get("artifact_path", ""))),
+            )
+            return fallback
+        write_audio_source_status(
+            source="none",
+            physical_healthy=False,
+            reason=f"{reason}; host_telemetry_unavailable",
+        )
+        return None
+
+    write_audio_source_status(
+        source="physical",
+        physical_healthy=True,
+        reason=reason,
+    )
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -1528,27 +1632,39 @@ async def run(
     crossfade_direction = 0  # +1 = camera→host, -1 = host→camera, 0 = stable
     crossfade_last_source = resolve_ascii_source(ascii_source)
 
-    # Pause flag: when Astrid chooses CLOSE_EYES, the bridge writes this file.
-    # We skip LLaVA/whisper calls while it exists, freeing Ollama for dialogue.
-    pause_flag = Path(__file__).parent.parent / "consciousness-bridge" / "workspace" / "perception_paused.flag"
+    bridge_workspace = Path(__file__).parent.parent / "consciousness-bridge" / "workspace"
+    # Back-compat: the legacy flag pauses both lanes. New flags let Astrid
+    # close eyes or ears independently.
+    pause_flag = bridge_workspace / "perception_paused.flag"
+    visual_pause_flag = bridge_workspace / "perception_visual_paused.flag"
+    audio_pause_flag = bridge_workspace / "perception_audio_paused.flag"
 
     while True:
         now = time.time()
 
-        # Respect Astrid's sovereignty: CLOSE_EYES pauses perception.
-        if pause_flag.exists():
-            await asyncio.sleep(5.0)
-            continue
+        # Respect Astrid's sovereignty: CLOSE_EYES pauses visual input,
+        # CLOSE_EARS pauses audio input. The old flag still pauses both.
+        all_paused = pause_flag.exists()
+        visual_paused = all_paused or visual_pause_flag.exists()
+        audio_paused = all_paused or audio_pause_flag.exists()
 
         # Visual perception (LLaVA prose description).
-        if camera_index is not None and (now - last_vision) >= vision_interval:
+        if (
+            not visual_paused
+            and camera_index is not None
+            and (now - last_vision) >= vision_interval
+        ):
             try:
                 perceive_visual(camera_index, use_claude=use_claude_vision)
             except Exception as e:
                 log.error(f"Visual perception error: {e}")
             last_vision = now
 
-        if ascii_interval > 0.0 and (now - last_ascii) >= ascii_interval:
+        if (
+            not visual_paused
+            and ascii_interval > 0.0
+            and (now - last_ascii) >= ascii_interval
+        ):
             source = resolve_ascii_source(ascii_source)
             try:
                 # Progressive crossfade between camera and host.
@@ -1576,9 +1692,14 @@ async def run(
             last_ascii = now
 
         # Audio perception.
-        if enable_mic and WHISPER_AVAILABLE and (now - last_audio) >= audio_interval:
+        if (
+            not audio_paused
+            and enable_mic
+            and audio_interval > 0.0
+            and (now - last_audio) >= audio_interval
+        ):
             try:
-                perceive_audio()
+                perceive_audio_with_fallback()
             except Exception as e:
                 log.error(f"Audio perception error: {e}")
             last_audio = now
