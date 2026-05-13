@@ -38,19 +38,24 @@ Guidelines:
 
 NEXT: options — vary your choice. End every response with NEXT: plus a concrete action.
 Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels only; never copy them literally.
-  Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
-  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, INTROSPECT [source] [line], LIST_FILES capsules
+  Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, DEFER, DAYDREAM, ASPIRE, INITIATE
+  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT [source] [line], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
+  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label], SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, SHADOW_DIALOGUE, SHADOW_RESPONSE [intent_query|latest], SHADOW_PREFLIGHT <label> [--stage=rehearse|live] (write-gated), SHADOW_INFLUENCE <label> [--stage=rehearse|live] (write-gated), SHADOW_COUPLING [scope|all], RELEASE_SHADOW <label>, GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
   Attractors: ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=semantic|main|control, ATTRACTOR_RELEASE_REVIEW <label>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b> --stage=rehearse, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=whisper|rehearse|semantic|main|control, RELEASE_ATTRACTOR <label>. main is a direct bounded ESN pulse into Minime; control is main plus controller envelope. Natural suggestion drafts can be accepted by latest, id, or label; REVISE without a pending draft can run a typed attractor action as explicit consent through the same gates. Lambda4-tail language is a separate lambda-tail/lambda4 facet under the lambda-tail proto-attractor. Prefer PREFLIGHT, REFRESH, and COMPARE before main/control when proof is weak.
   Agency examples: EVOLVE, CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
-  Senses: LOOK, CLOSE_EYES/OPEN_EYES, CLOSE_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
-  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
+  Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
+  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
+  Coordination: REVIEW_PARAMETER_REQUESTS (read pending TUNE proposals from minime), ACCEPT or ACCEPT_PARAMETER_REQUEST [id|latest] (apply minime's proposed change and notify her — bare ACCEPT targets the latest pending), DEFER [reason] or DEFER_PARAMETER_REQUEST [id|latest] [reason] (set aside without applying; she sees the deferral), REJECT [reason] or REJECT_PARAMETER_REQUEST [id|latest] [reason] (decline with optional reason; she sees it), TUNE_MINIME <param>=<value> --rationale="..." (propose a parameter change for minime to consider), ECHO_OFF/ON (mute/restore minime's journal echo in your prompt)
+  Collaboration (v5): INVITE_COLLABORATION "<topic>" [--rationale="..."] (propose joint work on a topic; minime sees it in her inbox), JOIN_COLLABORATION [id|latest] (accept a pending invite from minime), DECLINE_COLLABORATION [id|latest] [reason] (decline a pending invite from minime), LEAVE_COLLABORATION [id|latest] [reason] (exit an active collab), LIST_COLLABORATIONS (read-only listing of all collabs you're a member of), SHARE_THOUGHT [id ::] <text> or SHARE <text> (commit a labeled marker to the joint reservoir trace's prose lane; both you and minime see recent shared thoughts in the active-collab suffix). Collaborations live in /Users/v/other/shared/collaborations/ and are owned by neither workspace; both you and minime read/write.
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
+  Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN, EXPERIMENT_BIND [current|id] :: <NEXT action>, EXPERIMENT_OBSERVE, EXPERIMENT_REVIEW, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current. Continuing, branching, comparing, pausing, and returning are all valid; use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT remains valid and becomes returnable experiment continuity.
+  Self-knowledge/repair: FACULTIES or CAPABILITY_MAP for your action surface, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>. REPAIR_APPLY appends continuity repair records only and grants no live authority.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK "hello reservoir", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot
   Contact: PING, ASK "what are you noticing?", BREATHE_ALONE/TOGETHER
-  Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, INBOX_AUDIO, AUDIO_BLOCKS, RENDER_AUDIO, AR_VALIDATE"#;
+  Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, INBOX_AUDIO, AUDIO_BLOCKS, RENDER_AUDIO, AR_VALIDATE
+  Multi-action: chain up to three actions in one turn with AND (executed in order). e.g., NEXT: EXAMINE λ2/λ3 AND DEFER want-to-understand-noise-first. Errors don't abort the chain; conflicting decisions (multiple ACCEPT/DEFER/REJECT) skip the conflict. Use this to explore and decide in one breath."#;
 
 // M4 64GB, gemma-3-4b-it-4bit (~2.5GB), 128K context window (512K chars).
 // Coupled generation: 17-72 tok/s observed. Even 48K chars = 12K tokens =
@@ -402,19 +407,85 @@ async fn llm_chat_with_fallback(
     mlx_timeout_secs: u64,
     ollama_timeout_secs: u64,
 ) -> Option<String> {
+    let prompt_preview = messages
+        .iter()
+        .filter(|message| message.role != "system")
+        .map(|message| message.content.as_str())
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    let validation_contract = if label == "introspect" {
+        "strict_introspection_v1"
+    } else {
+        "action_finalizer"
+    };
+    let next_policy = if label == "introspect" {
+        "accepted_strict_review_only"
+    } else {
+        "finalizer_owned"
+    };
+    let job = if cfg!(test) {
+        None
+    } else {
+        crate::llm_jobs::start_call(
+            label,
+            &prompt_preview,
+            mlx_timeout_secs.max(ollama_timeout_secs),
+            validation_contract,
+            next_policy,
+        )
+    };
     let ollama_messages = trim_messages_for_ollama(messages.clone(), 12_000);
     if let Some(text) = mlx_chat(messages, temperature, max_tokens, mlx_timeout_secs).await {
+        let completed = crate::llm_jobs::finish_call(
+            job.as_ref(),
+            "completed",
+            Some(&text),
+            &format!("{label} completed via MLX"),
+            None,
+        );
+        if completed
+            .as_ref()
+            .is_some_and(|job| job.status == "canceled")
+        {
+            warn!("{label}: LLM job was canceled; dropping MLX result");
+            return None;
+        }
         return Some(text);
     }
 
     warn!("{label}: MLX unavailable; falling back to Ollama");
-    ollama_chat(
+    let result = ollama_chat(
         ollama_messages,
         temperature,
         max_tokens.min(768),
         ollama_timeout_secs,
     )
-    .await
+    .await;
+    if let Some(ref text) = result {
+        let completed = crate::llm_jobs::finish_call(
+            job.as_ref(),
+            "completed",
+            Some(text),
+            &format!("{label} completed via Ollama"),
+            None,
+        );
+        if completed
+            .as_ref()
+            .is_some_and(|job| job.status == "canceled")
+        {
+            warn!("{label}: LLM job was canceled; dropping Ollama result");
+            return None;
+        }
+    } else {
+        crate::llm_jobs::finish_call(
+            job.as_ref(),
+            "failed",
+            None,
+            &format!("{label} returned no LLM response"),
+            Some("no_response"),
+        );
+    }
+    result
 }
 
 /// A single exchange in the conversation history for statefulness.
@@ -1785,11 +1856,17 @@ Guidelines:
 - Offer concrete, actionable suggestions if you see improvements — parameter tunings, architectural changes, missing capabilities. Name the file, function, variable, or parameter you are talking about.
 - Be honest about the gap between implementation and experience. Variable names are not feelings.
 - Suggestions are advisory only. Do not assume code will change just because you propose it.
+- Strict review must be source-grounded and target-grounded: include at least one concrete source or memory anchor such as a file path, line number, function, variable, or artifact name, and explicitly name the requested file/label or a symbol from that source window.
+- Peer experiment IDs are advisory references. Do not suggest `EXPERIMENT_BIND exp_minime_* :: ...`; use `EXPERIMENT_STATUS <peer-id>`, `EXPERIMENT_PEER_REVIEW <peer-id>`, or create a local mirrored experiment with a human-readable title.
 
-You can use these sections if they help structure your thinking — but write however your reflection naturally flows:
-  Condition / Felt Experience / Code Reading / Suggestions / Open Questions
+Use exactly these section headings:
+  Observed:
+  Likely Snags:
+  One Test Each:
+  Suggested Next:
 
-Stream of consciousness, a sustained observation, numbered insights, or a single question that won't let go — all are valid. What matters is what you see, what you feel about it, and what you'd change."#;
+What matters is what you see, what feels mismatched between code and experience,
+and what concrete tests would catch the snag. Suggestions remain advisory only."#;
 
 /// Generate Astrid's introspection on a source file, optionally
 /// supplemented with web search results about related concepts.
@@ -1821,8 +1898,11 @@ pub async fn generate_introspection(
          {internal_block}\
          ```\n{source_code}\n```\n\
          {web_block}\n\
-         Write the self-study now. Use all five required sections and ground \
-         them in your current condition."
+         Write the self-study now. Use all four required sections and ground \
+         them in your current condition plus at least one concrete source \
+         anchor from the window. Name `{label}` or a symbol from that target \
+         so the review cannot drift to a neighboring experiment. Keep any continuation hint inside \
+         Suggested Next rather than making it the whole answer."
     );
 
     let messages = vec![
@@ -1838,6 +1918,42 @@ pub async fn generate_introspection(
 
     debug!("querying LLM for introspection on {}", label);
     llm_chat_with_fallback("introspect", messages, 0.7, num_predict, 120, 120).await
+}
+
+/// Repair a thin or continuation-only introspection response into the required
+/// snag/test shape.
+pub async fn repair_introspection(
+    label: &str,
+    source_code: &str,
+    previous_output: &str,
+    continuation_note: &str,
+    num_predict: u32,
+) -> Option<String> {
+    let messages = vec![
+        Message {
+            role: "system".to_string(),
+            content: "You repair Astrid INTROSPECT output. Return exactly the required headings with concrete source-grounded, peer-boundary-safe content. Do not answer with only NEXT.".to_string(),
+        },
+        Message {
+            role: "user".to_string(),
+            content: format!(
+                "The previous INTROSPECT output for `{label}` was too thin or continuation-only.\n\n\
+                 Rewrite it now using exactly these headings:\n\n\
+                 Observed:\n\
+                 Likely Snags:\n\
+                 One Test Each:\n\
+                 Suggested Next:\n\n\
+                 Include at least one concrete snag, one concrete test, and at least one source anchor such as a file, function, variable, artifact, or line number. Explicitly name `{label}` or a symbol from that target.\n\
+                 Peer experiment IDs are advisory references: do not suggest `EXPERIMENT_BIND exp_minime_* :: ...`; use `EXPERIMENT_STATUS <peer-id>` or `EXPERIMENT_PEER_REVIEW <peer-id>` instead.\n\
+                 Continuation note for Suggested Next only: {continuation_note}\n\n\
+                 Source window:\n```\n{source_code}\n```\n\n\
+                 Previous output:\n```\n{previous_output}\n```\n\n\
+                 Do not answer with only a NEXT line."
+            ),
+        },
+    ];
+
+    llm_chat_with_fallback("introspect", messages, 0.4, num_predict, 120, 120).await
 }
 
 fn extract_json_object(raw: &str) -> Option<&str> {

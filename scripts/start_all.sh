@@ -219,7 +219,10 @@ check_duplicate_processes() {
         "minime_feeder"
     do
         local count
-        count="$(pgrep -f "$pattern" 2>/dev/null | awk 'NF' | wc -l | tr -d ' ')"
+        # `set -o pipefail` + pgrep: pgrep returns 1 when no matches, which
+        # would abort the script via `set -e` when the system is fully
+        # clean. Tolerate a no-match exit by trapping the pipeline status.
+        count="$(pgrep -f "$pattern" 2>/dev/null | awk 'NF' | wc -l | tr -d ' ' || echo 0)"
         if [ "$count" -gt 1 ]; then
             warn "$pattern has $count matching processes"
             duplicates=$((duplicates + 1))
@@ -300,6 +303,9 @@ if [ "$MINIME_ONLY" = false ]; then
 
     ensure_launchd_label "$RESERVOIR_DIR/launchd/com.reservoir.minime-feeder.plist" "Minime feeder"
     EXPECTED_LABELS+=("com.reservoir.minime-feeder")
+
+    ensure_launchd_label "$RESERVOIR_DIR/launchd/com.reservoir.collab-feeder.plist" "Collab feeder"
+    EXPECTED_LABELS+=("com.reservoir.collab-feeder")
     echo ""
 
     echo "--- Astrid ---"
