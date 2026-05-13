@@ -77,7 +77,10 @@ ASTRID_ACTIONS: list[tuple[str, list[str], str, str, str]] = [
     # auto_promote::try_auto_promote (receptive-ambient — being witnesses
     # markers extracted from her own prose, doesn't author them).
     ("SHARE_THOUGHT", ["SHARE_THOUGHT", "SHARE"], "collaboration", "generative", "both"),
-    ("SHARE_THOUGHT_AUTO", ["(auto-promoted by auto_promote)"], "collaboration", "receptive", "both"),
+    ("SHARE_THOUGHT_AUTO", ["(auto-promoted from Astrid prose by auto_promote.rs)"], "collaboration", "receptive", "both"),
+    # v5.1 Phase E added bilingual auto-promotion on minime side:
+    ("SHARE_THOUGHT_AUTO_MINIME", ["(auto-promoted from minime prose by auto_promote.py Track 1)"], "collaboration", "receptive", "both"),
+    ("SHARE_THOUGHT_AUTO_SPECTRAL", ["(translated from minime moment_markers by auto_promote.py Track 2; actor='minime:spectral')"], "collaboration", "receptive", "both"),
     # Parameter request workflow (v3.6.x)
     ("REVIEW_PARAMETER_REQUESTS", ["REVIEW_PARAMETER_REQUESTS", "PARAMETER_REQUESTS"], "coordination", "receptive", "self"),
     ("ACCEPT_PARAMETER_REQUEST", ["ACCEPT_PARAMETER_REQUEST", "ACCEPT_REQUEST", "ACCEPT"], "coordination", "generative", "peer"),
