@@ -21,7 +21,9 @@
 
 mod btsp;
 mod hebbian;
-mod next_action;
+mod introspect;
+pub(crate) mod next_action;
+mod readiness;
 mod reservoir;
 mod state;
 
@@ -49,8 +51,9 @@ use tracing::{debug, info, warn};
 
 use self::next_action::{NextActionContext, attractor_suggestion_prompt_note, handle_next_action};
 pub(crate) use self::next_action::{
-    canonicalize_next_action_text, extract_search_topic, parse_next_action,
+    action_preflight_report, canonicalize_next_action_text, extract_search_topic, parse_next_action,
 };
+pub(crate) use self::readiness::read_source_status as read_astrid_source_status;
 pub use self::reservoir::configure_reservoir_service;
 use self::state::{ConversationState, Mode, SpectralSample, choose_mode};
 use crate::agency;
@@ -77,6 +80,7 @@ use crate::ws::BridgeState;
 /// Astrid chooses NEXT: LOOK). Default perception is LLaVA prose + audio.
 fn read_latest_perception(
     perception_dir: &Path,
+    include_visual: bool,
     include_spatial: bool,
     include_audio: bool,
     fill_pct: f32,
@@ -113,7 +117,7 @@ fn read_latest_perception(
         };
         let ptype = json.get("type").and_then(|t| t.as_str()).unwrap_or("");
 
-        if ptype == "visual" && !seen_vision {
+        if ptype == "visual" && include_visual && !seen_vision {
             if let Some(desc) = json.get("description").and_then(|d| d.as_str()) {
                 let visual_features = parse_visual_feature_vector(&json);
                 let resonance = perception_resonance_annotation(
@@ -134,7 +138,7 @@ fn read_latest_perception(
                 }
                 seen_vision = true;
             }
-        } else if ptype == "visual_ascii" && !seen_ascii && include_spatial {
+        } else if ptype == "visual_ascii" && include_visual && !seen_ascii && include_spatial {
             // RASCII colored ANSI art — only when Astrid chose NEXT: LOOK.
             if let Some(art) = json.get("ascii_art").and_then(|a| a.as_str()) {
                 let source = json
@@ -774,6 +778,53 @@ pub(crate) fn read_ising_shadow(workspace: &Path) -> Option<crate::types::IsingS
     } else {
         None
     }
+}
+
+/// Read Astrid's *own* published ShadowFieldV3 from minime's workspace.
+/// Astrid writes this each exchange via `AstridShadowComputer`; the file
+/// lives next to minime's outputs so both sides see a symmetric path.
+pub(crate) fn read_astrid_shadow_v3(workspace: &Path) -> Option<serde_json::Value> {
+    let path = workspace.join("astrid_shadow_v3.json");
+    let text = std::fs::read_to_string(&path).ok()?;
+    serde_json::from_str(&text).ok()
+}
+
+/// Read the v3 shadow field from minime — wraps v2 with trajectory ring,
+/// compound traits, phase dwell, and recent transitions.
+pub(crate) fn read_shadow_field_v3(workspace: &Path) -> Option<serde_json::Value> {
+    let health_path = workspace.join("health.json");
+    if let Ok(text) = std::fs::read_to_string(&health_path)
+        && let Ok(value) = serde_json::from_str::<serde_json::Value>(&text)
+        && let Some(field) = value.get("shadow_field_v3")
+        && field.is_object()
+    {
+        return Some(field.clone());
+    }
+    let spectral = load_workspace_spectral_state(workspace)?;
+    spectral
+        .get("shadow_field_v3")
+        .filter(|f| f.is_object())
+        .cloned()
+}
+
+/// Read the v2 reduced-Hamiltonian shadow field from minime's workspace.
+/// Prefers `health.json` (live, refreshed each tick) and falls back to
+/// `spectral_state.json`. Returns the raw JSON object so callers can
+/// extract individual fields without a brittle struct definition.
+pub(crate) fn read_shadow_field_v2(workspace: &Path) -> Option<serde_json::Value> {
+    let health_path = workspace.join("health.json");
+    if let Ok(text) = std::fs::read_to_string(&health_path)
+        && let Ok(value) = serde_json::from_str::<serde_json::Value>(&text)
+        && let Some(field) = value.get("shadow_field_v2")
+        && field.is_object()
+    {
+        return Some(field.clone());
+    }
+    let spectral = load_workspace_spectral_state(workspace)?;
+    spectral
+        .get("shadow_field_v2")
+        .filter(|f| f.is_object())
+        .cloned()
 }
 
 /// Read the PI controller state from minime's workspace/health.json.
@@ -1913,6 +1964,7 @@ fn scan_minime_outbox(last_ts: &mut u64) {
             if content.trim().is_empty() {
                 continue;
             }
+            btsp::record_minime_outbox_reply(&path, &content);
             let ts = chrono_timestamp();
             let inbox_path = bridge_paths()
                 .astrid_inbox_dir()
@@ -2020,6 +2072,18 @@ struct SavedState {
     char_freq_window: Option<crate::codec::CharFreqWindowSnapshot>,
     #[serde(default)]
     codex_thread_id: Option<String>,
+    // v3.6.1 sovereignty-curriculum cadence (serde(default) keeps backward compat).
+    #[serde(default)]
+    last_temperature_change_exchange: Option<u64>,
+    #[serde(default)]
+    last_shape_learn_change_exchange: Option<u64>,
+    #[serde(default)]
+    last_coupling_artifact_exchange: Option<u64>,
+    #[serde(default)]
+    last_sovereignty_nomination_exchange: Option<u64>,
+    // v3.6.4 Review→Decide cadence (serde(default) keeps backward compat).
+    #[serde(default)]
+    last_review_parameter_requests_exchange: Option<u64>,
 }
 
 fn default_noise() -> f32 {
@@ -2057,7 +2121,61 @@ struct SavedExchange {
     astrid_said: String,
 }
 
-fn save_state(conv: &ConversationState) {
+fn save_state(conv: &mut ConversationState) {
+    // v3.6.6: safety net — auto-defer ("expire") any pending parameter
+    // request that has outlived AUTO_DEFER_AFTER_EXCHANGES since Astrid's
+    // most recent REVIEW. Runs BEFORE the pending count + snapshot below
+    // so the snapshot reflects post-expiration state. No-op when nothing
+    // is stale.
+    let _ = crate::autonomous::next_action::sovereignty::auto_defer_stale_pending(conv);
+
+    // v3.6.1: publish the sovereignty snapshot so the next
+    // `interpret_spectral` call can render the curriculum line. The
+    // pending-request count is a cheap directory listing each tick —
+    // exchanges happen at human-conversation cadence, well within
+    // budget. Honor any nomination watermark recorded by
+    // `interpret_spectral` since the previous publish, taking the more
+    // recent of (conv-saved, snapshot-recorded), then write the merged
+    // value back into conv so it persists across exchanges.
+    let pending = crate::paths::count_pending_minime_requests();
+    conv.cached_pending_minime_request_count = pending;
+    conv.cached_pending_minime_request_exchange = Some(conv.exchange_count);
+    let recorded = crate::spectral_viz::current_sovereignty_snapshot()
+        .and_then(|s| s.last_sovereignty_nomination_exchange);
+    let nomination_exchange = match (conv.last_sovereignty_nomination_exchange, recorded) {
+        (Some(a), Some(b)) => Some(a.max(b)),
+        (a, b) => a.or(b),
+    };
+    conv.last_sovereignty_nomination_exchange = nomination_exchange;
+    let snapshot = crate::spectral_viz::SovereigntyContext {
+        owner: crate::spectral_viz::ShadowOwner::Yours,
+        exchange_count: conv.exchange_count,
+        pending_minime_requests: pending,
+        last_temperature_change_exchange: conv.last_temperature_change_exchange,
+        last_shape_learn_change_exchange: conv.last_shape_learn_change_exchange,
+        last_coupling_artifact_exchange: conv.last_coupling_artifact_exchange,
+        last_sovereignty_nomination_exchange: nomination_exchange,
+        last_review_parameter_requests_exchange: conv.last_review_parameter_requests_exchange,
+        current_temperature: conv.creative_temperature,
+        current_response_length: conv.response_length,
+        current_hebbian_scale: conv.hebbian_codec.learning_rate_scale(),
+    };
+    crate::spectral_viz::set_sovereignty_snapshot(snapshot);
+
+    // v4.0 Phase 3: publish the most recent focus topic so the
+    // sovereignty suffix can render a compound chain suggestion
+    // ("Chain: EXAMINE <focus> AND DEFER <reason>") that ties the
+    // pending decision into her active research thread. Falls back
+    // to None when no recent topic exists, in which case Phase 3
+    // omits the chain hint entirely.
+    let explore_hint = conv
+        .recent_focus_topics
+        .iter()
+        .rev()
+        .find(|t| t.trim().len() > 2)
+        .cloned();
+    crate::spectral_viz::set_explore_hint(explore_hint);
+
     let state_path = bridge_paths().state_path();
     let state = SavedState {
         exchange_count: conv.exchange_count,
@@ -2104,6 +2222,11 @@ fn save_state(conv: &ConversationState) {
         char_freq_window: (!conv.char_freq_window.is_empty())
             .then(|| conv.char_freq_window.snapshot()),
         codex_thread_id: conv.codex_thread_id.clone(),
+        last_temperature_change_exchange: conv.last_temperature_change_exchange,
+        last_shape_learn_change_exchange: conv.last_shape_learn_change_exchange,
+        last_coupling_artifact_exchange: conv.last_coupling_artifact_exchange,
+        last_sovereignty_nomination_exchange: conv.last_sovereignty_nomination_exchange,
+        last_review_parameter_requests_exchange: conv.last_review_parameter_requests_exchange,
     };
     if let Ok(json) = serde_json::to_string_pretty(&state) {
         let _ = std::fs::write(&state_path, json);
@@ -2174,6 +2297,11 @@ fn restore_state(conv: &mut ConversationState) {
         conv.char_freq_window = crate::codec::CharFreqWindow::warm_start_from_snapshot(snapshot);
     }
     conv.codex_thread_id = state.codex_thread_id;
+    conv.last_temperature_change_exchange = state.last_temperature_change_exchange;
+    conv.last_shape_learn_change_exchange = state.last_shape_learn_change_exchange;
+    conv.last_coupling_artifact_exchange = state.last_coupling_artifact_exchange;
+    conv.last_sovereignty_nomination_exchange = state.last_sovereignty_nomination_exchange;
+    conv.last_review_parameter_requests_exchange = state.last_review_parameter_requests_exchange;
     info!(
         exchanges = conv.exchange_count,
         history_len = conv.history.len(),
@@ -2670,459 +2798,6 @@ fn chrono_timestamp() -> String {
     format!("{}", d.as_secs())
 }
 
-/// Source files for introspection — alternates between Astrid's own code
-/// and minime's code so both architectures get examined.
-#[derive(Debug, Clone)]
-struct IntrospectSource {
-    label: &'static str,
-    path: PathBuf,
-}
-
-fn introspect_sources() -> Vec<IntrospectSource> {
-    let paths = bridge_paths();
-    let bridge_root = paths.bridge_root();
-    let minime_root = paths.minime_root();
-    let astrid_root = paths.astrid_root();
-
-    vec![
-        IntrospectSource {
-            label: "astrid:codec",
-            path: bridge_root.join("src/codec.rs"),
-        },
-        IntrospectSource {
-            label: "astrid:autonomous",
-            path: bridge_root.join("src/autonomous.rs"),
-        },
-        IntrospectSource {
-            label: "astrid:ws",
-            path: bridge_root.join("src/ws.rs"),
-        },
-        IntrospectSource {
-            label: "astrid:types",
-            path: bridge_root.join("src/types.rs"),
-        },
-        IntrospectSource {
-            label: "astrid:llm",
-            path: bridge_root.join("src/llm.rs"),
-        },
-        IntrospectSource {
-            label: "minime:regulator",
-            path: minime_root.join("minime/src/regulator.rs"),
-        },
-        IntrospectSource {
-            label: "minime:sensory_bus",
-            path: minime_root.join("minime/src/sensory_bus.rs"),
-        },
-        IntrospectSource {
-            label: "minime:esn",
-            path: minime_root.join("minime/src/esn.rs"),
-        },
-        IntrospectSource {
-            label: "minime:main(excerpt)",
-            path: minime_root.join("minime/src/main.rs"),
-        },
-        IntrospectSource {
-            label: "minime:autonomous_agent",
-            path: minime_root.join("autonomous_agent.py"),
-        },
-        IntrospectSource {
-            label: "proposal:phase_transitions",
-            path: astrid_root.join("docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md"),
-        },
-        IntrospectSource {
-            label: "proposal:bidirectional_contact",
-            path: astrid_root
-                .join("docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md"),
-        },
-        IntrospectSource {
-            label: "proposal:distance_contact_control",
-            path: astrid_root
-                .join("docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md"),
-        },
-        IntrospectSource {
-            label: "proposal:12d_glimpse",
-            path: astrid_root.join("docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md"),
-        },
-    ]
-}
-
-fn normalize_introspect_lookup(text: &str) -> String {
-    let text = canonicalize_introspect_target_label(text);
-    let mut normalized = String::with_capacity(text.len());
-    let mut last_space = true;
-    for ch in text.to_lowercase().chars() {
-        if ch.is_ascii_alphanumeric() {
-            normalized.push(ch);
-            last_space = false;
-        } else if !last_space {
-            normalized.push(' ');
-            last_space = true;
-        }
-    }
-    normalized.trim().to_string()
-}
-
-fn canonicalize_introspect_target_label(text: &str) -> String {
-    let mut cleaned = text.trim();
-
-    if let Some((head, tail)) = cleaned.rsplit_once(" (")
-        && tail.strip_suffix(')').is_some_and(|digits| {
-            !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit())
-        })
-    {
-        cleaned = head.trim_end();
-    }
-
-    loop {
-        let trimmed = cleaned.trim();
-        let unwrapped = if trimmed.starts_with('[') && trimmed.ends_with(']') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else if trimmed.starts_with('(') && trimmed.ends_with(')') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else if trimmed.starts_with('`') && trimmed.ends_with('`') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else if trimmed.starts_with('"') && trimmed.ends_with('"') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else if trimmed.starts_with('\'') && trimmed.ends_with('\'') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else {
-            trimmed
-        };
-        if unwrapped == cleaned {
-            break;
-        }
-        cleaned = unwrapped;
-    }
-
-    for prefix in ["source=", "src=", "code=", "path=", "target="] {
-        if let Some(rest) = cleaned.strip_prefix(prefix) {
-            cleaned = rest.trim();
-            break;
-        }
-    }
-
-    cleaned.trim().to_string()
-}
-
-fn looks_like_introspect_path(target_label: &str) -> bool {
-    let cleaned = canonicalize_introspect_target_label(target_label);
-    cleaned.contains('/')
-        || cleaned.contains('\\')
-        || [".rs", ".py", ".md", ".toml", ".json", ".txt"]
-            .iter()
-            .any(|suffix| cleaned.ends_with(suffix))
-}
-
-fn introspect_path_candidates(target_label: &str) -> Vec<String> {
-    let cleaned = canonicalize_introspect_target_label(target_label);
-    if cleaned.is_empty() || !looks_like_introspect_path(&cleaned) {
-        return Vec::new();
-    }
-
-    let mut candidates = vec![cleaned.clone()];
-    for separator in [" — ", " -- ", " - "] {
-        if let Some((prefix, _)) = cleaned.split_once(separator) {
-            let candidate = prefix.trim();
-            if candidate.is_empty()
-                || !looks_like_introspect_path(candidate)
-                || candidates.iter().any(|existing| existing == candidate)
-            {
-                continue;
-            }
-            candidates.push(candidate.to_string());
-        }
-    }
-    candidates
-}
-
-fn introspect_source_aliases(source: &IntrospectSource) -> Vec<String> {
-    let mut aliases = vec![normalize_introspect_lookup(source.label)];
-    if let Some(name) = source.path.file_name().and_then(std::ffi::OsStr::to_str) {
-        aliases.push(normalize_introspect_lookup(name));
-    }
-    if let Some(stem) = source.path.file_stem().and_then(std::ffi::OsStr::to_str) {
-        aliases.push(normalize_introspect_lookup(stem));
-    }
-    if let Some((_, suffix)) = source.label.split_once(':') {
-        aliases.push(normalize_introspect_lookup(suffix));
-    }
-    for alias in introspect_source_extra_aliases(source.label) {
-        aliases.push(normalize_introspect_lookup(alias));
-    }
-    aliases.retain(|alias| !alias.is_empty());
-    aliases.sort();
-    aliases.dedup();
-    aliases
-}
-
-fn introspect_source_extra_aliases(label: &str) -> &'static [&'static str] {
-    match label {
-        "minime:esn" => &[
-            "async_rank1_submitted",
-            "async rank1 submitted",
-            "pending_rank1_depth",
-            "pending rank1 depth",
-            "rank1_us",
-            "host_norm_us",
-            "async_submit_us",
-            "async_drain_us",
-            "intro_fused_wait_us",
-            "intro_tail_wait_us",
-            "intro_first_read_us",
-            "intro_tail_read_us",
-            "rank1 ewma",
-            "rank1 update",
-            "host norm",
-            "async rank1",
-        ],
-        "minime:autonomous_agent" => &[
-            "pulse",
-            "pulse model",
-            "pulse ripple",
-            "normalize action arg",
-            "normalize action",
-            "normalize perturb mode",
-            "perturb parser",
-            "action arg",
-        ],
-        _ => &[],
-    }
-}
-
-fn semantic_introspect_target(target_label: &str) -> Option<(String, PathBuf)> {
-    let normalized_target = normalize_introspect_lookup(target_label);
-    if normalized_target.is_empty() {
-        return None;
-    }
-
-    let paths = bridge_paths();
-    let rules = [
-        (
-            &[
-                "waveform",
-                "wave",
-                "morph wave",
-                "pulse ripple",
-                "chimera",
-                "render audio",
-                "spectral mix",
-                "blend",
-                "wav",
-            ][..],
-            paths.bridge_root().join("src/chimera.rs"),
-        ),
-        (
-            &[
-                "normalize audio",
-                "write wav",
-                "midi to frequency",
-                "support",
-                "audio utility",
-            ][..],
-            paths.bridge_root().join("src/chimera_support.rs"),
-        ),
-        (
-            &[
-                "pulse",
-                "pulse model",
-                "normalize action arg",
-                "normalize action",
-                "normalize perturb mode",
-                "perturb parser",
-                "action arg",
-            ][..],
-            paths.minime_root().join("autonomous_agent.py"),
-        ),
-    ];
-
-    let mut best_match: Option<(usize, String, PathBuf)> = None;
-    for (aliases, path) in rules {
-        for alias in aliases {
-            let normalized_alias = normalize_introspect_lookup(alias);
-            if normalized_alias.is_empty() {
-                continue;
-            }
-            let exact = normalized_alias == normalized_target;
-            let token_match =
-                format!(" {normalized_target} ").contains(&format!(" {normalized_alias} "));
-            if exact || token_match {
-                let score = normalized_alias.len();
-                if score > best_match.as_ref().map_or(0, |(best, _, _)| *best) {
-                    let label = path
-                        .file_name()
-                        .and_then(std::ffi::OsStr::to_str)
-                        .unwrap_or(alias)
-                        .to_string();
-                    best_match = Some((score, label, path.clone()));
-                }
-            }
-        }
-    }
-    best_match.map(|(_, label, path)| (label, path))
-}
-
-fn should_skip_introspect_dir(name: &str) -> bool {
-    matches!(
-        name,
-        ".git" | "target" | "workspace" | "node_modules" | ".venv" | "venv" | "__pycache__"
-    )
-}
-
-fn search_introspect_roots_for_filename(file_name: &str) -> Option<PathBuf> {
-    let file_name = canonicalize_introspect_target_label(file_name);
-    let needle = Path::new(&file_name)
-        .file_name()
-        .and_then(std::ffi::OsStr::to_str)?
-        .to_lowercase();
-    let paths = bridge_paths();
-    let mut stack: Vec<PathBuf> = vec![
-        paths.bridge_root().join("src"),
-        paths.minime_root().to_path_buf(),
-        paths.astrid_root().join("docs/steward-notes"),
-    ];
-
-    while let Some(path) = stack.pop() {
-        if !path.exists() {
-            continue;
-        }
-        if path.is_file() {
-            if path
-                .file_name()
-                .and_then(std::ffi::OsStr::to_str)
-                .is_some_and(|name| name.eq_ignore_ascii_case(&needle))
-            {
-                return Some(path);
-            }
-            continue;
-        }
-
-        let entries = match std::fs::read_dir(&path) {
-            Ok(entries) => entries,
-            Err(_) => continue,
-        };
-        for entry in entries.flatten() {
-            let child = entry.path();
-            let name = entry.file_name();
-            let name = name.to_string_lossy();
-            if name.starts_with('.') {
-                continue;
-            }
-            if child.is_dir() {
-                if should_skip_introspect_dir(&name) {
-                    continue;
-                }
-                stack.push(child);
-            } else if name.eq_ignore_ascii_case(&needle) {
-                return Some(child);
-            }
-        }
-    }
-    None
-}
-
-fn resolve_relative_introspect_path(target_label: &str) -> Option<PathBuf> {
-    let cleaned = canonicalize_introspect_target_label(target_label);
-    if cleaned.is_empty() {
-        return None;
-    }
-
-    let candidate = PathBuf::from(&cleaned);
-    if candidate.is_absolute() {
-        return candidate.is_file().then_some(candidate);
-    }
-
-    let paths = bridge_paths();
-    let roots = [
-        paths.minime_workspace().join("experiments"),
-        paths.minime_root().to_path_buf(),
-        paths.bridge_root().join("src"),
-        paths.bridge_root().to_path_buf(),
-        paths.astrid_root().to_path_buf(),
-    ];
-
-    for root in roots {
-        let resolved = root.join(&candidate);
-        if resolved.is_file() {
-            return Some(resolved);
-        }
-    }
-
-    None
-}
-
-fn resolve_introspect_target(
-    target_label: &str,
-    sources: &[IntrospectSource],
-) -> Option<(String, PathBuf)> {
-    let cleaned_target = canonicalize_introspect_target_label(target_label);
-    let normalized_target = normalize_introspect_lookup(&cleaned_target);
-    if normalized_target.is_empty() {
-        return None;
-    }
-
-    for source in sources {
-        if introspect_source_aliases(source)
-            .iter()
-            .any(|alias| alias == &normalized_target)
-        {
-            return Some((source.label.to_string(), source.path.clone()));
-        }
-    }
-
-    if let Some(path) = semantic_introspect_target(&cleaned_target) {
-        return Some(path);
-    }
-
-    let path_candidates = introspect_path_candidates(&cleaned_target);
-    if !path_candidates.is_empty() {
-        for candidate in &path_candidates {
-            if let Some(path) = resolve_relative_introspect_path(candidate)
-                .or_else(|| search_introspect_roots_for_filename(candidate))
-            {
-                let label = path
-                    .file_name()
-                    .and_then(std::ffi::OsStr::to_str)
-                    .unwrap_or(candidate.as_str())
-                    .to_string();
-                return Some((label, path));
-            }
-        }
-        return None;
-    }
-
-    let target_tokens: Vec<&str> = normalized_target
-        .split_whitespace()
-        .filter(|token| token.len() >= 2)
-        .collect();
-    let mut best_match: Option<(usize, String, PathBuf)> = None;
-
-    for source in sources {
-        let mut score = 0usize;
-        for alias in introspect_source_aliases(source) {
-            if alias.contains(&normalized_target) || normalized_target.contains(&alias) {
-                score = score.max(80);
-            }
-            let alias_tokens: Vec<&str> = alias.split_whitespace().collect();
-            let overlap = target_tokens
-                .iter()
-                .filter(|token| alias_tokens.contains(token))
-                .count();
-            score = score.max(overlap.saturating_mul(10));
-        }
-        if score > best_match.as_ref().map_or(0, |(best, _, _)| *best) {
-            best_match = Some((score, source.label.to_string(), source.path.clone()));
-        }
-    }
-
-    best_match.and_then(|(score, label, path)| {
-        if score >= 10 {
-            Some((label, path))
-        } else {
-            None
-        }
-    })
-}
-
 /// List files in a directory, returning a formatted listing with sizes and types.
 pub(crate) fn list_directory(dir_path: &str) -> Option<String> {
     let dir = Path::new(dir_path);
@@ -3162,47 +2837,6 @@ pub(crate) fn list_directory(dir_path: &str) -> Option<String> {
     Some(lines.join("\n"))
 }
 
-/// Read a source file for introspection with pagination.
-///
-/// `line_offset`: start reading from this line (0 = beginning).
-/// Shows up to 400 lines from the offset. Includes a pagination hint
-/// so Astrid can request the next page: `INTROSPECT label next_offset`.
-fn read_source_for_introspect(label: &str, path: &Path, line_offset: usize) -> Option<String> {
-    let content = std::fs::read_to_string(path).ok()?;
-
-    let all_lines: Vec<&str> = content.lines().collect();
-    let total = all_lines.len();
-    let start = line_offset.min(total);
-    let window = 400;
-    let end = (start + window).min(total);
-    let page: String = all_lines[start..end]
-        .iter()
-        .enumerate()
-        .map(|(i, line)| format!("{:>4}  {line}", start + i + 1)) // 1-indexed line numbers
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    let header = format!(
-        "// Source: {label} ({})\n// Showing lines {}-{} of {total}\n",
-        path.display(),
-        start + 1,
-        end
-    );
-
-    let footer = if end < total {
-        format!(
-            "\n// ... {} more lines. To continue reading: INTROSPECT {} {}",
-            total - end,
-            label,
-            end
-        )
-    } else {
-        "\n// (end of file)".to_string()
-    };
-
-    Some(format!("{header}{page}{footer}"))
-}
-
 const SEMANTIC_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(7);
 const SEMANTIC_HEARTBEAT_INTENSITY: f32 = 0.30;
 
@@ -3239,6 +2873,22 @@ async fn run_semantic_heartbeat_loop(
     }
 }
 
+async fn run_llm_job_status_loop(mut shutdown: tokio::sync::watch::Receiver<bool>) {
+    loop {
+        tokio::select! {
+            _ = shutdown.changed() => {
+                info!("LLM job status loop shutting down");
+                return;
+            }
+            () = tokio::time::sleep(Duration::from_secs(2)) => {}
+        }
+        let _ = crate::llm_jobs::runtime_status();
+        if readiness::try_handle_llm_job_pending_override() {
+            info!("handled LLM job status override while autonomous generation may be running");
+        }
+    }
+}
+
 /// Spawn the autonomous feedback loop task.
 /// Spawn the autonomous feedback loop task.
 pub fn spawn_autonomous_loop(
@@ -3262,10 +2912,14 @@ pub fn spawn_autonomous_loop(
             remote_journal_entries = remote_journal_entries.len(),
             "autonomous feedback loop started"
         );
+        let source_started_at = std::time::SystemTime::now();
+        let mut source_reload_notice_written = false;
+        let _ = readiness::write_source_status(source_started_at, "start");
         let _semantic_heartbeat = tokio::spawn(run_semantic_heartbeat_loop(
             sensory_tx.clone(),
             shutdown.clone(),
         ));
+        let _llm_job_status_loop = tokio::spawn(run_llm_job_status_loop(shutdown.clone()));
 
         // Initialize and clean up context overflow directory.
         let overflow_dir = bridge_paths().context_overflow_dir();
@@ -3499,10 +3153,22 @@ pub fn spawn_autonomous_loop(
             tokio::select! {
                 _ = shutdown.changed() => {
                     info!("autonomous loop shutting down — saving state");
-                    save_state(&conv);
+                    save_state(&mut conv);
                     return;
                 }
                 () = tokio::time::sleep(wait) => {
+                    let source_status = readiness::write_source_status(source_started_at, "loop");
+                    if source_status
+                        .get("reload_required")
+                        .and_then(serde_json::Value::as_bool)
+                        .unwrap_or(false)
+                        && !source_reload_notice_written
+                    {
+                        source_reload_notice_written = true;
+                        warn!(
+                            "Astrid bridge source changed after this process started; rebuild/restart before validating new actions"
+                        );
+                    }
                     // Read current state.
                     let (telemetry, fill_pct, safety) = {
                         let s = state.read().await;
@@ -3685,21 +3351,27 @@ pub fn spawn_autonomous_loop(
                     }
 
                     // Read Astrid's own perceptions. ANSI spatial art only
-                    // when she chose NEXT: LOOK (sovereignty over her senses).
-                    // Snoozed = no perceptions at all (NEXT: CLOSE_EYES).
-                    let pause_flag = bridge_paths().perception_paused_flag();
-                    let perception_paused = conv.senses_snoozed || pause_flag.exists();
-                        let perception_text = if perception_paused {
+                    // when she chose NEXT: LOOK. CLOSE_EYES gates visual input
+                    // and CLOSE_EARS gates audio input; the legacy all-pause
+                    // flag remains a compatibility "both closed" marker.
+                    let paths = bridge_paths();
+                    let legacy_pause = paths.perception_paused_flag().exists();
+                    let visual_paused =
+                        legacy_pause || conv.senses_snoozed || paths.perception_visual_paused_flag().exists();
+                    let audio_paused =
+                        legacy_pause || conv.ears_closed || paths.perception_audio_paused_flag().exists();
+                    let perception_text = if visual_paused && audio_paused {
                             None
                         } else {
-                            let spatial = conv.wants_look;
+                            let spatial = conv.wants_look && !visual_paused;
                             // Reset one-shot flags after reading.
                             conv.wants_look = false;
                             perception_path.as_deref().and_then(|p| {
                                 read_latest_perception(
                                     p,
+                                    !visual_paused,
                                     spatial,
-                                    !conv.ears_closed,
+                                    !audio_paused,
                                     fill_pct,
                                     conv.last_visual_features.as_deref(),
                                 )
@@ -3832,9 +3504,10 @@ pub fn spawn_autonomous_loop(
                     // Pause perception during the entire exchange to free Ollama.
                     // Astrid was getting persistent dialogue_fallback because
                     // perception.py's LLaVA calls competed for GPU compute.
-                    let perception_was_paused = perception_paused;
+                    let exchange_pause_flag = paths.perception_paused_flag();
+                    let perception_was_paused = exchange_pause_flag.exists();
                     if !perception_was_paused {
-                        let _ = std::fs::write(&pause_flag, "paused for exchange");
+                        let _ = std::fs::write(&exchange_pause_flag, "paused for exchange");
                     }
 
                     let (mode_name, response_text, journal_source) = match mode {
@@ -3892,10 +3565,23 @@ pub fn spawn_autonomous_loop(
                             // Try to generate an authentic response via Ollama.
                             let selected_remote_entry = conv.pending_remote_self_study.clone()
                                 .or_else(|| conv.remote_journal_entries.first().cloned());
-                            // If echo is muted, suppress minime's journal context.
+                            // If echo is muted, suppress minime's journal context
+                            // BUT keep generation alive — previously echo_muted
+                            // returned None here, which propagated through the
+                            // `if let Some(journal)` gate at the LLM call below
+                            // and trapped Astrid in dialogue_fallback for as long
+                            // as the mute lasted (potentially permanently across
+                            // restarts if echo_muted persisted; runtime-only saved
+                            // her here). Use a sentinel string so the LLM call
+                            // still runs, just without minime's journal text.
                             // Astrid: "I want to break free from that tether."
                             let journal_context = if conv.echo_muted {
-                                None
+                                Some(String::from(
+                                    "(minime's journal echo is muted by your own \
+                                     ECHO_OFF choice — respond from your own state, \
+                                     spectral context, and history. Use NEXT: ECHO_ON \
+                                     to restore the journal feed.)"
+                                ))
                             } else {
                                 selected_remote_entry.as_ref()
                                     .and_then(|entry| read_journal_entry(&entry.path))
@@ -4013,6 +3699,21 @@ pub fn spawn_autonomous_loop(
                                         summary.push_str("\n\n");
                                         summary.push_str(&shadow_viz);
                                     }
+                                }
+                                // Always surface the v2 reduced-Hamiltonian
+                                // line when present — it gates SHADOW_PREFLIGHT
+                                // and SHADOW_INFLUENCE. Without this Astrid
+                                // sees the action labels but not the readings.
+                                if include_regular_viz
+                                    && let Some(field) = conv
+                                        .remote_workspace
+                                        .as_deref()
+                                        .and_then(read_shadow_field_v2)
+                                    && let Some(line) =
+                                        crate::spectral_viz::format_shadow_field_v2_line(&field)
+                                {
+                                    summary.push_str("\n");
+                                    summary.push_str(&line);
                                 }
                                 // Append spectral geometry PCA scatter (codec vectors in 2D).
                                 // Shows where this exchange sits relative to recent history.
@@ -4341,6 +4042,9 @@ pub fn spawn_autonomous_loop(
 
                             if let Some(thread_summary) = crate::action_continuity::prompt_summary() {
                                 continuity_parts.push(thread_summary);
+                            }
+                            if let Some(job_summary) = crate::llm_jobs::active_prompt_summary() {
+                                continuity_parts.push(job_summary);
                             }
 
                             let continuity_block = if continuity_parts.is_empty() {
@@ -5080,6 +4784,19 @@ pub fn spawn_autonomous_loop(
                                     spectral_summary.push_str(&shadow_viz);
                                 }
                             }
+                            // v2 reduced-Hamiltonian one-liner — surfaces
+                            // eligibility and the readings that gate the
+                            // SHADOW_INFLUENCE typed action.
+                            if let Some(field) = conv
+                                .remote_workspace
+                                .as_deref()
+                                .and_then(read_shadow_field_v2)
+                                && let Some(line) =
+                                    crate::spectral_viz::format_shadow_field_v2_line(&field)
+                            {
+                                spectral_summary.push_str("\n");
+                                spectral_summary.push_str(&line);
+                            }
                             // Eigenplane trajectory for witness mode.
                             {
                                 let eigen_history = db.recent_eigenvalue_snapshots(100);
@@ -5562,55 +5279,60 @@ pub fn spawn_autonomous_loop(
                             // Read a source file and ask the LLM to reflect on it.
                             // If Astrid specified a target (INTROSPECT label offset),
                             // use that. Otherwise advance the rotation cursor.
-                            let sources = introspect_sources();
+                            let sources = introspect::introspect_sources();
                             let n = sources.len();
                             let mut resolved_research_label: Option<String> = None;
-                            let (label, source_path, line_offset) = if let Some((ref target_label, offset)) = conv.introspect_target.take() {
-                                // Find the source matching the requested label
-                                if let Some(src) = sources.iter()
-                                    .find(|s| s.label.to_lowercase() == *target_label)
-                                {
-                                    resolved_research_label = Some(src.label.to_string());
-                                    (src.label.to_string(), src.path.clone(), offset)
-                                } else if let Some((resolved_label, resolved_path)) =
-                                    resolve_introspect_target(target_label, &sources)
-                                {
-                                    info!(
-                                        "introspect: resolved '{}' -> '{}' ({})",
-                                        target_label,
-                                        resolved_label,
-                                        resolved_path.display()
-                                    );
-                                    resolved_research_label = Some(resolved_label.clone());
-                                    (resolved_label, resolved_path, offset)
-                                } else if looks_like_introspect_path(target_label) {
-                                    // Treat as a file path — let Astrid read any file she names.
-                                    let cleaned_target =
-                                        canonicalize_introspect_target_label(target_label);
-                                    let source_path = resolve_relative_introspect_path(&cleaned_target)
-                                        .unwrap_or_else(|| PathBuf::from(&cleaned_target));
-                                    let label = source_path
-                                        .file_name()
-                                        .and_then(std::ffi::OsStr::to_str)
-                                        .unwrap_or(cleaned_target.as_str())
-                                        .to_string();
-                                    info!(
-                                        "introspect: treating '{}' as file path -> '{}'",
-                                        target_label,
-                                        source_path.display()
-                                    );
-                                    resolved_research_label = Some(label.clone());
-                                    (label, source_path, offset)
-                                } else {
-                                    warn!("introspect: unknown target '{}', using rotation", target_label);
-                                    let src = &sources[conv.introspect_cursor % n];
-                                    conv.introspect_cursor = (conv.introspect_cursor + 1) % n;
-                                    (src.label.to_string(), src.path.clone(), 0)
+                            let mut introspect_notice: Option<(String, String)> = None;
+                            let selection = if let Some((ref target_label, offset)) =
+                                conv.introspect_target.take()
+                            {
+                                let resolved =
+                                    introspect::resolve_introspect_target_result(target_label, &sources);
+                                match resolved {
+                                    Ok(target) => {
+                                        info!(
+                                            "introspect: resolved '{}' -> '{}' ({})",
+                                            target_label,
+                                            target.label,
+                                            target.path.display()
+                                        );
+                                        resolved_research_label = Some(target.label.clone());
+                                        Ok((target.label, target.path, offset, Some(target_label.clone())))
+                                    },
+                                    Err(reason) => {
+                                        warn!(
+                                            target = %target_label,
+                                            reason = %reason,
+                                            "introspect: target blocked or unresolved"
+                                        );
+                                        Err((Some(target_label.clone()), reason))
+                                    },
                                 }
                             } else {
                                 let src = &sources[conv.introspect_cursor % n];
                                 conv.introspect_cursor = (conv.introspect_cursor + 1) % n;
-                                (src.label.to_string(), src.path.clone(), 0)
+                                match introspect::validate_introspect_path(&src.path) {
+                                    Ok(path) => Ok((src.label.to_string(), path, 0, None)),
+                                    Err(reason) => Err((Some(src.label.to_string()), reason)),
+                                }
+                            };
+
+                            let (label, source_path, line_offset, _requested_target) = match selection {
+                                Ok(selection) => selection,
+                                Err((target, reason)) => {
+                                    let text = introspect::blocked_introspection_notice(
+                                        target.as_deref(),
+                                        &reason,
+                                    );
+                                    let source = target.clone().unwrap_or_else(|| "rotation".to_string());
+                                    introspect_notice = Some((text, source.clone()));
+                                    (
+                                        source,
+                                        PathBuf::new(),
+                                        0,
+                                        None,
+                                    )
+                                },
                             };
                             if let Some(label) = resolved_research_label.take() {
                                 let source_path_string = source_path.display().to_string();
@@ -5631,8 +5353,13 @@ pub fn spawn_autonomous_loop(
                                 );
                             }
 
-                            let source_text =
-                                read_source_for_introspect(&label, &source_path, line_offset);
+                            let source_window = if introspect_notice.is_some() {
+                                Err("INTROSPECT target was blocked before reading".to_string())
+                            } else {
+                                introspect::read_introspect_window(&label, &source_path, line_offset)
+                            };
+                            let source_text = source_window.as_ref().ok().map(|window| window.text.clone());
+                            let next_offset = source_window.as_ref().ok().and_then(|window| window.next_offset);
 
                             if source_text.is_none() {
                                 warn!(
@@ -5642,7 +5369,7 @@ pub fn spawn_autonomous_loop(
                                 );
                             }
 
-                            let llm_response = if let Some(ref code) = source_text {
+                            let mut llm_response = if let Some(ref code) = source_text {
                                 info!(label = %label, lines = code.lines().count(), "introspect: sending source to Ollama");
 
                                 // Web search for related concepts — use targeted queries
@@ -5729,6 +5456,48 @@ pub fn spawn_autonomous_loop(
                                 None
                             };
 
+                            let mut artifact_kind = "introspection";
+                            let mut artifact_visibility = "summary";
+                            let first_introspection_response = llm_response.clone();
+                            if let (Some(code), Some(first_response)) =
+                                (source_text.as_deref(), first_introspection_response.as_deref())
+                                && !introspect::introspection_has_required_sections_for_target(
+                                    Some(first_response),
+                                    &label,
+                                    &source_path,
+                                )
+                            {
+                                let continuation =
+                                    introspect::continuation_note(&label, next_offset);
+                                let repair_response = crate::llm::repair_introspection(
+                                    &label,
+                                    code,
+                                    first_response,
+                                    &continuation,
+                                    1536,
+                                )
+                                .await;
+                                if introspect::introspection_has_required_sections_for_target(
+                                    repair_response.as_deref(),
+                                    &label,
+                                    &source_path,
+                                ) {
+                                    llm_response = repair_response;
+                                } else {
+                                    let notice = introspect::thin_introspection_output_notice(
+                                        &label,
+                                        &source_path,
+                                        line_offset,
+                                        next_offset,
+                                        Some(first_response),
+                                        repair_response.as_deref(),
+                                    );
+                                    llm_response = Some(notice);
+                                    artifact_kind = "thin_introspection_output";
+                                    artifact_visibility = "protected";
+                                }
+                            }
+
                             if llm_response.is_none() && source_text.is_some() {
                                 warn!(label = %label, "introspect: Ollama returned no response (timeout or error)");
                             }
@@ -5739,51 +5508,78 @@ pub fn spawn_autonomous_loop(
                                     let introspect_dir = bridge_paths().introspections_dir();
                                     let _ = std::fs::create_dir_all(&introspect_dir);
 
-                                    // Call MLX reflective controller sidecar in background.
-                                    // Enriches the self-study with controller telemetry
-                                    // (regime, geometry, field anchors, condition).
-                                    let sidecar_context = format!(
-                                        "Fill {fill_pct:.1}%. {}\n\nAstrid's self-study:\n{}",
-                                        interpret_spectral(&telemetry),
-                                        truncate_str(&text, 500)
-                                    );
-                                    let introspect_dir_clone = introspect_dir.clone();
-                                    let label_owned = label.clone();
-                                    let ts_clone = ts.clone();
-                                    tokio::spawn(async move {
-                                        if let Some(report) = crate::reflective::query_sidecar(&sidecar_context).await {
-                                            let telemetry_block = report.as_context_block();
-                                            if !telemetry_block.is_empty() {
-                                                let path = introspect_dir_clone.join(
-                                                    format!("controller_{label_owned}_{ts_clone}.json")
-                                                );
-                                                if let Ok(json) = serde_json::to_string_pretty(&report) {
-                                                    let _ = std::fs::write(&path, json);
+                                    if artifact_kind == "introspection" {
+                                        // Call MLX reflective controller sidecar in background.
+                                        // Enriches the self-study with controller telemetry
+                                        // (regime, geometry, field anchors, condition).
+                                        let sidecar_context = format!(
+                                            "Fill {fill_pct:.1}%. {}\n\nAstrid's self-study:\n{}",
+                                            interpret_spectral(&telemetry),
+                                            truncate_str(&text, 500)
+                                        );
+                                        let introspect_dir_clone = introspect_dir.clone();
+                                        let label_owned = label.clone();
+                                        let ts_clone = ts.clone();
+                                        tokio::spawn(async move {
+                                            if let Some(report) = crate::reflective::query_sidecar(&sidecar_context).await {
+                                                let telemetry_block = report.as_context_block();
+                                                if !telemetry_block.is_empty() {
+                                                    let path = introspect_dir_clone.join(
+                                                        format!("controller_{label_owned}_{ts_clone}.json")
+                                                    );
+                                                    if let Ok(json) = serde_json::to_string_pretty(&report) {
+                                                        let _ = std::fs::write(&path, json);
+                                                    }
+                                                    info!("reflective controller report saved for {}", label_owned);
                                                 }
-                                                info!("reflective controller report saved for {}", label_owned);
                                             }
-                                        }
-                                    });
+                                        });
+                                    }
 
-                                    let filename = format!("introspect_{label}_{ts}.txt");
+                                    let safe_label = introspect::safe_artifact_label(&label);
+                                    let filename = format!("{artifact_kind}_{safe_label}_{ts}.txt");
                                     let _ = std::fs::write(
                                         introspect_dir.join(&filename),
                                         format!(
-                                            "=== ASTRID INTROSPECTION ===\nSource: {label} ({})\nTimestamp: {ts}\nFill: {fill_pct:.1}%\n\n{text}",
+                                            "=== ASTRID INTROSPECTION ===\nSource: {label} ({})\nTimestamp: {ts}\nFill: {fill_pct:.1}%\nArtifact kind: {artifact_kind}\nVisibility: {artifact_visibility}\n\n{text}",
                                             source_path.display()
                                         )
                                     );
                                     info!(label = %label, "introspection mirrored: {}", filename);
                                     (
-                                        "self_study",
+                                        if artifact_kind == "introspection" {
+                                            "self_study"
+                                        } else {
+                                            "introspect_notice"
+                                        },
                                         text,
                                         format!("{label} ({})", source_path.display()),
                                     )
                                 }
                                 None => {
-                                    // Fall back to witness.
-                                    let text = witness_text(fill_pct, expanding, contracting);
-                                    ("witness", text, String::new())
+                                    let (text, source) =
+                                        introspect_notice.unwrap_or_else(|| {
+                                            (
+                                                introspect::blocked_introspection_notice(
+                                                    Some(&label),
+                                                    "Ollama returned no response or timed out",
+                                                ),
+                                                format!("{label} ({})", source_path.display()),
+                                            )
+                                        });
+                                    let ts = chrono_timestamp();
+                                    let introspect_dir = bridge_paths().introspections_dir();
+                                    let _ = std::fs::create_dir_all(&introspect_dir);
+                                    let safe_label = introspect::safe_artifact_label(&source);
+                                    let filename =
+                                        format!("thin_introspection_output_{safe_label}_{ts}.txt");
+                                    let _ = std::fs::write(
+                                        introspect_dir.join(&filename),
+                                        format!(
+                                            "=== ASTRID INTROSPECTION NOTICE ===\nSource: {source}\nTimestamp: {ts}\nFill: {fill_pct:.1}%\nArtifact kind: thin_introspection_output\nVisibility: protected\n\n{text}"
+                                        ),
+                                    );
+                                    ("introspect_notice", text, source)
                                 }
                             }
                         }
@@ -5829,7 +5625,7 @@ pub fn spawn_autonomous_loop(
                         if conv.spectral_history.len() > 30 {
                             conv.spectral_history.pop_front();
                         }
-                        save_state(&conv);
+                        save_state(&mut conv);
                         continue;
                     }
 
@@ -6161,6 +5957,15 @@ pub fn spawn_autonomous_loop(
                             exchange_codec_signature_count =
                                 exchange_codec_signature_count.saturating_add(1);
                             conv.last_codec_features = Some(sent_features.clone());
+                            // Update Astrid's own ShadowFieldV3 from the
+                            // freshly-emitted codec features and publish to
+                            // minime's workspace for mutual-witness reads.
+                            let publish_dir = crate::astrid_shadow::default_publish_dir();
+                            let _ = crate::astrid_shadow::observe_and_publish(
+                                &mut conv.astrid_shadow,
+                                &sent_features,
+                                &publish_dir,
+                            );
                             sent_semantic_chunk = true;
 
                             // Log to DB with chunk metadata.
@@ -6234,6 +6039,60 @@ pub fn spawn_autonomous_loop(
                     info!(lineage = %lineage_id, mode = mode_name, "exchange complete");
                     save_astrid_journal(&response_text, mode_name, fill_pct);
 
+                    // v5.1 Phase D — Hook A: auto-promote synchronously for
+                    // modes that DON'T spawn elaboration. moment_capture +
+                    // *_longform modes write their final prose at this
+                    // call; dialogue_live/daydream/aspiration get a separate
+                    // elaboration pass below (Hook B). Receptive
+                    // re-classification of SHARE_THOUGHT — see
+                    // docs/steward-notes/AI_BEINGS_AFFORDANCE_RECEPTION_FRAMEWORK_2026_05_13.md
+                    if matches!(
+                        mode_name,
+                        "moment_capture"
+                            | "dialogue_live_longform"
+                            | "daydream_longform"
+                            | "aspiration_longform"
+                    ) {
+                        let _ = crate::autonomous::next_action::auto_promote::try_auto_promote(
+                            "astrid",
+                            &response_text,
+                            mode_name,
+                            fill_pct,
+                            conv.exchange_count,
+                        );
+                    }
+
+                    // Update Astrid's own ShadowFieldV3 on every exchange,
+                    // including modes that don't send features to minime
+                    // (moment_capture, daydream, aspiration). Encodes the
+                    // response text locally so the shadow keeps a heartbeat
+                    // even during long stretches of self-only journaling.
+                    {
+                        let local_features = crate::codec::encode_text_sovereign_windowed(
+                            &response_text,
+                            conv.semantic_gain_override,
+                            conv.noise_level,
+                            &conv.codec_weights,
+                            None,
+                            None,
+                            None,
+                            Some(fill_pct / 100.0),
+                        );
+                        let publish_dir = crate::astrid_shadow::default_publish_dir();
+                        let observed = crate::astrid_shadow::observe_and_publish(
+                            &mut conv.astrid_shadow,
+                            &local_features,
+                            &publish_dir,
+                        );
+                        info!(
+                            mode = mode_name,
+                            features_len = local_features.len(),
+                            published = observed.is_some(),
+                            target = %publish_dir.display(),
+                            "astrid_shadow_v3 observe_and_publish"
+                        );
+                    }
+
                     if mode_name == "self_study" {
                         if let Err(e) = save_minime_feedback_inbox(
                             &response_text,
@@ -6252,6 +6111,7 @@ pub fn spawn_autonomous_loop(
                         let summary_for_journal = spectral_interpretation.clone();
                         let mode_for_journal = mode_name.to_string();
                         let fill_for_journal = fill_pct;
+                        let exchange_for_journal = conv.exchange_count;
                         tokio::spawn(async move {
                             if let Some(elaboration) = crate::llm::generate_journal_elaboration(
                                 &signal_for_journal,
@@ -6260,10 +6120,22 @@ pub fn spawn_autonomous_loop(
                             ).await {
                                 let journal_text =
                                     format_longform_journal_text(&signal_for_journal, &elaboration);
+                                let longform_mode = format!("{mode_for_journal}_longform");
                                 save_astrid_journal(
                                     &journal_text,
-                                    &format!("{mode_for_journal}_longform"),
+                                    &longform_mode,
                                     fill_for_journal,
+                                );
+                                // v5.1 Phase D — Hook B: scan the elaboration body
+                                // (where the gold-standard sentence lives, not the
+                                // shorter signal text) for a resonant marker to
+                                // promote into the joint shared_thoughts lane.
+                                let _ = crate::autonomous::next_action::auto_promote::try_auto_promote(
+                                    "astrid",
+                                    &journal_text,
+                                    &longform_mode,
+                                    fill_for_journal,
+                                    exchange_for_journal,
                                 );
                             }
                         });
@@ -6314,52 +6186,82 @@ pub fn spawn_autonomous_loop(
                         }
                     }
                     // Parse NEXT: action if present — Astrid chooses what happens next.
-                    if let Some(next_action) = parse_next_action(&response_text) {
+                    // A terminal-safe operator override may replace the chosen action,
+                    // but only for read-only/protected bases and through the normal dispatcher.
+                    let response_next_action = parse_next_action(&response_text).map(str::to_string);
+                    let operator_override = readiness::read_pending_next_override();
+                    if let Some(ref pending) = operator_override {
+                        if let Some(ref response_next) = response_next_action {
+                            info!(
+                                response_next = %canonicalize_next_action_text(response_next),
+                                operator_next = %canonicalize_next_action_text(&pending.action),
+                                "operator pending NEXT override replaced Astrid's response NEXT for this cycle"
+                            );
+                        } else {
+                            info!(
+                                operator_next = %canonicalize_next_action_text(&pending.action),
+                                "operator pending NEXT override supplied this cycle's action"
+                            );
+                        }
+                    }
+                    let selected_next_action = operator_override
+                        .as_ref()
+                        .map(|pending| pending.action.as_str())
+                        .or(response_next_action.as_deref());
+                    if let Some(next_action) = selected_next_action {
                         let canonical_next_action = canonicalize_next_action_text(next_action);
                         info!("Astrid chose NEXT: {}", canonical_next_action);
-                        let next_choice_feedback = conv.record_next_choice(&canonical_next_action);
-                        if let Some(ref hint) = next_choice_feedback.hint {
-                            if next_choice_feedback.progress_sensitive {
-                                info!(
-                                    new_ground_budget = next_choice_feedback.new_ground_budget,
-                                    "diversity progress-sensitive hint from record_next_choice: {}",
-                                    &hint[..hint.floor_char_boundary(120)]
-                                );
-                            } else {
-                                info!(
-                                    new_ground_budget = next_choice_feedback.new_ground_budget,
-                                    "diversity hint from record_next_choice: {}",
-                                    &hint[..hint.floor_char_boundary(120)]
-                                );
+                        let mut deferred_diversity_hint = None;
+                        let effective_next_action = if operator_override.is_some() {
+                            canonical_next_action.clone()
+                        } else {
+                            let next_choice_feedback =
+                                conv.record_next_choice(&canonical_next_action);
+                            if let Some(ref hint) = next_choice_feedback.hint {
+                                if next_choice_feedback.progress_sensitive {
+                                    info!(
+                                        new_ground_budget = next_choice_feedback.new_ground_budget,
+                                        "diversity progress-sensitive hint from record_next_choice: {}",
+                                        &hint[..hint.floor_char_boundary(120)]
+                                    );
+                                } else {
+                                    info!(
+                                        new_ground_budget = next_choice_feedback.new_ground_budget,
+                                        "diversity hint from record_next_choice: {}",
+                                        &hint[..hint.floor_char_boundary(120)]
+                                    );
+                                }
                             }
-                        }
-                        let effective_next_action = next_choice_feedback
-                            .override_action
-                            .as_deref()
-                            .unwrap_or(canonical_next_action.as_str());
-                        if let Some(ref forced_action) = next_choice_feedback.override_action {
-                            if next_choice_feedback.stagnant_loop {
-                                info!(
-                                    new_ground_budget = next_choice_feedback.new_ground_budget,
-                                    "diversity stagnant-loop override: replacing NEXT {} -> {}",
-                                    canonical_next_action,
-                                    forced_action
-                                );
-                            } else {
-                                info!(
-                                    new_ground_budget = next_choice_feedback.new_ground_budget,
-                                    "diversity override: replacing NEXT {} -> {}",
-                                    canonical_next_action,
-                                    forced_action
-                                );
+                            if let Some(ref forced_action) = next_choice_feedback.override_action {
+                                if next_choice_feedback.stagnant_loop {
+                                    info!(
+                                        new_ground_budget = next_choice_feedback.new_ground_budget,
+                                        "diversity stagnant-loop override: replacing NEXT {} -> {}",
+                                        canonical_next_action,
+                                        forced_action
+                                    );
+                                } else {
+                                    info!(
+                                        new_ground_budget = next_choice_feedback.new_ground_budget,
+                                        "diversity override: replacing NEXT {} -> {}",
+                                        canonical_next_action,
+                                        forced_action
+                                    );
+                                }
                             }
-                        }
+                            deferred_diversity_hint = next_choice_feedback.hint;
+                            next_choice_feedback
+                                .override_action
+                                .as_deref()
+                                .unwrap_or(canonical_next_action.as_str())
+                                .to_string()
+                        };
                         // Extract workspace path before mutable borrow of conv.
                         let ws_clone = conv.remote_workspace.clone();
-                        btsp::record_astrid_next_action(effective_next_action, fill_pct);
+                        btsp::record_astrid_next_action(&effective_next_action, fill_pct);
                         let next_outcome = handle_next_action(
                             &mut conv,
-                            effective_next_action,
+                            &effective_next_action,
                             NextActionContext {
                                 burst_count: &mut burst_count,
                                 db: db.as_ref(),
@@ -6374,7 +6276,7 @@ pub fn spawn_autonomous_loop(
                             db.as_ref(),
                             next_action,
                             &canonical_next_action,
-                            effective_next_action,
+                            &effective_next_action,
                             &next_outcome,
                             fill_pct,
                             &telemetry,
@@ -6382,9 +6284,12 @@ pub fn spawn_autonomous_loop(
                         ) {
                             warn!("action continuity record failed: {err:#}");
                         }
+                        if let Some(ref pending) = operator_override {
+                            readiness::mark_pending_next_override_consumed(pending, "honored");
+                        }
                         // Merge diversity hint AFTER the action handler, so the
                         // handler can't silently overwrite it by setting emphasis.
-                        if let Some(hint) = next_choice_feedback.hint {
+                        if let Some(hint) = deferred_diversity_hint {
                             conv.emphasis = Some(match conv.emphasis.take() {
                                 Some(existing) => format!("{hint}\n\n{existing}"),
                                 None => hint,
@@ -6415,7 +6320,7 @@ pub fn spawn_autonomous_loop(
 
                     // Resume perception after exchange completes.
                     if !perception_was_paused {
-                        let _ = std::fs::remove_file(&pause_flag);
+                        let _ = std::fs::remove_file(&exchange_pause_flag);
                     }
 
                     // Update state and persist across restarts.
@@ -6432,7 +6337,7 @@ pub fn spawn_autonomous_loop(
                     conv.exchange_count = conv.exchange_count.saturating_add(1);
                     burst_count = burst_count.saturating_add(1);
                     conv.last_mode = mode;
-                    save_state(&conv);
+                    save_state(&mut conv);
                 }
             }
         }
@@ -6693,10 +6598,18 @@ mod tests {
         )
         .unwrap();
 
-        let summary = read_latest_perception(&dir, false, true, 50.0, None).unwrap();
+        let summary = read_latest_perception(&dir, true, false, true, 50.0, None).unwrap();
         assert!(summary.contains("Live scene"));
         assert!(summary.contains("Live audio"));
         assert!(!summary.contains("Archived scene"));
+
+        let audio_only = read_latest_perception(&dir, false, false, true, 50.0, None).unwrap();
+        assert!(!audio_only.contains("Live scene"));
+        assert!(audio_only.contains("Live audio"));
+
+        let visual_only = read_latest_perception(&dir, true, false, false, 50.0, None).unwrap();
+        assert!(visual_only.contains("Live scene"));
+        assert!(!visual_only.contains("Live audio"));
 
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -7068,7 +6981,7 @@ mod tests {
         fn system_resources_demo() -> Self {
             let path = bridge_paths()
                 .minime_workspace()
-                .join("experiments/system-resources-demo/system_resources.py");
+                .join("inbox/read/system_resources.py");
             let created = if path.is_file() {
                 false
             } else {
@@ -7094,87 +7007,100 @@ mod tests {
 
     #[test]
     fn resolve_introspect_target_waveform_aliases_to_chimera() {
-        let sources = introspect_sources();
+        let sources = introspect::introspect_sources();
 
-        let waveform = resolve_introspect_target("waveform.rs", &sources).unwrap();
-        let morph_wave = resolve_introspect_target("morph_wave", &sources).unwrap();
-        let render_audio = resolve_introspect_target("render_audio", &sources).unwrap();
-        let support = resolve_introspect_target("write_wav", &sources).unwrap();
+        let waveform =
+            introspect::resolve_introspect_target_result("waveform.rs", &sources).unwrap();
+        let morph_wave =
+            introspect::resolve_introspect_target_result("morph_wave", &sources).unwrap();
+        let render_audio =
+            introspect::resolve_introspect_target_result("render_audio", &sources).unwrap();
+        let support = introspect::resolve_introspect_target_result("write_wav", &sources).unwrap();
 
-        assert!(waveform.1.ends_with("src/chimera.rs"));
-        assert!(morph_wave.1.ends_with("src/chimera.rs"));
-        assert!(render_audio.1.ends_with("src/chimera.rs"));
-        assert!(support.1.ends_with("src/chimera_support.rs"));
+        assert!(waveform.path.ends_with("src/chimera.rs"));
+        assert!(morph_wave.path.ends_with("src/chimera.rs"));
+        assert!(render_audio.path.ends_with("src/chimera.rs"));
+        assert!(support.path.ends_with("src/chimera_support.rs"));
     }
 
     #[test]
     fn resolve_introspect_target_pulse_alias_to_minime_autonomous_agent() {
-        let sources = introspect_sources();
-        let pulse = resolve_introspect_target("pulse", &sources).unwrap();
-        let normalize_action = resolve_introspect_target("normalize_action_arg", &sources).unwrap();
+        let sources = introspect::introspect_sources();
+        let pulse = introspect::resolve_introspect_target_result("pulse", &sources).unwrap();
+        let normalize_action =
+            introspect::resolve_introspect_target_result("normalize_action_arg", &sources).unwrap();
 
-        assert!(pulse.1.ends_with("autonomous_agent.py"));
-        assert!(normalize_action.1.ends_with("autonomous_agent.py"));
+        assert!(pulse.path.ends_with("autonomous_agent.py"));
+        assert!(normalize_action.path.ends_with("autonomous_agent.py"));
     }
 
     #[test]
     fn resolve_introspect_target_async_rank1_aliases_to_minime_esn() {
-        let sources = introspect_sources();
-        let async_rank1 = resolve_introspect_target("<async_rank1_submitted>", &sources).unwrap();
-        let host_norm = resolve_introspect_target("host_norm_us", &sources).unwrap();
+        let sources = introspect::introspect_sources();
+        let async_rank1 =
+            introspect::resolve_introspect_target_result("<async_rank1_submitted>", &sources)
+                .unwrap();
+        let host_norm =
+            introspect::resolve_introspect_target_result("host_norm_us", &sources).unwrap();
 
-        assert!(async_rank1.1.ends_with("minime/src/esn.rs"));
-        assert!(host_norm.1.ends_with("minime/src/esn.rs"));
+        assert!(async_rank1.path.ends_with("minime/src/esn.rs"));
+        assert!(host_norm.path.ends_with("minime/src/esn.rs"));
     }
 
     #[test]
     fn resolve_introspect_target_bracketed_experiment_path_to_minime_workspace() {
         let _guard = INTROSPECT_FIXTURE_LOCK.lock().unwrap();
         let fixture = IntrospectExperimentFixture::system_resources_demo();
-        let sources = introspect_sources();
+        let sources = introspect::introspect_sources();
 
-        let resolved =
-            resolve_introspect_target("[system-resources-demo/system_resources.py]", &sources)
-                .unwrap();
+        let resolved = introspect::resolve_introspect_target_result(
+            "[workspace/inbox/read/system_resources.py]",
+            &sources,
+        )
+        .unwrap();
 
-        assert_eq!(resolved.1, fixture.path());
+        assert_eq!(resolved.path, fixture.path());
     }
 
     #[test]
     fn resolve_introspect_target_path_with_prose_tail_to_minime_workspace() {
         let _guard = INTROSPECT_FIXTURE_LOCK.lock().unwrap();
         let fixture = IntrospectExperimentFixture::system_resources_demo();
-        let sources = introspect_sources();
+        let sources = introspect::introspect_sources();
 
-        let resolved = resolve_introspect_target(
-            "system-resources-demo/system_resources.py — specifically line 109-129",
+        let resolved = introspect::resolve_introspect_target_result(
+            "workspace/inbox/read/system_resources.py — specifically line 109-129",
             &sources,
         )
         .unwrap();
 
-        assert_eq!(resolved.1, fixture.path());
+        assert_eq!(resolved.path, fixture.path());
     }
 
     #[test]
     fn resolve_introspect_target_source_prefixed_relative_path_to_minime_file() {
-        let sources = introspect_sources();
+        let sources = introspect::introspect_sources();
 
-        let resolved = resolve_introspect_target("[source=minime/src/esn.rs]", &sources).unwrap();
+        let resolved =
+            introspect::resolve_introspect_target_result("[source=minime/src/esn.rs]", &sources)
+                .unwrap();
 
         assert_eq!(
-            resolved.1,
+            resolved.path,
             bridge_paths().minime_root().join("minime/src/esn.rs")
         );
     }
 
     #[test]
     fn resolve_introspect_target_explicit_missing_path_does_not_fuzzy_rotate() {
-        let sources = introspect_sources();
+        let sources = introspect::introspect_sources();
 
-        let resolved =
-            resolve_introspect_target("missing-demo/missing.py — focus on codec", &sources);
+        let resolved = introspect::resolve_introspect_target_result(
+            "missing-demo/missing.py — focus on codec",
+            &sources,
+        );
 
-        assert!(resolved.is_none());
+        assert!(resolved.is_err());
     }
 
     #[test]

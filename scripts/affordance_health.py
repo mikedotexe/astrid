@@ -72,7 +72,12 @@ ASTRID_ACTIONS: list[tuple[str, list[str], str, str, str]] = [
     ("DECLINE_COLLABORATION", ["DECLINE_COLLABORATION", "DECLINE_COLLAB"], "collaboration", "generative", "peer"),
     ("LEAVE_COLLABORATION", ["LEAVE_COLLABORATION", "LEAVE_COLLAB"], "collaboration", "generative", "peer"),
     ("LIST_COLLABORATIONS", ["LIST_COLLABORATIONS", "LIST_COLLABS", "COLLABORATIONS"], "collaboration", "receptive", "self"),
+    # SHARE_THOUGHT is dual-mode as of v5.1 Phase D: the manual NEXT action
+    # (generative-owned-peer) AND auto-promoted markers from
+    # auto_promote::try_auto_promote (receptive-ambient — being witnesses
+    # markers extracted from her own prose, doesn't author them).
     ("SHARE_THOUGHT", ["SHARE_THOUGHT", "SHARE"], "collaboration", "generative", "both"),
+    ("SHARE_THOUGHT_AUTO", ["(auto-promoted by auto_promote)"], "collaboration", "receptive", "both"),
     # Parameter request workflow (v3.6.x)
     ("REVIEW_PARAMETER_REQUESTS", ["REVIEW_PARAMETER_REQUESTS", "PARAMETER_REQUESTS"], "coordination", "receptive", "self"),
     ("ACCEPT_PARAMETER_REQUEST", ["ACCEPT_PARAMETER_REQUEST", "ACCEPT_REQUEST", "ACCEPT"], "coordination", "generative", "peer"),

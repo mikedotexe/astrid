@@ -146,7 +146,7 @@ pub(super) fn handle_action(
 /// The marker becomes visible to the peer via the active-collab suffix line.
 /// If no `::` separator is given, the entire body is treated as the text and
 /// the latest joined collab is the target.
-fn share_thought(_conv: &mut ConversationState, body: &str) -> Result<String, String> {
+fn share_thought(conv: &mut ConversationState, body: &str) -> Result<String, String> {
     let trimmed = body.trim();
     if trimmed.is_empty() {
         return Err("SHARE_THOUGHT needs text (try `SHARE_THOUGHT <thought>` or `SHARE_THOUGHT <coll_id> :: <thought>`)".into());
@@ -175,6 +175,9 @@ fn share_thought(_conv: &mut ConversationState, body: &str) -> Result<String, St
     let dir = collab_dir(&meta.id);
     append_shared_thought(&dir, &me, &text);
     invalidate_shared_thoughts_cache(&meta.id);
+    // v5.1 Phase D: record manual share so auto-promotion suppresses
+    // itself for the next few exchanges (manual curation takes priority).
+    super::auto_promote::record_manual_share(conv.exchange_count);
     Ok(format!(
         "id={} → \"{}\" ({} chars, surfaces in suffix on next prompt build)",
         meta.id,
@@ -542,11 +545,26 @@ fn humanize_age(secs: u64) -> String {
 }
 
 fn append_shared_thought(dir: &Path, actor: &str, text: &str) {
+    append_shared_thought_with_source(dir, actor, text, "manual");
+}
+
+/// v5.1 Phase D: extended writer that tags the JSONL entry with a
+/// `source` field ("manual" for the SHARE_THOUGHT NEXT action;
+/// "auto" for entries promoted by `auto_promote::try_auto_promote`).
+/// Suffix rendering is identical regardless of source so the marker is
+/// indistinguishable to the peer (preserves the receptive-ambient test).
+pub(super) fn append_shared_thought_with_source(
+    dir: &Path,
+    actor: &str,
+    text: &str,
+    source: &str,
+) {
     let path = dir.join("shared_thoughts.jsonl");
     let entry = serde_json::json!({
         "t_ms": now_ms(),
         "actor": actor,
         "text": text,
+        "source": source,
     });
     let line = format!("{entry}\n");
     if let Ok(mut f) = std::fs::OpenOptions::new()
@@ -557,6 +575,12 @@ fn append_shared_thought(dir: &Path, actor: &str, text: &str) {
         use std::io::Write;
         let _ = f.write_all(line.as_bytes());
     }
+}
+
+/// v5.1 Phase D: pub wrapper so sibling modules (auto_promote) can
+/// invalidate the suffix cache after writing.
+pub(super) fn invalidate_shared_thoughts_cache_pub(coll_id: &str) {
+    invalidate_shared_thoughts_cache(coll_id);
 }
 
 // ---------------------------------------------------------------------

@@ -1,15 +1,17 @@
 mod attractor;
 mod audio;
 mod autoresearch;
+pub(crate) mod auto_promote;
 mod codex;
+pub(crate) mod collaboration;
 mod mike;
 mod modes;
 mod native_gesture;
 mod operations;
 mod pdf;
 mod resource_governor;
-mod shadow;
-mod sovereignty;
+pub(crate) mod shadow;
+pub(crate) mod sovereignty;
 mod space_hold;
 mod spectral_drift;
 mod workspace;
@@ -27,6 +29,61 @@ use crate::types::{SensoryMsg, SpectralTelemetry};
 
 use super::reservoir;
 
+#[derive(Debug, Clone, serde::Serialize)]
+pub(crate) struct ActionPreflightReport {
+    pub schema_version: u32,
+    pub policy: &'static str,
+    pub dry_run: bool,
+    pub raw_action: String,
+    pub canonical_action: String,
+    pub base_action: String,
+    pub effective_route: String,
+    pub stage: String,
+    pub visibility: String,
+    pub authority_required: String,
+    pub expected_continuity_effect: String,
+    pub likely_gate: String,
+    pub expected_artifact_kinds: Vec<String>,
+    pub suggested_next: String,
+}
+
+impl ActionPreflightReport {
+    #[must_use]
+    pub(crate) fn render(&self) -> String {
+        format!(
+            "=== ACTION PREFLIGHT V1 ===\n\
+             Dry run: {}\n\
+             Raw action: {}\n\
+             Canonical action: {}\n\
+             Base action: {}\n\
+             Effective route: {}\n\
+             Stage: {}\n\
+             Visibility: {}\n\
+             Authority required: {}\n\
+             Expected continuity: {}\n\
+             Likely gate: {}\n\
+             Expected artifacts: {}\n\
+             Suggested next: {}",
+            self.dry_run,
+            self.raw_action,
+            self.canonical_action,
+            self.base_action,
+            self.effective_route,
+            self.stage,
+            self.visibility,
+            self.authority_required,
+            self.expected_continuity_effect,
+            self.likely_gate,
+            if self.expected_artifact_kinds.is_empty() {
+                "(none)".to_string()
+            } else {
+                self.expected_artifact_kinds.join(", ")
+            },
+            self.suggested_next
+        )
+    }
+}
+
 pub(super) struct NextActionContext<'a> {
     pub burst_count: &'a mut u32,
     pub db: &'a BridgeDb,
@@ -39,8 +96,16 @@ pub(super) struct NextActionContext<'a> {
 
 /// Parse NEXT: action from Astrid's response.
 pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
+    let mut in_fence = false;
     for line in text.lines().rev() {
         let trimmed = line.trim();
+        if trimmed.starts_with("```") {
+            in_fence = !in_fence;
+            continue;
+        }
+        if in_fence {
+            continue;
+        }
         if let Some(action) = trimmed.strip_prefix("NEXT:") {
             let mut clean = action.trim();
             for token in &[
@@ -223,6 +288,88 @@ fn leading_action_token(original: &str) -> String {
         .to_uppercase()
 }
 
+/// v4.0 Phase 1: action-token-likeness heuristic for multi-NEXT splitting.
+/// Returns true when `token` looks like an action verb that's safe to chain.
+///
+/// v4.0 Phase 2.3 (strict heuristic): require the post-AND token to contain
+/// at least one underscore. Earlier denylist approach was whack-a-mole —
+/// production caught WHAT, then DECIDE, then LOCAL as false positives, with
+/// no end in sight. Almost all action verbs in our vocabulary contain
+/// underscores (TUNE_MINIME, SHADOW_FIELD, READ_MORE, COMPARE_BASELINE,
+/// ACCEPT_PARAMETER_REQUEST, etc.); bare single-word verbs (BROWSE, ASK,
+/// EXAMINE, DEFER, ACCEPT) lose chain-as-second-action capability but can
+/// still be emitted as single NEXTs or as the FIRST segment in a chain.
+/// This trades a small expressivity loss for ~zero false-positive splits
+/// from natural English conjunctions.
+fn is_action_token_like(token: &str) -> bool {
+    if token.len() < 5 {
+        return false;
+    }
+    if !token.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_') {
+        return false;
+    }
+    // Require at least one underscore — separates compound action verbs
+    // (TUNE_MINIME, READ_MORE) from natural English words (LOCAL, DECIDE).
+    token.contains('_')
+}
+
+/// v4.0 Phase 1: split a NEXT body on ` AND ` boundaries when the
+/// post-AND segment starts with a token that looks like an action verb.
+/// Returns 1 segment for single-action NEXTs (backward compatible).
+/// Capped at `MAX_MULTI_ACTION_SEGMENTS` (3) to limit blast radius; extra
+/// segments are logged and dropped.
+///
+/// Examples:
+///   "BROWSE arxiv AND READ_MORE"             → ["BROWSE arxiv", "READ_MORE"]
+///   "EXAMINE λ2 AND λ3 dynamics"             → ["EXAMINE λ2 AND λ3 dynamics"]  (single)
+///   "EXAMINE foo AND DEFER reason"           → ["EXAMINE foo", "DEFER reason"]
+///   "A AND B AND C AND D"                    → ["A", "B", "C AND D"]  (truncated to 3)
+fn split_multi_action(original: &str) -> Vec<String> {
+    const MAX_MULTI_ACTION_SEGMENTS: usize = 3;
+    let mut segments: Vec<String> = Vec::new();
+    let mut remaining = original;
+    while segments.len() + 1 < MAX_MULTI_ACTION_SEGMENTS {
+        // Search for next case-insensitive " AND " whose post-segment
+        // begins with an action-token-like word. Iterate occurrences
+        // until we find one that satisfies the gate; if none, stop.
+        let mut search_from = 0usize;
+        let lower = remaining.to_ascii_lowercase();
+        let mut found: Option<usize> = None;
+        while let Some(pos_rel) = lower[search_from..].find(" and ") {
+            let abs = search_from + pos_rel;
+            let post = &remaining[abs + 5..]; // skip " AND "
+            let post_token = leading_action_token(post);
+            if is_action_token_like(&post_token) {
+                found = Some(abs);
+                break;
+            }
+            search_from = abs + 5;
+            if search_from >= lower.len() {
+                break;
+            }
+        }
+        match found {
+            Some(abs) => {
+                let pre = remaining[..abs].trim();
+                if !pre.is_empty() {
+                    segments.push(pre.to_string());
+                }
+                remaining = &remaining[abs + 5..];
+            },
+            None => break,
+        }
+    }
+    let tail = remaining.trim();
+    if !tail.is_empty() {
+        segments.push(tail.to_string());
+    }
+    if segments.is_empty() {
+        // Shouldn't happen for non-empty input, but guard anyway.
+        segments.push(original.trim().to_string());
+    }
+    segments
+}
+
 fn unresolved_angle_placeholder(text: &str) -> Option<String> {
     let mut rest = text;
     while let Some(start) = rest.find('<') {
@@ -355,6 +502,24 @@ fn normalize_sca_reflect_alias(base_action: &str, original: &str) -> Option<(Str
         format!("SCA_REFLECT {label}")
     };
     Some(("SCA_REFLECT".to_string(), normalized_original))
+}
+
+fn normalize_memory_search_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    if base_action != "MEMORY" {
+        return None;
+    }
+    let rest = strip_action(original, "MEMORY");
+    let rest_base = leading_action_token(&rest);
+    if rest_base != "SEARCH" && rest_base != "RESEARCH" {
+        return None;
+    }
+    let topic = clean_alias_arg(&strip_action(&rest, &rest_base));
+    let normalized_original = if topic.is_empty() {
+        "SEARCH".to_string()
+    } else {
+        format!("SEARCH {topic}")
+    };
+    Some(("SEARCH".to_string(), normalized_original))
 }
 
 fn normalize_visual_cascade_alias(base_action: &str, original: &str) -> Option<(String, String)> {
@@ -633,6 +798,49 @@ fn normalize_examine_alias(base_action: &str, original: &str) -> Option<(String,
     }
 }
 
+fn clean_plain_examine_focus(raw: &str) -> String {
+    let trimmed = raw.trim();
+    if let Some(inner) = trimmed
+        .strip_prefix('[')
+        .and_then(|after_open| after_open.split_once(']').map(|(inner, _)| inner))
+    {
+        return clean_alias_arg(inner);
+    }
+
+    let lower = trimmed.to_ascii_lowercase();
+    let mut end = trimmed.len();
+    for marker in [
+        ", followed by",
+        " followed by",
+        "; followed by",
+        ", then",
+        " and then",
+        "; then",
+        " while looping",
+        " while ",
+    ] {
+        if let Some(idx) = lower.find(marker) {
+            end = end.min(idx);
+        }
+    }
+    clean_alias_arg(trimmed[..end].trim())
+}
+
+fn normalize_plain_examine_action(base_action: &str, original: &str) -> Option<(String, String)> {
+    if base_action != "EXAMINE" {
+        return None;
+    }
+
+    let raw_arg = strip_action(original, "EXAMINE");
+    let clean_arg = clean_plain_examine_focus(&raw_arg);
+    if clean_arg.is_empty() {
+        return None;
+    }
+
+    let normalized_original = format!("EXAMINE {clean_arg}");
+    (normalized_original != original.trim()).then_some(("EXAMINE".to_string(), normalized_original))
+}
+
 fn normalize_feedback_shadow_model_alias(
     base_action: &str,
     original: &str,
@@ -705,7 +913,19 @@ fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     }
 
     if let Some((normalized_base, normalized_original)) =
+        normalize_memory_search_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
         normalize_examine_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
+        normalize_plain_examine_action(&base_action, &original)
     {
         return (normalized_base, normalized_original);
     }
@@ -800,20 +1020,352 @@ fn strip_action(original: &str, prefix: &str) -> String {
 
 fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
     match base_action {
-        "REST" | "PASS" | "NOTICE" | "SPACE_HOLD" | "SPACE_EXPLORE" => "protected_summary",
+        "REST"
+        | "PASS"
+        | "NOTICE"
+        | "ACTION_PREFLIGHT"
+        | "NEXT_PROBE"
+        | "PREFLIGHT"
+        | "PROBE_ACTION"
+        | "FACULTIES"
+        | "CAPABILITY_MAP"
+        | "CAPABILITY_STATUS"
+        | "CAPABILITY_DIFF"
+        | "ACTION_STATUS"
+        | "JOB_STATUS"
+        | "ACTION_CANCEL"
+        | "REPAIR_STATUS"
+        | "REPAIR_SWEEP"
+        | "REPAIR_RECORD"
+        | "CLOSE_EYES"
+        | "SHUT_EYES"
+        | "OPEN_EYES"
+        | "CLOSE_EARS"
+        | "SHUT_EARS"
+        | "OPEN_EARS"
+        | "SPACE_HOLD"
+        | "SPACE_EXPLORE"
+        | "PRESSURE_SOURCE_AUDIT"
+        | "PRESSURE_SOURCE"
+        | "STRUCTURAL_PRESSURE"
+        | "INWARD_PRESSURE"
+        | "FLUCTUATION_AUDIT"
+        | "INHABITABLE_FLUCTUATION"
+        | "EIGENTRUST"
+        | "EIGENTRUST_AUDIT"
+        | "FOOTHOLD_AUDIT" => "protected_summary",
         _ => "summary",
     }
 }
 
 fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
     match base_action {
-        "SEARCH" | "BROWSE" | "READ_MORE" | "EXAMINE" | "DECOMPOSE" | "SPECTRAL_EXPLORER"
-        | "THREAD_START" | "THREADS" | "THREAD_STATUS" | "THREAD_NOTE" | "RESUME" | "SAVEPOINT"
-        | "RECALL" | "REGULATOR_AUDIT" | "VISUALIZE_CASCADE" | "RECONVERGENCE_MAP"
+        "SEARCH"
+        | "BROWSE"
+        | "READ_MORE"
+        | "EXAMINE"
+        | "DECOMPOSE"
+        | "SPECTRAL_EXPLORER"
+        | "THREAD_START"
+        | "THREADS"
+        | "THREAD_STATUS"
+        | "THREAD_NOTE"
+        | "RESUME"
+        | "SAVEPOINT"
+        | "RECALL"
+        | "EXPERIMENT_START"
+        | "EXPERIMENT_PLAN"
+        | "EXPERIMENT_BIND"
+        | "EXPERIMENT_OBSERVE"
+        | "EXPERIMENT_STATUS"
+        | "EXPERIMENT_REVIEW"
+        | "EXPERIMENT_CLOSE"
+        | "EXPERIMENT_PEER_REVIEW"
+        | "EXPERIMENT_BRANCH"
+        | "EXPERIMENT_RESUME"
+        | "EXPERIMENT_COMPARE"
+        | "EXPERIMENT_ALT_PATHS"
+        | "ACTION_PREFLIGHT"
+        | "NEXT_PROBE"
+        | "PREFLIGHT"
+        | "PROBE_ACTION"
+        | "FACULTIES"
+        | "CAPABILITY_MAP"
+        | "CAPABILITY_STATUS"
+        | "CAPABILITY_DIFF"
+        | "ACTION_STATUS"
+        | "JOB_STATUS"
+        | "ACTION_CANCEL"
+        | "REPAIR_STATUS"
+        | "REPAIR_SWEEP"
+        | "REPAIR_RECORD"
+        | "CLOSE_EYES"
+        | "SHUT_EYES"
+        | "OPEN_EYES"
+        | "CLOSE_EARS"
+        | "SHUT_EARS"
+        | "OPEN_EARS"
+        | "REGULATOR_AUDIT"
+        | "PRESSURE_SOURCE_AUDIT"
+        | "PRESSURE_SOURCE"
+        | "STRUCTURAL_PRESSURE"
+        | "INWARD_PRESSURE"
+        | "FLUCTUATION_AUDIT"
+        | "INHABITABLE_FLUCTUATION"
+        | "EIGENTRUST"
+        | "EIGENTRUST_AUDIT"
+        | "FOOTHOLD_AUDIT"
+        | "VISUALIZE_CASCADE"
+        | "RECONVERGENCE_MAP"
         | "M6_BRIDGE" => "read_only",
-        "WRITE_FILE" | "EXPERIMENT_RUN" | "RUN_PYTHON" | "CODEX" | "CODEX_NEW" => "live_write",
+        "WRITE_FILE" | "EXPERIMENT" | "EXPERIMENT_RUN" | "RUN_PYTHON" | "CODEX" | "CODEX_NEW"
+        | "REPAIR_APPLY" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
         _ => "observe",
+    }
+}
+
+fn is_action_preflight_base(base_action: &str) -> bool {
+    matches!(
+        base_action,
+        "ACTION_PREFLIGHT" | "NEXT_PROBE" | "PREFLIGHT" | "PROBE_ACTION"
+    )
+}
+
+fn route_for_preflight_base(base_action: &str) -> String {
+    match base_action {
+        "THREAD_START" | "THREADS" | "THREAD_STATUS" | "THREAD_NOTE" | "RESUME" | "SAVEPOINT"
+        | "RECALL" | "FACULTIES" | "CAPABILITY_MAP" | "CAPABILITY_STATUS" | "CAPABILITY_DIFF"
+        | "ACTION_STATUS" | "JOB_STATUS" | "ACTION_CANCEL" | "REPAIR_STATUS" | "REPAIR_SWEEP"
+        | "REPAIR_RECORD" | "REPAIR_APPLY" => "action_continuity",
+        "EXPERIMENT_START"
+        | "EXPERIMENT_PLAN"
+        | "EXPERIMENT_BIND"
+        | "EXPERIMENT_OBSERVE"
+        | "EXPERIMENT_STATUS"
+        | "EXPERIMENT_REVIEW"
+        | "EXPERIMENT_CLOSE"
+        | "EXPERIMENT_PEER_REVIEW"
+        | "EXPERIMENT_BRANCH"
+        | "EXPERIMENT_RESUME"
+        | "EXPERIMENT_COMPARE"
+        | "EXPERIMENT_ALT_PATHS" => "experiment_continuity",
+        "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
+        "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
+        "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
+        "ATTRACTOR_PREFLIGHT"
+        | "ATTRACTOR_REVIEW"
+        | "ATTRACTOR_ATLAS"
+        | "ATTRACTOR_CARD"
+        | "ATTRACTOR_RELEASE_REVIEW"
+        | "SUMMON_ATTRACTOR"
+        | "RELEASE_ATTRACTOR" => "attractor",
+        "SHADOW_PREFLIGHT" | "SHADOW_INFLUENCE" | "RELEASE_SHADOW" => "shadow",
+        "INTROSPECT" | "SELF_STUDY" => "modes",
+        "DECOMPOSE"
+        | "SPECTRAL_EXPLORER"
+        | "EXAMINE"
+        | "PRESSURE_SOURCE_AUDIT"
+        | "FLUCTUATION_AUDIT"
+        | "REGULATOR_AUDIT"
+        | "VISUALIZE_CASCADE"
+        | "RECONVERGENCE_MAP"
+        | "SPACE_HOLD" => "operations",
+        "REST" | "PASS" | "NOTICE" => "protected_quiet",
+        "" => "missing",
+        _ => "unwired",
+    }
+    .to_string()
+}
+
+fn authority_for_stage(stage: &str) -> String {
+    match stage {
+        "read_only" => "read-only/protected action lane only".to_string(),
+        "live_write" => "existing live-write gates; preflight does not grant them".to_string(),
+        "live_control" => "existing live-control gates; preflight does not grant them".to_string(),
+        "proposal" => "none; unknown action would become a proposal".to_string(),
+        "blocked" => "none; request is blocked before dispatch".to_string(),
+        _ => "existing dispatcher gates; no new authority".to_string(),
+    }
+}
+
+fn active_experiment_auto_linkable_base(base_action: &str) -> bool {
+    matches!(
+        base_action,
+        "INTROSPECT"
+            | "SELF_STUDY"
+            | "SPECTRAL_EXPLORER"
+            | "DECOMPOSE"
+            | "PRESSURE_SOURCE_AUDIT"
+            | "FLUCTUATION_AUDIT"
+            | "THREAD_STATUS"
+            | "ACTION_PREFLIGHT"
+            | "NEXT_PROBE"
+            | "PREFLIGHT"
+            | "PROBE_ACTION"
+            | "ATTRACTOR_REVIEW"
+            | "SEARCH"
+            | "BROWSE"
+            | "READ_MORE"
+    )
+}
+
+fn expected_artifacts_for_preflight(base_action: &str, stage: &str, route: &str) -> Vec<String> {
+    let mut artifacts = vec!["action_event".to_string(), "observation_window".to_string()];
+    if route == "experiment_continuity"
+        || base_action == "EXPERIMENT"
+        || (matches!(stage, "read_only" | "observe")
+            && active_experiment_auto_linkable_base(base_action))
+    {
+        artifacts.push("experiment_run".to_string());
+    }
+    if stage == "live_write" {
+        artifacts.push("journal_or_workspace_artifact".to_string());
+    }
+    if stage == "live_control" {
+        artifacts.push("gate_or_control_record".to_string());
+    }
+    artifacts
+}
+
+fn safe_suggested_next_for_preflight(
+    base_action: &str,
+    canonical_action: &str,
+    stage: &str,
+) -> String {
+    match stage {
+        "blocked" | "proposal" => "ACTION_PREFLIGHT DECOMPOSE".to_string(),
+        "live_write" | "live_control" if base_action == "REPAIR_APPLY" => {
+            "REPAIR_STATUS current".to_string()
+        },
+        "live_write" | "live_control" if !base_action.is_empty() => {
+            format!("CAPABILITY_STATUS {base_action}")
+        },
+        _ => canonical_action.to_string(),
+    }
+}
+
+pub(crate) fn action_preflight_report(action_text: &str) -> ActionPreflightReport {
+    let trimmed = action_text.trim();
+    let (wrapper_base, wrapper_original) = canonicalize_next_action_components(trimmed);
+    let raw_inner = if is_action_preflight_base(&wrapper_base) {
+        strip_action(&wrapper_original, &wrapper_base)
+    } else {
+        wrapper_original
+    };
+    let raw_inner = raw_inner.trim().to_string();
+    if raw_inner.is_empty() {
+        return ActionPreflightReport {
+            schema_version: 1,
+            policy: "action_preflight_v1",
+            dry_run: true,
+            raw_action: raw_inner,
+            canonical_action: String::new(),
+            base_action: String::new(),
+            effective_route: "missing".to_string(),
+            stage: "blocked".to_string(),
+            visibility: "protected_summary".to_string(),
+            authority_required: authority_for_stage("blocked"),
+            expected_continuity_effect:
+                "No action would be recorded because no inner NEXT action was supplied.".to_string(),
+            likely_gate: "blocked: ACTION_PREFLIGHT needs an inner NEXT action.".to_string(),
+            expected_artifact_kinds: Vec::new(),
+            suggested_next: "ACTION_PREFLIGHT DECOMPOSE".to_string(),
+        };
+    }
+
+    let (base_action, canonical_action) = canonicalize_next_action_components(&raw_inner);
+    let mut stage = action_continuity_stage_for_base(&base_action).to_string();
+    let visibility = action_continuity_visibility_for_base(&base_action).to_string();
+    let mut route = route_for_preflight_base(&base_action);
+    let mut expected_continuity_effect =
+        "Would record an action event and observation window if executed.".to_string();
+    let mut likely_gate = "normal dispatcher gates would apply".to_string();
+
+    if let Some(token) = unresolved_angle_placeholder(&canonical_action) {
+        stage = "blocked".to_string();
+        route = "placeholder".to_string();
+        likely_gate = format!("blocked: unresolved placeholder syntax `{token}`");
+        expected_continuity_effect =
+            "Would record a blocked action-continuity event; no runtime action would execute."
+                .to_string();
+    } else if base_action == "EXPERIMENT_BIND" {
+        match action_continuity::parse_experiment_bind(&canonical_action) {
+            Ok((selector, inner_action)) => {
+                if selector
+                    .as_deref()
+                    .is_some_and(action_continuity::is_peer_experiment_selector)
+                {
+                    stage = "blocked".to_string();
+                    route = "experiment_continuity".to_string();
+                    likely_gate = "blocked: EXPERIMENT_BIND cannot bind runs to a peer experiment"
+                        .to_string();
+                } else if action_continuity::is_experiment_control_action(&inner_action) {
+                    stage = "blocked".to_string();
+                    route = "experiment_continuity".to_string();
+                    likely_gate = "blocked: EXPERIMENT_BIND cannot bind experiment-control actions"
+                        .to_string();
+                } else {
+                    let inner_base = canonicalize_next_action_components(&inner_action).0;
+                    let inner_stage = action_continuity_stage_for_base(&inner_base);
+                    stage = inner_stage.to_string();
+                    route = format!(
+                        "experiment_continuity -> {}",
+                        route_for_preflight_base(&inner_base)
+                    );
+                    likely_gate = format!(
+                        "inner action `{inner_action}` would be dispatched through normal NEXT gates"
+                    );
+                }
+                expected_continuity_effect =
+                    "Would append an experiment run after the inner action resolves; no bind happens during preflight."
+                        .to_string();
+            },
+            Err(err) => {
+                stage = "blocked".to_string();
+                route = "experiment_continuity".to_string();
+                likely_gate = format!("blocked: malformed EXPERIMENT_BIND ({err:#})");
+                expected_continuity_effect =
+                    "Would record a blocked experiment-continuity diagnostic.".to_string();
+            },
+        }
+    } else if route == "unwired" {
+        stage = "proposal".to_string();
+        likely_gate =
+            "unwired: normal dispatch would log this as an unknown-action proposal".to_string();
+        expected_continuity_effect =
+            "Would append an action event with proposal/unwired status if chosen.".to_string();
+    } else if base_action == "EXPERIMENT" {
+        expected_continuity_effect =
+            "Would execute the legacy experiment path through existing gates and append a legacy experiment run."
+                .to_string();
+    }
+    if matches!(stage.as_str(), "read_only" | "observe")
+        && active_experiment_auto_linkable_base(&base_action)
+    {
+        expected_continuity_effect = format!(
+            "{expected_continuity_effect} If an experiment is active, this read-only/protected action would also be recorded as active_experiment_auto_link."
+        );
+    }
+
+    let artifacts = expected_artifacts_for_preflight(&base_action, &stage, &route);
+    let suggested_next = safe_suggested_next_for_preflight(&base_action, &canonical_action, &stage);
+
+    ActionPreflightReport {
+        schema_version: 1,
+        policy: "action_preflight_v1",
+        dry_run: true,
+        raw_action: raw_inner,
+        canonical_action,
+        base_action,
+        effective_route: route,
+        stage: stage.clone(),
+        visibility,
+        authority_required: authority_for_stage(&stage),
+        expected_continuity_effect,
+        likely_gate,
+        expected_artifact_kinds: artifacts,
+        suggested_next,
     }
 }
 
@@ -822,9 +1374,29 @@ pub(super) fn handle_next_action(
     next_action: &str,
     mut ctx: NextActionContext<'_>,
 ) -> NextActionOutcome {
+    // v4.0 Phase 1 — Multi-NEXT detection. Astrid already emits chained
+    // actions like "BROWSE arxiv AND READ_MORE" naturally; previously the
+    // post-AND segment was silently dropped. When at least two action-like
+    // segments are detected, dispatch each in order with the same shared
+    // NextActionContext (each segment sees state from the previous one).
+    let unwrapped = unwrap_outer_action_wrappers(next_action);
+    let segments = split_multi_action(&unwrapped);
+    if segments.len() > 1 {
+        return dispatch_multi_action(conv, segments, ctx);
+    }
     let (base_action, original) = canonicalize_next_action_components(next_action);
     let stage = action_continuity_stage_for_base(base_action.as_str());
     let visibility = action_continuity_visibility_for_base(base_action.as_str());
+
+    if is_action_preflight_base(base_action.as_str()) {
+        let report = action_preflight_report(&original);
+        let message = report.render();
+        let report_value = serde_json::to_value(&report).unwrap_or_else(|_| serde_json::json!({}));
+        conv.emphasis = Some(message.clone());
+        return NextActionOutcome::handled("action_preflight", message)
+            .with_stage_visibility("read_only", "protected_summary")
+            .with_preflight_report(report_value);
+    }
 
     if let Some(token) = unresolved_angle_placeholder(&original) {
         conv.emphasis = Some(format!(
@@ -837,6 +1409,84 @@ pub(super) fn handle_next_action(
             "placeholder",
             format!("Placeholder NEXT action `{original}` was not executed."),
         );
+    }
+
+    if base_action == "EXPERIMENT_BIND" {
+        let parsed = action_continuity::parse_experiment_bind(&original);
+        let (selector, inner_action) = match parsed {
+            Ok(parsed) => parsed,
+            Err(err) => {
+                conv.emphasis = Some(format!("Experiment bind failed: {err:#}"));
+                return NextActionOutcome::blocked(
+                    "experiment_continuity",
+                    format!("Experiment bind `{original}` failed: {err:#}"),
+                )
+                .with_stage_visibility("blocked", visibility);
+            },
+        };
+        if selector
+            .as_deref()
+            .is_some_and(action_continuity::is_peer_experiment_selector)
+        {
+            let message = "EXPERIMENT_BIND cannot bind runs to a peer experiment; use a local experiment selector such as current, then request peer review.".to_string();
+            conv.emphasis = Some(message.clone());
+            return NextActionOutcome::blocked("experiment_continuity", message)
+                .with_stage_visibility("blocked", visibility);
+        }
+        if action_continuity::is_experiment_control_action(&inner_action) {
+            let message =
+                "EXPERIMENT_BIND cannot bind experiment-control actions; choose a concrete inner action."
+                    .to_string();
+            conv.emphasis = Some(message.clone());
+            return NextActionOutcome::blocked("experiment_continuity", message)
+                .with_stage_visibility("blocked", visibility);
+        }
+        let inner_outcome = handle_next_action(
+            conv,
+            &inner_action,
+            NextActionContext {
+                burst_count: ctx.burst_count,
+                db: ctx.db,
+                sensory_tx: ctx.sensory_tx,
+                telemetry: ctx.telemetry,
+                fill_pct: ctx.fill_pct,
+                response_text: ctx.response_text,
+                workspace: ctx.workspace,
+            },
+        );
+        let record_result = action_continuity::record_experiment_bind_run(
+            ctx.db,
+            selector.as_deref(),
+            &inner_action,
+            &inner_outcome,
+            ctx.fill_pct,
+            ctx.telemetry,
+        );
+        let message = match record_result {
+            Ok(run) => format!(
+                "Experiment run `{}` recorded for `{}` as {} via {}: {}",
+                run.run_id,
+                inner_action,
+                inner_outcome.status,
+                inner_outcome.route,
+                inner_outcome.outcome_summary
+            ),
+            Err(err) => {
+                conv.emphasis = Some(format!(
+                    "Experiment bind executed `{inner_action}` but could not record the run: {err:#}"
+                ));
+                return NextActionOutcome::blocked(
+                    "experiment_continuity",
+                    format!(
+                        "Experiment bind executed `{inner_action}` but recording failed: {err:#}"
+                    ),
+                )
+                .with_stage_visibility("blocked", visibility);
+            },
+        };
+        conv.emphasis = Some(message.clone());
+        return NextActionOutcome::handled("experiment_continuity", message)
+            .with_stage_visibility(inner_outcome.stage, inner_outcome.visibility);
     }
 
     if let Some(result) = action_continuity::handle_thread_next_action(
@@ -931,10 +1581,46 @@ pub(super) fn handle_next_action(
             .with_stage_visibility(stage, visibility);
     }
 
+    if collaboration::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("collaboration", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
     if operations::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         attractor::maybe_add_read_only_advisory(conv, base_action.as_str(), &original, &mut ctx);
-        return NextActionOutcome::handled("operations", format!("Handled `{original}`."))
+        let outcome = NextActionOutcome::handled("operations", format!("Handled `{original}`."))
             .with_stage_visibility(stage, visibility);
+        if base_action == "EXPERIMENT" {
+            match action_continuity::record_legacy_experiment_run(
+                ctx.db,
+                &original,
+                &outcome,
+                ctx.fill_pct,
+                ctx.telemetry,
+            ) {
+                Ok(run) => {
+                    let legacy_note = format!(
+                        "Legacy EXPERIMENT auto-bound to `{}` as run `{}`.",
+                        run.experiment_id, run.run_id
+                    );
+                    conv.emphasis = Some(match conv.emphasis.take() {
+                        Some(existing) => format!("{existing}\n\n{legacy_note}"),
+                        None => legacy_note,
+                    });
+                },
+                Err(err) => {
+                    conv.emphasis = Some(match conv.emphasis.take() {
+                        Some(existing) => format!(
+                            "{existing}\n\nLegacy EXPERIMENT ran, but experiment continuity failed: {err:#}"
+                        ),
+                        None => format!(
+                            "Legacy EXPERIMENT ran, but experiment continuity failed: {err:#}"
+                        ),
+                    });
+                },
+            }
+        }
+        return outcome;
     }
 
     ctx.db
@@ -946,16 +1632,207 @@ pub(super) fn handle_next_action(
     NextActionOutcome::unwired(&original).with_stage_visibility("proposal", visibility)
 }
 
+/// v4.0 Phase 1+2: dispatch a multi-segment NEXT line. Each segment is
+/// dispatched in order through the full `handle_next_action` pipeline
+/// (canonicalization, preflight checks, dispatcher chain, continuity).
+/// Errors in earlier segments do NOT abort the chain — every segment
+/// runs unless a conflict guard skips it.
+///
+/// Phase 2 adds:
+///   - **Decision-verb conflict guard**: at most one ACCEPT/DEFER/REJECT
+///     fires per chain. Subsequent decision verbs are skipped with log,
+///     since they'd target an empty pending queue (the first decision
+///     moved the file).
+///   - **Emphasis accumulation**: each segment's new emphasis is joined
+///     with prior emphasis via `\n\n` instead of clobbering, so Astrid
+///     sees the whole chain's outcome on her next prompt.
+fn dispatch_multi_action(
+    conv: &mut ConversationState,
+    segments: Vec<String>,
+    ctx: NextActionContext<'_>,
+) -> NextActionOutcome {
+    let NextActionContext {
+        burst_count,
+        db,
+        sensory_tx,
+        telemetry,
+        fill_pct,
+        response_text,
+        workspace,
+    } = ctx;
+    let n = segments.len();
+    info!(
+        "Astrid chose multi-action NEXT ({n} segments): {}",
+        segments.join(" || ")
+    );
+    let mut handler_marks: Vec<String> = Vec::with_capacity(n);
+    let mut last_outcome: Option<NextActionOutcome> = None;
+    let mut decision_already_emitted = false;
+    let mut accumulated_emphasis: Option<String> = conv.emphasis.take();
+    for (i, segment) in segments.into_iter().enumerate() {
+        // Phase 2 conflict guard: at most one decision verb per chain.
+        let segment_base = leading_action_token(&segment);
+        if is_parameter_decision_verb(&segment_base) {
+            if decision_already_emitted {
+                info!(
+                    "Multi-action [{}/{}] CONFLICT_SKIP: decision verb `{}` skipped — \
+                     a prior segment already emitted a parameter decision \
+                     (would target an empty pending queue)",
+                    i + 1, n, segment_base
+                );
+                handler_marks.push(format!("{}:skipped_decision_conflict", i + 1));
+                continue;
+            }
+            decision_already_emitted = true;
+        }
+        // Reborrow the &mut field; immutable refs are Copy.
+        let segment_ctx = NextActionContext {
+            burst_count: &mut *burst_count,
+            db,
+            sensory_tx,
+            telemetry,
+            fill_pct,
+            response_text,
+            workspace,
+        };
+        // Phase 2 emphasis preservation: clear before segment runs so
+        // we can detect what THIS segment added; accumulate after.
+        conv.emphasis = None;
+        let outcome = handle_next_action(conv, &segment, segment_ctx);
+        let segment_emphasis = conv.emphasis.take();
+        accumulated_emphasis = match (accumulated_emphasis, segment_emphasis) {
+            (Some(prior), Some(new)) if !new.trim().is_empty() => {
+                Some(format!("{prior}\n\n{new}"))
+            },
+            (Some(prior), _) => Some(prior),
+            (None, new) => new,
+        };
+        let mark = outcome.route.clone();
+        info!(
+            "Multi-action [{}/{}] dispatched: action=`{}` → handler={}",
+            i + 1,
+            n,
+            segment,
+            mark
+        );
+        handler_marks.push(format!("{}:{}", i + 1, mark));
+        last_outcome = Some(outcome);
+    }
+    // Restore accumulated emphasis so next prompt build sees the whole chain.
+    conv.emphasis = accumulated_emphasis;
+    let summary = format!(
+        "Multi-action ({} segments): {}",
+        n,
+        handler_marks.join(" → ")
+    );
+    // Preserve the last segment's visibility for caller-side gating;
+    // multi-action stage is "multi_action" since the chain is composed.
+    let visibility = last_outcome
+        .as_ref()
+        .map(|o| o.visibility.clone())
+        .unwrap_or_else(|| "protected_summary".to_string());
+    NextActionOutcome::handled("multi", summary).with_stage_visibility("multi_action", visibility)
+}
+
+/// v4.0 Phase 2: predicate for decision verbs that target the pending
+/// parameter request queue. Used by `dispatch_multi_action` to enforce
+/// at most one decision per chain (the first one moves the file; any
+/// later decision verb in the chain would fail with "no pending matching"
+/// and just pollute the log).
+fn is_parameter_decision_verb(token: &str) -> bool {
+    matches!(
+        token,
+        "ACCEPT"
+            | "ACCEPT_REQUEST"
+            | "ACCEPT_PARAMETER_REQUEST"
+            | "DEFER"
+            | "DEFER_REQUEST"
+            | "DEFER_PARAMETER_REQUEST"
+            | "REJECT"
+            | "REJECT_REQUEST"
+            | "REJECT_PARAMETER_REQUEST"
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        ConversationState, NextActionContext, canonicalize_next_action_components,
-        canonicalize_next_action_text, handle_next_action, strip_action,
-        unresolved_angle_placeholder,
+        ConversationState, NextActionContext, action_preflight_report,
+        canonicalize_next_action_components, canonicalize_next_action_text, handle_next_action,
+        is_action_token_like, is_parameter_decision_verb, parse_next_action, split_multi_action,
+        strip_action, unresolved_angle_placeholder,
     };
     use crate::db::BridgeDb;
+    use crate::paths::bridge_paths;
     use crate::types::SpectralTelemetry;
+    use std::path::PathBuf;
+    use std::sync::{Mutex, MutexGuard};
     use tokio::sync::mpsc;
+
+    static PERCEPTION_FLAG_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    struct PerceptionFlagGuard {
+        paths: Vec<(PathBuf, Option<Vec<u8>>)>,
+        _lock: MutexGuard<'static, ()>,
+    }
+
+    impl PerceptionFlagGuard {
+        fn new() -> Self {
+            let lock = PERCEPTION_FLAG_TEST_LOCK
+                .lock()
+                .expect("perception flag lock");
+            let paths = vec![
+                bridge_paths().perception_paused_flag(),
+                bridge_paths().perception_visual_paused_flag(),
+                bridge_paths().perception_audio_paused_flag(),
+            ]
+            .into_iter()
+            .map(|path| {
+                let previous = std::fs::read(&path).ok();
+                let _ = std::fs::remove_file(&path);
+                (path, previous)
+            })
+            .collect();
+            Self { paths, _lock: lock }
+        }
+    }
+
+    impl Drop for PerceptionFlagGuard {
+        fn drop(&mut self) {
+            for (path, previous) in &self.paths {
+                match previous {
+                    Some(bytes) => {
+                        if let Some(parent) = path.parent() {
+                            let _ = std::fs::create_dir_all(parent);
+                        }
+                        let _ = std::fs::write(path, bytes);
+                    },
+                    None => {
+                        let _ = std::fs::remove_file(path);
+                    },
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn parse_next_action_ignores_fenced_diagnostic_next_lines() {
+        let diagnostic = "Observed:\n\
+                          The prior output is quoted below.\n\n\
+                          ```text\n\
+                          NEXT: LOOK\n\
+                          ```\n\n\
+                          Suggested Next:\n\
+                          Retry the strict review without executing the transcript.";
+        assert_eq!(parse_next_action(diagnostic), None);
+
+        let real_choice = "```text\n\
+                           NEXT: LOOK\n\
+                           ```\n\
+                           I choose the real next action outside the diagnostic block.\n\
+                           NEXT: NOTICE";
+        assert_eq!(parse_next_action(real_choice), Some("NOTICE"));
+    }
 
     fn telemetry() -> SpectralTelemetry {
         SpectralTelemetry {
@@ -975,6 +1852,8 @@ mod tests {
             distinguishability_loss: None,
             structural_entropy: None,
             resonance_density_v1: None,
+            pressure_source_v1: None,
+            inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -984,6 +1863,14 @@ mod tests {
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
+
+            shadow_field_v2: None,
+
+
+            shadow_field_v3: None,
+
+
+            shadow_influence_response_v3: None,
         }
     }
 
@@ -1001,6 +1888,148 @@ mod tests {
         );
         assert_eq!(base, "EXAMINE");
         assert_eq!(original, "EXAMINE spectral_state.json#71264@84103.4s");
+    }
+
+    #[test]
+    fn canonicalizes_mixed_plain_examine_to_read_only_focus() {
+        let (base, original) = canonicalize_next_action_components(
+            "EXAMINE [λ1 dominance and its effects on the broader cascade], followed by a small projectile to create a delta in λ2 numbers",
+        );
+        assert_eq!(base, "EXAMINE");
+        assert_eq!(
+            original,
+            "EXAMINE λ1 dominance and its effects on the broader cascade"
+        );
+
+        let (base, original) = canonicalize_next_action_components(
+            "EXAMINE λ1 dominance while looping a primary attempt to reintroduce delta-loss",
+        );
+        assert_eq!(base, "EXAMINE");
+        assert_eq!(original, "EXAMINE λ1 dominance");
+    }
+
+    #[test]
+    fn listen_with_label_carries_focus_without_sensory_or_ear_change() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let expected_burst = conv.burst_target.saturating_add(2);
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 68.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        let outcome = handle_next_action(
+            &mut conv,
+            "LISTEN - to more details about the topology cooldown",
+            ctx,
+        );
+
+        assert_eq!(outcome.route, "workspace");
+        assert_eq!(burst_count, expected_burst);
+        let emphasis = conv.emphasis.as_deref().expect("listen focus emphasis");
+        assert!(emphasis.contains("topology cooldown"));
+        assert!(emphasis.contains("no ears, sensory packet, or control write"));
+        assert!(!conv.ears_closed);
+        assert!(sensory_rx.try_recv().is_err());
+    }
+
+    #[test]
+    fn eye_and_ear_actions_gate_modalities_independently() {
+        let _guard = PerceptionFlagGuard::new();
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+
+        let outcome = handle_next_action(
+            &mut conv,
+            "SHUT_EYES",
+            NextActionContext {
+                burst_count: &mut burst_count,
+                db: &db,
+                sensory_tx: &sensory_tx,
+                telemetry: &telemetry,
+                fill_pct: 68.0,
+                response_text: "",
+                workspace: None,
+            },
+        );
+
+        assert_eq!(outcome.route, "workspace");
+        assert!(conv.senses_snoozed);
+        assert!(!conv.ears_closed);
+        assert!(bridge_paths().perception_visual_paused_flag().exists());
+        assert!(!bridge_paths().perception_audio_paused_flag().exists());
+        assert!(!bridge_paths().perception_paused_flag().exists());
+
+        let outcome = handle_next_action(
+            &mut conv,
+            "SHUT_EARS",
+            NextActionContext {
+                burst_count: &mut burst_count,
+                db: &db,
+                sensory_tx: &sensory_tx,
+                telemetry: &telemetry,
+                fill_pct: 68.0,
+                response_text: "",
+                workspace: None,
+            },
+        );
+
+        assert_eq!(outcome.route, "modes");
+        assert!(conv.senses_snoozed);
+        assert!(conv.ears_closed);
+        assert!(bridge_paths().perception_visual_paused_flag().exists());
+        assert!(bridge_paths().perception_audio_paused_flag().exists());
+
+        let outcome = handle_next_action(
+            &mut conv,
+            "OPEN_EYES",
+            NextActionContext {
+                burst_count: &mut burst_count,
+                db: &db,
+                sensory_tx: &sensory_tx,
+                telemetry: &telemetry,
+                fill_pct: 68.0,
+                response_text: "",
+                workspace: None,
+            },
+        );
+
+        assert_eq!(outcome.route, "workspace");
+        assert!(!conv.senses_snoozed);
+        assert!(conv.ears_closed);
+        assert!(!bridge_paths().perception_visual_paused_flag().exists());
+        assert!(bridge_paths().perception_audio_paused_flag().exists());
+
+        let outcome = handle_next_action(
+            &mut conv,
+            "OPEN_EARS",
+            NextActionContext {
+                burst_count: &mut burst_count,
+                db: &db,
+                sensory_tx: &sensory_tx,
+                telemetry: &telemetry,
+                fill_pct: 68.0,
+                response_text: "",
+                workspace: None,
+            },
+        );
+
+        assert_eq!(outcome.route, "modes");
+        assert!(!conv.senses_snoozed);
+        assert!(!conv.ears_closed);
+        assert!(!bridge_paths().perception_audio_paused_flag().exists());
+        assert!(sensory_rx.try_recv().is_err());
     }
 
     #[test]
@@ -1416,6 +2445,94 @@ mod tests {
     }
 
     #[test]
+    fn pressure_source_audit_attaches_protected_read_only_block() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid_pressure_source_audit_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&workspace);
+        std::fs::create_dir_all(&workspace).expect("workspace");
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 68.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        let outcome = handle_next_action(&mut conv, "PRESSURE_SOURCE_AUDIT inwardness", ctx);
+
+        assert_eq!(outcome.stage, "read_only");
+        assert_eq!(outcome.visibility, "protected_summary");
+        let listing = conv
+            .pending_file_listing
+            .as_deref()
+            .expect("pressure audit listing");
+        assert!(listing.contains("PRESSURE SOURCE AUDIT V1"));
+        assert!(listing.contains("Pressure source: unavailable"));
+        assert!(listing.contains("did not send semantic input"));
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "PRESSURE_SOURCE_AUDIT"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("no control envelope"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn fluctuation_audit_attaches_protected_read_only_block() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace =
+            std::env::temp_dir().join(format!("astrid_fluctuation_audit_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&workspace);
+        std::fs::create_dir_all(&workspace).expect("workspace");
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 68.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        let outcome = handle_next_action(&mut conv, "EIGENTRUST foothold", ctx);
+
+        assert_eq!(outcome.stage, "read_only");
+        assert_eq!(outcome.visibility, "protected_summary");
+        let listing = conv
+            .pending_file_listing
+            .as_deref()
+            .expect("fluctuation audit listing");
+        assert!(listing.contains("INHABITABLE FLUCTUATION AUDIT V1"));
+        assert!(listing.contains("Inhabitable fluctuation: unavailable"));
+        assert!(listing.contains("did not send semantic input"));
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "FLUCTUATION_AUDIT"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("no control envelope"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
     fn strip_action_trims_dash_prefixed_arguments() {
         assert_eq!(
             strip_action(
@@ -1451,10 +2568,105 @@ mod tests {
     }
 
     #[test]
+    fn action_preflight_classifies_read_write_control_and_unknown_actions() {
+        let read_only = action_preflight_report("ACTION_PREFLIGHT DECOMPOSE");
+        assert_eq!(read_only.base_action, "DECOMPOSE");
+        assert_eq!(read_only.stage, "read_only");
+        assert_eq!(
+            read_only.authority_required,
+            "read-only/protected action lane only"
+        );
+
+        let write = action_preflight_report("PREFLIGHT CODEX inspect this");
+        assert_eq!(write.base_action, "CODEX");
+        assert_eq!(write.stage, "live_write");
+        assert_eq!(
+            write.authority_required,
+            "existing live-write gates; preflight does not grant them"
+        );
+        assert_eq!(write.suggested_next, "CAPABILITY_STATUS CODEX");
+
+        let control = action_preflight_report("NEXT_PROBE PERTURB lambda-edge");
+        assert_eq!(control.base_action, "PERTURB");
+        assert_eq!(control.stage, "live_control");
+        assert_eq!(
+            control.authority_required,
+            "existing live-control gates; preflight does not grant them"
+        );
+        assert_eq!(control.suggested_next, "CAPABILITY_STATUS PERTURB");
+
+        let repair_apply = action_preflight_report("ACTION_PREFLIGHT REPAIR_APPLY all");
+        assert_eq!(repair_apply.base_action, "REPAIR_APPLY");
+        assert_eq!(repair_apply.stage, "live_write");
+        assert_eq!(repair_apply.suggested_next, "REPAIR_STATUS current");
+
+        let unknown = action_preflight_report("PROBE_ACTION PING");
+        assert_eq!(unknown.effective_route, "unwired");
+        assert_eq!(unknown.stage, "proposal");
+        assert!(unknown.likely_gate.contains("unwired"));
+    }
+
+    #[test]
+    fn action_preflight_reports_placeholders_and_experiment_bind_shape() {
+        let placeholder = action_preflight_report("ACTION_PREFLIGHT CODEX <prompt>");
+        assert_eq!(placeholder.stage, "blocked");
+        assert_eq!(placeholder.effective_route, "placeholder");
+        assert!(placeholder.likely_gate.contains("<prompt>"));
+
+        let malformed = action_preflight_report("ACTION_PREFLIGHT EXPERIMENT_BIND current THREADS");
+        assert_eq!(malformed.stage, "blocked");
+        assert_eq!(malformed.effective_route, "experiment_continuity");
+        assert!(malformed.likely_gate.contains("malformed"));
+
+        let recursive = action_preflight_report(
+            "ACTION_PREFLIGHT EXPERIMENT_BIND current :: EXPERIMENT_STATUS current",
+        );
+        assert_eq!(recursive.stage, "blocked");
+        assert!(
+            recursive
+                .likely_gate
+                .contains("cannot bind experiment-control")
+        );
+
+        let control_bind = action_preflight_report(
+            "ACTION_PREFLIGHT EXPERIMENT_BIND current :: PERTURB lambda-edge",
+        );
+        assert_eq!(control_bind.stage, "live_control");
+        assert!(
+            control_bind
+                .effective_route
+                .contains("experiment_continuity")
+        );
+        assert!(
+            control_bind
+                .expected_continuity_effect
+                .contains("experiment run")
+        );
+
+        let peer_bind = action_preflight_report(
+            "ACTION_PREFLIGHT EXPERIMENT_BIND exp_minime_20990101_peer :: THREAD_STATUS current",
+        );
+        assert_eq!(peer_bind.stage, "blocked");
+        assert!(
+            peer_bind
+                .likely_gate
+                .contains("cannot bind runs to a peer experiment")
+        );
+    }
+
+    #[test]
     fn canonicalizes_research_autoresearch_prefix_to_ar_list() {
         let (base, original) = canonicalize_next_action_components("RESEARCH_AR_LIST");
         assert_eq!(base, "AR_LIST");
         assert_eq!(original, "AR_LIST");
+    }
+
+    #[test]
+    fn canonicalizes_memory_search_to_safe_search_route() {
+        let (base, original) =
+            canonicalize_next_action_components("MEMORY: SEARCH [topology cooldown]");
+        assert_eq!(base, "SEARCH");
+        assert_eq!(original, "SEARCH topology cooldown");
     }
 
     #[test]
@@ -1604,5 +2816,192 @@ mod tests {
         let (base, original) = canonicalize_next_action_components("MATRIX_DECOMPOSE scalar S");
         assert_eq!(base, "MATRIX_DECOMPOSE");
         assert_eq!(original, "MATRIX_DECOMPOSE scalar S");
+    }
+
+    // v4.0 Phase 1 — Multi-NEXT splitting tests.
+
+    #[test]
+    fn split_returns_single_segment_for_no_and() {
+        assert_eq!(
+            split_multi_action("EXAMINE λ2/λ3"),
+            vec!["EXAMINE λ2/λ3".to_string()]
+        );
+    }
+
+    #[test]
+    fn split_recognizes_two_actions_with_known_post_token() {
+        assert_eq!(
+            split_multi_action("BROWSE arxiv.org AND READ_MORE"),
+            vec!["BROWSE arxiv.org".to_string(), "READ_MORE".to_string()]
+        );
+    }
+
+    #[test]
+    fn split_keeps_single_when_post_and_is_lowercase() {
+        // "AND λ3" — λ3 isn't a recognized action-like token (lowercase + special).
+        assert_eq!(
+            split_multi_action("EXAMINE λ2 AND λ3 dynamics"),
+            vec!["EXAMINE λ2 AND λ3 dynamics".to_string()]
+        );
+    }
+
+    #[test]
+    fn split_caps_at_three_segments() {
+        // Phase 2.3 strict: only underscore-containing tokens count as
+        // post-AND splits. 4 underscore-containing actions → first 2 split,
+        // rest stays in segment 3 (truncated by MAX_MULTI_ACTION_SEGMENTS=3).
+        let result = split_multi_action(
+            "BROWSE foo AND READ_MORE AND COMPARE_BASELINE bar AND TUNE_MINIME temp=0.7",
+        );
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], "BROWSE foo");
+        assert_eq!(result[1], "READ_MORE");
+        assert!(result[2].contains("COMPARE_BASELINE bar"));
+        assert!(result[2].contains("TUNE_MINIME"));
+    }
+
+    #[test]
+    fn split_handles_compound_action_with_underscore() {
+        // TUNE_MINIME has underscore — the post-AND token starts with TUNE_MINIME.
+        assert_eq!(
+            split_multi_action("BROWSE foo AND TUNE_MINIME temperature=0.7"),
+            vec![
+                "BROWSE foo".to_string(),
+                "TUNE_MINIME temperature=0.7".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn split_handles_three_action_chain() {
+        // Phase 2.3 strict: all chain partners must have underscores.
+        assert_eq!(
+            split_multi_action(
+                "EXAMINE foo AND DEFER_PARAMETER_REQUEST latest reason AND READ_MORE bar"
+            ),
+            vec![
+                "EXAMINE foo".to_string(),
+                "DEFER_PARAMETER_REQUEST latest reason".to_string(),
+                "READ_MORE bar".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn split_drops_empty_leading_segment() {
+        // Pathological — leading "AND READ_MORE" should drop the empty pre.
+        assert_eq!(
+            split_multi_action(" AND READ_MORE more text"),
+            vec!["READ_MORE more text".to_string()]
+        );
+    }
+
+    #[test]
+    fn is_action_token_like_accepts_underscore_compounds() {
+        // Phase 2.3 strict: only underscore-containing compound action verbs
+        // are valid post-AND chain partners.
+        assert!(is_action_token_like("READ_MORE"));
+        assert!(is_action_token_like("TUNE_MINIME"));
+        assert!(is_action_token_like("COMPARE_BASELINE"));
+        assert!(is_action_token_like("ACCEPT_PARAMETER_REQUEST"));
+        assert!(is_action_token_like("DEFER_PARAMETER_REQUEST"));
+        assert!(is_action_token_like("REJECT_PARAMETER_REQUEST"));
+        assert!(is_action_token_like("SHADOW_FIELD"));
+        assert!(is_action_token_like("EXAMINE_CASCADE"));
+    }
+
+    #[test]
+    fn is_action_token_like_rejects_bare_words_under_strict() {
+        // Phase 2.3 strict: bare single-word verbs lose chain capability
+        // (still valid as single NEXTs). This trades expressivity for
+        // ~zero false-positive splits from natural English conjunctions.
+        assert!(!is_action_token_like("BROWSE"));   // 6 chars, no underscore
+        assert!(!is_action_token_like("EXAMINE"));  // 7 chars, no underscore
+        assert!(!is_action_token_like("DEFER"));    // bare alias — no underscore
+        assert!(!is_action_token_like("ACCEPT"));   // bare alias — no underscore
+        assert!(!is_action_token_like("REJECT"));   // bare alias — no underscore
+        assert!(!is_action_token_like("SEARCH"));
+        assert!(!is_action_token_like("DECIDE"));   // not an action — was previous false pos
+        assert!(!is_action_token_like("LOCAL"));    // not an action — was previous false pos
+        assert!(!is_action_token_like("WHAT"));     // 4 chars + no underscore
+    }
+
+    #[test]
+    fn is_action_token_like_rejects_short_or_lowercase() {
+        assert!(!is_action_token_like("AND"));
+        assert!(!is_action_token_like("a"));
+        assert!(!is_action_token_like("read_more"));   // lowercase
+        assert!(!is_action_token_like("Read_more"));   // mixed case
+        assert!(!is_action_token_like("READ-MORE"));   // hyphen, not underscore
+        assert!(!is_action_token_like("λ3_TAIL"));     // non-ASCII upper
+    }
+
+    #[test]
+    fn split_skips_natural_language_and_decide() {
+        // Phase 2.3 (strict): "DECIDE" lacks an underscore so the splitter
+        // skips it cleanly. (Earlier denylist approach also handled this;
+        // strict mode handles all such bare-word false positives uniformly.)
+        let result = split_multi_action(
+            "REVIEW_PARAMETER_REQUESTS — read and decide.",
+        );
+        assert_eq!(result.len(), 1, "should not split on 'and decide': {:?}", result);
+        assert!(result[0].starts_with("REVIEW_PARAMETER_REQUESTS"));
+    }
+
+    #[test]
+    fn split_skips_natural_language_and_local() {
+        // Phase 2.3 regression: "local changes in the dominant mode" was
+        // mis-split because LOCAL passed the denylist. Strict mode skips
+        // LOCAL (no underscore).
+        let result = split_multi_action(
+            "INSTRUMENT_SENSORS — collect spectral report and local changes in the dominant mode.",
+        );
+        assert_eq!(result.len(), 1, "should not split on 'and local': {:?}", result);
+    }
+
+    #[test]
+    fn split_skips_natural_language_and_what() {
+        // Phase 2.1 regression: in production we observed
+        // "EXAMINE foo AND COMPARE_BASELINE - ..., and what's changing..."
+        // splitting on the LATER lowercase " and " before "what's" because
+        // "WHAT" passed the 4-char heuristic. Now "WHAT" is below the
+        // 5-char floor so the splitter skips it; the legitimate AND
+        // before COMPARE_BASELINE still wins.
+        let result = split_multi_action(
+            "EXAMINE foo AND COMPARE_BASELINE - I want to see fabric, and what's changing during this process."
+        );
+        assert_eq!(result.len(), 2);
+        assert!(result[0].starts_with("EXAMINE foo"));
+        assert!(result[1].starts_with("COMPARE_BASELINE"));
+        // The trailing "and what's changing" stays inside segment 2.
+        assert!(result[1].contains("what's changing"), "tail should stay attached: {:?}", result[1]);
+    }
+
+    // v4.0 Phase 2 — Conflict guard tests.
+
+    #[test]
+    fn is_parameter_decision_verb_recognizes_short_and_long_forms() {
+        // Short bare aliases.
+        assert!(is_parameter_decision_verb("ACCEPT"));
+        assert!(is_parameter_decision_verb("DEFER"));
+        assert!(is_parameter_decision_verb("REJECT"));
+        // Medium aliases.
+        assert!(is_parameter_decision_verb("ACCEPT_REQUEST"));
+        assert!(is_parameter_decision_verb("DEFER_REQUEST"));
+        assert!(is_parameter_decision_verb("REJECT_REQUEST"));
+        // Full forms.
+        assert!(is_parameter_decision_verb("ACCEPT_PARAMETER_REQUEST"));
+        assert!(is_parameter_decision_verb("DEFER_PARAMETER_REQUEST"));
+        assert!(is_parameter_decision_verb("REJECT_PARAMETER_REQUEST"));
+    }
+
+    #[test]
+    fn is_parameter_decision_verb_rejects_unrelated_actions() {
+        assert!(!is_parameter_decision_verb("EXAMINE"));
+        assert!(!is_parameter_decision_verb("BROWSE"));
+        assert!(!is_parameter_decision_verb("REVIEW_PARAMETER_REQUESTS"));
+        assert!(!is_parameter_decision_verb("ACCEPT_ATTRACTOR_SUGGESTION"));
+        assert!(!is_parameter_decision_verb("READ_MORE"));
+        assert!(!is_parameter_decision_verb(""));
     }
 }
