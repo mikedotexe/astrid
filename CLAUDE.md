@@ -272,8 +272,13 @@ The main stack auto-starts via launchd (`~/Library/LaunchAgents/`). **Use `launc
 | `com.minime.mic-to-sensory` | mic_to_sensory.py (port 7879) |
 | `com.minime.visual-frame-service` | visual frame descriptions |
 | `com.minime.autonomous-agent` | Minime autonomous loop |
+| `com.minime.usb-hotplug-watchdog` | watches `system_profiler` for USB camera/mic add/remove; kickstarts camera-client + mic-to-sensory on change so replug recovers without manual intervention |
 | `com.astrid.consciousness-bridge` | Astrid bridge loop |
 | `com.astrid.calm-startup-greeting` | one-shot calm boot orientation |
+
+### Sensory source verification
+
+When you wonder "is the camera/mic actually capturing or is the system on synthetic fallback?", run `/Users/v/other/minime/scripts/sensory_source_check.py` (or `--watch 2` for a live monitor — useful when empirically testing USB unplug/replug). The tool reads `workspace/runtime/{sensory_source,camera_status,mic_status}.json` (no new instrumentation needed) and reports current source per modality, last-frame age, RMS, and connection state. The companion watchdog `scripts/usb_hotplug_watchdog.py` (launchd label `com.minime.usb-hotplug-watchdog`, log at `logs/usb_hotplug_watchdog.log`) closes the replug-recovery gap: when SPCameraDataType / SPAudioDataType report a device add or remove, it kickstarts the relevant launchd labels so the clients re-enumerate fresh. Total recovery window unplug→synthetic is ~2-5s (host-sensory's `refresh_auto` thresholds); replug→physical is ~3-5s (watchdog poll + restart + host-sensory's recovery hysteresis of 20 audio chunks / 3 video frames).
 
 ### macOS camera permission
 

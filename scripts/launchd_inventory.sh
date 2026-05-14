@@ -27,6 +27,7 @@ prod_plists=(
     "$MINIME_DIR/launchd/com.minime.mic-to-sensory.plist"
     "$MINIME_DIR/launchd/com.minime.visual-frame-service.plist"
     "$MINIME_DIR/launchd/com.minime.autonomous-agent.plist"
+    "$MINIME_DIR/launchd/com.minime.usb-hotplug-watchdog.plist"
     "$RESERVOIR_DIR/launchd/com.reservoir.service.plist"
     "$RESERVOIR_DIR/launchd/com.reservoir.coupled-astrid.plist"
     "$RESERVOIR_DIR/launchd/com.reservoir.astrid-feeder.plist"
@@ -43,6 +44,7 @@ persistent_labels=(
     com.minime.mic-to-sensory
     com.minime.visual-frame-service
     com.minime.autonomous-agent
+    com.minime.usb-hotplug-watchdog
     com.reservoir.service
     com.reservoir.coupled-astrid
     com.reservoir.astrid-feeder
