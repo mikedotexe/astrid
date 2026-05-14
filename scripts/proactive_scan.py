@@ -279,8 +279,12 @@ def probe_process_health(prior: dict[str, Any]) -> dict[str, Any]:
 def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
     """Tail recent log lines, grep for ERROR/FATAL/exception, flag if rate elevated.
 
-    Looks at the last ~2000 lines of each known log file (roughly the last
-    1-3h of activity at typical rates).
+    Looks at the last ~2000 lines of each known log file. Critically,
+    weights findings by log freshness — a stale log full of historical
+    errors (e.g. 989 connection-refused lines from a process that's now
+    reconnected) should not look the same as an actively-failing process.
+    The proactive scan's job is to surface CURRENT signal, not historical
+    forensics.
     """
     log_files: list[Path] = []
     if ASTRID_BRIDGE_LOG.is_file():
@@ -297,9 +301,21 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
         )
 
     pattern = re.compile(r"\b(ERROR|FATAL|Traceback|Exception|panic)\b", re.IGNORECASE)
-    findings: list[str] = []
-    total_errors = 0
+    now = time.time()
+    # A log is "stale" if it hasn't been written to in this window — its
+    # errors are historical and should not be surfaced as current signal.
+    STALE_THRESHOLD_SECONDS = 30 * 60  # 30 min
+
+    active_findings: list[str] = []
+    stale_findings: list[str] = []
+    active_errors = 0
+    stale_errors = 0
+
     for lf in log_files:
+        try:
+            mtime = lf.stat().st_mtime
+        except OSError:
+            continue
         try:
             res = subprocess.run(
                 ["tail", "-n", "2000", str(lf)],
@@ -310,25 +326,45 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
         except Exception:
             continue
         n = sum(1 for line in res.stdout.splitlines() if pattern.search(line))
-        total_errors += n
-        if n > 0:
-            findings.append(f"{lf.name}: {n} error/exception line(s) in last 2000")
+        if n == 0:
+            continue
+        age_s = now - mtime
+        if age_s > STALE_THRESHOLD_SECONDS:
+            stale_errors += n
+            stale_findings.append(
+                f"{lf.name}: {n} historical error(s) (log stale {_fmt_duration(age_s)})"
+            )
+        else:
+            active_errors += n
+            active_findings.append(
+                f"{lf.name}: {n} error(s) in last 2000 (log fresh, age {_fmt_duration(age_s)})"
+            )
 
-    severity = "ok"
-    summary = f"clean — 0 errors in last ~2000 lines across {len(log_files)} log file(s)"
-    if total_errors >= 50:
+    snapshot = {"active_errors": active_errors, "stale_errors": stale_errors}
+
+    # Severity is driven primarily by ACTIVE errors. Stale errors get a
+    # notice mention (so they're not invisible) but don't trigger warning.
+    if active_errors >= 50:
         severity = "warning"
-        summary = f"elevated errors: {total_errors} across {len(log_files)} log file(s)"
-    elif total_errors > 0:
+        summary = f"elevated CURRENT errors: {active_errors} across {len(active_findings)} active log(s)"
+    elif active_errors > 0:
         severity = "notice"
-        summary = f"{total_errors} error/exception line(s) across {len(log_files)} log file(s)"
+        summary = f"{active_errors} current error(s) across {len(active_findings)} active log(s)"
+    elif stale_errors > 0:
+        severity = "ok"
+        summary = (
+            f"no current errors — {stale_errors} historical error(s) in stale log(s) "
+            f"({len(stale_findings)} file(s) untouched >{STALE_THRESHOLD_SECONDS // 60}m)"
+        )
+    else:
+        severity = "ok"
+        summary = f"clean — 0 errors across {len(log_files)} log file(s)"
 
-    snapshot = {"total_errors": total_errors}
     return _finding(
         "log_error_rate",
         severity,
         summary,
-        details=findings if findings else None,
+        details=(active_findings + stale_findings) if (active_findings or stale_findings) else None,
         snapshot=snapshot,
     )
 
@@ -1087,6 +1123,28 @@ class ConvergenceTests(unittest.TestCase):
         self.assertGreater(len(convs), 0)
         c = convs[0]
         self.assertIn("pi controller", c["shared_domain_phrases"])
+
+    def test_log_error_rate_distinguishes_stale_from_active(self) -> None:
+        # Smoke: the probe should classify a stale log full of errors as
+        # OK with stale-error mention, not warning. We can't easily mock
+        # MINIME_LOGS_DIR here without restructuring; instead verify the
+        # core claim by reading the actual host-sensory.log if available.
+        # Falls through cleanly if not present (test environment portability).
+        from pathlib import Path
+        log = Path("/Users/v/other/minime/logs/host-sensory.log")
+        if not log.is_file():
+            self.skipTest("host-sensory.log not present in this environment")
+        try:
+            mtime = log.stat().st_mtime
+        except OSError:
+            self.skipTest("can't stat host-sensory.log")
+        # If the log is very fresh, this test can't make the staleness claim
+        if time.time() - mtime < 30 * 60:
+            self.skipTest("host-sensory.log is fresh — can't verify stale handling")
+        finding = probe_log_error_rate({})
+        # The probe should NOT classify this as warning even with high error
+        # count, because the log is stale.
+        self.assertNotEqual(finding["severity"], "warning")
 
     def test_mirror_mode_filtered_from_sample(self) -> None:
         # Astrid mirror entries are literal copies — must not be in sample
