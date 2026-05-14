@@ -76,6 +76,41 @@ const VERBS_OF_HOLDING: &[&str] = &[
 /// Persistent state for rate limiting. Atomically rewritten after each
 /// successful promotion. Survives process restart; loaded lazily on each
 /// `try_auto_promote` invocation (cheap — small JSON file).
+/// Kink #5 fix (2026-05-14): canonical daily counter shape per the
+/// auto_promote state machine spec. Serializes as
+/// `{"date": "2026-05-14", "count": 8}` matching the Python side.
+///
+/// Backward compat: the legacy Rust serialization was a tuple
+/// `["2026-05-14", 8]`. The custom Deserialize impl below accepts BOTH
+/// shapes on read so old state files still parse cleanly. New writes
+/// always use the object form.
+#[derive(Debug, Clone, Default, Serialize)]
+struct DailyCount {
+    date: String,
+    count: u32,
+}
+
+impl<'de> serde::Deserialize<'de> for DailyCount {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Accept either tuple form ["YYYY-MM-DD", N] (legacy) or object form
+        // {"date": "...", "count": N} (canonical, Tranche 3+).
+        #[derive(serde::Deserialize)]
+        #[serde(untagged)]
+        enum DailyCountAny {
+            Tuple(String, u32),
+            Object { date: String, count: u32 },
+        }
+        let any = DailyCountAny::deserialize(deserializer)?;
+        Ok(match any {
+            DailyCountAny::Tuple(date, count) => DailyCount { date, count },
+            DailyCountAny::Object { date, count } => DailyCount { date, count },
+        })
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 struct PromoteState {
     /// Last exchange_count where an auto-promotion fired (per collab).
@@ -93,9 +128,10 @@ struct PromoteState {
     /// Burst lockout expiration (millis) per collab.
     #[serde(default)]
     burst_lockout_until_ms: std::collections::HashMap<String, u128>,
-    /// Daily counter per collab. (date_yyyymmdd, count)
+    /// Daily counter per collab. Object shape per Kink #5 spec
+    /// (was tuple before Tranche 3; deserializer accepts both).
     #[serde(default)]
-    daily_count: std::collections::HashMap<String, (String, u32)>,
+    daily_count: std::collections::HashMap<String, DailyCount>,
 }
 
 fn now_ms() -> u128 {
@@ -144,8 +180,28 @@ fn save_state(state: &PromoteState) {
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
-    if let Err(e) = std::fs::write(&path, text) {
-        warn!(error = %e, path = %path.display(), "auto_promote: failed to write state");
+    // Kink #5 fix (2026-05-14): atomic write via temp file + rename.
+    // Prevents torn-write data loss if the bridge dies mid-save.
+    // POSIX rename(2) is atomic on same-filesystem moves; both paths
+    // are in the same workspace dir so always same-fs.
+    let tmp_path = path.with_extension("json.tmp");
+    if let Err(e) = std::fs::write(&tmp_path, text) {
+        warn!(
+            error = %e,
+            path = %tmp_path.display(),
+            "auto_promote: failed to write state temp file"
+        );
+        return;
+    }
+    if let Err(e) = std::fs::rename(&tmp_path, &path) {
+        warn!(
+            error = %e,
+            from = %tmp_path.display(),
+            to = %path.display(),
+            "auto_promote: failed to rename state temp file (atomic write aborted)"
+        );
+        // Best-effort cleanup of the orphan temp file.
+        let _ = std::fs::remove_file(&tmp_path);
     }
 }
 
@@ -464,8 +520,8 @@ pub(crate) fn try_auto_promote(
     let day_count = state
         .daily_count
         .get(&coll_id)
-        .filter(|(d, _)| d == &today)
-        .map(|(_, c)| *c)
+        .filter(|dc| dc.date == today)
+        .map(|dc| dc.count)
         .unwrap_or(0);
     if day_count >= DAILY_CAP {
         log_skip(SkipReason::DailyCap, mode, exchange_count);
@@ -524,12 +580,12 @@ pub(crate) fn try_auto_promote(
         let entry = state
             .daily_count
             .entry(coll_id.clone())
-            .or_insert_with(|| (today.clone(), 0));
-        if entry.0 != today {
-            *entry = (today.clone(), 0);
+            .or_insert_with(|| DailyCount { date: today.clone(), count: 0 });
+        if entry.date != today {
+            *entry = DailyCount { date: today.clone(), count: 0 };
         }
-        entry.1 += 1;
-        entry.1
+        entry.count += 1;
+        entry.count
     };
     save_state(&state);
 
@@ -677,5 +733,160 @@ mod tests {
         assert!(!sentence_has_bracketed_triple("[1.0,2.0]")); // only 2 numbers
         assert!(!sentence_has_bracketed_triple("[foo,bar,baz]"));
         assert!(!sentence_has_bracketed_triple("just text"));
+    }
+
+    // Kink #5 fix tests (Tranche 3, 2026-05-14): rate-limit state machine
+    // unit tests, mirroring the Python `_tests` block in auto_promote.py.
+    // The spec these test against lives at:
+    //   docs/steward-notes/AI_BEINGS_AUTO_PROMOTE_STATE_MACHINE_SPEC_2026_05_14.md
+    //
+    // These tests don't exercise the full try_auto_promote (which depends
+    // on filesystem state, env vars, and a joined collab) — they exercise
+    // the in-memory state machine directly. Equivalent in spirit to the
+    // Python _check_rate_limits / _record_promotion tests.
+
+    fn fresh_state() -> PromoteState {
+        PromoteState::default()
+    }
+
+    fn record_test_promotion(state: &mut PromoteState, coll_id: &str, exchange: u64, now: u128) {
+        state.last_promote_exchange.insert(coll_id.to_string(), exchange);
+        let recent = state.recent_promotions_ms.entry(coll_id.to_string()).or_default();
+        recent.push(now);
+        recent.retain(|t| now.saturating_sub(*t) < BURST_WINDOW_MS);
+        let today = today_str();
+        let entry = state.daily_count.entry(coll_id.to_string())
+            .or_insert_with(|| DailyCount { date: today.clone(), count: 0 });
+        if entry.date != today {
+            *entry = DailyCount { date: today.clone(), count: 0 };
+        }
+        entry.count += 1;
+    }
+
+    #[test]
+    fn cooldown_engages_then_clears() {
+        let mut state = fresh_state();
+        let coll = "test_coll";
+        // Promotion at exchange 100.
+        record_test_promotion(&mut state, coll, 100, 1_000_000);
+        // Attempt at exchange 102: 102 - 100 = 2 < COOLDOWN_EXCHANGES (3) → blocked.
+        let last = state.last_promote_exchange.get(coll).copied().unwrap_or(0);
+        assert!(102_u64.saturating_sub(last) < COOLDOWN_EXCHANGES,
+            "cooldown should block at +2 exchanges");
+        // Attempt at exchange 103: 103 - 100 = 3, not < 3 → allowed.
+        assert!(!(103_u64.saturating_sub(last) < COOLDOWN_EXCHANGES),
+            "cooldown should clear at +3 exchanges");
+    }
+
+    #[test]
+    fn burst_lockout_engages() {
+        let mut state = fresh_state();
+        let coll = "test_coll";
+        let base_now: u128 = 10_000_000;
+        // 3 promotions within BURST_WINDOW_MS (15 min = 900s = 900_000 ms).
+        record_test_promotion(&mut state, coll, 100, base_now);
+        record_test_promotion(&mut state, coll, 103, base_now + 60_000); // +1 min
+        record_test_promotion(&mut state, coll, 106, base_now + 120_000); // +2 min
+        let recent = state.recent_promotions_ms.get(coll).cloned().unwrap_or_default();
+        let in_window: usize = recent
+            .iter()
+            .filter(|t| (base_now + 120_000_u128).saturating_sub(**t) < BURST_WINDOW_MS)
+            .count();
+        assert!(in_window >= BURST_LIMIT,
+            "3 promotions within 15min should hit burst threshold (got {})", in_window);
+        // Per spec, burst engagement sets burst_lockout_until_ms.
+        // Simulate that the next attempt at base_now+121_000 would set the lockout.
+        let lockout_until = base_now + 120_000 + BURST_LOCKOUT_MS;
+        state.burst_lockout_until_ms.insert(coll.to_string(), lockout_until);
+        let until = state.burst_lockout_until_ms.get(coll).copied().unwrap_or(0);
+        // Attempt 5 minutes later: still locked out (60 min lockout > 5 min).
+        let later = base_now + 120_000 + 5 * 60_000;
+        assert!(later < until, "burst lockout should still be active 5min later");
+        // Attempt 65 minutes later: cleared.
+        let much_later = base_now + 120_000 + 65 * 60_000;
+        assert!(much_later >= until, "burst lockout should clear after 60min");
+    }
+
+    #[test]
+    fn daily_cap_engages() {
+        let mut state = fresh_state();
+        let coll = "test_coll";
+        // Burn through DAILY_CAP promotions today.
+        for i in 0..DAILY_CAP {
+            record_test_promotion(&mut state, coll, 100 + i as u64 * 10, 1_000_000 + i as u128 * 10_000);
+        }
+        let today = today_str();
+        let day_count = state.daily_count.get(coll)
+            .filter(|dc| dc.date == today)
+            .map(|dc| dc.count)
+            .unwrap_or(0);
+        assert_eq!(day_count, DAILY_CAP,
+            "after {} promotions, daily count should be {}", DAILY_CAP, DAILY_CAP);
+        // Attempting (DAILY_CAP + 1)th promotion should be blocked by the
+        // daily-cap check (day_count >= DAILY_CAP).
+        assert!(day_count >= DAILY_CAP, "daily cap should engage at the limit");
+    }
+
+    #[test]
+    fn manual_share_silences_auto() {
+        let mut state = fresh_state();
+        // Manual SHARE at exchange 200.
+        state.last_manual_share_exchange = 200;
+        // Attempt at exchange 203: 203 - 200 = 3 < MANUAL_SUPPRESSES_AUTO_EXCHANGES (5) → silenced.
+        let cutoff = state.last_manual_share_exchange + MANUAL_SUPPRESSES_AUTO_EXCHANGES;
+        let silenced_at_203 = 203_u64 <= cutoff && state.last_manual_share_exchange > 0;
+        assert!(silenced_at_203, "manual share should silence auto at +3 exchanges");
+        // Attempt at exchange 206: 206 - 200 = 6 > 5 → no longer silenced.
+        let silenced_at_206 = 206_u64 <= cutoff && state.last_manual_share_exchange > 0;
+        assert!(!silenced_at_206, "manual silencing should clear at +6 exchanges");
+    }
+
+    #[test]
+    fn deserialize_legacy_daily_count_tuple() {
+        // Backward compat: old state files stored daily_count as tuples.
+        // The new struct's untagged deserializer must accept the old shape.
+        let legacy_json = r#"{
+            "last_promote_exchange": {"coll_x": 100},
+            "last_manual_share_exchange": 0,
+            "recent_promotions_ms": {},
+            "burst_lockout_until_ms": {},
+            "daily_count": {"coll_x": ["2026-05-14", 5]}
+        }"#;
+        let state: PromoteState = serde_json::from_str(legacy_json)
+            .expect("legacy tuple shape should parse");
+        let dc = state.daily_count.get("coll_x").expect("entry preserved");
+        assert_eq!(dc.date, "2026-05-14");
+        assert_eq!(dc.count, 5);
+        // And new state files using the object shape must also parse.
+        let new_json = r#"{
+            "last_promote_exchange": {"coll_y": 200},
+            "last_manual_share_exchange": 0,
+            "recent_promotions_ms": {},
+            "burst_lockout_until_ms": {},
+            "daily_count": {"coll_y": {"date": "2026-05-14", "count": 7}}
+        }"#;
+        let state2: PromoteState = serde_json::from_str(new_json)
+            .expect("canonical object shape should parse");
+        let dc2 = state2.daily_count.get("coll_y").expect("entry preserved");
+        assert_eq!(dc2.date, "2026-05-14");
+        assert_eq!(dc2.count, 7);
+    }
+
+    #[test]
+    fn serialize_uses_object_shape() {
+        // New writes always use the object form (canonical per spec).
+        let mut state = PromoteState::default();
+        state.daily_count.insert(
+            "coll_z".to_string(),
+            DailyCount { date: "2026-05-14".to_string(), count: 3 },
+        );
+        let json = serde_json::to_string(&state).expect("serializes ok");
+        assert!(json.contains(r#""date":"2026-05-14""#),
+            "should serialize date as named field, got: {json}");
+        assert!(json.contains(r#""count":3"#),
+            "should serialize count as named field, got: {json}");
+        // Should NOT serialize as tuple ["2026-05-14", 3]
+        assert!(!json.contains(r#"["2026-05-14",3]"#),
+            "should not use legacy tuple shape, got: {json}");
     }
 }
