@@ -23,7 +23,7 @@
 // numeric refs) and was rejected for v1 in favor of high-precision
 // regex matching. See plan in `~/.claude/plans/`.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
@@ -34,6 +34,13 @@ use crate::paths::bridge_paths;
 const ENV_DISABLED: &str = "ASTRID_AUTO_PROMOTE_DISABLED";
 const ENV_DRY_RUN: &str = "ASTRID_AUTO_PROMOTE_DRY_RUN";
 const SENTINEL_FILENAME: &str = "auto_promote.disabled";
+/// Kink #6 fix (2026-05-14): sentinel-file alternative to ASTRID_AUTO_PROMOTE_DRY_RUN.
+/// `launchctl setenv` does NOT propagate env vars to launchd-managed processes
+/// whose plist defines an EnvironmentVariables block (which both bridges do —
+/// they set PATH explicitly). The plist EV block REPLACES the launchd-domain
+/// env, so env-var-based dry-run signaling silently fails to take effect.
+/// A sentinel file works regardless of plist config and survives kickstart.
+const SENTINEL_DRY_RUN_FILENAME: &str = "auto_promote.dry_run";
 const STATE_FILENAME: &str = "auto_promote_state.json";
 
 const MAX_PROMOTION_LEN: usize = 200;
@@ -224,11 +231,23 @@ fn kill_switch_active() -> bool {
     sentinel_path().is_file()
 }
 
-fn dry_run_active() -> bool {
+fn dry_run_active_for(workspace: &Path) -> bool {
+    // Kink #6 fix: sentinel file takes priority over env var. Either signal
+    // engages dry-run; sentinel works even when launchctl setenv is silently
+    // dropped by the plist's EnvironmentVariables block. Pure function on a
+    // workspace path so unit tests can exercise it without bridge_paths()
+    // global state.
+    if workspace.join(SENTINEL_DRY_RUN_FILENAME).is_file() {
+        return true;
+    }
     matches!(
         std::env::var(ENV_DRY_RUN).ok().as_deref(),
         Some("1") | Some("true") | Some("TRUE")
     )
+}
+
+fn dry_run_active() -> bool {
+    dry_run_active_for(bridge_paths().bridge_workspace())
 }
 
 /// Split text into sentences. Naive but adequate: terminal punctuation
@@ -888,5 +907,41 @@ mod tests {
         // Should NOT serialize as tuple ["2026-05-14", 3]
         assert!(!json.contains(r#"["2026-05-14",3]"#),
             "should not use legacy tuple shape, got: {json}");
+    }
+
+    #[test]
+    fn dry_run_sentinel_engages_then_clears() {
+        // Kink #6 fix verification (2026-05-14): dry_run_active_for() must
+        // return true when the sentinel file exists, false when it doesn't.
+        // This test exercises the pure path-taking variant so we don't
+        // depend on bridge_paths() OnceLock global state (which would
+        // poison parallel tests).
+        //
+        // The env-var path (ASTRID_AUTO_PROMOTE_DRY_RUN=1) is unchanged
+        // from before this fix and is not re-asserted here — Rust 2024
+        // makes set_var/remove_var unsafe and this crate denies unsafe.
+        // The sentinel path IS the new code being verified.
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let workspace = tmp.path();
+
+        // Initially: no sentinel → not in dry-run (assuming env var unset
+        // in test environment; cargo test runs without it).
+        let initial = dry_run_active_for(workspace);
+        assert!(!initial, "no sentinel should mean dry-run off (was {initial})");
+
+        // Drop the sentinel file → engages.
+        let sentinel_path = workspace.join(SENTINEL_DRY_RUN_FILENAME);
+        std::fs::write(&sentinel_path, "").expect("touch sentinel");
+        assert!(
+            dry_run_active_for(workspace),
+            "sentinel file should engage dry-run"
+        );
+
+        // Remove the sentinel → clears.
+        std::fs::remove_file(&sentinel_path).expect("rm sentinel");
+        assert!(
+            !dry_run_active_for(workspace),
+            "removing sentinel should clear dry-run"
+        );
     }
 }

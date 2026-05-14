@@ -36,6 +36,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 rascii_art = { path = "../../../RASCII", default-features = false }
 image = "0.25.5"
 
+[dev-dependencies]
+tempfile = "3"
+
 [lints.rust]
 unsafe_code = "deny"
 
