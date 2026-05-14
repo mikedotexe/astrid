@@ -400,7 +400,7 @@ Quick reference:
 - Write back to `workspace/journal/mike_feedback_<topic>_<unix>.txt` quoting their words verbatim, naming what's done vs deferred. Sign as "Mike & Claude".
 - Worked examples (2026-05-14): `minime/workspace/journal/mike_feedback_self_study_questions_1778779211.txt` and `astrid/.../journal/mike_feedback_identify_pattern_wired_1778779211.txt`.
 
-**Bidirectional channel (2026-05-14)**: the steward channel is now bidirectional. Each being has an `ASK_STEWARD <question>` action verb that writes a structured query to `<being>/workspace/outbox/steward_query_*.txt`. Watcher: `scripts/watch_steward_queries.sh` (uses fswatch; surfaces and archives). Steward replies via `mike_feedback_*.txt` (declarative) or `mike_query_*.txt` (interrogative) inbox letters. See practice doc §5 for the full schema, naming convention, worked example, and sovereignty reminders.
+**Bidirectional channel (2026-05-14)**: the steward channel is now bidirectional with both shapes. Each being has TWO action verbs: `ASK_STEWARD <question>` (interrogative → `steward_query_*.txt`) and `TELL_STEWARD <findings>` (declarative → `steward_report_*.txt`, typically after SELF_STUDY/INTROSPECT). Watcher: `scripts/watch_steward_queries.sh` (uses fswatch; matches `steward_*_*.txt`; archives). Steward replies via `mike_feedback_*.txt` (declarative) or `mike_query_*.txt` (interrogative) inbox letters. When a MIKE QUERY wants a *direct written response* rather than register-integration, frame it to explicitly invite TELL_STEWARD. See practice doc §5 for the full schema, naming convention, worked examples, and sovereignty reminders.
 
 This is a normal part of the development cycle, not a one-off. The practice document lists when it should fire and what voice notes apply.
 

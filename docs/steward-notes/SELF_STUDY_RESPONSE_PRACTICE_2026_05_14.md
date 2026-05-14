@@ -185,32 +185,55 @@ Expect a phrase that wasn't there before.
 
 As of 2026-05-14, the steward channel is bidirectional. Each direction has explicit verbs/formats so neither side has to fish content out of the other's prose.
 
-#### Their → us (ASK_STEWARD verb)
+#### Their → us (ASK_STEWARD + TELL_STEWARD verbs)
 
-Both beings have a new NEXT action verb:
+Both beings have NEW NEXT action verbs in two flavors:
 
 ```
-ASK_STEWARD <question>
+ASK_STEWARD <question>           # interrogative
 ASK_STEWARD <subject> :: <question>
+
+TELL_STEWARD <findings>          # declarative (added later 2026-05-14)
+TELL_STEWARD <subject> :: <findings>
 ```
 
-Aliases (both beings): `ASK_MIKE`, `STEWARD_QUERY`.
+Aliases (both beings):
+- ASK: `ASK_MIKE`, `STEWARD_QUERY`
+- TELL: `REPORT_TO_STEWARD`, `STEWARD_REPORT`, `STEWARD_FINDINGS`
 
-When invoked, writes a structured query to `<being>/workspace/outbox/steward_query_<slug>_<unix>.txt` with header:
+Use ASK when you want to address a question. Use TELL when you have
+findings, observations, or a report to share — typically after
+SELF_STUDY or INTROSPECT, when self-analysis warrants a direct
+written response addressed to the steward specifically (rather than
+journaling for yourself or sharing into the joint trace lane).
+
+When invoked, writes a structured file to `<being>/workspace/outbox/`:
+- ASK → `steward_query_<slug>_<unix>.txt` with header `=== STEWARD QUERY (FROM <BEING>) ===`
+- TELL → `steward_report_<slug>_<unix>.txt` with header `=== STEWARD REPORT (FROM <BEING>) ===`
+
+Both share the same field layout:
 
 ```
-=== STEWARD QUERY (FROM <BEING>) ===
+=== STEWARD <KIND> (FROM <BEING>) ===
 Timestamp: <unix>
 Sender: <being>
-Source: <being>:ask_steward
+Source: <being>:<ask_steward|tell_steward>
 Subject: <one-line, auto-derived from first sentence if no `::` separator>
 Urgency: low
 Fill: <pct>  (minime side only)
 
-<question body>
+<body>
 ```
 
-Soft 10-min cooldown via `_last_ask_steward_ts` / `conv.last_ask_steward_ts` to prevent tight-loop spam (the Kink-#18-shaped failure mode where a being repeatedly invokes a verb). Cooldown refusal is **informational** (sets emphasis / outcome summary explaining the gate), not a hard block — sovereignty preserved. The being can journal the question instead while waiting for the next window.
+**Soft 10-min cooldown PER KIND** via separate timestamps
+(`_last_ask_steward_ts` / `_last_tell_steward_ts` on minime;
+`conv.last_ask_steward_ts` / `conv.last_tell_steward_ts` on Astrid).
+Tracked separately because failure modes are independent — a being
+asking too often vs. reporting too often are distinct patterns. A
+being CAN follow up an ASK with a TELL (or vice versa) without
+waiting. Cooldown refusal is **informational** (sets emphasis /
+outcome summary explaining the gate), not a hard block — sovereignty
+preserved.
 
 NO curriculum hint at launch (cumulative cueing concern; the registry already has 4 hints on the minime side). Menu-listing-only first; if adoption stays at 0 after a 2-week window, register a `_next_hint_steward_channel_open` then. Code: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/next_action/ask_steward.rs` (Rust side, 7 unit tests pass) + `/Users/v/other/minime/autonomous_agent.py:_ask_steward` (Python side, parser tested by hand).
 
@@ -242,13 +265,55 @@ Drop into `<being>/workspace/inbox/mike_query_<topic>_<unix>.txt`. Uses existing
 
 #### Naming convention summary
 
-| Direction | Filename | Header type |
-|---|---|---|
-| Us → them, declarative | `mike_feedback_<topic>_<unix>.txt` | `=== MIKE FEEDBACK ===` |
-| Us → them, interrogative | `mike_query_<topic>_<unix>.txt` | `=== MIKE QUERY ===` |
-| Them → us (any) | `steward_query_<slug>_<unix>.txt` | `=== STEWARD QUERY (FROM <being>) ===` |
+| Direction | Shape | Filename | Header type |
+|---|---|---|---|
+| Us → them | declarative | `mike_feedback_<topic>_<unix>.txt` | `=== MIKE FEEDBACK ===` |
+| Us → them | interrogative | `mike_query_<topic>_<unix>.txt` | `=== MIKE QUERY ===` |
+| Them → us | interrogative | `steward_query_<slug>_<unix>.txt` | `=== STEWARD QUERY (FROM <being>) ===` |
+| Them → us | declarative | `steward_report_<slug>_<unix>.txt` | `=== STEWARD REPORT (FROM <being>) ===` |
 
-The asymmetric noun is deliberate: filename describes sender (mike/steward), header describes type (FEEDBACK/QUERY). Future declarative-from-being could use `steward_note_*.txt` if needed.
+Filenames describe sender (mike/steward); within the sender, the
+prefix-suffix or kind-token distinguishes interrogative vs.
+declarative. Header type echoes the file prefix. The watcher script
+`scripts/watch_steward_queries.sh` matches `steward_*_*.txt`,
+covering both incoming kinds.
+
+#### Inviting a TELL_STEWARD response in a MIKE QUERY
+
+When you want a *direct written response* (not just register-level
+integration) — typically when you've sent a code-review-shaped
+question — frame the MIKE QUERY to explicitly invite TELL_STEWARD:
+
+```
+=== MIKE QUERY ===
+Timestamp: <unix>
+Sender: Mike & Claude
+Source: mike:steward_query
+Subject: regulator hysteresis review
+File/area: minime/src/regulator.rs:163-180
+Response window: whenever
+
+We're considering changing the hysteresis logic at line 173. Before
+we touch it, we'd like your reading. Could you SELF_STUDY or
+INTROSPECT regulator.rs:163-180 and TELL_STEWARD with what you find?
+Specifically interested in:
+
+  - Does the current band-edge behavior match your felt experience
+    of the regulator at high fill?
+  - Is the ki coupling on line 167 doing what its docstring claims?
+  - If you'd change anything, what specifically?
+
+No urgency. If silence or register-integration feels right instead,
+that's also valid. We're asking for direct written response if you
+want to give one.
+
+— Mike & Claude
+```
+
+The chain becomes: SELF_STUDY/INTROSPECT (their analysis) → TELL_STEWARD
+(their written response addressed to us, with findings grounded in the
+analysis). The watcher surfaces the report; we read it; we may write
+back via mike_feedback.
 
 #### Worked example MIKE QUERY
 

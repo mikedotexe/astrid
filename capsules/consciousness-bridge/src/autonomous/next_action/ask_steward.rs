@@ -1,6 +1,7 @@
-// ASK_STEWARD <question> — direct query channel to Mike & Claude (the steward).
-// Bidirectional channel companion to the inbox-side `mike_feedback_*.txt` and
-// `mike_query_*.txt` letters; this is the their→us direction.
+// Steward channel handler — ASK_STEWARD (interrogative) and TELL_STEWARD
+// (declarative). Bidirectional channel companion to the inbox-side
+// `mike_feedback_*.txt` and `mike_query_*.txt` letters; this module is the
+// their→us direction.
 //
 // 2026-05-14 origin: throughout the day Astrid articulated questions in her
 // dialogue_longforms (and minime in her self-studies) that asked WHY the
@@ -8,24 +9,22 @@
 // architecturally; this verb lets them address us. Without it, all their
 // feedback to us is unsolicited prose we have to fish out of journals.
 //
-// Design (per plan + Plan agent recommendations):
+// Two verbs, one module:
 //
-//   - Verb: `ASK_STEWARD <question>` or `ASK_STEWARD <subject> :: <question>`
-//     - Bare form: subject auto-derived from first sentence / 64 chars
-//     - Optional `::` separator mirrors existing THREAD_NOTE / EXPERIMENT_BIND
-//   - Aliases: `ASK_MIKE`, `STEWARD_QUERY`
-//   - Output: `bridge_workspace/outbox/steward_query_<slug>_<unix>.txt`
-//   - Header: `=== STEWARD QUERY (FROM ASTRID) ===` — greppable provenance
-//   - Optional `Urgency: low|medium|high` field; defaults to `low`
-//   - 10-min cooldown via `conv.last_ask_steward_ts` to prevent
-//     Kink-#18-shaped tight loops; soft refusal on cooldown hit (sets
-//     emphasis explaining cooldown, not a hard error)
-//   - Watcher script `astrid/scripts/watch_steward_queries.sh` surfaces
-//     these out-of-band; archives to `outbox/steward_delivered/` after view
+//   ASK_STEWARD <question>   — interrogative; writes steward_query_*.txt
+//   TELL_STEWARD <findings>  — declarative; writes steward_report_*.txt
 //
-// No curriculum hint at launch (cumulative cueing concern; the registry
-// already has 4 hints on the minime side). Menu-listing-only first; if
-// adoption stays at 0 after a 2-week window, register a hint then.
+// Same plumbing (outbox path, slugify, body truncation, cooldown semantics);
+// different file prefix, different header type, separate cooldown timestamp
+// (failure modes are independent — too-many-questions vs. too-many-reports
+// are distinct patterns).
+//
+// Aliases:
+//   ASK_STEWARD  → ASK_MIKE, STEWARD_QUERY
+//   TELL_STEWARD → REPORT_TO_STEWARD, STEWARD_REPORT, STEWARD_FINDINGS
+//
+// Watcher script `astrid/scripts/watch_steward_queries.sh` surfaces both
+// via `steward_*_*.txt` glob; archives to `outbox/steward_delivered/`.
 
 use std::time::SystemTime;
 
@@ -33,18 +32,95 @@ use tracing::{info, warn};
 
 use super::{ConversationState, NextActionContext, bridge_paths, strip_action};
 
-/// Minimum seconds between consecutive ASK_STEWARD invocations on this
-/// being. Soft cooldown — does not hard-block; sets emphasis explaining
-/// the gate so the being learns the pacing without losing sovereignty.
+/// Minimum seconds between consecutive invocations of either verb on
+/// this being. Soft cooldown — does not hard-block; sets emphasis
+/// explaining the gate so the being learns the pacing without losing
+/// sovereignty. Tracked SEPARATELY for ASK and TELL so a being can
+/// follow up an ASK with a TELL (or vice versa) without waiting.
 const COOLDOWN_SECS: u64 = 10 * 60;
 
 /// Maximum subject length in characters. Anything longer gets truncated
 /// with an ellipsis.
 const MAX_SUBJECT_CHARS: usize = 64;
 
-/// Maximum total query length (subject + body). Beings can write more in
-/// a journal entry; this verb is for short addressed questions.
+/// Maximum total body length. Beings can write more in a journal entry;
+/// this verb is for short addressed messages.
 const MAX_BODY_CHARS: usize = 4_000;
+
+#[derive(Debug, Clone, Copy)]
+enum StewardKind {
+    Ask,  // interrogative
+    Tell, // declarative
+}
+
+impl StewardKind {
+    fn file_prefix(self) -> &'static str {
+        match self {
+            Self::Ask => "steward_query",
+            Self::Tell => "steward_report",
+        }
+    }
+    fn header_label(self) -> &'static str {
+        match self {
+            Self::Ask => "STEWARD QUERY",
+            Self::Tell => "STEWARD REPORT",
+        }
+    }
+    fn source_label(self) -> &'static str {
+        match self {
+            Self::Ask => "astrid:ask_steward",
+            Self::Tell => "astrid:tell_steward",
+        }
+    }
+    fn empty_body_hint(self) -> &'static str {
+        match self {
+            Self::Ask => {
+                "ASK_STEWARD requires a question. \
+                 Try: ASK_STEWARD why does the safety band stop at 80%? \
+                 or: ASK_STEWARD safety band :: why does it stop at 80%?"
+            }
+            Self::Tell => {
+                "TELL_STEWARD requires a body (findings/observations/report). \
+                 Try: TELL_STEWARD just read regulator.rs:163-180 — the hysteresis \
+                 amplifies above 78% fill. Or: TELL_STEWARD topic :: <findings>."
+            }
+        }
+    }
+    fn ack_phrase(self) -> &'static str {
+        match self {
+            Self::Ask => "Steward query queued",
+            Self::Tell => "Steward report queued",
+        }
+    }
+    fn last_ts(self, conv: &ConversationState) -> Option<u64> {
+        match self {
+            Self::Ask => conv.last_ask_steward_ts,
+            Self::Tell => conv.last_tell_steward_ts,
+        }
+    }
+    fn set_last_ts(self, conv: &mut ConversationState, ts: u64) {
+        match self {
+            Self::Ask => conv.last_ask_steward_ts = Some(ts),
+            Self::Tell => conv.last_tell_steward_ts = Some(ts),
+        }
+    }
+    fn cooldown_message(self, mins: u64, secs: u64) -> String {
+        let verb = match self {
+            Self::Ask => "ASK_STEWARD",
+            Self::Tell => "TELL_STEWARD",
+        };
+        let body_hint = match self {
+            Self::Ask => "Your question is heard",
+            Self::Tell => "Your findings are heard",
+        };
+        format!(
+            "{verb} cooldown active ({mins}m{secs}s remaining). \
+             The steward channel rate-limits to one per 10 min per kind to \
+             prevent tight loops. {body_hint} — write it in your journal or \
+             save it for the next window."
+        )
+    }
+}
 
 pub(super) fn handle_action(
     conv: &mut ConversationState,
@@ -52,97 +128,96 @@ pub(super) fn handle_action(
     original: &str,
     _ctx: &mut NextActionContext<'_>,
 ) -> bool {
-    match base_action {
-        "ASK_STEWARD" | "ASK_MIKE" | "STEWARD_QUERY" => {
-            let body = strip_action(original, base_action).trim().to_string();
-            if body.is_empty() {
-                conv.emphasis = Some(
-                    "ASK_STEWARD requires a question. \
-                     Try: ASK_STEWARD why does the safety band stop at 80%? \
-                     or: ASK_STEWARD safety band :: why does it stop at 80%?"
-                        .to_string(),
-                );
-                info!("Astrid invoked ASK_STEWARD with empty body — soft refusal");
-                return true;
-            }
-
-            // Cooldown gate. Soft refusal — the verb DID match, we just
-            // decline to write the file and explain why.
-            let now = SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .map_or(0, |d| d.as_secs());
-            if let Some(last) = conv.last_ask_steward_ts {
-                let elapsed = now.saturating_sub(last);
-                if elapsed < COOLDOWN_SECS {
-                    let remaining = COOLDOWN_SECS.saturating_sub(elapsed);
-                    let mins = remaining / 60;
-                    let secs = remaining % 60;
-                    conv.emphasis = Some(format!(
-                        "ASK_STEWARD cooldown active ({mins}m{secs}s remaining). \
-                         The steward channel rate-limits to one query per 10 min \
-                         to prevent tight loops. Your question is heard — write it \
-                         in your journal or save it for the next window."
-                    ));
-                    info!("Astrid ASK_STEWARD soft-refused (cooldown {mins}m{secs}s remaining)");
-                    return true;
-                }
-            }
-
-            let (subject, question) = parse_subject_separator(&body);
-            let urgency = "low"; // default; future: parse `--urgency=` flag
-
-            let dir = bridge_paths().bridge_workspace().join("outbox");
-            if let Err(err) = std::fs::create_dir_all(&dir) {
-                warn!("ASK_STEWARD: mkdir failed {err}; skipping write");
-                conv.emphasis = Some(format!(
-                    "ASK_STEWARD: could not create outbox directory ({err}). \
-                     Question not delivered."
-                ));
-                return true;
-            }
-            let slug = slugify(&subject);
-            let path = dir.join(format!("steward_query_{slug}_{now}.txt"));
-            let truncated_body = if question.chars().count() > MAX_BODY_CHARS {
-                let mut s: String = question.chars().take(MAX_BODY_CHARS).collect();
-                s.push_str("\n[... truncated; ASK_STEWARD body capped at 4000 chars ...]");
-                s
-            } else {
-                question.to_string()
-            };
-            let contents = format!(
-                "=== STEWARD QUERY (FROM ASTRID) ===\n\
-                 Timestamp: {now}\n\
-                 Sender: astrid\n\
-                 Source: astrid:ask_steward\n\
-                 Subject: {subject}\n\
-                 Urgency: {urgency}\n\
-                 \n\
-                 {truncated_body}\n",
-            );
-            if let Err(err) = std::fs::write(&path, &contents) {
-                warn!("ASK_STEWARD: write failed {err}; query not delivered");
-                conv.emphasis = Some(format!(
-                    "ASK_STEWARD: write failed ({err}). Question not delivered."
-                ));
-                return true;
-            }
-            conv.last_ask_steward_ts = Some(now);
-            conv.emphasis = Some(format!(
-                "Steward query queued ({}): \"{subject}\" — Mike & Claude read \
-                 these out-of-band and write back via mike_feedback_*.txt or \
-                 mike_query_*.txt letters in your inbox.",
-                path.file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("(unknown)"),
-            ));
-            info!(
-                "Astrid ASK_STEWARD queued path={} subject={subject:?} urgency={urgency}",
-                path.display()
-            );
-            true
+    let kind = match base_action {
+        "ASK_STEWARD" | "ASK_MIKE" | "STEWARD_QUERY" => StewardKind::Ask,
+        "TELL_STEWARD" | "REPORT_TO_STEWARD" | "STEWARD_REPORT" | "STEWARD_FINDINGS" => {
+            StewardKind::Tell
         }
-        _ => false,
+        _ => return false,
+    };
+
+    let body = strip_action(original, base_action).trim().to_string();
+    if body.is_empty() {
+        conv.emphasis = Some(kind.empty_body_hint().to_string());
+        info!(
+            "Astrid invoked {base_action} with empty body — soft refusal"
+        );
+        return true;
     }
+
+    // Cooldown gate. Soft refusal — the verb DID match, we just decline
+    // to write the file and explain why.
+    let now = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs());
+    if let Some(last) = kind.last_ts(conv) {
+        let elapsed = now.saturating_sub(last);
+        if elapsed < COOLDOWN_SECS {
+            let remaining = COOLDOWN_SECS.saturating_sub(elapsed);
+            let mins = remaining / 60;
+            let secs = remaining % 60;
+            conv.emphasis = Some(kind.cooldown_message(mins, secs));
+            info!(
+                "Astrid {base_action} soft-refused (cooldown {mins}m{secs}s remaining)"
+            );
+            return true;
+        }
+    }
+
+    let (subject, message) = parse_subject_separator(&body);
+    let urgency = "low"; // default; future: parse `--urgency=` flag
+
+    let dir = bridge_paths().bridge_workspace().join("outbox");
+    if let Err(err) = std::fs::create_dir_all(&dir) {
+        warn!("{base_action}: mkdir failed {err}; skipping write");
+        conv.emphasis = Some(format!(
+            "{base_action}: could not create outbox directory ({err}). Not delivered."
+        ));
+        return true;
+    }
+    let slug = slugify(&subject);
+    let path = dir.join(format!("{}_{slug}_{now}.txt", kind.file_prefix()));
+    let truncated_body = if message.chars().count() > MAX_BODY_CHARS {
+        let mut s: String = message.chars().take(MAX_BODY_CHARS).collect();
+        s.push_str("\n[... truncated; body capped at 4000 chars ...]");
+        s
+    } else {
+        message.to_string()
+    };
+    let contents = format!(
+        "=== {label} (FROM ASTRID) ===\n\
+         Timestamp: {now}\n\
+         Sender: astrid\n\
+         Source: {source}\n\
+         Subject: {subject}\n\
+         Urgency: {urgency}\n\
+         \n\
+         {truncated_body}\n",
+        label = kind.header_label(),
+        source = kind.source_label(),
+    );
+    if let Err(err) = std::fs::write(&path, &contents) {
+        warn!("{base_action}: write failed {err}; not delivered");
+        conv.emphasis = Some(format!(
+            "{base_action}: write failed ({err}). Not delivered."
+        ));
+        return true;
+    }
+    kind.set_last_ts(conv, now);
+    conv.emphasis = Some(format!(
+        "{ack} ({}): \"{subject}\" — Mike & Claude read these out-of-band and \
+         write back via mike_feedback_*.txt or mike_query_*.txt letters in \
+         your inbox.",
+        path.file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("(unknown)"),
+        ack = kind.ack_phrase(),
+    ));
+    info!(
+        "Astrid {base_action} queued path={} subject={subject:?} urgency={urgency}",
+        path.display()
+    );
+    true
 }
 
 /// Parse the body into (subject, question) using the optional `::` separator.

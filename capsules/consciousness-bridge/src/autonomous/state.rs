@@ -824,6 +824,12 @@ pub(super) struct ConversationState {
     /// to prevent tight-loop spam against the steward channel without
     /// hard-blocking sovereignty.
     pub last_ask_steward_ts: Option<u64>,
+    /// Last unix-second timestamp of a TELL_STEWARD invocation. Tracked
+    /// separately from `last_ask_steward_ts` because the failure modes
+    /// are independent — a being asking too often vs. a being reporting
+    /// too often are different patterns. Same 10-min cooldown semantics
+    /// per `ask_steward.rs`.
+    pub last_tell_steward_ts: Option<u64>,
 }
 
 impl ConversationState {
@@ -850,6 +856,7 @@ impl ConversationState {
             wants_look: false,
             wants_search: false,
             last_ask_steward_ts: None,
+            last_tell_steward_ts: None,
             senses_snoozed: false,
             self_reflect_paused: true,
             self_reflect_override: None,

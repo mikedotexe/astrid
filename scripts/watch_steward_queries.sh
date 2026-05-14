@@ -30,17 +30,21 @@ mkdir -p "$MINIME_OUT" "$ASTRID_OUT"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] watch_steward_queries.sh started"
 echo "  Watching: $MINIME_OUT"
 echo "  Watching: $ASTRID_OUT"
-echo "  Pattern:  steward_query_*.txt"
+echo "  Patterns: steward_query_*.txt (ASK), steward_report_*.txt (TELL)"
 echo "---"
 
 fswatch -0 "$MINIME_OUT" "$ASTRID_OUT" \
   | xargs -0 -n1 -I{} sh -c '
     f="$1"
     case "$f" in
-      *steward_query_*.txt)
+      *steward_query_*.txt|*steward_report_*.txt)
         # Skip already-archived files (fswatch may emit on file-creation race).
         [ -f "$f" ] || exit 0
-        echo "[$(date "+%Y-%m-%d %H:%M:%S")] NEW QUERY: $f"
+        case "$f" in
+          *steward_query_*) KIND="QUERY (their question)" ;;
+          *steward_report_*) KIND="REPORT (their findings)" ;;
+        esac
+        echo "[$(date "+%Y-%m-%d %H:%M:%S")] NEW $KIND: $f"
         echo "----- (header + first 20 lines) -----"
         head -20 "$f"
         echo "----- (end preview) -----"
