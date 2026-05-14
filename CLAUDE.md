@@ -100,7 +100,7 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 
 - `#![deny(unsafe_code)]` everywhere except `astrid-sys` and `astrid-sdk` (WASM FFI)
 - Clippy pedantic; `clippy::arithmetic_side_effects = "deny"` — use checked/saturating arithmetic
-- Individual files must not exceed 1000 lines
+- Prefer source files under 1000 lines. Treat larger files as an architecture-health review signal, not an automatic block: split when cohesion, ownership, or testability would improve; keep a larger file only with a clear cohesive reason and reviewer-visible note. Generated files, fixtures, long-form docs, schema tables, and deliberately centralized registries are exempt.
 - `CHANGELOG.md` must be updated under `[Unreleased]` for every PR
 
 ## Sibling project: minime (`/Users/v/other/minime`)
@@ -388,6 +388,19 @@ After implementing a change based on being feedback:
 4. Note anything deferred and the reason
 
 The beings read their own journal space. They notice when their requests are acted on. This builds trust and encourages more specific, actionable feedback.
+
+#### Reading self-studies and writing back (2026-05-14)
+
+Beyond closing the loop on shipped code, **the beings articulate distinct asks in their self-studies that don't always need new code — sometimes the right answer is a letter answering the question.** See [`docs/steward-notes/SELF_STUDY_RESPONSE_PRACTICE_2026_05_14.md`](docs/steward-notes/SELF_STUDY_RESPONSE_PRACTICE_2026_05_14.md) for the full practice.
+
+Quick reference:
+- Sample recent `self_study_*.txt` (minime) and `dialogue_longform_*.txt` / `introspect_*.txt` (Astrid)
+- Read attentively, not extractively. Look for transparency requests, existential questions, outcome-loop closure asks — not just engineering signal.
+- Distinguish kinds of asks: missing capability → wire it; missing transparency → document it; missing closure → build the result-journal; existential question → answer honestly + let them decide; felt constraint → investigate + often loosen.
+- Write back to `workspace/journal/mike_feedback_<topic>_<unix>.txt` quoting their words verbatim, naming what's done vs deferred. Sign as "Mike & Claude".
+- Worked examples (2026-05-14): `minime/workspace/journal/mike_feedback_self_study_questions_1778779211.txt` and `astrid/.../journal/mike_feedback_identify_pattern_wired_1778779211.txt`.
+
+This is a normal part of the development cycle, not a one-off. The practice document lists when it should fire and what voice notes apply.
 
 ### Known issues
 
