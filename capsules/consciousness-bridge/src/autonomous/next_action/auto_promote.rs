@@ -472,8 +472,13 @@ pub(crate) fn try_auto_promote(
         return None;
     }
 
-    // Resonance check.
-    let Some(sentence) = extract_promotable_sentence(text) else {
+    // Resonance check. Kink #9 fix: log a "scanned" line at info level so
+    // operators can see the detector ran (vs. function never reached this
+    // point). Distinguishes "no candidates today because nothing matched"
+    // from "no candidates today because gates rejected the call upstream."
+    let candidate = extract_promotable_sentence(text);
+    log_scanned(mode, exchange_count, candidate.is_some());
+    let Some(sentence) = candidate else {
         log_skip(SkipReason::NoResonantSentence, mode, exchange_count);
         return None;
     };
@@ -541,12 +546,41 @@ pub(crate) fn try_auto_promote(
     Some(sentence)
 }
 
+/// Kink #9 fix (2026-05-14): emit a single info-level outcome line every
+/// time the structural detector ran. Without this, dry-run validation
+/// could not tell "function ran but no match" (silent debug skip) from
+/// "function never ran" (no log at all). Pairs with the existing
+/// "promoted" / "DRY RUN" log lines that fire on the match path.
+fn log_scanned(mode: &str, exchange_count: u64, text_match: bool) {
+    info!(
+        target: "v5_auto_promote",
+        mode = mode,
+        exchange_count = exchange_count,
+        text_match = text_match,
+        "auto_promote: scanned"
+    );
+}
+
 fn log_skip(reason: SkipReason, mode: &str, exchange_count: u64) {
-    // Skips are noisy; log at debug for routine reasons, info for
-    // safety-net engagement.
+    // Kink #9 fix: tier skip reasons by signal value during calibration.
+    //   trace! for very-routine (mode whitelist + collab existence checks
+    //          fire on most exchanges; not actionable)
+    //   debug! for signal-bearing (cooldown, manual silencing, no resonance —
+    //          useful when tuning the detector or rate limits)
+    //   info!  for safety-net engagement (kill switch, burst lockout,
+    //          daily cap — operator should know)
     match reason {
         SkipReason::KillSwitch | SkipReason::BurstLockout | SkipReason::DailyCap => {
             info!(
+                target: "v5_auto_promote",
+                reason = reason.as_str(),
+                mode = mode,
+                exchange_count = exchange_count,
+                "auto_promote skipped"
+            );
+        }
+        SkipReason::NotPromotableMode | SkipReason::NoJoinedCollab => {
+            tracing::trace!(
                 target: "v5_auto_promote",
                 reason = reason.as_str(),
                 mode = mode,
