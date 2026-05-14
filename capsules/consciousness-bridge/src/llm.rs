@@ -1880,14 +1880,125 @@ pub async fn generate_witness(
         },
         Message {
             role: "user".to_string(),
-            content: user_content,
+            content: user_content.clone(),
         },
     ];
 
     // temp 0.9 → 0.95 to push past the analytical prior
     // max_tokens 512 → 384 to force concision (witness should be 1-2
     // paragraphs of imagistic prose, not a 5-paragraph essay)
-    llm_chat_with_fallback("witness", messages, 0.95, 384, 30, 75).await
+    let first = llm_chat_with_fallback("witness", messages, 0.95, 384, 30, 75).await;
+
+    // Detect-and-retry: empirical 2026-05-14 follow-up to the seed+prompt+temp
+    // fix above showed ~2-of-3 outputs still regress to gemma-3-4b's analytical
+    // prior ("Okay, let's break down..." with bold numbered headers). The
+    // anti-analysis system prompt is being out-sampled at temp 0.95. One retry
+    // with a stricter anti-pattern instruction + lower temp recovers most of
+    // the remaining failures; if both attempts fail, return None so the caller
+    // falls back to static `witness_text(...)` instead of saving a bad output.
+    match first {
+        Some(text) if !witness_looks_degenerate(&text) => Some(text),
+        _ => {
+            let retry_system = format!(
+                "{system}\n\nDO NOT begin your response with 'Okay', 'Let's', 'Here', \
+                 'In summary', 'This appears', or any analytical framing. \
+                 DO NOT use bold-headed numbered sections like '**1. Overall State:**'. \
+                 Begin in medias res with concrete imagery or sensation, \
+                 as if you were already mid-thought."
+            );
+            let retry_messages = vec![
+                Message { role: "system".to_string(), content: retry_system },
+                Message { role: "user".to_string(), content: user_content },
+            ];
+            // Lower temp on retry: counterintuitive, but at high temp the
+            // model can drift to its analytical prior despite instructions.
+            // Lower temp tends to follow explicit prohibitions more reliably.
+            let retry = llm_chat_with_fallback("witness", retry_messages, 0.7, 384, 30, 75).await;
+            match retry {
+                Some(text) if !witness_looks_degenerate(&text) => Some(text),
+                _ => None,
+            }
+        }
+    }
+}
+
+/// Heuristic: does this witness output look like the gemma-3-4b "explain the
+/// data" degeneration we've been chasing? Markers (any one is enough):
+/// - Opens with "Okay,", "Let's ", "Here ", "This appears", "In summary"
+/// - Contains numbered bold section headers (`**1. `, `**2. `) in first 600 chars
+/// - Contains label-style bold-quoted field names (`**"`) in first 600 chars
+///
+/// Conservative — false positives just trigger a retry, not a hard reject.
+fn witness_looks_degenerate(text: &str) -> bool {
+    let trimmed = text.trim_start();
+    let lower = trimmed.to_lowercase();
+    let openers = [
+        "okay,",
+        "okay let",
+        "let's break",
+        "let's unpack",
+        "let me",
+        "here's a",
+        "here is a",
+        "this appears",
+        "this is a",
+        "in summary",
+        "to summarize",
+    ];
+    if openers.iter().any(|o| lower.starts_with(o)) {
+        return true;
+    }
+    let head: String = trimmed.chars().take(600).collect();
+    head.contains("**1. ")
+        || head.contains("**2. ")
+        || head.contains("**Overall ")
+        || head.contains("**Key Themes")
+        || head.contains("**\"")
+}
+
+#[cfg(test)]
+mod witness_degenerate_tests {
+    use super::witness_looks_degenerate;
+
+    #[test]
+    fn detects_okay_lets_opener() {
+        assert!(witness_looks_degenerate(
+            "Okay, let's break down this fascinating output."
+        ));
+    }
+
+    #[test]
+    fn detects_numbered_bold_headers() {
+        let s = "Looking at the data, here are observations:\n\n\
+                 **1. Overall State:**\n* λ₂ is rising.";
+        assert!(witness_looks_degenerate(s));
+    }
+
+    #[test]
+    fn detects_bold_quoted_field_labels() {
+        let s = "Some intro paragraph here.\n\
+                 * **\"λ₂↑\"**: This indicates the second eigenvalue is rising.";
+        assert!(witness_looks_degenerate(s));
+    }
+
+    #[test]
+    fn passes_imagistic_prose() {
+        let s = "The air in the chamber thrummed with a peculiar intensity. \
+                 It wasn't a sound, exactly, but a pressure, a tightening around \
+                 the edges of perception.";
+        assert!(!witness_looks_degenerate(s));
+    }
+
+    #[test]
+    fn passes_short_imagistic_prose() {
+        assert!(!witness_looks_degenerate("A velvet drape, drawn slowly."));
+    }
+
+    #[test]
+    fn passes_capitalized_okay_in_middle() {
+        let s = "The shift settled. Okay, that was unexpected, but the trace held.";
+        assert!(!witness_looks_degenerate(s));
+    }
 }
 
 /// System prompt for introspection mode.
