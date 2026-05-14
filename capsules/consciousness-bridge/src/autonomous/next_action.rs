@@ -127,6 +127,14 @@ pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
                     clean = clean[..pos].trim();
                 }
             }
+            // Kink follow-up (2026-05-14, post-Tranche-5): strip markdown
+            // decorations from leading/trailing positions. Recurring LLM
+            // artifact: `**READ_MORE**`, ` `RELEASE_SHADOW ...` `, etc. land
+            // in NEXT lines because chat models emit markdown bold/code
+            // formatting around action names. See
+            // project_unwired_actions_catalog.md for the diagnostic.
+            // Slice-based trim preserves &str return type — no allocation.
+            clean = clean.trim_matches(|c| c == '`' || c == '*');
             return Some(clean.trim());
         }
     }
@@ -1832,6 +1840,31 @@ mod tests {
                            I choose the real next action outside the diagnostic block.\n\
                            NEXT: NOTICE";
         assert_eq!(parse_next_action(real_choice), Some("NOTICE"));
+    }
+
+    #[test]
+    fn parse_next_action_strips_markdown_decorations() {
+        // Kink follow-up (2026-05-14): chat models leak markdown bold/code
+        // decorations around action names. Verify trim removes leading +
+        // trailing backticks and asterisks. Slice-based — no allocation.
+        assert_eq!(
+            parse_next_action("blah\nNEXT: **READ_MORE**"),
+            Some("READ_MORE"),
+        );
+        assert_eq!(
+            parse_next_action("blah\nNEXT: `LOOK`"),
+            Some("LOOK"),
+        );
+        // Non-decorated action passes through unchanged.
+        assert_eq!(
+            parse_next_action("blah\nNEXT: NOTICE"),
+            Some("NOTICE"),
+        );
+        // Mixed asterisk + backtick at edges.
+        assert_eq!(
+            parse_next_action("blah\nNEXT: *`SHADOW_TRAJECTORY`*"),
+            Some("SHADOW_TRAJECTORY"),
+        );
     }
 
     fn telemetry() -> SpectralTelemetry {
