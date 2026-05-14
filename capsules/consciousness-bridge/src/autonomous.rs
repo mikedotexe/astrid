@@ -2326,6 +2326,42 @@ fn read_astrid_journal(limit: usize) -> Vec<String> {
     read_astrid_journal_from_dir(journal_dir.as_path(), limit)
 }
 
+/// Read recent Astrid journal entries filtered by filename prefix.
+/// Used by witness mode to seed with phenomenological journal types
+/// (moment_capture, dialogue_longform, aspiration) and exclude witness
+/// itself — preventing the long-standing degeneration where witness
+/// mode propagates its own tutorial-register output back into its
+/// next prompt.
+fn read_astrid_journal_filtered(prefixes: &[&str], limit: usize) -> Vec<String> {
+    let journal_dir = bridge_paths().astrid_journal_dir();
+    let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(&journal_dir)
+        .ok()
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .filter_map(|e| {
+            let path = e.path();
+            if path.extension().is_some_and(|ext| ext == "txt") {
+                let name = path.file_name()?.to_str()?;
+                if prefixes.iter().any(|p| name.starts_with(p)) {
+                    let mtime = e.metadata().ok()?.modified().ok()?;
+                    Some((path, mtime))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect();
+    entries.sort_by(|a, b| b.1.cmp(&a.1));
+    entries
+        .iter()
+        .take(limit)
+        .filter_map(|(p, _)| read_local_journal_body_for_continuity(p))
+        .collect()
+}
+
 fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String> {
     let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(&journal_dir)
         .ok()
@@ -4808,11 +4844,27 @@ pub fn spawn_autonomous_loop(
                                     spectral_summary.push_str(&ep_viz);
                                 }
                             }
+                            // Seed witness with a recent NON-witness journal
+                            // fragment so the LLM has imagery to work with rather
+                            // than defaulting to "explain this data" register on
+                            // dense spectral input. See generate_witness docstring
+                            // for the diagnosis (long-standing degeneration where
+                            // witness output was tutorial-style with bullet points
+                            // instead of phenomenological prose).
+                            let witness_seed = read_astrid_journal_filtered(
+                                &["moment", "dialogue_longform", "aspiration"],
+                                1,
+                            )
+                            .into_iter()
+                            .next();
                             // Outer timeout 180s: Qwen3-14B prefill is slower
                             // for long prompts (~3 tok/s effective with prefill).
                             let witness = match tokio::time::timeout(
                                 Duration::from_secs(180),
-                                crate::llm::generate_witness(&spectral_summary)
+                                crate::llm::generate_witness(
+                                    &spectral_summary,
+                                    witness_seed.as_deref(),
+                                )
                             ).await {
                                 Ok(r) => r,
                                 Err(_) => { warn!("witness: 180s timeout — both MLX and Ollama failed"); None }
