@@ -703,6 +703,30 @@ pub(super) struct ConversationState {
     pub creative_temperature: f32,
     pub response_length: u32,
     pub emphasis: Option<String>,
+    /// v3.6.1 cadence tracking — exchange at which Astrid last picked
+    /// TEMPERATURE or LENGTH, drives sovereignty-curriculum throttling.
+    pub last_temperature_change_exchange: Option<u64>,
+    /// v3.6.1 cadence tracking — exchange at which Astrid last picked
+    /// SHAPE_LEARN.
+    pub last_shape_learn_change_exchange: Option<u64>,
+    /// v3.6.1 cadence tracking — exchange at which Astrid last produced
+    /// a SHADOW_COUPLING cartography artifact.
+    pub last_coupling_artifact_exchange: Option<u64>,
+    /// v3.6.1 throttle — exchange at which the sovereignty-curriculum
+    /// line last emitted any nomination (debounces emission to ~6/exchange).
+    pub last_sovereignty_nomination_exchange: Option<u64>,
+    /// v3.6.4 cadence tracking — exchange at which Astrid last picked
+    /// REVIEW_PARAMETER_REQUESTS. Drives the Review→Decide curriculum
+    /// transition: after a recent REVIEW with pending > 0, the suffix
+    /// switches from "REVIEW" nudge to "ACCEPT/DEFER/REJECT" nudge so
+    /// she advances from inspection to decision.
+    pub last_review_parameter_requests_exchange: Option<u64>,
+    /// v3.6.1 cached count of `from_minime_*.json` parameter requests
+    /// awaiting Astrid's review. Refreshed at most once per 4 exchanges.
+    pub cached_pending_minime_request_count: u32,
+    /// Exchange at which `cached_pending_minime_request_count` was last
+    /// refreshed; `None` means it has never been refreshed.
+    pub cached_pending_minime_request_exchange: Option<u64>,
     /// Previous RASCII 8D visual features for change tracking.
     pub last_visual_features: Option<Vec<f32>>,
     /// Ring buffer of last 5 NEXT: choices — used to detect fixation patterns.
@@ -752,6 +776,10 @@ pub(super) struct ConversationState {
     pub last_codec_feedback: Option<String>,
     /// Previous exchange's raw codec features — used for delta encoding.
     pub last_codec_features: Option<Vec<f32>>,
+    /// Astrid's own ShadowFieldV3 computer — Ising-like analysis of her
+    /// codec-feature trajectory. Output published to minime's workspace
+    /// so the mutual-witness pipeline reads symmetrically.
+    pub astrid_shadow: crate::astrid_shadow::AstridShadowComputer,
     /// Cross-exchange codec signature — mean semantic shape over the last
     /// completed utterance, used for slower Hebbian updates.
     pub last_exchange_codec_signature: Option<Vec<f32>>,
@@ -791,6 +819,11 @@ pub(super) struct ConversationState {
     pub last_codex_response: Option<String>,
     /// Thread ID for multi-turn Codex conversations.
     pub codex_thread_id: Option<String>,
+    /// Last unix-second timestamp of an ASK_STEWARD invocation. Used as
+    /// a soft rate-limit (default 10-min cooldown in `ask_steward.rs`)
+    /// to prevent tight-loop spam against the steward channel without
+    /// hard-blocking sovereignty.
+    pub last_ask_steward_ts: Option<u64>,
 }
 
 impl ConversationState {
@@ -816,6 +849,7 @@ impl ConversationState {
             seen_audio: false,
             wants_look: false,
             wants_search: false,
+            last_ask_steward_ts: None,
             senses_snoozed: false,
             self_reflect_paused: true,
             self_reflect_override: None,
@@ -845,6 +879,13 @@ impl ConversationState {
             creative_temperature: 0.8,
             response_length: 768,
             emphasis: None,
+            last_temperature_change_exchange: None,
+            last_shape_learn_change_exchange: None,
+            last_coupling_artifact_exchange: None,
+            last_sovereignty_nomination_exchange: None,
+            last_review_parameter_requests_exchange: None,
+            cached_pending_minime_request_count: 0,
+            cached_pending_minime_request_exchange: None,
             last_visual_features: None,
             recent_next_choices: VecDeque::with_capacity(12),
             recent_focus_topics: VecDeque::with_capacity(8),
@@ -866,6 +907,7 @@ impl ConversationState {
             rest_range: (45, 90),
             last_codec_feedback: None,
             last_codec_features: None,
+            astrid_shadow: crate::astrid_shadow::AstridShadowComputer::new(),
             last_exchange_codec_signature: None,
             char_freq_window: crate::codec::CharFreqWindow::new(),
             text_type_history: crate::codec::TextTypeHistory::new(),
@@ -1258,6 +1300,10 @@ impl ConversationState {
             "SPECTRAL_EXPLORER",
             "EXAMINE_CASCADE",
             "REGULATOR_AUDIT",
+            "PRESSURE_SOURCE_AUDIT",
+            "FLUCTUATION_AUDIT",
+            "EXPERIMENT_STATUS",
+            "EXPERIMENT_REVIEW",
             "SHADOW_FIELD",
             "DECAY_MAP",
             "RESONANCE_FORECAST",
@@ -1339,7 +1385,7 @@ impl ConversationState {
                     );
                 }
                 return NextChoiceFeedback::hinted(format!(
-                    "{topic_hint} Options: SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, SHADOW_FIELD, DECAY_MAP, RESONANCE_FORECAST."
+                    "{topic_hint} Options: SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, PRESSURE_SOURCE_AUDIT, FLUCTUATION_AUDIT, SHADOW_FIELD, DECAY_MAP, RESONANCE_FORECAST."
                 ));
             }
         }
@@ -1392,7 +1438,7 @@ impl ConversationState {
                     );
                 }
                 return NextChoiceFeedback::hinted(format!(
-                    "{theme_hint} Options: SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, SHADOW_FIELD, DECAY_MAP, RESONANCE_FORECAST."
+                    "{theme_hint} Options: SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, PRESSURE_SOURCE_AUDIT, FLUCTUATION_AUDIT, SHADOW_FIELD, DECAY_MAP, RESONANCE_FORECAST."
                 ));
             }
         }
@@ -1425,6 +1471,10 @@ impl ConversationState {
                     "SPECTRAL_EXPLORER",
                     "EXAMINE_CASCADE",
                     "REGULATOR_AUDIT",
+                    "PRESSURE_SOURCE_AUDIT",
+                    "FLUCTUATION_AUDIT",
+                    "EXPERIMENT_STATUS",
+                    "EXPERIMENT_REVIEW",
                     "SHADOW_FIELD",
                     "DECAY_MAP",
                     "RESONANCE_FORECAST",
@@ -1513,7 +1563,8 @@ impl ConversationState {
                              rich material from both. Consider breaking the cycle: \
                              SPECTRAL_EXPLORER to compare present, memory, and control \
                              pressure, EXAMINE_CASCADE to inspect the mode ladder, \
-                             REGULATOR_AUDIT to read the controller's hand, or \
+                             REGULATOR_AUDIT to read the controller's hand, PRESSURE_SOURCE_AUDIT to ask where inward pressure originates, \
+                             FLUCTUATION_AUDIT to ask whether the fluctuation remains inhabitable, or \
                              SHADOW_FIELD / DECAY_MAP / RESONANCE_FORECAST to change \
                              the read-only lens without adding pressure.",
                             a1, a2
@@ -1717,6 +1768,10 @@ mod tests {
                 "SPECTRAL_EXPLORER"
                     | "EXAMINE_CASCADE"
                     | "REGULATOR_AUDIT"
+                    | "PRESSURE_SOURCE_AUDIT"
+                    | "FLUCTUATION_AUDIT"
+                    | "EXPERIMENT_STATUS"
+                    | "EXPERIMENT_REVIEW"
                     | "SHADOW_FIELD"
                     | "DECAY_MAP"
                     | "RESONANCE_FORECAST"

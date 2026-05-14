@@ -1,3 +1,4 @@
+mod ask_steward;
 mod attractor;
 mod audio;
 mod autoresearch;
@@ -1581,6 +1582,11 @@ pub(super) fn handle_next_action(
 
     if identify_pattern::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return NextActionOutcome::handled("identify_pattern", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
+    if ask_steward::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("ask_steward", format!("Handled `{original}`."))
             .with_stage_visibility(stage, visibility);
     }
 
