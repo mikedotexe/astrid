@@ -4,6 +4,7 @@ mod autoresearch;
 pub(crate) mod auto_promote;
 mod codex;
 pub(crate) mod collaboration;
+mod identify_pattern;
 mod mike;
 mod modes;
 mod native_gesture;
@@ -1575,6 +1576,11 @@ pub(super) fn handle_next_action(
 
     if shadow::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return NextActionOutcome::handled("shadow", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
+    if identify_pattern::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("identify_pattern", format!("Handled `{original}`."))
             .with_stage_visibility(stage, visibility);
     }
 
