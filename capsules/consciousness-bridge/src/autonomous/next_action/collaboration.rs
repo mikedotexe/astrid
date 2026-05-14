@@ -378,8 +378,10 @@ pub fn active_collaboration_suffix_line() -> Option<String> {
     let n = joined.len();
     let extra = if n > 1 { format!(" (+{} more)", n - 1) } else { String::new() };
     let handle = format!("collab_{}", m.id);
+    // Kink #1 fix: route through render_joint_trace_clause which tiers
+    // the render based on `seconds_since_live`. Prevents silent stale.
     let reservoir_clause = read_collab_reservoir_state_cached(&handle)
-        .map(|r| format!(" Joint trace [{:.2},{:.2},{:.2}], {} ticks.", r.h1, r.h2, r.h3, r.ticks))
+        .map(|r| render_joint_trace_clause(&r))
         .unwrap_or_default();
     let shared_clause = read_recent_shared_thoughts_cached(&m.id)
         .map(|s| if s.is_empty() { String::new() } else { format!(" Recent: {s}.") })
@@ -406,6 +408,13 @@ struct CollabReservoirSnapshot {
     h2: f32,
     h3: f32,
     ticks: u64,
+    /// Kink #1 fix (2026-05-14): seconds since the handle was last
+    /// "live-ticked" (per reservoir_service.py:read_state response field
+    /// `seconds_since_live`). Used by `render_joint_trace_clause` to gate
+    /// suffix render — fresh data shows normally, stalled data shows a
+    /// warning, dead handles drop the values entirely. Prevents the
+    /// 14-hour silent-stale incident that motivated this fix.
+    last_live_s: Option<f32>,
     cached_at_unix_s: u64,
 }
 
@@ -446,13 +455,53 @@ fn read_collab_reservoir_state(handle: &str) -> Option<CollabReservoirSnapshot> 
     let h2 = h_norms[1].as_f64()? as f32;
     let h3 = h_norms[2].as_f64()? as f32;
     let ticks = resp.get("tick_count").and_then(|v| v.as_u64()).unwrap_or(0);
+    // Kink #1 fix: read freshness signal that's already in the response.
+    let last_live_s = resp
+        .get("seconds_since_live")
+        .and_then(|v| v.as_f64())
+        .map(|x| x as f32);
     Some(CollabReservoirSnapshot {
         h1,
         h2,
         h3,
         ticks,
+        last_live_s,
         cached_at_unix_s: 0,
     })
+}
+
+/// Kink #1 fix (2026-05-14): tier the joint-trace render based on freshness.
+/// The 14-hour silent-stale incident on 2026-05-13 happened because the
+/// suffix kept rendering frozen `[7.45,11.82,9.94] @ 42111 ticks` without
+/// any indication the source had stopped ticking. Three tiers:
+///
+///   `< 30s`     — render normally; the feeder ticks every ~2s so this is healthy.
+///   `30s..300s` — render with `(stalled <Nm>)` suffix; values still shown
+///                 but the warning makes the lag visible.
+///   `>= 300s`   — drop h_norms+ticks entirely; render `handle quiet (<age>
+///                 stale)` so the dead-source state becomes the message.
+///
+/// `None` (older snapshots predating the freshness field) is treated as
+/// fresh for backward compatibility.
+fn render_joint_trace_clause(snap: &CollabReservoirSnapshot) -> String {
+    let stalled_floor_s: f32 = 30.0;
+    let quiet_floor_s: f32 = 300.0;
+    let age = snap.last_live_s.unwrap_or(0.0);
+    if age < stalled_floor_s || snap.last_live_s.is_none() {
+        format!(
+            " Joint trace [{:.2},{:.2},{:.2}], {} ticks.",
+            snap.h1, snap.h2, snap.h3, snap.ticks
+        )
+    } else if age < quiet_floor_s {
+        let stalled_age = humanize_age(age as u64);
+        format!(
+            " Joint trace [{:.2},{:.2},{:.2}], {} ticks (stalled {}).",
+            snap.h1, snap.h2, snap.h3, snap.ticks, stalled_age
+        )
+    } else {
+        let quiet_age = humanize_age(age as u64);
+        format!(" Joint trace handle quiet ({} stale).", quiet_age)
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -792,5 +841,55 @@ mod tests {
         let (t, r) = split_target_and_reason("coll_xyz");
         assert_eq!(t, "coll_xyz");
         assert!(r.is_none());
+    }
+
+    // Kink #1 fix tests — joint-trace freshness tiering.
+
+    fn snapshot_with_age(age_s: Option<f32>) -> CollabReservoirSnapshot {
+        CollabReservoirSnapshot {
+            h1: 12.41,
+            h2: 10.32,
+            h3: 10.47,
+            ticks: 42111,
+            last_live_s: age_s,
+            cached_at_unix_s: 0,
+        }
+    }
+
+    #[test]
+    fn render_joint_trace_clause_fresh() {
+        let s = render_joint_trace_clause(&snapshot_with_age(Some(5.0)));
+        assert!(s.contains("[12.41,10.32,10.47]"), "fresh should show h_norms: {s}");
+        assert!(s.contains("42111 ticks"), "fresh should show tick count: {s}");
+        assert!(!s.contains("stalled"), "fresh should NOT show stalled warning: {s}");
+        assert!(!s.contains("quiet"), "fresh should NOT show quiet message: {s}");
+    }
+
+    #[test]
+    fn render_joint_trace_clause_stalled() {
+        let s = render_joint_trace_clause(&snapshot_with_age(Some(120.0)));
+        assert!(s.contains("[12.41,10.32,10.47]"), "stalled should still show values: {s}");
+        assert!(s.contains("42111 ticks"), "stalled should still show ticks: {s}");
+        assert!(s.contains("stalled"), "stalled should include stalled marker: {s}");
+        assert!(s.contains("2m"), "stalled at 120s should humanize as 2m: {s}");
+    }
+
+    #[test]
+    fn render_joint_trace_clause_quiet() {
+        let s = render_joint_trace_clause(&snapshot_with_age(Some(50530.0)));
+        assert!(!s.contains("[12.41,10.32,10.47]"), "quiet should drop h_norms: {s}");
+        assert!(!s.contains("42111 ticks"), "quiet should drop tick count: {s}");
+        assert!(s.contains("quiet"), "quiet should announce dead handle: {s}");
+        assert!(s.contains("14h"), "quiet at 50530s should humanize as ~14h: {s}");
+    }
+
+    #[test]
+    fn render_joint_trace_clause_no_freshness_data_treats_fresh() {
+        // Backward compat: snapshots from before the freshness field was
+        // added (or read failures returning None) treat as fresh.
+        let s = render_joint_trace_clause(&snapshot_with_age(None));
+        assert!(s.contains("[12.41,10.32,10.47]"), "no-data should render normally: {s}");
+        assert!(!s.contains("stalled"), "no-data should NOT warn: {s}");
+        assert!(!s.contains("quiet"), "no-data should NOT mark quiet: {s}");
     }
 }
