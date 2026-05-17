@@ -72,7 +72,7 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 
 - `#![deny(unsafe_code)]` everywhere except `astrid-sys` and `astrid-sdk` (WASM FFI)
 - Clippy pedantic; `clippy::arithmetic_side_effects = "deny"` — use checked/saturating arithmetic
-- Individual files must not exceed 1000 lines
+- Prefer source files under 1000 lines. Treat larger files as an architecture-health review signal, not an automatic block: split when cohesion, ownership, or testability would improve; keep a larger file only with a clear cohesive reason and reviewer-visible note. Generated files, fixtures, long-form docs, schema tables, and deliberately centralized registries are exempt.
 - `CHANGELOG.md` must be updated under `[Unreleased]` for every PR
 
 ## Sibling project: minime (`/Users/v/other/minime`)

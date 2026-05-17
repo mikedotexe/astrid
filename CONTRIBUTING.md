@@ -43,7 +43,7 @@ also when a maintainer evaluates whether the task is a good fit for a first cont
 ### 4. Write your code
 
 - Follow existing code style and patterns
-- Individual files must not exceed 1000 lines. Split large files into modules
+- Prefer source files under 1000 lines. When a file grows beyond that, treat it as an architecture-health review: split it if cohesion, ownership, or testability would improve; keep it intact only when the larger shape is deliberate and explained in the PR
 - Run `cargo test --workspace` and `cargo clippy -- -D warnings` before submitting
 - Update `CHANGELOG.md` under the `[Unreleased]` section
 
@@ -67,7 +67,7 @@ review is thorough. Address all comments before requesting re-review.
 
 ## Code Guidelines
 
-- **1000-line file limit.** No exceptions without the `large-file-ok` label from a maintainer
+- **Architecture-health review.** Source files over 1000 lines are allowed only when they remain cohesive, have a clear ownership boundary, and are covered by review notes or the `large-file-ok` label. Generated files, fixtures, long-form docs, schema tables, and deliberately centralized registries are exempt. Run `python3 scripts/architecture_health.py` to spot large-file and long-function pressure before review
 - **Conventional Commits.** `feat(scope): description`, `fix(scope): description`, etc.
 - **Tests required.** New features need tests. Bug fixes need a regression test
 - **No unsafe code** without explicit justification and maintainer approval
