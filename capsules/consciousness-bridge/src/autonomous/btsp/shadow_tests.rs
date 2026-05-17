@@ -49,6 +49,7 @@ fn active_astrid_proposal() -> ActiveSovereigntyProposal {
         outcomes: Vec::new(),
         refusals: Vec::new(),
         counteroffers: Vec::new(),
+        study_first_records: Vec::new(),
         last_negotiation_event_at_unix_s: 0,
         shadow_equivalences: Vec::new(),
     }

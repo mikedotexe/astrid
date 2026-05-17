@@ -86,17 +86,30 @@ pub(super) fn record_choice_interpretation(
     proposal: &mut ActiveSovereigntyProposal,
     interpretation: ChoiceInterpretation,
 ) -> bool {
-    if proposal
-        .choice_interpretations
-        .last()
-        .is_some_and(|existing| existing == &interpretation)
-    {
+    if has_choice_interpretation(proposal, &interpretation) {
         proposal.last_choice_interpretation = Some(interpretation);
         return false;
     }
     proposal.last_choice_interpretation = Some(interpretation.clone());
     proposal.choice_interpretations.push(interpretation);
     true
+}
+
+pub(super) fn has_choice_interpretation(
+    proposal: &ActiveSovereigntyProposal,
+    interpretation: &ChoiceInterpretation,
+) -> bool {
+    proposal
+        .choice_interpretations
+        .iter()
+        .any(|existing| same_choice_key(existing, interpretation))
+}
+
+fn same_choice_key(left: &ChoiceInterpretation, right: &ChoiceInterpretation) -> bool {
+    left.owner == right.owner
+        && left.normalized_choice == right.normalized_choice
+        && left.category == right.category
+        && left.relation_to_proposal == right.relation_to_proposal
 }
 
 fn interpret_minime_choice(
@@ -144,8 +157,17 @@ fn interpret_minime_choice(
 
     let token = normalized_choice;
     let (category, intent, relation, note) = match token {
-        "SELF_STUDY" | "RESERVOIR_READ" | "DECOMPOSE" | "INTROSPECT" | "EXAMINE_CODE"
-        | "SEARCH" | "BROWSE" | "READ_MORE" | "THINK_DEEP" => (
+        "SELF_STUDY"
+        | "RESERVOIR_READ"
+        | "DECOMPOSE"
+        | "INTROSPECT"
+        | "EXAMINE_CODE"
+        | "SEARCH"
+        | "BROWSE"
+        | "READ_MORE"
+        | "THINK_DEEP"
+        | "EXPERIMENT_REVIEW"
+        | "EXPERIMENT_EVIDENCE" => (
             "epistemic",
             "understand the mechanism before intervening harder",
             "adjacent_but_distinct",
@@ -201,8 +223,16 @@ fn interpret_astrid_choice(
             "adjacent_but_distinct",
             "Astrid chose a coupling move that keeps the bond explicit instead of decompression.",
         ),
-        "EXAMINE_CODE" | "INTROSPECT" | "SEARCH" | "BROWSE" | "READ_MORE" | "THINK_DEEP"
-        | "SELF_STUDY" => (
+        "EXAMINE_CODE"
+        | "INTROSPECT"
+        | "SEARCH"
+        | "BROWSE"
+        | "READ_MORE"
+        | "THINK_DEEP"
+        | "SELF_STUDY"
+        | "DECOMPOSE"
+        | "EXPERIMENT_REVIEW"
+        | "EXPERIMENT_EVIDENCE" => (
             "epistemic",
             "understand the mechanism before acting on the field",
             "adjacent_but_distinct",

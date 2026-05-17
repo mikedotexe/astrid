@@ -10,6 +10,8 @@ const COOLDOWN_INTEGRATED_SECS: u64 = 5 * 60;
 const COOLDOWN_EXPIRED_SECS: u64 = 5 * 60;
 const COOLDOWN_DECLINED_SECS: u64 = 3 * 60;
 const COOLDOWN_MISREAD_DECLINED_SECS: u64 = 10 * 60;
+const COOLDOWN_ADJACENT_ONLY_RECONCENTRATING_SECS: u64 = 10 * 60;
+const COOLDOWN_STUDY_FIRST_RECONCENTRATING_SECS: u64 = 20 * 60;
 const COOLDOWN_ESCALATED_SECS: u64 = 15 * 60;
 const COOLDOWN_ESCALATION_WINDOW_SECS: u64 = 30 * 60;
 const LEARNED_POLICY_WINDOW: usize = 24;
@@ -96,14 +98,22 @@ pub(super) fn cooldown_state_for(
         .iter()
         .rev()
         .any(|refusal| refusal.reason == "misread");
-    let base_duration = match latest.reply_state.as_str() {
-        "declined" if misread_decline => COOLDOWN_MISREAD_DECLINED_SECS,
-        "declined" => COOLDOWN_DECLINED_SECS,
-        "expired" => COOLDOWN_EXPIRED_SECS,
-        _ => COOLDOWN_INTEGRATED_SECS,
+    let adjacent_only_reconcentrating = adjacent_only_reconcentrating(latest);
+    let study_first_reconcentrating = study_first_reconcentrating(latest);
+    let base_duration = if study_first_reconcentrating {
+        COOLDOWN_STUDY_FIRST_RECONCENTRATING_SECS
+    } else if adjacent_only_reconcentrating {
+        COOLDOWN_ADJACENT_ONLY_RECONCENTRATING_SECS
+    } else {
+        match latest.reply_state.as_str() {
+            "declined" if misread_decline => COOLDOWN_MISREAD_DECLINED_SECS,
+            "declined" => COOLDOWN_DECLINED_SECS,
+            "expired" => COOLDOWN_EXPIRED_SECS,
+            _ => COOLDOWN_INTEGRATED_SECS,
+        }
     };
     let duration = if escalated {
-        COOLDOWN_ESCALATED_SECS
+        base_duration.max(COOLDOWN_ESCALATED_SECS)
     } else {
         base_duration
     };
@@ -112,8 +122,12 @@ pub(super) fn cooldown_state_for(
     CooldownState {
         active: now < until_unix_s,
         until_unix_s,
-        reason: if escalated {
+        reason: if study_first_reconcentrating {
+            "recent_study_first_reconcentrating_same_fingerprint".to_string()
+        } else if escalated {
             "repeated_reconcentrating_same_fingerprint".to_string()
+        } else if adjacent_only_reconcentrating {
+            "recent_adjacent_only_reconcentrating_same_fingerprint".to_string()
         } else {
             match latest.reply_state.as_str() {
                 "declined" if misread_decline => "recent_misread_same_fingerprint".to_string(),
@@ -322,6 +336,37 @@ fn should_escalate_cooldown(
         }
     }
     total != 0 && ratio_at_least(reconcentrating, total, 1, 2)
+}
+
+fn adjacent_only_reconcentrating(proposal: &ActiveSovereigntyProposal) -> bool {
+    if proposal.choice_interpretations.is_empty()
+        || !proposal.exact_adoptions.is_empty()
+        || !proposal.refusals.is_empty()
+        || !proposal.counteroffers.is_empty()
+    {
+        return false;
+    }
+    proposal.outcomes.iter().any(|outcome| {
+        outcome.response_id == "adjacent_uptake"
+            && outcome.opening_vs_reconcentration == "reconcentrating"
+    })
+}
+
+fn study_first_reconcentrating(proposal: &ActiveSovereigntyProposal) -> bool {
+    if proposal.study_first_records.is_empty()
+        || !proposal.exact_adoptions.is_empty()
+        || !proposal.refusals.is_empty()
+        || proposal
+            .counteroffers
+            .iter()
+            .any(|counteroffer| matches!(counteroffer.state.as_str(), "open" | "accepted"))
+    {
+        return false;
+    }
+    proposal.outcomes.iter().any(|outcome| {
+        outcome.response_id == super::agency::RESPONSE_STUDY_FIRST
+            && outcome.opening_vs_reconcentration == "reconcentrating"
+    })
 }
 
 fn proposal_resolved_at(proposal: &ActiveSovereigntyProposal) -> u64 {

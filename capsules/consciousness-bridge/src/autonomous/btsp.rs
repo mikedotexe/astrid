@@ -1,17 +1,20 @@
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use tracing::{info, warn};
+use tracing::info;
 
 mod adoption;
+mod agency;
 mod causality;
 mod choice;
 mod conversion;
 mod helpers;
 mod policy;
+mod proposal;
 mod render;
+mod roundtrip;
 mod seed;
 mod shadow;
 mod signal;
@@ -19,35 +22,43 @@ mod social;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
+mod tests_agency;
+#[cfg(test)]
 mod tests_policy;
+mod trace;
 
 use super::state::ConversationState;
 use crate::paths::bridge_paths;
-use crate::rescue_policy::STABLE_CORE_TARGET_FILL_PCT;
-use adoption::{ExactAdoption, exact_adoptions_for_scoring, record_exact_adoption};
+use adoption::{ExactAdoption, record_exact_adoption};
+use agency::{score_adopted_outcomes, score_final_non_adoption_outcomes};
 use choice::{
-    ChoiceInterpretation, interpret_choice, interpret_exact_choice, is_same_family_adjacent,
-    record_choice_interpretation,
+    ChoiceInterpretation, has_choice_interpretation, interpret_choice, interpret_exact_choice,
+    is_same_family_adjacent, record_choice_interpretation,
 };
 use helpers::{
-    atomic_write_json, build_non_adoption_outcome, load_json_or_default, normalize_choice,
-    now_unix_s, push_unique_outcome, recompute_reply_state, response_matches_choice,
+    atomic_write_json, load_json_or_default, normalize_choice, now_unix_s, recompute_reply_state,
+    response_matches_choice,
 };
 use policy::{
     LearnedPolicyEntry, build_signal_fingerprint, cooldown_state_for, hydrate_signal_fingerprints,
     refresh_learned_policy,
 };
 use render::{render_owner_block, render_signal_guidance};
-use seed::{seed_episode, seeded_response_ids};
+pub(super) use roundtrip::{export_minime_prompt_block_once, record_minime_outbox_reply};
+#[cfg(test)]
+pub(super) use roundtrip::{record_minime_reply_into_runtime, render_minime_inbox_note};
+use seed::seed_episode;
+#[cfg(test)]
+use seed::seeded_response_ids;
 use shadow::{ShadowEquivalenceRecord, observe_shadow_equivalence, record_shadow_equivalence};
 use signal::{
     append_signal_event, ensure_signal_catalog_seeded, evaluate_seeded_episode,
-    learning_note_for_outcome, maybe_record_note_read, persist_signal_status,
-    related_choice_for_owner,
+    maybe_record_note_read, persist_signal_status, related_choice_for_owner,
 };
 use social::{
-    CounterofferRecord, PreferenceMemoryEntry, RefusalRecord, apply_structured_signal,
-    parse_structured_signal, record_refusal, refresh_preference_memory,
+    CounterofferRecord, PreferenceMemoryEntry, RefusalRecord, StudyFirstRecord,
+    apply_structured_signal, has_study_first_record, link_study_first_resolution,
+    parse_structured_signal, record_refusal, record_study_first, refresh_preference_memory,
     resolve_counteroffers_for_exact_adoption,
 };
 
@@ -170,6 +181,8 @@ pub(super) struct ActiveSovereigntyProposal {
     #[serde(default)]
     pub counteroffers: Vec<CounterofferRecord>,
     #[serde(default)]
+    pub study_first_records: Vec<StudyFirstRecord>,
+    #[serde(default)]
     pub last_negotiation_event_at_unix_s: u64,
     #[serde(default)]
     pub shadow_equivalences: Vec<ShadowEquivalenceRecord>,
@@ -197,6 +210,7 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
     changed |= score_adopted_outcomes(&mut bank, &mut ledger, controller_health);
     changed |= score_final_non_adoption_outcomes(&mut bank, &mut ledger, controller_health);
     changed |= refresh_seeded_episode_learning(&mut bank, &ledger);
+    changed |= trace::sync_live_trace_episodes(&mut bank, &ledger);
 
     let evaluation = evaluate_seeded_episode(controller_health);
     let previous_status =
@@ -227,69 +241,14 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
     );
     persist_signal_status(&status);
 
-    if !has_active_proposal(&ledger, EPISODE_ID)
-        && !cooldown_state.active
-        && let Some(matched) = evaluation.matched
-    {
-        let created_at_unix_s = now_unix_s();
-        let proposal = ActiveSovereigntyProposal {
-            proposal_id: format!("{EPISODE_ID}_proposal_{created_at_unix_s}"),
-            episode_id: EPISODE_ID.to_string(),
-            episode_name: EPISODE_NAME.to_string(),
-            matched_cues: matched.matched_cues.clone(),
-            matched_live_signals: matched.live_signals.clone(),
-            matched_signal_families: matched.matched_signal_families.clone(),
-            matched_signal_roles: matched.matched_signal_roles.clone(),
-            signal_score: matched.signal_score,
-            confidence: matched.signal_score,
-            audience: "bilateral".to_string(),
-            candidate_response_ids: seeded_response_ids(),
-            reply_state: "unseen".to_string(),
-            selected_response_id: None,
-            latest_selected_response_id: None,
-            selected_response_ids_by_owner: HashMap::new(),
-            owner_reply_state: HashMap::from([
-                (OWNER_ASTRID.to_string(), "unseen".to_string()),
-                (OWNER_MINIME.to_string(), "unseen".to_string()),
-            ]),
-            outcome_status: "pending".to_string(),
-            created_at_unix_s,
-            expires_at_unix_s: created_at_unix_s.saturating_add(ACTIVE_WINDOW_SECS),
-            matched_at_exchange: conv.exchange_count,
-            latest_match_at_unix_s: created_at_unix_s,
-            prompt_exposures: HashMap::new(),
-            related_choice: None,
-            signal_fingerprint: signal_fingerprint.clone(),
-            last_choice_interpretation: None,
-            choice_interpretations: Vec::new(),
-            exact_adoptions: Vec::new(),
-            adoption_contexts: HashMap::new(),
-            outcomes: Vec::new(),
-            refusals: Vec::new(),
-            counteroffers: Vec::new(),
-            last_negotiation_event_at_unix_s: 0,
-            shadow_equivalences: Vec::new(),
-        };
-        append_signal_event(
-            "signal_matched",
-            json!({
-                "episode_id": EPISODE_ID,
-                "proposal_id": proposal.proposal_id.clone(),
-                "signal_families": proposal.matched_signal_families.clone(),
-                "signal_roles": proposal.matched_signal_roles.clone(),
-                "signal_score": proposal.signal_score,
-                "matched_cues": proposal.matched_cues.clone(),
-                "live_signals": proposal.matched_live_signals.clone(),
-                "detail": "Rolling BTSP signal match opened a bounded proposal."
-            }),
-        );
-        ledger.proposals.push(proposal);
-        changed = true;
-        info!(
-            episode_id = EPISODE_ID,
-            cues = matched.matched_cues.join(", "),
-            live_signals = matched.live_signals.join(", "),
-            "btsp: created bilateral sovereignty proposal"
+    if let Some(matched) = evaluation.matched {
+        changed |= proposal::maybe_open_advisory_proposal(
+            &bank,
+            &mut ledger,
+            conv,
+            &matched,
+            &signal_fingerprint,
+            &cooldown_state,
         );
     }
 
@@ -298,6 +257,7 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub(super) fn render_astrid_prompt_block() -> Option<String> {
     ensure_signal_catalog_seeded();
     let (mut bank, mut ledger) = load_runtime();
@@ -312,6 +272,7 @@ pub(super) fn render_astrid_prompt_block() -> Option<String> {
     Some(rendered)
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub(super) fn render_astrid_initiation_seed() -> Option<String> {
     ensure_signal_catalog_seeded();
     let (mut bank, mut ledger) = load_runtime();
@@ -324,61 +285,6 @@ pub(super) fn render_astrid_initiation_seed() -> Option<String> {
     record_prompt_render(proposal, OWNER_ASTRID, "astrid_initiation");
     save_runtime(&mut bank, &mut ledger);
     Some(rendered)
-}
-
-pub(super) fn export_minime_prompt_block_once() -> Option<PathBuf> {
-    ensure_signal_catalog_seeded();
-    let (mut bank, mut ledger) = load_runtime();
-    let Some((episode, proposal, responses)) =
-        active_owner_view(&bank, &mut ledger, OWNER_MINIME, false)
-    else {
-        return None;
-    };
-    if proposal
-        .prompt_exposures
-        .get(OWNER_MINIME)
-        .copied()
-        .unwrap_or(0)
-        > 0
-    {
-        return None;
-    }
-
-    let rendered = render_owner_block(episode, proposal, OWNER_MINIME, &responses, false);
-    let note = render_minime_inbox_note(proposal, &rendered);
-    let inbox_dir = bridge_paths().minime_inbox_dir();
-    if let Err(error) = std::fs::create_dir_all(&inbox_dir) {
-        warn!(%error, path = %inbox_dir.display(), "btsp: failed to create minime inbox");
-        return None;
-    }
-    let path = inbox_dir.join(format!(
-        "btsp_proposal_{}_{}.txt",
-        proposal.proposal_id,
-        now_unix_s()
-    ));
-    if let Err(error) = std::fs::write(&path, note) {
-        warn!(%error, path = %path.display(), "btsp: failed to export minime prompt block");
-        return None;
-    }
-
-    proposal
-        .owner_reply_state
-        .insert(OWNER_MINIME.to_string(), "witnessed".to_string());
-    proposal.reply_state = recompute_reply_state(proposal);
-    record_prompt_render(proposal, OWNER_MINIME, "minime_inbox");
-    let episode_id = proposal.episode_id.clone();
-    let proposal_id = proposal.proposal_id.clone();
-    save_runtime(&mut bank, &mut ledger);
-    append_signal_event(
-        "minime_prompt_exported",
-        json!({
-            "episode_id": episode_id,
-            "proposal_id": proposal_id,
-            "path": path.display().to_string(),
-            "detail": "Minime owner-specific BTSP proposal block was written to Minime's inbox."
-        }),
-    );
-    Some(path)
 }
 
 pub(super) fn record_astrid_next_action(next_action: &str, fill_pct: f32) {
@@ -396,20 +302,6 @@ pub(super) fn record_astrid_next_action(next_action: &str, fill_pct: f32) {
     if changed {
         save_runtime(&mut bank, &mut ledger);
     }
-}
-
-fn render_minime_inbox_note(proposal: &ActiveSovereigntyProposal, rendered: &str) -> String {
-    format!(
-        "=== BTSP SOVEREIGNTY PROPOSAL FOR MINIME ===\n\
-         Source: astrid:btsp_sovereignty_proposal\n\
-         Proposal: {}\n\
-         Created: {}\n\
-         Expires: {}\n\n\
-         This is advisory only. It is an owner-specific view of a bilateral signal proposal; choose only if it feels true.\n\
-         If a candidate fits, answer in your normal NEXT syntax using the action shown. If none fits, continue your present course or name the mismatch.\n\n\
-         {}\n",
-        proposal.proposal_id, proposal.created_at_unix_s, proposal.expires_at_unix_s, rendered
-    )
 }
 
 pub(super) fn record_astrid_inbox_read(path: &Path, content: &str) {
@@ -507,245 +399,6 @@ fn expire_stale_proposals(ledger: &mut ProposalLedger) -> bool {
     changed
 }
 
-fn score_adopted_outcomes(
-    bank: &mut EpisodeBank,
-    ledger: &mut ProposalLedger,
-    controller_health: Option<&Value>,
-) -> bool {
-    let Some(health) = controller_health else {
-        return false;
-    };
-    let target_fill = health
-        .get("target_fill_pct")
-        .and_then(Value::as_f64)
-        .unwrap_or(STABLE_CORE_TARGET_FILL_PCT) as f32;
-    let current_fill = health
-        .get("fill_pct")
-        .and_then(Value::as_f64)
-        .unwrap_or(target_fill as f64) as f32;
-    let fill_band = health
-        .get("fill_band")
-        .and_then(Value::as_str)
-        .unwrap_or("unknown");
-    let phase = health
-        .get("phase")
-        .and_then(Value::as_str)
-        .unwrap_or("unknown");
-    let shape_verdict = health
-        .get("perturb_visibility")
-        .and_then(|value| value.get("shape_verdict"))
-        .and_then(Value::as_str)
-        .unwrap_or("unknown");
-
-    let mut changed = false;
-    for proposal in &mut ledger.proposals {
-        if proposal.reply_state != "adopted" || proposal.outcome_status == "integrated" {
-            continue;
-        }
-        let Some(episode) = bank
-            .episodes
-            .iter_mut()
-            .find(|episode| episode.episode_id == proposal.episode_id)
-        else {
-            continue;
-        };
-
-        let selections = exact_adoptions_for_scoring(proposal);
-        for adoption in selections {
-            let owner = adoption.owner.clone();
-            let response_id = adoption.response_id.clone();
-            if proposal
-                .outcomes
-                .iter()
-                .any(|outcome| outcome.owner == owner && outcome.response_id == response_id)
-            {
-                continue;
-            }
-
-            let before_fill = adoption
-                .context
-                .as_ref()
-                .and_then(|value| value.get("fill_pct"))
-                .and_then(Value::as_f64)
-                .map(|value| value as f32)
-                .or_else(|| {
-                    proposal
-                        .adoption_contexts
-                        .get(&owner)
-                        .and_then(|value| value.get("fill_pct"))
-                        .and_then(Value::as_f64)
-                        .map(|value| value as f32)
-                })
-                .unwrap_or(current_fill);
-            let before_gap = (target_fill - before_fill).abs();
-            let after_gap = (target_fill - current_fill).abs();
-            let target_nearness = if after_gap + 0.75 < before_gap {
-                "positive"
-            } else if before_gap + 0.75 < after_gap {
-                "negative"
-            } else {
-                "mixed"
-            };
-            let distress_or_recovery = match fill_band {
-                "near" | "over" if current_fill >= before_fill => "recovery",
-                "under" if current_fill < before_fill => "worsening",
-                _ => "mixed",
-            };
-            let opening_vs_reconcentration = match shape_verdict {
-                "tightening" => "reconcentrating",
-                "softened_only" => "mixed",
-                _ if matches!(phase, "plateau" | "expanding") => "opening",
-                _ => "mixed",
-            };
-            let note = format!(
-                "Outcome after {owner} selected {response_id}: target_nearness={target_nearness}, distress_or_recovery={distress_or_recovery}, opening_vs_reconcentration={opening_vs_reconcentration}, phase={phase}, fill_band={fill_band}, shape_verdict={shape_verdict}."
-            );
-            let outcome = ResponseOutcomeNote {
-                proposal_id: proposal.proposal_id.clone(),
-                response_id: response_id.clone(),
-                owner: owner.clone(),
-                recorded_at_unix_s: now_unix_s(),
-                target_nearness: target_nearness.to_string(),
-                distress_or_recovery: distress_or_recovery.to_string(),
-                opening_vs_reconcentration: opening_vs_reconcentration.to_string(),
-                note,
-            };
-            proposal.outcomes.push(outcome.clone());
-            if !episode.response_outcomes.iter().any(|existing| {
-                existing.proposal_id == outcome.proposal_id
-                    && existing.owner == outcome.owner
-                    && existing.response_id == outcome.response_id
-            }) {
-                episode.response_outcomes.push(outcome.clone());
-            }
-            if let Some(learning_note) = learning_note_for_outcome(proposal, &outcome)
-                && !episode
-                    .family_learning_notes
-                    .iter()
-                    .any(|existing| existing == &learning_note)
-            {
-                episode.family_learning_notes.push(learning_note.clone());
-                append_signal_event(
-                    "outcome_scored",
-                    json!({
-                        "episode_id": proposal.episode_id.clone(),
-                        "proposal_id": proposal.proposal_id.clone(),
-                        "owner": outcome.owner.clone(),
-                        "response_id": outcome.response_id.clone(),
-                        "signal_families": proposal.matched_signal_families.clone(),
-                        "signal_roles": proposal.matched_signal_roles.clone(),
-                        "learning_note": learning_note,
-                        "detail": outcome.note.clone()
-                    }),
-                );
-            } else {
-                append_signal_event(
-                    "outcome_scored",
-                    json!({
-                        "episode_id": proposal.episode_id.clone(),
-                        "proposal_id": proposal.proposal_id.clone(),
-                        "owner": outcome.owner.clone(),
-                        "response_id": outcome.response_id.clone(),
-                        "signal_families": proposal.matched_signal_families.clone(),
-                        "signal_roles": proposal.matched_signal_roles.clone(),
-                        "detail": outcome.note.clone()
-                    }),
-                );
-            }
-            changed = true;
-        }
-
-        if !proposal.outcomes.is_empty() {
-            proposal.outcome_status = "integrated".to_string();
-            proposal.reply_state = "integrated".to_string();
-            changed = true;
-        }
-    }
-    changed
-}
-
-fn score_final_non_adoption_outcomes(
-    bank: &mut EpisodeBank,
-    ledger: &mut ProposalLedger,
-    controller_health: Option<&Value>,
-) -> bool {
-    let mut changed = false;
-    for proposal in &mut ledger.proposals {
-        if proposal.outcome_status == "integrated" {
-            continue;
-        }
-        let Some(episode) = bank
-            .episodes
-            .iter_mut()
-            .find(|episode| episode.episode_id == proposal.episode_id)
-        else {
-            continue;
-        };
-
-        if proposal.reply_state == "declined" {
-            let owner_states = proposal.owner_reply_state.clone();
-            for (owner, state) in owner_states {
-                if state != "declined" {
-                    continue;
-                }
-                let outcome = build_non_adoption_outcome(
-                    proposal,
-                    &owner,
-                    "continue_current_course",
-                    "Owner declined the proposal and continued the current course.",
-                    controller_health,
-                );
-                changed |= push_unique_outcome(episode, proposal, outcome);
-            }
-            if !proposal.outcomes.is_empty() {
-                proposal.outcome_status = "integrated".to_string();
-                changed = true;
-            }
-        } else if proposal.reply_state == "expired" {
-            let owner_states = proposal.owner_reply_state.clone();
-            for (owner, state) in owner_states {
-                if state != "declined" {
-                    continue;
-                }
-                let outcome = build_non_adoption_outcome(
-                    proposal,
-                    &owner,
-                    "continue_current_course",
-                    "Owner declined the proposal before expiry and continued the current course.",
-                    controller_health,
-                );
-                changed |= push_unique_outcome(episode, proposal, outcome);
-            }
-
-            let owner_state_summary = if proposal.owner_reply_state.is_empty() {
-                "none observed".to_string()
-            } else {
-                proposal
-                    .owner_reply_state
-                    .iter()
-                    .map(|(owner, state)| format!("{owner}={state}"))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            };
-            let outcome = build_non_adoption_outcome(
-                proposal,
-                OWNER_SYSTEM,
-                "proposal_expired",
-                &format!(
-                    "Proposal expired without nominated response adoption; owner_states={owner_state_summary}."
-                ),
-                controller_health,
-            );
-            changed |= push_unique_outcome(episode, proposal, outcome);
-            if !proposal.outcomes.is_empty() {
-                proposal.outcome_status = "integrated".to_string();
-                changed = true;
-            }
-        }
-    }
-    changed
-}
-
 fn active_owner_view<'a>(
     bank: &'a EpisodeBank,
     ledger: &'a mut ProposalLedger,
@@ -763,18 +416,7 @@ fn active_owner_view<'a>(
         .episodes
         .iter()
         .find(|episode| episode.episode_id == proposal.episode_id)?;
-    let responses = episode
-        .nominated_responses
-        .iter()
-        .filter(|response| response.owner == owner)
-        .filter(|response| {
-            proposal
-                .candidate_response_ids
-                .iter()
-                .any(|candidate| candidate == &response.response_id)
-        })
-        .cloned()
-        .collect::<Vec<_>>();
+    let responses = proposal::ordered_responses_for_proposal(episode, proposal, owner);
     if responses.is_empty() {
         return None;
     }
@@ -823,6 +465,7 @@ fn record_prompt_render(
     );
 }
 
+#[allow(clippy::too_many_lines)]
 fn apply_owner_choice(
     bank: &mut EpisodeBank,
     ledger: &mut ProposalLedger,
@@ -862,6 +505,42 @@ fn apply_owner_choice(
 
     let Some(response) = matched else {
         if let Some(interpretation) = interpret_choice(owner, choice, &normalized) {
+            if should_infer_study_first(proposal, owner, &interpretation) {
+                let duplicate_study_first = has_study_first_record(
+                    proposal,
+                    owner,
+                    "inquiry_before_intervention",
+                    Some(&normalized),
+                );
+                if duplicate_study_first {
+                    append_signal_event(
+                        "choice_duplicate_ignored",
+                        json!({
+                            "episode_id": proposal.episode_id.clone(),
+                            "proposal_id": proposal.proposal_id.clone(),
+                            "owner": owner,
+                            "choice": normalized,
+                            "category": interpretation.category.clone(),
+                            "relation_to_proposal": interpretation.relation_to_proposal.clone(),
+                            "study_first": true,
+                            "signal_families": proposal.matched_signal_families.clone(),
+                            "signal_roles": proposal.matched_signal_roles.clone(),
+                            "detail": "Owner repeated the same study-first BTSP evidence for this proposal; the runtime kept the prior study-first record and did not rescore it."
+                        }),
+                    );
+                    return false;
+                }
+                return record_study_first(
+                    episode,
+                    proposal,
+                    owner,
+                    "inquiry_before_intervention",
+                    "inferred_epistemic_adjacent_after_prior_answer",
+                    Some(&normalized),
+                    true,
+                );
+            }
+            let duplicate_interpretation = has_choice_interpretation(proposal, &interpretation);
             let interpretation_changed =
                 record_choice_interpretation(proposal, interpretation.clone());
             let shadow_changed = if let Some(record) =
@@ -889,10 +568,27 @@ fn apply_owner_choice(
             } else {
                 false
             };
-            proposal
+            let previous_owner_state = proposal
                 .owner_reply_state
                 .insert(owner.to_string(), "answered".to_string());
             proposal.reply_state = recompute_reply_state(proposal);
+            if duplicate_interpretation {
+                append_signal_event(
+                    "choice_duplicate_ignored",
+                    json!({
+                        "episode_id": proposal.episode_id.clone(),
+                        "proposal_id": proposal.proposal_id.clone(),
+                        "owner": owner,
+                        "choice": normalized,
+                        "category": interpretation.category.clone(),
+                        "relation_to_proposal": interpretation.relation_to_proposal.clone(),
+                        "signal_families": proposal.matched_signal_families.clone(),
+                        "signal_roles": proposal.matched_signal_roles.clone(),
+                        "detail": "Owner repeated the same adjacent BTSP choice for this proposal; the runtime kept the prior interpretation and did not rescore it."
+                    }),
+                );
+                return shadow_changed || previous_owner_state.as_deref() != Some("answered");
+            }
             if is_same_family_adjacent(&interpretation)
                 || related_choice_for_owner(owner, &normalized)
             {
@@ -916,6 +612,7 @@ fn apply_owner_choice(
                         "detail": "Owner chose an adjacent same-family response while the proposal was active."
                     }),
                 );
+                agency::append_adjacent_choice_agency_event(proposal, owner, &normalized);
                 return interpretation_changed
                     || shadow_changed
                     || previous.as_deref() != proposal.related_choice.as_deref();
@@ -963,6 +660,11 @@ fn apply_owner_choice(
         proposal.adoption_contexts.get(owner).cloned(),
     );
     record_exact_adoption(proposal, adoption);
+    let _ = link_study_first_resolution(
+        proposal,
+        owner,
+        &format!("exact_accept:{}", response.response_id),
+    );
     let interpretation = interpret_exact_choice(owner, choice, &normalized, response);
     record_choice_interpretation(proposal, interpretation.clone());
     for counteroffer in
@@ -1007,6 +709,35 @@ fn apply_owner_choice(
     true
 }
 
+fn should_infer_study_first(
+    proposal: &ActiveSovereigntyProposal,
+    owner: &str,
+    interpretation: &ChoiceInterpretation,
+) -> bool {
+    interpretation.owner == owner
+        && is_study_first_choice(interpretation)
+        && proposal.choice_interpretations.iter().any(|existing| {
+            existing.owner == owner && existing.relation_to_proposal != "exact_nominated"
+        })
+}
+
+fn is_study_first_choice(interpretation: &ChoiceInterpretation) -> bool {
+    if interpretation.category == "epistemic" {
+        return true;
+    }
+    matches!(
+        interpretation.normalized_choice.as_str(),
+        "BROWSE"
+            | "SEARCH"
+            | "READ_MORE"
+            | "DECOMPOSE"
+            | "INTROSPECT"
+            | "EXPERIMENT_REVIEW"
+            | "EXPERIMENT_EVIDENCE"
+    )
+}
+
+#[cfg(test)]
 fn has_active_proposal(ledger: &ProposalLedger, episode_id: &str) -> bool {
     ledger
         .proposals

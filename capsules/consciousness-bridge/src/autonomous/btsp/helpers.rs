@@ -31,6 +31,12 @@ pub(super) fn normalize_choice(raw: &str) -> String {
     if trimmed.contains(':') && trimmed.to_ascii_uppercase().starts_with("REGIME:") {
         return trimmed.to_ascii_uppercase();
     }
+    let mut parts = trimmed.split_whitespace();
+    if let (Some(command), Some(regime)) = (parts.next(), parts.next())
+        && command.eq_ignore_ascii_case("REGIME")
+    {
+        return format!("REGIME:{}", regime.to_ascii_uppercase());
+    }
     trimmed
         .split_whitespace()
         .next()

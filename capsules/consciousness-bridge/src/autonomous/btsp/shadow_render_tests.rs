@@ -1,3 +1,4 @@
+use super::super::choice::ChoiceInterpretation;
 use super::super::conversion::{ConversionEvidence, ConversionState};
 use super::super::policy::CooldownState;
 use super::super::render::{render_owner_block_from_status, render_signal_guidance_from_parts};
@@ -41,6 +42,7 @@ fn active_astrid_proposal() -> ActiveSovereigntyProposal {
         outcomes: Vec::new(),
         refusals: Vec::new(),
         counteroffers: Vec::new(),
+        study_first_records: Vec::new(),
         last_negotiation_event_at_unix_s: 0,
         shadow_equivalences: Vec::new(),
     }
@@ -239,4 +241,48 @@ fn astrid_owner_block_renders_shadow_policy_lines_and_grouped_candidates() {
         .find("NEXT: BREATHE_ALONE")
         .expect("breathe line");
     assert!(dampen_index < breathe_index);
+}
+
+#[test]
+fn owner_block_puts_refusal_and_counter_routes_before_candidates_after_adjacent_answer() {
+    let episode = seed_episode();
+    let mut proposal = active_astrid_proposal();
+    proposal.choice_interpretations.push(ChoiceInterpretation {
+        owner: OWNER_ASTRID.to_string(),
+        raw_choice: "READ_MORE".to_string(),
+        normalized_choice: "READ_MORE".to_string(),
+        category: "epistemic".to_string(),
+        likely_intent: "understand before acting".to_string(),
+        relation_to_proposal: "adjacent_but_distinct".to_string(),
+        note: "test".to_string(),
+        interpreted_at_unix_s: 1,
+    });
+    let status = base_status();
+    let responses = episode
+        .nominated_responses
+        .iter()
+        .filter(|response| response.owner == OWNER_ASTRID)
+        .cloned()
+        .collect::<Vec<_>>();
+
+    let owner_block = render_owner_block_from_status(
+        &episode,
+        &proposal,
+        OWNER_ASTRID,
+        &responses,
+        false,
+        &status,
+    );
+
+    let followup_index = owner_block
+        .find("Already recorded adjacent answer")
+        .expect("followup line");
+    let candidate_index = owner_block
+        .find("Candidate responses for you:")
+        .expect("candidate heading");
+    assert!(followup_index < candidate_index);
+    assert!(owner_block.contains("BTSP agency checkpoint"));
+    assert!(owner_block.contains("duplicate evidence"));
+    assert!(owner_block.contains("BTSP_REFUSAL study_first"));
+    assert!(owner_block.contains("BTSP_COUNTER NEXT: ..."));
 }

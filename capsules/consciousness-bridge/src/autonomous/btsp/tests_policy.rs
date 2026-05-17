@@ -161,6 +161,7 @@ fn refusal_reason_records_preference_memory_and_declined_state() {
             outcomes: Vec::new(),
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -229,6 +230,7 @@ fn counteroffer_response_swap_resolves_on_exact_adoption() {
             outcomes: Vec::new(),
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -305,6 +307,7 @@ fn behavioral_preference_memory_appears_after_three_epistemic_adjacent_choices()
             outcomes: Vec::new(),
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         })

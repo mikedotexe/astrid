@@ -3,7 +3,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use super::helpers::{now_unix_s, recompute_reply_state};
+use super::helpers::{
+    normalize_choice, now_unix_s, recompute_reply_state, response_matches_choice,
+};
 use super::shadow::derive_shadow_behavioral_preferences;
 use super::signal::append_signal_event;
 use super::{
@@ -73,6 +75,20 @@ pub(in crate::autonomous) struct CounterofferRecord {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub(in crate::autonomous) struct StudyFirstRecord {
+    pub study_first_id: String,
+    pub owner: String,
+    pub reason: String,
+    pub source: String,
+    #[serde(default)]
+    pub inferred_from_choice: Option<String>,
+    pub after_adjacent: bool,
+    pub recorded_at_unix_s: u64,
+    #[serde(default)]
+    pub resolution_evidence: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub(in crate::autonomous) struct ActiveNegotiationView {
     #[serde(default)]
     pub items: Vec<ActiveNegotiationItem>,
@@ -95,6 +111,7 @@ pub(in crate::autonomous) struct ActiveNegotiationItem {
 pub(in crate::autonomous) enum StructuredSignal {
     Refusal { reason: String },
     Counter { payload: String },
+    StudyFirst { reason: String },
     Accept,
     Decline,
 }
@@ -120,7 +137,7 @@ pub(super) fn normalize_relation_stance(raw: &str) -> Option<String> {
 
 pub(super) fn parse_structured_signal(raw: &str) -> Option<StructuredSignal> {
     for line in raw.lines() {
-        let trimmed = line.trim();
+        let trimmed = strip_optional_next_prefix(line.trim());
         if trimmed.is_empty() {
             continue;
         }
@@ -145,8 +162,28 @@ pub(super) fn parse_structured_signal(raw: &str) -> Option<StructuredSignal> {
                 payload: payload.to_string(),
             });
         }
+        if upper.starts_with("BTSP_STUDY_FIRST ") {
+            let reason = trimmed["BTSP_STUDY_FIRST ".len()..].trim();
+            if reason.is_empty() {
+                return None;
+            }
+            return Some(StructuredSignal::StudyFirst {
+                reason: normalize_study_first_reason(reason),
+            });
+        }
     }
     None
+}
+
+fn strip_optional_next_prefix(line: &str) -> &str {
+    let upper = line.to_ascii_uppercase();
+    if upper.starts_with("NEXT:") {
+        return line["NEXT:".len()..].trim();
+    }
+    if upper.starts_with("NEXT ") {
+        return line["NEXT ".len()..].trim();
+    }
+    line
 }
 
 pub(super) fn other_owner(owner: &str) -> &'static str {
@@ -162,11 +199,11 @@ pub(super) fn build_counteroffer(
     payload: &str,
     episode: &BTSPEpisodeRecord,
     proposal: &ActiveSovereigntyProposal,
-) -> Option<CounterofferRecord> {
+) -> CounterofferRecord {
     let target_owner = other_owner(owner).to_string();
     let normalized_payload = payload.trim();
     if let Some(stance) = normalize_relation_stance(normalized_payload) {
-        return Some(CounterofferRecord {
+        return CounterofferRecord {
             counteroffer_id: format!(
                 "{}_counter_{}_{}",
                 proposal.proposal_id,
@@ -186,18 +223,59 @@ pub(super) fn build_counteroffer(
             ),
             recorded_at_unix_s: now_unix_s(),
             resolved_at_unix_s: None,
-        });
+        };
     }
 
-    let response_id = normalized_payload.to_ascii_lowercase();
-    let response = episode
-        .nominated_responses
-        .iter()
-        .find(|response| response.response_id == response_id)?;
-    if response.owner == owner {
-        return None;
+    if let Some(response) = counteroffer_response_for_payload(normalized_payload, episode) {
+        let response_id = response.response_id.clone();
+        return CounterofferRecord {
+            counteroffer_id: format!(
+                "{}_counter_{}_{}",
+                proposal.proposal_id,
+                owner,
+                now_unix_s()
+            ),
+            owner: owner.to_string(),
+            target_owner: response.owner.clone(),
+            kind: "response_swap".to_string(),
+            requested_response_id: Some(response_id.clone()),
+            requested_stance: None,
+            state: "open".to_string(),
+            note: format!(
+                "{} is asking for {}.",
+                owner_label(owner),
+                requested_response_label(&response_id)
+            ),
+            recorded_at_unix_s: now_unix_s(),
+            resolved_at_unix_s: None,
+        };
     }
-    Some(CounterofferRecord {
+
+    if normalized_payload.to_ascii_uppercase().starts_with("NEXT:") {
+        return CounterofferRecord {
+            counteroffer_id: format!(
+                "{}_counter_{}_{}",
+                proposal.proposal_id,
+                owner,
+                now_unix_s()
+            ),
+            owner: owner.to_string(),
+            target_owner: owner.to_string(),
+            kind: "freeform_next".to_string(),
+            requested_response_id: None,
+            requested_stance: None,
+            state: "noted".to_string(),
+            note: format!(
+                "{} offered a freeform NEXT counterproposal: {}.",
+                owner_label(owner),
+                normalized_payload
+            ),
+            recorded_at_unix_s: now_unix_s(),
+            resolved_at_unix_s: None,
+        };
+    }
+
+    CounterofferRecord {
         counteroffer_id: format!(
             "{}_counter_{}_{}",
             proposal.proposal_id,
@@ -206,18 +284,45 @@ pub(super) fn build_counteroffer(
         ),
         owner: owner.to_string(),
         target_owner,
-        kind: "response_swap".to_string(),
-        requested_response_id: Some(response_id.clone()),
+        kind: "freeform".to_string(),
+        requested_response_id: None,
         requested_stance: None,
-        state: "open".to_string(),
+        state: "noted".to_string(),
         note: format!(
-            "{} is asking for {}.",
-            owner_label(owner),
-            requested_response_label(&response_id)
+            "{} offered a freeform BTSP counterproposal.",
+            owner_label(owner)
         ),
         recorded_at_unix_s: now_unix_s(),
         resolved_at_unix_s: None,
-    })
+    }
+}
+
+fn counteroffer_response_for_payload<'a>(
+    payload: &str,
+    episode: &'a BTSPEpisodeRecord,
+) -> Option<&'a super::NominatedResponse> {
+    let direct_response_id = payload.to_ascii_lowercase();
+    if let Some(response) = episode
+        .nominated_responses
+        .iter()
+        .find(|response| response.response_id == direct_response_id)
+    {
+        return Some(response);
+    }
+    let trimmed = payload.trim();
+    let action = if trimmed.to_ascii_uppercase().starts_with("NEXT:") {
+        trimmed.get(5..).unwrap_or_default().trim()
+    } else {
+        trimmed
+    };
+    let normalized = normalize_choice(action);
+    if normalized.is_empty() {
+        return None;
+    }
+    episode
+        .nominated_responses
+        .iter()
+        .find(|response| response_matches_choice(response, &normalized))
 }
 
 pub(super) fn open_counteroffer(
@@ -285,6 +390,7 @@ pub(super) fn resolve_counteroffers_for_exact_adoption(
     resolved
 }
 
+#[allow(clippy::too_many_lines)]
 pub(super) fn apply_structured_signal(
     episode: &mut BTSPEpisodeRecord,
     proposal: &mut ActiveSovereigntyProposal,
@@ -300,10 +406,13 @@ pub(super) fn apply_structured_signal(
             &format!("BTSP_REFUSAL {reason}"),
         ),
         StructuredSignal::Counter { payload } => {
-            let Some(counteroffer) = build_counteroffer(owner, &payload, episode, proposal) else {
-                return false;
-            };
+            let counteroffer = build_counteroffer(owner, &payload, episode, proposal);
             let opened = open_counteroffer(proposal, counteroffer.clone());
+            let _ = link_study_first_resolution(
+                proposal,
+                owner,
+                &format!("counteroffer:{}", counteroffer.counteroffer_id),
+            );
             proposal
                 .owner_reply_state
                 .insert(owner.to_string(), "answered".to_string());
@@ -342,7 +451,31 @@ pub(super) fn apply_structured_signal(
                     "detail": counteroffer.note.clone()
                 }),
             );
+            super::agency::append_counteroffer_agency_event(
+                proposal,
+                owner,
+                &counteroffer.counteroffer_id,
+                counteroffer.requested_response_id.is_some(),
+            );
             opened
+        },
+        StructuredSignal::StudyFirst { reason } => {
+            let after_adjacent = proposal
+                .choice_interpretations
+                .iter()
+                .any(|interpretation| {
+                    interpretation.owner == owner
+                        && interpretation.relation_to_proposal != "exact_nominated"
+                });
+            record_study_first(
+                episode,
+                proposal,
+                owner,
+                &reason,
+                "explicit_btsp_study_first",
+                None,
+                after_adjacent,
+            )
         },
         StructuredSignal::Accept => {
             let Some(counteroffer) = resolve_incoming_counteroffer(proposal, owner, true) else {
@@ -414,6 +547,112 @@ pub(super) fn apply_structured_signal(
     }
 }
 
+pub(super) fn has_study_first_record(
+    proposal: &ActiveSovereigntyProposal,
+    owner: &str,
+    reason: &str,
+    inferred_from_choice: Option<&str>,
+) -> bool {
+    let normalized_reason = normalize_study_first_reason(reason);
+    proposal.study_first_records.iter().any(|record| {
+        record.owner == owner
+            && record.reason == normalized_reason
+            && record.inferred_from_choice.as_deref() == inferred_from_choice
+    })
+}
+
+pub(super) fn record_study_first(
+    episode: &mut BTSPEpisodeRecord,
+    proposal: &mut ActiveSovereigntyProposal,
+    owner: &str,
+    reason: &str,
+    source: &str,
+    inferred_from_choice: Option<&str>,
+    after_adjacent: bool,
+) -> bool {
+    if has_study_first_record(proposal, owner, reason, inferred_from_choice) {
+        return false;
+    }
+    let normalized_reason = normalize_study_first_reason(reason);
+    let now = now_unix_s();
+    let record = StudyFirstRecord {
+        study_first_id: format!("{}_study_first_{}_{}", proposal.proposal_id, owner, now),
+        owner: owner.to_string(),
+        reason: normalized_reason.clone(),
+        source: source.to_string(),
+        inferred_from_choice: inferred_from_choice.map(str::to_string),
+        after_adjacent,
+        recorded_at_unix_s: now,
+        resolution_evidence: Vec::new(),
+    };
+    proposal.study_first_records.push(record.clone());
+    proposal.last_negotiation_event_at_unix_s = now;
+    proposal
+        .owner_reply_state
+        .insert(owner.to_string(), "answered".to_string());
+    proposal.reply_state = recompute_reply_state(proposal);
+    let source_ref = format!("{}:study_first", proposal.proposal_id);
+    let _ = merge_preference_memory(
+        &mut episode.preference_memory,
+        owner,
+        "prefers_inquiry_before_intervention",
+        KIND_DECLARED,
+        &source_ref,
+    );
+    append_signal_event(
+        "study_first_recorded",
+        json!({
+            "episode_id": proposal.episode_id.clone(),
+            "proposal_id": proposal.proposal_id.clone(),
+            "owner": owner,
+            "reason": normalized_reason,
+            "source": source,
+            "inferred_from_choice": inferred_from_choice,
+            "after_adjacent": after_adjacent,
+            "study_first_id": record.study_first_id.clone(),
+            "signal_families": proposal.matched_signal_families.clone(),
+            "signal_roles": proposal.matched_signal_roles.clone(),
+            "detail": "Owner requested a study-first BTSP window; this is agency, not exact adoption or widening evidence."
+        }),
+    );
+    true
+}
+
+pub(super) fn link_study_first_resolution(
+    proposal: &mut ActiveSovereigntyProposal,
+    owner: &str,
+    evidence: &str,
+) -> bool {
+    let Some(record) = proposal
+        .study_first_records
+        .iter_mut()
+        .rev()
+        .find(|record| record.owner == owner)
+    else {
+        return false;
+    };
+    if record
+        .resolution_evidence
+        .iter()
+        .any(|existing| existing == evidence)
+    {
+        return false;
+    }
+    record.resolution_evidence.push(evidence.to_string());
+    append_signal_event(
+        "study_first_resolution_linked",
+        json!({
+            "episode_id": proposal.episode_id.clone(),
+            "proposal_id": proposal.proposal_id.clone(),
+            "owner": owner,
+            "study_first_id": record.study_first_id.clone(),
+            "evidence": evidence,
+            "detail": "A later BTSP evidence or counteroffer move was linked back to a study-first window."
+        }),
+    );
+    true
+}
+
 pub(super) fn record_refusal(
     episode: &mut BTSPEpisodeRecord,
     proposal: &mut ActiveSovereigntyProposal,
@@ -483,6 +722,17 @@ pub(super) fn record_refusal(
         );
     }
     true
+}
+
+fn normalize_study_first_reason(raw: &str) -> String {
+    raw.trim()
+        .trim_matches(|ch: char| ch == '`' || ch == '"' || ch == '\'')
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .chars()
+        .take(160)
+        .collect::<String>()
 }
 
 pub(super) fn refresh_preference_memory(
@@ -669,7 +919,7 @@ pub(super) fn preference_for_counteroffer(
     }
     match counteroffer.requested_response_id.as_deref() {
         Some("astrid_dampen") => Some("prefers_softer_contact"),
-        Some("astrid_breathe_alone") | Some("astrid_echo_off") => Some("prefers_more_space"),
+        Some("astrid_breathe_alone" | "astrid_echo_off") => Some("prefers_more_space"),
         Some("minime_notice_first") => Some("prefers_witnessing_first"),
         _ => None,
     }
@@ -708,10 +958,7 @@ fn derive_behavioral_preferences(
                     .or_default()
                     .insert(proposal_ref.clone());
             }
-            if interpretation.normalized_choice == "NOTICE"
-                || interpretation.relation_to_proposal == "same_family_adjacent"
-                    && interpretation.normalized_choice == "NOTICE"
-            {
+            if interpretation.normalized_choice == "NOTICE" {
                 counts
                     .entry((
                         interpretation.owner.clone(),

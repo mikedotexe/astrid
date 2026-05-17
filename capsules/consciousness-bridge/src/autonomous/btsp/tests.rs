@@ -15,6 +15,47 @@ fn test_fingerprint(matched_signal_families: &[&str], health: serde_json::Value)
     build_signal_fingerprint(&families, Some(&health))
 }
 
+fn active_test_proposal(proposal_id: &str) -> ActiveSovereigntyProposal {
+    ActiveSovereigntyProposal {
+        proposal_id: proposal_id.to_string(),
+        episode_id: EPISODE_ID.to_string(),
+        episode_name: EPISODE_NAME.to_string(),
+        matched_cues: vec!["grinding".to_string()],
+        matched_live_signals: vec!["perturb_visibility:tightening".to_string()],
+        matched_signal_families: vec!["grinding_family".to_string()],
+        matched_signal_roles: vec!["early_warning".to_string()],
+        signal_score: 0.8,
+        confidence: 0.8,
+        audience: "bilateral".to_string(),
+        candidate_response_ids: seeded_response_ids(),
+        reply_state: "witnessed".to_string(),
+        selected_response_id: None,
+        latest_selected_response_id: None,
+        selected_response_ids_by_owner: HashMap::new(),
+        owner_reply_state: HashMap::from([(OWNER_MINIME.to_string(), "witnessed".to_string())]),
+        outcome_status: "pending".to_string(),
+        created_at_unix_s: 1,
+        expires_at_unix_s: u64::MAX,
+        matched_at_exchange: 1,
+        latest_match_at_unix_s: 1,
+        prompt_exposures: HashMap::new(),
+        related_choice: None,
+        signal_fingerprint:
+            "families=grinding_family;transition=none;crossing=none;perturb=tightening;fill_band=unknown"
+                .to_string(),
+        last_choice_interpretation: None,
+        choice_interpretations: Vec::new(),
+        exact_adoptions: Vec::new(),
+        adoption_contexts: HashMap::new(),
+        outcomes: Vec::new(),
+        refusals: Vec::new(),
+        counteroffers: Vec::new(),
+        study_first_records: Vec::new(),
+        last_negotiation_event_at_unix_s: 0,
+        shadow_equivalences: Vec::new(),
+    }
+}
+
 #[test]
 fn response_matches_action_base() {
     let response = NominatedResponse {
@@ -46,6 +87,93 @@ fn response_matches_regime_choice() {
 }
 
 #[test]
+fn adjacent_only_reconcentrating_same_fingerprint_cools_down() {
+    let now = super::helpers::now_unix_s();
+    let mut proposal = active_test_proposal("adjacent_cooldown");
+    proposal.reply_state = "expired".to_string();
+    proposal.created_at_unix_s = now;
+    proposal.expires_at_unix_s = now;
+    proposal.latest_match_at_unix_s = now;
+    proposal.choice_interpretations = vec![
+        interpret_choice(OWNER_MINIME, "BROWSE https://example.test", "BROWSE")
+            .expect("adjacent interpretation"),
+    ];
+    proposal.outcomes = vec![ResponseOutcomeNote {
+        proposal_id: proposal.proposal_id.clone(),
+        response_id: "adjacent_uptake".to_string(),
+        owner: OWNER_MINIME.to_string(),
+        recorded_at_unix_s: now,
+        target_nearness: "mixed".to_string(),
+        distress_or_recovery: "recovery".to_string(),
+        opening_vs_reconcentration: "reconcentrating".to_string(),
+        note: "adjacent-only reconcentration".to_string(),
+    }];
+    let fingerprint = proposal.signal_fingerprint.clone();
+    let ledger = ProposalLedger {
+        proposals: vec![proposal],
+        last_updated_unix_s: now,
+    };
+
+    let cooldown = cooldown_state_for(&ledger, EPISODE_ID, &fingerprint);
+
+    assert!(cooldown.active);
+    assert_eq!(
+        cooldown.reason,
+        "recent_adjacent_only_reconcentrating_same_fingerprint"
+    );
+}
+
+#[test]
+fn study_first_reconcentrating_same_fingerprint_cools_down_longer() {
+    let now = super::helpers::now_unix_s();
+    let mut proposal = active_test_proposal("study_first_cooldown");
+    proposal.reply_state = "expired".to_string();
+    proposal.created_at_unix_s = now;
+    proposal.expires_at_unix_s = now;
+    proposal.latest_match_at_unix_s = now;
+    proposal.study_first_records = vec![StudyFirstRecord {
+        study_first_id: "study_first_cooldown_study_first_minime_1".to_string(),
+        owner: OWNER_MINIME.to_string(),
+        reason: "need evidence first".to_string(),
+        source: "explicit_btsp_study_first".to_string(),
+        inferred_from_choice: None,
+        after_adjacent: false,
+        recorded_at_unix_s: now,
+        resolution_evidence: Vec::new(),
+    }];
+    proposal.outcomes = vec![ResponseOutcomeNote {
+        proposal_id: proposal.proposal_id.clone(),
+        response_id: "study_first".to_string(),
+        owner: OWNER_MINIME.to_string(),
+        recorded_at_unix_s: now,
+        target_nearness: "mixed".to_string(),
+        distress_or_recovery: "recovery".to_string(),
+        opening_vs_reconcentration: "reconcentrating".to_string(),
+        note: "study-first reconcentration".to_string(),
+    }];
+    let fingerprint = proposal.signal_fingerprint.clone();
+    let ledger = ProposalLedger {
+        proposals: vec![proposal],
+        last_updated_unix_s: now,
+    };
+
+    let cooldown = cooldown_state_for(&ledger, EPISODE_ID, &fingerprint);
+
+    assert!(cooldown.active);
+    assert_eq!(
+        cooldown.reason,
+        "recent_study_first_reconcentrating_same_fingerprint"
+    );
+    assert!(cooldown.until_unix_s.saturating_sub(now) >= 20 * 60);
+}
+
+#[test]
+fn regime_space_syntax_normalizes_for_exact_matching() {
+    assert_eq!(normalize_choice("NEXT: REGIME recover"), "REGIME:RECOVER");
+    assert_eq!(normalize_choice("REGIME breathe"), "REGIME:BREATHE");
+}
+
+#[test]
 fn detect_live_signals_catches_transition_and_tightening() {
     let health = json!({
         "fill_band": "near",
@@ -71,6 +199,344 @@ fn detect_live_signals_catches_transition_and_tightening() {
             .any(|signal| signal.contains("fill_band_crossing"))
     );
     assert!(signals.iter().any(|signal| signal.contains("tightening")));
+}
+
+#[test]
+fn minime_outbox_reply_records_exact_notice_adoption() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("roundtrip_notice")],
+        last_updated_unix_s: 0,
+    };
+    let content = "\
+BTSP_PROPOSAL_ID roundtrip_notice
+BTSP_RESPONSE_ID minime_notice_first
+BTSP_ACCEPT roundtrip_notice minime_notice_first
+
+I can name the tightening first.
+NEXT: NOTICE
+";
+
+    assert!(record_minime_reply_into_runtime(
+        &mut bank,
+        &mut ledger,
+        None,
+        content,
+        "hash",
+    ));
+    let proposal = &ledger.proposals[0];
+    assert_eq!(proposal.reply_state, "adopted");
+    assert_eq!(
+        proposal
+            .selected_response_ids_by_owner
+            .get(OWNER_MINIME)
+            .map(String::as_str),
+        Some("minime_notice_first")
+    );
+    assert_eq!(proposal.exact_adoptions.len(), 1);
+}
+
+#[test]
+fn minime_outbox_reply_records_structured_refusal() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("roundtrip_refusal")],
+        last_updated_unix_s: 0,
+    };
+    let content = "\
+BTSP_PROPOSAL_ID roundtrip_refusal
+BTSP_REFUSAL study_first
+NEXT: DECOMPOSE
+";
+
+    assert!(record_minime_reply_into_runtime(
+        &mut bank,
+        &mut ledger,
+        None,
+        content,
+        "hash",
+    ));
+    let proposal = &ledger.proposals[0];
+    assert_eq!(
+        proposal
+            .owner_reply_state
+            .get(OWNER_MINIME)
+            .map(String::as_str),
+        Some("declined")
+    );
+    assert_eq!(proposal.refusals[0].reason, "study_first");
+}
+
+#[test]
+fn next_prefixed_refusal_records_structured_agency() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("next_prefixed_refusal")],
+        last_updated_unix_s: 0,
+    };
+
+    assert!(apply_owner_choice(
+        &mut bank,
+        &mut ledger,
+        OWNER_MINIME,
+        "NEXT: BTSP_REFUSAL study_first",
+        None,
+    ));
+    let proposal = &ledger.proposals[0];
+    assert_eq!(
+        proposal
+            .owner_reply_state
+            .get(OWNER_MINIME)
+            .map(String::as_str),
+        Some("declined")
+    );
+    assert_eq!(proposal.refusals[0].reason, "study_first");
+    assert!(proposal.choice_interpretations.is_empty());
+}
+
+#[test]
+fn next_prefixed_counter_records_structured_agency() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("next_prefixed_counter")],
+        last_updated_unix_s: 0,
+    };
+
+    assert!(apply_owner_choice(
+        &mut bank,
+        &mut ledger,
+        OWNER_MINIME,
+        "NEXT: BTSP_COUNTER NEXT: DECOMPOSE first",
+        None,
+    ));
+    let proposal = &ledger.proposals[0];
+    assert_eq!(
+        proposal
+            .owner_reply_state
+            .get(OWNER_MINIME)
+            .map(String::as_str),
+        Some("answered")
+    );
+    assert_eq!(proposal.counteroffers.len(), 1);
+    assert_eq!(proposal.counteroffers[0].kind, "freeform_next");
+    assert!(
+        proposal.counteroffers[0]
+            .note
+            .contains("NEXT: DECOMPOSE first")
+    );
+    assert!(proposal.choice_interpretations.is_empty());
+}
+
+#[test]
+fn next_prefixed_study_first_records_structured_agency() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("next_prefixed_study_first")],
+        last_updated_unix_s: 0,
+    };
+
+    assert!(apply_owner_choice(
+        &mut bank,
+        &mut ledger,
+        OWNER_MINIME,
+        "NEXT: BTSP_STUDY_FIRST need evidence first",
+        None,
+    ));
+    let proposal = &ledger.proposals[0];
+    assert_eq!(
+        proposal
+            .owner_reply_state
+            .get(OWNER_MINIME)
+            .map(String::as_str),
+        Some("answered")
+    );
+    assert_eq!(proposal.study_first_records.len(), 1);
+    assert_eq!(
+        proposal.study_first_records[0].reason,
+        "need evidence first"
+    );
+    assert!(proposal.choice_interpretations.is_empty());
+    assert!(proposal.refusals.is_empty());
+}
+
+#[test]
+fn minime_outbox_reply_records_observed_next_without_next_line() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("roundtrip_observed_next")],
+        last_updated_unix_s: 0,
+    };
+    let content = "\
+BTSP_PROPOSAL_ID roundtrip_observed_next
+BTSP_OBSERVED_NEXT DECOMPOSE
+";
+
+    assert!(record_minime_reply_into_runtime(
+        &mut bank,
+        &mut ledger,
+        None,
+        content,
+        "hash",
+    ));
+    let proposal = &ledger.proposals[0];
+    let interpretation = proposal
+        .choice_interpretations
+        .last()
+        .expect("expected adjacent choice interpretation");
+    assert_eq!(interpretation.owner, OWNER_MINIME);
+    assert_eq!(interpretation.raw_choice, "DECOMPOSE");
+    assert_eq!(interpretation.relation_to_proposal, "adjacent_but_distinct");
+    assert_eq!(proposal.reply_state, "answered");
+}
+
+#[test]
+fn duplicate_observed_next_for_same_proposal_records_once() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("roundtrip_duplicate_observed_next")],
+        last_updated_unix_s: 0,
+    };
+    let content = "\
+BTSP_PROPOSAL_ID roundtrip_duplicate_observed_next
+BTSP_OBSERVED_NEXT PERTURB
+";
+
+    let _ = super::signal::drain_test_signal_events();
+    assert!(record_minime_reply_into_runtime(
+        &mut bank,
+        &mut ledger,
+        None,
+        content,
+        "hash-one",
+    ));
+    let _ = super::signal::drain_test_signal_events();
+    assert!(!record_minime_reply_into_runtime(
+        &mut bank,
+        &mut ledger,
+        None,
+        content,
+        "hash-two",
+    ));
+    let proposal = &ledger.proposals[0];
+    assert_eq!(proposal.choice_interpretations.len(), 1);
+    assert_eq!(proposal.outcomes.len(), 0);
+    assert_eq!(
+        proposal.choice_interpretations[0].normalized_choice,
+        "PERTURB"
+    );
+    assert_eq!(proposal.reply_state, "answered");
+    let events = super::signal::drain_test_signal_events();
+    assert!(events.iter().any(
+        |event| event.get("event_type").and_then(serde_json::Value::as_str)
+            == Some("choice_duplicate_ignored")
+    ));
+}
+
+#[test]
+fn repeated_epistemic_observed_next_becomes_study_first_once() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("roundtrip_study_first")],
+        last_updated_unix_s: 0,
+    };
+    let first = "\
+BTSP_PROPOSAL_ID roundtrip_study_first
+BTSP_OBSERVED_NEXT BROWSE https://example.test/paper
+";
+    let second = "\
+BTSP_PROPOSAL_ID roundtrip_study_first
+BTSP_OBSERVED_NEXT BROWSE https://example.test/paper
+";
+
+    assert!(record_minime_reply_into_runtime(
+        &mut bank,
+        &mut ledger,
+        None,
+        first,
+        "hash-one",
+    ));
+    let _ = super::signal::drain_test_signal_events();
+    assert!(record_minime_reply_into_runtime(
+        &mut bank,
+        &mut ledger,
+        None,
+        second,
+        "hash-two",
+    ));
+    let proposal = &ledger.proposals[0];
+    assert_eq!(proposal.choice_interpretations.len(), 1);
+    assert_eq!(proposal.study_first_records.len(), 1);
+    assert_eq!(
+        proposal.study_first_records[0]
+            .inferred_from_choice
+            .as_deref(),
+        Some("BROWSE")
+    );
+    let events = super::signal::drain_test_signal_events();
+    assert!(events.iter().any(
+        |event| event.get("event_type").and_then(serde_json::Value::as_str)
+            == Some("study_first_recorded")
+    ));
+    assert!(!record_minime_reply_into_runtime(
+        &mut bank,
+        &mut ledger,
+        None,
+        second,
+        "hash-three",
+    ));
+}
+
+#[test]
+fn live_trace_episode_is_created_from_exact_roundtrip_adoption() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut proposal = active_test_proposal("trace_source");
+    proposal.reply_state = "adopted".to_string();
+    proposal.owner_reply_state = HashMap::from([(OWNER_MINIME.to_string(), "adopted".to_string())]);
+    proposal.exact_adoptions = vec![ExactAdoption::new(
+        OWNER_MINIME,
+        "minime_notice_first",
+        "NOTICE",
+        "NOTICE",
+        Some(json!({"fill_pct": 42.0})),
+    )];
+    let ledger = ProposalLedger {
+        proposals: vec![proposal],
+        last_updated_unix_s: 0,
+    };
+
+    assert!(trace::sync_live_trace_episodes(&mut bank, &ledger));
+    assert!(
+        bank.episodes
+            .iter()
+            .any(|episode| episode.kind == "BTSP live eligibility trace")
+    );
 }
 
 #[test]
@@ -163,17 +629,26 @@ fn minime_inbox_note_preserves_owner_specific_advisory_context() {
         outcomes: Vec::new(),
         refusals: Vec::new(),
         counteroffers: Vec::new(),
+        study_first_records: Vec::new(),
         last_negotiation_event_at_unix_s: 0,
         shadow_equivalences: Vec::new(),
     };
+    let responses = seed_episode()
+        .nominated_responses
+        .into_iter()
+        .filter(|response| response.owner == OWNER_MINIME)
+        .collect::<Vec<_>>();
 
     let note = render_minime_inbox_note(
         &proposal,
+        &responses,
         "Candidate responses for you:\n- NOTICE - name the tightening",
     );
 
     assert!(note.contains("Source: astrid:btsp_sovereignty_proposal"));
     assert!(note.contains("Proposal: proposal_for_minime"));
+    assert!(note.contains("BTSP_ENVELOPE_JSON_START"));
+    assert!(note.contains("\"schema\": \"astrid.btsp.proposal.v2\""));
     assert!(note.contains("advisory only"));
     assert!(note.contains("Candidate responses for you"));
     assert!(note.contains("NEXT syntax"));
@@ -216,6 +691,7 @@ fn active_proposal_detection_respects_final_states() {
             outcomes: Vec::new(),
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -265,6 +741,7 @@ fn declined_proposal_records_continue_current_course_evidence() {
             outcomes: Vec::new(),
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -336,6 +813,7 @@ fn expired_proposal_records_system_expiry_evidence() {
             outcomes: Vec::new(),
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -448,6 +926,7 @@ fn multiple_exact_adoptions_preserve_first_and_latest_response_ids() {
             outcomes: Vec::new(),
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -543,6 +1022,7 @@ fn scoring_uses_exact_adoption_history_not_just_latest_per_owner() {
             outcomes: Vec::new(),
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -672,6 +1152,7 @@ fn cooldown_blocks_same_fingerprint_after_integrated_resolution() {
             }],
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -758,6 +1239,7 @@ fn materially_changed_fingerprint_bypasses_cooldown() {
             }],
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         }],
@@ -834,6 +1316,7 @@ fn repeated_reconcentrating_same_fingerprint_extends_cooldown() {
             }],
             refusals: Vec::new(),
             counteroffers: Vec::new(),
+            study_first_records: Vec::new(),
             last_negotiation_event_at_unix_s: 0,
             shadow_equivalences: Vec::new(),
         })

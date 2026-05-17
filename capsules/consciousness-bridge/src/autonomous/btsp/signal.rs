@@ -1,7 +1,11 @@
 use std::collections::{BTreeMap, BTreeSet};
+#[cfg(not(test))]
 use std::fs::OpenOptions;
+#[cfg(not(test))]
 use std::io::Write;
 use std::path::{Path, PathBuf};
+#[cfg(test)]
+use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -33,6 +37,9 @@ const ROLE_SECONDARY_WARNING: &str = "secondary_warning";
 const ROLE_PRESENT_STATE: &str = "present_state";
 const ROLE_WATCH_ONLY: &str = "watch_only";
 const ROLE_CONTEXT_ONLY: &str = "context_only";
+
+#[cfg(test)]
+static TEST_SIGNAL_EVENTS: Mutex<Vec<Value>> = Mutex::new(Vec::new());
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub(super) struct SignalCatalog {
@@ -283,13 +290,6 @@ pub(super) fn detect_live_signals(controller_health: Option<&Value>) -> Vec<Stri
 }
 
 pub(super) fn append_signal_event(event_type: &str, payload: Value) {
-    if cfg!(test) {
-        return;
-    }
-    let path = bridge_paths().btsp_signal_events_path();
-    if let Some(parent) = path.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
     let mut object = match payload {
         Value::Object(map) => map,
         _ => return,
@@ -299,12 +299,33 @@ pub(super) fn append_signal_event(event_type: &str, payload: Value) {
     object
         .entry("event_origin".to_string())
         .or_insert_with(|| json!("bridge_runtime"));
-    let Ok(line) = serde_json::to_string(&object) else {
-        return;
-    };
-    if let Ok(mut handle) = OpenOptions::new().create(true).append(true).open(path) {
-        let _ = writeln!(handle, "{line}");
+    #[cfg(test)]
+    {
+        if let Ok(mut events) = TEST_SIGNAL_EVENTS.lock() {
+            events.push(Value::Object(object));
+        }
     }
+    #[cfg(not(test))]
+    {
+        let path = bridge_paths().btsp_signal_events_path();
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let Ok(line) = serde_json::to_string(&object) else {
+            return;
+        };
+        if let Ok(mut handle) = OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(handle, "{line}");
+        }
+    }
+}
+
+#[cfg(test)]
+pub(super) fn drain_test_signal_events() -> Vec<Value> {
+    TEST_SIGNAL_EVENTS
+        .lock()
+        .map(|mut events| std::mem::take(&mut *events))
+        .unwrap_or_default()
 }
 
 pub(super) fn maybe_record_note_read(path: &Path, owner: &str, content: &str) {

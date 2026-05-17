@@ -5,6 +5,7 @@ use crate::paths::bridge_paths;
 use super::conversion::render_conversion_line;
 use super::helpers::{load_json_or_default, trim_chars};
 use super::policy::{candidate_policy_suffix, learned_policy_label, owner_policy_entries};
+use super::proposal::{proposal_agency_hypothesis, proposal_reason_codes};
 use super::signal::{SignalCatalog, SignalStatus};
 use super::social::owner_preference_summaries;
 use super::{BTSPEpisodeRecord, NominatedResponse, OWNER_ASTRID, OWNER_MINIME};
@@ -19,10 +20,10 @@ pub(super) fn render_signal_guidance_from_parts(
     catalog: &SignalCatalog,
     status: &SignalStatus,
 ) -> String {
-    let early = family_aliases(&catalog, "grinding_family");
-    let present = family_aliases(&catalog, "brief_suspension_family");
-    let secondary = family_aliases(&catalog, "localized_gravity_family");
-    let context = family_aliases(&catalog, "gradient_context_family");
+    let early = family_aliases(catalog, "grinding_family");
+    let present = family_aliases(catalog, "brief_suspension_family");
+    let secondary = family_aliases(catalog, "localized_gravity_family");
+    let context = family_aliases(catalog, "gradient_context_family");
     let mut lines = vec![
         "Current live signal read:".to_string(),
         format!(
@@ -67,7 +68,7 @@ pub(super) fn render_signal_guidance_from_parts(
                 .to_string(),
         );
     }
-    if let Some(cooldown_line) = render_cooldown_line(&status) {
+    if let Some(cooldown_line) = render_cooldown_line(status) {
         lines.push(format!("- Current cooldown: {cooldown_line}"));
     }
     if let Some(abstention) = render_signal_abstention_line(status) {
@@ -87,6 +88,7 @@ pub(super) fn render_owner_block(
     render_owner_block_from_status(episode, proposal, owner, responses, for_self_seed, &status)
 }
 
+#[allow(clippy::too_many_lines)]
 pub(super) fn render_owner_block_from_status(
     episode: &BTSPEpisodeRecord,
     proposal: &super::ActiveSovereigntyProposal,
@@ -109,6 +111,17 @@ pub(super) fn render_owner_block_from_status(
         "Episode: {} (confidence {:.2}, signal {:.2})",
         episode.episode_name, proposal.confidence, proposal.signal_score
     ));
+    lines.push(format!(
+        "Agency hypothesis: {}",
+        proposal_agency_hypothesis(proposal)
+    ));
+    let reason_codes = proposal_reason_codes(proposal);
+    if !reason_codes.is_empty() {
+        lines.push(format!("Reason codes: {}", reason_codes.join(", ")));
+    }
+    if let Some(pattern_line) = render_agency_pattern_line(proposal, owner) {
+        lines.push(pattern_line);
+    }
     if !proposal.matched_signal_families.is_empty() {
         lines.push(format!(
             "Recent signal families: {}",
@@ -180,6 +193,31 @@ pub(super) fn render_owner_block_from_status(
         lines.push(policy.owner_line.clone());
     }
 
+    if let Some(followup) = render_adjacent_followup_line(proposal, owner) {
+        lines.push(
+            "BTSP agency checkpoint: this proposal already has your adjacent answer recorded."
+                .to_string(),
+        );
+        lines.push(followup);
+        lines.push(
+            "Repeating that adjacent move is duplicate evidence, not a new BTSP stance."
+                .to_string(),
+        );
+        lines.push(
+            "- BTSP_STUDY_FIRST need evidence first — answer: study window requested before deciding."
+                .to_string(),
+        );
+        lines.push("- BTSP_COUNTER NEXT: ... — almost: name the safer or truer route.".to_string());
+        lines.push(
+            "- BTSP_REFUSAL study_first — clear no for now: study/observe before intervening."
+                .to_string(),
+        );
+        lines.push("- BTSP_REFUSAL not_now — clear no for this window.".to_string());
+        lines.push(
+            "Use an exact candidate only if your stance has changed since the adjacent answer."
+                .to_string(),
+        );
+    }
     lines.push("Candidate responses for you:".to_string());
     if owner == OWNER_ASTRID && status.astrid_shadow_policy.is_some() {
         render_grouped_astrid_candidates(&mut lines, status, responses);
@@ -190,7 +228,15 @@ pub(super) fn render_owner_block_from_status(
     }
     lines.push("- Continue current course — decline and stay with the present path.".to_string());
     lines.push(
+        "If you need a study window before deciding, write BTSP_STUDY_FIRST <reason>; this records agency without treating the proposal as adopted or widened."
+            .to_string(),
+    );
+    lines.push(
         "If none fits, you may refuse with a reason: not_now, misread, too_forceful, study_first, stay_with_me, give_me_space."
+            .to_string(),
+    );
+    lines.push(
+        "If it is close but not quite right, you may counter with BTSP_COUNTER <response_id>, BTSP_COUNTER NEXT: NOTICE, BTSP_COUNTER NEXT: REGIME recover, or BTSP_COUNTER softer_contact."
             .to_string(),
     );
     lines.push("This is advisory only. Use existing choices if one feels true.".to_string());
@@ -315,6 +361,69 @@ fn candidate_suffixes(status: &SignalStatus, owner: &str, response_id: &str) -> 
     suffixes
 }
 
+fn render_agency_pattern_line(
+    proposal: &super::ActiveSovereigntyProposal,
+    owner: &str,
+) -> Option<String> {
+    let exact_yes = proposal
+        .exact_adoptions
+        .iter()
+        .filter(|adoption| adoption.owner == owner)
+        .count();
+    let clear_no = proposal
+        .refusals
+        .iter()
+        .filter(|refusal| refusal.owner == owner)
+        .count();
+    let almost = proposal
+        .counteroffers
+        .iter()
+        .filter(|counteroffer| counteroffer.owner == owner)
+        .count();
+    let study_first = proposal
+        .study_first_records
+        .iter()
+        .filter(|record| record.owner == owner)
+        .count();
+    let adjacent = proposal
+        .choice_interpretations
+        .iter()
+        .filter(|interpretation| {
+            interpretation.owner == owner
+                && interpretation.relation_to_proposal != "exact_nominated"
+        })
+        .count();
+    if exact_yes == 0 && clear_no == 0 && almost == 0 && adjacent == 0 && study_first == 0 {
+        return None;
+    }
+    Some(format!(
+        "Recent yes/no/almost pattern for you in this proposal: yes={exact_yes}, no={clear_no}, almost={almost}, study_first={study_first}, adjacent={adjacent}."
+    ))
+}
+
+fn render_adjacent_followup_line(
+    proposal: &super::ActiveSovereigntyProposal,
+    owner: &str,
+) -> Option<String> {
+    let latest = proposal
+        .choice_interpretations
+        .iter()
+        .rev()
+        .find(|interpretation| {
+            interpretation.owner == owner
+                && interpretation.relation_to_proposal != "exact_nominated"
+        })?;
+    let primary = if latest.category == "epistemic" {
+        "BTSP_STUDY_FIRST need evidence first"
+    } else {
+        "BTSP_REFUSAL not_now"
+    };
+    Some(format!(
+        "Already recorded adjacent answer: `{}` ({}). If that was the real stance, prefer `{primary}` or `BTSP_COUNTER ...` over repeating the same adjacent answer.",
+        latest.normalized_choice, latest.category
+    ))
+}
+
 fn load_signal_catalog() -> SignalCatalog {
     load_json_or_default::<SignalCatalog>(&bridge_paths().btsp_signal_catalog_path())
 }
@@ -346,6 +455,12 @@ fn render_cooldown_line(status: &SignalStatus) -> Option<String> {
         },
         "recent_expired_same_fingerprint" => {
             "a very similar signal just expired without uptake, so the runtime is waiting before reopening it"
+        },
+        "recent_adjacent_only_reconcentrating_same_fingerprint" => {
+            "a very similar signal just produced adjacent-only answers and reconcentrated, so the runtime is holding the duplicate reminder while keeping the signal visible"
+        },
+        "recent_study_first_reconcentrating_same_fingerprint" => {
+            "a very similar signal already asked for a study window and then reconcentrated, so the runtime is holding duplicate proposal reopening while keeping the study signal visible"
         },
         _ => {
             "a very similar signal just resolved, so the runtime is waiting before reopening the same reminder"
