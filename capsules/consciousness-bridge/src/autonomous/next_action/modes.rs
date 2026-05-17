@@ -141,13 +141,18 @@ pub(super) fn handle_action(
             info!("Astrid resumed self-reflection (override for 8 exchanges)");
             true
         },
-        "CLOSE_EARS" => {
+        "CLOSE_EARS" | "SHUT_EARS" => {
             conv.ears_closed = true;
+            let flag = bridge_paths().perception_audio_paused_flag();
+            let _ = std::fs::write(&flag, "paused by CLOSE_EARS");
             info!("Astrid closed her ears");
             true
         },
         "OPEN_EARS" => {
             conv.ears_closed = false;
+            let paths = bridge_paths();
+            let _ = std::fs::remove_file(paths.perception_audio_paused_flag());
+            let _ = std::fs::remove_file(paths.perception_paused_flag());
             info!("Astrid opened her ears");
             true
         },
@@ -194,6 +199,7 @@ pub(super) fn handle_action(
         },
         "INTROSPECT" | "SELF_STUDY" | "INVESTIGATE" => {
             conv.wants_introspect = true;
+            conv.defer_inbox = true;
             let parts: Vec<&str> = original.splitn(3, ' ').collect();
             if parts.len() >= 2 {
                 let label = parts[1].to_lowercase();
@@ -216,6 +222,7 @@ pub(super) fn handle_action(
             // code) but without the spectral visualization overlay that EXAMINE adds.
             // The bracketed argument is stripped and used as the introspection target label.
             conv.wants_introspect = true;
+            conv.defer_inbox = true;
             // Strip "EXAMINE_CODE" prefix; the remainder is the target (may have brackets).
             let raw_arg = super::strip_action(original, "EXAMINE_CODE");
             // Remove surrounding brackets if present: "[vec/adj/memory/stats]" → "vec/adj/memory/stats"
@@ -379,6 +386,8 @@ mod tests {
             distinguishability_loss: None,
             structural_entropy: None,
             resonance_density_v1: None,
+            pressure_source_v1: None,
+            inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -388,6 +397,12 @@ mod tests {
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
+
+            shadow_field_v2: None,
+
+            shadow_field_v3: None,
+
+            shadow_influence_response_v3: None,
         }
     }
 
@@ -416,6 +431,7 @@ mod tests {
         );
 
         assert!(handled);
+        assert!(conv.defer_inbox);
         assert_eq!(
             conv.introspect_target,
             Some(("system-resources-demo/system_resources.py".to_string(), 0))
@@ -424,6 +440,39 @@ mod tests {
             conv.emphasis
                 .as_deref()
                 .is_some_and(|text| text.contains("system-resources-demo/system_resources.py"))
+        );
+    }
+
+    #[test]
+    fn targeted_introspect_defers_inbox_once() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, _sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let mut ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 50.0,
+            response_text: "",
+            workspace: None,
+        };
+
+        let handled = handle_action(
+            &mut conv,
+            "INTROSPECT",
+            "INTROSPECT src/autonomous/introspect.rs 680",
+            &mut ctx,
+        );
+
+        assert!(handled);
+        assert!(conv.wants_introspect);
+        assert!(conv.defer_inbox);
+        assert_eq!(
+            conv.introspect_target,
+            Some(("src/autonomous/introspect.rs".to_string(), 680))
         );
     }
 

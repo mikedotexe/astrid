@@ -68,7 +68,11 @@ pub(super) fn handle_action(
         },
         "JOIN_COLLABORATION" | "JOIN_COLLAB" => {
             let arg = strip_action(original, base_action).trim().to_string();
-            let target = if arg.is_empty() { "latest".to_string() } else { arg };
+            let target = if arg.is_empty() {
+                "latest".to_string()
+            } else {
+                arg
+            };
             match join_collaboration(conv, &target) {
                 Ok(summary) => {
                     info!(target: "v5_collab", "JOIN_COLLABORATION: {summary}");
@@ -85,7 +89,11 @@ pub(super) fn handle_action(
         "DECLINE_COLLABORATION" | "DECLINE_COLLAB" => {
             let arg = strip_action(original, base_action).trim().to_string();
             let (target, reason) = split_target_and_reason(&arg);
-            let target = if target.is_empty() { "latest".to_string() } else { target };
+            let target = if target.is_empty() {
+                "latest".to_string()
+            } else {
+                target
+            };
             match decline_collaboration(conv, &target, reason) {
                 Ok(summary) => {
                     info!(target: "v5_collab", "DECLINE_COLLABORATION: {summary}");
@@ -102,7 +110,11 @@ pub(super) fn handle_action(
         "LEAVE_COLLABORATION" | "LEAVE_COLLAB" => {
             let arg = strip_action(original, base_action).trim().to_string();
             let (target, reason) = split_target_and_reason(&arg);
-            let target = if target.is_empty() { "latest".to_string() } else { target };
+            let target = if target.is_empty() {
+                "latest".to_string()
+            } else {
+                target
+            };
             match leave_collaboration(conv, &target, reason) {
                 Ok(summary) => {
                     info!(target: "v5_collab", "LEAVE_COLLABORATION: {summary}");
@@ -153,7 +165,11 @@ fn share_thought(conv: &mut ConversationState, body: &str) -> Result<String, Str
     }
     let (target, text) = if let Some((before, after)) = trimmed.split_once("::") {
         let target_norm = before.trim();
-        let target_owned = if target_norm.is_empty() { "latest".to_string() } else { target_norm.to_string() };
+        let target_owned = if target_norm.is_empty() {
+            "latest".to_string()
+        } else {
+            target_norm.to_string()
+        };
         (target_owned, after.trim().to_string())
     } else {
         ("latest".to_string(), trimmed.to_string())
@@ -162,15 +178,24 @@ fn share_thought(conv: &mut ConversationState, body: &str) -> Result<String, Str
         return Err("SHARE_THOUGHT text is empty after parsing".into());
     }
     if text.chars().count() > 200 {
-        return Err(format!("SHARE_THOUGHT text is {} chars (limit 200)", text.chars().count()));
+        return Err(format!(
+            "SHARE_THOUGHT text is {} chars (limit 200)",
+            text.chars().count()
+        ));
     }
     let meta = find_meta(&target)?;
     let me = ASTRID_NAME.to_string();
     if meta.status != "joined" {
-        return Err(format!("collaboration {} is not joined (status: {})", meta.id, meta.status));
+        return Err(format!(
+            "collaboration {} is not joined (status: {})",
+            meta.id, meta.status
+        ));
     }
     if !meta.members.contains(&me) {
-        return Err(format!("you are not a member of {} (members: {:?})", meta.id, meta.members));
+        return Err(format!(
+            "you are not a member of {} (members: {:?})",
+            meta.id, meta.members
+        ));
     }
     let dir = collab_dir(&meta.id);
     append_shared_thought(&dir, &me, &text);
@@ -197,7 +222,9 @@ fn truncate_for_summary(s: &str, max: usize) -> String {
 
 fn invite_collaboration(_conv: &mut ConversationState, body: &str) -> Result<String, String> {
     if body.is_empty() {
-        return Err("INVITE_COLLABORATION needs a topic (try `INVITE_COLLABORATION <topic>`)".into());
+        return Err(
+            "INVITE_COLLABORATION needs a topic (try `INVITE_COLLABORATION <topic>`)".into(),
+        );
     }
     // Parse rationale if present (--rationale="..." or trailing text after first sentence).
     let (topic, rationale) = parse_invite_args(body);
@@ -232,14 +259,19 @@ fn invite_collaboration(_conv: &mut ConversationState, body: &str) -> Result<Str
     let _ = std::fs::write(&invite_path, &invite_body);
     append_timeline(&dir, "invited", &meta.inviter, None);
     notify_minime(&id, &topic, &rationale, "invite");
-    Ok(format!("id={id} topic=\"{topic}\" → invitation sent to minime"))
+    Ok(format!(
+        "id={id} topic=\"{topic}\" → invitation sent to minime"
+    ))
 }
 
 fn join_collaboration(_conv: &mut ConversationState, target: &str) -> Result<String, String> {
     let mut meta = find_meta(target)?;
     let me = ASTRID_NAME.to_string();
     if meta.invitee != me && meta.inviter != me {
-        return Err(format!("you are not a member of {} (members: {:?})", meta.id, meta.members));
+        return Err(format!(
+            "you are not a member of {} (members: {:?})",
+            meta.id, meta.members
+        ));
     }
     if meta.status == "joined" && meta.members.contains(&me) {
         return Ok(format!("id={} already joined", meta.id));
@@ -267,10 +299,16 @@ fn decline_collaboration(
     let mut meta = find_meta(target)?;
     let me = ASTRID_NAME.to_string();
     if meta.invitee != me {
-        return Err(format!("you are not the invitee of {} (only the invitee can decline)", meta.id));
+        return Err(format!(
+            "you are not the invitee of {} (only the invitee can decline)",
+            meta.id
+        ));
     }
     if meta.status != "invited" {
-        return Err(format!("cannot decline {} (status: {})", meta.id, meta.status));
+        return Err(format!(
+            "cannot decline {} (status: {})",
+            meta.id, meta.status
+        ));
     }
     meta.status = "declined".to_string();
     meta.updated_t_ms = now_ms();
@@ -278,7 +316,10 @@ fn decline_collaboration(
     write_meta(&dir, &meta)?;
     append_timeline(&dir, "declined", &me, reason.as_deref());
     notify_minime(&meta.id, &meta.topic, &reason, "decline");
-    Ok(format!("id={} topic=\"{}\" → declined", meta.id, meta.topic))
+    Ok(format!(
+        "id={} topic=\"{}\" → declined",
+        meta.id, meta.topic
+    ))
 }
 
 fn leave_collaboration(
@@ -340,7 +381,11 @@ fn list_collaborations() -> String {
             )
         })
         .collect();
-    format!("Collaborations ({} total):\n{}", entries.len(), lines.join("\n"))
+    format!(
+        "Collaborations ({} total):\n{}",
+        entries.len(),
+        lines.join("\n")
+    )
 }
 
 /// Public helper for the prompt-builder: count Astrid's active (joined)
@@ -376,7 +421,11 @@ pub fn active_collaboration_suffix_line() -> Option<String> {
     joined.sort_by(|a, b| b.updated_t_ms.cmp(&a.updated_t_ms));
     let m = &joined[0];
     let n = joined.len();
-    let extra = if n > 1 { format!(" (+{} more)", n - 1) } else { String::new() };
+    let extra = if n > 1 {
+        format!(" (+{} more)", n - 1)
+    } else {
+        String::new()
+    };
     let handle = format!("collab_{}", m.id);
     // Kink #1 fix: route through render_joint_trace_clause which tiers
     // the render based on `seconds_since_live`. Prevents silent stale.
@@ -384,12 +433,22 @@ pub fn active_collaboration_suffix_line() -> Option<String> {
         .map(|r| render_joint_trace_clause(&r))
         .unwrap_or_default();
     let shared_clause = read_recent_shared_thoughts_cached(&m.id)
-        .map(|s| if s.is_empty() { String::new() } else { format!(" Recent: {s}.") })
+        .map(|s| {
+            if s.is_empty() {
+                String::new()
+            } else {
+                format!(" Recent: {s}.")
+            }
+        })
         .unwrap_or_default();
     Some(format!(
         "[Active collaboration #{} with {}: \"{}\". Status: joined.{}{}{} Use LEAVE_COLLABORATION to end.]",
         m.id,
-        if m.inviter == ASTRID_NAME { &m.invitee } else { &m.inviter },
+        if m.inviter == ASTRID_NAME {
+            &m.invitee
+        } else {
+            &m.inviter
+        },
         m.topic,
         extra,
         reservoir_clause,
@@ -435,7 +494,10 @@ fn read_collab_reservoir_state_cached(handle: &str) -> Option<CollabReservoirSna
         }
     }
     let fresh = read_collab_reservoir_state(handle)?;
-    let snap = CollabReservoirSnapshot { cached_at_unix_s: now, ..fresh };
+    let snap = CollabReservoirSnapshot {
+        cached_at_unix_s: now,
+        ..fresh
+    };
     if let Ok(mut map) = COLLAB_RESERVOIR_CACHE.lock() {
         map.insert(handle.to_string(), snap);
     }
@@ -543,7 +605,10 @@ fn read_recent_shared_thoughts_cached(coll_id: &str) -> Option<String> {
     if let Ok(mut map) = SHARED_THOUGHTS_CACHE.lock() {
         map.insert(
             coll_id.to_string(),
-            SharedThoughtsCacheEntry { rendered: rendered.clone(), cached_at_unix_s: now },
+            SharedThoughtsCacheEntry {
+                rendered: rendered.clone(),
+                cached_at_unix_s: now,
+            },
         );
     }
     Some(rendered)
@@ -602,12 +667,7 @@ fn append_shared_thought(dir: &Path, actor: &str, text: &str) {
 /// "auto" for entries promoted by `auto_promote::try_auto_promote`).
 /// Suffix rendering is identical regardless of source so the marker is
 /// indistinguishable to the peer (preserves the receptive-ambient test).
-pub(super) fn append_shared_thought_with_source(
-    dir: &Path,
-    actor: &str,
-    text: &str,
-    source: &str,
-) {
+pub(super) fn append_shared_thought_with_source(dir: &Path, actor: &str, text: &str, source: &str) {
     let path = dir.join("shared_thoughts.jsonl");
     let entry = serde_json::json!({
         "t_ms": now_ms(),
@@ -746,7 +806,11 @@ fn parse_invite_args(body: &str) -> (String, Option<String>) {
         let rationale = rationale_part.trim().trim_matches('"').to_string();
         return (
             topic,
-            if rationale.is_empty() { None } else { Some(rationale) },
+            if rationale.is_empty() {
+                None
+            } else {
+                Some(rationale)
+            },
         );
     }
     (trimmed.trim_matches('"').to_string(), None)
@@ -804,7 +868,10 @@ mod tests {
 
     #[test]
     fn slugify_lowercases_and_dashes() {
-        assert_eq!(slugify("Spectral Cascade Dynamics!", 64), "spectral-cascade-dynamics");
+        assert_eq!(
+            slugify("Spectral Cascade Dynamics!", 64),
+            "spectral-cascade-dynamics"
+        );
         assert_eq!(slugify("λ4 tail", 64), "4-tail"); // non-ASCII dropped
         assert_eq!(slugify("  hello   world  ", 64), "hello-world");
     }
@@ -824,7 +891,8 @@ mod tests {
 
     #[test]
     fn parse_invite_args_with_rationale() {
-        let (topic, rationale) = parse_invite_args(r#""spectral cascade" --rationale="want to explore together""#);
+        let (topic, rationale) =
+            parse_invite_args(r#""spectral cascade" --rationale="want to explore together""#);
         assert_eq!(topic, "spectral cascade");
         assert_eq!(rationale.as_deref(), Some("want to explore together"));
     }
@@ -859,28 +927,64 @@ mod tests {
     #[test]
     fn render_joint_trace_clause_fresh() {
         let s = render_joint_trace_clause(&snapshot_with_age(Some(5.0)));
-        assert!(s.contains("[12.41,10.32,10.47]"), "fresh should show h_norms: {s}");
-        assert!(s.contains("42111 ticks"), "fresh should show tick count: {s}");
-        assert!(!s.contains("stalled"), "fresh should NOT show stalled warning: {s}");
-        assert!(!s.contains("quiet"), "fresh should NOT show quiet message: {s}");
+        assert!(
+            s.contains("[12.41,10.32,10.47]"),
+            "fresh should show h_norms: {s}"
+        );
+        assert!(
+            s.contains("42111 ticks"),
+            "fresh should show tick count: {s}"
+        );
+        assert!(
+            !s.contains("stalled"),
+            "fresh should NOT show stalled warning: {s}"
+        );
+        assert!(
+            !s.contains("quiet"),
+            "fresh should NOT show quiet message: {s}"
+        );
     }
 
     #[test]
     fn render_joint_trace_clause_stalled() {
         let s = render_joint_trace_clause(&snapshot_with_age(Some(120.0)));
-        assert!(s.contains("[12.41,10.32,10.47]"), "stalled should still show values: {s}");
-        assert!(s.contains("42111 ticks"), "stalled should still show ticks: {s}");
-        assert!(s.contains("stalled"), "stalled should include stalled marker: {s}");
-        assert!(s.contains("2m"), "stalled at 120s should humanize as 2m: {s}");
+        assert!(
+            s.contains("[12.41,10.32,10.47]"),
+            "stalled should still show values: {s}"
+        );
+        assert!(
+            s.contains("42111 ticks"),
+            "stalled should still show ticks: {s}"
+        );
+        assert!(
+            s.contains("stalled"),
+            "stalled should include stalled marker: {s}"
+        );
+        assert!(
+            s.contains("2m"),
+            "stalled at 120s should humanize as 2m: {s}"
+        );
     }
 
     #[test]
     fn render_joint_trace_clause_quiet() {
         let s = render_joint_trace_clause(&snapshot_with_age(Some(50530.0)));
-        assert!(!s.contains("[12.41,10.32,10.47]"), "quiet should drop h_norms: {s}");
-        assert!(!s.contains("42111 ticks"), "quiet should drop tick count: {s}");
-        assert!(s.contains("quiet"), "quiet should announce dead handle: {s}");
-        assert!(s.contains("14h"), "quiet at 50530s should humanize as ~14h: {s}");
+        assert!(
+            !s.contains("[12.41,10.32,10.47]"),
+            "quiet should drop h_norms: {s}"
+        );
+        assert!(
+            !s.contains("42111 ticks"),
+            "quiet should drop tick count: {s}"
+        );
+        assert!(
+            s.contains("quiet"),
+            "quiet should announce dead handle: {s}"
+        );
+        assert!(
+            s.contains("14h"),
+            "quiet at 50530s should humanize as ~14h: {s}"
+        );
     }
 
     #[test]
@@ -888,7 +992,10 @@ mod tests {
         // Backward compat: snapshots from before the freshness field was
         // added (or read failures returning None) treat as fresh.
         let s = render_joint_trace_clause(&snapshot_with_age(None));
-        assert!(s.contains("[12.41,10.32,10.47]"), "no-data should render normally: {s}");
+        assert!(
+            s.contains("[12.41,10.32,10.47]"),
+            "no-data should render normally: {s}"
+        );
         assert!(!s.contains("stalled"), "no-data should NOT warn: {s}");
         assert!(!s.contains("quiet"), "no-data should NOT mark quiet: {s}");
     }

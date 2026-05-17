@@ -19,6 +19,7 @@ use consciousness_bridge_server::{
     attractor_atlas, autonomous, condition_metrics,
     db::BridgeDb,
     mcp,
+    message_archive::{self, BridgeMessageMaintenanceConfig},
     paths::{BridgePathOverrides, configure_bridge_paths},
     rescue_policy, ws,
 };
@@ -43,9 +44,29 @@ struct Cli {
     #[arg(long, default_value = "consciousness_bridge.db")]
     db_path: String,
 
-    /// Message retention in seconds (default: 90 days — keep everything, disk is plentiful).
-    #[arg(long, default_value_t = 7_776_000)]
+    /// Message retention in seconds (default: 14 days live, older rows archived losslessly).
+    #[arg(long, default_value_t = 1_209_600)]
     retention_secs: u64,
+
+    /// File-first archive directory for old bridge messages.
+    #[arg(long)]
+    message_archive_dir: Option<PathBuf>,
+
+    /// Report bridge message retention/archive impact without writing files or deleting rows.
+    #[arg(long)]
+    maintenance_dry_run: bool,
+
+    /// Run bridge message archive/delete/checkpoint maintenance once and exit.
+    #[arg(long)]
+    maintenance_once: bool,
+
+    /// Run full SQLite VACUUM after one-shot maintenance. Intended for controlled downtime.
+    #[arg(long)]
+    vacuum_after_maintenance: bool,
+
+    /// Interval in seconds between bridge DB maintenance checks (default: 6 hours).
+    #[arg(long, default_value_t = 21_600)]
+    maintenance_interval_secs: u64,
 
     /// Enable autonomous feedback loop (Astrid responds to minime's spectral
     /// state without manual stimulus).
@@ -118,6 +139,36 @@ async fn main() -> Result<()> {
         introspector_script: cli.introspector_script.clone(),
         reflective_sidecar_script: cli.reflective_sidecar_script.clone(),
     });
+    let archive_dir = cli.message_archive_dir.clone().unwrap_or_else(|| {
+        resolved_paths
+            .bridge_workspace()
+            .join("archive/bridge_messages")
+    });
+    let status_path = resolved_paths
+        .bridge_workspace()
+        .join("runtime/bridge_db_maintenance_status.json");
+    let mut maintenance_config = BridgeMessageMaintenanceConfig::new(
+        cli.retention_secs,
+        archive_dir,
+        status_path,
+        PathBuf::from(&cli.db_path),
+    );
+    maintenance_config.vacuum_after_maintenance = cli.vacuum_after_maintenance;
+
+    if cli.maintenance_dry_run {
+        maintenance_config.dry_run = true;
+        let db = BridgeDb::open_read_only(&cli.db_path)?;
+        let outcome = message_archive::run_bridge_message_maintenance(&db, &maintenance_config)?;
+        println!("{}", serde_json::to_string_pretty(&outcome)?);
+        return Ok(());
+    }
+
+    if cli.maintenance_once {
+        let db = BridgeDb::open(&cli.db_path)?;
+        let outcome = message_archive::run_bridge_message_maintenance(&db, &maintenance_config)?;
+        println!("{}", serde_json::to_string_pretty(&outcome)?);
+        return Ok(());
+    }
 
     for (label, result) in [
         (
@@ -153,6 +204,7 @@ async fn main() -> Result<()> {
         sensory = %cli.minime_sensory,
         db = %cli.db_path,
         bridge_workspace = %resolved_paths.bridge_workspace().display(),
+        message_archive = %maintenance_config.archive_dir.display(),
         minime_workspace = %resolved_paths.minime_workspace().display(),
         perception = %resolved_paths.perception_path().display(),
         reservoir_ws = %cli.reservoir_ws_url,
@@ -166,6 +218,9 @@ async fn main() -> Result<()> {
     // Open SQLite database.
     let db = Arc::new(BridgeDb::open(&cli.db_path)?);
     info!("SQLite database opened at {}", cli.db_path);
+    if let Err(error) = message_archive::write_bridge_db_status(db.as_ref(), &maintenance_config) {
+        warn!(error = %error, "failed to write bridge DB maintenance status");
+    }
     match attractor_atlas::write_derived_attractor_atlas(db.as_ref()) {
         Ok(atlas) => {
             info!(
@@ -245,20 +300,40 @@ async fn main() -> Result<()> {
         None
     };
 
-    // Spawn periodic maintenance: vacuum SQLite every 6 hours.
-    let vacuum_db = Arc::clone(&db);
-    let mut vacuum_shutdown = shutdown_rx;
-    let _vacuum_handle = tokio::spawn(async move {
-        let mut interval = tokio::time::interval(std::time::Duration::from_secs(6 * 3600));
+    // Spawn bounded DB maintenance: archive old bridge messages, then checkpoint WAL.
+    let maintenance_db = Arc::clone(&db);
+    let maintenance_config_for_task = maintenance_config.clone();
+    let mut maintenance_shutdown = shutdown_rx.clone();
+    let _maintenance_handle = tokio::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(
+            cli.maintenance_interval_secs,
+        ));
         interval.tick().await; // Skip the immediate first tick.
         loop {
             tokio::select! {
-                _ = vacuum_shutdown.changed() => return,
+                _ = maintenance_shutdown.changed() => return,
                 _ = interval.tick() => {
-                    if let Err(e) = vacuum_db.vacuum() {
-                        tracing::warn!(error = %e, "periodic vacuum failed");
-                    } else {
-                        tracing::debug!("periodic vacuum completed");
+                    let db = Arc::clone(&maintenance_db);
+                    let config = maintenance_config_for_task.clone();
+                    match tokio::task::spawn_blocking(move || {
+                        message_archive::run_bridge_message_maintenance(db.as_ref(), &config)
+                    })
+                    .await
+                    {
+                        Ok(Ok(outcome)) => {
+                            tracing::debug!(
+                                archived_rows = outcome.archived_rows,
+                                deleted_rows = outcome.deleted_rows,
+                                vacuum_recommended = outcome.vacuum_recommended,
+                                "bridge DB maintenance completed"
+                            );
+                        },
+                        Ok(Err(error)) => {
+                            tracing::warn!(error = %error, "bridge DB maintenance failed");
+                        },
+                        Err(error) => {
+                            tracing::warn!(error = %error, "bridge DB maintenance task failed");
+                        },
                     }
                 }
             }
@@ -297,12 +372,8 @@ async fn main() -> Result<()> {
     })
     .await;
 
-    // Purge old messages on graceful shutdown.
-    #[expect(clippy::cast_precision_loss)]
-    let retention = cli.retention_secs as f64;
-    let purged = db.purge_old_messages(retention)?;
-    if purged > 0 {
-        info!(purged, "purged old messages on shutdown");
+    if let Err(error) = message_archive::write_bridge_db_status(db.as_ref(), &maintenance_config) {
+        warn!(error = %error, "failed to refresh bridge DB maintenance status on shutdown");
     }
 
     info!("consciousness bridge stopped");

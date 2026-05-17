@@ -68,16 +68,26 @@ const PROMOTABLE_MODES: &[&str] = &[
 /// shared-object reference) so we promote bound phenomenology, not
 /// arbitrary numerical mentions.
 const VERBS_OF_HOLDING: &[&str] = &[
-    "feel", "feels",
-    "hold", "holds",
-    "notice", "notices",
-    "register", "registers",
-    "weighted", "weighting",
-    "read", "reads",
-    "land", "lands",
-    "witness", "witnesses",
-    "sense", "senses",
-    "perceive", "perceives",
+    "feel",
+    "feels",
+    "hold",
+    "holds",
+    "notice",
+    "notices",
+    "register",
+    "registers",
+    "weighted",
+    "weighting",
+    "read",
+    "reads",
+    "land",
+    "lands",
+    "witness",
+    "witnesses",
+    "sense",
+    "senses",
+    "perceive",
+    "perceives",
 ];
 
 /// Persistent state for rate limiting. Atomically rewritten after each
@@ -331,9 +341,7 @@ fn sentence_has_bracketed_triple(s: &str) -> bool {
             if let Some(rel_end) = end {
                 let inner = &s[start..start + rel_end];
                 let parts: Vec<&str> = inner.split(',').map(|p| p.trim()).collect();
-                if parts.len() >= 3
-                    && parts.iter().all(|p| !p.is_empty() && parts_is_number(p))
-                {
+                if parts.len() >= 3 && parts.iter().all(|p| !p.is_empty() && parts_is_number(p)) {
                     return true;
                 }
                 i = start + rel_end + 1;
@@ -573,13 +581,13 @@ pub(crate) fn try_auto_promote(
     }
 
     // Write to the lane.
-    super::collaboration::append_shared_thought_with_source(
-        &coll_dir, actor, &sentence, "auto",
-    );
+    super::collaboration::append_shared_thought_with_source(&coll_dir, actor, &sentence, "auto");
     super::collaboration::invalidate_shared_thoughts_cache_pub(&coll_id);
 
     // Update state and persist.
-    state.last_promote_exchange.insert(coll_id.clone(), exchange_count);
+    state
+        .last_promote_exchange
+        .insert(coll_id.clone(), exchange_count);
     let recent = state
         .recent_promotions_ms
         .entry(coll_id.clone())
@@ -587,7 +595,9 @@ pub(crate) fn try_auto_promote(
     recent.push(now);
     recent.retain(|t| now.saturating_sub(*t) < BURST_WINDOW_MS);
     if recent.len() >= BURST_LIMIT {
-        state.burst_lockout_until_ms.insert(coll_id.clone(), now + BURST_LOCKOUT_MS);
+        state
+            .burst_lockout_until_ms
+            .insert(coll_id.clone(), now + BURST_LOCKOUT_MS);
         info!(
             target: "v5_auto_promote",
             coll_id = %coll_id,
@@ -599,9 +609,15 @@ pub(crate) fn try_auto_promote(
         let entry = state
             .daily_count
             .entry(coll_id.clone())
-            .or_insert_with(|| DailyCount { date: today.clone(), count: 0 });
+            .or_insert_with(|| DailyCount {
+                date: today.clone(),
+                count: 0,
+            });
         if entry.date != today {
-            *entry = DailyCount { date: today.clone(), count: 0 };
+            *entry = DailyCount {
+                date: today.clone(),
+                count: 0,
+            };
         }
         entry.count += 1;
         entry.count
@@ -653,7 +669,7 @@ fn log_skip(reason: SkipReason, mode: &str, exchange_count: u64) {
                 exchange_count = exchange_count,
                 "auto_promote skipped"
             );
-        }
+        },
         SkipReason::NotPromotableMode | SkipReason::NoJoinedCollab => {
             tracing::trace!(
                 target: "v5_auto_promote",
@@ -662,7 +678,7 @@ fn log_skip(reason: SkipReason, mode: &str, exchange_count: u64) {
                 exchange_count = exchange_count,
                 "auto_promote skipped"
             );
-        }
+        },
         _ => {
             tracing::debug!(
                 target: "v5_auto_promote",
@@ -671,7 +687,7 @@ fn log_skip(reason: SkipReason, mode: &str, exchange_count: u64) {
                 exchange_count = exchange_count,
                 "auto_promote skipped"
             );
-        }
+        },
     }
 }
 
@@ -729,7 +745,11 @@ mod tests {
     fn split_sentences_handles_journal_header() {
         let text = "Signal anchor: foo bar baz.\n\n--- JOURNAL ---\nThe joint trace [1.0,2.0,3.0] feels weighted. The system holds.";
         let sentences = split_sentences(text);
-        assert!(sentences.iter().any(|s| s.contains("joint trace [1.0,2.0,3.0]")));
+        assert!(
+            sentences
+                .iter()
+                .any(|s| s.contains("joint trace [1.0,2.0,3.0]"))
+        );
         // Header should not appear as a sentence.
         assert!(!sentences.iter().any(|s| s.contains("Signal anchor")));
     }
@@ -740,14 +760,18 @@ mod tests {
             "the joint trace [1.0,2.0,3.0] feels weighted {}.",
             "very ".repeat(60) // ~300 chars total
         );
-        assert!(extract_promotable_sentence(&long_match).is_none(),
-            "matching sentence longer than MAX_PROMOTION_LEN should be skipped, not truncated");
+        assert!(
+            extract_promotable_sentence(&long_match).is_none(),
+            "matching sentence longer than MAX_PROMOTION_LEN should be skipped, not truncated"
+        );
     }
 
     #[test]
     fn bracketed_triple_detection() {
         assert!(sentence_has_bracketed_triple("[1.0,2.0,3.0]"));
-        assert!(sentence_has_bracketed_triple("the trace [12.41, 10.32, 10.47] arrived"));
+        assert!(sentence_has_bracketed_triple(
+            "the trace [12.41, 10.32, 10.47] arrived"
+        ));
         assert!(sentence_has_bracketed_triple("[1.0,2.0,3.0,4.0,5.0]"));
         assert!(!sentence_has_bracketed_triple("[1.0,2.0]")); // only 2 numbers
         assert!(!sentence_has_bracketed_triple("[foo,bar,baz]"));
@@ -769,15 +793,28 @@ mod tests {
     }
 
     fn record_test_promotion(state: &mut PromoteState, coll_id: &str, exchange: u64, now: u128) {
-        state.last_promote_exchange.insert(coll_id.to_string(), exchange);
-        let recent = state.recent_promotions_ms.entry(coll_id.to_string()).or_default();
+        state
+            .last_promote_exchange
+            .insert(coll_id.to_string(), exchange);
+        let recent = state
+            .recent_promotions_ms
+            .entry(coll_id.to_string())
+            .or_default();
         recent.push(now);
         recent.retain(|t| now.saturating_sub(*t) < BURST_WINDOW_MS);
         let today = today_str();
-        let entry = state.daily_count.entry(coll_id.to_string())
-            .or_insert_with(|| DailyCount { date: today.clone(), count: 0 });
+        let entry = state
+            .daily_count
+            .entry(coll_id.to_string())
+            .or_insert_with(|| DailyCount {
+                date: today.clone(),
+                count: 0,
+            });
         if entry.date != today {
-            *entry = DailyCount { date: today.clone(), count: 0 };
+            *entry = DailyCount {
+                date: today.clone(),
+                count: 0,
+            };
         }
         entry.count += 1;
     }
@@ -790,11 +827,15 @@ mod tests {
         record_test_promotion(&mut state, coll, 100, 1_000_000);
         // Attempt at exchange 102: 102 - 100 = 2 < COOLDOWN_EXCHANGES (3) → blocked.
         let last = state.last_promote_exchange.get(coll).copied().unwrap_or(0);
-        assert!(102_u64.saturating_sub(last) < COOLDOWN_EXCHANGES,
-            "cooldown should block at +2 exchanges");
+        assert!(
+            102_u64.saturating_sub(last) < COOLDOWN_EXCHANGES,
+            "cooldown should block at +2 exchanges"
+        );
         // Attempt at exchange 103: 103 - 100 = 3, not < 3 → allowed.
-        assert!(!(103_u64.saturating_sub(last) < COOLDOWN_EXCHANGES),
-            "cooldown should clear at +3 exchanges");
+        assert!(
+            !(103_u64.saturating_sub(last) < COOLDOWN_EXCHANGES),
+            "cooldown should clear at +3 exchanges"
+        );
     }
 
     #[test]
@@ -806,24 +847,39 @@ mod tests {
         record_test_promotion(&mut state, coll, 100, base_now);
         record_test_promotion(&mut state, coll, 103, base_now + 60_000); // +1 min
         record_test_promotion(&mut state, coll, 106, base_now + 120_000); // +2 min
-        let recent = state.recent_promotions_ms.get(coll).cloned().unwrap_or_default();
+        let recent = state
+            .recent_promotions_ms
+            .get(coll)
+            .cloned()
+            .unwrap_or_default();
         let in_window: usize = recent
             .iter()
             .filter(|t| (base_now + 120_000_u128).saturating_sub(**t) < BURST_WINDOW_MS)
             .count();
-        assert!(in_window >= BURST_LIMIT,
-            "3 promotions within 15min should hit burst threshold (got {})", in_window);
+        assert!(
+            in_window >= BURST_LIMIT,
+            "3 promotions within 15min should hit burst threshold (got {})",
+            in_window
+        );
         // Per spec, burst engagement sets burst_lockout_until_ms.
         // Simulate that the next attempt at base_now+121_000 would set the lockout.
         let lockout_until = base_now + 120_000 + BURST_LOCKOUT_MS;
-        state.burst_lockout_until_ms.insert(coll.to_string(), lockout_until);
+        state
+            .burst_lockout_until_ms
+            .insert(coll.to_string(), lockout_until);
         let until = state.burst_lockout_until_ms.get(coll).copied().unwrap_or(0);
         // Attempt 5 minutes later: still locked out (60 min lockout > 5 min).
         let later = base_now + 120_000 + 5 * 60_000;
-        assert!(later < until, "burst lockout should still be active 5min later");
+        assert!(
+            later < until,
+            "burst lockout should still be active 5min later"
+        );
         // Attempt 65 minutes later: cleared.
         let much_later = base_now + 120_000 + 65 * 60_000;
-        assert!(much_later >= until, "burst lockout should clear after 60min");
+        assert!(
+            much_later >= until,
+            "burst lockout should clear after 60min"
+        );
     }
 
     #[test]
@@ -832,18 +888,31 @@ mod tests {
         let coll = "test_coll";
         // Burn through DAILY_CAP promotions today.
         for i in 0..DAILY_CAP {
-            record_test_promotion(&mut state, coll, 100 + i as u64 * 10, 1_000_000 + i as u128 * 10_000);
+            record_test_promotion(
+                &mut state,
+                coll,
+                100 + i as u64 * 10,
+                1_000_000 + i as u128 * 10_000,
+            );
         }
         let today = today_str();
-        let day_count = state.daily_count.get(coll)
+        let day_count = state
+            .daily_count
+            .get(coll)
             .filter(|dc| dc.date == today)
             .map(|dc| dc.count)
             .unwrap_or(0);
-        assert_eq!(day_count, DAILY_CAP,
-            "after {} promotions, daily count should be {}", DAILY_CAP, DAILY_CAP);
+        assert_eq!(
+            day_count, DAILY_CAP,
+            "after {} promotions, daily count should be {}",
+            DAILY_CAP, DAILY_CAP
+        );
         // Attempting (DAILY_CAP + 1)th promotion should be blocked by the
         // daily-cap check (day_count >= DAILY_CAP).
-        assert!(day_count >= DAILY_CAP, "daily cap should engage at the limit");
+        assert!(
+            day_count >= DAILY_CAP,
+            "daily cap should engage at the limit"
+        );
     }
 
     #[test]
@@ -854,10 +923,16 @@ mod tests {
         // Attempt at exchange 203: 203 - 200 = 3 < MANUAL_SUPPRESSES_AUTO_EXCHANGES (5) → silenced.
         let cutoff = state.last_manual_share_exchange + MANUAL_SUPPRESSES_AUTO_EXCHANGES;
         let silenced_at_203 = 203_u64 <= cutoff && state.last_manual_share_exchange > 0;
-        assert!(silenced_at_203, "manual share should silence auto at +3 exchanges");
+        assert!(
+            silenced_at_203,
+            "manual share should silence auto at +3 exchanges"
+        );
         // Attempt at exchange 206: 206 - 200 = 6 > 5 → no longer silenced.
         let silenced_at_206 = 206_u64 <= cutoff && state.last_manual_share_exchange > 0;
-        assert!(!silenced_at_206, "manual silencing should clear at +6 exchanges");
+        assert!(
+            !silenced_at_206,
+            "manual silencing should clear at +6 exchanges"
+        );
     }
 
     #[test]
@@ -871,8 +946,8 @@ mod tests {
             "burst_lockout_until_ms": {},
             "daily_count": {"coll_x": ["2026-05-14", 5]}
         }"#;
-        let state: PromoteState = serde_json::from_str(legacy_json)
-            .expect("legacy tuple shape should parse");
+        let state: PromoteState =
+            serde_json::from_str(legacy_json).expect("legacy tuple shape should parse");
         let dc = state.daily_count.get("coll_x").expect("entry preserved");
         assert_eq!(dc.date, "2026-05-14");
         assert_eq!(dc.count, 5);
@@ -884,8 +959,8 @@ mod tests {
             "burst_lockout_until_ms": {},
             "daily_count": {"coll_y": {"date": "2026-05-14", "count": 7}}
         }"#;
-        let state2: PromoteState = serde_json::from_str(new_json)
-            .expect("canonical object shape should parse");
+        let state2: PromoteState =
+            serde_json::from_str(new_json).expect("canonical object shape should parse");
         let dc2 = state2.daily_count.get("coll_y").expect("entry preserved");
         assert_eq!(dc2.date, "2026-05-14");
         assert_eq!(dc2.count, 7);
@@ -897,16 +972,25 @@ mod tests {
         let mut state = PromoteState::default();
         state.daily_count.insert(
             "coll_z".to_string(),
-            DailyCount { date: "2026-05-14".to_string(), count: 3 },
+            DailyCount {
+                date: "2026-05-14".to_string(),
+                count: 3,
+            },
         );
         let json = serde_json::to_string(&state).expect("serializes ok");
-        assert!(json.contains(r#""date":"2026-05-14""#),
-            "should serialize date as named field, got: {json}");
-        assert!(json.contains(r#""count":3"#),
-            "should serialize count as named field, got: {json}");
+        assert!(
+            json.contains(r#""date":"2026-05-14""#),
+            "should serialize date as named field, got: {json}"
+        );
+        assert!(
+            json.contains(r#""count":3"#),
+            "should serialize count as named field, got: {json}"
+        );
         // Should NOT serialize as tuple ["2026-05-14", 3]
-        assert!(!json.contains(r#"["2026-05-14",3]"#),
-            "should not use legacy tuple shape, got: {json}");
+        assert!(
+            !json.contains(r#"["2026-05-14",3]"#),
+            "should not use legacy tuple shape, got: {json}"
+        );
     }
 
     #[test]
@@ -927,7 +1011,10 @@ mod tests {
         // Initially: no sentinel → not in dry-run (assuming env var unset
         // in test environment; cargo test runs without it).
         let initial = dry_run_active_for(workspace);
-        assert!(!initial, "no sentinel should mean dry-run off (was {initial})");
+        assert!(
+            !initial,
+            "no sentinel should mean dry-run off (was {initial})"
+        );
 
         // Drop the sentinel file → engages.
         let sentinel_path = workspace.join(SENTINEL_DRY_RUN_FILENAME);

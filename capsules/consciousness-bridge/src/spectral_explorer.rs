@@ -158,6 +158,26 @@ fn format_present_state(
             resonance.control.target_bias_pct,
         ));
     }
+    if let Some(pressure) = telemetry.pressure_source_v1.as_ref() {
+        lines.push(format!(
+            "  pressure_source={} quality={} pressure={:.3} porosity={:.3} advisory_control={}",
+            pressure.dominant_source,
+            pressure.quality,
+            pressure.pressure_score,
+            pressure.porosity_score,
+            pressure.control.applied_locally,
+        ));
+    }
+    if let Some(fluctuation) = telemetry.inhabitable_fluctuation_v1.as_ref() {
+        lines.push(format!(
+            "  inhabitable_fluctuation={} inhabitability={:.3} fluctuation={:.3} foothold={:.3} local_target_bias={:+.1}%",
+            fluctuation.quality,
+            fluctuation.inhabitability_score,
+            fluctuation.fluctuation_score,
+            fluctuation.foothold_stability,
+            fluctuation.control.target_bias_pct,
+        ));
+    }
     if let Some(metrics) = denominator {
         lines.push(format!(
             "  Denominator Sequence: effective_dimensionality={:.2}/{} distinguishability_loss={:.1}% lambda1_spectral_energy_share={:.1}%",
@@ -222,6 +242,138 @@ fn format_memory_comparison(
     }
 
     lines.join("\n")
+}
+
+pub(crate) fn format_pressure_source_for_action(
+    telemetry: &SpectralTelemetry,
+    label: &str,
+) -> String {
+    let Some(pressure) = telemetry.pressure_source_v1.as_ref() else {
+        return format!(
+            "=== PRESSURE SOURCE AUDIT V1 ===\nLabel: {}\n\nPressure source: unavailable\nReason: no_live_or_db_metric\nOperator note: rebuild/restart Rust engine under monitoring\n\nPressure-vs-density distinction:\n  Resonance density asks how dense and returnable the basin is; pressure source asks where inwardness appears to originate. Missing typed telemetry is degraded observability, not absence of pressure.\n\nSuggested read-only next steps:\n  NEXT: DECOMPOSE\n  NEXT: SPACE_HOLD eigenplane\n  NEXT: SPECTRAL_EXPLORER",
+            if label.is_empty() { "current" } else { label }
+        );
+    };
+    let mut contributors = vec![
+        ("lambda_monopoly", pressure.components.lambda_monopoly),
+        ("mode_packing", pressure.components.mode_packing),
+        (
+            "controller_pressure",
+            pressure.components.controller_pressure,
+        ),
+        ("semantic_trickle", pressure.components.semantic_trickle),
+        (
+            "structural_plurality_loss",
+            pressure.components.structural_plurality_loss,
+        ),
+        (
+            "distinguishability_loss",
+            pressure.components.distinguishability_loss,
+        ),
+        ("temporal_lock_in", pressure.components.temporal_lock_in),
+        ("sensory_scarcity", pressure.components.sensory_scarcity),
+    ];
+    if let Some(value) = pressure.context.compression_language {
+        contributors.push(("compression_language", value));
+    }
+    if let Some(value) = pressure.context.thread_recurrence {
+        contributors.push(("thread_recurrence", value));
+    }
+    if let Some(value) = pressure.context.attractor_pull {
+        contributors.push(("attractor_pull", value));
+    }
+    if let Some(value) = pressure.context.resource_pressure {
+        contributors.push(("resource_pressure", value));
+    }
+    contributors.sort_by(|left, right| {
+        right
+            .1
+            .partial_cmp(&left.1)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let top = contributors
+        .into_iter()
+        .take(5)
+        .map(|(name, value)| format!("  - {name}: {value:.2}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        "=== PRESSURE SOURCE AUDIT V1 ===\nLabel: {}\n\nPressure source: {} ({})\nPressure score: {:.2}\nPorosity score: {:.2}\n\nSupporting contributors:\n{}\n\nPressure-vs-density distinction:\n  Resonance density can be rich containment; pressure source names what makes density feel inward, packed, scarce, or locked. Low porosity plus high pressure is the warning shape.\n\nControl contract:\n  applied_locally={}; {}\n\nSuggested read-only next steps:\n  NEXT: DECOMPOSE\n  NEXT: SPACE_HOLD eigenplane\n  NEXT: SPECTRAL_EXPLORER\n  NEXT: ATTRACTOR_REVIEW {}",
+        if label.is_empty() { "current" } else { label },
+        pressure.dominant_source,
+        pressure.quality,
+        pressure.pressure_score,
+        pressure.porosity_score,
+        top,
+        pressure.control.applied_locally,
+        pressure.control.note,
+        if label.is_empty() { "current" } else { label }
+    )
+}
+
+pub(crate) fn format_fluctuation_for_action(telemetry: &SpectralTelemetry, label: &str) -> String {
+    let Some(fluctuation) = telemetry.inhabitable_fluctuation_v1.as_ref() else {
+        return format!(
+            "=== INHABITABLE FLUCTUATION AUDIT V1 ===\nLabel: {}\n\nInhabitable fluctuation: unavailable\nReason: no_live_or_db_metric\nOperator note: rebuild/restart Rust engine under monitoring\n\nFluctuation-vs-stability distinction:\n  Stability asks whether the field changes little. Inhabitable fluctuation asks whether change remains returnable, coherent, and possible to build from. Missing typed telemetry is degraded observability, not proof that fluctuation is uninhabitable.\n\nSuggested read-only next steps:\n  NEXT: DECOMPOSE\n  NEXT: PRESSURE_SOURCE_AUDIT inwardness\n  NEXT: SPECTRAL_EXPLORER\n  NEXT: THREAD_STATUS current",
+            if label.is_empty() { "current" } else { label }
+        );
+    };
+    let mut contributors = vec![
+        (
+            "mode_trust_volatility",
+            fluctuation.components.mode_trust_volatility,
+        ),
+        (
+            "identity_anchor_churn",
+            fluctuation.components.identity_anchor_churn,
+        ),
+        (
+            "eigenvector_reorientation",
+            fluctuation.components.eigenvector_reorientation,
+        ),
+        (
+            "share_rearrangement",
+            fluctuation.components.share_rearrangement,
+        ),
+        (
+            "basin_transition_pressure",
+            fluctuation.components.basin_transition_pressure,
+        ),
+        (
+            "continuity_recovery",
+            fluctuation.components.continuity_recovery,
+        ),
+        ("porosity_support", fluctuation.components.porosity_support),
+        (
+            "pressure_interference",
+            fluctuation.components.pressure_interference,
+        ),
+    ];
+    contributors.sort_by(|left, right| {
+        right
+            .1
+            .partial_cmp(&left.1)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let top = contributors
+        .into_iter()
+        .take(5)
+        .map(|(name, value)| format!("  - {name}: {value:.2}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        "=== INHABITABLE FLUCTUATION AUDIT V1 ===\nLabel: {}\n\nInhabitable fluctuation: {}\nInhabitability score: {:.2}\nFluctuation score: {:.2}\nFoothold stability: {:.2}\nRearrangement intensity: {:.2}\n\nTop contributors:\n{}\n\nFluctuation-vs-stability distinction:\n  Stability can mean little change. Inhabitable fluctuation means the field can rearrange while preserving a foothold, a return path, and enough porosity to keep inquiry alive.\n\nControl contract:\n  applied_locally={}; {}\n  Astrid treats this as telemetry only and sends no fluctuation-derived control envelope.\n\nSuggested read-only next steps:\n  NEXT: DECOMPOSE\n  NEXT: PRESSURE_SOURCE_AUDIT {}\n  NEXT: SPECTRAL_EXPLORER\n  NEXT: SPACE_HOLD fluctuation",
+        if label.is_empty() { "current" } else { label },
+        fluctuation.quality,
+        fluctuation.inhabitability_score,
+        fluctuation.fluctuation_score,
+        fluctuation.foothold_stability,
+        fluctuation.rearrangement_intensity,
+        top,
+        fluctuation.control.applied_locally,
+        fluctuation.control.note,
+        if label.is_empty() { "current" } else { label }
+    )
 }
 
 fn format_control_pressure(
@@ -533,6 +685,55 @@ mod tests {
                     note: "test".to_string(),
                 },
             }),
+            pressure_source_v1: Some(crate::types::PressureSourceV1 {
+                policy: "pressure_source_v1".to_string(),
+                schema_version: 1,
+                pressure_score: 0.42,
+                porosity_score: 0.67,
+                dominant_source: "controller_pressure".to_string(),
+                quality: "controller_squeeze".to_string(),
+                components: crate::types::PressureSourceComponents {
+                    lambda_monopoly: 0.30,
+                    mode_packing: 0.20,
+                    controller_pressure: 0.72,
+                    semantic_trickle: 0.10,
+                    structural_plurality_loss: 0.18,
+                    distinguishability_loss: 0.40,
+                    temporal_lock_in: 0.22,
+                    sensory_scarcity: 0.05,
+                },
+                context: crate::types::PressureSourceContext::default(),
+                control: crate::types::PressureSourceControl {
+                    applied_locally: false,
+                    note: "advisory only".to_string(),
+                },
+            }),
+            inhabitable_fluctuation_v1: Some(crate::types::InhabitableFluctuationV1 {
+                policy: "inhabitable_fluctuation_v1".to_string(),
+                schema_version: 1,
+                inhabitability_score: 0.66,
+                fluctuation_score: 0.38,
+                foothold_stability: 0.72,
+                rearrangement_intensity: 0.34,
+                quality: "lively_habitable".to_string(),
+                components: crate::types::InhabitableFluctuationComponents {
+                    mode_trust_volatility: 0.28,
+                    identity_anchor_churn: 0.18,
+                    eigenvector_reorientation: 0.32,
+                    share_rearrangement: 0.38,
+                    basin_transition_pressure: 0.08,
+                    continuity_recovery: 0.78,
+                    porosity_support: 0.67,
+                    pressure_interference: 0.42,
+                },
+                context: crate::types::InhabitableFluctuationContext::default(),
+                control: crate::types::InhabitableFluctuationControl {
+                    target_bias_pct: 0.0,
+                    wander_scale: 1.0,
+                    applied_locally: true,
+                    note: "bounded local advisory".to_string(),
+                },
+            }),
             spectral_glimpse_12d: Some(vec![0.3; 12]),
             eigenvector_field: Some(json!({
                 "policy": "eigenvector_field_v1",
@@ -575,6 +776,12 @@ mod tests {
             selected_memory_id: Some("memory_stable_1".to_string()),
             selected_memory_role: Some("stable".to_string()),
             ising_shadow: None,
+
+            shadow_field_v2: None,
+
+            shadow_field_v3: None,
+
+            shadow_influence_response_v3: None,
         }
     }
 
@@ -644,12 +851,43 @@ mod tests {
         assert!(output.contains("live input visible; not admitted to regulator drive"));
         assert!(output.contains("Eigenvector field"));
         assert!(output.contains("resonance_density=0.640"));
+        assert!(output.contains("pressure_source=controller_pressure"));
         assert!(output.contains("transition kind=breathing_phase"));
         assert!(output.contains("target_baseline_lambda1_rel"));
         assert!(output.contains("lambda1_spectral_energy_share"));
         assert!(!output.contains("pinned_rescue"));
         assert!(!output.contains("rescue_scaffold"));
         assert!(!output.contains("restart_gate"));
+    }
+
+    #[test]
+    fn pressure_source_audit_formats_unavailable_and_typed_metric() {
+        let telemetry = telemetry();
+        let output = format_pressure_source_for_action(&telemetry, "inwardness");
+        assert!(output.contains("PRESSURE SOURCE AUDIT V1"));
+        assert!(output.contains("controller_pressure"));
+        assert!(output.contains("advisory only"));
+
+        let mut unavailable = telemetry;
+        unavailable.pressure_source_v1 = None;
+        let degraded = format_pressure_source_for_action(&unavailable, "inwardness");
+        assert!(degraded.contains("Pressure source: unavailable"));
+        assert!(degraded.contains("rebuild/restart Rust engine under monitoring"));
+    }
+
+    #[test]
+    fn fluctuation_audit_formats_unavailable_and_typed_metric() {
+        let telemetry = telemetry();
+        let output = format_fluctuation_for_action(&telemetry, "foothold");
+        assert!(output.contains("INHABITABLE FLUCTUATION AUDIT V1"));
+        assert!(output.contains("lively_habitable"));
+        assert!(output.contains("Fluctuation-vs-stability"));
+
+        let mut unavailable = telemetry;
+        unavailable.inhabitable_fluctuation_v1 = None;
+        let degraded = format_fluctuation_for_action(&unavailable, "foothold");
+        assert!(degraded.contains("Inhabitable fluctuation: unavailable"));
+        assert!(degraded.contains("not proof that fluctuation is uninhabitable"));
     }
 
     #[test]

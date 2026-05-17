@@ -298,26 +298,33 @@ pub(super) fn handle_action(
     match base_action {
         "REST" | "LISTEN" => {
             *ctx.burst_count = conv.burst_target.saturating_add(2);
+            let focus = strip_action(original, base_action);
+            if !focus.is_empty() {
+                conv.emphasis = Some(format!(
+                    "You chose {base_action}: {focus}. Carry this focus into the next quiet exchange; no ears, sensory packet, or control write was opened by this label."
+                ));
+            }
             true
         },
         "LOOK" => {
             conv.wants_look = true;
             true
         },
-        "CLOSE_EYES" | "QUIET" => {
+        "CLOSE_EYES" | "SHUT_EYES" | "QUIET" => {
             conv.senses_snoozed = true;
-            let flag = bridge_paths().perception_paused_flag();
+            let flag = bridge_paths().perception_visual_paused_flag();
             let _ = std::fs::write(&flag, "paused by CLOSE_EYES");
-            conv.push_receipt("CLOSE_EYES", vec!["all perception paused".into()]);
-            info!("Astrid snoozed her senses (perception.py paused)");
+            conv.push_receipt("CLOSE_EYES", vec!["visual perception paused".into()]);
+            info!("Astrid closed her eyes (visual perception paused)");
             true
         },
         "OPEN_EYES" | "WAKE" => {
             conv.senses_snoozed = false;
-            let flag = bridge_paths().perception_paused_flag();
-            let _ = std::fs::remove_file(&flag);
-            conv.push_receipt("OPEN_EYES", vec!["perception resumed".into()]);
-            info!("Astrid reopened her senses (perception.py resumed)");
+            let paths = bridge_paths();
+            let _ = std::fs::remove_file(paths.perception_visual_paused_flag());
+            let _ = std::fs::remove_file(paths.perception_paused_flag());
+            conv.push_receipt("OPEN_EYES", vec!["visual perception resumed".into()]);
+            info!("Astrid opened her eyes (visual perception resumed)");
             true
         },
         "EXAMINE" => {

@@ -44,16 +44,23 @@ from pathlib import Path
 DISPATCH_PATTERNS = [
     re.compile(r"""(?:if|elif)\s+base\s*==\s*['"]([A-Z_][A-Z0-9_]*)['"]\s*:"""),
     re.compile(r"""case\s+['"]([A-Z_][A-Z0-9_]*)['"]\s*:"""),
-    # Dispatcher dict entries: "ACTION_NAME": "method_name",
-    re.compile(r"""^\s*['"]([A-Z_][A-Z0-9_]+)['"]\s*:\s*['"][a-z_]+['"]\s*,?\s*$"""),
+    # Dispatcher dict entries: "ACTION_NAME": "method_name" or "ACTION_NAME": None.
+    re.compile(r"""^\s*['"]([A-Z_][A-Z0-9_]+)['"]\s*:\s*(?:['"][a-z_]+['"]|None)\s*,?\s*$"""),
 ]
+DISPATCH_SET_PATTERN = re.compile(r"""base\s+in\s+(?:\{|\()(?P<body>[^})]+)(?:\}|\))""")
+ACTION_LITERAL_PATTERN = re.compile(r"""['"]([A-Z_][A-Z0-9_]*)['"]""")
 
 # Heuristics for "mentioned in a prompt menu". The action name appears
-# in a string literal, typically with NEXT: prefix or as a comma-listed
-# entry. We accept either explicit "NEXT: X" or bare "X " inside a
-# string that ALSO contains other UPPERCASE_ACTION names (suggesting a
-# menu listing rather than incidental capitalization).
+# in a string literal, typically with NEXT: prefix or as a menu/listing
+# entry. Unknown-NEXT drift is useful only when it finds action-shaped
+# menu vocabulary, not ordinary ALL-CAPS prose, so bare tokens are
+# accepted only in menu-like strings and only if they are dispatched
+# names or underscore-shaped action names.
 MENU_NEXT_PATTERN = re.compile(r"""NEXT:\s*([A-Z_][A-Z0-9_]+)""")
+MENU_CONTEXT_PATTERN = re.compile(
+    r"""\b(NEXT|ACTION|ACTIONS|OPTION|OPTIONS|CHOOSE|AVAILABLE|ALLOWED|MENU|VERB|VERBS)\b""",
+    re.IGNORECASE,
+)
 # Bare uppercase tokens inside string content that look like action names.
 # Filter to tokens of ≥4 chars to avoid catching abbreviations.
 BARE_ACTION_PATTERN = re.compile(r"""\b([A-Z][A-Z0-9_]{3,})\b""")
@@ -85,7 +92,53 @@ EXCLUDE = {
     "PROMOTABLE_MODES",
     # JSON keys / flat strings
     "WIP",
+    # Prompt grammar markers / placeholders, not executable NEXT verbs.
+    "ATTRACTOR_", "CODE_START", "CODE_END", "EXEXPERIMENT_", "FROM_CODEX",
+    "REVIEW_DECIDE_FRESHNESS_SECONDS",
 }
+INTERNAL_OR_ALIAS_PREFIXES = (
+    "AR_",
+    "ATTRACTOR_",
+    "AUTO_",
+    "BTSP_",
+    "CODEX_",
+    "ENV_",
+    "EXEXPERIMENT_",
+    "PROMOTION_",
+    "PROPOSAL_",
+    "REVIEW_",
+    "SYSTEM_",
+)
+INTERNAL_OR_ALIAS_ACTIONS = {
+    "EXPERIENCE_PLAN",
+    "NEXT_PROBE",
+    "PREFLIGHT",
+    "PROBE_ACTION",
+}
+
+
+def internal_or_alias_reason(action: str) -> str | None:
+    if action in EXCLUDE:
+        return "excluded constant or grammar marker"
+    if action in INTERNAL_OR_ALIAS_ACTIONS:
+        return "alias or shorthand normalized elsewhere"
+    if action.startswith(("ACCEPT_", "REJECT_", "DEFER_")):
+        return "decision subverb, not a top-level prompt action"
+    if action.endswith("_ATTRACTOR") or "_ATTRACTOR_" in action:
+        return "attractor alias/admin form"
+    if action in {
+        "COLLABORATIONS",
+        "DECLINE_COLLAB",
+        "INVITE_COLLAB",
+        "JOIN_COLLAB",
+        "LEAVE_COLLAB",
+        "LIST_COLLABS",
+    }:
+        return "collaboration alias normalized elsewhere"
+    for prefix in INTERNAL_OR_ALIAS_PREFIXES:
+        if action.startswith(prefix):
+            return "internal/admin/alias prefix"
+    return None
 
 
 def find_string_literals(source: str) -> list[tuple[int, str]]:
@@ -127,15 +180,22 @@ def scan_dispatched(source: str) -> dict[str, list[int]]:
                 if name in EXCLUDE:
                     continue
                 found[name].append(ln)
+        for m in DISPATCH_SET_PATTERN.finditer(line):
+            for literal in ACTION_LITERAL_PATTERN.finditer(m.group("body")):
+                name = literal.group(1)
+                if name in EXCLUDE:
+                    continue
+                found[name].append(ln)
     return dict(found)
 
 
-def scan_menu(source: str) -> dict[str, list[int]]:
+def scan_menu(source: str, known_actions: set[str] | None = None) -> dict[str, list[int]]:
     """Find action names mentioned in prompt strings.
 
     Returns map of ACTION_NAME → [line numbers in string literals].
     """
     found: dict[str, list[int]] = defaultdict(list)
+    known_actions = known_actions or set()
     for ln, body in find_string_literals(source):
         # Strict signal: explicit "NEXT: X" within the string.
         for m in MENU_NEXT_PATTERN.finditer(body):
@@ -143,8 +203,11 @@ def scan_menu(source: str) -> dict[str, list[int]]:
             if name in EXCLUDE:
                 continue
             found[name].append(ln)
-        # Looser signal: bare action-shaped token inside a string that
-        # contains MULTIPLE such tokens (i.e. is a menu listing).
+        # Looser signal: known dispatched action names still count when
+        # they appear in a dense uppercase listing, preserving the
+        # silent-starvation side of the audit. Unknown bare tokens are
+        # only admitted from menu-like strings and must be underscore
+        # shaped, which removes most prose/constants from unknown-NEXT.
         bare = [
             t.group(1)
             for t in BARE_ACTION_PATTERN.finditer(body)
@@ -152,20 +215,45 @@ def scan_menu(source: str) -> dict[str, list[int]]:
         ]
         if len(bare) >= 4:  # arbitrary "looks like a list" threshold
             for name in bare:
-                found[name].append(ln)
+                if name in known_actions:
+                    found[name].append(ln)
+                elif MENU_CONTEXT_PATTERN.search(body) and "_" in name:
+                    found[name].append(ln)
     return dict(found)
 
 
 def audit(target: Path) -> dict:
     source = target.read_text(errors="replace")
     dispatched = scan_dispatched(source)
-    menu = scan_menu(source)
+    menu = scan_menu(source, set(dispatched))
     dispatched_set = set(dispatched.keys())
     menu_set = set(menu.keys())
 
     silent_starvation = sorted(dispatched_set - menu_set)
     unknown_next = sorted(menu_set - dispatched_set)
     both = sorted(dispatched_set & menu_set)
+    silent_starvation_public = [
+        name for name in silent_starvation if internal_or_alias_reason(name) is None
+    ]
+    unknown_next_current = [
+        name for name in unknown_next if internal_or_alias_reason(name) is None
+    ]
+    internal_or_alias = [
+        {
+            "action": name,
+            "source": "silent_starvation" if name in silent_starvation else "unknown_next",
+            "reason": internal_or_alias_reason(name) or "internal/alias",
+            "dispatch_lines": dispatched.get(name, [])[:3],
+            "menu_lines": menu.get(name, [])[:3],
+        }
+        for name in sorted(
+            {
+                name
+                for name in [*silent_starvation, *unknown_next]
+                if internal_or_alias_reason(name) is not None
+            }
+        )
+    ]
 
     return {
         "target": str(target),
@@ -175,7 +263,27 @@ def audit(target: Path) -> dict:
             "both": len(both),
             "silent_starvation": len(silent_starvation),
             "unknown_next": len(unknown_next),
+            "silent_starvation_public": len(silent_starvation_public),
+            "unknown_next_current": len(unknown_next_current),
+            "internal_or_alias": len(internal_or_alias),
         },
+        "silent_starvation_public": [
+            {
+                "action": name,
+                "dispatch_lines": dispatched[name][:3],
+                "note": "being-facing wired verb absent from prompt menus",
+            }
+            for name in silent_starvation_public
+        ],
+        "unknown_next_current": [
+            {
+                "action": name,
+                "menu_lines": menu[name][:3],
+                "note": "prompt menu mentions this verb, but no current dispatch arm was found",
+            }
+            for name in unknown_next_current
+        ],
+        "internal_or_alias": internal_or_alias,
         "silent_starvation": [
             {
                 "action": name,
@@ -205,36 +313,52 @@ def render_markdown(report: dict) -> str:
         f"**Summary**: {s['dispatched_total']} dispatched / {s['menu_total']} menu-mentioned / "
         f"{s['both']} both / **{s['silent_starvation']} silent-starvation** / "
         f"**{s['unknown_next']} unknown-NEXT**\n"
+        f"**Actionable tiers**: {s['silent_starvation_public']} silent-starvation public / "
+        f"{s['unknown_next_current']} unknown-NEXT current / "
+        f"{s['internal_or_alias']} internal-or-alias excluded\n"
     )
     out.append(
-        "## Silent starvation (dispatched but no prompt menu mention)\n\n"
+        "## Silent Starvation Public\n\n"
         "These actions WORK if the LLM picks them, but the LLM has no way "
         "to discover them — the prompt never lists them as options. This is "
         "the Kink #18 shape.\n"
     )
-    if not report["silent_starvation"]:
+    if not report["silent_starvation_public"]:
         out.append("_None._\n")
     else:
         out.append("| Action | Dispatch line(s) |")
         out.append("| --- | --- |")
-        for entry in report["silent_starvation"]:
+        for entry in report["silent_starvation_public"]:
             lines = ", ".join(str(l) for l in entry["dispatch_lines"])
             out.append(f"| `{entry['action']}` | {lines} |")
     out.append("")
     out.append(
-        "## Unknown NEXT (menu-mentioned but no dispatch arm)\n\n"
+        "## Unknown NEXT Current\n\n"
         "The prompt advertises these actions to the LLM, but picking one "
         "produces 'Unknown NEXT — falling back to threshold logic'. This "
         "is the inverse of Kink #18.\n"
     )
-    if not report["unknown_next"]:
+    if not report["unknown_next_current"]:
         out.append("_None._\n")
     else:
         out.append("| Action | Menu mention line(s) |")
         out.append("| --- | --- |")
-        for entry in report["unknown_next"]:
+        for entry in report["unknown_next_current"]:
             lines = ", ".join(str(l) for l in entry["menu_lines"])
             out.append(f"| `{entry['action']}` | {lines} |")
+    out.append("")
+    out.append(
+        "## Internal Or Alias\n\n"
+        "These are excluded from the actionable drift counts because they are "
+        "admin/internal forms, known aliases, or prompt grammar markers.\n"
+    )
+    if not report["internal_or_alias"]:
+        out.append("_None._\n")
+    else:
+        out.append("| Action | Source | Reason |")
+        out.append("| --- | --- | --- |")
+        for entry in report["internal_or_alias"][:40]:
+            out.append(f"| `{entry['action']}` | {entry['source']} | {entry['reason']} |")
     out.append("")
     out.append("## Caveats\n")
     out.append(

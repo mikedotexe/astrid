@@ -783,6 +783,7 @@ pub(crate) fn read_ising_shadow(workspace: &Path) -> Option<crate::types::IsingS
 /// Read Astrid's *own* published ShadowFieldV3 from minime's workspace.
 /// Astrid writes this each exchange via `AstridShadowComputer`; the file
 /// lives next to minime's outputs so both sides see a symmetric path.
+#[allow(dead_code)]
 pub(crate) fn read_astrid_shadow_v3(workspace: &Path) -> Option<serde_json::Value> {
     let path = workspace.join("astrid_shadow_v3.json");
     let text = std::fs::read_to_string(&path).ok()?;
@@ -791,6 +792,7 @@ pub(crate) fn read_astrid_shadow_v3(workspace: &Path) -> Option<serde_json::Valu
 
 /// Read the v3 shadow field from minime — wraps v2 with trajectory ring,
 /// compound traits, phase dwell, and recent transitions.
+#[allow(dead_code)]
 pub(crate) fn read_shadow_field_v3(workspace: &Path) -> Option<serde_json::Value> {
     let health_path = workspace.join("health.json");
     if let Ok(text) = std::fs::read_to_string(&health_path)

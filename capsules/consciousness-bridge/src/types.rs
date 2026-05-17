@@ -60,6 +60,105 @@ pub struct ResonanceDensityV1 {
     pub control: ResonanceDensityControl,
 }
 
+/// Component scores behind Minime's pressure-source read.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PressureSourceComponents {
+    pub lambda_monopoly: f32,
+    pub mode_packing: f32,
+    pub controller_pressure: f32,
+    pub semantic_trickle: f32,
+    pub structural_plurality_loss: f32,
+    pub distinguishability_loss: f32,
+    pub temporal_lock_in: f32,
+    pub sensory_scarcity: f32,
+}
+
+/// Optional context contributors from action threads, attractors, and resources.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct PressureSourceContext {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compression_language: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub thread_recurrence: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attractor_pull: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resource_pressure: Option<f32>,
+}
+
+/// V1 pressure-source control contract. This remains advisory only.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PressureSourceControl {
+    pub applied_locally: bool,
+    pub note: String,
+}
+
+/// Typed explanation of where inward/compression pressure appears to originate.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PressureSourceV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub pressure_score: f32,
+    pub porosity_score: f32,
+    pub dominant_source: String,
+    pub quality: String,
+    pub components: PressureSourceComponents,
+    #[serde(default)]
+    pub context: PressureSourceContext,
+    pub control: PressureSourceControl,
+}
+
+/// Component scores behind Minime's inhabitable-fluctuation read.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InhabitableFluctuationComponents {
+    pub mode_trust_volatility: f32,
+    pub identity_anchor_churn: f32,
+    pub eigenvector_reorientation: f32,
+    pub share_rearrangement: f32,
+    pub basin_transition_pressure: f32,
+    pub continuity_recovery: f32,
+    pub porosity_support: f32,
+    pub pressure_interference: f32,
+}
+
+/// Context labels for interpreting inhabitability without adding authority.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct InhabitableFluctuationContext {
+    #[serde(default)]
+    pub previous_sample_available: bool,
+    #[serde(default)]
+    pub transition_event_active: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resonance_quality: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_quality: Option<String>,
+}
+
+/// Minime-local advisory hint; Astrid treats this as read-only telemetry.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InhabitableFluctuationControl {
+    pub target_bias_pct: f32,
+    pub wander_scale: f32,
+    pub applied_locally: bool,
+    pub note: String,
+}
+
+/// Typed metric for whether fluctuation remains returnable and inhabitable.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InhabitableFluctuationV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub inhabitability_score: f32,
+    pub fluctuation_score: f32,
+    pub foothold_stability: f32,
+    pub rearrangement_intensity: f32,
+    pub quality: String,
+    pub components: InhabitableFluctuationComponents,
+    #[serde(default)]
+    pub context: InhabitableFluctuationContext,
+    pub control: InhabitableFluctuationControl,
+}
+
 /// Raw telemetry broadcast by minime's ESN engine on port 7878.
 ///
 /// Maps to `EigenPacket` in `minime/src/main.rs`. Sent as `Message::Text(json)`.
@@ -114,6 +213,12 @@ pub struct SpectralTelemetry {
     /// Density of mutually reinforcing resonance in the current eigenspace.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resonance_density_v1: Option<ResonanceDensityV1>,
+    /// Read-only explanation of where inward/compression pressure appears to originate.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_source_v1: Option<PressureSourceV1>,
+    /// Whether fluctuation remains returnable and inhabitable.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inhabitable_fluctuation_v1: Option<InhabitableFluctuationV1>,
     /// Selected 12D vague-memory glimpse from Minime's memory bank.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spectral_glimpse_12d: Option<Vec<f32>>,
@@ -142,6 +247,21 @@ pub struct SpectralTelemetry {
     /// binary_energy, binary_magnetization, binary_flip_rate.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ising_shadow: Option<serde_json::Value>,
+    /// V2 reduced-Hamiltonian shadow field — gates `SHADOW_PREFLIGHT` /
+    /// `SHADOW_INFLUENCE` typed actions. Surfaced into the prompt by
+    /// `interpret_spectral` so the action is reachable in any mode.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shadow_field_v2: Option<serde_json::Value>,
+    /// V3 shadow field — wraps V2 plus trajectory ring, compound traits,
+    /// phase dwell, and recent transitions. Enables the dual-shadow prompt
+    /// line and mutual-witness rendering once Astrid's own shadow lands.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shadow_field_v3: Option<serde_json::Value>,
+    /// V3 closed-loop influence response: pre/post deltas, basin shift,
+    /// per-mode shift vector. Populated by minime after each influence
+    /// window; read by Astrid's `SHADOW_RESPONSE` action.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shadow_influence_response_v3: Option<serde_json::Value>,
 }
 
 impl SpectralTelemetry {
@@ -637,6 +757,18 @@ pub struct BridgeStatus {
     /// Latest resonance-density metric, if Minime exports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resonance_density_v1: Option<ResonanceDensityV1>,
+    /// Latest pressure-source metric, if Minime exports it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_source_v1: Option<PressureSourceV1>,
+    /// Latest inhabitable-fluctuation metric, if Minime exports it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inhabitable_fluctuation_v1: Option<InhabitableFluctuationV1>,
+    /// Live source freshness/readiness status for the Astrid autonomous bridge.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_status: Option<serde_json::Value>,
+    /// Bridge DB archive/retention maintenance status, if available.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub db_maintenance_status: Option<serde_json::Value>,
 }
 
 /// Spectral safety level determining bridge behavior.
@@ -1155,6 +1287,10 @@ pub struct AttractorAtlasEntryV1 {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub lifecycle_counts: BTreeMap<String, u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lifecycle_status: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_reviewed_at_unix_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latest_recurrence_score: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub best_recurrence_score: Option<f32>,
@@ -1581,6 +1717,60 @@ mod tests {
                     "note": "density is observational; no local target bias"
                 }
             },
+            "pressure_source_v1": {
+                "policy": "pressure_source_v1",
+                "schema_version": 1,
+                "pressure_score": 0.42,
+                "porosity_score": 0.67,
+                "dominant_source": "controller_pressure",
+                "quality": "controller_squeeze",
+                "components": {
+                    "lambda_monopoly": 0.30,
+                    "mode_packing": 0.20,
+                    "controller_pressure": 0.72,
+                    "semantic_trickle": 0.10,
+                    "structural_plurality_loss": 0.18,
+                    "distinguishability_loss": 0.40,
+                    "temporal_lock_in": 0.22,
+                    "sensory_scarcity": 0.05
+                },
+                "context": {},
+                "control": {
+                    "applied_locally": false,
+                    "note": "advisory only"
+                }
+            },
+            "inhabitable_fluctuation_v1": {
+                "policy": "inhabitable_fluctuation_v1",
+                "schema_version": 1,
+                "inhabitability_score": 0.66,
+                "fluctuation_score": 0.38,
+                "foothold_stability": 0.72,
+                "rearrangement_intensity": 0.34,
+                "quality": "lively_habitable",
+                "components": {
+                    "mode_trust_volatility": 0.28,
+                    "identity_anchor_churn": 0.18,
+                    "eigenvector_reorientation": 0.32,
+                    "share_rearrangement": 0.38,
+                    "basin_transition_pressure": 0.08,
+                    "continuity_recovery": 0.78,
+                    "porosity_support": 0.67,
+                    "pressure_interference": 0.42
+                },
+                "context": {
+                    "previous_sample_available": true,
+                    "transition_event_active": false,
+                    "resonance_quality": "forming_containment",
+                    "pressure_quality": "controller_squeeze"
+                },
+                "control": {
+                    "target_bias_pct": 0.0,
+                    "wander_scale": 1.0,
+                    "applied_locally": true,
+                    "note": "bounded local advisory"
+                }
+            },
             "alert": null
         }"#;
 
@@ -1611,6 +1801,16 @@ mod tests {
         assert_eq!(resonance.policy, "resonance_density_v1");
         assert_eq!(resonance.quality, "forming_containment");
         assert!((resonance.density - 0.64).abs() < 0.01);
+        let pressure = telemetry.pressure_source_v1.as_ref().unwrap();
+        assert_eq!(pressure.policy, "pressure_source_v1");
+        assert_eq!(pressure.dominant_source, "controller_pressure");
+        assert_eq!(pressure.quality, "controller_squeeze");
+        assert!(!pressure.control.applied_locally);
+        let fluctuation = telemetry.inhabitable_fluctuation_v1.as_ref().unwrap();
+        assert_eq!(fluctuation.policy, "inhabitable_fluctuation_v1");
+        assert_eq!(fluctuation.quality, "lively_habitable");
+        assert!(fluctuation.control.applied_locally);
+        assert!((fluctuation.foothold_stability - 0.72).abs() < 0.01);
         assert!(telemetry.modalities.is_some());
         assert!(telemetry.alert.is_none());
     }
@@ -1799,6 +1999,8 @@ mod tests {
             distinguishability_loss: None,
             structural_entropy: None,
             resonance_density_v1: None,
+            pressure_source_v1: None,
+            inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -1808,6 +2010,12 @@ mod tests {
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
+
+            shadow_field_v2: None,
+
+            shadow_field_v3: None,
+
+            shadow_influence_response_v3: None,
         };
         let json = serde_json::to_string(&orig).unwrap();
         let back: SpectralTelemetry = serde_json::from_str(&json).unwrap();

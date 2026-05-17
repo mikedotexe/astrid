@@ -362,7 +362,7 @@ fn tool_definitions() -> Value {
             },
             {
                 "name": "probe_action",
-                "description": "Replay a bridge-local NEXT action live and return exactly what Astrid would have experienced. Supports SEARCH, BROWSE, READ_MORE, LIST_FILES/LS, COMPOSE, ANALYZE_AUDIO, RENDER_AUDIO, and read-only AR_* autoresearch actions.",
+                "description": "Replay supported bridge-local read-only NEXT actions, or return a universal dry-run preflight report for richer NEXT actions without executing them.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -399,6 +399,8 @@ struct ProbeOutcome {
     safety_level: SafetyLevel,
     #[serde(skip_serializing_if = "Option::is_none")]
     effective_query: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    preflight: Option<Value>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -714,6 +716,16 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
             .latest_telemetry
             .as_ref()
             .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
+        pressure_source_v1: s
+            .latest_telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.pressure_source_v1.clone()),
+        inhabitable_fluctuation_v1: s
+            .latest_telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.inhabitable_fluctuation_v1.clone()),
+        source_status: crate::autonomous::read_astrid_source_status(),
+        db_maintenance_status: crate::message_archive::read_runtime_status(),
     };
     Ok(json!({
         "content": [{
@@ -1396,6 +1408,7 @@ async fn probe_search_action(
                 artifacts: Vec::new(),
                 safety_level: live.safety_level,
                 effective_query: Some(query),
+                preflight: None,
             }
         },
         None => probe_error_action(
@@ -1512,6 +1525,7 @@ async fn probe_browse_action(
         )],
         safety_level: live.safety_level,
         effective_query: None,
+        preflight: None,
     }
 }
 
@@ -1583,6 +1597,7 @@ fn probe_read_more_action(safety_level: SafetyLevel) -> ProbeOutcome {
                 )],
                 safety_level,
                 effective_query: None,
+                preflight: None,
             }
         },
         Err(_) => {
@@ -1622,6 +1637,7 @@ fn probe_list_files_action(parsed_action: &str, safety_level: SafetyLevel) -> Pr
             )],
             safety_level,
             effective_query: None,
+            preflight: None,
         },
         None => probe_error_action(
             parsed_action.to_string(),
@@ -1667,6 +1683,7 @@ fn probe_autoresearch_action(parsed_action: &str, live: &LiveProbeContext) -> Pr
                 )],
                 safety_level: live.safety_level,
                 effective_query: None,
+                preflight: None,
             }
         },
         Err(error) => probe_error_action(
@@ -1707,6 +1724,7 @@ fn probe_compose_action(live: &LiveProbeContext) -> ProbeOutcome {
             )],
             safety_level: live.safety_level,
             effective_query: None,
+            preflight: None,
         },
         None => probe_error_action(
             parsed_action,
@@ -1736,6 +1754,7 @@ fn probe_analyze_audio_action(safety_level: SafetyLevel) -> ProbeOutcome {
             )],
             safety_level,
             effective_query: None,
+            preflight: None,
         },
         None => probe_error_action(
             parsed_action,
@@ -1765,6 +1784,7 @@ fn probe_render_audio_action(safety_level: SafetyLevel) -> ProbeOutcome {
             )],
             safety_level,
             effective_query: None,
+            preflight: None,
         },
         Some(result) => probe_error_action(
             parsed_action,
@@ -1788,17 +1808,18 @@ fn probe_unsupported_action(
     base_action: String,
     safety_level: SafetyLevel,
 ) -> ProbeOutcome {
+    let report = crate::autonomous::action_preflight_report(&parsed_action);
+    let experienced_text = report.render();
     ProbeOutcome {
         parsed_action,
-        base_action: base_action.clone(),
-        status: "unsupported".to_string(),
-        summary: format!(
-            "{base_action} is out of scope for probe_action. Supported actions: SEARCH, BROWSE, READ_MORE, LIST_FILES/LS, COMPOSE, ANALYZE_AUDIO, RENDER_AUDIO, and read-only AR_* actions (`AR_LIST`, `AR_LIST_PENDING`, `AR_LIST_ACTIVE`, `AR_LIST_DONE`, `AR_SHOW`, `AR_READ`, `AR_DEEP_READ`, `AR_VALIDATE`)."
-        ),
-        experienced_text: String::new(),
+        base_action,
+        status: "preflight".to_string(),
+        summary: "Returned universal dry-run preflight; no action was executed.".to_string(),
+        experienced_text,
         artifacts: Vec::new(),
         safety_level,
         effective_query: None,
+        preflight: serde_json::to_value(report).ok(),
     }
 }
 
@@ -1818,6 +1839,7 @@ fn probe_error_action(
         artifacts: Vec::new(),
         safety_level,
         effective_query: None,
+        preflight: None,
     }
 }
 
@@ -1906,6 +1928,7 @@ fn log_probe_action(
         "artifacts": outcome.artifacts,
         "safety_level": outcome.safety_level,
         "effective_query": outcome.effective_query,
+        "preflight": outcome.preflight,
     });
     let payload_json = serde_json::to_string(&payload).unwrap_or_default();
     if let Err(error) = db.log_message(
@@ -2088,6 +2111,16 @@ async fn handle_resource_read(
                     .latest_telemetry
                     .as_ref()
                     .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
+                pressure_source_v1: s
+                    .latest_telemetry
+                    .as_ref()
+                    .and_then(|telemetry| telemetry.pressure_source_v1.clone()),
+                inhabitable_fluctuation_v1: s
+                    .latest_telemetry
+                    .as_ref()
+                    .and_then(|telemetry| telemetry.inhabitable_fluctuation_v1.clone()),
+                source_status: crate::autonomous::read_astrid_source_status(),
+                db_maintenance_status: crate::message_archive::read_runtime_status(),
             };
             Ok(json!({
                 "contents": [{

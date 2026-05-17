@@ -322,14 +322,61 @@ async fn probe_action_missing_input_returns_structured_error() {
 }
 
 #[tokio::test]
-async fn probe_action_unsupported_returns_structured_status() {
+async fn probe_action_unsupported_returns_universal_preflight() {
     let state = Arc::new(RwLock::new(BridgeState::new()));
     let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
 
     let result = tool_probe_action(&json!({"action_text": "PING"}), &state, &db)
         .await
         .unwrap();
-    assert_eq!(result["structuredContent"]["status"], "unsupported");
+    assert_eq!(result["structuredContent"]["status"], "preflight");
+    assert_eq!(
+        result["structuredContent"]["preflight"]["effective_route"],
+        "unwired"
+    );
+    assert_eq!(
+        result["structuredContent"]["preflight"]["stage"],
+        "proposal"
+    );
+    assert!(
+        result["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("Dry run: true")
+    );
+}
+
+#[tokio::test]
+async fn probe_action_rich_next_returns_dry_run_preflight() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+
+    let result = tool_probe_action(
+        &json!({"action_text": "EXPERIMENT_BIND current :: PERTURB lambda-edge"}),
+        &state,
+        &db,
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(result["structuredContent"]["status"], "preflight");
+    assert_eq!(result["structuredContent"]["preflight"]["dry_run"], true);
+    assert_eq!(
+        result["structuredContent"]["preflight"]["stage"],
+        "live_control"
+    );
+    assert!(
+        result["structuredContent"]["preflight"]["effective_route"]
+            .as_str()
+            .unwrap()
+            .contains("experiment_continuity")
+    );
+    assert!(
+        result["structuredContent"]["summary"]
+            .as_str()
+            .unwrap()
+            .contains("no action was executed")
+    );
 }
 
 #[tokio::test]
@@ -482,6 +529,8 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
             distinguishability_loss: None,
             structural_entropy: None,
             resonance_density_v1: None,
+            pressure_source_v1: None,
+            inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -491,6 +540,12 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
+
+            shadow_field_v2: None,
+
+            shadow_field_v3: None,
+
+            shadow_influence_response_v3: None,
         });
         state.spectral_fingerprint = Some(vec![0.0; 32]);
     }

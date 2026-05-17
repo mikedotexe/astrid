@@ -66,7 +66,7 @@ pub(super) fn handle_action(
                 path = report.artifact_path,
             );
             true
-        }
+        },
         _ => false,
     }
 }
@@ -137,8 +137,7 @@ fn render_identify_pattern(ctx: &NextActionContext<'_>, label: &str) -> PatternR
     }
     if per_lambda.is_empty() {
         summary_lines.push(
-            "  (no lambdas had enough usable samples — telemetry shape mismatch?)"
-                .to_string(),
+            "  (no lambdas had enough usable samples — telemetry shape mismatch?)".to_string(),
         );
     }
 
@@ -153,9 +152,7 @@ fn render_identify_pattern(ctx: &NextActionContext<'_>, label: &str) -> PatternR
     } else {
         label.replace([' ', '/'], "_")
     };
-    let artifact_path = dir.join(format!(
-        "identify_pattern_{label_slug}_{now_unix_s}.json",
-    ));
+    let artifact_path = dir.join(format!("identify_pattern_{label_slug}_{now_unix_s}.json",));
     let record = serde_json::json!({
         "schema": "identify_pattern_v1",
         "label": label,
@@ -237,11 +234,7 @@ fn analyze_cadence(series: &[f64]) -> CadenceAnalysis {
             let j = i.saturating_add(lag);
             sum += centered[i] * centered[j];
         }
-        let normalized = if lag0.abs() > 1e-12 {
-            sum / lag0
-        } else {
-            0.0
-        };
+        let normalized = if lag0.abs() > 1e-12 { sum / lag0 } else { 0.0 };
         if normalized > peak_value {
             peak_value = normalized;
             peak_lag = lag;

@@ -7,7 +7,7 @@
 #![allow(dead_code)]
 
 use anyhow::Result;
-use rusqlite::{Connection, params};
+use rusqlite::{Connection, OpenFlags, params};
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -43,6 +43,17 @@ impl BridgeDb {
         };
         db.migrate()?;
         Ok(db)
+    }
+
+    /// Open an existing bridge database for read-only inspection.
+    ///
+    /// This intentionally skips migrations and write pragmas so dry-run
+    /// maintenance commands can report impact without mutating the database.
+    pub fn open_read_only<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        Ok(Self {
+            conn: Mutex::new(conn),
+        })
     }
 
     /// Acquire the database connection, panicking if the lock is poisoned.
@@ -219,6 +230,29 @@ impl BridgeDb {
             );
             CREATE INDEX IF NOT EXISTS idx_artifact_links_action
                 ON artifact_links(action_id, timestamp);
+
+            CREATE TABLE IF NOT EXISTS bridge_message_archives (
+                archive_id       TEXT PRIMARY KEY,
+                created_at       REAL NOT NULL,
+                day              TEXT NOT NULL,
+                retention_cutoff REAL NOT NULL,
+                start_ts         REAL NOT NULL,
+                end_ts           REAL NOT NULL,
+                min_id           INTEGER NOT NULL,
+                max_id           INTEGER NOT NULL,
+                row_count        INTEGER NOT NULL,
+                raw_bytes        INTEGER NOT NULL,
+                compressed_bytes INTEGER NOT NULL,
+                sha256           TEXT NOT NULL,
+                compression      TEXT NOT NULL,
+                path             TEXT NOT NULL,
+                manifest_path    TEXT NOT NULL,
+                status           TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_bridge_message_archives_day
+                ON bridge_message_archives(day, status);
+            CREATE INDEX IF NOT EXISTS idx_bridge_message_archives_ts
+                ON bridge_message_archives(start_ts, end_ts);
             ",
         )?;
 
@@ -521,6 +555,183 @@ impl BridgeDb {
         Ok(rows)
     }
 
+    /// Return high-level stats for the hot bridge message table.
+    pub fn bridge_message_live_stats(&self, cutoff: f64) -> Result<BridgeMessageLiveStats> {
+        let conn = self.lock();
+        let (live_count, oldest_live_ts, newest_live_ts): (i64, Option<f64>, Option<f64>) = conn
+            .query_row(
+                "SELECT COUNT(*), MIN(timestamp), MAX(timestamp) FROM bridge_messages",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )?;
+        let (archivable_count, oldest_archivable_ts, newest_archivable_ts): (
+            i64,
+            Option<f64>,
+            Option<f64>,
+        ) = conn.query_row(
+            "SELECT COUNT(*), MIN(timestamp), MAX(timestamp) FROM bridge_messages WHERE timestamp < ?1",
+            params![cutoff],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        Ok(BridgeMessageLiveStats {
+            live_count: i64_to_u64(live_count)?,
+            oldest_live_ts,
+            newest_live_ts,
+            archivable_count: i64_to_u64(archivable_count)?,
+            oldest_archivable_ts,
+            newest_archivable_ts,
+        })
+    }
+
+    /// Return UTC day spans with rows old enough to archive.
+    pub fn bridge_message_archive_spans(
+        &self,
+        cutoff: f64,
+        limit: usize,
+    ) -> Result<Vec<BridgeMessageArchiveSpan>> {
+        let conn = self.lock();
+        let mut stmt = conn.prepare(
+            r"SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch') AS day,
+                     MIN(id), MAX(id), COUNT(*), MIN(timestamp), MAX(timestamp),
+                     COALESCE(SUM(length(payload)), 0)
+              FROM bridge_messages
+              WHERE timestamp < ?1
+              GROUP BY day
+              ORDER BY day ASC
+              LIMIT ?2",
+        )?;
+        #[expect(clippy::cast_possible_wrap)]
+        let rows = stmt.query_map(params![cutoff, limit as i64], |row| {
+            Ok(BridgeMessageArchiveSpan {
+                day: row.get(0)?,
+                min_id: row.get(1)?,
+                max_id: row.get(2)?,
+                row_count: row.get(3)?,
+                start_ts: row.get(4)?,
+                end_ts: row.get(5)?,
+                payload_bytes: row.get(6)?,
+                retention_cutoff: cutoff,
+            })
+        })?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(Into::into)
+    }
+
+    /// Load all currently-live messages covered by an archive span.
+    pub fn bridge_messages_for_archive_span(
+        &self,
+        span: &BridgeMessageArchiveSpan,
+    ) -> Result<Vec<MessageRow>> {
+        let conn = self.lock();
+        let mut stmt = conn.prepare(
+            r"SELECT id, timestamp, direction, topic, payload, fill_pct, lambda1, phase
+              FROM bridge_messages
+              WHERE timestamp < ?1
+                AND strftime('%Y-%m-%d', timestamp, 'unixepoch') = ?2
+              ORDER BY timestamp ASC, id ASC",
+        )?;
+        let rows = stmt.query_map(params![span.retention_cutoff, &span.day], map_message_row)?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(Into::into)
+    }
+
+    /// Return a completed archive that already covers a live span, if any.
+    pub fn completed_archive_covering_span(
+        &self,
+        span: &BridgeMessageArchiveSpan,
+    ) -> Result<Option<BridgeMessageArchiveLedgerRow>> {
+        let conn = self.lock();
+        let mut stmt = conn.prepare(
+            r"SELECT archive_id, created_at, day, retention_cutoff, start_ts, end_ts,
+                     min_id, max_id, row_count, raw_bytes, compressed_bytes,
+                     sha256, compression, path, manifest_path, status
+              FROM bridge_message_archives
+              WHERE status = 'completed'
+                AND day = ?1
+                AND min_id <= ?2
+                AND max_id >= ?3
+                AND row_count = ?4
+              ORDER BY created_at DESC
+              LIMIT 1",
+        )?;
+        let mut rows = stmt.query_map(
+            params![&span.day, span.min_id, span.max_id, span.row_count],
+            map_bridge_message_archive_ledger_row,
+        )?;
+        rows.next().transpose().map_err(Into::into)
+    }
+
+    /// Mirror a completed file-first bridge-message archive into SQLite.
+    pub fn record_bridge_message_archive(
+        &self,
+        record: &BridgeMessageArchiveLedgerRow,
+    ) -> Result<()> {
+        self.lock().execute(
+            r"INSERT INTO bridge_message_archives
+              (archive_id, created_at, day, retention_cutoff, start_ts, end_ts,
+               min_id, max_id, row_count, raw_bytes, compressed_bytes,
+               sha256, compression, path, manifest_path, status)
+              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
+              ON CONFLICT(archive_id) DO UPDATE SET
+                status = excluded.status,
+                path = excluded.path,
+                manifest_path = excluded.manifest_path,
+                sha256 = excluded.sha256,
+                compressed_bytes = excluded.compressed_bytes",
+            params![
+                &record.archive_id,
+                record.created_at,
+                &record.day,
+                record.retention_cutoff,
+                record.start_ts,
+                record.end_ts,
+                record.min_id,
+                record.max_id,
+                record.row_count,
+                record.raw_bytes,
+                record.compressed_bytes,
+                &record.sha256,
+                &record.compression,
+                &record.path,
+                &record.manifest_path,
+                &record.status,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Delete live bridge messages only after their span has been archived.
+    pub fn delete_bridge_messages_for_archive_span(
+        &self,
+        span: &BridgeMessageArchiveSpan,
+    ) -> Result<usize> {
+        let deleted = self.lock().execute(
+            r"DELETE FROM bridge_messages
+              WHERE timestamp < ?1
+                AND strftime('%Y-%m-%d', timestamp, 'unixepoch') = ?2",
+            params![span.retention_cutoff, &span.day],
+        )?;
+        Ok(deleted)
+    }
+
+    /// Return SQLite page/freelist counts for maintenance status.
+    pub fn sqlite_page_stats(&self) -> Result<SqlitePageStats> {
+        let conn = self.lock();
+        let page_count: i64 = conn.query_row("PRAGMA page_count", [], |row| row.get(0))?;
+        let freelist_count: i64 = conn.query_row("PRAGMA freelist_count", [], |row| row.get(0))?;
+        let page_size: i64 = conn.query_row("PRAGMA page_size", [], |row| row.get(0))?;
+        Ok(SqlitePageStats {
+            page_count: i64_to_u64(page_count)?,
+            freelist_count: i64_to_u64(freelist_count)?,
+            page_size: i64_to_u64(page_size)?,
+        })
+    }
+
+    /// Truncate the write-ahead log after archive/delete maintenance.
+    pub fn checkpoint_wal(&self) -> Result<()> {
+        self.lock()
+            .execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")?;
+        Ok(())
+    }
+
     /// Delete messages older than `retention_secs` seconds.
     pub fn purge_old_messages(&self, retention_secs: f64) -> Result<usize> {
         let cutoff = unix_now() - retention_secs;
@@ -534,6 +745,23 @@ impl BridgeDb {
     /// Run `SQLite` VACUUM to reclaim disk space after purges.
     pub fn vacuum(&self) -> Result<()> {
         self.lock().execute_batch("VACUUM")?;
+        Ok(())
+    }
+
+    #[cfg(test)]
+    pub(crate) fn insert_bridge_message_for_test(
+        &self,
+        timestamp: f64,
+        direction: &str,
+        topic: &str,
+        payload: &str,
+    ) -> Result<()> {
+        self.lock().execute(
+            r"INSERT INTO bridge_messages
+              (timestamp, direction, topic, payload)
+              VALUES (?1, ?2, ?3, ?4)",
+            params![timestamp, direction, topic, payload],
+        )?;
         Ok(())
     }
 
@@ -915,6 +1143,59 @@ pub struct MessageRow {
     pub phase: Option<String>,
 }
 
+/// Current live/archivable bridge-message table stats.
+#[derive(Debug, Clone)]
+pub struct BridgeMessageLiveStats {
+    pub live_count: u64,
+    pub oldest_live_ts: Option<f64>,
+    pub newest_live_ts: Option<f64>,
+    pub archivable_count: u64,
+    pub oldest_archivable_ts: Option<f64>,
+    pub newest_archivable_ts: Option<f64>,
+}
+
+/// A UTC day-sized span of bridge messages old enough to archive.
+#[derive(Debug, Clone)]
+pub struct BridgeMessageArchiveSpan {
+    pub day: String,
+    pub min_id: i64,
+    pub max_id: i64,
+    pub row_count: i64,
+    pub start_ts: f64,
+    pub end_ts: f64,
+    pub payload_bytes: i64,
+    pub retention_cutoff: f64,
+}
+
+/// SQLite mirror row for a completed bridge-message archive shard.
+#[derive(Debug, Clone)]
+pub struct BridgeMessageArchiveLedgerRow {
+    pub archive_id: String,
+    pub created_at: f64,
+    pub day: String,
+    pub retention_cutoff: f64,
+    pub start_ts: f64,
+    pub end_ts: f64,
+    pub min_id: i64,
+    pub max_id: i64,
+    pub row_count: i64,
+    pub raw_bytes: i64,
+    pub compressed_bytes: i64,
+    pub sha256: String,
+    pub compression: String,
+    pub path: String,
+    pub manifest_path: String,
+    pub status: String,
+}
+
+/// SQLite page statistics used to decide whether a controlled vacuum is useful.
+#[derive(Debug, Clone)]
+pub struct SqlitePageStats {
+    pub page_count: u64,
+    pub freelist_count: u64,
+    pub page_size: u64,
+}
+
 /// A row from the `attractor_ledger` table.
 #[derive(Debug, Clone)]
 pub struct AttractorLedgerRow {
@@ -954,6 +1235,33 @@ fn map_attractor_ledger_row(row: &rusqlite::Row) -> rusqlite::Result<AttractorLe
         classification: row.get(7)?,
         payload: row.get(8)?,
     })
+}
+
+fn map_bridge_message_archive_ledger_row(
+    row: &rusqlite::Row,
+) -> rusqlite::Result<BridgeMessageArchiveLedgerRow> {
+    Ok(BridgeMessageArchiveLedgerRow {
+        archive_id: row.get(0)?,
+        created_at: row.get(1)?,
+        day: row.get(2)?,
+        retention_cutoff: row.get(3)?,
+        start_ts: row.get(4)?,
+        end_ts: row.get(5)?,
+        min_id: row.get(6)?,
+        max_id: row.get(7)?,
+        row_count: row.get(8)?,
+        raw_bytes: row.get(9)?,
+        compressed_bytes: row.get(10)?,
+        sha256: row.get(11)?,
+        compression: row.get(12)?,
+        path: row.get(13)?,
+        manifest_path: row.get(14)?,
+        status: row.get(15)?,
+    })
+}
+
+fn i64_to_u64(value: i64) -> Result<u64> {
+    u64::try_from(value).map_err(Into::into)
 }
 
 pub fn unix_now() -> f64 {

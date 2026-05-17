@@ -626,6 +626,22 @@ async fn handle_telemetry_message(
             .resonance_density_v1
             .as_ref()
             .map_or("unavailable", |metric| metric.quality.as_str()),
+        pressure_source = telemetry
+            .pressure_source_v1
+            .as_ref()
+            .map_or("unavailable", |metric| metric.dominant_source.as_str()),
+        pressure_score = telemetry
+            .pressure_source_v1
+            .as_ref()
+            .map_or(0.0, |metric| metric.pressure_score),
+        inhabitable_fluctuation = telemetry
+            .inhabitable_fluctuation_v1
+            .as_ref()
+            .map_or("unavailable", |metric| metric.quality.as_str()),
+        inhabitability_score = telemetry
+            .inhabitable_fluctuation_v1
+            .as_ref()
+            .map_or(0.0, |metric| metric.inhabitability_score),
         pull_topology = pull_topology
             .as_ref()
             .map_or("unavailable", |profile| profile.classification.as_str()),
@@ -1397,6 +1413,8 @@ mod tests {
             distinguishability_loss: None,
             structural_entropy: None,
             resonance_density_v1: None,
+            pressure_source_v1: None,
+            inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -1406,6 +1424,12 @@ mod tests {
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
+
+            shadow_field_v2: None,
+
+            shadow_field_v3: None,
+
+            shadow_influence_response_v3: None,
         };
 
         let (fill, source, fallback) = resolve_fill_pct(&telemetry);

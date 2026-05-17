@@ -55,6 +55,14 @@ pub struct PacingState {
 pub struct SensoryState {
     pub eyes_open: bool,
     pub ears_open: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visual_gate_reason: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audio_gate_reason: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
     pub has_seen_video: bool,
     pub has_heard_audio: bool,
 }
@@ -189,16 +197,16 @@ impl FacultySnapshot {
                             "audio transcription",
                         ),
                         f(
-                            "CLOSE_EYES / OPEN_EYES",
+                            "CLOSE_EYES / SHUT_EYES / OPEN_EYES",
                             if senses_snoozed {
                                 FacultyStatus::Active
                             } else {
                                 a.clone()
                             },
-                            "pause/resume all perception",
+                            "pause/resume visual input",
                         ),
                         f(
-                            "CLOSE_EARS / OPEN_EARS",
+                            "CLOSE_EARS / SHUT_EARS / OPEN_EARS",
                             if ears_closed {
                                 FacultyStatus::Active
                             } else {
@@ -341,6 +349,71 @@ impl FacultySnapshot {
                             "REGULATOR_AUDIT [label]",
                             a.clone(),
                             "inspect active fixed-point pressure and legacy PI mirror fields",
+                        ),
+                        f(
+                            "PRESSURE_SOURCE_AUDIT [label]",
+                            a.clone(),
+                            "inspect where inward pressure appears to originate without sending control",
+                        ),
+                        f(
+                            "FLUCTUATION_AUDIT [label]",
+                            a.clone(),
+                            "inspect whether spectral fluctuation remains returnable and inhabitable",
+                        ),
+                        f(
+                            "ACTION_PREFLIGHT <NEXT action>",
+                            a.clone(),
+                            "dry-run route, gates, authority, continuity, and artifacts without executing",
+                        ),
+                        f(
+                            "EXPERIMENT_START <title> :: <question>",
+                            a.clone(),
+                            "open a being-owned experiment inside the current action thread",
+                        ),
+                        f(
+                            "EXPERIMENT_CHARTER current :: hypothesis: ...; method_intent: ...; proposed_next_action: ACTION_PREFLIGHT ...",
+                            a.clone(),
+                            "author hypothesis, method intent, proposed action, evidence targets, stop criteria, and consent posture",
+                        ),
+                        f(
+                            "EXPERIMENT_REHEARSE current",
+                            a.clone(),
+                            "dry-run the chartered proposed action; live write/control routes are recorded as blocked rehearsal, not executed",
+                        ),
+                        f(
+                            "EXPERIMENT_PREFLIGHT current",
+                            a.clone(),
+                            "alias for EXPERIMENT_REHEARSE when rehearsal is phrased as preflight",
+                        ),
+                        f(
+                            "EXPERIMENT_EVIDENCE current :: felt ...; telemetry ...; artifact ...",
+                            a.clone(),
+                            "record felt evidence plus current telemetry/artifact context",
+                        ),
+                        f(
+                            "EXPERIMENT_DECIDE current :: accept because ... / refuse because ... / counter NEXT: ACTION_PREFLIGHT ...",
+                            a.clone(),
+                            "record agency outcome and update the experiment return point",
+                        ),
+                        f(
+                            "EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE",
+                            a.clone(),
+                            "run one normal gated action and remember it as an experiment run",
+                        ),
+                        f(
+                            "EXPERIMENT_BRANCH <title> :: <question>",
+                            a.clone(),
+                            "open a child experiment while preserving the parent as a return point",
+                        ),
+                        f(
+                            "EXPERIMENT_ALT_PATHS [current]",
+                            a.clone(),
+                            "propose deepen, contrast, and rest/observe paths without executing them",
+                        ),
+                        f(
+                            "EXPERIMENT_REVIEW current",
+                            a.clone(),
+                            "synthesize learned runs, artifacts, and next return point",
                         ),
                         f(
                             "RESONANCE_FORECAST [label]",
@@ -582,8 +655,16 @@ impl AstridSelfModel {
         } else {
             "standard"
         };
-        let eyes = if c.senses.eyes_open { "open" } else { "closed" };
-        let ears = if c.senses.ears_open { "open" } else { "closed" };
+        let eyes = c
+            .senses
+            .visual_gate_reason
+            .as_deref()
+            .unwrap_or(if c.senses.eyes_open { "open" } else { "closed" });
+        let ears = c
+            .senses
+            .audio_gate_reason
+            .as_deref()
+            .unwrap_or(if c.senses.ears_open { "open" } else { "closed" });
         let echo = if c.echo_muted { "off" } else { "on" };
         let breath = if c.breathing_coupled {
             "coupled"
@@ -915,6 +996,24 @@ pub fn snapshot_self_model(
             senses: SensoryState {
                 eyes_open: !senses_snoozed,
                 ears_open: !ears_closed,
+                visual_gate_reason: Some(
+                    if senses_snoozed {
+                        "closed_by_astrid"
+                    } else {
+                        "open_by_default"
+                    }
+                    .to_string(),
+                ),
+                audio_gate_reason: Some(
+                    if ears_closed {
+                        "closed_by_astrid"
+                    } else {
+                        "open_by_default"
+                    }
+                    .to_string(),
+                ),
+                updated_at: None,
+                source: Some("astrid_conversation_state".to_string()),
                 has_seen_video: seen_video,
                 has_heard_audio: seen_audio,
             },

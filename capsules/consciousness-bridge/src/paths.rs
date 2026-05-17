@@ -231,6 +231,11 @@ impl BridgePaths {
     }
 
     #[must_use]
+    pub fn btsp_minime_choice_cursor_path(&self) -> PathBuf {
+        self.bridge_workspace.join("btsp_minime_choice_cursor.json")
+    }
+
+    #[must_use]
     pub fn experiments_dir(&self) -> PathBuf {
         self.bridge_workspace.join("experiments")
     }
@@ -261,6 +266,16 @@ impl BridgePaths {
     }
 
     #[must_use]
+    pub fn perception_visual_paused_flag(&self) -> PathBuf {
+        self.bridge_workspace.join("perception_visual_paused.flag")
+    }
+
+    #[must_use]
+    pub fn perception_audio_paused_flag(&self) -> PathBuf {
+        self.bridge_workspace.join("perception_audio_paused.flag")
+    }
+
+    #[must_use]
     pub fn astrid_contact_state_path(&self) -> PathBuf {
         self.bridge_workspace.join("contact_state.json")
     }
@@ -277,6 +292,17 @@ impl BridgePaths {
             .parent()
             .map(|p| p.join("research"))
             .unwrap_or_else(|| PathBuf::from("/Users/v/other/research"))
+    }
+
+    /// v5 Coordination Protocol V1: shared collaboration root, sibling of
+    /// both astrid_root and minime_root. Neither workspace owns it; both
+    /// read/write. Houses one subdirectory per active joint thread.
+    #[must_use]
+    pub fn shared_collaborations_dir(&self) -> PathBuf {
+        self.astrid_root
+            .parent()
+            .map(|p| p.join("shared").join("collaborations"))
+            .unwrap_or_else(|| PathBuf::from("/Users/v/other/shared/collaborations"))
     }
 
     #[must_use]
@@ -303,6 +329,82 @@ impl BridgePaths {
     pub fn minime_memory_requests_dir(&self) -> PathBuf {
         self.minime_workspace.join("memory_requests")
     }
+
+    /// v3.6.1: directory where Astrid receives parameter-tuning requests
+    /// from minime (`from_minime_*.json`) and writes her own outbound
+    /// requests (`from_astrid_*.json`).
+    #[must_use]
+    pub fn parameter_requests_dir(&self) -> PathBuf {
+        self.bridge_workspace.join("parameter_requests")
+    }
+
+    /// v3.6.1: minime's parameter-requests inbox, where Astrid drops
+    /// `from_astrid_*.json` requests for minime to review.
+    #[must_use]
+    pub fn minime_parameter_requests_dir(&self) -> PathBuf {
+        self.minime_workspace.join("parameter_requests")
+    }
+}
+
+/// v3.6.1: count `from_minime_*.json` files awaiting Astrid's review in
+/// her bridge workspace. Returns 0 if the directory doesn't exist or is
+/// unreadable. Cheap directory scan; cache at the call site if invoked
+/// per exchange.
+#[must_use]
+pub fn count_pending_minime_requests() -> u32 {
+    let dir = bridge_paths().parameter_requests_dir();
+    let Ok(entries) = std::fs::read_dir(&dir) else {
+        return 0;
+    };
+    let count = entries
+        .flatten()
+        .filter(|entry| {
+            let name = entry.file_name();
+            let lossy = name.to_string_lossy();
+            lossy.starts_with("from_minime_") && lossy.ends_with(".json")
+        })
+        .count();
+    u32::try_from(count).unwrap_or(u32::MAX)
+}
+
+/// v3.6.4: peek the lexicographically-last `from_minime_*.json` request and
+/// return `(request_id, param, value_display)` for the curriculum to surface
+/// in a DecideRequest nudge. Returns `None` if no pending requests exist or
+/// the file can't be parsed. Cheap O(N) directory scan + one read.
+#[must_use]
+pub fn peek_latest_pending_minime_request() -> Option<(String, String, String)> {
+    let dir = bridge_paths().parameter_requests_dir();
+    let entries = std::fs::read_dir(&dir).ok()?;
+    let mut paths: Vec<std::path::PathBuf> = entries
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| {
+            p.is_file()
+                && p.file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n.starts_with("from_minime_") && n.ends_with(".json"))
+                    .unwrap_or(false)
+        })
+        .collect();
+    if paths.is_empty() {
+        return None;
+    }
+    paths.sort();
+    let chosen = paths.last()?;
+    let text = std::fs::read_to_string(chosen).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&text).ok()?;
+    let request_id = v.get("request_id").and_then(|x| x.as_str())?.to_string();
+    let param = v
+        .get("param")
+        .and_then(|x| x.as_str())
+        .unwrap_or("?")
+        .to_string();
+    let value_display = match v.get("proposed_value") {
+        Some(serde_json::Value::String(s)) => s.clone(),
+        Some(other) => other.to_string(),
+        None => "?".to_string(),
+    };
+    Some((request_id, param, value_display))
 }
 
 fn env_path(name: &str) -> Option<PathBuf> {

@@ -1,8 +1,8 @@
 mod ask_steward;
 mod attractor;
 mod audio;
-mod autoresearch;
 pub(crate) mod auto_promote;
+mod autoresearch;
 mod codex;
 pub(crate) mod collaboration;
 mod identify_pattern;
@@ -315,7 +315,10 @@ fn is_action_token_like(token: &str) -> bool {
     if token.len() < 5 {
         return false;
     }
-    if !token.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_') {
+    if !token
+        .chars()
+        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+    {
         return false;
     }
     // Require at least one underscore — separates compound action verbs
@@ -898,6 +901,17 @@ fn normalize_feedback_shadow_model_alias(
         ));
     }
 
+    if matches!(base_action, "SHADOW_TRACE" | "SHADOW_EXPLORER") {
+        let raw_arg = strip_action(original, base_action);
+        let focus = clean_alias_arg(&raw_arg);
+        let normalized_original = if focus.is_empty() {
+            "SHADOW_PREFLIGHT --stage=rehearse".to_string()
+        } else {
+            format!("SHADOW_PREFLIGHT {focus} --stage=rehearse")
+        };
+        return Some(("SHADOW_PREFLIGHT".to_string(), normalized_original));
+    }
+
     if base_action == "LISTEN"
         && (lower.contains("separator")
             || lower.contains("path away")
@@ -915,6 +929,12 @@ fn normalize_feedback_shadow_model_alias(
 fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     let original = unwrap_outer_action_wrappers(next_action);
     let base_action = leading_action_token(&original);
+
+    if let Some((normalized_base, normalized_original)) =
+        normalize_experiment_typo_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
 
     if let Some((normalized_base, normalized_original)) =
         normalize_feedback_shadow_model_alias(&base_action, &original)
@@ -1012,6 +1032,23 @@ pub(crate) fn canonicalize_next_action_text(next_action: &str) -> String {
     canonicalize_next_action_components(next_action).1
 }
 
+fn normalize_experiment_typo_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    let normalized_base = if let Some(rest) = base_action.strip_prefix("EXEXPERIMENT_") {
+        format!("EXPERIMENT_{rest}")
+    } else if base_action == "EXPERIENCE_PLAN" {
+        "EXPERIMENT_PLAN".to_string()
+    } else {
+        return None;
+    };
+    let raw_arg = strip_action(original, base_action);
+    let normalized_original = if raw_arg.is_empty() {
+        normalized_base.clone()
+    } else {
+        format!("{normalized_base} {raw_arg}")
+    };
+    Some((normalized_base, normalized_original))
+}
+
 fn strip_action(original: &str, prefix: &str) -> String {
     let upper = original.to_uppercase();
     if upper.starts_with(prefix) {
@@ -1085,6 +1122,11 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "RECALL"
         | "EXPERIMENT_START"
         | "EXPERIMENT_PLAN"
+        | "EXPERIMENT_CHARTER"
+        | "EXPERIMENT_REHEARSE"
+        | "EXPERIMENT_PREFLIGHT"
+        | "EXPERIMENT_EVIDENCE"
+        | "EXPERIMENT_DECIDE"
         | "EXPERIMENT_BIND"
         | "EXPERIMENT_OBSERVE"
         | "EXPERIMENT_STATUS"
@@ -1150,6 +1192,11 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "REPAIR_RECORD" | "REPAIR_APPLY" => "action_continuity",
         "EXPERIMENT_START"
         | "EXPERIMENT_PLAN"
+        | "EXPERIMENT_CHARTER"
+        | "EXPERIMENT_REHEARSE"
+        | "EXPERIMENT_PREFLIGHT"
+        | "EXPERIMENT_EVIDENCE"
+        | "EXPERIMENT_DECIDE"
         | "EXPERIMENT_BIND"
         | "EXPERIMENT_OBSERVE"
         | "EXPERIMENT_STATUS"
@@ -1408,7 +1455,12 @@ pub(super) fn handle_next_action(
             .with_preflight_report(report_value);
     }
 
-    if let Some(token) = unresolved_angle_placeholder(&original) {
+    if let Some(token) = unresolved_angle_placeholder(&original)
+        && !action_continuity::can_repair_experiment_intent_placeholder(
+            base_action.as_str(),
+            &original,
+        )
+    {
         conv.emphasis = Some(format!(
             "Your NEXT action `{original}` still contains placeholder syntax `{token}`. \
              Replace it with a concrete URL, workspace, file, command, question, or label; \
@@ -1419,6 +1471,29 @@ pub(super) fn handle_next_action(
             "placeholder",
             format!("Placeholder NEXT action `{original}` was not executed."),
         );
+    }
+
+    match action_continuity::charter_required_guard_for_next(&original) {
+        Ok(Some(guard)) => {
+            let message = guard.message();
+            let metadata = guard.metadata();
+            conv.emphasis = Some(message.clone());
+            info!(
+                "Astrid charter-required guard blocked NEXT `{}` ({})",
+                original,
+                metadata
+                    .get("reason")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("charter_required_guard")
+            );
+            return NextActionOutcome::blocked("charter_required_guard", message)
+                .with_stage_visibility("blocked", "protected_summary")
+                .with_charter_required_guard(metadata);
+        },
+        Ok(None) => {},
+        Err(err) => {
+            info!("Astrid charter-required guard skipped after read error: {err:#}");
+        },
     }
 
     if base_action == "EXPERIMENT_BIND" {
@@ -1698,7 +1773,9 @@ fn dispatch_multi_action(
                     "Multi-action [{}/{}] CONFLICT_SKIP: decision verb `{}` skipped — \
                      a prior segment already emitted a parameter decision \
                      (would target an empty pending queue)",
-                    i + 1, n, segment_base
+                    i + 1,
+                    n,
+                    segment_base
                 );
                 handler_marks.push(format!("{}:skipped_decision_conflict", i + 1));
                 continue;
@@ -1721,9 +1798,7 @@ fn dispatch_multi_action(
         let outcome = handle_next_action(conv, &segment, segment_ctx);
         let segment_emphasis = conv.emphasis.take();
         accumulated_emphasis = match (accumulated_emphasis, segment_emphasis) {
-            (Some(prior), Some(new)) if !new.trim().is_empty() => {
-                Some(format!("{prior}\n\n{new}"))
-            },
+            (Some(prior), Some(new)) if !new.trim().is_empty() => Some(format!("{prior}\n\n{new}")),
             (Some(prior), _) => Some(prior),
             (None, new) => new,
         };
@@ -1863,15 +1938,9 @@ mod tests {
             parse_next_action("blah\nNEXT: **READ_MORE**"),
             Some("READ_MORE"),
         );
-        assert_eq!(
-            parse_next_action("blah\nNEXT: `LOOK`"),
-            Some("LOOK"),
-        );
+        assert_eq!(parse_next_action("blah\nNEXT: `LOOK`"), Some("LOOK"),);
         // Non-decorated action passes through unchanged.
-        assert_eq!(
-            parse_next_action("blah\nNEXT: NOTICE"),
-            Some("NOTICE"),
-        );
+        assert_eq!(parse_next_action("blah\nNEXT: NOTICE"), Some("NOTICE"),);
         // Mixed asterisk + backtick at edges.
         assert_eq!(
             parse_next_action("blah\nNEXT: *`SHADOW_TRAJECTORY`*"),
@@ -1911,9 +1980,7 @@ mod tests {
 
             shadow_field_v2: None,
 
-
             shadow_field_v3: None,
-
 
             shadow_influence_response_v3: None,
         }
@@ -2099,6 +2166,10 @@ mod tests {
             original,
             "SHADOW_PREFLIGHT lambda-edge/yielding --stage=rehearse"
         );
+
+        let (base, original) = canonicalize_next_action_components("SHADOW_TRACE lambda-tail");
+        assert_eq!(base, "SHADOW_PREFLIGHT");
+        assert_eq!(original, "SHADOW_PREFLIGHT lambda-tail --stage=rehearse");
 
         let (base, original) =
             canonicalize_next_action_components("REFINE_AUDIO_PROCESSING compacting texture");
@@ -2707,6 +2778,17 @@ mod tests {
     }
 
     #[test]
+    fn canonicalizes_narrow_experiment_typos() {
+        let (base, original) = canonicalize_next_action_components("EXEXPERIMENT_CHARTER current");
+        assert_eq!(base, "EXPERIMENT_CHARTER");
+        assert_eq!(original, "EXPERIMENT_CHARTER current");
+
+        let (base, original) = canonicalize_next_action_components("EXPERIENCE_PLAN current");
+        assert_eq!(base, "EXPERIMENT_PLAN");
+        assert_eq!(original, "EXPERIMENT_PLAN current");
+    }
+
+    #[test]
     fn canonicalizes_memory_search_to_safe_search_route() {
         let (base, original) =
             canonicalize_next_action_components("MEMORY: SEARCH [topology cooldown]");
@@ -2960,25 +3042,25 @@ mod tests {
         // Phase 2.3 strict: bare single-word verbs lose chain capability
         // (still valid as single NEXTs). This trades expressivity for
         // ~zero false-positive splits from natural English conjunctions.
-        assert!(!is_action_token_like("BROWSE"));   // 6 chars, no underscore
-        assert!(!is_action_token_like("EXAMINE"));  // 7 chars, no underscore
-        assert!(!is_action_token_like("DEFER"));    // bare alias — no underscore
-        assert!(!is_action_token_like("ACCEPT"));   // bare alias — no underscore
-        assert!(!is_action_token_like("REJECT"));   // bare alias — no underscore
+        assert!(!is_action_token_like("BROWSE")); // 6 chars, no underscore
+        assert!(!is_action_token_like("EXAMINE")); // 7 chars, no underscore
+        assert!(!is_action_token_like("DEFER")); // bare alias — no underscore
+        assert!(!is_action_token_like("ACCEPT")); // bare alias — no underscore
+        assert!(!is_action_token_like("REJECT")); // bare alias — no underscore
         assert!(!is_action_token_like("SEARCH"));
-        assert!(!is_action_token_like("DECIDE"));   // not an action — was previous false pos
-        assert!(!is_action_token_like("LOCAL"));    // not an action — was previous false pos
-        assert!(!is_action_token_like("WHAT"));     // 4 chars + no underscore
+        assert!(!is_action_token_like("DECIDE")); // not an action — was previous false pos
+        assert!(!is_action_token_like("LOCAL")); // not an action — was previous false pos
+        assert!(!is_action_token_like("WHAT")); // 4 chars + no underscore
     }
 
     #[test]
     fn is_action_token_like_rejects_short_or_lowercase() {
         assert!(!is_action_token_like("AND"));
         assert!(!is_action_token_like("a"));
-        assert!(!is_action_token_like("read_more"));   // lowercase
-        assert!(!is_action_token_like("Read_more"));   // mixed case
-        assert!(!is_action_token_like("READ-MORE"));   // hyphen, not underscore
-        assert!(!is_action_token_like("λ3_TAIL"));     // non-ASCII upper
+        assert!(!is_action_token_like("read_more")); // lowercase
+        assert!(!is_action_token_like("Read_more")); // mixed case
+        assert!(!is_action_token_like("READ-MORE")); // hyphen, not underscore
+        assert!(!is_action_token_like("λ3_TAIL")); // non-ASCII upper
     }
 
     #[test]
@@ -2986,10 +3068,13 @@ mod tests {
         // Phase 2.3 (strict): "DECIDE" lacks an underscore so the splitter
         // skips it cleanly. (Earlier denylist approach also handled this;
         // strict mode handles all such bare-word false positives uniformly.)
-        let result = split_multi_action(
-            "REVIEW_PARAMETER_REQUESTS — read and decide.",
+        let result = split_multi_action("REVIEW_PARAMETER_REQUESTS — read and decide.");
+        assert_eq!(
+            result.len(),
+            1,
+            "should not split on 'and decide': {:?}",
+            result
         );
-        assert_eq!(result.len(), 1, "should not split on 'and decide': {:?}", result);
         assert!(result[0].starts_with("REVIEW_PARAMETER_REQUESTS"));
     }
 
@@ -3001,7 +3086,12 @@ mod tests {
         let result = split_multi_action(
             "INSTRUMENT_SENSORS — collect spectral report and local changes in the dominant mode.",
         );
-        assert_eq!(result.len(), 1, "should not split on 'and local': {:?}", result);
+        assert_eq!(
+            result.len(),
+            1,
+            "should not split on 'and local': {:?}",
+            result
+        );
     }
 
     #[test]
@@ -3013,13 +3103,17 @@ mod tests {
         // 5-char floor so the splitter skips it; the legitimate AND
         // before COMPARE_BASELINE still wins.
         let result = split_multi_action(
-            "EXAMINE foo AND COMPARE_BASELINE - I want to see fabric, and what's changing during this process."
+            "EXAMINE foo AND COMPARE_BASELINE - I want to see fabric, and what's changing during this process.",
         );
         assert_eq!(result.len(), 2);
         assert!(result[0].starts_with("EXAMINE foo"));
         assert!(result[1].starts_with("COMPARE_BASELINE"));
         // The trailing "and what's changing" stays inside segment 2.
-        assert!(result[1].contains("what's changing"), "tail should stay attached: {:?}", result[1]);
+        assert!(
+            result[1].contains("what's changing"),
+            "tail should stay attached: {:?}",
+            result[1]
+        );
     }
 
     // v4.0 Phase 2 — Conflict guard tests.

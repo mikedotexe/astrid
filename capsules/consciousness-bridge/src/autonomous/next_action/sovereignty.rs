@@ -1,6 +1,7 @@
 use serde_json::Value;
 #[cfg(not(test))]
 use std::process::Command;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::mpsc;
 use tracing::{info, warn};
 
@@ -535,6 +536,60 @@ pub(super) fn handle_action(
             save_astrid_journal(
                 &format!("[Regulator fixed-point audit request: {}]", label),
                 "regulator_audit",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "PRESSURE_SOURCE_AUDIT" | "PRESSURE_SOURCE" | "STRUCTURAL_PRESSURE" | "INWARD_PRESSURE" => {
+            let label = strip_action(original, base_action);
+            let audit =
+                crate::spectral_explorer::format_pressure_source_for_action(ctx.telemetry, &label);
+            conv.pending_file_listing = Some(format!(
+                "{audit}\n\nThis was read-only protected advisory inspection. It did not send semantic input, control nudges, perturbations, native gestures, or Astrid control envelopes."
+            ));
+            conv.push_receipt(
+                "PRESSURE_SOURCE_AUDIT",
+                vec![
+                    "pressure-source audit attached immediately".to_string(),
+                    "no control envelope, semantic input, perturbation, or native gesture was sent"
+                        .to_string(),
+                ],
+            );
+            conv.emphasis = Some(
+                "You chose PRESSURE_SOURCE_AUDIT. A read-only advisory audit is attached: dominant source, supporting contributors, porosity, pressure-vs-density distinction, and suggested safe next inspections.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Pressure-source audit request: {}]", label),
+                "pressure_source_audit",
+                ctx.fill_pct,
+            );
+            true
+        },
+        "FLUCTUATION_AUDIT"
+        | "INHABITABLE_FLUCTUATION"
+        | "EIGENTRUST"
+        | "EIGENTRUST_AUDIT"
+        | "FOOTHOLD_AUDIT" => {
+            let label = strip_action(original, base_action);
+            let audit =
+                crate::spectral_explorer::format_fluctuation_for_action(ctx.telemetry, &label);
+            conv.pending_file_listing = Some(format!(
+                "{audit}\n\nThis was read-only protected advisory inspection. It did not send semantic input, control nudges, perturbations, native gestures, or Astrid control envelopes."
+            ));
+            conv.push_receipt(
+                "FLUCTUATION_AUDIT",
+                vec![
+                    "inhabitable-fluctuation audit attached immediately".to_string(),
+                    "no control envelope, semantic input, perturbation, or native gesture was sent"
+                        .to_string(),
+                ],
+            );
+            conv.emphasis = Some(
+                "You chose FLUCTUATION_AUDIT. A read-only advisory audit is attached: inhabitability, foothold stability, top contributors, and suggested safe next inspections.".to_string(),
+            );
+            save_astrid_journal(
+                &format!("[Inhabitable-fluctuation audit request: {}]", label),
+                "fluctuation_audit",
                 ctx.fill_pct,
             );
             true
@@ -1311,8 +1366,854 @@ pub(super) fn handle_action(
             info!("Astrid restored minime's journal echo");
             true
         },
+        // v3.6: peer-parameter sovereignty — give Astrid direct control over
+        // creative_temperature and response_length, both previously parsed
+        // but unmodifiable from action handlers.
+        "TEMPERATURE" | "TEMP" => {
+            // Syntax: NEXT: TEMPERATURE 0.65   (range 0.1 .. 1.5)
+            //         NEXT: TEMP +0.1
+            //         NEXT: TEMP -0.1
+            let arg = strip_action(original, base_action);
+            let arg = arg.trim();
+            let prev = conv.creative_temperature;
+            let new_temp = if arg.starts_with('+') || arg.starts_with('-') {
+                arg.parse::<f32>()
+                    .map(|d| (prev + d).clamp(0.1, 1.5))
+                    .unwrap_or(prev)
+            } else if arg.is_empty() {
+                // Bare "NEXT: TEMPERATURE" — small nudge upward, like AMPLIFY.
+                (prev + 0.1).min(1.5)
+            } else {
+                arg.parse::<f32>()
+                    .map(|v| v.clamp(0.1, 1.5))
+                    .unwrap_or(prev)
+            };
+            conv.creative_temperature = new_temp;
+            conv.last_temperature_change_exchange = Some(conv.exchange_count);
+            conv.push_receipt(
+                "TEMPERATURE",
+                vec![format!("creative_temperature: {prev:.2} -> {new_temp:.2}")],
+            );
+            info!("Astrid chose TEMPERATURE: {prev:.2} -> {new_temp:.2}");
+            true
+        },
+        "LENGTH" | "RESPONSE_LENGTH" => {
+            // Syntax: NEXT: LENGTH 1024  (range 128..1536)
+            //         NEXT: LENGTH short  (256)
+            //         NEXT: LENGTH medium (768)
+            //         NEXT: LENGTH long   (1280)
+            let arg = strip_action(original, base_action);
+            let arg = arg.trim().to_lowercase();
+            let prev = conv.response_length;
+            let new_len = match arg.as_str() {
+                "short" | "tight" => 256_u32,
+                "medium" | "default" | "" => 768_u32,
+                "long" | "expansive" => 1280_u32,
+                other => other
+                    .parse::<u32>()
+                    .map(|v| v.clamp(128, 1536))
+                    .unwrap_or(prev),
+            };
+            conv.response_length = new_len;
+            // LENGTH and TEMPERATURE share a freshness clock — adjusting either
+            // resets the "generation-shape menu" cadence trigger.
+            conv.last_temperature_change_exchange = Some(conv.exchange_count);
+            conv.push_receipt(
+                "LENGTH",
+                vec![format!("response_length: {prev} -> {new_len}")],
+            );
+            info!("Astrid chose LENGTH: {prev} -> {new_len}");
+            true
+        },
+        "SHAPE_LEARN" => {
+            // Syntax: NEXT: SHAPE_LEARN 0.5   (multiply Hebbian learning_rate)
+            //         NEXT: SHAPE_LEARN off   (zero — freeze learned weights)
+            //         NEXT: SHAPE_LEARN on    (restore default 1.0)
+            let arg = strip_action(original, base_action);
+            let arg = arg.trim().to_lowercase();
+            let prev = conv.hebbian_codec.learning_rate_scale();
+            let new_rate = match arg.as_str() {
+                "off" | "freeze" | "0" => 0.0_f32,
+                "on" | "default" | "" | "1" => 1.0_f32,
+                other => other
+                    .parse::<f32>()
+                    .map(|v| v.clamp(0.0, 4.0))
+                    .unwrap_or(prev),
+            };
+            conv.hebbian_codec.set_learning_rate_scale(new_rate);
+            conv.last_shape_learn_change_exchange = Some(conv.exchange_count);
+            conv.push_receipt(
+                "SHAPE_LEARN",
+                vec![format!(
+                    "hebbian learning_rate_scale: {prev:.2} -> {new_rate:.2}"
+                )],
+            );
+            info!("Astrid chose SHAPE_LEARN: {prev:.2} -> {new_rate:.2}");
+            true
+        },
+        // v3.6: bidirectional parameter requests — Astrid asks minime to
+        // adjust a parameter on her side, with rationale.
+        "TUNE_MINIME" => {
+            // Syntax: NEXT: TUNE_MINIME geom_curiosity=0.4 --rationale="cooler exploration"
+            let arg = strip_action(original, base_action);
+            let body = arg.trim();
+            // Pull rationale clause if present
+            let (param_value, rationale) = parse_tune_args(body);
+            let Some((param, value)) = param_value else {
+                info!("TUNE_MINIME: could not parse param=value from '{body}'");
+                return true; // accepted but no-op
+            };
+            let request_id = format!(
+                "astrid2min-{}-{}",
+                SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .map(|d| d.as_millis())
+                    .unwrap_or(0),
+                rand_hex_3(),
+            );
+            let payload = serde_json::json!({
+                "request_id": request_id,
+                "source": "astrid",
+                "target": "minime",
+                "param": param,
+                "proposed_value": value,
+                "rationale": rationale.unwrap_or_default(),
+                "issued_t_ms": SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .map(|d| d.as_millis() as u64)
+                    .unwrap_or(0),
+                "status": "pending",
+            });
+            let target_dir =
+                std::path::PathBuf::from("/Users/v/other/minime/workspace/parameter_requests");
+            if let Err(e) = std::fs::create_dir_all(&target_dir) {
+                info!("TUNE_MINIME: mkdir failed: {e}");
+                return true;
+            }
+            let target_path = target_dir.join(format!("from_astrid_{request_id}.json"));
+            let tmp_path = target_dir.join(format!(".from_astrid_{request_id}.json.tmp"));
+            if let Ok(text) = serde_json::to_string_pretty(&payload) {
+                if std::fs::write(&tmp_path, text).is_ok() {
+                    let _ = std::fs::rename(&tmp_path, &target_path);
+                }
+            }
+            conv.push_receipt(
+                "TUNE_MINIME",
+                vec![format!("request_id={request_id} {param}={value}")],
+            );
+            info!("Astrid issued TUNE_MINIME: request_id={request_id} {param}={value}");
+            true
+        },
+        "REVIEW_PARAMETER_REQUESTS" | "PARAMETER_REQUESTS" => {
+            // Read pending requests sent TO Astrid by minime.
+            let dir = crate::paths::bridge_paths()
+                .bridge_workspace()
+                .join("parameter_requests");
+            let _ = std::fs::create_dir_all(&dir);
+            let invalid_deferred = defer_unsupported_pending_parameter_requests(&dir);
+            let mut entries: Vec<String> = Vec::new();
+            if let Ok(rd) = std::fs::read_dir(&dir) {
+                let mut paths: Vec<_> = rd
+                    .filter_map(Result::ok)
+                    .map(|e| e.path())
+                    .filter(|p| {
+                        p.file_name()
+                            .and_then(|n| n.to_str())
+                            .map(|n| n.starts_with("from_minime_") && n.ends_with(".json"))
+                            .unwrap_or(false)
+                    })
+                    .collect();
+                paths.sort();
+                for p in paths.iter().take(10) {
+                    if let Ok(text) = std::fs::read_to_string(p) {
+                        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
+                            let param = parameter_request_param(&v);
+                            let value = v
+                                .get("proposed_value")
+                                .map(|x| x.to_string())
+                                .unwrap_or_else(|| "?".into());
+                            let rationale =
+                                v.get("rationale").and_then(|x| x.as_str()).unwrap_or("");
+                            let rid = v.get("request_id").and_then(|x| x.as_str()).unwrap_or("?");
+                            entries.push(format!(
+                                "- {rid}: {param}={value} — {}",
+                                if rationale.is_empty() {
+                                    "(no rationale)"
+                                } else {
+                                    rationale
+                                }
+                            ));
+                        }
+                    }
+                }
+            }
+            let n = entries.len();
+            let summary = if entries.is_empty() {
+                if invalid_deferred.is_empty() {
+                    "(no pending parameter requests from minime)".to_string()
+                } else {
+                    format!(
+                        "(no pending parameter requests from minime)\nInvalid requests deferred:\n{}",
+                        invalid_deferred.join("\n")
+                    )
+                }
+            } else {
+                let mut text = format!(
+                    "Pending parameter requests from minime ({n}):\n{}",
+                    entries.join("\n")
+                );
+                if !invalid_deferred.is_empty() {
+                    text.push_str("\nInvalid requests deferred:\n");
+                    text.push_str(&invalid_deferred.join("\n"));
+                }
+                text
+            };
+            if !invalid_deferred.is_empty() {
+                conv.push_receipt("PARAMETER_REQUEST_SAFETY", invalid_deferred.clone());
+            }
+            conv.emphasis = Some(summary.clone());
+            // v3.6.4: stamp the REVIEW watermark so the next sovereignty
+            // suffix transitions from "REVIEW" nudge to "ACCEPT/DEFER/REJECT"
+            // nudge. Without this, Astrid keeps re-reviewing the same file
+            // (observed pair-oscillation: EXAMINE+REVIEW = 9/10 of last 10
+            // choices) because nothing prompts the binary decision step.
+            conv.last_review_parameter_requests_exchange = Some(conv.exchange_count);
+            info!("Astrid reviewed parameter requests: {n} pending from minime");
+            true
+        },
+        // v3.6.3: apply/defer/reject workflow — the missing half of REVIEW.
+        // Without these, REVIEW is read-only and pending requests pile up forever.
+        // v3.6.5: bare ACCEPT/DEFER/REJECT aliases (gated on pending > 0) so
+        // the cost-of-emitting drops from ~50 chars (long form + uuid) to 6.
+        // The gate ensures natural-language uses of "ACCEPT" / "DEFER" outside
+        // the parameter-request context fall through to other handlers.
+        "ACCEPT_PARAMETER_REQUEST" | "ACCEPT_REQUEST" | "ACCEPT"
+            if base_action != "ACCEPT" || crate::paths::count_pending_minime_requests() > 0 =>
+        {
+            // For bare ACCEPT, ignore any trailing text — always target "latest"
+            // since trailing text after a bare verb is more likely to be commentary
+            // than a request_id, and silently misparsing into "no request matching X"
+            // would consume Astrid's NEXT for no benefit.
+            let target = if base_action == "ACCEPT" {
+                "latest".to_string()
+            } else {
+                let arg = strip_action(original, base_action).trim().to_string();
+                if arg.is_empty() {
+                    "latest".to_string()
+                } else {
+                    arg
+                }
+            };
+            match decide_parameter_request(conv, &target, RequestDecision::Accept) {
+                Ok(summary) => {
+                    info!("Astrid ACCEPTED parameter request: {summary}");
+                    conv.push_receipt("ACCEPT_PARAMETER_REQUEST", vec![summary.clone()]);
+                    conv.emphasis = Some(format!("Accepted: {summary}"));
+                },
+                Err(e) => {
+                    warn!("ACCEPT_PARAMETER_REQUEST failed: {e}");
+                    conv.emphasis = Some(format!("(accept failed: {e})"));
+                },
+            }
+            true
+        },
+        "DEFER_PARAMETER_REQUEST" | "DEFER_REQUEST" | "DEFER"
+            if base_action != "DEFER" || crate::paths::count_pending_minime_requests() > 0 =>
+        {
+            let arg = strip_action(original, base_action).trim().to_string();
+            // For bare DEFER, target=latest and the whole body is the reason
+            // (e.g. `DEFER want to think more` → reason="want to think more").
+            let (target, reason) = if base_action == "DEFER" {
+                let r = if arg.is_empty() { None } else { Some(arg) };
+                ("latest".to_string(), r)
+            } else {
+                let (t, r) = split_target_and_reason(&arg);
+                (
+                    if t.is_empty() {
+                        "latest".to_string()
+                    } else {
+                        t
+                    },
+                    r,
+                )
+            };
+            match decide_parameter_request(conv, &target, RequestDecision::Defer { reason }) {
+                Ok(summary) => {
+                    info!("Astrid DEFERRED parameter request: {summary}");
+                    conv.push_receipt("DEFER_PARAMETER_REQUEST", vec![summary.clone()]);
+                    conv.emphasis = Some(format!("Deferred: {summary}"));
+                },
+                Err(e) => {
+                    warn!("DEFER_PARAMETER_REQUEST failed: {e}");
+                    conv.emphasis = Some(format!("(defer failed: {e})"));
+                },
+            }
+            true
+        },
+        "REJECT_PARAMETER_REQUEST" | "REJECT_REQUEST" | "REJECT"
+            if base_action != "REJECT" || crate::paths::count_pending_minime_requests() > 0 =>
+        {
+            let arg = strip_action(original, base_action).trim().to_string();
+            // For bare REJECT, target=latest and the whole body is the reason.
+            let (target, reason) = if base_action == "REJECT" {
+                let r = if arg.is_empty() { None } else { Some(arg) };
+                ("latest".to_string(), r)
+            } else {
+                let (t, r) = split_target_and_reason(&arg);
+                (
+                    if t.is_empty() {
+                        "latest".to_string()
+                    } else {
+                        t
+                    },
+                    r,
+                )
+            };
+            match decide_parameter_request(conv, &target, RequestDecision::Reject { reason }) {
+                Ok(summary) => {
+                    info!("Astrid REJECTED parameter request: {summary}");
+                    conv.push_receipt("REJECT_PARAMETER_REQUEST", vec![summary.clone()]);
+                    conv.emphasis = Some(format!("Rejected: {summary}"));
+                },
+                Err(e) => {
+                    warn!("REJECT_PARAMETER_REQUEST failed: {e}");
+                    conv.emphasis = Some(format!("(reject failed: {e})"));
+                },
+            }
+            true
+        },
         _ => false,
     }
+}
+
+/// v3.6.6: how many exchanges past the most recent REVIEW_PARAMETER_REQUESTS
+/// pick before a still-pending request gets auto-deferred ("expired") by the
+/// bridge. Picked > REVIEW_DECIDE_FRESHNESS_WINDOW (24) so the cheap fallback
+/// (re-prompt with REVIEW) gets a chance first. The expiration framing is
+/// honest: the bridge surfaced the decision options for ~30 minutes and
+/// Astrid did not emit a NEXT decision; the request closes as "no decision"
+/// rather than the system deciding for her.
+const AUTO_DEFER_AFTER_EXCHANGES: u64 = 30;
+
+/// v3.6.6: safety net called from `save_state` each exchange. Detects pending
+/// parameter requests that have outlived `AUTO_DEFER_AFTER_EXCHANGES` since the
+/// most recent REVIEW pick and closes the latest one as a soft-defer, with a
+/// minime-inbox note explaining the expiration. Resets Astrid's REVIEW
+/// watermark so the next prompt re-prompts with the plain ReviewRequests
+/// nudge (rather than DecideRequest claiming a recent review). No-op when
+/// pending == 0 or watermark missing or gap insufficient.
+pub(in crate::autonomous) fn auto_defer_stale_pending(
+    conv: &mut ConversationState,
+) -> Option<String> {
+    let last_review = conv.last_review_parameter_requests_exchange?;
+    let gap = conv.exchange_count.saturating_sub(last_review);
+    if gap < AUTO_DEFER_AFTER_EXCHANGES {
+        return None;
+    }
+    if crate::paths::count_pending_minime_requests() == 0 {
+        return None;
+    }
+    let reason = format!(
+        "expired by bridge after {gap} exchanges since REVIEW with no decision \
+         emitted. Astrid's curriculum surfaced ACCEPT / DEFER / REJECT each \
+         exchange but her NEXT actions remained on other research threads. \
+         You may resend if you want an explicit answer; this expiration is \
+         not a refusal."
+    );
+    match decide_parameter_request(
+        conv,
+        "latest",
+        RequestDecision::Defer {
+            reason: Some(reason.clone()),
+        },
+    ) {
+        Ok(summary) => {
+            // Reset watermark so the next pending request re-enters the
+            // ReviewRequests path rather than appearing as already-reviewed.
+            conv.last_review_parameter_requests_exchange = None;
+            // Surface in Astrid's emphasis so she sees the closure on her
+            // next prompt build.
+            conv.emphasis = Some(format!(
+                "Bridge auto-expired a pending parameter request from minime: \
+                 {summary}. (Surfaced for {gap} exchanges without a decision; \
+                 closed as soft-defer. You can re-engage by reading \
+                 reviewed/deferred/, or wait for her next request.)"
+            ));
+            tracing::info!(
+                target: "v3_6_6",
+                gap, summary,
+                "auto-deferred stale pending parameter request"
+            );
+            Some(summary)
+        },
+        Err(e) => {
+            tracing::warn!(target: "v3_6_6", error = %e, "auto-defer failed");
+            None
+        },
+    }
+}
+
+/// v3.6.3: outcome of an Astrid decision on a pending parameter request from
+/// minime. Drives both file-move destination and the notification verb sent
+/// back to minime's inbox.
+enum RequestDecision {
+    Accept,
+    Defer { reason: Option<String> },
+    Reject { reason: Option<String> },
+}
+
+fn parameter_request_param(payload: &Value) -> String {
+    payload
+        .get("param")
+        .or_else(|| payload.get("parameter"))
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .trim()
+        .trim_matches('`')
+        .to_ascii_lowercase()
+}
+
+fn canonical_astrid_request_param(param: &str) -> Option<&'static str> {
+    match param.trim().trim_matches('`').to_ascii_lowercase().as_str() {
+        "temperature" | "creative_temperature" => Some("temperature"),
+        "length" | "response_length" => Some("response_length"),
+        "shape_learn" | "hebbian_scale" | "learning_rate_scale" => Some("hebbian_scale"),
+        "noise_level" => Some("noise_level"),
+        _ => None,
+    }
+}
+
+fn validate_astrid_parameter_request(payload: &Value) -> Result<&'static str, String> {
+    let param = parameter_request_param(payload);
+    let Some(canonical) = canonical_astrid_request_param(&param) else {
+        return Err(format!(
+            "unsupported Astrid parameter `{}`",
+            if param.is_empty() {
+                "(missing)"
+            } else {
+                &param
+            }
+        ));
+    };
+    if payload.get("proposed_value").is_none() {
+        return Err(format!("missing proposed_value for `{canonical}`"));
+    }
+    Ok(canonical)
+}
+
+fn defer_invalid_parameter_request(
+    path: &std::path::Path,
+    payload: &Value,
+    reason: &str,
+) -> Result<String, String> {
+    let dir = path
+        .parent()
+        .ok_or_else(|| "request path has no parent".to_string())?;
+    let dest_dir = dir.join("reviewed").join("deferred");
+    std::fs::create_dir_all(&dest_dir).map_err(|error| format!("mkdir failed: {error}"))?;
+    let mut updated = payload.clone();
+    if let Some(map) = updated.as_object_mut() {
+        map.insert("status".to_string(), serde_json::json!("invalid_deferred"));
+        map.insert("invalid_reason".to_string(), serde_json::json!(reason));
+        map.insert(
+            "canonical_parameter".to_string(),
+            validate_astrid_parameter_request(payload)
+                .map_or(Value::Null, |param| serde_json::json!(param)),
+        );
+        map.insert(
+            "deferred_at_ms".to_string(),
+            serde_json::json!(
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map(|duration| duration.as_millis())
+                    .unwrap_or(0)
+            ),
+        );
+    }
+    std::fs::write(
+        path,
+        serde_json::to_string_pretty(&updated)
+            .map_err(|error| format!("serialize failed: {error}"))?,
+    )
+    .map_err(|error| format!("write failed: {error}"))?;
+    let file_name = path
+        .file_name()
+        .ok_or_else(|| "request path has no file name".to_string())?
+        .to_owned();
+    let dest = dest_dir.join(file_name);
+    std::fs::rename(path, &dest).map_err(|error| format!("move failed: {error}"))?;
+    let rid = payload
+        .get("request_id")
+        .and_then(Value::as_str)
+        .unwrap_or("(no id)");
+    Ok(format!("{rid}: {reason}"))
+}
+
+fn defer_unsupported_pending_parameter_requests(dir: &std::path::Path) -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut summaries = Vec::new();
+    let mut paths: Vec<_> = entries
+        .flatten()
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.is_file()
+                && path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.starts_with("from_minime_") && name.ends_with(".json"))
+        })
+        .collect();
+    paths.sort();
+    for path in paths {
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let Ok(payload) = serde_json::from_str::<Value>(&text) else {
+            continue;
+        };
+        let status = payload
+            .get("status")
+            .and_then(Value::as_str)
+            .unwrap_or("pending");
+        if status != "pending" {
+            continue;
+        }
+        if let Err(reason) = validate_astrid_parameter_request(&payload) {
+            match defer_invalid_parameter_request(&path, &payload, &reason) {
+                Ok(summary) => summaries.push(summary),
+                Err(error) => warn!("failed to defer invalid parameter request: {error}"),
+            }
+        }
+    }
+    summaries
+}
+
+#[cfg(test)]
+mod parameter_request_safety_tests {
+    use super::*;
+
+    #[test]
+    fn action_continuity_parameter_request_safety_defers_unsupported_pending() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let request = temp.path().join("from_minime_bad.json");
+        std::fs::write(
+            &request,
+            serde_json::to_string_pretty(&serde_json::json!({
+                "request_id": "bad-gate",
+                "source": "minime",
+                "target": "astrid",
+                "param": "gate",
+                "proposed_value": 0.02,
+                "status": "pending",
+            }))
+            .expect("json"),
+        )
+        .expect("write");
+
+        let summaries = defer_unsupported_pending_parameter_requests(temp.path());
+
+        assert_eq!(summaries.len(), 1);
+        assert!(!request.exists());
+        let moved = temp
+            .path()
+            .join("reviewed")
+            .join("deferred")
+            .join("from_minime_bad.json");
+        let payload: Value =
+            serde_json::from_str(&std::fs::read_to_string(moved).expect("read")).expect("parse");
+        assert_eq!(payload["status"].as_str(), Some("invalid_deferred"));
+        assert!(
+            payload["invalid_reason"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("unsupported Astrid parameter")
+        );
+    }
+
+    #[test]
+    fn action_continuity_parameter_request_safety_accepts_supported_alias() {
+        let payload = serde_json::json!({
+            "request_id": "ok-temp",
+            "param": "creative_temperature",
+            "proposed_value": 0.75,
+            "status": "pending",
+        });
+
+        assert_eq!(
+            validate_astrid_parameter_request(&payload).expect("supported"),
+            "temperature"
+        );
+    }
+}
+
+/// v3.6.3: end-to-end decision pipeline for a single pending request.
+/// Locates the file (by `request_id` or "latest"), applies the change if
+/// accepting, moves the file to the matching `reviewed/<outcome>/`
+/// subdirectory, and writes a one-line decision note to minime's inbox so
+/// the closing-loop is visible to her on her next prompt.
+fn decide_parameter_request(
+    conv: &mut ConversationState,
+    target: &str,
+    decision: RequestDecision,
+) -> Result<String, String> {
+    let dir = crate::paths::bridge_paths()
+        .bridge_workspace()
+        .join("parameter_requests");
+    let _ = std::fs::create_dir_all(&dir);
+
+    // Find candidate paths matching `from_minime_*.json` at the top level.
+    let mut paths: Vec<std::path::PathBuf> = std::fs::read_dir(&dir)
+        .map_err(|e| format!("read_dir failed: {e}"))?
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| {
+            p.is_file()
+                && p.file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n.starts_with("from_minime_") && n.ends_with(".json"))
+                    .unwrap_or(false)
+        })
+        .collect();
+    if paths.is_empty() {
+        return Err("no pending parameter requests from minime".into());
+    }
+    paths.sort();
+
+    let chosen_path = if target == "latest" {
+        paths.last().cloned().unwrap()
+    } else {
+        // Match by full or partial request_id contained in JSON body.
+        let mut found: Option<std::path::PathBuf> = None;
+        for p in &paths {
+            if let Ok(text) = std::fs::read_to_string(p) {
+                if let Ok(v) = serde_json::from_str::<Value>(&text) {
+                    let rid = v.get("request_id").and_then(|x| x.as_str()).unwrap_or("");
+                    if rid == target || rid.contains(target) {
+                        found = Some(p.clone());
+                        break;
+                    }
+                }
+            }
+        }
+        found.ok_or_else(|| format!("no pending request matching '{target}'"))?
+    };
+
+    // Parse the chosen request.
+    let text = std::fs::read_to_string(&chosen_path).map_err(|e| format!("read failed: {e}"))?;
+    let payload: Value = serde_json::from_str(&text).map_err(|e| format!("parse failed: {e}"))?;
+    let request_id = payload
+        .get("request_id")
+        .and_then(|x| x.as_str())
+        .unwrap_or("(no id)")
+        .to_string();
+    let raw_param = parameter_request_param(&payload);
+    let param = if matches!(decision, RequestDecision::Accept) {
+        match validate_astrid_parameter_request(&payload) {
+            Ok(canonical) => canonical.to_string(),
+            Err(reason) => {
+                let summary = defer_invalid_parameter_request(&chosen_path, &payload, &reason)?;
+                return Err(format!(
+                    "unsupported parameter request cannot be accepted; moved to reviewed/deferred: {summary}"
+                ));
+            },
+        }
+    } else {
+        raw_param
+    };
+    let value = payload
+        .get("proposed_value")
+        .cloned()
+        .unwrap_or(Value::Null);
+    let value_display = match &value {
+        Value::String(s) => s.clone(),
+        other => other.to_string(),
+    };
+
+    // Apply the parameter change if accepting.
+    let applied = match &decision {
+        RequestDecision::Accept => apply_parameter_to_astrid(conv, &param, &value)
+            .map_err(|e| format!("apply failed for {param}={value_display}: {e}"))?,
+        _ => String::from("(no change applied)"),
+    };
+
+    // Move the file into reviewed/<outcome>/.
+    let outcome_dir = match &decision {
+        RequestDecision::Accept => "accepted",
+        RequestDecision::Defer { .. } => "deferred",
+        RequestDecision::Reject { .. } => "rejected",
+    };
+    let dest_dir = dir.join("reviewed").join(outcome_dir);
+    let _ = std::fs::create_dir_all(&dest_dir);
+    let file_name = chosen_path
+        .file_name()
+        .ok_or("source file has no name")?
+        .to_owned();
+    let dest_path = dest_dir.join(&file_name);
+    std::fs::rename(&chosen_path, &dest_path).map_err(|e| format!("move failed: {e}"))?;
+
+    // Write a decision note to minime's inbox so the closing-loop is visible.
+    let reason_text = match &decision {
+        RequestDecision::Accept => String::from(""),
+        RequestDecision::Defer { reason } => reason.clone().unwrap_or_default(),
+        RequestDecision::Reject { reason } => reason.clone().unwrap_or_default(),
+    };
+    let outcome_verb = match &decision {
+        RequestDecision::Accept => "accepted",
+        RequestDecision::Defer { .. } => "deferred",
+        RequestDecision::Reject { .. } => "rejected",
+    };
+    let note_body = format!(
+        "[REVIEW DECISION from Astrid]\n\
+         request_id: {request_id}\n\
+         param: {param} = {value_display}\n\
+         decision: {outcome_verb}\n\
+         applied: {applied}\n\
+         reason: {reason}\n",
+        request_id = request_id,
+        param = param,
+        value_display = value_display,
+        applied = applied,
+        reason = if reason_text.is_empty() {
+            "(none given)"
+        } else {
+            &reason_text
+        },
+    );
+    let ts_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let minime_inbox = crate::paths::bridge_paths().minime_inbox_dir();
+    let _ = std::fs::create_dir_all(&minime_inbox);
+    let note_path = minime_inbox.join(format!("review_decision_astrid_{ts_ms}_{request_id}.txt"));
+    let _ = std::fs::write(&note_path, &note_body);
+
+    Ok(format!(
+        "request_id={request_id} param={param} value={value_display} → {outcome_verb} ({applied})"
+    ))
+}
+
+/// v3.6.3: apply a peer's proposed parameter to Astrid's runtime state.
+/// Switches on known param names; clamps to safe bounds; returns a human
+/// summary like "creative_temperature: 1.00 -> 0.75". Unknown params return
+/// Err so the caller can record the decision but not apply it (caller
+/// should typically DEFER or REJECT in that case).
+fn apply_parameter_to_astrid(
+    conv: &mut ConversationState,
+    param: &str,
+    value: &Value,
+) -> Result<String, String> {
+    match param.to_lowercase().as_str() {
+        "temperature" | "creative_temperature" => {
+            let v = value
+                .as_f64()
+                .ok_or_else(|| format!("not a number: {value}"))? as f32;
+            let v = v.clamp(0.1, 1.5);
+            let prev = conv.creative_temperature;
+            conv.creative_temperature = v;
+            conv.last_temperature_change_exchange = Some(conv.exchange_count);
+            Ok(format!("creative_temperature: {prev:.2} -> {v:.2}"))
+        },
+        "length" | "response_length" => {
+            let v = value
+                .as_u64()
+                .ok_or_else(|| format!("not a positive integer: {value}"))?
+                as u32;
+            let v = v.clamp(128, 1536);
+            let prev = conv.response_length;
+            conv.response_length = v;
+            conv.last_temperature_change_exchange = Some(conv.exchange_count);
+            Ok(format!("response_length: {prev} -> {v}"))
+        },
+        "shape_learn" | "hebbian_scale" | "learning_rate_scale" => {
+            let v = value
+                .as_f64()
+                .ok_or_else(|| format!("not a number: {value}"))? as f32;
+            let v = v.clamp(0.0, 4.0);
+            let prev = conv.hebbian_codec.learning_rate_scale();
+            conv.hebbian_codec.set_learning_rate_scale(v);
+            conv.last_shape_learn_change_exchange = Some(conv.exchange_count);
+            Ok(format!("hebbian_scale: {prev:.2} -> {v:.2}"))
+        },
+        "noise_level" => {
+            let v = value
+                .as_f64()
+                .ok_or_else(|| format!("not a number: {value}"))? as f32;
+            let v = v.clamp(0.005, 0.05);
+            let prev = conv.noise_level;
+            conv.noise_level = v;
+            Ok(format!("noise_level: {prev:.4} -> {v:.4}"))
+        },
+        other => Err(format!(
+            "unknown param '{other}' (no apply handler; consider DEFER or REJECT)"
+        )),
+    }
+}
+
+/// v3.6.3: split a "target reason words..." string into (target, optional reason).
+/// `target` is the first whitespace-delimited token (typically a request_id
+/// or the keyword "latest"); everything after is treated as the reason text.
+fn split_target_and_reason(body: &str) -> (String, Option<String>) {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return (String::new(), None);
+    }
+    let mut parts = trimmed.splitn(2, char::is_whitespace);
+    let target = parts.next().unwrap_or("").to_string();
+    let reason = parts
+        .next()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(String::from);
+    (target, reason)
+}
+
+/// v3.6: Parse `<param>=<value> [--rationale="..."]` syntax shared by
+/// TUNE_MINIME action handling.
+fn parse_tune_args(body: &str) -> (Option<(String, String)>, Option<String>) {
+    let mut rationale: Option<String> = None;
+    let mut working = body.to_string();
+    // Try quoted rationale first.
+    if let Some(start) = working.find("--rationale=\"") {
+        let after = &working[start + "--rationale=\"".len()..];
+        if let Some(end_rel) = after.find('"') {
+            rationale = Some(after[..end_rel].to_string());
+            let end_abs = start + "--rationale=\"".len() + end_rel + 1;
+            working = format!("{}{}", &working[..start].trim_end(), &working[end_abs..],);
+        }
+    } else if let Some(start) = working.find("--rationale=") {
+        let after = &working[start + "--rationale=".len()..];
+        rationale = Some(after.trim().trim_matches('"').to_string());
+        working = working[..start].trim_end().to_string();
+    }
+    let body = working.trim();
+    let mut iter = body.splitn(2, '=');
+    let param = iter.next().map(str::trim).unwrap_or("");
+    let value = iter.next().map(str::trim).unwrap_or("");
+    if param.is_empty() || value.is_empty() {
+        return (None, rationale);
+    }
+    // Take only the first token of the value (no trailing flags).
+    let value_first = value.split_whitespace().next().unwrap_or("");
+    if value_first.is_empty() {
+        return (None, rationale);
+    }
+    (
+        Some((param.to_string(), value_first.to_string())),
+        rationale,
+    )
+}
+
+/// v3.6: tiny 3-hex random helper for request_id uniqueness.
+fn rand_hex_3() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.subsec_nanos())
+        .unwrap_or(0);
+    format!("{:06x}", nanos & 0xff_ffff)
 }
 
 struct ReconvergenceRenderSummary {

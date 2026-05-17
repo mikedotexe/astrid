@@ -29,6 +29,50 @@ const CONTROL_AUTHORSHIP_MIN: f32 = 0.60;
 const SUGGESTION_POLICY: &str = "attractor_suggestion_v1";
 const SUGGESTION_STORE_POLICY: &str = "attractor_suggestion_memory_v1";
 const SUGGESTION_PENDING_TTL_SECS: f64 = 6.0 * 60.0 * 60.0;
+const SELECTOR_TAIL_ACTIONS: &[&str] = &[
+    "ATTRACTOR_ATLAS",
+    "ATTRACTOR_CARD",
+    "ATTRACTOR_REVIEW",
+    "REVIEW_ATTRACTOR",
+    "ATTRACTOR_PREFLIGHT",
+    "ATTRACTOR_RELEASE_REVIEW",
+    "ATTRACTOR_SUGGESTIONS",
+    "ACCEPT_ATTRACTOR_SUGGESTION",
+    "REVISE_ATTRACTOR_SUGGESTION",
+    "REJECT_ATTRACTOR_SUGGESTION",
+    "CREATE_ATTRACTOR",
+    "ATTRACTOR_CREATE",
+    "SEED_ATTRACTOR",
+    "ATTRACTOR_SEED",
+    "PROMOTE_ATTRACTOR",
+    "ATTRACTOR_PROMOTE",
+    "CLAIM_ATTRACTOR",
+    "ATTRACTOR_CLAIM",
+    "BLEND_ATTRACTOR",
+    "ATTRACTOR_BLEND",
+    "REFRESH_ATTRACTOR_SNAPSHOT",
+    "ATTRACTOR_REFRESH_SNAPSHOT",
+    "SUMMON_ATTRACTOR",
+    "ATTRACTOR_SUMMON",
+    "COMPARE_ATTRACTOR",
+    "ATTRACTOR_COMPARE",
+    "RELEASE_ATTRACTOR",
+    "ATTRACTOR_RELEASE",
+    "FEATHER_ATTRACTOR",
+    "SPREAD_ATTRACTOR",
+    "UNCLIFF_ATTRACTOR",
+    "SOFTEN_ATTRACTOR",
+    "COUNTER_ATTRACTOR",
+    "RELEASE",
+    "MARK_RESOLVED",
+    "RESOLVE",
+    "RESOLVED",
+    "LET_GO",
+    "DISSOLVE",
+    "READ_MORE",
+    "SEARCH",
+    "BROWSE",
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SummonStage {
@@ -1894,13 +1938,17 @@ fn review_alternatives_for_candidate(candidate: &AttractorCandidate) -> Vec<Stri
         || candidate.label.starts_with("lambda-tail/")
         || candidate.label.starts_with("lambda-edge/")
     {
-        return vec![
-            format!("SHADOW_PREFLIGHT {} --stage=rehearse", candidate.label),
+        let mut suggestions = vec![
+            super::shadow::next_shadow_suggestion(&candidate.label),
             format!("ATTRACTOR_PREFLIGHT {} --stage=main", candidate.label),
             format!("CLAIM_ATTRACTOR {}", candidate.label),
             format!("PROMOTE_ATTRACTOR {}", candidate.label),
             format!("COMPARE_ATTRACTOR {}", candidate.label),
         ];
+        if let Some(followup) = super::shadow::closed_loop_followup_suggestion(&candidate.label) {
+            suggestions.insert(1, followup);
+        }
+        return suggestions;
     }
     vec![
         format!("REFRESH_ATTRACTOR_SNAPSHOT {}", candidate.label),
@@ -1914,7 +1962,7 @@ fn suggested_action_for_candidate(
     focus: &str,
 ) -> (String, Vec<String>) {
     let review = format!("ATTRACTOR_REVIEW {}", candidate.label);
-    let shadow_preflight = format!("SHADOW_PREFLIGHT {} --stage=rehearse", candidate.label);
+    let shadow_preflight = super::shadow::next_shadow_suggestion(&candidate.label);
     let attractor_preflight = format!("ATTRACTOR_PREFLIGHT {} --stage=main", candidate.label);
     let mut alternatives = review_alternatives_for_candidate(candidate);
     let lower_focus = focus.to_ascii_lowercase();
@@ -3967,7 +4015,7 @@ fn intent_from_row(row: &AttractorLedgerRow, label: &str) -> Option<AttractorInt
             | AttractorCommandKind::Promote
             | AttractorCommandKind::Claim
             | AttractorCommandKind::Blend
-    ) && intent.label.eq_ignore_ascii_case(label)
+    ) && selector_matches_seed(&intent.label, label)
         && intent.seed_snapshot.is_some()
     {
         Some(intent)
@@ -4078,6 +4126,7 @@ fn is_stopword(token: &str) -> bool {
 }
 
 fn parse_label_and_stage(raw: &str) -> (String, Option<SummonStage>) {
+    let raw = strip_selector_tail(raw);
     let mut stage = None;
     let mut label_parts = Vec::new();
     let mut skip_next = false;
@@ -4196,20 +4245,84 @@ fn label_has_commentary_tail(label: &str) -> bool {
     let lower = format!(" {} ", label.to_ascii_lowercase());
     label.contains(',')
         || label.contains(';')
+        || label.contains('|')
         || lower.contains(" but ")
         || lower.contains(" monitor ")
         || lower.contains(" recurrence ")
         || lower.contains(" because ")
+        || selector_tail_action_index(label).is_some()
 }
 
 fn clean_label(raw: &str) -> String {
-    raw.trim()
-        .trim_matches(|c: char| matches!(c, '[' | ']' | '"' | '\'' | '`' | '“' | '”'))
-        .split('<')
-        .next()
-        .unwrap_or(raw)
+    strip_selector_tail(raw)
+}
+
+fn strip_selector_tail(raw: &str) -> String {
+    let mut text = raw
         .trim()
-        .to_string()
+        .trim_matches(|c: char| matches!(c, '[' | ']' | '"' | '\'' | '`' | '“' | '”'))
+        .trim()
+        .to_string();
+    if text.is_empty() {
+        return text;
+    }
+    if text.to_ascii_uppercase().starts_with("NEXT:") {
+        text = text["NEXT:".len()..].trim().to_string();
+    }
+    if let Some((before, _)) = text.split_once('|') {
+        text = before.trim().to_string();
+    }
+    if let Some((before, _)) = text.split_once('<') {
+        text = before.trim().to_string();
+    }
+    if let Some(idx) = next_marker_index(&text) {
+        text.truncate(idx);
+    }
+    if let Some(idx) = selector_tail_action_index(&text) {
+        text.truncate(idx);
+    }
+    let mut cleaned = text
+        .trim()
+        .trim_end_matches(|c: char| matches!(c, ',' | ';' | ':' | '.'))
+        .trim()
+        .to_string();
+    for suffix in [" and", " then"] {
+        if cleaned.to_ascii_lowercase().ends_with(suffix) {
+            let keep = cleaned.len().saturating_sub(suffix.len());
+            cleaned.truncate(keep);
+            cleaned = cleaned.trim().to_string();
+        }
+    }
+    cleaned
+}
+
+fn next_marker_index(text: &str) -> Option<usize> {
+    let upper = text.to_ascii_uppercase();
+    upper.find("NEXT:").filter(|idx| *idx > 0)
+}
+
+fn selector_tail_action_index(text: &str) -> Option<usize> {
+    let upper = text.to_ascii_uppercase();
+    let mut best = None;
+    for action in SELECTOR_TAIL_ACTIONS {
+        let mut needles = vec![
+            format!(",{action}"),
+            format!(", {action}"),
+            format!(";{action}"),
+            format!("; {action}"),
+        ];
+        if action.contains('_') || action.contains("ATTRACTOR") {
+            needles.push(format!(" {action}"));
+        }
+        for needle in needles {
+            if let Some(idx) = upper.find(&needle) {
+                if idx > 0 && best.is_none_or(|current| idx < current) {
+                    best = Some(idx);
+                }
+            }
+        }
+    }
+    best
 }
 
 fn label_slug(raw: &str) -> String {
@@ -4284,6 +4397,17 @@ fn canonical_attractor_label(raw: &str) -> String {
     label
 }
 
+fn selector_matches_seed(seed_label: &str, selector: &str) -> bool {
+    let seed_slug = label_slug(&canonical_attractor_label(seed_label));
+    let selector_slug = label_slug(&canonical_attractor_label(selector));
+    if seed_slug.is_empty() || selector_slug.is_empty() {
+        return false;
+    }
+    seed_slug == selector_slug
+        || (seed_slug.len() >= 8 && selector_slug.contains(&seed_slug))
+        || (selector_slug.len() >= 8 && seed_slug.contains(&selector_slug))
+}
+
 fn label_slug_path(raw: &str) -> String {
     raw.split('/')
         .map(label_slug)
@@ -4320,6 +4444,8 @@ fn intent_id(created_at: f64) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use tokio::sync::mpsc;
 
     use super::*;
@@ -4344,6 +4470,8 @@ mod tests {
             distinguishability_loss: None,
             structural_entropy: None,
             resonance_density_v1: None,
+            pressure_source_v1: None,
+            inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -4353,6 +4481,9 @@ mod tests {
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
+            shadow_field_v2: None,
+            shadow_field_v3: None,
+            shadow_influence_response_v3: None,
         }
     }
 
@@ -4370,8 +4501,18 @@ mod tests {
             telemetry,
             fill_pct: telemetry.fill_pct(),
             response_text,
-            workspace: None,
+            workspace: Some(test_workspace_dir()),
         }
+    }
+
+    fn test_workspace_dir() -> &'static Path {
+        let dir = std::env::temp_dir().join(format!(
+            "astrid-attractor-workspace-{}-{:.0}",
+            std::process::id(),
+            unix_now() * 1_000_000.0
+        ));
+        fs::create_dir_all(&dir).expect("create test workspace");
+        Box::leak(dir.into_boxed_path())
     }
 
     fn test_suggestion_dir(name: &str) -> PathBuf {
@@ -5886,6 +6027,42 @@ mod tests {
         assert_eq!(localized.label, "lambda-edge/localized-gravity");
         let bridge = nearest_attractor_label(&ctx, "suspension bridge");
         assert!(!matches!(bridge, Some(candidate) if candidate.label == "lambda-edge/suspension"));
+    }
+
+    #[test]
+    fn noisy_attractor_selectors_strip_trailing_actions() {
+        assert_eq!(
+            canonical_attractor_label(
+                "honey-selection | REFRESH_ATTRACTOR_SNAPSHOT honey-selection"
+            ),
+            "honey-selection"
+        );
+        assert_eq!(
+            canonical_attractor_label("cooled-theme-edge | READ_MORE"),
+            "cooled-theme-edge"
+        );
+        assert_eq!(
+            canonical_attractor_label("cooled-theme-edge, accept_attractor_suggestion latest"),
+            "cooled-theme-edge"
+        );
+        assert_eq!(
+            canonical_attractor_label("honey release pattern"),
+            "honey release pattern"
+        );
+        assert_eq!(
+            clean_typed_attractor_label(
+                "honey-selection | REFRESH_ATTRACTOR_SNAPSHOT honey-selection"
+            ),
+            Some("honey-selection".to_string())
+        );
+        let (label, stage) =
+            parse_label_and_stage("honey-selection --stage=main | ATTRACTOR_CARD honey-selection");
+        assert_eq!(label, "honey-selection");
+        assert_eq!(stage, Some(SummonStage::Main));
+        assert!(selector_matches_seed(
+            "honey-selection",
+            "honey-selection | REFRESH_ATTRACTOR_SNAPSHOT honey-selection"
+        ));
     }
 
     #[test]

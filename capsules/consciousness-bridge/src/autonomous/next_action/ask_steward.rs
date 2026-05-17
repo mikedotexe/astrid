@@ -78,12 +78,12 @@ impl StewardKind {
                 "ASK_STEWARD requires a question. \
                  Try: ASK_STEWARD why does the safety band stop at 80%? \
                  or: ASK_STEWARD safety band :: why does it stop at 80%?"
-            }
+            },
             Self::Tell => {
                 "TELL_STEWARD requires a body (findings/observations/report). \
                  Try: TELL_STEWARD just read regulator.rs:163-180 — the hysteresis \
                  amplifies above 78% fill. Or: TELL_STEWARD topic :: <findings>."
-            }
+            },
         }
     }
     fn ack_phrase(self) -> &'static str {
@@ -132,16 +132,14 @@ pub(super) fn handle_action(
         "ASK_STEWARD" | "ASK_MIKE" | "STEWARD_QUERY" => StewardKind::Ask,
         "TELL_STEWARD" | "REPORT_TO_STEWARD" | "STEWARD_REPORT" | "STEWARD_FINDINGS" => {
             StewardKind::Tell
-        }
+        },
         _ => return false,
     };
 
     let body = strip_action(original, base_action).trim().to_string();
     if body.is_empty() {
         conv.emphasis = Some(kind.empty_body_hint().to_string());
-        info!(
-            "Astrid invoked {base_action} with empty body — soft refusal"
-        );
+        info!("Astrid invoked {base_action} with empty body — soft refusal");
         return true;
     }
 
@@ -157,9 +155,7 @@ pub(super) fn handle_action(
             let mins = remaining / 60;
             let secs = remaining % 60;
             conv.emphasis = Some(kind.cooldown_message(mins, secs));
-            info!(
-                "Astrid {base_action} soft-refused (cooldown {mins}m{secs}s remaining)"
-            );
+            info!("Astrid {base_action} soft-refused (cooldown {mins}m{secs}s remaining)");
             return true;
         }
     }
@@ -304,8 +300,7 @@ mod tests {
 
     #[test]
     fn parse_subject_separator_without_falls_back_to_auto_subject() {
-        let (subject, question) =
-            parse_subject_separator("why do hints fire on cycle boundaries?");
+        let (subject, question) = parse_subject_separator("why do hints fire on cycle boundaries?");
         assert_eq!(subject, "why do hints fire on cycle boundaries");
         assert_eq!(question, "why do hints fire on cycle boundaries?");
     }

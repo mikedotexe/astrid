@@ -22,12 +22,22 @@ const PAIR_IMPACT_EMA_DECAY: f32 = 0.80;
 pub(crate) struct HebbianCodecSidecar {
     #[serde(default = "default_pair_traces")]
     pair_traces: Vec<PairTrace>,
+    /// v3.6: scalar multiplier applied to the per-step learning rate.
+    /// 0.0 freezes the sidecar (no new learning); 1.0 is the default;
+    /// values up to 4.0 let the being learn faster on demand.
+    #[serde(default = "default_learning_rate_scale")]
+    learning_rate_scale: f32,
+}
+
+fn default_learning_rate_scale() -> f32 {
+    1.0
 }
 
 impl Default for HebbianCodecSidecar {
     fn default() -> Self {
         Self {
             pair_traces: default_pair_traces(),
+            learning_rate_scale: default_learning_rate_scale(),
         }
     }
 }
@@ -74,6 +84,17 @@ fn comfort_outcome(previous_fill: f32, current_fill: f32) -> f32 {
 }
 
 impl HebbianCodecSidecar {
+    /// v3.6: read the current sovereign learning_rate_scale (default 1.0).
+    pub(crate) fn learning_rate_scale(&self) -> f32 {
+        self.learning_rate_scale
+    }
+
+    /// v3.6: set the sovereign learning_rate_scale. Clamped to [0.0, 4.0]
+    /// so freezing (0.0) and modest acceleration are both expressible.
+    pub(crate) fn set_learning_rate_scale(&mut self, value: f32) {
+        self.learning_rate_scale = value.clamp(0.0, 4.0);
+    }
+
     pub(crate) fn decay_scores(&mut self) {
         for trace in &mut self.pair_traces {
             trace.score *= PAIR_TRACE_DECAY;
@@ -102,7 +123,11 @@ impl HebbianCodecSidecar {
             if coactivity < MIN_COACTIVITY_TO_LEARN {
                 continue;
             }
-            trace.score = (trace.score + outcome * coactivity * PAIR_LEARNING_RATE)
+            // v3.6: per-pair score update is scaled by the runtime
+            // learning_rate_scale (sovereign), allowing the being to freeze
+            // (0.0), default (1.0), or accelerate (up to 4.0) Hebbian learning.
+            let effective_rate = PAIR_LEARNING_RATE * self.learning_rate_scale;
+            trace.score = (trace.score + outcome * coactivity * effective_rate)
                 .clamp(-MAX_PAIR_SCORE, MAX_PAIR_SCORE);
             trace.contact_updates = trace.contact_updates.saturating_add(1);
             trace.impact_ema =

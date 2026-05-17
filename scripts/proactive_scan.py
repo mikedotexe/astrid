@@ -168,6 +168,21 @@ DOMAIN_PHRASES = frozenset(
     ]
 )
 
+BENIGN_LOG_ERROR_PATTERNS = [
+    re.compile(
+        r"WS recv error: WebSocket protocol error: Connection reset without closing handshake",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"WS recv error: .*Client disconnected:",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"WebSocket protocol error: .*Client disconnected:",
+        re.IGNORECASE,
+    )
+]
+
 
 # ----------------------------------------------------------------------
 # State management
@@ -224,6 +239,11 @@ def _finding(
         "details": details,
         "snapshot": snapshot,
     }
+
+
+def _is_benign_log_error(line: str) -> bool:
+    """True for noisy, expected disconnect lines that contain the word error."""
+    return any(pattern.search(line) for pattern in BENIGN_LOG_ERROR_PATTERNS)
 
 
 def probe_process_health(prior: dict[str, Any]) -> dict[str, Any]:
@@ -284,7 +304,9 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
     errors (e.g. 989 connection-refused lines from a process that's now
     reconnected) should not look the same as an actively-failing process.
     The proactive scan's job is to surface CURRENT signal, not historical
-    forensics.
+    forensics. A recent log can also contain settled restart-window errors:
+    if the file has not changed since the prior scan, keep the evidence
+    visible but don't keep escalating it as a fresh failure.
     """
     log_files: list[Path] = []
     if ASTRID_BRIDGE_LOG.is_file():
@@ -306,14 +328,29 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
     # errors are historical and should not be surfaced as current signal.
     STALE_THRESHOLD_SECONDS = 30 * 60  # 30 min
 
+    prior = prior if isinstance(prior, dict) else {}
+    prior_files = prior.get("files", {})
+    if not isinstance(prior_files, dict):
+        prior_files = {}
+    prior_run_at = prior.get("_blind_spots_last_run")
+    if not isinstance(prior_run_at, (int, float)):
+        prior_run_at = None
+
     active_findings: list[str] = []
+    settled_findings: list[str] = []
     stale_findings: list[str] = []
+    benign_findings: list[str] = []
     active_errors = 0
+    settled_recent_errors = 0
     stale_errors = 0
+    benign_transient_errors = 0
+    file_snapshots: dict[str, dict[str, Any]] = {}
 
     for lf in log_files:
         try:
-            mtime = lf.stat().st_mtime
+            stat = lf.stat()
+            mtime = stat.st_mtime
+            size = stat.st_size
         except OSError:
             continue
         try:
@@ -325,7 +362,23 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
             )
         except Exception:
             continue
-        n = sum(1 for line in res.stdout.splitlines() if pattern.search(line))
+        matching_lines = [
+            line for line in res.stdout.splitlines() if pattern.search(line)
+        ]
+        benign_n = sum(1 for line in matching_lines if _is_benign_log_error(line))
+        n = len(matching_lines) - benign_n
+        benign_transient_errors += benign_n
+        file_snapshots[str(lf)] = {
+            "errors": n,
+            "raw_errors": len(matching_lines),
+            "ignored_transient_errors": benign_n,
+            "mtime": mtime,
+            "size": size,
+        }
+        if benign_n > 0:
+            benign_findings.append(
+                f"{lf.name}: ignored {benign_n} expected websocket disconnect error(s)"
+            )
         if n == 0:
             continue
         age_s = now - mtime
@@ -334,27 +387,67 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
             stale_findings.append(
                 f"{lf.name}: {n} historical error(s) (log stale {_fmt_duration(age_s)})"
             )
+            continue
+
+        previous = prior_files.get(str(lf))
+        unchanged_since_prior = False
+        if isinstance(previous, dict):
+            previous_mtime = previous.get("mtime")
+            unchanged_since_prior = (
+                previous.get("errors") == n
+                and previous.get("size") == size
+                and isinstance(previous_mtime, (int, float))
+                and abs(float(previous_mtime) - mtime) < 1e-6
+            )
+        no_writes_since_prior = bool(prior_run_at is not None and mtime <= prior_run_at)
+        if unchanged_since_prior or no_writes_since_prior:
+            settled_recent_errors += n
+            settled_findings.append(
+                f"{lf.name}: {n} recent settled error(s) "
+                f"(log age {_fmt_duration(age_s)}, no writes since prior scan)"
+            )
         else:
             active_errors += n
             active_findings.append(
-                f"{lf.name}: {n} error(s) in last 2000 (log fresh, age {_fmt_duration(age_s)})"
+                f"{lf.name}: {n} new/current error(s) in last 2000 "
+                f"(log fresh, age {_fmt_duration(age_s)})"
             )
 
-    snapshot = {"active_errors": active_errors, "stale_errors": stale_errors}
+    snapshot = {
+        "active_errors": active_errors,
+        "settled_recent_errors": settled_recent_errors,
+        "stale_errors": stale_errors,
+        "ignored_transient_errors": benign_transient_errors,
+        "files": file_snapshots,
+    }
 
-    # Severity is driven primarily by ACTIVE errors. Stale errors get a
-    # notice mention (so they're not invisible) but don't trigger warning.
+    # Severity is driven primarily by ACTIVE errors. Settled/stale errors get
+    # an OK mention (so they're not invisible) but don't trigger warning.
     if active_errors >= 50:
         severity = "warning"
         summary = f"elevated CURRENT errors: {active_errors} across {len(active_findings)} active log(s)"
     elif active_errors > 0:
         severity = "notice"
         summary = f"{active_errors} current error(s) across {len(active_findings)} active log(s)"
+    elif settled_recent_errors > 0:
+        severity = "ok"
+        summary = (
+            f"no new current errors — {settled_recent_errors} recent settled error(s) "
+            f"unchanged since prior scan"
+        )
+        if stale_errors > 0:
+            summary += f"; {stale_errors} historical error(s) in stale log(s)"
     elif stale_errors > 0:
         severity = "ok"
         summary = (
             f"no current errors — {stale_errors} historical error(s) in stale log(s) "
             f"({len(stale_findings)} file(s) untouched >{STALE_THRESHOLD_SECONDS // 60}m)"
+        )
+    elif benign_transient_errors > 0:
+        severity = "ok"
+        summary = (
+            f"clean — 0 actionable errors; ignored {benign_transient_errors} "
+            "expected transient websocket disconnect(s)"
         )
     else:
         severity = "ok"
@@ -364,7 +457,9 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
         "log_error_rate",
         severity,
         summary,
-        details=(active_findings + stale_findings) if (active_findings or stale_findings) else None,
+        details=(active_findings + settled_findings + stale_findings + benign_findings)
+        if (active_findings or settled_findings or stale_findings or benign_findings)
+        else None,
         snapshot=snapshot,
     )
 
@@ -662,8 +757,13 @@ def run_blind_spots() -> dict[str, Any]:
     results: list[dict[str, Any]] = []
     new_snapshots: dict[str, Any] = {}
     for name, fn in BLIND_SPOT_PROBES:
+        probe_prior = prior.get(name) or {}
+        if name == "log_error_rate" and isinstance(probe_prior, dict):
+            probe_prior = dict(probe_prior)
+            if isinstance(state.get("blind_spots_last_run"), (int, float)):
+                probe_prior["_blind_spots_last_run"] = state["blind_spots_last_run"]
         try:
-            f = fn(prior.get(name) or {})
+            f = fn(probe_prior)
         except Exception as e:
             f = _finding(name, "notice", f"probe raised exception: {e}")
         results.append(f)
@@ -1126,10 +1226,9 @@ class ConvergenceTests(unittest.TestCase):
 
     def test_log_error_rate_distinguishes_stale_from_active(self) -> None:
         # Smoke: the probe should classify a stale log full of errors as
-        # OK with stale-error mention, not warning. We can't easily mock
-        # MINIME_LOGS_DIR here without restructuring; instead verify the
-        # core claim by reading the actual host-sensory.log if available.
-        # Falls through cleanly if not present (test environment portability).
+        # OK with stale-error mention, not warning. This uses the actual
+        # host-sensory.log when available as a production-shape smoke test
+        # and falls through cleanly if not present.
         from pathlib import Path
         log = Path("/Users/v/other/minime/logs/host-sensory.log")
         if not log.is_file():
@@ -1145,6 +1244,73 @@ class ConvergenceTests(unittest.TestCase):
         # The probe should NOT classify this as warning even with high error
         # count, because the log is stale.
         self.assertNotEqual(finding["severity"], "warning")
+
+    def test_log_error_rate_downgrades_unchanged_recent_errors(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        global ASTRID_BRIDGE_LOG, MINIME_LOGS_DIR
+        old_bridge_log = ASTRID_BRIDGE_LOG
+        old_minime_logs_dir = MINIME_LOGS_DIR
+        try:
+            with TemporaryDirectory() as tmpdir:
+                d = Path(tmpdir)
+                log = d / "host-sensory.log"
+                log.write_text("\n".join("ERROR connection refused" for _ in range(60)))
+                mtime = time.time() - 60
+                os.utime(log, (mtime, mtime))
+                stat = log.stat()
+
+                ASTRID_BRIDGE_LOG = d / "missing-bridge.log"
+                MINIME_LOGS_DIR = d
+                finding = probe_log_error_rate(
+                    {
+                        "_blind_spots_last_run": time.time(),
+                        "files": {
+                            str(log): {
+                                "errors": 60,
+                                "mtime": stat.st_mtime,
+                                "size": stat.st_size,
+                            }
+                        },
+                    }
+                )
+        finally:
+            ASTRID_BRIDGE_LOG = old_bridge_log
+            MINIME_LOGS_DIR = old_minime_logs_dir
+
+        self.assertEqual(finding["severity"], "ok")
+        self.assertEqual(finding["snapshot"]["active_errors"], 0)
+        self.assertEqual(finding["snapshot"]["settled_recent_errors"], 60)
+        self.assertIn("settled", finding["summary"])
+
+    def test_log_error_rate_ignores_expected_ws_disconnect(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        global ASTRID_BRIDGE_LOG, MINIME_LOGS_DIR
+        old_bridge_log = ASTRID_BRIDGE_LOG
+        old_minime_logs_dir = MINIME_LOGS_DIR
+        try:
+            with TemporaryDirectory() as tmpdir:
+                d = Path(tmpdir)
+                log = d / "minime-engine.log"
+                log.write_text(
+                    "WS recv error: WebSocket protocol error: "
+                    "Connection reset without closing handshake\n"
+                    "WS recv error: ❌ Client disconnected: 127.0.0.1:59592\n"
+                    "WebSocket protocol error: ❌ Client disconnected: 127.0.0.1:59592\n"
+                )
+
+                ASTRID_BRIDGE_LOG = d / "missing-bridge.log"
+                MINIME_LOGS_DIR = d
+                finding = probe_log_error_rate({})
+        finally:
+            ASTRID_BRIDGE_LOG = old_bridge_log
+            MINIME_LOGS_DIR = old_minime_logs_dir
+
+        self.assertEqual(finding["severity"], "ok")
+        self.assertEqual(finding["snapshot"]["active_errors"], 0)
+        self.assertEqual(finding["snapshot"]["ignored_transient_errors"], 3)
+        self.assertIn("0 actionable errors", finding["summary"])
 
     def test_mirror_mode_filtered_from_sample(self) -> None:
         # Astrid mirror entries are literal copies — must not be in sample

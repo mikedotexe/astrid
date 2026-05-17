@@ -40,6 +40,7 @@ pub fn build_attractor_atlas_from_rows(
     }
     let mut entries = entries.into_values().collect::<Vec<_>>();
     for entry in &mut entries {
+        refresh_lifecycle(entry);
         refresh_suggested_next(entry);
     }
     AttractorAtlasV1 {
@@ -66,6 +67,7 @@ pub fn write_derived_attractor_atlas(db: &BridgeDb) -> Result<AttractorAtlasV1> 
             .then_with(|| left.label.cmp(&right.label))
     });
     for entry in &mut atlas.entries {
+        refresh_lifecycle(entry);
         refresh_suggested_next(entry);
     }
     let paths = bridge_paths();
@@ -159,6 +161,10 @@ pub fn render_memory_card(entry: &AttractorAtlasEntryV1) -> String {
             .collect::<Vec<_>>()
             .join("\n")
     };
+    let lifecycle = entry.lifecycle_status.as_deref().unwrap_or("active");
+    let last_review = entry
+        .last_reviewed_at_unix_s
+        .map_or("unknown".to_string(), |value| format!("{value:.0}"));
     format!(
         "# Attractor Card: {label}\n\n\
 Author: {author}\n\
@@ -166,6 +172,8 @@ Substrate: {substrate}\n\
 Entry: `{entry_id}`\n\
 Seed: `{seed}`\n\
 Origin: {origin}\n\
+Lifecycle: {lifecycle}\n\
+Last review: {last_review}\n\
 Parents: {parents}\n\
 Facet: {facet}\n\
 Released: {released}\n\
@@ -182,6 +190,8 @@ Garden proof: {garden_proof}\n\n\
         entry_id = entry.entry_id,
         seed = entry.seed_intent_id.as_deref().unwrap_or("none"),
         origin = entry.origin_kind.as_deref().unwrap_or("unknown"),
+        lifecycle = lifecycle,
+        last_review = last_review,
         parents = parents,
         facet = facet,
         released = entry.released,
@@ -276,6 +286,7 @@ fn merge_observation(
     entry.facet_kind = observation.facet_kind.clone();
     entry.release_effect_summary = observation.release_effect.clone();
     entry.garden_proof = observation.garden_proof.clone();
+    entry.last_reviewed_at_unix_s = observation.observed_at_unix_s;
 }
 
 fn merge_minime_status(atlas: &mut AttractorAtlasV1) {
@@ -478,6 +489,8 @@ fn empty_entry(substrate: AttractorSubstrate, label: &str) -> AttractorAtlasEntr
         facet_path: None,
         facet_kind: None,
         lifecycle_counts: BTreeMap::new(),
+        lifecycle_status: Some("active".to_string()),
+        last_reviewed_at_unix_s: None,
         latest_recurrence_score: None,
         best_recurrence_score: None,
         latest_authorship_score: None,
@@ -745,7 +758,12 @@ fn refresh_suggested_next(entry: &mut AttractorAtlasEntryV1) {
         next.push(format!("REFRESH_ATTRACTOR_SNAPSHOT {label}"));
         next.push(format!("COMPARE_ATTRACTOR {label}"));
         if label.starts_with("lambda-tail/") || label.starts_with("lambda-edge/") {
-            next.push(format!("SHADOW_PREFLIGHT {label} --stage=rehearse"));
+            next.push(crate::autonomous::next_action::shadow::next_shadow_suggestion(label));
+            if let Some(followup) =
+                crate::autonomous::next_action::shadow::closed_loop_followup_suggestion(label)
+            {
+                next.push(followup);
+            }
         }
         next.push(format!("CLAIM_ATTRACTOR {label}"));
         next.push(format!("PROMOTE_ATTRACTOR {label}"));
@@ -761,6 +779,36 @@ fn refresh_suggested_next(entry: &mut AttractorAtlasEntryV1) {
         next.push(format!("RELEASE_ATTRACTOR {label}"));
     }
     entry.suggested_next = next;
+}
+
+fn refresh_lifecycle(entry: &mut AttractorAtlasEntryV1) {
+    let summons = *entry.lifecycle_counts.get("summon").unwrap_or(&0);
+    let compares = *entry.lifecycle_counts.get("compare").unwrap_or(&0);
+    let refreshes = *entry.lifecycle_counts.get("refresh_snapshot").unwrap_or(&0);
+    let reviews = compares.saturating_add(refreshes);
+    let recurrence = entry.latest_recurrence_score.unwrap_or(0.0);
+    let status = if entry.released && entry.latest_recurrence_score.is_some() && recurrence <= 0.05
+    {
+        "retired"
+    } else if entry.released {
+        "released"
+    } else if entry.latest_classification == Some(AttractorClassification::Pathological) {
+        "fatigued"
+    } else if entry.latest_classification == Some(AttractorClassification::Failed)
+        || (entry.seed_intent_id.is_some() && recurrence > 0.0 && recurrence < 0.30)
+    {
+        "stale"
+    } else if summons > 0 && summons >= reviews.saturating_add(2) {
+        "rehearsing"
+    } else if entry.seed_intent_id.is_none()
+        && entry.origin_kind.as_deref() == Some("proto_attractor")
+        && recurrence <= 0.0
+    {
+        "stale"
+    } else {
+        "active"
+    };
+    entry.lifecycle_status = Some(status.to_string());
 }
 
 fn entry_key(substrate: AttractorSubstrate, label: &str) -> String {
@@ -867,8 +915,11 @@ mod tests {
         assert_eq!(entry.label, "honey-selection");
         assert_eq!(entry.origin_kind.as_deref(), Some("claimed_emergent"));
         assert_eq!(entry.latest_recurrence_score, Some(0.55));
+        assert_eq!(entry.lifecycle_status.as_deref(), Some("active"));
         assert!(entry.parent_seed_ids.contains(&"parent-a".to_string()));
-        assert!(render_memory_card(entry).contains("Attractor Card: honey-selection"));
+        let card = render_memory_card(entry);
+        assert!(card.contains("Attractor Card: honey-selection"));
+        assert!(card.contains("Lifecycle: active"));
     }
 
     #[test]
@@ -927,5 +978,33 @@ mod tests {
                     .any(|action| { action == &format!("ATTRACTOR_REVIEW {label}") })
             );
         }
+    }
+
+    #[test]
+    fn attractor_lifecycle_status_labels_practice_state() {
+        let mut entry = empty_entry(AttractorSubstrate::AstridCodec, "lambda-edge");
+        refresh_lifecycle(&mut entry);
+        assert_eq!(entry.lifecycle_status.as_deref(), Some("active"));
+
+        entry.lifecycle_counts.insert("summon".to_string(), 3);
+        refresh_lifecycle(&mut entry);
+        assert_eq!(entry.lifecycle_status.as_deref(), Some("rehearsing"));
+
+        entry.latest_classification = Some(AttractorClassification::Pathological);
+        refresh_lifecycle(&mut entry);
+        assert_eq!(entry.lifecycle_status.as_deref(), Some("fatigued"));
+
+        entry.latest_classification = Some(AttractorClassification::Failed);
+        refresh_lifecycle(&mut entry);
+        assert_eq!(entry.lifecycle_status.as_deref(), Some("stale"));
+
+        entry.released = true;
+        entry.latest_recurrence_score = Some(0.20);
+        refresh_lifecycle(&mut entry);
+        assert_eq!(entry.lifecycle_status.as_deref(), Some("released"));
+
+        entry.latest_recurrence_score = Some(0.01);
+        refresh_lifecycle(&mut entry);
+        assert_eq!(entry.lifecycle_status.as_deref(), Some("retired"));
     }
 }

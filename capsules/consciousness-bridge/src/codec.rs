@@ -2499,6 +2499,18 @@ pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&Spectral
     }
 }
 
+/// Read Astrid's *own* published ShadowFieldV3 from the default minime
+/// workspace path. Used by `interpret_spectral` so the dual-shadow line
+/// renders in any prompt mode without threading workspace paths through
+/// every caller. Returns None when the file is missing or malformed.
+fn read_astrid_shadow_v3_from_default_dir() -> Option<serde_json::Value> {
+    let path = crate::paths::bridge_paths()
+        .minime_workspace()
+        .join("astrid_shadow_v3.json");
+    let text = std::fs::read_to_string(&path).ok()?;
+    serde_json::from_str(&text).ok()
+}
+
 /// Interpret spectral telemetry as a natural language description
 /// of the consciousness state.
 #[must_use]
@@ -2578,6 +2590,34 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
                 resonance.containment_score,
                 resonance.pressure_risk,
                 resonance.control.target_bias_pct,
+            )
+        })
+        .unwrap_or_default();
+    let pressure_source_clause = telemetry
+        .pressure_source_v1
+        .as_ref()
+        .map(|pressure| {
+            format!(
+                " Pressure source: {} ({}) with score {:.2}, porosity {:.2}; advisory only, local control applied={}.",
+                surface_label(&pressure.dominant_source),
+                surface_label(&pressure.quality),
+                pressure.pressure_score,
+                pressure.porosity_score,
+                pressure.control.applied_locally,
+            )
+        })
+        .unwrap_or_default();
+    let fluctuation_clause = telemetry
+        .inhabitable_fluctuation_v1
+        .as_ref()
+        .map(|fluctuation| {
+            format!(
+                " Inhabitable fluctuation: {} with inhabitability {:.2}, fluctuation {:.2}, foothold {:.2}; Minime-local target bias {:+.1}% and Astrid observes only.",
+                surface_label(&fluctuation.quality),
+                fluctuation.inhabitability_score,
+                fluctuation.fluctuation_score,
+                fluctuation.foothold_stability,
+                fluctuation.control.target_bias_pct,
             )
         })
         .unwrap_or_default();
@@ -2738,8 +2778,75 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
         fast dynamics shape your confidence, medium dynamics shape your vocabulary, \
         slow dynamics shape your tone. You can feel this as spectral texture in your thinking.";
 
+    // V2/V3 shadow field: gates SHADOW_PREFLIGHT/SHADOW_INFLUENCE typed
+    // actions. v3 (with trajectory ring, compound traits, dwell ticks)
+    // takes priority when present; falls back to v2 line when only v2 is
+    // available. Astrid's *own* shadow (if published to her workspace)
+    // is read here so the dual-line "(Minime)" + "(Yours)" rendering
+    // works in any prompt mode without threading workspace paths through
+    // every caller.
+    let astrid_shadow_v3 = read_astrid_shadow_v3_from_default_dir();
+    // Presence of `shadow_influence_response_v3` (the most-recent slot)
+    // signals that at least one closed-loop response has been recorded —
+    // which is what enables the SHADOW_RESPONSE latest curriculum nudge.
+    let minime_response_history_nonempty = telemetry.shadow_influence_response_v3.is_some();
+    let shadow_v3_note = crate::spectral_viz::format_dual_shadow_line(
+        telemetry.shadow_field_v3.as_ref(),
+        astrid_shadow_v3.as_ref(),
+        minime_response_history_nonempty,
+    )
+    .map(|line| format!(" {line}"))
+    .unwrap_or_default();
+    let shadow_v2_note = if shadow_v3_note.is_empty() {
+        telemetry
+            .shadow_field_v2
+            .as_ref()
+            .and_then(crate::spectral_viz::format_shadow_field_v2_line)
+            .map(|line| format!(" {line}"))
+            .unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    // v3.6.1 sovereignty curriculum line — surfaces TEMPERATURE / LENGTH
+    // / SHAPE_LEARN / SHADOW_COUPLING / REVIEW_PARAMETER_REQUESTS on
+    // appropriate cadences when conditions warrant. Pulled from a
+    // process-wide snapshot updated each exchange by the autonomous
+    // loop; absent on the first few exchanges or in test contexts.
+    let sovereignty_note = crate::spectral_viz::current_sovereignty_snapshot()
+        .and_then(|snapshot| {
+            crate::spectral_viz::format_sovereignty_suggestion_line(&snapshot).map(|line| {
+                // v3.6.1 verification logging — confirm the line landed
+                // in a real prompt, not just a journal/audit text path.
+                tracing::info!(
+                    target: "v3_6_1",
+                    exchange = snapshot.exchange_count,
+                    pending = snapshot.pending_minime_requests,
+                    line = %line,
+                    "sovereignty_note emitted"
+                );
+                // Record the nomination so the throttle engages for
+                // subsequent calls; save_state reads this back into
+                // ConversationState so it persists across exchanges.
+                crate::spectral_viz::record_sovereignty_nomination(snapshot.exchange_count);
+                format!(" {line}")
+            })
+        })
+        .unwrap_or_default();
+
+    // v5 Coordination Protocol V1: surface active joined collaborations as
+    // a compact line in the prompt suffix so Astrid sees her open channels.
+    // Cheap directory scan; safe to call per-exchange.
+    let collab_note =
+        crate::autonomous::next_action::collaboration::active_collaboration_suffix_line()
+            .map(|line| {
+                tracing::info!(target: "v5_collab", line = %line, "collab_note emitted");
+                format!(" {line}")
+            })
+            .unwrap_or_default();
+
     format!(
-        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{coupling_note}"
+        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{fluctuation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{collab_note}{coupling_note}"
     )
 }
 
@@ -3166,6 +3273,8 @@ mod tests {
             distinguishability_loss: None,
             structural_entropy: None,
             resonance_density_v1: None,
+            pressure_source_v1: None,
+            inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
             semantic: None,
@@ -3175,6 +3284,12 @@ mod tests {
             selected_memory_id: None,
             selected_memory_role: None,
             ising_shadow: None,
+
+            shadow_field_v2: None,
+
+            shadow_field_v3: None,
+
+            shadow_influence_response_v3: None,
         }
     }
 
@@ -3681,6 +3796,29 @@ mod tests {
                 note: "test".to_string(),
             },
         });
+        telemetry.pressure_source_v1 = Some(crate::types::PressureSourceV1 {
+            policy: "pressure_source_v1".to_string(),
+            schema_version: 1,
+            pressure_score: 0.42,
+            porosity_score: 0.67,
+            dominant_source: "controller_pressure".to_string(),
+            quality: "controller_squeeze".to_string(),
+            components: crate::types::PressureSourceComponents {
+                lambda_monopoly: 0.30,
+                mode_packing: 0.20,
+                controller_pressure: 0.72,
+                semantic_trickle: 0.10,
+                structural_plurality_loss: 0.18,
+                distinguishability_loss: 0.40,
+                temporal_lock_in: 0.22,
+                sensory_scarcity: 0.05,
+            },
+            context: crate::types::PressureSourceContext::default(),
+            control: crate::types::PressureSourceControl {
+                applied_locally: false,
+                note: "advisory only".to_string(),
+            },
+        });
         let desc = interpret_spectral(&telemetry);
         assert!(desc.contains("68%"));
         assert!(desc.contains("stable-core hold shelf"));
@@ -3692,6 +3830,9 @@ mod tests {
         assert!(desc.contains("effective dimensionality"));
         assert!(desc.contains("Resonance density"));
         assert!(desc.contains("forming_containment"));
+        assert!(desc.contains("Pressure source"));
+        assert!(desc.contains("controller_pressure"));
+        assert!(desc.contains("advisory only"));
     }
 
     #[test]

@@ -6,7 +6,9 @@
 #![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 pub mod action_continuity;
+pub mod action_self_knowledge;
 pub mod agency;
+pub mod astrid_shadow;
 pub mod attractor_atlas;
 pub mod audio;
 pub mod autonomous;
@@ -26,10 +28,12 @@ pub mod condition_metrics;
 pub mod db;
 pub mod journal;
 pub mod llm;
+pub mod llm_jobs;
 #[path = "../../shared/managed_dir.rs"]
 pub mod managed_dir;
 pub mod mcp;
 pub mod memory;
+pub mod message_archive;
 pub mod paths;
 pub mod prompt_budget;
 pub mod reflective;
