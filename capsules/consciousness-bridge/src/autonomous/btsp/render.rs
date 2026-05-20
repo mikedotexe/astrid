@@ -193,18 +193,47 @@ pub(super) fn render_owner_block_from_status(
         lines.push(policy.owner_line.clone());
     }
 
-    if let Some(followup) = render_adjacent_followup_line(proposal, owner) {
+    if let Some(followup) = render_study_first_followup_line(proposal, owner) {
+        lines.push(
+            "BTSP agency checkpoint: study window already requested; next useful BTSP move is counter, refusal, or evidence resolution."
+                .to_string(),
+        );
+        lines.push(
+            "BTSP closure pending: choose counter/refusal/evidence resolution before another ordinary adjacent answer."
+                .to_string(),
+        );
+        lines.push(followup);
+        lines.push(
+            "Repeating the same study-first or inquiry move is duplicate evidence, not a new BTSP stance."
+                .to_string(),
+        );
+        lines.push(
+            "- BTSP_COUNTER NEXT: ... — almost: name the evidence route that should replace this offer."
+                .to_string(),
+        );
+        lines
+            .push("- BTSP_COUNTER softer_contact — almost: the offer is too forceful.".to_string());
+        lines.push(
+            "- BTSP_REFUSAL study_first — clear no for now: inquiry belongs outside this proposal."
+                .to_string(),
+        );
+        lines.push("- BTSP_REFUSAL not_now — clear no for this window.".to_string());
+        lines.push(
+            "Use an exact candidate only if your stance has changed since the study window."
+                .to_string(),
+        );
+    } else if let Some(followup) = render_adjacent_followup_line(proposal, owner) {
         lines.push(
             "BTSP agency checkpoint: this proposal already has your adjacent answer recorded."
+                .to_string(),
+        );
+        lines.push(
+            "BTSP closure pending: choose counter/refusal before another ordinary adjacent answer."
                 .to_string(),
         );
         lines.push(followup);
         lines.push(
             "Repeating that adjacent move is duplicate evidence, not a new BTSP stance."
-                .to_string(),
-        );
-        lines.push(
-            "- BTSP_STUDY_FIRST need evidence first — answer: study window requested before deciding."
                 .to_string(),
         );
         lines.push("- BTSP_COUNTER NEXT: ... — almost: name the safer or truer route.".to_string());
@@ -213,6 +242,10 @@ pub(super) fn render_owner_block_from_status(
                 .to_string(),
         );
         lines.push("- BTSP_REFUSAL not_now — clear no for this window.".to_string());
+        lines.push(
+            "- BTSP_STUDY_FIRST need evidence first — answer: study window requested before deciding."
+                .to_string(),
+        );
         lines.push(
             "Use an exact candidate only if your stance has changed since the adjacent answer."
                 .to_string(),
@@ -414,13 +447,43 @@ fn render_adjacent_followup_line(
                 && interpretation.relation_to_proposal != "exact_nominated"
         })?;
     let primary = if latest.category == "epistemic" {
-        "BTSP_STUDY_FIRST need evidence first"
+        "BTSP_COUNTER NEXT: ... or BTSP_REFUSAL study_first"
     } else {
-        "BTSP_REFUSAL not_now"
+        "BTSP_COUNTER NEXT: ... or BTSP_REFUSAL not_now"
     };
     Some(format!(
-        "Already recorded adjacent answer: `{}` ({}). If that was the real stance, prefer `{primary}` or `BTSP_COUNTER ...` over repeating the same adjacent answer.",
+        "Already recorded adjacent answer: `{}` ({}). If that was the real stance, prefer `{primary}` over repeating the same adjacent answer.",
         latest.normalized_choice, latest.category
+    ))
+}
+
+fn render_study_first_followup_line(
+    proposal: &super::ActiveSovereigntyProposal,
+    owner: &str,
+) -> Option<String> {
+    let record = proposal
+        .study_first_records
+        .iter()
+        .rev()
+        .find(|record| record.owner == owner)?;
+    let resolution = if record.resolution_evidence.is_empty() {
+        "No resolution evidence is linked yet."
+    } else {
+        "Resolution evidence is now linked; decide, counter, or close instead of reopening the same study request."
+    };
+    let observed = proposal
+        .choice_interpretations
+        .iter()
+        .rev()
+        .find(|interpretation| {
+            interpretation.owner == owner
+                && interpretation.relation_to_proposal != "exact_nominated"
+        })
+        .map(|interpretation| interpretation.normalized_choice.as_str())
+        .unwrap_or("...");
+    Some(format!(
+        "Study window already requested: reason=`{}` source=`{}`. {resolution} Suggested counter template: `BTSP_COUNTER NEXT: {observed}`.",
+        record.reason, record.source
     ))
 }
 
@@ -460,7 +523,7 @@ fn render_cooldown_line(status: &SignalStatus) -> Option<String> {
             "a very similar signal just produced adjacent-only answers and reconcentrated, so the runtime is holding the duplicate reminder while keeping the signal visible"
         },
         "recent_study_first_reconcentrating_same_fingerprint" => {
-            "a very similar signal already asked for a study window and then reconcentrated, so the runtime is holding duplicate proposal reopening while keeping the study signal visible"
+            "a very similar signal already asked for a study window and then reconcentrated; proposal reopening is held until evidence resolves, or the owner counters/refuses"
         },
         _ => {
             "a very similar signal just resolved, so the runtime is waiting before reopening the same reminder"

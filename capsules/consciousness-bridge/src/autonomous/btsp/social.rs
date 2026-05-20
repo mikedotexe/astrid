@@ -570,10 +570,24 @@ pub(super) fn record_study_first(
     inferred_from_choice: Option<&str>,
     after_adjacent: bool,
 ) -> bool {
+    let normalized_reason = normalize_study_first_reason(reason);
     if has_study_first_record(proposal, owner, reason, inferred_from_choice) {
+        append_signal_event(
+            "study_first_duplicate_ignored",
+            json!({
+                "episode_id": proposal.episode_id.clone(),
+                "proposal_id": proposal.proposal_id.clone(),
+                "owner": owner,
+                "reason": normalized_reason,
+                "source": source,
+                "inferred_from_choice": inferred_from_choice,
+                "signal_families": proposal.matched_signal_families.clone(),
+                "signal_roles": proposal.matched_signal_roles.clone(),
+                "detail": "Owner repeated the same study-first BTSP choice for this proposal; the runtime kept the prior study-first record and did not rescore it."
+            }),
+        );
         return false;
     }
-    let normalized_reason = normalize_study_first_reason(reason);
     let now = now_unix_s();
     let record = StudyFirstRecord {
         study_first_id: format!("{}_study_first_{}_{}", proposal.proposal_id, owner, now),
@@ -675,6 +689,7 @@ pub(super) fn record_refusal(
     };
     proposal.refusals.push(refusal.clone());
     proposal.last_negotiation_event_at_unix_s = refusal.recorded_at_unix_s;
+    let _ = link_study_first_resolution(proposal, owner, &format!("refusal:{normalized_reason}"));
     append_signal_event(
         "refusal_recorded",
         json!({

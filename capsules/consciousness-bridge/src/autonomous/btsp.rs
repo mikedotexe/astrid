@@ -514,7 +514,7 @@ fn apply_owner_choice(
                 );
                 if duplicate_study_first {
                     append_signal_event(
-                        "choice_duplicate_ignored",
+                        "study_first_duplicate_ignored",
                         json!({
                             "episode_id": proposal.episode_id.clone(),
                             "proposal_id": proposal.proposal_id.clone(),
@@ -540,6 +540,16 @@ fn apply_owner_choice(
                     true,
                 );
             }
+            let linked_study_first_resolution =
+                if should_link_study_first_resolution(proposal, owner, &interpretation) {
+                    link_study_first_resolution(
+                        proposal,
+                        owner,
+                        &format!("evidence:{}", interpretation.normalized_choice),
+                    )
+                } else {
+                    false
+                };
             let duplicate_interpretation = has_choice_interpretation(proposal, &interpretation);
             let interpretation_changed =
                 record_choice_interpretation(proposal, interpretation.clone());
@@ -587,7 +597,9 @@ fn apply_owner_choice(
                         "detail": "Owner repeated the same adjacent BTSP choice for this proposal; the runtime kept the prior interpretation and did not rescore it."
                     }),
                 );
-                return shadow_changed || previous_owner_state.as_deref() != Some("answered");
+                return shadow_changed
+                    || linked_study_first_resolution
+                    || previous_owner_state.as_deref() != Some("answered");
             }
             if is_same_family_adjacent(&interpretation)
                 || related_choice_for_owner(owner, &normalized)
@@ -615,6 +627,7 @@ fn apply_owner_choice(
                 agency::append_adjacent_choice_agency_event(proposal, owner, &normalized);
                 return interpretation_changed
                     || shadow_changed
+                    || linked_study_first_resolution
                     || previous.as_deref() != proposal.related_choice.as_deref();
             }
             append_signal_event(
@@ -633,7 +646,7 @@ fn apply_owner_choice(
                     "detail": "Owner made an interpretable adjacent choice while the proposal was active."
                 }),
             );
-            return interpretation_changed || shadow_changed;
+            return interpretation_changed || shadow_changed || linked_study_first_resolution;
         }
         let previous = proposal
             .owner_reply_state
@@ -735,6 +748,20 @@ fn is_study_first_choice(interpretation: &ChoiceInterpretation) -> bool {
             | "EXPERIMENT_REVIEW"
             | "EXPERIMENT_EVIDENCE"
     )
+}
+
+fn should_link_study_first_resolution(
+    proposal: &ActiveSovereigntyProposal,
+    owner: &str,
+    interpretation: &ChoiceInterpretation,
+) -> bool {
+    interpretation.owner == owner
+        && is_study_first_choice(interpretation)
+        && proposal
+            .study_first_records
+            .iter()
+            .rev()
+            .any(|record| record.owner == owner && record.resolution_evidence.is_empty())
 }
 
 #[cfg(test)]

@@ -33,6 +33,14 @@ DEFAULT_MINIME_ACTIVE_SIDECAR = Path(
 )
 DEFAULT_MINIME_BTSP_SUPPORT = Path("/Users/v/other/minime/btsp_signal_support.py")
 ACTIVE_STATES = {"unseen", "witnessed", "answered", "adopted"}
+EVIDENCE_LIKE_BTSP_VERBS = {
+    "BROWSE",
+    "SEARCH",
+    "READ_MORE",
+    "DECOMPOSE",
+    "EXPERIMENT_EVIDENCE",
+    "EXPERIMENT_REVIEW",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -105,6 +113,9 @@ def build_audit(
     cohorts = summarize_cohorts(real, episodes)
     conversion = conversion_status_health(signal_status, minime_support_path=minime_support_path)
     sidecar = sidecar_summary(active_sidecar)
+    study_first_closure = study_first_closure_summary(real)
+    sidecar_next_best_moves = active_sidecar_next_best_moves(sidecar)
+    closure_pending = btsp_closure_pending(sidecar, sidecar_next_best_moves)
     churn = same_fingerprint_churn(real)
     events = signal_event_summary(signal_events or [])
     snags = collect_snags(
@@ -118,6 +129,7 @@ def build_audit(
         conversion=conversion,
         churn=churn,
         sidecar=sidecar,
+        study_first_closure=study_first_closure,
     )
     return {
         "proposal_count": len(real),
@@ -142,10 +154,13 @@ def build_audit(
         "current_live_proposal": compact_proposal(active[-1]) if active else None,
         "duplicate_adjacent_repeats": duplicate_adjacent,
         "study_first": study_first,
+        "study_first_closure": study_first_closure,
         "prompt_exposure": exposure_summary,
         "outcomes": outcome_summary,
         "conversion_status_rendering": conversion,
         "active_sidecar": sidecar,
+        "active_sidecar_next_best_moves": sidecar_next_best_moves,
+        "btsp_closure_pending_v1": closure_pending,
         "signal_events": events,
         "same_fingerprint_churn": churn,
         "top_cohorts": compact_cohorts(cohorts),
@@ -307,6 +322,75 @@ def study_first_summary(
     }
 
 
+def study_first_closure_summary(proposals: list[dict[str, Any]]) -> dict[str, Any]:
+    due: list[dict[str, Any]] = []
+    opportunity_keys: set[tuple[str, str]] = set()
+    for proposal in proposals:
+        proposal_id = str(proposal.get("proposal_id") or "")
+        exact_owners = {
+            str(item.get("owner") or "")
+            for item in proposal.get("exact_adoptions") or []
+            if isinstance(item, dict)
+        }
+        refusal_owners = {
+            str(item.get("owner") or "")
+            for item in proposal.get("refusals") or []
+            if isinstance(item, dict)
+        }
+        counter_owners = {
+            str(item.get("owner") or "")
+            for item in proposal.get("counteroffers") or []
+            if isinstance(item, dict)
+        }
+        adjacent_owners = {
+            str(item.get("owner") or "")
+            for item in proposal.get("choice_interpretations") or []
+            if isinstance(item, dict)
+            and str(item.get("relation_to_proposal") or "") != "exact_nominated"
+        }
+        for owner in adjacent_owners:
+            if (
+                owner
+                and owner not in exact_owners
+                and owner not in refusal_owners
+                and owner not in counter_owners
+            ):
+                opportunity_keys.add((proposal_id, owner))
+        for record in proposal.get("study_first_records") or []:
+            if not isinstance(record, dict):
+                continue
+            owner = str(record.get("owner") or "")
+            if (
+                owner
+                and owner not in exact_owners
+                and owner not in refusal_owners
+                and owner not in counter_owners
+            ):
+                opportunity_keys.add((proposal_id, owner))
+            resolved = bool(record.get("resolution_evidence"))
+            resolved = resolved or owner in exact_owners or owner in refusal_owners or owner in counter_owners
+            if resolved:
+                continue
+            due.append(
+                {
+                    "proposal_id": proposal_id,
+                    "owner": owner,
+                    "reason": record.get("reason"),
+                    "source": record.get("source"),
+                    "inferred_from_choice": record.get("inferred_from_choice"),
+                    "recorded_at_unix_s": record.get("recorded_at_unix_s"),
+                    "signal_fingerprint": derive_signal_fingerprint(proposal),
+                    "study_first_resolution_due_v1": True,
+                }
+            )
+    due.sort(key=lambda item: int(item.get("recorded_at_unix_s", 0) or 0), reverse=True)
+    return {
+        "unresolved_study_first_count": len(due),
+        "study_first_resolution_due": due[:8],
+        "counteroffer_opportunity_count": len(opportunity_keys),
+    }
+
+
 def prompt_exposure_summary(proposals: list[dict[str, Any]]) -> dict[str, Any]:
     astrid_only = minime_only = both = neither = asymmetry_total = 0
     for proposal in proposals:
@@ -388,8 +472,66 @@ def sidecar_summary(payload: dict[str, Any] | None) -> dict[str, Any]:
         "last_reply_classification": payload.get("last_reply_classification"),
         "last_observed_next": payload.get("last_observed_next"),
         "last_study_first_reason": payload.get("last_study_first_reason"),
+        "last_counteroffer_template": payload.get("last_counteroffer_template"),
+        "last_refusal_template": payload.get("last_refusal_template"),
+        "study_first_resolution_due": payload.get("study_first_resolution_due"),
         "last_replied_at_unix_s": payload.get("last_replied_at_unix_s"),
     }
+
+
+def active_sidecar_next_best_moves(sidecar: dict[str, Any]) -> list[str]:
+    if not sidecar.get("present"):
+        return []
+    classification = str(sidecar.get("last_reply_classification") or "")
+    observed = str(sidecar.get("last_observed_next") or "").strip()
+    counter = str(sidecar.get("last_counteroffer_template") or "").strip()
+    if not counter:
+        if observed and evidence_like_action(observed):
+            counter = f"BTSP_COUNTER NEXT: {compact_action(observed)}"
+        elif observed:
+            counter = "BTSP_COUNTER softer_contact"
+        else:
+            counter = "BTSP_COUNTER NEXT: ..."
+    moves = [counter]
+    refusal = str(sidecar.get("last_refusal_template") or "").strip()
+    if refusal:
+        moves.append(refusal)
+    if "BTSP_REFUSAL study_first" not in moves:
+        moves.append("BTSP_REFUSAL study_first")
+    if "BTSP_REFUSAL not_now" not in moves:
+        moves.append("BTSP_REFUSAL not_now")
+    if classification == "observed_next" and evidence_like_action(observed):
+        moves.append("BTSP_STUDY_FIRST need evidence first")
+    return moves
+
+
+def btsp_closure_pending(sidecar: dict[str, Any], next_best_moves: list[str]) -> dict[str, Any]:
+    classification = str(sidecar.get("last_reply_classification") or "")
+    pending = bool(sidecar.get("present")) and classification in {"observed_next", "study_first"}
+    return {
+        "present": pending,
+        "proposal_id": sidecar.get("proposal_id") if pending else None,
+        "state": classification if pending else None,
+        "next_best_moves": next_best_moves if pending else [],
+        "status_line": (
+            "BTSP closure pending: choose counter, refusal, or evidence resolution before another ordinary NEXT."
+            if pending
+            else ""
+        ),
+        "exact_only_if_stance_changed": pending,
+    }
+
+
+def compact_action(action: str, limit: int = 140) -> str:
+    compact = " ".join(str(action or "").split())
+    if len(compact) <= limit:
+        return compact or "..."
+    return compact[:limit].rstrip()
+
+
+def evidence_like_action(action: str) -> bool:
+    base = str(action or "").strip().split(None, 1)[0].upper().rstrip(":")
+    return base in EVIDENCE_LIKE_BTSP_VERBS
 
 
 def same_fingerprint_churn(proposals: list[dict[str, Any]]) -> dict[str, Any]:
@@ -430,6 +572,12 @@ def signal_event_summary(events: list[dict[str, Any]]) -> dict[str, Any]:
         if isinstance(event, dict)
         and str(event.get("event_type") or "") == "choice_duplicate_ignored"
     ]
+    study_first_duplicate_ignored = [
+        event
+        for event in events
+        if isinstance(event, dict)
+        and str(event.get("event_type") or "") == "study_first_duplicate_ignored"
+    ]
     recent_duplicate_ignored = []
     for event in duplicate_ignored[-5:]:
         recent_duplicate_ignored.append(
@@ -443,8 +591,19 @@ def signal_event_summary(events: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "total": len(events),
         "choice_duplicate_ignored": counts.get("choice_duplicate_ignored", 0),
+        "study_first_duplicate_ignored": counts.get("study_first_duplicate_ignored", 0),
         "study_first_recorded": counts.get("study_first_recorded", 0),
         "recent_choice_duplicate_ignored": recent_duplicate_ignored,
+        "recent_study_first_duplicate_ignored": [
+            {
+                "proposal_id": event.get("proposal_id"),
+                "owner": event.get("owner"),
+                "choice": event.get("choice"),
+                "reason": event.get("reason"),
+                "recorded_at_unix_s": event.get("recorded_at_unix_s"),
+            }
+            for event in study_first_duplicate_ignored[-5:]
+        ],
     }
 
 
@@ -458,6 +617,8 @@ def collect_snags(**parts: Any) -> list[dict[str, Any]]:
         snags.append({"severity": "medium", "kind": "no_study_first_uptake", "detail": "Adjacent inquiry is present but no first-class study-first records exist yet."})
     if parts["study_first"]["study_first_reconcentrating"] >= 2:
         snags.append({"severity": "medium", "kind": "study_first_reconcentrating", "detail": "Repeated study-first outcomes are still reconcentrating; duplicate proposal reopening should remain cooled down."})
+    if parts["study_first_closure"]["unresolved_study_first_count"] > 0:
+        snags.append({"severity": "medium", "kind": "study_first_resolution_due", "detail": f"{parts['study_first_closure']['unresolved_study_first_count']} study-first records still need evidence resolution, counteroffer, refusal, or later exact adoption."})
     if parts["duplicate_adjacent"]["extra_repeats"] > 0:
         snags.append({"severity": "medium", "kind": "duplicate_adjacent_repeats", "detail": f"{parts['duplicate_adjacent']['extra_repeats']} repeated adjacent choices are present."})
     if parts["conversion"]["rendering_risk"]:
@@ -496,12 +657,34 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Minime active sidecar: present=`{sidecar['present']}` "
         f"classification=`{sidecar.get('last_reply_classification')}` observed=`{sidecar.get('last_observed_next')}` study_first=`{sidecar.get('last_study_first_reason')}`"
     )
+    if report["active_sidecar_next_best_moves"]:
+        lines.append(
+            f"- Active sidecar next-best moves: `{report['active_sidecar_next_best_moves']}`"
+        )
+    closure_pending = report["btsp_closure_pending_v1"]
+    if closure_pending["present"]:
+        lines.append(
+            f"- BTSP closure pending: proposal=`{closure_pending['proposal_id']}` "
+            f"state=`{closure_pending['state']}` moves=`{closure_pending['next_best_moves']}`"
+        )
     events = report["signal_events"]
     lines.append(
-        f"- Signal events: choice_duplicate_ignored=`{events['choice_duplicate_ignored']}` study_first_recorded=`{events['study_first_recorded']}`"
+        f"- Signal events: choice_duplicate_ignored=`{events['choice_duplicate_ignored']}` "
+        f"study_first_duplicate_ignored=`{events['study_first_duplicate_ignored']}` "
+        f"study_first_recorded=`{events['study_first_recorded']}`"
     )
     study_first = report["study_first"]
+    closure = report["study_first_closure"]
     lines.extend(["", "## Study First"])
+    lines.append(
+        f"- Unresolved study-first: `{closure['unresolved_study_first_count']}`; "
+        f"counteroffer opportunities: `{closure['counteroffer_opportunity_count']}`"
+    )
+    for item in closure["study_first_resolution_due"][:5]:
+        lines.append(
+            f"- Resolution due `{item.get('proposal_id')}` owner=`{item.get('owner')}` "
+            f"reason=`{item.get('reason')}` inferred=`{item.get('inferred_from_choice')}`"
+        )
     if study_first["recent_records"]:
         for record in study_first["recent_records"]:
             lines.append(
@@ -632,6 +815,34 @@ class BtspRealityAuditTests(unittest.TestCase):
         self.assertEqual(report["study_first"]["study_first_after_adjacent"], 1)
         self.assertEqual(report["study_first"]["study_first_reconcentrating"], 1)
         self.assertEqual(report["study_first"]["top_study_first_verbs"][0]["verb"], "BROWSE")
+        self.assertEqual(report["study_first_closure"]["unresolved_study_first_count"], 1)
+        self.assertTrue(
+            report["study_first_closure"]["study_first_resolution_due"][0][
+                "study_first_resolution_due_v1"
+            ]
+        )
+
+    def test_study_first_resolution_evidence_clears_due(self) -> None:
+        proposals = [
+            {
+                "proposal_id": "btsp_ep_proposal_1",
+                "reply_state": "answered",
+                "signal_fingerprint": "families=f;transition=t;crossing=none;perturb=p;fill_band=b",
+                "study_first_records": [
+                    {
+                        "owner": "minime",
+                        "reason": "need evidence first",
+                        "source": "explicit_btsp_study_first",
+                        "recorded_at_unix_s": 3,
+                        "resolution_evidence": ["evidence:DECOMPOSE"],
+                    }
+                ],
+            }
+        ]
+
+        report = build_audit(proposals, [])
+
+        self.assertEqual(report["study_first_closure"]["unresolved_study_first_count"], 0)
 
     def test_signal_event_summary_counts_duplicate_guard(self) -> None:
         summary = signal_event_summary(
@@ -644,10 +855,54 @@ class BtspRealityAuditTests(unittest.TestCase):
                     "choice": "BROWSE",
                     "recorded_at_unix_s": 7,
                 },
+                {
+                    "event_type": "study_first_duplicate_ignored",
+                    "proposal_id": "p1",
+                    "owner": "minime",
+                    "reason": "inquiry_before_intervention",
+                    "recorded_at_unix_s": 8,
+                },
             ]
         )
         self.assertEqual(summary["choice_duplicate_ignored"], 1)
+        self.assertEqual(summary["study_first_duplicate_ignored"], 1)
         self.assertEqual(summary["recent_choice_duplicate_ignored"][0]["choice"], "BROWSE")
+        self.assertEqual(
+            summary["recent_study_first_duplicate_ignored"][0]["reason"],
+            "inquiry_before_intervention",
+        )
+
+    def test_active_sidecar_next_best_moves_avoid_liveish_next_template(self) -> None:
+        sidecar = sidecar_summary(
+            {
+                "schema": "minime.btsp.active_proposal.v2",
+                "proposal": {"proposal_id": "p1"},
+                "last_reply_classification": "observed_next",
+                "last_observed_next": "RELEASE lambda-pressure",
+            }
+        )
+
+        moves = active_sidecar_next_best_moves(sidecar)
+
+        self.assertIn("BTSP_COUNTER softer_contact", moves)
+        self.assertNotIn("BTSP_COUNTER NEXT: RELEASE lambda-pressure", moves)
+
+    def test_active_sidecar_reports_closure_pending(self) -> None:
+        sidecar = sidecar_summary(
+            {
+                "schema": "minime.btsp.active_proposal.v2",
+                "proposal": {"proposal_id": "p1"},
+                "last_reply_classification": "observed_next",
+                "last_observed_next": "DECOMPOSE",
+            }
+        )
+        moves = active_sidecar_next_best_moves(sidecar)
+
+        pending = btsp_closure_pending(sidecar, moves)
+
+        self.assertTrue(pending["present"])
+        self.assertEqual(pending["proposal_id"], "p1")
+        self.assertIn("BTSP closure pending", pending["status_line"])
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:

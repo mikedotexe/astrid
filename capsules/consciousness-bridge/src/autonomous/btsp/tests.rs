@@ -508,6 +508,83 @@ BTSP_OBSERVED_NEXT BROWSE https://example.test/paper
         second,
         "hash-three",
     ));
+    let events = super::signal::drain_test_signal_events();
+    assert!(events.iter().any(
+        |event| event.get("event_type").and_then(serde_json::Value::as_str)
+            == Some("study_first_duplicate_ignored")
+    ));
+}
+
+#[test]
+fn study_first_followed_by_evidence_links_resolution_without_exact_adoption() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("study_first_resolution")],
+        last_updated_unix_s: 0,
+    };
+
+    assert!(apply_owner_choice(
+        &mut bank,
+        &mut ledger,
+        OWNER_MINIME,
+        "NEXT: BTSP_STUDY_FIRST need evidence first",
+        None,
+    ));
+    let _ = super::signal::drain_test_signal_events();
+    assert!(apply_owner_choice(
+        &mut bank,
+        &mut ledger,
+        OWNER_MINIME,
+        "NEXT: EXPERIMENT_EVIDENCE current :: spectral_condition stable",
+        None,
+    ));
+    let proposal = &ledger.proposals[0];
+    assert!(proposal.exact_adoptions.is_empty());
+    assert_eq!(proposal.study_first_records.len(), 1);
+    assert_eq!(
+        proposal.study_first_records[0].resolution_evidence,
+        vec!["evidence:EXPERIMENT_EVIDENCE"]
+    );
+    let events = super::signal::drain_test_signal_events();
+    assert!(events.iter().any(
+        |event| event.get("event_type").and_then(serde_json::Value::as_str)
+            == Some("study_first_resolution_linked")
+    ));
+}
+
+#[test]
+fn refusal_after_study_first_resolves_study_window() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: vec![active_test_proposal("study_first_refusal_resolution")],
+        last_updated_unix_s: 0,
+    };
+
+    assert!(apply_owner_choice(
+        &mut bank,
+        &mut ledger,
+        OWNER_MINIME,
+        "NEXT: BTSP_STUDY_FIRST need evidence first",
+        None,
+    ));
+    assert!(apply_owner_choice(
+        &mut bank,
+        &mut ledger,
+        OWNER_MINIME,
+        "NEXT: BTSP_REFUSAL study_first",
+        None,
+    ));
+    let proposal = &ledger.proposals[0];
+    assert_eq!(
+        proposal.study_first_records[0].resolution_evidence,
+        vec!["refusal:study_first"]
+    );
 }
 
 #[test]
