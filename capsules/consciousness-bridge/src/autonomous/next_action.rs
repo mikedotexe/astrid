@@ -217,6 +217,38 @@ fn clean_alias_arg(raw: &str) -> String {
         .to_string()
 }
 
+fn clean_shadow_decompose_focus(raw: &str) -> String {
+    let focus = clean_alias_arg(raw);
+    let normalized = focus
+        .to_ascii_lowercase()
+        .replace(['.', ',', ';'], "")
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    if focus.is_empty() || normalized == "observer with memory" {
+        "lambda-tail/lambda4".to_string()
+    } else {
+        focus
+    }
+}
+
+fn clean_weave_trace_focus(raw: &str) -> String {
+    let focus = clean_alias_arg(raw);
+    let normalized = focus
+        .to_ascii_lowercase()
+        .replace(['.', ',', ';'], "")
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    if focus.is_empty() || normalized == "observer with memory" {
+        "weave/lambda4".to_string()
+    } else if normalized.starts_with("weave/") || normalized.starts_with("weave ") {
+        focus
+    } else {
+        format!("weave/{focus}")
+    }
+}
+
 fn normalize_codeish_target(raw: &str) -> Option<String> {
     let mut target = clean_alias_arg(raw);
     if target.is_empty() {
@@ -901,6 +933,31 @@ fn normalize_feedback_shadow_model_alias(
         ));
     }
 
+    if base_action == "SHADOW_DECOMPOSE" {
+        let raw_arg = strip_action(original, base_action);
+        let focus = clean_shadow_decompose_focus(&raw_arg);
+        let normalized_original = format!("SHADOW_PREFLIGHT {focus} --stage=rehearse");
+        return Some(("SHADOW_PREFLIGHT".to_string(), normalized_original));
+    }
+
+    if base_action == "WEAVE_TRACE" {
+        let raw_arg = strip_action(original, base_action);
+        let focus = clean_weave_trace_focus(&raw_arg);
+        let normalized_original = format!("SHADOW_PREFLIGHT {focus} --stage=rehearse");
+        return Some(("SHADOW_PREFLIGHT".to_string(), normalized_original));
+    }
+
+    if base_action == "UNSHAPED_BASELINE" {
+        let raw_arg = strip_action(original, base_action);
+        let focus = clean_alias_arg(&raw_arg);
+        let normalized_original = if focus.is_empty() {
+            "CONSTRAINT_AUDIT lambda-tail/lambda4".to_string()
+        } else {
+            format!("CONSTRAINT_AUDIT {focus}")
+        };
+        return Some(("CONSTRAINT_AUDIT".to_string(), normalized_original));
+    }
+
     if matches!(base_action, "SHADOW_TRACE" | "SHADOW_EXPLORER") {
         let raw_arg = strip_action(original, base_action);
         let focus = clean_alias_arg(&raw_arg);
@@ -1092,6 +1149,8 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "OPEN_EARS"
         | "SPACE_HOLD"
         | "SPACE_EXPLORE"
+        | "CONSTRAINT_AUDIT"
+        | "UNSHAPED_BASELINE"
         | "PRESSURE_SOURCE_AUDIT"
         | "PRESSURE_SOURCE"
         | "STRUCTURAL_PRESSURE"
@@ -1113,6 +1172,8 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "EXAMINE"
         | "DECOMPOSE"
         | "SPECTRAL_EXPLORER"
+        | "CONSTRAINT_AUDIT"
+        | "UNSHAPED_BASELINE"
         | "THREAD_START"
         | "THREADS"
         | "THREAD_STATUS"
@@ -1222,6 +1283,8 @@ fn route_for_preflight_base(base_action: &str) -> String {
         "DECOMPOSE"
         | "SPECTRAL_EXPLORER"
         | "EXAMINE"
+        | "CONSTRAINT_AUDIT"
+        | "UNSHAPED_BASELINE"
         | "PRESSURE_SOURCE_AUDIT"
         | "FLUCTUATION_AUDIT"
         | "REGULATOR_AUDIT"
@@ -1253,6 +1316,8 @@ fn active_experiment_auto_linkable_base(base_action: &str) -> bool {
             | "SELF_STUDY"
             | "SPECTRAL_EXPLORER"
             | "DECOMPOSE"
+            | "CONSTRAINT_AUDIT"
+            | "UNSHAPED_BASELINE"
             | "PRESSURE_SOURCE_AUDIT"
             | "FLUCTUATION_AUDIT"
             | "THREAD_STATUS"
@@ -2692,6 +2757,11 @@ mod tests {
             read_only.authority_required,
             "read-only/protected action lane only"
         );
+        let constraint =
+            action_preflight_report("ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4");
+        assert_eq!(constraint.base_action, "CONSTRAINT_AUDIT");
+        assert_eq!(constraint.stage, "read_only");
+        assert_eq!(constraint.effective_route, "operations");
 
         let write = action_preflight_report("PREFLIGHT CODEX inspect this");
         assert_eq!(write.base_action, "CODEX");
@@ -2786,6 +2856,34 @@ mod tests {
         let (base, original) = canonicalize_next_action_components("EXPERIENCE_PLAN current");
         assert_eq!(base, "EXPERIMENT_PLAN");
         assert_eq!(original, "EXPERIMENT_PLAN current");
+    }
+
+    #[test]
+    fn canonicalizes_shadow_decompose_to_rehearsal_preflight() {
+        let (base, original) = canonicalize_next_action_components("SHADOW_DECOMPOSE lambda-tail");
+        assert_eq!(base, "SHADOW_PREFLIGHT");
+        assert_eq!(original, "SHADOW_PREFLIGHT lambda-tail --stage=rehearse");
+
+        let (base, original) =
+            canonicalize_next_action_components("SHADOW_DECOMPOSE observer with memory");
+        assert_eq!(base, "SHADOW_PREFLIGHT");
+        assert_eq!(
+            original,
+            "SHADOW_PREFLIGHT lambda-tail/lambda4 --stage=rehearse"
+        );
+
+        let (base, original) = canonicalize_next_action_components("WEAVE_TRACE λ4 decay");
+        assert_eq!(base, "SHADOW_PREFLIGHT");
+        assert_eq!(original, "SHADOW_PREFLIGHT weave/λ4 decay --stage=rehearse");
+
+        let (base, original) = canonicalize_next_action_components("WEAVE_TRACE");
+        assert_eq!(base, "SHADOW_PREFLIGHT");
+        assert_eq!(original, "SHADOW_PREFLIGHT weave/lambda4 --stage=rehearse");
+
+        let (base, original) =
+            canonicalize_next_action_components("UNSHAPED_BASELINE lambda-tail/lambda4");
+        assert_eq!(base, "CONSTRAINT_AUDIT");
+        assert_eq!(original, "CONSTRAINT_AUDIT lambda-tail/lambda4");
     }
 
     #[test]

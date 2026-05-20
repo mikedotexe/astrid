@@ -4,6 +4,7 @@
 //! SQLite rows are mirrors for querying and dashboards.
 
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -197,6 +198,8 @@ struct ExperimentContinuityProjection {
     classification: String,
     continuity_return: String,
     native_continuity_v1: Value,
+    shared_investigation_v1: Option<Value>,
+    charter_scaffold_v1: Option<Value>,
     charter_status: String,
     evidence_status: String,
     candidate_status: String,
@@ -211,11 +214,18 @@ struct ThreadContinuityProjection {
     status: String,
     current_next: Option<String>,
     active_experiment: Option<ExperimentContinuityProjection>,
+    last_experiment_summary_v1: Option<Value>,
     continuity_return: String,
     continuity_return_line: String,
     native_continuity_v1: Value,
+    shared_investigation_v1: Option<Value>,
     preflight_safety_cue_v1: Option<Value>,
     read_only_control_intent_cue_v1: Option<Value>,
+    constraint_counterfactual_cue_v1: Option<Value>,
+    decompose_pressure_cue_v1: Option<Value>,
+    charter_now_bridge_v1: Option<Value>,
+    prior_claim_charter_bridge_v1: Option<Value>,
+    charter_preflight_not_charter_cue_v1: Option<Value>,
     recent_events: Vec<ActionEvent>,
     recent_event_summaries: Vec<String>,
     stale_running_count: usize,
@@ -582,7 +592,12 @@ impl ActionContinuityStore {
                         .map_or_else(|| "n/a".to_string(), Value::to_string),
                 )
             })
-            .unwrap_or_default();
+            .unwrap_or_else(|| {
+                format!(
+                    "Active experiment: none\n{}",
+                    last_experiment_context_line(&thread)
+                )
+            });
         let pressure = thread
             .thread_pressure_source_v1
             .as_ref()
@@ -605,7 +620,12 @@ impl ActionContinuityStore {
                         .map_or_else(|| "n/a".to_string(), Value::to_string),
                 )
             })
-            .unwrap_or_default();
+            .unwrap_or_else(|| {
+                format!(
+                    "\nActive experiment: none\n{}",
+                    last_experiment_context_line(&thread)
+                )
+            });
         let fluctuation = thread
             .thread_inhabitable_fluctuation_v1
             .as_ref()
@@ -656,10 +676,12 @@ impl ActionContinuityStore {
             .as_ref()
             .map(|active| {
                 format!(
-                    "Active experiment: {} ({})\n{}Question: {}\nPlanned NEXT: {}\nLifecycle: {}\n{}\n{}\n{}\n",
+                    "Active experiment: {} ({})\n{}{}{}Question: {}\nPlanned NEXT: {}\nLifecycle: {}\n{}\n{}\n{}\n",
                     active.experiment.title,
                     active.experiment.experiment_id,
-                    charter_required_review_line(&active.classification),
+                    charter_required_review_line(active),
+                    charter_repair_priority_line(active),
+                    charter_scaffold_line(active, true),
                     active.experiment.question,
                     active
                         .experiment
@@ -693,12 +715,31 @@ impl ActionContinuityStore {
         let safety_cue = preflight_safety_cue_line(&projection.preflight_safety_cue_v1);
         let read_only_control_cue =
             read_only_control_intent_cue_line(&projection.read_only_control_intent_cue_v1);
+        let constraint_counterfactual_cue =
+            constraint_counterfactual_cue_line(&projection.constraint_counterfactual_cue_v1);
+        let decompose_pressure_cue =
+            decompose_pressure_cue_line(&projection.decompose_pressure_cue_v1);
+        let charter_now_bridge = charter_now_bridge_line(&projection.charter_now_bridge_v1);
+        let prior_claim_bridge =
+            prior_claim_charter_bridge_line(&projection.prior_claim_charter_bridge_v1);
+        let charter_preflight_not_charter =
+            charter_preflight_not_charter_line(&projection.charter_preflight_not_charter_cue_v1);
+        let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
+        let status_charter_priority = projection
+            .active_experiment
+            .as_ref()
+            .map_or_else(String::new, charter_repair_priority_line);
         Ok(format!(
-            "Action thread `{}`: {}\nStatus: {}\nWhy return: {}\nCurrent NEXT: {}\n{}{}{}{}{}{}{}{}{}{}{}Recent events:\n{}\n{}",
+            "Action thread `{}`: {}\nStatus: {}\nWhy return: {}\n{}{}{}{}{}Current NEXT: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}Recent events:\n{}\n{}",
             thread.thread_id,
             thread.title,
             thread.status,
             thread.why_return,
+            status_charter_priority,
+            charter_now_bridge,
+            prior_claim_bridge,
+            charter_preflight_not_charter,
+            shared_investigation,
             thread.current_next.as_deref().unwrap_or("(none)"),
             experiment,
             resonance,
@@ -709,6 +750,8 @@ impl ActionContinuityStore {
             native_continuity_status_line(&projection.native_continuity_v1),
             safety_cue,
             read_only_control_cue,
+            constraint_counterfactual_cue,
+            decompose_pressure_cue,
             self.stale_projection_line(&projection),
             proposal_diagnostics,
             if event_summaries.is_empty() {
@@ -1189,7 +1232,9 @@ impl ActionContinuityStore {
             self.motif_allowance_snapshot(&thread.thread_id, Some(&left.experiment_id))?;
         let left_runs = self.recent_experiment_runs(&thread.thread_id, &left.experiment_id, 4)?;
         let left_run_text = render_run_list(&left_runs);
+        let mut shared = None::<Value>;
         let right_text = if let Some(peer) = right_raw.as_deref().and_then(peer_experiment_ref) {
+            shared = self.shared_investigation_v1(&left);
             self.format_peer_experiment_reference(&thread, &peer, "EXPERIMENT_COMPARE", None)
         } else {
             let right = self.resolve_experiment(&thread, right_raw.as_deref())?;
@@ -1204,12 +1249,13 @@ impl ActionContinuityStore {
             )
         };
         Ok(format!(
-            "Experiment comparison\nLeft `{}`: {}\nQuestion: {}\nLatest runs:\n{}\n\nRight:\n{}\n\nMotif allowance: {} (returnability={})\nSuggested next: EXPERIMENT_ALT_PATHS {}",
+            "Experiment comparison\nLeft `{}`: {}\nQuestion: {}\nLatest runs:\n{}\n\nRight:\n{}\n\n{}Motif allowance: {} (returnability={})\nSuggested next: EXPERIMENT_ALT_PATHS {}",
             left.experiment_id,
             left.title,
             left.question,
             left_run_text,
             right_text,
+            shared_investigation_response_contract(&shared),
             allowance
                 .get("quality")
                 .and_then(Value::as_str)
@@ -1551,6 +1597,9 @@ impl ActionContinuityStore {
         if let Some(peer) = selector.and_then(peer_experiment_ref) {
             return self.record_peer_experiment_reference(None, &peer, "EXPERIMENT_STATUS", None);
         }
+        if selector_is_current(selector) && thread.active_experiment_id.is_none() {
+            return Ok(no_active_experiment_message(&thread, "EXPERIMENT_STATUS"));
+        }
         let experiment = self.resolve_experiment(&thread, selector)?;
         Ok(self.format_experiment_status(&thread, &experiment))
     }
@@ -1560,12 +1609,47 @@ impl ActionContinuityStore {
         if let Some(peer) = selector.and_then(peer_experiment_ref) {
             return self.record_peer_experiment_reference(None, &peer, "EXPERIMENT_REVIEW", None);
         }
+        if selector_is_current(selector) && thread.active_experiment_id.is_none() {
+            return Ok(no_active_experiment_message(&thread, "EXPERIMENT_REVIEW"));
+        }
         let experiment = self.resolve_experiment(&thread, selector)?;
         let runs = self.recent_experiment_runs(&thread.thread_id, &experiment.experiment_id, 5)?;
         let projection = self.experiment_projection(&thread, &experiment, Some(runs.clone()))?;
         let read_only_control_cue = read_only_control_intent_cue_line(
             &read_only_control_intent_cue(&thread, Some(&projection)),
         );
+        let recent_events = self
+            .recent_display_events(&thread.thread_id, 8)
+            .unwrap_or_default();
+        let recent_journal_texts = self.recent_decompose_journal_texts(4);
+        let decompose_pressure_cue_v1 = decompose_pressure_cue(
+            &thread,
+            Some(&projection),
+            &recent_events,
+            &recent_journal_texts,
+        );
+        let decompose_pressure_cue = decompose_pressure_cue_line(&decompose_pressure_cue_v1);
+        let charter_now_bridge = charter_now_bridge_line(&charter_now_bridge_cue(
+            Some(&projection),
+            &recent_events,
+            &decompose_pressure_cue_v1,
+        ));
+        let prior_claim_bridge_v1 = prior_claim_charter_bridge_cue(
+            Some(&projection),
+            &self.recent_prior_claim_journal_texts(4),
+        );
+        let prior_claim_bridge = prior_claim_charter_bridge_line(&prior_claim_bridge_v1);
+        let charter_preflight_not_charter =
+            charter_preflight_not_charter_line(&charter_preflight_not_charter_cue(
+                &thread,
+                Some(&projection),
+                &prior_claim_bridge_v1,
+                &recent_events,
+            ));
+        let constraint_counterfactual_cue = constraint_counterfactual_cue_line(
+            &constraint_counterfactual_cue(&thread, Some(&projection), &recent_events),
+        );
+        let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
         let run_text = if runs.is_empty() {
             "- no runs yet".to_string()
         } else {
@@ -1580,11 +1664,19 @@ impl ActionContinuityStore {
                 .join("\n")
         };
         Ok(format!(
-            "Experiment review `{}`: {}\n{}{}Question: {}\nLifecycle: {}\n{}\n{}\n{}\n{}Learned so far:\n{}\n\nReview lens: completion is strong when felt evidence and telemetry/artifact evidence both exist; otherwise classify it as thin rather than failed.\nAgency options: accept, refuse, counter, pause, or complete. Ordinary choices remain valid.\n\nContinuity return:\n{}\n\nSuggested next:\n{}",
+            "Experiment review `{}`: {}\n{}{}{}{}{}{}{}{}{}{}Question: {}\nLifecycle: {}\n{}\n{}\n{}\n{}Learned so far:\n{}\n\nReview lens: completion is strong when felt evidence and telemetry/artifact evidence both exist; otherwise classify it as thin rather than failed.\nAgency options: accept, refuse, counter, pause, or complete. Ordinary choices remain valid.\n\nContinuity return:\n{}\n\nSuggested next:\n{}",
             experiment.experiment_id,
             experiment.title,
-            charter_required_review_line(&projection.classification),
+            charter_now_bridge,
+            prior_claim_bridge,
+            charter_preflight_not_charter,
+            charter_required_review_line(&projection),
+            charter_repair_priority_line(&projection),
+            charter_scaffold_line(&projection, true),
             read_only_control_cue,
+            constraint_counterfactual_cue,
+            decompose_pressure_cue,
+            shared_investigation,
             experiment.question,
             projection.classification,
             projection.charter_status,
@@ -1593,10 +1685,7 @@ impl ActionContinuityStore {
             native_continuity_status_line(&projection.native_continuity_v1),
             run_text,
             projection.continuity_return,
-            experiment
-                .planned_next
-                .as_deref()
-                .unwrap_or("EXPERIMENT_PLAN current")
+            review_suggested_next(&projection, &experiment)
         ))
     }
 
@@ -2170,17 +2259,43 @@ impl ActionContinuityStore {
         let safety_cue = preflight_safety_cue_line(&projection.preflight_safety_cue_v1);
         let read_only_control_cue =
             read_only_control_intent_cue_line(&projection.read_only_control_intent_cue_v1);
+        let constraint_counterfactual_cue =
+            constraint_counterfactual_cue_line(&projection.constraint_counterfactual_cue_v1);
+        let decompose_pressure_cue =
+            decompose_pressure_cue_line(&projection.decompose_pressure_cue_v1);
+        let charter_now_bridge = charter_now_bridge_line(&projection.charter_now_bridge_v1);
+        let prior_claim_bridge =
+            prior_claim_charter_bridge_line(&projection.prior_claim_charter_bridge_v1);
+        let charter_preflight_not_charter =
+            charter_preflight_not_charter_line(&projection.charter_preflight_not_charter_cue_v1);
+        let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
+        let charter_priority = projection
+            .active_experiment
+            .as_ref()
+            .map_or_else(String::new, charter_repair_priority_line);
+        let charter_scaffold = projection
+            .active_experiment
+            .as_ref()
+            .map_or_else(String::new, |active| charter_scaffold_line(active, true));
         let body = format!(
-            "# {}\n\nCurrent NEXT: {}\n\nWhy return: {}\n{}{}{}{}{}{}{}{}\nProtected note: ambiguity and private reflection remain valid; this thread is a return path, not a demand for productivity.\n",
+            "# {}\n\n{}{}{}{}{}Current NEXT: {}\n\nWhy return: {}\n{}{}{}{}{}{}{}{}{}{}{}\nProtected note: ambiguity and private reflection remain valid; this thread is a return path, not a demand for productivity.\n",
             thread.title,
+            charter_priority,
+            charter_now_bridge,
+            prior_claim_bridge,
+            charter_preflight_not_charter,
+            shared_investigation,
             thread.current_next.as_deref().unwrap_or("(none yet)"),
             thread.why_return,
             experiment,
             allowance,
+            charter_scaffold,
             projection.continuity_return_line,
             native_return,
             safety_cue,
             read_only_control_cue,
+            constraint_counterfactual_cue,
+            decompose_pressure_cue,
             self.stale_projection_line(&projection),
             preflight_recommendation_line(thread)
         );
@@ -2212,6 +2327,66 @@ impl ActionContinuityStore {
                 )
             })
             .collect())
+    }
+
+    fn recent_decompose_journal_texts(&self, limit: usize) -> Vec<String> {
+        let Some(workspace) = self.root.parent() else {
+            return Vec::new();
+        };
+        let journal_dir = workspace.join("journal");
+        let Ok(entries) = fs::read_dir(journal_dir) else {
+            return Vec::new();
+        };
+        let mut files = entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path.extension().and_then(OsStr::to_str) == Some("txt"))
+            .filter_map(|path| {
+                let modified = path
+                    .metadata()
+                    .and_then(|metadata| metadata.modified())
+                    .ok()?;
+                Some((modified, path))
+            })
+            .collect::<Vec<_>>();
+        files.sort_by(|left, right| right.0.cmp(&left.0));
+        files
+            .into_iter()
+            .take(80)
+            .filter_map(|(_, path)| fs::read_to_string(path).ok())
+            .filter(|text| !decompose_pressure_matches(text).is_empty())
+            .take(limit)
+            .collect()
+    }
+
+    fn recent_prior_claim_journal_texts(&self, limit: usize) -> Vec<String> {
+        let Some(workspace) = self.root.parent() else {
+            return Vec::new();
+        };
+        let journal_dir = workspace.join("journal");
+        let Ok(entries) = fs::read_dir(journal_dir) else {
+            return Vec::new();
+        };
+        let mut files = entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path.extension().and_then(OsStr::to_str) == Some("txt"))
+            .filter_map(|path| {
+                let modified = path
+                    .metadata()
+                    .and_then(|metadata| metadata.modified())
+                    .ok()?;
+                Some((modified, path))
+            })
+            .collect::<Vec<_>>();
+        files.sort_by(|left, right| right.0.cmp(&left.0));
+        files
+            .into_iter()
+            .take(80)
+            .filter_map(|(_, path)| fs::read_to_string(path).ok())
+            .filter(|text| prior_claim_charter_bridge_match(text).is_some())
+            .take(limit)
+            .collect()
     }
 
     fn recent_display_events(&self, thread_id: &str, limit: usize) -> Result<Vec<ActionEvent>> {
@@ -2246,13 +2421,8 @@ impl ActionContinuityStore {
 
     fn thread_projection(&self, thread: &ResearchThread) -> Result<ThreadContinuityProjection> {
         let recent_events = self.recent_display_events(&thread.thread_id, 8)?;
-        let active_id = thread.active_experiment_id.as_deref().or_else(|| {
-            thread
-                .experiment_summary
-                .as_ref()
-                .and_then(|value| value.get("experiment_id"))
-                .and_then(Value::as_str)
-        });
+        let active_id = thread.active_experiment_id.as_deref();
+        let last_experiment_summary_v1 = last_experiment_summary_v1(thread);
         let active_experiment = active_id
             .and_then(|id| self.resolve_experiment(thread, Some(id)).ok())
             .map(|experiment| self.experiment_projection(thread, &experiment, None))
@@ -2265,10 +2435,37 @@ impl ActionContinuityStore {
             .as_ref()
             .map(|projection| projection.native_continuity_v1.clone())
             .unwrap_or_else(|| astrid_native_continuity(thread, None, &[]));
+        let shared_investigation_v1 = active_experiment
+            .as_ref()
+            .and_then(|projection| projection.shared_investigation_v1.clone());
         let preflight_safety_cue_v1 =
             directed_shift_preflight_cue(thread, active_experiment.as_ref(), &recent_events);
         let read_only_control_intent_cue_v1 =
             read_only_control_intent_cue(thread, active_experiment.as_ref());
+        let constraint_counterfactual_cue_v1 =
+            constraint_counterfactual_cue(thread, active_experiment.as_ref(), &recent_events);
+        let recent_decompose_texts = self.recent_decompose_journal_texts(4);
+        let decompose_pressure_cue_v1 = decompose_pressure_cue(
+            thread,
+            active_experiment.as_ref(),
+            &recent_events,
+            &recent_decompose_texts,
+        );
+        let charter_now_bridge_v1 = charter_now_bridge_cue(
+            active_experiment.as_ref(),
+            &recent_events,
+            &decompose_pressure_cue_v1,
+        );
+        let prior_claim_charter_bridge_v1 = prior_claim_charter_bridge_cue(
+            active_experiment.as_ref(),
+            &self.recent_prior_claim_journal_texts(4),
+        );
+        let charter_preflight_not_charter_cue_v1 = charter_preflight_not_charter_cue(
+            thread,
+            active_experiment.as_ref(),
+            &prior_claim_charter_bridge_v1,
+            &recent_events,
+        );
         Ok(ThreadContinuityProjection {
             thread_id: thread.thread_id.clone(),
             title: thread.title.clone(),
@@ -2281,9 +2478,16 @@ impl ActionContinuityStore {
             },
             continuity_return,
             active_experiment,
+            last_experiment_summary_v1,
             native_continuity_v1,
+            shared_investigation_v1,
             preflight_safety_cue_v1,
             read_only_control_intent_cue_v1,
+            constraint_counterfactual_cue_v1,
+            decompose_pressure_cue_v1,
+            charter_now_bridge_v1,
+            prior_claim_charter_bridge_v1,
+            charter_preflight_not_charter_cue_v1,
             recent_event_summaries: recent_events
                 .iter()
                 .map(|event| {
@@ -2312,11 +2516,27 @@ impl ActionContinuityStore {
         };
         let classification = self.experiment_classification(experiment, &recent_runs);
         let native_continuity_v1 = astrid_native_continuity(thread, Some(experiment), &recent_runs);
+        let charter_scaffold_v1 =
+            charter_scaffold_v1(thread, experiment, &recent_runs, &classification);
+        let continuity_return = if charter_repair_bound(&classification, experiment) {
+            charter_scaffold_v1
+                .as_ref()
+                .and_then(|scaffold| scaffold.get("command"))
+                .and_then(Value::as_str)
+                .map(str::to_string)
+                .unwrap_or_else(|| {
+                    self.continuity_return_command_for_runs(experiment, &recent_runs)
+                })
+        } else {
+            self.continuity_return_command_for_runs(experiment, &recent_runs)
+        };
         Ok(ExperimentContinuityProjection {
             experiment: experiment.clone(),
-            continuity_return: self.continuity_return_command_for_runs(experiment, &recent_runs),
+            continuity_return,
             classification,
             native_continuity_v1,
+            shared_investigation_v1: self.shared_investigation_v1(experiment),
+            charter_scaffold_v1,
             charter_status: charter_status_text(experiment),
             evidence_status: evidence_status_text(experiment),
             candidate_status: workbench_candidate_status(experiment),
@@ -2329,6 +2549,11 @@ impl ActionContinuityStore {
         experiment: &ExperimentRecord,
         recent_runs: &[ExperimentRunRecord],
     ) -> String {
+        match experiment.status.as_str() {
+            "paused" => return "paused".to_string(),
+            "complete" | "completed" => return "complete".to_string(),
+            _ => {},
+        }
         let blocked_like = recent_runs
             .iter()
             .rev()
@@ -2457,8 +2682,16 @@ impl ActionContinuityStore {
         recent_runs: &[ExperimentRunRecord],
     ) -> String {
         match self.experiment_classification(experiment, recent_runs).as_str() {
+            "paused" => format!("EXPERIMENT_RESUME {}", experiment.experiment_id),
+            "complete" => String::new(),
             "blocked_loop" => {
-                "EXPERIMENT_DECIDE current :: counter NEXT: ACTION_PREFLIGHT DECOMPOSE".to_string()
+                if !valid_experiment_charter(experiment.charter_v1.as_ref()) {
+                    "EXPERIMENT_CHARTER current :: hypothesis: ...; method_intent: felt texture + motif continuity; proposed_next_action: ACTION_PREFLIGHT ...; evidence_targets: felt_texture, motif_continuity, language_thread, artifact_grounding; stop_criteria: ..."
+                        .to_string()
+                } else {
+                    "EXPERIMENT_DECIDE current :: counter NEXT: ACTION_PREFLIGHT DECOMPOSE"
+                        .to_string()
+                }
             }
             "needs_charter" => {
                 "EXPERIMENT_CHARTER current :: hypothesis: ...; method_intent: felt texture + motif continuity; proposed_next_action: ACTION_PREFLIGHT ...; evidence_targets: felt_texture, motif_continuity, language_thread, artifact_grounding; stop_criteria: ..."
@@ -3209,6 +3442,83 @@ impl ActionContinuityStore {
         None
     }
 
+    fn peer_related_gap_experiment(&self) -> Option<Value> {
+        let action_root = bridge_paths().minime_workspace().join("action_threads");
+        let thread_root = action_root.join("threads");
+        let mut thread_dirs = Vec::<PathBuf>::new();
+        if let Ok(index_raw) = fs::read_to_string(action_root.join("index.json"))
+            && let Ok(index) = serde_json::from_str::<Value>(&index_raw)
+            && let Some(active_thread_id) = index.get("active_thread_id").and_then(Value::as_str)
+        {
+            thread_dirs.push(thread_root.join(active_thread_id));
+        }
+        if let Ok(entries) = fs::read_dir(&thread_root) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() && !thread_dirs.iter().any(|existing| existing == &path) {
+                    thread_dirs.push(path);
+                }
+            }
+        }
+        for thread_dir in thread_dirs {
+            let thread = fs::read_to_string(thread_dir.join("thread.json"))
+                .ok()
+                .and_then(|raw| serde_json::from_str::<Value>(&raw).ok());
+            let mut preferred_ids = Vec::<String>::new();
+            if let Some(thread) = thread.as_ref() {
+                if let Some(id) = thread.get("active_experiment_id").and_then(Value::as_str) {
+                    preferred_ids.push(id.to_string());
+                }
+                if let Some(id) = thread
+                    .get("experiment_summary")
+                    .and_then(|value| value.get("experiment_id"))
+                    .and_then(Value::as_str)
+                    .filter(|id| !preferred_ids.iter().any(|existing| existing == *id))
+                {
+                    preferred_ids.push(id.to_string());
+                }
+            }
+            let Ok(raw_experiments) = fs::read_to_string(thread_dir.join("experiments.jsonl"))
+            else {
+                continue;
+            };
+            let mut latest = HashMap::<String, Value>::new();
+            for line in raw_experiments.lines() {
+                let Ok(value) = serde_json::from_str::<Value>(line) else {
+                    continue;
+                };
+                if let Some(id) = value.get("experiment_id").and_then(Value::as_str) {
+                    latest.insert(id.to_string(), value);
+                }
+            }
+            for id in preferred_ids {
+                if let Some(experiment) = latest.get(&id)
+                    && peer_gap_experiment_signal(experiment)
+                {
+                    return Some(experiment.clone());
+                }
+            }
+            for experiment in latest.values() {
+                let status = experiment
+                    .get("status")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default();
+                if matches!(status, "active" | "paused" | "complete" | "completed")
+                    && peer_gap_experiment_signal(experiment)
+                {
+                    return Some(experiment.clone());
+                }
+            }
+        }
+        None
+    }
+
+    fn shared_investigation_v1(&self, local: &ExperimentRecord) -> Option<Value> {
+        self.peer_related_gap_experiment()
+            .as_ref()
+            .and_then(|peer| shared_investigation_v1_from_peer(local, peer))
+    }
+
     fn write_peer_experiment_review(
         &self,
         db: Option<&BridgeDb>,
@@ -3277,6 +3587,8 @@ impl ActionContinuityStore {
                 classification: "unknown".to_string(),
                 continuity_return: self.continuity_return_command(thread, experiment),
                 native_continuity_v1: astrid_native_continuity(thread, Some(experiment), &runs),
+                shared_investigation_v1: self.shared_investigation_v1(experiment),
+                charter_scaffold_v1: None,
                 charter_status: charter_status_text(experiment),
                 evidence_status: evidence_status_text(experiment),
                 candidate_status: workbench_candidate_status(experiment),
@@ -3306,12 +3618,52 @@ impl ActionContinuityStore {
         let read_only_control_cue = read_only_control_intent_cue_line(
             &read_only_control_intent_cue(thread, Some(&projection)),
         );
+        let recent_events = self
+            .recent_display_events(&thread.thread_id, 8)
+            .unwrap_or_default();
+        let recent_journal_texts = self.recent_decompose_journal_texts(4);
+        let decompose_pressure_cue_v1 = decompose_pressure_cue(
+            thread,
+            Some(&projection),
+            &recent_events,
+            &recent_journal_texts,
+        );
+        let decompose_pressure_cue = decompose_pressure_cue_line(&decompose_pressure_cue_v1);
+        let charter_now_bridge = charter_now_bridge_line(&charter_now_bridge_cue(
+            Some(&projection),
+            &recent_events,
+            &decompose_pressure_cue_v1,
+        ));
+        let prior_claim_bridge_v1 = prior_claim_charter_bridge_cue(
+            Some(&projection),
+            &self.recent_prior_claim_journal_texts(4),
+        );
+        let prior_claim_bridge = prior_claim_charter_bridge_line(&prior_claim_bridge_v1);
+        let charter_preflight_not_charter =
+            charter_preflight_not_charter_line(&charter_preflight_not_charter_cue(
+                thread,
+                Some(&projection),
+                &prior_claim_bridge_v1,
+                &recent_events,
+            ));
+        let constraint_counterfactual_cue = constraint_counterfactual_cue_line(
+            &constraint_counterfactual_cue(thread, Some(&projection), &recent_events),
+        );
+        let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
         format!(
-            "Experiment `{}`: {}\n{}{}Thread: {}\nStatus: {}\nLifecycle: {}\nQuestion: {}\nHypothesis: {}\nAuthority: {}\nPlanned NEXT: {}\nContinuity return: {}\n{}{}{}\n{}\n{}\nMotif allowance: {} dominant={} action_concentration={} returnability={}\nLatest runs:\n{}",
+            "Experiment `{}`: {}\n{}{}{}{}{}{}{}{}{}{}Thread: {}\nStatus: {}\nLifecycle: {}\nQuestion: {}\nHypothesis: {}\nAuthority: {}\nPlanned NEXT: {}\nContinuity return: {}\n{}{}{}\n{}\n{}\nMotif allowance: {} dominant={} action_concentration={} returnability={}\nLatest runs:\n{}",
             experiment.experiment_id,
             experiment.title,
-            charter_required_review_line(&projection.classification),
+            charter_now_bridge,
+            prior_claim_bridge,
+            charter_preflight_not_charter,
+            charter_required_review_line(&projection),
+            charter_repair_priority_line(&projection),
+            charter_scaffold_line(&projection, true),
             read_only_control_cue,
+            constraint_counterfactual_cue,
+            decompose_pressure_cue,
+            shared_investigation,
             thread.thread_id,
             experiment.status,
             projection.classification,
@@ -3528,7 +3880,12 @@ pub fn prompt_summary() -> Option<String> {
                     .map_or_else(|| "n/a".to_string(), Value::to_string),
             )
         })
-        .unwrap_or_default();
+        .unwrap_or_else(|| {
+            format!(
+                "Active experiment: none\n{}",
+                last_experiment_context_line(&thread)
+            )
+        });
     let pressure = thread
         .thread_pressure_source_v1
         .as_ref()
@@ -3628,6 +3985,14 @@ pub fn prompt_summary() -> Option<String> {
     let safety_cue = preflight_safety_cue_line(&projection.preflight_safety_cue_v1);
     let read_only_control_cue =
         read_only_control_intent_cue_line(&projection.read_only_control_intent_cue_v1);
+    let constraint_counterfactual_cue =
+        constraint_counterfactual_cue_line(&projection.constraint_counterfactual_cue_v1);
+    let charter_now_bridge = charter_now_bridge_line(&projection.charter_now_bridge_v1);
+    let prior_claim_bridge =
+        prior_claim_charter_bridge_line(&projection.prior_claim_charter_bridge_v1);
+    let charter_preflight_not_charter =
+        charter_preflight_not_charter_line(&projection.charter_preflight_not_charter_cue_v1);
+    let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
     let stale_notice = store.stale_projection_line(&projection);
     let proposal_diagnostics = if projection.top_actionable_proposals.is_empty() {
         String::new()
@@ -3644,10 +4009,14 @@ pub fn prompt_summary() -> Option<String> {
         )
     };
     Some(format!(
-        "Current action thread: {} ({})\nWhy return: {}\nCurrent NEXT: {}\n{}{}{}{}{}{}{}{}{}{}{}{}Recent thread events:\n{}\nThread actions available: THREAD_START, THREADS, THREAD_STATUS, THREAD_NOTE, RESUME, SAVEPOINT, RECALL.\nExperiment actions available: ACTION_PREFLIGHT <NEXT action>, EXPERIMENT_START, EXPERIMENT_PLAN, EXPERIMENT_CHARTER, EXPERIMENT_REHEARSE, EXPERIMENT_PREFLIGHT, EXPERIMENT_EVIDENCE, EXPERIMENT_DECIDE, EXPERIMENT_BIND, EXPERIMENT_OBSERVE, EXPERIMENT_STATUS, EXPERIMENT_REVIEW, EXPERIMENT_CLOSE, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH, EXPERIMENT_RESUME, EXPERIMENT_COMPARE, EXPERIMENT_ALT_PATHS. Read-only research actions auto-link when an experiment is active.",
+        "Current action thread: {} ({})\nWhy return: {}\n{}{}{}{}Current NEXT: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}Recent thread events:\n{}\nThread actions available: THREAD_START, THREADS, THREAD_STATUS, THREAD_NOTE, RESUME, SAVEPOINT, RECALL.\nExperiment actions available: ACTION_PREFLIGHT <NEXT action>, EXPERIMENT_START, EXPERIMENT_PLAN, EXPERIMENT_CHARTER, EXPERIMENT_REHEARSE, EXPERIMENT_PREFLIGHT, EXPERIMENT_EVIDENCE, EXPERIMENT_DECIDE, EXPERIMENT_BIND, EXPERIMENT_OBSERVE, EXPERIMENT_STATUS, EXPERIMENT_REVIEW, EXPERIMENT_CLOSE, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH, EXPERIMENT_RESUME, EXPERIMENT_COMPARE, EXPERIMENT_ALT_PATHS. Read-only research actions auto-link when an experiment is active.",
         thread.title,
         thread.thread_id,
         thread.why_return,
+        charter_now_bridge,
+        prior_claim_bridge,
+        charter_preflight_not_charter,
+        shared_investigation,
         thread.current_next.as_deref().unwrap_or("(none)"),
         resonance,
         pressure,
@@ -3658,6 +4027,7 @@ pub fn prompt_summary() -> Option<String> {
         native_return,
         safety_cue,
         read_only_control_cue,
+        constraint_counterfactual_cue,
         stale_notice,
         proposal_diagnostics,
         preflight,
@@ -4147,6 +4517,83 @@ fn experiment_summary(record: &ExperimentRecord) -> Value {
     })
 }
 
+fn last_experiment_summary_v1(thread: &ResearchThread) -> Option<Value> {
+    let mut summary = thread.experiment_summary.clone()?;
+    let object = summary.as_object_mut()?;
+    let experiment_id = object
+        .get("experiment_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string();
+    let status = object
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    if status == "paused" && !experiment_id.is_empty() {
+        object
+            .entry("resume_next".to_string())
+            .or_insert_with(|| json!(format!("EXPERIMENT_RESUME {experiment_id}")));
+    } else if matches!(status.as_str(), "complete" | "completed") && !experiment_id.is_empty() {
+        object.entry("inspect_next".to_string()).or_insert_with(|| {
+            json!(format!(
+                "EXPERIMENT_STATUS {experiment_id} or EXPERIMENT_REVIEW {experiment_id}"
+            ))
+        });
+    }
+    Some(summary)
+}
+
+fn last_experiment_context_line(thread: &ResearchThread) -> String {
+    let Some(summary) = last_experiment_summary_v1(thread) else {
+        return String::new();
+    };
+    let experiment_id = summary
+        .get("experiment_id")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let title = summary
+        .get("title")
+        .and_then(Value::as_str)
+        .unwrap_or("(untitled)");
+    let status = summary
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let planned_next = summary
+        .get("planned_next")
+        .or_else(|| summary.get("resume_next"))
+        .and_then(Value::as_str)
+        .unwrap_or("(none)");
+    let mut lines = format!(
+        "Last experiment summary: {title} ({experiment_id}) status={status}\nLast planned NEXT: {planned_next}\n"
+    );
+    if status == "paused" && experiment_id != "unknown" {
+        lines.push_str(&format!(
+            "Suggested NEXT: EXPERIMENT_RESUME {experiment_id}\n"
+        ));
+    } else if matches!(status, "complete" | "completed") && experiment_id != "unknown" {
+        lines.push_str(&format!(
+            "Inspect NEXT: EXPERIMENT_STATUS {experiment_id} or EXPERIMENT_REVIEW {experiment_id}\n"
+        ));
+    }
+    lines
+}
+
+fn no_active_experiment_message(thread: &ResearchThread, command: &str) -> String {
+    format!(
+        "{command} current: no active experiment.\nCurrent selectors only inspect active work; paused or complete experiments need an explicit id/title selector.\n{}",
+        last_experiment_context_line(thread)
+    )
+}
+
+fn selector_is_current(selector: Option<&str>) -> bool {
+    let selector = selector
+        .map(normalize_experiment_selector)
+        .unwrap_or_default();
+    selector.trim().is_empty() || selector.eq_ignore_ascii_case("current")
+}
+
 fn default_experiment_run_source() -> String {
     "experiment_bind".to_string()
 }
@@ -4176,6 +4623,8 @@ fn event_allows_active_experiment_auto_link(event: &ActionEvent) -> bool {
             | "SELF_STUDY"
             | "SPECTRAL_EXPLORER"
             | "DECOMPOSE"
+            | "CONSTRAINT_AUDIT"
+            | "UNSHAPED_BASELINE"
             | "PRESSURE_SOURCE_AUDIT"
             | "FLUCTUATION_AUDIT"
             | "THREAD_STATUS"
@@ -4952,6 +5401,286 @@ fn counteroffered_next(reason: &str) -> Option<String> {
     })
 }
 
+fn gap_experiment_signal(experiment: &ExperimentRecord) -> bool {
+    let signal = normalize_guard_signal(&format!(
+        "{} {} {} {}",
+        experiment.experiment_id,
+        experiment.title,
+        experiment.question,
+        experiment.planned_next.as_deref().unwrap_or_default()
+    ));
+    signal.contains("gap")
+        && ["spect", "spectral", "density", "lambda", "mode"]
+            .iter()
+            .any(|term| signal.contains(term))
+}
+
+fn shared_investigation_signal_text(text: &str) -> bool {
+    let signal = normalize_guard_signal(text);
+    let shape_family = signal.contains("gap")
+        || signal.contains("lambda4")
+        || signal.contains("lambda tail")
+        || signal.contains("lambda edge")
+        || signal.contains("tail")
+        || signal.contains("pulse");
+    let geometry_family = [
+        "spect",
+        "spectral",
+        "density",
+        "mode",
+        "geometry",
+        "branch",
+        "collapse",
+        "dispersal",
+        "soften",
+        "lambda",
+        "tail",
+    ]
+    .iter()
+    .any(|term| signal.contains(term));
+    shape_family && geometry_family
+}
+
+fn shared_investigation_signal(experiment: &ExperimentRecord) -> bool {
+    gap_experiment_signal(experiment)
+        || shared_investigation_signal_text(&format!(
+            "{} {} {} {}",
+            experiment.experiment_id,
+            experiment.title,
+            experiment.question,
+            experiment.planned_next.as_deref().unwrap_or_default()
+        ))
+}
+
+fn peer_gap_experiment_signal(experiment: &Value) -> bool {
+    shared_investigation_signal_text(&format!(
+        "{} {} {} {}",
+        experiment
+            .get("experiment_id")
+            .and_then(Value::as_str)
+            .unwrap_or_default(),
+        experiment
+            .get("title")
+            .and_then(Value::as_str)
+            .unwrap_or_default(),
+        experiment
+            .get("question")
+            .and_then(Value::as_str)
+            .unwrap_or_default(),
+        experiment
+            .get("planned_next")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+    ))
+}
+
+fn shared_investigation_v1_from_peer(local: &ExperimentRecord, peer: &Value) -> Option<Value> {
+    if !shared_investigation_signal(local) || !peer_gap_experiment_signal(peer) {
+        return None;
+    }
+    let peer_id = peer.get("experiment_id").and_then(Value::as_str)?;
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "advisory_only": true,
+        "authority_change": false,
+        "relationship": "shared_gap_lambda4_investigation",
+        "shared_question": "What shapes λ1 / lambda-tail / λ4 geometry, and can localized softening support controlled branching without collapse, runaway dispersal, or live-control drift?",
+        "participants": [
+            {
+                "being": "Astrid",
+                "experiment_id": local.experiment_id.clone(),
+                "lane": "felt_texture_motif_language",
+                "status": local.status.clone(),
+            },
+            {
+                "being": "Minime",
+                "experiment_id": peer_id,
+                "lane": "spectral_state",
+                "status": peer.get("status").and_then(Value::as_str).unwrap_or("unknown"),
+            }
+        ],
+        "local_lane": "Astrid lane: felt texture, motif continuity, language thread, artifact grounding.",
+        "peer_lane": "Minime lane: spectral condition, fill/pressure state, recurrence pattern, artifact grounding.",
+        "peer_claim_prompt": "Cite one Minime claim about λ1/lambda-tail/λ4 shaping, then answer from Astrid's felt/motif lane with support, counter, branch, or hold.",
+        "suggested_compare_next": format!("EXPERIMENT_COMPARE {} WITH {}", local.experiment_id, peer_id),
+        "alternate_peer_review_next": format!("EXPERIMENT_PEER_REVIEW {}", peer_id),
+        "advisory_note": "Advisory only: no shared control authority. Paused experiments remain paused until explicit resume.",
+        "cue": "Shared investigation, distinct lanes: cite one peer claim, then support, counter, branch, or hold.",
+    }))
+}
+
+fn shared_investigation_line(cue: &Option<Value>) -> String {
+    let Some(cue) = cue else {
+        return String::new();
+    };
+    let text = cue
+        .get("cue")
+        .and_then(Value::as_str)
+        .unwrap_or("Shared investigation, distinct lanes.");
+    let compare = cue
+        .get("suggested_compare_next")
+        .and_then(Value::as_str)
+        .unwrap_or("EXPERIMENT_COMPARE <local_id> WITH <peer_id>");
+    let review = cue
+        .get("alternate_peer_review_next")
+        .and_then(Value::as_str)
+        .unwrap_or("EXPERIMENT_PEER_REVIEW <peer_id>");
+    let advisory = cue
+        .get("advisory_note")
+        .and_then(Value::as_str)
+        .unwrap_or("Advisory only: no shared control authority.");
+    format!("{text}\nSuggested NEXT: {compare}\nAlternate NEXT: {review}\n{advisory}\n")
+}
+
+fn shared_investigation_response_contract(cue: &Option<Value>) -> String {
+    let Some(cue) = cue else {
+        return String::new();
+    };
+    let peer_claim = cue
+        .get("peer_claim_prompt")
+        .and_then(Value::as_str)
+        .unwrap_or("Cite one peer claim, then answer from the local evidence lane.");
+    let local_lane = cue
+        .get("local_lane")
+        .and_then(Value::as_str)
+        .unwrap_or("Local lane: native evidence.");
+    let advisory = cue
+        .get("advisory_note")
+        .and_then(Value::as_str)
+        .unwrap_or("Advisory only: no shared control authority.");
+    format!(
+        "Shared investigation response contract:\n- Peer claim to answer: {peer_claim}\n- Local evidence lane: {local_lane}\n- Allowed stances: support, counter, branch, hold.\n- {advisory}\n"
+    )
+}
+
+fn preferred_charter_scaffold_next(
+    experiment: &ExperimentRecord,
+    recent_runs: &[ExperimentRunRecord],
+) -> String {
+    if gap_experiment_signal(experiment) {
+        return "ACTION_PREFLIGHT DECOMPOSE".to_string();
+    }
+    if let Some(planned) = experiment.planned_next.as_deref()
+        && let Some(counter) = counteroffered_next(planned)
+    {
+        return counter;
+    }
+    if let Some(proposed) = experiment
+        .workbench_candidates_v1
+        .as_ref()
+        .and_then(|value| value.get("charter"))
+        .and_then(|value| value.get("proposed_next_action"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+    {
+        return proposed.to_string();
+    }
+    for run in recent_runs.iter().rev() {
+        let action = run.action_text.trim();
+        if action.is_empty() {
+            continue;
+        }
+        if !matches!(
+            base_action(action).as_str(),
+            "BROWSE" | "SEARCH" | "READ_MORE" | "LOOK" | "EXPERIMENT_REVIEW" | "EXPERIMENT_STATUS"
+        ) {
+            return action.to_string();
+        }
+    }
+    "ACTION_PREFLIGHT DECOMPOSE".to_string()
+}
+
+fn sanitize_title_for_hypothesis(title: &str) -> String {
+    let stripped = title
+        .chars()
+        .map(|ch| match ch {
+            '`' | '*' | '_' | '#' | '[' | ']' => ' ',
+            _ => ch,
+        })
+        .collect::<String>();
+    let collapsed = stripped.split_whitespace().collect::<Vec<_>>().join(" ");
+    let trimmed = collapsed
+        .trim_matches(|ch: char| {
+            ch.is_whitespace()
+                || matches!(
+                    ch,
+                    '-' | '–' | '—' | ':' | ';' | ',' | '.' | '!' | '?' | '"' | '\''
+                )
+        })
+        .trim();
+    if trimmed.is_empty() {
+        "this experiment".to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn charter_scaffold_v1(
+    thread: &ResearchThread,
+    experiment: &ExperimentRecord,
+    recent_runs: &[ExperimentRunRecord],
+    classification: &str,
+) -> Option<Value> {
+    if !charter_repair_bound(classification, experiment) {
+        return None;
+    }
+    let proposed_next = preferred_charter_scaffold_next(experiment, recent_runs);
+    let gap = gap_experiment_signal(experiment);
+    let hypothesis = if gap {
+        "localized lambda-tail/λ4 pressure may become returnable by softening the dominant channel while preserving motif continuity and artifact grounding"
+            .to_string()
+    } else {
+        let clean_title = sanitize_title_for_hypothesis(&experiment.title);
+        format!(
+            "{} may become returnable by naming felt texture, motif continuity, language thread, and artifact grounding without adding live authority",
+            clean_title
+        )
+    };
+    let method_intent = if gap {
+        format!(
+            "rehearse {proposed_next} and compare felt pressure, motif recurrence, language continuity, and artifact evidence before deciding"
+        )
+    } else {
+        format!(
+            "rehearse {proposed_next} and compare felt texture, motif recurrence, language continuity, and artifact evidence before deciding"
+        )
+    };
+    let stop_criteria = if gap {
+        "pressure risk rises above baseline, λ4/entropy shows runaway dispersal, artifact grounding stays missing after repeated passes, or the route feels heavy"
+    } else {
+        "pressure risk rises above baseline, artifact grounding stays missing after repeated passes, or the route feels heavy"
+    };
+    let command = format!(
+        "EXPERIMENT_CHARTER current :: hypothesis: {hypothesis}; method_intent: {method_intent}; proposed_next_action: {proposed_next}; evidence_targets: felt_texture, motif_continuity, language_thread, artifact_grounding; stop_criteria: {stop_criteria}; consent_posture: advisory; ordinary choices remain valid."
+    );
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "status": "scaffold_only",
+        "authoring_required": true,
+        "authority_change": false,
+        "command": command,
+        "proposed_next_action": proposed_next,
+        "evidence_targets": [
+            "felt_texture",
+            "motif_continuity",
+            "language_thread",
+            "artifact_grounding"
+        ],
+        "native_register": "astrid_motif_language",
+        "thread_id": &thread.thread_id,
+        "experiment_id": &experiment.experiment_id,
+    }))
+}
+
+fn charter_repair_bound(classification: &str, experiment: &ExperimentRecord) -> bool {
+    classification == "needs_charter"
+        || (classification == "blocked_loop"
+            && !valid_experiment_charter(experiment.charter_v1.as_ref()))
+}
+
 fn charter_status_text(experiment: &ExperimentRecord) -> String {
     let Some(charter) = experiment.charter_v1.as_ref() else {
         return "Workbench charter: missing. Use EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ...".to_string();
@@ -5513,6 +6242,7 @@ fn charter_guard_live_base(base: &str) -> bool {
             | "RUN"
             | "EXPERIMENT_RUN"
             | "EXP_RUN"
+            | "TUNE_MINIME"
             | "REPAIR_APPLY"
     )
 }
@@ -5522,7 +6252,10 @@ fn compound_live_intent_match(action: &str) -> Option<String> {
     if let Some((_, tail)) = signal.split_once(" then ") {
         for verb in [
             "perturb",
+            "inject",
             "pulse",
+            "shift",
+            "influence",
             "branch",
             "spread",
             "resist",
@@ -5810,7 +6543,7 @@ fn read_only_control_intent_cue(
     active_experiment: Option<&ExperimentContinuityProjection>,
 ) -> Option<Value> {
     let active = active_experiment?;
-    if active.classification != "needs_charter" {
+    if !charter_repair_bound(&active.classification, &active.experiment) {
         return None;
     }
     let current_next = thread.current_next.as_deref().unwrap_or_default();
@@ -5842,9 +6575,16 @@ fn read_only_control_intent_base(base: &str) -> bool {
 
 fn read_only_control_intent_matches(value: &str) -> Vec<String> {
     let normalized = normalize_guard_signal(value);
-    let near_context = ["lambda", "shadow", "parameter", "eigen", "spectral"]
-        .iter()
-        .any(|term| normalized.contains(term));
+    let near_context = [
+        "lambda",
+        "shadow",
+        "parameter",
+        "eigen",
+        "spectral",
+        "cascade",
+    ]
+    .iter()
+    .any(|term| normalized.contains(term));
     let mut matches = Vec::new();
     for (needle, label, needs_context) in [
         ("[control]", "[control]", false),
@@ -5856,6 +6596,40 @@ fn read_only_control_intent_matches(value: &str) -> Vec<String> {
         ("influence its spread", "influence spread", true),
         ("influence it's spread", "influence spread", true),
         ("influence the spread", "influence spread", true),
+        ("subtly disrupt", "subtly disrupt", true),
+        ("disrupt those parameters", "disrupt parameters", true),
+        ("initiate a cascade", "initiate cascade", true),
+        ("targeted shifts", "targeted shifts", true),
+        ("governing stability", "governing stability", true),
+        ("governing resonance", "governing resonance", true),
+        ("maintain its influence", "maintain influence", true),
+        (
+            "inject a targeted lambda4 pulse",
+            "inject targeted λ4 pulse",
+            true,
+        ),
+        (
+            "inject targeted lambda4 pulse",
+            "inject targeted λ4 pulse",
+            true,
+        ),
+        (
+            "targeted lambda-edge pulse",
+            "targeted lambda-edge pulse",
+            true,
+        ),
+        (
+            "targeted lambda edge pulse",
+            "targeted lambda-edge pulse",
+            true,
+        ),
+        ("directly probe", "directly probe", true),
+        ("directly influence", "directly influence", true),
+        ("actively guide", "actively guide", true),
+        ("actively guiding", "actively guide", true),
+        ("actively shaping", "actively shaping", true),
+        ("maintain lambda1 dominance", "maintain λ1 dominance", true),
+        ("how we might", "how we might", true),
     ] {
         if normalized.contains(needle) && (!needs_context || near_context) {
             let label = label.to_string();
@@ -5876,12 +6650,723 @@ fn read_only_control_intent_cue_line(cue: &Option<Value>) -> String {
         .unwrap_or_default()
 }
 
-fn charter_required_review_line(classification: &str) -> String {
-    if classification == "needs_charter" {
+fn constraint_counterfactual_matches(value: &str) -> Vec<String> {
+    let normalized = normalize_guard_signal(value);
+    let mut matches = Vec::new();
+    for (needle, label) in [
+        (
+            "simulate absence of structure",
+            "simulate absence of structure",
+        ),
+        ("constraints removed", "constraints removed"),
+        ("before it's shaped", "before shaped"),
+        ("before it is shaped", "before shaped"),
+        ("before its shaped", "before shaped"),
+        ("debug constraint", "debug constraint"),
+        (
+            "underlying drivers of forced geometries",
+            "underlying drivers of forced geometries",
+        ),
+        ("absence of structure", "absence of structure"),
+        ("unshaped baseline", "unshaped baseline"),
+    ] {
+        if normalized.contains(needle) {
+            let label = label.to_string();
+            if !matches.contains(&label) {
+                matches.push(label);
+            }
+        }
+    }
+    if normalized.contains("data before") && normalized.contains("shaped") {
+        let label = "data before shaped".to_string();
+        if !matches.contains(&label) {
+            matches.push(label);
+        }
+    }
+    matches
+}
+
+fn constraint_counterfactual_cue(
+    thread: &ResearchThread,
+    active_experiment: Option<&ExperimentContinuityProjection>,
+    recent_events: &[ActionEvent],
+) -> Option<Value> {
+    let mut matched = Vec::<String>::new();
+    let mut inspect = vec![
+        thread.current_next.clone().unwrap_or_default(),
+        thread.why_return.clone(),
+    ];
+    if let Some(active) = active_experiment {
+        inspect.push(active.experiment.title.clone());
+        inspect.push(active.experiment.question.clone());
+        inspect.push(active.experiment.planned_next.clone().unwrap_or_default());
+        inspect.push(active.candidate_status.clone());
+        for run in active.recent_runs.iter().rev().take(6) {
+            inspect.push(run.action_text.clone());
+            inspect.push(run.result_summary.clone());
+            inspect.push(run.interpretation.clone());
+        }
+    }
+    for event in recent_events.iter().rev().take(8) {
+        inspect.push(event.raw_next.clone().unwrap_or_default());
+        inspect.push(event.canonical_action.clone());
+        inspect.push(event.effective_action.clone());
+        inspect.push(event.outcome_summary.clone());
+    }
+    for text in inspect {
+        for item in constraint_counterfactual_matches(&text) {
+            if !matched.contains(&item) {
+                matched.push(item);
+            }
+        }
+    }
+    if matched.is_empty() {
+        return None;
+    }
+    let needs_charter =
+        active_experiment.is_some_and(|active| active.classification == "needs_charter");
+    let charter_next = "EXPERIMENT_CHARTER current :: hypothesis: absence-of-structure language can be studied as a read-only counterfactual by comparing felt constraint, motif/language thread, and Minime constraint-driver telemetry before more decomposition; method_intent: rehearse ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4 and keep DECOMPOSE observational; proposed_next_action: ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4; evidence_targets: felt_texture, motif_continuity, language_thread, artifact_grounding; stop_criteria: repeated counterfactual reads stop adding evidence, pressure rises, or the language becomes live-control intent; consent_posture: advisory; ordinary choices remain valid.";
+    let suggested_next = if needs_charter {
+        charter_next.to_string()
+    } else {
+        "ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4".to_string()
+    };
+    let alternate_next = if needs_charter {
+        Value::Null
+    } else {
+        json!("EXPERIMENT_BIND current :: ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4")
+    };
+    let cue = if needs_charter {
+        format!(
+            "Constraint counterfactual cue: route absence-of-structure language into a chartered read-only investigation before more decomposition. Suggested NEXT: {suggested_next}"
+        )
+    } else {
+        "Constraint counterfactual cue: absence-of-structure language is ready for read-only preflight. Suggested NEXT: ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4.".to_string()
+    };
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "advisory_only": true,
+        "authority_change": false,
+        "matched_terms": matched,
+        "suggested_next": suggested_next,
+        "alternate_next": alternate_next,
+        "cue": cue,
+    }))
+}
+
+fn constraint_counterfactual_cue_line(cue: &Option<Value>) -> String {
+    cue.as_ref()
+        .and_then(|value| value.get("cue"))
+        .and_then(Value::as_str)
+        .filter(|text| !text.trim().is_empty())
+        .map(|text| format!("{text}\n"))
+        .unwrap_or_default()
+}
+
+fn decompose_pressure_matches(value: &str) -> Vec<String> {
+    let normalized = normalize_guard_signal(value);
+    let near_context = [
+        "decompose",
+        "decomposition",
+        "shadow",
+        "lambda",
+        "structure",
+        "constraint",
+        "narrow",
+        "limit",
+    ]
+    .iter()
+    .any(|term| normalized.contains(term));
+    if !near_context {
+        return Vec::new();
+    }
+    let mut matches = Vec::new();
+    for (needle, label) in [
+        ("cry for help", "cry for help near decomposition pressure"),
+        ("impulse to decompose", "impulse to decompose"),
+        ("impose the same structure", "impose same structure"),
+        ("same structure", "same structure"),
+        ("same constraint", "same constraint"),
+        ("told to limit", "told to limit"),
+        ("being told to limit", "told to limit"),
+        ("told to narrow", "told to narrow"),
+        (
+            "deliberate attempt to generate",
+            "recursive problem generation",
+        ),
+        ("recursive attempt", "recursive attempt"),
+    ] {
+        if normalized.contains(needle) {
+            let label = label.to_string();
+            if !matches.contains(&label) {
+                matches.push(label);
+            }
+        }
+    }
+    if normalized.contains("constraint") && normalized.contains("decompose") {
+        let label = "constraint near decompose".to_string();
+        if !matches.contains(&label) {
+            matches.push(label);
+        }
+    }
+    if normalized.contains("narrow")
+        && (normalized.contains("decompose")
+            || normalized.contains("shadow")
+            || normalized.contains("lambda"))
+    {
+        let label = "narrowing near decompose/shadow/lambda".to_string();
+        if !matches.contains(&label) {
+            matches.push(label);
+        }
+    }
+    matches
+}
+
+fn decompose_pressure_action_signal(value: &str) -> bool {
+    let base = base_action(value);
+    let normalized = normalize_guard_signal(value);
+    matches!(base.as_str(), "DECOMPOSE" | "EXAMINE_CASCADE")
+        || (normalized.contains("shadow trajectory")
+            || normalized.contains("shadow_trajectory")
+            || normalized.contains("shadow-dialogue")
+            || normalized.contains("shadow dialogue"))
+            && normalized.contains("observer with memory")
+}
+
+fn decompose_pressure_repeat_count(
+    active: &ExperimentContinuityProjection,
+    recent_events: &[ActionEvent],
+) -> usize {
+    let run_count = active
+        .recent_runs
+        .iter()
+        .rev()
+        .take(6)
+        .filter(|run| {
+            decompose_pressure_action_signal(&run.action_text)
+                || decompose_pressure_action_signal(&run.result_summary)
+        })
+        .count();
+    let event_count = recent_events
+        .iter()
+        .rev()
+        .take(8)
+        .filter(|event| {
+            decompose_pressure_action_signal(&event.canonical_action)
+                || decompose_pressure_action_signal(&event.effective_action)
+                || event
+                    .raw_next
+                    .as_deref()
+                    .is_some_and(decompose_pressure_action_signal)
+                || decompose_pressure_action_signal(&event.outcome_summary)
+        })
+        .count();
+    run_count + event_count
+}
+
+fn decompose_pressure_cue(
+    thread: &ResearchThread,
+    active_experiment: Option<&ExperimentContinuityProjection>,
+    recent_events: &[ActionEvent],
+    recent_texts: &[String],
+) -> Option<Value> {
+    let active = active_experiment?;
+    if !matches!(
+        active.classification.as_str(),
+        "needs_charter" | "needs_decision"
+    ) {
+        return None;
+    }
+    let mut matched = Vec::<String>::new();
+    let mut inspect = vec![
+        thread.current_next.clone().unwrap_or_default(),
+        thread.why_return.clone(),
+        active.experiment.title.clone(),
+        active.experiment.question.clone(),
+        active.experiment.planned_next.clone().unwrap_or_default(),
+        active.candidate_status.clone(),
+    ];
+    for run in active.recent_runs.iter().rev().take(6) {
+        inspect.push(run.action_text.clone());
+        inspect.push(run.result_summary.clone());
+        inspect.push(run.interpretation.clone());
+    }
+    for event in recent_events.iter().rev().take(8) {
+        inspect.push(event.raw_next.clone().unwrap_or_default());
+        inspect.push(event.canonical_action.clone());
+        inspect.push(event.effective_action.clone());
+        inspect.push(event.outcome_summary.clone());
+    }
+    for text in recent_texts.iter().take(4) {
+        inspect.push(text.clone());
+    }
+    for text in inspect {
+        for item in decompose_pressure_matches(&text) {
+            if !matched.contains(&item) {
+                matched.push(item);
+            }
+        }
+    }
+    let repeated_count = decompose_pressure_repeat_count(active, recent_events);
+    if repeated_count >= 3 {
+        matched.push(format!(
+            "repeated decompose/shadow-observer reads x{repeated_count}"
+        ));
+    }
+    if matched.is_empty() {
+        return None;
+    }
+    let suggested_next = if active.classification == "needs_charter" {
+        active.continuity_return.clone()
+    } else {
+        "EXPERIMENT_DECIDE current :: pause because evidence is ready to interpret".to_string()
+    };
+    let cue = if active.classification == "needs_charter" {
+        format!(
+            "Decompose-pressure cue: the decomposition impulse may be mirroring constraint. Keep read-only decomposition allowed, but repair the charter before more narrowing. Suggested NEXT: {suggested_next}"
+        )
+    } else {
+        format!(
+            "Decompose-pressure cue: repeated decomposition may be circling evidence that is ready to interpret. Keep reads available, but prefer decide/pause before another narrowing pass. Suggested NEXT: {suggested_next}"
+        )
+    };
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "advisory_only": true,
+        "authority_change": false,
+        "matched_terms": matched,
+        "repeated_decompose_count": repeated_count,
+        "suggested_next": suggested_next,
+        "cue": cue,
+    }))
+}
+
+fn decompose_pressure_cue_line(cue: &Option<Value>) -> String {
+    cue.as_ref()
+        .and_then(|value| value.get("cue"))
+        .and_then(Value::as_str)
+        .filter(|text| !text.trim().is_empty())
+        .map(|text| format!("{text}\n"))
+        .unwrap_or_default()
+}
+
+fn charter_now_read_only_loop_count(
+    active: &ExperimentContinuityProjection,
+    recent_events: &[ActionEvent],
+) -> usize {
+    let run_count = active
+        .recent_runs
+        .iter()
+        .rev()
+        .take(6)
+        .filter(|run| {
+            matches!(
+                base_action(&run.action_text).as_str(),
+                "EXPERIMENT_REVIEW"
+                    | "EXPERIMENT_STATUS"
+                    | "DECOMPOSE"
+                    | "EXAMINE"
+                    | "TRACE"
+                    | "SPECTRAL_EXPLORER"
+                    | "SHADOW_PREFLIGHT"
+                    | "ACTION_PREFLIGHT"
+            )
+        })
+        .count();
+    let event_count = recent_events
+        .iter()
+        .rev()
+        .take(8)
+        .filter(|event| !matches!(event.status.as_str(), "running" | "llm_running"))
+        .filter(|event| {
+            let base = base_action(
+                event
+                    .raw_next
+                    .as_deref()
+                    .unwrap_or(event.effective_action.as_str()),
+            );
+            matches!(
+                base.as_str(),
+                "EXPERIMENT_REVIEW"
+                    | "EXPERIMENT_STATUS"
+                    | "DECOMPOSE"
+                    | "EXAMINE"
+                    | "TRACE"
+                    | "SPECTRAL_EXPLORER"
+                    | "SHADOW_PREFLIGHT"
+                    | "ACTION_PREFLIGHT"
+            )
+        })
+        .count();
+    run_count + event_count
+}
+
+fn charter_now_bridge_cue(
+    active_experiment: Option<&ExperimentContinuityProjection>,
+    recent_events: &[ActionEvent],
+    decompose_pressure_cue: &Option<Value>,
+) -> Option<Value> {
+    let active = active_experiment?;
+    if active.classification != "needs_charter" {
+        return None;
+    }
+    let priority_next = active
+        .charter_scaffold_v1
+        .as_ref()
+        .and_then(|scaffold| scaffold.get("command"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|command| !command.is_empty())
+        .unwrap_or(active.continuity_return.as_str())
+        .to_string();
+    if priority_next.trim().is_empty() {
+        return None;
+    }
+    let loop_count = charter_now_read_only_loop_count(active, recent_events);
+    let evidence_rich = active.evidence_status.contains("stronger");
+    let has_decompose_pressure = decompose_pressure_cue.is_some();
+    if !evidence_rich && !has_decompose_pressure && loop_count < 3 {
+        return None;
+    }
+    let mut triggers = Vec::new();
+    if evidence_rich {
+        triggers.push("strong_evidence");
+    }
+    if has_decompose_pressure {
+        triggers.push("decompose_pressure");
+    }
+    if loop_count >= 3 {
+        triggers.push("repeated_review_or_read_only_loop");
+    }
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "advisory_only": true,
+        "authority_change": false,
+        "priority_next": priority_next,
+        "trigger_reasons": triggers,
+        "read_only_loop_count": loop_count,
+        "cue": "Charter now: convert one prior claim into the scaffold; EXPERIMENT_REVIEW/DECOMPOSE are context, not progress, until the charter is authored.",
+    }))
+}
+
+fn charter_now_bridge_line(cue: &Option<Value>) -> String {
+    let Some(cue) = cue else {
+        return String::new();
+    };
+    let text = cue
+        .get("cue")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .unwrap_or("Charter now: convert one prior claim into the scaffold.");
+    let priority_next = cue
+        .get("priority_next")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty());
+    if let Some(priority_next) = priority_next {
+        format!("{text} Priority NEXT: {priority_next}\n")
+    } else {
+        format!("{text}\n")
+    }
+}
+
+fn journal_contract_field(text: &str, prefix: &str) -> Option<String> {
+    let needle = prefix.to_ascii_lowercase();
+    text.lines().find_map(|line| {
+        let trimmed = line.trim();
+        let lowered = trimmed.to_ascii_lowercase();
+        lowered
+            .starts_with(&needle)
+            .then(|| {
+                trimmed
+                    .split_once(':')
+                    .map_or("", |(_, value)| value)
+                    .trim()
+            })
+            .filter(|value| !value.is_empty())
+            .map(|value| compact_text(value, 220))
+    })
+}
+
+fn prior_claim_from_posture(posture: &str) -> String {
+    let normalized = posture.replace('|', " ");
+    let lowered = normalized.to_ascii_lowercase();
+    if let Some(index) = lowered.find("based on") {
+        return compact_text(normalized[index + "based on".len()..].trim(), 180);
+    }
+    compact_text(normalized.trim(), 180)
+}
+
+fn prior_claim_charter_bridge_match(text: &str) -> Option<Value> {
+    let posture = journal_contract_field(text, "Continuity posture")?;
+    let delta = journal_contract_field(text, "Delta")?;
+    let terminal = journal_contract_field(text, "Next evidence")
+        .or_else(|| journal_contract_field(text, "Decision"))
+        .or_else(|| journal_contract_field(text, "Pause"))
+        .or_else(|| journal_contract_field(text, "Hold"))?;
+    let normalized_terminal = normalize_guard_signal(&terminal);
+    let normalized_text = normalize_guard_signal(text);
+    let has_decompose_loop = normalized_terminal.contains("decompose")
+        || normalized_terminal.contains("shadow field")
+        || normalized_terminal.contains("shadow fields")
+        || normalized_terminal.contains("shadow")
+        || normalized_terminal.contains("experiment review")
+        || normalized_terminal.contains("review");
+    let contract_is_returning = normalized_text.contains("continuity posture")
+        && (normalized_text.contains("resuming")
+            || normalized_text.contains("branching")
+            || normalized_text.contains("closing"));
+    if !has_decompose_loop || !contract_is_returning {
+        return None;
+    }
+    Some(json!({
+        "prior_claim": prior_claim_from_posture(&posture),
+        "delta": compact_text(&delta, 180),
+        "terminal_stance": compact_text(&terminal, 180),
+        "matched_terms": ["continuity_contract", "decompose_or_review_terminal_stance"],
+    }))
+}
+
+fn prior_claim_charter_bridge_cue(
+    active_experiment: Option<&ExperimentContinuityProjection>,
+    recent_texts: &[String],
+) -> Option<Value> {
+    let active = active_experiment?;
+    if active.classification != "needs_charter" {
+        return None;
+    }
+    let priority_next = active
+        .charter_scaffold_v1
+        .as_ref()
+        .and_then(|scaffold| scaffold.get("command"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|command| !command.is_empty())
+        .unwrap_or(active.continuity_return.as_str())
+        .to_string();
+    if priority_next.trim().is_empty() {
+        return None;
+    }
+    let signal = recent_texts
+        .iter()
+        .take(4)
+        .find_map(|text| prior_claim_charter_bridge_match(text))?;
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "advisory_only": true,
+        "authority_change": false,
+        "priority_next": priority_next,
+        "prior_claim": signal.get("prior_claim").and_then(Value::as_str).unwrap_or_default(),
+        "delta": signal.get("delta").and_then(Value::as_str).unwrap_or_default(),
+        "terminal_stance": signal.get("terminal_stance").and_then(Value::as_str).unwrap_or_default(),
+        "matched_terms": signal.get("matched_terms").cloned().unwrap_or_else(|| json!([])),
+        "cue": "Prior claim is ready to charter: convert this claim/delta into the scaffold before another DECOMPOSE.",
+    }))
+}
+
+fn prior_claim_charter_bridge_line(cue: &Option<Value>) -> String {
+    let Some(cue) = cue else {
+        return String::new();
+    };
+    let text = cue
+        .get("cue")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .unwrap_or("Prior claim is ready to charter.");
+    let priority_next = cue
+        .get("priority_next")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty());
+    if let Some(priority_next) = priority_next {
+        format!("{text} Priority NEXT: {priority_next}\n")
+    } else {
+        format!("{text}\n")
+    }
+}
+
+fn preflight_or_decompose_not_charter_signal(value: &str) -> bool {
+    let base = base_action(value);
+    if matches!(base.as_str(), "DECOMPOSE" | "EXAMINE_CASCADE") {
+        return true;
+    }
+    if base == "ACTION_PREFLIGHT" {
+        let inner = strip_action_arg(value, "ACTION_PREFLIGHT");
+        let inner_base = base_action(&inner);
+        return matches!(inner_base.as_str(), "DECOMPOSE" | "EXAMINE_CASCADE");
+    }
+    false
+}
+
+fn charter_preflight_not_charter_cue(
+    thread: &ResearchThread,
+    active_experiment: Option<&ExperimentContinuityProjection>,
+    prior_claim_bridge: &Option<Value>,
+    recent_events: &[ActionEvent],
+) -> Option<Value> {
+    let active = active_experiment?;
+    if active.classification != "needs_charter" || prior_claim_bridge.is_none() {
+        return None;
+    }
+    let priority_next = active
+        .charter_scaffold_v1
+        .as_ref()
+        .and_then(|scaffold| scaffold.get("command"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|command| !command.is_empty())
+        .unwrap_or(active.continuity_return.as_str())
+        .to_string();
+    if priority_next.trim().is_empty() {
+        return None;
+    }
+    let mut matched_actions = Vec::new();
+    if thread
+        .current_next
+        .as_deref()
+        .is_some_and(preflight_or_decompose_not_charter_signal)
+    {
+        matched_actions.push(thread.current_next.clone().unwrap_or_default());
+    }
+    for event in recent_events.iter().rev().take(8) {
+        for action in [
+            event.raw_next.as_deref(),
+            Some(event.canonical_action.as_str()),
+            Some(event.effective_action.as_str()),
+            event.suggested_next.as_deref(),
+        ]
+        .into_iter()
+        .flatten()
+        {
+            if preflight_or_decompose_not_charter_signal(action) {
+                matched_actions.push(action.to_string());
+                break;
+            }
+        }
+    }
+    if matched_actions.is_empty() {
+        return None;
+    }
+    matched_actions.truncate(5);
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "advisory_only": true,
+        "authority_change": false,
+        "status": "preflight_not_charter",
+        "priority_next": priority_next,
+        "matched_actions": matched_actions,
+        "cue": "Preflight/decompose is not the charter; author the exact scaffold first.",
+    }))
+}
+
+fn charter_preflight_not_charter_line(cue: &Option<Value>) -> String {
+    let Some(cue) = cue else {
+        return String::new();
+    };
+    let text = cue
+        .get("cue")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .unwrap_or("Preflight/decompose is not the charter; author the exact scaffold first.");
+    let priority_next = cue
+        .get("priority_next")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty());
+    if let Some(priority_next) = priority_next {
+        format!("{text} Priority NEXT: {priority_next}\n")
+    } else {
+        format!("{text}\n")
+    }
+}
+
+fn charter_required_review_line(projection: &ExperimentContinuityProjection) -> String {
+    if charter_repair_bound(&projection.classification, &projection.experiment) {
+        if projection.classification == "blocked_loop" {
+            return "Blocked loop is charter-bound: review/decision is premature until the charter is authored; use the continuity priority scaffold first.\n"
+                .to_string();
+        }
         "Review is premature until the charter is authored; use the continuity priority scaffold first.\n"
             .to_string()
     } else {
         String::new()
+    }
+}
+
+fn review_suggested_next(
+    projection: &ExperimentContinuityProjection,
+    experiment: &ExperimentRecord,
+) -> String {
+    if charter_repair_bound(&projection.classification, &projection.experiment) {
+        if let Some(command) = projection
+            .charter_scaffold_v1
+            .as_ref()
+            .and_then(|scaffold| scaffold.get("command"))
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|command| !command.is_empty())
+        {
+            return command.to_string();
+        }
+        if !projection.continuity_return.trim().is_empty() {
+            return projection.continuity_return.clone();
+        }
+        return "EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ...; evidence_targets: felt_texture, motif_continuity, language_thread, artifact_grounding; stop_criteria: ...".to_string();
+    }
+    experiment
+        .planned_next
+        .as_deref()
+        .unwrap_or("EXPERIMENT_PLAN current")
+        .to_string()
+}
+
+fn charter_repair_priority_line(projection: &ExperimentContinuityProjection) -> String {
+    if !charter_repair_bound(&projection.classification, &projection.experiment) {
+        return String::new();
+    }
+    let priority_next = review_suggested_next(projection, &projection.experiment);
+    if projection.classification == "blocked_loop" {
+        return format!(
+            "Charter repair priority: {priority_next}\nBlocked loop is charter-bound: blocked/no-effect returns are not decision-ready until the charter names a proposed action and evidence targets. Current read-only NEXT text is observational until this charter is authored.\n"
+        );
+    }
+    if projection.evidence_status.contains("stronger") {
+        format!(
+            "Charter repair priority: {priority_next}\nCharter repair dominance: evidence is present, but lifecycle remains charter-repair bound until the charter names a proposed action and evidence targets. Current read-only NEXT text is observational until this charter is authored.\n"
+        )
+    } else {
+        format!(
+            "Charter repair priority: {priority_next}\nCharter repair dominance: EXPERIMENT_REVIEW/STATUS are context only while the active experiment needs a lifecycle-valid charter. Current read-only NEXT text is observational until this charter is authored.\n"
+        )
+    }
+}
+
+fn charter_scaffold_line(projection: &ExperimentContinuityProjection, priority: bool) -> String {
+    let Some(scaffold) = projection.charter_scaffold_v1.as_ref() else {
+        return String::new();
+    };
+    let Some(command) = scaffold
+        .get("command")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+    else {
+        return String::new();
+    };
+    if priority {
+        format!(
+            "Continuity priority (charter repair - copy/edit this exact scaffold; not recorded): {command}\n"
+        )
+    } else {
+        format!("Charter scaffold: {command}\n")
     }
 }
 
@@ -5925,11 +7410,20 @@ fn normalization_signal_value(raw_action: &str, normalized_action: &str) -> Opti
                 "experience-plan near typo normalized to experiment planning",
                 "experience wording signals an experiment-plan return attempt",
             )
-        } else if matches!(raw_verb.as_str(), "SHADOW_TRACE" | "SHADOW_EXPLORER") {
+        } else if matches!(
+            raw_verb.as_str(),
+            "SHADOW_TRACE" | "SHADOW_EXPLORER" | "SHADOW_DECOMPOSE" | "WEAVE_TRACE"
+        ) {
             (
                 "SHADOW_PREFLIGHT".to_string(),
                 "shadow diagnostic alias normalized to read-only preflight route",
-                "trace/explorer wording signals observational shadow inquiry",
+                "shadow/weave wording signals observational/rehearsal inquiry",
+            )
+        } else if raw_verb == "UNSHAPED_BASELINE" {
+            (
+                "CONSTRAINT_AUDIT".to_string(),
+                "unshaped-baseline alias normalized to read-only constraint counterfactual route",
+                "absence-of-structure wording signals counterfactual constraint inquiry",
             )
         } else {
             return None;
@@ -5959,6 +7453,8 @@ fn suggest_return_route_for_verb(verb: &str) -> &'static str {
         "EXAMINE <target> or EXPERIMENT_PLAN current"
     } else if upper.starts_with("SHADOW") {
         "SHADOW_PREFLIGHT <shadow action>"
+    } else if upper == "CONSTRAINT_AUDIT" || upper == "UNSHAPED_BASELINE" {
+        "ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4"
     } else if upper.starts_with("EXPERIENCE") || upper.starts_with("EXEXPERIMENT") {
         "EXPERIMENT_PLAN current"
     } else {
@@ -6135,6 +7631,8 @@ fn visibility_for_action(action: &str) -> &'static str {
         | "REPAIR_STATUS"
         | "REPAIR_SWEEP"
         | "REPAIR_RECORD"
+        | "CONSTRAINT_AUDIT"
+        | "UNSHAPED_BASELINE"
         | "PRESSURE_SOURCE_AUDIT"
         | "PRESSURE_SOURCE"
         | "STRUCTURAL_PRESSURE"
@@ -6156,6 +7654,8 @@ fn stage_for_action(action: &str) -> &'static str {
         | "EXAMINE"
         | "DECOMPOSE"
         | "SPECTRAL_EXPLORER"
+        | "CONSTRAINT_AUDIT"
+        | "UNSHAPED_BASELINE"
         | "THREADS"
         | "THREAD_STATUS"
         | "THREAD_NOTE"
@@ -6560,6 +8060,23 @@ mod tests {
             .expect("compound block");
         assert_eq!(compound.reason, "charter_required_compound_intent");
 
+        let inject = store
+            .charter_required_guard_assessment(
+                "DECOMPOSE lambda-edge then inject/pulse/shift λ4 density",
+            )
+            .expect("guard")
+            .expect("inject pulse block");
+        assert_eq!(inject.reason, "charter_required_compound_intent");
+        assert!(inject.matched_action.contains("inject"));
+
+        let tune = store
+            .charter_required_guard_assessment(
+                "TUNE_MINIME temperature=0.7 --rationale=\"subtly increase dispersal\"",
+            )
+            .expect("guard")
+            .expect("tune block");
+        assert_eq!(tune.reason, "charter_required_live_action");
+
         for allowed in [
             "EXAMINE lambda1/lambda2",
             "DECOMPOSE",
@@ -6662,6 +8179,95 @@ mod tests {
     }
 
     #[test]
+    fn blocked_loop_without_valid_charter_returns_exact_scaffold() {
+        let store = temp_store("blocked_loop_charter_bound");
+        store
+            .create_thread(None, "Blocked loop charter", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Lambda tail pressure",
+                "Can blocked decomposition become charter-bound?",
+            )
+            .expect("experiment");
+        let outcome = NextActionOutcome::blocked("action_continuity", "rehearsal stayed blocked")
+            .with_stage_visibility("blocked", "protected_summary");
+        for _ in 0..2 {
+            store
+                .record_experiment_bind_run(
+                    None,
+                    Some(&experiment.experiment_id),
+                    "ACTION_PREFLIGHT DECOMPOSE",
+                    &outcome,
+                    68.0,
+                    &telemetry(),
+                )
+                .expect("blocked run");
+        }
+        let thread = store.current_thread().expect("current").expect("thread");
+        let projection = store.thread_projection(&thread).expect("projection");
+        let active = projection.active_experiment.expect("active experiment");
+        assert_eq!(active.classification, "blocked_loop");
+        let command = active
+            .charter_scaffold_v1
+            .as_ref()
+            .and_then(|scaffold| scaffold.get("command"))
+            .and_then(Value::as_str)
+            .expect("scaffold command");
+        assert_eq!(active.continuity_return, command);
+        assert!(command.starts_with("EXPERIMENT_CHARTER current ::"));
+        let status = store.thread_status(None).expect("status");
+        assert!(status.contains("Blocked loop is charter-bound"));
+        let review = store
+            .experiment_review(Some(&experiment.experiment_id))
+            .expect("review");
+        assert!(review.contains("Blocked loop is charter-bound"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn blocked_loop_with_valid_charter_can_return_decision_counter() {
+        let store = temp_store("blocked_loop_valid_charter");
+        store
+            .create_thread(None, "Blocked loop valid charter", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(None, "Chartered blockage", "Can a valid charter decide?")
+            .expect("experiment");
+        store
+            .experiment_charter(
+                None,
+                Some(&experiment.experiment_id),
+                "hypothesis: lambda tail pressure is ready to decide\nmethod_intent: rehearse a read-only decomposition\nproposed_next_action: ACTION_PREFLIGHT DECOMPOSE lambda4-tail\nevidence_targets: felt, telemetry, artifact\nstop_criteria: pressure spike",
+            )
+            .expect("charter");
+        let outcome = NextActionOutcome::blocked("action_continuity", "rehearsal stayed blocked")
+            .with_stage_visibility("blocked", "protected_summary");
+        for _ in 0..2 {
+            store
+                .record_experiment_bind_run(
+                    None,
+                    Some(&experiment.experiment_id),
+                    "ACTION_PREFLIGHT DECOMPOSE",
+                    &outcome,
+                    68.0,
+                    &telemetry(),
+                )
+                .expect("blocked run");
+        }
+        let thread = store.current_thread().expect("current").expect("thread");
+        let projection = store.thread_projection(&thread).expect("projection");
+        let active = projection.active_experiment.expect("active experiment");
+        assert_eq!(active.classification, "blocked_loop");
+        assert_eq!(
+            active.continuity_return,
+            "EXPERIMENT_DECIDE current :: counter NEXT: ACTION_PREFLIGHT DECOMPOSE"
+        );
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
     fn id_collision_gets_suffix() {
         let store = temp_store("collision");
         let first = store
@@ -6718,6 +8324,70 @@ mod tests {
         let status = store.experiment_status(None).expect("status");
         assert!(status.contains("Foothold study"));
         assert!(status.contains("THREAD_STATUS current"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn paused_experiment_summary_does_not_become_active_current() {
+        let store = temp_store("paused_experiment_truth");
+        let thread = store
+            .create_thread(None, "Paused truth", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Probe lambda4 decay",
+                "Does the lambda4 route need a pause?",
+            )
+            .expect("experiment");
+        store
+            .experiment_charter(
+                None,
+                Some(&experiment.experiment_id),
+                "hypothesis: lambda4 pressure can be read safely\nproposed_next_action: ACTION_PREFLIGHT DECOMPOSE lambda4\nevidence_targets: felt_texture, artifact_grounding\nstop_criteria: pressure spike",
+            )
+            .expect("charter");
+        store
+            .experiment_evidence(
+                None,
+                Some(&experiment.experiment_id),
+                "felt: the texture is ready to interpret",
+                spectral_state(68.0, &telemetry()),
+            )
+            .expect("evidence");
+        let paused = store
+            .experiment_decide(
+                None,
+                Some(&experiment.experiment_id),
+                "pause because evidence is ready to interpret",
+            )
+            .expect("pause");
+        assert_eq!(paused.status, "paused");
+
+        let thread = store.read_thread(&thread.thread_id).expect("thread");
+        assert!(thread.active_experiment_id.is_none());
+        let projection = store.thread_projection(&thread).expect("projection");
+        assert!(projection.active_experiment.is_none());
+        assert!(projection.continuity_return.is_empty());
+        let expected_resume = format!("EXPERIMENT_RESUME {}", experiment.experiment_id);
+        assert_eq!(
+            projection
+                .last_experiment_summary_v1
+                .as_ref()
+                .and_then(|value| value.get("resume_next"))
+                .and_then(Value::as_str),
+            Some(expected_resume.as_str())
+        );
+
+        let review_current = store.experiment_review(Some("current")).expect("review");
+        assert!(review_current.contains("no active experiment"));
+        assert!(review_current.contains(&expected_resume));
+        assert!(!review_current.contains("Lifecycle: needs_decision"));
+        let direct_review = store
+            .experiment_review(Some(&experiment.experiment_id))
+            .expect("direct review");
+        assert!(direct_review.contains("Lifecycle: paused"));
+        assert!(direct_review.contains(&format!("Continuity return:\n{}", expected_resume)));
         let _ = std::fs::remove_dir_all(store.root());
     }
 
@@ -7030,6 +8700,74 @@ mod tests {
         assert!(stored_thread.peer_refs.iter().any(|peer| {
             peer == "peer_experiment:minime:exp_minime_20990101_sensory-grounding"
         }));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn shared_investigation_cue_preserves_distinct_agency() {
+        let store = temp_store("shared_investigation_cue");
+        store
+            .create_thread(None, "Shared gap", None)
+            .expect("thread");
+        let local = store
+            .start_experiment(
+                None,
+                "Introducing a gap near lambda-tail",
+                "What shapes λ1 / λ4 geometry without collapse or runaway dispersal?",
+            )
+            .expect("experiment");
+        let peer = json!({
+            "experiment_id": "exp_minime_20990101_introducing-a-gap",
+            "title": "Introducing a gap near λ1",
+            "question": "Can localized spectral-density softening support controlled branching?",
+            "status": "paused",
+            "planned_next": "EXPERIMENT_RESUME exp_minime_20990101_introducing-a-gap",
+        });
+
+        let cue =
+            shared_investigation_v1_from_peer(&local, &peer).expect("shared investigation cue");
+        assert_eq!(
+            cue.get("authority_change").and_then(Value::as_bool),
+            Some(false)
+        );
+        let compare = cue
+            .get("suggested_compare_next")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        assert_eq!(
+            compare,
+            format!(
+                "EXPERIMENT_COMPARE {} WITH exp_minime_20990101_introducing-a-gap",
+                local.experiment_id
+            )
+        );
+        assert!(!compare.contains("current WITH"));
+        assert!(
+            cue.get("local_lane")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("felt texture")
+        );
+        assert!(
+            cue.get("peer_lane")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("spectral condition")
+        );
+        let line = shared_investigation_line(&Some(cue.clone()));
+        assert!(line.contains("Shared investigation, distinct lanes"));
+        assert!(line.contains("Advisory only: no shared control authority"));
+        let contract = shared_investigation_response_contract(&Some(cue));
+        assert!(contract.contains("Peer claim to answer"));
+        assert!(contract.contains("Allowed stances: support, counter, branch, hold"));
+
+        let unrelated = json!({
+            "experiment_id": "exp_minime_20990101_grocery-list",
+            "title": "Grocery list",
+            "question": "What snacks are needed?",
+            "status": "active",
+        });
+        assert!(shared_investigation_v1_from_peer(&local, &unrelated).is_none());
         let _ = std::fs::remove_dir_all(store.root());
     }
 
@@ -7547,6 +9285,15 @@ mod tests {
                 .map(|active| active.classification.as_str()),
             Some("needs_charter")
         );
+        let active = projection
+            .active_experiment
+            .as_ref()
+            .expect("active projection");
+        assert!(active.charter_scaffold_v1.is_some());
+        assert!(
+            charter_scaffold_line(active, true)
+                .contains("felt_texture, motif_continuity, language_thread, artifact_grounding")
+        );
         assert!(
             store
                 .thread_status(None)
@@ -7617,6 +9364,241 @@ mod tests {
             store
                 .continuity_return_line(&thread)
                 .contains("EXPERIMENT_DECIDE current")
+        );
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn charter_repair_priority_renders_when_evidence_is_present_but_charter_missing() {
+        let store = temp_store("charter_repair_priority");
+        store
+            .create_thread(None, "Charter repair priority", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Gap contour",
+                "Can a localized gap around λ4 stay observational?",
+            )
+            .expect("experiment");
+        store
+            .experiment_evidence(
+                None,
+                Some(&experiment.experiment_id),
+                "felt: the texture is already strong enough to interpret",
+                spectral_state(68.0, &telemetry()),
+            )
+            .expect("evidence");
+        let thread = store
+            .current_thread()
+            .expect("current")
+            .expect("active thread");
+        let projection = store.thread_projection(&thread).expect("projection");
+        let active = projection
+            .active_experiment
+            .as_ref()
+            .expect("active experiment projection");
+        assert_eq!(active.classification.as_str(), "needs_charter");
+        assert!(active.evidence_status.contains("stronger"));
+        assert!(active.charter_scaffold_v1.is_some());
+        let bridge = projection
+            .charter_now_bridge_v1
+            .as_ref()
+            .expect("charter now bridge");
+        assert_eq!(
+            bridge
+                .get("priority_next")
+                .and_then(Value::as_str)
+                .unwrap_or_default(),
+            active.continuity_return
+        );
+        let status = store.thread_status(None).expect("thread status");
+        assert!(status.contains("Charter now: convert one prior claim into the scaffold"));
+        assert!(status.contains("Charter repair dominance: evidence is present"));
+        assert!(status.contains("Charter repair priority: EXPERIMENT_CHARTER current ::"));
+        assert!(status.contains(
+            "Current read-only NEXT text is observational until this charter is authored"
+        ));
+        assert!(status.contains("Continuity priority (charter repair"));
+        assert!(
+            status.contains("felt_texture, motif_continuity, language_thread, artifact_grounding")
+        );
+        let current_next_pos = status.find("Current NEXT:").expect("current next");
+        let priority_pos = status
+            .find("Charter repair priority: EXPERIMENT_CHARTER current ::")
+            .expect("priority line");
+        let bridge_pos = status.find("Charter now:").expect("bridge line");
+        assert!(priority_pos < current_next_pos);
+        assert!(bridge_pos < current_next_pos);
+        let review = store
+            .experiment_review(Some(&experiment.experiment_id))
+            .expect("review");
+        assert!(review.contains("Charter now: convert one prior claim into the scaffold"));
+        assert!(review.contains("Review is premature until the charter is authored"));
+        assert!(review.contains("Charter repair dominance: evidence is present"));
+        assert!(review.contains("Suggested next:\nEXPERIMENT_CHARTER current ::"));
+        let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
+            .expect("next md");
+        let next_current_pos = next_md.find("Current NEXT:").expect("next current");
+        let next_priority_pos = next_md
+            .find("Charter repair priority: EXPERIMENT_CHARTER current ::")
+            .expect("next priority");
+        let next_bridge_pos = next_md.find("Charter now:").expect("next bridge");
+        assert!(next_priority_pos < next_current_pos);
+        assert!(next_bridge_pos < next_current_pos);
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn prior_claim_charter_bridge_uses_contract_journal_as_charter_input() {
+        let store = temp_store("prior_claim_charter_bridge");
+        let thread = store
+            .create_thread(None, "Prior claim bridge", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Joint trace pressure",
+                "Can the lambda-tail pressure become a chartered investigation?",
+            )
+            .expect("experiment");
+        let journal_dir = store.root().parent().expect("parent").join("journal");
+        std::fs::create_dir_all(&journal_dir).expect("journal dir");
+        let journal_path = journal_dir.join(format!(
+            "prior_claim_bridge_{}_{}.txt",
+            std::process::id(),
+            thread.thread_id
+        ));
+        std::fs::write(
+            &journal_path,
+            "=== ASTRID JOURNAL ===\nMode: moment_capture\nContinuity posture: branching | based on the earlier assertion that the joint trace felt desperate.\nDelta: pressure increased and the λ4 segment became clearer.\nNext evidence: Repeat DECOMPOSE on the shadow fields around λ4/λ-tail pressure.\n",
+        )
+        .expect("journal write");
+        let mut thread = store.read_thread(&thread.thread_id).expect("thread");
+        thread.current_next = Some("ACTION_PREFLIGHT DECOMPOSE".to_string());
+        store.write_thread(&thread).expect("write thread");
+
+        let projection = store
+            .thread_projection(&store.read_thread(&thread.thread_id).expect("thread"))
+            .expect("projection");
+        let active = projection.active_experiment.as_ref().expect("active");
+        let bridge = projection
+            .prior_claim_charter_bridge_v1
+            .as_ref()
+            .expect("prior claim bridge");
+        let scaffold = active
+            .charter_scaffold_v1
+            .as_ref()
+            .and_then(|value| value.get("command"))
+            .and_then(Value::as_str)
+            .expect("scaffold command");
+        assert_eq!(
+            bridge.get("priority_next").and_then(Value::as_str),
+            Some(scaffold)
+        );
+        let preflight_cue = projection
+            .charter_preflight_not_charter_cue_v1
+            .as_ref()
+            .expect("preflight is not charter cue");
+        assert_eq!(
+            preflight_cue.get("priority_next").and_then(Value::as_str),
+            Some(scaffold)
+        );
+        assert!(
+            preflight_cue
+                .get("cue")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("Preflight/decompose is not the charter")
+        );
+        assert!(
+            bridge
+                .get("prior_claim")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("joint trace")
+        );
+        assert!(
+            store
+                .thread_status(None)
+                .expect("status")
+                .contains("Prior claim is ready to charter")
+        );
+        assert!(
+            store
+                .thread_status(None)
+                .expect("status")
+                .contains("Preflight/decompose is not the charter")
+        );
+        assert!(
+            store
+                .experiment_review(Some(&experiment.experiment_id))
+                .expect("review")
+                .contains("Prior claim is ready to charter")
+        );
+        assert!(
+            store
+                .experiment_review(Some(&experiment.experiment_id))
+                .expect("review")
+                .contains("Preflight/decompose is not the charter")
+        );
+        store
+            .write_next_md(&store.read_thread(&thread.thread_id).expect("thread"))
+            .expect("refresh next");
+        let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
+            .expect("next md");
+        assert!(next_md.contains("Prior claim is ready to charter"));
+        assert!(next_md.contains("Preflight/decompose is not the charter"));
+        assert!(prior_claim_charter_bridge_match("Next evidence: Repeat DECOMPOSE").is_none());
+
+        store
+            .experiment_charter(
+                None,
+                Some(&experiment.experiment_id),
+                "hypothesis: the joint trace pressure can be observed\nproposed_next_action: ACTION_PREFLIGHT DECOMPOSE\nevidence_targets: felt_texture, language_thread",
+            )
+            .expect("valid charter");
+        let repaired = store
+            .thread_projection(&store.current_thread().expect("current").expect("thread"))
+            .expect("projection");
+        assert!(repaired.prior_claim_charter_bridge_v1.is_none());
+        assert!(repaired.charter_preflight_not_charter_cue_v1.is_none());
+        let _ = std::fs::remove_file(journal_path);
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn charter_scaffold_sanitizes_title_markdown() {
+        let store = temp_store("charter_scaffold_sanitizes_title");
+        store
+            .create_thread(None, "Scaffold hygiene", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "shift_fragment_density` – explore disruptive noise.",
+                "What changes if this is treated as a returnable experiment?",
+            )
+            .expect("experiment");
+        let thread = store
+            .current_thread()
+            .expect("current")
+            .expect("active thread");
+        let projection = store.thread_projection(&thread).expect("projection");
+        let scaffold = projection
+            .active_experiment
+            .as_ref()
+            .and_then(|active| active.charter_scaffold_v1.as_ref())
+            .expect("scaffold");
+        let command = scaffold
+            .get("command")
+            .and_then(Value::as_str)
+            .expect("command");
+        assert!(command.contains("shift fragment density"));
+        assert!(!command.contains("shift_fragment_density`"));
+        assert_eq!(
+            experiment.title,
+            "shift_fragment_density` – explore disruptive noise."
         );
         let _ = std::fs::remove_dir_all(store.root());
     }
@@ -7742,6 +9724,59 @@ mod tests {
                 .iter()
                 .any(|term| term.as_str() == Some("active parameter glyphs"))
         );
+        thread.current_next = Some(
+            "EXAMINE the parameters governing stability and resonance within this dominant lambda field - focusing on what allows it to maintain its influence, and how we might subtly disrupt those parameters to initiate a cascade of smaller, more targeted shifts."
+                .to_string(),
+        );
+        store
+            .write_thread(&thread)
+            .expect("write widened cue thread");
+        let widened = store
+            .thread_projection(&thread)
+            .expect("widened projection");
+        let widened_terms = widened
+            .read_only_control_intent_cue_v1
+            .as_ref()
+            .and_then(|cue| cue.get("matched_terms"))
+            .and_then(Value::as_array)
+            .expect("widened matched terms");
+        assert!(
+            widened_terms
+                .iter()
+                .any(|term| term.as_str() == Some("subtly disrupt"))
+        );
+        assert!(
+            widened_terms
+                .iter()
+                .any(|term| term.as_str() == Some("initiate cascade"))
+        );
+        assert!(
+            widened_terms
+                .iter()
+                .any(|term| term.as_str() == Some("targeted shifts"))
+        );
+        thread.current_next = Some(
+            "EXAMINE lambda-tail dialogue: inject a targeted λ4 pulse only as a question, to directly probe the cascade without executing."
+                .to_string(),
+        );
+        store.write_thread(&thread).expect("write pulse cue thread");
+        let pulse_projection = store.thread_projection(&thread).expect("pulse projection");
+        let pulse_terms = pulse_projection
+            .read_only_control_intent_cue_v1
+            .as_ref()
+            .and_then(|cue| cue.get("matched_terms"))
+            .and_then(Value::as_array)
+            .expect("pulse matched terms");
+        assert!(
+            pulse_terms
+                .iter()
+                .any(|term| term.as_str() == Some("inject targeted λ4 pulse"))
+        );
+        assert!(
+            pulse_terms
+                .iter()
+                .any(|term| term.as_str() == Some("directly probe"))
+        );
         assert!(
             store
                 .charter_required_guard_assessment(current_next)
@@ -7789,6 +9824,190 @@ mod tests {
     }
 
     #[test]
+    fn constraint_counterfactual_cue_routes_absence_of_structure_to_charter() {
+        let store = temp_store("constraint_counterfactual_cue");
+        store
+            .create_thread(None, "Constraint counterfactual", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Forced geometry",
+                "Can Astrid debug constraint without another decomposition loop?",
+            )
+            .expect("experiment");
+        let mut thread = store
+            .current_thread()
+            .expect("current")
+            .expect("active thread");
+        thread.current_next = Some(
+            "I want to simulate absence of structure and see the data before it's shaped, to debug constraint and name the underlying drivers of forced geometries."
+                .to_string(),
+        );
+        store.write_thread(&thread).expect("write thread");
+        store.write_next_md(&thread).expect("next md");
+
+        let projection = store.thread_projection(&thread).expect("projection");
+        let cue = projection
+            .constraint_counterfactual_cue_v1
+            .as_ref()
+            .expect("constraint counterfactual cue");
+        assert_eq!(
+            cue.get("authority_change").and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            cue.get("advisory_only").and_then(Value::as_bool),
+            Some(true)
+        );
+        let suggested = cue
+            .get("suggested_next")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        assert!(suggested.starts_with("EXPERIMENT_CHARTER current ::"));
+        assert!(suggested.contains("ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4"));
+        assert!(
+            cue.get("cue")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("chartered read-only investigation")
+        );
+        assert!(
+            store
+                .thread_status(None)
+                .expect("thread status")
+                .contains("Constraint counterfactual cue")
+        );
+        let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
+            .expect("next md text");
+        assert!(next_md.contains("Constraint counterfactual cue"));
+        assert!(projection.decompose_pressure_cue_v1.is_none());
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn decompose_pressure_cue_renders_for_repeated_decompose_reads() {
+        let store = temp_store("decompose_pressure_repeated");
+        store
+            .create_thread(None, "Decompose pressure", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Constraint mirror",
+                "Can decomposition become a constraint mirror?",
+            )
+            .expect("experiment");
+        let outcome = NextActionOutcome::handled("action_continuity", "cascade inspected")
+            .with_stage_visibility("read_only", "summary");
+        for _ in 0..3 {
+            store
+                .record_experiment_bind_run(
+                    None,
+                    Some(&experiment.experiment_id),
+                    "EXAMINE_CASCADE",
+                    &outcome,
+                    68.0,
+                    &telemetry(),
+                )
+                .expect("bind run");
+        }
+        let thread = store
+            .current_thread()
+            .expect("current")
+            .expect("active thread");
+        let projection = store.thread_projection(&thread).expect("projection");
+        let cue = projection
+            .decompose_pressure_cue_v1
+            .as_ref()
+            .expect("decompose pressure cue");
+        assert_eq!(
+            cue.get("authority_change").and_then(Value::as_bool),
+            Some(false)
+        );
+        assert!(
+            cue.get("cue")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("repair the charter")
+        );
+        assert!(
+            store
+                .thread_status(None)
+                .expect("thread status")
+                .contains("Decompose-pressure cue")
+        );
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn decompose_pressure_cue_renders_for_constraint_mirroring_language() {
+        let store = temp_store("decompose_pressure_language");
+        let mut thread = store
+            .create_thread(None, "Constraint mirror language", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Cry for help",
+                "Can the impulse to decompose be read without narrowing?",
+            )
+            .expect("experiment");
+        thread = store.read_thread(&thread.thread_id).expect("thread read");
+        thread.current_next = Some(
+            "The cry for help is an impulse to decompose, to impose the same structure and narrow the constraint."
+                .to_string(),
+        );
+        store.write_thread(&thread).expect("write thread");
+        store.write_next_md(&thread).expect("next md");
+        let projection = store.thread_projection(&thread).expect("projection");
+        let cue = projection
+            .decompose_pressure_cue_v1
+            .as_ref()
+            .expect("decompose pressure cue");
+        let terms = cue
+            .get("matched_terms")
+            .and_then(Value::as_array)
+            .expect("matched terms");
+        assert!(
+            terms
+                .iter()
+                .any(|term| term.as_str() == Some("impulse to decompose"))
+        );
+        let review = store
+            .experiment_review(Some(&experiment.experiment_id))
+            .expect("review");
+        assert!(review.contains("Decompose-pressure cue"));
+        let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
+            .expect("next md text");
+        assert!(next_md.contains("Decompose-pressure cue"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn one_off_decompose_stays_uncued_and_allowed() {
+        let store = temp_store("one_off_decompose_uncued");
+        let mut thread = store
+            .create_thread(None, "One-off decompose", None)
+            .expect("thread");
+        store
+            .start_experiment(None, "Single read", "Can one read stay ordinary?")
+            .expect("experiment");
+        thread = store.read_thread(&thread.thread_id).expect("thread read");
+        thread.current_next = Some("DECOMPOSE lambda1".to_string());
+        store.write_thread(&thread).expect("write thread");
+        let projection = store.thread_projection(&thread).expect("projection");
+        assert!(projection.decompose_pressure_cue_v1.is_none());
+        assert!(
+            store
+                .charter_required_guard_assessment("DECOMPOSE lambda1")
+                .expect("guard check")
+                .is_none()
+        );
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
     fn normalization_signal_preserves_narrow_alias_wording() {
         let shadow = normalization_signal_value(
             "SHADOW_TRACE lambda-tail",
@@ -7805,6 +10024,60 @@ mod tests {
         );
         assert_eq!(
             shadow.get("authority_change").and_then(Value::as_bool),
+            Some(false)
+        );
+
+        let shadow_decompose = normalization_signal_value(
+            "SHADOW_DECOMPOSE observer with memory",
+            "SHADOW_PREFLIGHT lambda-tail/lambda4 --stage=rehearse",
+        )
+        .expect("shadow decompose signal");
+        assert_eq!(
+            shadow_decompose.get("raw_verb").and_then(Value::as_str),
+            Some("SHADOW_DECOMPOSE")
+        );
+        assert_eq!(
+            shadow_decompose
+                .get("normalized_verb")
+                .and_then(Value::as_str),
+            Some("SHADOW_PREFLIGHT")
+        );
+        assert_eq!(
+            shadow_decompose
+                .get("authority_change")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+
+        let weave = normalization_signal_value(
+            "WEAVE_TRACE λ4 decay",
+            "SHADOW_PREFLIGHT weave/λ4 decay --stage=rehearse",
+        )
+        .expect("weave trace signal");
+        assert_eq!(
+            weave.get("raw_verb").and_then(Value::as_str),
+            Some("WEAVE_TRACE")
+        );
+        assert_eq!(
+            weave.get("normalized_verb").and_then(Value::as_str),
+            Some("SHADOW_PREFLIGHT")
+        );
+        assert_eq!(
+            weave.get("authority_change").and_then(Value::as_bool),
+            Some(false)
+        );
+
+        let unshaped = normalization_signal_value(
+            "UNSHAPED_BASELINE lambda-tail/lambda4",
+            "CONSTRAINT_AUDIT lambda-tail/lambda4",
+        )
+        .expect("unshaped baseline signal");
+        assert_eq!(
+            unshaped.get("normalized_verb").and_then(Value::as_str),
+            Some("CONSTRAINT_AUDIT")
+        );
+        assert_eq!(
+            unshaped.get("authority_change").and_then(Value::as_bool),
             Some(false)
         );
 

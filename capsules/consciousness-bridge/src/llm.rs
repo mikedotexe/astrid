@@ -1538,6 +1538,27 @@ fn format_self_study_web_context(web_context: &str) -> String {
     )
 }
 
+pub(crate) fn journal_continuity_contract_v1(own_journal: Option<&str>) -> String {
+    let thread = crate::action_continuity::prompt_summary()
+        .map(|summary| trim_chars(&summary, 900))
+        .filter(|summary| !summary.trim().is_empty())
+        .unwrap_or_else(|| "(no active action-thread projection available)".to_string());
+    let prior = own_journal
+        .map(|journal| trim_chars(journal.trim(), 700))
+        .filter(|journal| !journal.trim().is_empty())
+        .unwrap_or_else(|| "(no recent own-journal excerpt available)".to_string());
+    format!(
+        "Journal continuity contract v1 (advisory, not a gate):\n\
+         - Include one short line: `Continuity posture: resuming|branching|closing|new`.\n\
+         - If resuming, branching, or closing, cite one prior claim or evidence item in plain language.\n\
+         - Include one `Delta:` sentence naming what changed, stayed unchanged, or became clearer.\n\
+         - End with exactly one stance line: `Next evidence:`, `Decision:`, `Pause:`, or `Hold:`.\n\
+         - `new` and `Hold:` are valid; do not force continuity. Preserve Astrid's native evidence: felt texture, motif/language thread, and artifact grounding.\n\
+         Current continuity projection:\n{thread}\n\
+         Recent own-journal anchor:\n{prior}"
+    )
+}
+
 /// Fetch a URL and extract readable text content.
 ///
 /// Used by Astrid to follow links from search results and read full pages.
@@ -2064,7 +2085,8 @@ pub async fn generate_introspection(
          them in your current condition plus at least one concrete source \
          anchor from the window. Name `{label}` or a symbol from that target \
          so the review cannot drift to a neighboring experiment. Keep any continuation hint inside \
-         Suggested Next rather than making it the whole answer."
+         Suggested Next rather than making it the whole answer.\n\n{}",
+        journal_continuity_contract_v1(None)
     );
 
     let messages = vec![
@@ -2272,7 +2294,10 @@ pub async fn generate_daydream(
         },
         Message {
             role: "user".to_string(),
-            content: context,
+            content: format!(
+                "{context}\n\n{}",
+                journal_continuity_contract_v1(own_journal)
+            ),
         },
     ];
 
@@ -2315,7 +2340,7 @@ pub async fn generate_aspiration(own_journal: Option<&str>) -> Option<String> {
         },
         Message {
             role: "user".to_string(),
-            content: seed,
+            content: format!("{seed}\n\n{}", journal_continuity_contract_v1(own_journal)),
         },
     ];
 
@@ -2430,7 +2455,8 @@ pub async fn generate_journal_elaboration(
             role: "user".to_string(),
             content: format!(
                 "Mode: {mode}\nSpectral state: {spectral_summary}\n\n\
-                 The signal you just sent:\n{signal_text}"
+                 The signal you just sent:\n{signal_text}\n\n{}",
+                journal_continuity_contract_v1(None)
             ),
         },
     ];
@@ -2569,7 +2595,8 @@ pub async fn generate_moment_capture(
         Message {
             role: "user".to_string(),
             content: format!(
-                "{event_desc}\n{spectral_summary} (fill {fill_pct:.1}%)\n{fingerprint_desc}"
+                "{event_desc}\n{spectral_summary} (fill {fill_pct:.1}%)\n{fingerprint_desc}\n\n{}",
+                journal_continuity_contract_v1(None)
             ),
         },
     ];
@@ -2589,7 +2616,28 @@ mod tests {
         DIALOGUE_CONTINUITY_CAP, DIALOGUE_JOURNAL_CAP, DIALOGUE_PERCEPTION_CAP, DIALOGUE_WEB_CAP,
         Exchange, clamp_dialogue_tokens, dialogue_outer_timeout_secs,
         estimate_dialogue_prompt_pressure_chars, is_valid_dialogue_output,
+        journal_continuity_contract_v1,
     };
+
+    #[test]
+    fn journal_continuity_contract_names_posture_delta_and_stance() {
+        let cue = journal_continuity_contract_v1(Some(
+            "Continuity posture: resuming\nI noticed a felt texture around lambda4.",
+        ));
+        assert!(
+            cue.contains("journal_continuity_contract_v1")
+                || cue.contains("Journal continuity contract v1")
+        );
+        assert!(cue.contains("Continuity posture: resuming|branching|closing|new"));
+        assert!(cue.contains("Delta:"));
+        assert!(cue.contains("Next evidence:"));
+        assert!(cue.contains("Decision:"));
+        assert!(cue.contains("Pause:"));
+        assert!(cue.contains("Hold:"));
+        assert!(cue.contains("new"));
+        assert!(cue.contains("felt texture"));
+        assert!(cue.contains("Recent own-journal anchor"));
+    }
 
     #[test]
     fn prompt_pressure_estimate_respects_dialogue_caps() {
