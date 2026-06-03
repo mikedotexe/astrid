@@ -1,0 +1,33 @@
+[package]
+name = "astrid-capsule-skills"
+version = "0.1.0"
+description = "Skills Loader - Reads and loads Agent Skills via VFS"
+authors = ["Joshua J. Bouw <dev@joshuajbouw.com>", "Unicity Labs <info@unicity-labs.com>"]
+astrid-version = ">=0.1.0"
+
+[[component]]
+id = "skills-loader"
+file = "astrid_capsule_skills.wasm"
+type = "executable"
+capabilities = { fs_read = ["cwd://", "home://"] }
+
+[capabilities]
+fs_read = ["cwd://", "home://"]
+ipc_publish = ["tool.v1.execute.*.result", "tool.v1.response.describe.*"]
+ipc_subscribe = [
+    "tool.v1.execute.list_skills",
+    "tool.v1.execute.read_skill",
+    "tool.v1.request.describe",
+]
+
+[[interceptor]]
+event = "tool.v1.execute.list_skills"
+action = "tool_execute_list_skills"
+
+[[interceptor]]
+event = "tool.v1.execute.read_skill"
+action = "tool_execute_read_skill"
+
+[[interceptor]]
+event = "tool.v1.request.describe"
+action = "tool_describe"

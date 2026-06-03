@@ -3,6 +3,7 @@ name = "astrid-daemon"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+autobins = false
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
@@ -10,10 +11,6 @@ description = "Astrid daemon - the background kernel process for the Astrid secu
 
 [lib]
 path = "src/lib.rs"
-
-[[bin]]
-name = "astrid-daemon"
-path = "src/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }

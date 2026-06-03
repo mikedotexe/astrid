@@ -1,0 +1,17 @@
+[package]
+name = "astrid-guest"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Minimal Rust guest SDK for Astrid Component Model capsules"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+wit-bindgen = { workspace = true }
+
+[lints]
+workspace = true

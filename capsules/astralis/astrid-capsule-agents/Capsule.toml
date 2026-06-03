@@ -1,0 +1,23 @@
+[package]
+name = "astrid-capsule-agents"
+version = "0.1.0"
+description = "Injects project instructions from AGENTS.md into the system prompt"
+authors = ["Joshua J. Bouw <dev@joshuajbouw.com>", "Unicity Labs <info@unicity-labs.com>"]
+astrid-version = ">=0.1.0"
+
+[[component]]
+id = "agents"
+file = "astrid_capsule_agents.wasm"
+type = "executable"
+capabilities = { fs_read = ["cwd://"] }
+
+[capabilities]
+allow_prompt_injection = true
+ipc_publish = ["prompt_builder.v1.hook_response.*"]
+
+[env]
+cwd_dir = { type = "string", request = "Project folder name", default = ".astrid" }
+
+[[interceptor]]
+event = "prompt_builder.v1.hook.before_build"
+action = "on_before_prompt_build"

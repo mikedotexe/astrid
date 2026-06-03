@@ -40,6 +40,7 @@ pub(crate) fn run_build(
     // Route to the appropriate builder
     match detected_type.as_str() {
         "rust" => crate::rust::build(&target_dir, output)?,
+        "rust-component" => crate::rust_component::build(&target_dir, output)?,
         "mcp" => crate::mcp::convert(&target_dir, "mcp.json", output)?,
         "extension" => crate::mcp::convert(&target_dir, "gemini-extension.json", output)?,
         "openclaw" => crate::openclaw::build(&target_dir, output)?,
@@ -55,7 +56,7 @@ pub(crate) fn run_build(
         unknown => {
             bail!(
                 "Unknown project type: {unknown}. \
-                 Supported types: rust, openclaw, mcp, extension"
+                 Supported types: rust, rust-component, openclaw, mcp, extension"
             );
         },
     }

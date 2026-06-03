@@ -1,0 +1,45 @@
+[package]
+name = "astrid-capsule-cli"
+version = "0.1.0"
+description = "Optional CLI compatibility uplink for Astrid; native socket management remains canonical."
+authors = ["Joshua J. Bouw <dev@joshuajbouw.com>", "Unicity Labs <info@unicity-labs.com>"]
+astrid-version = ">=0.1.0"
+
+[[component]]
+id = "cli-compat"
+file = "astrid_capsule_cli.wasm"
+type = "uplink"
+
+[capabilities]
+uplink = true
+ipc_publish = [
+    "user.v1.prompt",
+    "client.v1.connect",
+    "client.v1.disconnect",
+    "cli.v1.command.execute",
+    "astrid.v1.request.*",
+    "astrid.v1.elicit.response.*",
+    "astrid.v1.approval.response.*",
+    "registry.v1.get_providers",
+    "registry.v1.set_active_model",
+    "registry.v1.selection.*",
+    "session.v1.request.*",
+]
+ipc_subscribe = [
+    "agent.v1.response",
+    "agent.v1.stream.delta",
+    "astrid.v1.approval",
+    "astrid.v1.capsules_loaded",
+    "astrid.v1.elicit.*",
+    "astrid.v1.onboarding.required",
+    "astrid.v1.response.*",
+    "registry.v1.response.*",
+    "registry.v1.active_model_changed",
+    "registry.v1.selection.*",
+    "session.v1.response.*",
+]
+
+[[uplink]]
+name = "cli-compat"
+platform = "cli"
+profile = "bridge"

@@ -2,10 +2,8 @@
 ///
 /// Package: astrid:capsule@0.1.0
 ///
-/// This file defines the canonical contract between the Astrid host runtime
-/// and WASM capsule guests. Near-term it documents the Extism host function
-/// contract (WS-3); long-term it becomes direct Component Model imports/exports
-/// when migrating to the Component Model (WS-8).
+/// This file defines the canonical Component Model contract between the Astrid
+/// host runtime and WASM capsule guests.
 ///
 /// The host exposes 49 functions across 11 domain-specific interfaces. All
 /// operations are capability-gated and audited by the Astrid runtime. Capsules
@@ -762,25 +760,26 @@ world capsule {
     /// directing the kernel how to proceed.
     export astrid-hook-trigger: func(action: string, payload: list<u8>) -> capsule-result;
 
-    /// Background run loop for long-lived capsules.
+    /// Required background run-loop stub.
     ///
-    /// Capsules that export `run` are started as background tasks.
-    /// The function should block indefinitely (event loop pattern),
-    /// processing IPC messages via subscriptions set up before
-    /// calling `signal-ready`. The kernel manages the lifecycle.
+    /// All Component Model capsules export `run` for ABI uniformity. The host
+    /// starts it only when `Capsule.toml` explicitly marks the capsule as a
+    /// daemon/uplink (for example `[capabilities].uplink = true` or a daemon
+    /// component type). Ordinary tool and prompt capsules keep this as a no-op
+    /// stub and run only through `astrid-hook-trigger` dispatch.
     export run: func();
 
     /// Lifecycle hook: first-time installation.
     ///
     /// Called once when a capsule is installed. May use `elicit` to
     /// collect secrets and configuration from the user interactively.
-    /// Optional — capsules without this export skip the install phase.
+    /// No-op stubs are valid for capsules with no install work.
     export astrid-install: func();
 
     /// Lifecycle hook: upgrade from a previous version.
     ///
     /// Called when a capsule is upgraded. May use `elicit` to collect
-    /// new configuration. Optional — capsules without this export
-    /// skip the upgrade phase.
+    /// new configuration. No-op stubs are valid for capsules with no upgrade
+    /// work.
     export astrid-upgrade: func();
 }

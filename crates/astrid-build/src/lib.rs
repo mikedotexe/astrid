@@ -17,6 +17,7 @@ mod build;
 mod mcp;
 mod openclaw;
 mod rust;
+mod rust_component;
 /// WIT record → JSON Schema conversion for IPC topic schemas.
 pub mod wit_schema;
 

@@ -85,6 +85,36 @@ pub struct DaemonStatus {
     pub connected_clients: u32,
     /// Names of loaded capsules.
     pub loaded_capsules: Vec<String>,
+    /// Capsule install/discovery/runtime compatibility summary.
+    #[serde(default)]
+    pub capsule_runtime_health: CapsuleRuntimeHealth,
+}
+
+/// Capsule runtime compatibility summary for daemon health/status output.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CapsuleRuntimeHealth {
+    /// Overall status: `ok`, `notice`, `warning`, or `critical`.
+    pub status: String,
+    /// Raw installed manifest count before discovery de-duplication.
+    pub installed_manifests: u32,
+    /// Manifest count after normal runtime discovery/de-duplication.
+    pub discovered_manifests: u32,
+    /// Component payloads found on disk.
+    pub component_payloads_found: u32,
+    /// Payloads that appear to be Wasmtime Component Model binaries.
+    pub loadable_component_model: u32,
+    /// Payloads that are legacy Extism-era core MVP modules.
+    pub legacy_extism_mvp: u32,
+    /// Legacy Extism-era modules accepted by the repo baseline.
+    pub accepted_legacy_extism_mvp: u32,
+    /// Component payloads missing from disk.
+    pub missing_payloads: u32,
+    /// Legacy/core/invalid incompatibilities not accepted by baseline.
+    pub actionable_incompatible: u32,
+    /// Missing payloads not accepted by baseline.
+    pub actionable_missing_payloads: u32,
+    /// Loaded capsule count from the live registry.
+    pub loaded_capsules: u32,
 }
 
 /// Metadata entry for a loaded capsule.

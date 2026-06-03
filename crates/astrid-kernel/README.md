@@ -21,8 +21,7 @@ The `Kernel` struct holds every system-wide resource: `EventBus`, `CapsuleRegist
 4. Mount the copy-on-write VFS overlay. Writes land in a session-scoped `TempDir`. The real workspace is read-only until explicit commit.
 5. Bind `~/.astrid/run/system.sock` (parent directory 0o700). Generate a 256-bit CSPRNG session token and write it to `~/.astrid/run/system.token` (a 0o600 file).
 6. Create the identity store. Bootstrap the CLI root user idempotently.
-7. Spawn four background tasks: kernel management router, connection tracker, idle monitor, capsule health monitor.
-8. Spawn the `EventDispatcher` to route IPC events to capsule interceptors.
+7. Spawn background tasks: kernel management router, native socket bridge, idle monitor, React watchdog, capsule health monitor, and the `EventDispatcher`.
 
 Requires a multi-threaded tokio runtime. The constructor asserts this at the top and panics on single-threaded runtimes because `block_in_place` would deadlock.
 
@@ -34,7 +33,7 @@ The kernel router listens on `astrid.v1.request.*` and handles `ListCapsules`, `
 
 ## Idle auto-shutdown
 
-Tracks active connections via `AtomicUsize` plus `EventBus::subscriber_count()` as a secondary signal. Shuts down after `ASTRID_IDLE_TIMEOUT_SECS` (default 300) of zero effective connections and no daemon/cron capsules running.
+Only explicitly ephemeral daemons auto-shutdown. In ephemeral mode, the monitor tracks active connections via `AtomicUsize` and shuts down after `ASTRID_IDLE_TIMEOUT_SECS` (default 30) of zero effective connections and no daemon capsules running. Persistent daemons, including launchd-managed instances, keep running until signaled.
 
 ## Socket security
 

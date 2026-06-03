@@ -177,11 +177,6 @@ fn install_existing_kernel(
     }
 
     std::fs::write(kernel_dst, &kernel_bytes).expect("failed to write kernel to OUT_DIR");
-    println!(
-        "cargo:warning=Using QuickJS kernel: {} ({} bytes)",
-        kernel_src.display(),
-        kernel_bytes.len()
-    );
 }
 
 /// Write a minimal placeholder WASM module (8 bytes).
@@ -297,10 +292,13 @@ fn auto_build_kernel(kernel_dst: &Path, kernel_dir: &Path, out_dir: &str) -> boo
         return false;
     }
 
-    // Clone extism-js into a temp build directory
-    let build_dir = PathBuf::from(out_dir).join("quickjs-kernel-build");
-    if build_dir.exists() {
-        let _ = std::fs::remove_dir_all(&build_dir);
+    // Clone extism-js into a temp build directory. The upstream
+    // install-wasi-sdk.sh script insists that the checkout directory itself is
+    // named "js-pdk", so keep Astrid's scratch root separate from the clone dir.
+    let build_root = PathBuf::from(out_dir).join("quickjs-kernel-build");
+    let build_dir = build_root.join("js-pdk");
+    if build_root.exists() {
+        let _ = std::fs::remove_dir_all(&build_root);
     }
 
     if !run_step(
@@ -350,6 +348,7 @@ fn auto_build_kernel(kernel_dst: &Path, kernel_dir: &Path, out_dir: &str) -> boo
     // Build QuickJS core to wasm32-wasip1.
     // Uses sandboxed env (no inherited Cargo flags/target dir) with only the
     // Rust toolchain vars needed for compilation forwarded back in.
+    let wasi_sdk_path = build_dir.join("wasi-sdk");
     let mut cargo_cmd = sandboxed_command("cargo");
     cargo_cmd
         .args([
@@ -359,7 +358,9 @@ fn auto_build_kernel(kernel_dst: &Path, kernel_dir: &Path, out_dir: &str) -> boo
             "--target-dir",
             path_str(&build_dir.join("cargo-target")),
         ])
-        .current_dir(&build_dir);
+        .current_dir(build_dir.join("crates/core"))
+        .env("WASI_SDK", path_str(&wasi_sdk_path))
+        .env("WASI_SDK_PATH", path_str(&wasi_sdk_path));
     forward_env(&mut cargo_cmd, "RUSTUP_HOME");
     forward_env(&mut cargo_cmd, "CARGO_HOME");
     forward_env(&mut cargo_cmd, "RUSTUP_TOOLCHAIN");
@@ -405,7 +406,7 @@ fn auto_build_kernel(kernel_dst: &Path, kernel_dir: &Path, out_dir: &str) -> boo
     let success = install_built_kernel(&built_wasm, kernel_dst, kernel_dir);
 
     // Clean up build dir regardless of outcome
-    let _ = std::fs::remove_dir_all(&build_dir);
+    let _ = std::fs::remove_dir_all(&build_root);
 
     success
 }

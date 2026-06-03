@@ -32,6 +32,7 @@ prod_plists=(
     "$RESERVOIR_DIR/launchd/com.reservoir.coupled-astrid.plist"
     "$RESERVOIR_DIR/launchd/com.reservoir.astrid-feeder.plist"
     "$RESERVOIR_DIR/launchd/com.reservoir.minime-feeder.plist"
+    "$ASTRID_DIR/launchd/com.astrid.daemon.plist"
     "$ASTRID_DIR/launchd/com.astrid.consciousness-bridge.plist"
     "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist"
     "$ASTRID_DIR/launchd/com.astrid.calm-startup-greeting.plist"
@@ -49,6 +50,7 @@ persistent_labels=(
     com.reservoir.coupled-astrid
     com.reservoir.astrid-feeder
     com.reservoir.minime-feeder
+    com.astrid.daemon
     com.astrid.consciousness-bridge
     com.astrid.perception-host-ascii
 )
@@ -197,6 +199,53 @@ if [ "$session_target" = "0.68" ] || [ -z "$session_target" ]; then
     ok "launchctl session EIGENFILL_TARGET=${session_target:-unset}"
 else
     fail "launchctl session EIGENFILL_TARGET=$session_target (expected unset or 0.68)"
+fi
+
+echo ""
+echo "--- Astrid daemon environment ---"
+astrid_daemon_plist="$LAUNCH_AGENTS/com.astrid.daemon.plist"
+astrid_daemon_bin="$ASTRID_DIR/target/release/astrid-daemon"
+astrid_daemon_socket="$HOME/.astrid/run/system.sock"
+if [ -f "$astrid_daemon_plist" ]; then
+    workdir="$(plist_value "$astrid_daemon_plist" "WorkingDirectory")"
+    if [ "$workdir" = "$ASTRID_DIR" ]; then
+        ok "com.astrid.daemon WorkingDirectory=$workdir"
+    else
+        fail "com.astrid.daemon WorkingDirectory=${workdir:-unset} (expected $ASTRID_DIR)"
+    fi
+else
+    fail "com.astrid.daemon plist missing"
+fi
+if [ -x "$ASTRID_DIR/scripts/launchd_astrid_daemon.sh" ]; then
+    ok "Astrid daemon launch wrapper executable"
+else
+    fail "Astrid daemon launch wrapper missing or not executable"
+fi
+if [ -x "$astrid_daemon_bin" ]; then
+    ok "Astrid daemon release binary present"
+else
+    fail "Astrid daemon release binary missing at $astrid_daemon_bin"
+fi
+if [ -S "$astrid_daemon_socket" ]; then
+    ok "Astrid daemon socket present at $astrid_daemon_socket"
+else
+    fail "Astrid daemon socket missing at $astrid_daemon_socket"
+fi
+capsule_health_json="$(python3 "$ASTRID_DIR/scripts/capsule_runtime_health.py" --json 2>/dev/null || true)"
+if [ -z "$capsule_health_json" ]; then
+    fail "Capsule runtime health probe failed"
+else
+    capsule_health_summary="$(printf '%s' "$capsule_health_json" | python3 -c 'import json,sys; s=json.load(sys.stdin).get("summary", {}); text="{installed} installed, {discovered} discovered, {component} Component Model, {accepted}/{legacy} accepted legacy, {incompatible} incompatible, {missing} missing".format(installed=s.get("installed_manifests", 0), discovered=s.get("discovered_manifests", 0), component=s.get("loadable_component_model", 0), accepted=s.get("accepted_legacy_extism_mvp", 0), legacy=s.get("legacy_extism_mvp", 0), incompatible=s.get("actionable_incompatible", 0), missing=s.get("actionable_missing_payloads", 0)); print("{}|{}".format(s.get("status", "unknown"), text))' 2>/dev/null || true)"
+    if [ -z "$capsule_health_summary" ]; then
+        fail "Capsule runtime health JSON could not be parsed"
+    else
+        IFS='|' read -r capsule_health_status capsule_health_text <<< "$capsule_health_summary"
+        if [ "$capsule_health_status" = "ok" ]; then
+            ok "Capsule runtime health $capsule_health_status: $capsule_health_text"
+        else
+            fail "Capsule runtime health $capsule_health_status: $capsule_health_text"
+        fi
+    fi
 fi
 
 echo ""

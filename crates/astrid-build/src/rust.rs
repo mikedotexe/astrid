@@ -1,4 +1,4 @@
-//! Rust capsule builder — compiles a Rust crate to `wasm32-wasip1` and packages it.
+//! Legacy Rust capsule builder — compiles a Rust crate to `wasm32-wasip1` and packages it.
 
 use crate::archiver::pack_capsule_archive;
 use anyhow::{Context, Result, bail};

@@ -189,11 +189,9 @@ async fn run_loop(
 
         if app.should_quit {
             // Notify the kernel so it can update its connection count.
-            // NOTE: This message travels over the socket to the WASM proxy
-            // capsule, which must re-publish it on the EventBus as
-            // `client.v1.disconnect` for the ConnectionTracker to see it.
-            // If the proxy doesn't forward it, the secondary signal
-            // (bus subscriber_count drop) still handles idle detection.
+            // The native socket bridge publishes the disconnect event on the
+            // EventBus; optional uplink capsules may publish the same lifecycle
+            // topic for their own clients.
             let msg = astrid_types::ipc::IpcMessage::new(
                 "client.v1.disconnect",
                 astrid_types::ipc::IpcPayload::Disconnect {

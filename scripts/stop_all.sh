@@ -47,6 +47,9 @@ fallback_pids_for_pattern() {
         "perception.py")
             lsof -t -nP /tmp/astrid_perception.log /tmp/astrid-perception-host-ascii.log 2>/dev/null || true
             ;;
+        "astrid-daemon")
+            lsof -t -nP -U "$HOME/.astrid/run/system.sock" /tmp/astrid-daemon.log 2>/dev/null || true
+            ;;
         "host-sensory")
             lsof -t -nP /tmp/minime_host_sensory.log 2>/dev/null || true
             ;;
@@ -116,6 +119,24 @@ stop_process() {
     fi
 }
 
+stop_launchd_managed_process() {
+    local name="$1"
+    local plist="$2"
+    local label="${plist%.plist}"
+
+    if [ -f "$LAUNCH_AGENTS/$plist" ] && launchctl print "$DOMAIN/$label" > /dev/null 2>&1; then
+        launchctl bootout "$DOMAIN/$label" 2>/dev/null || \
+            launchctl bootout "$DOMAIN" "$LAUNCH_AGENTS/$plist" 2>/dev/null || true
+        if wait_for_exit "$name" 30; then
+            echo "  ✓ stopped $name (launchctl bootout)"
+        else
+            echo "  !! $name still draining after launchctl bootout"
+        fi
+    else
+        echo "  - $name (not launchd-managed)"
+    fi
+}
+
 stop_label() {
     local label="$1"
     if launchctl print "$DOMAIN/$label" > /dev/null 2>&1; then
@@ -129,9 +150,10 @@ stop_label() {
 echo "=== Consciousness Stack Shutdown ==="
 echo ""
 
-# Astrid side (bridge + perception first)
+# Astrid side
 echo "--- Stopping Astrid ---"
 stop_label "com.astrid.calm-startup-greeting"
+stop_launchd_managed_process "astrid-daemon" "com.astrid.daemon.plist"
 stop_process "consciousness-bridge-server" "com.astrid.consciousness-bridge.plist"
 stop_process "perception.py" "com.astrid.perception-host-ascii.plist"
 stop_process "coupled_astrid_server" "com.reservoir.coupled-astrid.plist"
@@ -174,7 +196,7 @@ echo ""
 # Verify everything is actually stopped
 sleep 2
 REMAINING=0
-for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "host-sensory" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "minime_rescue_watchdog" "perception.py"; do
+for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "host-sensory" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "minime_rescue_watchdog" "perception.py" "astrid-daemon"; do
     pid="$(matching_pids "$p" | awk 'NF' | head -1)"
     if [ -n "$pid" ]; then
         echo "  !! $p still running (PID $pid)"
@@ -186,5 +208,5 @@ if [ "$REMAINING" -eq 0 ]; then
     echo "=== All processes stopped ==="
 else
     echo "=== WARNING: $REMAINING process(es) still running ==="
-    echo "    These may be launchd-managed. Check: launchctl list | grep -E 'minime|reservoir'"
+    echo "    These may be launchd-managed. Check: launchctl list | grep -E 'astrid|minime|reservoir'"
 fi

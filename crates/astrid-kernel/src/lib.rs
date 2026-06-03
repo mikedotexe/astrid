@@ -9,12 +9,15 @@
 //! The Kernel is a pure, decentralized WASM runner. It contains no business
 //! logic, no cognitive loops, and no network servers. Its sole responsibility
 //! is to instantiate `astrid_events::EventBus`, load `.capsule` files into
-//! the Extism sandbox, and route IPC bytes between them.
+//! the Component Model WASM sandbox, expose native socket management, and route
+//! IPC bytes between them.
 
+mod capsule_runtime_health;
 /// The Management API router listening to the `EventBus`.
 pub mod kernel_router;
 /// The Unix Domain Socket manager.
 pub mod socket;
+mod socket_bridge;
 
 use astrid_audit::AuditLog;
 use astrid_capabilities::{CapabilityStore, DirHandle};
@@ -60,7 +63,7 @@ pub struct Kernel {
     /// Always `Some` in production (boot requires `AstridHome`). Remains
     /// `Option` for compatibility with `CapsuleContext` and test fixtures.
     pub home_root: Option<PathBuf>,
-    /// The natively bound Unix Socket for the CLI proxy.
+    /// The natively bound Unix socket for CLI/native management.
     pub cli_socket_listener: Option<Arc<tokio::sync::Mutex<tokio::net::UnixListener>>>,
     /// Shared KV store backing all capsule-scoped stores and kernel state.
     pub kv: Arc<astrid_storage::SurrealKvStore>,
@@ -224,25 +227,7 @@ impl Kernel {
             identity_store,
         });
 
-        drop(kernel_router::spawn_kernel_router(Arc::clone(&kernel)));
-        drop(spawn_idle_monitor(Arc::clone(&kernel)));
-        drop(spawn_react_watchdog(Arc::clone(&kernel.event_bus)));
-        drop(spawn_capsule_health_monitor(Arc::clone(&kernel)));
-
-        // Spawn the event dispatcher — routes EventBus events to capsule interceptors.
-        // Wire the identity store so auto-provisioning is gated.
-        let dispatcher = astrid_capsule::dispatcher::EventDispatcher::new(
-            Arc::clone(&kernel.capsules),
-            Arc::clone(&kernel.event_bus),
-        )
-        .with_identity_store(Arc::clone(&kernel.identity_store));
-        tokio::spawn(dispatcher.run());
-
-        debug_assert_eq!(
-            kernel.event_bus.subscriber_count(),
-            INTERNAL_SUBSCRIBER_COUNT,
-            "INTERNAL_SUBSCRIBER_COUNT is stale; update it when adding permanent subscribers"
-        );
+        spawn_kernel_tasks(&kernel);
 
         Ok(kernel)
     }
@@ -545,7 +530,7 @@ impl Kernel {
         }
     }
 
-    /// Enable or disable ephemeral mode (immediate shutdown on last disconnect).
+    /// Enable or disable ephemeral mode (idle shutdown after last disconnect).
     pub fn set_ephemeral(&self, val: bool) {
         self.ephemeral.store(val, Ordering::Relaxed);
     }
@@ -701,8 +686,31 @@ impl Kernel {
     }
 }
 
-/// Open (or create) the persistent audit log and verify historical chain integrity.
-///
+fn spawn_kernel_tasks(kernel: &Arc<Kernel>) {
+    drop(kernel_router::spawn_kernel_router(Arc::clone(kernel)));
+    drop(socket_bridge::spawn_native_socket_bridge(Arc::clone(
+        kernel,
+    )));
+    drop(spawn_idle_monitor(Arc::clone(kernel)));
+    drop(spawn_react_watchdog(Arc::clone(&kernel.event_bus)));
+    drop(spawn_capsule_health_monitor(Arc::clone(kernel)));
+
+    // Spawn the event dispatcher — routes EventBus events to capsule interceptors.
+    // Wire the identity store so auto-provisioning is gated.
+    let dispatcher = astrid_capsule::dispatcher::EventDispatcher::new(
+        Arc::clone(&kernel.capsules),
+        Arc::clone(&kernel.event_bus),
+    )
+    .with_identity_store(Arc::clone(&kernel.identity_store));
+    tokio::spawn(dispatcher.run());
+
+    debug_assert_eq!(
+        kernel.event_bus.subscriber_count(),
+        INTERNAL_SUBSCRIBER_COUNT,
+        "INTERNAL_SUBSCRIBER_COUNT is stale; update it when adding permanent subscribers"
+    );
+}
+
 /// Initialize the sandboxed overlay VFS.
 ///
 /// Creates a lower (read-only workspace) and upper (session-scoped temp dir)
@@ -825,16 +833,9 @@ fn load_or_generate_runtime_key(keys_dir: &Path) -> std::io::Result<KeyPair> {
 
 /// Spawns a background task that cleanly shuts down the Kernel if there is no activity.
 ///
-/// Uses dual-signal idle detection:
-/// - **Primary:** explicit `active_connections` counter (incremented on first IPC
-///   message per source, decremented on `Disconnect`).
-/// - **Secondary:** `EventBus::subscriber_count()` minus the kernel router's own
-///   subscription. When a CLI process dies without sending `Disconnect`, its
-///   broadcast receiver is dropped so the subscriber count falls.
+/// Idle shutdown is only active for explicitly ephemeral daemons.
 ///
-/// Takes the minimum of both signals to handle ungraceful disconnects.
-///
-/// Configurable via `ASTRID_IDLE_TIMEOUT_SECS` (default 300 = 5 minutes).
+/// Configurable via `ASTRID_IDLE_TIMEOUT_SECS` (default 30 seconds).
 /// Number of permanent internal event bus subscribers that are not client
 /// connections: `KernelRouter` (`kernel.request.*`), `ConnectionTracker` (`client.*`),
 /// and `EventDispatcher` (all events).
@@ -842,14 +843,25 @@ const INTERNAL_SUBSCRIBER_COUNT: usize = 3;
 
 /// Initial grace period before idle checking begins.
 const IDLE_INITIAL_GRACE: std::time::Duration = std::time::Duration::from_secs(5);
-/// Additional grace for non-ephemeral daemons to let capsules fully initialize.
-const IDLE_NON_EPHEMERAL_GRACE: std::time::Duration = std::time::Duration::from_secs(25);
 /// How often the idle monitor polls when running in ephemeral mode.
 const IDLE_EPHEMERAL_CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(1);
-/// How often the idle monitor polls when running in persistent mode.
-const IDLE_CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(15);
-/// Default idle timeout for non-ephemeral daemons (5 minutes).
-const IDLE_DEFAULT_TIMEOUT: std::time::Duration = std::time::Duration::from_mins(5);
+/// Default idle timeout for ephemeral daemons.
+const IDLE_DEFAULT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct IdleMonitorConfig {
+    enabled: bool,
+    timeout: std::time::Duration,
+    check_interval: std::time::Duration,
+}
+
+fn idle_monitor_config(ephemeral: bool, env_timeout_secs: Option<u64>) -> IdleMonitorConfig {
+    IdleMonitorConfig {
+        enabled: ephemeral,
+        timeout: env_timeout_secs.map_or(IDLE_DEFAULT_TIMEOUT, std::time::Duration::from_secs),
+        check_interval: IDLE_EPHEMERAL_CHECK_INTERVAL,
+    }
+}
 
 fn spawn_idle_monitor(kernel: Arc<Kernel>) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
@@ -858,32 +870,21 @@ fn spawn_idle_monitor(kernel: Arc<Kernel>) -> tokio::task::JoinHandle<()> {
         tokio::time::sleep(IDLE_INITIAL_GRACE).await;
 
         // Read ephemeral flag after grace period (set by daemon after boot).
-        let ephemeral = kernel.ephemeral.load(Ordering::Relaxed);
-        let idle_timeout = if ephemeral {
-            // Give the CLI time to reconnect after brief disconnects (e.g.
-            // during tool execution when the TUI might momentarily drop
-            // the socket). Zero timeout caused premature shutdowns.
-            std::time::Duration::from_secs(30)
-        } else {
+        let config = idle_monitor_config(
+            kernel.ephemeral.load(Ordering::Relaxed),
             std::env::var("ASTRID_IDLE_TIMEOUT_SECS")
                 .ok()
-                .and_then(|v| v.parse().ok())
-                .map_or(IDLE_DEFAULT_TIMEOUT, std::time::Duration::from_secs)
-        };
-        let check_interval = if ephemeral {
-            IDLE_EPHEMERAL_CHECK_INTERVAL
-        } else {
-            IDLE_CHECK_INTERVAL
-        };
-
-        // Non-ephemeral: additional grace to let capsules fully initialize.
-        if !ephemeral {
-            tokio::time::sleep(IDLE_NON_EPHEMERAL_GRACE).await;
+                .and_then(|v| v.parse().ok()),
+        );
+        if !config.enabled {
+            tracing::debug!("Persistent kernel; idle auto-shutdown disabled");
+            return;
         }
+
         let mut idle_since: Option<tokio::time::Instant> = None;
 
         loop {
-            tokio::time::sleep(check_interval).await;
+            tokio::time::sleep(config.check_interval).await;
 
             let connections = kernel.connection_count();
 
@@ -909,12 +910,12 @@ fn spawn_idle_monitor(kernel: Arc<Kernel>) -> tokio::task::JoinHandle<()> {
 
                 tracing::debug!(
                     idle_secs = elapsed.as_secs(),
-                    timeout_secs = idle_timeout.as_secs(),
+                    timeout_secs = config.timeout.as_secs(),
                     connections,
                     "Kernel idle, monitoring timeout"
                 );
 
-                if elapsed >= idle_timeout {
+                if elapsed >= config.timeout {
                     tracing::info!("Idle timeout reached, initiating shutdown");
                     kernel.shutdown(Some("idle_timeout".to_string())).await;
                     std::process::exit(0);
@@ -1356,6 +1357,28 @@ mod tests {
         assert!(!tracker.exhausted());
         // Should not restart immediately (backoff hasn't elapsed).
         assert!(!tracker.should_restart());
+    }
+
+    #[test]
+    fn persistent_idle_monitor_is_disabled() {
+        let config = idle_monitor_config(false, Some(1));
+        assert!(!config.enabled);
+        assert_eq!(config.timeout, std::time::Duration::from_secs(1));
+    }
+
+    #[test]
+    fn ephemeral_idle_monitor_uses_default_timeout() {
+        let config = idle_monitor_config(true, None);
+        assert!(config.enabled);
+        assert_eq!(config.timeout, IDLE_DEFAULT_TIMEOUT);
+        assert_eq!(config.check_interval, IDLE_EPHEMERAL_CHECK_INTERVAL);
+    }
+
+    #[test]
+    fn ephemeral_idle_monitor_accepts_env_timeout() {
+        let config = idle_monitor_config(true, Some(9));
+        assert!(config.enabled);
+        assert_eq!(config.timeout, std::time::Duration::from_secs(9));
     }
 
     #[test]

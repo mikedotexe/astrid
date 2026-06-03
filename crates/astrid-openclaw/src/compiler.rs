@@ -2,7 +2,7 @@
 //!
 //! Replaces the external `extism-js` CLI with an embedded pipeline:
 //! 1. Embed the pre-built `QuickJS` WASM kernel via `include_bytes!`
-//! 2. Spawn self with hidden `wizer-internal` subcommand
+//! 2. Spawn `astrid-build` with its hidden `--wizer-internal` flag
 //! 3. Child process runs Wizer on the kernel, reading JS from stdin
 //! 4. Parent reads the Wizer'd WASM and stitches named exports
 //! 5. Final WASM is written to `output_path`
@@ -91,17 +91,17 @@ pub fn compile(js_source: &str, output_path: &Path) -> BridgeResult<()> {
     Ok(())
 }
 
-/// Locate the `astrid` CLI binary for the Wizer subprocess.
+/// Locate the `astrid-build` binary for the Wizer subprocess.
 ///
-/// The Wizer subprocess needs an executable with the hidden `wizer-internal`
-/// subcommand. This lives in the `astrid` CLI binary.
+/// The Wizer subprocess needs an executable with the hidden `--wizer-internal`
+/// flag. This lives in the `astrid-build` companion binary.
 ///
 /// Search order:
-/// 1. `ASTRID_BIN` environment variable (override for CI/testing)
-/// 2. Current executable (when running as the `astrid` CLI)
+/// 1. `ASTRID_BUILD_BIN` environment variable (override for CI/testing)
+/// 2. Current executable (when running as the `astrid-build` binary)
 /// 3. Sibling/ancestor directories (when running as a test binary in `target/debug/deps/`)
 fn find_bridge_binary() -> BridgeResult<PathBuf> {
-    if let Ok(path) = std::env::var("ASTRID_BIN") {
+    if let Ok(path) = std::env::var("ASTRID_BUILD_BIN") {
         let p = PathBuf::from(path);
         if p.exists() {
             return Ok(p);
@@ -111,30 +111,30 @@ fn find_bridge_binary() -> BridgeResult<PathBuf> {
     let self_exe = std::env::current_exe()
         .map_err(|e| BridgeError::CompileFailed(format!("cannot find own executable: {e}")))?;
 
-    // If we ARE the astrid binary, use ourselves
-    if self_exe.file_stem().is_some_and(|s| s == "astrid") {
+    // If we ARE the astrid-build binary, use ourselves.
+    if self_exe.file_stem().is_some_and(|s| s == "astrid-build") {
         return Ok(self_exe);
     }
 
     // When running as a test binary (target/debug/deps/xxx), look in ancestor dirs
     for ancestor in self_exe.ancestors().skip(1).take(3) {
-        let candidate = ancestor.join("astrid");
+        let candidate = ancestor.join("astrid-build");
         if candidate.is_file() {
             return Ok(candidate);
         }
     }
 
     Err(BridgeError::CompileFailed(
-        "cannot find astrid binary for Wizer subprocess. \
-         Set ASTRID_BIN or ensure the CLI is built."
+        "cannot find astrid-build binary for Wizer subprocess. \
+         Set ASTRID_BUILD_BIN or ensure the build companion is built."
             .into(),
     ))
 }
 
 /// Run Wizer in a subprocess, piping JS source to stdin.
 ///
-/// Finds the `astrid` CLI binary and invokes its hidden `wizer-internal`
-/// subcommand. The child process runs Wizer on the embedded kernel and writes
+/// Finds the `astrid-build` binary and invokes its hidden `--wizer-internal`
+/// flag. The child process runs Wizer on the embedded kernel and writes
 /// the pre-initialized WASM to a temp file.
 fn wizer_subprocess(js_source: &str) -> BridgeResult<Vec<u8>> {
     let bridge_bin = find_bridge_binary()?;
@@ -145,8 +145,7 @@ fn wizer_subprocess(js_source: &str) -> BridgeResult<Vec<u8>> {
     let output_path = tmp_dir.path().join("wizered.wasm");
 
     let mut child = Command::new(&bridge_bin)
-        .arg("wizer-internal")
-        .arg("--output")
+        .arg("--wizer-internal")
         .arg(&output_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

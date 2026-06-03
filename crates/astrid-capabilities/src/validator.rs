@@ -149,6 +149,10 @@ impl MultiPermissionCheck {
 
     /// Run all checks against a validator.
     #[must_use]
+    #[expect(
+        dead_code,
+        reason = "test helper returns detailed rows when assertions need them"
+    )]
     pub(crate) fn check_all(
         &self,
         validator: &CapabilityValidator<'_>,

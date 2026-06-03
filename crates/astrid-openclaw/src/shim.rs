@@ -4,7 +4,7 @@
 //! 1. Defines host function wrappers (lazy-resolved, not called during Wizer init)
 //! 2. Wraps the original plugin code in an IIFE with CJS module simulation
 //! 3. Provides an `OpenClaw` context mock that maps to Astrid host functions
-//! 4. Exports `describe-tools`, `execute-tool`, and `run-hook` for the Extism runtime
+//! 4. Exports legacy plugin entry points: `describe-tools`, `execute-tool`, and `run-hook`
 //!
 //! Host functions are NOT available during Wizer pre-initialization. All host
 //! function calls (config loading, plugin activation, logging) are deferred to

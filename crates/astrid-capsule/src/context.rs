@@ -37,8 +37,8 @@ pub struct CapsuleContext {
     /// When set, WASM capsules can dispatch hooks to other capsules via
     /// the `astrid_trigger_hook` host function (the kernel mechanism).
     pub capsule_registry: Option<Arc<tokio::sync::RwLock<CapsuleRegistry>>>,
-    /// Session token for authenticating CLI socket connections. Only set for
-    /// capsules with `net_bind` capability (the CLI proxy capsule).
+    /// Session token for authenticating CLI socket connections. Exposed only
+    /// to capsules with `net_bind` capability.
     pub session_token: Option<Arc<SessionToken>>,
     /// Shared allowance store for capsule-level approval requests.
     pub allowance_store: Option<Arc<astrid_approval::AllowanceStore>>,

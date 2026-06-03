@@ -1,0 +1,24 @@
+[package]
+name = "astrid-capsule-http"
+version = "0.1.0"
+description = "HTTP fetch tool for Astrid agents"
+authors = ["Joshua J. Bouw <dev@joshuajbouw.com>", "Unicity Labs <info@unicity-labs.com>"]
+astrid-version = ">=0.1.0"
+
+[[component]]
+id = "http-tools"
+file = "astrid_capsule_http.wasm"
+type = "executable"
+
+[capabilities]
+net = ["*"]
+ipc_publish = ["tool.v1.execute.*.result", "tool.v1.response.describe.*"]
+ipc_subscribe = ["tool.v1.execute.fetch_url", "tool.v1.request.describe"]
+
+[[interceptor]]
+event = "tool.v1.execute.fetch_url"
+action = "tool_execute_fetch_url"
+
+[[interceptor]]
+event = "tool.v1.request.describe"
+action = "tool_describe"

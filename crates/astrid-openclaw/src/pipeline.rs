@@ -243,7 +243,7 @@ fn compile_tier2(
         // this, npm may run under a different (older) Node, causing EBADENGINE
         // errors and potentially incomplete installs.
         let mut cmd = std::process::Command::new(&npm_bin);
-        cmd.args(["install", "--omit=dev"])
+        cmd.args(["install", "--omit=dev", "--no-audit", "--no-fund"])
             .current_dir(opts.output_dir);
         if let Some(node_dir) = std::path::Path::new(&node_bin).parent() {
             let current_path = std::env::var("PATH").unwrap_or_default();

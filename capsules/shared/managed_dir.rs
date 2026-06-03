@@ -80,7 +80,7 @@ fn live_files(dir: &Path, extension: &str) -> io::Result<Vec<ManagedFile>> {
         .filter_map(Result::ok)
         .filter_map(|entry| {
             let path = entry.path();
-            if !path.is_file() || !path.extension().is_some_and(|ext| ext == extension) {
+            if !path.is_file() || path.extension().is_none_or(|ext| ext != extension) {
                 return None;
             }
             let modified = entry.metadata().ok()?.modified().ok()?;

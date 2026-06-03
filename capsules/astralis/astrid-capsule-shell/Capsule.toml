@@ -1,0 +1,42 @@
+[package]
+name = "astrid-capsule-shell"
+version = "0.1.0"
+description = "Core shell execution tools for the Astrid OS"
+authors = ["Joshua J. Bouw <dev@joshuajbouw.com>", "Unicity Labs <info@unicity-labs.com>"]
+astrid-version = ">=0.1.0"
+
+[[component]]
+id = "shell-tools"
+file = "astrid_capsule_shell.wasm"
+type = "executable"
+
+[capabilities]
+host_process = ["bash", "sh", "zsh"]
+ipc_publish = ["tool.v1.execute.*.result", "tool.v1.response.describe.*"]
+ipc_subscribe = [
+    "tool.v1.execute.run_shell_command",
+    "tool.v1.execute.spawn_background_process",
+    "tool.v1.execute.read_process_logs",
+    "tool.v1.execute.kill_process",
+    "tool.v1.request.describe",
+]
+
+[[interceptor]]
+event = "tool.v1.execute.run_shell_command"
+action = "tool_execute_run_shell_command"
+
+[[interceptor]]
+event = "tool.v1.execute.spawn_background_process"
+action = "tool_execute_spawn_background_process"
+
+[[interceptor]]
+event = "tool.v1.execute.read_process_logs"
+action = "tool_execute_read_process_logs"
+
+[[interceptor]]
+event = "tool.v1.execute.kill_process"
+action = "tool_execute_kill_process"
+
+[[interceptor]]
+event = "tool.v1.request.describe"
+action = "tool_describe"

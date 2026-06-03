@@ -182,6 +182,21 @@ wait_port() {
     return 1
 }
 
+wait_socket() {
+    local socket_path="$1"
+    local name="$2"
+    local timeout="${3:-45}"
+    for _ in $(seq 1 "$timeout"); do
+        if [ -S "$socket_path" ]; then
+            ok "$name ready at $socket_path"
+            return 0
+        fi
+        sleep 1
+    done
+    fail "$name not ready at $socket_path after ${timeout}s"
+    return 1
+}
+
 disable_opt_in_rescue_labels() {
     local loaded_any=false
     for label in com.minime.engine-rescue-watchdog com.minime.engine-rescue; do
@@ -216,7 +231,8 @@ check_duplicate_processes() {
         "mic_to_sensory" \
         "perception.py" \
         "astrid_feeder" \
-        "minime_feeder"
+        "minime_feeder" \
+        "astrid-daemon"
     do
         local count
         # `set -o pipefail` + pgrep: pgrep returns 1 when no matches, which
@@ -309,6 +325,10 @@ if [ "$MINIME_ONLY" = false ]; then
     echo ""
 
     echo "--- Astrid ---"
+    ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.daemon.plist" "Astrid core daemon"
+    wait_socket "$HOME/.astrid/run/system.sock" "Astrid daemon socket" 60
+    EXPECTED_LABELS+=("com.astrid.daemon")
+
     ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.consciousness-bridge.plist" "consciousness bridge"
     EXPECTED_LABELS+=("com.astrid.consciousness-bridge")
 

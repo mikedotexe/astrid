@@ -371,6 +371,10 @@ impl TokenBuilder {
 
     /// Add multiple permissions.
     #[must_use]
+    #[expect(
+        dead_code,
+        reason = "test builder keeps fluent variants for coverage expansion"
+    )]
     pub(crate) fn permissions(mut self, perms: impl IntoIterator<Item = Permission>) -> Self {
         for perm in perms {
             if !self.permissions.contains(&perm) {
@@ -395,6 +399,10 @@ impl TokenBuilder {
 
     /// Set session scope.
     #[must_use]
+    #[expect(
+        dead_code,
+        reason = "test builder keeps fluent variants for coverage expansion"
+    )]
     pub(crate) fn session(self) -> Self {
         self.scope(TokenScope::Session)
     }
@@ -408,6 +416,10 @@ impl TokenBuilder {
 
     /// Mark token as single-use (for replay protection).
     #[must_use]
+    #[expect(
+        dead_code,
+        reason = "test builder keeps fluent variants for coverage expansion"
+    )]
     pub(crate) fn single_use(mut self) -> Self {
         self.single_use = true;
         self

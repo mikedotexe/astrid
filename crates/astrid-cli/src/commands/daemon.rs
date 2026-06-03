@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 
-use crate::{find_companion_binary, socket_client, theme};
+use crate::{find_companion_binary, formatter::OutputFormat, socket_client, theme};
 
 /// Build a hint string pointing the user to the daemon log directory.
 fn log_hint() -> String {
@@ -176,10 +176,14 @@ pub(crate) async fn handle_start() -> Result<()> {
 }
 
 /// Handle `astrid status`.
-pub(crate) async fn handle_status() -> Result<()> {
+pub(crate) async fn handle_status(format: OutputFormat) -> Result<()> {
     let socket_path = socket_client::proxy_socket_path();
     if !socket_path.exists() {
-        println!("{}", theme::Theme::info("No Astrid daemon is running."));
+        if format == OutputFormat::Json {
+            println!("{}", serde_json::json!({"running": false}));
+        } else {
+            println!("{}", theme::Theme::info("No Astrid daemon is running."));
+        }
         return Ok(());
     }
 
@@ -200,34 +204,84 @@ pub(crate) async fn handle_status() -> Result<()> {
                     && let Ok(astrid_types::kernel::KernelResponse::Status(status)) =
                         serde_json::from_value::<astrid_types::kernel::KernelResponse>(val)
                 {
-                    let uptime_display = format_uptime(status.uptime_secs);
-                    println!(
-                        "{}",
-                        theme::Theme::success(&format!(
-                            "Astrid daemon (PID {}, uptime {})",
-                            status.pid, uptime_display
-                        ))
-                    );
-                    println!("  Version:    {}", status.version);
-                    println!("  Clients:    {}", status.connected_clients);
-                    println!("  Capsules:   {} loaded", status.loaded_capsules.len());
-                    for capsule in &status.loaded_capsules {
-                        println!("    - {capsule}");
-                    }
+                    print_status(format, &status)?;
                 } else {
-                    println!("{}", theme::Theme::error("Unexpected response from daemon"));
+                    print_status_error(format, "Unexpected response from daemon")?;
                 }
             }
         },
         Err(_) => {
-            println!(
-                "{}",
-                theme::Theme::error(
-                    "Daemon socket exists but connection failed. \
-                     It may be starting up or in a bad state."
-                )
-            );
+            print_status_error(
+                format,
+                "Daemon socket exists but connection failed. It may be starting up or in a bad state.",
+            )?;
         },
+    }
+    Ok(())
+}
+
+fn print_status(format: OutputFormat, status: &astrid_types::kernel::DaemonStatus) -> Result<()> {
+    if format == OutputFormat::Json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "running": true,
+                "status": status,
+            }))?
+        );
+        return Ok(());
+    }
+
+    let uptime_display = format_uptime(status.uptime_secs);
+    println!(
+        "{}",
+        theme::Theme::success(&format!(
+            "Astrid daemon (PID {}, uptime {})",
+            status.pid, uptime_display
+        ))
+    );
+    println!("  Version:    {}", status.version);
+    println!(
+        "  Mode:       {}",
+        if status.ephemeral {
+            "ephemeral"
+        } else {
+            "persistent"
+        }
+    );
+    println!("  Clients:    {}", status.connected_clients);
+    println!("  Capsules:   {} loaded", status.loaded_capsules.len());
+    let health = &status.capsule_runtime_health;
+    println!(
+        "  Runtime:    {} installed, {} discovered, {} Component Model, {} accepted legacy",
+        health.installed_manifests,
+        health.discovered_manifests,
+        health.loadable_component_model,
+        health.accepted_legacy_extism_mvp
+    );
+    if health.actionable_incompatible > 0 || health.actionable_missing_payloads > 0 {
+        println!(
+            "              {} incompatible, {} missing payloads need attention",
+            health.actionable_incompatible, health.actionable_missing_payloads
+        );
+    }
+    for capsule in &status.loaded_capsules {
+        println!("    - {capsule}");
+    }
+    Ok(())
+}
+
+fn print_status_error(format: OutputFormat, message: &str) -> Result<()> {
+    if format == OutputFormat::Json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "running": false,
+                "error": message,
+            }))?
+        );
+    } else {
+        println!("{}", theme::Theme::error(message));
     }
     Ok(())
 }

@@ -3,6 +3,7 @@ name = "astrid-build"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+autobins = false
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
@@ -11,10 +12,6 @@ description = "Astrid capsule build tooling - compiles and packages capsules"
 [lib]
 name = "astrid_build"
 path = "src/lib.rs"
-
-[[bin]]
-name = "astrid-build"
-path = "src/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -27,6 +24,7 @@ tar = { workspace = true }
 tempfile = { workspace = true }
 toml_edit = "0.25.3"
 tracing = { workspace = true }
+wasmparser = { workspace = true }
 wit-parser = { workspace = true }
 
 [dev-dependencies]

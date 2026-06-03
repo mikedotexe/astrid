@@ -135,8 +135,16 @@ pub(crate) fn check_for_update_cached() -> Option<String> {
 }
 
 /// Print an update banner if a newer version is available.
-pub(crate) fn print_update_banner() {
-    if let Some(latest) = check_for_update_cached() {
+pub(crate) async fn print_update_banner() {
+    let latest = match tokio::task::spawn_blocking(check_for_update_cached).await {
+        Ok(latest) => latest,
+        Err(e) => {
+            tracing::debug!("Update check task failed: {e}");
+            None
+        },
+    };
+
+    if let Some(latest) = latest {
         eprintln!(
             "{}",
             Theme::warning(&format!(

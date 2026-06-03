@@ -113,7 +113,7 @@ enum Commands {
         output: Option<String>,
 
         /// Explicitly define the project type (e.g., 'mcp' for legacy host servers)
-        #[arg(short, long, name = "type")]
+        #[arg(short = 't', long = "type", alias = "project-type", name = "type")]
         project_type: Option<String>,
 
         /// Import a legacy `mcp.json` to auto-convert
@@ -301,16 +301,18 @@ async fn main() -> Result<()> {
 
     init_logging(&cli);
 
-    // Check for updates (cached, non-blocking) on interactive commands.
-    if cli.prompt.is_none() && !matches!(cli.command, Some(Commands::SelfUpdate)) {
-        commands::self_update::print_update_banner();
-    }
-
     // Parse output format.
     let output_format = match cli.format.as_str() {
         "json" => formatter::OutputFormat::Json,
         _ => formatter::OutputFormat::Pretty,
     };
+    let stdin_is_terminal = std::io::stdin().is_terminal();
+
+    // Check for updates only on human interactive startup surfaces. Health,
+    // status, JSON, headless, and script contexts stay machine-readable/quiet.
+    if should_print_update_banner(&cli, output_format, stdin_is_terminal) {
+        commands::self_update::print_update_banner().await;
+    }
 
     // Headless mode: -p "prompt" sends a single prompt and exits.
     if let Some(prompt_text) = cli.prompt {
@@ -336,7 +338,7 @@ async fn main() -> Result<()> {
     }
 
     // Also detect piped stdin with no subcommand as headless.
-    if cli.command.is_none() && !std::io::stdin().is_terminal() {
+    if cli.command.is_none() && !stdin_is_terminal {
         ensure_global_config();
         let mut stdin_text = String::new();
         std::io::Read::read_to_string(&mut std::io::stdin(), &mut stdin_text)?;
@@ -428,7 +430,7 @@ async fn main() -> Result<()> {
             commands::daemon::handle_start().await?;
         },
         Some(Commands::Status) => {
-            commands::daemon::handle_status().await?;
+            commands::daemon::handle_status(output_format).await?;
         },
         Some(Commands::Stop) => {
             commands::daemon::handle_stop().await?;
@@ -439,6 +441,17 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn should_print_update_banner(
+    cli: &Cli,
+    output_format: formatter::OutputFormat,
+    stdin_is_terminal: bool,
+) -> bool {
+    output_format == formatter::OutputFormat::Pretty
+        && cli.prompt.is_none()
+        && stdin_is_terminal
+        && matches!(&cli.command, Some(Commands::Chat { .. }) | None)
 }
 
 // ─── Interactive session ─────────────────────────────────────────

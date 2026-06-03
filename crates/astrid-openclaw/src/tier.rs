@@ -19,7 +19,7 @@ use crate::manifest::OpenClawManifest;
 /// The runtime tier for a plugin.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PluginTier {
-    /// Tier 1: compiled to WASM, runs in Extism sandbox.
+    /// Tier 1: compiled to the legacy WASM plugin export surface.
     Wasm,
     /// Tier 2: runs as a sandboxed Node.js subprocess via MCP bridge.
     Node,

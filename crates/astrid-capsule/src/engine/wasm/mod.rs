@@ -15,6 +15,9 @@ pub mod bindings;
 pub mod host;
 pub mod host_state;
 
+#[cfg(test)]
+mod run_loop_policy_tests;
+
 /// Today's date as `YYYY-MM-DD` for daily log rotation.
 fn today_date_string() -> String {
     let now = std::time::SystemTime::now()
@@ -157,7 +160,7 @@ pub struct WasmEngine {
     inbound_rx: Option<tokio::sync::mpsc::Receiver<astrid_core::InboundMessage>>,
     run_handle: Option<tokio::task::JoinHandle<()>>,
     /// Receiver for the readiness signal from the run loop.
-    /// Only set for capsules that have a `run()` export.
+    /// Only set for capsules whose manifest explicitly starts `run()`.
     /// The Mutex is required because `wait_ready` takes `&self` but we need
     /// to clone the receiver (which marks the current value as seen). We
     /// clone inside the lock and immediately drop it, so concurrent
@@ -273,6 +276,7 @@ impl ExecutionEngine for WasmEngine {
                 "WASM engine requires at least one component definition".into(),
             )
         })?;
+        let component_kind = component.r#type.clone();
 
         let wasm_path = if component.path.is_absolute() {
             component.path.clone()
@@ -323,7 +327,7 @@ impl ExecutionEngine for WasmEngine {
         let process_tracker_for_listener = process_tracker.clone();
 
         let capsule_dir_for_verify = self._capsule_dir.clone();
-        let (store_arc, instance, rx, has_run, ready_rx, wt_engine) =
+        let (store_arc, instance, rx, starts_run_loop, ready_rx, wt_engine) =
             tokio::task::block_in_place(move || {
                 let wasm_bytes = std::fs::read(&wasm_path).map_err(|e| {
                     CapsuleError::UnsupportedEntryPoint(format!("Failed to read WASM: {e}"))
@@ -556,8 +560,8 @@ impl ExecutionEngine for WasmEngine {
                     ready_tx: None,
                     host_semaphore,
                     cancel_token: cancel_token_for_state,
-                    // Only provide the session token to capsules with net_bind
-                    // (the CLI proxy). Other capsules have no use for it.
+                    // Only provide the session token to capsules with net_bind.
+                    // Native daemon management already owns the core CLI socket.
                     session_token: if manifest.capabilities.net_bind.is_empty() {
                         None
                     } else {
@@ -572,13 +576,15 @@ impl ExecutionEngine for WasmEngine {
                 };
 
                 // Pre-scan WASM exports to detect run() before instantiation.
-                // Component Model instantiation requires all exports to be present,
-                // but we need to know about run() ahead of time for timeout config.
+                // Component Model capsules provide required lifecycle stubs, so
+                // export presence is not enough to mark a capsule long-lived.
+                // The manifest must explicitly request daemon/uplink execution.
                 //
-                // On parse failure, default to true (no timeout) - the safe
-                // direction. A truly corrupt binary will fail Component::from_binary
-                // moments later anyway.
+                // On parse failure, default to true for export presence. A truly
+                // corrupt binary will fail Component::from_binary moments later.
                 let has_run_export = wasm_exports_contain_run(&wasm_bytes);
+                let starts_run_loop =
+                    should_start_run_loop(&manifest, &component_kind, has_run_export);
 
                 // Build wasmtime engine, store, linker, and instantiate the component.
                 let wt_engine = build_wasmtime_engine()?;
@@ -592,8 +598,7 @@ impl ExecutionEngine for WasmEngine {
                 // have a wall-clock timeout. Other capsules get a safety
                 // timeout — generous enough for interceptors that do streaming HTTP
                 // (e.g. LLM providers) while still catching runaways.
-                let is_daemon = !manifest.uplinks.is_empty() || manifest.capabilities.uplink;
-                if !is_daemon && !has_run_export {
+                if !starts_run_loop {
                     // Each epoch tick is EPOCH_TICK_INTERVAL (100ms). Set the
                     // deadline so total timeout ≈ WASM_CAPSULE_TIMEOUT_SECS.
                     let deadline =
@@ -641,12 +646,10 @@ impl ExecutionEngine for WasmEngine {
                         ))
                     })?;
 
-                let has_run = has_run_export;
-
                 let store_arc = Arc::new(Mutex::new(store));
 
                 // Only allocate the watch channel for run-loop capsules.
-                let ready_rx = if has_run {
+                let ready_rx = if starts_run_loop {
                     let (ready_tx, ready_rx) = tokio::sync::watch::channel(false);
                     let mut s = store_arc.lock().map_err(|e| {
                         CapsuleError::UnsupportedEntryPoint(format!("Store lock poisoned: {e}"))
@@ -664,7 +667,7 @@ impl ExecutionEngine for WasmEngine {
                 // Note: subscriptions are created before the WASM guest starts, so
                 // events published between subscribe and the guest's first recv/poll
                 // call are buffered in the broadcast channel (same as normal IPC).
-                if has_run && !manifest.interceptors.is_empty() {
+                if starts_run_loop && !manifest.interceptors.is_empty() {
                     // Cap auto-subscribed interceptors to leave headroom for
                     // guest-initiated subscriptions (shared 128-slot pool).
                     const MAX_AUTO_SUBSCRIBE: usize = 64;
@@ -717,7 +720,14 @@ impl ExecutionEngine for WasmEngine {
                     );
                 }
 
-                Ok::<_, CapsuleError>((store_arc, instance, rx, has_run, ready_rx, wt_engine))
+                Ok::<_, CapsuleError>((
+                    store_arc,
+                    instance,
+                    rx,
+                    starts_run_loop,
+                    ready_rx,
+                    wt_engine,
+                ))
             })?;
 
         // Register UUID-to-CapsuleId mapping so host functions can resolve
@@ -788,7 +798,7 @@ impl ExecutionEngine for WasmEngine {
             });
         }
 
-        if has_run {
+        if starts_run_loop {
             self.ready_rx = ready_rx.map(tokio::sync::Mutex::new);
 
             // The run loop holds the store mutex for its entire lifetime.
@@ -1194,6 +1204,23 @@ pub fn run_lifecycle(
 /// A truly corrupt binary will fail the subsequent Component::from_binary anyway.
 fn wasm_exports_contain_run(wasm_bytes: &[u8]) -> bool {
     wasm_exports_contain("run", wasm_bytes)
+}
+
+/// Decide whether a component's `run` export should be started as a
+/// background task.
+///
+/// Component Model guests provide `run` as a required stub, so export presence
+/// only proves ABI conformance. Runtime-active loops must be manifest-owned.
+#[must_use]
+fn should_start_run_loop(
+    manifest: &CapsuleManifest,
+    component_type: &str,
+    has_run_export: bool,
+) -> bool {
+    has_run_export
+        && (manifest.capabilities.uplink
+            || !manifest.uplinks.is_empty()
+            || matches!(component_type, "daemon" | "uplink"))
 }
 
 /// Pre-scans a WASM binary's export section to check whether it exports a

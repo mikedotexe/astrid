@@ -11,7 +11,7 @@ Capsules are processes in the OS model. This crate reads a `Capsule.toml` manife
 
 A single manifest can run multiple engines simultaneously under one lifecycle:
 
-- **`WasmEngine`** - Extism/Wasmtime sandbox. Full host ABI access via syscalls. 64 MB memory ceiling (1024 WASM pages).
+- **`WasmEngine`** - Wasmtime Component Model sandbox. Full host ABI access via syscalls. 64 MB memory ceiling (1024 WASM pages).
 - **`McpHostEngine`** - Native stdio subprocess bridged through `SecureMcpClient`. Binary hash verification, capability gating.
 - **`StaticEngine`** - Context files, skills, and commands loaded into memory without booting a VM.
 

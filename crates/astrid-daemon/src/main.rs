@@ -1,6 +1,7 @@
-//! Standalone daemon binary entry point.
+//! Companion daemon binary entry point.
 //!
-//! Delegates to the shared `astrid_daemon::run()` library function.
+//! The runnable binary is declared by the `astrid` package and delegates to
+//! the shared `astrid_daemon::run()` library function.
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

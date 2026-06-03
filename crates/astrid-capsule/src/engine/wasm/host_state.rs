@@ -177,8 +177,8 @@ pub struct HostState {
     /// Triggered during capsule unload to unblock `ipc_recv`, `elicit`, and
     /// `net_accept`/`net_read`/`net_write` host functions that may be waiting on I/O.
     pub cancel_token: CancellationToken,
-    /// Session token for authenticating CLI socket connections. Only set for
-    /// the CLI proxy capsule (which has `net_bind` capability).
+    /// Session token for authenticating CLI socket connections. Exposed only
+    /// to capsules with `net_bind` capability.
     pub session_token: Option<std::sync::Arc<astrid_core::session_token::SessionToken>>,
     /// Pre-registered interceptor subscription handles for run-loop capsules.
     ///

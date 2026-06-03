@@ -12,6 +12,7 @@ members = [
     "crates/astrid-core",
     "crates/astrid-crypto",
     "crates/astrid-events",
+    "crates/astrid-guest",
     "crates/astrid-types",
     "crates/astrid-hooks",
     "crates/astrid-integration-tests",
@@ -45,6 +46,7 @@ astrid-daemon = { path = "crates/astrid-daemon", version = "0.5.1" }
 astrid-core = { path = "crates/astrid-core", version = "0.5.1" }
 astrid-crypto = { path = "crates/astrid-crypto", version = "0.5.1" }
 astrid-events = { path = "crates/astrid-events", version = "0.5.1" }
+astrid-guest = { path = "crates/astrid-guest", version = "0.5.1" }
 astrid-hooks = { path = "crates/astrid-hooks", version = "0.5.1" }
 astrid-kernel = { path = "crates/astrid-kernel", version = "0.5.1" }
 astrid-mcp = { path = "crates/astrid-mcp", version = "0.5.1" }
@@ -113,6 +115,7 @@ walkdir = "2.5"
 wasm-encoder = "0.227"
 wasmparser = "0.227"
 wit-parser = "0.227"
+wit-bindgen = "0.51"
 wasmtime = { version = "43", features = ["component-model", "cranelift"] }
 wasmtime-wasi = "43"
 unicode-width = "0.2"

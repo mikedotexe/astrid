@@ -1,8 +1,8 @@
 //! Astrid Daemon — shared library for the background kernel process.
 //!
 //! This crate provides the daemon entry point as a library function so it can
-//! be reused by both the standalone `astrid-daemon` binary and the `astrid`
-//! CLI binary (which ships both via `cargo install astrid`).
+//! be reused by the bundled `astrid-daemon` companion binary shipped by the
+//! `astrid` package.
 
 #![deny(unsafe_code)]
 #![deny(missing_docs)]
@@ -67,13 +67,13 @@ fn init_logging(verbose: bool) {
 
 /// Run the Astrid daemon with the given arguments.
 ///
-/// This is the shared entry point used by both the standalone `astrid-daemon`
-/// binary and the `astrid` CLI's bundled daemon binary.
+/// This is the shared entry point used by the `astrid` package's bundled
+/// daemon binary.
 ///
 /// # Errors
 ///
-/// Returns an error if the kernel fails to boot, the CLI proxy capsule is
-/// missing, or the readiness file cannot be written.
+/// Returns an error if the kernel fails to boot or the readiness file cannot be
+/// written.
 pub async fn run() -> Result<()> {
     let args = Args::parse();
 
@@ -92,7 +92,8 @@ pub async fn run() -> Result<()> {
         .await
         .map_err(|e| anyhow::anyhow!("Failed to boot Kernel: {e}"))?;
 
-    // In ephemeral mode, shut down immediately when the last client disconnects.
+    // In ephemeral mode, shut down after the idle timeout when the last client
+    // disconnects.
     if args.ephemeral {
         kernel.set_ephemeral(true);
     }
@@ -100,8 +101,8 @@ pub async fn run() -> Result<()> {
     // Load all capsules (auto-discovery)
     kernel.load_all_capsules().await;
 
-    // Verify the CLI proxy capsule loaded. Without it, the daemon
-    // has no accept loop and CLI connections will always time out.
+    // Report whether the optional CLI uplink capsule loaded. Native socket
+    // management owns core daemon status/reload/shutdown.
     {
         let reg = kernel.capsules.read().await;
         let has_cli_proxy = reg
@@ -109,13 +110,9 @@ pub async fn run() -> Result<()> {
             .iter()
             .any(|id| id.as_str() == "astrid-capsule-cli");
         if !has_cli_proxy {
-            tracing::error!(
-                "CLI proxy capsule (astrid-capsule-cli) not found - \
-                 daemon cannot accept CLI connections"
-            );
-            anyhow::bail!(
-                "CLI proxy capsule (astrid-capsule-cli) not found. \
-                 Install it with: astrid capsule install @unicity-astrid/capsule-cli"
+            tracing::warn!(
+                "optional CLI uplink capsule (astrid-capsule-cli) not found - \
+                 continuing with native socket bridge"
             );
         }
     }

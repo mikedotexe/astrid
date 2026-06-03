@@ -18,7 +18,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 KERNEL_DIR="$ROOT_DIR/crates/astrid-openclaw/kernel"
-BUILD_DIR="${TMPDIR:-/tmp}/quickjs-kernel-build"
+BUILD_ROOT="${TMPDIR:-/tmp}/quickjs-kernel-build"
+BUILD_DIR="$BUILD_ROOT/js-pdk"
 
 JS_PDK_REPO="https://github.com/nicholasgasior/extism-js.git"
 JS_PDK_TAG="v1.6.0"
@@ -30,7 +31,7 @@ if ! rustup target list --installed | grep -q wasm32-wasip1; then
 fi
 
 echo "==> Cloning js-pdk ${JS_PDK_TAG}..."
-rm -rf "$BUILD_DIR"
+rm -rf "$BUILD_ROOT"
 git clone --depth 1 --branch "$JS_PDK_TAG" "$JS_PDK_REPO" "$BUILD_DIR"
 
 echo "==> Installing wasi-sdk..."
@@ -43,8 +44,10 @@ npm install
 npm run build
 
 echo "==> Building QuickJS core (wasm32-wasip1)..."
-cd "$BUILD_DIR"
-cargo build --release --target=wasm32-wasip1
+cd "$BUILD_DIR/crates/core"
+WASI_SDK="$BUILD_DIR/wasi-sdk" \
+WASI_SDK_PATH="$BUILD_DIR/wasi-sdk" \
+    cargo build --release --target=wasm32-wasip1 --target-dir "$BUILD_DIR/target"
 
 BUILT_WASM="$BUILD_DIR/target/wasm32-wasip1/release/js_pdk_core.wasm"
 if [ ! -f "$BUILT_WASM" ]; then
@@ -80,4 +83,4 @@ echo "Rebuild astrid-openclaw to embed the kernel:"
 echo "  cargo build -p astrid-openclaw"
 
 # Cleanup
-rm -rf "$BUILD_DIR"
+rm -rf "$BUILD_ROOT"

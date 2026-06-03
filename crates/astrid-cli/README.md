@@ -10,9 +10,9 @@ In the OS model, this is a shell. It does not run agents, call LLMs, enforce sec
 
 ## Architecture
 
-Three companion binaries work together:
+Three companion binaries work together and are shipped by the `astrid` package:
 
-| Binary | Crate | Role |
+| Binary | Library surface | Role |
 |---|---|---|
 | `astrid` | astrid-cli | Terminal frontend (TUI, REPL, capsule management) |
 | `astrid-daemon` | astrid-daemon | Background kernel process (boots kernel, loads capsules, serves IPC) |
@@ -23,9 +23,9 @@ The CLI discovers companion binaries in the same directory as itself, falling ba
 ## Quick start
 
 ```bash
-cargo install --path crates/astrid-cli
-cargo install --path crates/astrid-daemon
-cargo install --path crates/astrid-build
+cargo install astrid
+# or, from this workspace:
+cargo build -p astrid --release
 
 astrid init
 astrid chat
@@ -48,7 +48,7 @@ astrid chat
 | Command | Description |
 |---|---|
 | `astrid start` | Start a persistent daemon (detached, no TUI). Survives CLI disconnect. |
-| `astrid status` | Show daemon PID, uptime, connected clients, loaded capsules. |
+| `astrid status` | Show daemon PID, uptime, connected clients, loaded capsules, and runtime health. Use `--format json` for health scripts. |
 | `astrid stop` | Gracefully shut down the running daemon. |
 
 When you run `astrid chat` without a running daemon, an **ephemeral** daemon is spawned automatically. It shuts down on idle after the last client disconnects. Use `astrid start` for a persistent daemon that serves multiple frontends (CLI, Discord, web).

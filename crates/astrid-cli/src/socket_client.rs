@@ -103,8 +103,8 @@ impl SocketClient {
     ///
     /// Read the next IPC message from the daemon.
     ///
-    /// The CLI proxy capsule sends individual `IpcMessage` objects over the
-    /// socket as length-prefixed JSON.
+    /// The daemon sends individual `IpcMessage` objects over the socket as
+    /// length-prefixed JSON.
     ///
     /// # Errors
     /// Returns an error if the message cannot be read or parsed.

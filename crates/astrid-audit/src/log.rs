@@ -551,6 +551,10 @@ impl<'a> AuditBuilder<'a> {
     /// # Errors
     ///
     /// Returns an error if the audit entry cannot be appended.
+    #[expect(
+        dead_code,
+        reason = "builder detail helpers are reserved for richer audit callers"
+    )]
     pub(crate) fn success_with(self, details: impl Into<String>) -> AuditResult<AuditEntryId> {
         self.log.append(
             self.session_id,
@@ -572,6 +576,10 @@ impl<'a> AuditBuilder<'a> {
     /// # Errors
     ///
     /// Returns an error if the audit entry cannot be appended.
+    #[expect(
+        dead_code,
+        reason = "builder detail helpers are reserved for richer audit callers"
+    )]
     pub(crate) fn failure(self, error: impl Into<String>) -> AuditResult<AuditEntryId> {
         self.log.append(
             self.session_id,

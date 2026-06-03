@@ -1,0 +1,1578 @@
+{
+  "growth_tolerance_lines": 50,
+  "growth_tolerance_ratio": 0.05,
+  "large_files": [
+    {
+      "level": "critical",
+      "lines": 22944,
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "public_items": 106,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 7731,
+      "path": "capsules/consciousness-bridge/src/autonomous.rs",
+      "public_items": 10,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 6575,
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/attractor.rs",
+      "public_items": 5,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 5239,
+      "path": "scripts/continuity_of_thought_audit.py",
+      "public_items": 154,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 4106,
+      "path": "capsules/consciousness-bridge/src/codec.rs",
+      "public_items": 55,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 3320,
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action.rs",
+      "public_items": 14,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 3208,
+      "path": "capsules/consciousness-bridge/src/mcp.rs",
+      "public_items": 1,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 2998,
+      "path": "capsules/consciousness-bridge/src/authority_gate.rs",
+      "public_items": 23,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 2703,
+      "path": "capsules/consciousness-bridge/src/llm.rs",
+      "public_items": 37,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "critical",
+      "lines": 2533,
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/sovereignty.rs",
+      "public_items": 2,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "level": "review",
+      "lines": 2489,
+      "path": "capsules/consciousness-bridge/src/types.rs",
+      "public_items": 74,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 2467,
+      "path": "crates/astrid-cli/src/commands/capsule/install.rs",
+      "public_items": 11,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 2289,
+      "path": "capsules/consciousness-bridge/src/autonomous/state.rs",
+      "public_items": 27,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 2083,
+      "path": "capsules/consciousness-bridge/src/spectral_viz.rs",
+      "public_items": 29,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1830,
+      "path": "capsules/consciousness-bridge/src/ws.rs",
+      "public_items": 5,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1797,
+      "path": "capsules/consciousness-bridge/src/experiment_conveyor.rs",
+      "public_items": 5,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1785,
+      "path": "capsules/consciousness-bridge/src/rescue_policy_tests.rs",
+      "public_items": 0,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1761,
+      "path": "capsules/perception/perception.py",
+      "public_items": 59,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1653,
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "public_items": 1,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1631,
+      "path": "crates/astrid-kernel/src/lib.rs",
+      "public_items": 10,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1621,
+      "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
+      "public_items": 8,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1587,
+      "path": "crates/astrid-cli/src/tui/state.rs",
+      "public_items": 48,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1551,
+      "path": "crates/astrid-mcp/src/server.rs",
+      "public_items": 28,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1518,
+      "path": "scripts/proactive_scan.py",
+      "public_items": 49,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "review",
+      "lines": 1504,
+      "path": "crates/astrid-cli/src/tui/input.rs",
+      "public_items": 3,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "level": "watch",
+      "lines": 1493,
+      "path": "capsules/consciousness-bridge/src/db.rs",
+      "public_items": 48,
+      "suggestion": "check facade/API pressure"
+    },
+    {
+      "level": "watch",
+      "lines": 1433,
+      "path": "crates/astrid-openclaw/src/shim.rs",
+      "public_items": 2,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1428,
+      "path": "capsules/consciousness-bridge/src/action_self_knowledge.rs",
+      "public_items": 2,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1410,
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp/tests.rs",
+      "public_items": 0,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1387,
+      "path": "capsules/consciousness-bridge/src/lambda_tail.rs",
+      "public_items": 18,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1369,
+      "path": "scripts/memory_reasoning_audit.py",
+      "public_items": 36,
+      "suggestion": "check facade/API pressure"
+    },
+    {
+      "level": "watch",
+      "lines": 1363,
+      "path": "capsules/consciousness-bridge/src/rescue_policy.rs",
+      "public_items": 14,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1318,
+      "path": "crates/astrid-cli-mockup/src/ui/state.rs",
+      "public_items": 70,
+      "suggestion": "check facade/API pressure"
+    },
+    {
+      "level": "watch",
+      "lines": 1200,
+      "path": "crates/astrid-storage/src/kv.rs",
+      "public_items": 22,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1193,
+      "path": "capsules/consciousness-bridge/src/self_model.rs",
+      "public_items": 21,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1148,
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp/social.rs",
+      "public_items": 30,
+      "suggestion": "check facade/API pressure"
+    },
+    {
+      "level": "watch",
+      "lines": 1103,
+      "path": "crates/astrid-cli-mockup/src/demo/player.rs",
+      "public_items": 5,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1101,
+      "path": "capsules/consciousness-bridge/src/agency.rs",
+      "public_items": 21,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1069,
+      "path": "crates/astrid-config/src/types.rs",
+      "public_items": 26,
+      "suggestion": "check facade/API pressure"
+    },
+    {
+      "level": "watch",
+      "lines": 1068,
+      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
+      "public_items": 6,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1053,
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/operations.rs",
+      "public_items": 1,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1052,
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/shadow.rs",
+      "public_items": 5,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1050,
+      "path": "crates/astrid-approval/src/budget.rs",
+      "public_items": 32,
+      "suggestion": "check facade/API pressure"
+    },
+    {
+      "level": "watch",
+      "lines": 1026,
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/auto_promote.rs",
+      "public_items": 2,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1026,
+      "path": "capsules/consciousness-bridge/src/lambda_edge.rs",
+      "public_items": 11,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1010,
+      "path": "capsules/consciousness-bridge/src/attractor_atlas.rs",
+      "public_items": 4,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "level": "watch",
+      "lines": 1009,
+      "path": "crates/astrid-config/src/merge/tests.rs",
+      "public_items": 0,
+      "suggestion": "watch cohesion before expanding"
+    }
+  ],
+  "long_functions": [
+    {
+      "level": "critical",
+      "lines": 3483,
+      "name": "spawn_autonomous_loop",
+      "path": "capsules/consciousness-bridge/src/autonomous.rs",
+      "start_line": 3239
+    },
+    {
+      "level": "critical",
+      "lines": 1685,
+      "name": "handle_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/sovereignty.rs",
+      "start_line": 22
+    },
+    {
+      "level": "critical",
+      "lines": 1019,
+      "name": "advance",
+      "path": "crates/astrid-cli-mockup/src/demo/player.rs",
+      "start_line": 72
+    },
+    {
+      "level": "critical",
+      "lines": 806,
+      "name": "inspect_text_windowed",
+      "path": "capsules/consciousness-bridge/src/codec.rs",
+      "start_line": 1266
+    },
+    {
+      "level": "critical",
+      "lines": 784,
+      "name": "tool_definitions",
+      "path": "capsules/consciousness-bridge/src/mcp.rs",
+      "start_line": 95
+    },
+    {
+      "level": "critical",
+      "lines": 711,
+      "name": "handle_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/operations.rs",
+      "start_line": 7
+    },
+    {
+      "level": "critical",
+      "lines": 662,
+      "name": "default",
+      "path": "crates/astrid-events/src/event.rs",
+      "start_line": 62
+    },
+    {
+      "level": "critical",
+      "lines": 565,
+      "name": "load",
+      "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
+      "start_line": 265
+    },
+    {
+      "level": "critical",
+      "lines": 541,
+      "name": "generate_node_polyfills",
+      "path": "crates/astrid-openclaw/src/shim.rs",
+      "start_line": 398
+    },
+    {
+      "level": "critical",
+      "lines": 539,
+      "name": "audit_workspace",
+      "path": "scripts/continuity_of_thought_audit.py",
+      "start_line": 2586
+    },
+    {
+      "level": "critical",
+      "lines": 518,
+      "name": "handle_thread_next_action",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 11591
+    },
+    {
+      "level": "critical",
+      "lines": 486,
+      "name": "eigenvector_field_view",
+      "path": "capsules/consciousness-bridge/src/types.rs",
+      "start_line": 335
+    },
+    {
+      "level": "critical",
+      "lines": 472,
+      "name": "from_flags",
+      "path": "capsules/consciousness-bridge/src/self_model.rs",
+      "start_line": 170
+    },
+    {
+      "level": "critical",
+      "lines": 390,
+      "name": "handle_reservoir_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/reservoir.rs",
+      "start_line": 140
+    },
+    {
+      "level": "critical",
+      "lines": 376,
+      "name": "research_budget_guard_assessment_with_base",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 732
+    },
+    {
+      "level": "critical",
+      "lines": 374,
+      "name": "handle_next_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action.rs",
+      "start_line": 1509
+    },
+    {
+      "level": "critical",
+      "lines": 367,
+      "name": "handle_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/workspace.rs",
+      "start_line": 290
+    },
+    {
+      "level": "critical",
+      "lines": 365,
+      "name": "handle_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/codex.rs",
+      "start_line": 12
+    },
+    {
+      "level": "critical",
+      "lines": 358,
+      "name": "build",
+      "path": "crates/astrid-cli-mockup/src/demo/scenarios/showcase.rs",
+      "start_line": 7
+    },
+    {
+      "level": "critical",
+      "lines": 355,
+      "name": "render_markdown",
+      "path": "scripts/continuity_of_thought_audit.py",
+      "start_line": 3586
+    },
+    {
+      "level": "critical",
+      "lines": 347,
+      "name": "capability_specs",
+      "path": "capsules/consciousness-bridge/src/action_self_knowledge.rs",
+      "start_line": 583
+    },
+    {
+      "level": "critical",
+      "lines": 345,
+      "name": "generate_header",
+      "path": "crates/astrid-openclaw/src/shim.rs",
+      "start_line": 53
+    },
+    {
+      "level": "critical",
+      "lines": 339,
+      "name": "astrid_recent",
+      "path": "capsules/consciousness-bridge/harvest_feedback.sh",
+      "start_line": 195
+    },
+    {
+      "level": "critical",
+      "lines": 336,
+      "name": "interpret_spectral",
+      "path": "capsules/consciousness-bridge/src/codec.rs",
+      "start_line": 2513
+    },
+    {
+      "level": "critical",
+      "lines": 336,
+      "name": "all_astrid_events_have_event_type_strings",
+      "path": "crates/astrid-openclaw/tests/full_api_e2e.rs",
+      "start_line": 349
+    },
+    {
+      "level": "critical",
+      "lines": 327,
+      "name": "default",
+      "path": "capsules/consciousness-bridge/src/types.rs",
+      "start_line": 1097
+    },
+    {
+      "level": "critical",
+      "lines": 324,
+      "name": "handle_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/modes.rs",
+      "start_line": 47
+    },
+    {
+      "level": "critical",
+      "lines": 311,
+      "name": "record_next_choice",
+      "path": "capsules/consciousness-bridge/src/autonomous/state.rs",
+      "start_line": 1300
+    },
+    {
+      "level": "critical",
+      "lines": 304,
+      "name": "normalize",
+      "path": "crates/astrid-cli/src/tui/state.rs",
+      "start_line": 493
+    },
+    {
+      "level": "critical",
+      "lines": 300,
+      "name": "render_input",
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "start_line": 897
+    },
+    {
+      "level": "critical",
+      "lines": 298,
+      "name": "action_help",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/operations.rs",
+      "start_line": 756
+    },
+    {
+      "level": "critical",
+      "lines": 296,
+      "name": "enforce_restrictions",
+      "path": "crates/astrid-config/src/merge/restrict.rs",
+      "start_line": 15
+    },
+    {
+      "level": "critical",
+      "lines": 288,
+      "name": "arrow",
+      "path": "crates/astrid-cli-mockup/src/ui/state.rs",
+      "start_line": 641
+    },
+    {
+      "level": "critical",
+      "lines": 285,
+      "name": "render_host_ascii_clock",
+      "path": "capsules/perception/perception.py",
+      "start_line": 1003
+    },
+    {
+      "level": "critical",
+      "lines": 284,
+      "name": "summarize_rows",
+      "path": "capsules/consciousness-bridge/tools/btsp_astrid_indirect_uptake.py",
+      "start_line": 145
+    },
+    {
+      "level": "critical",
+      "lines": 283,
+      "name": "normalize_focus_theme",
+      "path": "capsules/consciousness-bridge/src/autonomous/state.rs",
+      "start_line": 553
+    },
+    {
+      "level": "critical",
+      "lines": 275,
+      "name": "deserialize",
+      "path": "crates/astrid-capsule/src/manifest.rs",
+      "start_line": 155
+    },
+    {
+      "level": "critical",
+      "lines": 273,
+      "name": "handle_daemon_event",
+      "path": "crates/astrid-cli/src/tui/mod.rs",
+      "start_line": 214
+    },
+    {
+      "level": "critical",
+      "lines": 269,
+      "name": "render_nexus_entry",
+      "path": "crates/astrid-cli-mockup/src/ui/views/nexus.rs",
+      "start_line": 244
+    },
+    {
+      "level": "critical",
+      "lines": 265,
+      "name": "build",
+      "path": "crates/astrid-cli-mockup/src/demo/scenarios/multi_agent_ops.rs",
+      "start_line": 8
+    },
+    {
+      "level": "critical",
+      "lines": 263,
+      "name": "spawn_sensory_sender",
+      "path": "capsules/consciousness-bridge/src/ws.rs",
+      "start_line": 1194
+    },
+    {
+      "level": "critical",
+      "lines": 262,
+      "name": "main",
+      "path": "capsules/consciousness-bridge/src/main.rs",
+      "start_line": 121
+    },
+    {
+      "level": "critical",
+      "lines": 258,
+      "name": "build_evaluation_from_artifacts",
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp/signal.rs",
+      "start_line": 650
+    },
+    {
+      "level": "critical",
+      "lines": 256,
+      "name": "record_next_event",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 1464
+    },
+    {
+      "level": "critical",
+      "lines": 256,
+      "name": "apply_owner_choice",
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp.rs",
+      "start_line": 469
+    },
+    {
+      "level": "critical",
+      "lines": 254,
+      "name": "generate_dialogue",
+      "path": "capsules/consciousness-bridge/src/llm.rs",
+      "start_line": 827
+    },
+    {
+      "level": "critical",
+      "lines": 249,
+      "name": "full_spectral_decomposition",
+      "path": "capsules/consciousness-bridge/src/autonomous.rs",
+      "start_line": 1593
+    },
+    {
+      "level": "critical",
+      "lines": 245,
+      "name": "handle_telemetry_message",
+      "path": "capsules/consciousness-bridge/src/ws.rs",
+      "start_line": 537
+    },
+    {
+      "level": "critical",
+      "lines": 241,
+      "name": "thread_status",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 1108
+    },
+    {
+      "level": "critical",
+      "lines": 230,
+      "name": "spawn_telemetry_subscriber",
+      "path": "capsules/consciousness-bridge/src/ws.rs",
+      "start_line": 307
+    },
+    {
+      "level": "critical",
+      "lines": 230,
+      "name": "intercept",
+      "path": "crates/astrid-approval/src/interceptor/mod.rs",
+      "start_line": 108
+    },
+    {
+      "level": "critical",
+      "lines": 230,
+      "name": "follows",
+      "path": "crates/astrid-audit/src/entry.rs",
+      "start_line": 182
+    },
+    {
+      "level": "critical",
+      "lines": 227,
+      "name": "encode_text",
+      "path": "capsules/consciousness-bridge/tools/speak_to_minime.py",
+      "start_line": 43
+    },
+    {
+      "level": "critical",
+      "lines": 222,
+      "name": "enrich_controller_health",
+      "path": "capsules/consciousness-bridge/src/autonomous.rs",
+      "start_line": 849
+    },
+    {
+      "level": "review",
+      "lines": 219,
+      "name": "handle_idle_input",
+      "path": "crates/astrid-cli-mockup/src/ui/input.rs",
+      "start_line": 37
+    },
+    {
+      "level": "review",
+      "lines": 217,
+      "name": "prompt_summary",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 11374
+    },
+    {
+      "level": "review",
+      "lines": 211,
+      "name": "matches",
+      "path": "crates/astrid-approval/src/allowance/pattern.rs",
+      "start_line": 112
+    },
+    {
+      "level": "review",
+      "lines": 210,
+      "name": "execute_semantic_microdose_from_paths",
+      "path": "capsules/consciousness-bridge/src/authority_gate.rs",
+      "start_line": 757
+    },
+    {
+      "level": "review",
+      "lines": 208,
+      "name": "render_report",
+      "path": "capsules/consciousness-bridge/src/codec_explorer.rs",
+      "start_line": 605
+    },
+    {
+      "level": "review",
+      "lines": 208,
+      "name": "generate_exports",
+      "path": "crates/astrid-openclaw/src/shim.rs",
+      "start_line": 939
+    },
+    {
+      "level": "review",
+      "lines": 207,
+      "name": "handle_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/mike.rs",
+      "start_line": 20
+    },
+    {
+      "level": "review",
+      "lines": 206,
+      "name": "migrate",
+      "path": "capsules/consciousness-bridge/src/db.rs",
+      "start_line": 67
+    },
+    {
+      "level": "review",
+      "lines": 205,
+      "name": "thread_projection",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 8911
+    },
+    {
+      "level": "review",
+      "lines": 199,
+      "name": "load_manifest",
+      "path": "crates/astrid-capsule/src/discovery.rs",
+      "start_line": 186
+    },
+    {
+      "level": "review",
+      "lines": 198,
+      "name": "liveish_pressure_terms",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 16073
+    },
+    {
+      "level": "review",
+      "lines": 198,
+      "name": "render",
+      "path": "capsules/consciousness-bridge/src/chimera.rs",
+      "start_line": 37
+    },
+    {
+      "level": "review",
+      "lines": 197,
+      "name": "extract_live_sample",
+      "path": "capsules/consciousness-bridge/tools/being_phase_transition_edge_watcher.py",
+      "start_line": 220
+    },
+    {
+      "level": "review",
+      "lines": 196,
+      "name": "observe",
+      "path": "capsules/consciousness-bridge/src/astrid_shadow.rs",
+      "start_line": 161
+    },
+    {
+      "level": "review",
+      "lines": 195,
+      "name": "render_activity",
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "start_line": 702
+    },
+    {
+      "level": "review",
+      "lines": 192,
+      "name": "classify_sticky_mode",
+      "path": "capsules/consciousness-bridge/src/sticky_mode.rs",
+      "start_line": 121
+    },
+    {
+      "level": "review",
+      "lines": 192,
+      "name": "handle_idle_input",
+      "path": "crates/astrid-cli/src/tui/input.rs",
+      "start_line": 533
+    },
+    {
+      "level": "review",
+      "lines": 190,
+      "name": "record_research_budget_request_command",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 3670
+    },
+    {
+      "level": "review",
+      "lines": 190,
+      "name": "handle_pending_actions",
+      "path": "crates/astrid-cli/src/tui/mod.rs",
+      "start_line": 487
+    },
+    {
+      "level": "review",
+      "lines": 188,
+      "name": "read_latest_perception",
+      "path": "capsules/consciousness-bridge/src/autonomous.rs",
+      "start_line": 85
+    },
+    {
+      "level": "review",
+      "lines": 188,
+      "name": "run_lifecycle",
+      "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
+      "start_line": 1007
+    },
+    {
+      "level": "review",
+      "lines": 188,
+      "name": "render_nexus",
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "start_line": 514
+    },
+    {
+      "level": "review",
+      "lines": 187,
+      "name": "render_owner_block_from_status",
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp/render.rs",
+      "start_line": 92
+    },
+    {
+      "level": "review",
+      "lines": 185,
+      "name": "section",
+      "path": "crates/astrid-cli-mockup/src/ui/state.rs",
+      "start_line": 116
+    },
+    {
+      "level": "review",
+      "lines": 184,
+      "name": "format_controller_section",
+      "path": "capsules/consciousness-bridge/src/autonomous.rs",
+      "start_line": 1228
+    },
+    {
+      "level": "review",
+      "lines": 179,
+      "name": "sovereign_loop_status_v1",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 5063
+    },
+    {
+      "level": "review",
+      "lines": 178,
+      "name": "minime_recent",
+      "path": "capsules/consciousness-bridge/harvest_feedback.sh",
+      "start_line": 17
+    },
+    {
+      "level": "review",
+      "lines": 177,
+      "name": "write_combined_bundle",
+      "path": "capsules/consciousness-bridge/tools/being_phase_space_watcher.py",
+      "start_line": 377
+    },
+    {
+      "level": "review",
+      "lines": 177,
+      "name": "build_sandboxed_command",
+      "path": "crates/astrid-mcp/src/server.rs",
+      "start_line": 432
+    },
+    {
+      "level": "review",
+      "lines": 177,
+      "name": "render_markdown",
+      "path": "scripts/memory_reasoning_audit.py",
+      "start_line": 845
+    },
+    {
+      "level": "review",
+      "lines": 175,
+      "name": "track_minime_influence",
+      "path": "capsules/consciousness-bridge/src/astrid_shadow.rs",
+      "start_line": 384
+    },
+    {
+      "level": "review",
+      "lines": 174,
+      "name": "bundle_delta",
+      "path": "capsules/consciousness-bridge/tools/being_phase_transition_report.py",
+      "start_line": 242
+    },
+    {
+      "level": "review",
+      "lines": 172,
+      "name": "parse_minime_eigenpacket_full",
+      "path": "capsules/consciousness-bridge/src/types.rs",
+      "start_line": 1686
+    },
+    {
+      "level": "review",
+      "lines": 171,
+      "name": "wrap",
+      "path": "crates/astrid-workspace/src/sandbox.rs",
+      "start_line": 108
+    },
+    {
+      "level": "review",
+      "lines": 169,
+      "name": "limited_write_block_reason",
+      "path": "capsules/consciousness-bridge/src/rescue_policy.rs",
+      "start_line": 305
+    },
+    {
+      "level": "review",
+      "lines": 169,
+      "name": "summarize",
+      "path": "capsules/consciousness-bridge/tools/btsp_onset_truth_table.py",
+      "start_line": 220
+    },
+    {
+      "level": "review",
+      "lines": 169,
+      "name": "render_welcome",
+      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
+      "start_line": 802
+    },
+    {
+      "level": "review",
+      "lines": 168,
+      "name": "probe_log_error_rate",
+      "path": "scripts/proactive_scan.py",
+      "start_line": 299
+    },
+    {
+      "level": "review",
+      "lines": 166,
+      "name": "research_budget_guard_blocks_without_budget_and_debits_with_budget",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 20428
+    },
+    {
+      "level": "review",
+      "lines": 166,
+      "name": "compose_from_spectral_state_details",
+      "path": "capsules/consciousness-bridge/src/audio.rs",
+      "start_line": 48
+    },
+    {
+      "level": "review",
+      "lines": 166,
+      "name": "status",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/resource_governor.rs",
+      "start_line": 44
+    },
+    {
+      "level": "review",
+      "lines": 165,
+      "name": "from_value",
+      "path": "capsules/consciousness-bridge/src/rescue_policy.rs",
+      "start_line": 89
+    },
+    {
+      "level": "review",
+      "lines": 165,
+      "name": "bidirectional_bridge_with_safety_protocol",
+      "path": "capsules/consciousness-bridge/tests/mock_ws_integration.rs",
+      "start_line": 206
+    },
+    {
+      "level": "review",
+      "lines": 163,
+      "name": "render_html",
+      "path": "capsules/consciousness-bridge/src/shared_investigation.rs",
+      "start_line": 237
+    },
+    {
+      "level": "review",
+      "lines": 163,
+      "name": "render_topology",
+      "path": "crates/astrid-cli-mockup/src/ui/views/topology.rs",
+      "start_line": 15
+    },
+    {
+      "level": "review",
+      "lines": 162,
+      "name": "read_only_control_intent_cue_projects_examine_before_charter",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 22436
+    },
+    {
+      "level": "review",
+      "lines": 162,
+      "name": "render_table",
+      "path": "crates/astrid-cli-mockup/src/ui/views/command.rs",
+      "start_line": 94
+    },
+    {
+      "level": "review",
+      "lines": 160,
+      "name": "seed_episode",
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp/seed.rs",
+      "start_line": 5
+    },
+    {
+      "level": "review",
+      "lines": 160,
+      "name": "scan_minime_outbox",
+      "path": "capsules/consciousness-bridge/src/autonomous.rs",
+      "start_line": 1931
+    },
+    {
+      "level": "review",
+      "lines": 159,
+      "name": "experiment_authority_request_command",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 3038
+    },
+    {
+      "level": "review",
+      "lines": 159,
+      "name": "render_state",
+      "path": "capsules/consciousness-bridge/src/self_model.rs",
+      "start_line": 728
+    },
+    {
+      "level": "review",
+      "lines": 159,
+      "name": "default_session_id",
+      "path": "crates/astrid-types/src/ipc.rs",
+      "start_line": 65
+    },
+    {
+      "level": "review",
+      "lines": 159,
+      "name": "label_path",
+      "path": "scripts/launchd_inventory.sh",
+      "start_line": 107
+    },
+    {
+      "level": "review",
+      "lines": 158,
+      "name": "interpret_fingerprint",
+      "path": "capsules/consciousness-bridge/src/autonomous.rs",
+      "start_line": 1435
+    },
+    {
+      "level": "review",
+      "lines": 156,
+      "name": "prior_claim_charter_bridge_uses_contract_journal_as_charter_input",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 22081
+    },
+    {
+      "level": "review",
+      "lines": 156,
+      "name": "apply_structured_signal",
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp/social.rs",
+      "start_line": 394
+    },
+    {
+      "level": "review",
+      "lines": 154,
+      "name": "native_gesture_gate",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/native_gesture.rs",
+      "start_line": 92
+    },
+    {
+      "level": "review",
+      "lines": 154,
+      "name": "evaluate_v2_previous_send",
+      "path": "capsules/consciousness-bridge/src/rescue_policy.rs",
+      "start_line": 625
+    },
+    {
+      "level": "review",
+      "lines": 153,
+      "name": "parse_action",
+      "path": "capsules/consciousness-bridge/src/autoresearch.rs",
+      "start_line": 239
+    },
+    {
+      "level": "review",
+      "lines": 152,
+      "name": "experiment_loop_review_command",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 4341
+    },
+    {
+      "level": "review",
+      "lines": 152,
+      "name": "format_experiment_status",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 10976
+    },
+    {
+      "level": "review",
+      "lines": 152,
+      "name": "handle_summon",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/attractor.rs",
+      "start_line": 598
+    },
+    {
+      "level": "review",
+      "lines": 151,
+      "name": "main",
+      "path": "crates/astrid-cli/src/main.rs",
+      "start_line": 299
+    },
+    {
+      "level": "review",
+      "lines": 151,
+      "name": "new",
+      "path": "crates/astrid-kernel/src/lib.rs",
+      "start_line": 104
+    },
+    {
+      "level": "review",
+      "lines": 150,
+      "name": "try_auto_promote",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/auto_promote.rs",
+      "start_line": 487
+    },
+    {
+      "level": "review",
+      "lines": 150,
+      "name": "run",
+      "path": "crates/astrid-cli/src/tui/headless.rs",
+      "start_line": 181
+    },
+    {
+      "level": "review",
+      "lines": 150,
+      "name": "handle_slash_command",
+      "path": "crates/astrid-cli/src/tui/mod.rs",
+      "start_line": 677
+    },
+    {
+      "level": "review",
+      "lines": 149,
+      "name": "description",
+      "path": "crates/astrid-audit/src/entry.rs",
+      "start_line": 412
+    },
+    {
+      "level": "review",
+      "lines": 148,
+      "name": "extract_visual_features",
+      "path": "capsules/perception/perception.py",
+      "start_line": 294
+    },
+    {
+      "level": "review",
+      "lines": 148,
+      "name": "request_approval",
+      "path": "crates/astrid-capsule/src/engine/wasm/host/approval.rs",
+      "start_line": 178
+    },
+    {
+      "level": "review",
+      "lines": 147,
+      "name": "decide_parameter_request",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/sovereignty.rs",
+      "start_line": 1958
+    },
+    {
+      "level": "review",
+      "lines": 147,
+      "name": "build_control_plane_v1",
+      "path": "capsules/consciousness-bridge/src/continuity_control_plane.rs",
+      "start_line": 168
+    },
+    {
+      "level": "review",
+      "lines": 146,
+      "name": "derive_astrid_shadow_policy",
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp/shadow.rs",
+      "start_line": 293
+    },
+    {
+      "level": "review",
+      "lines": 145,
+      "name": "experiment_advance_command",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 2893
+    },
+    {
+      "level": "review",
+      "lines": 145,
+      "name": "install_from_local_path_inner",
+      "path": "crates/astrid-cli/src/commands/capsule/install.rs",
+      "start_line": 782
+    },
+    {
+      "level": "review",
+      "lines": 144,
+      "name": "elicit",
+      "path": "crates/astrid-capsule/src/engine/wasm/host/elicit.rs",
+      "start_line": 61
+    },
+    {
+      "level": "review",
+      "lines": 142,
+      "name": "telemetry",
+      "path": "capsules/consciousness-bridge/src/spectral_explorer.rs",
+      "start_line": 643
+    },
+    {
+      "level": "review",
+      "lines": 141,
+      "name": "run",
+      "path": "crates/astrid-capsule/src/dispatcher.rs",
+      "start_line": 101
+    },
+    {
+      "level": "review",
+      "lines": 140,
+      "name": "render_onboarding_menu",
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "start_line": 1261
+    },
+    {
+      "level": "review",
+      "lines": 139,
+      "name": "execute_mode_release_microdose",
+      "path": "capsules/consciousness-bridge/src/authority_gate.rs",
+      "start_line": 967
+    },
+    {
+      "level": "review",
+      "lines": 139,
+      "name": "load",
+      "path": "crates/astrid-config/src/loader.rs",
+      "start_line": 43
+    },
+    {
+      "level": "review",
+      "lines": 138,
+      "name": "write_next_md",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 8122
+    },
+    {
+      "level": "review",
+      "lines": 138,
+      "name": "motif_allowance_snapshot",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 10499
+    },
+    {
+      "level": "review",
+      "lines": 138,
+      "name": "handle_action",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/shadow.rs",
+      "start_line": 17
+    },
+    {
+      "level": "review",
+      "lines": 138,
+      "name": "classify_lambda_edge",
+      "path": "capsules/consciousness-bridge/src/lambda_edge.rs",
+      "start_line": 116
+    },
+    {
+      "level": "review",
+      "lines": 138,
+      "name": "render_geometry_scatter",
+      "path": "capsules/consciousness-bridge/src/spectral_viz.rs",
+      "start_line": 801
+    },
+    {
+      "level": "review",
+      "lines": 137,
+      "name": "render_identify_pattern",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/identify_pattern.rs",
+      "start_line": 79
+    },
+    {
+      "level": "review",
+      "lines": 137,
+      "name": "render_report",
+      "path": "capsules/consciousness-bridge/tools/btsp_onset_truth_table.py",
+      "start_line": 389
+    },
+    {
+      "level": "review",
+      "lines": 136,
+      "name": "append_spectral_drift_event",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "start_line": 52
+    },
+    {
+      "level": "review",
+      "lines": 135,
+      "name": "experiment_loop_step_command",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 4206
+    },
+    {
+      "level": "review",
+      "lines": 135,
+      "name": "mlx_chat",
+      "path": "capsules/consciousness-bridge/src/llm.rs",
+      "start_line": 188
+    },
+    {
+      "level": "review",
+      "lines": 135,
+      "name": "run_bridge_message_maintenance",
+      "path": "capsules/consciousness-bridge/src/message_archive.rs",
+      "start_line": 128
+    },
+    {
+      "level": "review",
+      "lines": 135,
+      "name": "assemble_within_budget",
+      "path": "capsules/consciousness-bridge/src/prompt_budget.rs",
+      "start_line": 61
+    },
+    {
+      "level": "review",
+      "lines": 135,
+      "name": "render_chain_entries",
+      "path": "crates/astrid-cli-mockup/src/ui/views/chain.rs",
+      "start_line": 133
+    },
+    {
+      "level": "review",
+      "lines": 133,
+      "name": "approve_loop_consequence_budget_from_paths",
+      "path": "capsules/consciousness-bridge/src/authority_gate.rs",
+      "start_line": 608
+    },
+    {
+      "level": "review",
+      "lines": 133,
+      "name": "record_native_gesture",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/native_gesture.rs",
+      "start_line": 801
+    },
+    {
+      "level": "review",
+      "lines": 132,
+      "name": "handle_request",
+      "path": "crates/astrid-kernel/src/kernel_router.rs",
+      "start_line": 99
+    },
+    {
+      "level": "review",
+      "lines": 131,
+      "name": "check_proc",
+      "path": "capsules/consciousness-bridge/babysit.sh",
+      "start_line": 16
+    },
+    {
+      "level": "review",
+      "lines": 130,
+      "name": "auto_build_kernel",
+      "path": "crates/astrid-openclaw/build.rs",
+      "start_line": 290
+    },
+    {
+      "level": "review",
+      "lines": 129,
+      "name": "summarize_cohorts",
+      "path": "capsules/consciousness-bridge/tools/btsp_cohort_scoreboard.py",
+      "start_line": 42
+    },
+    {
+      "level": "review",
+      "lines": 129,
+      "name": "build",
+      "path": "crates/astrid-build/src/rust.rs",
+      "start_line": 15
+    },
+    {
+      "level": "review",
+      "lines": 128,
+      "name": "append_space_hold_event",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/space_hold.rs",
+      "start_line": 48
+    },
+    {
+      "level": "review",
+      "lines": 128,
+      "name": "load",
+      "path": "crates/astrid-capsule/src/engine/mcp.rs",
+      "start_line": 48
+    },
+    {
+      "level": "review",
+      "lines": 127,
+      "name": "experiment_loop_request_command",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 4037
+    },
+    {
+      "level": "review",
+      "lines": 127,
+      "name": "handle_refresh_snapshot",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/attractor.rs",
+      "start_line": 471
+    },
+    {
+      "level": "review",
+      "lines": 127,
+      "name": "net_accept",
+      "path": "crates/astrid-capsule/src/engine/wasm/host/net.rs",
+      "start_line": 205
+    },
+    {
+      "level": "review",
+      "lines": 127,
+      "name": "esm_to_cjs",
+      "path": "crates/astrid-openclaw/src/transpiler.rs",
+      "start_line": 159
+    },
+    {
+      "level": "review",
+      "lines": 125,
+      "name": "handle_blend",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/attractor.rs",
+      "start_line": 882
+    },
+    {
+      "level": "review",
+      "lines": 125,
+      "name": "shadow_preflight",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action/shadow.rs",
+      "start_line": 209
+    },
+    {
+      "level": "review",
+      "lines": 124,
+      "name": "continuity_session_accept_command",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 6349
+    },
+    {
+      "level": "review",
+      "lines": 124,
+      "name": "action_preflight_report",
+      "path": "capsules/consciousness-bridge/src/autonomous/next_action.rs",
+      "start_line": 1385
+    },
+    {
+      "level": "review",
+      "lines": 124,
+      "name": "render_queue",
+      "path": "crates/astrid-cli-mockup/src/ui/views/shield.rs",
+      "start_line": 77
+    },
+    {
+      "level": "review",
+      "lines": 124,
+      "name": "charter_scaffold_v1",
+      "path": "scripts/continuity_of_thought_audit.py",
+      "start_line": 909
+    },
+    {
+      "level": "review",
+      "lines": 123,
+      "name": "research_budget_accept_latest_scaffold_self_activates_local_budget",
+      "path": "capsules/consciousness-bridge/src/action_continuity.rs",
+      "start_line": 20124
+    },
+    {
+      "level": "review",
+      "lines": 123,
+      "name": "score_final_non_adoption_outcomes",
+      "path": "capsules/consciousness-bridge/src/autonomous/btsp/agency.rs",
+      "start_line": 109
+    },
+    {
+      "level": "review",
+      "lines": 123,
+      "name": "trigger_hook",
+      "path": "crates/astrid-capsule/src/engine/wasm/host/sys.rs",
+      "start_line": 48
+    },
+    {
+      "level": "review",
+      "lines": 123,
+      "name": "add_shared_research_dossier",
+      "path": "scripts/continuity_of_thought_audit.py",
+      "start_line": 3463
+    },
+    {
+      "level": "review",
+      "lines": 122,
+      "name": "approve_research_budget_from_paths",
+      "path": "capsules/consciousness-bridge/src/authority_gate.rs",
+      "start_line": 474
+    },
+    {
+      "level": "review",
+      "lines": 122,
+      "name": "render_activity",
+      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
+      "start_line": 447
+    },
+    {
+      "level": "review",
+      "lines": 122,
+      "name": "render_agent_card",
+      "path": "crates/astrid-cli-mockup/src/ui/widgets/agent_card.rs",
+      "start_line": 14
+    },
+    {
+      "level": "review",
+      "lines": 120,
+      "name": "approve_budget_from_paths",
+      "path": "capsules/consciousness-bridge/src/authority_gate.rs",
+      "start_line": 322
+    },
+    {
+      "level": "review",
+      "lines": 120,
+      "name": "summarize_agency",
+      "path": "capsules/consciousness-bridge/tools/btsp_agency_scoreboard.py",
+      "start_line": 39
+    },
+    {
+      "level": "review",
+      "lines": 120,
+      "name": "build_report",
+      "path": "capsules/consciousness-bridge/tools/btsp_astrid_indirect_uptake.py",
+      "start_line": 429
+    }
+  ],
+  "schema_version": 1,
+  "source": "scripts/architecture_health.py --no-baseline --json"
+}

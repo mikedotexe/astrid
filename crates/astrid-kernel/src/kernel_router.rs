@@ -12,9 +12,8 @@ use tracing::{debug, info, warn};
 /// 1. `astrid.v1.request.*` - handles management commands (list capsules, reload, etc.)
 /// 2. `client.v1.disconnect` - decrements the active connection counter on graceful disconnect.
 ///
-/// Connection *increment* happens when the WASM proxy capsule accepts a socket
-/// connection (it publishes a `client.v1.connected` event). For ungraceful disconnects,
-/// the idle monitor uses `EventBus::subscriber_count()` as a secondary signal.
+/// Connection events are published by the native socket bridge and any optional
+/// uplink capsules that accept client connections.
 #[must_use]
 pub(crate) fn spawn_kernel_router(kernel: Arc<crate::Kernel>) -> tokio::task::JoinHandle<()> {
     // Spawn the connection tracker as a sibling task.
@@ -197,13 +196,16 @@ async fn handle_request(kernel: &Arc<crate::Kernel>, topic: String, req: KernelR
             let uptime = kernel.boot_time.elapsed().as_secs();
             let reg = kernel.capsules.read().await;
             let loaded: Vec<String> = reg.list().iter().map(ToString::to_string).collect();
+            let capsule_runtime_health =
+                crate::capsule_runtime_health::summarize(&kernel.workspace_root, &loaded);
             let status = astrid_events::kernel_api::DaemonStatus {
                 pid: std::process::id(),
                 uptime_secs: uptime,
                 version: env!("CARGO_PKG_VERSION").to_string(),
-                ephemeral: false, // The kernel doesn't know; daemon sets this via response override if needed
+                ephemeral: kernel.ephemeral.load(std::sync::atomic::Ordering::Relaxed),
                 connected_clients: u32::try_from(kernel.connection_count()).unwrap_or(u32::MAX),
                 loaded_capsules: loaded,
+                capsule_runtime_health,
             };
             KernelResponse::Status(status)
         },
