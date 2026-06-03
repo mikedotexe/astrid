@@ -1295,7 +1295,7 @@ fn handle_release_review(
     let effect = latest_release
         .as_ref()
         .map_or("no_release_baseline", |observation| {
-            observation.release_effect.as_deref().unwrap_or_else(|| {
+            observation.release_effect.as_deref().unwrap_or({
                 if !pulse.active && current_pressure == 0 {
                     "effective"
                 } else if !pulse.active {
@@ -2292,10 +2292,10 @@ fn suggestion_pending_key_parts(
 fn suggestion_key_raw_slug(raw_label: &str, nearest_label: &str) -> String {
     let canonical = canonical_attractor_label(nearest_label);
     let query_tokens = distinctive_tokens(raw_label);
-    if let Some(index) = canonical.strip_prefix("lambda-tail/lambda") {
-        if is_lambda_tail_facet_query(raw_label, &query_tokens, index) {
-            return label_slug(&canonical);
-        }
+    if let Some(index) = canonical.strip_prefix("lambda-tail/lambda")
+        && is_lambda_tail_facet_query(raw_label, &query_tokens, index)
+    {
+        return label_slug(&canonical);
     }
     if canonical == "lambda-tail" && is_lambda_tail_query(raw_label, &query_tokens) {
         return label_slug(&canonical);
@@ -3054,16 +3054,15 @@ fn execute_no_pending_revision(
         .suggestions
         .iter_mut()
         .find(|suggestion| suggestion.suggestion_id == suggestion_id)
+        && suggestion.status == AttractorSuggestionStatus::Executed
     {
-        if suggestion.status == AttractorSuggestionStatus::Executed {
-            suggestion.status = AttractorSuggestionStatus::ExecutedWithoutPending;
-            suggestion.decision_reason = Some(
-                "no pending draft matched; revised typed action executed as explicit consent"
-                    .to_string(),
-            );
-            suggestion.updated_at_unix_s = Some(unix_now());
-            changed = true;
-        }
+        suggestion.status = AttractorSuggestionStatus::ExecutedWithoutPending;
+        suggestion.decision_reason = Some(
+            "no pending draft matched; revised typed action executed as explicit consent"
+                .to_string(),
+        );
+        suggestion.updated_at_unix_s = Some(unix_now());
+        changed = true;
     }
     if changed {
         let _ = save_suggestion_store(&store);
@@ -3130,12 +3129,10 @@ fn suggested_typed_correction(action: &str) -> Option<String> {
     let raw = action
         .get(base.len()..)
         .unwrap_or_default()
-        .trim_start_matches(|c: char| matches!(c, ':' | '-' | '\u{2014}'))
+        .trim_start_matches([':', '-', '\u{2014}'])
         .trim();
     let label = clean_suggestion_raw_label(raw);
-    if clean_typed_attractor_label(&label).is_none() {
-        return None;
-    }
+    clean_typed_attractor_label(&label)?;
     match base_upper.as_str() {
         "ATTRACTOR_REVIEW"
         | "ATTRACTOR_PREFLIGHT"
@@ -3861,6 +3858,7 @@ fn send_stage(
                 pi_kp: control.pi_kp,
                 pi_ki: control.pi_ki,
                 pi_max_step: control.pi_max_step,
+                pi_integrator_leak: control.pi_integrator_leak,
                 attractor_intent_id: Some(intent.intent_id.clone()),
                 ..ControlRequest::default()
             };
@@ -4146,10 +4144,10 @@ fn parse_label_and_stage(raw: &str) -> (String, Option<SummonStage>) {
     if raw.split_whitespace().any(|part| part == "--stage") {
         let mut parts = raw.split_whitespace();
         while let Some(part) = parts.next() {
-            if part == "--stage" {
-                if let Some(value) = parts.next() {
-                    stage = parse_stage(value);
-                }
+            if part == "--stage"
+                && let Some(value) = parts.next()
+            {
+                stage = parse_stage(value);
             }
         }
     }
@@ -4217,7 +4215,7 @@ fn clean_suggestion_raw_label(raw: &str) -> String {
         .next()
         .unwrap_or(text.as_str())
         .trim()
-        .trim_end_matches(|c: char| matches!(c, ',' | ';' | ':' | '.'));
+        .trim_end_matches([',', ';', ':', '.']);
     let compact = without_tail
         .split_whitespace()
         .collect::<Vec<_>>()
@@ -4283,7 +4281,7 @@ fn strip_selector_tail(raw: &str) -> String {
     }
     let mut cleaned = text
         .trim()
-        .trim_end_matches(|c: char| matches!(c, ',' | ';' | ':' | '.'))
+        .trim_end_matches([',', ';', ':', '.'])
         .trim()
         .to_string();
     for suffix in [" and", " then"] {
@@ -4315,10 +4313,11 @@ fn selector_tail_action_index(text: &str) -> Option<usize> {
             needles.push(format!(" {action}"));
         }
         for needle in needles {
-            if let Some(idx) = upper.find(&needle) {
-                if idx > 0 && best.is_none_or(|current| idx < current) {
-                    best = Some(idx);
-                }
+            if let Some(idx) = upper.find(&needle)
+                && idx > 0
+                && best.is_none_or(|current| idx < current)
+            {
+                best = Some(idx);
             }
         }
     }
@@ -4468,6 +4467,8 @@ mod tests {
             spectral_denominator_v1: None,
             effective_dimensionality: None,
             distinguishability_loss: None,
+            esn_leak: None,
+            esn_leak_override_v1: None,
             structural_entropy: None,
             resonance_density_v1: None,
             pressure_source_v1: None,

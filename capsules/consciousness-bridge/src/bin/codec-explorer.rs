@@ -1,3 +1,5 @@
+#![allow(clippy::pedantic)]
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -164,8 +166,7 @@ fn default_output_dir() -> PathBuf {
     let ts = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .ok()
-        .map(|duration| duration.as_secs())
-        .unwrap_or(0);
+        .map_or(0, |duration| duration.as_secs());
     PathBuf::from(format!(
         "/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/codec_explorer/{ts}"
     ))

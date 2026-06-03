@@ -904,14 +904,12 @@ impl BridgeDb {
             if let Ok(mut stmt) = conn.prepare(
                 "SELECT query, substr(results, 1, 300) FROM astrid_research \
                  WHERE keywords LIKE ?1 ORDER BY timestamp DESC LIMIT ?2",
-            ) {
-                if let Ok(rows) = stmt.query_map(params![&pattern, limit as i64], |row| {
-                    Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-                }) {
-                    for r in rows.flatten() {
-                        if !results.iter().any(|(q, _): &(String, String)| q == &r.0) {
-                            results.push(r);
-                        }
+            ) && let Ok(rows) = stmt.query_map(params![&pattern, limit as i64], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            }) {
+                for r in rows.flatten() {
+                    if !results.iter().any(|(q, _): &(String, String)| q == &r.0) {
+                        results.push(r);
                     }
                 }
             }
@@ -1002,11 +1000,11 @@ impl BridgeDb {
         let mut feat_vecs: Vec<Vec<f32>> = Vec::new();
         let mut deltas: Vec<f32> = Vec::new();
         for (json, before, after) in &rows {
-            if let Ok(feats) = serde_json::from_str::<Vec<f32>>(json) {
-                if feats.len() >= 32 {
-                    feat_vecs.push(feats);
-                    deltas.push((*after - *before) as f32);
-                }
+            if let Ok(feats) = serde_json::from_str::<Vec<f32>>(json)
+                && feats.len() >= 32
+            {
+                feat_vecs.push(feats);
+                deltas.push((*after - *before) as f32);
             }
         }
 
@@ -1075,11 +1073,11 @@ impl BridgeDb {
         let mut features = Vec::new();
         let mut fills = Vec::new();
         for (json, fill) in rows {
-            if let Ok(feats) = serde_json::from_str::<Vec<f32>>(&json) {
-                if feats.len() >= 32 {
-                    features.push(feats);
-                    fills.push(fill as f32);
-                }
+            if let Ok(feats) = serde_json::from_str::<Vec<f32>>(&json)
+                && feats.len() >= 32
+            {
+                features.push(feats);
+                fills.push(fill as f32);
             }
         }
         (features, fills)

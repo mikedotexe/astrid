@@ -35,6 +35,12 @@ pub struct RegimeTracker {
     contracting_count: u32,
 }
 
+impl Default for RegimeTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RegimeTracker {
     pub fn new() -> Self {
         Self {
@@ -203,15 +209,15 @@ impl ReflectiveReport {
             }
         }
 
-        if let Some(ref field) = self.prompt_embedding_field {
-            if let Some(anchors) = field.get("top_anchors").and_then(|a| a.as_array()) {
-                let labels: Vec<&str> = anchors
-                    .iter()
-                    .filter_map(|a| a.get("label").and_then(|l| l.as_str()))
-                    .collect();
-                if !labels.is_empty() {
-                    parts.push(format!("Field anchors: {}", labels.join(", ")));
-                }
+        if let Some(ref field) = self.prompt_embedding_field
+            && let Some(anchors) = field.get("top_anchors").and_then(|a| a.as_array())
+        {
+            let labels: Vec<&str> = anchors
+                .iter()
+                .filter_map(|a| a.get("label").and_then(|l| l.as_str()))
+                .collect();
+            if !labels.is_empty() {
+                parts.push(format!("Field anchors: {}", labels.join(", ")));
             }
         }
 
@@ -258,7 +264,7 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
 
     debug!("calling MLX reflective sidecar");
 
-    let result = tokio::task::spawn_blocking(move || {
+    tokio::task::spawn_blocking(move || {
         let output = std::process::Command::new("python3")
             .arg(&sidecar_script)
             .arg("--json")
@@ -307,7 +313,5 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
     })
     .await
     .ok()
-    .flatten();
-
-    result
+    .flatten()
 }

@@ -311,8 +311,8 @@ fn dimension_label(index: usize) -> String {
         26 => String::from("curiosity"),
         27 => String::from("reflective"),
         31 => String::from("energy"),
-        32..=39 => format!("embedding_proj_{}", index - 32),
-        40..=43 => format!("narrative_arc_{}", index - 40),
+        32..=39 => format!("embedding_proj_{}", index.saturating_sub(32)),
+        40..=43 => format!("narrative_arc_{}", index.saturating_sub(40)),
         _ => format!("dim_{index}"),
     }
 }
@@ -536,7 +536,7 @@ fn write_relevance_svg(summary: &CodecExplorerSummary) -> Result<()> {
     let plot_w = width - left - right;
     let plot_h = height - top - bottom;
     let step = if summary.entries.len() > 1 {
-        plot_w / (summary.entries.len() - 1) as f32
+        plot_w / summary.entries.len().saturating_sub(1) as f32
     } else {
         plot_w
     };

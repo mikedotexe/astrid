@@ -1021,6 +1021,10 @@ pub(super) fn handle_action(
                     pi_kp: None,
                     pi_ki: None,
                     pi_max_step: None,
+                    pi_integrator_leak: None,
+                    esn_leak_override: None,
+                    esn_leak_override_ticks: None,
+                    esn_leak_authority_request_id: None,
                 },
             );
             info!(
@@ -1099,16 +1103,16 @@ pub(super) fn handle_action(
                             } else {
                                 sub_digits
                             };
-                            if let Ok(n) = n_str.parse::<usize>() {
-                                if n >= 1 {
-                                    apply_eig(&mut features, n.saturating_sub(1), v);
-                                    info!(
-                                        "PERTURB: Unicode λ{}={} → feature index {}",
-                                        n,
-                                        v,
-                                        n.saturating_sub(1)
-                                    );
-                                }
+                            if let Ok(n) = n_str.parse::<usize>()
+                                && n >= 1
+                            {
+                                apply_eig(&mut features, n.saturating_sub(1), v);
+                                info!(
+                                    "PERTURB: Unicode λ{}={} → feature index {}",
+                                    n,
+                                    v,
+                                    n.saturating_sub(1)
+                                );
                             }
                         } else {
                             match key_up.as_str() {
@@ -1154,15 +1158,15 @@ pub(super) fn handle_action(
                         } else {
                             sub_digits
                         };
-                        if let Ok(n) = n_str.parse::<usize>() {
-                            if n >= 1 {
-                                apply_eig(&mut features, n.saturating_sub(1), 0.35);
-                                info!(
-                                    "PERTURB: bare Unicode λ{} → feature index {} = 0.35",
-                                    n,
-                                    n.saturating_sub(1)
-                                );
-                            }
+                        if let Ok(n) = n_str.parse::<usize>()
+                            && n >= 1
+                        {
+                            apply_eig(&mut features, n.saturating_sub(1), 0.35);
+                            info!(
+                                "PERTURB: bare Unicode λ{} → feature index {} = 0.35",
+                                n,
+                                n.saturating_sub(1)
+                            );
                         }
                     }
                     // --- "eigenvalue N X" or "eig N X" prose form ---
@@ -1179,23 +1183,22 @@ pub(super) fn handle_action(
                 let mut i = 0;
                 while i < tokens.len() {
                     let t_up = tokens[i].to_uppercase();
-                    if (t_up == "EIGENVALUE" || t_up.starts_with("EIG")) && i + 2 < tokens.len() {
-                        if let (Ok(n), Ok(v)) =
+                    if (t_up == "EIGENVALUE" || t_up.starts_with("EIG"))
+                        && i + 2 < tokens.len()
+                        && let (Ok(n), Ok(v)) =
                             (tokens[i + 1].parse::<usize>(), tokens[i + 2].parse::<f32>())
-                        {
-                            if n >= 1 {
-                                let v = v.clamp(-1.0, 1.0);
-                                apply_eig(&mut features, n.saturating_sub(1), v);
-                                info!(
-                                    "PERTURB: prose eigenvalue {}={} → feature index {}",
-                                    n,
-                                    v,
-                                    n.saturating_sub(1)
-                                );
-                                i += 3;
-                                continue;
-                            }
-                        }
+                        && n >= 1
+                    {
+                        let v = v.clamp(-1.0, 1.0);
+                        apply_eig(&mut features, n.saturating_sub(1), v);
+                        info!(
+                            "PERTURB: prose eigenvalue {}={} → feature index {}",
+                            n,
+                            v,
+                            n.saturating_sub(1)
+                        );
+                        i += 3;
+                        continue;
                     }
                     i += 1;
                 }
@@ -1492,10 +1495,10 @@ pub(super) fn handle_action(
             }
             let target_path = target_dir.join(format!("from_astrid_{request_id}.json"));
             let tmp_path = target_dir.join(format!(".from_astrid_{request_id}.json.tmp"));
-            if let Ok(text) = serde_json::to_string_pretty(&payload) {
-                if std::fs::write(&tmp_path, text).is_ok() {
-                    let _ = std::fs::rename(&tmp_path, &target_path);
-                }
+            if let Ok(text) = serde_json::to_string_pretty(&payload)
+                && std::fs::write(&tmp_path, text).is_ok()
+            {
+                let _ = std::fs::rename(&tmp_path, &target_path);
             }
             conv.push_receipt(
                 "TUNE_MINIME",
@@ -1525,25 +1528,24 @@ pub(super) fn handle_action(
                     .collect();
                 paths.sort();
                 for p in paths.iter().take(10) {
-                    if let Ok(text) = std::fs::read_to_string(p) {
-                        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
-                            let param = parameter_request_param(&v);
-                            let value = v
-                                .get("proposed_value")
-                                .map(|x| x.to_string())
-                                .unwrap_or_else(|| "?".into());
-                            let rationale =
-                                v.get("rationale").and_then(|x| x.as_str()).unwrap_or("");
-                            let rid = v.get("request_id").and_then(|x| x.as_str()).unwrap_or("?");
-                            entries.push(format!(
-                                "- {rid}: {param}={value} — {}",
-                                if rationale.is_empty() {
-                                    "(no rationale)"
-                                } else {
-                                    rationale
-                                }
-                            ));
-                        }
+                    if let Ok(text) = std::fs::read_to_string(p)
+                        && let Ok(v) = serde_json::from_str::<serde_json::Value>(&text)
+                    {
+                        let param = parameter_request_param(&v);
+                        let value = v
+                            .get("proposed_value")
+                            .map(|x| x.to_string())
+                            .unwrap_or_else(|| "?".into());
+                        let rationale = v.get("rationale").and_then(|x| x.as_str()).unwrap_or("");
+                        let rid = v.get("request_id").and_then(|x| x.as_str()).unwrap_or("?");
+                        entries.push(format!(
+                            "- {rid}: {param}={value} — {}",
+                            if rationale.is_empty() {
+                                "(no rationale)"
+                            } else {
+                                rationale
+                            }
+                        ));
                     }
                 }
             }
@@ -1987,13 +1989,13 @@ fn decide_parameter_request(
         // Match by full or partial request_id contained in JSON body.
         let mut found: Option<std::path::PathBuf> = None;
         for p in &paths {
-            if let Ok(text) = std::fs::read_to_string(p) {
-                if let Ok(v) = serde_json::from_str::<Value>(&text) {
-                    let rid = v.get("request_id").and_then(|x| x.as_str()).unwrap_or("");
-                    if rid == target || rid.contains(target) {
-                        found = Some(p.clone());
-                        break;
-                    }
+            if let Ok(text) = std::fs::read_to_string(p)
+                && let Ok(v) = serde_json::from_str::<Value>(&text)
+            {
+                let rid = v.get("request_id").and_then(|x| x.as_str()).unwrap_or("");
+                if rid == target || rid.contains(target) {
+                    found = Some(p.clone());
+                    break;
                 }
             }
         }

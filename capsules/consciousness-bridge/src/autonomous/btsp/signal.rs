@@ -490,7 +490,7 @@ fn recent_owner_artifacts(owner: &str) -> Vec<TextArtifact> {
         };
         for entry in entries.filter_map(Result::ok) {
             let path = entry.path();
-            if !path.is_file() || !path.extension().is_some_and(|ext| ext == "txt") {
+            if !path.is_file() || path.extension().is_none_or(|ext| ext != "txt") {
                 continue;
             }
             if let Some(required_prefix) = prefix

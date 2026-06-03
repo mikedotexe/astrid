@@ -119,10 +119,27 @@ async fn bridge_receives_telemetry_from_mock_ws() {
             consciousness_bridge_server::types::SafetyLevel::Green
         );
         assert!(s.messages_relayed >= 1);
+        assert!(s.lambda_tail.is_some());
+        assert!(s.lambda_edge_perception.is_some());
     }
 
     // Verify SQLite logged the message.
     assert!(db.message_count().unwrap() >= 1);
+    assert!(
+        !db.query_messages(0.0, f64::MAX, Some("consciousness.v1.lambda_tail"), 10)
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        !db.query_messages(
+            0.0,
+            f64::MAX,
+            Some("consciousness.v1.lambda_edge_perception"),
+            10,
+        )
+        .unwrap()
+        .is_empty()
+    );
 
     // Send an escalating packet (red zone).
     tx.send(eigenpacket_json(0.95, 998.0, Some("PANIC MODE ACTIVATED")))
@@ -248,6 +265,23 @@ async fn bidirectional_bridge_with_safety_protocol() {
         .unwrap();
     tokio::time::sleep(Duration::from_millis(100)).await;
     assert_eq!(state.read().await.safety_level, SafetyLevel::Green);
+    assert!(state.read().await.lambda_tail.is_some());
+    assert!(state.read().await.lambda_edge_perception.is_some());
+    assert!(
+        !db.query_messages(0.0, f64::MAX, Some("consciousness.v1.lambda_tail"), 10)
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        !db.query_messages(
+            0.0,
+            f64::MAX,
+            Some("consciousness.v1.lambda_edge_perception"),
+            10,
+        )
+        .unwrap()
+        .is_empty()
+    );
 
     // --- Step 2: Send semantic features → should arrive at mock sensory server ---
     let semantic_msg = SensoryMsg::Semantic {

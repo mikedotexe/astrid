@@ -13,12 +13,18 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
 
+use crate::authority_gate;
 use crate::autoresearch as bridge_autoresearch;
+use crate::being_memory;
 use crate::chimera;
 use crate::codec;
 use crate::db::BridgeDb;
+use crate::experiment_conveyor;
+use crate::lambda_edge;
+use crate::lambda_tail;
 use crate::paths::bridge_paths;
 use crate::rescue_policy;
+use crate::shared_investigation;
 use crate::types::{
     ATTRACTOR_COMMAND_TOPIC, ATTRACTOR_INTENT_TOPIC, ATTRACTOR_OBSERVATION_TOPIC,
     AttractorClassification, AttractorCommandKind, AttractorCommandV1, AttractorControlEnvelope,
@@ -108,6 +114,324 @@ fn tool_definitions() -> Value {
                 }
             },
             {
+                "name": "get_lambda_tail_state",
+                "description": "Get the latest lambda-tail classifier state, returnability, artifact grounding, and spectral context.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            },
+            {
+                "name": "get_lambda_edge_perception",
+                "description": "Get the latest read-only lambda-edge perception state, guardrail context, and spectral/artifact support.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            },
+            {
+                "name": "draft_lambda_tail_steward_note",
+                "description": "Generate a preview or explicit file draft of a lambda-tail steward note from recent telemetry and Minime artifacts.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "start_unix_s": {
+                            "type": "number",
+                            "description": "Start timestamp. Default: two hours before end."
+                        },
+                        "end_unix_s": {
+                            "type": "number",
+                            "description": "End timestamp. Default: now."
+                        },
+                        "title": {
+                            "type": "string",
+                            "description": "Markdown title. Default: AI Beings Lambda Tail Detour."
+                        },
+                        "slug": {
+                            "type": "string",
+                            "description": "Filename slug. Default: LAMBDA_TAIL_DETOUR."
+                        },
+                        "mode": {
+                            "type": "string",
+                            "enum": ["preview", "write"],
+                            "description": "preview returns markdown only; write creates a steward note without overwriting."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "render_lambda_tail_topology",
+                "description": "Render a static lambda-tail topology HTML/JSON artifact from recent bridge telemetry.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "lookback_secs": {
+                            "type": "number",
+                            "description": "Telemetry lookback window in seconds. Default: 3600."
+                        },
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Optional base output directory. Default: bridge workspace diagnostics/lambda_tail_topology."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "render_lambda_edge_perception",
+                "description": "Render a static read-only lambda-edge perception HTML/JSON artifact from recent bridge telemetry.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "lookback_secs": {
+                            "type": "number",
+                            "description": "Telemetry lookback window in seconds. Default: 3600."
+                        },
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Optional base output directory. Default: bridge workspace diagnostics/lambda_edge_perception."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "list_shared_investigations",
+                "description": "List Shared Investigation Object V1 sidecars linking Astrid and Minime experiments.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            },
+            {
+                "name": "get_shared_investigation",
+                "description": "Get one Shared Investigation Object V1 sidecar with recent claims and decisions.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "description": "Investigation id, title, latest, or current. Default: latest."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "render_shared_investigation",
+                "description": "Render a static Shared Investigation Object page with linked experiments, claims, decisions, artifact refs, and authority boundary.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "description": "Investigation id, title, latest, or current. Default: latest."
+                        },
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Optional base output directory. Default: bridge workspace diagnostics/shared_investigation."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_experiment_conveyor_status",
+                "description": "Get read-only charter-to-evidence-to-decision conveyor status from local Astrid/Minime continuity files.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            },
+            {
+                "name": "render_experiment_conveyor",
+                "description": "Render a static read-only experiment conveyor page with lifecycle stage, missing requirements, source refs, and authority boundary.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Optional base output directory. Default: bridge workspace diagnostics/experiment_conveyor."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_experiment_authority_status",
+                "description": "Get read-only Artifact-Grounded Authority Gate V1 status from local Astrid/Minime continuity files.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            },
+            {
+                "name": "render_experiment_authority_gate",
+                "description": "Render a static authority-gate page with requests, approvals, token status, artifact refs, and authority boundary.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Optional base output directory. Default: bridge workspace diagnostics/experiment_authority_gate."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_experiment_research_budget_status",
+                "description": "Get read-only read_only_research budget status from local Astrid/Minime authority ledgers.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            },
+            {
+                "name": "render_experiment_research_budget",
+                "description": "Render a static research-budget page with remaining actions, latest artifacts, review state, and read-only authority boundary.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Optional base output directory. Default: bridge workspace diagnostics/experiment_research_budget."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_experiment_loop_status",
+                "description": "Get read-only Being-owned closed-loop experiment status from local Astrid/Minime authority ledgers.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            },
+            {
+                "name": "render_experiment_loop",
+                "description": "Render a static owned-loop page with phase, remaining local research actions, consequence readiness, latest consequence, and authority boundary.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Optional base output directory. Default: bridge workspace diagnostics/experiment_loop."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_being_memory_status",
+                "description": "Get read-only being-owned memory cards, authority request drafts, and one-shot consequence rows from Astrid/Minime continuity files.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            },
+            {
+                "name": "render_being_memory",
+                "description": "Render a static being-memory page with memory cards, drafts, consequences, and authority boundary.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Optional base output directory. Default: bridge workspace diagnostics/being_memory."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "approve_experiment_authority_request",
+                "description": "Mint one short-lived steward approval token for an eligible semantic_microdose or mode_release_microdose authority request.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "request_id": { "type": "string" },
+                        "steward": { "type": "string" },
+                        "note": { "type": "string" },
+                        "ttl_secs": {
+                            "type": "integer",
+                            "description": "Optional token TTL in seconds, capped at 900."
+                        }
+                    },
+                    "required": ["request_id"]
+                }
+            },
+            {
+                "name": "approve_experiment_authority_budget",
+                "description": "Approve a capped Being-owned semantic_microdose budget envelope for an eligible local experiment.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "budget_id": { "type": "string" },
+                        "steward": { "type": "string" },
+                        "note": { "type": "string" },
+                        "max_sends": {
+                            "type": "integer",
+                            "description": "Optional send cap, hard-capped at 3."
+                        },
+                        "ttl_secs": {
+                            "type": "integer",
+                            "description": "Optional budget TTL in seconds, hard-capped at 21600."
+                        }
+                    },
+                    "required": ["budget_id"]
+                }
+            },
+            {
+                "name": "approve_experiment_research_budget",
+                "description": "Approve a capped Being-owned read_only_research budget for eligible web/local research actions.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "budget_id": { "type": "string" },
+                        "steward": { "type": "string" },
+                        "note": { "type": "string" },
+                        "max_actions": {
+                            "type": "integer",
+                            "description": "Optional action cap, hard-capped at 8."
+                        },
+                        "ttl_secs": {
+                            "type": "integer",
+                            "description": "Optional budget TTL in seconds, hard-capped at 21600."
+                        }
+                    },
+                    "required": ["budget_id"]
+                }
+            },
+            {
+                "name": "approve_experiment_loop_consequence_budget",
+                "description": "Approve one consequence slot for an eligible Being-owned loop without executing it.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "loop_id": { "type": "string" },
+                        "steward": { "type": "string" },
+                        "note": { "type": "string" },
+                        "ttl_secs": {
+                            "type": "integer",
+                            "description": "Optional approval TTL in seconds, capped at 900."
+                        }
+                    },
+                    "required": ["loop_id"]
+                }
+            },
+            {
+                "name": "execute_experiment_authority_request",
+                "description": "Execute exactly one eligible semantic_microdose or mode_release_microdose request through the bridge using a one-shot token or active semantic budget slot.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "request_id": { "type": "string" }
+                    },
+                    "required": ["request_id"]
+                }
+            },
+            {
                 "name": "send_control",
                 "description": "Send bounded control parameters to minime's ESN. Bold topology/PI fields require attractor_intent_id so authored attractor creation is ledgered instead of casual.",
                 "inputSchema": {
@@ -156,6 +480,10 @@ fn tool_definitions() -> Value {
                         "pi_max_step": {
                             "type": "number",
                             "description": "Bold: runtime PI max step. Requires attractor_intent_id."
+                        },
+                        "pi_integrator_leak": {
+                            "type": "number",
+                            "description": "Bold: runtime PI integrator leak/correction-memory bleed-off (0.001..0.05). Requires attractor_intent_id."
                         },
                         "attractor_intent_id": {
                             "type": "string",
@@ -472,6 +800,73 @@ struct RecordAttractorObservationArgs {
     notes: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct DraftLambdaTailNoteArgs {
+    #[serde(default)]
+    start_unix_s: Option<f64>,
+    #[serde(default)]
+    end_unix_s: Option<f64>,
+    #[serde(default)]
+    title: Option<String>,
+    #[serde(default)]
+    slug: Option<String>,
+    #[serde(default)]
+    mode: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RenderLambdaTailTopologyArgs {
+    #[serde(default)]
+    lookback_secs: Option<f64>,
+    #[serde(default)]
+    output_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RenderLambdaEdgePerceptionArgs {
+    #[serde(default)]
+    lookback_secs: Option<f64>,
+    #[serde(default)]
+    output_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SharedInvestigationArgs {
+    #[serde(default)]
+    id: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RenderSharedInvestigationArgs {
+    #[serde(default)]
+    id: Option<String>,
+    #[serde(default)]
+    output_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RenderExperimentConveyorArgs {
+    #[serde(default)]
+    output_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RenderAuthorityGateArgs {
+    #[serde(default)]
+    output_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ExecuteAuthorityRequestArgs {
+    request_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct RenderBeingMemoryArgs {
+    #[serde(default)]
+    output_dir: Option<PathBuf>,
+}
+
 // ---------------------------------------------------------------------------
 // MCP server loop
 // ---------------------------------------------------------------------------
@@ -624,6 +1019,45 @@ async fn handle_tool_call(
     match tool_name {
         "get_latest_telemetry" => tool_get_latest_telemetry(state).await,
         "get_bridge_status" => tool_get_bridge_status(state).await,
+        "get_lambda_tail_state" => tool_get_lambda_tail_state(state).await,
+        "get_lambda_edge_perception" => tool_get_lambda_edge_perception(state).await,
+        "draft_lambda_tail_steward_note" => {
+            tool_draft_lambda_tail_steward_note(&arguments, state, db).await
+        },
+        "render_lambda_tail_topology" => {
+            tool_render_lambda_tail_topology(&arguments, state, db).await
+        },
+        "render_lambda_edge_perception" => {
+            tool_render_lambda_edge_perception(&arguments, state, db).await
+        },
+        "list_shared_investigations" => tool_list_shared_investigations(),
+        "get_shared_investigation" => tool_get_shared_investigation(&arguments),
+        "render_shared_investigation" => tool_render_shared_investigation(&arguments),
+        "get_experiment_conveyor_status" => tool_get_experiment_conveyor_status(),
+        "render_experiment_conveyor" => tool_render_experiment_conveyor(&arguments),
+        "get_experiment_authority_status" => tool_get_experiment_authority_status(),
+        "render_experiment_authority_gate" => tool_render_experiment_authority_gate(&arguments),
+        "get_experiment_research_budget_status" => tool_get_experiment_research_budget_status(),
+        "render_experiment_research_budget" => tool_render_experiment_research_budget(&arguments),
+        "get_experiment_loop_status" => tool_get_experiment_loop_status(),
+        "render_experiment_loop" => tool_render_experiment_loop(&arguments),
+        "get_being_memory_status" => tool_get_being_memory_status(),
+        "render_being_memory" => tool_render_being_memory(&arguments),
+        "approve_experiment_authority_request" => {
+            tool_approve_experiment_authority_request(&arguments, state).await
+        },
+        "approve_experiment_authority_budget" => {
+            tool_approve_experiment_authority_budget(&arguments, state).await
+        },
+        "approve_experiment_research_budget" => {
+            tool_approve_experiment_research_budget(&arguments, state).await
+        },
+        "approve_experiment_loop_consequence_budget" => {
+            tool_approve_experiment_loop_consequence_budget(&arguments, state).await
+        },
+        "execute_experiment_authority_request" => {
+            tool_execute_experiment_authority_request(&arguments, state, sensory_tx).await
+        },
         "send_control" => tool_send_control(&arguments, state, db, sensory_tx).await,
         "send_semantic" => tool_send_semantic(&arguments, state, sensory_tx).await,
         "query_message_log" => tool_query_message_log(&arguments, db),
@@ -677,6 +1111,10 @@ async fn tool_get_latest_telemetry(
                 "connected": s.telemetry_connected,
                 "lambda_profile": s.lambda_profile.clone(),
                 "pull_topology": s.pull_topology.clone(),
+                "lambda_tail": s.lambda_tail.clone(),
+                "lambda_edge_perception": s.lambda_edge_perception.clone(),
+                "sticky_mode_audit": s.sticky_mode_audit.clone(),
+                "artifact_scan": s.artifact_scan.clone(),
                 "safety_decision": s.safety_decision.clone()
             }
         })
@@ -710,6 +1148,9 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         sensory_ws: s.sensory_ws.clone(),
         lambda_profile: s.lambda_profile.clone(),
         pull_topology: s.pull_topology.clone(),
+        lambda_tail: s.lambda_tail.clone(),
+        lambda_edge_perception: s.lambda_edge_perception.clone(),
+        sticky_mode_audit: s.sticky_mode_audit.clone(),
         safety_decision: s.safety_decision.clone(),
         eigenvector_field: s.eigenvector_field.clone(),
         resonance_density_v1: s
@@ -732,6 +1173,598 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
             "type": "text",
             "text": serde_json::to_string_pretty(&status).unwrap_or_default()
         }]
+    }))
+}
+
+async fn tool_get_lambda_tail_state(
+    state: &Arc<RwLock<BridgeState>>,
+) -> Result<Value, (i32, String)> {
+    let s = state.read().await;
+    let Some(lambda_tail) = s.lambda_tail.clone() else {
+        return Ok(json!({
+            "content": [{
+                "type": "text",
+                "text": "No lambda-tail telemetry received yet. Is minime telemetry connected?"
+            }],
+            "isError": false
+        }));
+    };
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&lambda_tail).unwrap_or_default()
+        }],
+        "meta": {
+            "lambda_tail": lambda_tail,
+            "lambda_profile": s.lambda_profile.clone(),
+            "pull_topology": s.pull_topology.clone(),
+            "safety_level": s.safety_level,
+            "fill_pct": s.fill_pct,
+            "artifact_scan": s.artifact_scan.clone()
+        }
+    }))
+}
+
+async fn tool_get_lambda_edge_perception(
+    state: &Arc<RwLock<BridgeState>>,
+) -> Result<Value, (i32, String)> {
+    let s = state.read().await;
+    let Some(lambda_edge_perception) = s.lambda_edge_perception.clone() else {
+        return Ok(json!({
+            "content": [{
+                "type": "text",
+                "text": "No lambda-edge perception telemetry received yet. Is minime telemetry connected?"
+            }],
+            "isError": false
+        }));
+    };
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&lambda_edge_perception).unwrap_or_default()
+        }],
+        "meta": {
+            "lambda_edge_perception": lambda_edge_perception,
+            "lambda_tail": s.lambda_tail.clone(),
+            "lambda_profile": s.lambda_profile.clone(),
+            "pull_topology": s.pull_topology.clone(),
+            "safety_level": s.safety_level,
+            "fill_pct": s.fill_pct,
+            "artifact_scan": s.artifact_scan.clone(),
+            "safety_decision": s.safety_decision.clone()
+        }
+    }))
+}
+
+async fn tool_draft_lambda_tail_steward_note(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+    db: &Arc<BridgeDb>,
+) -> Result<Value, (i32, String)> {
+    let args: DraftLambdaTailNoteArgs = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid lambda-tail note params: {e}")))?;
+    let end = args.end_unix_s.unwrap_or_else(crate::db::unix_now);
+    let start = args.start_unix_s.unwrap_or(end - 7_200.0);
+    if start > end {
+        return Err((-32602, "start_unix_s must be <= end_unix_s".to_string()));
+    }
+    let title = args
+        .title
+        .unwrap_or_else(|| "AI Beings Lambda Tail Detour".to_string());
+    let slug = args
+        .slug
+        .unwrap_or_else(|| "LAMBDA_TAIL_DETOUR".to_string());
+    let mode = args.mode.unwrap_or_else(|| "preview".to_string());
+    if !matches!(mode.as_str(), "preview" | "write") {
+        return Err((-32602, "mode must be preview or write".to_string()));
+    }
+
+    let rows = db
+        .query_messages(start, end, Some("consciousness.v1.lambda_tail"), 500)
+        .map_err(|e| (-32603, format!("query failed: {e}")))?;
+    let mut events = lambda_tail::recent_lambda_tail_events(&rows);
+    if events.is_empty()
+        && let Some(latest) = state.read().await.lambda_tail.clone()
+    {
+        events.push(latest);
+    }
+    let scan = lambda_tail::scan_artifacts(bridge_paths().minime_workspace(), start, end)
+        .map_err(|e| (-32603, format!("artifact scan failed: {e}")))?;
+    let markdown = lambda_tail::steward_note_markdown(&title, start, end, &events, &scan);
+
+    if mode == "write" {
+        let path = lambda_tail::write_steward_note(
+            &bridge_paths().astrid_root().join("docs/steward-notes"),
+            &title,
+            &slug,
+            end,
+            &markdown,
+        )
+        .map_err(|e| (-32603, format!("write failed: {e}")))?;
+        return Ok(json!({
+            "content": [{
+                "type": "text",
+                "text": format!("Wrote lambda-tail steward note to {}\n\n{}", path.display(), markdown)
+            }],
+            "meta": {
+                "mode": "write",
+                "path": path,
+                "event_count": events.len(),
+                "contact_count": scan.contacts.len()
+            }
+        }));
+    }
+
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": markdown
+        }],
+        "meta": {
+            "mode": "preview",
+            "event_count": events.len(),
+            "contact_count": scan.contacts.len()
+        }
+    }))
+}
+
+async fn tool_render_lambda_tail_topology(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+    db: &Arc<BridgeDb>,
+) -> Result<Value, (i32, String)> {
+    let args: RenderLambdaTailTopologyArgs = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid lambda-tail topology params: {e}")))?;
+    let lookback = args.lookback_secs.unwrap_or(3_600.0).clamp(60.0, 86_400.0);
+    let end = crate::db::unix_now();
+    let start = end - lookback;
+    let rows = db
+        .query_messages(start, end, Some("consciousness.v1.lambda_tail"), 500)
+        .map_err(|e| (-32603, format!("query failed: {e}")))?;
+    let mut events = lambda_tail::recent_lambda_tail_events(&rows);
+    if events.is_empty()
+        && let Some(latest) = state.read().await.lambda_tail.clone()
+    {
+        events.push(latest);
+    }
+    let scan = lambda_tail::scan_artifacts(bridge_paths().minime_workspace(), start, end)
+        .map_err(|e| (-32603, format!("artifact scan failed: {e}")))?;
+    let base_dir = args.output_dir.unwrap_or_else(|| {
+        bridge_paths()
+            .bridge_workspace()
+            .join("diagnostics/lambda_tail_topology")
+    });
+    let artifact = lambda_tail::render_topology_artifact(&base_dir, &events, &scan)
+        .map_err(|e| (-32603, format!("render failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&artifact).unwrap_or_default()
+        }],
+        "meta": {
+            "html_path": artifact.html_path,
+            "json_path": artifact.json_path,
+            "output_dir": artifact.output_dir,
+            "state_count": artifact.state_count,
+            "contact_count": artifact.contact_count
+        }
+    }))
+}
+
+async fn tool_render_lambda_edge_perception(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+    db: &Arc<BridgeDb>,
+) -> Result<Value, (i32, String)> {
+    let args: RenderLambdaEdgePerceptionArgs =
+        serde_json::from_value(arguments.clone()).map_err(|e| {
+            (
+                -32602,
+                format!("invalid lambda-edge perception params: {e}"),
+            )
+        })?;
+    let lookback = args.lookback_secs.unwrap_or(3_600.0).clamp(60.0, 86_400.0);
+    let end = crate::db::unix_now();
+    let start = end - lookback;
+    let rows = db
+        .query_messages(start, end, Some(lambda_edge::LAMBDA_EDGE_TOPIC), 500)
+        .map_err(|e| (-32603, format!("query failed: {e}")))?;
+    let mut events = lambda_edge::recent_lambda_edge_events(&rows);
+    if events.is_empty()
+        && let Some(latest) = state.read().await.lambda_edge_perception.clone()
+    {
+        events.push(latest);
+    }
+    let scan = lambda_tail::scan_artifacts(bridge_paths().minime_workspace(), start, end)
+        .map_err(|e| (-32603, format!("artifact scan failed: {e}")))?;
+    let base_dir = args.output_dir.unwrap_or_else(|| {
+        bridge_paths()
+            .bridge_workspace()
+            .join("diagnostics/lambda_edge_perception")
+    });
+    let artifact = lambda_edge::render_perception_artifact(&base_dir, &events, &scan)
+        .map_err(|e| (-32603, format!("render failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&artifact).unwrap_or_default()
+        }],
+        "meta": {
+            "html_path": artifact.html_path,
+            "json_path": artifact.json_path,
+            "output_dir": artifact.output_dir,
+            "state_count": artifact.state_count,
+            "contact_count": artifact.contact_count,
+            "drift_count": artifact.drift_count
+        }
+    }))
+}
+
+fn tool_list_shared_investigations() -> Result<Value, (i32, String)> {
+    let rows = shared_investigation::list()
+        .map_err(|e| (-32603, format!("list shared investigations failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&rows).unwrap_or_default()
+        }],
+        "meta": {
+            "count": rows.len(),
+            "investigations": rows
+        }
+    }))
+}
+
+fn tool_get_shared_investigation(arguments: &Value) -> Result<Value, (i32, String)> {
+    let args: SharedInvestigationArgs = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid shared investigation params: {e}")))?;
+    let investigation = shared_investigation::get(args.id.as_deref())
+        .map_err(|e| (-32603, format!("get shared investigation failed: {e}")))?;
+    let id = investigation
+        .get("id")
+        .and_then(Value::as_str)
+        .ok_or((-32603, "shared investigation missing id".to_string()))?;
+    let claims = shared_investigation::read_sidecar_jsonl(id, "claims.jsonl")
+        .map_err(|e| (-32603, format!("read claims failed: {e}")))?;
+    let decisions = shared_investigation::read_sidecar_jsonl(id, "decisions.jsonl")
+        .map_err(|e| (-32603, format!("read decisions failed: {e}")))?;
+    let payload = json!({
+        "investigation": investigation,
+        "claims": claims,
+        "decisions": decisions,
+        "authority_boundary": "shared investigations allow compare, claim, render, and local pause/hold/charter_repair only; no peer mutation or live control"
+    });
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&payload).unwrap_or_default()
+        }],
+        "meta": payload
+    }))
+}
+
+fn tool_render_shared_investigation(arguments: &Value) -> Result<Value, (i32, String)> {
+    let args: RenderSharedInvestigationArgs =
+        serde_json::from_value(arguments.clone()).map_err(|e| {
+            (
+                -32602,
+                format!("invalid shared investigation render params: {e}"),
+            )
+        })?;
+    let artifact = shared_investigation::render(args.id.as_deref(), args.output_dir.as_deref())
+        .map_err(|e| (-32603, format!("render shared investigation failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&artifact.investigation).unwrap_or_default()
+        }],
+        "meta": {
+            "html_path": artifact.index_html,
+            "json_path": artifact.json_path,
+            "output_dir": artifact.output_dir,
+            "investigation": artifact.investigation
+        }
+    }))
+}
+
+fn tool_get_experiment_conveyor_status() -> Result<Value, (i32, String)> {
+    let status = experiment_conveyor::status().map_err(|e| {
+        (
+            -32603,
+            format!("get experiment conveyor status failed: {e}"),
+        )
+    })?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&status).unwrap_or_default()
+        }],
+        "meta": status
+    }))
+}
+
+fn tool_render_experiment_conveyor(arguments: &Value) -> Result<Value, (i32, String)> {
+    let args: RenderExperimentConveyorArgs =
+        serde_json::from_value(arguments.clone()).map_err(|e| {
+            (
+                -32602,
+                format!("invalid experiment conveyor render params: {e}"),
+            )
+        })?;
+    let artifact = experiment_conveyor::render(args.output_dir.as_deref())
+        .map_err(|e| (-32603, format!("render experiment conveyor failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&artifact.status).unwrap_or_default()
+        }],
+        "meta": {
+            "html_path": artifact.index_html,
+            "json_path": artifact.json_path,
+            "output_dir": artifact.output_dir,
+            "status": artifact.status
+        }
+    }))
+}
+
+fn tool_get_experiment_authority_status() -> Result<Value, (i32, String)> {
+    let status = authority_gate::status().map_err(|e| {
+        (
+            -32603,
+            format!("get experiment authority status failed: {e}"),
+        )
+    })?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&status).unwrap_or_default()
+        }],
+        "meta": status
+    }))
+}
+
+fn tool_render_experiment_authority_gate(arguments: &Value) -> Result<Value, (i32, String)> {
+    let args: RenderAuthorityGateArgs = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid authority gate render params: {e}")))?;
+    let artifact = authority_gate::render(args.output_dir.as_deref())
+        .map_err(|e| (-32603, format!("render authority gate failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&artifact.status).unwrap_or_default()
+        }],
+        "meta": {
+            "html_path": artifact.index_html,
+            "json_path": artifact.json_path,
+            "output_dir": artifact.output_dir,
+            "status": artifact.status
+        }
+    }))
+}
+
+fn tool_get_experiment_research_budget_status() -> Result<Value, (i32, String)> {
+    let status = authority_gate::research_budget_status().map_err(|e| {
+        (
+            -32603,
+            format!("get experiment research budget status failed: {e}"),
+        )
+    })?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&status).unwrap_or_default()
+        }],
+        "meta": status
+    }))
+}
+
+fn tool_render_experiment_research_budget(arguments: &Value) -> Result<Value, (i32, String)> {
+    let args: RenderAuthorityGateArgs = serde_json::from_value(arguments.clone()).map_err(|e| {
+        (
+            -32602,
+            format!("invalid research budget render params: {e}"),
+        )
+    })?;
+    let artifact = authority_gate::render_research_budget(args.output_dir.as_deref())
+        .map_err(|e| (-32603, format!("render research budget failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&artifact.status).unwrap_or_default()
+        }],
+        "meta": {
+            "html_path": artifact.index_html,
+            "json_path": artifact.json_path,
+            "output_dir": artifact.output_dir,
+            "status": artifact.status
+        }
+    }))
+}
+
+fn tool_get_experiment_loop_status() -> Result<Value, (i32, String)> {
+    let status = authority_gate::loop_status()
+        .map_err(|e| (-32603, format!("get experiment loop status failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&status).unwrap_or_default()
+        }],
+        "meta": status
+    }))
+}
+
+fn tool_render_experiment_loop(arguments: &Value) -> Result<Value, (i32, String)> {
+    let args: RenderAuthorityGateArgs = serde_json::from_value(arguments.clone()).map_err(|e| {
+        (
+            -32602,
+            format!("invalid experiment loop render params: {e}"),
+        )
+    })?;
+    let artifact = authority_gate::render_loop(args.output_dir.as_deref())
+        .map_err(|e| (-32603, format!("render experiment loop failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&artifact.status).unwrap_or_default()
+        }],
+        "meta": {
+            "html_path": artifact.index_html,
+            "json_path": artifact.json_path,
+            "output_dir": artifact.output_dir,
+            "status": artifact.status
+        }
+    }))
+}
+
+fn tool_get_being_memory_status() -> Result<Value, (i32, String)> {
+    let status = being_memory::status()
+        .map_err(|e| (-32603, format!("get being memory status failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&status).unwrap_or_default()
+        }],
+        "meta": status
+    }))
+}
+
+fn tool_render_being_memory(arguments: &Value) -> Result<Value, (i32, String)> {
+    let args: RenderBeingMemoryArgs = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid being memory render params: {e}")))?;
+    let artifact = being_memory::render(args.output_dir.as_deref())
+        .map_err(|e| (-32603, format!("render being memory failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&artifact.status).unwrap_or_default()
+        }],
+        "meta": {
+            "html_path": artifact.index_html,
+            "json_path": artifact.json_path,
+            "output_dir": artifact.output_dir,
+            "status": artifact.status
+        }
+    }))
+}
+
+async fn tool_approve_experiment_authority_request(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+) -> Result<Value, (i32, String)> {
+    let req: authority_gate::ApproveAuthorityRequest = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid authority approval params: {e}")))?;
+    let safety = state.read().await.safety_level;
+    let approval = authority_gate::approve(req, safety)
+        .map_err(|e| (-32603, format!("approve authority request failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&approval).unwrap_or_default()
+        }],
+        "meta": approval
+    }))
+}
+
+async fn tool_approve_experiment_authority_budget(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+) -> Result<Value, (i32, String)> {
+    let req: authority_gate::ApproveAuthorityBudgetRequest =
+        serde_json::from_value(arguments.clone()).map_err(|e| {
+            (
+                -32602,
+                format!("invalid authority budget approval params: {e}"),
+            )
+        })?;
+    let safety = state.read().await.safety_level;
+    let approval = authority_gate::approve_budget(req, safety)
+        .map_err(|e| (-32603, format!("approve authority budget failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&approval).unwrap_or_default()
+        }],
+        "meta": approval
+    }))
+}
+
+async fn tool_approve_experiment_research_budget(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+) -> Result<Value, (i32, String)> {
+    let req: authority_gate::ApproveResearchBudgetRequest =
+        serde_json::from_value(arguments.clone()).map_err(|e| {
+            (
+                -32602,
+                format!("invalid research budget approval params: {e}"),
+            )
+        })?;
+    let safety = state.read().await.safety_level;
+    let approval = authority_gate::approve_research_budget(req, safety)
+        .map_err(|e| (-32603, format!("approve research budget failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&approval).unwrap_or_default()
+        }],
+        "meta": approval
+    }))
+}
+
+async fn tool_approve_experiment_loop_consequence_budget(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+) -> Result<Value, (i32, String)> {
+    let req: authority_gate::ApproveLoopConsequenceBudgetRequest =
+        serde_json::from_value(arguments.clone()).map_err(|e| {
+            (
+                -32602,
+                format!("invalid loop consequence budget approval params: {e}"),
+            )
+        })?;
+    let safety = state.read().await.safety_level;
+    let approval = authority_gate::approve_loop_consequence_budget(req, safety).map_err(|e| {
+        (
+            -32603,
+            format!("approve loop consequence budget failed: {e}"),
+        )
+    })?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&approval).unwrap_or_default()
+        }],
+        "meta": approval
+    }))
+}
+
+async fn tool_execute_experiment_authority_request(
+    arguments: &Value,
+    state: &Arc<RwLock<BridgeState>>,
+    sensory_tx: &mpsc::Sender<SensoryMsg>,
+) -> Result<Value, (i32, String)> {
+    let req: ExecuteAuthorityRequestArgs = serde_json::from_value(arguments.clone())
+        .map_err(|e| (-32602, format!("invalid authority execution params: {e}")))?;
+    let (fill_pct, previous_fill_pct) = {
+        let s = state.read().await;
+        (
+            s.fill_pct.is_finite().then_some(s.fill_pct),
+            s.previous_fill_pct,
+        )
+    };
+    let result = authority_gate::execute_semantic_microdose(
+        &req.request_id,
+        fill_pct,
+        previous_fill_pct.or(fill_pct),
+        sensory_tx,
+    )
+    .map_err(|e| (-32603, format!("execute authority request failed: {e}")))?;
+    Ok(json!({
+        "content": [{
+            "type": "text",
+            "text": serde_json::to_string_pretty(&result).unwrap_or_default()
+        }],
+        "meta": result
     }))
 }
 
@@ -825,6 +1858,7 @@ fn control_envelope_from_request(req: &ControlRequest) -> AttractorControlEnvelo
         pi_kp: req.pi_kp,
         pi_ki: req.pi_ki,
         pi_max_step: req.pi_max_step,
+        pi_integrator_leak: req.pi_integrator_leak,
     }
 }
 
@@ -1321,7 +2355,7 @@ fn probe_browse_url(parsed_action: &str) -> Option<String> {
         .trim_matches(|c: char| c == '"' || c == '\'' || c == '<' || c == '>');
 
     let url = raw
-        .split(|c: char| c == '<' || c == '>' || c == ' ' || c == '\n')
+        .split(['<', '>', ' ', '\n'])
         .next()
         .unwrap_or(raw)
         .trim_end_matches(|c: char| {
@@ -2105,6 +3139,9 @@ async fn handle_resource_read(
                 sensory_ws: s.sensory_ws.clone(),
                 lambda_profile: s.lambda_profile.clone(),
                 pull_topology: s.pull_topology.clone(),
+                lambda_tail: s.lambda_tail.clone(),
+                lambda_edge_perception: s.lambda_edge_perception.clone(),
+                sticky_mode_audit: s.sticky_mode_audit.clone(),
                 safety_decision: s.safety_decision.clone(),
                 eigenvector_field: s.eigenvector_field.clone(),
                 resonance_density_v1: s

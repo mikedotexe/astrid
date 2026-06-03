@@ -1203,18 +1203,13 @@ pub enum SovereigntySuggestion {
 
 /// Throttle gap between sovereignty nominations (in exchanges). Ensures
 /// the line doesn't drown out the shadow curriculum.
-/// v3.6.1 verification mode: tightened from 6 → 2 to observe uptake
-/// faster during soak. Restore to 6 after Astrid demonstrates organic
-/// uptake of one of the new actions.
-const SOVEREIGNTY_NOMINATION_THROTTLE: u64 = 2;
+const SOVEREIGNTY_NOMINATION_THROTTLE: u64 = 6;
 /// Cadence at which SHADOW_COUPLING re-enters rotation when the
 /// artifact has gone stale (or never been emitted).
-/// v3.6.1 verification mode: tightened from 16 → 4. Restore after soak.
-const SHADOW_COUPLING_ROTATION: u64 = 4;
+const SHADOW_COUPLING_ROTATION: u64 = 16;
 /// Cadence at which the generation-shape menu re-enters rotation when
 /// neither TEMPERATURE / LENGTH nor SHAPE_LEARN has been touched.
-/// v3.6.1 verification mode: tightened from 24 → 6. Restore after soak.
-const GENERATION_SHAPE_ROTATION: u64 = 6;
+const GENERATION_SHAPE_ROTATION: u64 = 24;
 /// v3.6.4: how recent a REVIEW_PARAMETER_REQUESTS pick must be for the
 /// curriculum to switch to the DecideRequest nudge (vs falling back to
 /// ReviewRequests). v3.6.6 bumped from 12 → 24 after observing Astrid
@@ -1327,15 +1322,13 @@ fn clip_topic_for_chain_hint(topic: &str, max_len: usize) -> String {
     }
     // Walk char boundaries to respect UTF-8 (e.g., λ is 2 bytes).
     let mut last_ws = 0usize;
-    let mut total_chars = 0usize;
-    for (byte_idx, ch) in trimmed.char_indices() {
+    for (total_chars, (byte_idx, ch)) in trimmed.char_indices().enumerate() {
         if total_chars >= max_len {
             break;
         }
         if ch.is_whitespace() {
             last_ws = byte_idx;
         }
-        total_chars += 1;
     }
     let cut = if last_ws > 0 {
         last_ws
@@ -1397,10 +1390,10 @@ pub fn current_sovereignty_snapshot() -> Option<SovereigntyContext> {
 /// throttle. `save_state` reads this back into `ConversationState` so
 /// the watermark survives across exchanges.
 pub fn record_sovereignty_nomination(exchange_count: u64) {
-    if let Ok(mut guard) = LATEST_SOVEREIGNTY_SNAPSHOT.lock() {
-        if let Some(snapshot) = guard.as_mut() {
-            snapshot.last_sovereignty_nomination_exchange = Some(exchange_count);
-        }
+    if let Ok(mut guard) = LATEST_SOVEREIGNTY_SNAPSHOT.lock()
+        && let Some(snapshot) = guard.as_mut()
+    {
+        snapshot.last_sovereignty_nomination_exchange = Some(exchange_count);
     }
 }
 

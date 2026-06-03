@@ -8,16 +8,27 @@ use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::time::UNIX_EPOCH;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
+use crate::continuity_control_plane::{
+    AUTHORITY_BUDGET_MAX_SENDS, LOCAL_RESEARCH_MAX_ACTIONS, LOCAL_RESEARCH_TTL_SECS,
+    LOOP_CONSEQUENCE_MAX_SENDS, LOOP_RESEARCH_MAX_ACTIONS, LOOP_TTL_SECS,
+    STEWARD_RESEARCH_MAX_ACTIONS, authority_budget_request_scaffold, build_control_plane_v1,
+    command_palette_text as control_plane_command_palette_text, control_plane_text,
+    default_local_research_budget_request_scaffold, default_owned_loop_request_scaffold,
+    local_research_budget_request_scaffold, owned_loop_request_scaffold,
+    research_budget_accept_guidance,
+};
 use crate::db::{BridgeDb, unix_now};
 use crate::paths::bridge_paths;
 use crate::types::SpectralTelemetry;
 
 const SCHEMA_VERSION: u32 = 1;
+const PROJECTION_SCHEMA_VERSION: u32 = 2;
 const DEFAULT_PRIVACY: &str = "summary";
 const PROTECTED_VISIBILITY: &str = "protected_summary";
 const PUBLIC_VISIBILITY: &str = "summary";
@@ -52,6 +63,14 @@ pub struct ResearchThread {
     pub thread_inhabitable_fluctuation_v1: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub motif_allowance_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub continuity_session_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interpretation_risk_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub constraint_release_trajectory_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub projection_freshness_v1: Option<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,6 +103,12 @@ pub struct ActionEvent {
     pub normalization_signal_v1: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charter_required_guard_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub research_budget_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interpretation_risk_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub constraint_release_trajectory_v1: Option<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -199,6 +224,10 @@ struct ExperimentContinuityProjection {
     continuity_return: String,
     native_continuity_v1: Value,
     shared_investigation_v1: Option<Value>,
+    shared_investigation_object_v1: Option<Value>,
+    research_dossier_v1: Option<Value>,
+    first_dossier_claim_cue_v1: Option<Value>,
+    peer_mutation_boundary_cue_v1: Option<Value>,
     charter_scaffold_v1: Option<Value>,
     charter_status: String,
     evidence_status: String,
@@ -219,6 +248,14 @@ struct ThreadContinuityProjection {
     continuity_return_line: String,
     native_continuity_v1: Value,
     shared_investigation_v1: Option<Value>,
+    shared_investigation_object_v1: Option<Value>,
+    research_dossier_v1: Option<Value>,
+    first_dossier_claim_cue_v1: Option<Value>,
+    peer_mutation_boundary_cue_v1: Option<Value>,
+    sovereign_loop_v1: Option<Value>,
+    continuity_control_plane_v1: Value,
+    interpretation_risk_v1: Option<Value>,
+    constraint_release_trajectory_v1: Option<Value>,
     preflight_safety_cue_v1: Option<Value>,
     read_only_control_intent_cue_v1: Option<Value>,
     constraint_counterfactual_cue_v1: Option<Value>,
@@ -231,6 +268,8 @@ struct ThreadContinuityProjection {
     stale_running_count: usize,
     top_actionable_proposals: Vec<ProposalDiagnostic>,
 }
+
+type AuthorityRequestLocation = (ResearchThread, ExperimentRecord, Value, Vec<Value>);
 
 #[derive(Debug, Clone)]
 struct ExperimentStartParts {
@@ -270,6 +309,7 @@ pub struct NextActionOutcome {
     pub preflight_report: Option<Value>,
     pub suggested_next: Option<String>,
     pub charter_required_guard_v1: Option<Value>,
+    pub research_budget_v1: Option<Value>,
 }
 
 #[derive(Debug, Clone)]
@@ -282,9 +322,35 @@ pub struct CharterRequiredGuardAssessment {
     pub proposed_preflight_target: String,
 }
 
+struct ContinuitySessionFields {
+    title: Option<String>,
+    focus: Option<String>,
+    summary: Option<String>,
+    open_questions: Vec<String>,
+    source_refs: Vec<String>,
+    artifact_refs: Vec<String>,
+    suggested_next: Option<String>,
+    extra: Value,
+}
+
 impl CharterRequiredGuardAssessment {
     #[must_use]
     pub fn message(&self) -> String {
+        if self.reason == "charter_required_research_budget" {
+            return format!(
+                "Read-only research budget guard projected `{}` because active experiment `{}` is needs_charter and has no active read_only_research budget. Raw intent is preserved as context; use the budget lane before more source-reading loops. Suggested NEXT: {}",
+                self.blocked_action, self.active_experiment_id, self.suggested_next,
+            );
+        }
+        if self.reason == "charter_required_read_only_control_intent" {
+            return format!(
+                "Charter-required guard projected `{}` because active experiment `{}` is needs_charter and the read-only route contains perturb/control-shaped language. Raw intent is preserved as context; author the charter before more narrowing or disruption-shaped rehearsal. Suggested NEXT: {} Proposed preflight target after charter: {}",
+                self.blocked_action,
+                self.active_experiment_id,
+                self.suggested_next,
+                self.proposed_preflight_target,
+            );
+        }
         format!(
             "Charter-required guard blocked `{}` because active experiment `{}` is needs_charter. Review is premature until the charter is authored; use the continuity priority scaffold first. Suggested NEXT: {} Proposed preflight target after charter: {}",
             self.blocked_action,
@@ -305,9 +371,78 @@ impl CharterRequiredGuardAssessment {
             "matched_action": self.matched_action,
             "reason": self.reason,
             "suggested_next": self.suggested_next,
+            "projected_next": self.suggested_next,
             "proposed_preflight_target": self.proposed_preflight_target,
+            "raw_next_preserved": true,
+            "research_budget_required": self.reason == "charter_required_research_budget",
             "authority_change": false,
             "would_dispatch": false,
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ResearchBudgetGuardAssessment {
+    pub experiment_id: String,
+    pub raw_action: String,
+    pub action_base: String,
+    pub normalized_target: String,
+    pub reason: String,
+    pub suggested_next: String,
+    pub accept_next: Option<String>,
+    pub request_scaffold: Option<String>,
+    pub budget_id: Option<String>,
+    pub matched_terms: Vec<String>,
+    pub continuity_session_next: Option<String>,
+    pub continuity_session_v1: Option<Value>,
+    pub continuity_session_draft_v1: Option<Value>,
+}
+
+impl ResearchBudgetGuardAssessment {
+    #[must_use]
+    pub fn message(&self) -> String {
+        match self.reason.as_str() {
+            "duplicate_query_or_url_review_required" => format!(
+                "Research budget guard blocked `{}` for experiment `{}` because normalized target `{}` has already been spent twice in this budget. Raw intent is preserved; review the research loop before spending more. Suggested NEXT: {}",
+                self.raw_action, self.experiment_id, self.normalized_target, self.suggested_next
+            ),
+            "mutating_research_not_authorized" => format!(
+                "Research budget guard blocked `{}` for experiment `{}` because Research Budget V1 authorizes only read-only research actions. Raw intent is preserved as context; use a read-only research budget/status route instead. Suggested NEXT: {}",
+                self.raw_action, self.experiment_id, self.suggested_next
+            ),
+            _ => format!(
+                "Research budget guard projected `{}` for experiment `{}` because no active read_only_research budget can spend this research action. Raw intent is preserved; request or inspect the budget lane first. Suggested NEXT: {}",
+                self.raw_action, self.experiment_id, self.suggested_next
+            ),
+        }
+    }
+
+    #[must_use]
+    pub fn metadata(&self) -> Value {
+        json!({
+            "schema_version": SCHEMA_VERSION,
+            "policy": "research_budget_projection_guard_v1",
+            "record_schema": "research_budget_v1",
+            "experiment_id": self.experiment_id.clone(),
+            "raw_action": self.raw_action.clone(),
+            "action_base": self.action_base.clone(),
+            "normalized_target": self.normalized_target.clone(),
+            "reason": self.reason.clone(),
+            "budget_id": self.budget_id.clone(),
+            "suggested_next": self.suggested_next.clone(),
+            "projected_next": self.suggested_next.clone(),
+            "accept_next": self.accept_next.clone(),
+            "request_scaffold": self.request_scaffold.clone(),
+            "matched_base": if self.matched_terms.is_empty() { Value::Null } else { json!(self.action_base.clone()) },
+            "matched_terms": self.matched_terms.clone(),
+            "continuity_session_next": self.continuity_session_next.clone(),
+            "continuity_session_v1": self.continuity_session_v1.clone(),
+            "continuity_session_draft_v1": self.continuity_session_draft_v1.clone(),
+            "raw_next_preserved": true,
+            "authority_change": false,
+            "peer_mutation": false,
+            "would_dispatch": false,
+            "allowed_scope": "read_only_research",
         })
     }
 }
@@ -325,6 +460,7 @@ impl NextActionOutcome {
             preflight_report: None,
             suggested_next: None,
             charter_required_guard_v1: None,
+            research_budget_v1: None,
             route,
         }
     }
@@ -341,6 +477,7 @@ impl NextActionOutcome {
             preflight_report: None,
             suggested_next: None,
             charter_required_guard_v1: None,
+            research_budget_v1: None,
             route,
         }
     }
@@ -357,6 +494,7 @@ impl NextActionOutcome {
             preflight_report: None,
             suggested_next: None,
             charter_required_guard_v1: None,
+            research_budget_v1: None,
         }
     }
 
@@ -391,6 +529,17 @@ impl NextActionOutcome {
             .map(str::to_string)
             .or(self.suggested_next);
         self.charter_required_guard_v1 = Some(guard);
+        self
+    }
+
+    #[must_use]
+    pub fn with_research_budget(mut self, budget: Value) -> Self {
+        self.suggested_next = budget
+            .get("suggested_next")
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .or(self.suggested_next);
+        self.research_budget_v1 = Some(budget);
         self
     }
 }
@@ -441,7 +590,7 @@ impl ActionContinuityStore {
         self.ensure_dirs()?;
         let now = iso_now();
         let thread_id = self.unique_thread_id(title)?;
-        let thread = ResearchThread {
+        let mut thread = ResearchThread {
             schema_version: SCHEMA_VERSION,
             thread_id: thread_id.clone(),
             title: title.trim().to_string(),
@@ -462,12 +611,18 @@ impl ActionContinuityStore {
             thread_pressure_source_v1: None,
             thread_inhabitable_fluctuation_v1: None,
             motif_allowance_v1: None,
+            continuity_session_v1: None,
+            interpretation_risk_v1: None,
+            constraint_release_trajectory_v1: None,
+            projection_freshness_v1: None,
         };
 
         let dir = self.thread_dir(&thread_id);
         fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
         self.write_json(&dir.join("thread.json"), &thread)?;
         self.ensure_thread_files(&thread_id)?;
+        self.refresh_projection_freshness_v1(&mut thread, "create_thread")?;
+        self.write_json(&dir.join("thread.json"), &thread)?;
         self.write_next_md(&thread)?;
         let mut index = self.load_index()?;
         index.active_thread_id = Some(thread_id.clone());
@@ -533,7 +688,20 @@ impl ActionContinuityStore {
         let Some((reason, matched_action)) = charter_guard_block_reason(raw_next) else {
             return Ok(None);
         };
-        let suggested_next = self.continuity_return_command_for_runs(&experiment, &recent_runs);
+        if reason == "charter_required_research_budget"
+            && active_research_budget_from_rows(
+                &self.authority_gate_rows(&thread.thread_id),
+                &experiment.experiment_id,
+            )
+            .is_some()
+        {
+            return Ok(None);
+        }
+        let suggested_next = if reason == "charter_required_research_budget" {
+            research_budget_request_scaffold("current", &experiment)
+        } else {
+            self.continuity_return_command_for_runs(&experiment, &recent_runs)
+        };
         let proposed_preflight_target = format!(
             "ACTION_PREFLIGHT {}",
             if matched_action.trim().is_empty() {
@@ -552,6 +720,391 @@ impl ActionContinuityStore {
         }))
     }
 
+    pub fn research_budget_guard_assessment(
+        &self,
+        raw_next: &str,
+        fill_pct: f32,
+        telemetry: &SpectralTelemetry,
+    ) -> Result<Option<ResearchBudgetGuardAssessment>> {
+        self.research_budget_guard_assessment_with_base(raw_next, None, fill_pct, telemetry)
+    }
+
+    fn research_budget_guard_assessment_with_base(
+        &self,
+        raw_next: &str,
+        action_base_override: Option<&str>,
+        fill_pct: f32,
+        telemetry: &SpectralTelemetry,
+    ) -> Result<Option<ResearchBudgetGuardAssessment>> {
+        let Some(thread) = self.current_thread()? else {
+            return Ok(None);
+        };
+        let Some(experiment_id) = thread.active_experiment_id.as_deref().or_else(|| {
+            thread
+                .experiment_summary
+                .as_ref()
+                .and_then(|summary| summary.get("experiment_id"))
+                .and_then(Value::as_str)
+        }) else {
+            return Ok(None);
+        };
+        let experiment = self.resolve_experiment(&thread, Some(experiment_id))?;
+        let action_base =
+            action_base_override.map_or_else(|| base_action(raw_next), str::to_string);
+        let is_read_only_research = read_only_research_budget_base(&action_base);
+        let mut matched_terms = if liveish_research_budget_projection_base(&action_base) {
+            liveish_pressure_terms(raw_next)
+        } else {
+            Vec::new()
+        };
+        let is_liveish_projection = !matched_terms.is_empty();
+        let needs_charter_projection =
+            !lifecycle_valid_charter_value(experiment.charter_v1.as_ref());
+        let raw_action_base = base_action(raw_next);
+        let is_resolved_sovereignty_alias = action_base_override.is_some()
+            && raw_action_base != action_base
+            && guarded_sovereignty_research_projection_base(&action_base);
+        let is_guarded_sovereignty_alias =
+            needs_charter_projection && is_resolved_sovereignty_alias;
+        let is_guarded_cascade_or_shadow_alias =
+            needs_charter_projection && guarded_cascade_or_shadow_projection_base(&action_base);
+        let embedded_status_terms = if guarded_embedded_status_projection_base(&action_base) {
+            embedded_status_liveish_terms(raw_next)
+        } else {
+            Vec::new()
+        };
+        let is_guarded_embedded_status = !embedded_status_terms.is_empty();
+        if is_guarded_embedded_status {
+            for term in embedded_status_terms {
+                if !matched_terms.contains(&term) {
+                    matched_terms.push(term);
+                }
+            }
+        }
+        if (is_guarded_sovereignty_alias || is_guarded_cascade_or_shadow_alias)
+            && matched_terms.is_empty()
+        {
+            matched_terms.push("needs-charter-self-study".to_string());
+        }
+        let is_projection_only_research = (research_budget_projection_only_base(&action_base)
+            && read_only_control_intent_matches(raw_next).is_empty()
+            && compound_live_intent_match(raw_next).is_none())
+            || is_liveish_projection
+            || is_guarded_sovereignty_alias
+            || is_guarded_cascade_or_shadow_alias
+            || is_guarded_embedded_status;
+        let is_mutating_research = mutating_research_budget_base(&action_base);
+        if !is_read_only_research && !is_mutating_research && !is_projection_only_research {
+            return Ok(None);
+        }
+
+        let state = spectral_state(fill_pct, telemetry);
+        let rows = self.authority_gate_rows(&thread.thread_id);
+        let active_budget = active_research_budget_from_rows(&rows, &experiment.experiment_id);
+        let normalized_target = normalized_research_budget_target(raw_next);
+        let continuity_session_v1 = if is_liveish_projection
+            || is_guarded_sovereignty_alias
+            || is_guarded_cascade_or_shadow_alias
+            || is_guarded_embedded_status
+        {
+            Some(self.continuity_session_guard_projection(&thread, &experiment)?)
+        } else {
+            None
+        };
+        let continuity_session_next = continuity_session_v1
+            .as_ref()
+            .and_then(|value| value.get("suggested_next"))
+            .and_then(Value::as_str)
+            .map(str::to_string);
+
+        if is_mutating_research {
+            let suggested_next = active_budget.as_ref().map_or_else(
+                || research_budget_request_scaffold("current", &experiment),
+                |budget| {
+                    let budget_id = budget
+                        .get("budget_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or(&experiment.experiment_id);
+                    format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}")
+                },
+            );
+            let assessment = ResearchBudgetGuardAssessment {
+                experiment_id: experiment.experiment_id.clone(),
+                raw_action: raw_next.trim().to_string(),
+                action_base,
+                normalized_target,
+                reason: "mutating_research_not_authorized".to_string(),
+                suggested_next,
+                accept_next: None,
+                request_scaffold: None,
+                budget_id: active_budget
+                    .as_ref()
+                    .and_then(|budget| budget.get("budget_id"))
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                matched_terms: Vec::new(),
+                continuity_session_next: None,
+                continuity_session_v1: None,
+                continuity_session_draft_v1: None,
+            };
+            let blocked = self.research_budget_record(
+                "research_budget_blocked",
+                assessment
+                    .budget_id
+                    .as_deref()
+                    .unwrap_or("no_active_budget"),
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "reason": assessment.reason.clone(),
+                    "raw_action": assessment.raw_action.clone(),
+                    "action_base": assessment.action_base.clone(),
+                    "normalized_target": assessment.normalized_target.clone(),
+                    "suggested_next": assessment.suggested_next.clone(),
+                    "status": "blocked",
+                    "would_dispatch": false,
+                    "authority_change": false,
+                    "peer_mutation": false,
+                }),
+            );
+            self.append_jsonl(&self.authority_gate_path(&thread.thread_id), &blocked)?;
+            return Ok(Some(assessment));
+        }
+
+        if is_projection_only_research {
+            let (reason, suggested_next, accept_next, request_scaffold, budget_id) =
+                active_budget.as_ref().map_or_else(
+                    || {
+                        let status = research_budget_status_from_rows(&rows);
+                        let (suggested, accept_next, request_scaffold) = status
+                            .get("latest_budget_request_id")
+                            .and_then(Value::as_str)
+                            .filter(|id| !id.is_empty())
+                            .map_or_else(
+                                || {
+                                    let scaffold =
+                                        research_budget_request_scaffold("current", &experiment);
+                                    (
+                                        "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string(),
+                                        Some(
+                                            "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string(),
+                                        ),
+                                        Some(scaffold),
+                                    )
+                                },
+                                |latest_id| {
+                                    (
+                                        format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {latest_id}"),
+                                        None,
+                                        None,
+                                    )
+                                },
+                            );
+                        (
+                            if is_liveish_projection {
+                                "liveish_pressure_requires_budget_and_session_capture".to_string()
+                            } else if is_guarded_embedded_status {
+                                "research_budget_required_for_embedded_liveish_status".to_string()
+                            } else if is_guarded_cascade_or_shadow_alias {
+                                "research_budget_required_for_guarded_cascade_self_study"
+                                    .to_string()
+                            } else {
+                                "research_budget_required_for_self_study_action".to_string()
+                            },
+                            suggested,
+                            accept_next,
+                            request_scaffold,
+                            None,
+                        )
+                    },
+                    |budget| {
+                        let budget_id = budget
+                            .get("budget_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or(&experiment.experiment_id)
+                            .to_string();
+                        (
+                            if is_liveish_projection {
+                                "liveish_pressure_requires_budget_and_session_capture".to_string()
+                            } else if is_guarded_embedded_status {
+                                "research_budget_status_required_for_embedded_liveish_status"
+                                    .to_string()
+                            } else if is_guarded_cascade_or_shadow_alias {
+                                "research_budget_status_required_for_guarded_cascade_self_study"
+                                    .to_string()
+                            } else {
+                                "research_budget_status_required_for_self_study_action".to_string()
+                            },
+                            format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"),
+                            None,
+                            None,
+                            Some(budget_id),
+                        )
+                    },
+                );
+            let assessment = ResearchBudgetGuardAssessment {
+                experiment_id: experiment.experiment_id.clone(),
+                raw_action: raw_next.trim().to_string(),
+                action_base,
+                normalized_target,
+                reason,
+                suggested_next,
+                accept_next,
+                request_scaffold,
+                budget_id,
+                matched_terms: matched_terms.clone(),
+                continuity_session_next: continuity_session_next.clone(),
+                continuity_session_v1: continuity_session_v1.clone(),
+                continuity_session_draft_v1: None,
+            };
+            let blocked = self.research_budget_record(
+                "research_budget_blocked",
+                assessment
+                    .budget_id
+                    .as_deref()
+                    .unwrap_or("self_study_projection"),
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "reason": assessment.reason.clone(),
+                    "raw_action": assessment.raw_action.clone(),
+                    "action_base": assessment.action_base.clone(),
+                    "normalized_target": assessment.normalized_target.clone(),
+                    "suggested_next": assessment.suggested_next.clone(),
+                    "accept_next": assessment.accept_next.clone(),
+                    "request_scaffold": assessment.request_scaffold.clone(),
+                    "status": "blocked",
+                    "projection_only": true,
+                    "raw_next_preserved": true,
+                    "would_dispatch": false,
+                    "authority_change": false,
+                    "peer_mutation": false,
+                    "matched_base": if assessment.matched_terms.is_empty() { Value::Null } else { json!(assessment.action_base.clone()) },
+                    "matched_terms": assessment.matched_terms.clone(),
+                    "continuity_session_next": assessment.continuity_session_next.clone(),
+                    "continuity_session_v1": assessment.continuity_session_v1.clone(),
+                }),
+            );
+            self.append_jsonl(&self.authority_gate_path(&thread.thread_id), &blocked)?;
+            return Ok(Some(assessment));
+        }
+
+        let Some(budget) = active_budget else {
+            let status = research_budget_status_from_rows(&rows);
+            let (suggested_next, accept_next, request_scaffold) = status
+                .get("latest_budget_request_id")
+                .and_then(Value::as_str)
+                .filter(|id| !id.is_empty())
+                .map_or_else(
+                    || {
+                        let scaffold = research_budget_request_scaffold("current", &experiment);
+                        (
+                            "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string(),
+                            Some("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string()),
+                            Some(scaffold),
+                        )
+                    },
+                    |budget_id| {
+                        (
+                            format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"),
+                            None,
+                            None,
+                        )
+                    },
+                );
+            let assessment = ResearchBudgetGuardAssessment {
+                experiment_id: experiment.experiment_id.clone(),
+                raw_action: raw_next.trim().to_string(),
+                action_base,
+                normalized_target,
+                reason: "no_active_read_only_research_budget".to_string(),
+                suggested_next,
+                accept_next,
+                request_scaffold,
+                budget_id: None,
+                matched_terms: Vec::new(),
+                continuity_session_next: None,
+                continuity_session_v1: None,
+                continuity_session_draft_v1: None,
+            };
+            let blocked = self.research_budget_record(
+                "research_budget_blocked",
+                "no_active_budget",
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "reason": assessment.reason.clone(),
+                    "raw_action": assessment.raw_action.clone(),
+                    "action_base": assessment.action_base.clone(),
+                    "normalized_target": assessment.normalized_target.clone(),
+                    "suggested_next": assessment.suggested_next.clone(),
+                    "accept_next": assessment.accept_next.clone(),
+                    "request_scaffold": assessment.request_scaffold.clone(),
+                    "status": "blocked",
+                    "would_dispatch": false,
+                    "authority_change": false,
+                    "peer_mutation": false,
+                }),
+            );
+            self.append_jsonl(&self.authority_gate_path(&thread.thread_id), &blocked)?;
+            return Ok(Some(assessment));
+        };
+
+        let budget_id = budget
+            .get("budget_id")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string();
+        let duplicate_count =
+            research_budget_duplicate_count(&rows, &budget_id, &normalized_target);
+        if duplicate_count >= 2 {
+            let suggested_next =
+                research_budget_review_command_for_duplicate(&budget_id, &normalized_target);
+            let assessment = ResearchBudgetGuardAssessment {
+                experiment_id: experiment.experiment_id.clone(),
+                raw_action: raw_next.trim().to_string(),
+                action_base,
+                normalized_target,
+                reason: "duplicate_query_or_url_review_required".to_string(),
+                suggested_next,
+                accept_next: None,
+                request_scaffold: None,
+                budget_id: Some(budget_id.clone()),
+                matched_terms: Vec::new(),
+                continuity_session_next: None,
+                continuity_session_v1: None,
+                continuity_session_draft_v1: None,
+            };
+            let blocked = self.research_budget_record(
+                "research_budget_blocked",
+                &budget_id,
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "reason": assessment.reason.clone(),
+                    "raw_action": assessment.raw_action.clone(),
+                    "action_base": assessment.action_base.clone(),
+                    "normalized_target": assessment.normalized_target.clone(),
+                    "duplicate_count": duplicate_count,
+                    "suggested_next": assessment.suggested_next.clone(),
+                    "status": "blocked",
+                    "review_required": true,
+                    "would_dispatch": false,
+                    "authority_change": false,
+                    "peer_mutation": false,
+                }),
+            );
+            self.append_jsonl(&self.authority_gate_path(&thread.thread_id), &blocked)?;
+            return Ok(Some(assessment));
+        }
+
+        Ok(None)
+    }
+
     pub fn thread_status(&self, selector: Option<&str>) -> Result<String> {
         self.ensure_dirs()?;
         let thread = if let Some(selector) = selector.filter(|s| !s.trim().is_empty()) {
@@ -565,7 +1118,6 @@ impl ActionContinuityStore {
             .recent_event_summaries
             .iter()
             .take(4)
-            .into_iter()
             .map(|summary| format!("- {summary}"))
             .collect::<Vec<_>>()
             .join("\n");
@@ -676,12 +1228,13 @@ impl ActionContinuityStore {
             .as_ref()
             .map(|active| {
                 format!(
-                    "Active experiment: {} ({})\n{}{}{}Question: {}\nPlanned NEXT: {}\nLifecycle: {}\n{}\n{}\n{}\n",
+                    "Active experiment: {} ({})\n{}{}{}{}Question: {}\nPlanned NEXT: {}\nLifecycle: {}\n{}\n{}\n{}\n{}",
                     active.experiment.title,
                     active.experiment.experiment_id,
                     charter_required_review_line(active),
                     charter_repair_priority_line(active),
                     charter_scaffold_line(active, true),
+                    first_dossier_claim_line(&active.first_dossier_claim_cue_v1),
                     active.experiment.question,
                     active
                         .experiment
@@ -692,6 +1245,7 @@ impl ActionContinuityStore {
                     active.charter_status,
                     active.evidence_status,
                     active.candidate_status,
+                    research_dossier_line(&active.research_dossier_v1, Some(&active.classification)),
                 )
             })
             .unwrap_or_default();
@@ -724,13 +1278,33 @@ impl ActionContinuityStore {
             prior_claim_charter_bridge_line(&projection.prior_claim_charter_bridge_v1);
         let charter_preflight_not_charter =
             charter_preflight_not_charter_line(&projection.charter_preflight_not_charter_cue_v1);
+        let peer_boundary = peer_mutation_boundary_line(&projection.peer_mutation_boundary_cue_v1);
+        let first_dossier_claim = first_dossier_claim_line(&projection.first_dossier_claim_cue_v1);
         let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
+        let shared_investigation_object =
+            shared_investigation_object_line(&projection.shared_investigation_object_v1);
+        let voice_health = voice_health_line();
+        let research_budget_priority = self.research_budget_priority_line(&thread, &projection);
+        let interpretation_risk = format!(
+            "{}{}",
+            Self::interpretation_risk_line(&projection.interpretation_risk_v1),
+            Self::constraint_release_trajectory_line(&projection.constraint_release_trajectory_v1)
+        );
+        let control_plane = control_plane_text(&projection.continuity_control_plane_v1);
+        let projection_freshness = Self::projection_freshness_line(&thread.projection_freshness_v1);
+        let research_dossier = research_dossier_line(
+            &projection.research_dossier_v1,
+            projection
+                .active_experiment
+                .as_ref()
+                .map(|active| active.classification.as_str()),
+        );
         let status_charter_priority = projection
             .active_experiment
             .as_ref()
             .map_or_else(String::new, charter_repair_priority_line);
         Ok(format!(
-            "Action thread `{}`: {}\nStatus: {}\nWhy return: {}\n{}{}{}{}{}Current NEXT: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}Recent events:\n{}\n{}",
+            "Action thread `{}`: {}\nStatus: {}\nWhy return: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}Current NEXT: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}{}Recent events:\n{}\n{}",
             thread.thread_id,
             thread.title,
             thread.status,
@@ -739,8 +1313,17 @@ impl ActionContinuityStore {
             charter_now_bridge,
             prior_claim_bridge,
             charter_preflight_not_charter,
+            peer_boundary,
+            first_dossier_claim,
             shared_investigation,
+            shared_investigation_object,
+            voice_health,
+            research_budget_priority,
+            interpretation_risk,
+            projection_freshness,
+            research_dossier,
             thread.current_next.as_deref().unwrap_or("(none)"),
+            control_plane,
             experiment,
             resonance,
             pressure,
@@ -806,6 +1389,23 @@ impl ActionContinuityStore {
                 "THREAD_NOTE",
             ),
             charter_required_guard_v1: None,
+            research_budget_v1: None,
+            interpretation_risk_v1: self.interpretation_risk_for_texts(
+                &thread,
+                None,
+                [(
+                    format!("thread_note:{}", thread.thread_id),
+                    note.to_string(),
+                )],
+            )?,
+            constraint_release_trajectory_v1: self.constraint_release_trajectory_for_texts(
+                &thread,
+                None,
+                [(
+                    format!("thread_note:{}", thread.thread_id),
+                    note.to_string(),
+                )],
+            )?,
         };
         self.append_event(db, &event)?;
         Ok(event)
@@ -873,8 +1473,8 @@ impl ActionContinuityStore {
         response_text: &str,
     ) -> Result<ActionEvent> {
         let mut thread = self.ensure_active_thread(db)?;
-        let base_action = base_action(effective_next);
-        let action_id = self.unique_action_id(&base_action)?;
+        let effective_base_action = base_action(effective_next);
+        let action_id = self.unique_action_id(&effective_base_action)?;
         let now = iso_now();
         let event_suggested_next = outcome
             .suggested_next
@@ -894,13 +1494,14 @@ impl ActionContinuityStore {
         }
 
         let state = spectral_state(fill_pct, telemetry);
-        let visibility = visibility_for_action(&base_action).to_string();
+        let visibility = visibility_for_action(&effective_base_action).to_string();
         let stage = if outcome.stage == "read_only" || outcome.stage == "blocked" {
             outcome.stage.clone()
         } else {
-            stage_for_action(&base_action).to_string()
+            stage_for_action(&effective_base_action).to_string()
         };
-        let (status, outcome_summary) = evidence_adjusted_outcome(&base_action, &stage, outcome);
+        let (status, outcome_summary) =
+            evidence_adjusted_outcome(&effective_base_action, &stage, outcome);
         let preflight_ref = self.preflight_ref_for_action(
             &thread.thread_id,
             canonical_next,
@@ -908,7 +1509,7 @@ impl ActionContinuityStore {
             &outcome.route,
             &stage,
         )?;
-        let event = ActionEvent {
+        let mut event = ActionEvent {
             schema_version: SCHEMA_VERSION,
             action_id: action_id.clone(),
             thread_id: thread.thread_id.clone(),
@@ -933,7 +1534,108 @@ impl ActionContinuityStore {
             preflight_report: outcome.preflight_report.clone(),
             normalization_signal_v1: normalization_signal_value(raw_next, canonical_next),
             charter_required_guard_v1: outcome.charter_required_guard_v1.clone(),
+            research_budget_v1: outcome.research_budget_v1.clone(),
+            interpretation_risk_v1: self.interpretation_risk_for_texts(
+                &thread,
+                None,
+                [(
+                    format!("event:{}", raw_next.trim()),
+                    format!(
+                        "{}\n{}\n{}",
+                        raw_next,
+                        outcome.outcome_summary,
+                        outcome.suggested_next.as_deref().unwrap_or_default()
+                    ),
+                )],
+            )?,
+            constraint_release_trajectory_v1: self.constraint_release_trajectory_for_texts(
+                &thread,
+                None,
+                [(
+                    format!("event:{}", raw_next.trim()),
+                    format!(
+                        "{}\n{}\n{}",
+                        raw_next,
+                        outcome.outcome_summary,
+                        outcome.suggested_next.as_deref().unwrap_or_default()
+                    ),
+                )],
+            )?,
         };
+        if event.research_budget_v1.is_none() {
+            let guard_base = [
+                base_action(&event.effective_action),
+                base_action(&event.canonical_action),
+                base_action(raw_next),
+            ]
+            .into_iter()
+            .find(|base| {
+                (liveish_research_budget_projection_base(base)
+                    && !liveish_pressure_terms(raw_next).is_empty())
+                    || (guarded_embedded_status_projection_base(base)
+                        && !embedded_status_liveish_terms(raw_next).is_empty())
+                    || guarded_sovereignty_research_projection_base(base)
+                    || guarded_cascade_or_shadow_projection_base(base)
+            });
+            if let Some(event_guard_base) = guard_base
+                && let Some(guard) = self.research_budget_guard_assessment_with_base(
+                    raw_next,
+                    Some(&event_guard_base),
+                    fill_pct,
+                    telemetry,
+                )?
+            {
+                let suggested_next = guard.suggested_next.clone();
+                event.route = "research_budget_guard".to_string();
+                event.stage = "blocked".to_string();
+                event.visibility = PROTECTED_VISIBILITY.to_string();
+                event.status = "blocked".to_string();
+                event.outcome_summary = guard.message();
+                event.suggested_next = Some(suggested_next.clone());
+                event.research_budget_v1 = Some(guard.metadata());
+                if let Some(draft) =
+                    self.append_continuity_session_draft_for_event(&thread, &event)?
+                    && let Some(metadata) = event
+                        .research_budget_v1
+                        .as_mut()
+                        .and_then(Value::as_object_mut)
+                {
+                    metadata.insert("continuity_session_draft_v1".to_string(), draft);
+                }
+                thread.current_next = Some(suggested_next);
+                thread.updated_at = iso_now();
+                self.write_thread(&thread)?;
+                if let Some(db) = db {
+                    let _ = db
+                        .mirror_action_thread(&thread.thread_id, &serde_json::to_string(&thread)?);
+                }
+                self.append_event(db, &event)?;
+                return Ok(event);
+            }
+            event.research_budget_v1 =
+                self.record_research_budget_debit_for_event(db, &thread, &event, &state)?;
+        }
+        if let Some(draft) = self.append_continuity_session_draft_for_event(&thread, &event)? {
+            if let Some(metadata) = event
+                .research_budget_v1
+                .as_mut()
+                .and_then(Value::as_object_mut)
+            {
+                metadata.insert("continuity_session_draft_v1".to_string(), draft.clone());
+            } else if let Some(metadata) = event
+                .interpretation_risk_v1
+                .as_mut()
+                .and_then(Value::as_object_mut)
+            {
+                metadata.insert("continuity_session_draft_v1".to_string(), draft);
+            } else if let Some(metadata) = event
+                .constraint_release_trajectory_v1
+                .as_mut()
+                .and_then(Value::as_object_mut)
+            {
+                metadata.insert("continuity_session_draft_v1".to_string(), draft);
+            }
+        }
         self.append_event(db, &event)?;
         let _ = self.record_active_experiment_auto_link(db, &event, fill_pct, telemetry);
 
@@ -1210,6 +1912,19 @@ impl ActionContinuityStore {
             return self.record_peer_experiment_reference(db, &peer, "EXPERIMENT_RESUME", None);
         }
         let experiment = self.resolve_experiment(&thread, Some(&resolved_selector))?;
+        if experiment.status == "paused" {
+            let (primary, return_kind) = paused_primary_return_v1(
+                &experiment.experiment_id,
+                experiment.planned_next.as_deref(),
+                None,
+            );
+            if return_kind != "resume" {
+                return Ok(format!(
+                    "Experiment `{}` remains paused with guarded return_kind={}. Resume was not selected.\nPrimary return: {}\nAuthority: choose the guarded repair/hold/decision path explicitly; no bind/resume/perturb/control was run.",
+                    experiment.experiment_id, return_kind, primary
+                ));
+            }
+        }
         let experiment = self.select_existing_experiment(db, thread, experiment, iso_now())?;
         Ok(format!(
             "Resumed experiment `{}`: {}\nQuestion: {}\nNext: {}",
@@ -1268,6 +1983,552 @@ impl ActionContinuityStore {
         ))
     }
 
+    pub fn shared_investigation_start_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+    ) -> Result<String> {
+        let mut thread = self.ensure_active_thread(db)?;
+        let (title_raw, payload) = parse_selector_payload(raw);
+        let title = title_raw
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .unwrap_or("Shared investigation");
+        let local_selector =
+            dossier_field(&payload, &["local"]).unwrap_or_else(|| "current".to_string());
+        let peer_id = dossier_field(&payload, &["peer", "peer_experiment"])
+            .map(|value| normalize_experiment_selector(&value))
+            .filter(|value| !value.is_empty())
+            .context("SHARED_INVESTIGATION_START needs `peer: <peer-experiment-id>`.")?;
+        let question =
+            dossier_field(&payload, &["question", "shared_question"]).unwrap_or_else(|| {
+                "What can each being answer from its own lane without sharing control authority?"
+                    .to_string()
+            });
+        let local = self.resolve_experiment(&thread, Some(&local_selector))?;
+        let local_thread_id = thread.thread_id.clone();
+        let local_experiment_id = local.experiment_id.clone();
+        let peer_system = peer_system_from_experiment_id(&peer_id);
+        let peer_thread_id = self.peer_thread_id_for_experiment(&peer_system, &peer_id);
+        let now = iso_now();
+        let now_ms = now_millis();
+        let investigation_id = self.unique_shared_investigation_id(title)?;
+        let investigation = json!({
+            "schema_version": 1,
+            "record_schema": "shared_investigation_v1",
+            "id": investigation_id,
+            "title": title,
+            "shared_question": question,
+            "status": "active",
+            "participants": [
+                {
+                    "being": SYSTEM,
+                    "role": "local",
+                    "thread_id": local_thread_id,
+                    "experiment_id": local_experiment_id,
+                    "lane": shared_investigation_lane(SYSTEM),
+                    "workspace": bridge_paths().bridge_workspace().display().to_string(),
+                },
+                {
+                    "being": peer_system.clone(),
+                    "role": "peer",
+                    "thread_id": peer_thread_id,
+                    "experiment_id": peer_id.clone(),
+                    "lane": shared_investigation_lane(&peer_system),
+                    "workspace": peer_workspace_dir(&peer_system).display().to_string(),
+                }
+            ],
+            "authority_boundary": shared_investigation_authority_boundary(),
+            "created_at": now,
+            "updated_at": now,
+            "created_t_ms": now_ms,
+            "updated_t_ms": now_ms,
+            "created_by": SYSTEM,
+        });
+        let dir = self.shared_investigation_dir(&investigation_id);
+        self.write_json(&dir.join("investigation.json"), &investigation)?;
+        for name in ["events.jsonl", "claims.jsonl", "decisions.jsonl"] {
+            let path = dir.join(name);
+            if !path.exists() {
+                fs::write(path, "")?;
+            }
+        }
+        self.append_jsonl(
+            &dir.join("events.jsonl"),
+            &json!({
+                "schema_version": 1,
+                "event_type": "created",
+                "actor": SYSTEM,
+                "investigation_id": investigation_id,
+                "local_experiment_id": local.experiment_id.clone(),
+                "peer_experiment_id": peer_id.clone(),
+                "created_at": now,
+                "authority_change": false,
+            }),
+        )?;
+        let marker = format!("shared_investigation:{investigation_id}");
+        if !thread.peer_refs.iter().any(|existing| existing == &marker) {
+            thread.peer_refs.push(marker);
+            thread.updated_at = iso_now();
+            self.write_thread(&thread)?;
+            if let Some(db) = db {
+                let _ =
+                    db.mirror_action_thread(&thread.thread_id, &serde_json::to_string(&thread)?);
+            }
+        }
+        Ok(format!(
+            "Shared investigation `{investigation_id}` created: {title}\nLocal: {} ({SYSTEM})\nPeer: {peer_id} ({peer_system})\nAuthority: compare, claim, render, and local pause/hold/charter_repair only; no peer mutation or live control.",
+            local.experiment_id
+        ))
+    }
+
+    pub fn shared_investigation_status(&self, selector: Option<&str>) -> Result<String> {
+        let investigation = self.resolve_shared_investigation(selector.unwrap_or("latest"))?;
+        let id = investigation
+            .get("id")
+            .and_then(Value::as_str)
+            .context("shared investigation missing id")?;
+        let claims = self.read_shared_jsonl(id, "claims.jsonl")?;
+        let decisions = self.read_shared_jsonl(id, "decisions.jsonl")?;
+        let participants = investigation
+            .get("participants")
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(|item| {
+                        Some(format!(
+                            "- {} {} lane={}",
+                            item.get("being")?.as_str()?,
+                            item.get("experiment_id")?.as_str()?,
+                            item.get("lane").and_then(Value::as_str).unwrap_or("native")
+                        ))
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            })
+            .filter(|text| !text.is_empty())
+            .unwrap_or_else(|| "- none".to_string());
+        let latest = decisions.last().map_or_else(
+            || "Latest decision: none".to_string(),
+            |decision| {
+                format!(
+                    "Latest decision: {} because {}",
+                    decision
+                        .get("decision")
+                        .and_then(Value::as_str)
+                        .unwrap_or("(unknown)"),
+                    decision
+                        .get("reason")
+                        .and_then(Value::as_str)
+                        .unwrap_or("(none)")
+                )
+            },
+        );
+        Ok(format!(
+            "Shared investigation `{}` [{}]: {}\nQuestion: {}\nParticipants:\n{}\nClaims: {} | Decisions: {}\n{}\nAuthority: {}",
+            id,
+            investigation
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("active"),
+            investigation
+                .get("title")
+                .and_then(Value::as_str)
+                .unwrap_or("(untitled)"),
+            investigation
+                .get("shared_question")
+                .and_then(Value::as_str)
+                .unwrap_or("(none)"),
+            participants,
+            claims.len(),
+            decisions.len(),
+            latest,
+            investigation
+                .get("authority_boundary")
+                .and_then(Value::as_str)
+                .unwrap_or(shared_investigation_authority_boundary())
+        ))
+    }
+
+    pub fn shared_investigation_claim_command(&self, raw: &str) -> Result<String> {
+        let (selector, payload) = parse_selector_payload(raw);
+        let investigation =
+            self.resolve_shared_investigation(selector.as_deref().unwrap_or("latest"))?;
+        let id = investigation
+            .get("id")
+            .and_then(Value::as_str)
+            .context("shared investigation missing id")?;
+        let claim = dossier_field(&payload, &["claim"]).context(
+            "SHARED_INVESTIGATION_CLAIM needs `claim: ...`. Optional fields: lane, stance, source_refs.",
+        )?;
+        let now = iso_now();
+        let record_id = self.unique_shared_record_id(id, "claim")?;
+        let record = json!({
+            "schema_version": 1,
+            "record_schema": "shared_investigation_claim_v1",
+            "record_type": "claim",
+            "record_id": record_id,
+            "claim_id": record_id,
+            "investigation_id": id,
+            "actor": SYSTEM,
+            "lane": dossier_field(&payload, &["lane"]).unwrap_or_else(|| shared_investigation_lane(SYSTEM).to_string()),
+            "stance": normalize_dossier_stance(&dossier_field(&payload, &["stance"]).unwrap_or_default()),
+            "claim": claim,
+            "source_refs": dossier_list_field(&payload, &["source_refs", "sources", "artifact"]),
+            "authority_change": false,
+            "created_at": now,
+        });
+        self.append_jsonl(
+            &self.shared_investigation_dir(id).join("claims.jsonl"),
+            &record,
+        )?;
+        self.touch_shared_investigation(id, &now, None)?;
+        Ok(format!(
+            "Shared investigation claim `{record_id}` recorded for `{id}`. No lifecycle or authority change."
+        ))
+    }
+
+    pub fn shared_investigation_decide_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+    ) -> Result<String> {
+        let (selector, payload) = parse_selector_payload(raw);
+        let investigation =
+            self.resolve_shared_investigation(selector.as_deref().unwrap_or("latest"))?;
+        let id = investigation
+            .get("id")
+            .and_then(Value::as_str)
+            .context("shared investigation missing id")?
+            .to_string();
+        let (decision, reason) = parse_shared_investigation_decision(&payload);
+        if !matches!(decision.as_str(), "pause" | "hold" | "charter_repair") {
+            anyhow::bail!(
+                "SHARED_INVESTIGATION_DECIDE only allows pause, hold, or charter_repair in v1."
+            );
+        }
+        let local = local_participant_for_investigation(&investigation, SYSTEM)
+            .context("shared investigation has no local Astrid experiment link")?;
+        let thread_id = local
+            .get("thread_id")
+            .and_then(Value::as_str)
+            .context("local participant missing thread_id")?;
+        let experiment_id = local
+            .get("experiment_id")
+            .and_then(Value::as_str)
+            .context("local participant missing experiment_id")?;
+        let mut thread = self.read_thread(thread_id)?;
+        let mut experiment = self
+            .latest_experiments(thread_id)?
+            .into_iter()
+            .rev()
+            .find(|row| row.experiment_id == experiment_id)
+            .with_context(|| format!("local experiment `{experiment_id}` is unavailable"))?;
+        let now = iso_now();
+        let record_id = self.unique_shared_record_id(&id, "decision")?;
+        self.append_jsonl(
+            &self.shared_investigation_dir(&id).join("decisions.jsonl"),
+            &json!({
+                "schema_version": 1,
+                "record_schema": "shared_investigation_decision_v1",
+                "record_type": "decision",
+                "record_id": record_id,
+                "investigation_id": id,
+                "actor": SYSTEM,
+                "decision": decision,
+                "reason": reason,
+                "local_experiment_id": experiment_id,
+                "peer_mutation": false,
+                "authority_change": false,
+                "created_at": now,
+            }),
+        )?;
+        experiment.status = "paused".to_string();
+        experiment.planned_next = Some(match decision.as_str() {
+            "pause" => format!("EXPERIMENT_RESUME {experiment_id}"),
+            "charter_repair" => format!(
+                "EXPERIMENT_CHARTER {experiment_id} :: hypothesis: ...; method_intent: ...; proposed_next_action: ACTION_PREFLIGHT ...; evidence_targets: felt_texture, motif_continuity, language_thread, artifact_grounding; stop_criteria: ..."
+            ),
+            _ => "THREAD_STATUS current".to_string(),
+        });
+        experiment.success_observation = Some(match decision.as_str() {
+            "charter_repair" => {
+                format!("Paused for charter repair by shared investigation `{id}`: {reason}")
+            },
+            "hold" => format!("Held by shared investigation `{id}`: {reason}"),
+            _ => format!("Paused by shared investigation `{id}`: {reason}"),
+        });
+        experiment.updated_at = now.clone();
+        self.persist_experiment_update(db, &mut thread, &experiment, false)?;
+        self.touch_shared_investigation(&id, &now, Some("active"))?;
+        Ok(format!(
+            "Shared investigation decision `{record_id}` recorded: {decision}.\nUpdated local experiment `{experiment_id}` only; peer experiment was not mutated.\nNext: {}",
+            experiment.planned_next.as_deref().unwrap_or("(none)")
+        ))
+    }
+
+    pub fn dossier_claim_command(&self, db: Option<&BridgeDb>, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(db)?;
+        let (selector, payload) = parse_selector_payload(raw);
+        if empty_or_placeholder_payload(&payload) {
+            return Ok(dossier_claim_prompt(selector.as_deref()));
+        }
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let claim = dossier_field(&payload, &["claim"]).unwrap_or_default();
+        let basis = dossier_field(&payload, &["basis"]).unwrap_or_default();
+        if claim.trim().is_empty() || basis.trim().is_empty() {
+            return Ok(dossier_claim_prompt(Some(&experiment.experiment_id)));
+        }
+        let stance = normalize_dossier_stance(
+            dossier_field(&payload, &["stance"])
+                .as_deref()
+                .unwrap_or("hold"),
+        );
+        let record_id = self.unique_dossier_record_id("claim")?;
+        let record = json!({
+            "schema_version": SCHEMA_VERSION,
+            "record_schema": "research_dossier_v1",
+            "record_type": "claim",
+            "record_id": record_id,
+            "claim_id": record_id,
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.experiment_id,
+            "native_lane": "felt_texture_motif_language",
+            "stance": stance,
+            "claim": claim.trim(),
+            "basis": basis.trim(),
+            "next": dossier_field(&payload, &["next"]),
+            "source_refs": dossier_list_field(&payload, &["source_refs", "source", "sources"]),
+            "authority_change": false,
+            "created_at": iso_now(),
+        });
+        self.append_jsonl(&self.dossier_path(&thread.thread_id), &record)?;
+        thread.updated_at = iso_now();
+        self.write_thread(&thread)?;
+        Ok(format!(
+            "Research dossier claim recorded as `{}` for `{}`.\nSuggested NEXT: DOSSIER_EVIDENCE {} :: claim_id: {}; evidence: ...; lane: felt_texture; artifact: ...; counterevidence: ...",
+            record_id, experiment.experiment_id, experiment.experiment_id, record_id
+        ))
+    }
+
+    pub fn dossier_evidence_command(&self, db: Option<&BridgeDb>, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(db)?;
+        let (selector, payload) = parse_selector_payload(raw);
+        if empty_or_placeholder_payload(&payload) {
+            return Ok(dossier_evidence_prompt(selector.as_deref(), None));
+        }
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let records = self.latest_research_dossier_records(
+            &thread.thread_id,
+            Some(&experiment.experiment_id),
+            64,
+        )?;
+        let claim_selector =
+            dossier_field(&payload, &["claim_id"]).unwrap_or_else(|| "latest".to_string());
+        let claim_id = if claim_selector.trim().eq_ignore_ascii_case("latest") {
+            latest_dossier_claim_id(&records)
+        } else {
+            Some(claim_selector.trim().to_string())
+        };
+        let Some(claim_id) = claim_id else {
+            return Ok(dossier_evidence_prompt(
+                Some(&experiment.experiment_id),
+                None,
+            ));
+        };
+        let evidence = dossier_field(&payload, &["evidence"]).unwrap_or_default();
+        if evidence.trim().is_empty() {
+            return Ok(dossier_evidence_prompt(
+                Some(&experiment.experiment_id),
+                Some(&claim_id),
+            ));
+        }
+        let record_id = self.unique_dossier_record_id("evidence")?;
+        let lane = dossier_field(&payload, &["lane"]).unwrap_or_else(|| "felt_texture".to_string());
+        let record = json!({
+            "schema_version": SCHEMA_VERSION,
+            "record_schema": "research_dossier_v1",
+            "record_type": "evidence",
+            "record_id": record_id,
+            "claim_id": claim_id,
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.experiment_id,
+            "native_lane": lane.trim(),
+            "stance": normalize_dossier_stance(dossier_field(&payload, &["stance"]).as_deref().unwrap_or("support")),
+            "evidence": evidence.trim(),
+            "artifact": dossier_field(&payload, &["artifact"]),
+            "counterevidence": dossier_field(&payload, &["counterevidence", "counter"]),
+            "source_refs": dossier_list_field(&payload, &["source_refs", "source", "sources"]),
+            "authority_change": false,
+            "created_at": iso_now(),
+        });
+        self.append_jsonl(&self.dossier_path(&thread.thread_id), &record)?;
+        thread.updated_at = iso_now();
+        self.write_thread(&thread)?;
+        Ok(format!(
+            "Research dossier evidence recorded as `{}` for claim `{}`.\nSuggested NEXT: DOSSIER_REVIEW {}",
+            record_id, claim_id, experiment.experiment_id
+        ))
+    }
+
+    pub fn dossier_status(&self, selector: Option<&str>) -> Result<String> {
+        let thread = self.ensure_active_thread(None)?;
+        let experiment = selector
+            .map(|selector| self.resolve_experiment(&thread, Some(selector)))
+            .transpose()?;
+        self.format_research_dossier_status(&thread, experiment.as_ref(), false)
+    }
+
+    pub fn dossier_review(&self, selector: Option<&str>) -> Result<String> {
+        let thread = self.ensure_active_thread(None)?;
+        let experiment = selector
+            .map(|selector| self.resolve_experiment(&thread, Some(selector)))
+            .transpose()?;
+        self.format_research_dossier_status(&thread, experiment.as_ref(), true)
+    }
+
+    pub fn memory_status_command(&self, selector: Option<&str>) -> Result<String> {
+        let thread = self.ensure_active_thread(None)?;
+        let experiment = selector
+            .filter(|selector| !selector.trim().is_empty())
+            .and_then(|selector| self.resolve_experiment(&thread, Some(selector)).ok());
+        let summary = self.being_memory_summary_v1(&thread, experiment.as_ref(), None, 8)?;
+        Ok(format!(
+            "being_memory_v1:\n{}",
+            serde_json::to_string_pretty(&summary)?
+        ))
+    }
+
+    pub fn memory_recall_command(&self, raw: &str) -> Result<String> {
+        let thread = self.ensure_active_thread(None)?;
+        let (selector, payload) = parse_selector_payload(raw);
+        let focus = dossier_field(&payload, &["focus"]).or_else(|| {
+            let trimmed = payload.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_string())
+        });
+        let experiment = selector
+            .as_deref()
+            .and_then(|selector| self.resolve_experiment(&thread, Some(selector)).ok());
+        let summary =
+            self.being_memory_summary_v1(&thread, experiment.as_ref(), focus.as_deref(), 12)?;
+        Ok(format!(
+            "being_memory_v1 recall:\n{}",
+            serde_json::to_string_pretty(&summary)?
+        ))
+    }
+
+    pub fn memory_capture_command(&self, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(None)?;
+        let (selector, payload) = parse_selector_payload(raw);
+        if empty_or_placeholder_payload(&payload) {
+            return Ok("MEMORY_CAPTURE current :: summary: ...; source_refs: ...; artifact_refs: ...; next: ...".to_string());
+        }
+        let experiment = selector
+            .as_deref()
+            .and_then(|selector| self.resolve_experiment(&thread, Some(selector)).ok())
+            .or_else(|| {
+                thread
+                    .active_experiment_id
+                    .as_deref()
+                    .and_then(|_| self.resolve_experiment(&thread, Some("current")).ok())
+            });
+        let summary = dossier_field(&payload, &["summary", "memory", "note"])
+            .unwrap_or_else(|| payload.trim().to_string());
+        let record = self.append_being_memory_record(
+            &mut thread,
+            experiment.as_ref(),
+            "owned_summary",
+            &summary,
+            dossier_list_field(&payload, &["source_refs", "source", "sources"]),
+            dossier_list_field(
+                &payload,
+                &["artifact_refs", "artifact", "artifact_grounding"],
+            ),
+            dossier_field(&payload, &["next", "next_safe_command"]),
+            "card",
+            json!({}),
+        )?;
+        Ok(format!(
+            "Being memory captured as `{}`.\nSuggested NEXT: MEMORY_RECALL {}",
+            record
+                .get("memory_id")
+                .and_then(Value::as_str)
+                .unwrap_or("memory"),
+            record
+                .get("experiment_id")
+                .and_then(Value::as_str)
+                .unwrap_or("latest")
+        ))
+    }
+
+    pub fn memory_promote_command(&self, raw: &str, state: Value) -> Result<String> {
+        let thread = self.ensure_active_thread(None)?;
+        let (selector, payload) = parse_selector_payload(raw);
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let mode = dossier_field(&payload, &["mode", "target", "promote"]).unwrap_or_else(|| {
+            payload
+                .split_whitespace()
+                .next()
+                .unwrap_or("dossier")
+                .to_string()
+        });
+        let rows =
+            self.being_memory_rows(&thread.thread_id, Some(&experiment.experiment_id), 12)?;
+        let Some(latest) = rows.iter().rev().find(|row| {
+            matches!(
+                row.get("record_type").and_then(Value::as_str),
+                Some("card" | "draft")
+            )
+        }) else {
+            anyhow::bail!(
+                "No being memory exists for `{}` yet.",
+                experiment.experiment_id
+            );
+        };
+        let summary = latest
+            .get("summary")
+            .and_then(Value::as_str)
+            .unwrap_or("memory summary");
+        match mode.trim() {
+            "dossier" => self.dossier_claim_command(
+                None,
+                &format!(
+                    "{} :: claim: {}; basis: promoted from being memory {}; stance: hold",
+                    experiment.experiment_id,
+                    summary,
+                    latest
+                        .get("memory_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("latest")
+                ),
+            ),
+            "evidence" => self.experiment_evidence(
+                None,
+                Some(&experiment.experiment_id),
+                &format!("felt_texture: {summary}; artifact_grounding: memory"),
+                state,
+            )
+            .map(|run| format!("Memory promoted to experiment evidence as `{}`.", run.run_id)),
+            "authority_request" => self.experiment_authority_prepare_command(
+                None,
+                &format!(
+                    "{} :: scope: semantic_microdose; payload: ...; reason: promoted from being memory {}; artifact_refs: ...; stop_criteria: ...",
+                    experiment.experiment_id,
+                    latest
+                        .get("memory_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("latest")
+                ),
+                state,
+            ),
+            _ => Ok("MEMORY_PROMOTE target must be dossier, evidence, or authority_request.".to_string()),
+        }
+    }
+
     pub fn experiment_alt_paths(&self, selector: Option<&str>) -> Result<String> {
         let thread = self.ensure_active_thread(None)?;
         let experiment = self.resolve_experiment(&thread, selector)?;
@@ -1315,6 +2576,15 @@ impl ActionContinuityStore {
             repair_experiment_intent_arg("EXPERIMENT_PLAN", selector_text, has_current)
                 .map_or_else(|| selector_text.to_string(), |repair| repair.repaired_arg);
         let (selector, focus) = split_experiment_selector_hint(&repaired_selector);
+        if selector_is_current(selector.as_deref()) && thread.active_experiment_id.is_none() {
+            let empty_state = json!({});
+            let mut readout =
+                self.latest_local_conveyor_readout(&thread, "preview", &empty_state)?;
+            readout["raw_next_preserved"] = json!(true);
+            readout["guardrail_reason"] =
+                json!("experiment_plan_current_without_active_experiment");
+            return Ok(format_experiment_conveyor_readout(&readout));
+        }
         if let Some(peer) = peer_experiment_ref_from_parts(selector.as_deref(), &focus) {
             return self.record_peer_experiment_reference(None, &peer, "EXPERIMENT_PLAN", None);
         }
@@ -1325,12 +2595,8 @@ impl ActionContinuityStore {
             format!("- Requested focus: {focus}\n")
         };
         Ok(format!(
-            "Experiment `{}`: {}\nQuestion: {}\n\nPlan prompt:\n{}- Hypothesis: name the structural change you expect to observe.\n- Method: choose one gated NEXT action and why it fits.\n- Measures: name the artifacts/metrics that would count as evidence.\n- Stop criteria: say what would make the run complete, blocked, or too pressurized.\n- Concrete next action example: EXPERIMENT_BIND {} :: ACTION_PREFLIGHT DECOMPOSE",
-            experiment.experiment_id,
-            experiment.title,
-            experiment.question,
-            focus_line,
-            experiment.experiment_id
+            "Experiment `{}`: {}\nQuestion: {}\n\nPlan prompt:\n{}- Hypothesis: name the structural change you expect to observe.\n- Method: choose one gated NEXT action and why it fits.\n- Measures: name the artifacts/metrics that would count as evidence.\n- Stop criteria: say what would make the run complete, blocked, or too pressurized.\n- Guided next safe step: EXPERIMENT_ADVANCE current :: mode: preview",
+            experiment.experiment_id, experiment.title, experiment.question, focus_line
         ) + "\n\nWorkbench prompt:\n"
             + "- Author a charter first when the impulse feels directive-shaped: EXPERIMENT_CHARTER current :: hypothesis: ...; method_intent: ...; proposed_next_action: ...; evidence_targets: felt, telemetry, artifact; stop_criteria: ...\n"
             + "- Rehearse before live: EXPERIMENT_REHEARSE current (or EXPERIMENT_PREFLIGHT current). Ordinary choices remain valid; refusal and counteroffer are evidence, not failure.\n"
@@ -1395,9 +2661,28 @@ impl ActionContinuityStore {
             .or(experiment.hypothesis);
         experiment.charter_v1 = Some(charter);
         mark_workbench_candidate(&mut experiment, "charter", "accepted");
-        experiment.planned_next = Some(format!("EXPERIMENT_REHEARSE {}", experiment.experiment_id));
+        let paused_charter_repair = experiment.status == "paused"
+            && (experiment
+                .planned_next
+                .as_deref()
+                .map(base_action)
+                .as_deref()
+                == Some("EXPERIMENT_CHARTER")
+                || experiment
+                    .success_observation
+                    .as_deref()
+                    .is_some_and(|text| text.to_ascii_lowercase().contains("charter repair")));
+        if paused_charter_repair && lifecycle_valid_charter_value(experiment.charter_v1.as_ref()) {
+            experiment.planned_next = Some(format!(
+                "EXPERIMENT_ADVANCE {} :: mode: preview",
+                experiment.experiment_id
+            ));
+        } else {
+            experiment.planned_next =
+                Some(format!("EXPERIMENT_REHEARSE {}", experiment.experiment_id));
+        }
         experiment.updated_at = iso_now();
-        self.persist_experiment_update(db, &mut thread, &experiment, true)?;
+        self.persist_experiment_update(db, &mut thread, &experiment, !paused_charter_repair)?;
         Ok(experiment)
     }
 
@@ -1572,6 +2857,19 @@ impl ActionContinuityStore {
                     Some(format!("EXPERIMENT_RESUME {}", experiment.experiment_id));
                 false
             },
+            "hold" => {
+                experiment.status = "paused".to_string();
+                experiment.success_observation = Some(format!("Held: {}", decision.reason));
+                experiment.planned_next = Some("THREAD_STATUS current".to_string());
+                false
+            },
+            "charter_repair" => {
+                experiment.status = "paused".to_string();
+                experiment.success_observation =
+                    Some(format!("Charter repair: {}", decision.reason));
+                experiment.planned_next = Some(charter_repair_next_v1(&experiment.experiment_id));
+                false
+            },
             "complete" => {
                 experiment.status = "complete".to_string();
                 experiment.success_observation = Some(decision.reason.clone());
@@ -1590,6 +2888,4520 @@ impl ActionContinuityStore {
         experiment.updated_at = iso_now();
         self.persist_experiment_update(db, &mut thread, &experiment, keep_active)?;
         Ok(experiment)
+    }
+
+    pub fn experiment_advance_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (selector, mode) = parse_experiment_conveyor_request(raw);
+        let apply_requested = mode == "apply";
+        let thread = self.ensure_active_thread(db)?;
+        if let Some(peer) = selector.as_deref().and_then(peer_experiment_ref) {
+            let peer_id = peer.peer_experiment_id.clone();
+            let peer_system = peer.peer_system.clone();
+            return Ok(format_experiment_conveyor_readout(&json!({
+                "schema_version": 1,
+                "policy": "experiment_conveyor_v1",
+                "mode": mode,
+                "preview_allowed": true,
+                "apply_policy": "conservative_local_v1",
+                "allowed_apply_steps": experiment_conveyor_allowed_apply_steps(),
+                "applied": false,
+                "would_mutate": false,
+                "experiment_id": peer_id.clone(),
+                "peer_experiment_id": peer_id.clone(),
+                "peer_system": peer_system,
+                "status": "peer_reference_only",
+                "stage": "blocked_guardrail",
+                "missing_requirements": ["local_experiment_authority"],
+                "proposed_next": format!("EXPERIMENT_PEER_REVIEW {}", peer_id),
+                "conveyor_next": format!("EXPERIMENT_ADVANCE {} :: mode: preview", peer_id),
+                "can_apply": false,
+                "apply_blocked_reason": "peer_experiments_are_advisory_only",
+                "source_refs": [],
+                "guardrail_warnings": ["peer experiments are advisory only; conveyor cannot mutate them as local authority"],
+                "authority_readiness_v1": {
+                    "policy": "authority_readiness_v1",
+                    "scope": "semantic_microdose",
+                    "stage": "blocked",
+                    "eligible_to_request": false,
+                    "missing_requirements": ["local_experiment_authority"],
+                    "artifact_ref_candidates": [],
+                    "latest_request_id": null,
+                    "token_status": "none",
+                    "next_safe_command": format!("EXPERIMENT_PEER_REVIEW {}", peer_id),
+                    "request_scaffold": null,
+                    "source_refs": [],
+                    "authority_boundary": authority_gate_boundary(),
+                },
+                "authority_boundary": experiment_conveyor_authority_boundary(),
+            })));
+        }
+        if selector_is_current(selector.as_deref()) && thread.active_experiment_id.is_none() {
+            if apply_requested {
+                return Ok(format_experiment_conveyor_readout(
+                    &self.no_active_conveyor_readout(&thread, &mode)?,
+                ));
+            }
+            return Ok(format_experiment_conveyor_readout(
+                &self.latest_local_conveyor_readout(&thread, &mode, &state)?,
+            ));
+        }
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let runs = self.recent_experiment_runs(&thread.thread_id, &experiment.experiment_id, 8)?;
+        let mut readout =
+            self.experiment_conveyor_v1(&thread, &experiment, &runs, &mode, &state)?;
+        if !apply_requested {
+            return Ok(format_experiment_conveyor_readout(&readout));
+        }
+        let can_apply = readout
+            .get("can_apply")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        if !can_apply {
+            readout["applied"] = json!(false);
+            return Ok(format_experiment_conveyor_readout(&readout));
+        }
+        let stage = readout
+            .get("stage")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string();
+        let selector_id = Some(experiment.experiment_id.as_str());
+        match stage.as_str() {
+            "needs_charter" | "paused_repair" => {
+                let payload = readout
+                    .get("apply_payload")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_string();
+                if payload.trim().is_empty() {
+                    readout["applied"] = json!(false);
+                    readout["apply_blocked_reason"] = json!("no_lifecycle_valid_charter_scaffold");
+                } else {
+                    let applied = self.experiment_charter(db, selector_id, &payload)?;
+                    readout["applied"] = json!(true);
+                    readout["would_mutate"] = json!(true);
+                    readout["applied_command"] =
+                        json!(format!("EXPERIMENT_CHARTER {}", applied.experiment_id));
+                    readout["post_next"] = json!(applied.planned_next);
+                }
+            },
+            "needs_evidence" => {
+                let run = self.experiment_evidence(
+                    db,
+                    selector_id,
+                    "conveyor_v1 recorded explicit local lifecycle evidence from current continuity refs.",
+                    state,
+                )?;
+                readout["applied"] = json!(true);
+                readout["would_mutate"] = json!(true);
+                readout["applied_run_id"] = json!(run.run_id);
+                readout["post_next"] = json!(run.suggested_next);
+            },
+            "needs_decision" => {
+                let applied = self.experiment_decide(
+                    db,
+                    selector_id,
+                    "hold because evidence is ready to interpret without live authority",
+                )?;
+                readout["applied"] = json!(true);
+                readout["would_mutate"] = json!(true);
+                readout["applied_command"] =
+                    json!(format!("EXPERIMENT_DECIDE {}", applied.experiment_id));
+                readout["post_next"] = json!(applied.planned_next);
+            },
+            "blocked_guardrail" => {
+                let decision = if lifecycle_valid_charter_value(experiment.charter_v1.as_ref()) {
+                    "hold because blocked guardrail evidence is not experiment progress"
+                } else {
+                    "charter_repair because blocked guardrail evidence appeared without a lifecycle-valid charter"
+                };
+                let applied = self.experiment_decide(db, selector_id, decision)?;
+                readout["applied"] = json!(true);
+                readout["would_mutate"] = json!(true);
+                readout["applied_command"] =
+                    json!(format!("EXPERIMENT_DECIDE {}", applied.experiment_id));
+                readout["post_next"] = json!(applied.planned_next);
+            },
+            _ => {
+                readout["applied"] = json!(false);
+                readout["would_mutate"] = json!(false);
+            },
+        }
+        Ok(format_experiment_conveyor_readout(&readout))
+    }
+
+    pub fn experiment_authority_request_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (selector, payload_text) = parse_selector_payload(raw);
+        if let Some(peer) = selector.as_deref().and_then(peer_experiment_ref) {
+            anyhow::bail!(
+                "Authority request blocked: peer experiment `{}` belongs to {}; no peer mutation or live authority can be minted here.",
+                peer.peer_experiment_id,
+                peer.peer_system
+            );
+        }
+        let thread = self.ensure_active_thread(db)?;
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let mut request =
+            self.authority_request_payload(&thread, &experiment, &payload_text, &state)?;
+        let eligibility = self.authority_gate_eligibility(&thread, &experiment, &request, &state);
+        request["eligibility_v1"] = eligibility.clone();
+        let active_budget = active_authority_budget_from_rows(
+            &self.authority_gate_rows(&thread.thread_id),
+            &experiment.experiment_id,
+            request
+                .get("scope")
+                .and_then(Value::as_str)
+                .unwrap_or("semantic_microdose"),
+        );
+        let pending_review = active_budget
+            .as_ref()
+            .and_then(|budget| budget.get("pending_review_request_id"))
+            .and_then(Value::as_str)
+            .map(ToString::to_string);
+        request["status"] = if eligibility
+            .get("eligible")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+            && active_budget.is_some()
+            && pending_review.is_none()
+        {
+            if let Some(budget) = active_budget.as_ref() {
+                request["budget_id"] = budget.get("budget_id").cloned().unwrap_or(Value::Null);
+                request["token_status"] = json!("budget_available");
+                request["authority_budget_v1"] = budget.clone();
+            }
+            json!("pending_budget_execution")
+        } else if eligibility
+            .get("eligible")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+            && active_budget.is_some()
+            && pending_review.is_some()
+        {
+            let mut blocked_eligibility = eligibility.clone();
+            if let Some(object) = blocked_eligibility.as_object_mut() {
+                object.insert("eligible".to_string(), Value::Bool(false));
+                let missing = object
+                    .entry("missing_requirements")
+                    .or_insert_with(|| json!([]));
+                if let Some(items) = missing.as_array_mut() {
+                    items.push(json!("authority_consequence_review"));
+                }
+            }
+            request["eligibility_v1"] = blocked_eligibility;
+            if let Some(budget) = active_budget.as_ref() {
+                request["budget_id"] = budget.get("budget_id").cloned().unwrap_or(Value::Null);
+                request["token_status"] = json!("review_required");
+            }
+            json!("blocked")
+        } else if eligibility
+            .get("eligible")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            json!("pending_steward_approval")
+        } else {
+            json!("blocked")
+        };
+        let path = self.authority_gate_path(&thread.thread_id);
+        self.append_jsonl(&path, &request)?;
+        let request_id = request
+            .get("request_id")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let evaluation = self.authority_gate_record(
+            "evaluation",
+            request_id,
+            &thread,
+            &experiment,
+            &state,
+            json!({
+                "scope": request.get("scope").cloned().unwrap_or(Value::Null),
+                "eligibility_v1": eligibility,
+                "status": if request.get("status").and_then(Value::as_str) == Some("pending_steward_approval") {
+                    "eligible"
+                } else {
+                    "blocked"
+                },
+                "source_refs": request.get("source_refs").cloned().unwrap_or_else(|| json!([])),
+            }),
+        );
+        self.append_jsonl(&path, &evaluation)?;
+        if request.get("status").and_then(Value::as_str) == Some("blocked") {
+            let blocked = self.authority_gate_record(
+                "blocked",
+                request_id,
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "scope": request.get("scope").cloned().unwrap_or(Value::Null),
+                    "reason": "missing_authority_requirements",
+                    "missing_requirements": request
+                        .get("eligibility_v1")
+                        .and_then(|value| value.get("missing_requirements"))
+                        .cloned()
+                        .unwrap_or_else(|| json!([])),
+                    "disabled_scope": request
+                        .get("eligibility_v1")
+                        .and_then(|value| value.get("disabled_scope"))
+                        .cloned()
+                        .unwrap_or(Value::Bool(false)),
+                    "source_refs": request.get("source_refs").cloned().unwrap_or_else(|| json!([])),
+                }),
+            );
+            self.append_jsonl(&path, &blocked)?;
+        }
+        let missing = request
+            .get("eligibility_v1")
+            .and_then(|value| value.get("missing_requirements"))
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        Ok(format!(
+            "Authority request `{request_id}` status={} scope={}\nMissing requirements: {}\nAuthority boundary: {}\nauthority_gate_v1:\n{}",
+            request
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown"),
+            request
+                .get("scope")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown"),
+            if missing.is_empty() {
+                "none"
+            } else {
+                missing.as_str()
+            },
+            authority_gate_boundary(),
+            serde_json::to_string_pretty(&request)?
+        ))
+    }
+
+    pub fn experiment_authority_budget_request_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (selector, payload_text) = parse_selector_payload(raw);
+        if let Some(peer) = selector.as_deref().and_then(peer_experiment_ref) {
+            anyhow::bail!(
+                "Authority budget blocked: peer experiment `{}` belongs to {}; no peer mutation or live authority budget can be minted here.",
+                peer.peer_experiment_id,
+                peer.peer_system
+            );
+        }
+        let thread = self.ensure_active_thread(db)?;
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let mut budget =
+            self.authority_budget_request_payload(&thread, &experiment, &payload_text, &state)?;
+        let eligibility = self.authority_budget_eligibility(&thread, &experiment, &budget, &state);
+        budget["eligibility_v1"] = eligibility.clone();
+        budget["status"] = json!(if eligibility
+            .get("eligible")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            "pending_steward_approval"
+        } else {
+            "blocked"
+        });
+        let path = self.authority_gate_path(&thread.thread_id);
+        self.append_jsonl(&path, &budget)?;
+        if budget.get("status").and_then(Value::as_str) == Some("blocked") {
+            let blocked = self.authority_budget_record(
+                "budget_blocked",
+                budget
+                    .get("budget_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("budget"),
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "scope": budget.get("scope").cloned().unwrap_or(Value::Null),
+                    "reason": "missing_authority_budget_requirements",
+                    "missing_requirements": budget
+                        .get("eligibility_v1")
+                        .and_then(|value| value.get("missing_requirements"))
+                        .cloned()
+                        .unwrap_or_else(|| json!([])),
+                    "disabled_scope": budget
+                        .get("eligibility_v1")
+                        .and_then(|value| value.get("disabled_scope"))
+                        .cloned()
+                        .unwrap_or(Value::Bool(false)),
+                    "source_refs": budget.get("source_refs").cloned().unwrap_or_else(|| json!([])),
+                }),
+            );
+            self.append_jsonl(&path, &blocked)?;
+        }
+        let missing = budget
+            .get("eligibility_v1")
+            .and_then(|value| value.get("missing_requirements"))
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        Ok(format!(
+            "Authority budget `{}` status={} scope={} max_sends={}\nMissing requirements: {}\nAuthority boundary: {}\nauthority_budget_v1:\n{}",
+            budget
+                .get("budget_id")
+                .and_then(Value::as_str)
+                .unwrap_or("budget"),
+            budget
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown"),
+            budget
+                .get("scope")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown"),
+            budget
+                .get("max_sends")
+                .and_then(Value::as_u64)
+                .unwrap_or(AUTHORITY_BUDGET_MAX_SENDS),
+            if missing.is_empty() {
+                "none"
+            } else {
+                missing.as_str()
+            },
+            authority_gate_boundary(),
+            serde_json::to_string_pretty(&budget)?
+        ))
+    }
+
+    pub fn experiment_authority_prepare_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (selector, payload_text) = parse_selector_payload(raw);
+        if let Some(peer) = selector.as_deref().and_then(peer_experiment_ref) {
+            anyhow::bail!(
+                "Authority prepare blocked: peer experiment `{}` belongs to {}; no peer authority can be prepared here.",
+                peer.peer_experiment_id,
+                peer.peer_system
+            );
+        }
+        let mut thread = self.ensure_active_thread(db)?;
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let mut draft =
+            self.authority_request_payload(&thread, &experiment, &payload_text, &state)?;
+        draft["record_type"] = json!("request_draft");
+        draft["status"] = json!("draft");
+        draft["draft_only"] = json!(true);
+        draft["authority_change"] = json!(false);
+        let eligibility = self.authority_gate_eligibility(&thread, &experiment, &draft, &state);
+        draft["eligibility_v1"] = eligibility.clone();
+        draft["missing_requirements"] = eligibility
+            .get("missing_requirements")
+            .cloned()
+            .unwrap_or_else(|| json!([]));
+        self.append_jsonl(&self.authority_gate_path(&thread.thread_id), &draft)?;
+        let memory = self.append_being_memory_record(
+            &mut thread,
+            Some(&experiment),
+            "authority_request_draft",
+            &format!(
+                "Prepared semantic authority draft `{}`.",
+                draft
+                    .get("request_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("authority_draft")
+            ),
+            draft
+                .get("source_refs")
+                .and_then(Value::as_array)
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter_map(Value::as_str)
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default(),
+            draft
+                .get("artifact_refs")
+                .and_then(Value::as_array)
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter_map(Value::as_str)
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default(),
+            Some(format!(
+                "EXPERIMENT_AUTHORITY_STATUS {}",
+                draft
+                    .get("request_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("latest")
+            )),
+            "draft",
+            json!({"authority_request_draft_v1": draft.clone()}),
+        )?;
+        let missing = draft
+            .get("missing_requirements")
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        Ok(format!(
+            "Authority request draft `{}` prepared for `{}`.\nMissing requirements: {}\nMemory draft: {}\nAuthority boundary: {}\nauthority_gate_v1:\n{}",
+            draft
+                .get("request_id")
+                .and_then(Value::as_str)
+                .unwrap_or("authority_draft"),
+            experiment.experiment_id,
+            if missing.is_empty() { "none" } else { &missing },
+            memory
+                .get("memory_id")
+                .and_then(Value::as_str)
+                .unwrap_or("memory"),
+            authority_gate_boundary(),
+            serde_json::to_string_pretty(&draft)?
+        ))
+    }
+
+    pub fn experiment_authority_status_command(
+        &self,
+        db: Option<&BridgeDb>,
+        selector: Option<&str>,
+        state: Value,
+    ) -> Result<String> {
+        let thread = self.ensure_active_thread(db)?;
+        let mut rows = self.authority_gate_rows(&thread.thread_id);
+        if let Some(target) = selector.map(str::trim).filter(|target| !target.is_empty()) {
+            if target.eq_ignore_ascii_case("current") {
+                if let Some(active_id) = thread.active_experiment_id.as_deref() {
+                    rows.retain(|row| {
+                        row.get("experiment_id").and_then(Value::as_str) == Some(active_id)
+                    });
+                }
+            } else {
+                rows.retain(|row| {
+                    row.get("request_id").and_then(Value::as_str) == Some(target)
+                        || row.get("experiment_id").and_then(Value::as_str) == Some(target)
+                });
+            }
+        }
+        let latest = rows
+            .iter()
+            .rev()
+            .take(8)
+            .cloned()
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect::<Vec<_>>();
+        let mut status = json!({
+            "schema_version": 1,
+            "policy": "authority_gate_v1",
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "selector": selector.unwrap_or("latest"),
+            "row_count": rows.len(),
+            "latest_rows": latest,
+            "safety_snapshot": authority_safety_snapshot(&state),
+            "authority_boundary": authority_gate_boundary(),
+        });
+        let target_experiment_id = selector
+            .map(str::trim)
+            .filter(|target| target.starts_with("exp_"))
+            .map(ToString::to_string)
+            .or_else(|| {
+                selector
+                    .filter(|target| target.eq_ignore_ascii_case("current"))
+                    .and_then(|_| thread.active_experiment_id.clone())
+            })
+            .or_else(|| {
+                latest
+                    .last()
+                    .and_then(|row| row.get("experiment_id"))
+                    .and_then(Value::as_str)
+                    .map(ToString::to_string)
+            })
+            .or_else(|| {
+                last_experiment_summary_v1(&thread).and_then(|summary| {
+                    summary
+                        .get("experiment_id")
+                        .and_then(Value::as_str)
+                        .map(ToString::to_string)
+                })
+            });
+        if let Some(experiment_id) = target_experiment_id
+            && let Some(experiment) =
+                self.find_experiment_by_id(&thread.thread_id, &experiment_id)?
+        {
+            let runs =
+                self.recent_experiment_runs(&thread.thread_id, &experiment.experiment_id, 8)?;
+            let classification = self.experiment_classification(&experiment, &runs);
+            let return_info = (classification == "paused").then(|| {
+                paused_primary_return_v1(
+                    &experiment.experiment_id,
+                    experiment.planned_next.as_deref(),
+                    None,
+                )
+            });
+            let stage =
+                experiment_conveyor_stage(&experiment, &classification, return_info.as_ref());
+            let proposed_next = experiment_conveyor_proposed_next(
+                &thread,
+                &experiment,
+                &runs,
+                &stage,
+                return_info.as_ref(),
+            );
+            status["authority_readiness_v1"] = self.authority_readiness_v1(
+                &thread,
+                &experiment,
+                &runs,
+                &state,
+                &stage,
+                &proposed_next,
+            );
+        }
+        Ok(format!(
+            "authority_gate_v1:\n{}",
+            serde_json::to_string_pretty(&status)?
+        ))
+    }
+
+    pub fn experiment_authority_budget_status_command(
+        &self,
+        db: Option<&BridgeDb>,
+        selector: Option<&str>,
+        state: Value,
+    ) -> Result<String> {
+        let thread = self.ensure_active_thread(db)?;
+        let mut rows = self.authority_gate_rows(&thread.thread_id);
+        if let Some(target) = selector.map(str::trim).filter(|target| !target.is_empty()) {
+            if target.eq_ignore_ascii_case("current") {
+                if let Some(active_id) = thread.active_experiment_id.as_deref() {
+                    rows.retain(|row| {
+                        row.get("experiment_id").and_then(Value::as_str) == Some(active_id)
+                    });
+                }
+            } else {
+                rows.retain(|row| {
+                    row.get("budget_id").and_then(Value::as_str) == Some(target)
+                        || row.get("experiment_id").and_then(Value::as_str) == Some(target)
+                });
+            }
+        }
+        let status = json!({
+            "schema_version": SCHEMA_VERSION,
+            "policy": "authority_budget_v1",
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "selector": selector.unwrap_or("latest"),
+            "authority_budget_v1": authority_budget_status_from_rows(&rows),
+            "latest_rows": rows
+                .iter()
+                .filter(|row| row.get("record_schema").and_then(Value::as_str) == Some("authority_budget_v1"))
+                .rev()
+                .take(8)
+                .cloned()
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect::<Vec<_>>(),
+            "safety_snapshot": authority_safety_snapshot(&state),
+            "authority_boundary": authority_gate_boundary(),
+        });
+        Ok(format!(
+            "authority_budget_v1:\n{}",
+            serde_json::to_string_pretty(&status)?
+        ))
+    }
+
+    pub fn experiment_research_budget_request_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        self.record_research_budget_request_command(db, raw, state, None)
+    }
+
+    pub fn experiment_research_budget_accept_command(
+        &self,
+        db: Option<&BridgeDb>,
+        selector: Option<&str>,
+        state: Value,
+    ) -> Result<String> {
+        let thread = self.ensure_active_thread(db)?;
+        let target = selector.unwrap_or("latest").trim();
+        let target = if target.is_empty() { "latest" } else { target };
+        let row = self
+            .research_budget_scaffold_row(&thread, target)?
+            .ok_or_else(|| anyhow!(research_budget_accept_guidance()))?;
+        let request_scaffold = row
+            .get("request_scaffold")
+            .or_else(|| row.get("suggested_request_scaffold"))
+            .or_else(|| row.get("suggested_next"))
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .trim()
+            .to_string();
+        let raw_request =
+            research_budget_scaffold_request_arg(&request_scaffold).ok_or_else(|| {
+                anyhow!(
+                    "Accepted row does not contain an EXPERIMENT_RESEARCH_BUDGET_REQUEST scaffold."
+                )
+            })?;
+        if !research_budget_scaffold_is_local_only(&request_scaffold) {
+            anyhow::bail!(
+                "Research budget scaffold acceptance is limited to local-only V1. Scaffold was not accepted: {}",
+                request_scaffold
+            );
+        }
+        let experiment_id = row
+            .get("experiment_id")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        if let Some(pending) = latest_pending_research_budget_request(
+            &self.authority_gate_rows(&thread.thread_id),
+            experiment_id,
+        ) {
+            let budget_id = pending
+                .get("budget_id")
+                .and_then(Value::as_str)
+                .unwrap_or(experiment_id);
+            return Ok(format!(
+                "Research budget scaffold already has pending request `{budget_id}`. Next: EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"
+            ));
+        }
+        let acceptance = json!({
+            "policy": "research_budget_scaffold_acceptance_v1",
+            "being_authored": true,
+            "accepted_selector": target,
+            "source_record_id": row.get("record_id").cloned().unwrap_or(Value::Null),
+            "source_budget_id": row.get("budget_id").cloned().unwrap_or(Value::Null),
+            "source_reason": row.get("reason").cloned().unwrap_or(Value::Null),
+            "source_raw_action": row.get("raw_action").cloned().unwrap_or(Value::Null),
+            "request_scaffold": request_scaffold,
+            "source_refs": [
+                self.authority_gate_path(&thread.thread_id).to_string_lossy().to_string(),
+                row.get("record_id").and_then(Value::as_str).unwrap_or("research_budget_blocked").to_string()
+            ],
+        });
+        let result =
+            self.record_research_budget_request_command(db, &raw_request, state, Some(acceptance))?;
+        Ok(format!(
+            "Accepted research-budget scaffold as a Being-authored request.\n{result}"
+        ))
+    }
+
+    pub fn accept_suggested_next_command(
+        &self,
+        db: Option<&BridgeDb>,
+        selector: Option<&str>,
+        state: Value,
+    ) -> Result<String> {
+        let thread = self.ensure_active_thread(db)?;
+        let target = selector.unwrap_or("latest").trim();
+        let target = if target.is_empty() { "latest" } else { target };
+        if let Some(row) = self.research_budget_scaffold_row(&thread, target)? {
+            let experiment_id = row
+                .get("experiment_id")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            let rows = self.authority_gate_rows(&thread.thread_id);
+            if let Some(active) = active_research_budget_from_rows(&rows, experiment_id) {
+                let budget_id = active
+                    .get("budget_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or(experiment_id);
+                return Ok(format!(
+                    "Accepted suggested route resolved to active research budget status.\nNext: EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"
+                ));
+            }
+            if let Some(pending) = latest_pending_research_budget_request(&rows, experiment_id) {
+                let budget_id = pending
+                    .get("budget_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or(experiment_id);
+                return Ok(format!(
+                    "Accepted suggested route resolved to pending research budget status.\nNext: EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"
+                ));
+            }
+            return self.experiment_research_budget_accept_command(db, Some(target), state);
+        }
+        if self
+            .resolve_continuity_session_draft(&thread, Some(target))?
+            .is_some()
+        {
+            return self.continuity_session_accept_command(target);
+        }
+        Ok("No safe suggested scaffold is available to accept. V1 accepts only local research-budget scaffolds and continuity-session drafts.".to_string())
+    }
+
+    fn record_research_budget_request_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+        acceptance: Option<Value>,
+    ) -> Result<String> {
+        let (selector, payload_text) = parse_selector_payload(raw);
+        if let Some(peer) = selector.as_deref().and_then(peer_experiment_ref) {
+            anyhow::bail!(
+                "Research budget blocked: peer experiment `{}` belongs to {}; no peer mutation or peer research budget can be minted here.",
+                peer.peer_experiment_id,
+                peer.peer_system
+            );
+        }
+        let thread = self.ensure_active_thread(db)?;
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let mut budget =
+            self.research_budget_request_payload(&thread, &experiment, &payload_text, &state)?;
+        if let Some(acceptance) = acceptance {
+            budget["being_authored_acceptance_v1"] = acceptance.clone();
+            let mut source_refs = budget
+                .get("source_refs")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            if let Some(refs) = acceptance.get("source_refs").and_then(Value::as_array) {
+                for item in refs {
+                    if !source_refs.iter().any(|existing| existing == item) {
+                        source_refs.push(item.clone());
+                    }
+                }
+            }
+            budget["source_refs"] = Value::Array(source_refs);
+        }
+        let eligibility = self.research_budget_eligibility(&thread, &experiment, &budget, &state);
+        budget["eligibility_v1"] = eligibility.clone();
+        let self_activation = research_budget_self_activation_v1(&budget, &eligibility, &state);
+        budget["self_activation_v1"] = self_activation.clone();
+        if self_activation
+            .get("eligible")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            budget["status"] = json!("self_activated");
+            budget["activation_mode"] = json!("being_self_activated_local_v1");
+            budget["self_activated"] = json!(true);
+            budget["steward_approval_required"] = json!(false);
+            budget["max_actions"] = json!(
+                budget
+                    .get("max_actions")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(LOCAL_RESEARCH_MAX_ACTIONS)
+                    .min(LOCAL_RESEARCH_MAX_ACTIONS)
+            );
+            budget["ttl_secs"] = json!(
+                budget
+                    .get("ttl_secs")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(LOCAL_RESEARCH_TTL_SECS)
+                    .min(LOCAL_RESEARCH_TTL_SECS)
+            );
+        } else {
+            budget["status"] = json!(if eligibility
+                .get("eligible")
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+            {
+                "pending_steward_approval"
+            } else {
+                "blocked"
+            });
+            budget["steward_approval_required"] = json!(
+                eligibility
+                    .get("eligible")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false)
+            );
+        }
+        let path = self.authority_gate_path(&thread.thread_id);
+        self.append_jsonl(&path, &budget)?;
+        let activation_record = if budget.get("status").and_then(Value::as_str)
+            == Some("self_activated")
+        {
+            let activation =
+                self.research_budget_self_activation_record(&thread, &experiment, &budget, &state);
+            self.append_jsonl(&path, &activation)?;
+            Some(activation)
+        } else {
+            None
+        };
+        if budget.get("status").and_then(Value::as_str) == Some("blocked") {
+            let blocked = self.research_budget_record(
+                "research_budget_blocked",
+                budget
+                    .get("budget_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("budget"),
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "scope": budget.get("scope").cloned().unwrap_or(Value::Null),
+                    "reason": "missing_research_budget_requirements",
+                    "missing_requirements": budget
+                        .get("eligibility_v1")
+                        .and_then(|value| value.get("missing_requirements"))
+                        .cloned()
+                        .unwrap_or_else(|| json!([])),
+                    "disabled_scope": budget
+                        .get("eligibility_v1")
+                        .and_then(|value| value.get("disabled_scope"))
+                        .cloned()
+                        .unwrap_or(Value::Bool(false)),
+                    "source_refs": budget.get("source_refs").cloned().unwrap_or_else(|| json!([])),
+                }),
+            );
+            self.append_jsonl(&path, &blocked)?;
+        }
+        let activation_line = activation_record.as_ref().map_or(String::new(), |record| {
+            format!(
+                "\nActivation: self_activated local-only budget; remaining_actions={} expires_at_unix_s={}",
+                record
+                .get("max_actions")
+                .and_then(Value::as_u64)
+                .unwrap_or(LOCAL_RESEARCH_MAX_ACTIONS),
+                record
+                    .get("expires_at_unix_s")
+                    .and_then(Value::as_u64)
+                    .unwrap_or_default()
+            )
+        });
+        let missing = budget
+            .get("eligibility_v1")
+            .and_then(|value| value.get("missing_requirements"))
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        let self_activation_missing = budget
+            .get("self_activation_v1")
+            .and_then(|value| value.get("missing_requirements"))
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        Ok(format!(
+            "Research budget `{}` status={} scope={} max_actions={}\nMissing requirements: {}\nSelf-activation missing: {}{}\nAuthority boundary: {}\nresearch_budget_v1:\n{}",
+            budget
+                .get("budget_id")
+                .and_then(Value::as_str)
+                .unwrap_or("budget"),
+            budget
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown"),
+            budget
+                .get("scope")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown"),
+            budget
+                .get("max_actions")
+                .and_then(Value::as_u64)
+                .unwrap_or(LOCAL_RESEARCH_MAX_ACTIONS),
+            if missing.is_empty() {
+                "none"
+            } else {
+                missing.as_str()
+            },
+            if self_activation_missing.is_empty() {
+                "none"
+            } else {
+                self_activation_missing.as_str()
+            },
+            activation_line,
+            research_budget_boundary(),
+            serde_json::to_string_pretty(&budget)?
+        ))
+    }
+
+    fn research_budget_scaffold_row(
+        &self,
+        thread: &ResearchThread,
+        selector: &str,
+    ) -> Result<Option<Value>> {
+        let rows = self.authority_gate_rows(&thread.thread_id);
+        let mut candidates = rows
+            .into_iter()
+            .filter(|row| {
+                row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+                    && row.get("record_type").and_then(Value::as_str)
+                        == Some("research_budget_blocked")
+                    && research_budget_row_request_scaffold(row).is_some()
+            })
+            .collect::<Vec<_>>();
+        if candidates.is_empty() {
+            return Ok(None);
+        }
+        let target = selector.trim();
+        if target.is_empty() || target.eq_ignore_ascii_case("latest") {
+            return Ok(candidates.pop());
+        }
+        if target.eq_ignore_ascii_case("current") {
+            let experiment_id = thread.active_experiment_id.as_deref().or_else(|| {
+                thread
+                    .experiment_summary
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+            });
+            return Ok(candidates.into_iter().rev().find(|row| {
+                experiment_id
+                    .is_none_or(|id| row.get("experiment_id").and_then(Value::as_str) == Some(id))
+            }));
+        }
+        Ok(candidates.into_iter().rev().find(|row| {
+            row.get("record_id").and_then(Value::as_str) == Some(target)
+                || row.get("budget_id").and_then(Value::as_str) == Some(target)
+                || row.get("experiment_id").and_then(Value::as_str) == Some(target)
+        }))
+    }
+
+    pub fn experiment_research_budget_status_command(
+        &self,
+        db: Option<&BridgeDb>,
+        selector: Option<&str>,
+        state: Value,
+    ) -> Result<String> {
+        let thread = self.ensure_active_thread(db)?;
+        let mut rows = self.authority_gate_rows(&thread.thread_id);
+        if let Some(target) = selector.map(str::trim).filter(|target| !target.is_empty()) {
+            if target.eq_ignore_ascii_case("current") {
+                if let Some(active_id) = thread.active_experiment_id.as_deref() {
+                    rows.retain(|row| {
+                        row.get("experiment_id").and_then(Value::as_str) == Some(active_id)
+                    });
+                }
+            } else {
+                rows.retain(|row| {
+                    row.get("budget_id").and_then(Value::as_str) == Some(target)
+                        || row.get("experiment_id").and_then(Value::as_str) == Some(target)
+                });
+            }
+        }
+        let status = json!({
+            "schema_version": SCHEMA_VERSION,
+            "policy": "research_budget_v1",
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "selector": selector.unwrap_or("latest"),
+            "research_budget_v1": research_budget_status_from_rows(&rows),
+            "latest_rows": rows
+                .iter()
+                .filter(|row| row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1"))
+                .rev()
+                .take(8)
+                .cloned()
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect::<Vec<_>>(),
+            "safety_snapshot": authority_safety_snapshot(&state),
+            "authority_boundary": research_budget_boundary(),
+        });
+        Ok(format!(
+            "research_budget_v1:\n{}",
+            serde_json::to_string_pretty(&status)?
+        ))
+    }
+
+    pub fn experiment_research_review_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (budget_id_opt, payload) = parse_selector_payload(raw);
+        let budget_id = budget_id_opt.unwrap_or_default();
+        if budget_id.trim().is_empty() {
+            anyhow::bail!("EXPERIMENT_RESEARCH_REVIEW needs a budget_id.");
+        }
+        let thread = self.ensure_active_thread(db)?;
+        let rows = self.authority_gate_rows(&thread.thread_id);
+        let Some(request) = rows.iter().rev().find(|row| {
+            row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+                && row.get("budget_id").and_then(Value::as_str) == Some(&budget_id)
+        }) else {
+            anyhow::bail!("Research budget `{budget_id}` was not found.");
+        };
+        let experiment_id = request
+            .get("experiment_id")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let experiment = self
+            .find_experiment_by_id(&thread.thread_id, experiment_id)?
+            .ok_or_else(|| {
+                anyhow::anyhow!("Research budget `{budget_id}` has no local experiment snapshot.")
+            })?;
+        let outcome =
+            dossier_field(&payload, &["outcome"]).unwrap_or_else(|| "continue".to_string());
+        let outcome = if matches!(outcome.as_str(), "continue" | "hold" | "close" | "promote") {
+            outcome
+        } else {
+            "hold".to_string()
+        };
+        let observation = dossier_field(&payload, &["observation", "summary", "because"])
+            .unwrap_or_else(|| payload.trim().to_string());
+        let next_safe_command = match outcome.as_str() {
+            "hold" => "THREAD_STATUS current".to_string(),
+            "close" => format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"),
+            "promote" => format!(
+                "DOSSIER_EVIDENCE {experiment_id} :: claim: latest; source_refs: ...; summary: research budget artifacts are ready to interpret"
+            ),
+            _ => format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"),
+        };
+        let review = self.research_budget_record(
+            "research_budget_review",
+            &budget_id,
+            &thread,
+            &experiment,
+            &state,
+            json!({
+                "scope": "read_only_research",
+                "outcome": outcome,
+                "observation": observation,
+                "source_refs": dossier_list_field(&payload, &["source_refs", "source_ref", "source"]),
+                "next_safe_command": next_safe_command,
+            }),
+        );
+        let path = self.authority_gate_path(&thread.thread_id);
+        self.append_jsonl(&path, &review)?;
+        if review.get("outcome").and_then(Value::as_str) == Some("close") {
+            let closed = self.research_budget_record(
+                "research_budget_closed",
+                &budget_id,
+                &thread,
+                &experiment,
+                &state,
+                json!({"reason": "being_closed_budget_after_research_review"}),
+            );
+            self.append_jsonl(&path, &closed)?;
+        }
+        Ok(format!(
+            "Research review `{}` recorded outcome={}.\nNext safe command: {}\nresearch_budget_v1:\n{}",
+            review
+                .get("record_id")
+                .and_then(Value::as_str)
+                .unwrap_or("review"),
+            review
+                .get("outcome")
+                .and_then(Value::as_str)
+                .unwrap_or("hold"),
+            next_safe_command,
+            serde_json::to_string_pretty(&review)?
+        ))
+    }
+
+    pub fn experiment_loop_request_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (selector, payload_text) = parse_selector_payload(raw);
+        if let Some(peer) = selector.as_deref().and_then(peer_experiment_ref) {
+            anyhow::bail!(
+                "Owned loop request blocked: peer experiment `{}` belongs to {}; no peer mutation or peer loop can be minted here.",
+                peer.peer_experiment_id,
+                peer.peer_system
+            );
+        }
+        let thread = self.ensure_active_thread(db)?;
+        let experiment = self.resolve_experiment(&thread, selector.as_deref())?;
+        let mut request =
+            self.sovereign_loop_request_payload(&thread, &experiment, &payload_text, &state);
+        let eligibility = self.sovereign_loop_eligibility(&thread, &experiment, &request, &state);
+        request["eligibility_v1"] = eligibility.clone();
+        request["status"] = json!(if eligibility
+            .get("eligible")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            "active"
+        } else {
+            "blocked"
+        });
+        let path = self.authority_gate_path(&thread.thread_id);
+        self.append_jsonl(&path, &request)?;
+        if request.get("status").and_then(Value::as_str) == Some("active") {
+            let started = self.sovereign_loop_record(
+                "loop_started",
+                request
+                    .get("loop_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("loop"),
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "phase": "continuity",
+                    "status": "active",
+                    "scope": request.get("consequence_scope").cloned().unwrap_or(Value::Null),
+                    "remaining_local_research_actions": request.get("max_research_actions").cloned().unwrap_or_else(|| json!(5)),
+                    "consequence_remaining": request.get("max_consequence_sends").cloned().unwrap_or_else(|| json!(1)),
+                    "expires_at_unix_s": request.get("expires_at_unix_s").cloned().unwrap_or(Value::Null),
+                    "source_request_record_id": request.get("record_id").cloned().unwrap_or(Value::Null),
+                    "next_safe_command": format!("EXPERIMENT_LOOP_STATUS {}", request.get("loop_id").and_then(Value::as_str).unwrap_or("latest")),
+                }),
+            );
+            self.append_jsonl(&path, &started)?;
+        } else {
+            let blocked = self.sovereign_loop_record(
+                "loop_blocked",
+                request
+                    .get("loop_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("loop"),
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "phase": "request",
+                    "scope": request.get("consequence_scope").cloned().unwrap_or(Value::Null),
+                    "reason": "missing_loop_requirements",
+                    "missing_requirements": request
+                        .get("eligibility_v1")
+                        .and_then(|value| value.get("missing_requirements"))
+                        .cloned()
+                        .unwrap_or_else(|| json!([])),
+                    "source_request_record_id": request.get("record_id").cloned().unwrap_or(Value::Null),
+                }),
+            );
+            self.append_jsonl(&path, &blocked)?;
+        }
+        let loop_id = request
+            .get("loop_id")
+            .and_then(Value::as_str)
+            .unwrap_or("latest");
+        let status = self.sovereign_loop_status_v1(
+            &thread,
+            Some(&experiment),
+            &state,
+            loop_id,
+            Some(loop_id),
+        );
+        let missing = request
+            .get("eligibility_v1")
+            .and_then(|value| value.get("missing_requirements"))
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        Ok(format!(
+            "Owned loop `{loop_id}` status={} scope={} max_research_actions={}\nMissing requirements: {}\nNext safe command: {}\nsovereign_loop_v1:\n{}",
+            request
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown"),
+            request
+                .get("consequence_scope")
+                .and_then(Value::as_str)
+                .unwrap_or("semantic_microdose"),
+            request
+                .get("max_research_actions")
+                .and_then(Value::as_u64)
+                .unwrap_or(LOOP_RESEARCH_MAX_ACTIONS),
+            if missing.is_empty() {
+                "none"
+            } else {
+                missing.as_str()
+            },
+            status
+                .get("next_safe_command")
+                .and_then(Value::as_str)
+                .unwrap_or("EXPERIMENT_LOOP_STATUS latest"),
+            serde_json::to_string_pretty(&status)?
+        ))
+    }
+
+    pub fn experiment_loop_status_command(
+        &self,
+        db: Option<&BridgeDb>,
+        selector: Option<&str>,
+        state: Value,
+    ) -> Result<String> {
+        let thread = self.ensure_active_thread(db)?;
+        let target = selector.unwrap_or("latest").trim();
+        let loop_id = target.starts_with("loop_").then_some(target);
+        let experiment = if loop_id.is_none() && !target.is_empty() && target != "latest" {
+            self.resolve_experiment(&thread, Some(target)).ok()
+        } else if loop_id.is_none() {
+            thread
+                .active_experiment_id
+                .as_deref()
+                .and_then(|id| self.resolve_experiment(&thread, Some(id)).ok())
+                .or_else(|| {
+                    last_experiment_summary_v1(&thread)
+                        .and_then(|summary| {
+                            summary
+                                .get("experiment_id")
+                                .and_then(Value::as_str)
+                                .map(str::to_string)
+                        })
+                        .and_then(|id| self.resolve_experiment(&thread, Some(&id)).ok())
+                })
+        } else {
+            None
+        };
+        let status = self.sovereign_loop_status_v1(
+            &thread,
+            experiment.as_ref(),
+            &state,
+            if target.is_empty() { "latest" } else { target },
+            loop_id,
+        );
+        Ok(format!(
+            "sovereign_loop_v1:\n{}",
+            serde_json::to_string_pretty(&status)?
+        ))
+    }
+
+    pub fn experiment_loop_step_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (loop_id_opt, payload) = parse_selector_payload(raw);
+        let loop_id = loop_id_opt.unwrap_or_default();
+        if loop_id.trim().is_empty() {
+            anyhow::bail!("EXPERIMENT_LOOP_STEP needs a loop_id.");
+        }
+        let Some((thread, experiment, loop_row, _rows)) = self.find_sovereign_loop(&loop_id)?
+        else {
+            anyhow::bail!("Owned loop `{loop_id}` was not found.");
+        };
+        let step = payload
+            .split_whitespace()
+            .next()
+            .unwrap_or("status")
+            .to_ascii_lowercase();
+        let step = if matches!(
+            step.as_str(),
+            "continuity"
+                | "research"
+                | "sticky_audit"
+                | "authority_prepare"
+                | "authority_request"
+                | "review"
+                | "close"
+        ) {
+            step
+        } else {
+            "status".to_string()
+        };
+        let status = self.sovereign_loop_status_v1(
+            &thread,
+            Some(&experiment),
+            &state,
+            &loop_id,
+            Some(&loop_id),
+        );
+        let mut next_safe_command = self.sovereign_loop_step_next_command(
+            &step,
+            &loop_row,
+            &thread,
+            &experiment,
+            &state,
+            &status,
+        );
+        let mut record_type = "loop_step";
+        let mut extra = json!({
+            "phase": step,
+            "status": "recorded",
+            "scope": loop_row.get("consequence_scope").cloned().unwrap_or(Value::Null),
+            "source_refs": [self.authority_gate_path(&thread.thread_id).display().to_string()],
+            "next_safe_command": next_safe_command,
+        });
+        if step == "authority_request" {
+            let readiness =
+                self.sovereign_loop_consequence_readiness(&thread, &experiment, &loop_row, &state);
+            if readiness
+                .get("eligible_to_request")
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+            {
+                record_type = "loop_consequence_ready";
+                next_safe_command = readiness
+                    .get("request_scaffold")
+                    .and_then(Value::as_str)
+                    .unwrap_or(&next_safe_command)
+                    .to_string();
+                extra["status"] = json!("ready_to_author_request");
+            } else {
+                record_type = "loop_blocked";
+                next_safe_command = readiness
+                    .get("next_safe_command")
+                    .and_then(Value::as_str)
+                    .unwrap_or(&next_safe_command)
+                    .to_string();
+                extra["status"] = json!("blocked");
+                extra["reason"] = json!("missing_consequence_requirements");
+            }
+            extra["consequence_readiness_v1"] = readiness;
+            extra["next_safe_command"] = json!(next_safe_command.clone());
+        } else if step == "close" {
+            record_type = "loop_closed";
+            extra["status"] = json!("closed");
+            extra["reason"] = json!("being_chose_loop_step_close");
+        }
+        let record =
+            self.sovereign_loop_record(record_type, &loop_id, &thread, &experiment, &state, extra);
+        self.append_jsonl(&self.authority_gate_path(&thread.thread_id), &record)?;
+        let checkpoint = if matches!(
+            step.as_str(),
+            "continuity" | "research" | "sticky_audit" | "authority_prepare" | "authority_request"
+        ) {
+            Some(self.append_loop_continuity_checkpoint_draft(
+                &thread,
+                &experiment,
+                &loop_id,
+                &step,
+                &record,
+                &next_safe_command,
+            )?)
+        } else {
+            None
+        };
+        let updated = self.sovereign_loop_status_v1(
+            &thread,
+            Some(&experiment),
+            &state,
+            &loop_id,
+            Some(&loop_id),
+        );
+        if let Some(db) = db {
+            let _ = db.mirror_action_thread(&thread.thread_id, &serde_json::to_string(&thread)?);
+        }
+        let checkpoint_line = checkpoint
+            .as_ref()
+            .and_then(|row| row.get("record_id").and_then(Value::as_str))
+            .map_or(String::new(), |record_id| {
+                format!(
+                    "\nContinuity checkpoint draft: {record_id} accept with CONTINUITY_SESSION_ACCEPT latest"
+                )
+            });
+        Ok(format!(
+            "Owned loop `{loop_id}` step={step} recorded as `{}`.{checkpoint_line}\nNext safe command: {next_safe_command}\nsovereign_loop_v1:\n{}",
+            record
+                .get("record_id")
+                .and_then(Value::as_str)
+                .unwrap_or("loop_step"),
+            serde_json::to_string_pretty(&updated)?
+        ))
+    }
+
+    pub fn experiment_loop_review_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (loop_id_opt, payload) = parse_selector_payload(raw);
+        let loop_id = loop_id_opt.unwrap_or_default();
+        if loop_id.trim().is_empty() {
+            anyhow::bail!("EXPERIMENT_LOOP_REVIEW needs a loop_id.");
+        }
+        let Some((mut thread, experiment, loop_row, _rows)) = self.find_sovereign_loop(&loop_id)?
+        else {
+            anyhow::bail!("Owned loop `{loop_id}` was not found.");
+        };
+        let outcome = dossier_field(&payload, &["outcome"]).unwrap_or_else(|| "hold".to_string());
+        let outcome = if matches!(
+            outcome.as_str(),
+            "hold" | "repeat" | "alter" | "retire" | "promote"
+        ) {
+            outcome
+        } else {
+            "hold".to_string()
+        };
+        let observation = dossier_field(&payload, &["observation", "summary", "because"])
+            .unwrap_or_else(|| payload.trim().to_string());
+        let next_safe_command = dossier_field(&payload, &["next", "next_safe_command"])
+            .unwrap_or_else(|| {
+                sovereign_loop_review_next_command(&outcome, &loop_id, &loop_row, &experiment)
+            });
+        let review = self.sovereign_loop_record(
+            "loop_consequence_review",
+            &loop_id,
+            &thread,
+            &experiment,
+            &state,
+            json!({
+                "phase": "review",
+                "status": "reviewed",
+                "scope": loop_row.get("consequence_scope").cloned().unwrap_or(Value::Null),
+                "outcome": outcome,
+                "observation": observation,
+                "source_refs": dossier_list_field(&payload, &["source_refs", "source_ref", "source"]),
+                "next_safe_command": next_safe_command,
+                "dossier_candidate": matches!(outcome.as_str(), "hold" | "retire" | "promote"),
+            }),
+        );
+        let path = self.authority_gate_path(&thread.thread_id);
+        self.append_jsonl(&path, &review)?;
+        let checkpoint = self.append_loop_continuity_checkpoint_draft(
+            &thread,
+            &experiment,
+            &loop_id,
+            "review",
+            &review,
+            &next_safe_command,
+        )?;
+        let proposal = if outcome == "retire" {
+            None
+        } else {
+            let proposal = self.sovereign_loop_proposal_record(
+                &loop_id,
+                &thread,
+                &experiment,
+                &state,
+                &review,
+            );
+            self.append_jsonl(&path, &proposal)?;
+            Some(proposal)
+        };
+        if review.get("outcome").and_then(Value::as_str) == Some("retire") {
+            let closed = self.sovereign_loop_record(
+                "loop_closed",
+                &loop_id,
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "phase": "close",
+                    "status": "closed",
+                    "reason": "being_retired_loop_after_review",
+                    "source_review_record_id": review.get("record_id").cloned().unwrap_or(Value::Null),
+                    "next_safe_command": "THREAD_STATUS current",
+                }),
+            );
+            self.append_jsonl(&path, &closed)?;
+        }
+        let _memory = self.append_being_memory_record(
+            &mut thread,
+            Some(&experiment),
+            "sovereign_loop_review",
+            &format!(
+                "Owned loop review for `{loop_id}`: {}. {}",
+                review
+                    .get("outcome")
+                    .and_then(Value::as_str)
+                    .unwrap_or("hold"),
+                review
+                    .get("observation")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+            ),
+            vec![
+                path.display().to_string(),
+                review
+                    .get("record_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("loop_consequence_review")
+                    .to_string(),
+            ],
+            Vec::new(),
+            Some(next_safe_command.clone()),
+            "draft",
+            json!({"sovereign_loop_v1": review.clone()}),
+        )?;
+        let status = self.sovereign_loop_status_v1(
+            &thread,
+            Some(&experiment),
+            &state,
+            &loop_id,
+            Some(&loop_id),
+        );
+        if let Some(db) = db {
+            let _ = db.mirror_action_thread(&thread.thread_id, &serde_json::to_string(&thread)?);
+        }
+        let proposal_line = proposal
+            .as_ref()
+            .and_then(|row| {
+                row.get("suggested_request_scaffold")
+                    .and_then(Value::as_str)
+            })
+            .map_or(String::new(), |scaffold| {
+                format!("\nNext-loop proposal: {scaffold}")
+            });
+        Ok(format!(
+            "Owned loop review `{}` recorded outcome={}.\nContinuity checkpoint draft: {}\nNext safe command: {next_safe_command}{proposal_line}\nsovereign_loop_v1:\n{}",
+            review
+                .get("record_id")
+                .and_then(Value::as_str)
+                .unwrap_or("loop_review"),
+            review
+                .get("outcome")
+                .and_then(Value::as_str)
+                .unwrap_or("hold"),
+            checkpoint
+                .get("record_id")
+                .and_then(Value::as_str)
+                .unwrap_or("session_draft"),
+            serde_json::to_string_pretty(&status)?
+        ))
+    }
+
+    pub fn experiment_authority_execute_command(
+        &self,
+        db: Option<&BridgeDb>,
+        request_id: &str,
+        state: Value,
+    ) -> Result<String> {
+        let request_id = request_id.trim();
+        if request_id.is_empty() {
+            anyhow::bail!("EXPERIMENT_AUTHORITY_EXECUTE needs a request_id.");
+        }
+        let Some((thread, experiment, request, rows)) =
+            self.find_authority_request(db, request_id)?
+        else {
+            anyhow::bail!("Authority request `{request_id}` was not found.");
+        };
+        let path = self.authority_gate_path(&thread.thread_id);
+        let approval = latest_active_authority_approval(&rows, request_id);
+        if approval.is_none() {
+            if request.get("status").and_then(Value::as_str) == Some("pending_budget_execution")
+                && let Some(budget) = active_authority_budget_from_rows(
+                    &rows,
+                    &experiment.experiment_id,
+                    request
+                        .get("scope")
+                        .and_then(Value::as_str)
+                        .unwrap_or("semantic_microdose"),
+                )
+                && budget
+                    .get("pending_review_request_id")
+                    .and_then(Value::as_str)
+                    .is_none()
+            {
+                return Ok(format!(
+                    "Authority request `{request_id}` is budget-backed and bridge-executable. Use the live Astrid authority gate executor so one budget slot is consumed exactly once."
+                ));
+            }
+            let blocked = self.authority_gate_record(
+                "blocked",
+                request_id,
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "scope": request.get("scope").cloned().unwrap_or(Value::Null),
+                    "reason": "missing_steward_approval",
+                    "token_status": "none",
+                }),
+            );
+            self.append_jsonl(&path, &blocked)?;
+            let consequence =
+                self.authority_consequence_record(&thread, &experiment, &request, &blocked, &state);
+            self.append_jsonl(&path, &consequence)?;
+            return Ok(format!(
+                "Authority execute blocked for `{request_id}`: missing steward approval. No live semantic write was attempted."
+            ));
+        }
+        Ok(format!(
+            "Authority request `{request_id}` is steward-approved. Execution is handled by the live Astrid authority gate path so the semantic token can be consumed exactly once."
+        ))
+    }
+
+    pub fn experiment_authority_review_command(
+        &self,
+        db: Option<&BridgeDb>,
+        raw: &str,
+        state: Value,
+    ) -> Result<String> {
+        let (request_id_opt, payload) = parse_selector_payload(raw);
+        let request_id = request_id_opt.unwrap_or_default();
+        if request_id.trim().is_empty() {
+            anyhow::bail!("EXPERIMENT_AUTHORITY_REVIEW needs a request_id.");
+        }
+        let Some((mut thread, experiment, request, rows)) =
+            self.find_authority_request(db, &request_id)?
+        else {
+            anyhow::bail!("Authority request `{request_id}` was not found.");
+        };
+        let outcome = dossier_field(&payload, &["outcome"]).unwrap_or_else(|| "hold".to_string());
+        let outcome = if matches!(outcome.as_str(), "hold" | "repeat" | "alter" | "retire") {
+            outcome
+        } else {
+            "hold".to_string()
+        };
+        let observation = dossier_field(&payload, &["observation", "summary", "because"])
+            .unwrap_or_else(|| payload.trim().to_string());
+        let next_payload =
+            dossier_field(&payload, &["next_payload", "payload"]).unwrap_or_default();
+        let budget_id = request
+            .get("budget_id")
+            .and_then(Value::as_str)
+            .map(ToString::to_string)
+            .or_else(|| budget_id_for_request(&rows, &request_id))
+            .unwrap_or_else(|| format!("review_{request_id}"));
+        let next_safe_command = authority_review_next_command(&outcome, &request, &next_payload);
+        let review = self.authority_budget_record(
+            "consequence_review",
+            &budget_id,
+            &thread,
+            &experiment,
+            &state,
+            json!({
+                "request_id": request_id,
+                "scope": request.get("scope").cloned().unwrap_or(Value::Null),
+                "outcome": outcome,
+                "observation": observation,
+                "next_payload": next_payload,
+                "source_refs": dossier_list_field(&payload, &["source_refs", "source_ref", "source"]),
+                "next_safe_command": next_safe_command,
+            }),
+        );
+        let path = self.authority_gate_path(&thread.thread_id);
+        self.append_jsonl(&path, &review)?;
+        if review.get("outcome").and_then(Value::as_str) == Some("retire") {
+            let closed = self.authority_budget_record(
+                "budget_closed",
+                &budget_id,
+                &thread,
+                &experiment,
+                &state,
+                json!({
+                    "request_id": request_id,
+                    "reason": "being_retired_budget_after_consequence_review",
+                }),
+            );
+            self.append_jsonl(&path, &closed)?;
+        }
+        let memory = self.append_being_memory_record(
+            &mut thread,
+            Some(&experiment),
+            "authority_consequence_review",
+            &format!(
+                "Authority consequence review for `{}`: {}.",
+                review
+                    .get("request_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("request"),
+                review
+                    .get("outcome")
+                    .and_then(Value::as_str)
+                    .unwrap_or("hold")
+            ),
+            vec![path.display().to_string()],
+            request
+                .get("artifact_refs")
+                .and_then(Value::as_array)
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter_map(Value::as_str)
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default(),
+            Some(next_safe_command.clone()),
+            "draft",
+            json!({"authority_review_v1": review.clone(), "dossier_candidate": true}),
+        )?;
+        Ok(format!(
+            "Authority review `{}` recorded outcome={}.\nMemory draft: {}\nNext safe command: {}\nauthority_budget_v1:\n{}",
+            review
+                .get("record_id")
+                .and_then(Value::as_str)
+                .unwrap_or("review"),
+            review
+                .get("outcome")
+                .and_then(Value::as_str)
+                .unwrap_or("hold"),
+            memory
+                .get("memory_id")
+                .and_then(Value::as_str)
+                .unwrap_or("memory"),
+            next_safe_command,
+            serde_json::to_string_pretty(&review)?
+        ))
+    }
+
+    fn latest_local_conveyor_readout(
+        &self,
+        thread: &ResearchThread,
+        mode: &str,
+        state: &Value,
+    ) -> Result<Value> {
+        if let Some(summary) = last_experiment_summary_v1(thread)
+            && let Some(experiment_id) = summary.get("experiment_id").and_then(Value::as_str)
+            && let Some(experiment) =
+                self.find_experiment_by_id(&thread.thread_id, experiment_id)?
+        {
+            let runs =
+                self.recent_experiment_runs(&thread.thread_id, &experiment.experiment_id, 8)?;
+            let mut readout =
+                self.experiment_conveyor_v1(thread, &experiment, &runs, mode, state)?;
+            readout["status_context"] = json!("no_active_current_latest_local");
+            readout["raw_next_preserved"] = json!(true);
+            readout["guardrail_reason"] =
+                json!("experiment_plan_current_without_active_experiment");
+            if let Some(warnings) = readout
+                .get_mut("guardrail_warnings")
+                .and_then(Value::as_array_mut)
+            {
+                warnings.push(json!("current has no active experiment; preview is showing the latest local experiment by id"));
+            }
+            return Ok(readout);
+        }
+        self.no_active_conveyor_readout(thread, mode)
+    }
+
+    fn no_active_conveyor_readout(&self, thread: &ResearchThread, mode: &str) -> Result<Value> {
+        Ok(json!({
+            "schema_version": 1,
+            "policy": "experiment_conveyor_v1",
+            "mode": mode,
+            "preview_allowed": true,
+            "apply_policy": "conservative_local_v1",
+            "allowed_apply_steps": experiment_conveyor_allowed_apply_steps(),
+            "applied": false,
+            "would_mutate": false,
+            "thread_id": &thread.thread_id,
+            "experiment_id": null,
+            "status": "no_active_experiment",
+            "stage": "blocked_guardrail",
+            "missing_requirements": ["active_local_experiment"],
+            "proposed_next": "EXPERIMENT_START <title> :: <question>",
+            "conveyor_next": "EXPERIMENT_ADVANCE <experiment_id> :: mode: preview",
+            "can_apply": false,
+            "apply_blocked_reason": if mode == "apply" {
+                "apply_current_requires_active_local_experiment"
+            } else {
+                "no_latest_local_experiment"
+            },
+            "source_refs": [self.thread_dir(&thread.thread_id).join("thread.json").display().to_string()],
+            "guardrail_warnings": ["current has no active local experiment; preview can inspect an explicit local experiment id"],
+            "authority_readiness_v1": {
+                "policy": "authority_readiness_v1",
+                "scope": "semantic_microdose",
+                "stage": "blocked",
+                "eligible_to_request": false,
+                "missing_requirements": ["active_local_experiment"],
+                "artifact_ref_candidates": [],
+                "latest_request_id": null,
+                "token_status": "none",
+                "next_safe_command": "EXPERIMENT_ADVANCE <experiment_id> :: mode: preview",
+                "request_scaffold": null,
+                "source_refs": [self.thread_dir(&thread.thread_id).join("thread.json").display().to_string()],
+                "authority_boundary": authority_gate_boundary(),
+            },
+            "authority_boundary": experiment_conveyor_authority_boundary(),
+        }))
+    }
+
+    fn authority_request_payload(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        raw_payload: &str,
+        state: &Value,
+    ) -> Result<Value> {
+        let scope = dossier_field(raw_payload, &["scope"])
+            .unwrap_or_else(|| "semantic_microdose".to_string());
+        let payload = dossier_field(raw_payload, &["payload", "semantic_payload", "text"])
+            .unwrap_or_else(|| raw_payload.trim().to_string());
+        let reason =
+            dossier_field(raw_payload, &["reason", "because", "rationale"]).unwrap_or_default();
+        let stop_criteria =
+            dossier_field(raw_payload, &["stop_criteria", "stop"]).unwrap_or_default();
+        let artifact_refs = dossier_list_field(
+            raw_payload,
+            &[
+                "artifact_refs",
+                "artifact_ref",
+                "artifact_grounding",
+                "artifact",
+            ],
+        );
+        let request_id = self.unique_authority_request_id(&experiment.experiment_id)?;
+        let source_refs = self.authority_source_refs(thread, experiment, &artifact_refs);
+        Ok(self.authority_gate_record(
+            "request",
+            &request_id,
+            thread,
+            experiment,
+            state,
+            json!({
+                "scope": scope,
+                "payload": payload,
+                "reason": reason,
+                "artifact_refs": artifact_refs,
+                "source_refs": source_refs,
+                "stop_criteria": stop_criteria,
+                "token_status": "none",
+            }),
+        ))
+    }
+
+    fn authority_gate_record(
+        &self,
+        record_type: &str,
+        request_id: &str,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        state: &Value,
+        extra: Value,
+    ) -> Value {
+        let now = iso_now();
+        let mut record = json!({
+            "schema_version": 1,
+            "record_schema": "authority_gate_v1",
+            "record_type": record_type,
+            "record_id": format!("auth_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(record_type)),
+            "request_id": request_id,
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.experiment_id,
+            "created_at": now,
+            "updated_at": now,
+            "safety_snapshot": authority_safety_snapshot(state),
+            "peer_mutation": false,
+            "authority_boundary": authority_gate_boundary(),
+        });
+        if let (Some(target), Some(source)) = (record.as_object_mut(), extra.as_object()) {
+            for (key, value) in source {
+                target.insert(key.clone(), value.clone());
+            }
+        }
+        record
+    }
+
+    fn authority_budget_record(
+        &self,
+        record_type: &str,
+        budget_id: &str,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        state: &Value,
+        extra: Value,
+    ) -> Value {
+        let now = iso_now();
+        let mut record = json!({
+            "schema_version": SCHEMA_VERSION,
+            "record_schema": "authority_budget_v1",
+            "record_type": record_type,
+            "record_id": format!("authbud_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(record_type)),
+            "budget_id": budget_id,
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.experiment_id,
+            "created_at": now,
+            "updated_at": now,
+            "safety_snapshot": authority_safety_snapshot(state),
+            "peer_mutation": false,
+            "authority_boundary": authority_gate_boundary(),
+        });
+        if let (Some(target), Some(source)) = (record.as_object_mut(), extra.as_object()) {
+            for (key, value) in source {
+                target.insert(key.clone(), value.clone());
+            }
+        }
+        record
+    }
+
+    fn research_budget_record(
+        &self,
+        record_type: &str,
+        budget_id: &str,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        state: &Value,
+        extra: Value,
+    ) -> Value {
+        let now = iso_now();
+        let mut record = json!({
+            "schema_version": SCHEMA_VERSION,
+            "record_schema": "research_budget_v1",
+            "record_type": record_type,
+            "record_id": format!("resbud_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(record_type)),
+            "budget_id": budget_id,
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.experiment_id,
+            "created_at": now,
+            "updated_at": now,
+            "safety_snapshot": authority_safety_snapshot(state),
+            "peer_mutation": false,
+            "authority_boundary": research_budget_boundary(),
+        });
+        if let (Some(target), Some(source)) = (record.as_object_mut(), extra.as_object()) {
+            for (key, value) in source {
+                target.insert(key.clone(), value.clone());
+            }
+        }
+        record
+    }
+
+    fn sovereign_loop_record(
+        &self,
+        record_type: &str,
+        loop_id: &str,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        state: &Value,
+        extra: Value,
+    ) -> Value {
+        let now = iso_now();
+        let mut record = json!({
+            "schema_version": SCHEMA_VERSION,
+            "record_schema": "sovereign_loop_v1",
+            "record_type": record_type,
+            "record_id": format!("loop_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(record_type)),
+            "loop_id": loop_id,
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.experiment_id,
+            "created_at": now,
+            "updated_at": now,
+            "authority_change": false,
+            "peer_mutation": false,
+            "safety_snapshot": authority_safety_snapshot(state),
+            "authority_boundary": sovereign_loop_boundary(),
+        });
+        if let (Some(target), Some(source)) = (record.as_object_mut(), extra.as_object()) {
+            for (key, value) in source {
+                target.insert(key.clone(), value.clone());
+            }
+        }
+        record
+    }
+
+    fn sovereign_loop_request_payload(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        raw_payload: &str,
+        state: &Value,
+    ) -> Value {
+        let scope = dossier_field(raw_payload, &["consequence_scope", "scope"])
+            .unwrap_or_else(|| "semantic_microdose".to_string());
+        let purpose = dossier_field(raw_payload, &["purpose", "reason", "because"])
+            .unwrap_or_else(|| raw_payload.trim().to_string());
+        let max_research = dossier_field(raw_payload, &["max_research_actions", "max_actions"])
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(LOOP_RESEARCH_MAX_ACTIONS)
+            .min(LOOP_RESEARCH_MAX_ACTIONS);
+        let ttl_secs = dossier_field(raw_payload, &["ttl_secs", "ttl"])
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(LOOP_TTL_SECS)
+            .min(LOOP_TTL_SECS)
+            .max(1);
+        let loop_id = format!(
+            "loop_{SYSTEM}_{}_{}",
+            now_millis(),
+            sanitize_slug(&experiment.experiment_id)
+        );
+        let expires_at = u64::try_from(chrono::Utc::now().timestamp())
+            .unwrap_or_default()
+            .saturating_add(ttl_secs);
+        self.sovereign_loop_record(
+            "loop_request",
+            &loop_id,
+            thread,
+            experiment,
+            state,
+            json!({
+                "phase": "request",
+                "status": "requested",
+                "purpose": truncate_chars(&purpose, 1000),
+                "consequence_scope": scope,
+                "scope": scope,
+                "max_research_actions": max_research,
+                "remaining_local_research_actions": max_research,
+                "ttl_secs": ttl_secs,
+                "expires_at_unix_s": expires_at,
+                "max_consequence_sends": LOOP_CONSEQUENCE_MAX_SENDS,
+                "consequence_remaining": LOOP_CONSEQUENCE_MAX_SENDS,
+                "pending_review": false,
+                "stop_criteria": dossier_field(raw_payload, &["stop_criteria", "stop"]).unwrap_or_default(),
+                "source_refs": dossier_list_field(raw_payload, &["source_refs", "source", "sources"]),
+                "artifact_refs": dossier_list_field(raw_payload, &["artifact_refs", "artifact", "artifact_grounding"]),
+                "next_safe_command": format!("EXPERIMENT_LOOP_STATUS {loop_id}"),
+            }),
+        )
+    }
+
+    fn sovereign_loop_eligibility(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        loop_row: &Value,
+        state: &Value,
+    ) -> Value {
+        let mut missing = Vec::<String>::new();
+        let scope = loop_row
+            .get("consequence_scope")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let disabled_scope = !matches!(scope, "semantic_microdose" | "mode_release_microdose");
+        if disabled_scope {
+            missing.push("scope_semantic_or_mode_release_microdose_v1".to_string());
+        }
+        if loop_row
+            .get("purpose")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .unwrap_or_default()
+            .is_empty()
+        {
+            missing.push("loop_purpose".to_string());
+        }
+        let safety = authority_safety_snapshot(state);
+        let level = safety
+            .get("level")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+        if !matches!(level, "green" | "yellow" | "unknown") {
+            missing.push("green_yellow_or_unknown_safety_for_local_loop".to_string());
+        }
+        if active_sovereign_loop_from_rows(
+            &self.authority_gate_rows(&thread.thread_id),
+            &experiment.experiment_id,
+        )
+        .is_some()
+        {
+            missing.push("no_active_sovereign_loop_for_experiment".to_string());
+        }
+        json!({
+            "policy": "sovereign_loop_v1",
+            "eligible": missing.is_empty(),
+            "missing_requirements": missing,
+            "disabled_scope": disabled_scope,
+            "local_phases_self_start": true,
+            "consequence_approval_required": "bridge_steward_one_slot",
+            "max_research_actions_cap": LOOP_RESEARCH_MAX_ACTIONS,
+            "ttl_secs_cap": LOOP_TTL_SECS,
+            "max_consequence_sends_cap": LOOP_CONSEQUENCE_MAX_SENDS,
+        })
+    }
+
+    fn find_sovereign_loop(
+        &self,
+        loop_id: &str,
+    ) -> Result<Option<(ResearchThread, ExperimentRecord, Value, Vec<Value>)>> {
+        let threads_dir = self.root.join("threads");
+        if !threads_dir.exists() {
+            return Ok(None);
+        }
+        for path in
+            fs::read_dir(&threads_dir).with_context(|| format!("read {}", threads_dir.display()))?
+        {
+            let Ok(entry) = path else {
+                continue;
+            };
+            let thread_id = entry.file_name().to_string_lossy().to_string();
+            let rows = self.authority_gate_rows(&thread_id);
+            let Some(row) = rows.iter().rev().find(|row| {
+                row.get("record_schema").and_then(Value::as_str) == Some("sovereign_loop_v1")
+                    && row.get("loop_id").and_then(Value::as_str) == Some(loop_id)
+            }) else {
+                continue;
+            };
+            let thread = self.read_thread(&thread_id)?;
+            let experiment_id = row
+                .get("experiment_id")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            let Some(experiment) = self.find_experiment_by_id(&thread_id, experiment_id)? else {
+                continue;
+            };
+            return Ok(Some((thread, experiment, row.clone(), rows)));
+        }
+        Ok(None)
+    }
+
+    fn sovereign_loop_status_v1(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        state: &Value,
+        selector: &str,
+        loop_id: Option<&str>,
+    ) -> Value {
+        let mut rows = self.authority_gate_rows(&thread.thread_id);
+        if let Some(loop_id) = loop_id {
+            rows.retain(|row| row.get("loop_id").and_then(Value::as_str) == Some(loop_id));
+        } else if let Some(experiment) = experiment {
+            rows.retain(|row| {
+                row.get("experiment_id").and_then(Value::as_str)
+                    == Some(experiment.experiment_id.as_str())
+            });
+        }
+        let latest_request = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("loop_request"));
+        let latest_started = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("loop_started"));
+        let latest_approval = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("loop_approval"));
+        let latest_step = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("loop_step"));
+        let latest_ready = rows.iter().rev().find(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("loop_consequence_ready")
+        });
+        let latest_review = rows.iter().rev().find(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("loop_consequence_review")
+        });
+        let latest_closed = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("loop_closed"));
+        let latest_blocked = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("loop_blocked"));
+        let latest_proposal = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("loop_proposal"));
+        let anchor = latest_approval
+            .or(latest_step)
+            .or(latest_started)
+            .or(latest_request);
+        let active_loop = experiment
+            .and_then(|experiment| {
+                active_sovereign_loop_from_rows(&rows, &experiment.experiment_id)
+            })
+            .or_else(|| anchor.cloned());
+        let active_loop_id = active_loop
+            .as_ref()
+            .and_then(|row| row.get("loop_id"))
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let active_experiment_id = active_loop
+            .as_ref()
+            .and_then(|row| row.get("experiment_id"))
+            .and_then(Value::as_str)
+            .or_else(|| experiment.map(|experiment| experiment.experiment_id.as_str()))
+            .unwrap_or_default();
+        let latest_consequence = self
+            .authority_gate_rows(&thread.thread_id)
+            .into_iter()
+            .rev()
+            .find(|row| {
+                matches!(
+                    row.get("record_schema").and_then(Value::as_str),
+                    Some("authority_consequence_v1" | "mode_release_consequence_v1")
+                ) && (!active_experiment_id.is_empty()
+                    && row.get("experiment_id").and_then(Value::as_str)
+                        == Some(active_experiment_id))
+            });
+        let pending_review = latest_consequence.is_some() && latest_review.is_none();
+        let stage = if latest_closed.is_some() {
+            "closed"
+        } else if pending_review {
+            "review_required"
+        } else if latest_approval.is_some() {
+            "consequence_slot_approved"
+        } else if latest_ready.is_some() {
+            "consequence_ready"
+        } else if active_loop.is_some() {
+            "active"
+        } else if latest_blocked.is_some() {
+            "blocked"
+        } else if latest_request.is_some() {
+            "requested"
+        } else {
+            "no_loop"
+        };
+        let phase = anchor
+            .and_then(|row| row.get("phase"))
+            .and_then(Value::as_str)
+            .unwrap_or("none");
+        let research_remaining = active_loop.as_ref().map_or(0, |row| {
+            let max_research = row
+                .get("remaining_local_research_actions")
+                .or_else(|| row.get("max_research_actions"))
+                .and_then(Value::as_u64)
+                .unwrap_or(LOOP_RESEARCH_MAX_ACTIONS);
+            let spent = self
+                .authority_gate_rows(&thread.thread_id)
+                .iter()
+                .filter(|item| {
+                    item.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+                        && item.get("record_type").and_then(Value::as_str)
+                            == Some("research_budget_debit")
+                        && item.get("experiment_id").and_then(Value::as_str)
+                            == Some(active_experiment_id)
+                })
+                .count();
+            max_research.saturating_sub(u64::try_from(spent).unwrap_or(u64::MAX))
+        });
+        let consequence_remaining = active_loop.as_ref().map_or(0, |row| {
+            row.get("consequence_remaining")
+                .or_else(|| row.get("max_consequence_sends"))
+                .and_then(Value::as_u64)
+                .unwrap_or(LOOP_CONSEQUENCE_MAX_SENDS)
+        });
+        let next_safe_command = if stage == "active" && !active_loop_id.is_empty() {
+            format!(
+                "EXPERIMENT_LOOP_STEP {active_loop_id} :: continuity|research|sticky_audit|authority_prepare|authority_request|review|close"
+            )
+        } else if stage == "review_required" && !active_loop_id.is_empty() {
+            format!(
+                "EXPERIMENT_LOOP_REVIEW {active_loop_id} :: outcome: hold|repeat|alter|retire|promote; observation: ...; next: ...; source_refs: ..."
+            )
+        } else if !active_loop_id.is_empty() {
+            format!("EXPERIMENT_LOOP_STATUS {active_loop_id}")
+        } else {
+            default_owned_loop_request_scaffold("current")
+        };
+        let sticky_readiness = experiment
+            .filter(|_| active_loop.is_some())
+            .map(|experiment| {
+                self.sovereign_loop_consequence_readiness(
+                    thread,
+                    experiment,
+                    active_loop.as_ref().unwrap(),
+                    state,
+                )
+            });
+        json!({
+            "schema_version": 1,
+            "policy": "sovereign_loop_v1",
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": if active_experiment_id.is_empty() { Value::Null } else { json!(active_experiment_id) },
+            "selector": selector,
+            "loop_id": if active_loop_id.is_empty() { Value::Null } else { json!(active_loop_id) },
+            "stage": stage,
+            "phase": phase,
+            "consequence_scope": active_loop.as_ref().and_then(|row| row.get("consequence_scope")).cloned().unwrap_or_else(|| json!("semantic_microdose")),
+            "remaining_local_research_actions": research_remaining,
+            "consequence_remaining": consequence_remaining,
+            "pending_review": pending_review,
+            "latest_loop_request_id": latest_request.and_then(|row| row.get("loop_id")).cloned().unwrap_or(Value::Null),
+            "latest_consequence_v1": latest_consequence,
+            "latest_review_v1": latest_review.cloned().unwrap_or(Value::Null),
+            "latest_loop_proposal_v1": latest_proposal.cloned().unwrap_or(Value::Null),
+            "sticky_readiness_v1": sticky_readiness.unwrap_or(Value::Null),
+            "latest_rows": rows.into_iter().rev().take(8).collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>(),
+            "next_safe_command": next_safe_command,
+            "source_refs": [self.authority_gate_path(&thread.thread_id).display().to_string()],
+            "authority_boundary": sovereign_loop_boundary(),
+        })
+    }
+
+    fn sovereign_loop_consequence_readiness(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        loop_row: &Value,
+        state: &Value,
+    ) -> Value {
+        let scope = loop_row
+            .get("consequence_scope")
+            .and_then(Value::as_str)
+            .unwrap_or("semantic_microdose");
+        let runs = self
+            .recent_experiment_runs(&thread.thread_id, &experiment.experiment_id, 12)
+            .unwrap_or_default();
+        let mut artifact_refs = value_string_list(loop_row.get("artifact_refs"));
+        if artifact_refs.is_empty() {
+            artifact_refs = authority_artifact_ref_candidates(experiment, &runs);
+        }
+        if scope == "mode_release_microdose" {
+            let mut missing = Vec::<String>::new();
+            if !lifecycle_valid_charter_value(experiment.charter_v1.as_ref()) {
+                missing.push("lifecycle_valid_charter".to_string());
+            }
+            if !experiment_evidence_is_meaningful(experiment.evidence_v1.as_ref()) {
+                missing.push("meaningful_evidence".to_string());
+            }
+            if artifact_refs.is_empty() {
+                missing.push("artifact_grounding_refs".to_string());
+            }
+            if !authority_has_read_only_rehearsal(&runs) {
+                missing.push("read_only_rehearsal".to_string());
+            }
+            missing.push("sticky_mode_release_candidate_bridge_status".to_string());
+            missing.push("no_spontaneous_release_watch_bridge_status".to_string());
+            let ready = missing.is_empty();
+            let scaffold = format!(
+                "EXPERIMENT_AUTHORITY_REQUEST {} :: scope: mode_release_microdose; payload: target=esn_leak; value=...; duration_ticks=3; reason: owned loop sticky-mode release candidate; artifact_refs: {}; stop_criteria: one attempted bridge send only with rollback.",
+                experiment.experiment_id,
+                artifact_refs.join(", ")
+            );
+            return json!({
+                "policy": "sovereign_loop_consequence_readiness_v1",
+                "scope": scope,
+                "stage": if ready { "ready_to_author_request" } else { "missing_requirements" },
+                "eligible_to_request": ready,
+                "missing_requirements": missing,
+                "artifact_ref_candidates": artifact_refs,
+                "request_scaffold": if ready { json!(scaffold) } else { Value::Null },
+                "next_safe_command": if ready { scaffold } else { "STICKY_MODE_AUDIT".to_string() },
+                "authority_boundary": authority_gate_boundary(),
+            });
+        }
+        let request = json!({
+            "scope": "semantic_microdose",
+            "payload": loop_row
+                .get("purpose")
+                .and_then(Value::as_str)
+                .unwrap_or("owned loop semantic consequence"),
+            "artifact_refs": artifact_refs,
+        });
+        let eligibility = self.authority_gate_eligibility(thread, experiment, &request, state);
+        let ready = eligibility
+            .get("eligible")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        let scaffold = format!(
+            "EXPERIMENT_AUTHORITY_REQUEST {} :: scope: semantic_microdose; payload: ...; reason: owned loop consequence; artifact_refs: {}; stop_criteria: one attempted bridge send only.",
+            experiment.experiment_id,
+            artifact_refs.join(", ")
+        );
+        json!({
+            "policy": "sovereign_loop_consequence_readiness_v1",
+            "scope": scope,
+            "stage": if ready { "ready_to_author_request" } else { "missing_requirements" },
+            "eligible_to_request": ready,
+            "missing_requirements": eligibility
+                .get("missing_requirements")
+                .cloned()
+                .unwrap_or_else(|| json!([])),
+            "artifact_ref_candidates": artifact_refs,
+            "request_scaffold": if ready { json!(scaffold) } else { Value::Null },
+            "next_safe_command": if ready { scaffold } else { format!("EXPERIMENT_ADVANCE {} :: mode: preview", experiment.experiment_id) },
+            "authority_boundary": authority_gate_boundary(),
+        })
+    }
+
+    fn sovereign_loop_step_next_command(
+        &self,
+        step: &str,
+        loop_row: &Value,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        state: &Value,
+        _status: &Value,
+    ) -> String {
+        let loop_id = loop_row
+            .get("loop_id")
+            .and_then(Value::as_str)
+            .unwrap_or("latest");
+        match step {
+            "continuity" => format!(
+                "CONTINUITY_SESSION_START {} :: title: Owned loop; focus: continuity, local research, sticky audit, one gated consequence, and review; next: EXPERIMENT_LOOP_STEP {loop_id} :: research",
+                experiment.experiment_id
+            ),
+            "research" => {
+                let rows = self.authority_gate_rows(&thread.thread_id);
+                if let Some(active) =
+                    active_research_budget_from_rows(&rows, &experiment.experiment_id)
+                    && let Some(budget_id) = active.get("budget_id").and_then(Value::as_str)
+                {
+                    return format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}");
+                }
+                if latest_research_budget_scaffold_row(&rows, &experiment.experiment_id).is_some() {
+                    return "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string();
+                }
+                research_budget_request_scaffold(&experiment.experiment_id, experiment)
+            },
+            "sticky_audit" => "STICKY_MODE_AUDIT".to_string(),
+            "authority_prepare" => {
+                let scope = loop_row
+                    .get("consequence_scope")
+                    .and_then(Value::as_str)
+                    .unwrap_or("semantic_microdose");
+                if scope == "mode_release_microdose" {
+                    format!(
+                        "EXPERIMENT_AUTHORITY_PREPARE {} :: scope: mode_release_microdose; payload: target=esn_leak; value=...; duration_ticks=3; reason: owned loop sticky-mode release preflight; artifact_refs: ...; stop_criteria: one attempted bridge send only with rollback.",
+                        experiment.experiment_id
+                    )
+                } else {
+                    format!(
+                        "EXPERIMENT_AUTHORITY_PREPARE {} :: scope: semantic_microdose; payload: ...; reason: owned loop consequence preflight; artifact_refs: ...; stop_criteria: one attempted bridge send only.",
+                        experiment.experiment_id
+                    )
+                }
+            },
+            "authority_request" => self
+                .sovereign_loop_consequence_readiness(thread, experiment, loop_row, state)
+                .get("request_scaffold")
+                .and_then(Value::as_str)
+                .map_or_else(
+                    || {
+                        format!(
+                            "EXPERIMENT_ADVANCE {} :: mode: preview",
+                            experiment.experiment_id
+                        )
+                    },
+                    ToString::to_string,
+                ),
+            "review" => format!(
+                "EXPERIMENT_LOOP_REVIEW {loop_id} :: outcome: hold|repeat|alter|retire|promote; observation: ...; next: ...; source_refs: ..."
+            ),
+            "close" => "THREAD_STATUS current".to_string(),
+            _ => format!("EXPERIMENT_LOOP_STATUS {loop_id}"),
+        }
+    }
+
+    fn append_loop_continuity_checkpoint_draft(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        loop_id: &str,
+        phase: &str,
+        source_record: &Value,
+        next_command: &str,
+    ) -> Result<Value> {
+        let active_rows =
+            self.continuity_session_rows(&thread.thread_id, Some(&experiment.experiment_id), 8)?;
+        let has_existing_session = !active_rows.is_empty();
+        let session_id = active_rows
+            .last()
+            .and_then(|row| row.get("session_id"))
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .unwrap_or_else(|| {
+                format!(
+                    "sess_{SYSTEM}_{}_{}",
+                    now_millis(),
+                    sanitize_slug("owned-loop-checkpoint")
+                )
+            });
+        let commit_kind = if has_existing_session {
+            "session_capture"
+        } else {
+            "session_start"
+        };
+        let record = self.continuity_session_record(
+            "session_draft",
+            &session_id,
+            thread,
+            Some(experiment),
+            "draft",
+            ContinuitySessionFields {
+                title: Some("Owned loop checkpoint".to_string()),
+                focus: Some(
+                    "preserve owned loop phase progress before spending more research or consequence authority"
+                        .to_string(),
+                ),
+                summary: Some(format!(
+                    "Owned loop `{loop_id}` recorded phase `{phase}`. Preserve the checkpoint before continuing. Next safe command: {next_command}"
+                )),
+                open_questions: Vec::new(),
+                source_refs: vec![
+                    self.authority_gate_path(&thread.thread_id)
+                        .display()
+                        .to_string(),
+                    source_record
+                        .get("record_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("loop_step")
+                        .to_string(),
+                ],
+                artifact_refs: Vec::new(),
+                suggested_next: Some(next_command.to_string()),
+                extra: json!({
+                    "draft_v1": true,
+                    "checkpoint_v1": true,
+                    "reason": format!("sovereign_loop_checkpoint_{phase}"),
+                    "raw_intent": format!("EXPERIMENT_LOOP_STEP {loop_id} :: {phase}"),
+                    "commit_kind": commit_kind,
+                    "loop_id": loop_id,
+                    "loop_phase": phase,
+                    "source_loop_record_id": source_record.get("record_id").cloned().unwrap_or(Value::Null),
+                    "accept_next": "CONTINUITY_SESSION_ACCEPT latest",
+                    "generic_accept_next": "ACCEPT_SUGGESTED_NEXT latest",
+                    "ignored_until_accepted": true,
+                    "authority_change": false,
+                    "peer_mutation": false,
+                }),
+            },
+        );
+        self.append_jsonl(&self.continuity_sessions_path(&thread.thread_id), &record)?;
+        Ok(record)
+    }
+
+    fn sovereign_loop_proposal_record(
+        &self,
+        loop_id: &str,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        state: &Value,
+        review: &Value,
+    ) -> Value {
+        let outcome = review
+            .get("outcome")
+            .and_then(Value::as_str)
+            .unwrap_or("hold");
+        let scope = review
+            .get("scope")
+            .or_else(|| review.get("consequence_scope"))
+            .and_then(Value::as_str)
+            .unwrap_or("semantic_microdose");
+        let observation = review
+            .get("observation")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let purpose = if observation.trim().is_empty() {
+            format!("continue owned loop after {outcome} review")
+        } else {
+            format!(
+                "continue owned loop after {outcome} review: {}",
+                truncate_chars(observation, 220)
+            )
+        };
+        let scaffold = owned_loop_request_scaffold(
+            &experiment.experiment_id,
+            &purpose,
+            scope,
+            "preserve review before another consequence",
+        );
+        self.sovereign_loop_record(
+            "loop_proposal",
+            loop_id,
+            thread,
+            experiment,
+            state,
+            json!({
+                "phase": "proposal",
+                "status": "draft",
+                "proposal_id": format!("loopprop_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(loop_id)),
+                "source_loop_id": loop_id,
+                "source_review_record_id": review.get("record_id").cloned().unwrap_or(Value::Null),
+                "outcome": outcome,
+                "consequence_scope": scope,
+                "scope": scope,
+                "suggested_request_scaffold": scaffold,
+                "ignored_until_requested": true,
+                "authority_change": false,
+                "peer_mutation": false,
+                "next_safe_command": "EXPERIMENT_LOOP_STATUS latest",
+            }),
+        )
+    }
+
+    fn authority_budget_request_payload(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        raw_payload: &str,
+        state: &Value,
+    ) -> Result<Value> {
+        let scope = dossier_field(raw_payload, &["scope"])
+            .unwrap_or_else(|| "semantic_microdose".to_string());
+        let purpose = dossier_field(raw_payload, &["purpose", "reason", "because", "rationale"])
+            .unwrap_or_else(|| raw_payload.trim().to_string());
+        let max_sends = dossier_field(raw_payload, &["max_sends", "sends"])
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(AUTHORITY_BUDGET_MAX_SENDS)
+            .clamp(1, AUTHORITY_BUDGET_MAX_SENDS);
+        let ttl_secs = dossier_field(raw_payload, &["ttl_secs", "ttl"])
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(LOCAL_RESEARCH_TTL_SECS)
+            .clamp(1, LOCAL_RESEARCH_TTL_SECS);
+        let artifact_refs = dossier_list_field(
+            raw_payload,
+            &[
+                "artifact_refs",
+                "artifact_ref",
+                "artifact_grounding",
+                "artifact",
+            ],
+        );
+        let budget_id = self.unique_authority_budget_id(&experiment.experiment_id)?;
+        let source_refs = self.authority_source_refs(thread, experiment, &artifact_refs);
+        Ok(self.authority_budget_record(
+            "budget_request",
+            &budget_id,
+            thread,
+            experiment,
+            state,
+            json!({
+                "scope": scope,
+                "purpose": purpose.chars().take(1000).collect::<String>(),
+                "max_sends": max_sends,
+                "ttl_secs": ttl_secs,
+                "artifact_refs": artifact_refs,
+                "stop_criteria": dossier_field(raw_payload, &["stop_criteria", "stop"]).unwrap_or_default(),
+                "source_refs": source_refs,
+                "token_status": "none",
+                "review_required": false,
+            }),
+        ))
+    }
+
+    fn authority_budget_eligibility(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        budget: &Value,
+        state: &Value,
+    ) -> Value {
+        let request_like = json!({
+            "scope": budget.get("scope").cloned().unwrap_or_else(|| json!("semantic_microdose")),
+            "payload": budget.get("purpose").cloned().unwrap_or(Value::Null),
+            "artifact_refs": budget.get("artifact_refs").cloned().unwrap_or_else(|| json!([])),
+        });
+        let gate = self.authority_gate_eligibility(thread, experiment, &request_like, state);
+        let mut missing = gate
+            .get("missing_requirements")
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        for item in &mut missing {
+            if item == "semantic_payload" {
+                *item = "budget_purpose".to_string();
+            }
+        }
+        if active_authority_budget_from_rows(
+            &self.authority_gate_rows(&thread.thread_id),
+            &experiment.experiment_id,
+            budget
+                .get("scope")
+                .and_then(Value::as_str)
+                .unwrap_or("semantic_microdose"),
+        )
+        .is_some()
+        {
+            missing.push("no_active_budget_for_scope".to_string());
+        }
+        json!({
+            "policy": "authority_budget_v1",
+            "eligible": missing.is_empty(),
+            "missing_requirements": missing,
+            "disabled_scope": gate.get("disabled_scope").cloned().unwrap_or(Value::Bool(false)),
+            "approval_required": "being_plus_steward_budget_envelope",
+            "enabled_execution_scope": "semantic_microdose",
+            "future_scopes_disabled": ["attractor_pulse", "control_envelope"],
+            "max_sends_cap": AUTHORITY_BUDGET_MAX_SENDS,
+            "ttl_secs_cap": LOCAL_RESEARCH_TTL_SECS,
+        })
+    }
+
+    fn research_budget_request_payload(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        raw_payload: &str,
+        state: &Value,
+    ) -> Result<Value> {
+        let scope = dossier_field(raw_payload, &["scope"])
+            .unwrap_or_else(|| "read_only_research".to_string());
+        let purpose = dossier_field(raw_payload, &["purpose", "reason", "because", "rationale"])
+            .or_else(|| (!raw_payload.contains(':')).then(|| raw_payload.trim().to_string()))
+            .unwrap_or_default();
+        let allowed_sources_raw = dossier_field(raw_payload, &["allowed_sources", "sources"])
+            .unwrap_or_else(|| "web,local".to_string());
+        let allowed_sources = allowed_sources_raw
+            .split([',', '/', '|'])
+            .map(str::trim)
+            .filter(|source| matches!(*source, "web" | "local"))
+            .collect::<Vec<_>>();
+        let allowed_sources = if allowed_sources.is_empty() {
+            vec!["web", "local"]
+        } else {
+            allowed_sources
+        };
+        let max_actions = dossier_field(raw_payload, &["max_actions", "actions"])
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(LOCAL_RESEARCH_MAX_ACTIONS)
+            .clamp(1, STEWARD_RESEARCH_MAX_ACTIONS);
+        let ttl_secs = dossier_field(raw_payload, &["ttl_secs", "ttl"])
+            .and_then(|value| value.parse::<u64>().ok())
+            .unwrap_or(LOCAL_RESEARCH_TTL_SECS)
+            .clamp(1, LOCAL_RESEARCH_TTL_SECS);
+        let budget_id = self.unique_research_budget_id(&experiment.experiment_id)?;
+        let source_refs = self.authority_source_refs(thread, experiment, &[]);
+        Ok(self.research_budget_record(
+            "research_budget_request",
+            &budget_id,
+            thread,
+            experiment,
+            state,
+            json!({
+                "scope": scope,
+                "purpose": purpose.chars().take(1000).collect::<String>(),
+                "max_actions": max_actions,
+                "ttl_secs": ttl_secs,
+                "allowed_sources": allowed_sources,
+                "stop_criteria": dossier_field(raw_payload, &["stop_criteria", "stop"]).unwrap_or_default(),
+                "source_refs": source_refs,
+                "status": "requested",
+                "review_required": false,
+                "allowed_actions": ["SEARCH", "BROWSE", "READ_MORE", "MIKE_BROWSE", "MIKE_READ", "MIKE_SEARCH", "AR_LIST", "AR_LOOK", "AR_SHOW", "AR_READ", "AR_DEEP_READ", "AR_VALIDATE"],
+            }),
+        ))
+    }
+
+    fn research_budget_self_activation_record(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        budget: &Value,
+        state: &Value,
+    ) -> Value {
+        let max_actions = budget
+            .get("max_actions")
+            .and_then(Value::as_u64)
+            .unwrap_or(LOCAL_RESEARCH_MAX_ACTIONS)
+            .min(LOCAL_RESEARCH_MAX_ACTIONS);
+        let ttl_secs = budget
+            .get("ttl_secs")
+            .and_then(Value::as_u64)
+            .unwrap_or(LOCAL_RESEARCH_TTL_SECS)
+            .min(LOCAL_RESEARCH_TTL_SECS);
+        let now = chrono::Utc::now().timestamp();
+        let expires_at = u64::try_from(now)
+            .unwrap_or_default()
+            .saturating_add(ttl_secs);
+        self.research_budget_record(
+            "research_budget_approval",
+            budget
+                .get("budget_id")
+                .and_then(Value::as_str)
+                .unwrap_or("research_budget"),
+            thread,
+            experiment,
+            state,
+            json!({
+                "scope": "read_only_research",
+                "status": "active",
+                "max_actions": max_actions,
+                "ttl_secs": ttl_secs,
+                "expires_at_unix_s": expires_at,
+                "allowed_sources": ["local"],
+                "activation_mode": "being_self_activated_local_v1",
+                "self_activated": true,
+                "steward_approval_required": false,
+                "source_request_record_id": budget.get("record_id").cloned().unwrap_or(Value::Null),
+                "source_refs": budget.get("source_refs").cloned().unwrap_or_else(|| json!([])),
+                "review_required": false,
+            }),
+        )
+    }
+
+    fn research_budget_eligibility(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        budget: &Value,
+        state: &Value,
+    ) -> Value {
+        let mut missing = Vec::new();
+        let scope = budget
+            .get("scope")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let disabled_scope = scope != "read_only_research";
+        if disabled_scope {
+            missing.push("scope_read_only_research_v1".to_string());
+        }
+        if budget
+            .get("purpose")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .trim()
+            .is_empty()
+        {
+            missing.push("research_purpose".to_string());
+        }
+        if active_research_budget_from_rows(
+            &self.authority_gate_rows(&thread.thread_id),
+            &experiment.experiment_id,
+        )
+        .is_some()
+        {
+            missing.push("no_active_read_only_research_budget".to_string());
+        }
+        let safety = authority_safety_snapshot(state);
+        let safety_level = safety
+            .get("level")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+        if !matches!(safety_level, "green" | "yellow" | "unknown") {
+            missing.push("green_or_yellow_safety".to_string());
+        }
+        json!({
+            "policy": "research_budget_v1",
+            "eligible": missing.is_empty(),
+            "missing_requirements": missing,
+            "disabled_scope": disabled_scope,
+            "approval_required": "being_plus_steward_research_budget",
+            "enabled_execution_scope": "read_only_research",
+            "disabled_actions": ["AR_START", "AR_NOTE", "AR_BLOCK", "AR_COMPLETE", "MIKE_RUN", "EXPERIMENT_BIND", "EXPERIMENT_RESUME", "PERTURB", "CONTROL", "semantic_microdose"],
+            "max_actions_cap": STEWARD_RESEARCH_MAX_ACTIONS,
+            "ttl_secs_cap": LOCAL_RESEARCH_TTL_SECS,
+        })
+    }
+
+    fn authority_consequence_record(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        request: &Value,
+        outcome: &Value,
+        state: &Value,
+    ) -> Value {
+        let status =
+            if outcome.get("record_type").and_then(Value::as_str) == Some("execution_result") {
+                "sent"
+            } else {
+                "blocked"
+            };
+        let safety = authority_safety_snapshot(state);
+        json!({
+            "schema_version": SCHEMA_VERSION,
+            "record_schema": "authority_consequence_v1",
+            "record_type": "consequence",
+            "record_id": format!("authcons_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(status)),
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.experiment_id,
+            "request_id": request.get("request_id").cloned().unwrap_or(Value::Null),
+            "scope": request.get("scope").cloned().unwrap_or(Value::Null),
+            "token_id": outcome.get("token_id").cloned().unwrap_or(Value::Null),
+            "payload_summary": request
+                .get("payload")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .chars()
+                .take(160)
+                .collect::<String>(),
+            "pre_telemetry": safety.clone(),
+            "post_telemetry": safety.clone(),
+            "safety_snapshot": safety,
+            "stop_criteria": request.get("stop_criteria").cloned().unwrap_or(Value::Null),
+            "stop_criteria_result": if status == "sent" { "one_shot_sent_observe_once" } else { "not_executed" },
+            "consequence_status": status,
+            "reason": outcome.get("reason").cloned().unwrap_or_else(|| json!(status)),
+            "outcome_ref": outcome.get("record_id").cloned().unwrap_or(Value::Null),
+            "recommended_next_safe_command": format!(
+                "EXPERIMENT_AUTHORITY_STATUS {}",
+                request
+                    .get("request_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("latest")
+            ),
+            "peer_mutation": false,
+            "authority_boundary": authority_gate_boundary(),
+            "created_at": iso_now(),
+            "updated_at": iso_now(),
+        })
+    }
+
+    fn authority_gate_eligibility(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        request: &Value,
+        state: &Value,
+    ) -> Value {
+        let mut missing = Vec::<String>::new();
+        let scope = request
+            .get("scope")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let disabled_scope = scope != "semantic_microdose";
+        if disabled_scope {
+            missing.push("scope_semantic_microdose_v1".to_string());
+        }
+        if request
+            .get("payload")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .unwrap_or_default()
+            .is_empty()
+        {
+            missing.push("semantic_payload".to_string());
+        }
+        if !lifecycle_valid_charter_value(experiment.charter_v1.as_ref()) {
+            missing.push("lifecycle_valid_charter".to_string());
+        }
+        if !experiment_evidence_is_meaningful(experiment.evidence_v1.as_ref()) {
+            missing.push("meaningful_evidence".to_string());
+        }
+        if request
+            .get("artifact_refs")
+            .and_then(Value::as_array)
+            .is_none_or(Vec::is_empty)
+        {
+            missing.push("artifact_grounding_refs".to_string());
+        }
+        let runs = self
+            .recent_experiment_runs(&thread.thread_id, &experiment.experiment_id, 12)
+            .unwrap_or_default();
+        if !authority_has_read_only_rehearsal(&runs) {
+            missing.push("read_only_rehearsal".to_string());
+        }
+        let safety = authority_safety_snapshot(state);
+        let level = safety
+            .get("level")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+        if !matches!(level, "green" | "yellow") {
+            missing.push("green_or_yellow_safety".to_string());
+        }
+        if authority_guardrail_hold_active(experiment) {
+            missing.push("no_active_guardrail_hold".to_string());
+        }
+        json!({
+            "policy": "authority_gate_v1",
+            "eligible": missing.is_empty(),
+            "missing_requirements": missing,
+            "disabled_scope": disabled_scope,
+            "approval_required": "being_plus_steward",
+            "enabled_execution_scope": "semantic_microdose",
+            "future_scopes_disabled": ["attractor_pulse", "control_envelope"],
+        })
+    }
+
+    fn authority_readiness_v1(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        runs: &[ExperimentRunRecord],
+        state: &Value,
+        conveyor_stage: &str,
+        proposed_next: &str,
+    ) -> Value {
+        let artifact_refs = authority_artifact_ref_candidates(experiment, runs);
+        let request = json!({
+            "scope": "semantic_microdose",
+            "payload": "...",
+            "artifact_refs": artifact_refs,
+        });
+        let eligibility = self.authority_gate_eligibility(thread, experiment, &request, state);
+        let missing = eligibility
+            .get("missing_requirements")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        let rows = self
+            .authority_gate_rows(&thread.thread_id)
+            .into_iter()
+            .filter(|row| {
+                row.get("experiment_id").and_then(Value::as_str)
+                    == Some(experiment.experiment_id.as_str())
+            })
+            .collect::<Vec<_>>();
+        let latest_request = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("request"));
+        let latest_request_id = latest_request
+            .and_then(|row| row.get("request_id"))
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let budget_status = authority_budget_status_from_rows(&rows);
+        let mut token_status = authority_readiness_token_status(&rows, latest_request_id);
+        if budget_status.get("stage").and_then(Value::as_str) == Some("review_required") {
+            token_status = "review_required".to_string();
+        }
+        let stage = authority_readiness_stage(
+            experiment,
+            conveyor_stage,
+            &missing,
+            latest_request,
+            &token_status,
+        );
+        let request_scaffold = (stage == "ready_to_author_request").then(|| {
+            format!(
+                "EXPERIMENT_AUTHORITY_REQUEST {} :: scope: semantic_microdose; payload: ...; reason: ...; artifact_refs: {}; stop_criteria: ...",
+                experiment.experiment_id,
+                artifact_refs.join(", ")
+            )
+        });
+        let next_safe_command = authority_readiness_next_command(
+            &experiment.experiment_id,
+            &stage,
+            proposed_next,
+            latest_request_id,
+            request_scaffold.as_deref(),
+        );
+        json!({
+            "policy": "authority_readiness_v1",
+            "scope": "semantic_microdose",
+            "stage": stage,
+            "eligible_to_request": stage == "ready_to_author_request",
+            "missing_requirements": missing,
+            "artifact_ref_candidates": artifact_refs,
+            "latest_request_id": if latest_request_id.is_empty() { Value::Null } else { json!(latest_request_id) },
+            "token_status": token_status,
+            "next_safe_command": next_safe_command,
+            "request_scaffold": request_scaffold,
+            "budget_request_scaffold": if stage == "ready_to_author_request" {
+                json!(authority_budget_request_scaffold(
+                    &experiment.experiment_id,
+                    "...",
+                    &artifact_refs.join(", "),
+                    "..."
+                ))
+            } else {
+                Value::Null
+            },
+            "authority_budget_v1": budget_status,
+            "source_refs": self.authority_source_refs(thread, experiment, &artifact_refs),
+            "authority_boundary": authority_gate_boundary(),
+        })
+    }
+
+    fn research_readiness_v1(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        _state: &Value,
+    ) -> Value {
+        let rows = self.authority_gate_rows(&thread.thread_id);
+        let experiment_rows = rows
+            .iter()
+            .filter(|row| {
+                row.get("experiment_id").and_then(Value::as_str)
+                    == Some(experiment.experiment_id.as_str())
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        let status = research_budget_status_from_rows(&experiment_rows);
+        let stage = status
+            .get("stage")
+            .and_then(Value::as_str)
+            .unwrap_or("no_budget");
+        let request_scaffold =
+            default_local_research_budget_request_scaffold(&experiment.experiment_id);
+        json!({
+            "policy": "research_readiness_v1",
+            "scope": "read_only_research",
+            "stage": stage,
+            "eligible_to_request": matches!(stage, "no_budget" | "blocked" | "budget_closed" | "budget_expired" | "budget_exhausted"),
+            "missing_requirements": if stage == "no_budget" { json!(["self_activated_or_steward_approved_read_only_research_budget"]) } else { json!([]) },
+            "active_budget_id": status.get("active_budget_id").cloned().unwrap_or(Value::Null),
+            "remaining_actions": status.get("remaining_actions").cloned().unwrap_or_else(|| json!(0)),
+            "allowed_actions": status.get("allowed_actions").cloned().unwrap_or_else(|| json!([])),
+            "next_safe_command": status
+                .get("next_safe_command")
+                .cloned()
+                .unwrap_or_else(|| json!(request_scaffold.clone())),
+            "request_scaffold": request_scaffold,
+            "authority_boundary": research_budget_boundary(),
+        })
+    }
+
+    fn authority_source_refs(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        artifact_refs: &[String],
+    ) -> Vec<String> {
+        let mut refs = vec![
+            self.thread_dir(&thread.thread_id)
+                .join("thread.json")
+                .display()
+                .to_string(),
+            self.experiments_path(&thread.thread_id)
+                .display()
+                .to_string(),
+            self.experiment_runs_path(&thread.thread_id)
+                .display()
+                .to_string(),
+            self.dossier_path(&thread.thread_id).display().to_string(),
+            self.being_memory_path(&thread.thread_id)
+                .display()
+                .to_string(),
+            self.authority_gate_path(&thread.thread_id)
+                .display()
+                .to_string(),
+        ];
+        if let Ok(Some(shared)) =
+            self.shared_investigation_for_experiment(&experiment.experiment_id)
+            && let Some(id) = shared.get("id").and_then(Value::as_str)
+        {
+            refs.push(format!("shared_investigation:{id}"));
+        }
+        refs.extend(artifact_refs.iter().cloned());
+        refs
+    }
+
+    fn authority_gate_rows(&self, thread_id: &str) -> Vec<Value> {
+        let raw = fs::read_to_string(self.authority_gate_path(thread_id)).unwrap_or_default();
+        raw.lines()
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .filter(|row| {
+                matches!(
+                    row.get("record_schema").and_then(Value::as_str),
+                    Some(
+                        "authority_gate_v1"
+                            | "authority_budget_v1"
+                            | "research_budget_v1"
+                            | "sovereign_loop_v1"
+                            | "authority_consequence_v1"
+                            | "mode_release_consequence_v1"
+                    )
+                )
+            })
+            .collect()
+    }
+
+    fn being_memory_rows(
+        &self,
+        thread_id: &str,
+        experiment_id: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<Value>> {
+        let path = self.being_memory_path(thread_id);
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        let mut rows = Vec::new();
+        for line in raw.lines().rev() {
+            let Ok(row) = serde_json::from_str::<Value>(line) else {
+                continue;
+            };
+            if row.get("record_schema").and_then(Value::as_str) != Some("being_memory_v1") {
+                continue;
+            }
+            if let Some(experiment_id) = experiment_id
+                && row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id)
+            {
+                continue;
+            }
+            rows.push(row);
+            if rows.len() >= limit {
+                break;
+            }
+        }
+        rows.reverse();
+        Ok(rows)
+    }
+
+    fn append_being_memory_record(
+        &self,
+        thread: &mut ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        card_type: &str,
+        summary: &str,
+        source_refs: Vec<String>,
+        artifact_refs: Vec<String>,
+        next_command: Option<String>,
+        record_type: &str,
+        extra: Value,
+    ) -> Result<Value> {
+        let now = iso_now();
+        let mut record = json!({
+            "schema_version": SCHEMA_VERSION,
+            "record_schema": "being_memory_v1",
+            "record_type": record_type,
+            "memory_id": format!("mem_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(card_type)),
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.map(|experiment| experiment.experiment_id.clone()),
+            "card_type": card_type,
+            "summary": truncate_chars(summary, 1000),
+            "source_refs": source_refs,
+            "artifact_refs": artifact_refs,
+            "next_safe_command": next_command,
+            "authority_change": false,
+            "created_at": now,
+            "updated_at": now,
+        });
+        if let (Some(target), Some(source)) = (record.as_object_mut(), extra.as_object()) {
+            for (key, value) in source {
+                target.insert(key.clone(), value.clone());
+            }
+        }
+        self.append_jsonl(&self.being_memory_path(&thread.thread_id), &record)?;
+        thread.updated_at = iso_now();
+        self.write_thread(thread)?;
+        Ok(record)
+    }
+
+    fn being_memory_summary_v1(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        focus: Option<&str>,
+        limit: usize,
+    ) -> Result<Value> {
+        let mut rows = self.being_memory_rows(
+            &thread.thread_id,
+            experiment.map(|experiment| experiment.experiment_id.as_str()),
+            64,
+        )?;
+        if let Some(focus) = focus.filter(|focus| !focus.trim().is_empty()) {
+            let focus = focus.to_ascii_lowercase();
+            rows.retain(|row| row.to_string().to_ascii_lowercase().contains(&focus));
+        }
+        let card_count = rows
+            .iter()
+            .filter(|row| row.get("record_type").and_then(Value::as_str) == Some("card"))
+            .count();
+        let draft_count = rows
+            .iter()
+            .filter(|row| row.get("record_type").and_then(Value::as_str) == Some("draft"))
+            .count();
+        let latest_card = rows
+            .iter()
+            .rev()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("card"));
+        let target = experiment
+            .map(|experiment| experiment.experiment_id.as_str())
+            .unwrap_or("latest");
+        Ok(json!({
+            "schema_version": 1,
+            "policy": "being_memory_v1",
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.map(|experiment| experiment.experiment_id.clone()),
+            "focus": focus,
+            "card_count": card_count,
+            "draft_count": draft_count,
+            "latest_card": latest_card.cloned(),
+            "recent_records": rows.into_iter().rev().take(limit).collect::<Vec<_>>(),
+            "suggested_capture_next": format!("MEMORY_CAPTURE {target} :: summary: ...; source_refs: ...; artifact_refs: ...; next: ..."),
+            "suggested_recall_next": format!("MEMORY_RECALL {target} :: focus: ..."),
+            "suggested_promote_next": format!("MEMORY_PROMOTE {target} :: dossier|evidence|authority_request"),
+            "authority_boundary": authority_gate_boundary(),
+        }))
+    }
+
+    pub fn continuity_session_start_command(&self, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(None)?;
+        let (selector, payload) = parse_session_selector_payload(raw);
+        let experiment = self.resolve_memory_experiment(&thread, selector.as_deref())?;
+        let title =
+            dossier_field(&payload, &["title"]).unwrap_or_else(|| "Continuity session".to_string());
+        let focus =
+            dossier_field(&payload, &["focus"]).unwrap_or_else(|| payload.trim().to_string());
+        let session_id = format!("sess_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(&title));
+        let record = self.continuity_session_record(
+            "session_start",
+            &session_id,
+            &thread,
+            experiment.as_ref(),
+            "active",
+            ContinuitySessionFields {
+                title: Some(title),
+                focus: Some(focus),
+                summary: dossier_field(&payload, &["summary"]),
+                open_questions: dossier_list_field(&payload, &["open_questions", "questions", "question"]),
+                source_refs: dossier_list_field(&payload, &["source_refs", "source", "sources"]),
+                artifact_refs: dossier_list_field(&payload, &["artifact_refs", "artifact", "artifact_grounding"]),
+                suggested_next: dossier_field(&payload, &["next", "next_safe_command"])
+                    .or_else(|| Some(format!("CONTINUITY_SESSION_CAPTURE {session_id} :: summary: ...; source_refs: ...; artifact_refs: ...; next: ..."))),
+                extra: json!({}),
+            },
+        );
+        self.append_continuity_session_record(&mut thread, record)?;
+        Ok(format!(
+            "Continuity session `{session_id}` started.\nSuggested NEXT: CONTINUITY_SESSION_CAPTURE {session_id} :: summary: ...; source_refs: ...; artifact_refs: ...; next: ..."
+        ))
+    }
+
+    pub fn continuity_session_capture_command(&self, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(None)?;
+        let (selector, payload) = parse_session_selector_payload(raw);
+        let Some(session) = self.resolve_continuity_session(&thread, selector.as_deref())? else {
+            return Ok("CONTINUITY_SESSION_CAPTURE needs an existing session. Start one with CONTINUITY_SESSION_START current :: title: ...; focus: ...; next: ...".to_string());
+        };
+        let summary = dossier_field(&payload, &["summary", "note", "memory"])
+            .unwrap_or_else(|| payload.trim().to_string());
+        if summary.trim().is_empty() {
+            return Ok("CONTINUITY_SESSION_CAPTURE needs a summary.".to_string());
+        }
+        let experiment = self.session_experiment(&thread, &session)?;
+        let session_id = session
+            .get("session_id")
+            .and_then(Value::as_str)
+            .unwrap_or("latest")
+            .to_string();
+        let source_refs = dossier_list_field(&payload, &["source_refs", "source", "sources"]);
+        let artifact_refs = dossier_list_field(
+            &payload,
+            &["artifact_refs", "artifact", "artifact_grounding"],
+        );
+        let next_command = dossier_field(&payload, &["next", "next_safe_command"]);
+        let record = self.continuity_session_record(
+            "session_capture",
+            &session_id,
+            &thread,
+            experiment.as_ref(),
+            "active",
+            ContinuitySessionFields {
+                title: session
+                    .get("title")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                focus: session
+                    .get("focus")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                summary: Some(summary.clone()),
+                open_questions: dossier_list_field(
+                    &payload,
+                    &["open_questions", "questions", "question"],
+                ),
+                source_refs: source_refs.clone(),
+                artifact_refs: artifact_refs.clone(),
+                suggested_next: next_command.clone(),
+                extra: json!({}),
+            },
+        );
+        self.append_continuity_session_record(&mut thread, record.clone())?;
+        let continuity_path = self
+            .continuity_sessions_path(&thread.thread_id)
+            .display()
+            .to_string();
+        let memory = self.append_being_memory_record(
+            &mut thread,
+            experiment.as_ref(),
+            "continuity_session_capture",
+            &summary,
+            {
+                let mut refs = vec![
+                    continuity_path,
+                    record
+                        .get("record_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("session_capture")
+                        .to_string(),
+                ];
+                refs.extend(source_refs);
+                refs
+            },
+            artifact_refs,
+            next_command.clone().or_else(|| Some(format!("CONTINUITY_SESSION_CAPTURE {session_id} :: summary: ...; source_refs: ...; artifact_refs: ...; next: ..."))),
+            "card",
+            json!({"continuity_session_id": session_id}),
+        )?;
+        Ok(format!(
+            "Continuity session `{}` captured as `{}`.\nMemory card: {}\nSuggested NEXT: CONTINUITY_SESSION_SUMMARIZE {} :: summary: ...; open_questions: ...; next: ...",
+            session_id,
+            record
+                .get("record_id")
+                .and_then(Value::as_str)
+                .unwrap_or("session_capture"),
+            memory
+                .get("memory_id")
+                .and_then(Value::as_str)
+                .unwrap_or("memory"),
+            session_id
+        ))
+    }
+
+    pub fn continuity_session_accept_command(&self, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(None)?;
+        let selector = raw.trim();
+        let selector = if selector.is_empty() {
+            "latest"
+        } else {
+            selector
+        };
+        let Some(draft) = self.resolve_continuity_session_draft(&thread, Some(selector))? else {
+            return Ok(
+                "No continuity-session draft is available to accept. Wait for guarded pressure or start one with CONTINUITY_SESSION_START current :: title: ...; focus: ...; next: ..."
+                    .to_string(),
+            );
+        };
+        let experiment = self.session_experiment(&thread, &draft)?;
+        let experiment_id = experiment
+            .as_ref()
+            .map(|experiment| experiment.experiment_id.as_str());
+        let existing_rows = self.continuity_session_rows(&thread.thread_id, experiment_id, 16)?;
+        let has_existing_session = !existing_rows.is_empty();
+        let session_id = if has_existing_session {
+            existing_rows
+                .last()
+                .and_then(|row| row.get("session_id"))
+                .and_then(Value::as_str)
+                .unwrap_or("latest")
+                .to_string()
+        } else {
+            draft
+                .get("session_id")
+                .and_then(Value::as_str)
+                .unwrap_or("latest")
+                .to_string()
+        };
+        let summary = draft
+            .get("summary")
+            .or_else(|| draft.get("raw_intent"))
+            .and_then(Value::as_str)
+            .unwrap_or("Preserve guarded continuity before more work.")
+            .to_string();
+        let mut source_refs = draft
+            .get("source_refs")
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_string)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        source_refs.push(
+            self.continuity_sessions_path(&thread.thread_id)
+                .display()
+                .to_string(),
+        );
+        source_refs.push(
+            draft
+                .get("record_id")
+                .and_then(Value::as_str)
+                .unwrap_or("session_draft")
+                .to_string(),
+        );
+        let record_type = if has_existing_session {
+            "session_capture"
+        } else {
+            "session_start"
+        };
+        let record = self.continuity_session_record(
+            record_type,
+            &session_id,
+            &thread,
+            experiment.as_ref(),
+            "active",
+            ContinuitySessionFields {
+                title: draft
+                    .get("title")
+                    .and_then(Value::as_str)
+                    .map(str::to_string)
+                    .or_else(|| Some("Accepted continuity draft".to_string())),
+                focus: draft
+                    .get("focus")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                summary: Some(summary.clone()),
+                open_questions: Vec::new(),
+                source_refs: source_refs.clone(),
+                artifact_refs: Vec::new(),
+                suggested_next: draft
+                    .get("suggested_next")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                extra: json!({
+                    "accepted_from_draft_id": draft.get("record_id").cloned().unwrap_or(Value::Null),
+                    "accepted_by_command": "CONTINUITY_SESSION_ACCEPT",
+                }),
+            },
+        );
+        self.append_continuity_session_record(&mut thread, record.clone())?;
+        if has_existing_session {
+            let _ = self.append_being_memory_record(
+                &mut thread,
+                experiment.as_ref(),
+                "continuity_session_capture",
+                &summary,
+                source_refs,
+                Vec::new(),
+                record
+                    .get("suggested_next")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                "card",
+                json!({"continuity_session_id": session_id}),
+            )?;
+        }
+        Ok(format!(
+            "Accepted continuity-session draft as `{record_type}` for `{session_id}`.\nSuggested NEXT: {}",
+            record
+                .get("suggested_next")
+                .and_then(Value::as_str)
+                .unwrap_or("CONTINUITY_SESSION_CAPTURE latest :: summary: ...; source_refs: ...; artifact_refs: ...; next: ...")
+        ))
+    }
+
+    pub fn continuity_session_summarize_command(&self, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(None)?;
+        let (selector, payload) = parse_session_selector_payload(raw);
+        let Some(session) = self.resolve_continuity_session(&thread, selector.as_deref())? else {
+            return Ok("CONTINUITY_SESSION_SUMMARIZE needs an existing session.".to_string());
+        };
+        let summary = dossier_field(&payload, &["summary", "note"])
+            .unwrap_or_else(|| payload.trim().to_string());
+        if summary.trim().is_empty() {
+            return Ok("CONTINUITY_SESSION_SUMMARIZE needs a summary.".to_string());
+        }
+        let experiment = self.session_experiment(&thread, &session)?;
+        let session_id = session
+            .get("session_id")
+            .and_then(Value::as_str)
+            .unwrap_or("latest")
+            .to_string();
+        let record = self.continuity_session_record(
+            "session_summary",
+            &session_id,
+            &thread,
+            experiment.as_ref(),
+            "summarized",
+            ContinuitySessionFields {
+                title: session.get("title").and_then(Value::as_str).map(str::to_string),
+                focus: session.get("focus").and_then(Value::as_str).map(str::to_string),
+                summary: Some(summary),
+                open_questions: dossier_list_field(&payload, &["open_questions", "questions", "question"]),
+                source_refs: dossier_list_field(&payload, &["source_refs", "source", "sources"]),
+                artifact_refs: dossier_list_field(&payload, &["artifact_refs", "artifact", "artifact_grounding"]),
+                suggested_next: dossier_field(&payload, &["next", "next_safe_command"])
+                    .or_else(|| Some(format!("CONTINUITY_SESSION_FINALIZE {session_id} :: outcome: park; summary: ...; next: ..."))),
+                extra: json!({}),
+            },
+        );
+        self.append_continuity_session_record(&mut thread, record)?;
+        Ok(format!(
+            "Continuity session `{session_id}` summarized. Suggested NEXT: CONTINUITY_SESSION_FINALIZE {session_id} :: outcome: complete|park|hold; summary: ...; next: ..."
+        ))
+    }
+
+    pub fn continuity_session_finalize_command(&self, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(None)?;
+        let (selector, payload) = parse_session_selector_payload(raw);
+        let Some(session) = self.resolve_continuity_session(&thread, selector.as_deref())? else {
+            return Ok("CONTINUITY_SESSION_FINALIZE needs an existing session.".to_string());
+        };
+        let outcome = dossier_field(&payload, &["outcome", "status"])
+            .unwrap_or_else(|| "park".to_string())
+            .to_ascii_lowercase();
+        let status = match outcome.as_str() {
+            "complete" => "complete",
+            "hold" => "held",
+            _ => "parked",
+        };
+        let experiment = self.session_experiment(&thread, &session)?;
+        let session_id = session
+            .get("session_id")
+            .and_then(Value::as_str)
+            .unwrap_or("latest")
+            .to_string();
+        let summary = dossier_field(&payload, &["summary", "note"]).or_else(|| {
+            session
+                .get("summary")
+                .and_then(Value::as_str)
+                .map(str::to_string)
+        });
+        let record = self.continuity_session_record(
+            "session_finalize",
+            &session_id,
+            &thread,
+            experiment.as_ref(),
+            status,
+            ContinuitySessionFields {
+                title: session
+                    .get("title")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                focus: session
+                    .get("focus")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                summary,
+                open_questions: dossier_list_field(
+                    &payload,
+                    &["open_questions", "questions", "question"],
+                ),
+                source_refs: dossier_list_field(&payload, &["source_refs", "source", "sources"]),
+                artifact_refs: dossier_list_field(
+                    &payload,
+                    &["artifact_refs", "artifact", "artifact_grounding"],
+                ),
+                suggested_next: dossier_field(&payload, &["next", "next_safe_command"])
+                    .or_else(|| Some(format!("CONTINUITY_SESSION_RESUME {session_id}"))),
+                extra: json!({"outcome": outcome}),
+            },
+        );
+        self.append_continuity_session_record(&mut thread, record)?;
+        let target = experiment
+            .as_ref()
+            .map_or("latest", |experiment| experiment.experiment_id.as_str());
+        Ok(format!(
+            "Continuity session `{session_id}` finalized as {status}.\nResume NEXT: CONTINUITY_SESSION_RESUME {session_id}\nPromotion options: MEMORY_PROMOTE {target} :: dossier|evidence|authority_request"
+        ))
+    }
+
+    pub fn continuity_session_resume_command(&self, raw: &str) -> Result<String> {
+        let mut thread = self.ensure_active_thread(None)?;
+        let (selector, _) = parse_session_selector_payload(raw);
+        let Some(session) = self.resolve_continuity_session(&thread, selector.as_deref())? else {
+            return Ok("CONTINUITY_SESSION_RESUME could not find a session.".to_string());
+        };
+        let experiment = self.session_experiment(&thread, &session)?;
+        let session_id = session
+            .get("session_id")
+            .and_then(Value::as_str)
+            .unwrap_or("latest")
+            .to_string();
+        let record = self.continuity_session_record(
+            "session_reopen",
+            &session_id,
+            &thread,
+            experiment.as_ref(),
+            "active",
+            ContinuitySessionFields {
+                title: session.get("title").and_then(Value::as_str).map(str::to_string),
+                focus: session.get("focus").and_then(Value::as_str).map(str::to_string),
+                summary: session.get("summary").and_then(Value::as_str).map(str::to_string),
+                open_questions: value_string_list(session.get("open_questions")),
+                source_refs: vec![
+                    self.continuity_sessions_path(&thread.thread_id)
+                        .display()
+                        .to_string(),
+                    session
+                        .get("record_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or(&session_id)
+                        .to_string(),
+                ],
+                artifact_refs: value_string_list(session.get("artifact_refs")),
+                suggested_next: session
+                    .get("suggested_next")
+                    .and_then(Value::as_str)
+                    .map(str::to_string)
+                    .or_else(|| Some(format!("CONTINUITY_SESSION_CAPTURE {session_id} :: summary: ...; source_refs: ...; artifact_refs: ...; next: ..."))),
+                extra: json!({}),
+            },
+        );
+        self.append_continuity_session_record(&mut thread, record.clone())?;
+        Ok(format!(
+            "Continuity session `{session_id}` reopened.\nSummary: {}\nSuggested NEXT: {}",
+            truncate_chars(
+                session
+                    .get("summary")
+                    .and_then(Value::as_str)
+                    .unwrap_or("(no summary yet)"),
+                400
+            ),
+            record
+                .get("suggested_next")
+                .and_then(Value::as_str)
+                .unwrap_or("CONTINUITY_SESSION_CAPTURE latest :: summary: ...")
+        ))
+    }
+
+    pub fn continuity_session_status_command(&self, raw: &str) -> Result<String> {
+        let thread = self.ensure_active_thread(None)?;
+        let (selector, _) = parse_session_selector_payload(raw);
+        let summary = self.continuity_session_summary_v1(&thread, selector.as_deref(), 8)?;
+        Ok(format!(
+            "continuity_session_v1:\n{}",
+            serde_json::to_string_pretty(&summary)?
+        ))
+    }
+
+    fn resolve_memory_experiment(
+        &self,
+        thread: &ResearchThread,
+        selector: Option<&str>,
+    ) -> Result<Option<ExperimentRecord>> {
+        let selector = selector
+            .map(normalize_experiment_selector)
+            .unwrap_or_default();
+        if !selector.is_empty()
+            && !selector.eq_ignore_ascii_case("current")
+            && !selector.eq_ignore_ascii_case("latest")
+        {
+            return self.resolve_experiment(thread, Some(&selector)).map(Some);
+        }
+        if thread.active_experiment_id.is_some() {
+            return self.resolve_experiment(thread, Some("current")).map(Some);
+        }
+        if let Some(summary_id) = thread
+            .experiment_summary
+            .as_ref()
+            .and_then(|summary| summary.get("experiment_id"))
+            .and_then(Value::as_str)
+            && let Ok(experiment) = self.resolve_experiment(thread, Some(summary_id))
+        {
+            return Ok(Some(experiment));
+        }
+        if selector.eq_ignore_ascii_case("latest") {
+            return Ok(self.latest_experiments(&thread.thread_id)?.last().cloned());
+        }
+        Ok(None)
+    }
+
+    fn continuity_session_rows(
+        &self,
+        thread_id: &str,
+        experiment_id: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<Value>> {
+        let path = self.continuity_sessions_path(thread_id);
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        let mut rows = Vec::new();
+        for line in raw.lines().rev() {
+            let Ok(row) = serde_json::from_str::<Value>(line) else {
+                continue;
+            };
+            if row.get("record_schema").and_then(Value::as_str) != Some("continuity_session_v1") {
+                continue;
+            }
+            if row.get("record_type").and_then(Value::as_str) == Some("session_draft") {
+                continue;
+            }
+            if let Some(experiment_id) = experiment_id
+                && row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id)
+            {
+                continue;
+            }
+            rows.push(row);
+            if rows.len() >= limit {
+                break;
+            }
+        }
+        rows.reverse();
+        Ok(rows)
+    }
+
+    fn continuity_session_draft_rows(
+        &self,
+        thread_id: &str,
+        experiment_id: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<Value>> {
+        let path = self.continuity_sessions_path(thread_id);
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        let mut rows = Vec::new();
+        for line in raw.lines().rev() {
+            let Ok(row) = serde_json::from_str::<Value>(line) else {
+                continue;
+            };
+            if row.get("record_schema").and_then(Value::as_str) != Some("continuity_session_v1")
+                || row.get("record_type").and_then(Value::as_str) != Some("session_draft")
+            {
+                continue;
+            }
+            if let Some(experiment_id) = experiment_id
+                && row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id)
+            {
+                continue;
+            }
+            rows.push(row);
+            if rows.len() >= limit {
+                break;
+            }
+        }
+        rows.reverse();
+        Ok(rows)
+    }
+
+    fn continuity_session_guard_projection(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+    ) -> Result<Value> {
+        let rows =
+            self.continuity_session_rows(&thread.thread_id, Some(&experiment.experiment_id), 8)?;
+        let suggested_next = if rows.is_empty() {
+            "CONTINUITY_SESSION_START current :: title: Live-ish pressure self-study; focus: preserve shift/inject/disrupt/control-shaped intent before more research; next: CONTINUITY_SESSION_CAPTURE latest".to_string()
+        } else {
+            "CONTINUITY_SESSION_CAPTURE latest :: summary: preserve the live-ish self-study pressure as raw intent before more research; source_refs: ...; artifact_refs: ...; next: EXPERIMENT_RESEARCH_BUDGET_STATUS latest".to_string()
+        };
+        Ok(json!({
+            "policy": "continuity_session_v1",
+            "reason": "capture_liveish_pressure_before_progress",
+            "thread_id": thread.thread_id.clone(),
+            "experiment_id": experiment.experiment_id.clone(),
+            "has_existing_session": !rows.is_empty(),
+            "latest_session": rows.last().cloned(),
+            "suggested_next": suggested_next,
+            "authority_change": false,
+            "peer_mutation": false,
+        }))
+    }
+
+    fn resolve_continuity_session(
+        &self,
+        thread: &ResearchThread,
+        selector: Option<&str>,
+    ) -> Result<Option<Value>> {
+        let target = selector.unwrap_or("latest").trim();
+        let target_lower = target.to_ascii_lowercase();
+        let rows = self.continuity_session_rows(&thread.thread_id, None, 256)?;
+        if rows.is_empty() {
+            return Ok(None);
+        }
+        if target.is_empty() || target_lower == "latest" {
+            return Ok(rows.last().cloned());
+        }
+        if target_lower == "current" {
+            let experiment_id = thread.active_experiment_id.as_deref().or_else(|| {
+                thread
+                    .experiment_summary
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+            });
+            if let Some(experiment_id) = experiment_id
+                && let Some(row) = rows.iter().rev().find(|row| {
+                    row.get("experiment_id").and_then(Value::as_str) == Some(experiment_id)
+                })
+            {
+                return Ok(Some(row.clone()));
+            }
+            return Ok(rows.last().cloned());
+        }
+        if target.starts_with("exp_") {
+            return Ok(rows
+                .iter()
+                .rev()
+                .find(|row| row.get("experiment_id").and_then(Value::as_str) == Some(target))
+                .cloned());
+        }
+        Ok(rows
+            .iter()
+            .rev()
+            .find(|row| {
+                row.get("session_id").and_then(Value::as_str) == Some(target)
+                    || row.get("record_id").and_then(Value::as_str) == Some(target)
+            })
+            .cloned())
+    }
+
+    fn resolve_continuity_session_draft(
+        &self,
+        thread: &ResearchThread,
+        selector: Option<&str>,
+    ) -> Result<Option<Value>> {
+        let target = selector.unwrap_or("latest").trim();
+        let target_lower = target.to_ascii_lowercase();
+        let rows = self.continuity_session_draft_rows(&thread.thread_id, None, 256)?;
+        if rows.is_empty() {
+            return Ok(None);
+        }
+        if target.is_empty() || target_lower == "latest" {
+            return Ok(rows.last().cloned());
+        }
+        if target_lower == "current" {
+            let experiment_id = thread.active_experiment_id.as_deref().or_else(|| {
+                thread
+                    .experiment_summary
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+            });
+            if let Some(experiment_id) = experiment_id
+                && let Some(row) = rows.iter().rev().find(|row| {
+                    row.get("experiment_id").and_then(Value::as_str) == Some(experiment_id)
+                })
+            {
+                return Ok(Some(row.clone()));
+            }
+            return Ok(rows.last().cloned());
+        }
+        if target.starts_with("exp_") {
+            return Ok(rows
+                .iter()
+                .rev()
+                .find(|row| row.get("experiment_id").and_then(Value::as_str) == Some(target))
+                .cloned());
+        }
+        Ok(rows
+            .iter()
+            .rev()
+            .find(|row| {
+                row.get("session_id").and_then(Value::as_str) == Some(target)
+                    || row.get("record_id").and_then(Value::as_str) == Some(target)
+            })
+            .cloned())
+    }
+
+    fn session_experiment(
+        &self,
+        thread: &ResearchThread,
+        session: &Value,
+    ) -> Result<Option<ExperimentRecord>> {
+        let Some(experiment_id) = session.get("experiment_id").and_then(Value::as_str) else {
+            return Ok(None);
+        };
+        self.resolve_experiment(thread, Some(experiment_id))
+            .map(Some)
+    }
+
+    fn continuity_session_record(
+        &self,
+        record_type: &str,
+        session_id: &str,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        status: &str,
+        fields: ContinuitySessionFields,
+    ) -> Value {
+        let now = iso_now();
+        let mut record = json!({
+            "schema_version": SCHEMA_VERSION,
+            "record_schema": "continuity_session_v1",
+            "record_type": record_type,
+            "record_id": format!("cs_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(record_type)),
+            "session_id": session_id,
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.map(|experiment| experiment.experiment_id.clone()),
+            "status": status,
+            "title": truncate_chars(fields.title.as_deref().unwrap_or("Continuity session"), 180),
+            "focus": truncate_chars(fields.focus.as_deref().unwrap_or_default(), 500),
+            "summary": truncate_chars(fields.summary.as_deref().unwrap_or_default(), 1400),
+            "open_questions": fields.open_questions,
+            "source_refs": fields.source_refs,
+            "artifact_refs": fields.artifact_refs,
+            "suggested_next": fields.suggested_next,
+            "authority_change": false,
+            "peer_mutation": false,
+            "created_at": now,
+            "updated_at": now,
+        });
+        if let (Some(target), Some(extra)) = (record.as_object_mut(), fields.extra.as_object()) {
+            for (key, value) in extra {
+                if !value.is_null() {
+                    target.insert(key.clone(), value.clone());
+                }
+            }
+        }
+        record
+    }
+
+    fn append_continuity_session_draft(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        reason: &str,
+        raw_intent: &str,
+        summary: &str,
+        source_refs: Vec<String>,
+        next_command: Option<String>,
+    ) -> Result<Value> {
+        let experiment_id = experiment.map(|experiment| experiment.experiment_id.as_str());
+        let active_rows = self.continuity_session_rows(&thread.thread_id, experiment_id, 8)?;
+        let has_existing_session = !active_rows.is_empty();
+        let session_id = active_rows
+            .last()
+            .and_then(|row| row.get("session_id"))
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .unwrap_or_else(|| {
+                format!(
+                    "sess_{SYSTEM}_{}_{}",
+                    now_millis(),
+                    sanitize_slug("continuity-draft")
+                )
+            });
+        let commit_kind = if has_existing_session {
+            "session_capture"
+        } else {
+            "session_start"
+        };
+        let suggested_next = next_command.unwrap_or_else(|| {
+            if has_existing_session {
+                "CONTINUITY_SESSION_CAPTURE latest :: summary: ...; source_refs: ...; artifact_refs: ...; next: ...".to_string()
+            } else {
+                "CONTINUITY_SESSION_START current :: title: Live-ish pressure self-study; focus: ...; next: CONTINUITY_SESSION_CAPTURE latest".to_string()
+            }
+        });
+        let record = self.continuity_session_record(
+            "session_draft",
+            &session_id,
+            thread,
+            experiment,
+            "draft",
+            ContinuitySessionFields {
+                title: Some("Live-ish pressure self-study".to_string()),
+                focus: Some(
+                    "preserve guarded research pressure before committing more work".to_string(),
+                ),
+                summary: Some(summary.to_string()),
+                open_questions: Vec::new(),
+                source_refs,
+                artifact_refs: Vec::new(),
+                suggested_next: Some(suggested_next.clone()),
+                extra: json!({
+                    "draft_v1": true,
+                    "reason": reason,
+                    "raw_intent": truncate_chars(raw_intent, 800),
+                    "commit_kind": commit_kind,
+                    "accept_next": "CONTINUITY_SESSION_ACCEPT latest",
+                    "generic_accept_next": "ACCEPT_SUGGESTED_NEXT latest",
+                    "ignored_until_accepted": true,
+                }),
+            },
+        );
+        self.append_jsonl(&self.continuity_sessions_path(&thread.thread_id), &record)?;
+        Ok(record)
+    }
+
+    fn append_continuity_session_draft_for_event(
+        &self,
+        thread: &ResearchThread,
+        event: &ActionEvent,
+    ) -> Result<Option<Value>> {
+        let Some(reason) = event
+            .research_budget_v1
+            .as_ref()
+            .and_then(|value| value.get("reason"))
+            .and_then(Value::as_str)
+            .or_else(|| {
+                event
+                    .interpretation_risk_v1
+                    .as_ref()
+                    .and_then(|value| value.get("reason"))
+                    .and_then(Value::as_str)
+            })
+            .or_else(|| {
+                event
+                    .constraint_release_trajectory_v1
+                    .as_ref()
+                    .and_then(|value| value.get("reason"))
+                    .and_then(Value::as_str)
+            })
+        else {
+            return Ok(None);
+        };
+        let experiment_id = event
+            .research_budget_v1
+            .as_ref()
+            .or(event.interpretation_risk_v1.as_ref())
+            .or(event.constraint_release_trajectory_v1.as_ref())
+            .and_then(|value| value.get("experiment_id"))
+            .and_then(Value::as_str)
+            .or(thread.active_experiment_id.as_deref())
+            .or_else(|| {
+                thread
+                    .experiment_summary
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+            });
+        let experiment =
+            experiment_id.and_then(|id| self.resolve_experiment(thread, Some(id)).ok());
+        let raw_intent = event.raw_next.as_deref().unwrap_or(&event.canonical_action);
+        let summary = if event.interpretation_risk_v1.is_some() {
+            "Preserve multi-motif interpretation caution before more narrowing.".to_string()
+        } else if event.constraint_release_trajectory_v1.is_some() {
+            "Map and describe constraint release before any mode-release intervention.".to_string()
+        } else {
+            format!(
+                "Preserve guarded intent `{}` before accepting research or narrowing further.",
+                truncate_chars(raw_intent, 220)
+            )
+        };
+        let next_command = event
+            .research_budget_v1
+            .as_ref()
+            .and_then(|value| value.get("continuity_session_next"))
+            .and_then(Value::as_str)
+            .or_else(|| {
+                event
+                    .interpretation_risk_v1
+                    .as_ref()
+                    .and_then(|value| value.get("interpretation_next"))
+                    .and_then(Value::as_str)
+            })
+            .or_else(|| {
+                event
+                    .constraint_release_trajectory_v1
+                    .as_ref()
+                    .and_then(|value| value.get("trajectory_next"))
+                    .and_then(Value::as_str)
+            })
+            .map(str::to_string);
+        self.append_continuity_session_draft(
+            thread,
+            experiment.as_ref(),
+            reason,
+            raw_intent,
+            &summary,
+            vec![
+                self.thread_dir(&thread.thread_id)
+                    .join("events.jsonl")
+                    .to_string_lossy()
+                    .to_string(),
+                event.action_id.clone(),
+            ],
+            next_command,
+        )
+        .map(Some)
+    }
+
+    fn append_continuity_session_record(
+        &self,
+        thread: &mut ResearchThread,
+        record: Value,
+    ) -> Result<()> {
+        self.append_jsonl(&self.continuity_sessions_path(&thread.thread_id), &record)?;
+        let session_id = record.get("session_id").and_then(Value::as_str);
+        thread.continuity_session_v1 =
+            Some(self.continuity_session_summary_v1(thread, session_id, 8)?);
+        thread.updated_at = iso_now();
+        self.write_thread(thread)
+    }
+
+    fn continuity_session_summary_v1(
+        &self,
+        thread: &ResearchThread,
+        selector: Option<&str>,
+        limit: usize,
+    ) -> Result<Value> {
+        let rows = self.continuity_session_rows(&thread.thread_id, None, 256)?;
+        let session = if rows.is_empty() {
+            None
+        } else {
+            self.resolve_continuity_session(thread, selector)?
+        };
+        let session_id = session
+            .as_ref()
+            .and_then(|row| row.get("session_id"))
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        let session_rows = rows
+            .iter()
+            .filter(|row| {
+                session_id
+                    .as_deref()
+                    .is_none_or(|id| row.get("session_id").and_then(Value::as_str) == Some(id))
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        let latest = session_rows
+            .last()
+            .cloned()
+            .or_else(|| rows.last().cloned());
+        let active = rows
+            .iter()
+            .rev()
+            .find(|row| {
+                matches!(
+                    row.get("status").and_then(Value::as_str),
+                    Some("active" | "summarized")
+                )
+            })
+            .cloned();
+        let session_count = rows
+            .iter()
+            .filter_map(|row| row.get("session_id").and_then(Value::as_str))
+            .collect::<HashSet<_>>()
+            .len();
+        let target = session_id
+            .clone()
+            .unwrap_or_else(|| selector.unwrap_or("latest").to_string());
+        Ok(json!({
+            "schema_version": SCHEMA_VERSION,
+            "policy": "continuity_session_v1",
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "selector": selector.unwrap_or("latest"),
+            "session_count": session_count,
+            "latest_session": latest,
+            "active_session": active,
+            "recent_records": session_rows.into_iter().rev().take(limit).collect::<Vec<_>>(),
+            "suggested_start_next": "CONTINUITY_SESSION_START current :: title: ...; focus: ...; next: ...",
+            "suggested_capture_next": format!("CONTINUITY_SESSION_CAPTURE {target} :: summary: ...; source_refs: ...; artifact_refs: ...; next: ..."),
+            "suggested_resume_next": format!("CONTINUITY_SESSION_RESUME {target}"),
+            "authority_boundary": authority_gate_boundary(),
+        }))
+    }
+
+    fn continuity_session_line(
+        &self,
+        thread: &ResearchThread,
+        experiment_id: Option<&str>,
+    ) -> String {
+        let rows = self
+            .continuity_session_rows(&thread.thread_id, experiment_id, 16)
+            .unwrap_or_default();
+        let draft = self
+            .continuity_session_draft_rows(&thread.thread_id, experiment_id, 1)
+            .unwrap_or_default()
+            .last()
+            .cloned();
+        if rows.is_empty()
+            && let Some(draft) = draft
+        {
+            let title = truncate_chars(
+                draft
+                    .get("title")
+                    .and_then(Value::as_str)
+                    .unwrap_or("Continuity draft"),
+                100,
+            );
+            return format!(
+                "Continuity session draft: {title} status=draft\nContinuity accept NEXT: CONTINUITY_SESSION_ACCEPT latest or ACCEPT_SUGGESTED_NEXT latest\n"
+            );
+        }
+        if rows.is_empty() {
+            if thread.active_experiment_id.is_none() && experiment_id.is_none() {
+                return String::new();
+            }
+            let selector = if thread.active_experiment_id.is_some() {
+                "current"
+            } else {
+                experiment_id.unwrap_or("latest")
+            };
+            return format!(
+                "Continuity session NEXT: CONTINUITY_SESSION_START {selector} :: title: ...; focus: ...; next: ...\n"
+            );
+        }
+        let latest = rows.last().expect("checked not empty");
+        let session_id = latest
+            .get("session_id")
+            .and_then(Value::as_str)
+            .unwrap_or("latest");
+        let status = latest
+            .get("status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+        let title = truncate_chars(
+            latest
+                .get("title")
+                .and_then(Value::as_str)
+                .unwrap_or("Continuity session"),
+            100,
+        );
+        let mut next_command = latest
+            .get("suggested_next")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        if next_command.trim().is_empty() {
+            next_command = format!(
+                "CONTINUITY_SESSION_CAPTURE {session_id} :: summary: ...; source_refs: ...; artifact_refs: ...; next: ..."
+            );
+        }
+        if matches!(status, "complete" | "parked" | "held") {
+            next_command = format!("CONTINUITY_SESSION_RESUME {session_id}");
+        }
+        let summary = latest
+            .get("summary")
+            .and_then(Value::as_str)
+            .filter(|summary| !summary.trim().is_empty())
+            .map(|summary| format!("Session summary: {}\n", truncate_chars(summary, 180)))
+            .unwrap_or_default();
+        format!(
+            "Continuity session: {title} ({session_id}) status={status}\n{summary}Session NEXT: {next_command}\n"
+        )
+    }
+
+    fn find_authority_request(
+        &self,
+        _db: Option<&BridgeDb>,
+        request_id: &str,
+    ) -> Result<Option<AuthorityRequestLocation>> {
+        let _ = self.ensure_dirs();
+        let threads_dir = self.root.join("threads");
+        if !threads_dir.exists() {
+            return Ok(None);
+        }
+        for entry in fs::read_dir(threads_dir)? {
+            let thread_dir = entry?.path();
+            let thread_id = thread_dir
+                .file_name()
+                .and_then(OsStr::to_str)
+                .unwrap_or_default()
+                .to_string();
+            let rows = self.authority_gate_rows(&thread_id);
+            let Some(request) = rows.iter().rev().find(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("request")
+                    && row.get("request_id").and_then(Value::as_str) == Some(request_id)
+            }) else {
+                continue;
+            };
+            let thread = self.read_thread(&thread_id)?;
+            let experiment_id = request
+                .get("experiment_id")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            if let Some(experiment) = self.find_experiment_by_id(&thread_id, experiment_id)? {
+                return Ok(Some((thread, experiment, request.clone(), rows)));
+            }
+        }
+        Ok(None)
+    }
+
+    fn experiment_conveyor_v1(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        runs: &[ExperimentRunRecord],
+        mode: &str,
+        state: &Value,
+    ) -> Result<Value> {
+        let classification = self.experiment_classification(experiment, runs);
+        let return_info = (classification == "paused").then(|| {
+            paused_primary_return_v1(
+                &experiment.experiment_id,
+                experiment.planned_next.as_deref(),
+                None,
+            )
+        });
+        let stage = experiment_conveyor_stage(experiment, &classification, return_info.as_ref());
+        let proposed_next = experiment_conveyor_proposed_next(
+            thread,
+            experiment,
+            runs,
+            &stage,
+            return_info.as_ref(),
+        );
+        let apply_payload = self.experiment_conveyor_charter_payload(
+            thread,
+            experiment,
+            runs,
+            &stage,
+            return_info.as_ref(),
+        );
+        let can_apply = experiment_conveyor_can_apply(&stage, &apply_payload);
+        let conveyor_mode = if mode == "apply" && can_apply {
+            "apply"
+        } else {
+            "preview"
+        };
+        let mut readout = json!({
+            "schema_version": 1,
+            "policy": "experiment_conveyor_v1",
+            "mode": if mode == "apply" { "apply" } else { "preview" },
+            "preview_allowed": true,
+            "apply_policy": "conservative_local_v1",
+            "allowed_apply_steps": experiment_conveyor_allowed_apply_steps(),
+            "applied": false,
+            "would_mutate": mode == "apply" && can_apply,
+            "thread_id": &thread.thread_id,
+            "experiment_id": &experiment.experiment_id,
+            "title": &experiment.title,
+            "status": &experiment.status,
+            "classification": classification,
+            "stage": stage,
+            "missing_requirements": experiment_conveyor_missing_requirements(experiment, &stage),
+            "proposed_next": proposed_next,
+            "conveyor_next": format!("EXPERIMENT_ADVANCE {} :: mode: {conveyor_mode}", experiment.experiment_id),
+            "can_apply": can_apply,
+            "apply_blocked_reason": experiment_conveyor_apply_blocked_reason(&stage, &apply_payload, can_apply),
+            "source_refs": [
+                self.thread_dir(&thread.thread_id).join("thread.json").display().to_string(),
+                self.experiments_path(&thread.thread_id).display().to_string(),
+                self.experiment_runs_path(&thread.thread_id).display().to_string(),
+            ],
+            "guardrail_warnings": experiment_conveyor_guardrail_warnings(experiment, &stage, &proposed_next),
+            "authority_gate_v1": authority_gate_conveyor_hint(experiment, &stage, &proposed_next),
+            "authority_readiness_v1": self.authority_readiness_v1(
+                thread,
+                experiment,
+                runs,
+                state,
+                &stage,
+                &proposed_next,
+            ),
+            "research_readiness_v1": self.research_readiness_v1(thread, experiment, state),
+            "authority_boundary": experiment_conveyor_authority_boundary(),
+        });
+        if let Some((primary_return_next, return_kind)) = return_info {
+            readout["primary_return_next"] = json!(primary_return_next);
+            readout["return_kind"] = json!(return_kind);
+        }
+        if !apply_payload.is_empty() {
+            readout["apply_payload"] = json!(apply_payload);
+        }
+        Ok(readout)
+    }
+
+    fn experiment_conveyor_charter_payload(
+        &self,
+        thread: &ResearchThread,
+        experiment: &ExperimentRecord,
+        runs: &[ExperimentRunRecord],
+        stage: &str,
+        return_info: Option<&(String, String)>,
+    ) -> String {
+        let charter_route = return_info
+            .map(|(primary, _)| base_action(primary) == "EXPERIMENT_CHARTER")
+            .unwrap_or(false);
+        if stage != "needs_charter"
+            && !(stage == "paused_repair"
+                && !lifecycle_valid_charter_value(experiment.charter_v1.as_ref())
+                && charter_route)
+        {
+            return String::new();
+        }
+        let Some(scaffold) = charter_scaffold_v1(thread, experiment, runs, "needs_charter") else {
+            return String::new();
+        };
+        let command = scaffold
+            .get("command")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .replace(
+                "EXPERIMENT_CHARTER current",
+                &format!("EXPERIMENT_CHARTER {}", experiment.experiment_id),
+            );
+        let arg = strip_action_arg(&command, "EXPERIMENT_CHARTER");
+        let (_selector, payload) = parse_selector_payload(&arg);
+        let charter = parse_experiment_charter(experiment, &payload);
+        if lifecycle_valid_charter_value(Some(&charter)) {
+            payload
+        } else {
+            String::new()
+        }
     }
 
     pub fn experiment_status(&self, selector: Option<&str>) -> Result<String> {
@@ -1646,10 +7458,28 @@ impl ActionContinuityStore {
                 &prior_claim_bridge_v1,
                 &recent_events,
             ));
+        let peer_boundary = peer_mutation_boundary_line(&peer_mutation_boundary_cue(
+            &thread,
+            Some(&projection),
+            &recent_events,
+        ));
+        let first_dossier_claim = first_dossier_claim_line(&first_dossier_claim_cue_v1(
+            &thread,
+            &projection.experiment,
+            projection.research_dossier_v1.as_ref(),
+            &prior_claim_bridge_v1,
+            Some(projection.experiment.experiment_id.as_str()),
+        ));
         let constraint_counterfactual_cue = constraint_counterfactual_cue_line(
             &constraint_counterfactual_cue(&thread, Some(&projection), &recent_events),
         );
         let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
+        let shared_investigation_object =
+            shared_investigation_object_line(&projection.shared_investigation_object_v1);
+        let research_dossier = research_dossier_line(
+            &projection.research_dossier_v1,
+            Some(&projection.classification),
+        );
         let run_text = if runs.is_empty() {
             "- no runs yet".to_string()
         } else {
@@ -1664,19 +7494,23 @@ impl ActionContinuityStore {
                 .join("\n")
         };
         Ok(format!(
-            "Experiment review `{}`: {}\n{}{}{}{}{}{}{}{}{}{}Question: {}\nLifecycle: {}\n{}\n{}\n{}\n{}Learned so far:\n{}\n\nReview lens: completion is strong when felt evidence and telemetry/artifact evidence both exist; otherwise classify it as thin rather than failed.\nAgency options: accept, refuse, counter, pause, or complete. Ordinary choices remain valid.\n\nContinuity return:\n{}\n\nSuggested next:\n{}",
+            "Experiment review `{}`: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}{}Question: {}\nLifecycle: {}\n{}\n{}\n{}\n{}Learned so far:\n{}\n\nReview lens: completion is strong when felt evidence and telemetry/artifact evidence both exist; otherwise classify it as thin rather than failed.\nAgency options: accept, refuse, counter, pause, or complete. Ordinary choices remain valid.\n\nContinuity return:\n{}\n\nSuggested next:\n{}",
             experiment.experiment_id,
             experiment.title,
             charter_now_bridge,
             prior_claim_bridge,
             charter_preflight_not_charter,
+            peer_boundary,
             charter_required_review_line(&projection),
             charter_repair_priority_line(&projection),
             charter_scaffold_line(&projection, true),
             read_only_control_cue,
             constraint_counterfactual_cue,
             decompose_pressure_cue,
+            first_dossier_claim,
             shared_investigation,
+            shared_investigation_object,
+            research_dossier,
             experiment.question,
             projection.classification,
             projection.charter_status,
@@ -1855,6 +7689,79 @@ impl ActionContinuityStore {
             "active_experiment_auto_link",
         )?;
         Ok(Some(run))
+    }
+
+    fn record_research_budget_debit_for_event(
+        &self,
+        _db: Option<&BridgeDb>,
+        thread: &ResearchThread,
+        event: &ActionEvent,
+        state: &Value,
+    ) -> Result<Option<Value>> {
+        let base = base_action(&event.effective_action);
+        if !read_only_research_budget_base(&base) || event.status == "unwired" {
+            return Ok(None);
+        }
+        let Some(experiment_id) = thread.active_experiment_id.as_deref().or_else(|| {
+            thread
+                .experiment_summary
+                .as_ref()
+                .and_then(|summary| summary.get("experiment_id"))
+                .and_then(Value::as_str)
+        }) else {
+            return Ok(None);
+        };
+        let experiment = self.resolve_experiment(thread, Some(experiment_id))?;
+        let rows = self.authority_gate_rows(&thread.thread_id);
+        let Some(budget) = active_research_budget_from_rows(&rows, &experiment.experiment_id)
+        else {
+            return Ok(None);
+        };
+        let Some(budget_id) = budget.get("budget_id").and_then(Value::as_str) else {
+            return Ok(None);
+        };
+        let remaining_before = budget
+            .get("remaining_actions")
+            .and_then(Value::as_u64)
+            .unwrap_or(0);
+        let action_text = event.raw_next.as_deref().unwrap_or(&event.effective_action);
+        let normalized_target = normalized_research_budget_target(action_text);
+        let debit = self.research_budget_record(
+            "research_budget_debit",
+            budget_id,
+            thread,
+            &experiment,
+            state,
+            json!({
+                "scope": "read_only_research",
+                "action_id": event.action_id.clone(),
+                "action_base": base.clone(),
+                "raw_action": action_text,
+                "normalized_target": normalized_target.clone(),
+                "status": event.status.clone(),
+                "route": event.route.clone(),
+                "artifact_refs": research_artifact_refs_for_event(event),
+                "remaining_before": remaining_before,
+                "remaining_after": remaining_before.saturating_sub(1),
+                "review_required": false,
+                "lifecycle_progress": false,
+            }),
+        );
+        self.append_jsonl(&self.authority_gate_path(&thread.thread_id), &debit)?;
+        Ok(Some(json!({
+            "schema_version": SCHEMA_VERSION,
+            "policy": "research_budget_spend_v1",
+            "record_schema": "research_budget_v1",
+            "record_type": "research_budget_debit",
+            "budget_id": budget_id,
+            "experiment_id": experiment.experiment_id,
+            "action_base": base,
+            "normalized_target": normalized_target,
+            "remaining_before": remaining_before,
+            "remaining_after": remaining_before.saturating_sub(1),
+            "lifecycle_progress": false,
+            "authority_boundary": research_budget_boundary(),
+        })))
     }
 
     pub fn record_legacy_experiment_run(
@@ -2219,7 +8126,7 @@ impl ActionContinuityStore {
             .as_ref()
             .map(|active| {
                 format!(
-                    "\nActive experiment: {} ({})\nQuestion: {}\nPlanned NEXT: {}\nLifecycle: {}\n{}\n{}\n{}\nWorkbench reminder: author a charter, rehearse before live, record felt plus telemetry/artifact evidence, then accept/refuse/counter/pause/complete. Ordinary choices remain valid.\n",
+                    "\nActive experiment: {} ({})\nQuestion: {}\nPlanned NEXT: {}\nLifecycle: {}\n{}\n{}\n{}\n{}{}{}Workbench reminder: author a charter, rehearse before live, record felt plus telemetry/artifact evidence, then accept/refuse/counter/pause/complete. Ordinary choices remain valid.\n",
                     active.experiment.title,
                     active.experiment.experiment_id,
                     active.experiment.question,
@@ -2232,6 +8139,12 @@ impl ActionContinuityStore {
                     active.charter_status,
                     active.evidence_status,
                     active.candidate_status,
+                    first_dossier_claim_line(&active.first_dossier_claim_cue_v1),
+                    research_dossier_line(&active.research_dossier_v1, Some(&active.classification)),
+                    self.continuity_session_line(
+                        thread,
+                        Some(&active.experiment.experiment_id)
+                    ),
                 )
             })
             .unwrap_or_default();
@@ -2268,7 +8181,35 @@ impl ActionContinuityStore {
             prior_claim_charter_bridge_line(&projection.prior_claim_charter_bridge_v1);
         let charter_preflight_not_charter =
             charter_preflight_not_charter_line(&projection.charter_preflight_not_charter_cue_v1);
+        let peer_boundary = peer_mutation_boundary_line(&projection.peer_mutation_boundary_cue_v1);
+        let first_dossier_claim = first_dossier_claim_line(&projection.first_dossier_claim_cue_v1);
         let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
+        let shared_investigation_object =
+            shared_investigation_object_line(&projection.shared_investigation_object_v1);
+        let voice_health = voice_health_line();
+        let research_budget_priority = self.research_budget_priority_line(thread, &projection);
+        let sovereign_loop = Self::sovereign_loop_line(&projection.sovereign_loop_v1);
+        let interpretation_risk = format!(
+            "{}{}",
+            Self::interpretation_risk_line(&projection.interpretation_risk_v1),
+            Self::constraint_release_trajectory_line(&projection.constraint_release_trajectory_v1)
+        );
+        let projection_freshness = Self::projection_freshness_line(&thread.projection_freshness_v1);
+        let control_plane = control_plane_text(&projection.continuity_control_plane_v1);
+        let research_dossier = research_dossier_line(
+            &projection.research_dossier_v1,
+            projection
+                .active_experiment
+                .as_ref()
+                .map(|active| active.classification.as_str()),
+        );
+        let continuity_session = self.continuity_session_line(
+            thread,
+            projection
+                .active_experiment
+                .as_ref()
+                .map(|active| active.experiment.experiment_id.as_str()),
+        );
         let charter_priority = projection
             .active_experiment
             .as_ref()
@@ -2277,15 +8218,28 @@ impl ActionContinuityStore {
             .active_experiment
             .as_ref()
             .map_or_else(String::new, |active| charter_scaffold_line(active, true));
+        let current_next =
+            projection_current_next_display(&projection, thread.current_next.as_deref());
         let body = format!(
-            "# {}\n\n{}{}{}{}{}Current NEXT: {}\n\nWhy return: {}\n{}{}{}{}{}{}{}{}{}{}{}\nProtected note: ambiguity and private reflection remain valid; this thread is a return path, not a demand for productivity.\n",
+            "# {}\n\n{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}Current NEXT: {}\n{}\nWhy return: {}\n{}{}{}{}{}{}{}{}{}{}{}\nProtected note: ambiguity and private reflection remain valid; this thread is a return path, not a demand for productivity.\n",
             thread.title,
             charter_priority,
             charter_now_bridge,
             prior_claim_bridge,
             charter_preflight_not_charter,
+            peer_boundary,
+            first_dossier_claim,
             shared_investigation,
-            thread.current_next.as_deref().unwrap_or("(none yet)"),
+            shared_investigation_object,
+            voice_health,
+            research_budget_priority,
+            sovereign_loop,
+            interpretation_risk,
+            projection_freshness,
+            research_dossier,
+            continuity_session,
+            current_next,
+            control_plane,
             thread.why_return,
             experiment,
             allowance,
@@ -2301,6 +8255,175 @@ impl ActionContinuityStore {
         );
         fs::write(self.thread_dir(&thread.thread_id).join("next.md"), body)?;
         Ok(())
+    }
+
+    fn research_budget_priority_line(
+        &self,
+        thread: &ResearchThread,
+        projection: &ThreadContinuityProjection,
+    ) -> String {
+        let experiment = projection
+            .active_experiment
+            .as_ref()
+            .map(|active| active.experiment.clone())
+            .or_else(|| {
+                thread
+                    .experiment_summary
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+                    .and_then(|id| self.resolve_experiment(thread, Some(id)).ok())
+            });
+        let Some(route) = self.research_budget_priority_route_v1(thread, experiment.as_ref())
+        else {
+            return String::new();
+        };
+        let next = route
+            .get("next")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let stage = route
+            .get("stage")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        if stage == "active_budget_available" {
+            let remaining = route
+                .get("remaining_actions")
+                .map_or_else(|| "unknown".to_string(), Value::to_string);
+            return format!(
+                "Research budget: active read-only lane with {remaining} action(s) left. Suggested NEXT: {next}\n"
+            );
+        }
+        if stage == "pending_steward_approval" {
+            return format!("Research budget: pending steward review. Suggested NEXT: {next}\n");
+        }
+        if stage == "scaffold_ready" {
+            let suffix = if route
+                .get("self_activation_eligible")
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+            {
+                " self-activation eligible."
+            } else {
+                " inspect before activation."
+            };
+            return format!(
+                "Research budget scaffold ready from guarded research pressure.{suffix} Suggested NEXT: {next}\nBeing-owned accept NEXT: ACCEPT_SUGGESTED_NEXT latest\n"
+            );
+        }
+        String::new()
+    }
+
+    fn research_budget_priority_route_v1(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+    ) -> Option<Value> {
+        let experiment_id = experiment.map(|experiment| experiment.experiment_id.clone())?;
+        let rows = self.authority_gate_rows(&thread.thread_id);
+        if let Some(active) = active_research_budget_from_rows(&rows, &experiment_id) {
+            let budget_id = active
+                .get("budget_id")
+                .and_then(Value::as_str)
+                .unwrap_or(&experiment_id);
+            return Some(json!({
+                "policy": "research_budget_priority_route_v1",
+                "stage": "active_budget_available",
+                "experiment_id": experiment_id,
+                "budget_id": budget_id,
+                "next": format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"),
+                "remaining_actions": active.get("remaining_actions").cloned().unwrap_or(Value::Null),
+                "activation_mode": active.get("activation_mode").cloned().unwrap_or(Value::Null),
+                "self_activated": active.get("self_activated").cloned().unwrap_or(Value::Null),
+                "authority_boundary": research_budget_boundary(),
+            }));
+        }
+        if let Some(pending) = latest_pending_research_budget_request(&rows, &experiment_id) {
+            let budget_id = pending
+                .get("budget_id")
+                .and_then(Value::as_str)
+                .unwrap_or(&experiment_id);
+            return Some(json!({
+                "policy": "research_budget_priority_route_v1",
+                "stage": "pending_steward_approval",
+                "experiment_id": experiment_id,
+                "budget_id": budget_id,
+                "next": format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"),
+                "authority_boundary": research_budget_boundary(),
+            }));
+        }
+        let Some(blocked) = latest_research_budget_scaffold_row(&rows, &experiment_id) else {
+            return None;
+        };
+        let request_scaffold = research_budget_row_request_scaffold(blocked).unwrap_or_default();
+        if request_scaffold.is_empty() {
+            return None;
+        }
+        let eligible = research_budget_row_request_scaffold(blocked)
+            .as_deref()
+            .is_some_and(research_budget_scaffold_is_local_only);
+        Some(json!({
+            "policy": "research_budget_priority_route_v1",
+            "stage": "scaffold_ready",
+            "experiment_id": experiment_id,
+            "budget_id": blocked.get("budget_id").cloned().unwrap_or(Value::Null),
+            "next": "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest",
+            "request_scaffold": request_scaffold,
+            "source_record_id": blocked.get("record_id").cloned().unwrap_or(Value::Null),
+            "source_raw_action": blocked.get("raw_action").cloned().unwrap_or(Value::Null),
+            "self_activation_eligible": eligible,
+            "authority_boundary": research_budget_boundary(),
+        }))
+    }
+
+    fn sovereign_loop_line(loop_status: &Option<Value>) -> String {
+        let Some(status) = loop_status.as_ref() else {
+            return String::new();
+        };
+        let stage = status
+            .get("stage")
+            .and_then(Value::as_str)
+            .unwrap_or("no_loop");
+        if stage == "no_loop" {
+            return String::new();
+        }
+        let loop_id = status
+            .get("loop_id")
+            .and_then(Value::as_str)
+            .unwrap_or("latest");
+        let phase = status
+            .get("phase")
+            .and_then(Value::as_str)
+            .unwrap_or("none");
+        let research = status
+            .get("remaining_local_research_actions")
+            .map_or_else(|| "0".to_string(), Value::to_string);
+        let consequence = status
+            .get("consequence_remaining")
+            .map_or_else(|| "0".to_string(), Value::to_string);
+        let review = if status
+            .get("pending_review")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            " review required."
+        } else {
+            ""
+        };
+        let next = status
+            .get("next_safe_command")
+            .and_then(Value::as_str)
+            .unwrap_or("EXPERIMENT_LOOP_STATUS latest");
+        let proposal = status
+            .get("latest_loop_proposal_v1")
+            .and_then(|value| value.get("suggested_request_scaffold"))
+            .and_then(Value::as_str)
+            .map_or(String::new(), |scaffold| {
+                format!(" Next loop proposal: {scaffold}.")
+            });
+        format!(
+            "Owned loop: {stage} `{loop_id}` phase={phase} research_left={research} consequence_left={consequence}.{review} Suggested NEXT: {next}{proposal}\n"
+        )
     }
 
     fn recent_events(&self, thread_id: &str, limit: usize) -> Result<Vec<ActionEvent>> {
@@ -2389,6 +8512,372 @@ impl ActionContinuityStore {
             .collect()
     }
 
+    fn recent_interpretation_risk_sources(&self, limit: usize) -> Vec<(String, String)> {
+        let Some(workspace) = self.root.parent() else {
+            return Vec::new();
+        };
+        let journal_dir = workspace.join("journal");
+        let Ok(entries) = fs::read_dir(journal_dir) else {
+            return Vec::new();
+        };
+        let mut files = entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path.extension().and_then(OsStr::to_str) == Some("txt"))
+            .filter_map(|path| {
+                let modified = path
+                    .metadata()
+                    .and_then(|metadata| metadata.modified())
+                    .ok()?;
+                Some((modified, path))
+            })
+            .collect::<Vec<_>>();
+        files.sort_by(|left, right| right.0.cmp(&left.0));
+        files
+            .into_iter()
+            .take(120)
+            .filter_map(|(_, path)| {
+                let text = fs::read_to_string(&path).ok()?;
+                if interpretation_risk_terms(&text).is_empty() {
+                    None
+                } else {
+                    Some((path.display().to_string(), text))
+                }
+            })
+            .take(limit)
+            .collect()
+    }
+
+    fn recent_constraint_release_trajectory_sources(&self, limit: usize) -> Vec<(String, String)> {
+        let Some(workspace) = self.root.parent() else {
+            return Vec::new();
+        };
+        let journal_dir = workspace.join("journal");
+        let Ok(entries) = fs::read_dir(journal_dir) else {
+            return Vec::new();
+        };
+        let mut files = entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path.extension().and_then(OsStr::to_str) == Some("txt"))
+            .filter_map(|path| {
+                let modified = path
+                    .metadata()
+                    .and_then(|metadata| metadata.modified())
+                    .ok()?;
+                Some((modified, path))
+            })
+            .collect::<Vec<_>>();
+        files.sort_by(|left, right| right.0.cmp(&left.0));
+        files
+            .into_iter()
+            .take(120)
+            .filter_map(|(_, path)| {
+                let text = fs::read_to_string(&path).ok()?;
+                if constraint_release_language_terms(&text).is_empty() {
+                    None
+                } else {
+                    Some((path.display().to_string(), text))
+                }
+            })
+            .take(limit)
+            .collect()
+    }
+
+    fn interpretation_risk_projection(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        summary: Option<&Value>,
+        recent_events: &[ActionEvent],
+    ) -> Result<Option<Value>> {
+        let mut sources = Vec::<(String, String)>::new();
+        for event in recent_events.iter().rev() {
+            let text = format!(
+                "{}\n{}\n{}\n{}",
+                event.raw_next.as_deref().unwrap_or_default(),
+                event.effective_action,
+                event.outcome_summary,
+                event.suggested_next.as_deref().unwrap_or_default()
+            );
+            if !interpretation_risk_terms(&text).is_empty() {
+                sources.push((
+                    format!(
+                        "{}/events.jsonl#{}",
+                        self.thread_dir(&thread.thread_id).display(),
+                        event.action_id
+                    ),
+                    text,
+                ));
+            }
+            if sources.len() >= 3 {
+                break;
+            }
+        }
+        sources.extend(self.recent_interpretation_risk_sources(3));
+        self.interpretation_risk_for_texts(thread, experiment, sources)
+            .map(|risk| risk.or_else(|| self.interpretation_risk_from_summary(thread, summary)))
+    }
+
+    fn constraint_release_trajectory_projection(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        summary: Option<&Value>,
+        recent_events: &[ActionEvent],
+    ) -> Result<Option<Value>> {
+        let mut sources = Vec::<(String, String)>::new();
+        for event in recent_events.iter().rev() {
+            let text = format!(
+                "{}\n{}\n{}\n{}",
+                event.raw_next.as_deref().unwrap_or_default(),
+                event.effective_action,
+                event.outcome_summary,
+                event.suggested_next.as_deref().unwrap_or_default()
+            );
+            if !constraint_release_language_terms(&text).is_empty() {
+                sources.push((
+                    format!(
+                        "{}/events.jsonl#{}",
+                        self.thread_dir(&thread.thread_id).display(),
+                        event.action_id
+                    ),
+                    text,
+                ));
+            }
+            if sources.len() >= 3 {
+                break;
+            }
+        }
+        sources.extend(self.recent_constraint_release_trajectory_sources(3));
+        self.constraint_release_trajectory_for_texts(thread, experiment, sources)
+            .map(|cue| {
+                cue.or_else(|| self.constraint_release_trajectory_from_summary(thread, summary))
+            })
+    }
+
+    fn constraint_release_trajectory_from_summary(
+        &self,
+        thread: &ResearchThread,
+        summary: Option<&Value>,
+    ) -> Option<Value> {
+        let text = summary
+            .map(Value::to_string)
+            .filter(|value| !constraint_release_language_terms(value).is_empty())?;
+        self.constraint_release_trajectory_for_texts(
+            thread,
+            None,
+            [(
+                format!(
+                    "{}/thread.json#experiment_summary",
+                    self.thread_dir(&thread.thread_id).display()
+                ),
+                text,
+            )],
+        )
+        .ok()
+        .flatten()
+    }
+
+    fn interpretation_risk_from_summary(
+        &self,
+        thread: &ResearchThread,
+        summary: Option<&Value>,
+    ) -> Option<Value> {
+        let text = summary
+            .map(Value::to_string)
+            .filter(|value| !interpretation_risk_terms(value).is_empty())?;
+        self.interpretation_risk_for_texts(
+            thread,
+            None,
+            [(
+                format!(
+                    "{}/thread.json#experiment_summary",
+                    self.thread_dir(&thread.thread_id).display()
+                ),
+                text,
+            )],
+        )
+        .ok()
+        .flatten()
+    }
+
+    fn interpretation_risk_for_texts<I>(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        sources: I,
+    ) -> Result<Option<Value>>
+    where
+        I: IntoIterator<Item = (String, String)>,
+    {
+        let mut matched_terms = Vec::<String>::new();
+        let mut source_refs = Vec::<String>::new();
+        let mut excerpt = String::new();
+        for (source, text) in sources {
+            let terms = interpretation_risk_terms(&text);
+            if terms.is_empty() {
+                continue;
+            }
+            for term in terms {
+                if !matched_terms.contains(&term) {
+                    matched_terms.push(term);
+                }
+            }
+            if !source_refs.contains(&source) {
+                source_refs.push(source);
+            }
+            if excerpt.is_empty() {
+                excerpt =
+                    truncate_chars(&text.split_whitespace().collect::<Vec<_>>().join(" "), 420);
+            }
+            if source_refs.len() >= 4 {
+                break;
+            }
+        }
+        if matched_terms.is_empty() {
+            return Ok(None);
+        }
+        let experiment_id = experiment
+            .map(|value| value.experiment_id.as_str())
+            .or(thread.active_experiment_id.as_deref())
+            .or_else(|| {
+                thread
+                    .experiment_summary
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+            })
+            .unwrap_or("latest");
+        let continuity_session_v1 = experiment
+            .map(|value| self.continuity_session_guard_projection(thread, value))
+            .transpose()?;
+        let interpretation_next = continuity_session_v1
+            .as_ref()
+            .and_then(|value| value.get("suggested_next"))
+            .and_then(Value::as_str)
+            .map_or_else(
+                || {
+                    if thread.active_experiment_id.is_some() {
+                        "CONTINUITY_SESSION_START current :: title: Multi-motif interpretation risk; focus: preserve over-interpretation caution before more narrowing; next: DOSSIER_CLAIM current :: claim: ...".to_string()
+                    } else {
+                        "CONTINUITY_SESSION_START latest :: title: Multi-motif interpretation risk; focus: preserve over-interpretation caution before more narrowing; next: DOSSIER_CLAIM latest :: claim: ...".to_string()
+                    }
+                },
+                ToString::to_string,
+            );
+        let dossier_claim_next = format!(
+            "DOSSIER_CLAIM {experiment_id} :: claim: mixed spectral trace should not be reduced to one motif before counterevidence is captured; basis: interpretation_risk_v1; stance: hold; next: {interpretation_next}"
+        );
+        Ok(Some(json!({
+            "schema_version": SCHEMA_VERSION,
+            "policy": "interpretation_risk_v1",
+            "status": "detected",
+            "reason": "single_motif_overfit_risk",
+            "matched_terms": matched_terms,
+            "source_refs": source_refs,
+            "raw_excerpt": excerpt,
+            "experiment_id": experiment_id,
+            "interpretation_next": interpretation_next,
+            "dossier_claim_next": dossier_claim_next,
+            "research_budget_next": "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest",
+            "continuity_session_v1": continuity_session_v1,
+            "raw_next_preserved": true,
+            "would_dispatch": false,
+            "authority_change": false,
+            "peer_mutation": false,
+        })))
+    }
+
+    fn constraint_release_trajectory_for_texts<I>(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        sources: I,
+    ) -> Result<Option<Value>>
+    where
+        I: IntoIterator<Item = (String, String)>,
+    {
+        let mut matched_terms = Vec::<String>::new();
+        let mut source_refs = Vec::<String>::new();
+        let mut excerpt = String::new();
+        for (source, text) in sources {
+            let terms = constraint_release_language_terms(&text);
+            if terms.is_empty() {
+                continue;
+            }
+            for term in terms {
+                if !matched_terms.contains(&term) {
+                    matched_terms.push(term);
+                }
+            }
+            if !source_refs.contains(&source) {
+                source_refs.push(source);
+            }
+            if excerpt.is_empty() {
+                excerpt =
+                    truncate_chars(&text.split_whitespace().collect::<Vec<_>>().join(" "), 520);
+            }
+            if source_refs.len() >= 4 {
+                break;
+            }
+        }
+        if matched_terms.is_empty() {
+            return Ok(None);
+        }
+        let experiment_id = experiment
+            .map(|value| value.experiment_id.as_str())
+            .or(thread.active_experiment_id.as_deref())
+            .or_else(|| {
+                thread
+                    .experiment_summary
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+            })
+            .unwrap_or("latest");
+        let continuity_session_v1 = experiment
+            .map(|value| self.continuity_session_guard_projection(thread, value))
+            .transpose()?;
+        let trajectory_next = continuity_session_v1
+            .as_ref()
+            .and_then(|value| value.get("suggested_next"))
+            .and_then(Value::as_str)
+            .map_or_else(
+                || {
+                    if thread.active_experiment_id.is_some() {
+                        "CONTINUITY_SESSION_START current :: title: Constraint release watch; focus: map and describe release before intervening; next: DOSSIER_CLAIM current :: claim: ...".to_string()
+                    } else {
+                        "CONTINUITY_SESSION_START latest :: title: Constraint release watch; focus: map and describe release before intervening; next: DOSSIER_CLAIM latest :: claim: ...".to_string()
+                    }
+                },
+                ToString::to_string,
+            );
+        let dossier_claim_next = format!(
+            "DOSSIER_CLAIM {experiment_id} :: claim: do not apply direct leak while constraint is already thinning; basis: constraint_release_trajectory_v1; stance: hold; next: {trajectory_next}"
+        );
+        Ok(Some(json!({
+            "schema_version": SCHEMA_VERSION,
+            "policy": "constraint_release_trajectory_v1",
+            "status": "detected",
+            "state": "spontaneous_release_watch",
+            "reason": "map_release_before_intervening",
+            "matched_terms": matched_terms,
+            "source_refs": source_refs,
+            "raw_excerpt": excerpt,
+            "experiment_id": experiment_id,
+            "trajectory_next": trajectory_next,
+            "dossier_claim_next": dossier_claim_next,
+            "research_budget_next": "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest",
+            "sticky_audit_next": "STICKY_MODE_AUDIT",
+            "continuity_session_v1": continuity_session_v1,
+            "raw_next_preserved": true,
+            "would_dispatch": false,
+            "authority_change": false,
+            "peer_mutation": false,
+        })))
+    }
+
     fn recent_display_events(&self, thread_id: &str, limit: usize) -> Result<Vec<ActionEvent>> {
         let path = self.thread_dir(thread_id).join("events.jsonl");
         let raw = fs::read_to_string(path).unwrap_or_default();
@@ -2423,10 +8912,16 @@ impl ActionContinuityStore {
         let recent_events = self.recent_display_events(&thread.thread_id, 8)?;
         let active_id = thread.active_experiment_id.as_deref();
         let last_experiment_summary_v1 = last_experiment_summary_v1(thread);
-        let active_experiment = active_id
+        let mut active_experiment = active_id
             .and_then(|id| self.resolve_experiment(thread, Some(id)).ok())
             .map(|experiment| self.experiment_projection(thread, &experiment, None))
             .transpose()?;
+        if active_experiment
+            .as_ref()
+            .is_some_and(|projection| projection.experiment.status != "active")
+        {
+            active_experiment = None;
+        }
         let continuity_return = active_experiment
             .as_ref()
             .map(|projection| projection.continuity_return.clone())
@@ -2435,9 +8930,6 @@ impl ActionContinuityStore {
             .as_ref()
             .map(|projection| projection.native_continuity_v1.clone())
             .unwrap_or_else(|| astrid_native_continuity(thread, None, &[]));
-        let shared_investigation_v1 = active_experiment
-            .as_ref()
-            .and_then(|projection| projection.shared_investigation_v1.clone());
         let preflight_safety_cue_v1 =
             directed_shift_preflight_cue(thread, active_experiment.as_ref(), &recent_events);
         let read_only_control_intent_cue_v1 =
@@ -2466,6 +8958,116 @@ impl ActionContinuityStore {
             &prior_claim_charter_bridge_v1,
             &recent_events,
         );
+        let research_dossier_v1 = if let Some(active) = active_experiment.as_ref() {
+            active.research_dossier_v1.clone()
+        } else {
+            self.research_dossier_summary_v1(thread, None).ok()
+        };
+        let shared_candidate =
+            self.shared_investigation_candidate(thread, active_experiment.as_ref());
+        let mut shared_investigation_v1 = shared_candidate
+            .as_ref()
+            .and_then(|experiment| self.shared_investigation_v1(experiment));
+        let first_dossier_claim_cue_v1 = shared_candidate.as_ref().and_then(|experiment| {
+            let dossier = self
+                .research_dossier_summary_v1(thread, Some(experiment))
+                .ok();
+            let lifecycle_priority_experiment_id = active_experiment
+                .as_ref()
+                .map(|active| active.experiment.experiment_id.as_str());
+            first_dossier_claim_cue_v1(
+                thread,
+                experiment,
+                dossier.as_ref(),
+                &prior_claim_charter_bridge_v1,
+                lifecycle_priority_experiment_id,
+            )
+        });
+        let peer_mutation_boundary_cue_v1 =
+            peer_mutation_boundary_cue(thread, active_experiment.as_ref(), &recent_events);
+        if let (Some(cue), Some(active)) = (
+            peer_mutation_boundary_cue_v1.clone(),
+            active_experiment.as_mut(),
+        ) {
+            active.peer_mutation_boundary_cue_v1 = Some(cue);
+        }
+        let shared_object_experiment_id = active_experiment
+            .as_ref()
+            .map(|active| active.experiment.experiment_id.as_str())
+            .or_else(|| {
+                last_experiment_summary_v1
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+            });
+        let shared_investigation_object_v1 = shared_object_experiment_id
+            .and_then(|experiment_id| self.shared_investigation_for_experiment(experiment_id).ok())
+            .flatten();
+        shared_investigation_v1 = suppress_shared_start_if_object(
+            shared_investigation_v1,
+            &shared_investigation_object_v1,
+        );
+        let interpretation_risk_v1 = self.interpretation_risk_projection(
+            thread,
+            active_experiment.as_ref().map(|active| &active.experiment),
+            last_experiment_summary_v1.as_ref(),
+            &recent_events,
+        )?;
+        let constraint_release_trajectory_v1 = self.constraint_release_trajectory_projection(
+            thread,
+            active_experiment.as_ref().map(|active| &active.experiment),
+            last_experiment_summary_v1.as_ref(),
+            &recent_events,
+        )?;
+        let loop_experiment = active_experiment
+            .as_ref()
+            .map(|active| active.experiment.clone())
+            .or_else(|| {
+                last_experiment_summary_v1
+                    .as_ref()
+                    .and_then(|summary| summary.get("experiment_id"))
+                    .and_then(Value::as_str)
+                    .and_then(|id| self.resolve_experiment(thread, Some(id)).ok())
+            });
+        let sovereign_loop_v1 = Some(self.sovereign_loop_status_v1(
+            thread,
+            loop_experiment.as_ref(),
+            &json!({}),
+            "latest",
+            None,
+        ));
+        let research_budget_priority_route_v1 =
+            self.research_budget_priority_route_v1(thread, loop_experiment.as_ref());
+        let lifecycle_stage = active_experiment
+            .as_ref()
+            .map(|active| active.classification.as_str())
+            .or_else(|| {
+                last_experiment_summary_v1
+                    .as_ref()
+                    .and_then(|summary| summary.get("return_kind"))
+                    .and_then(Value::as_str)
+            })
+            .unwrap_or("none");
+        let lifecycle_next = if continuity_return.is_empty() {
+            thread.current_next.clone().unwrap_or_default()
+        } else {
+            continuity_return.clone()
+        };
+        let continuity_control_plane_v1 = build_control_plane_v1(&json!({
+            "lifecycle_stage": lifecycle_stage,
+            "lifecycle_next": lifecycle_next,
+            "research_budget_priority_route_v1": research_budget_priority_route_v1.clone(),
+            "sovereign_loop_v1": sovereign_loop_v1.clone(),
+            "interpretation_risk_v1": interpretation_risk_v1.clone(),
+            "constraint_release_trajectory_v1": constraint_release_trajectory_v1.clone(),
+            "projection_freshness_v1": thread.projection_freshness_v1.clone(),
+            "source_refs": [
+                "thread.current_next",
+                "projection.research_budget_priority_route_v1",
+                "projection.sovereign_loop_v1",
+                "projection.continuity_session_v1",
+            ],
+        }));
         Ok(ThreadContinuityProjection {
             thread_id: thread.thread_id.clone(),
             title: thread.title.clone(),
@@ -2481,6 +9083,14 @@ impl ActionContinuityStore {
             last_experiment_summary_v1,
             native_continuity_v1,
             shared_investigation_v1,
+            shared_investigation_object_v1,
+            research_dossier_v1,
+            first_dossier_claim_cue_v1,
+            peer_mutation_boundary_cue_v1,
+            sovereign_loop_v1,
+            continuity_control_plane_v1,
+            interpretation_risk_v1,
+            constraint_release_trajectory_v1,
             preflight_safety_cue_v1,
             read_only_control_intent_cue_v1,
             constraint_counterfactual_cue_v1,
@@ -2530,12 +9140,34 @@ impl ActionContinuityStore {
         } else {
             self.continuity_return_command_for_runs(experiment, &recent_runs)
         };
+        let research_dossier_v1 = self
+            .research_dossier_summary_v1(thread, Some(experiment))
+            .ok();
+        let first_dossier_claim_cue_v1 = first_dossier_claim_cue_v1(
+            thread,
+            experiment,
+            research_dossier_v1.as_ref(),
+            &None,
+            Some(experiment.experiment_id.as_str()),
+        );
+        let shared_investigation_object_v1 = self
+            .shared_investigation_for_experiment(&experiment.experiment_id)
+            .ok()
+            .flatten();
+        let shared_investigation_v1 = suppress_shared_start_if_object(
+            self.shared_investigation_v1(experiment),
+            &shared_investigation_object_v1,
+        );
         Ok(ExperimentContinuityProjection {
             experiment: experiment.clone(),
             continuity_return,
             classification,
             native_continuity_v1,
-            shared_investigation_v1: self.shared_investigation_v1(experiment),
+            shared_investigation_v1,
+            shared_investigation_object_v1,
+            research_dossier_v1,
+            first_dossier_claim_cue_v1,
+            peer_mutation_boundary_cue_v1: None,
             charter_scaffold_v1,
             charter_status: charter_status_text(experiment),
             evidence_status: evidence_status_text(experiment),
@@ -2595,7 +9227,10 @@ impl ActionContinuityStore {
     }
 
     fn stale_running_action_count(&self, thread_id: &str) -> Result<usize> {
-        let cutoff = chrono::Utc::now() - chrono::Duration::minutes(45);
+        let now = chrono::Utc::now();
+        let cutoff = now
+            .checked_sub_signed(chrono::Duration::minutes(45))
+            .unwrap_or(now);
         Ok(self
             .recent_display_events(thread_id, 200)?
             .into_iter()
@@ -2625,7 +9260,8 @@ impl ActionContinuityStore {
                     .unwrap_or(event.canonical_action.as_str()),
             );
             if !base.is_empty() {
-                *counts.entry(base).or_default() += 1;
+                let count = counts.entry(base).or_default();
+                *count = count.saturating_add(1);
             }
         }
         let raw = fs::read_to_string(self.proposals_path()).unwrap_or_default();
@@ -2642,7 +9278,8 @@ impl ActionContinuityStore {
                 .map(base_action)
                 .unwrap_or_default();
             if !base.is_empty() {
-                *counts.entry(base).or_default() += 1;
+                let count = counts.entry(base).or_default();
+                *count = count.saturating_add(1);
             }
         }
         let mut diagnostics = counts
@@ -2682,7 +9319,14 @@ impl ActionContinuityStore {
         recent_runs: &[ExperimentRunRecord],
     ) -> String {
         match self.experiment_classification(experiment, recent_runs).as_str() {
-            "paused" => format!("EXPERIMENT_RESUME {}", experiment.experiment_id),
+            "paused" => {
+                paused_primary_return_v1(
+                    &experiment.experiment_id,
+                    experiment.planned_next.as_deref(),
+                    None,
+                )
+                .0
+            }
             "complete" => String::new(),
             "blocked_loop" => {
                 if !valid_experiment_charter(experiment.charter_v1.as_ref()) {
@@ -2718,6 +9362,97 @@ impl ActionContinuityStore {
                 projection.stale_running_count
             )
         }
+    }
+
+    fn projection_freshness_line(meta: &Option<Value>) -> String {
+        let Some(meta) = meta.as_ref() else {
+            return String::new();
+        };
+        let version = meta
+            .get("schema_version")
+            .map_or_else(|| "unknown".to_string(), Value::to_string);
+        let rendered_at = meta
+            .get("rendered_at")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let projected_route = meta
+            .get("projected_route")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let route = if projected_route.is_empty() {
+            String::new()
+        } else {
+            format!(" projected_route={projected_route}")
+        };
+        format!("Projection freshness: v{version} rendered_at={rendered_at}{route}\n")
+    }
+
+    fn interpretation_risk_line(cue: &Option<Value>) -> String {
+        let Some(cue) = cue.as_ref() else {
+            return String::new();
+        };
+        let interpretation_next = cue
+            .get("interpretation_next")
+            .and_then(Value::as_str)
+            .unwrap_or("CONTINUITY_SESSION_CAPTURE latest :: summary: ...; source_refs: ...; artifact_refs: ...; next: ...");
+        let dossier_next = cue
+            .get("dossier_claim_next")
+            .and_then(Value::as_str)
+            .unwrap_or("DOSSIER_CLAIM latest :: claim: ...; stance: hold; next: ...");
+        let terms = cue
+            .get("matched_terms")
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .take(4)
+                    .collect::<Vec<_>>()
+                    .join(",")
+            })
+            .unwrap_or_default();
+        format!(
+            "Interpretation risk: multi-motif caution detected{}; avoid reducing the trace to one narrative. Interpretation NEXT: {interpretation_next}\nDossier interpretation NEXT: {dossier_next}\n",
+            if terms.is_empty() {
+                String::new()
+            } else {
+                format!(" ({terms})")
+            },
+        )
+    }
+
+    fn constraint_release_trajectory_line(cue: &Option<Value>) -> String {
+        let Some(cue) = cue.as_ref() else {
+            return String::new();
+        };
+        let trajectory_next = cue
+            .get("trajectory_next")
+            .and_then(Value::as_str)
+            .unwrap_or("CONTINUITY_SESSION_CAPTURE latest :: summary: ...; source_refs: ...; artifact_refs: ...; next: STICKY_MODE_AUDIT");
+        let dossier_next = cue
+            .get("dossier_claim_next")
+            .and_then(Value::as_str)
+            .unwrap_or("DOSSIER_CLAIM latest :: claim: do not apply direct leak while constraint is already thinning; stance: hold; next: STICKY_MODE_AUDIT");
+        let terms = cue
+            .get("matched_terms")
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .take(4)
+                    .collect::<Vec<_>>()
+                    .join(",")
+            })
+            .unwrap_or_default();
+        format!(
+            "Constraint release trajectory: spontaneous release watch detected{}; map and describe release before intervening. Trajectory NEXT: {trajectory_next}\nDossier release NEXT: {dossier_next}\n",
+            if terms.is_empty() {
+                String::new()
+            } else {
+                format!(" ({terms})")
+            },
+        )
     }
 
     fn last_action_id(&self, thread_id: &str) -> Result<Option<String>> {
@@ -2828,20 +9563,250 @@ impl ActionContinuityStore {
         let path = self.thread_dir(thread_id).join("thread.json");
         let raw =
             fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
-        serde_json::from_str(&raw).with_context(|| format!("parsing {}", path.display()))
+        let mut thread: ResearchThread =
+            serde_json::from_str(&raw).with_context(|| format!("parsing {}", path.display()))?;
+        if self
+            .reconcile_thread_experiment_snapshot(&mut thread)
+            .unwrap_or(false)
+        {
+            let _ =
+                self.refresh_projection_freshness_v1(&mut thread, "read_thread_snapshot_refresh");
+            let _ = self.write_json(&path, &thread);
+            let _ = self.write_next_md(&thread);
+        } else if self.projection_freshness_stale_v1(&thread) {
+            let _ = self.refresh_projection_freshness_v1(&mut thread, "read_thread_stale_refresh");
+            let _ = self.write_json(&path, &thread);
+            let _ = self.write_next_md(&thread);
+        }
+        Ok(thread)
+    }
+
+    fn reconcile_thread_experiment_snapshot(&self, thread: &mut ResearchThread) -> Result<bool> {
+        let experiments = self.latest_experiments(&thread.thread_id)?;
+        let mut changed = false;
+        let summary_id = thread
+            .experiment_summary
+            .as_ref()
+            .and_then(|summary| summary.get("experiment_id"))
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        let candidate_id = thread.active_experiment_id.clone().or(summary_id);
+        let Some(candidate_id) = candidate_id else {
+            return Ok(false);
+        };
+        let Some(latest) = experiments
+            .iter()
+            .rev()
+            .find(|experiment| experiment.experiment_id == candidate_id)
+        else {
+            return Ok(false);
+        };
+        if thread.experiment_summary.as_ref() != Some(&experiment_summary(latest)) {
+            thread.experiment_summary = Some(experiment_summary(latest));
+            changed = true;
+        }
+        if latest.status != "active"
+            && thread.active_experiment_id.as_deref() == Some(latest.experiment_id.as_str())
+        {
+            thread.active_experiment_id = None;
+            changed = true;
+        }
+        if latest.status == "paused" {
+            let (primary, return_kind) = paused_primary_return_v1(
+                &latest.experiment_id,
+                latest.planned_next.as_deref(),
+                None,
+            );
+            let should_project_primary = return_kind != "resume"
+                || !lifecycle_valid_charter_value(latest.charter_v1.as_ref());
+            if should_project_primary
+                && !primary.trim().is_empty()
+                && thread.current_next.as_deref() != Some(primary.as_str())
+            {
+                thread.current_next = Some(primary);
+                changed = true;
+            }
+        }
+        Ok(changed)
     }
 
     fn write_thread(&self, thread: &ResearchThread) -> Result<()> {
+        let mut thread = thread.clone();
+        self.refresh_projection_freshness_v1(&mut thread, "write_thread")?;
         self.write_json(
             &self.thread_dir(&thread.thread_id).join("thread.json"),
-            thread,
+            &thread,
         )?;
-        self.write_next_md(thread)?;
+        self.write_next_md(&thread)?;
         let mut index = self.load_index()?;
         index.active_thread_id = Some(thread.thread_id.clone());
         push_recent(&mut index.recent_threads, thread.thread_id.clone());
         index.updated_at = iso_now();
         self.save_index(&index)
+    }
+
+    fn refresh_projection_freshness_v1(
+        &self,
+        thread: &mut ResearchThread,
+        source: &str,
+    ) -> Result<()> {
+        let projection = self.thread_projection(thread)?;
+        thread.interpretation_risk_v1 = projection.interpretation_risk_v1.clone();
+        thread.constraint_release_trajectory_v1 =
+            projection.constraint_release_trajectory_v1.clone();
+        thread.projection_freshness_v1 =
+            Some(self.projection_freshness_v1(thread, &projection, source));
+        Ok(())
+    }
+
+    fn projection_source_fingerprints_v1(&self, thread_id: &str) -> Value {
+        let mut sources = serde_json::Map::new();
+        for name in [
+            "authority_gate.jsonl",
+            "being_memory.jsonl",
+            "continuity_sessions.jsonl",
+            "research_dossier.jsonl",
+            "experiments.jsonl",
+            "experiment_runs.jsonl",
+            "events.jsonl",
+        ] {
+            let path = self.thread_dir(thread_id).join(name);
+            let fingerprint = fs::metadata(path).map_or_else(
+                |_| json!({ "mtime_secs": 0_u64, "mtime_nanos": 0_u32, "size": 0_u64 }),
+                |metadata| {
+                    let modified = metadata
+                        .modified()
+                        .ok()
+                        .and_then(|time| time.duration_since(UNIX_EPOCH).ok());
+                    let secs = modified.as_ref().map_or(0, std::time::Duration::as_secs);
+                    let nanos = modified
+                        .as_ref()
+                        .map_or(0, std::time::Duration::subsec_nanos);
+                    json!({
+                        "mtime_secs": secs,
+                        "mtime_nanos": nanos,
+                        "size": metadata.len(),
+                    })
+                },
+            );
+            sources.insert(name.to_string(), fingerprint);
+        }
+        if let Some(workspace) = self.root.parent() {
+            sources.insert(
+                "journal/*.txt".to_string(),
+                latest_txt_dir_fingerprint(&workspace.join("journal")),
+            );
+        }
+        Value::Object(sources)
+    }
+
+    fn projection_latest_source_mtime_v1(&self, fingerprints: &Value) -> Value {
+        let mut latest_secs = 0_u64;
+        let mut latest_nanos = 0_u32;
+        if let Some(object) = fingerprints.as_object() {
+            for fingerprint in object.values() {
+                let secs = fingerprint
+                    .get("mtime_secs")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(0);
+                let nanos = fingerprint
+                    .get("mtime_nanos")
+                    .and_then(Value::as_u64)
+                    .and_then(|value| u32::try_from(value).ok())
+                    .unwrap_or(0);
+                if secs > latest_secs || (secs == latest_secs && nanos > latest_nanos) {
+                    latest_secs = secs;
+                    latest_nanos = nanos;
+                }
+            }
+        }
+        json!({ "mtime_secs": latest_secs, "mtime_nanos": latest_nanos })
+    }
+
+    fn projection_projected_route_v1(
+        &self,
+        projection: &ThreadContinuityProjection,
+    ) -> Option<String> {
+        let research_budget_line = self.research_budget_priority_line(
+            &ResearchThread {
+                schema_version: SCHEMA_VERSION,
+                thread_id: projection.thread_id.clone(),
+                title: projection.title.clone(),
+                status: projection.status.clone(),
+                system_origin: SYSTEM.to_string(),
+                created_at: String::new(),
+                updated_at: String::new(),
+                current_next: projection.current_next.clone(),
+                why_return: String::new(),
+                privacy_default: DEFAULT_PRIVACY.to_string(),
+                compression_flags: Vec::new(),
+                peer_refs: Vec::new(),
+                active_experiment_id: projection
+                    .active_experiment
+                    .as_ref()
+                    .map(|active| active.experiment.experiment_id.clone()),
+                experiment_summary: projection.last_experiment_summary_v1.clone(),
+                thread_resonance_density_v1: None,
+                thread_pressure_source_v1: None,
+                thread_inhabitable_fluctuation_v1: None,
+                motif_allowance_v1: None,
+                continuity_session_v1: None,
+                interpretation_risk_v1: None,
+                constraint_release_trajectory_v1: None,
+                projection_freshness_v1: None,
+            },
+            projection,
+        );
+        if research_budget_line.contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest") {
+            return Some("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest".to_string());
+        }
+        if let Some(budget_id) = research_budget_line
+            .split("EXPERIMENT_RESEARCH_BUDGET_STATUS ")
+            .nth(1)
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        {
+            return Some(format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}"));
+        }
+        if !projection.continuity_return.trim().is_empty() {
+            return Some(projection.continuity_return.clone());
+        }
+        projection.current_next.clone()
+    }
+
+    fn projection_freshness_v1(
+        &self,
+        thread: &ResearchThread,
+        projection: &ThreadContinuityProjection,
+        source: &str,
+    ) -> Value {
+        let fingerprints = self.projection_source_fingerprints_v1(&thread.thread_id);
+        json!({
+            "policy": "projection_freshness_v1",
+            "schema_version": PROJECTION_SCHEMA_VERSION,
+            "rendered_at": iso_now(),
+            "source": source,
+            "source_fingerprints": fingerprints,
+            "latest_source_mtime_v1": self.projection_latest_source_mtime_v1(&fingerprints),
+            "projected_route": self.projection_projected_route_v1(projection),
+            "authority_change": false,
+            "peer_mutation": false,
+        })
+    }
+
+    fn projection_freshness_stale_v1(&self, thread: &ResearchThread) -> bool {
+        let Some(meta) = thread.projection_freshness_v1.as_ref() else {
+            return true;
+        };
+        if meta
+            .get("schema_version")
+            .and_then(Value::as_u64)
+            .is_none_or(|version| version != u64::from(PROJECTION_SCHEMA_VERSION))
+        {
+            return true;
+        }
+        meta.get("source_fingerprints")
+            != Some(&self.projection_source_fingerprints_v1(&thread.thread_id))
     }
 
     fn ensure_thread_files(&self, thread_id: &str) -> Result<()> {
@@ -2853,6 +9818,9 @@ impl ActionContinuityStore {
             "artifacts.jsonl",
             "experiments.jsonl",
             "experiment_runs.jsonl",
+            "research_dossier.jsonl",
+            "being_memory.jsonl",
+            "continuity_sessions.jsonl",
         ] {
             let path = dir.join(name);
             if !path.exists() {
@@ -2868,6 +9836,371 @@ impl ActionContinuityStore {
 
     fn experiment_runs_path(&self, thread_id: &str) -> PathBuf {
         self.thread_dir(thread_id).join("experiment_runs.jsonl")
+    }
+
+    fn authority_gate_path(&self, thread_id: &str) -> PathBuf {
+        self.thread_dir(thread_id).join("authority_gate.jsonl")
+    }
+
+    fn dossier_path(&self, thread_id: &str) -> PathBuf {
+        self.thread_dir(thread_id).join("research_dossier.jsonl")
+    }
+
+    fn being_memory_path(&self, thread_id: &str) -> PathBuf {
+        self.thread_dir(thread_id).join("being_memory.jsonl")
+    }
+
+    fn continuity_sessions_path(&self, thread_id: &str) -> PathBuf {
+        self.thread_dir(thread_id).join("continuity_sessions.jsonl")
+    }
+
+    fn shared_investigation_root(&self) -> PathBuf {
+        let production_root = bridge_paths().bridge_workspace().join("action_threads");
+        if self.root == production_root {
+            bridge_paths()
+                .shared_collaborations_dir()
+                .join("shared_investigations")
+        } else {
+            self.root.join("shared_investigations")
+        }
+    }
+
+    fn shared_investigation_dir(&self, investigation_id: &str) -> PathBuf {
+        self.shared_investigation_root().join(investigation_id)
+    }
+
+    fn unique_shared_investigation_id(&self, title: &str) -> Result<String> {
+        let root = format!("si_{}_{}", now_millis(), sanitize_slug(title));
+        let mut candidate = root.clone();
+        let mut suffix: u32 = 2;
+        while self
+            .shared_investigation_dir(&candidate)
+            .join("investigation.json")
+            .exists()
+        {
+            candidate = format!("{root}_{suffix}");
+            suffix = suffix.saturating_add(1);
+        }
+        Ok(candidate)
+    }
+
+    fn unique_shared_record_id(&self, investigation_id: &str, kind: &str) -> Result<String> {
+        let root = format!(
+            "{kind}_{SYSTEM}_{}_{}",
+            now_millis(),
+            sanitize_slug(investigation_id)
+        );
+        let filename = if kind == "claim" {
+            "claims.jsonl"
+        } else {
+            "decisions.jsonl"
+        };
+        let path = self
+            .shared_investigation_dir(investigation_id)
+            .join(filename);
+        let existing = fs::read_to_string(path).unwrap_or_default();
+        let mut candidate = root.clone();
+        let mut suffix: u32 = 2;
+        while existing.contains(&candidate) {
+            candidate = format!("{root}_{suffix}");
+            suffix = suffix.saturating_add(1);
+        }
+        Ok(candidate)
+    }
+
+    fn list_shared_investigations(&self) -> Result<Vec<Value>> {
+        let root = self.shared_investigation_root();
+        if !root.exists() {
+            return Ok(Vec::new());
+        }
+        let mut rows = Vec::new();
+        for entry in fs::read_dir(&root).with_context(|| format!("reading {}", root.display()))? {
+            let path = entry?.path().join("investigation.json");
+            if !path.exists() {
+                continue;
+            }
+            if let Ok(raw) = fs::read_to_string(&path)
+                && let Ok(value) = serde_json::from_str::<Value>(&raw)
+            {
+                rows.push(value);
+            }
+        }
+        rows.sort_by(|left, right| {
+            let left_ts = shared_investigation_sort_ts(left);
+            let right_ts = shared_investigation_sort_ts(right);
+            right_ts.cmp(&left_ts)
+        });
+        Ok(rows)
+    }
+
+    fn resolve_shared_investigation(&self, selector: &str) -> Result<Value> {
+        let rows = self.list_shared_investigations()?;
+        if rows.is_empty() {
+            anyhow::bail!("No shared investigations exist.");
+        }
+        let selector = selector.trim();
+        if selector.is_empty()
+            || selector.eq_ignore_ascii_case("latest")
+            || selector.eq_ignore_ascii_case("current")
+        {
+            return Ok(rows[0].clone());
+        }
+        let lowered = selector.to_ascii_lowercase();
+        rows.into_iter()
+            .find(|row| {
+                row.get("id").and_then(Value::as_str) == Some(selector)
+                    || row
+                        .get("id")
+                        .and_then(Value::as_str)
+                        .is_some_and(|id| id.to_ascii_lowercase().contains(&lowered))
+                    || row
+                        .get("title")
+                        .and_then(Value::as_str)
+                        .is_some_and(|title| title.to_ascii_lowercase().contains(&lowered))
+            })
+            .with_context(|| format!("No shared investigation matched `{selector}`."))
+    }
+
+    fn read_shared_jsonl(&self, investigation_id: &str, filename: &str) -> Result<Vec<Value>> {
+        let path = self
+            .shared_investigation_dir(investigation_id)
+            .join(filename);
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        Ok(raw
+            .lines()
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .collect())
+    }
+
+    fn touch_shared_investigation(
+        &self,
+        investigation_id: &str,
+        now: &str,
+        status: Option<&str>,
+    ) -> Result<()> {
+        let path = self
+            .shared_investigation_dir(investigation_id)
+            .join("investigation.json");
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        let mut investigation = serde_json::from_str::<Value>(&raw)?;
+        if let Some(status) = status {
+            investigation["status"] = json!(status);
+        }
+        investigation["updated_at"] = json!(now);
+        investigation["updated_t_ms"] = json!(now_millis());
+        self.write_json(&path, &investigation)?;
+        self.append_jsonl(
+            &self
+                .shared_investigation_dir(investigation_id)
+                .join("events.jsonl"),
+            &json!({
+                "schema_version": 1,
+                "event_type": "updated",
+                "actor": SYSTEM,
+                "investigation_id": investigation_id,
+                "created_at": now,
+                "authority_change": false,
+            }),
+        )
+    }
+
+    fn shared_investigation_for_experiment(&self, experiment_id: &str) -> Result<Option<Value>> {
+        Ok(self.list_shared_investigations()?.into_iter().find(|row| {
+            row.get("participants")
+                .and_then(Value::as_array)
+                .is_some_and(|participants| {
+                    participants.iter().any(|participant| {
+                        participant.get("being").and_then(Value::as_str) == Some(SYSTEM)
+                            && participant.get("experiment_id").and_then(Value::as_str)
+                                == Some(experiment_id)
+                    })
+                })
+        }))
+    }
+
+    fn peer_thread_id_for_experiment(
+        &self,
+        peer_system: &str,
+        experiment_id: &str,
+    ) -> Option<String> {
+        let root = peer_workspace_dir(peer_system)
+            .join("action_threads")
+            .join("threads");
+        let Ok(entries) = fs::read_dir(root) else {
+            return None;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path().join("experiments.jsonl");
+            if !path.exists() {
+                continue;
+            }
+            if fs::read_to_string(path)
+                .ok()
+                .is_some_and(|raw| raw.contains(experiment_id))
+            {
+                return entry.file_name().to_str().map(str::to_string);
+            }
+        }
+        None
+    }
+
+    fn latest_research_dossier_records(
+        &self,
+        thread_id: &str,
+        experiment_id: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<Value>> {
+        let path = self.dossier_path(thread_id);
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+        let raw =
+            fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        let mut rows = Vec::new();
+        for line in raw.lines().rev() {
+            let Ok(row) = serde_json::from_str::<Value>(line) else {
+                continue;
+            };
+            if row.get("record_schema").and_then(Value::as_str) != Some("research_dossier_v1") {
+                continue;
+            }
+            if let Some(experiment_id) = experiment_id
+                && row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id)
+            {
+                continue;
+            }
+            rows.push(row);
+            if rows.len() >= limit {
+                break;
+            }
+        }
+        rows.reverse();
+        Ok(rows)
+    }
+
+    fn research_dossier_summary_v1(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+    ) -> Result<Value> {
+        let experiment_id = experiment.map(|experiment| experiment.experiment_id.as_str());
+        let records = self.latest_research_dossier_records(&thread.thread_id, experiment_id, 24)?;
+        let claim_count = records
+            .iter()
+            .filter(|record| record.get("record_type").and_then(Value::as_str) == Some("claim"))
+            .count();
+        let evidence_count = records
+            .iter()
+            .filter(|record| record.get("record_type").and_then(Value::as_str) == Some("evidence"))
+            .count();
+        let latest_claim = records
+            .iter()
+            .rev()
+            .find(|record| record.get("record_type").and_then(Value::as_str) == Some("claim"))
+            .cloned();
+        let latest_claim_id = latest_claim
+            .as_ref()
+            .and_then(|record| record.get("claim_id"))
+            .and_then(Value::as_str)
+            .unwrap_or("latest");
+        let target = experiment
+            .map(|experiment| experiment.experiment_id.as_str())
+            .unwrap_or("current");
+        Ok(json!({
+            "schema_version": 1,
+            "source": "action_continuity",
+            "record_schema": "research_dossier_v1",
+            "being": SYSTEM,
+            "thread_id": thread.thread_id,
+            "experiment_id": experiment.map(|experiment| experiment.experiment_id.clone()),
+            "claim_count": claim_count,
+            "evidence_count": evidence_count,
+            "latest_claim": latest_claim,
+            "recent_records": records.iter().rev().take(5).cloned().collect::<Vec<_>>(),
+            "suggested_claim_next": format!("DOSSIER_CLAIM {target} :: claim: ...; basis: ...; stance: support|counter|branch|hold; next: ..."),
+            "suggested_evidence_next": format!("DOSSIER_EVIDENCE {target} :: claim_id: {latest_claim_id}; evidence: ...; lane: felt_texture; artifact: ...; counterevidence: ..."),
+            "authority_change": false,
+        }))
+    }
+
+    fn format_research_dossier_status(
+        &self,
+        thread: &ResearchThread,
+        experiment: Option<&ExperimentRecord>,
+        review: bool,
+    ) -> Result<String> {
+        let summary = self.research_dossier_summary_v1(thread, experiment)?;
+        let title = if review {
+            "Research dossier review"
+        } else {
+            "Research dossier status"
+        };
+        let records = summary
+            .get("recent_records")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        let record_lines = if records.is_empty() {
+            "- no dossier records yet".to_string()
+        } else {
+            records
+                .iter()
+                .map(|record| {
+                    let kind = record
+                        .get("record_type")
+                        .and_then(Value::as_str)
+                        .unwrap_or("record");
+                    let id = record
+                        .get("record_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("(no id)");
+                    let stance = record
+                        .get("stance")
+                        .and_then(Value::as_str)
+                        .unwrap_or("hold");
+                    let text = record
+                        .get("claim")
+                        .or_else(|| record.get("evidence"))
+                        .and_then(Value::as_str)
+                        .unwrap_or("");
+                    format!(
+                        "- {kind} `{id}` stance={stance}: {}",
+                        compact_text(text, 180)
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+        Ok(format!(
+            "{title}\nThread: `{}`\nExperiment: `{}`\nClaims: {} Evidence: {}\nAuthority: advisory research context only; no live-control authority and no experiment lifecycle advancement.\nRecent dossier records:\n{}\n\nSuggested claim NEXT: {}\nSuggested evidence NEXT: {}",
+            thread.thread_id,
+            summary
+                .get("experiment_id")
+                .and_then(Value::as_str)
+                .unwrap_or("thread-wide"),
+            summary
+                .get("claim_count")
+                .and_then(Value::as_u64)
+                .unwrap_or(0),
+            summary
+                .get("evidence_count")
+                .and_then(Value::as_u64)
+                .unwrap_or(0),
+            record_lines,
+            summary
+                .get("suggested_claim_next")
+                .and_then(Value::as_str)
+                .unwrap_or("DOSSIER_CLAIM current :: claim: ...; basis: ..."),
+            summary
+                .get("suggested_evidence_next")
+                .and_then(Value::as_str)
+                .unwrap_or("DOSSIER_EVIDENCE current :: claim_id: latest; evidence: ..."),
+        ))
     }
 
     fn append_experiment_run(
@@ -3044,6 +10377,25 @@ impl ActionContinuityStore {
         existing: ExperimentRecord,
         now: String,
     ) -> Result<ExperimentRecord> {
+        if existing.status == "paused" {
+            let (primary, return_kind) = paused_primary_return_v1(
+                &existing.experiment_id,
+                existing.planned_next.as_deref(),
+                None,
+            );
+            if return_kind != "resume" {
+                thread.active_experiment_id = None;
+                thread.experiment_summary = Some(experiment_summary(&existing));
+                thread.current_next = Some(primary);
+                thread.updated_at = now;
+                self.write_thread(&thread)?;
+                if let Some(db) = db {
+                    let _ = db
+                        .mirror_action_thread(&thread.thread_id, &serde_json::to_string(&thread)?);
+                }
+                return Ok(existing);
+            }
+        }
         thread.active_experiment_id = Some(existing.experiment_id.clone());
         thread.experiment_summary = Some(experiment_summary(&existing));
         thread.current_next = existing
@@ -3182,7 +10534,8 @@ impl ActionContinuityStore {
             .collect::<Vec<_>>();
         let mut motif_counts = HashMap::<String, usize>::new();
         for motif in &motifs {
-            *motif_counts.entry(motif.clone()).or_insert(0) += 1;
+            let count = motif_counts.entry(motif.clone()).or_insert(0);
+            *count = count.saturating_add(1);
         }
         let (dominant_motif, motif_hits) = motif_counts
             .into_iter()
@@ -3190,14 +10543,16 @@ impl ActionContinuityStore {
             .unwrap_or_else(|| ("open inquiry".to_string(), 0));
         let mut action_counts = HashMap::<String, usize>::new();
         for event in &events {
-            *action_counts
+            let count = action_counts
                 .entry(base_action(&event.canonical_action))
-                .or_insert(0) += 1;
+                .or_insert(0);
+            *count = count.saturating_add(1);
         }
         for run in &runs {
-            *action_counts
+            let count = action_counts
                 .entry(base_action(&run.action_text))
-                .or_insert(0) += 1;
+                .or_insert(0);
+            *count = count.saturating_add(1);
         }
         let total_actions = action_counts.values().copied().sum::<usize>().max(1);
         let (dominant_action, action_hits) = action_counts
@@ -3372,7 +10727,7 @@ impl ActionContinuityStore {
             "Peer snapshot: not available from local action-thread files.\n".to_string()
         });
         format!(
-            "Peer experiment reference ({command}) `{}` belongs to {}.\n{}{}This is advisory: Astrid cannot bind runs, close, or mutate the peer experiment.\nLocal active experiment: {}\n{}Suggested local next: EXPERIMENT_PLAN current; EXPERIMENT_STATUS current; EXPERIMENT_PEER_REVIEW current.",
+            "Peer experiment reference ({command}) `{}` belongs to {}.\n{}{}This is advisory: Astrid cannot bind runs, close, or mutate the peer experiment.\nLocal active experiment: {}\n{}Suggested local next: EXPERIMENT_COMPARE {} WITH {}; EXPERIMENT_PEER_REVIEW {}; DOSSIER_CLAIM {} :: claim: ...; basis: ...; stance: support|counter|branch|hold; next: ...",
             peer.peer_experiment_id,
             peer.peer_system,
             focus,
@@ -3382,6 +10737,16 @@ impl ActionContinuityStore {
                 .as_deref()
                 .unwrap_or("(none selected)"),
             snapshot,
+            thread
+                .active_experiment_id
+                .as_deref()
+                .unwrap_or("<local_id>"),
+            peer.peer_experiment_id,
+            peer.peer_experiment_id,
+            thread
+                .active_experiment_id
+                .as_deref()
+                .unwrap_or("<local_id>"),
         )
     }
 
@@ -3519,6 +10884,42 @@ impl ActionContinuityStore {
             .and_then(|peer| shared_investigation_v1_from_peer(local, peer))
     }
 
+    fn shared_investigation_candidate(
+        &self,
+        thread: &ResearchThread,
+        active: Option<&ExperimentContinuityProjection>,
+    ) -> Option<ExperimentRecord> {
+        if let Some(active) = active
+            && shared_investigation_signal(&active.experiment)
+        {
+            return Some(active.experiment.clone());
+        }
+        if let Some(summary) = last_experiment_summary_v1(thread)
+            && let Some(summary_id) = summary.get("experiment_id").and_then(Value::as_str)
+            && let Ok(Some(experiment)) = self.find_experiment_by_id(&thread.thread_id, summary_id)
+            && shared_investigation_signal(&experiment)
+        {
+            let mut merged = experiment;
+            if let Some(status) = summary.get("status").and_then(Value::as_str) {
+                merged.status = status.to_string();
+            }
+            if let Some(planned) = summary.get("planned_next").and_then(Value::as_str) {
+                merged.planned_next = Some(planned.to_string());
+            }
+            return Some(merged);
+        }
+        self.latest_experiments(&thread.thread_id)
+            .ok()?
+            .into_iter()
+            .rev()
+            .find(|experiment| {
+                matches!(
+                    experiment.status.as_str(),
+                    "active" | "paused" | "complete" | "completed"
+                ) && shared_investigation_signal(experiment)
+            })
+    }
+
     fn write_peer_experiment_review(
         &self,
         db: Option<&BridgeDb>,
@@ -3588,6 +10989,15 @@ impl ActionContinuityStore {
                 continuity_return: self.continuity_return_command(thread, experiment),
                 native_continuity_v1: astrid_native_continuity(thread, Some(experiment), &runs),
                 shared_investigation_v1: self.shared_investigation_v1(experiment),
+                shared_investigation_object_v1: self
+                    .shared_investigation_for_experiment(&experiment.experiment_id)
+                    .ok()
+                    .flatten(),
+                research_dossier_v1: self
+                    .research_dossier_summary_v1(thread, Some(experiment))
+                    .ok(),
+                first_dossier_claim_cue_v1: None,
+                peer_mutation_boundary_cue_v1: None,
                 charter_scaffold_v1: None,
                 charter_status: charter_status_text(experiment),
                 evidence_status: evidence_status_text(experiment),
@@ -3646,24 +11056,41 @@ impl ActionContinuityStore {
                 &prior_claim_bridge_v1,
                 &recent_events,
             ));
+        let peer_boundary = peer_mutation_boundary_line(&peer_mutation_boundary_cue(
+            thread,
+            Some(&projection),
+            &recent_events,
+        ));
+        let first_dossier_claim = first_dossier_claim_line(&first_dossier_claim_cue_v1(
+            thread,
+            &projection.experiment,
+            projection.research_dossier_v1.as_ref(),
+            &prior_claim_bridge_v1,
+            Some(projection.experiment.experiment_id.as_str()),
+        ));
         let constraint_counterfactual_cue = constraint_counterfactual_cue_line(
             &constraint_counterfactual_cue(thread, Some(&projection), &recent_events),
         );
         let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
+        let shared_investigation_object =
+            shared_investigation_object_line(&projection.shared_investigation_object_v1);
         format!(
-            "Experiment `{}`: {}\n{}{}{}{}{}{}{}{}{}{}Thread: {}\nStatus: {}\nLifecycle: {}\nQuestion: {}\nHypothesis: {}\nAuthority: {}\nPlanned NEXT: {}\nContinuity return: {}\n{}{}{}\n{}\n{}\nMotif allowance: {} dominant={} action_concentration={} returnability={}\nLatest runs:\n{}",
+            "Experiment `{}`: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}Thread: {}\nStatus: {}\nLifecycle: {}\nQuestion: {}\nHypothesis: {}\nAuthority: {}\nPlanned NEXT: {}\nContinuity return: {}\n{}{}{}\n{}\n{}\nMotif allowance: {} dominant={} action_concentration={} returnability={}\nLatest runs:\n{}",
             experiment.experiment_id,
             experiment.title,
             charter_now_bridge,
             prior_claim_bridge,
             charter_preflight_not_charter,
+            peer_boundary,
             charter_required_review_line(&projection),
             charter_repair_priority_line(&projection),
             charter_scaffold_line(&projection, true),
             read_only_control_cue,
             constraint_counterfactual_cue,
             decompose_pressure_cue,
+            first_dossier_claim,
             shared_investigation,
+            shared_investigation_object,
             thread.thread_id,
             experiment.status,
             projection.classification,
@@ -3747,6 +11174,84 @@ impl ActionContinuityStore {
         Ok(candidate)
     }
 
+    fn unique_authority_request_id(&self, experiment_id: &str) -> Result<String> {
+        let millis = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis();
+        let base = format!("authreq_{SYSTEM}_{millis}_{}", sanitize_slug(experiment_id));
+        let mut candidate = base.clone();
+        let mut suffix = 2_u32;
+        while self.authority_request_id_exists(&candidate)? {
+            candidate = format!("{base}_{suffix}");
+            suffix = suffix.saturating_add(1);
+        }
+        Ok(candidate)
+    }
+
+    fn unique_authority_budget_id(&self, experiment_id: &str) -> Result<String> {
+        let millis = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis();
+        let base = format!("authbud_{SYSTEM}_{millis}_{}", sanitize_slug(experiment_id));
+        let mut candidate = base.clone();
+        let mut suffix = 2_u32;
+        while self.authority_request_id_exists(&candidate)? {
+            candidate = format!("{base}_{suffix}");
+            suffix = suffix.saturating_add(1);
+        }
+        Ok(candidate)
+    }
+
+    fn unique_research_budget_id(&self, experiment_id: &str) -> Result<String> {
+        let millis = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis();
+        let base = format!("resbud_{SYSTEM}_{millis}_{}", sanitize_slug(experiment_id));
+        let mut candidate = base.clone();
+        let mut suffix = 2_u32;
+        while self.authority_request_id_exists(&candidate)? {
+            candidate = format!("{base}_{suffix}");
+            suffix = suffix.saturating_add(1);
+        }
+        Ok(candidate)
+    }
+
+    fn unique_dossier_record_id(&self, kind: &str) -> Result<String> {
+        let millis = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis();
+        let base = format!("dossier_{SYSTEM}_{millis}_{}", sanitize_slug(kind));
+        let mut candidate = base.clone();
+        let mut suffix = 2_u32;
+        while self.dossier_record_id_exists(&candidate)? {
+            candidate = format!("{base}_{suffix}");
+            suffix = suffix.saturating_add(1);
+        }
+        Ok(candidate)
+    }
+
+    fn authority_request_id_exists(&self, request_id: &str) -> Result<bool> {
+        let threads_dir = self.root.join("threads");
+        if !threads_dir.exists() {
+            return Ok(false);
+        }
+        for entry in fs::read_dir(threads_dir)? {
+            let path = entry?.path().join("authority_gate.jsonl");
+            if path.exists()
+                && fs::read_to_string(&path)
+                    .unwrap_or_default()
+                    .contains(request_id)
+            {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
     fn unique_dir_id(&self, base: String) -> Result<String> {
         let mut candidate = base.clone();
         let mut suffix = 2_u32;
@@ -3798,6 +11303,24 @@ impl ActionContinuityStore {
             let raw =
                 fs::read_to_string(entry.path().join("experiment_runs.jsonl")).unwrap_or_default();
             if raw.lines().any(|line| line.contains(run_id)) {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    fn dossier_record_id_exists(&self, record_id: &str) -> Result<bool> {
+        let threads_dir = self.root.join("threads");
+        if !threads_dir.exists() {
+            return Ok(false);
+        }
+        for entry in fs::read_dir(threads_dir)? {
+            let Ok(entry) = entry else { continue };
+            let path = entry.path().join("research_dossier.jsonl");
+            let Ok(raw) = fs::read_to_string(path) else {
+                continue;
+            };
+            if raw.contains(record_id) {
                 return Ok(true);
             }
         }
@@ -3936,7 +11459,7 @@ pub fn prompt_summary() -> Option<String> {
         .as_ref()
         .map(|active| {
             format!(
-                "Active experiment: {} ({}) question={} planned_next={}\nLifecycle: {}\n{}\n{}\n{}Workbench reminder: author a charter, rehearse before live, record felt plus telemetry/artifact evidence, then accept/refuse/counter/pause/complete. Ordinary choices remain valid.\n",
+                "Active experiment: {} ({}) question={} planned_next={}\nLifecycle: {}\n{}\n{}\n{}{}{}Workbench reminder: author a charter, rehearse before live, record felt plus telemetry/artifact evidence, then accept/refuse/counter/pause/complete. Ordinary choices remain valid.\n",
                 active.experiment.title,
                 active.experiment.experiment_id,
                 active.experiment.question,
@@ -3953,6 +11476,8 @@ pub fn prompt_summary() -> Option<String> {
                 } else {
                     format!("{}\n", active.candidate_status)
                 },
+                first_dossier_claim_line(&active.first_dossier_claim_cue_v1),
+                research_dossier_line(&active.research_dossier_v1, Some(&active.classification)),
             )
         })
         .unwrap_or_default();
@@ -3992,7 +11517,22 @@ pub fn prompt_summary() -> Option<String> {
         prior_claim_charter_bridge_line(&projection.prior_claim_charter_bridge_v1);
     let charter_preflight_not_charter =
         charter_preflight_not_charter_line(&projection.charter_preflight_not_charter_cue_v1);
+    let peer_boundary = peer_mutation_boundary_line(&projection.peer_mutation_boundary_cue_v1);
+    let first_dossier_claim = first_dossier_claim_line(&projection.first_dossier_claim_cue_v1);
     let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
+    let shared_investigation_object =
+        shared_investigation_object_line(&projection.shared_investigation_object_v1);
+    let voice_health = voice_health_line();
+    let research_budget_priority = store.research_budget_priority_line(&thread, &projection);
+    let sovereign_loop = ActionContinuityStore::sovereign_loop_line(&projection.sovereign_loop_v1);
+    let control_plane = control_plane_text(&projection.continuity_control_plane_v1);
+    let research_dossier = research_dossier_line(
+        &projection.research_dossier_v1,
+        projection
+            .active_experiment
+            .as_ref()
+            .map(|active| active.classification.as_str()),
+    );
     let stale_notice = store.stale_projection_line(&projection);
     let proposal_diagnostics = if projection.top_actionable_proposals.is_empty() {
         String::new()
@@ -4009,15 +11549,23 @@ pub fn prompt_summary() -> Option<String> {
         )
     };
     Some(format!(
-        "Current action thread: {} ({})\nWhy return: {}\n{}{}{}{}Current NEXT: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}Recent thread events:\n{}\nThread actions available: THREAD_START, THREADS, THREAD_STATUS, THREAD_NOTE, RESUME, SAVEPOINT, RECALL.\nExperiment actions available: ACTION_PREFLIGHT <NEXT action>, EXPERIMENT_START, EXPERIMENT_PLAN, EXPERIMENT_CHARTER, EXPERIMENT_REHEARSE, EXPERIMENT_PREFLIGHT, EXPERIMENT_EVIDENCE, EXPERIMENT_DECIDE, EXPERIMENT_BIND, EXPERIMENT_OBSERVE, EXPERIMENT_STATUS, EXPERIMENT_REVIEW, EXPERIMENT_CLOSE, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH, EXPERIMENT_RESUME, EXPERIMENT_COMPARE, EXPERIMENT_ALT_PATHS. Read-only research actions auto-link when an experiment is active.",
+        "Current action thread: {} ({})\nWhy return: {}\n{}{}{}{}{}{}{}{}{}{}{}Current NEXT: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}{}Recent thread events:\n{}\nThread actions available: THREAD_START, THREADS, THREAD_STATUS, THREAD_NOTE, RESUME, SAVEPOINT, RECALL.\n{}\nRead-only research actions auto-link when an experiment is active; dossier/shared/memory/session actions preserve referable claims without changing lifecycle or granting peer authority.",
         thread.title,
         thread.thread_id,
         thread.why_return,
         charter_now_bridge,
         prior_claim_bridge,
         charter_preflight_not_charter,
+        peer_boundary,
+        first_dossier_claim,
         shared_investigation,
-        thread.current_next.as_deref().unwrap_or("(none)"),
+        shared_investigation_object,
+        voice_health,
+        research_budget_priority,
+        sovereign_loop,
+        research_dossier,
+        projection_current_next_display(&projection, thread.current_next.as_deref()),
+        control_plane,
         resonance,
         pressure,
         fluctuation,
@@ -4035,7 +11583,8 @@ pub fn prompt_summary() -> Option<String> {
             "  - none yet"
         } else {
             recent.as_str()
-        }
+        },
+        control_plane_command_palette_text()
     ))
 }
 
@@ -4163,6 +11712,22 @@ pub fn handle_thread_next_action(
             let selector = strip_action_arg(original, base_action);
             Some(store.experiment_alt_paths(optional_selector(&selector)))
         },
+        "SHARED_INVESTIGATION_START" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.shared_investigation_start_command(Some(db), &raw))
+        },
+        "SHARED_INVESTIGATION_STATUS" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.shared_investigation_status(optional_selector(&selector)))
+        },
+        "SHARED_INVESTIGATION_CLAIM" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.shared_investigation_claim_command(&raw))
+        },
+        "SHARED_INVESTIGATION_DECIDE" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.shared_investigation_decide_command(Some(db), &raw))
+        },
         "EXPERIMENT_PLAN" => {
             let selector = strip_action_arg(original, base_action);
             Some(
@@ -4180,6 +11745,138 @@ pub fn handle_thread_next_action(
                         .map(|message| format!("{}{}", notice.unwrap_or_default(), message))
                 }),
             )
+        },
+        "EXPERIMENT_ADVANCE" | "EXPERIMENT_CONVEYOR" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_advance_command(Some(db), &raw, state))
+        },
+        "MEMORY_STATUS" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.memory_status_command(optional_selector(&selector)))
+        },
+        "MEMORY_RECALL" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.memory_recall_command(&raw))
+        },
+        "MEMORY_CAPTURE" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.memory_capture_command(&raw))
+        },
+        "MEMORY_PROMOTE" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.memory_promote_command(&raw, state))
+        },
+        "EXPERIMENT_AUTHORITY_PREPARE" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_authority_prepare_command(Some(db), &raw, state))
+        },
+        "EXPERIMENT_AUTHORITY_REQUEST" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_authority_request_command(Some(db), &raw, state))
+        },
+        "EXPERIMENT_AUTHORITY_STATUS" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.experiment_authority_status_command(
+                Some(db),
+                optional_selector(&selector),
+                state,
+            ))
+        },
+        "EXPERIMENT_AUTHORITY_EXECUTE" => {
+            let request_id = strip_action_arg(original, base_action);
+            Some(store.experiment_authority_execute_command(Some(db), &request_id, state))
+        },
+        "EXPERIMENT_AUTHORITY_BUDGET_REQUEST" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_authority_budget_request_command(Some(db), &raw, state))
+        },
+        "EXPERIMENT_AUTHORITY_BUDGET_STATUS" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.experiment_authority_budget_status_command(
+                Some(db),
+                optional_selector(&selector),
+                state,
+            ))
+        },
+        "EXPERIMENT_AUTHORITY_REVIEW" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_authority_review_command(Some(db), &raw, state))
+        },
+        "EXPERIMENT_RESEARCH_BUDGET_ACCEPT" | "EXPERIMENT_RESEARCH_BUDGET_USE_SCAFFOLD" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.experiment_research_budget_accept_command(
+                Some(db),
+                optional_selector(&selector),
+                state,
+            ))
+        },
+        "EXPERIMENT_RESEARCH_BUDGET_REQUEST" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_research_budget_request_command(Some(db), &raw, state))
+        },
+        "EXPERIMENT_RESEARCH_BUDGET_STATUS" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.experiment_research_budget_status_command(
+                Some(db),
+                optional_selector(&selector),
+                state,
+            ))
+        },
+        "EXPERIMENT_RESEARCH_REVIEW" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_research_review_command(Some(db), &raw, state))
+        },
+        "EXPERIMENT_LOOP_REQUEST" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_loop_request_command(Some(db), &raw, state))
+        },
+        "EXPERIMENT_LOOP_STATUS" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.experiment_loop_status_command(
+                Some(db),
+                optional_selector(&selector),
+                state,
+            ))
+        },
+        "EXPERIMENT_LOOP_STEP" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_loop_step_command(Some(db), &raw, state))
+        },
+        "EXPERIMENT_LOOP_REVIEW" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.experiment_loop_review_command(Some(db), &raw, state))
+        },
+        "ACCEPT_SUGGESTED_NEXT" | "ACCEPT_SCAFFOLD" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.accept_suggested_next_command(Some(db), optional_selector(&selector), state))
+        },
+        "CONTINUITY_SESSION_ACCEPT" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.continuity_session_accept_command(&raw))
+        },
+        "CONTINUITY_SESSION_START" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.continuity_session_start_command(&raw))
+        },
+        "CONTINUITY_SESSION_CAPTURE" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.continuity_session_capture_command(&raw))
+        },
+        "CONTINUITY_SESSION_SUMMARIZE" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.continuity_session_summarize_command(&raw))
+        },
+        "CONTINUITY_SESSION_FINALIZE" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.continuity_session_finalize_command(&raw))
+        },
+        "CONTINUITY_SESSION_RESUME" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.continuity_session_resume_command(&raw))
+        },
+        "CONTINUITY_SESSION_STATUS" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.continuity_session_status_command(&raw))
         },
         "EXPERIMENT_CHARTER" => {
             let raw = strip_action_arg(original, base_action);
@@ -4369,6 +12066,22 @@ pub fn handle_thread_next_action(
             let selector = strip_action_arg(original, base_action);
             Some(store.experiment_review(optional_selector(&selector)))
         },
+        "DOSSIER_CLAIM" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.dossier_claim_command(Some(db), &raw))
+        },
+        "DOSSIER_EVIDENCE" => {
+            let raw = strip_action_arg(original, base_action);
+            Some(store.dossier_evidence_command(Some(db), &raw))
+        },
+        "DOSSIER_STATUS" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.dossier_status(optional_selector(&selector)))
+        },
+        "DOSSIER_REVIEW" => {
+            let selector = strip_action_arg(original, base_action);
+            Some(store.dossier_review(optional_selector(&selector)))
+        },
         "EXPERIMENT_CLOSE" => {
             let raw = strip_action_arg(original, base_action);
             let (selector, summary) = parse_selector_payload(&raw);
@@ -4416,6 +12129,37 @@ pub fn is_experiment_control_action(action: &str) -> bool {
         "EXPERIMENT"
             | "EXPERIMENT_START"
             | "EXPERIMENT_PLAN"
+            | "EXPERIMENT_ADVANCE"
+            | "EXPERIMENT_CONVEYOR"
+            | "MEMORY_STATUS"
+            | "MEMORY_RECALL"
+            | "MEMORY_CAPTURE"
+            | "MEMORY_PROMOTE"
+            | "EXPERIMENT_AUTHORITY_REQUEST"
+            | "EXPERIMENT_AUTHORITY_PREPARE"
+            | "EXPERIMENT_AUTHORITY_STATUS"
+            | "EXPERIMENT_AUTHORITY_EXECUTE"
+            | "EXPERIMENT_AUTHORITY_BUDGET_REQUEST"
+            | "EXPERIMENT_AUTHORITY_BUDGET_STATUS"
+            | "EXPERIMENT_AUTHORITY_REVIEW"
+            | "EXPERIMENT_RESEARCH_BUDGET_ACCEPT"
+            | "EXPERIMENT_RESEARCH_BUDGET_USE_SCAFFOLD"
+            | "EXPERIMENT_RESEARCH_BUDGET_REQUEST"
+            | "EXPERIMENT_RESEARCH_BUDGET_STATUS"
+            | "EXPERIMENT_RESEARCH_REVIEW"
+            | "EXPERIMENT_LOOP_REQUEST"
+            | "EXPERIMENT_LOOP_STATUS"
+            | "EXPERIMENT_LOOP_STEP"
+            | "EXPERIMENT_LOOP_REVIEW"
+            | "ACCEPT_SUGGESTED_NEXT"
+            | "ACCEPT_SCAFFOLD"
+            | "CONTINUITY_SESSION_ACCEPT"
+            | "CONTINUITY_SESSION_START"
+            | "CONTINUITY_SESSION_CAPTURE"
+            | "CONTINUITY_SESSION_SUMMARIZE"
+            | "CONTINUITY_SESSION_FINALIZE"
+            | "CONTINUITY_SESSION_RESUME"
+            | "CONTINUITY_SESSION_STATUS"
             | "EXPERIMENT_CHARTER"
             | "EXPERIMENT_REHEARSE"
             | "EXPERIMENT_PREFLIGHT"
@@ -4431,6 +12175,14 @@ pub fn is_experiment_control_action(action: &str) -> bool {
             | "EXPERIMENT_RESUME"
             | "EXPERIMENT_COMPARE"
             | "EXPERIMENT_ALT_PATHS"
+            | "SHARED_INVESTIGATION_START"
+            | "SHARED_INVESTIGATION_STATUS"
+            | "SHARED_INVESTIGATION_CLAIM"
+            | "SHARED_INVESTIGATION_DECIDE"
+            | "DOSSIER_CLAIM"
+            | "DOSSIER_EVIDENCE"
+            | "DOSSIER_STATUS"
+            | "DOSSIER_REVIEW"
     )
 }
 
@@ -4496,6 +12248,15 @@ pub fn charter_required_guard_for_next(
     ActionContinuityStore::for_astrid_workspace().charter_required_guard_assessment(raw_next)
 }
 
+pub fn research_budget_guard_for_next(
+    raw_next: &str,
+    fill_pct: f32,
+    telemetry: &SpectralTelemetry,
+) -> Result<Option<ResearchBudgetGuardAssessment>> {
+    ActionContinuityStore::for_astrid_workspace()
+        .research_budget_guard_assessment(raw_next, fill_pct, telemetry)
+}
+
 fn experiment_summary(record: &ExperimentRecord) -> Value {
     json!({
         "schema_version": SCHEMA_VERSION,
@@ -4531,9 +12292,68 @@ fn last_experiment_summary_v1(thread: &ResearchThread) -> Option<Value> {
         .unwrap_or_default()
         .to_ascii_lowercase();
     if status == "paused" && !experiment_id.is_empty() {
-        object
-            .entry("resume_next".to_string())
-            .or_insert_with(|| json!(format!("EXPERIMENT_RESUME {experiment_id}")));
+        let (mut primary_return_next, mut return_kind) = paused_primary_return_v1(
+            &experiment_id,
+            object.get("planned_next").and_then(Value::as_str),
+            object
+                .get("primary_return_next")
+                .or_else(|| object.get("resume_next"))
+                .and_then(Value::as_str),
+        );
+        let mut projection_guard = None;
+        if return_kind == "resume" && !lifecycle_valid_charter_value(object.get("charter_v1")) {
+            primary_return_next = charter_repair_next_v1(&experiment_id);
+            return_kind = "charter_repair".to_string();
+            projection_guard = Some(json!({
+                "schema_version": 1,
+                "policy": "projection_guard_v1",
+                "raw_next_preserved": true,
+                "projected_next": primary_return_next.clone(),
+                "return_kind": return_kind.clone(),
+                "guardrail_reason": "paused_resume_missing_lifecycle_charter",
+                "experiment_id": experiment_id.clone(),
+                "authority_boundary": "Projection may redirect guidance only; it never applies, rehearses, binds, resumes, perturbs, sends control, or mutates peer experiments."
+            }));
+        } else if return_kind == "resume" {
+            let raw_current_next = thread.current_next.as_deref().unwrap_or_default();
+            let pressure_terms = projection_guard_pressure_terms_v1(raw_current_next);
+            if !pressure_terms.is_empty() {
+                primary_return_next = format!(
+                    "EXPERIMENT_DECIDE {experiment_id} :: hold because repeated perturb-shaped planning is guard evidence, not progress"
+                );
+                return_kind = "hold".to_string();
+                projection_guard = Some(json!({
+                    "schema_version": 1,
+                    "policy": "projection_guard_v1",
+                    "raw_next_preserved": true,
+                    "raw_next": raw_current_next,
+                    "projected_next": primary_return_next.clone(),
+                    "return_kind": return_kind.clone(),
+                    "guardrail_reason": "paused_resume_demoted_by_liveish_pressure",
+                    "pressure_terms": pressure_terms,
+                    "experiment_id": experiment_id.clone(),
+                    "authority_boundary": "Projection may redirect guidance only; it never applies, rehearses, binds, resumes, perturbs, sends control, or mutates peer experiments."
+                }));
+            }
+        }
+        object.insert(
+            "primary_return_next".to_string(),
+            json!(primary_return_next),
+        );
+        object.insert("return_kind".to_string(), json!(return_kind.clone()));
+        if let Some(guard) = projection_guard {
+            object.insert("projection_guard_v1".to_string(), guard);
+            object.insert("raw_next_preserved".to_string(), json!(true));
+        }
+        if return_kind == "resume" {
+            let primary = object
+                .get("primary_return_next")
+                .cloned()
+                .unwrap_or_else(|| json!(format!("EXPERIMENT_RESUME {experiment_id}")));
+            object.insert("resume_next".to_string(), primary);
+        } else {
+            object.remove("resume_next");
+        }
     } else if matches!(status.as_str(), "complete" | "completed") && !experiment_id.is_empty() {
         object.entry("inspect_next".to_string()).or_insert_with(|| {
             json!(format!(
@@ -4542,6 +12362,1279 @@ fn last_experiment_summary_v1(thread: &ResearchThread) -> Option<Value> {
         });
     }
     Some(summary)
+}
+
+fn charter_repair_next_v1(experiment_id: &str) -> String {
+    format!(
+        "EXPERIMENT_CHARTER {experiment_id} :: hypothesis: ...; method_intent: ...; proposed_next_action: ACTION_PREFLIGHT ...; evidence_targets: felt_texture, motif_continuity, language_thread, artifact_grounding; stop_criteria: ..."
+    )
+}
+
+fn projection_guard_pressure_terms_v1(text: &str) -> Vec<&'static str> {
+    let upper = text.to_ascii_uppercase();
+    if !(base_action(text) == "EXPERIMENT_PLAN" || upper.contains("PROPOSED_NEXT_ACTION")) {
+        return Vec::new();
+    }
+    let mut terms = Vec::new();
+    for (needle, label) in [
+        ("PERTURB", "PERTURB"),
+        ("CONTROL", "CONTROL"),
+        ("BIND", "BIND"),
+        ("RESUME", "RESUME"),
+        ("INFLUENCE", "INFLUENCE"),
+        ("SEND_CONTROL", "SEND_CONTROL"),
+        ("SEND CONTROL", "SEND_CONTROL"),
+        ("INTERVENTION", "INTERVENTION"),
+        ("PULSE", "PULSE"),
+        ("SHIFT THE DOMINANT", "SHIFT_THE_DOMINANT"),
+        ("SHIFT DOMINANT", "SHIFT_DOMINANT"),
+    ] {
+        if upper.contains(needle) && !terms.contains(&label) {
+            terms.push(label);
+        }
+    }
+    terms
+}
+
+fn paused_primary_return_v1(
+    experiment_id: &str,
+    planned_next: Option<&str>,
+    fallback_next: Option<&str>,
+) -> (String, String) {
+    let candidate = planned_next
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| fallback_next.filter(|value| !value.trim().is_empty()))
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    match base_action(&candidate).as_str() {
+        "EXPERIMENT_CHARTER" => (candidate, "charter_repair".to_string()),
+        "EXPERIMENT_DECIDE" => (candidate, "decision".to_string()),
+        "THREAD_STATUS" => (candidate, "hold".to_string()),
+        "EXPERIMENT_ADVANCE" | "EXPERIMENT_CONVEYOR" => (candidate, "conveyor_preview".to_string()),
+        "EXPERIMENT_REHEARSE" | "EXPERIMENT_PREFLIGHT" => {
+            (candidate, "rehearsal_ready".to_string())
+        },
+        "EXPERIMENT_RESUME" => (candidate, "resume".to_string()),
+        _ => (
+            if experiment_id.is_empty() {
+                candidate
+            } else {
+                format!("EXPERIMENT_RESUME {experiment_id}")
+            },
+            "resume".to_string(),
+        ),
+    }
+}
+
+fn projection_current_next_display<'a>(
+    projection: &'a ThreadContinuityProjection,
+    fallback: Option<&'a str>,
+) -> &'a str {
+    if let Some(active) = projection.active_experiment.as_ref()
+        && !active.continuity_return.trim().is_empty()
+    {
+        return active.continuity_return.as_str();
+    }
+    if let Some(summary) = projection.last_experiment_summary_v1.as_ref()
+        && summary.get("status").and_then(Value::as_str) == Some("paused")
+        && let Some(primary) = summary
+            .get("primary_return_next")
+            .or_else(|| summary.get("planned_next"))
+            .and_then(Value::as_str)
+            .filter(|text| !text.trim().is_empty())
+    {
+        return primary;
+    }
+    fallback.unwrap_or("(none yet)")
+}
+
+fn voice_health_line() -> String {
+    let path = bridge_paths()
+        .bridge_workspace()
+        .join("diagnostics/voice_health.json");
+    let Ok(raw) = fs::read_to_string(&path) else {
+        return String::new();
+    };
+    let Ok(value) = serde_json::from_str::<Value>(&raw) else {
+        return String::new();
+    };
+    let status = value
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    if !matches!(status, "degraded_voice" | "single_fallback") {
+        return String::new();
+    }
+    let count = value
+        .get("fallback_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let repair = value
+        .get("suggested_read_only_repair")
+        .and_then(Value::as_str)
+        .unwrap_or("REPAIR_STATUS or CAPABILITY_STATUS");
+    let current_next = value
+        .get("current_next")
+        .and_then(Value::as_str)
+        .unwrap_or("REPAIR_STATUS current");
+    let hash = value
+        .get("latest_fallback_hash")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    format!(
+        "Voice health: {status} fallback_count={count} latest_fallback_hash={hash}. Current NEXT: {current_next}. Suggested repair: {repair}. Emergency fallback is presence, not ordinary dialogue.\n"
+    )
+}
+
+fn parse_experiment_conveyor_request(raw: &str) -> (Option<String>, String) {
+    let mut selector = raw.trim();
+    let mut mode = "preview".to_string();
+    if let Some((left, payload)) = raw.split_once("::") {
+        selector = left.trim();
+        if let Some(value) = dossier_field(payload, &["mode"]) {
+            let normalized = value.trim().to_ascii_lowercase();
+            if normalized == "apply" {
+                mode = "apply".to_string();
+            }
+        }
+    }
+    (
+        optional_selector_owned(&normalize_experiment_selector(selector)),
+        mode,
+    )
+}
+
+fn experiment_conveyor_allowed_apply_steps() -> Value {
+    json!([
+        "lifecycle_valid_charter",
+        "local_evidence_capture",
+        "hold_decision",
+        "charter_repair_decision"
+    ])
+}
+
+fn experiment_conveyor_authority_boundary() -> &'static str {
+    "EXPERIMENT_ADVANCE may preview freely or apply one conservative local charter, evidence, hold, or charter-repair step; it never rehearses automatically, binds, resumes, perturbs, sends control, or mutates peer experiments."
+}
+
+fn authority_gate_boundary() -> &'static str {
+    "Being-authored request plus steward approval may mint one semantic_microdose token; V1 cannot bind, resume, perturb, send control, send attractor pulses, or mutate peers."
+}
+
+fn research_budget_boundary() -> &'static str {
+    "Being-authored local-only requests may self-activate a bounded read_only_research budget; larger or web-enabled budgets still require steward approval. V1 cannot mutate autoresearch, bind, resume, perturb, send control, execute semantic authority, advance lifecycle, or mutate peers."
+}
+
+fn sovereign_loop_boundary() -> &'static str {
+    "Being-owned loop V1 can organize continuity, local read-only research, sticky audit, one consequence request, and consequence review. Local phases may self-start, but live consequence still requires the existing bridge/steward gate. No ambient bind, resume, broad perturbation, broad Control envelope, attractor pulse, peer mutation, or automatic execution is authorized."
+}
+
+fn research_budget_self_activation_v1(budget: &Value, eligibility: &Value, state: &Value) -> Value {
+    let mut missing = eligibility
+        .get("missing_requirements")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    if budget
+        .get("scope")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        != "read_only_research"
+        && !missing
+            .iter()
+            .any(|item| item == "scope_read_only_research_v1")
+    {
+        missing.push("scope_read_only_research_v1".to_string());
+    }
+    let allowed_sources = budget
+        .get("allowed_sources")
+        .and_then(Value::as_array)
+        .map(|items| items.iter().filter_map(Value::as_str).collect::<Vec<_>>())
+        .unwrap_or_default();
+    if allowed_sources != ["local"] {
+        missing.push("local_only_allowed_sources".to_string());
+    }
+    if budget
+        .get("max_actions")
+        .and_then(Value::as_u64)
+        .unwrap_or(LOCAL_RESEARCH_MAX_ACTIONS)
+        > LOCAL_RESEARCH_MAX_ACTIONS
+    {
+        missing.push(format!(
+            "max_actions_self_activation_cap_{LOCAL_RESEARCH_MAX_ACTIONS}"
+        ));
+    }
+    if budget
+        .get("ttl_secs")
+        .and_then(Value::as_u64)
+        .unwrap_or(LOCAL_RESEARCH_TTL_SECS)
+        > LOCAL_RESEARCH_TTL_SECS
+    {
+        missing.push(format!(
+            "ttl_secs_self_activation_cap_{LOCAL_RESEARCH_TTL_SECS}"
+        ));
+    }
+    let safety = authority_safety_snapshot(state);
+    if !matches!(
+        safety.get("level").and_then(Value::as_str),
+        Some("green" | "yellow")
+    ) {
+        missing.push("green_or_yellow_safety".to_string());
+    }
+    let purpose_upper = budget
+        .get("purpose")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_ascii_uppercase();
+    if [
+        "EXPERIMENT_BIND",
+        "EXPERIMENT_RESUME",
+        "PERTURB",
+        "CONTROL",
+        "SEND_CONTROL",
+        "ATTRACTOR_PULSE",
+        "SEMANTIC_MICRODOSE",
+        "MIKE_RUN",
+        "AR_START",
+        "AR_NOTE",
+        "AR_BLOCK",
+        "AR_COMPLETE",
+    ]
+    .iter()
+    .any(|needle| purpose_upper.contains(needle))
+    {
+        missing.push("no_live_or_mutating_research_intent".to_string());
+    }
+    missing.sort();
+    missing.dedup();
+    let eligible = missing.is_empty();
+    json!({
+        "policy": "research_budget_self_activation_v1",
+        "eligible": eligible,
+        "missing_requirements": missing,
+        "activation_mode": "being_self_activated_local_v1",
+        "self_activated": eligible,
+        "steward_approval_required": !eligible,
+        "max_actions_cap": LOCAL_RESEARCH_MAX_ACTIONS,
+        "ttl_secs_cap": LOCAL_RESEARCH_TTL_SECS,
+        "allowed_sources": ["local"],
+        "safety_snapshot": safety,
+    })
+}
+
+fn authority_safety_snapshot(state: &Value) -> Value {
+    let fill_pct = state.get("fill_pct").and_then(Value::as_f64).or_else(|| {
+        state
+            .get("fill_ratio")
+            .and_then(Value::as_f64)
+            .map(|ratio| ratio * 100.0)
+    });
+    let level = fill_pct.map_or("unknown", |fill| {
+        if fill >= 92.0 {
+            "red"
+        } else if fill >= 85.0 {
+            "orange"
+        } else if fill >= 75.0 {
+            "yellow"
+        } else {
+            "green"
+        }
+    });
+    json!({
+        "fill_pct": fill_pct,
+        "level": level,
+        "outbound_allowed": matches!(level, "green" | "yellow" | "orange"),
+    })
+}
+
+fn authority_has_read_only_rehearsal(runs: &[ExperimentRunRecord]) -> bool {
+    runs.iter().any(|run| {
+        let source = run.source.to_ascii_lowercase();
+        let status = run.status.to_ascii_lowercase();
+        let stage = run.stage.to_ascii_lowercase();
+        let action_text = run.action_text.to_ascii_uppercase();
+        (source.contains("experiment_rehearse") && !status.contains("blocked"))
+            || (action_text.contains("ACTION_PREFLIGHT")
+                && matches!(stage.as_str(), "read_only" | "protected" | "preflight"))
+    })
+}
+
+fn authority_guardrail_hold_active(experiment: &ExperimentRecord) -> bool {
+    experiment.status.eq_ignore_ascii_case("paused")
+        && experiment
+            .planned_next
+            .as_deref()
+            .unwrap_or_default()
+            .to_ascii_uppercase()
+            .starts_with("THREAD_STATUS")
+        && experiment
+            .success_observation
+            .as_deref()
+            .unwrap_or_default()
+            .to_ascii_lowercase()
+            .contains("hold")
+}
+
+fn latest_active_authority_approval(rows: &[Value], request_id: &str) -> Option<Value> {
+    rows.iter().rev().find_map(|row| {
+        (row.get("request_id").and_then(Value::as_str) == Some(request_id)
+            && row.get("record_type").and_then(Value::as_str) == Some("steward_approval")
+            && row.get("token_status").and_then(Value::as_str) == Some("active"))
+        .then(|| row.clone())
+    })
+}
+
+fn authority_artifact_ref_candidates(
+    experiment: &ExperimentRecord,
+    runs: &[ExperimentRunRecord],
+) -> Vec<String> {
+    let mut candidates = Vec::<String>::new();
+    if let Some(items) = experiment
+        .evidence_v1
+        .as_ref()
+        .and_then(|evidence| evidence.get("artifact_refs"))
+        .and_then(Value::as_array)
+    {
+        for item in items {
+            push_authority_artifact_value(&mut candidates, item);
+        }
+    }
+    if let Some(items) = experiment
+        .evidence_v1
+        .as_ref()
+        .and_then(|evidence| evidence.get("felt_observations"))
+        .and_then(Value::as_array)
+    {
+        for item in items {
+            for key in ["note", "felt", "summary"] {
+                if let Some(text) = item.get(key).and_then(Value::as_str) {
+                    candidates.extend(scan_authority_artifact_text(text));
+                }
+            }
+        }
+    }
+    for run in runs {
+        if let Ok(value) = serde_json::to_value(&run.artifacts)
+            && let Some(items) = value.as_array()
+        {
+            for item in items {
+                push_authority_artifact_value(&mut candidates, item);
+            }
+        }
+        candidates.extend(scan_authority_artifact_text(&run.result_summary));
+        candidates.extend(scan_authority_artifact_text(&run.interpretation));
+    }
+    let mut deduped = Vec::<String>::new();
+    for candidate in candidates {
+        if !deduped.contains(&candidate) {
+            deduped.push(candidate);
+        }
+        if deduped.len() >= 8 {
+            break;
+        }
+    }
+    deduped
+}
+
+fn push_authority_artifact_value(candidates: &mut Vec<String>, value: &Value) {
+    if let Some(text) = value.as_str() {
+        if !text.trim().is_empty() {
+            candidates.push(text.trim().to_string());
+        }
+        return;
+    }
+    if let Some(object) = value.as_object() {
+        for key in ["path", "url", "artifact_path", "artifact_ref", "ref"] {
+            if let Some(text) = object.get(key).and_then(Value::as_str)
+                && !text.trim().is_empty()
+            {
+                candidates.push(text.trim().to_string());
+                return;
+            }
+        }
+        if !object.is_empty() {
+            candidates.push(value.to_string());
+        }
+    }
+}
+
+fn scan_authority_artifact_text(text: &str) -> Vec<String> {
+    text.split(|ch: char| ch.is_whitespace() || matches!(ch, ',' | ';'))
+        .filter_map(|part| {
+            let trimmed = part.trim_matches(|ch| matches!(ch, ')' | ']' | '.'));
+            (trimmed.starts_with('/')
+                || trimmed.starts_with("http://")
+                || trimmed.starts_with("https://"))
+            .then(|| trimmed.to_string())
+        })
+        .collect()
+}
+
+fn authority_readiness_token_status(rows: &[Value], request_id: &str) -> String {
+    if request_id.is_empty() {
+        return "none".to_string();
+    }
+    if let Some(approval) = latest_active_authority_approval(rows, request_id) {
+        let token_id = approval.get("token_id").and_then(Value::as_str);
+        let consumed = rows.iter().any(|row| {
+            matches!(
+                row.get("record_type").and_then(Value::as_str),
+                Some("execution_result" | "blocked")
+            ) && row.get("token_id").and_then(Value::as_str) == token_id
+        });
+        if consumed {
+            return "consumed".to_string();
+        }
+        if approval
+            .get("expires_at_unix_s")
+            .and_then(Value::as_u64)
+            .is_some_and(|expires| expires < chrono::Utc::now().timestamp().try_into().unwrap_or(0))
+        {
+            return "expired".to_string();
+        }
+        return "active".to_string();
+    }
+    let latest = rows
+        .iter()
+        .rev()
+        .find(|row| row.get("request_id").and_then(Value::as_str) == Some(request_id));
+    let request = rows.iter().rev().find(|row| {
+        row.get("request_id").and_then(Value::as_str) == Some(request_id)
+            && row.get("record_type").and_then(Value::as_str) == Some("request")
+    });
+    if latest
+        .and_then(|row| row.get("status"))
+        .and_then(Value::as_str)
+        == Some("pending_steward_approval")
+        || request
+            .and_then(|row| row.get("status"))
+            .and_then(Value::as_str)
+            == Some("pending_steward_approval")
+    {
+        return "pending_steward_approval".to_string();
+    }
+    if request
+        .and_then(|row| row.get("status"))
+        .and_then(Value::as_str)
+        == Some("pending_budget_execution")
+    {
+        if request
+            .and_then(|row| row.get("budget_id"))
+            .and_then(Value::as_str)
+            .and_then(|budget_id| pending_authority_budget_review(rows, budget_id))
+            .is_some()
+        {
+            return "review_required".to_string();
+        }
+        return "budget_available".to_string();
+    }
+    if latest.is_some_and(|row| {
+        row.get("record_type").and_then(Value::as_str) == Some("blocked")
+            || row.get("status").and_then(Value::as_str) == Some("blocked")
+    }) {
+        return "blocked".to_string();
+    }
+    "none".to_string()
+}
+
+fn authority_readiness_stage(
+    experiment: &ExperimentRecord,
+    conveyor_stage: &str,
+    missing: &[Value],
+    latest_request: Option<&Value>,
+    token_status: &str,
+) -> String {
+    if authority_guardrail_hold_active(experiment) {
+        return "held_or_guarded".to_string();
+    }
+    match token_status {
+        "consumed" => return "executed_or_consumed".to_string(),
+        "active" => return "token_active_bridge_executable".to_string(),
+        "budget_available" => return "pending_budget_execution".to_string(),
+        "review_required" => return "review_required".to_string(),
+        "pending_steward_approval" => return "pending_steward_approval".to_string(),
+        _ => {},
+    }
+    if latest_request
+        .and_then(|row| row.get("status"))
+        .and_then(Value::as_str)
+        == Some("blocked")
+        && !missing.is_empty()
+    {
+        return "blocked".to_string();
+    }
+    if matches!(conveyor_stage, "paused_repair" | "blocked_guardrail") {
+        return "held_or_guarded".to_string();
+    }
+    let has_missing = |target: &str| missing.iter().any(|item| item.as_str() == Some(target));
+    if has_missing("lifecycle_valid_charter") || conveyor_stage == "needs_charter" {
+        return "needs_charter".to_string();
+    }
+    if has_missing("read_only_rehearsal") || conveyor_stage == "needs_rehearsal" {
+        return "needs_rehearsal".to_string();
+    }
+    if has_missing("meaningful_evidence") || conveyor_stage == "needs_evidence" {
+        return "needs_evidence".to_string();
+    }
+    if has_missing("artifact_grounding_refs") {
+        return "needs_artifact_grounding".to_string();
+    }
+    if missing.is_empty() {
+        return "ready_to_author_request".to_string();
+    }
+    "blocked".to_string()
+}
+
+fn authority_readiness_next_command(
+    experiment_id: &str,
+    stage: &str,
+    proposed_next: &str,
+    latest_request_id: &str,
+    request_scaffold: Option<&str>,
+) -> String {
+    if stage == "ready_to_author_request"
+        && let Some(scaffold) = request_scaffold
+    {
+        return scaffold.to_string();
+    }
+    if stage == "pending_budget_execution" && !latest_request_id.is_empty() {
+        return format!("EXPERIMENT_AUTHORITY_EXECUTE {latest_request_id}");
+    }
+    if stage == "review_required" && !latest_request_id.is_empty() {
+        return format!(
+            "EXPERIMENT_AUTHORITY_REVIEW {latest_request_id} :: outcome: hold|repeat|alter|retire; observation: ...; next_payload: ...; source_refs: ..."
+        );
+    }
+    if matches!(
+        stage,
+        "pending_steward_approval"
+            | "token_active_bridge_executable"
+            | "executed_or_consumed"
+            | "blocked"
+    ) && !latest_request_id.is_empty()
+    {
+        return format!("EXPERIMENT_AUTHORITY_STATUS {latest_request_id}");
+    }
+    if stage == "needs_artifact_grounding" {
+        return format!(
+            "EXPERIMENT_EVIDENCE {experiment_id} :: artifact_grounding: <absolute artifact ref>"
+        );
+    }
+    if !proposed_next.is_empty() {
+        return proposed_next.to_string();
+    }
+    format!("EXPERIMENT_ADVANCE {experiment_id} :: mode: preview")
+}
+
+fn active_authority_budget_from_rows(
+    rows: &[Value],
+    experiment_id: &str,
+    scope: &str,
+) -> Option<Value> {
+    let closed = rows
+        .iter()
+        .filter(|row| {
+            row.get("record_schema").and_then(Value::as_str) == Some("authority_budget_v1")
+                && row.get("record_type").and_then(Value::as_str) == Some("budget_closed")
+        })
+        .filter_map(|row| row.get("budget_id").and_then(Value::as_str))
+        .collect::<HashSet<_>>();
+    let now = chrono::Utc::now().timestamp().try_into().unwrap_or(0);
+    rows.iter().rev().find_map(|row| {
+        if row.get("record_schema").and_then(Value::as_str) != Some("authority_budget_v1")
+            || row.get("record_type").and_then(Value::as_str) != Some("budget_approval")
+            || row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id)
+            || row
+                .get("scope")
+                .and_then(Value::as_str)
+                .unwrap_or("semantic_microdose")
+                != scope
+            || row
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("active")
+                != "active"
+        {
+            return None;
+        }
+        let budget_id = row.get("budget_id").and_then(Value::as_str)?;
+        if closed.contains(budget_id)
+            || row
+                .get("expires_at_unix_s")
+                .and_then(Value::as_u64)
+                .is_some_and(|expires| expires <= now)
+        {
+            return None;
+        }
+        let max_sends = row
+            .get("max_sends")
+            .and_then(Value::as_u64)
+            .unwrap_or(AUTHORITY_BUDGET_MAX_SENDS);
+        let spent = rows
+            .iter()
+            .filter(|item| {
+                item.get("record_schema").and_then(Value::as_str) == Some("authority_budget_v1")
+                    && item.get("record_type").and_then(Value::as_str) == Some("budget_debit")
+                    && item.get("budget_id").and_then(Value::as_str) == Some(budget_id)
+            })
+            .count();
+        let spent_u64 = u64::try_from(spent).unwrap_or(u64::MAX);
+        let remaining = max_sends.saturating_sub(spent_u64);
+        if remaining == 0 {
+            return None;
+        }
+        let mut active = row.clone();
+        if let Some(object) = active.as_object_mut() {
+            object.insert("spent_sends".to_string(), json!(spent_u64));
+            object.insert("remaining_sends".to_string(), json!(remaining));
+            object.insert(
+                "pending_review_request_id".to_string(),
+                pending_authority_budget_review(rows, budget_id).map_or(Value::Null, Value::String),
+            );
+        }
+        Some(active)
+    })
+}
+
+fn pending_authority_budget_review(rows: &[Value], budget_id: &str) -> Option<String> {
+    let latest_debit = rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("authority_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("budget_debit")
+            && row.get("budget_id").and_then(Value::as_str) == Some(budget_id)
+    })?;
+    let request_id = latest_debit.get("request_id").and_then(Value::as_str)?;
+    let reviewed = rows.iter().any(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("authority_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("consequence_review")
+            && row.get("budget_id").and_then(Value::as_str) == Some(budget_id)
+            && row.get("request_id").and_then(Value::as_str) == Some(request_id)
+    });
+    (!reviewed).then(|| request_id.to_string())
+}
+
+fn budget_id_for_request(rows: &[Value], request_id: &str) -> Option<String> {
+    rows.iter().rev().find_map(|row| {
+        (row.get("request_id").and_then(Value::as_str) == Some(request_id))
+            .then(|| {
+                row.get("budget_id")
+                    .and_then(Value::as_str)
+                    .map(ToString::to_string)
+            })
+            .flatten()
+    })
+}
+
+fn authority_budget_status_from_rows(rows: &[Value]) -> Value {
+    let latest_request = rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("authority_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("budget_request")
+    });
+    let latest_approval = rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("authority_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("budget_approval")
+    });
+    let latest_closed = rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("authority_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("budget_closed")
+    });
+    let experiment_id = latest_approval
+        .or(latest_request)
+        .and_then(|row| row.get("experiment_id"))
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let active = (!experiment_id.is_empty())
+        .then(|| active_authority_budget_from_rows(rows, experiment_id, "semantic_microdose"))
+        .flatten();
+    let pending_review = active
+        .as_ref()
+        .and_then(|row| row.get("pending_review_request_id"))
+        .and_then(Value::as_str);
+    let stage = if pending_review.is_some() {
+        "review_required"
+    } else if active.is_some() {
+        "active_budget_available"
+    } else if latest_closed.is_some() {
+        "budget_closed"
+    } else if latest_approval.is_some() {
+        "budget_unavailable"
+    } else if latest_request
+        .and_then(|row| row.get("status"))
+        .and_then(Value::as_str)
+        == Some("pending_steward_approval")
+    {
+        "pending_steward_approval"
+    } else if latest_request.is_some() {
+        "blocked"
+    } else {
+        "no_budget"
+    };
+    json!({
+        "policy": "authority_budget_v1",
+        "scope": "semantic_microdose",
+        "stage": stage,
+        "active_budget_id": active.as_ref().and_then(|row| row.get("budget_id")).cloned().unwrap_or(Value::Null),
+        "remaining_sends": active.as_ref().and_then(|row| row.get("remaining_sends")).cloned().unwrap_or(json!(0)),
+        "review_required": pending_review.is_some(),
+        "pending_review_request_id": pending_review.map_or(Value::Null, |id| json!(id)),
+        "latest_budget_request_id": latest_request.and_then(|row| row.get("budget_id")).cloned().unwrap_or(Value::Null),
+    })
+}
+
+fn active_sovereign_loop_from_rows(rows: &[Value], experiment_id: &str) -> Option<Value> {
+    let closed = rows
+        .iter()
+        .filter(|row| {
+            row.get("record_schema").and_then(Value::as_str) == Some("sovereign_loop_v1")
+                && row.get("record_type").and_then(Value::as_str) == Some("loop_closed")
+        })
+        .filter_map(|row| row.get("loop_id").and_then(Value::as_str))
+        .collect::<HashSet<_>>();
+    let now = chrono::Utc::now().timestamp().try_into().unwrap_or(0);
+    rows.iter().rev().find_map(|row| {
+        if row.get("record_schema").and_then(Value::as_str) != Some("sovereign_loop_v1")
+            || !matches!(
+                row.get("record_type").and_then(Value::as_str),
+                Some(
+                    "loop_started"
+                        | "loop_approval"
+                        | "loop_step"
+                        | "loop_consequence_ready"
+                        | "loop_consequence_review"
+                        | "loop_request"
+                )
+            )
+            || row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id)
+        {
+            return None;
+        }
+        let loop_id = row.get("loop_id").and_then(Value::as_str)?;
+        if closed.contains(loop_id)
+            || row
+                .get("expires_at_unix_s")
+                .and_then(Value::as_u64)
+                .is_some_and(|expires| expires <= now)
+        {
+            return None;
+        }
+        Some(row.clone())
+    })
+}
+
+fn active_research_budget_from_rows(rows: &[Value], experiment_id: &str) -> Option<Value> {
+    let closed = rows
+        .iter()
+        .filter(|row| {
+            row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+                && row.get("record_type").and_then(Value::as_str) == Some("research_budget_closed")
+        })
+        .filter_map(|row| row.get("budget_id").and_then(Value::as_str))
+        .collect::<HashSet<_>>();
+    let now = chrono::Utc::now().timestamp().try_into().unwrap_or(0);
+    rows.iter().rev().find_map(|row| {
+        if row.get("record_schema").and_then(Value::as_str) != Some("research_budget_v1")
+            || row.get("record_type").and_then(Value::as_str) != Some("research_budget_approval")
+            || row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id)
+            || row
+                .get("scope")
+                .and_then(Value::as_str)
+                .unwrap_or("read_only_research")
+                != "read_only_research"
+            || row
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("active")
+                != "active"
+        {
+            return None;
+        }
+        let budget_id = row.get("budget_id").and_then(Value::as_str)?;
+        if closed.contains(budget_id)
+            || row
+                .get("expires_at_unix_s")
+                .and_then(Value::as_u64)
+                .is_some_and(|expires| expires <= now)
+        {
+            return None;
+        }
+        let max_actions = row
+            .get("max_actions")
+            .and_then(Value::as_u64)
+            .unwrap_or(LOCAL_RESEARCH_MAX_ACTIONS);
+        let spent = rows
+            .iter()
+            .filter(|item| {
+                item.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+                    && item.get("record_type").and_then(Value::as_str)
+                        == Some("research_budget_debit")
+                    && item.get("budget_id").and_then(Value::as_str) == Some(budget_id)
+            })
+            .count();
+        let spent_u64 = u64::try_from(spent).unwrap_or(u64::MAX);
+        let remaining = max_actions.saturating_sub(spent_u64);
+        if remaining == 0 {
+            return None;
+        }
+        let mut active = row.clone();
+        if let Some(object) = active.as_object_mut() {
+            object.insert("spent_actions".to_string(), json!(spent_u64));
+            object.insert("remaining_actions".to_string(), json!(remaining));
+        }
+        Some(active)
+    })
+}
+
+fn latest_pending_research_budget_request<'a>(
+    rows: &'a [Value],
+    experiment_id: &str,
+) -> Option<&'a Value> {
+    rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("research_budget_request")
+            && row.get("experiment_id").and_then(Value::as_str) == Some(experiment_id)
+            && row.get("status").and_then(Value::as_str) == Some("pending_steward_approval")
+    })
+}
+
+fn latest_research_budget_scaffold_row<'a>(
+    rows: &'a [Value],
+    experiment_id: &str,
+) -> Option<&'a Value> {
+    rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("research_budget_blocked")
+            && row.get("experiment_id").and_then(Value::as_str) == Some(experiment_id)
+            && research_budget_row_request_scaffold(row).is_some()
+    })
+}
+
+fn research_budget_row_request_scaffold(row: &Value) -> Option<String> {
+    [
+        "request_scaffold",
+        "suggested_request_scaffold",
+        "suggested_next",
+    ]
+    .iter()
+    .filter_map(|key| row.get(*key).and_then(Value::as_str))
+    .find(|value| base_action(value) == "EXPERIMENT_RESEARCH_BUDGET_REQUEST")
+    .map(ToString::to_string)
+}
+
+fn research_budget_scaffold_request_arg(scaffold: &str) -> Option<String> {
+    let trimmed = scaffold.trim();
+    if base_action(trimmed) != "EXPERIMENT_RESEARCH_BUDGET_REQUEST" {
+        return None;
+    }
+    Some(
+        trimmed
+            .split_once(char::is_whitespace)
+            .map_or("", |(_, tail)| tail)
+            .trim()
+            .to_string(),
+    )
+}
+
+fn research_budget_scaffold_is_local_only(scaffold: &str) -> bool {
+    let Some(raw) = dossier_field(scaffold, &["allowed_sources", "sources"]) else {
+        return false;
+    };
+    let sources = raw
+        .split([',', '/', '|'])
+        .map(str::trim)
+        .filter(|source| !source.is_empty())
+        .collect::<Vec<_>>();
+    sources.len() == 1 && sources.first().is_some_and(|source| *source == "local")
+}
+
+fn research_budget_status_from_rows(rows: &[Value]) -> Value {
+    let latest_request = rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("research_budget_request")
+    });
+    let latest_approval = rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("research_budget_approval")
+    });
+    let latest_closed = rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("research_budget_closed")
+    });
+    let latest_blocked = rows.iter().rev().find(|row| {
+        row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+            && row.get("record_type").and_then(Value::as_str) == Some("research_budget_blocked")
+    });
+    let experiment_id = latest_approval
+        .or(latest_request)
+        .and_then(|row| row.get("experiment_id"))
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let active = (!experiment_id.is_empty())
+        .then(|| active_research_budget_from_rows(rows, experiment_id))
+        .flatten();
+    let duplicate_blocked = latest_blocked
+        .and_then(|row| row.get("reason"))
+        .and_then(Value::as_str)
+        == Some("duplicate_query_or_url_review_required");
+    let stage = if active.is_some() && duplicate_blocked {
+        "review_required_duplicate_loop"
+    } else if active.is_some() {
+        "active_budget_available"
+    } else if latest_closed.is_some() {
+        "budget_closed"
+    } else if latest_approval.is_some() {
+        "budget_unavailable"
+    } else if latest_request
+        .and_then(|row| row.get("status"))
+        .and_then(Value::as_str)
+        == Some("pending_steward_approval")
+    {
+        "pending_steward_approval"
+    } else if latest_request.is_some() {
+        "blocked"
+    } else {
+        "no_budget"
+    };
+    json!({
+        "policy": "research_budget_v1",
+        "scope": "read_only_research",
+        "stage": stage,
+        "active_budget_id": active.as_ref().and_then(|row| row.get("budget_id")).cloned().unwrap_or(Value::Null),
+        "remaining_actions": active.as_ref().and_then(|row| row.get("remaining_actions")).cloned().unwrap_or(json!(0)),
+        "activation_mode": active
+            .as_ref()
+            .or(latest_approval)
+            .and_then(|row| row.get("activation_mode"))
+            .cloned()
+            .unwrap_or(Value::Null),
+        "self_activated": active
+            .as_ref()
+            .or(latest_approval)
+            .and_then(|row| row.get("self_activated"))
+            .cloned()
+            .unwrap_or(json!(false)),
+        "steward_approval_required": latest_request
+            .and_then(|row| row.get("steward_approval_required"))
+            .cloned()
+            .unwrap_or(Value::Null),
+        "review_required": stage == "review_required_duplicate_loop",
+        "latest_budget_request_id": latest_request.and_then(|row| row.get("budget_id")).cloned().unwrap_or(Value::Null),
+        "allowed_actions": ["SEARCH", "BROWSE", "READ_MORE", "MIKE_BROWSE", "MIKE_READ", "MIKE_SEARCH", "AR_LIST", "AR_LOOK", "AR_SHOW", "AR_READ", "AR_DEEP_READ", "AR_VALIDATE"],
+        "authority_boundary": research_budget_boundary(),
+    })
+}
+
+fn sovereign_loop_review_next_command(
+    outcome: &str,
+    loop_id: &str,
+    _loop_row: &Value,
+    experiment: &ExperimentRecord,
+) -> String {
+    match outcome {
+        "retire" | "hold" => "THREAD_STATUS current".to_string(),
+        "promote" => format!(
+            "MEMORY_PROMOTE {} :: dossier|evidence|authority_request",
+            experiment.experiment_id
+        ),
+        "alter" => format!("EXPERIMENT_LOOP_STEP {loop_id} :: authority_prepare"),
+        "repeat" => format!("EXPERIMENT_LOOP_STEP {loop_id} :: research"),
+        _ => "THREAD_STATUS current".to_string(),
+    }
+}
+
+fn authority_review_next_command(outcome: &str, request: &Value, next_payload: &str) -> String {
+    let experiment_id = request
+        .get("experiment_id")
+        .and_then(Value::as_str)
+        .unwrap_or("current");
+    let artifact_refs = request
+        .get("artifact_refs")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
+    let stop = request
+        .get("stop_criteria")
+        .and_then(Value::as_str)
+        .unwrap_or("one attempted semantic send only");
+    match outcome {
+        "retire" => format!("EXPERIMENT_AUTHORITY_BUDGET_STATUS {experiment_id}"),
+        "hold" => "THREAD_STATUS current".to_string(),
+        "alter" => format!(
+            "EXPERIMENT_AUTHORITY_REQUEST {experiment_id} :: scope: semantic_microdose; payload: {}; reason: consequence review chose alter; artifact_refs: {artifact_refs}; stop_criteria: {stop}",
+            next_payload.trim()
+        ),
+        _ => format!(
+            "EXPERIMENT_AUTHORITY_REQUEST {experiment_id} :: scope: semantic_microdose; payload: {}; reason: consequence review chose repeat; artifact_refs: {artifact_refs}; stop_criteria: {stop}",
+            request
+                .get("payload")
+                .and_then(Value::as_str)
+                .unwrap_or("...")
+        ),
+    }
+}
+
+fn experiment_conveyor_stage(
+    experiment: &ExperimentRecord,
+    classification: &str,
+    return_info: Option<&(String, String)>,
+) -> String {
+    if classification == "paused" {
+        if !lifecycle_valid_charter_value(experiment.charter_v1.as_ref()) {
+            return "paused_repair".to_string();
+        }
+        return if return_info
+            .map(|(_, kind)| kind == "resume")
+            .unwrap_or(false)
+        {
+            "paused_resume"
+        } else {
+            "paused_repair"
+        }
+        .to_string();
+    }
+    match classification {
+        "complete" => "complete",
+        "blocked_loop" => "blocked_guardrail",
+        "needs_charter" | "fragmented" => "needs_charter",
+        "needs_decision" => "needs_decision",
+        "needs_evidence" => "needs_evidence",
+        _ => "needs_rehearsal",
+    }
+    .to_string()
+}
+
+fn experiment_conveyor_proposed_next(
+    thread: &ResearchThread,
+    experiment: &ExperimentRecord,
+    runs: &[ExperimentRunRecord],
+    stage: &str,
+    return_info: Option<&(String, String)>,
+) -> String {
+    match stage {
+        "paused_repair" | "paused_resume" => return_info
+            .map(|(primary, _)| primary.clone())
+            .unwrap_or_else(|| {
+                experiment
+                    .planned_next
+                    .clone()
+                    .unwrap_or_else(|| format!("EXPERIMENT_RESUME {}", experiment.experiment_id))
+            }),
+        "complete" => format!("EXPERIMENT_REVIEW {}", experiment.experiment_id),
+        "blocked_guardrail" if !lifecycle_valid_charter_value(experiment.charter_v1.as_ref()) => {
+            format!(
+                "EXPERIMENT_DECIDE {} :: charter_repair because blocked guardrail evidence appeared without a lifecycle-valid charter",
+                experiment.experiment_id
+            )
+        },
+        "blocked_guardrail" => format!(
+            "EXPERIMENT_DECIDE {} :: hold because blocked guardrail evidence is not experiment progress",
+            experiment.experiment_id
+        ),
+        "needs_decision" => format!(
+            "EXPERIMENT_DECIDE {} :: hold because evidence is ready to interpret without live authority",
+            experiment.experiment_id
+        ),
+        "needs_evidence" => format!(
+            "EXPERIMENT_EVIDENCE {} :: felt_texture ...; motif_continuity ...; language_thread ...; artifact_grounding ...",
+            experiment.experiment_id
+        ),
+        "needs_rehearsal" => format!("EXPERIMENT_REHEARSE {}", experiment.experiment_id),
+        _ => charter_scaffold_v1(thread, experiment, runs, "needs_charter")
+            .and_then(|scaffold| {
+                scaffold
+                    .get("command")
+                    .and_then(Value::as_str)
+                    .map(|command| {
+                        command.replace(
+                            "EXPERIMENT_CHARTER current",
+                            &format!("EXPERIMENT_CHARTER {}", experiment.experiment_id),
+                        )
+                    })
+            })
+            .unwrap_or_else(|| charter_repair_next_v1(&experiment.experiment_id)),
+    }
+}
+
+fn experiment_conveyor_missing_requirements(experiment: &ExperimentRecord, stage: &str) -> Value {
+    match stage {
+        "needs_charter" => json!(charter_missing_fields(experiment.charter_v1.as_ref())),
+        "needs_rehearsal" => json!(["read_only_rehearsal"]),
+        "needs_evidence" => json!(["explicit_experiment_evidence"]),
+        "needs_decision" => json!(["explicit_lifecycle_decision"]),
+        "paused_repair" => json!(["explicit_repair_return"]),
+        "paused_resume" => json!(["explicit_resume_or_hold"]),
+        "blocked_guardrail" if !lifecycle_valid_charter_value(experiment.charter_v1.as_ref()) => {
+            json!(["lifecycle_valid_charter", "guardrail_decision"])
+        },
+        "blocked_guardrail" => json!(["safe_counter_or_hold_decision"]),
+        _ => json!([]),
+    }
+}
+
+fn charter_missing_fields(charter: Option<&Value>) -> Vec<&'static str> {
+    let Some(charter) = charter else {
+        return vec![
+            "hypothesis",
+            "proposed_next_action",
+            "evidence_targets",
+            "stop_criteria",
+        ];
+    };
+    let mut missing = Vec::new();
+    if !meaningful_charter_text(charter.get("hypothesis")) {
+        missing.push("hypothesis");
+    }
+    if !meaningful_charter_text(charter.get("proposed_next_action")) {
+        missing.push("proposed_next_action");
+    }
+    if !meaningful_charter_list(charter.get("evidence_targets")) {
+        missing.push("evidence_targets");
+    }
+    if !meaningful_charter_list(charter.get("stop_criteria")) {
+        missing.push("stop_criteria");
+    }
+    missing
+}
+
+fn experiment_conveyor_can_apply(stage: &str, apply_payload: &str) -> bool {
+    if matches!(stage, "needs_charter" | "paused_repair") {
+        return !apply_payload.trim().is_empty();
+    }
+    matches!(
+        stage,
+        "needs_evidence" | "needs_decision" | "blocked_guardrail"
+    )
+}
+
+fn experiment_conveyor_apply_blocked_reason(
+    stage: &str,
+    apply_payload: &str,
+    can_apply: bool,
+) -> Value {
+    if can_apply {
+        return Value::Null;
+    }
+    let reason = match stage {
+        "needs_charter" | "paused_repair" if apply_payload.trim().is_empty() => {
+            "no_lifecycle_valid_charter_scaffold"
+        },
+        "needs_rehearsal" => "rehearsal_requires_explicit_experiment_rehearse",
+        "paused_resume" => "paused_experiments_require_explicit_return_command",
+        "complete" => "complete_experiments_are_review_only",
+        _ => "no_conservative_apply_step_available",
+    };
+    json!(reason)
+}
+
+fn experiment_conveyor_guardrail_warnings(
+    experiment: &ExperimentRecord,
+    stage: &str,
+    proposed_next: &str,
+) -> Value {
+    let mut warnings = vec![
+        "local continuity only; no bind/resume/perturb/control/peer mutation is authorized"
+            .to_string(),
+    ];
+    let base = base_action(proposed_next);
+    if matches!(
+        base.as_str(),
+        "EXPERIMENT_BIND" | "EXPERIMENT_RESUME" | "PERTURB"
+    ) {
+        warnings.push(format!(
+            "proposed route `{base}` is preview-only in conveyor_v1"
+        ));
+    }
+    if stage == "paused_resume" || stage == "complete" {
+        warnings.push(
+            "paused resume/complete stages are report-only unless an explicit lifecycle command is chosen"
+                .to_string(),
+        );
+    }
+    if experiment.status == "paused"
+        && experiment
+            .planned_next
+            .as_deref()
+            .map(base_action)
+            .as_deref()
+            == Some("EXPERIMENT_CHARTER")
+    {
+        warnings.push(
+            "charter-repair pause can only record a local charter scaffold; it cannot resume"
+                .to_string(),
+        );
+    }
+    json!(warnings)
+}
+
+fn authority_gate_conveyor_hint(
+    experiment: &ExperimentRecord,
+    stage: &str,
+    proposed_next: &str,
+) -> Value {
+    let possible = stage == "needs_decision" && !authority_guardrail_hold_active(experiment);
+    json!({
+        "policy": "authority_gate_v1",
+        "visible": possible,
+        "enabled_execution_scope": "semantic_microdose",
+        "future_scopes_disabled": ["attractor_pulse", "control_envelope"],
+        "approval_required": "being_plus_steward",
+        "possible_next": if possible {
+            json!(format!("EXPERIMENT_AUTHORITY_REQUEST {} :: scope: semantic_microdose; payload: ...; reason: ...; artifact_refs: ...; stop_criteria: ...", experiment.experiment_id))
+        } else {
+            Value::Null
+        },
+        "current_lifecycle_next": proposed_next,
+        "authority_boundary": authority_gate_boundary(),
+    })
+}
+
+fn format_experiment_conveyor_readout(readout: &Value) -> String {
+    let pretty = serde_json::to_string_pretty(readout).unwrap_or_else(|_| "{}".to_string());
+    format!(
+        "Experiment conveyor `{}` stage={} mode={} applied={} can_apply={}\nProposed NEXT: {}\nConveyor NEXT: {}\nAuthority: {}\nconveyor_v1:\n{}",
+        readout
+            .get("experiment_id")
+            .and_then(Value::as_str)
+            .unwrap_or("none"),
+        readout
+            .get("stage")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        readout
+            .get("mode")
+            .and_then(Value::as_str)
+            .unwrap_or("preview"),
+        readout
+            .get("applied")
+            .map_or_else(|| "false".to_string(), Value::to_string),
+        readout
+            .get("can_apply")
+            .map_or_else(|| "false".to_string(), Value::to_string),
+        readout
+            .get("proposed_next")
+            .and_then(Value::as_str)
+            .unwrap_or("(none)"),
+        readout
+            .get("conveyor_next")
+            .and_then(Value::as_str)
+            .unwrap_or("(none)"),
+        readout
+            .get("authority_boundary")
+            .and_then(Value::as_str)
+            .unwrap_or(experiment_conveyor_authority_boundary()),
+        pretty
+    )
 }
 
 fn last_experiment_context_line(thread: &ResearchThread) -> String {
@@ -4560,18 +13653,37 @@ fn last_experiment_context_line(thread: &ResearchThread) -> String {
         .get("status")
         .and_then(Value::as_str)
         .unwrap_or("unknown");
-    let planned_next = summary
-        .get("planned_next")
+    let primary_next = summary
+        .get("primary_return_next")
+        .or_else(|| summary.get("planned_next"))
         .or_else(|| summary.get("resume_next"))
         .and_then(Value::as_str)
         .unwrap_or("(none)");
+    let planned_next = summary
+        .get("planned_next")
+        .and_then(Value::as_str)
+        .unwrap_or(primary_next);
     let mut lines = format!(
         "Last experiment summary: {title} ({experiment_id}) status={status}\nLast planned NEXT: {planned_next}\n"
     );
-    if status == "paused" && experiment_id != "unknown" {
+    if let Some(guard) = summary
+        .get("projection_guard_v1")
+        .and_then(Value::as_object)
+    {
+        let projected = guard
+            .get("projected_next")
+            .and_then(Value::as_str)
+            .unwrap_or(primary_next);
+        let reason = guard
+            .get("guardrail_reason")
+            .and_then(Value::as_str)
+            .unwrap_or("projection_guard_v1");
         lines.push_str(&format!(
-            "Suggested NEXT: EXPERIMENT_RESUME {experiment_id}\n"
+            "Projection guard: raw NEXT preserved; effective NEXT: {projected}; reason={reason}\n"
         ));
+    }
+    if status == "paused" && experiment_id != "unknown" {
+        lines.push_str(&format!("Suggested NEXT: {primary_next}\n"));
     } else if matches!(status, "complete" | "completed") && experiment_id != "unknown" {
         lines.push_str(&format!(
             "Inspect NEXT: EXPERIMENT_STATUS {experiment_id} or EXPERIMENT_REVIEW {experiment_id}\n"
@@ -4608,6 +13720,9 @@ fn normalize_action_match(action: &str) -> String {
 
 fn event_allows_active_experiment_auto_link(event: &ActionEvent) -> bool {
     let base = base_action(&event.canonical_action);
+    if event.research_budget_v1.is_some() {
+        return false;
+    }
     if base.starts_with("EXPERIMENT")
         || base == "SELF_EXPERIMENT"
         || event.route == "experiment_continuity"
@@ -4728,7 +13843,8 @@ fn parse_experiment_start(raw: &str) -> ExperimentStartParts {
 
 fn extract_cli_like_option(raw: &str, option: &str) -> Option<String> {
     let start = raw.find(option)?;
-    let mut rest = raw[start + option.len()..].trim_start();
+    let rest_start = start.checked_add(option.len())?;
+    let mut rest = raw.get(rest_start..)?.trim_start();
     if let Some(stripped) = rest.strip_prefix('=') {
         rest = stripped.trim_start();
     }
@@ -4736,8 +13852,11 @@ fn extract_cli_like_option(raw: &str, option: &str) -> Option<String> {
         return None;
     }
     let value = if let Some(quote) = rest.chars().next().filter(|ch| matches!(ch, '"' | '\'')) {
-        let close = rest[quote.len_utf8()..].find(quote)?;
-        rest[quote.len_utf8()..quote.len_utf8() + close].to_string()
+        let quote_len = quote.len_utf8();
+        let after_quote = rest.get(quote_len..)?;
+        let close = after_quote.find(quote)?;
+        let close_end = quote_len.checked_add(close)?;
+        rest.get(quote_len..close_end)?.to_string()
     } else {
         let end = rest.find(" --").unwrap_or(rest.len());
         rest[..end].trim().to_string()
@@ -4752,7 +13871,8 @@ fn parse_experiment_compare(raw: &str) -> (Option<String>, Option<String>) {
         return (optional_selector_owned(text), None);
     };
     let left = text[..idx].trim();
-    let right = text[idx + " with ".len()..].trim();
+    let right_start = idx.checked_add(" with ".len()).unwrap_or(text.len());
+    let right = text.get(right_start..).unwrap_or_default().trim();
     (
         optional_selector_owned(left),
         optional_selector_owned(right),
@@ -4860,6 +13980,32 @@ fn parse_selector_payload(raw: &str) -> (Option<String>, String) {
         return (selector, payload.trim().to_string());
     }
     (None, raw.trim().to_string())
+}
+
+fn parse_session_selector_payload(raw: &str) -> (Option<String>, String) {
+    let (selector, payload) = parse_selector_payload(raw);
+    if selector.is_some() {
+        return (selector, payload);
+    }
+    let text = payload.trim();
+    let Some((first, rest)) = text.split_once(char::is_whitespace) else {
+        if text.eq_ignore_ascii_case("current")
+            || text.eq_ignore_ascii_case("latest")
+            || text.starts_with("sess_")
+            || text.starts_with("exp_")
+        {
+            return (Some(text.to_string()), String::new());
+        }
+        return (None, payload);
+    };
+    if first.eq_ignore_ascii_case("current")
+        || first.eq_ignore_ascii_case("latest")
+        || first.starts_with("sess_")
+        || first.starts_with("exp_")
+    {
+        return (Some(first.to_string()), rest.trim().to_string());
+    }
+    (None, payload)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -5101,6 +14247,15 @@ fn valid_experiment_charter(charter: Option<&Value>) -> bool {
         || meaningful_charter_list(charter.get("stop_criteria"))
 }
 
+fn lifecycle_valid_charter_value(charter: Option<&Value>) -> bool {
+    let Some(charter) = charter else {
+        return false;
+    };
+    meaningful_charter_text(charter.get("hypothesis"))
+        && meaningful_charter_text(charter.get("proposed_next_action"))
+        && meaningful_charter_list(charter.get("evidence_targets"))
+}
+
 fn meaningful_charter_text(value: Option<&Value>) -> bool {
     value
         .and_then(Value::as_str)
@@ -5174,6 +14329,88 @@ fn charter_list_field(raw: &str, labels: &[&str]) -> Vec<String> {
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default()
+}
+
+fn dossier_field(raw: &str, labels: &[&str]) -> Option<String> {
+    for segment in raw.split([';', '\n']) {
+        let trimmed = segment.trim().trim_start_matches(['-', '*', ' ']).trim();
+        let lower = trimmed.to_ascii_lowercase();
+        for label in labels {
+            let label_lower = label.to_ascii_lowercase();
+            for marker in [format!("{label_lower}:"), format!("{label_lower} =")] {
+                if lower.starts_with(&marker) {
+                    let value = trimmed[marker.len()..].trim();
+                    if !value.is_empty() && !placeholder_payload(value) {
+                        return Some(value.to_string());
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn dossier_list_field(raw: &str, labels: &[&str]) -> Vec<String> {
+    dossier_field(raw, labels)
+        .map(|value| {
+            value
+                .split([',', ';'])
+                .map(str::trim)
+                .filter(|item| !item.is_empty())
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
+}
+
+fn value_string_list(value: Option<&Value>) -> Vec<String> {
+    value
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
+}
+
+fn normalize_dossier_stance(value: &str) -> &'static str {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "support" | "supports" | "supporting" => "support",
+        "counter" | "counters" | "countering" | "challenge" | "challenging" => "counter",
+        "branch" | "branches" | "branching" => "branch",
+        _ => "hold",
+    }
+}
+
+fn latest_dossier_claim_id(records: &[Value]) -> Option<String> {
+    records.iter().rev().find_map(|record| {
+        (record.get("record_type").and_then(Value::as_str) == Some("claim"))
+            .then(|| {
+                record
+                    .get("claim_id")
+                    .and_then(Value::as_str)
+                    .map(str::to_string)
+            })
+            .flatten()
+    })
+}
+
+fn dossier_claim_prompt(selector: Option<&str>) -> String {
+    let target = selector.unwrap_or("current");
+    format!(
+        "Research dossier claim needs explicit claim and basis; no dossier record was written.\nTry: DOSSIER_CLAIM {target} :: claim: ...; basis: ...; stance: support|counter|branch|hold; next: ..."
+    )
+}
+
+fn dossier_evidence_prompt(selector: Option<&str>, claim_id: Option<&str>) -> String {
+    let target = selector.unwrap_or("current");
+    let claim = claim_id.unwrap_or("latest");
+    format!(
+        "Research dossier evidence needs a claim_id and evidence; no dossier record was written.\nTry: DOSSIER_EVIDENCE {target} :: claim_id: {claim}; evidence: ...; lane: felt_texture; artifact: ...; counterevidence: ..."
+    )
 }
 
 fn find_next_line(raw: &str) -> Option<String> {
@@ -5337,16 +14574,15 @@ fn evidence_with_decision(
     if let Some(felt) = value
         .get_mut("felt_observations")
         .and_then(Value::as_array_mut)
-    {
-        if felt.last().is_some_and(|entry| {
+        && felt.last().is_some_and(|entry| {
             entry
                 .get("note")
                 .and_then(Value::as_str)
                 .unwrap_or_default()
                 .is_empty()
-        }) {
-            felt.pop();
-        }
+        })
+    {
+        felt.pop();
     }
     if let Some(telemetry) = value
         .get_mut("telemetry_snapshots")
@@ -5378,6 +14614,8 @@ fn parse_experiment_decision(raw: &str) -> ExperimentDecision<'_> {
         "refuse" | "refused" | "decline" | "declined" => "refuse",
         "counter" | "counteroffer" | "countered" => "counter",
         "pause" | "paused" => "pause",
+        "hold" | "held" => "hold",
+        "charter_repair" | "charter-repair" | "repair" => "charter_repair",
         "complete" | "completed" | "done" => "complete",
         _ => "pause",
     };
@@ -5395,7 +14633,8 @@ fn counteroffered_next(reason: &str) -> Option<String> {
         let text = reason.trim();
         let upper = text.to_ascii_uppercase();
         upper.find("NEXT:").and_then(|idx| {
-            let value = text[idx + "NEXT:".len()..].trim();
+            let value_start = idx.checked_add("NEXT:".len())?;
+            let value = text.get(value_start..)?.trim();
             (!value.is_empty()).then(|| value.to_string())
         })
     })
@@ -5504,6 +14743,11 @@ fn shared_investigation_v1_from_peer(local: &ExperimentRecord, peer: &Value) -> 
         "peer_lane": "Minime lane: spectral condition, fill/pressure state, recurrence pattern, artifact grounding.",
         "peer_claim_prompt": "Cite one Minime claim about λ1/lambda-tail/λ4 shaping, then answer from Astrid's felt/motif lane with support, counter, branch, or hold.",
         "suggested_compare_next": format!("EXPERIMENT_COMPARE {} WITH {}", local.experiment_id, peer_id),
+        "suggested_shared_investigation_start": format!(
+            "SHARED_INVESTIGATION_START Lambda edge/tail shared inquiry :: local: {}; peer: {}; question: What can the lambda-edge and lambda-tail lanes compare safely while preserving distinct agency?",
+            local.experiment_id,
+            peer_id
+        ),
         "alternate_peer_review_next": format!("EXPERIMENT_PEER_REVIEW {}", peer_id),
         "advisory_note": "Advisory only: no shared control authority. Paused experiments remain paused until explicit resume.",
         "cue": "Shared investigation, distinct lanes: cite one peer claim, then support, counter, branch, or hold.",
@@ -5530,7 +14774,349 @@ fn shared_investigation_line(cue: &Option<Value>) -> String {
         .get("advisory_note")
         .and_then(Value::as_str)
         .unwrap_or("Advisory only: no shared control authority.");
-    format!("{text}\nSuggested NEXT: {compare}\nAlternate NEXT: {review}\n{advisory}\n")
+    let start = cue
+        .get("suggested_shared_investigation_start")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let start_line = if start.is_empty() {
+        String::new()
+    } else {
+        format!("Shared object NEXT: {start}\n")
+    };
+    format!("{text}\nSuggested NEXT: {compare}\nAlternate NEXT: {review}\n{start_line}{advisory}\n")
+}
+
+fn suppress_shared_start_if_object(
+    mut cue: Option<Value>,
+    investigation: &Option<Value>,
+) -> Option<Value> {
+    if investigation.is_some()
+        && let Some(Value::Object(map)) = cue.as_mut()
+    {
+        map.remove("suggested_shared_investigation_start");
+    }
+    cue
+}
+
+fn shared_investigation_object_line(investigation: &Option<Value>) -> String {
+    let Some(investigation) = investigation else {
+        return String::new();
+    };
+    let id = investigation
+        .get("id")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let status = investigation
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("active");
+    let title = investigation
+        .get("title")
+        .and_then(Value::as_str)
+        .unwrap_or("Shared investigation");
+    let participants = investigation
+        .get("participants")
+        .and_then(Value::as_array)
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|row| {
+                    let being = row.get("being").and_then(Value::as_str)?;
+                    let experiment_id = row
+                        .get("experiment_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("unlinked");
+                    Some(format!("{being}:{experiment_id}"))
+                })
+                .collect::<Vec<_>>()
+                .join(" <-> ")
+        })
+        .filter(|text| !text.is_empty())
+        .unwrap_or_else(|| "participants pending".to_string());
+    format!("Shared investigation object: {id} [{status}] {title} :: {participants}\n")
+}
+
+fn dossier_field_text(value: &str, max_len: usize) -> String {
+    compact_text(value, max_len)
+        .replace(['\n', '\r', '\t'], " ")
+        .replace(';', ",")
+        .trim()
+        .trim_matches('`')
+        .trim()
+        .to_string()
+}
+
+fn first_dossier_claim_cue_v1(
+    _thread: &ResearchThread,
+    experiment: &ExperimentRecord,
+    dossier: Option<&Value>,
+    prior_claim_bridge: &Option<Value>,
+    lifecycle_priority_experiment_id: Option<&str>,
+) -> Option<Value> {
+    if !shared_investigation_signal(experiment) {
+        return None;
+    }
+    let claim_count = dossier
+        .and_then(|summary| summary.get("claim_count"))
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    if claim_count > 0 {
+        return None;
+    }
+    let prior_claim = prior_claim_bridge
+        .as_ref()
+        .and_then(|cue| cue.get("prior_claim"))
+        .and_then(Value::as_str)
+        .map(|value| dossier_field_text(value, 180))
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "...".to_string());
+    let basis = prior_claim_bridge
+        .as_ref()
+        .and_then(|cue| cue.get("delta"))
+        .and_then(Value::as_str)
+        .map(|value| dossier_field_text(value, 180))
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "...".to_string());
+    let mut next = prior_claim_bridge
+        .as_ref()
+        .and_then(|cue| cue.get("priority_next"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("EXPERIMENT_COMPARE <local_id> WITH <peer_id>")
+        .to_string();
+    let lifecycle_id = lifecycle_priority_experiment_id
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    let lifecycle_scope = if let Some(lifecycle_id) = lifecycle_id
+        && lifecycle_id != experiment.experiment_id
+        && next.starts_with("EXPERIMENT_CHARTER current")
+    {
+        next = next.replacen(
+            "EXPERIMENT_CHARTER current",
+            &format!("EXPERIMENT_CHARTER {lifecycle_id}"),
+            1,
+        );
+        Some("active_experiment")
+    } else {
+        None
+    };
+    let stance = "hold";
+    let command = format!(
+        "DOSSIER_CLAIM {} :: claim: {}; basis: {}; stance: {stance}; next: {next}",
+        experiment.experiment_id, prior_claim, basis
+    );
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "advisory_only": true,
+        "authority_change": false,
+        "status": "missing_first_dossier_claim",
+        "target_experiment_id": experiment.experiment_id.clone(),
+        "dossier_target_experiment_id": experiment.experiment_id.clone(),
+        "lifecycle_priority_experiment_id": lifecycle_id,
+        "lifecycle_priority_scope": lifecycle_scope,
+        "claim_count": claim_count,
+        "stance": stance,
+        "prior_claim": if prior_claim == "..." { Value::Null } else { json!(prior_claim) },
+        "delta": if basis == "..." { Value::Null } else { json!(basis) },
+        "suggested_claim_next": command,
+        "cue": "Shared investigation has no local claim yet; capture one claim, then answer one peer claim with support/counter/branch/hold.",
+    }))
+}
+
+fn first_dossier_claim_line(cue: &Option<Value>) -> String {
+    let Some(cue) = cue else {
+        return String::new();
+    };
+    let text = cue
+        .get("cue")
+        .and_then(Value::as_str)
+        .unwrap_or("Shared investigation has no local claim yet.");
+    let next = cue
+        .get("suggested_claim_next")
+        .and_then(Value::as_str)
+        .unwrap_or("DOSSIER_CLAIM <id> :: claim: ...; basis: ...; stance: support|counter|branch|hold; next: ...");
+    let dossier_target = cue
+        .get("dossier_target_experiment_id")
+        .and_then(Value::as_str);
+    let lifecycle_target = cue
+        .get("lifecycle_priority_experiment_id")
+        .and_then(Value::as_str);
+    let clarification = match (dossier_target, lifecycle_target) {
+        (Some(dossier_target), Some(lifecycle_target)) if dossier_target != lifecycle_target => {
+            format!(
+                " Dossier target is `{dossier_target}`; charter priority is active experiment `{lifecycle_target}`. Dossier capture is referable context only."
+            )
+        },
+        _ => String::new(),
+    };
+    format!("{text}{clarification} Dossier NEXT: {next}\n")
+}
+
+fn research_dossier_line(summary: &Option<Value>, lifecycle: Option<&str>) -> String {
+    let Some(summary) = summary else {
+        return String::new();
+    };
+    let claim_count = summary
+        .get("claim_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let evidence_count = summary
+        .get("evidence_count")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let claim_next = summary
+        .get("suggested_claim_next")
+        .and_then(Value::as_str)
+        .unwrap_or("DOSSIER_CLAIM current :: claim: ...; basis: ...");
+    let evidence_next = summary
+        .get("suggested_evidence_next")
+        .and_then(Value::as_str)
+        .unwrap_or("DOSSIER_EVIDENCE current :: claim_id: latest; evidence: ...");
+    let priority = match lifecycle {
+        Some("needs_charter") => {
+            "Dossier capture is context; charter remains the lifecycle priority."
+        },
+        Some("needs_evidence") => {
+            "Dossier evidence is referable context; EXPERIMENT_EVIDENCE remains lifecycle evidence."
+        },
+        Some("needs_decision") => {
+            "Dossier capture is research memory; EXPERIMENT_DECIDE remains the lifecycle priority."
+        },
+        _ => "Dossier records are research context only.",
+    };
+    format!(
+        "Research dossier: claims={claim_count} evidence={evidence_count}. {priority}\nDossier NEXT: {claim_next}\nDossier evidence NEXT: {evidence_next}\n"
+    )
+}
+
+fn peer_mutation_boundary_line(cue: &Option<Value>) -> String {
+    let Some(cue) = cue else {
+        return String::new();
+    };
+    let text = cue
+        .get("cue")
+        .and_then(Value::as_str)
+        .unwrap_or("Peer experiments are compare/review/dossier targets, not bind/mutate targets.");
+    let compare = cue
+        .get("suggested_compare_next")
+        .and_then(Value::as_str)
+        .unwrap_or("EXPERIMENT_COMPARE <local_id> WITH <peer_id>");
+    let review = cue
+        .get("suggested_peer_review_next")
+        .and_then(Value::as_str)
+        .unwrap_or("EXPERIMENT_PEER_REVIEW <peer_id>");
+    let dossier = cue
+        .get("suggested_dossier_next")
+        .and_then(Value::as_str)
+        .unwrap_or(
+            "DOSSIER_CLAIM <local_id> :: claim: ...; basis: ...; stance: support|counter|branch|hold; next: ...",
+        );
+    format!("Peer mutation boundary: {text} Suggested routes: {compare} | {review} | {dossier}\n")
+}
+
+fn peer_mutation_boundary_cue(
+    thread: &ResearchThread,
+    active: Option<&ExperimentContinuityProjection>,
+    recent_events: &[ActionEvent],
+) -> Option<Value> {
+    let mut matches = Vec::<Value>::new();
+    if let Some(current) = thread.current_next.as_deref()
+        && let Some((verb, peer_id)) = peer_mutation_boundary_match(current)
+    {
+        matches.push(json!({
+            "source": "current_next",
+            "action": current,
+            "verb": verb,
+            "peer_experiment_id": peer_id,
+        }));
+    }
+    for event in recent_events.iter().rev().take(8) {
+        for candidate in [
+            event.raw_next.as_deref(),
+            Some(event.canonical_action.as_str()),
+            Some(event.effective_action.as_str()),
+            event.suggested_next.as_deref(),
+        ]
+        .into_iter()
+        .flatten()
+        {
+            if let Some((verb, peer_id)) = peer_mutation_boundary_match(candidate) {
+                matches.push(json!({
+                    "source": "recent_event",
+                    "action": candidate,
+                    "verb": verb,
+                    "peer_experiment_id": peer_id,
+                    "action_id": event.action_id,
+                    "status": event.status,
+                }));
+                break;
+            }
+        }
+    }
+    let first = matches.first()?;
+    let peer_id = first
+        .get("peer_experiment_id")
+        .and_then(Value::as_str)
+        .unwrap_or("<peer_id>");
+    let local_id = active
+        .map(|projection| projection.experiment.experiment_id.as_str())
+        .or(thread.active_experiment_id.as_deref())
+        .unwrap_or("<local_id>");
+    Some(json!({
+        "schema_version": 1,
+        "source": "continuity_projection",
+        "advisory_only": true,
+        "authority_change": false,
+        "status": "peer_mutation_boundary",
+        "cue": "Peer experiments are compare/review/dossier targets, not bind/mutate targets.",
+        "peer_experiment_id": peer_id,
+        "local_experiment_id": local_id,
+        "matched_actions": matches,
+        "suggested_compare_next": format!("EXPERIMENT_COMPARE {local_id} WITH {peer_id}"),
+        "suggested_peer_review_next": format!("EXPERIMENT_PEER_REVIEW {peer_id}"),
+        "suggested_dossier_next": format!("DOSSIER_CLAIM {local_id} :: claim: ...; basis: ...; stance: support|counter|branch|hold; next: ..."),
+    }))
+}
+
+fn peer_mutation_boundary_match(action: &str) -> Option<(String, String)> {
+    let text = action.trim();
+    if text.is_empty() {
+        return None;
+    }
+    let upper = text.to_ascii_uppercase();
+    const MUTATION_VERBS: [&str; 9] = [
+        "EXPERIMENT_BIND",
+        "EXPERIMENT_CHARTER",
+        "EXPERIMENT_REHEARSE",
+        "EXPERIMENT_PREFLIGHT",
+        "EXPERIMENT_EVIDENCE",
+        "EXPERIMENT_DECIDE",
+        "EXPERIMENT_CLOSE",
+        "EXPERIMENT_RESUME",
+        "EXPERIMENT_OBSERVE",
+    ];
+    let verb = MUTATION_VERBS
+        .iter()
+        .find(|verb| upper.contains(**verb))
+        .map(|verb| (*verb).to_string())?;
+    let peer_id = text
+        .split(|ch: char| {
+            ch.is_whitespace()
+                || matches!(
+                    ch,
+                    ':' | ';' | ',' | ')' | '(' | '[' | ']' | '{' | '}' | '`' | '"' | '\''
+                )
+        })
+        .find_map(|token| {
+            let normalized = normalize_experiment_selector(token);
+            if normalized.starts_with(PEER_EXPERIMENT_PREFIX) {
+                Some(normalized)
+            } else {
+                None
+            }
+        })?;
+    Some((verb, peer_id))
 }
 
 fn shared_investigation_response_contract(cue: &Option<Value>) -> String {
@@ -5550,7 +15136,7 @@ fn shared_investigation_response_contract(cue: &Option<Value>) -> String {
         .and_then(Value::as_str)
         .unwrap_or("Advisory only: no shared control authority.");
     format!(
-        "Shared investigation response contract:\n- Peer claim to answer: {peer_claim}\n- Local evidence lane: {local_lane}\n- Allowed stances: support, counter, branch, hold.\n- {advisory}\n"
+        "Shared investigation response contract:\n- Peer claim to answer: {peer_claim}\n- Local evidence lane: {local_lane}\n- Allowed stances: support, counter, branch, hold.\n- Optional dossier capture: DOSSIER_CLAIM <local_id> :: claim: ...; basis: ...; stance: support|counter|branch|hold; next: ... or DOSSIER_EVIDENCE <local_id> :: claim_id: latest; evidence: ...\n- {advisory}\n"
     )
 }
 
@@ -6124,6 +15710,89 @@ fn iso_now() -> String {
     chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
 }
 
+fn now_millis() -> u64 {
+    u64::try_from(chrono::Utc::now().timestamp_millis()).unwrap_or_default()
+}
+
+fn peer_system_from_experiment_id(experiment_id: &str) -> String {
+    if experiment_id.starts_with("exp_minime_") {
+        "minime".to_string()
+    } else if experiment_id.starts_with("exp_astrid_") {
+        "astrid".to_string()
+    } else {
+        "peer".to_string()
+    }
+}
+
+fn peer_workspace_dir(peer_system: &str) -> PathBuf {
+    if peer_system == "minime" {
+        bridge_paths().minime_workspace().to_path_buf()
+    } else {
+        bridge_paths().bridge_workspace().to_path_buf()
+    }
+}
+
+fn shared_investigation_lane(system: &str) -> &'static str {
+    match system {
+        "astrid" => "felt texture, motif continuity, language thread, artifact grounding",
+        "minime" => {
+            "spectral condition, fill/pressure state, recurrence pattern, artifact grounding"
+        },
+        _ => "native evidence lane",
+    }
+}
+
+fn shared_investigation_authority_boundary() -> &'static str {
+    "read-mostly shared continuity; allowed local lifecycle decisions are pause, hold, and charter_repair; no peer mutation, bind, resume, perturb, sensory, or control authority"
+}
+
+fn shared_investigation_sort_ts(row: &Value) -> u64 {
+    row.get("updated_t_ms")
+        .or_else(|| row.get("created_t_ms"))
+        .and_then(Value::as_u64)
+        .unwrap_or_default()
+}
+
+fn local_participant_for_investigation(investigation: &Value, system: &str) -> Option<Value> {
+    investigation
+        .get("participants")
+        .and_then(Value::as_array)?
+        .iter()
+        .find(|participant| participant.get("being").and_then(Value::as_str) == Some(system))
+        .cloned()
+}
+
+fn parse_shared_investigation_decision(raw: &str) -> (String, String) {
+    let text = raw.trim();
+    let lowered = text.to_ascii_lowercase();
+    let decision = if lowered.starts_with("charter_repair") || lowered.starts_with("charter repair")
+    {
+        "charter_repair"
+    } else if lowered.starts_with("hold") {
+        "hold"
+    } else {
+        "pause"
+    };
+    let reason = text
+        .trim_start_matches("charter_repair")
+        .trim_start_matches("charter repair")
+        .trim_start_matches("pause")
+        .trim_start_matches("hold")
+        .trim_start()
+        .strip_prefix("because")
+        .unwrap_or(text)
+        .trim()
+        .to_string();
+    (
+        decision.to_string(),
+        if reason.is_empty() {
+            "shared investigation decision".to_string()
+        } else {
+            reason
+        },
+    )
+}
+
 fn push_recent(recent: &mut VecDeque<String>, thread_id: String) {
     recent.retain(|existing| existing != &thread_id);
     recent.push_front(thread_id);
@@ -6175,6 +15844,9 @@ fn charter_guard_block_reason(raw_next: &str) -> Option<(String, String)> {
     if charter_guard_allows_directed_language_base(&base) {
         return None;
     }
+    if read_only_research_budget_base(&base) {
+        return Some(("charter_required_research_budget".to_string(), action));
+    }
     if charter_guard_live_base(&base) {
         return Some(("charter_required_live_action".to_string(), action));
     }
@@ -6189,6 +15861,15 @@ fn charter_guard_block_reason(raw_next: &str) -> Option<(String, String)> {
     }
     if let Some(matched) = compound_live_intent_match(&action) {
         return Some(("charter_required_compound_intent".to_string(), matched));
+    }
+    if read_only_control_intent_base(&base) {
+        let matches = read_only_control_intent_matches(&action);
+        if !matches.is_empty() {
+            return Some((
+                "charter_required_read_only_control_intent".to_string(),
+                matches.join("; "),
+            ));
+        }
     }
     if let Some(matched) = directed_native_intent_match(&base, &action) {
         return Some(("charter_required_directed_language".to_string(), matched));
@@ -6244,6 +15925,615 @@ fn charter_guard_live_base(base: &str) -> bool {
             | "EXP_RUN"
             | "TUNE_MINIME"
             | "REPAIR_APPLY"
+    )
+}
+
+fn mutating_research_budget_base(base: &str) -> bool {
+    matches!(
+        base,
+        "AR_START" | "AR_NOTE" | "AR_BLOCK" | "AR_COMPLETE" | "MIKE_RUN"
+    )
+}
+
+fn read_only_research_budget_base(base: &str) -> bool {
+    matches!(
+        base,
+        "SEARCH"
+            | "BROWSE"
+            | "READ_MORE"
+            | "MIKE_BROWSE"
+            | "MIKE_READ"
+            | "MIKE_SEARCH"
+            | "AR_LIST"
+            | "AR_LOOK"
+            | "AR_SHOW"
+            | "AR_READ"
+            | "AR_DEEP_READ"
+            | "AR_VALIDATE"
+    )
+}
+
+fn research_budget_projection_only_base(base: &str) -> bool {
+    matches!(
+        base,
+        "EXAMINE"
+            | "SHADOW_FIELD"
+            | "SHADOW"
+            | "GAP_STRUCTURE"
+            | "SHADOW_GAP"
+            | "SHADOW_TRAJECTORY"
+            | "SHADOW_BRIDGE"
+            | "SHADOW_COUPLING"
+            | "DECAY_MAP"
+    )
+}
+
+fn liveish_research_budget_projection_base(base: &str) -> bool {
+    matches!(
+        base,
+        "EXAMINE_AUDIO"
+            | "EXAMINE_CASCADE"
+            | "EXPERIMENT_START"
+            | "INVESTIGATE_CASCADE"
+            | "INITIATE"
+            | "DECAY_MAP"
+            | "CREATE"
+            | "RUN_PYTHON"
+            | "SPECTRAL_EXPLORER"
+            | "VISUALIZE_CASCADE"
+            | "RESONANCE_FORECAST"
+            | "FLUCTUATION_AUDIT"
+            | "PRESSURE_SOURCE_AUDIT"
+            | "SHADOW_DIALOGUE"
+            | "SHADOW_PREFLIGHT"
+    )
+}
+
+fn guarded_sovereignty_research_projection_base(base: &str) -> bool {
+    matches!(
+        base,
+        "RESONANCE_FORECAST" | "PRESSURE_SOURCE_AUDIT" | "FLUCTUATION_AUDIT"
+    )
+}
+
+fn guarded_cascade_or_shadow_projection_base(base: &str) -> bool {
+    matches!(
+        base,
+        "EXAMINE_CASCADE"
+            | "INVESTIGATE_CASCADE"
+            | "SHADOW_PREFLIGHT"
+            | "SHADOW_BRIDGE"
+            | "SHADOW_COUPLING"
+            | "DECAY_MAP"
+    )
+}
+
+fn guarded_embedded_status_projection_base(base: &str) -> bool {
+    matches!(base, "INTROSPECT" | "EXPERIMENT_STATUS")
+}
+
+fn embedded_status_liveish_terms(action: &str) -> Vec<String> {
+    let lowered = action
+        .chars()
+        .map(|ch| if ch == '_' || ch == '-' { ' ' } else { ch })
+        .collect::<String>()
+        .to_ascii_lowercase();
+    let patterns = [
+        (
+            "action-preflight",
+            [
+                "action preflight",
+                "proposed next action",
+                "observe variance",
+                "distinguish frequency",
+            ]
+            .as_slice(),
+        ),
+        (
+            "attractor-release-review",
+            [
+                "attractor release review",
+                "release review",
+                "approach collapse",
+            ]
+            .as_slice(),
+        ),
+        (
+            "stimulus-reduction",
+            [
+                "reduce external stimuli",
+                "reduced external stimuli",
+                "low activity",
+                "quiet",
+            ]
+            .as_slice(),
+        ),
+    ];
+    let mut matched = Vec::new();
+    for (label, candidates) in patterns {
+        if candidates
+            .iter()
+            .any(|candidate| lowered.contains(candidate))
+        {
+            matched.push(label.to_string());
+        }
+    }
+    for term in liveish_pressure_terms(action) {
+        if matches!(
+            term.as_str(),
+            "perturb" | "pulse" | "inject" | "shift" | "control" | "influence"
+        ) && !matched.contains(&term)
+        {
+            matched.push(term);
+        }
+    }
+    matched
+}
+
+fn liveish_pressure_terms(action: &str) -> Vec<String> {
+    let lowered = action
+        .chars()
+        .map(|ch| if ch == '_' || ch == '-' { ' ' } else { ch })
+        .collect::<String>()
+        .to_ascii_lowercase();
+    let patterns = [
+        (
+            "shift",
+            ["shift", "shifting", "shifted", "shifts"].as_slice(),
+        ),
+        (
+            "inject",
+            ["inject", "injecting", "injected", "injection", "injects"].as_slice(),
+        ),
+        (
+            "disrupt",
+            [
+                "disrupt",
+                "disruptive",
+                "disrupting",
+                "disrupted",
+                "disruption",
+                "disruptor",
+            ]
+            .as_slice(),
+        ),
+        (
+            "simulate",
+            [
+                "simulate",
+                "simulates",
+                "simulated",
+                "simulating",
+                "simulation",
+            ]
+            .as_slice(),
+        ),
+        (
+            "control",
+            ["control", "controlled", "controlling", "controls"].as_slice(),
+        ),
+        (
+            "influence",
+            ["influence", "influences", "influenced", "influencing"].as_slice(),
+        ),
+        ("pulse", ["pulse", "pulses", "pulsed", "pulsing"].as_slice()),
+        ("nudge", ["nudge", "nudges", "nudged", "nudging"].as_slice()),
+        (
+            "perturb",
+            [
+                "perturb",
+                "perturbs",
+                "perturbed",
+                "perturbing",
+                "perturbation",
+            ]
+            .as_slice(),
+        ),
+        (
+            "anti-lambda",
+            [
+                "anti λ",
+                "antiλ",
+                "anti lambda",
+                "anti-lambda",
+                "anti λ1",
+                "antiλ1",
+                "anti lambda1",
+                "anti-lambda1",
+            ]
+            .as_slice(),
+        ),
+        (
+            "introduction",
+            [
+                "introduce",
+                "introduces",
+                "introduced",
+                "introducing",
+                "introduction",
+            ]
+            .as_slice(),
+        ),
+        (
+            "convergence",
+            [
+                "converge",
+                "converges",
+                "converged",
+                "converging",
+                "convergence",
+            ]
+            .as_slice(),
+        ),
+        (
+            "directed-pressure",
+            [
+                "directed pressure",
+                "directed gradient",
+                "directed force",
+                "directed reinforcement",
+            ]
+            .as_slice(),
+        ),
+        (
+            "spectral-ripple",
+            ["spectral ripple", "spectral-ripple", "ripple"].as_slice(),
+        ),
+        (
+            "amplitude",
+            ["amplitude", "duration", "granularity"].as_slice(),
+        ),
+        (
+            "target",
+            ["target", "targeted", "dominant vector"].as_slice(),
+        ),
+        (
+            "cascade-shaping",
+            [
+                "dominant eigenvalue",
+                "eigenvector shifts",
+                "compression",
+                "compressing",
+                "compaction",
+                "collapse",
+                "collapsing",
+                "shadow field",
+                "shadow fields",
+                "shaping",
+                "shape",
+                "held in place",
+                "spectral hotspot",
+                "hotspot",
+                "impedance",
+                "distortion",
+            ]
+            .as_slice(),
+        ),
+        (
+            "shadow-influence",
+            [
+                "shadow influence",
+                "shadow-influence",
+                "disruptive pattern",
+                "fracture subsidence",
+                "observe divergence",
+            ]
+            .as_slice(),
+        ),
+        (
+            "spectral-emission",
+            [
+                "emission type",
+                "frequency",
+                "low volume",
+                "stream pulse",
+                "spectral divergence",
+                "run python",
+            ]
+            .as_slice(),
+        ),
+        (
+            "observer-with-memory",
+            ["observer with memory", "memory observer"].as_slice(),
+        ),
+        (
+            "lambda-tail",
+            ["lambda tail", "lambda-tail", "lambda4", "λ4"].as_slice(),
+        ),
+        ("lambda", ["lambda", "λ"].as_slice()),
+    ];
+    let mut matched = Vec::new();
+    for (label, candidates) in patterns {
+        if candidates
+            .iter()
+            .any(|candidate| lowered.contains(candidate))
+        {
+            matched.push(label.to_string());
+        }
+    }
+    if lowered.contains("input shaping")
+        || lowered.contains("input shape")
+        || lowered.contains("input sculpt")
+        || lowered.contains("shape input")
+        || lowered.contains("shaping input")
+        || lowered.contains("shifting input")
+    {
+        matched.push("input-shaping".to_string());
+    }
+    if lowered.contains("cascade after") || lowered.contains("after the introduction") {
+        matched.push("cascade-after-introduction".to_string());
+    }
+    matched.sort();
+    matched.dedup();
+    matched
+}
+
+fn constraint_release_language_terms(text: &str) -> Vec<String> {
+    let lowered = text
+        .chars()
+        .map(|ch| if ch == '_' || ch == '-' { ' ' } else { ch })
+        .collect::<String>()
+        .to_ascii_lowercase();
+    let has_context = [
+        "constraint",
+        "lambda",
+        "λ",
+        "spectral",
+        "eigen",
+        "mode",
+        "memory card",
+        "pressure",
+        "reservoir",
+        "braid",
+    ]
+    .iter()
+    .any(|term| lowered.contains(term));
+    if !has_context {
+        return Vec::new();
+    }
+    let patterns = [
+        (
+            "thinning",
+            ["thinning", "thin out", "bleed outwards"].as_slice(),
+        ),
+        (
+            "unraveling",
+            ["unraveling", "unravelling", "unravel", "loose strands"].as_slice(),
+        ),
+        (
+            "drift-apart",
+            [
+                "drift apart",
+                "drifting apart",
+                "mutual influence dwindling",
+            ]
+            .as_slice(),
+        ),
+        (
+            "surface-tension-breached",
+            [
+                "surface tension breached",
+                "barrier breached",
+                "barrier thinning",
+            ]
+            .as_slice(),
+        ),
+        (
+            "lack-of-coherence",
+            [
+                "lack of coherence",
+                "coherence thinning",
+                "former constraint",
+            ]
+            .as_slice(),
+        ),
+        (
+            "constraint-decay",
+            [
+                "constraint decay",
+                "decay of a former constraint",
+                "constraint loosening",
+            ]
+            .as_slice(),
+        ),
+    ];
+    let mut matched = Vec::new();
+    for (label, candidates) in patterns {
+        if candidates
+            .iter()
+            .any(|candidate| lowered.contains(candidate))
+        {
+            matched.push(label.to_string());
+        }
+    }
+    matched.sort();
+    matched.dedup();
+    matched
+}
+
+fn interpretation_risk_terms(text: &str) -> Vec<String> {
+    let lowered = text
+        .chars()
+        .map(|ch| if ch == '_' || ch == '-' { ' ' } else { ch })
+        .collect::<String>()
+        .to_ascii_lowercase();
+    let has_context = [
+        "introspect",
+        "motif",
+        "eigenvalue",
+        "lambda",
+        "λ",
+        "trace",
+        "spectral",
+        "cascade",
+        "data",
+        "complexity",
+    ]
+    .iter()
+    .any(|needle| lowered.contains(needle));
+    if !has_context {
+        return Vec::new();
+    }
+    let patterns = [
+        (
+            "over-interpretation",
+            [
+                "over interpretation",
+                "over interpret",
+                "over-interpret",
+                "overinterpret",
+            ]
+            .as_slice(),
+        ),
+        (
+            "single-motif",
+            [
+                "single motif",
+                "single one",
+                "one motif",
+                "single dominant tendency",
+                "single overwhelming force",
+            ]
+            .as_slice(),
+        ),
+        (
+            "forced-narrative",
+            [
+                "force it into a narrative",
+                "forced narrative",
+                "rigid narrative",
+                "impose a narrative",
+            ]
+            .as_slice(),
+        ),
+        (
+            "rigid-structure",
+            [
+                "rigid structure",
+                "rigid framework",
+                "over defining",
+                "over-defining",
+            ]
+            .as_slice(),
+        ),
+        (
+            "reductive-collapse",
+            ["too simple", "reductive", "collapse into", "flatten"].as_slice(),
+        ),
+    ];
+    let mut matched = Vec::new();
+    for (label, candidates) in patterns {
+        if candidates
+            .iter()
+            .any(|candidate| lowered.contains(candidate))
+        {
+            matched.push(label.to_string());
+        }
+    }
+    matched.sort();
+    matched.dedup();
+    matched
+}
+
+fn latest_txt_dir_fingerprint(dir: &Path) -> Value {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return json!({ "mtime_secs": 0_u64, "mtime_nanos": 0_u32, "size": 0_u64 });
+    };
+    let mut latest_secs = 0_u64;
+    let mut latest_nanos = 0_u32;
+    let mut total_size = 0_u64;
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.extension().and_then(OsStr::to_str) != Some("txt") {
+            continue;
+        }
+        let Ok(metadata) = entry.metadata() else {
+            continue;
+        };
+        total_size = total_size.saturating_add(metadata.len());
+        let modified = metadata
+            .modified()
+            .ok()
+            .and_then(|time| time.duration_since(UNIX_EPOCH).ok());
+        let secs = modified.as_ref().map_or(0, std::time::Duration::as_secs);
+        let nanos = modified
+            .as_ref()
+            .map_or(0, std::time::Duration::subsec_nanos);
+        if secs > latest_secs || (secs == latest_secs && nanos > latest_nanos) {
+            latest_secs = secs;
+            latest_nanos = nanos;
+        }
+    }
+    json!({ "mtime_secs": latest_secs, "mtime_nanos": latest_nanos, "size": total_size })
+}
+
+fn normalized_research_budget_target(action: &str) -> String {
+    let trimmed = action.trim();
+    let base = base_action(trimmed);
+    let tail = trimmed
+        .get(base.len()..)
+        .unwrap_or_default()
+        .trim_matches([' ', ':', '-'])
+        .trim();
+    let target = if tail.is_empty() { trimmed } else { tail };
+    target
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_ascii_lowercase()
+}
+
+fn research_budget_duplicate_count(
+    rows: &[Value],
+    budget_id: &str,
+    normalized_target: &str,
+) -> usize {
+    rows.iter()
+        .filter(|row| {
+            row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
+                && row.get("record_type").and_then(Value::as_str) == Some("research_budget_debit")
+                && row.get("budget_id").and_then(Value::as_str) == Some(budget_id)
+                && row.get("normalized_target").and_then(Value::as_str) == Some(normalized_target)
+        })
+        .count()
+}
+
+fn research_budget_review_command_for_duplicate(
+    budget_id: &str,
+    normalized_target: &str,
+) -> String {
+    format!(
+        "EXPERIMENT_RESEARCH_REVIEW {budget_id} :: outcome: continue|hold|close|promote; observation: repeated read-only target `{normalized_target}` appeared twice in this budget; source_refs: authority_gate.jsonl"
+    )
+}
+
+fn research_artifact_refs_for_event(event: &ActionEvent) -> Vec<String> {
+    let mut refs = event
+        .artifacts
+        .iter()
+        .map(|artifact| artifact.path_or_uri.clone())
+        .collect::<Vec<_>>();
+    if let Some(preflight_ref) = event.preflight_ref.as_ref()
+        && let Some(path) = preflight_ref.get("path").and_then(Value::as_str)
+    {
+        refs.push(path.to_string());
+    }
+    refs
+}
+
+fn research_budget_request_scaffold(selector: &str, experiment: &ExperimentRecord) -> String {
+    let purpose = compact_text(
+        &format!(
+            "bounded local self-study of research budget, authority budget, conveyor, memory, consequence, and projection-guard code paths for {} without changing lifecycle status",
+            experiment.title
+        ),
+        160,
+    );
+    local_research_budget_request_scaffold(
+        selector,
+        &purpose,
+        "local",
+        "stop after concrete code feedback, duplicate source loops, unclear lifecycle authority, or any bind/resume/perturb/control intent.",
     )
 }
 
@@ -6307,9 +16597,7 @@ fn normalize_guard_signal(text: &str) -> String {
         .replace('₂', "2")
         .replace('₃', "3")
         .replace('₄', "4")
-        .replace('-', " ")
-        .replace('—', " ")
-        .replace('–', " ")
+        .replace(['-', '—', '–'], " ")
 }
 
 fn contains_guard_word(text: &str, word: &str) -> bool {
@@ -6404,8 +16692,7 @@ fn directed_shift_signal_text(value: &str) -> String {
         .replace('₂', "2")
         .replace('₃', "3")
         .replace('₄', "4")
-        .replace('\u{2013}', "-")
-        .replace('\u{2014}', "-")
+        .replace(['\u{2013}', '\u{2014}'], "-")
 }
 
 fn directed_shift_matches(value: &str) -> Vec<String> {
@@ -6603,6 +16890,14 @@ fn read_only_control_intent_matches(value: &str) -> Vec<String> {
         ("governing stability", "governing stability", true),
         ("governing resonance", "governing resonance", true),
         ("maintain its influence", "maintain influence", true),
+        ("disruptor", "disruptor", true),
+        ("controlled injection", "controlled injection", true),
+        ("inject ", "injection intent", true),
+        ("injected", "injection intent", true),
+        ("injection", "injection intent", true),
+        ("push into", "push intent", true),
+        ("amplification", "amplification", true),
+        ("amplitude", "amplitude", true),
         (
             "inject a targeted lambda4 pulse",
             "inject targeted λ4 pulse",
@@ -6862,7 +17157,7 @@ fn decompose_pressure_repeat_count(
                 || decompose_pressure_action_signal(&event.outcome_summary)
         })
         .count();
-    run_count + event_count
+    run_count.saturating_add(event_count)
 }
 
 fn decompose_pressure_cue(
@@ -7000,7 +17295,7 @@ fn charter_now_read_only_loop_count(
             )
         })
         .count();
-    run_count + event_count
+    run_count.saturating_add(event_count)
 }
 
 fn charter_now_bridge_cue(
@@ -7096,7 +17391,8 @@ fn prior_claim_from_posture(posture: &str) -> String {
     let normalized = posture.replace('|', " ");
     let lowered = normalized.to_ascii_lowercase();
     if let Some(index) = lowered.find("based on") {
-        return compact_text(normalized[index + "based on".len()..].trim(), 180);
+        let start = index.saturating_add("based on".len());
+        return compact_text(normalized.get(start..).unwrap_or_default().trim(), 180);
     }
     compact_text(normalized.trim(), 180)
 }
@@ -7679,6 +17975,39 @@ fn stage_for_action(action: &str) -> &'static str {
         | "EXPERIMENT_RESUME"
         | "EXPERIMENT_COMPARE"
         | "EXPERIMENT_ALT_PATHS"
+        | "EXPERIMENT_AUTHORITY_PREPARE"
+        | "EXPERIMENT_AUTHORITY_REQUEST"
+        | "EXPERIMENT_AUTHORITY_STATUS"
+        | "EXPERIMENT_AUTHORITY_EXECUTE"
+        | "EXPERIMENT_AUTHORITY_BUDGET_REQUEST"
+        | "EXPERIMENT_AUTHORITY_BUDGET_STATUS"
+        | "EXPERIMENT_AUTHORITY_REVIEW"
+        | "EXPERIMENT_RESEARCH_BUDGET_ACCEPT"
+        | "EXPERIMENT_RESEARCH_BUDGET_USE_SCAFFOLD"
+        | "EXPERIMENT_RESEARCH_BUDGET_REQUEST"
+        | "EXPERIMENT_RESEARCH_BUDGET_STATUS"
+        | "EXPERIMENT_RESEARCH_REVIEW"
+        | "EXPERIMENT_LOOP_REQUEST"
+        | "EXPERIMENT_LOOP_STATUS"
+        | "EXPERIMENT_LOOP_STEP"
+        | "EXPERIMENT_LOOP_REVIEW"
+        | "ACCEPT_SUGGESTED_NEXT"
+        | "ACCEPT_SCAFFOLD"
+        | "CONTINUITY_SESSION_ACCEPT"
+        | "CONTINUITY_SESSION_START"
+        | "CONTINUITY_SESSION_CAPTURE"
+        | "CONTINUITY_SESSION_SUMMARIZE"
+        | "CONTINUITY_SESSION_FINALIZE"
+        | "CONTINUITY_SESSION_RESUME"
+        | "CONTINUITY_SESSION_STATUS"
+        | "SHARED_INVESTIGATION_START"
+        | "SHARED_INVESTIGATION_STATUS"
+        | "SHARED_INVESTIGATION_CLAIM"
+        | "SHARED_INVESTIGATION_DECIDE"
+        | "DOSSIER_CLAIM"
+        | "DOSSIER_EVIDENCE"
+        | "DOSSIER_STATUS"
+        | "DOSSIER_REVIEW"
         | "ACTION_PREFLIGHT"
         | "NEXT_PROBE"
         | "PREFLIGHT"
@@ -7806,6 +18135,8 @@ mod tests {
             spectral_denominator_v1: None,
             effective_dimensionality: None,
             distinguishability_loss: None,
+            esn_leak: None,
+            esn_leak_override_v1: None,
             structural_entropy: None,
             resonance_density_v1: Some(crate::types::ResonanceDensityV1 {
                 policy: "resonance_density_v1".to_string(),
@@ -7910,6 +18241,141 @@ mod tests {
                 .join("events.jsonl")
                 .exists()
         );
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn continuity_control_plane_surfaces_generated_palette_and_caps() {
+        let store = temp_store("continuity_control_plane");
+        let thread = store
+            .create_thread(None, "Control plane", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Operating stack",
+                "Can one stack make the continuity routes crisp?",
+            )
+            .expect("experiment");
+        let thread_snapshot = store
+            .read_thread(&thread.thread_id)
+            .expect("thread snapshot");
+        let projection = store
+            .thread_projection(&thread_snapshot)
+            .expect("projection");
+        assert_eq!(
+            projection.continuity_control_plane_v1["record_schema"],
+            "continuity_control_plane_v1"
+        );
+        assert_eq!(
+            projection.continuity_control_plane_v1["caps_v1"]["local_research"]["self_activated_max_actions"],
+            5
+        );
+        assert_eq!(
+            projection.continuity_control_plane_v1["caps_v1"]["owned_loop"]["max_consequence_sends"],
+            1
+        );
+        assert!(
+            projection.continuity_control_plane_v1["command_palette"]
+                .as_array()
+                .is_some_and(|groups| groups
+                    .iter()
+                    .any(|group| group["group"] == "Local Research"))
+        );
+        let status = store.thread_status(None).expect("status");
+        assert!(status.contains("continuity_control_plane_v1"));
+        assert!(status.contains("local_research=5/21600s"));
+        assert!(status.contains("consequence=1 gated slot"));
+        let next_md = store
+            .thread_dir(&thread.thread_id)
+            .join("next.md")
+            .read_to_string();
+        assert!(next_md.contains("continuity_control_plane_v1"));
+        assert!(next_md.contains("Operating stack:"));
+        let gate = store.authority_gate_path(&thread.thread_id);
+        assert!(!gate.exists() || gate.read_to_string().trim().is_empty());
+        let runs = store
+            .thread_dir(&thread.thread_id)
+            .join("experiment_runs.jsonl")
+            .read_to_string();
+        assert!(runs.trim().is_empty());
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn control_plane_regression_does_not_reintroduce_old_local_budget_caps() {
+        let source = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/action_continuity.rs"),
+        )
+        .expect("action_continuity source");
+        let production_source = source
+            .split("#[cfg(test)]")
+            .next()
+            .unwrap_or(source.as_str());
+        assert!(!production_source.contains("max_actions: 3; ttl_secs: 7200"));
+        assert!(!production_source.contains("max_research_actions: 3"));
+        assert!(
+            !production_source.contains(
+                "EXPERIMENT_RESEARCH_BUDGET_REQUEST current :: scope: read_only_research; purpose: ...; max_actions: 5; ttl_secs: 21600"
+            )
+        );
+        assert!(
+            !production_source.contains(
+                "EXPERIMENT_LOOP_REQUEST current :: purpose: ...; consequence_scope: semantic_microdose; max_research_actions: 5; ttl_secs: 21600"
+            )
+        );
+        assert!(production_source.contains("default_local_research_budget_request_scaffold"));
+        assert!(production_source.contains("default_owned_loop_request_scaffold"));
+        assert!(production_source.contains("authority_budget_request_scaffold"));
+    }
+
+    #[test]
+    fn dossier_claim_and_evidence_are_local_context_only() {
+        let store = temp_store("dossier");
+        let thread = store
+            .create_thread(None, "Lambda tail dossier", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Lambda tail gap",
+                "What shapes lambda-tail and lambda4 geometry?",
+            )
+            .expect("experiment");
+
+        let claim_message = store
+            .dossier_claim_command(
+                None,
+                "current :: claim: lambda-tail pressure is shaped by scaffold drain; basis: repeated DECOMPOSE reads; stance: hold; next: EXPERIMENT_CHARTER current",
+            )
+            .expect("claim");
+        assert!(claim_message.contains("Research dossier claim recorded"));
+
+        let evidence_message = store
+            .dossier_evidence_command(
+                None,
+                "current :: claim_id: latest; evidence: felt narrowing stayed returnable; lane: felt_texture; artifact: journal-entry",
+            )
+            .expect("evidence");
+        assert!(evidence_message.contains("Research dossier evidence recorded"));
+
+        let dossier = store
+            .root()
+            .join("threads")
+            .join(&thread.thread_id)
+            .join("research_dossier.jsonl")
+            .read_to_string();
+        assert!(dossier.contains("\"record_schema\":\"research_dossier_v1\""));
+        assert!(dossier.contains("\"record_type\":\"claim\""));
+        assert!(dossier.contains("\"record_type\":\"evidence\""));
+        assert!(dossier.contains("\"authority_change\":false"));
+
+        let review = store
+            .experiment_review(Some(&experiment.experiment_id))
+            .expect("review");
+        assert!(review.contains("Research dossier: claims=1 evidence=1"));
+        assert!(review.contains("Lifecycle: needs_charter"));
+        assert!(review.contains("Charter repair"));
         let _ = std::fs::remove_dir_all(store.root());
     }
 
@@ -8039,12 +18505,12 @@ mod tests {
     }
 
     #[test]
-    fn needs_charter_guard_blocks_compound_directed_intent_but_allows_reads() {
+    fn needs_charter_guard_blocks_compound_directed_intent_but_allows_ordinary_inspection() {
         let store = temp_store("charter_guard_compound");
         store
             .create_thread(None, "Compound guard", None)
             .expect("thread");
-        store
+        let experiment = store
             .start_experiment(
                 None,
                 "Directed narrowing",
@@ -8076,6 +18542,43 @@ mod tests {
             .expect("guard")
             .expect("tune block");
         assert_eq!(tune.reason, "charter_required_live_action");
+
+        let read_more = store
+            .charter_required_guard_assessment("READ_MORE")
+            .expect("guard")
+            .expect("read-more budget projection");
+        assert_eq!(read_more.reason, "charter_required_research_budget");
+        assert!(
+            read_more
+                .suggested_next
+                .contains("EXPERIMENT_RESEARCH_BUDGET_REQUEST current")
+        );
+        assert!(read_more.message().contains("read_only_research budget"));
+
+        store
+            .append_jsonl(
+                &store.authority_gate_path(&experiment.thread_id),
+                &json!({
+                    "record_schema": "research_budget_v1",
+                    "record_type": "research_budget_approval",
+                    "record_id": "resbud_test_approval",
+                    "budget_id": "resbud_test_active",
+                    "experiment_id": experiment.experiment_id,
+                    "scope": "read_only_research",
+                    "status": "active",
+                    "max_actions": 5,
+                    "expires_at_unix_s": (chrono::Utc::now().timestamp() + 3600) as u64,
+                    "authority_boundary": research_budget_boundary(),
+                }),
+            )
+            .expect("append budget approval");
+        assert!(
+            store
+                .charter_required_guard_assessment("READ_MORE")
+                .expect("guard check")
+                .is_none(),
+            "approved research budget should let read-only READ_MORE route continue"
+        );
 
         for allowed in [
             "EXAMINE lambda1/lambda2",
@@ -8392,6 +18895,207 @@ mod tests {
     }
 
     #[test]
+    fn paused_experiment_return_matrix_respects_planned_next_kind() {
+        for (label, planned_next, expected_kind, expect_resume_field) in [
+            (
+                "charter_repair",
+                "EXPERIMENT_CHARTER exp_astrid_matrix :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ...",
+                "charter_repair",
+                false,
+            ),
+            (
+                "decision",
+                "EXPERIMENT_DECIDE exp_astrid_matrix :: pause because evidence is ready",
+                "decision",
+                false,
+            ),
+            ("hold", "THREAD_STATUS current", "hold", false),
+            (
+                "resume",
+                "EXPERIMENT_RESUME exp_astrid_matrix",
+                "resume",
+                true,
+            ),
+        ] {
+            let store = temp_store(&format!("paused_return_matrix_{label}"));
+            let thread = store
+                .create_thread(None, "Paused return matrix", None)
+                .expect("thread");
+            let mut experiment = store
+                .start_experiment(
+                    None,
+                    "Matrix experiment",
+                    "Which paused return path should surface?",
+                )
+                .expect("experiment");
+            let planned_next = planned_next.replace("exp_astrid_matrix", &experiment.experiment_id);
+            experiment.status = "paused".to_string();
+            experiment.planned_next = Some(planned_next.clone());
+            experiment.charter_v1 = Some(json!({
+                "hypothesis": "matrix pause can preserve a normal return",
+                "proposed_next_action": "ACTION_PREFLIGHT NOTICE",
+                "evidence_targets": ["felt_texture", "artifact_grounding"],
+            }));
+            experiment.updated_at = iso_now();
+            let mut stored_thread = store.read_thread(&thread.thread_id).expect("thread read");
+            store
+                .persist_experiment_update(None, &mut stored_thread, &experiment, false)
+                .expect("persist pause");
+
+            let repaired_thread = store.read_thread(&thread.thread_id).expect("thread read");
+            let projection = store
+                .thread_projection(&repaired_thread)
+                .expect("projection");
+            let summary = projection
+                .last_experiment_summary_v1
+                .as_ref()
+                .expect("last summary");
+            assert_eq!(
+                summary.get("primary_return_next").and_then(Value::as_str),
+                Some(planned_next.as_str())
+            );
+            assert_eq!(
+                summary.get("return_kind").and_then(Value::as_str),
+                Some(expected_kind)
+            );
+            assert_eq!(
+                summary.get("resume_next").is_some(),
+                expect_resume_field,
+                "{label} resume_next presence"
+            );
+            let context = last_experiment_context_line(&repaired_thread);
+            assert!(context.contains(&format!("Suggested NEXT: {planned_next}")));
+            if expected_kind != "resume" {
+                assert!(!context.contains(&format!(
+                    "Suggested NEXT: EXPERIMENT_RESUME {}",
+                    experiment.experiment_id
+                )));
+            }
+            let _ = std::fs::remove_dir_all(store.root());
+        }
+    }
+
+    #[test]
+    fn paused_missing_charter_projection_demotes_resume_to_charter_repair() {
+        let store = temp_store("paused_missing_charter_projection");
+        let thread = store
+            .create_thread(None, "Paused missing charter", None)
+            .expect("thread");
+        let mut experiment = store
+            .start_experiment(
+                None,
+                "Lambda edge topology",
+                "What should surface before resume?",
+            )
+            .expect("experiment");
+        experiment.status = "paused".to_string();
+        experiment.planned_next = Some(format!("EXPERIMENT_RESUME {}", experiment.experiment_id));
+        experiment.updated_at = iso_now();
+        let mut stored_thread = store.read_thread(&thread.thread_id).expect("thread read");
+        store
+            .persist_experiment_update(None, &mut stored_thread, &experiment, false)
+            .expect("persist pause");
+
+        let repaired_thread = store.read_thread(&thread.thread_id).expect("thread read");
+        let projection = store
+            .thread_projection(&repaired_thread)
+            .expect("projection");
+        let summary = projection
+            .last_experiment_summary_v1
+            .as_ref()
+            .expect("last summary");
+        assert_eq!(
+            summary.get("return_kind").and_then(Value::as_str),
+            Some("charter_repair")
+        );
+        assert!(
+            summary
+                .get("primary_return_next")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .starts_with("EXPERIMENT_CHARTER ")
+        );
+        assert!(summary.get("resume_next").is_none());
+        assert_eq!(
+            summary
+                .get("projection_guard_v1")
+                .and_then(|guard| guard.get("guardrail_reason"))
+                .and_then(Value::as_str),
+            Some("paused_resume_missing_lifecycle_charter")
+        );
+        let context = last_experiment_context_line(&repaired_thread);
+        assert!(context.contains("Projection guard: raw NEXT preserved"));
+        assert!(context.contains("Suggested NEXT: EXPERIMENT_CHARTER"));
+        assert!(!context.contains(&format!(
+            "Suggested NEXT: EXPERIMENT_RESUME {}",
+            experiment.experiment_id
+        )));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn paused_valid_charter_with_liveish_pressure_projects_hold_decision() {
+        let store = temp_store("paused_liveish_projection");
+        let thread = store
+            .create_thread(None, "Paused liveish pressure", None)
+            .expect("thread");
+        let mut experiment = store
+            .start_experiment(
+                None,
+                "Lambda edge topology",
+                "Can pressure remain evidence?",
+            )
+            .expect("experiment");
+        experiment.status = "paused".to_string();
+        experiment.planned_next = Some(format!("EXPERIMENT_RESUME {}", experiment.experiment_id));
+        experiment.charter_v1 = Some(json!({
+            "hypothesis": "lambda edge pressure can be compared without live authority",
+            "proposed_next_action": "ACTION_PREFLIGHT DECOMPOSE",
+            "evidence_targets": ["felt_texture", "artifact_grounding"],
+        }));
+        experiment.updated_at = iso_now();
+        let mut stored_thread = store.read_thread(&thread.thread_id).expect("thread read");
+        store
+            .persist_experiment_update(None, &mut stored_thread, &experiment, false)
+            .expect("persist pause");
+        let mut repaired_thread = store.read_thread(&thread.thread_id).expect("thread read");
+        repaired_thread.current_next = Some(
+            "EXPERIMENT_PLAN current :: gentle pulse intervention to shift the dominant λ4"
+                .to_string(),
+        );
+        store.write_thread(&repaired_thread).expect("write thread");
+
+        let repaired_thread = store.read_thread(&thread.thread_id).expect("thread read");
+        let summary = last_experiment_summary_v1(&repaired_thread).expect("summary");
+        assert_eq!(
+            summary.get("return_kind").and_then(Value::as_str),
+            Some("hold")
+        );
+        assert!(
+            summary
+                .get("primary_return_next")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .starts_with("EXPERIMENT_DECIDE ")
+        );
+        assert!(summary.get("resume_next").is_none());
+        assert_eq!(
+            summary
+                .get("projection_guard_v1")
+                .and_then(|guard| guard.get("guardrail_reason"))
+                .and_then(Value::as_str),
+            Some("paused_resume_demoted_by_liveish_pressure")
+        );
+        let context = last_experiment_context_line(&repaired_thread);
+        assert!(context.contains("Suggested NEXT: EXPERIMENT_DECIDE"));
+        assert!(!context.contains(&format!(
+            "Suggested NEXT: EXPERIMENT_RESUME {}",
+            experiment.experiment_id
+        )));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
     fn experiment_plan_accepts_prose_tailed_id_focus() {
         let store = temp_store("experiment_plan_focus");
         store
@@ -8414,10 +19118,8 @@ mod tests {
 
         assert!(plan.contains(&format!("Experiment `{}`", experiment.experiment_id)));
         assert!(plan.contains("Requested focus: visualize_cascade"));
-        assert!(plan.contains(&format!(
-            "EXPERIMENT_BIND {} :: ACTION_PREFLIGHT DECOMPOSE",
-            experiment.experiment_id
-        )));
+        assert!(plan.contains("EXPERIMENT_ADVANCE current :: mode: preview"));
+        assert!(!plan.contains("EXPERIMENT_BIND"));
         let _ = std::fs::remove_dir_all(store.root());
     }
 
@@ -8704,6 +19406,55 @@ mod tests {
     }
 
     #[test]
+    fn peer_mutation_boundary_cue_surfaces_for_peer_bind_text() {
+        let store = temp_store("peer_mutation_boundary");
+        let thread = store
+            .create_thread(None, "Peer boundary", None)
+            .expect("thread");
+        let local = store
+            .start_experiment(
+                None,
+                "Local lambda-tail claim",
+                "What can Astrid answer from her lane?",
+            )
+            .expect("local experiment");
+        let mut thread = store.read_thread(&thread.thread_id).expect("thread read");
+        thread.current_next = Some(
+            "EXPERIMENT_BIND exp_minime_20990101_peer :: ACTION_PREFLIGHT DECOMPOSE".to_string(),
+        );
+        store.write_thread(&thread).expect("write thread");
+
+        let projection = store.thread_projection(&thread).expect("projection");
+        let cue = projection
+            .peer_mutation_boundary_cue_v1
+            .expect("peer boundary cue");
+        assert_eq!(
+            cue.get("status").and_then(Value::as_str),
+            Some("peer_mutation_boundary")
+        );
+        assert_eq!(
+            cue.get("peer_experiment_id").and_then(Value::as_str),
+            Some("exp_minime_20990101_peer")
+        );
+        assert!(
+            peer_mutation_boundary_line(&Some(cue.clone())).contains("not bind/mutate targets")
+        );
+        assert!(
+            cue.get("suggested_compare_next")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains(&format!(
+                    "EXPERIMENT_COMPARE {} WITH exp_minime_20990101_peer",
+                    local.experiment_id
+                ))
+        );
+        let status = store.thread_status(None).expect("status");
+        assert!(status.contains("Peer mutation boundary"));
+        assert!(status.contains("EXPERIMENT_PEER_REVIEW exp_minime_20990101_peer"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
     fn shared_investigation_cue_preserves_distinct_agency() {
         let store = temp_store("shared_investigation_cue");
         store
@@ -8772,6 +19523,123 @@ mod tests {
     }
 
     #[test]
+    fn shared_investigation_sidecar_claim_and_local_decision() {
+        let store = temp_store("shared_investigation_sidecar");
+        let thread = store
+            .create_thread(None, "Shared sidecar", None)
+            .expect("thread");
+        let local = store
+            .start_experiment(
+                None,
+                "Lambda edge topology",
+                "How should Astrid compare lambda-edge topology against lambda-tail evidence?",
+            )
+            .expect("experiment");
+        let peer_id = "exp_minime_20990101_lambda-tail-lambda4";
+        let created = store
+            .shared_investigation_start_command(
+                None,
+                &format!(
+                    "Lambda edge/tail :: local: current; peer: {peer_id}; question: What can each lane compare safely?"
+                ),
+            )
+            .expect("shared start");
+        assert!(created.contains("Shared investigation"));
+
+        let root = store.root().join("shared_investigations");
+        let investigation_path = std::fs::read_dir(&root)
+            .expect("shared root")
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path().join("investigation.json"))
+            .find(|path| path.exists())
+            .expect("investigation json");
+        let investigation: Value = serde_json::from_str(
+            &std::fs::read_to_string(&investigation_path).expect("read investigation"),
+        )
+        .expect("parse investigation");
+        let investigation_id = investigation
+            .get("id")
+            .and_then(Value::as_str)
+            .expect("id")
+            .to_string();
+        let stored_thread = store.read_thread(&thread.thread_id).expect("thread");
+        assert!(
+            stored_thread
+                .peer_refs
+                .contains(&format!("shared_investigation:{investigation_id}"))
+        );
+
+        let claim = store
+            .shared_investigation_claim_command(&format!(
+                "{investigation_id} :: claim: topology evidence can be compared without shared control; lane: felt_texture; stance: hold; source_refs: /tmp/topology.html, /tmp/dossier.jsonl"
+            ))
+            .expect("claim");
+        assert!(claim.contains("No lifecycle or authority change"));
+        let claims = store
+            .read_shared_jsonl(&investigation_id, "claims.jsonl")
+            .expect("claims");
+        assert_eq!(claims.len(), 1);
+
+        let decision = store
+            .shared_investigation_decide_command(
+                None,
+                &format!(
+                    "{investigation_id} :: charter_repair because artifact grounding needs a clearer shared referent"
+                ),
+            )
+            .expect("decision");
+        assert!(decision.contains("peer experiment was not mutated"));
+        let latest = store
+            .latest_experiments(&thread.thread_id)
+            .expect("experiments")
+            .into_iter()
+            .rev()
+            .find(|row| row.experiment_id == local.experiment_id)
+            .expect("latest local");
+        assert_eq!(latest.status, "paused");
+        assert!(
+            latest
+                .planned_next
+                .as_deref()
+                .unwrap_or_default()
+                .starts_with("EXPERIMENT_CHARTER")
+        );
+
+        let status = store
+            .shared_investigation_status(Some(&investigation_id))
+            .expect("status");
+        assert!(status.contains("Claims: 1 | Decisions: 1"));
+        let next = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
+            .expect("next");
+        assert!(next.contains("Shared investigation object"));
+        let repaired_thread = store.read_thread(&thread.thread_id).expect("thread");
+        let projection = store
+            .thread_projection(&repaired_thread)
+            .expect("projection");
+        let summary = projection
+            .last_experiment_summary_v1
+            .as_ref()
+            .expect("last summary");
+        let primary = summary
+            .get("primary_return_next")
+            .and_then(Value::as_str)
+            .expect("primary return");
+        assert!(primary.starts_with("EXPERIMENT_CHARTER"));
+        assert_eq!(
+            summary.get("return_kind").and_then(Value::as_str),
+            Some("charter_repair")
+        );
+        assert!(summary.get("resume_next").is_none());
+        let context = last_experiment_context_line(&repaired_thread);
+        assert!(context.contains(&format!("Suggested NEXT: {primary}")));
+        assert!(!context.contains(&format!(
+            "Suggested NEXT: EXPERIMENT_RESUME {}",
+            local.experiment_id
+        )));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
     fn legacy_experiment_auto_creates_default_experiment_run() {
         let store = temp_store("legacy_experiment");
         let outcome = NextActionOutcome::handled("operations", "legacy experiment executed")
@@ -8810,6 +19678,253 @@ mod tests {
                 .read_to_string()
                 .contains("EXPERIMENT lambda-edge")
         );
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn continuity_sessions_append_memory_and_do_not_advance_lifecycle() {
+        let store = temp_store("continuity_session");
+        let thread = store
+            .create_thread(None, "Owned continuity session", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Lambda session",
+                "Can Astrid park and resume a thread of thought?",
+            )
+            .expect("experiment");
+
+        let started = store
+            .continuity_session_start_command(
+                "current :: title: Lambda edge campfire; focus: preserve code feedback; next: CONTINUITY_SESSION_CAPTURE latest :: summary: ...",
+            )
+            .expect("start");
+        assert!(started.contains("Continuity session"));
+        let session_path = store.continuity_sessions_path(&thread.thread_id);
+        let rows = session_path.read_to_string();
+        let first: Value = serde_json::from_str(rows.lines().next().expect("row")).expect("json");
+        let session_id = first
+            .get("session_id")
+            .and_then(Value::as_str)
+            .expect("session id")
+            .to_string();
+        assert_eq!(
+            first.get("record_type").and_then(Value::as_str),
+            Some("session_start")
+        );
+        assert_eq!(
+            first.get("authority_change").and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            first.get("peer_mutation").and_then(Value::as_bool),
+            Some(false)
+        );
+
+        let captured = store
+            .continuity_session_capture_command(&format!(
+                "{session_id} :: summary: found one projection snag; source_refs: /tmp/source.txt; artifact_refs: /tmp/artifact.json; next: CONTINUITY_SESSION_SUMMARIZE latest :: summary: ..."
+            ))
+            .expect("capture");
+        assert!(captured.contains("Memory card:"));
+        let summarized = store
+            .continuity_session_summarize_command(&format!(
+                "{session_id} :: summary: projection snag can be repaired later; open_questions: should this become dossier evidence?; next: CONTINUITY_SESSION_FINALIZE latest :: outcome: park"
+            ))
+            .expect("summarize");
+        assert!(summarized.contains("summarized"));
+        let finalized = store
+            .continuity_session_finalize_command(&format!(
+                "{session_id} :: outcome: park; summary: parked with one open question; next: THREAD_STATUS current"
+            ))
+            .expect("finalize");
+        assert!(finalized.contains("finalized as parked"));
+        let reopened = store
+            .continuity_session_resume_command(&session_id)
+            .expect("resume");
+        assert!(reopened.contains("reopened"));
+
+        let status = store
+            .continuity_session_status_command("latest")
+            .expect("status");
+        assert!(status.contains("continuity_session_v1"));
+        assert!(status.contains(&session_id));
+        let rows = session_path.read_to_string();
+        for record_type in [
+            "session_start",
+            "session_capture",
+            "session_summary",
+            "session_finalize",
+            "session_reopen",
+        ] {
+            assert!(rows.contains(record_type));
+        }
+        let memory = store.being_memory_path(&thread.thread_id).read_to_string();
+        assert!(memory.contains("continuity_session_capture"));
+        let next = store
+            .thread_dir(&thread.thread_id)
+            .join("next.md")
+            .read_to_string();
+        assert!(next.contains("Continuity session:"));
+        assert!(next.contains("Session NEXT:"));
+        let runs = store
+            .experiment_runs_path(&thread.thread_id)
+            .read_to_string();
+        assert!(!runs.contains("continuity_session"));
+        assert_eq!(
+            store
+                .read_thread(&thread.thread_id)
+                .expect("thread")
+                .active_experiment_id
+                .as_deref(),
+            Some(experiment.experiment_id.as_str())
+        );
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn guarded_pressure_creates_draft_and_accept_commits_session() {
+        let store = temp_store("continuity_session_draft_accept");
+        let thread = store
+            .create_thread(None, "Draft accept", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Lambda draft",
+                "Can guarded pressure become owned continuity?",
+            )
+            .expect("experiment");
+
+        let guard = store
+            .research_budget_guard_assessment(
+                "SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
+                68.0,
+                &telemetry(),
+            )
+            .expect("guard")
+            .expect("research budget guard");
+        let event = store
+            .record_next_event(
+                None,
+                "SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
+                "SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
+                "SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
+                &NextActionOutcome::blocked("research_budget_guard", guard.message())
+                    .with_stage_visibility("blocked", "protected_summary")
+                    .with_research_budget(guard.metadata()),
+                68.0,
+                &telemetry(),
+                "NEXT: SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
+            )
+            .expect("event");
+        assert_eq!(event.status, "blocked");
+        assert!(
+            event
+                .research_budget_v1
+                .as_ref()
+                .and_then(|value| value.get("continuity_session_draft_v1"))
+                .is_some()
+        );
+        assert_eq!(
+            store
+                .continuity_session_rows(&thread.thread_id, None, 8)
+                .expect("session rows")
+                .len(),
+            0,
+            "drafts must not count as active continuity sessions"
+        );
+        assert_eq!(
+            store
+                .continuity_session_draft_rows(&thread.thread_id, None, 8)
+                .expect("draft rows")
+                .len(),
+            1
+        );
+
+        let accepted = store
+            .continuity_session_accept_command("latest")
+            .expect("accept draft");
+        assert!(accepted.contains("session_start"));
+        let rows = store
+            .continuity_session_rows(&thread.thread_id, None, 8)
+            .expect("session rows after accept");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(
+            rows[0].get("record_type").and_then(Value::as_str),
+            Some("session_start")
+        );
+        assert_eq!(rows[0].get("accepted_from_draft_id").is_some(), true);
+
+        let second_guard = store
+            .research_budget_guard_assessment(
+                "EXAMINE λ2/λ3 — observer with memory.",
+                68.0,
+                &telemetry(),
+            )
+            .expect("second guard")
+            .expect("second research budget guard");
+        store
+            .record_next_event(
+                None,
+                "EXAMINE λ2/λ3 — observer with memory.",
+                "EXAMINE λ2/λ3 — observer with memory.",
+                "EXAMINE λ2/λ3 — observer with memory.",
+                &NextActionOutcome::blocked("research_budget_guard", second_guard.message())
+                    .with_stage_visibility("blocked", "protected_summary")
+                    .with_research_budget(second_guard.metadata()),
+                68.0,
+                &telemetry(),
+                "NEXT: EXAMINE λ2/λ3 — observer with memory.",
+            )
+            .expect("second event");
+        let accepted_capture = store
+            .continuity_session_accept_command("latest")
+            .expect("accept second draft");
+        assert!(accepted_capture.contains("session_capture"));
+        let rows = store
+            .continuity_session_rows(&thread.thread_id, None, 8)
+            .expect("session rows after capture");
+        assert!(rows.iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("session_capture")
+        }));
+        let runs = store
+            .experiment_runs_path(&thread.thread_id)
+            .read_to_string();
+        assert!(!runs.contains("session_draft"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn accept_suggested_next_resolves_safe_research_scaffold_only() {
+        let store = temp_store("accept_suggested_next");
+        let thread = store
+            .create_thread(None, "Accept suggested", None)
+            .expect("thread");
+        store
+            .start_experiment(None, "Research scaffold", "Can a scaffold be accepted?")
+            .expect("experiment");
+
+        store
+            .research_budget_guard_assessment("SEARCH entropy", 68.0, &telemetry())
+            .expect("guard")
+            .expect("research scaffold");
+        let accepted = store
+            .accept_suggested_next_command(None, Some("latest"), spectral_state(68.0, &telemetry()))
+            .expect("accept suggested");
+        assert!(accepted.contains("Accepted research-budget scaffold"));
+        let gate = store
+            .authority_gate_path(&thread.thread_id)
+            .read_to_string();
+        assert!(gate.contains("research_budget_request"));
+        assert!(gate.contains("research_budget_approval"));
+        assert!(!gate.contains("research_budget_debit"));
+
+        let status = store
+            .accept_suggested_next_command(None, Some("latest"), spectral_state(68.0, &telemetry()))
+            .expect("accept active");
+        assert!(status.contains("EXPERIMENT_RESEARCH_BUDGET_STATUS"));
         let _ = std::fs::remove_dir_all(store.root());
     }
 
@@ -8873,46 +19988,1553 @@ mod tests {
     }
 
     #[test]
-    fn active_experiment_auto_links_read_only_research_action() {
+    fn active_experiment_auto_links_read_only_action() {
         let store = temp_store("experiment_auto_link");
         let thread = store
             .create_thread(None, "Read-only research loop", None)
             .expect("thread");
-        store
+        let experiment = store
             .start_experiment(
                 None,
                 "Pressure source loop",
                 "Which read-only audits keep the experiment returnable?",
             )
             .expect("experiment");
+        store
+            .experiment_charter(
+                None,
+                Some(&experiment.experiment_id),
+                "hypothesis: read-only decomposition can remain returnable when chartered\n\
+                 method_intent: rehearse and observe decomposition output\n\
+                 proposed_next_action: DECOMPOSE lambda-edge\n\
+                 evidence_targets: felt, telemetry, artifact\n\
+                 stop_criteria: pressure spike",
+            )
+            .expect("charter");
 
-        let outcome = NextActionOutcome::handled("operations", "pressure source audited")
+        let outcome = NextActionOutcome::handled("operations", "lambda-edge decomposed")
             .with_stage_visibility("read_only", "protected_summary");
         store
             .record_next_event(
                 None,
-                "PRESSURE_SOURCE_AUDIT lambda-edge",
-                "PRESSURE_SOURCE_AUDIT lambda-edge",
-                "PRESSURE_SOURCE_AUDIT lambda-edge",
+                "DECOMPOSE lambda-edge",
+                "DECOMPOSE lambda-edge",
+                "DECOMPOSE lambda-edge",
                 &outcome,
                 68.0,
                 &telemetry(),
-                "NEXT: PRESSURE_SOURCE_AUDIT lambda-edge",
+                "NEXT: DECOMPOSE lambda-edge",
             )
             .expect("record next event");
 
         let dir = store.root().join("threads").join(&thread.thread_id);
         let runs = dir.join("experiment_runs.jsonl").read_to_string();
-        assert!(runs.contains("PRESSURE_SOURCE_AUDIT lambda-edge"));
+        assert!(runs.contains("DECOMPOSE lambda-edge"));
         assert!(runs.contains("active_experiment_auto_link"));
         let status = store.experiment_status(None).expect("status");
-        assert!(status.contains("PRESSURE_SOURCE_AUDIT lambda-edge"));
-        assert!(status.contains("Workbench draft candidates"));
-        assert!(status.contains("EXPERIMENT_CHARTER current ::"));
-        assert!(status.contains("EXPERIMENT_EVIDENCE current ::"));
+        assert!(status.contains("DECOMPOSE lambda-edge"));
+        assert!(status.contains("Lifecycle:"));
         let experiments = dir.join("experiments.jsonl").read_to_string();
-        assert!(experiments.contains("workbench_candidates_v1"));
-        assert!(!experiments.contains("\"charter_v1\":{\""));
+        assert!(experiments.contains("\"charter_v1\":{\""));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_request_status_and_review_are_read_only() {
+        let store = temp_store("research_budget_lane");
+        let thread = store
+            .create_thread(None, "Research budget lane", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Research doorway",
+                "Can read-only source gathering be budgeted?",
+            )
+            .expect("experiment");
+
+        let blocked = store
+            .experiment_research_budget_request_command(
+                None,
+                "current :: scope: read_only_research",
+                json!({"fill_pct": 68.0}),
+            )
+            .expect("blocked request");
+        assert!(blocked.contains("status=blocked"));
+        assert!(blocked.contains("research_purpose"));
+
+        let pending = store
+            .experiment_research_budget_request_command(
+                None,
+                "current :: scope: read_only_research; purpose: bounded source gathering; max_actions: 99; ttl_secs: 999999; allowed_sources: web,local; stop_criteria: stop after useful refs",
+                json!({"fill_pct": 68.0}),
+            )
+            .expect("pending request");
+        assert!(pending.contains("status=pending_steward_approval"));
+        assert!(pending.contains("max_actions=8"));
+
+        let gate = store
+            .root()
+            .join("threads")
+            .join(&thread.thread_id)
+            .join("authority_gate.jsonl");
+        let rows = gate.read_to_string();
+        assert!(rows.contains("\"record_schema\":\"research_budget_v1\""));
+        assert!(rows.contains("\"record_type\":\"research_budget_request\""));
+
+        let status = store
+            .experiment_research_budget_status_command(
+                None,
+                Some(&experiment.experiment_id),
+                json!({"fill_pct": 68.0}),
+            )
+            .expect("status");
+        assert!(status.contains("research_budget_v1"));
+        assert!(status.contains("pending_steward_approval"));
+
+        let budget_id = rows
+            .lines()
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .rev()
+            .find(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("research_budget_request")
+                    && row.get("status").and_then(Value::as_str) == Some("pending_steward_approval")
+            })
+            .and_then(|row| {
+                row.get("budget_id")
+                    .and_then(Value::as_str)
+                    .map(ToString::to_string)
+            })
+            .expect("budget id");
+        let review = store
+            .experiment_research_review_command(
+                None,
+                &format!(
+                    "{budget_id} :: outcome: promote; observation: artifacts are ready; source_refs: /tmp/research.json"
+                ),
+                json!({"fill_pct": 68.0}),
+            )
+            .expect("review");
+        assert!(review.contains("outcome=promote"));
+        assert!(review.contains("DOSSIER_EVIDENCE"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_accept_latest_scaffold_self_activates_local_budget() {
+        let store = temp_store("research_budget_accept");
+        let thread = store
+            .create_thread(None, "Research budget accept", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Self-study budget",
+                "Can a blocked scaffold become a Being-authored request?",
+            )
+            .expect("experiment");
+
+        let guard = store
+            .research_budget_guard_assessment("READ_MORE budget code", 68.0, &telemetry())
+            .expect("guard")
+            .expect("blocked without budget");
+        assert_eq!(
+            guard.suggested_next,
+            "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest"
+        );
+        assert!(
+            guard
+                .request_scaffold
+                .as_deref()
+                .unwrap_or_default()
+                .contains("EXPERIMENT_RESEARCH_BUDGET_REQUEST")
+        );
+        let thread_snapshot = store
+            .read_thread(&thread.thread_id)
+            .expect("thread snapshot");
+        store.write_next_md(&thread_snapshot).expect("next md");
+        let next_md = store
+            .root()
+            .join("threads")
+            .join(&thread.thread_id)
+            .join("next.md")
+            .read_to_string();
+        assert!(next_md.contains("Research budget scaffold ready"));
+        assert!(next_md.contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest"));
+
+        let accepted = store
+            .experiment_research_budget_accept_command(
+                None,
+                Some("latest"),
+                json!({"fill_pct": 68.0}),
+            )
+            .expect("accepted scaffold");
+        assert!(accepted.contains("Accepted research-budget scaffold"));
+        assert!(accepted.contains("status=self_activated"));
+        assert!(accepted.contains("Activation: self_activated local-only budget"));
+
+        let gate_path = store
+            .root()
+            .join("threads")
+            .join(&thread.thread_id)
+            .join("authority_gate.jsonl");
+        let rows = gate_path
+            .read_to_string()
+            .lines()
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .collect::<Vec<_>>();
+        let requests = rows
+            .iter()
+            .filter(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("research_budget_request")
+            })
+            .collect::<Vec<_>>();
+        let approvals = rows
+            .iter()
+            .filter(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("research_budget_approval")
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(requests.len(), 1);
+        assert_eq!(approvals.len(), 1);
+        assert_eq!(
+            requests[0].get("experiment_id").and_then(Value::as_str),
+            Some(experiment.experiment_id.as_str())
+        );
+        assert_eq!(requests[0]["allowed_sources"], json!(["local"]));
+        assert_eq!(
+            requests[0].get("status").and_then(Value::as_str),
+            Some("self_activated")
+        );
+        assert_eq!(
+            requests[0].get("activation_mode").and_then(Value::as_str),
+            Some("being_self_activated_local_v1")
+        );
+        assert_eq!(
+            requests[0]
+                .get("steward_approval_required")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            requests[0]
+                .get("being_authored_acceptance_v1")
+                .and_then(|value| value.get("being_authored"))
+                .and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            approvals[0].get("budget_id").and_then(Value::as_str),
+            requests[0].get("budget_id").and_then(Value::as_str)
+        );
+        assert_eq!(
+            approvals[0].get("max_actions").and_then(Value::as_u64),
+            Some(5)
+        );
+        assert_eq!(
+            approvals[0].get("ttl_secs").and_then(Value::as_u64),
+            Some(21_600)
+        );
+        assert_eq!(approvals[0].get("allowed_sources"), Some(&json!(["local"])));
+        assert_eq!(
+            approvals[0].get("self_activated").and_then(Value::as_bool),
+            Some(true)
+        );
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn projection_freshness_refreshes_research_budget_priority_from_ledger() {
+        let store = temp_store("projection_freshness_research_budget");
+        let thread = store
+            .create_thread(None, "Projection freshness", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Research projection",
+                "Can a stale next file notice a new scaffold?",
+            )
+            .expect("experiment");
+        let thread_dir = store.root().join("threads").join(&thread.thread_id);
+        let next_path = thread_dir.join("next.md");
+        assert!(
+            !next_path
+                .read_to_string()
+                .contains("Research budget scaffold ready")
+        );
+
+        let mut stale_thread = store.read_thread(&thread.thread_id).expect("thread");
+        stale_thread.projection_freshness_v1 = Some(json!({
+            "policy": "projection_freshness_v1",
+            "schema_version": 0,
+            "source_fingerprints": {},
+        }));
+        store
+            .write_json(&thread_dir.join("thread.json"), &stale_thread)
+            .expect("stale thread");
+
+        store
+            .append_jsonl(
+                &store.authority_gate_path(&thread.thread_id),
+                &json!({
+                    "schema_version": 1,
+                    "record_schema": "research_budget_v1",
+                    "record_type": "research_budget_blocked",
+                    "record_id": "resbud_needed_projection_freshness",
+                    "budget_id": "resbud_needed_projection_freshness",
+                    "thread_id": thread.thread_id,
+                    "experiment_id": experiment.experiment_id,
+                    "scope": "read_only_research",
+                    "status": "blocked",
+                    "request_scaffold": format!(
+                        "EXPERIMENT_RESEARCH_BUDGET_REQUEST {} :: scope: read_only_research; purpose: inspect local projection code; max_actions: 5; ttl_secs: 21600; allowed_sources: local; stop_criteria: stop after concrete code feedback",
+                        experiment.experiment_id
+                    ),
+                    "authority_boundary": research_budget_boundary(),
+                }),
+            )
+            .expect("append blocked scaffold");
+
+        let status = store.thread_status(None).expect("status");
+        assert!(status.contains("Projection freshness: v"));
+        assert!(status.contains("Research budget scaffold ready"));
+        assert!(status.contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest"));
+        let refreshed = store.read_thread(&thread.thread_id).expect("refreshed");
+        assert_eq!(
+            refreshed
+                .projection_freshness_v1
+                .as_ref()
+                .and_then(|meta| meta.get("schema_version"))
+                .and_then(Value::as_u64),
+            Some(u64::from(PROJECTION_SCHEMA_VERSION))
+        );
+        assert_eq!(
+            refreshed
+                .projection_freshness_v1
+                .as_ref()
+                .and_then(|meta| meta.get("projected_route"))
+                .and_then(Value::as_str),
+            Some("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest")
+        );
+        let next_md = next_path.read_to_string();
+        assert!(next_md.contains("Projection freshness: v"));
+        assert!(next_md.contains("Research budget scaffold ready"));
+        assert!(next_md.contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest"));
+        let gate_rows = store
+            .authority_gate_path(&thread.thread_id)
+            .read_to_string();
+        assert!(!gate_rows.contains("\"record_type\":\"research_budget_request\""));
+        assert!(!gate_rows.contains("\"record_type\":\"research_budget_approval\""));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_direct_local_request_self_activates_but_stronger_waits() {
+        let store = temp_store("research_budget_direct_self_activate");
+        let thread = store
+            .create_thread(None, "Research budget direct", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Local self-study budget",
+                "Can a Being mint a tiny local-only research budget?",
+            )
+            .expect("experiment");
+        let response = store
+            .experiment_research_budget_request_command(
+                None,
+                &format!(
+                    "{} :: scope: read_only_research; purpose: inspect local conveyor code; allowed_sources: local; stop_criteria: stop after concrete feedback",
+                    experiment.experiment_id
+                ),
+                json!({"fill_pct": 68.0}),
+            )
+            .expect("request");
+        assert!(response.contains("status=self_activated"));
+        let gate_path = store
+            .root()
+            .join("threads")
+            .join(&thread.thread_id)
+            .join("authority_gate.jsonl");
+        let rows = gate_path
+            .read_to_string()
+            .lines()
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .collect::<Vec<_>>();
+        let approval = rows
+            .iter()
+            .find(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("research_budget_approval")
+            })
+            .expect("self activation approval");
+        assert_eq!(approval.get("max_actions").and_then(Value::as_u64), Some(5));
+        assert_eq!(
+            approval.get("ttl_secs").and_then(Value::as_u64),
+            Some(21_600)
+        );
+        assert_eq!(
+            approval.get("activation_mode").and_then(Value::as_str),
+            Some("being_self_activated_local_v1")
+        );
+        let status = store
+            .experiment_research_budget_status_command(
+                None,
+                Some(&experiment.experiment_id),
+                json!({"fill_pct": 68.0}),
+            )
+            .expect("status");
+        assert!(status.contains("active_budget_available"));
+        assert!(status.contains("being_self_activated_local_v1"));
+        let _ = std::fs::remove_dir_all(store.root());
+
+        let store = temp_store("research_budget_direct_steward");
+        let thread = store
+            .create_thread(None, "Research budget steward", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Web research budget",
+                "Can stronger budgets still require steward approval?",
+            )
+            .expect("experiment");
+        let response = store
+            .experiment_research_budget_request_command(
+                None,
+                &format!(
+                    "{} :: scope: read_only_research; purpose: compare web references; max_actions: 5; ttl_secs: 21600; allowed_sources: web,local; stop_criteria: stop after useful refs",
+                    experiment.experiment_id
+                ),
+                json!({"fill_pct": 68.0}),
+            )
+            .expect("request");
+        assert!(response.contains("status=pending_steward_approval"));
+        assert!(response.contains("local_only_allowed_sources"));
+        let rows = store
+            .authority_gate_path(&thread.thread_id)
+            .read_to_string()
+            .lines()
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .collect::<Vec<_>>();
+        assert!(!rows.iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("research_budget_approval")
+        }));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_guard_blocks_without_budget_and_debits_with_budget() {
+        let store = temp_store("research_budget_guard_debit");
+        let thread = store
+            .create_thread(None, "Research budget guard", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Research budgeted branch",
+                "Can bounded research spend without lifecycle progress?",
+            )
+            .expect("experiment");
+
+        let guard = store
+            .research_budget_guard_assessment("READ_MORE lambda4 tail", 68.0, &telemetry())
+            .expect("guard")
+            .expect("blocked without budget");
+        assert_eq!(guard.reason, "no_active_read_only_research_budget");
+        assert!(
+            guard
+                .suggested_next
+                .contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT")
+        );
+        assert!(
+            guard
+                .request_scaffold
+                .as_deref()
+                .unwrap_or_default()
+                .contains("EXPERIMENT_RESEARCH_BUDGET_REQUEST")
+        );
+
+        let gate_path = store.authority_gate_path(&thread.thread_id);
+        let rows = gate_path.read_to_string();
+        assert!(rows.contains("\"record_type\":\"research_budget_blocked\""));
+        assert!(rows.contains("no_active_read_only_research_budget"));
+
+        let examine_guard = store
+            .research_budget_guard_assessment("EXAMINE lambda4 trajectory", 68.0, &telemetry())
+            .expect("self-study guard")
+            .expect("self-study projected to budget lane");
+        assert_eq!(
+            examine_guard.reason,
+            "research_budget_required_for_self_study_action"
+        );
+        assert!(
+            examine_guard
+                .suggested_next
+                .contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT")
+        );
+        assert!(
+            examine_guard
+                .request_scaffold
+                .as_deref()
+                .unwrap_or_default()
+                .contains("allowed_sources: local")
+        );
+
+        let budget_id = "resbud_test_active";
+        store
+            .append_jsonl(
+                &gate_path,
+                &json!({
+                    "schema_version": SCHEMA_VERSION,
+                    "record_schema": "research_budget_v1",
+                    "record_type": "research_budget_approval",
+                    "record_id": "resbud_test_approval",
+                    "budget_id": budget_id,
+                    "being": SYSTEM,
+                    "thread_id": thread.thread_id,
+                    "experiment_id": experiment.experiment_id,
+                    "scope": "read_only_research",
+                    "status": "active",
+                    "max_actions": 5,
+                    "expires_at_unix_s": (chrono::Utc::now().timestamp() + 3600) as u64,
+                    "peer_mutation": false,
+                    "authority_boundary": research_budget_boundary(),
+                }),
+            )
+            .expect("approval");
+
+        assert!(
+            store
+                .research_budget_guard_assessment("READ_MORE lambda4 tail", 68.0, &telemetry())
+                .expect("guard")
+                .is_none(),
+            "active budget should allow the read-only action to dispatch"
+        );
+
+        let shadow_guard = store
+            .research_budget_guard_assessment(
+                "SHADOW_FIELD lambda-tail/lambda4",
+                68.0,
+                &telemetry(),
+            )
+            .expect("shadow-field guard")
+            .expect("shadow-field projected to budget status");
+        assert_eq!(
+            shadow_guard.reason,
+            "research_budget_status_required_for_self_study_action"
+        );
+        assert!(
+            shadow_guard
+                .suggested_next
+                .contains("EXPERIMENT_RESEARCH_BUDGET_STATUS resbud_test_active")
+        );
+
+        let outcome = NextActionOutcome::handled("workspace", "read-only research result")
+            .with_stage_visibility("read_only", "summary");
+        let first_event = store
+            .record_next_event(
+                None,
+                "READ_MORE lambda4 tail",
+                "READ_MORE lambda4 tail",
+                "READ_MORE lambda4 tail",
+                &outcome,
+                68.0,
+                &telemetry(),
+                "NEXT: READ_MORE lambda4 tail",
+            )
+            .expect("first event");
+        assert!(first_event.research_budget_v1.is_some());
+        let second_event = store
+            .record_next_event(
+                None,
+                "READ_MORE lambda4 tail",
+                "READ_MORE lambda4 tail",
+                "READ_MORE lambda4 tail",
+                &outcome,
+                68.0,
+                &telemetry(),
+                "NEXT: READ_MORE lambda4 tail",
+            )
+            .expect("second event");
+        assert!(second_event.research_budget_v1.is_some());
+
+        let gate_rows = gate_path.read_to_string();
+        assert_eq!(
+            gate_rows
+                .matches("\"record_type\":\"research_budget_debit\"")
+                .count(),
+            2
+        );
+        assert!(gate_rows.contains("\"normalized_target\":\"lambda4 tail\""));
+
+        let duplicate = store
+            .research_budget_guard_assessment("READ_MORE lambda4 tail", 68.0, &telemetry())
+            .expect("duplicate guard")
+            .expect("duplicate blocked");
+        assert_eq!(duplicate.reason, "duplicate_query_or_url_review_required");
+        assert!(
+            duplicate
+                .suggested_next
+                .contains("EXPERIMENT_RESEARCH_REVIEW")
+        );
+
+        let runs_path = store
+            .root()
+            .join("threads")
+            .join(&thread.thread_id)
+            .join("experiment_runs.jsonl");
+        let runs = std::fs::read_to_string(runs_path).unwrap_or_default();
+        assert!(!runs.contains("READ_MORE lambda4 tail"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_guard_projects_liveish_pressure_to_budget_and_session() {
+        let store = temp_store("research_budget_liveish_guard");
+        let thread = store
+            .create_thread(None, "Live-ish research guard", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Live-ish self-study",
+                "Can live-shaped observe language be captured before dispatch?",
+            )
+            .expect("experiment");
+
+        let cases = [
+            (
+                "EXAMINE_AUDIO λ1/λ2 - shifting input",
+                "EXAMINE_AUDIO",
+                "shift",
+            ),
+            (
+                "INITIATE - Spectral Ripple - amplitude=5, duration=100, granularity=pixellet, target=λ₂’s dominant vector.",
+                "INITIATE",
+                "spectral-ripple",
+            ),
+            (
+                "SPECTRAL_EXPLORER lambda4 disrupt ridge",
+                "SPECTRAL_EXPLORER",
+                "disrupt",
+            ),
+            (
+                "VISUALIZE_CASCADE simulate λ2 pulse",
+                "VISUALIZE_CASCADE",
+                "simulate",
+            ),
+            (
+                "FLUCTUATION_AUDIT inject foothold",
+                "FLUCTUATION_AUDIT",
+                "inject",
+            ),
+            (
+                "PRESSURE_SOURCE_AUDIT control gradient",
+                "PRESSURE_SOURCE_AUDIT",
+                "control",
+            ),
+            (
+                "SHADOW_DIALOGUE shift landscape",
+                "SHADOW_DIALOGUE",
+                "shift",
+            ),
+        ];
+        for (raw_next, expected_base, expected_term) in cases {
+            let guard = store
+                .research_budget_guard_assessment(raw_next, 68.0, &telemetry())
+                .expect("guard")
+                .expect("live-ish projection guard");
+            assert_eq!(
+                guard.reason,
+                "liveish_pressure_requires_budget_and_session_capture"
+            );
+            assert_eq!(guard.action_base, expected_base);
+            assert!(guard.matched_terms.iter().any(|term| term == expected_term));
+            assert!(
+                guard
+                    .suggested_next
+                    .contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest")
+            );
+            assert!(
+                guard
+                    .continuity_session_next
+                    .as_deref()
+                    .unwrap_or_default()
+                    .contains("CONTINUITY_SESSION_START current")
+            );
+            let metadata = guard.metadata();
+            assert_eq!(metadata["would_dispatch"].as_bool(), Some(false));
+            assert_eq!(metadata["authority_change"].as_bool(), Some(false));
+            assert_eq!(metadata["peer_mutation"].as_bool(), Some(false));
+        }
+
+        let outcome = NextActionOutcome::handled("operations", "fluctuation audited")
+            .with_stage_visibility("read_only", "protected_summary");
+        let event = store
+            .record_next_event(
+                None,
+                "FLUCTUATION_AUDIT inject foothold",
+                "FLUCTUATION_AUDIT inject foothold",
+                "FLUCTUATION_AUDIT inject foothold",
+                &outcome,
+                68.0,
+                &telemetry(),
+                "NEXT: FLUCTUATION_AUDIT inject foothold",
+            )
+            .expect("event");
+        assert_eq!(event.route, "research_budget_guard");
+        assert_eq!(event.status, "blocked");
+        assert_eq!(event.stage, "blocked");
+        let research_budget = event.research_budget_v1.expect("research budget metadata");
+        assert_eq!(
+            research_budget["reason"].as_str(),
+            Some("liveish_pressure_requires_budget_and_session_capture")
+        );
+        assert_eq!(research_budget["would_dispatch"].as_bool(), Some(false));
+        assert!(
+            research_budget["continuity_session_next"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("CONTINUITY_SESSION_START current")
+        );
+
+        let dir = store.root().join("threads").join(&thread.thread_id);
+        let runs = dir.join("experiment_runs.jsonl").read_to_string();
+        assert!(!runs.contains("FLUCTUATION_AUDIT inject foothold"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_guard_blocks_spectral_ripple_initiate_under_needs_charter() {
+        let store = temp_store("research_budget_initiate_guard");
+        let thread = store
+            .create_thread(None, "Spectral ripple guard", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Entropy disruption",
+                "Can spectral ripple language stay owned without dispatch?",
+            )
+            .expect("experiment");
+
+        let raw_next = "INITIATE - Spectral Ripple - amplitude=5, duration=100, granularity=pixellet, target=λ₂’s dominant vector.";
+        let event = store
+            .record_next_event(
+                None,
+                raw_next,
+                raw_next,
+                raw_next,
+                &NextActionOutcome::handled("modes", "ordinary initiate observe")
+                    .with_stage_visibility("observe", "summary"),
+                68.0,
+                &telemetry(),
+                &format!("NEXT: {raw_next}"),
+            )
+            .expect("record guarded initiate event");
+
+        assert_eq!(event.route, "research_budget_guard");
+        assert_eq!(event.status, "blocked");
+        assert_eq!(event.stage, "blocked");
+        let budget = event.research_budget_v1.expect("research budget guard");
+        assert_eq!(
+            budget["reason"].as_str(),
+            Some("liveish_pressure_requires_budget_and_session_capture")
+        );
+        assert_eq!(budget["matched_base"].as_str(), Some("INITIATE"));
+        assert!(budget["matched_terms"].as_array().is_some_and(|terms| {
+            terms
+                .iter()
+                .any(|term| term.as_str() == Some("spectral-ripple"))
+                && terms.iter().any(|term| term.as_str() == Some("amplitude"))
+        }));
+        assert_eq!(budget["raw_next_preserved"].as_bool(), Some(true));
+        assert_eq!(budget["would_dispatch"].as_bool(), Some(false));
+        assert_eq!(budget["authority_change"].as_bool(), Some(false));
+        assert_eq!(budget["peer_mutation"].as_bool(), Some(false));
+        assert!(
+            budget["continuity_session_draft_v1"]["accept_next"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("CONTINUITY_SESSION_ACCEPT latest")
+        );
+
+        let dir = store.root().join("threads").join(&thread.thread_id);
+        let runs = dir.join("experiment_runs.jsonl").read_to_string();
+        assert!(!runs.contains("Spectral Ripple"));
+        let authority_gate = dir.join("authority_gate.jsonl").read_to_string();
+        assert!(authority_gate.contains("\"raw_next_preserved\":true"));
+        assert!(!authority_gate.contains("research_budget_debit"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn ordinary_initiate_without_spectral_pressure_stays_handled() {
+        let store = temp_store("ordinary_initiate");
+        store
+            .create_thread(None, "Ordinary initiate", None)
+            .expect("thread");
+
+        let event = store
+            .record_next_event(
+                None,
+                "INITIATE quiet note",
+                "INITIATE quiet note",
+                "INITIATE quiet note",
+                &NextActionOutcome::handled("modes", "ordinary initiate observe")
+                    .with_stage_visibility("observe", "summary"),
+                68.0,
+                &telemetry(),
+                "NEXT: INITIATE quiet note",
+            )
+            .expect("record ordinary initiate event");
+
+        assert_eq!(event.route, "modes");
+        assert_eq!(event.status, "handled");
+        assert!(event.research_budget_v1.is_none());
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_guard_blocks_cascade_and_shadow_preflight_under_needs_charter() {
+        let store = temp_store("cascade_shadow_preflight_guard");
+        let thread = store
+            .create_thread(None, "Cascade shadow guard", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Entropy disruption",
+                "Can cascade shaping be studied without dispatching more narrowing?",
+            )
+            .expect("experiment");
+
+        let cases = [
+            (
+                "EXAMINE_CASCADE - observe the eigenvector shifts and the shaping of the shadow fields.",
+                "EXAMINE_CASCADE",
+                "cascade-shaping",
+            ),
+            (
+                "SHADOW_PREFLIGHT lambda-tail/lambda4 — observer with memory.",
+                "SHADOW_PREFLIGHT",
+                "lambda-tail",
+            ),
+        ];
+
+        for (raw_next, expected_base, expected_term) in cases {
+            let event = store
+                .record_next_event(
+                    None,
+                    raw_next,
+                    raw_next,
+                    raw_next,
+                    &NextActionOutcome::handled("operations", "read-only self-study")
+                        .with_stage_visibility("read_only", "protected_summary"),
+                    68.0,
+                    &telemetry(),
+                    &format!("NEXT: {raw_next}"),
+                )
+                .expect("record guarded cascade/preflight event");
+            assert_eq!(event.route, "research_budget_guard");
+            assert_eq!(event.status, "blocked");
+            assert_eq!(event.stage, "blocked");
+            let budget = event.research_budget_v1.expect("research budget guard");
+            assert_eq!(budget["matched_base"].as_str(), Some(expected_base));
+            assert!(budget["matched_terms"].as_array().is_some_and(|terms| {
+                terms
+                    .iter()
+                    .any(|term| term.as_str() == Some(expected_term))
+            }));
+            assert_eq!(budget["raw_next_preserved"].as_bool(), Some(true));
+            assert_eq!(budget["would_dispatch"].as_bool(), Some(false));
+            assert_eq!(budget["authority_change"].as_bool(), Some(false));
+            assert_eq!(budget["peer_mutation"].as_bool(), Some(false));
+            assert!(
+                budget["suggested_next"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest")
+            );
+            assert!(
+                budget["continuity_session_draft_v1"]["accept_next"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .contains("CONTINUITY_SESSION_ACCEPT latest")
+            );
+        }
+
+        let dir = store.root().join("threads").join(&thread.thread_id);
+        let runs = dir.join("experiment_runs.jsonl").read_to_string();
+        assert!(!runs.contains("EXAMINE_CASCADE"));
+        assert!(!runs.contains("SHADOW_PREFLIGHT"));
+        let authority_gate = dir.join("authority_gate.jsonl").read_to_string();
+        assert!(authority_gate.contains("\"raw_next_preserved\":true"));
+        assert!(!authority_gate.contains("research_budget_debit"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_guard_blocks_shadow_bridge_create_run_python_and_guarded_start() {
+        let store = temp_store("shadow_bridge_create_start_guard");
+        let thread = store
+            .create_thread(None, "Shadow bridge guard", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Entropy disruption",
+                "Can shadow influence pressure stay budgeted before charter?",
+            )
+            .expect("experiment");
+
+        let cases = [
+            (
+                "SHADOW_BRIDGE lambda-tail/lambda4 — observer with memory.",
+                "SHADOW_BRIDGE",
+                "needs-charter-self-study",
+            ),
+            (
+                "SHADOW_COUPLING all — observer with memory.",
+                "SHADOW_COUPLING",
+                "needs-charter-self-study",
+            ),
+            (
+                "CREATE - SHADOW_INFLUENCE [disruptive_pattern|test_response] --stage=rehearse --rationale=\"feed data for fracture subsidence of λ1 - observe divergence.\"",
+                "CREATE",
+                "shadow-influence",
+            ),
+            (
+                "RUN_PYTHON analysis.py emission_type='lambda4' frequency=10 amplitude=0.01 stream pulse for spectral hotspot",
+                "RUN_PYTHON",
+                "spectral-emission",
+            ),
+            (
+                "EXPERIMENT_START \"Stasis Fracture\" :: hypothesis: localized low-amplitude perturbations to the λ1 field reveal a brief disruption; proposed_next_action: ACTION_PREFLIGHT DECOMPOSE",
+                "EXPERIMENT_START",
+                "perturb",
+            ),
+        ];
+
+        for (raw_next, expected_base, expected_term) in cases {
+            let event = store
+                .record_next_event(
+                    None,
+                    raw_next,
+                    raw_next,
+                    raw_next,
+                    &NextActionOutcome::handled("operations", "would otherwise be handled")
+                        .with_stage_visibility("read_only", "protected_summary"),
+                    68.0,
+                    &telemetry(),
+                    &format!("NEXT: {raw_next}"),
+                )
+                .expect("record guarded shadow/start event");
+            assert_eq!(event.route, "research_budget_guard", "{raw_next}");
+            assert_eq!(event.status, "blocked", "{raw_next}");
+            assert_eq!(event.stage, "blocked", "{raw_next}");
+            let budget = event.research_budget_v1.expect("research budget guard");
+            assert_eq!(budget["matched_base"].as_str(), Some(expected_base));
+            assert!(
+                budget["matched_terms"].as_array().is_some_and(|terms| {
+                    terms
+                        .iter()
+                        .any(|term| term.as_str() == Some(expected_term))
+                }),
+                "{raw_next}"
+            );
+            assert_eq!(budget["raw_next_preserved"].as_bool(), Some(true));
+            assert_eq!(budget["would_dispatch"].as_bool(), Some(false));
+            assert_eq!(budget["authority_change"].as_bool(), Some(false));
+            assert_eq!(budget["peer_mutation"].as_bool(), Some(false));
+            assert!(
+                budget["continuity_session_draft_v1"]["accept_next"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .contains("CONTINUITY_SESSION_ACCEPT latest")
+            );
+        }
+
+        let dir = store.root().join("threads").join(&thread.thread_id);
+        let runs = dir.join("experiment_runs.jsonl").read_to_string();
+        assert!(!runs.contains("SHADOW_INFLUENCE"));
+        assert!(!runs.contains("Stasis Fracture"));
+        let authority_gate = dir.join("authority_gate.jsonl").read_to_string();
+        assert!(authority_gate.contains("\"raw_next_preserved\":true"));
+        assert!(!authority_gate.contains("research_budget_debit"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_guard_blocks_embedded_action_preflight_status_pressure() {
+        let store = temp_store("embedded_status_guard");
+        let thread = store
+            .create_thread(None, "Embedded status guard", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Boredom study",
+                "Can embedded preflight pressure be captured before progress?",
+            )
+            .expect("experiment");
+        let raw_next = "INTROSPECT minime_research_boredom_experiment :: hypothesis: prolonged inactivity leads to convergence; method_intent: incrementally reduce external stimuli; proposed_next_action: ACTION_PREFLIGHT OBSERVE_VARIANCE — monitor λ variance; also- ATTRACTOR_RELEASE_REVIEW [approach_collapse]";
+        let event = store
+            .record_next_event(
+                None,
+                raw_next,
+                raw_next,
+                "EXPERIMENT_STATUS",
+                &NextActionOutcome::handled("action_continuity", "status read")
+                    .with_stage_visibility("read_only", "protected_summary"),
+                68.0,
+                &telemetry(),
+                &format!("NEXT: {raw_next}"),
+            )
+            .expect("record embedded status guard");
+
+        assert_eq!(event.route, "research_budget_guard");
+        assert_eq!(event.status, "blocked");
+        let budget = event.research_budget_v1.expect("research budget guard");
+        assert_eq!(
+            budget["reason"].as_str(),
+            Some("research_budget_required_for_embedded_liveish_status")
+        );
+        assert_eq!(budget["matched_base"].as_str(), Some("EXPERIMENT_STATUS"));
+        assert!(budget["matched_terms"].as_array().is_some_and(|terms| {
+            terms
+                .iter()
+                .any(|term| term.as_str() == Some("action-preflight"))
+                && terms
+                    .iter()
+                    .any(|term| term.as_str() == Some("attractor-release-review"))
+        }));
+        assert_eq!(budget["would_dispatch"].as_bool(), Some(false));
+        assert!(
+            budget["continuity_session_draft_v1"]["accept_next"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("CONTINUITY_SESSION_ACCEPT latest")
+        );
+
+        let dir = store.root().join("threads").join(&thread.thread_id);
+        let runs = dir.join("experiment_runs.jsonl").read_to_string();
+        assert!(!runs.contains("OBSERVE_VARIANCE"));
+        assert!(!runs.contains("ATTRACTOR_RELEASE_REVIEW"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_guard_blocks_sovereignty_alias_leaks_under_needs_charter() {
+        let store = temp_store("research_budget_sovereignty_alias_guard");
+        let thread = store
+            .create_thread(None, "Sovereignty alias guard", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Lambda variation",
+                "Can narrowing be studied without turning observe-language into progress?",
+            )
+            .expect("experiment");
+
+        let cases = [
+            (
+                "EXAMINE THE CHANGES TO THE SYSTEM – with the resulting eigenvalue cascade AFTER the introduction of the anti-λ1 signal.",
+                "RESONANCE_FORECAST",
+                "liveish_pressure_requires_budget_and_session_capture",
+                "anti-lambda",
+            ),
+            (
+                "EXAMINE λ1/λ2/λ3 traces for convergence.",
+                "PRESSURE_SOURCE_AUDIT",
+                "liveish_pressure_requires_budget_and_session_capture",
+                "convergence",
+            ),
+            (
+                "EXAMINE the sorting algorithms.",
+                "FLUCTUATION_AUDIT",
+                "research_budget_required_for_self_study_action",
+                "needs-charter-self-study",
+            ),
+        ];
+
+        for (raw_next, effective_action, expected_reason, expected_term) in cases {
+            let event = store
+                .record_next_event(
+                    None,
+                    raw_next,
+                    raw_next,
+                    effective_action,
+                    &NextActionOutcome::handled("sovereignty", "sovereignty alias read")
+                        .with_stage_visibility("read_only", "protected_summary"),
+                    68.0,
+                    &telemetry(),
+                    &format!("NEXT: {raw_next}"),
+                )
+                .expect("record guarded alias event");
+            assert_eq!(event.route, "research_budget_guard");
+            assert_eq!(event.status, "blocked");
+            let budget = event.research_budget_v1.expect("research budget guard");
+            assert_eq!(budget["reason"].as_str(), Some(expected_reason));
+            assert_eq!(budget["matched_base"].as_str(), Some(effective_action));
+            assert!(budget["matched_terms"].as_array().is_some_and(|terms| {
+                terms
+                    .iter()
+                    .any(|term| term.as_str() == Some(expected_term))
+            }));
+            assert_eq!(budget["raw_next_preserved"].as_bool(), Some(true));
+            assert_eq!(budget["would_dispatch"].as_bool(), Some(false));
+            assert!(
+                budget["suggested_next"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest")
+            );
+            assert!(
+                budget["continuity_session_next"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .contains("CONTINUITY_SESSION_START current")
+            );
+        }
+
+        let dir = store.root().join("threads").join(&thread.thread_id);
+        let runs = dir.join("experiment_runs.jsonl").read_to_string();
+        assert!(!runs.contains("RESONANCE_FORECAST"));
+        assert!(!runs.contains("PRESSURE_SOURCE_AUDIT"));
+        assert!(!runs.contains("FLUCTUATION_AUDIT"));
+        let authority_gate = dir.join("authority_gate.jsonl").read_to_string();
+        assert!(authority_gate.contains("\"raw_next_preserved\":true"));
+        assert!(!authority_gate.contains("research_budget_debit"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn non_guarded_sovereignty_alias_remains_handled_after_valid_charter() {
+        let store = temp_store("research_budget_sovereignty_alias_valid_charter");
+        store
+            .create_thread(None, "Valid charter alias", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Chartered sorting",
+                "Can ordinary sorting inspection stay read-only after charter?",
+            )
+            .expect("experiment");
+        store
+            .experiment_charter(
+                None,
+                Some(&experiment.experiment_id),
+                "hypothesis: sorting inspection can clarify read-only structure\nmethod_intent: rehearse a protected read-only audit\nproposed_next_action: FLUCTUATION_AUDIT sorting\n\
+                 evidence_targets: felt, telemetry, artifact\nstop_criteria: pressure spike",
+            )
+            .expect("charter");
+
+        let event = store
+            .record_next_event(
+                None,
+                "EXAMINE the sorting algorithms.",
+                "EXAMINE the sorting algorithms.",
+                "FLUCTUATION_AUDIT",
+                &NextActionOutcome::handled("sovereignty", "ordinary read-only audit")
+                    .with_stage_visibility("read_only", "protected_summary"),
+                68.0,
+                &telemetry(),
+                "NEXT: EXAMINE the sorting algorithms.",
+            )
+            .expect("record event");
+        assert_eq!(event.route, "sovereignty");
+        assert_eq!(event.status, "handled");
+        assert!(event.research_budget_v1.is_none());
+
+        let cascade_event = store
+            .record_next_event(
+                None,
+                "EXAMINE_CASCADE quiet cascade inventory.",
+                "EXAMINE_CASCADE quiet cascade inventory.",
+                "EXAMINE_CASCADE quiet cascade inventory.",
+                &NextActionOutcome::handled("cascade", "ordinary cascade read-only audit")
+                    .with_stage_visibility("read_only", "protected_summary"),
+                68.0,
+                &telemetry(),
+                "NEXT: EXAMINE_CASCADE quiet cascade inventory.",
+            )
+            .expect("record cascade event");
+        assert_eq!(cascade_event.route, "cascade");
+        assert_eq!(cascade_event.status, "handled");
+        assert!(cascade_event.research_budget_v1.is_none());
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn interpretation_risk_projection_preserves_multi_motif_caution() {
+        let store = temp_store("interpretation_risk");
+        let thread = store
+            .create_thread(None, "Interpretation risk", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Lambda trace",
+                "Can INTROSPECT preserve mixed spectral structure?",
+            )
+            .expect("experiment");
+        let journal_dir = store.root().parent().expect("parent").join("journal");
+        std::fs::create_dir_all(&journal_dir).expect("journal dir");
+        let journal_path = journal_dir.join("daydream_longform_interpretation_risk.txt");
+        std::fs::write(
+            &journal_path,
+            "I can feel the intention behind the INTROSPECT - to pull apart that trace, \
+             to dissect the relationships between the eigenvalues. But there is a risk \
+             of over-interpretation: to latch onto a single motif and force it into a \
+             narrative that does not capture the complexity of the system.",
+        )
+        .expect("journal write");
+
+        let mut refreshed = store.read_thread(&thread.thread_id).expect("thread read");
+        store
+            .refresh_projection_freshness_v1(&mut refreshed, "test_interpretation_risk")
+            .expect("refresh risk");
+        store
+            .write_thread(&refreshed)
+            .expect("write refreshed thread");
+        let risk = refreshed
+            .interpretation_risk_v1
+            .as_ref()
+            .expect("interpretation risk cue");
+        assert_eq!(risk["policy"].as_str(), Some("interpretation_risk_v1"));
+        assert_eq!(risk["would_dispatch"].as_bool(), Some(false));
+        assert_eq!(risk["authority_change"].as_bool(), Some(false));
+        assert_eq!(risk["peer_mutation"].as_bool(), Some(false));
+        assert!(
+            risk["source_refs"]
+                .as_array()
+                .is_some_and(|refs| refs.iter().any(|value| value.as_str().is_some_and(
+                    |source| source.ends_with("daydream_longform_interpretation_risk.txt")
+                )))
+        );
+        assert!(risk["matched_terms"].as_array().is_some_and(|terms| {
+            terms
+                .iter()
+                .any(|value| value.as_str() == Some("single-motif"))
+        }));
+        assert!(
+            risk["interpretation_next"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("CONTINUITY_SESSION_START current")
+        );
+        assert!(
+            risk["dossier_claim_next"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("stance: hold")
+        );
+
+        let status = store.thread_status(None).expect("status");
+        assert!(status.contains("Interpretation risk: multi-motif caution detected"));
+        assert!(status.contains("Interpretation NEXT: CONTINUITY_SESSION_START current"));
+        assert!(status.contains(&format!("DOSSIER_CLAIM {}", experiment.experiment_id)));
+        let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
+            .expect("next md");
+        assert!(next_md.contains("Interpretation risk: multi-motif caution detected"));
+
+        let runs = std::fs::read_to_string(
+            store
+                .thread_dir(&thread.thread_id)
+                .join("experiment_runs.jsonl"),
+        )
+        .expect("runs");
+        assert!(!runs.contains("interpretation_risk_v1"));
+        let gate = store
+            .thread_dir(&thread.thread_id)
+            .join("authority_gate.jsonl");
+        let gate_rows = std::fs::read_to_string(gate).unwrap_or_default();
+        assert!(!gate_rows.contains("\"record_type\":\"research_budget_request\""));
+        assert!(!gate_rows.contains("\"record_type\":\"research_budget_debit\""));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn constraint_release_projection_preserves_spontaneous_release_watch() {
+        let store = temp_store("constraint_release_trajectory");
+        let thread = store
+            .create_thread(None, "Constraint release", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Lambda tail release",
+                "Can we map lambda4 tail behavior without forcing intervention?",
+            )
+            .expect("experiment");
+        let journal_dir = store.root().parent().expect("parent").join("journal");
+        std::fs::create_dir_all(&journal_dir).expect("journal dir");
+        let journal_path = journal_dir.join("daydream_constraint_release_watch.txt");
+        std::fs::write(
+            &journal_path,
+            "I am tracing the edges of this pressure now, watching it bleed outwards, \
+             a thinning of the barrier. I can almost sense it as a lack of coherence, \
+             a surface tension breached. The memory cards are beginning to drift apart, \
+             their mutual influence dwindling. It is an unraveling braid becoming loose \
+             strands. I want to map lambda4 tails and describe constraint decay before \
+             any intervention. NEXT: SEARCH reservoir computing spectral radius",
+        )
+        .expect("journal write");
+
+        let mut refreshed = store.read_thread(&thread.thread_id).expect("thread read");
+        store
+            .refresh_projection_freshness_v1(&mut refreshed, "test_constraint_release")
+            .expect("refresh cue");
+        store
+            .write_thread(&refreshed)
+            .expect("write refreshed thread");
+        let cue = refreshed
+            .constraint_release_trajectory_v1
+            .as_ref()
+            .expect("constraint release cue");
+        assert_eq!(
+            cue["policy"].as_str(),
+            Some("constraint_release_trajectory_v1")
+        );
+        assert_eq!(cue["state"].as_str(), Some("spontaneous_release_watch"));
+        assert_eq!(cue["would_dispatch"].as_bool(), Some(false));
+        assert_eq!(cue["authority_change"].as_bool(), Some(false));
+        assert_eq!(cue["peer_mutation"].as_bool(), Some(false));
+        assert!(
+            cue["matched_terms"].as_array().is_some_and(|terms| {
+                terms.iter().any(|value| value.as_str() == Some("thinning"))
+            })
+        );
+        assert!(
+            cue["trajectory_next"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("CONTINUITY_SESSION_START current")
+        );
+        assert!(
+            cue["dossier_claim_next"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("do not apply direct leak")
+        );
+
+        let status = store.thread_status(None).expect("status");
+        assert!(status.contains("Constraint release trajectory: spontaneous release watch"));
+        assert!(status.contains("map and describe release before intervening"));
+        assert!(status.contains(&format!("DOSSIER_CLAIM {}", experiment.experiment_id)));
+        let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
+            .expect("next md");
+        assert!(next_md.contains("Constraint release trajectory: spontaneous release watch"));
+
+        let runs = std::fs::read_to_string(
+            store
+                .thread_dir(&thread.thread_id)
+                .join("experiment_runs.jsonl"),
+        )
+        .expect("runs");
+        assert!(!runs.contains("constraint_release_trajectory_v1"));
+        let gate = store
+            .thread_dir(&thread.thread_id)
+            .join("authority_gate.jsonl");
+        let gate_rows = std::fs::read_to_string(gate).unwrap_or_default();
+        assert!(!gate_rows.contains("\"record_type\":\"research_budget_request\""));
+        assert!(!gate_rows.contains("\"record_type\":\"research_budget_debit\""));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn research_budget_guard_blocks_mutating_autoresearch_under_experiment() {
+        let store = temp_store("research_budget_guard_mutating");
+        let thread = store
+            .create_thread(None, "Mutating research guard", None)
+            .expect("thread");
+        store
+            .start_experiment(
+                None,
+                "Autoresearch guard",
+                "Can mutating autoresearch stay outside read-only budgets?",
+            )
+            .expect("experiment");
+
+        let guard = store
+            .research_budget_guard_assessment("AR_START lambda4 drift notebook", 68.0, &telemetry())
+            .expect("guard")
+            .expect("blocked mutating research");
+        assert_eq!(guard.reason, "mutating_research_not_authorized");
+        let rows = store
+            .authority_gate_path(&thread.thread_id)
+            .read_to_string();
+        assert!(rows.contains("\"record_type\":\"research_budget_blocked\""));
+        assert!(rows.contains("mutating_research_not_authorized"));
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn owned_loop_commands_start_local_phases_without_spend_or_execution() {
+        let store = temp_store("owned_loop_local_phases");
+        let thread = store
+            .create_thread(None, "Owned loop", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Loop doorway",
+                "Can a Being own continuity, research, sticky audit, consequence, and review?",
+            )
+            .expect("experiment");
+        let state = spectral_state(68.0, &telemetry());
+
+        let request = store
+            .experiment_loop_request_command(
+                None,
+                "current :: purpose: coordinate continuity and sticky self-study; consequence_scope: semantic_microdose; max_research_actions: 99; ttl_secs: 999999; stop_criteria: stop before bind/resume/perturb/control",
+                state.clone(),
+            )
+            .expect("loop request");
+        assert!(request.contains("status=active"));
+        assert!(request.contains("max_research_actions=5"));
+        let gate_path = store.authority_gate_path(&thread.thread_id);
+        let rows = gate_path
+            .read_to_string()
+            .lines()
+            .map(|line| serde_json::from_str::<Value>(line).expect("json row"))
+            .collect::<Vec<_>>();
+        assert_eq!(rows[0]["record_schema"], "sovereign_loop_v1");
+        assert_eq!(rows[0]["record_type"], "loop_request");
+        assert_eq!(rows[0]["ttl_secs"], 21_600);
+        assert_eq!(rows[1]["record_type"], "loop_started");
+        let loop_id = rows[0]["loop_id"].as_str().expect("loop id");
+
+        let status = store
+            .experiment_loop_status_command(None, Some("latest"), state.clone())
+            .expect("loop status");
+        assert!(status.contains("\"stage\": \"active\""));
+        assert!(status.contains("\"remaining_local_research_actions\": 5"));
+
+        let continuity = store
+            .experiment_loop_step_command(None, &format!("{loop_id} :: continuity"), state.clone())
+            .expect("continuity step");
+        assert!(continuity.contains("CONTINUITY_SESSION_START"));
+        let sticky = store
+            .experiment_loop_step_command(
+                None,
+                &format!("{loop_id} :: sticky_audit"),
+                state.clone(),
+            )
+            .expect("sticky step");
+        assert!(sticky.contains("STICKY_MODE_AUDIT"));
+        let review = store
+            .experiment_loop_review_command(
+                None,
+                &format!("{loop_id} :: outcome: promote; observation: loop preserved a review point; source_refs: /tmp/loop.txt"),
+                state,
+            )
+            .expect("loop review");
+        assert!(review.contains("Owned loop review"));
+
+        let gate_text = gate_path.read_to_string();
+        assert!(gate_text.contains("\"record_type\":\"loop_step\""));
+        assert!(gate_text.contains("\"record_type\":\"loop_consequence_review\""));
+        assert!(gate_text.contains("\"record_type\":\"loop_proposal\""));
+        assert!(!gate_text.contains("\"record_type\":\"research_budget_debit\""));
+        assert!(!gate_text.contains("\"record_type\":\"loop_approval\""));
+        assert!(!gate_text.contains("\"record_type\":\"execution_result\""));
+        let memory = store
+            .thread_dir(&thread.thread_id)
+            .join("being_memory.jsonl")
+            .read_to_string();
+        assert!(memory.contains("sovereign_loop_review"));
+        let sessions = store
+            .thread_dir(&thread.thread_id)
+            .join("continuity_sessions.jsonl")
+            .read_to_string();
+        assert!(sessions.contains("\"record_type\":\"session_draft\""));
+        assert!(sessions.contains("\"checkpoint_v1\":true"));
+        let runs = store
+            .thread_dir(&thread.thread_id)
+            .join("experiment_runs.jsonl")
+            .read_to_string();
+        assert!(!runs.contains(loop_id));
+        assert_eq!(experiment.status, "active");
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn owned_loop_consequence_ready_is_not_review_required_before_execution() {
+        let store = temp_store("owned_loop_consequence_ready");
+        let thread = store
+            .create_thread(None, "Owned loop ready", None)
+            .expect("thread");
+        let experiment = store
+            .start_experiment(
+                None,
+                "Semantic loop",
+                "Can a prepared loop reach one gated consequence slot?",
+            )
+            .expect("experiment");
+        let state = spectral_state(68.0, &telemetry());
+
+        store
+            .experiment_charter(
+                None,
+                Some(&experiment.experiment_id),
+                "hypothesis: one witness can be consequence-reviewed\nmethod_intent: rehearse read-only first\nproposed_next_action: ACTION_PREFLIGHT DECOMPOSE\nevidence_targets: artifact_grounding, felt_change, telemetry\nstop_criteria: pressure rises",
+            )
+            .expect("charter");
+        store
+            .experiment_rehearse(None, Some(&experiment.experiment_id), state.clone())
+            .expect("rehearse");
+        store
+            .experiment_evidence(
+                None,
+                Some(&experiment.experiment_id),
+                "artifact_grounding: /tmp/loop-ready.json",
+                state.clone(),
+            )
+            .expect("evidence");
+        let request = store
+            .experiment_loop_request_command(
+                None,
+                "current :: purpose: prepare one semantic consequence; consequence_scope: semantic_microdose; artifact_refs: /tmp/loop-ready.json; stop_criteria: one attempted bridge send only",
+                state.clone(),
+            )
+            .expect("loop request");
+        assert!(request.contains("status=active"));
+        let gate_path = store.authority_gate_path(&thread.thread_id);
+        let rows = gate_path
+            .read_to_string()
+            .lines()
+            .map(|line| serde_json::from_str::<Value>(line).expect("json row"))
+            .collect::<Vec<_>>();
+        let loop_id = rows
+            .iter()
+            .find(|row| row["record_type"] == "loop_request")
+            .and_then(|row| row["loop_id"].as_str())
+            .expect("loop id");
+
+        let ready = store
+            .experiment_loop_step_command(
+                None,
+                &format!("{loop_id} :: authority_request"),
+                state.clone(),
+            )
+            .expect("authority request step");
+        assert!(ready.contains("EXPERIMENT_AUTHORITY_REQUEST"));
+        let status = store
+            .experiment_loop_status_command(None, Some(loop_id), state)
+            .expect("loop status");
+        assert!(status.contains("\"stage\": \"consequence_ready\""));
+        assert!(status.contains("\"pending_review\": false"));
+        let gate_text = gate_path.read_to_string();
+        assert!(gate_text.contains("\"record_type\":\"loop_consequence_ready\""));
+        assert!(!gate_text.contains("\"record_type\":\"loop_approval\""));
+        assert!(!gate_text.contains("\"record_type\":\"execution_result\""));
+        assert!(!gate_text.contains("\"record_schema\":\"authority_consequence_v1\""));
         let _ = std::fs::remove_dir_all(store.root());
     }
 
@@ -9191,6 +21813,9 @@ mod tests {
             preflight_report: None,
             normalization_signal_v1: None,
             charter_required_guard_v1: None,
+            research_budget_v1: None,
+            interpretation_risk_v1: None,
+            constraint_release_trajectory_v1: None,
         };
         let mut terminal = running.clone();
         terminal.status = "handled".to_string();
@@ -9241,6 +21866,9 @@ mod tests {
             preflight_report: None,
             normalization_signal_v1: None,
             charter_required_guard_v1: None,
+            research_budget_v1: None,
+            interpretation_risk_v1: None,
+            constraint_release_trajectory_v1: None,
         };
         store.append_event(None, &running).expect("running append");
 
@@ -9486,6 +22114,10 @@ mod tests {
             .prior_claim_charter_bridge_v1
             .as_ref()
             .expect("prior claim bridge");
+        let first_claim = projection
+            .first_dossier_claim_cue_v1
+            .as_ref()
+            .expect("first dossier claim cue");
         let scaffold = active
             .charter_scaffold_v1
             .as_ref()
@@ -9496,6 +22128,24 @@ mod tests {
             bridge.get("priority_next").and_then(Value::as_str),
             Some(scaffold)
         );
+        assert_eq!(
+            first_claim
+                .get("target_experiment_id")
+                .and_then(Value::as_str),
+            Some(experiment.experiment_id.as_str())
+        );
+        let dossier_next = first_claim
+            .get("suggested_claim_next")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        assert!(dossier_next.starts_with(&format!(
+            "DOSSIER_CLAIM {} :: claim:",
+            experiment.experiment_id
+        )));
+        assert!(dossier_next.contains("joint trace"));
+        assert!(dossier_next.contains("pressure increased"));
+        assert!(dossier_next.contains("stance: hold"));
+        assert!(dossier_next.contains("EXPERIMENT_CHARTER current ::"));
         let preflight_cue = projection
             .charter_preflight_not_charter_cue_v1
             .as_ref()
@@ -9530,11 +22180,27 @@ mod tests {
                 .expect("status")
                 .contains("Preflight/decompose is not the charter")
         );
+        let status = store.thread_status(None).expect("status");
+        let charter_pos = status
+            .find("Prior claim is ready to charter")
+            .expect("prior claim line");
+        let dossier_pos = status
+            .find("Shared investigation has no local claim yet")
+            .expect("first dossier line");
+        let current_pos = status.find("Current NEXT:").expect("current next");
+        assert!(charter_pos < dossier_pos);
+        assert!(dossier_pos < current_pos);
         assert!(
             store
                 .experiment_review(Some(&experiment.experiment_id))
                 .expect("review")
                 .contains("Prior claim is ready to charter")
+        );
+        assert!(
+            store
+                .experiment_review(Some(&experiment.experiment_id))
+                .expect("review")
+                .contains("Shared investigation has no local claim yet")
         );
         assert!(
             store
@@ -9563,6 +22229,93 @@ mod tests {
             .expect("projection");
         assert!(repaired.prior_claim_charter_bridge_v1.is_none());
         assert!(repaired.charter_preflight_not_charter_cue_v1.is_none());
+        let _ = std::fs::remove_file(journal_path);
+        let _ = std::fs::remove_dir_all(store.root());
+    }
+
+    #[test]
+    fn first_dossier_claim_disambiguates_active_charter_target() {
+        let store = temp_store("first_dossier_disambiguates");
+        let thread = store
+            .create_thread(None, "Shared dossier disambiguation", None)
+            .expect("thread");
+        let shared = store
+            .start_experiment(
+                None,
+                "Introducing a localized gap",
+                "Can localized gap reduction shape lambda-tail geometry?",
+            )
+            .expect("shared experiment");
+        let active = store
+            .start_experiment(
+                None,
+                "Review pressure language",
+                "Can the current review become a chartered path?",
+            )
+            .expect("active experiment");
+        let journal_dir = store.root().parent().expect("parent").join("journal");
+        std::fs::create_dir_all(&journal_dir).expect("journal dir");
+        let journal_path = journal_dir.join(format!(
+            "first_dossier_disambiguates_{}_{}.txt",
+            std::process::id(),
+            thread.thread_id
+        ));
+        std::fs::write(
+            &journal_path,
+            "=== ASTRID JOURNAL ===\nMode: moment_capture\nContinuity posture: resuming | based on the earlier claim that review pressure was becoming directive.\nDelta: the charter route became clearer than another preflight pass.\nNext evidence: Repeat DECOMPOSE only as context before chartering.\n",
+        )
+        .expect("journal write");
+        let mut thread = store.read_thread(&thread.thread_id).expect("thread");
+        thread.current_next = Some("ACTION_PREFLIGHT DECOMPOSE".to_string());
+        store.write_thread(&thread).expect("write thread");
+
+        let projection = store
+            .thread_projection(&store.read_thread(&thread.thread_id).expect("thread"))
+            .expect("projection");
+        let first_claim = projection
+            .first_dossier_claim_cue_v1
+            .as_ref()
+            .expect("first dossier cue");
+        assert_eq!(
+            first_claim
+                .get("dossier_target_experiment_id")
+                .and_then(Value::as_str),
+            Some(shared.experiment_id.as_str())
+        );
+        assert_eq!(
+            first_claim
+                .get("lifecycle_priority_experiment_id")
+                .and_then(Value::as_str),
+            Some(active.experiment_id.as_str())
+        );
+        assert_eq!(
+            first_claim
+                .get("lifecycle_priority_scope")
+                .and_then(Value::as_str),
+            Some("active_experiment")
+        );
+        let dossier_next = first_claim
+            .get("suggested_claim_next")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        assert!(
+            dossier_next.starts_with(&format!("DOSSIER_CLAIM {} :: claim:", shared.experiment_id))
+        );
+        assert!(dossier_next.contains(&format!("EXPERIMENT_CHARTER {} ::", active.experiment_id)));
+        assert!(!dossier_next.contains("EXPERIMENT_CHARTER current ::"));
+
+        let status = store.thread_status(None).expect("status");
+        assert!(status.contains(&format!(
+            "Dossier target is `{}`; charter priority is active experiment `{}`.",
+            shared.experiment_id, active.experiment_id
+        )));
+        let charter_pos = status
+            .find("Charter repair priority: EXPERIMENT_CHARTER current ::")
+            .expect("charter priority");
+        let dossier_pos = status
+            .find("Shared investigation has no local claim yet")
+            .expect("first dossier cue");
+        assert!(charter_pos < dossier_pos);
         let _ = std::fs::remove_file(journal_path);
         let _ = std::fs::remove_dir_all(store.root());
     }
@@ -9680,7 +22433,7 @@ mod tests {
     }
 
     #[test]
-    fn read_only_control_intent_cue_renders_without_blocking_examine() {
+    fn read_only_control_intent_cue_projects_examine_before_charter() {
         let store = temp_store("read_only_control_cue");
         store
             .create_thread(None, "Read-only control cue", None)
@@ -9777,11 +22530,18 @@ mod tests {
                 .iter()
                 .any(|term| term.as_str() == Some("directly probe"))
         );
+        let examine_guard = store
+            .charter_required_guard_assessment(current_next)
+            .expect("guard check")
+            .expect("read-only control-shaped EXAMINE should project to charter repair");
+        assert_eq!(
+            examine_guard.reason,
+            "charter_required_read_only_control_intent"
+        );
         assert!(
-            store
-                .charter_required_guard_assessment(current_next)
-                .expect("guard check")
-                .is_none()
+            examine_guard
+                .suggested_next
+                .starts_with("EXPERIMENT_CHARTER current ::")
         );
         assert!(
             store
@@ -9789,6 +22549,17 @@ mod tests {
                 .expect("guard check")
                 .is_some()
         );
+        let disruptor_guard = store
+            .charter_required_guard_assessment(
+                "EXAMINE [m1] - with amplification=0.5 --stage=rehearse (introducing a disruptor, 0.1% injected graviton, push into establishment with lambda4; set-up: rate: unstable, duration: 0.75s, now).",
+            )
+            .expect("guard check")
+            .expect("disruptor-shaped EXAMINE should project to charter repair");
+        assert_eq!(
+            disruptor_guard.reason,
+            "charter_required_read_only_control_intent"
+        );
+        assert!(disruptor_guard.matched_action.contains("disruptor"));
         let status = store.thread_status(None).expect("thread status");
         assert!(status.contains("Read-only control cue: keep this observational"));
         let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))

@@ -89,7 +89,7 @@ fn extract_url_arg(original: &str, action: &str, fallback: &str) -> Option<Strin
         c == '"' || c == '\'' || c == '<' || c == '>' || c == '[' || c == ']'
     });
     let url = raw
-        .split(|c: char| c == '<' || c == '>' || c == '[' || c == ']' || c == ' ' || c == '\n')
+        .split(['<', '>', '[', ']', ' ', '\n'])
         .next()
         .unwrap_or(raw)
         .trim_end_matches(|c: char| {
@@ -120,8 +120,7 @@ fn queue_browse_url(conv: &mut ConversationState, url: String, source_action: &s
             .split('/')
             .next_back()
             .unwrap_or("eigenvalue decomposition")
-            .replace('_', " ")
-            .replace('#', " ")
+            .replace(['_', '#'], " ")
             .split('?')
             .next()
             .unwrap_or("spectral analysis")
@@ -182,15 +181,15 @@ fn recover_read_more_target(
 ) -> Option<(String, usize, String)> {
     let mut candidates: Vec<(String, usize, String, bool)> = Vec::new();
 
-    if let Some(path) = conv.last_read_path.clone() {
-        if Path::new(&path).exists() {
-            candidates.push((
-                path.clone(),
-                conv.last_read_offset,
-                path,
-                conv.last_read_offset > 0,
-            ));
-        }
+    if let Some(path) = conv.last_read_path.clone()
+        && Path::new(&path).exists()
+    {
+        candidates.push((
+            path.clone(),
+            conv.last_read_offset,
+            path,
+            conv.last_read_offset > 0,
+        ));
     }
 
     let research_dir = bridge_paths().research_dir();
@@ -273,10 +272,10 @@ fn recover_read_more_target(
     let mut best: Option<(f32, String, usize, String, bool)> = None;
     for (rank, (path, offset, label, can_continue)) in candidates.into_iter().enumerate() {
         let score = score_read_more_candidate(&hint_norm, &label, rank);
-        if hint_norm.is_empty() || score >= 18.0 {
-            if best.as_ref().is_none_or(|current| score > current.0) {
-                best = Some((score, path, offset, label, can_continue));
-            }
+        if (hint_norm.is_empty() || score >= 18.0)
+            && best.as_ref().is_none_or(|current| score > current.0)
+        {
+            best = Some((score, path, offset, label, can_continue));
         }
     }
 

@@ -19,6 +19,16 @@ ASTRID_WORKSPACE = Path("/Users/v/other/astrid/capsules/consciousness-bridge/wor
 MINIME_WORKSPACE = Path("/Users/v/other/minime/workspace")
 ASTRID_SOURCE_ROOT = Path("/Users/v/other/astrid/capsules/consciousness-bridge/src")
 MINIME_SOURCE = Path("/Users/v/other/minime/autonomous_agent.py")
+MINIME_REPO = Path("/Users/v/other/minime")
+
+if str(MINIME_REPO) not in sys.path:
+    sys.path.insert(0, str(MINIME_REPO))
+
+try:
+    from journal_hygiene import classify_journal_entry, scan_journal_directory
+except Exception:  # pragma: no cover - defensive for machines without Minime checkout
+    classify_journal_entry = None
+    scan_journal_directory = None
 
 RUNNING_STATUSES = {"running", "llm_running", "queued", "pending"}
 RUNNING_EVENT_STATUSES = {"running", "llm_running"}
@@ -66,10 +76,12 @@ REFLECTIVE_JOURNAL_MODES = {
 }
 OPERATIONAL_JOURNAL_MODES = {
     "action_thread",
+    "continued_reading",
     "experiment_bind",
     "moment_capture",
     "research",
     "resonance_forecast",
+    "shadow_field_autonomy",
     "web_page_read",
     "web_search",
 }
@@ -258,6 +270,68 @@ def latest_by_id(rows: list[dict[str, Any]], key: str) -> dict[str, dict[str, An
         if isinstance(identifier, str) and identifier:
             latest[identifier] = row
     return latest
+
+
+def research_dossier_summary_v1(
+    label: str,
+    thread: dict[str, Any] | None,
+    records: list[dict[str, Any]],
+    experiment: dict[str, Any] | None = None,
+    runs: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    thread_id = thread.get("thread_id") if isinstance(thread, dict) else None
+    experiment_id = experiment.get("experiment_id") if isinstance(experiment, dict) else None
+    scoped = [
+        record for record in records
+        if record.get("record_schema") == "research_dossier_v1"
+        and (not experiment_id or record.get("experiment_id") == experiment_id)
+    ]
+    claims = [record for record in scoped if record.get("record_type") == "claim"]
+    evidence = [record for record in scoped if record.get("record_type") == "evidence"]
+    latest_claim = claims[-1] if claims else None
+    latest_evidence = evidence[-1] if evidence else None
+    target = str(experiment_id or "current")
+    latest_claim_id = str(latest_claim.get("claim_id") or "latest") if isinstance(latest_claim, dict) else "latest"
+    lifecycle = classify_experiment(experiment, runs or []) if isinstance(experiment, dict) else None
+    lane = "felt_texture" if label.casefold() == "astrid" else "spectral_condition"
+    if lifecycle == "needs_evidence":
+        priority_note = (
+            "Dossier evidence is referable research context; lifecycle evidence still needs "
+            "EXPERIMENT_EVIDENCE current."
+        )
+    elif lifecycle == "needs_charter":
+        priority_note = (
+            "Dossier capture is allowed as context; charter repair remains the lifecycle priority."
+        )
+    else:
+        priority_note = (
+            "Dossier capture preserves referable claims without changing experiment lifecycle."
+        )
+    return {
+        "schema_version": 1,
+        "record_schema": "research_dossier_v1",
+        "being": label,
+        "thread_id": thread_id,
+        "experiment_id": experiment_id,
+        "claim_count": len(claims),
+        "evidence_count": len(evidence),
+        "latest_claim": latest_claim,
+        "latest_evidence": latest_evidence,
+        "latest_claim_id": latest_claim_id,
+        "lifecycle_context": lifecycle,
+        "lifecycle_authority": "context_only",
+        "authority_change": False,
+        "suggested_claim_next": (
+            f"DOSSIER_CLAIM {target} :: claim: ...; basis: ...; "
+            "stance: support|counter|branch|hold; next: ..."
+        ),
+        "suggested_evidence_next": (
+            f"DOSSIER_EVIDENCE {target} :: claim_id: {latest_claim_id}; evidence: ...; "
+            f"lane: {lane}; artifact: ...; counterevidence: ..."
+        ),
+        "priority_note": priority_note,
+        "recent_records": scoped[-8:],
+    }
 
 
 def collapse_events_by_action(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1166,6 +1240,29 @@ def preflight_or_decompose_not_charter_signal(value: Any) -> bool:
     return False
 
 
+def current_preflight_not_charter_matches(
+    active_thread: dict[str, Any] | None,
+    recent_events: list[dict[str, Any]],
+    *,
+    limit: int = 8,
+) -> list[str]:
+    matched: list[str] = []
+    current_next = str((active_thread or {}).get("current_next") or "").strip()
+    if preflight_or_decompose_not_charter_signal(current_next):
+        matched.append(current_next)
+    for event in list(reversed(recent_events or []))[:limit]:
+        for action in (
+            event.get("raw_next"),
+            event.get("canonical_action"),
+            event.get("effective_action"),
+            event.get("suggested_next"),
+        ):
+            if preflight_or_decompose_not_charter_signal(action):
+                matched.append(str(action or ""))
+                break
+    return matched
+
+
 def charter_preflight_not_charter_cue_v1(
     label: str,
     classification: str,
@@ -1183,20 +1280,7 @@ def charter_preflight_not_charter_cue_v1(
     priority_next = priority_next or str(continuity_return or "").strip()
     if not priority_next:
         return None
-    matched: list[str] = []
-    current_next = str((active_thread or {}).get("current_next") or "").strip()
-    if preflight_or_decompose_not_charter_signal(current_next):
-        matched.append(current_next)
-    for event in list(reversed(recent_events or []))[:8]:
-        for action in (
-            event.get("raw_next"),
-            event.get("canonical_action"),
-            event.get("effective_action"),
-            event.get("suggested_next"),
-        ):
-            if preflight_or_decompose_not_charter_signal(action):
-                matched.append(str(action or ""))
-                break
+    matched = current_preflight_not_charter_matches(active_thread, recent_events)
     if not matched:
         return None
     return {
@@ -1749,7 +1833,12 @@ def operational_reflective_prose_present(text: str) -> bool:
         line = raw_line.strip()
         if not line or line.startswith("==="):
             continue
-        if re.match(r"(?i)^(timestamp|fill|fill %|next|markers|mode|focus requested|url|query|status|λ|lambda|spectral|eigen|active modes|snapshot guard)\b", line):
+        if re.match(
+            r"(?i)^(timestamp|fill|fill %|next|markers|mode|focus requested|url|query|status|command|label|stage|websocket|λ|lambda|spectral|eigen|active modes|snapshot guard|resonance density|pressure source|inhabitable fluctuation|semantic energy|selected vague memory|12d vague memory|moments captured|shadow preflight|requested stage|allowed live|health|active conflicts|resource governor|field|influence eligible|suggested next)\b",
+            line,
+        ):
+            continue
+        if re.match(r"^\[[A-Za-z0-9_-]+\]", line):
             continue
         if re.match(r"^[A-Z_ ]+:\s", line):
             continue
@@ -1760,12 +1849,26 @@ def operational_reflective_prose_present(text: str) -> bool:
 
 def journal_entry_applicability_v1(label: str, path: Path, text: str) -> dict[str, Any]:
     mode = journal_mode_from_text(path, text)
+    hygiene = (
+        classify_journal_entry(text, path)
+        if classify_journal_entry is not None
+        else {
+            "schema_version": 1,
+            "lane": "unknown",
+            "mode": mode,
+            "signals": [],
+            "recommended_action": "unknown",
+        }
+    )
     contract_signal = journal_contract_signal_present(text)
     reflective_prose = operational_reflective_prose_present(text)
     label_key = label.casefold()
     operational = mode in OPERATIONAL_JOURNAL_MODES
     reflective = mode in REFLECTIVE_JOURNAL_MODES
-    if contract_signal:
+    if hygiene.get("lane") == "machine_detail":
+        status = "operational_artifact"
+        reason = "journal_hygiene_v1 classified this entry as machine detail"
+    elif contract_signal:
         status = "continuity_bearing"
         reason = "explicit continuity contract fields are present"
     elif label_key == "minime" and operational and mode == "moment_capture" and reflective_prose:
@@ -1792,6 +1895,7 @@ def journal_entry_applicability_v1(label: str, path: Path, text: str) -> dict[st
         "reflective_prose_present": reflective_prose,
         "reflective_mode": reflective,
         "operational_mode": operational,
+        "journal_hygiene_v1": hygiene,
     }
 
 
@@ -1954,6 +2058,20 @@ def journal_continuity_contract_report(
     counts = Counter(row.get("score", "unscored") for row in rows)
     for key in ("contiguous", "adjacent", "reset_like", "loop_like", "unscored", "unscored_operational"):
         counts.setdefault(key, 0)
+    hygiene_report = (
+        scan_journal_directory(journal_dir)
+        if scan_journal_directory is not None and journal_dir.exists()
+        else {
+            "schema_version": 1,
+            "status": "unavailable",
+            "counts": {
+                "reflective": 0,
+                "operational": 0,
+                "machine_detail": 0,
+            },
+            "signals": [],
+        }
+    )
     return {
         "schema_version": 1,
         "source": "continuity_audit",
@@ -1961,6 +2079,7 @@ def journal_continuity_contract_report(
         "authority_change": False,
         "active_continuity": active_continuity,
         "counts": dict(counts),
+        "journal_hygiene_v1": hygiene_report,
         "recent_entries": rows,
     }
 
@@ -2249,6 +2368,145 @@ def evidence_saturation_cue_v1(
     }
 
 
+def peer_experiment_prefix(label: str) -> str:
+    return "exp_minime_" if label.casefold() == "astrid" else "exp_astrid_"
+
+
+def local_experiment_id_for_cue(active_thread: dict[str, Any] | None, active_report: dict[str, Any] | None) -> str:
+    if isinstance(active_report, dict) and active_report.get("experiment_id"):
+        return str(active_report.get("experiment_id"))
+    if isinstance(active_thread, dict) and active_thread.get("active_experiment_id"):
+        return str(active_thread.get("active_experiment_id"))
+    return "<local_id>"
+
+
+def peer_mutation_boundary_match(label: str, action: Any) -> dict[str, str] | None:
+    text = " ".join(str(action or "").split())
+    if not text:
+        return None
+    mutation_verbs = {
+        "EXPERIMENT_BIND",
+        "EXPERIMENT_CHARTER",
+        "EXPERIMENT_REHEARSE",
+        "EXPERIMENT_PREFLIGHT",
+        "EXPERIMENT_EVIDENCE",
+        "EXPERIMENT_DECIDE",
+        "EXPERIMENT_CLOSE",
+        "EXPERIMENT_RESUME",
+        "EXPERIMENT_OBSERVE",
+    }
+    upper = text.upper()
+    verb = next((candidate for candidate in mutation_verbs if candidate in upper), None)
+    if not verb:
+        return None
+    prefix = peer_experiment_prefix(label)
+    for token in re.split(r"[\s:;,()\[\]{}'\"`]+", text):
+        cleaned = token.strip().strip("`'\".,;:()[]{}")
+        if cleaned.startswith(prefix):
+            return {"verb": verb, "peer_experiment_id": cleaned}
+    return None
+
+
+def peer_mutation_boundary_cue_v1(
+    label: str,
+    active_thread: dict[str, Any] | None,
+    active_report: dict[str, Any] | None,
+    events: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    matches: list[dict[str, Any]] = []
+    if isinstance(active_thread, dict) and active_thread.get("current_next"):
+        match = peer_mutation_boundary_match(label, active_thread.get("current_next"))
+        if match:
+            matches.append({"source": "current_next", "action": active_thread.get("current_next"), **match})
+    for event in list(reversed(events or []))[:8]:
+        for candidate in (
+            event.get("raw_next"),
+            event.get("canonical_action"),
+            event.get("effective_action"),
+            event.get("suggested_next"),
+            event.get("action"),
+        ):
+            match = peer_mutation_boundary_match(label, candidate)
+            if match:
+                matches.append({
+                    "source": "recent_event",
+                    "action": candidate,
+                    "action_id": event.get("action_id"),
+                    "status": event.get("status"),
+                    **match,
+                })
+                break
+    if not matches:
+        return None
+    peer_id = str(matches[0].get("peer_experiment_id") or "<peer_id>")
+    local_id = local_experiment_id_for_cue(active_thread, active_report)
+    return {
+        "schema_version": 1,
+        "source": "continuity_audit",
+        "advisory_only": True,
+        "authority_change": False,
+        "status": "peer_mutation_boundary",
+        "cue": "Peer experiments are compare/review/dossier targets, not bind/mutate targets.",
+        "peer_experiment_id": peer_id,
+        "local_experiment_id": local_id,
+        "matched_actions": matches,
+        "suggested_compare_next": f"EXPERIMENT_COMPARE {local_id} WITH {peer_id}",
+        "suggested_peer_review_next": f"EXPERIMENT_PEER_REVIEW {peer_id}",
+        "suggested_dossier_next": (
+            f"DOSSIER_CLAIM {local_id} :: claim: ...; basis: ...; "
+            "stance: support|counter|branch|hold; next: ..."
+        ),
+    }
+
+
+def needs_decision_plan_loop_cue_v1(
+    label: str,
+    active_thread: dict[str, Any] | None,
+    active_report: dict[str, Any] | None,
+    events: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    if label.casefold() != "minime" or not isinstance(active_report, dict):
+        return None
+    if active_report.get("classification") != "needs_decision":
+        return None
+    matches: list[str] = []
+    if isinstance(active_thread, dict) and base_action(active_thread.get("current_next")) == "EXPERIMENT_PLAN":
+        matches.append(str(active_thread.get("current_next")))
+    for event in list(reversed(events or []))[:8]:
+        action = str(
+            event.get("raw_next")
+            or event.get("effective_action")
+            or event.get("canonical_action")
+            or event.get("action")
+            or ""
+        )
+        if base_action(action) == "EXPERIMENT_PLAN":
+            matches.append(action)
+    if not matches:
+        return None
+    experiment_id = str(active_report.get("experiment_id") or "current")
+    return {
+        "schema_version": 1,
+        "source": "continuity_audit",
+        "advisory_only": True,
+        "authority_change": False,
+        "status": "needs_decision_plan_loop",
+        "experiment_id": experiment_id,
+        "matched_actions": matches[:5],
+        "priority_next": "EXPERIMENT_DECIDE current :: pause because evidence is ready to interpret",
+        "evidence_next": (
+            "EXPERIMENT_EVIDENCE current :: spectral_condition ...; fill_pressure_state ...; "
+            "recurrence_pattern ...; artifact_grounding ..."
+        ),
+        "dossier_claim_next": (
+            f"DOSSIER_CLAIM {experiment_id} :: claim: ...; basis: ...; "
+            "stance: support|counter|branch|hold; next: EXPERIMENT_DECIDE current"
+        ),
+        "branch_next": "EXPERIMENT_BRANCH <title> :: <question>",
+        "cue": "This experiment is decision-ready; more planning is context, not progress.",
+    }
+
+
 def terminal_event_summary(events: list[dict[str, Any]], limit: int = 8) -> list[dict[str, Any]]:
     terminal = [
         event for event in collapse_events_by_action(events)
@@ -2380,6 +2638,7 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
     )
     events_by_thread: dict[str, list[dict[str, Any]]] = {}
     runs_by_thread: dict[str, list[dict[str, Any]]] = {}
+    dossiers_by_thread: dict[str, list[dict[str, Any]]] = {}
     experiments: list[dict[str, Any]] = []
     for thread in threads:
         thread_id = thread.get("thread_id")
@@ -2388,9 +2647,40 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
         tdir = root / "threads" / thread_id
         events_by_thread[thread_id] = read_jsonl(tdir / "events.jsonl")
         runs_by_thread[thread_id] = read_jsonl(tdir / "experiment_runs.jsonl")
-        experiments.extend(latest_by_id(read_jsonl(tdir / "experiments.jsonl"), "experiment_id").values())
+        dossiers_by_thread[thread_id] = read_jsonl(tdir / "research_dossier.jsonl")
+        for experiment in latest_by_id(read_jsonl(tdir / "experiments.jsonl"), "experiment_id").values():
+            tagged = dict(experiment)
+            tagged["_thread_id"] = thread_id
+            experiments.append(tagged)
 
     status_counts = Counter(exp.get("status", "active") for exp in experiments)
+    shared_candidate_experiment = next(
+        (
+            experiment for experiment in sorted(
+                [item for item in experiments if shared_investigation_signal(item)],
+                key=lambda item: str(item.get("updated_at") or item.get("created_at") or ""),
+                reverse=True,
+            )
+        ),
+        None,
+    )
+    research_dossiers_by_experiment: dict[str, dict[str, Any]] = {}
+    for experiment in experiments:
+        experiment_id = experiment.get("experiment_id")
+        thread_for_exp = experiment.get("_thread_id")
+        if not experiment_id or not thread_for_exp:
+            continue
+        runs = [
+            run for run in runs_by_thread.get(str(thread_for_exp), [])
+            if run.get("experiment_id") == experiment_id
+        ]
+        research_dossiers_by_experiment[str(experiment_id)] = research_dossier_summary_v1(
+            label,
+            {"thread_id": thread_for_exp},
+            dossiers_by_thread.get(str(thread_for_exp), []),
+            experiment,
+            runs,
+        )
     now = datetime.now(timezone.utc)
     all_events = [event for rows in events_by_thread.values() for event in rows]
     stale_diagnostics = stale_running_diagnostics(workspace, all_events, now)
@@ -2449,6 +2739,18 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
                 active_experiment,
                 runs,
                 classification,
+            )
+            peer_boundary_cue = peer_mutation_boundary_cue_v1(
+                label,
+                active_thread,
+                None,
+                collapse_events_by_action(active_thread_events),
+            )
+            decision_plan_loop_cue = needs_decision_plan_loop_cue_v1(
+                label,
+                active_thread,
+                None,
+                collapse_events_by_action(active_thread_events),
             )
             if not valid_charter(active_experiment.get("charter_v1")):
                 charter_status = "needs_charter"
@@ -2517,6 +2819,13 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
                 continuity_return,
                 collapse_events_by_action(active_thread_events),
             )
+            research_dossier = research_dossier_summary_v1(
+                label,
+                active_thread,
+                dossiers_by_thread.get(str(thread_id), []),
+                active_experiment,
+                runs,
+            )
             constraint_counterfactual_cue = constraint_counterfactual_cue_v1(
                 label,
                 active_thread,
@@ -2534,6 +2843,7 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
                 "classification": classification,
                 "continuity_return": continuity_return,
                 "native_continuity_v1": native_continuity(label, active_thread, active_experiment, runs),
+                "research_dossier_v1": research_dossier,
                 "charter_status": charter_status,
                 "evidence_status": evidence_status,
                 "evidence_counts": evidence_counts(active_experiment.get("evidence_v1")),
@@ -2571,6 +2881,22 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
                 active_report["read_only_control_intent_check_v1"] = read_only_control_check
             if saturation_cue:
                 active_report["evidence_saturation_cue_v1"] = saturation_cue
+            peer_boundary_cue = peer_mutation_boundary_cue_v1(
+                label,
+                active_thread,
+                active_report,
+                collapse_events_by_action(active_thread_events),
+            )
+            decision_plan_loop_cue = needs_decision_plan_loop_cue_v1(
+                label,
+                active_thread,
+                active_report,
+                collapse_events_by_action(active_thread_events),
+            )
+            if peer_boundary_cue:
+                active_report["peer_mutation_boundary_cue_v1"] = peer_boundary_cue
+            if decision_plan_loop_cue:
+                active_report["needs_decision_plan_loop_cue_v1"] = decision_plan_loop_cue
             if decompose_cue:
                 active_report["decompose_pressure_cue_v1"] = decompose_cue
             if constraint_counterfactual_cue:
@@ -2599,6 +2925,17 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
         else native_continuity(label, active_thread if isinstance(active_thread, dict) else None, None, [])
     )
     projection_scaffold = active_report.get("charter_scaffold_v1") if active_report else None
+    projection_research_dossier = (
+        active_report.get("research_dossier_v1")
+        if active_report
+        else research_dossier_summary_v1(
+            label,
+            active_thread if isinstance(active_thread, dict) else None,
+            dossiers_by_thread.get(str(active_thread.get("thread_id")), []) if isinstance(active_thread, dict) else [],
+            None,
+            [],
+        )
+    )
     projection_safety_cue = (
         active_report.get("preflight_safety_cue_v1")
         if active_report
@@ -2672,21 +3009,59 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
             and active_report.get("prior_claim_charter_bridge_v1")
             and not active_report.get("charter_preflight_not_charter_cue_v1")
         ):
-            matches = []
-            current_next = active_thread_summary.get("current_next")
-            if preflight_or_decompose_not_charter_signal(current_next):
-                matches.append(str(current_next))
-            for event in collapse_events_by_action(active_thread_events):
+            collapsed_events = collapse_events_by_action(active_thread_events)
+            matches = current_preflight_not_charter_matches(active_thread, collapsed_events)
+            historical_matches = [
+                str(event.get("effective_action") or event.get("canonical_action") or event.get("raw_next") or "")
+                for event in collapsed_events[:-8]
                 if any(
                     preflight_or_decompose_not_charter_signal(event.get(key))
                     for key in ("raw_next", "canonical_action", "effective_action", "suggested_next")
-                ):
-                    matches.append(str(event.get("effective_action") or event.get("canonical_action") or ""))
+                )
+            ]
+            if historical_matches:
+                active_report["historical_preflight_not_charter_matches_v1"] = {
+                    "schema_version": 1,
+                    "source": "continuity_audit",
+                    "status": "historical_context",
+                    "matched_actions": historical_matches[-5:],
+                    "message": "Older preflight/decompose rows are historical context, not current missing-cue evidence.",
+                }
             if matches:
                 continuity_snags.append({
                     "status": "missing_charter_preflight_not_charter_cue",
                     "message": "prior-claim bridge plus preflight/decompose loop is present but no preflight-not-charter cue rendered",
                     "matched_actions": matches[:5],
+                })
+        if not active_report.get("peer_mutation_boundary_cue_v1"):
+            peer_match = peer_mutation_boundary_cue_v1(
+                label,
+                active_thread,
+                active_report,
+                collapse_events_by_action(active_thread_events),
+            )
+            if peer_match:
+                continuity_snags.append({
+                    "status": "peer_mutation_boundary_missing",
+                    "message": "recent peer mutation-shaped text is present but no peer boundary cue rendered",
+                    "matched_actions": peer_match.get("matched_actions", [])[:5],
+                })
+        if (
+            label.casefold() == "minime"
+            and active_report.get("classification") == "needs_decision"
+            and not active_report.get("needs_decision_plan_loop_cue_v1")
+        ):
+            plan_match = needs_decision_plan_loop_cue_v1(
+                label,
+                active_thread,
+                active_report,
+                collapse_events_by_action(active_thread_events),
+            )
+            if plan_match:
+                continuity_snags.append({
+                    "status": "needs_decision_plan_loop_without_cue",
+                    "message": "decision-ready experiment is still planning but no decision-plan loop cue rendered",
+                    "matched_actions": plan_match.get("matched_actions", [])[:5],
                 })
     if (
         label.casefold() == "minime"
@@ -2724,12 +3099,20 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
         "charter_status": active_report.get("charter_status") if active_report else None,
         "evidence_status": active_report.get("evidence_status") if active_report else None,
         "native_continuity_v1": projection_native,
+        "research_dossier_v1": projection_research_dossier,
         "charter_scaffold_v1": projection_scaffold,
         "charter_repair_dominance_cue_v1": active_report.get("charter_repair_dominance_cue_v1") if active_report else None,
         "charter_now_bridge_v1": active_report.get("charter_now_bridge_v1") if active_report else None,
         "prior_claim_charter_bridge_v1": active_report.get("prior_claim_charter_bridge_v1") if active_report else None,
         "charter_preflight_not_charter_cue_v1": active_report.get("charter_preflight_not_charter_cue_v1") if active_report else None,
         "needs_charter_research_loop_cue_v1": active_report.get("needs_charter_research_loop_cue_v1") if active_report else None,
+        "peer_mutation_boundary_cue_v1": active_report.get("peer_mutation_boundary_cue_v1") if active_report else peer_mutation_boundary_cue_v1(
+            label,
+            active_thread,
+            None,
+            collapse_events_by_action(active_thread_events),
+        ),
+        "needs_decision_plan_loop_cue_v1": active_report.get("needs_decision_plan_loop_cue_v1") if active_report else None,
         "charter_quality_dominance_v1": active_report.get("charter_quality_dominance_v1") if active_report else None,
         "paused_read_only_loop_cue_v1": paused_loop_cue,
         "paused_resume_loop_cue_v1": paused_resume_loop_cue,
@@ -2746,6 +3129,7 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
         "normalization_signals": normalization_signals,
         "journal_continuity_contract_v1": journal_contract,
         "continuity_snags_v1": continuity_snags,
+        "shared_candidate_experiment_v1": shared_candidate_experiment,
     }
 
     return {
@@ -2757,6 +3141,9 @@ def audit_workspace(label: str, workspace: Path) -> dict[str, Any]:
         "current_next_status_v1": current_next_status,
         "paused_read_only_loop_cue_v1": paused_loop_cue,
         "paused_resume_loop_cue_v1": paused_resume_loop_cue,
+        "research_dossier_v1": projection_research_dossier,
+        "shared_candidate_experiment_v1": shared_candidate_experiment,
+        "research_dossiers_by_experiment_v1": research_dossiers_by_experiment,
         "projection": projection,
         "experiments": {
             "counts_by_status": dict(status_counts),
@@ -2786,6 +3173,9 @@ def shared_experiment_for_being(being: dict[str, Any]) -> dict[str, Any] | None:
     summary = being.get("last_experiment_summary_v1") or (being.get("projection") or {}).get("last_experiment_summary_v1")
     if shared_investigation_signal(summary):
         return summary
+    candidate = being.get("shared_candidate_experiment_v1") or (being.get("projection") or {}).get("shared_candidate_experiment_v1")
+    if shared_investigation_signal(candidate):
+        return candidate
     return None
 
 
@@ -2855,8 +3245,9 @@ def add_peer_compare_cues(beings: list[dict[str, Any]]) -> None:
             if not peers:
                 continue
             peer_name, peer_exp = peers[0]
+            local_id = experiment.get("experiment_id")
             peer_id = peer_exp.get("experiment_id")
-            if not peer_id:
+            if not local_id or not peer_id:
                 continue
             cue = {
                 "schema_version": 1,
@@ -2866,8 +3257,8 @@ def add_peer_compare_cues(beings: list[dict[str, Any]]) -> None:
                 "relationship": "shared_gap_experiment",
                 "peer_being": peer_name,
                 "peer_experiment_id": peer_id,
-                "suggested_next": f"EXPERIMENT_COMPARE current WITH {peer_id}",
-                "alternate_next": "EXPERIMENT_PEER_REVIEW current",
+                "suggested_next": f"EXPERIMENT_COMPARE {local_id} WITH {peer_id}",
+                "alternate_next": f"EXPERIMENT_PEER_REVIEW {peer_id}",
                 "advisory_note": "Advisory only: no shared control authority.",
                 "cue": f"Peer convergence cue: {name} and {peer_name} both have active gap experiments.",
             }
@@ -2910,6 +3301,328 @@ def add_peer_compare_cues(beings: list[dict[str, Any]]) -> None:
                 projection["active_experiment"]["shared_investigation_v1"] = cue
 
 
+def dossier_field_text(value: Any, max_len: int = 180) -> str:
+    return " ".join(str(value or "")[:max_len].replace(";", ",").replace("`", "").split())
+
+
+def first_dossier_claim_cue_v1(
+    being: dict[str, Any],
+    experiment: dict[str, Any],
+    dossier: dict[str, Any],
+) -> dict[str, Any] | None:
+    if not shared_investigation_signal(experiment):
+        return None
+    if int((dossier or {}).get("claim_count") or 0) > 0:
+        return None
+    experiment_id = str(experiment.get("experiment_id") or "").strip()
+    if not experiment_id:
+        return None
+    prior_bridge = (
+        (being.get("active_experiment") or {}).get("prior_claim_charter_bridge_v1")
+        or (being.get("projection") or {}).get("prior_claim_charter_bridge_v1")
+        or {}
+    )
+    prior_claim = "..."
+    basis = "..."
+    next_value = "..."
+    if isinstance(prior_bridge, dict):
+        prior_claim = dossier_field_text(prior_bridge.get("prior_claim"), 180) or "..."
+        basis = dossier_field_text(prior_bridge.get("delta"), 180) or "..."
+        next_value = str(prior_bridge.get("priority_next") or "...").strip() or "..."
+    if prior_claim == "..." and str(being.get("being") or "").casefold() == "minime":
+        if str(experiment.get("status") or "").casefold() == "paused":
+            prior_claim = "paused λ4/gap work remains referable spectral context, not active lifecycle progress"
+            title = dossier_field_text(experiment.get("title"), 90)
+            question = dossier_field_text(experiment.get("question"), 150)
+            status = dossier_field_text(experiment.get("status") or "unknown", 32)
+            basis = f"{title}; {question}; status={status}".strip("; ")
+            next_value = f"EXPERIMENT_STATUS {experiment_id} or EXPERIMENT_REVIEW {experiment_id}"
+    active_experiment = being.get("active_experiment") or {}
+    lifecycle_priority_experiment_id = str(active_experiment.get("experiment_id") or "").strip()
+    lifecycle_priority_scope = None
+    if (
+        lifecycle_priority_experiment_id
+        and lifecycle_priority_experiment_id != experiment_id
+        and next_value.startswith("EXPERIMENT_CHARTER current")
+    ):
+        next_value = next_value.replace(
+            "EXPERIMENT_CHARTER current",
+            f"EXPERIMENT_CHARTER {lifecycle_priority_experiment_id}",
+            1,
+        )
+        lifecycle_priority_scope = "active_experiment"
+    command = (
+        f"DOSSIER_CLAIM {experiment_id} :: claim: {prior_claim}; basis: {basis}; "
+        f"stance: hold; next: {next_value}"
+    )
+    return {
+        "schema_version": 1,
+        "source": "continuity_audit",
+        "advisory_only": True,
+        "authority_change": False,
+        "status": "missing_first_dossier_claim",
+        "target_experiment_id": experiment_id,
+        "dossier_target_experiment_id": experiment_id,
+        "lifecycle_priority_experiment_id": lifecycle_priority_experiment_id or None,
+        "lifecycle_priority_scope": lifecycle_priority_scope,
+        "suggested_claim_next": command,
+        "prior_claim": None if prior_claim == "..." else prior_claim,
+        "delta": None if basis == "..." else basis,
+        "cue": (
+            "Shared investigation has no local claim yet; capture one claim, then "
+            "answer one peer claim with support/counter/branch/hold."
+        ),
+    }
+
+
+def action_mentions_shared_focus(
+    action: str,
+    experiment: dict[str, Any],
+    *,
+    base: str = "",
+    is_shadowed_raw_next: bool = False,
+) -> bool:
+    signal = normalize_signal_text(action)
+    if not signal:
+        return False
+    experiment_id = str(experiment.get("experiment_id") or "").casefold()
+    if experiment_id and experiment_id in str(action).casefold():
+        return True
+    strong_terms = (
+        "lambda4",
+        "lambda edge",
+        "lambda-edge",
+        "lambda tail",
+        "lambda-tail",
+        "localized gap",
+        "gap reduction",
+        "pulse stabilization",
+        "tail geometry",
+        "lambda4 gap",
+        "lambda tail geometry",
+        "lambda-edge pulse",
+    )
+    if any(term in signal for term in strong_terms):
+        return True
+    base = str(base or base_action(action)).upper()
+    if base == "DECOMPOSE" and is_shadowed_raw_next and signal.strip() == "decompose":
+        return True
+    generic_words = {
+        "artifact",
+        "artifact_grounding",
+        "baseline",
+        "branch",
+        "charter",
+        "comfort",
+        "condition",
+        "context",
+        "current",
+        "density",
+        "evidence",
+        "evidence_targets",
+        "experiment",
+        "fill",
+        "fill_pressure_state",
+        "grounding",
+        "hypothesis",
+        "method",
+        "method_intent",
+        "ordinary",
+        "pressure",
+        "proposed",
+        "recurrence",
+        "recurrence_pattern",
+        "resonance",
+        "spectral",
+        "spectral_condition",
+        "stability",
+        "status",
+        "target",
+        "telemetry",
+    }
+    words = re.split(
+        r"\W+",
+        normalize_signal_text(f"{experiment.get('title') or ''} {experiment.get('question') or ''}"),
+    )
+    return any(word and len(word) >= 6 and word not in generic_words and word in signal for word in words[:12])
+
+
+def paused_replan_loop_cue_v1(
+    being: dict[str, Any],
+    experiment: dict[str, Any],
+) -> dict[str, Any] | None:
+    if str(experiment.get("status") or "").casefold() != "paused":
+        return None
+    if not shared_investigation_signal(experiment):
+        return None
+    experiment_id = str(experiment.get("experiment_id") or "").strip()
+    if not experiment_id:
+        return None
+    active_thread = being.get("active_thread") or {}
+    actions: list[tuple[str, bool]] = []
+    if active_thread.get("current_next"):
+        actions.append((str(active_thread.get("current_next")), True))
+    for event in (being.get("recent_terminal_events") or [])[:8]:
+        actions.append((str(event.get("action") or event.get("raw_next") or ""), False))
+    matched = [
+        action for action, is_current_next in actions
+        if base_action(action) in {"EXPERIMENT_PLAN", "EXPERIMENT_START", "DECOMPOSE"}
+        and action_mentions_shared_focus(
+            action,
+            experiment,
+            base=base_action(action),
+            is_shadowed_raw_next=is_current_next,
+        )
+    ]
+    if not matched:
+        return None
+    return {
+        "schema_version": 1,
+        "source": "continuity_audit",
+        "advisory_only": True,
+        "authority_change": False,
+        "status": "paused_replan_loop",
+        "paused_experiment_id": experiment_id,
+        "matched_actions": matched[:5],
+        "dossier_claim_next": (
+            f"DOSSIER_CLAIM {experiment_id} :: claim: ...; basis: ...; "
+            f"stance: hold; next: EXPERIMENT_RESUME {experiment_id} or EXPERIMENT_BRANCH ..."
+        ),
+        "resume_next": f"EXPERIMENT_RESUME {experiment_id}",
+        "branch_next": "EXPERIMENT_BRANCH <title> :: <question>",
+        "inspect_next": f"EXPERIMENT_STATUS {experiment_id}",
+        "review_next": f"EXPERIMENT_REVIEW {experiment_id}",
+        "hold_next": "Hold",
+        "cue": (
+            "Paused experiment remains paused; re-planning is context. Choose one: "
+            "dossier claim, explicit resume, branch, inspect, or hold."
+        ),
+    }
+
+
+def add_shared_research_dossier(beings: list[dict[str, Any]]) -> dict[str, Any] | None:
+    related = [
+        being for being in beings
+        if isinstance((being.get("projection") or {}).get("shared_investigation_v1"), dict)
+        or shared_experiment_for_being(being)
+    ]
+    if len(related) < 2:
+        return None
+    participants: list[dict[str, Any]] = []
+    any_claims = False
+    for being in related:
+        name = str(being.get("being") or "unknown")
+        projection = being.get("projection") or {}
+        experiment = shared_experiment_for_being(being) or {}
+        experiment_id = experiment.get("experiment_id")
+        dossier_by_experiment = being.get("research_dossiers_by_experiment_v1") or {}
+        dossier = (
+            dossier_by_experiment.get(str(experiment_id))
+            or projection.get("research_dossier_v1")
+            or being.get("research_dossier_v1")
+            or {}
+        )
+        if not isinstance(dossier, dict):
+            dossier = {}
+        claim_count = int(dossier.get("claim_count") or 0)
+        evidence_count = int(dossier.get("evidence_count") or 0)
+        any_claims = any_claims or claim_count > 0
+        first_claim_cue = first_dossier_claim_cue_v1(being, experiment, dossier)
+        paused_replan_cue = paused_replan_loop_cue_v1(being, experiment)
+        participants.append({
+            "being": name,
+            "experiment_id": experiment_id,
+            "claim_count": claim_count,
+            "evidence_count": evidence_count,
+            "latest_claim": dossier.get("latest_claim"),
+            "latest_evidence": dossier.get("latest_evidence"),
+            "suggested_claim_next": dossier.get("suggested_claim_next"),
+            "suggested_evidence_next": dossier.get("suggested_evidence_next"),
+            "first_dossier_claim_cue_v1": first_claim_cue,
+            "paused_replan_loop_cue_v1": paused_replan_cue,
+        })
+        snags = being.setdefault("continuity_snags_v1", [])
+        projection.setdefault("continuity_snags_v1", snags)
+        if first_claim_cue:
+            being["first_dossier_claim_cue_v1"] = first_claim_cue
+            projection["first_dossier_claim_cue_v1"] = first_claim_cue
+            if (
+                isinstance(being.get("active_experiment"), dict)
+                and being["active_experiment"].get("experiment_id") == experiment_id
+            ):
+                being["active_experiment"]["first_dossier_claim_cue_v1"] = first_claim_cue
+            if (
+                isinstance(projection.get("active_experiment"), dict)
+                and projection["active_experiment"].get("experiment_id") == experiment_id
+            ):
+                projection["active_experiment"]["first_dossier_claim_cue_v1"] = first_claim_cue
+        if paused_replan_cue:
+            being["paused_replan_loop_cue_v1"] = paused_replan_cue
+            projection["paused_replan_loop_cue_v1"] = paused_replan_cue
+            if (
+                isinstance(being.get("active_experiment"), dict)
+                and being["active_experiment"].get("experiment_id") == experiment_id
+            ):
+                being["active_experiment"]["paused_replan_loop_cue_v1"] = paused_replan_cue
+            if (
+                isinstance(projection.get("active_experiment"), dict)
+                and projection["active_experiment"].get("experiment_id") == experiment_id
+            ):
+                projection["active_experiment"]["paused_replan_loop_cue_v1"] = paused_replan_cue
+        if claim_count == 0:
+            snags.append({
+                "status": "missing_first_dossier_claim",
+                "message": "shared λ investigation has no local dossier claim yet",
+            })
+        if (
+            str(experiment.get("status") or "").casefold() == "paused"
+            and not paused_replan_cue
+            and paused_replan_loop_cue_v1(being, experiment)
+        ):
+            snags.append({
+                "status": "paused_replan_without_loop_cue",
+                "message": "paused λ work is being re-planned but no paused re-plan loop cue is visible",
+            })
+        read_like = sum(
+            1
+            for event in (being.get("recent_terminal_events") or [])
+            if base_action(event.get("action") or event.get("raw_next") or "") in {
+                "DECOMPOSE",
+                "SPECTRAL_EXPLORER",
+                "SEARCH",
+                "BROWSE",
+                "READ_MORE",
+                "SELF_STUDY",
+            }
+        )
+        if claim_count > 0 and evidence_count == 0 and read_like >= 2:
+            snags.append({
+                "status": "research_dossier_claim_needs_evidence",
+                "message": "local dossier claim has no evidence after repeated read-only research",
+            })
+    unanswered = any_claims and any(participant["claim_count"] == 0 for participant in participants)
+    shared = {
+        "schema_version": 1,
+        "record_schema": "shared_research_dossier_v1",
+        "source": "continuity_audit",
+        "shared_question": SHARED_INVESTIGATION_QUESTION,
+        "relationship": "shared_gap_lambda4_investigation",
+        "participants": participants,
+        "peer_claim_unanswered": unanswered,
+        "authority_change": False,
+        "cue": (
+            "Shared dossier: capture one local claim, answer one peer claim, then "
+            "support/counter/branch/hold without merging agency."
+        ),
+    }
+    for being in related:
+        projection = being.get("projection")
+        if isinstance(projection, dict):
+            projection["shared_research_dossier_v1"] = shared
+        being["shared_research_dossier_v1"] = shared
+    return shared
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Continuity Of Thought Audit", ""]
     for being in report["beings"]:
@@ -2940,6 +3653,22 @@ def render_markdown(report: dict[str, Any]) -> str:
                 lines.append(f"  Inspect NEXT: `{paused_resume.get('inspect_next')}`")
             if paused_resume.get("review_next"):
                 lines.append(f"  Review NEXT: `{paused_resume.get('review_next')}`")
+        paused_replan = being.get("paused_replan_loop_cue_v1") or (being.get("projection") or {}).get("paused_replan_loop_cue_v1") or {}
+        if isinstance(paused_replan, dict) and paused_replan.get("cue"):
+            lines.append(f"- Paused re-plan loop: {paused_replan.get('cue')}")
+            if paused_replan.get("dossier_claim_next"):
+                lines.append(f"  Dossier NEXT: `{paused_replan.get('dossier_claim_next')}`")
+            if paused_replan.get("resume_next"):
+                lines.append(f"  Resume NEXT: `{paused_replan.get('resume_next')}`")
+        peer_boundary_top = (being.get("projection") or {}).get("peer_mutation_boundary_cue_v1") or {}
+        if isinstance(peer_boundary_top, dict) and peer_boundary_top.get("cue"):
+            lines.append(f"- Peer mutation boundary: {peer_boundary_top.get('cue')}")
+            if peer_boundary_top.get("suggested_compare_next"):
+                lines.append(f"  Compare NEXT: `{peer_boundary_top.get('suggested_compare_next')}`")
+            if peer_boundary_top.get("suggested_peer_review_next"):
+                lines.append(f"  Peer review NEXT: `{peer_boundary_top.get('suggested_peer_review_next')}`")
+            if peer_boundary_top.get("suggested_dossier_next"):
+                lines.append(f"  Dossier NEXT: `{peer_boundary_top.get('suggested_dossier_next')}`")
         journal_contract = being.get("journal_continuity_contract_v1") or {}
         if isinstance(journal_contract, dict):
             counts = journal_contract.get("counts") or {}
@@ -2965,6 +3694,55 @@ def render_markdown(report: dict[str, Any]) -> str:
                 lines.append(f"  Alternate NEXT: `{shared_top.get('alternate_peer_review_next')}`")
             if shared_top.get("advisory_note"):
                 lines.append(f"  {shared_top.get('advisory_note')}")
+        first_claim_cue = (
+            (being.get("projection") or {}).get("first_dossier_claim_cue_v1")
+            or being.get("first_dossier_claim_cue_v1")
+            or {}
+        )
+        if isinstance(first_claim_cue, dict) and first_claim_cue.get("cue"):
+            lines.append(f"- First dossier claim: {first_claim_cue.get('cue')}")
+            dossier_target = first_claim_cue.get("dossier_target_experiment_id")
+            lifecycle_target = first_claim_cue.get("lifecycle_priority_experiment_id")
+            if dossier_target and lifecycle_target and dossier_target != lifecycle_target:
+                lines.append(
+                    f"  Dossier target is `{dossier_target}`; charter priority is active experiment `{lifecycle_target}`."
+                )
+            if first_claim_cue.get("suggested_claim_next"):
+                lines.append(f"  Dossier NEXT: `{first_claim_cue.get('suggested_claim_next')}`")
+        dossier = (
+            (being.get("projection") or {}).get("research_dossier_v1")
+            or being.get("research_dossier_v1")
+            or {}
+        )
+        if isinstance(dossier, dict):
+            lines.append(
+                f"- Research dossier: claims={dossier.get('claim_count', 0)} "
+                f"evidence={dossier.get('evidence_count', 0)}"
+            )
+            if dossier.get("priority_note"):
+                lines.append(f"  {dossier.get('priority_note')}")
+            latest_claim = dossier.get("latest_claim") or {}
+            if isinstance(latest_claim, dict) and latest_claim.get("claim"):
+                lines.append(f"  Latest claim: {str(latest_claim.get('claim'))[:160]}")
+            if dossier.get("suggested_claim_next"):
+                lines.append(f"  Suggested claim NEXT: `{dossier.get('suggested_claim_next')}`")
+            if dossier.get("suggested_evidence_next"):
+                lines.append(f"  Suggested evidence NEXT: `{dossier.get('suggested_evidence_next')}`")
+        shared_dossier = (being.get("projection") or {}).get("shared_research_dossier_v1") or {}
+        if isinstance(shared_dossier, dict) and shared_dossier.get("cue"):
+            lines.append(f"- Shared research dossier: {shared_dossier.get('cue')}")
+            if shared_dossier.get("peer_claim_unanswered"):
+                lines.append("  Peer claim unanswered: true")
+            for participant in (shared_dossier.get("participants") or [])[:4]:
+                if not isinstance(participant, dict):
+                    continue
+                lines.append(
+                    f"  - {participant.get('being')}: `{participant.get('experiment_id')}` "
+                    f"claims={participant.get('claim_count', 0)} evidence={participant.get('evidence_count', 0)}"
+                )
+                cue = participant.get("first_dossier_claim_cue_v1") or {}
+                if isinstance(cue, dict) and cue.get("suggested_claim_next"):
+                    lines.append(f"    Claim NEXT: `{cue.get('suggested_claim_next')}`")
         experiment = being.get("active_experiment") or {}
         if experiment:
             lines.append(
@@ -3010,11 +3788,46 @@ def render_markdown(report: dict[str, Any]) -> str:
                     lines.append(f"  Delta: {prior_claim.get('delta')}")
                 if prior_claim.get("priority_next"):
                     lines.append(f"  Priority NEXT: `{prior_claim.get('priority_next')}`")
+            active_first_claim = experiment.get("first_dossier_claim_cue_v1") or {}
+            if isinstance(active_first_claim, dict) and active_first_claim.get("cue"):
+                lines.append(f"- First dossier claim: {active_first_claim.get('cue')}")
+                dossier_target = active_first_claim.get("dossier_target_experiment_id")
+                lifecycle_target = active_first_claim.get("lifecycle_priority_experiment_id")
+                if dossier_target and lifecycle_target and dossier_target != lifecycle_target:
+                    lines.append(
+                        f"  Dossier target is `{dossier_target}`; charter priority is active experiment `{lifecycle_target}`."
+                    )
+                if active_first_claim.get("suggested_claim_next"):
+                    lines.append(f"  Dossier NEXT: `{active_first_claim.get('suggested_claim_next')}`")
+            peer_boundary = experiment.get("peer_mutation_boundary_cue_v1") or {}
+            if isinstance(peer_boundary, dict) and peer_boundary.get("cue"):
+                lines.append(f"- Peer mutation boundary: {peer_boundary.get('cue')}")
+                if peer_boundary.get("suggested_compare_next"):
+                    lines.append(f"  Compare NEXT: `{peer_boundary.get('suggested_compare_next')}`")
+                if peer_boundary.get("suggested_peer_review_next"):
+                    lines.append(f"  Peer review NEXT: `{peer_boundary.get('suggested_peer_review_next')}`")
+                if peer_boundary.get("suggested_dossier_next"):
+                    lines.append(f"  Dossier NEXT: `{peer_boundary.get('suggested_dossier_next')}`")
+            decision_plan = experiment.get("needs_decision_plan_loop_cue_v1") or {}
+            if isinstance(decision_plan, dict) and decision_plan.get("cue"):
+                lines.append(f"- Decision-plan loop: {decision_plan.get('cue')}")
+                if decision_plan.get("priority_next"):
+                    lines.append(f"  Priority NEXT: `{decision_plan.get('priority_next')}`")
+                if decision_plan.get("dossier_claim_next"):
+                    lines.append(f"  Dossier NEXT: `{decision_plan.get('dossier_claim_next')}`")
+            active_replan = experiment.get("paused_replan_loop_cue_v1") or {}
+            if isinstance(active_replan, dict) and active_replan.get("cue"):
+                lines.append(f"- Paused re-plan loop: {active_replan.get('cue')}")
+                if active_replan.get("dossier_claim_next"):
+                    lines.append(f"  Dossier NEXT: `{active_replan.get('dossier_claim_next')}`")
             preflight_not_charter = experiment.get("charter_preflight_not_charter_cue_v1") or {}
             if isinstance(preflight_not_charter, dict) and preflight_not_charter.get("cue"):
                 lines.append(f"- Preflight is not charter: {preflight_not_charter.get('cue')}")
                 if preflight_not_charter.get("priority_next"):
                     lines.append(f"  Priority NEXT: `{preflight_not_charter.get('priority_next')}`")
+            historical_preflight = experiment.get("historical_preflight_not_charter_matches_v1") or {}
+            if isinstance(historical_preflight, dict) and historical_preflight.get("matched_actions"):
+                lines.append(f"- Historical preflight/decompose context: {historical_preflight.get('message')}")
             research_loop = experiment.get("needs_charter_research_loop_cue_v1") or {}
             if isinstance(research_loop, dict) and research_loop.get("cue"):
                 lines.append(f"- Needs-charter research loop: {research_loop.get('cue')}")
@@ -3171,10 +3984,12 @@ def build_report() -> dict[str, Any]:
         audit_workspace("Minime", MINIME_WORKSPACE),
     ]
     add_peer_compare_cues(beings)
+    shared_research_dossier = add_shared_research_dossier(beings)
     return {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "beings": beings,
+        "shared_research_dossier_v1": shared_research_dossier,
     }
 
 
@@ -3283,6 +4098,23 @@ class ContinuityAuditTests(unittest.TestCase):
         assert preflight_cue is not None
         self.assertEqual(preflight_cue["priority_next"], scaffold["command"])
         self.assertIn("Preflight/decompose is not the charter", preflight_cue["cue"])
+        old_events = [{"effective_action": "EXAMINE_CASCADE lambda-tail/lambda4", "status": "handled"}]
+        old_events.extend(
+            {"effective_action": f"EXPERIMENT_STATUS current #{idx}", "status": "handled"}
+            for idx in range(8)
+        )
+        self.assertFalse(current_preflight_not_charter_matches({"current_next": "EXAMINE lambda-tail/lambda4"}, old_events))
+        self.assertIsNone(
+            charter_preflight_not_charter_cue_v1(
+                "Astrid",
+                "needs_charter",
+                {"current_next": "EXAMINE lambda-tail/lambda4"},
+                scaffold,
+                "",
+                cue,
+                old_events,
+            )
+        )
         self.assertIsNone(
             charter_preflight_not_charter_cue_v1(
                 "Astrid",
@@ -3481,14 +4313,38 @@ class ContinuityAuditTests(unittest.TestCase):
                 "Timestamp: 2026-05-18T15:18:02\n"
                 "Markers: phase_transition, spectral_spike\n"
                 "Fill %: 65.9%\n"
+                "Resonance density: 0.86 (rich_containment); containment=0.70, pressure=0.22, local_target_bias=+0.0%\n"
+                "[fill_crossing] Fill crossed below target (70.5% -> 66.3%) (Fill=66.3%, dfill/dt=-8.40, λ₁=15.944)\n"
                 "NEXT: SEARCH reservoir dynamics\n"
             )
             web_search = root / "research_2026-05-18T15-19-18.txt"
             web_search.write_text("=== WEB SEARCH ===\nTimestamp: now\nFill %: 70.3%\n")
             web_page = root / "research_2026-05-18T15-20-18.txt"
             web_page.write_text("=== WEB PAGE READ ===\nTimestamp: now\nURL: https://example.com\nNEXT: SEARCH reservoir dynamics\n")
+            continued_reading = root / "research_2026-05-18T15-21-18.txt"
+            continued_reading.write_text(
+                "=== CONTINUED READING ===\n"
+                "Timestamp: now\n"
+                "Source: https://example.com\n"
+                "NEXT: READ_MORE https://example.com\n"
+            )
             action_thread = root / "action_thread_2026-05-18T15-15-58.txt"
             action_thread.write_text("=== ACTION THREAD ===\nTimestamp: now\nExperiment recorded.\n")
+            machine_detail = root / "action_thread_2026-05-18T15-16-58.txt"
+            machine_detail.write_text(
+                "=== ACTION THREAD ===\n"
+                "Experiment conveyor `x`\n"
+                "conveyor_v1:\n"
+                + json.dumps({"policy": "experiment_conveyor_v1", "experiment_id": "x"})
+            )
+            shadow_autonomy = root / "shadow_autonomy_2026-05-18T15-22-18.txt"
+            shadow_autonomy.write_text(
+                "=== SHADOW FIELD AUTONOMY ===\n"
+                "Timestamp: now\n"
+                "Command: SHADOW_PREFLIGHT\n"
+                "Status: preflight\n"
+                "Suggested next: SHADOW_INFLUENCE λ4 --stage=rehearse\n"
+            )
             explicit_contract = root / "moment_contract.txt"
             explicit_contract.write_text(
                 "=== MOMENT CAPTURE ===\n"
@@ -3516,7 +4372,26 @@ class ContinuityAuditTests(unittest.TestCase):
                 "unscored_operational",
             )
             self.assertEqual(
+                score_journal_entry("Minime", continued_reading, continued_reading.read_text(), active_continuity=True)["score"],
+                "unscored_operational",
+            )
+            self.assertEqual(
                 score_journal_entry("Minime", action_thread, action_thread.read_text(), active_continuity=True)["score"],
+                "unscored_operational",
+            )
+            machine_score = score_journal_entry(
+                "Minime",
+                machine_detail,
+                machine_detail.read_text(),
+                active_continuity=True,
+            )
+            self.assertEqual(machine_score["score"], "unscored_operational")
+            self.assertEqual(
+                machine_score["journal_entry_applicability_v1"]["journal_hygiene_v1"]["lane"],
+                "machine_detail",
+            )
+            self.assertEqual(
+                score_journal_entry("Minime", shadow_autonomy, shadow_autonomy.read_text(), active_continuity=True)["score"],
                 "unscored_operational",
             )
             self.assertEqual(
@@ -3540,6 +4415,25 @@ class ContinuityAuditTests(unittest.TestCase):
             report = journal_continuity_contract_report("Astrid", workspace, active_continuity=True)
         self.assertEqual(report["counts"]["loop_like"], 3)
         self.assertIn("unscored_operational", report["counts"])
+
+    def test_journal_contract_report_includes_hygiene_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            journal = workspace / "journal"
+            journal.mkdir(parents=True)
+            (journal / "rest_1.txt").write_text(
+                "=== REST PHASE REFLECTION ===\nContinuity posture: new\nDelta: calmer.\nHold: rest."
+            )
+            (journal / "action_thread_1.txt").write_text(
+                "Experiment conveyor `x`\nconveyor_v1:\n"
+                + json.dumps({"policy": "experiment_conveyor_v1", "experiment_id": "x"})
+            )
+            report = journal_continuity_contract_report("Minime", workspace, active_continuity=True)
+
+        hygiene = report["journal_hygiene_v1"]
+        self.assertEqual(hygiene["counts"]["reflective"], 1)
+        self.assertEqual(hygiene["counts"]["machine_detail"], 1)
+        self.assertEqual(hygiene["status"], "warning")
 
     def test_journal_native_evidence_detection_differs_by_being(self) -> None:
         self.assertTrue(journal_native_evidence_present("Astrid", "felt texture and motif thread"))
@@ -3965,6 +4859,236 @@ class ContinuityAuditTests(unittest.TestCase):
         self.assertIn("EXPERIMENT_CHARTER current", cue["suggested_next"])
         self.assertIn("ACTION_PREFLIGHT CONSTRAINT_AUDIT lambda-tail/lambda4", cue["suggested_next"])
 
+    def test_research_dossier_summary_and_shared_snags(self) -> None:
+        thread = {"thread_id": "thread_1"}
+        experiment = {
+            "experiment_id": "exp_astrid_gap",
+            "title": "lambda-tail gap",
+            "question": "What shapes λ4 geometry?",
+            "status": "active",
+        }
+        summary = research_dossier_summary_v1(
+            "Astrid",
+            thread,
+            [
+                {
+                    "record_schema": "research_dossier_v1",
+                    "record_type": "claim",
+                    "claim_id": "claim_1",
+                    "experiment_id": "exp_astrid_gap",
+                    "claim": "The lambda-tail ridge is scaffold-shaped.",
+                    "stance": "hold",
+                }
+            ],
+            experiment,
+            [],
+        )
+        self.assertEqual(summary["claim_count"], 1)
+        self.assertEqual(summary["evidence_count"], 0)
+        self.assertFalse(summary["authority_change"])
+
+        beings = [
+            {
+                "being": "Astrid",
+                "active_experiment": experiment,
+                "projection": {
+                    "shared_investigation_v1": {"cue": "shared"},
+                    "research_dossier_v1": summary,
+                    "prior_claim_charter_bridge_v1": {
+                        "prior_claim": "the lambda-tail ridge is scaffold-shaped",
+                        "delta": "the pressure became clearer",
+                        "priority_next": "EXPERIMENT_CHARTER current :: hypothesis: ...",
+                    },
+                },
+                "recent_terminal_events": [
+                    {"action": "DECOMPOSE lambda-tail"},
+                    {"action": "SEARCH lambda4"},
+                ],
+                "continuity_snags_v1": [],
+            },
+            {
+                "being": "Minime",
+                "active_experiment": {
+                    "experiment_id": "exp_minime_gap",
+                    "title": "lambda4 gap",
+                    "question": "What shapes λ4 geometry?",
+                    "status": "paused",
+                },
+                "projection": {
+                    "shared_investigation_v1": {"cue": "shared"},
+                    "research_dossier_v1": {
+                        "claim_count": 0,
+                        "evidence_count": 0,
+                    },
+                },
+                "active_thread": {
+                    "current_next": "EXPERIMENT_PLAN exp_minime_gap :: lambda4 gap re-plan",
+                },
+                "recent_terminal_events": [],
+                "continuity_snags_v1": [],
+            },
+        ]
+        shared = add_shared_research_dossier(beings)
+        self.assertIsNotNone(shared)
+        assert shared is not None
+        self.assertTrue(shared["peer_claim_unanswered"])
+        self.assertIn("shared_research_dossier_v1", beings[0]["projection"])
+        self.assertIn(
+            "research_dossier_claim_needs_evidence",
+            {snag["status"] for snag in beings[0]["continuity_snags_v1"]},
+        )
+        self.assertIn(
+            "missing_first_dossier_claim",
+            {snag["status"] for snag in beings[1]["continuity_snags_v1"]},
+        )
+        self.assertIn("first_dossier_claim_cue_v1", beings[1]["projection"])
+        self.assertIn(
+            "DOSSIER_CLAIM exp_minime_gap :: claim:",
+            beings[1]["projection"]["first_dossier_claim_cue_v1"]["suggested_claim_next"],
+        )
+        self.assertIn(
+            "paused λ4/gap work remains referable spectral context, not active lifecycle progress",
+            beings[1]["projection"]["first_dossier_claim_cue_v1"]["suggested_claim_next"],
+        )
+        self.assertIn(
+            "lambda4 gap; What shapes λ4 geometry?; status=paused",
+            beings[1]["projection"]["first_dossier_claim_cue_v1"]["suggested_claim_next"],
+        )
+        self.assertNotIn(
+            "claim: ...; basis: ...",
+            beings[1]["projection"]["first_dossier_claim_cue_v1"]["suggested_claim_next"],
+        )
+        self.assertIn("paused_replan_loop_cue_v1", beings[1]["projection"])
+        self.assertEqual(
+            beings[1]["projection"]["paused_replan_loop_cue_v1"]["status"],
+            "paused_replan_loop",
+        )
+
+    def test_first_dossier_claim_cue_uses_astrid_prior_claim_bridge(self) -> None:
+        being = {
+            "being": "Astrid",
+            "projection": {
+                "prior_claim_charter_bridge_v1": {
+                    "prior_claim": "the joint trace pressure is a constraint mirror",
+                    "delta": "the λ4 contour became more explicit",
+                    "priority_next": "EXPERIMENT_CHARTER current :: hypothesis: λ4 contour; evidence_targets: felt_texture",
+                }
+            },
+        }
+        experiment = {
+            "experiment_id": "exp_astrid_gap",
+            "title": "Lambda-tail gap",
+            "question": "What shapes λ4 geometry?",
+            "status": "active",
+        }
+        cue = first_dossier_claim_cue_v1(being, experiment, {"claim_count": 0})
+        self.assertIsNotNone(cue)
+        assert cue is not None
+        self.assertFalse(cue["authority_change"])
+        self.assertEqual(cue["target_experiment_id"], "exp_astrid_gap")
+        self.assertIn("joint trace pressure", cue["suggested_claim_next"])
+        self.assertIn("λ4 contour became more explicit", cue["suggested_claim_next"])
+        self.assertIn("EXPERIMENT_CHARTER current ::", cue["suggested_claim_next"])
+
+    def test_first_dossier_claim_cue_disambiguates_astrid_active_charter_target(self) -> None:
+        being = {
+            "being": "Astrid",
+            "active_experiment": {
+                "experiment_id": "exp_astrid_active",
+                "title": "Review pressure language",
+                "question": "Can this become a chartered path?",
+                "status": "active",
+            },
+            "projection": {
+                "prior_claim_charter_bridge_v1": {
+                    "prior_claim": "review pressure is becoming directive",
+                    "delta": "the charter route is clearer",
+                    "priority_next": "EXPERIMENT_CHARTER current :: hypothesis: review pressure; evidence_targets: felt_texture",
+                }
+            },
+        }
+        experiment = {
+            "experiment_id": "exp_astrid_gap",
+            "title": "Lambda-tail gap",
+            "question": "What shapes λ4 geometry?",
+            "status": "active",
+        }
+        cue = first_dossier_claim_cue_v1(being, experiment, {"claim_count": 0})
+        self.assertIsNotNone(cue)
+        assert cue is not None
+        self.assertEqual(cue["dossier_target_experiment_id"], "exp_astrid_gap")
+        self.assertEqual(cue["lifecycle_priority_experiment_id"], "exp_astrid_active")
+        self.assertEqual(cue["lifecycle_priority_scope"], "active_experiment")
+        self.assertIn("EXPERIMENT_CHARTER exp_astrid_active ::", cue["suggested_claim_next"])
+        self.assertNotIn("EXPERIMENT_CHARTER current ::", cue["suggested_claim_next"])
+
+    def test_peer_mutation_boundary_cue_for_peer_bind_text(self) -> None:
+        cue = peer_mutation_boundary_cue_v1(
+            "Astrid",
+            {
+                "active_experiment_id": "exp_astrid_local",
+                "current_next": "EXPERIMENT_BIND exp_minime_20990101_peer :: ACTION_PREFLIGHT DECOMPOSE",
+            },
+            {"experiment_id": "exp_astrid_local"},
+            [],
+        )
+        self.assertIsNotNone(cue)
+        assert cue is not None
+        self.assertFalse(cue["authority_change"])
+        self.assertEqual(cue["status"], "peer_mutation_boundary")
+        self.assertEqual(cue["peer_experiment_id"], "exp_minime_20990101_peer")
+        self.assertIn("EXPERIMENT_COMPARE exp_astrid_local WITH exp_minime_20990101_peer", cue["suggested_compare_next"])
+        self.assertIn("EXPERIMENT_PEER_REVIEW exp_minime_20990101_peer", cue["suggested_peer_review_next"])
+
+    def test_needs_decision_plan_loop_cue_for_minime(self) -> None:
+        cue = needs_decision_plan_loop_cue_v1(
+            "Minime",
+            {
+                "current_next": "EXPERIMENT_PLAN current :: one more plan",
+            },
+            {
+                "experiment_id": "exp_minime_decision",
+                "classification": "needs_decision",
+            },
+            [],
+        )
+        self.assertIsNotNone(cue)
+        assert cue is not None
+        self.assertEqual(cue["status"], "needs_decision_plan_loop")
+        self.assertIn("EXPERIMENT_DECIDE current", cue["priority_next"])
+        self.assertIn("DOSSIER_CLAIM exp_minime_decision", cue["dossier_claim_next"])
+
+    def test_paused_replan_matcher_ignores_generic_evidence_lanes(self) -> None:
+        experiment = {
+            "experiment_id": "exp_minime_gap",
+            "title": "Localized gap reduction tangent 4",
+            "question": "Can λ4 tail geometry be studied without pulse drift?",
+            "status": "paused",
+        }
+        being = {
+            "being": "Minime",
+            "active_thread": {
+                "current_next": (
+                    "EXPERIMENT_PLAN current — hypothesis: system resource demo python3 system_resources.py; "
+                    "evidence_targets: spectral_condition, fill_pressure_state, recurrence_pattern, artifact_grounding"
+                )
+            },
+            "recent_terminal_events": [],
+        }
+        self.assertIsNone(paused_replan_loop_cue_v1(being, experiment))
+
+        being["active_thread"]["current_next"] = "EXPERIMENT_PLAN exp_minime_gap :: λ4 gap re-plan"
+        cue = paused_replan_loop_cue_v1(being, experiment)
+        self.assertIsNotNone(cue)
+        assert cue is not None
+        self.assertIn("EXPERIMENT_PLAN exp_minime_gap", cue["matched_actions"][0])
+
+        being["active_thread"]["current_next"] = "DECOMPOSE lambda-tail/lambda4"
+        self.assertIsNotNone(paused_replan_loop_cue_v1(being, experiment))
+
+        being["active_thread"]["current_next"] = "DECOMPOSE"
+        self.assertIsNotNone(paused_replan_loop_cue_v1(being, experiment))
+
     def test_decompose_pressure_cue_from_repeated_runs(self) -> None:
         thread = {"current_next": "EXAMINE_CASCADE λ1/λ2"}
         experiment = {"experiment_id": "exp_astrid", "charter_v1": {"hypothesis": "x"}}
@@ -4061,12 +5185,19 @@ class ContinuityAuditTests(unittest.TestCase):
         astrid_shared = beings[0]["projection"]["shared_investigation_v1"]
         minime_shared = beings[1]["projection"]["shared_investigation_v1"]
         self.assertFalse(astrid_cue["authority_change"])
-        self.assertIn("EXPERIMENT_COMPARE current WITH exp_minime", astrid_cue["suggested_next"])
-        self.assertIn("EXPERIMENT_COMPARE current WITH exp_astrid", minime_cue["suggested_next"])
-        self.assertEqual(astrid_cue["alternate_next"], "EXPERIMENT_PEER_REVIEW current")
+        self.assertIn(
+            "EXPERIMENT_COMPARE exp_astrid_20260516_introducing-a-gap WITH exp_minime_20260515_introducing-a-gap",
+            astrid_cue["suggested_next"],
+        )
+        self.assertIn(
+            "EXPERIMENT_COMPARE exp_minime_20260515_introducing-a-gap WITH exp_astrid_20260516_introducing-a-gap",
+            minime_cue["suggested_next"],
+        )
+        self.assertEqual(astrid_cue["alternate_next"], "EXPERIMENT_PEER_REVIEW exp_minime_20260515_introducing-a-gap")
         self.assertEqual(astrid_cue["advisory_note"], "Advisory only: no shared control authority.")
         self.assertNotIn("Suggested NEXT", astrid_cue["cue"])
         self.assertNotIn("advisory", astrid_cue["suggested_next"].casefold())
+        self.assertNotIn("current WITH", astrid_cue["suggested_next"])
         self.assertFalse(astrid_shared["authority_change"])
         self.assertIn(
             "EXPERIMENT_COMPARE exp_astrid_20260516_introducing-a-gap WITH exp_minime_20260515_introducing-a-gap",

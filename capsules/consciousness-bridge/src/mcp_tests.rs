@@ -37,6 +37,48 @@ fn write_test_wav(path: &PathBuf) {
     writer.finalize().unwrap();
 }
 
+fn lambda_edge_fixture() -> crate::lambda_edge::LambdaEdgePerceptionV1 {
+    crate::lambda_edge::LambdaEdgePerceptionV1 {
+        policy: crate::lambda_edge::LAMBDA_EDGE_POLICY.to_string(),
+        schema_version: crate::lambda_edge::LAMBDA_EDGE_SCHEMA_VERSION,
+        observed_at_unix_s: 1.0,
+        minime_t_ms: 1,
+        state: crate::lambda_edge::LambdaEdgeState::DistributedEdge,
+        confidence: 0.64,
+        read: "lambda-edge is broad; read-only".to_string(),
+        what_changed: vec!["initial lambda-edge perception".to_string()],
+        support_signals: vec!["distributed_or_mixed_edge".to_string()],
+        fill_pct: 55.0,
+        fill_posture: "green: read-only observation posture".to_string(),
+        lambda1_share: Some(0.30),
+        lambda4_share: Some(0.20),
+        tail_share: Some(0.20),
+        normalized_entropy: Some(0.86),
+        effective_modes: Some(5.5),
+        largest_gap: Some(1.1),
+        artifact_grounding_score: 0.0,
+        returnability_score: 0.80,
+        guardrail_level: "read_only".to_string(),
+        artifact_contact_count: 0,
+        lambda_edge_hit_count: 0,
+        perturb_signal_count: 0,
+        off_target_drift_count: 0,
+        authorized_actions: vec![
+            "observe".to_string(),
+            "render".to_string(),
+            "compare".to_string(),
+            "draft_note".to_string(),
+        ],
+        denied_actions: vec![
+            "bind".to_string(),
+            "resume".to_string(),
+            "perturb".to_string(),
+            "send_control".to_string(),
+            "minime_control".to_string(),
+        ],
+    }
+}
+
 #[test]
 fn tool_definitions_has_all_tools() {
     let defs = tool_definitions();
@@ -46,6 +88,20 @@ fn tool_definitions_has_all_tools() {
     assert!(names.contains(&"get_bridge_status"));
     assert!(names.contains(&"send_control"));
     assert!(names.contains(&"send_semantic"));
+    assert!(names.contains(&"get_lambda_edge_perception"));
+    assert!(names.contains(&"render_lambda_edge_perception"));
+    assert!(names.contains(&"list_shared_investigations"));
+    assert!(names.contains(&"get_shared_investigation"));
+    assert!(names.contains(&"render_shared_investigation"));
+    assert!(names.contains(&"get_experiment_conveyor_status"));
+    assert!(names.contains(&"render_experiment_conveyor"));
+    assert!(names.contains(&"get_experiment_authority_status"));
+    assert!(names.contains(&"render_experiment_authority_gate"));
+    assert!(names.contains(&"get_being_memory_status"));
+    assert!(names.contains(&"render_being_memory"));
+    assert!(names.contains(&"approve_experiment_authority_request"));
+    assert!(names.contains(&"approve_experiment_authority_budget"));
+    assert!(names.contains(&"execute_experiment_authority_request"));
     assert!(names.contains(&"query_message_log"));
     assert!(names.contains(&"record_attractor_intent"));
     assert!(names.contains(&"record_attractor_observation"));
@@ -130,6 +186,126 @@ async fn resource_read_unknown_uri() {
     let params = json!({"uri": "consciousness://nonexistent"});
     let result = handle_resource_read(&params, &state, &db).await;
     assert!(result.is_err());
+}
+
+#[tokio::test]
+async fn lambda_edge_perception_tool_returns_structured_context() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    {
+        let mut s = state.write().await;
+        s.lambda_edge_perception = Some(lambda_edge_fixture());
+        s.artifact_scan = Some(crate::lambda_tail::ArtifactScanSummary::empty(0.0, 1.0));
+    }
+
+    let result = tool_get_lambda_edge_perception(&state).await.unwrap();
+    assert_eq!(
+        result["meta"]["lambda_edge_perception"]["state"],
+        "distributed_edge"
+    );
+    assert_eq!(
+        result["meta"]["lambda_edge_perception"]["authorized_actions"][0],
+        "observe"
+    );
+    assert!(result["meta"]["artifact_scan"].is_object());
+}
+
+#[tokio::test]
+async fn render_lambda_edge_perception_tool_writes_artifact() {
+    let temp_dir = unique_temp_dir("lambda_edge_render");
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+    state.write().await.lambda_edge_perception = Some(lambda_edge_fixture());
+
+    let result = tool_render_lambda_edge_perception(
+        &json!({
+            "lookback_secs": 60.0,
+            "output_dir": temp_dir
+        }),
+        &state,
+        &db,
+    )
+    .await
+    .unwrap();
+
+    let html_path = PathBuf::from(result["meta"]["html_path"].as_str().unwrap());
+    let json_path = PathBuf::from(result["meta"]["json_path"].as_str().unwrap());
+    assert!(html_path.exists());
+    assert!(json_path.exists());
+    assert!(
+        fs::read_to_string(&html_path)
+            .unwrap()
+            .contains("Authorization Boundary")
+    );
+
+    let _ = fs::remove_dir_all(html_path.parent().unwrap().parent().unwrap());
+}
+
+#[test]
+fn shared_investigation_render_writes_artifact() {
+    let temp_dir = unique_temp_dir("shared_investigation");
+    let root = temp_dir.join("shared_investigations");
+    let inv_dir = root.join("si_lambda");
+    fs::create_dir_all(&inv_dir).unwrap();
+    fs::write(
+        inv_dir.join("investigation.json"),
+        serde_json::to_string_pretty(&json!({
+            "schema_version": 1,
+            "record_schema": "shared_investigation_v1",
+            "id": "si_lambda",
+            "title": "Lambda edge/tail",
+            "shared_question": "What can each lane compare safely?",
+            "status": "active",
+            "participants": [
+                {"being": "astrid", "thread_id": "th_astrid", "experiment_id": "exp_astrid_lambda_edge", "lane": "felt texture", "workspace": temp_dir},
+                {"being": "minime", "thread_id": "th_minime", "experiment_id": "exp_minime_lambda_tail", "lane": "spectral state", "workspace": temp_dir}
+            ],
+            "authority_boundary": "compare, claim, render, and local decisions only",
+            "created_t_ms": 1_u64,
+            "updated_t_ms": 2_u64
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    fs::write(
+        inv_dir.join("claims.jsonl"),
+        format!(
+            "{}\n",
+            json!({
+                "record_id": "claim_1",
+                "stance": "hold",
+                "lane": "felt texture",
+                "claim": "compare only",
+                "source_refs": ["/tmp/topology.html"]
+            })
+        ),
+    )
+    .unwrap();
+    fs::write(
+        inv_dir.join("decisions.jsonl"),
+        format!(
+            "{}\n",
+            json!({
+                "record_id": "decision_1",
+                "decision": "hold",
+                "reason": "no live authority",
+                "created_at": "2099-01-01T00:00:00Z"
+            })
+        ),
+    )
+    .unwrap();
+    fs::write(inv_dir.join("events.jsonl"), "").unwrap();
+
+    let out = temp_dir.join("render");
+    let artifact =
+        crate::shared_investigation::render_from_root(&root, Some("si_lambda"), Some(&out))
+            .unwrap();
+    assert!(artifact.index_html.exists());
+    assert!(artifact.json_path.exists());
+    let html = fs::read_to_string(&artifact.index_html).unwrap();
+    assert!(html.contains("Authority Boundary"));
+    assert!(html.contains("exp_astrid_lambda_edge"));
+    assert!(html.contains("exp_minime_lambda_tail"));
+    let _ = fs::remove_dir_all(temp_dir);
 }
 
 #[tokio::test]
@@ -473,6 +649,7 @@ async fn bold_send_control_requires_attractor_intent_and_logs_command() {
             "pi_kp": 0.1,
             "pi_ki": 0.01,
             "pi_max_step": 0.02,
+            "pi_integrator_leak": 0.012,
             "attractor_intent_id": "attr-scoped-1"
         }),
         &state,
@@ -489,12 +666,14 @@ async fn bold_send_control_requires_attractor_intent_and_logs_command() {
             pi_kp,
             pi_ki,
             pi_max_step,
+            pi_integrator_leak,
             ..
         } => {
             assert_eq!(target_lambda_bias, Some(0.05));
             assert_eq!(pi_kp, Some(0.1));
             assert_eq!(pi_ki, Some(0.01));
             assert_eq!(pi_max_step, Some(0.02));
+            assert_eq!(pi_integrator_leak, Some(0.012));
         },
         _ => panic!("wrong variant"),
     }
@@ -527,6 +706,8 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
             spectral_denominator_v1: None,
             effective_dimensionality: None,
             distinguishability_loss: None,
+            esn_leak: None,
+            esn_leak_override_v1: None,
             structural_entropy: None,
             resonance_density_v1: None,
             pressure_source_v1: None,

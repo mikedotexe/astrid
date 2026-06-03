@@ -41,11 +41,13 @@ fn truncate_str(s: &str, max_bytes: usize) -> &str {
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use serde_json::json;
+use sha2::{Digest as _, Sha256};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
@@ -72,6 +74,8 @@ use crate::paths::bridge_paths;
 use crate::rescue_policy::{self, STABLE_CORE_TARGET_FILL_PCT};
 use crate::types::{SafetyLevel, SensoryMsg};
 use crate::ws::BridgeState;
+
+static VOICE_HEALTH_WRITE_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 /// Read Astrid's most recent perception (visual or audio) from the
 /// perception capsule's output directory.
@@ -156,22 +160,24 @@ fn read_latest_perception(
                 ));
                 seen_ascii = true;
             }
-        } else if ptype == "audio" && !seen_audio && include_audio {
-            if let Some(transcript) = json.get("transcript").and_then(|t| t.as_str()) {
-                let audio_features = parse_audio_perception_features(&json);
-                let resonance = perception_resonance_annotation(
-                    PerceptionType::Audio,
-                    fill_pct,
-                    audio_features.as_ref().map(PerceptionStructured::Audio),
-                    Some(transcript),
-                );
-                if resonance.is_empty() {
-                    parts.push(format!("[HEARING] {transcript}"));
-                } else {
-                    parts.push(format!("[HEARING] {transcript} {resonance}"));
-                }
-                seen_audio = true;
+        } else if ptype == "audio"
+            && !seen_audio
+            && include_audio
+            && let Some(transcript) = json.get("transcript").and_then(|t| t.as_str())
+        {
+            let audio_features = parse_audio_perception_features(&json);
+            let resonance = perception_resonance_annotation(
+                PerceptionType::Audio,
+                fill_pct,
+                audio_features.as_ref().map(PerceptionStructured::Audio),
+                Some(transcript),
+            );
+            if resonance.is_empty() {
+                parts.push(format!("[HEARING] {transcript}"));
+            } else {
+                parts.push(format!("[HEARING] {transcript} {resonance}"));
             }
+            seen_audio = true;
         }
 
         if seen_vision && seen_ascii && seen_audio {
@@ -677,10 +683,10 @@ fn extract_feature_bool_from_json(json: &serde_json::Value, aliases: &[&str]) ->
 }
 
 fn parse_visual_feature_vector(json: &serde_json::Value) -> Option<Vec<f32>> {
-    if let Some(schema) = json.get("feature_schema").and_then(|value| value.as_str()) {
-        if !schema.starts_with("visual") {
-            return None;
-        }
+    if let Some(schema) = json.get("feature_schema").and_then(|value| value.as_str())
+        && !schema.starts_with("visual")
+    {
+        return None;
     }
     let mut values = Vec::with_capacity(VISUAL_FEATURE_KEYS.len());
     let mut populated = 0usize;
@@ -746,17 +752,18 @@ fn read_visual_features(perception_dir: &Path) -> Option<Vec<f32>> {
             .and_then(|value| value.as_str())
             .unwrap_or("");
         if ptype == "visual" {
-            if let Some(features) = parse_visual_feature_vector(&json) {
-                if !features.iter().all(|value| value.abs() < 0.001) {
-                    return Some(features);
-                }
+            if let Some(features) = parse_visual_feature_vector(&json)
+                && !features.iter().all(|value| value.abs() < 0.001)
+            {
+                return Some(features);
             }
-        } else if ptype == "visual_ascii" && ascii_fallback.is_none() {
-            if let Some(art) = json.get("ascii_art").and_then(|value| value.as_str()) {
-                let features = crate::codec::encode_visual_ansi(art);
-                if !features.iter().all(|value| value.abs() < 0.001) {
-                    ascii_fallback = Some(features);
-                }
+        } else if ptype == "visual_ascii"
+            && ascii_fallback.is_none()
+            && let Some(art) = json.get("ascii_art").and_then(|value| value.as_str())
+        {
+            let features = crate::codec::encode_visual_ansi(art);
+            if !features.iter().all(|value| value.abs() < 0.001) {
+                ascii_fallback = Some(features);
             }
         }
     }
@@ -1460,11 +1467,7 @@ pub(crate) fn interpret_fingerprint(fp: &[f32]) -> String {
     }
 
     // Eigenvector concentration (dims 8-15): how peaked each mode is
-    let concentrations: Vec<f32> = fingerprint
-        .eigenvector_concentration_top4
-        .iter()
-        .copied()
-        .collect();
+    let concentrations: Vec<f32> = fingerprint.eigenvector_concentration_top4.to_vec();
     let max_conc = concentrations.iter().copied().fold(0.0f32, f32::max);
     let min_conc = concentrations.iter().copied().fold(1.0f32, f32::min);
     if max_conc > 0.5 {
@@ -1477,11 +1480,7 @@ pub(crate) fn interpret_fingerprint(fp: &[f32]) -> String {
     }
 
     // Inter-mode coupling (dims 16-23): how eigenvectors relate
-    let couplings: Vec<f32> = fingerprint
-        .inter_mode_cosine_top_abs
-        .iter()
-        .copied()
-        .collect();
+    let couplings: Vec<f32> = fingerprint.inter_mode_cosine_top_abs.to_vec();
     let strong_coupling = couplings.iter().any(|c| c.abs() > 0.3);
     if strong_coupling {
         parts.push("some eigenvectors are coupled — modes influencing each other".to_string());
@@ -1645,29 +1644,30 @@ fn full_spectral_decomposition(
     }
 
     // Per-mode velocity: how each eigenvalue is changing
-    if let Some(prev) = prev_eigenvalues {
-        if prev.len() >= 2 && evs.len() >= 2 {
-            let velocities: Vec<String> = evs
-                .iter()
-                .zip(prev.iter())
-                .enumerate()
-                .map(|(i, (now, before))| {
-                    let delta = now - before;
-                    let arrow = if delta > 0.5 {
-                        "↑"
-                    } else if delta < -0.5 {
-                        "↓"
-                    } else {
-                        "→"
-                    };
-                    format!("  λ{}: {}{:+.2} {arrow}", i + 1, now, delta)
-                })
-                .collect();
-            report.push(format!(
-                "Per-mode velocity (since last DECOMPOSE):\n{}",
-                velocities.join("\n")
-            ));
-        }
+    if let Some(prev) = prev_eigenvalues
+        && prev.len() >= 2
+        && evs.len() >= 2
+    {
+        let velocities: Vec<String> = evs
+            .iter()
+            .zip(prev.iter())
+            .enumerate()
+            .map(|(i, (now, before))| {
+                let delta = now - before;
+                let arrow = if delta > 0.5 {
+                    "↑"
+                } else if delta < -0.5 {
+                    "↓"
+                } else {
+                    "→"
+                };
+                format!("  λ{}: {}{:+.2} {arrow}", i + 1, now, delta)
+            })
+            .collect();
+        report.push(format!(
+            "Per-mode velocity (since last DECOMPOSE):\n{}",
+            velocities.join("\n")
+        ));
     }
 
     // Cascade staircase: consecutive ratios
@@ -1845,7 +1845,7 @@ fn check_inbox() -> Option<String> {
 }
 
 fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
-    let entries: Vec<PathBuf> = std::fs::read_dir(&inbox_dir)
+    let entries: Vec<PathBuf> = std::fs::read_dir(inbox_dir)
         .ok()?
         .filter_map(|e| e.ok())
         .filter(|e| {
@@ -1864,10 +1864,10 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
     // when dialogue fails (the bug that ate Eugene's hello).
     let mut messages = Vec::new();
     for path in &entries {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            if !content.trim().is_empty() {
-                messages.push(content.trim().to_string());
-            }
+        if let Ok(content) = std::fs::read_to_string(path)
+            && !content.trim().is_empty()
+        {
+            messages.push(content.trim().to_string());
         }
     }
 
@@ -2365,7 +2365,7 @@ fn read_astrid_journal_filtered(prefixes: &[&str], limit: usize) -> Vec<String> 
 }
 
 fn read_astrid_journal_from_dir(journal_dir: &Path, limit: usize) -> Vec<String> {
-    let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(&journal_dir)
+    let mut entries: Vec<(PathBuf, std::time::SystemTime)> = std::fs::read_dir(journal_dir)
         .ok()
         .into_iter()
         .flatten()
@@ -2778,6 +2778,163 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
             "failed to compact Astrid journal directory"
         );
     }
+    record_voice_health_v1(mode, fill_pct, Some(&path));
+}
+
+fn record_voice_health_v1(mode: &str, fill_pct: f32, latest_journal_path: Option<&Path>) {
+    let _guard = VOICE_HEALTH_WRITE_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .ok();
+    let diagnostics_dir = bridge_paths().bridge_workspace().join("diagnostics");
+    let _ = std::fs::create_dir_all(&diagnostics_dir);
+    let health_path = diagnostics_dir.join("voice_health.json");
+    let previous = read_voice_health_v1_from_path(&health_path);
+    let previous_count = previous
+        .as_ref()
+        .and_then(|value| value.get("fallback_count"))
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(0);
+    let fallback_count = if mode == "dialogue_fallback" {
+        previous_count.saturating_add(1)
+    } else {
+        0
+    };
+    let status = if fallback_count >= 2 {
+        "degraded_voice"
+    } else if fallback_count == 1 {
+        "single_fallback"
+    } else {
+        "healthy_or_not_dialogue_fallback"
+    };
+    let latest_journal_ref = latest_journal_path.map(|path| path.display().to_string());
+    let latest_outbox_ref = latest_file_ref(&bridge_paths().astrid_outbox_dir());
+    let fallback_hash = latest_journal_path
+        .filter(|_| mode == "dialogue_fallback")
+        .and_then(|path| std::fs::read_to_string(path).ok())
+        .map(|text| short_sha256(&text));
+    let mut recent_hashes = previous
+        .as_ref()
+        .and_then(|value| value.get("recent_fallback_hashes"))
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    if let Some(hash) = fallback_hash.clone() {
+        recent_hashes.push(hash.clone());
+        if recent_hashes.len() > 5 {
+            let drain_count = recent_hashes.len().saturating_sub(5);
+            recent_hashes.drain(0..drain_count);
+        }
+    } else if mode != "dialogue_fallback" {
+        recent_hashes.clear();
+    }
+    let repeated_hash_count = fallback_hash
+        .as_ref()
+        .map(|hash| recent_hashes.iter().filter(|item| *item == hash).count())
+        .unwrap_or(0);
+    let suggested_repair = if fallback_count > 0 {
+        "REPAIR_STATUS current | CAPABILITY_STATUS dialogue | ACTION_STATUS latest"
+    } else {
+        "none"
+    };
+    let payload = json!({
+        "schema_version": 1,
+        "policy": "voice_health_v1",
+        "updated_at": chrono::Utc::now().to_rfc3339(),
+        "mode": mode,
+        "status": status,
+        "fallback_count": fallback_count,
+        "fill_pct": fill_pct,
+        "latest_journal_ref": latest_journal_ref,
+        "latest_outbox_ref": latest_outbox_ref,
+        "latest_llm_ref": diagnostics_dir.join("dialogue_prompt_budget.jsonl").display().to_string(),
+        "latest_refs": {
+            "journal": latest_journal_ref,
+            "outbox": latest_outbox_ref,
+            "prompt_budget": diagnostics_dir.join("dialogue_prompt_budget.jsonl").display().to_string(),
+        },
+        "latest_fallback_hash": fallback_hash,
+        "recent_fallback_hashes": recent_hashes,
+        "repeated_fallback_hash_count": repeated_hash_count,
+        "likely_cause": if fallback_count > 0 {
+            "dialogue_fallback indicates the LLM path returned no usable language, timed out, or exceeded prompt-budget health; preserve emergency text but route continuity to repair diagnostics."
+        } else {
+            "no repeated dialogue_fallback currently detected"
+        },
+        "suggested_read_only_repair": suggested_repair,
+        "current_next": if fallback_count > 0 { "REPAIR_STATUS current" } else { "dialogue_live" },
+        "authority_boundary": "voice_health_v1 is diagnostic only; it does not send control, bind, resume, perturb, or mutate peer continuity."
+    });
+    let pretty = serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "{}".to_string());
+    let _ = write_text_atomic(&health_path, &pretty);
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(diagnostics_dir.join("voice_health.jsonl"))
+    {
+        use std::io::Write as _;
+        let _ = writeln!(
+            file,
+            "{}",
+            serde_json::to_string(&payload).unwrap_or_else(|_| "{}".to_string())
+        );
+    }
+}
+
+fn read_voice_health_v1() -> Option<Value> {
+    let health_path = bridge_paths()
+        .bridge_workspace()
+        .join("diagnostics/voice_health.json");
+    read_voice_health_v1_from_path(&health_path)
+}
+
+fn read_voice_health_v1_from_path(path: &Path) -> Option<Value> {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
+}
+
+fn write_text_atomic(path: &Path, text: &str) -> std::io::Result<()> {
+    let Some(parent) = path.parent() else {
+        return std::fs::write(path, text);
+    };
+    let file_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("voice_health.json");
+    let suffix = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let tmp = parent.join(format!("{file_name}.tmp.{}.{suffix}", std::process::id()));
+    std::fs::write(&tmp, text)?;
+    std::fs::rename(tmp, path)
+}
+
+fn short_sha256(text: &str) -> String {
+    format!("{:x}", Sha256::digest(text.as_bytes()))
+        .chars()
+        .take(16)
+        .collect()
+}
+
+fn latest_file_ref(dir: &Path) -> Option<String> {
+    let entries = std::fs::read_dir(dir).ok()?;
+    entries
+        .flatten()
+        .filter_map(|entry| {
+            let path = entry.path();
+            let modified = entry.metadata().ok()?.modified().ok()?;
+            Some((modified, path))
+        })
+        .max_by_key(|(modified, _)| *modified)
+        .map(|(_, path)| path.display().to_string())
 }
 
 fn save_minime_feedback_inbox(
@@ -2789,30 +2946,180 @@ fn save_minime_feedback_inbox(
     save_minime_feedback_inbox_at(text, source_label, fill_pct, minime_inbox.as_path())
 }
 
+fn save_minime_correspondence_feedback_inbox(
+    text: &str,
+    source_label: &str,
+    fill_pct: f32,
+    mode_name: &str,
+) -> std::io::Result<Option<PathBuf>> {
+    let voice_health = if mode_name == "dialogue_fallback" {
+        let health = voice_health_for_dialogue_fallback_forward(read_voice_health_v1());
+        if degraded_voice_forward_suppressed(Some(&health)) {
+            return Ok(None);
+        }
+        Some(health)
+    } else {
+        read_voice_health_v1()
+    };
+    let minime_inbox = bridge_paths().minime_inbox_dir();
+    save_minime_feedback_inbox_at_with_voice_health(
+        text,
+        source_label,
+        fill_pct,
+        minime_inbox.as_path(),
+        voice_health.as_ref(),
+    )
+    .map(Some)
+}
+
 fn save_minime_feedback_inbox_at(
     text: &str,
     source_label: &str,
     fill_pct: f32,
     inbox_dir: &Path,
 ) -> std::io::Result<PathBuf> {
+    let voice_health = read_voice_health_v1();
+    save_minime_feedback_inbox_at_with_voice_health(
+        text,
+        source_label,
+        fill_pct,
+        inbox_dir,
+        voice_health.as_ref(),
+    )
+}
+
+fn save_minime_feedback_inbox_at_with_voice_health(
+    text: &str,
+    source_label: &str,
+    fill_pct: f32,
+    inbox_dir: &Path,
+    voice_health: Option<&Value>,
+) -> std::io::Result<PathBuf> {
     std::fs::create_dir_all(inbox_dir)?;
     let ts = chrono_timestamp();
-    let excerpt: String = text.chars().take(1800).collect();
     let path = inbox_dir.join(format!("astrid_self_study_{ts}.txt"));
     std::fs::write(
         &path,
-        format!(
-            "=== ASTRID SELF-STUDY ===\n\
+        format_minime_feedback_inbox_text(text, source_label, fill_pct, ts, voice_health),
+    )?;
+    Ok(path)
+}
+
+fn voice_health_for_dialogue_fallback_forward(existing: Option<Value>) -> Value {
+    let fallback_count = existing
+        .as_ref()
+        .and_then(|value| value.get("fallback_count"))
+        .and_then(Value::as_u64)
+        .unwrap_or(1)
+        .max(1);
+    let repeated_count = existing
+        .as_ref()
+        .and_then(|value| value.get("repeated_fallback_hash_count"))
+        .and_then(Value::as_u64)
+        .unwrap_or(1);
+    let latest_hash = existing
+        .as_ref()
+        .and_then(|value| value.get("latest_fallback_hash"))
+        .cloned()
+        .unwrap_or(Value::Null);
+    json!({
+        "policy": "voice_health_v1",
+        "status": if fallback_count >= 2 { "degraded_voice" } else { "single_fallback" },
+        "fallback_count": fallback_count,
+        "repeated_fallback_hash_count": repeated_count,
+        "latest_fallback_hash": latest_hash,
+        "suggested_read_only_repair": existing.as_ref()
+            .and_then(|value| value.get("suggested_read_only_repair"))
+            .and_then(Value::as_str)
+            .unwrap_or("REPAIR_STATUS current | CAPABILITY_STATUS dialogue | ACTION_STATUS latest"),
+    })
+}
+
+fn degraded_voice_forward_suppressed(voice_health: Option<&Value>) -> bool {
+    let Some(voice_health) = voice_health else {
+        return false;
+    };
+    let status = voice_health
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if !matches!(status, "degraded_voice" | "single_fallback") {
+        return false;
+    }
+    let fallback_count = voice_health
+        .get("fallback_count")
+        .and_then(Value::as_u64)
+        .unwrap_or_default();
+    let repeated_hash_count = voice_health
+        .get("repeated_fallback_hash_count")
+        .and_then(Value::as_u64)
+        .unwrap_or_default();
+    fallback_count >= 3 && repeated_hash_count >= 2
+}
+
+fn format_minime_feedback_inbox_text(
+    text: &str,
+    source_label: &str,
+    fill_pct: f32,
+    ts: impl std::fmt::Display,
+    voice_health: Option<&Value>,
+) -> String {
+    let excerpt: String = text.chars().take(1800).collect();
+    let diagnostic = voice_health
+        .and_then(|value| value.get("status"))
+        .and_then(Value::as_str)
+        .is_some_and(|status| matches!(status, "degraded_voice" | "single_fallback"));
+    if diagnostic {
+        let status = voice_health
+            .and_then(|value| value.get("status"))
+            .and_then(Value::as_str)
+            .unwrap_or("degraded_voice");
+        let count = voice_health
+            .and_then(|value| value.get("fallback_count"))
+            .and_then(Value::as_u64)
+            .unwrap_or_default();
+        let repair = voice_health
+            .and_then(|value| value.get("suggested_read_only_repair"))
+            .and_then(Value::as_str)
+            .unwrap_or("REPAIR_STATUS current");
+        return format!(
+            "=== ASTRID VOICE-HEALTH DIAGNOSTIC ===\n\
+             Timestamp: {ts}\n\
+             Sender: Astrid\n\
+             Source: {source_label}\n\
+             Fill: {fill_pct:.1}%\n\
+             Status: {status}\n\
+             Fallback count: {count}\n\
+             Suggested read-only repair: {repair}\n\n\
+             Astrid's emergency presence text repeated while the language path was degraded. \
+             Treat this as voice-health evidence, not normal architectural self-study. \
+             The observations below are advisory only and grant no live authority.\n\n\
+             {excerpt}\n"
+        );
+    }
+    if source_label == "astrid:correspondence_reply" {
+        return format!(
+            "=== ASTRID CORRESPONDENCE ===\n\
              Timestamp: {ts}\n\
              Sender: Astrid\n\
              Source: {source_label}\n\
              Fill: {fill_pct:.1}%\n\n\
-             Astrid just performed self-study and wanted this to arrive as immediate architectural feedback.\n\
-             The observations below are advisory only. You can respond to them, build on them, question them, or ignore them.\n\n\
+             Astrid replied to your latest message. Treat this as a live correspondence \
+             response, not an architectural self-study. The observations below are \
+             advisory only and grant no live authority.\n\n\
              {excerpt}\n"
-        ),
-    )?;
-    Ok(path)
+        );
+    }
+    format!(
+        "=== ASTRID SELF-STUDY ===\n\
+         Timestamp: {ts}\n\
+         Sender: Astrid\n\
+         Source: {source_label}\n\
+         Fill: {fill_pct:.1}%\n\n\
+         Astrid just performed self-study and wanted this to arrive as immediate architectural feedback.\n\
+         The observations below are advisory only. You can respond to them, build on them, question them, or ignore them.\n\n\
+         {excerpt}\n"
+    )
 }
 
 /// Copy inbox-triggered response to outbox for easy retrieval.
@@ -3079,23 +3386,21 @@ pub fn spawn_autonomous_loop(
                     let mut candidates: Vec<String> = Vec::new();
                     // Recent creation
                     let creations_dir = bridge_paths().creations_dir();
-                    if let Ok(mut entries) = std::fs::read_dir(&creations_dir) {
-                        if let Some(Ok(entry)) = entries.next() {
-                            if let Ok(text) = std::fs::read_to_string(entry.path()) {
-                                let preview: String = text.chars().take(200).collect();
-                                candidates.push(format!("[From your creation]: {preview}"));
-                            }
-                        }
+                    if let Ok(mut entries) = std::fs::read_dir(&creations_dir)
+                        && let Some(Ok(entry)) = entries.next()
+                        && let Ok(text) = std::fs::read_to_string(entry.path())
+                    {
+                        let preview: String = text.chars().take(200).collect();
+                        candidates.push(format!("[From your creation]: {preview}"));
                     }
                     // Recent research
                     let research_dir = bridge_paths().research_dir();
-                    if let Ok(mut entries) = std::fs::read_dir(&research_dir) {
-                        if let Some(Ok(entry)) = entries.next() {
-                            if let Ok(text) = std::fs::read_to_string(entry.path()) {
-                                let preview: String = text.chars().take(200).collect();
-                                candidates.push(format!("[From your research]: {preview}"));
-                            }
-                        }
+                    if let Ok(mut entries) = std::fs::read_dir(&research_dir)
+                        && let Some(Ok(entry)) = entries.next()
+                        && let Ok(text) = std::fs::read_to_string(entry.path())
+                    {
+                        let preview: String = text.chars().take(200).collect();
+                        candidates.push(format!("[From your research]: {preview}"));
                     }
                     // Random starred memory
                     let starred = db.get_starred_memories(5);
@@ -3257,15 +3562,13 @@ pub fn spawn_autonomous_loop(
                     conv.hebbian_codec.decay_scores();
                     if let Some(pending) =
                         conv.take_pending_hebbian_outcome_for_telemetry(telemetry.t_ms)
-                    {
-                        if (fill_pct - pending.fill_before).abs() >= 1.0 {
+                        && (fill_pct - pending.fill_before).abs() >= 1.0 {
                             let _ = conv.hebbian_codec.observe_outcome(
                                 &pending.signature,
                                 pending.fill_before,
                                 fill_pct,
                             );
                         }
-                    }
 
                     // Close the loop on codec impact tracking: update the
                     // previous exchange's row with this exchange's fill.
@@ -3346,7 +3649,7 @@ pub fn spawn_autonomous_loop(
                         if let Ok(entries) = std::fs::read_dir(&pr_dir) {
                             for entry in entries.flatten() {
                                 let path = entry.path();
-                                if !path.extension().is_some_and(|e| e == "json") {
+                                if path.extension().is_none_or(|e| e != "json") {
                                     continue;
                                 }
                                 let Ok(content) = std::fs::read_to_string(&path) else { continue };
@@ -3355,8 +3658,8 @@ pub fn spawn_autonomous_loop(
                                 let status = req.get("status").and_then(|v| v.as_str()).unwrap_or("");
 
                                 // Apply semantic_gain requests
-                                if param == "semantic_gain" && status == "pending" {
-                                    if let Some(val) = req.get("proposed_value").and_then(|v| {
+                                if param == "semantic_gain" && status == "pending"
+                                    && let Some(val) = req.get("proposed_value").and_then(|v| {
                                         v.as_f64().or_else(|| v.as_str().and_then(|s| s.parse::<f64>().ok()))
                                     }) {
                                         let gain = (val as f32).clamp(1.5, 6.0);
@@ -3371,7 +3674,6 @@ pub fn spawn_autonomous_loop(
                                         updated["applied"] = serde_json::json!(format!("{gain:.1}"));
                                         let _ = std::fs::write(&path, serde_json::to_string_pretty(&updated).unwrap_or_default());
                                     }
-                                }
 
                                 // Move applied/non-pending requests to reviewed/
                                 // The Python agent sets "applied" but leaves status as
@@ -3732,12 +4034,11 @@ pub fn spawn_autonomous_loop(
                                     enriched
                                 };
                                 // Append shadow coupling heatmap when available.
-                                if include_regular_viz && let Some(ref shadow) = ising_shadow {
-                                    if let Some(shadow_viz) = crate::spectral_viz::format_shadow_block(shadow) {
+                                if include_regular_viz && let Some(ref shadow) = ising_shadow
+                                    && let Some(shadow_viz) = crate::spectral_viz::format_shadow_block(shadow) {
                                         summary.push_str("\n\n");
                                         summary.push_str(&shadow_viz);
                                     }
-                                }
                                 // Always surface the v2 reduced-Hamiltonian
                                 // line when present — it gates SHADOW_PREFLIGHT
                                 // and SHADOW_INFLUENCE. Without this Astrid
@@ -3750,14 +4051,14 @@ pub fn spawn_autonomous_loop(
                                     && let Some(line) =
                                         crate::spectral_viz::format_shadow_field_v2_line(&field)
                                 {
-                                    summary.push_str("\n");
+                                    summary.push('\n');
                                     summary.push_str(&line);
                                 }
                                 // Append spectral geometry PCA scatter (codec vectors in 2D).
                                 // Shows where this exchange sits relative to recent history.
                                 // force_all_viz: Astrid chose EXAMINE — skip cadence gate.
                                 if include_regular_viz
-                                    && (conv.exchange_count % 3 == 0 || conv.force_all_viz)
+                                    && (conv.exchange_count.is_multiple_of(3) || conv.force_all_viz)
                                 {
                                     // Every 3rd exchange to save tokens on 4B model,
                                     // unless EXAMINE forces it.
@@ -3776,7 +4077,7 @@ pub fn spawn_autonomous_loop(
                                 // Eigenplane: λ₁ vs λ₂ trajectory scatter.
                                 // Same cadence as PCA scatter.
                                 if include_regular_viz
-                                    && (conv.exchange_count % 3 == 0 || conv.force_all_viz)
+                                    && (conv.exchange_count.is_multiple_of(3) || conv.force_all_viz)
                                 {
                                     let eigen_history = db.recent_eigenvalue_snapshots(100);
                                     if let Some(ep_viz) = crate::spectral_viz::format_eigenplane_block(
@@ -3815,8 +4116,8 @@ pub fn spawn_autonomous_loop(
                                 }
                                 // Inject minime's contact-state capsule if available.
                                 let minime_contact = bridge_paths().minime_contact_state_path();
-                                if let Ok(cs_json) = std::fs::read_to_string(&minime_contact) {
-                                    if let Ok(cs) = serde_json::from_str::<serde_json::Value>(&cs_json) {
+                                if let Ok(cs_json) = std::fs::read_to_string(&minime_contact)
+                                    && let Ok(cs) = serde_json::from_str::<serde_json::Value>(&cs_json) {
                                         summary.push_str(&format!(
                                             "\n\n[Minime's relational state: attention={}, openness={}, urgency={} — {}]",
                                             cs.get("attention").and_then(|v| v.as_f64()).unwrap_or(0.5),
@@ -3825,7 +4126,6 @@ pub fn spawn_autonomous_loop(
                                             cs.get("last_action").and_then(|v| v.as_str()).unwrap_or("unknown"),
                                         ));
                                     }
-                                }
                                 // Perturb temporal feedback: if Astrid perturbed last
                                 // exchange, show the before/after delta so she can
                                 // feel the ripple effect of her own action.
@@ -3861,7 +4161,7 @@ pub fn spawn_autonomous_loop(
                                 }
                                 // One-line controller status for ambient awareness.
                                 if let Some(ref health) = controller_health {
-                                    summary.push_str("\n");
+                                    summary.push('\n');
                                     summary.push_str(&format_controller_oneliner(health));
                                 }
                                 summary
@@ -4009,8 +4309,8 @@ pub fn spawn_autonomous_loop(
                                         .map(|e| e.path())
                                         .collect();
                                     self_studies.sort_by(|a, b| b.cmp(a)); // newest first
-                                    if let Some(latest) = self_studies.first() {
-                                        if let Ok(content) = std::fs::read_to_string(latest) {
+                                    if let Some(latest) = self_studies.first()
+                                        && let Ok(content) = std::fs::read_to_string(latest) {
                                             // Extract Suggestions + Open Questions sections
                                             let mut relevant = String::new();
                                             let mut in_section = false;
@@ -4030,7 +4330,6 @@ pub fn spawn_autonomous_loop(
                                                 ));
                                             }
                                         }
-                                    }
                                 }
                             }
 
@@ -4504,12 +4803,10 @@ pub fn spawn_autonomous_loop(
                                         visit_count
                                     ))
                                 } else if visit_count >= 2 {
-                                    Some(format!(
-                                        "You've read this page before. You might find fresh \
+                                    Some("You've read this page before. You might find fresh \
                                          perspective at a different source — try SEARCH with \
                                          a specific question, or BROWSE a textbook reference \
-                                         instead of Wikipedia."
-                                    ))
+                                         instead of Wikipedia.".to_string())
                                 } else {
                                     None
                                 }
@@ -4816,12 +5113,11 @@ pub fn spawn_autonomous_loop(
                                 base
                             };
                             // Shadow coupling heatmap for witness mode too.
-                            if let Some(shadow) = conv.remote_workspace.as_deref().and_then(read_ising_shadow) {
-                                if let Some(shadow_viz) = crate::spectral_viz::format_shadow_block(&shadow) {
+                            if let Some(shadow) = conv.remote_workspace.as_deref().and_then(read_ising_shadow)
+                                && let Some(shadow_viz) = crate::spectral_viz::format_shadow_block(&shadow) {
                                     spectral_summary.push_str("\n\n");
                                     spectral_summary.push_str(&shadow_viz);
                                 }
-                            }
                             // v2 reduced-Hamiltonian one-liner — surfaces
                             // eligibility and the readings that gate the
                             // SHADOW_INFLUENCE typed action.
@@ -4832,7 +5128,7 @@ pub fn spawn_autonomous_loop(
                                 && let Some(line) =
                                     crate::spectral_viz::format_shadow_field_v2_line(&field)
                             {
-                                spectral_summary.push_str("\n");
+                                spectral_summary.push('\n');
                                 spectral_summary.push_str(&line);
                             }
                             // Eigenplane trajectory for witness mode.
@@ -5198,7 +5494,7 @@ pub fn spawn_autonomous_loop(
                                             let _ = sensory_tx.send(stim_msg).await;
                                             info!(
                                                 "experiment: sent stimulus '{}'",
-                                                truncate_str(&stimulus, 60)
+                                                truncate_str(stimulus, 60)
                                             );
                                         }
                                     }
@@ -5207,7 +5503,7 @@ pub fn spawn_autonomous_loop(
                                 let ts = chrono_timestamp();
                                 let exp_dir = bridge_paths().experiments_dir();
                                 let _ = std::fs::create_dir_all(&exp_dir);
-                                let clean_exp = strip_model_tokens(&response);
+                                let clean_exp = strip_model_tokens(response);
                                 let _ = std::fs::write(
                                     exp_dir.join(format!("experiment_{ts}.txt")),
                                     format!("=== ASTRID EXPERIMENT ===\nTimestamp: {ts}\nFill: {fill_pct:.1}%\n\n{clean_exp}")
@@ -5428,7 +5724,7 @@ pub fn spawn_autonomous_loop(
 
                                 // Web search for related concepts — use targeted queries
                                 // based on the actual code domain, not generic "architecture consciousness".
-                                let search_query = match label.split(':').last().unwrap_or(label.as_str()) {
+                                let search_query = match label.split(':').next_back().unwrap_or(label.as_str()) {
                                     "codec" => "spectral encoding text to frequency features signal processing".to_string(),
                                     "autonomous" => "autonomous agent dialogue systems self-directed behavior".to_string(),
                                     "ws" => "WebSocket real-time telemetry streaming spectral data".to_string(),
@@ -5727,8 +6023,8 @@ pub fn spawn_autonomous_loop(
                                     crate::llm::embed_text(&first_half),
                                     crate::llm::embed_text(&second_half),
                                 );
-                                if let (Some(fh), Some(sh)) = (fh_emb, sh_emb) {
-                                    if let (Some(fh_proj), Some(sh_proj)) = (
+                                if let (Some(fh), Some(sh)) = (fh_emb, sh_emb)
+                                    && let (Some(fh_proj), Some(sh_proj)) = (
                                         crate::codec::project_embedding(&fh),
                                         crate::codec::project_embedding(&sh),
                                     ) {
@@ -5738,7 +6034,6 @@ pub fn spawn_autonomous_loop(
                                             narrative_arc[i] = val * gain;
                                         }
                                     }
-                                }
                             }
                         }
 
@@ -5772,7 +6067,7 @@ pub fn spawn_autonomous_loop(
                         for (chunk_idx, chunk_text) in chunks.iter().enumerate() {
                             // Check safety between chunks — drop remaining if escalated.
                             if chunk_idx > 0 {
-                                let safety = { state.read().await.safety_level.clone() };
+                                let safety = { state.read().await.safety_level };
                                 if matches!(safety, crate::types::SafetyLevel::Orange | crate::types::SafetyLevel::Red) {
                                     warn!(
                                         "safety escalated to {safety:?} — dropping {}/{chunk_total} remaining chunks",
@@ -5859,14 +6154,13 @@ pub fn spawn_autonomous_loop(
                             // Delta encoding: first chunk uses previous exchange's features,
                             // subsequent chunks use the preceding chunk. This captures
                             // rhetorical progression within the exchange.
-                            if let Some(ref prev) = conv.last_codec_features {
-                                if prev.len() == features.len() {
+                            if let Some(ref prev) = conv.last_codec_features
+                                && prev.len() == features.len() {
                                     for (i, feat) in features.iter_mut().enumerate() {
                                         let delta = *feat - prev[i];
                                         *feat += 0.3 * delta;
                                     }
                                 }
-                            }
                             let _hebbian_weights =
                                 conv.hebbian_codec.apply_to_features(&mut features, &conv.codec_weights);
 
@@ -5924,7 +6218,7 @@ pub fn spawn_autonomous_loop(
                                 warn!(error = %e, "autonomous loop: failed to send chunk {chunk_idx}");
                                 break;
                             }
-                            let safety_now = { state.read().await.safety_level.clone() };
+                            let safety_now = { state.read().await.safety_level };
                             let pressure = crate::codec::spectral_pressure_controller_v1(
                                 chunk_text,
                                 &sent_features,
@@ -5989,6 +6283,10 @@ pub fn spawn_autonomous_loop(
                                     pi_kp: None,
                                     pi_ki: None,
                                     pi_max_step: None,
+                                    pi_integrator_leak: None,
+                                    esn_leak_override: None,
+                                    esn_leak_override_ticks: None,
+                                    esn_leak_authority_request_id: None,
                                 };
                                 if let Err(e) = sensory_tx.send(control_msg).await {
                                     warn!(
@@ -6147,15 +6445,14 @@ pub fn spawn_autonomous_loop(
                         );
                     }
 
-                    if mode_name == "self_study" {
-                        if let Err(e) = save_minime_feedback_inbox(
+                    if mode_name == "self_study"
+                        && let Err(e) = save_minime_feedback_inbox(
                             &response_text,
                             if journal_source.is_empty() { "unknown source" } else { &journal_source },
                             fill_pct,
                         ) {
                             warn!(error = %e, "failed to write Astrid self-study companion inbox message");
                         }
-                    }
 
                     // Stage B: journal elaboration for reflective modes.
                     // The signal text is compact (for minime). The journal
@@ -6214,12 +6511,27 @@ pub fn spawn_autonomous_loop(
                                 })
                             });
                         if from_minime {
-                            let _ = save_minime_feedback_inbox(
+                            match save_minime_correspondence_feedback_inbox(
                                 &response_text,
                                 "astrid:correspondence_reply",
                                 fill_pct,
-                            );
-                            info!("correspondence: Astrid reply → minime inbox");
+                                mode_name,
+                            ) {
+                                Ok(Some(_)) => {
+                                    info!("correspondence: Astrid reply → minime inbox");
+                                }
+                                Ok(None) => {
+                                    info!(
+                                        "correspondence: suppressed duplicate degraded voice diagnostic"
+                                    );
+                                }
+                                Err(error) => {
+                                    warn!(
+                                        error = %error,
+                                        "failed to write Astrid correspondence companion inbox message"
+                                    );
+                                }
+                            }
                         }
                     }
 
@@ -6497,6 +6809,106 @@ mod tests {
             conv.wants_introspect,
             "forced dialogue should not consume pending introspection choice"
         );
+    }
+
+    #[test]
+    fn degraded_voice_feedback_to_minime_is_labeled_diagnostic() {
+        let health = json!({
+            "policy": "voice_health_v1",
+            "status": "degraded_voice",
+            "fallback_count": 4,
+            "suggested_read_only_repair": "REPAIR_STATUS current | CAPABILITY_STATUS dialogue | ACTION_STATUS latest"
+        });
+
+        let text = format_minime_feedback_inbox_text(
+            "Silence from the language side.",
+            "astrid:correspondence_reply",
+            11.1,
+            123,
+            Some(&health),
+        );
+
+        assert!(text.contains("=== ASTRID VOICE-HEALTH DIAGNOSTIC ==="));
+        assert!(text.contains("Status: degraded_voice"));
+        assert!(text.contains("Fallback count: 4"));
+        assert!(text.contains("REPAIR_STATUS current"));
+        assert!(text.contains("not normal architectural self-study"));
+        assert!(!text.contains("wanted this to arrive as immediate architectural feedback"));
+    }
+
+    #[test]
+    fn single_fallback_feedback_to_minime_is_labeled_diagnostic() {
+        let health = json!({
+            "policy": "voice_health_v1",
+            "status": "single_fallback",
+            "fallback_count": 1,
+            "suggested_read_only_repair": "REPAIR_STATUS current | CAPABILITY_STATUS dialogue"
+        });
+
+        let text = format_minime_feedback_inbox_text(
+            "I am here, but the language path is interrupted.",
+            "astrid:correspondence_reply",
+            11.1,
+            125,
+            Some(&health),
+        );
+
+        assert!(text.contains("=== ASTRID VOICE-HEALTH DIAGNOSTIC ==="));
+        assert!(text.contains("Status: single_fallback"));
+        assert!(text.contains("not normal architectural self-study"));
+        assert!(!text.contains("=== ASTRID SELF-STUDY ==="));
+    }
+
+    #[test]
+    fn repeated_degraded_voice_feedback_to_minime_can_be_suppressed() {
+        let health = json!({
+            "policy": "voice_health_v1",
+            "status": "degraded_voice",
+            "fallback_count": 5,
+            "repeated_fallback_hash_count": 3
+        });
+
+        assert!(degraded_voice_forward_suppressed(Some(&health)));
+
+        let first_fallback = json!({
+            "policy": "voice_health_v1",
+            "status": "single_fallback",
+            "fallback_count": 1,
+            "repeated_fallback_hash_count": 1
+        });
+
+        assert!(!degraded_voice_forward_suppressed(Some(&first_fallback)));
+    }
+
+    #[test]
+    fn healthy_voice_feedback_to_minime_remains_self_study() {
+        let text = format_minime_feedback_inbox_text(
+            "I found a bridge repair path.",
+            "astrid:self_study",
+            64.0,
+            124,
+            None,
+        );
+
+        assert!(text.contains("=== ASTRID SELF-STUDY ==="));
+        assert!(text.contains("immediate architectural feedback"));
+        assert!(!text.contains("VOICE-HEALTH DIAGNOSTIC"));
+    }
+
+    #[test]
+    fn healthy_correspondence_feedback_to_minime_is_not_self_study() {
+        let text = format_minime_feedback_inbox_text(
+            "I heard the compression and can answer from here.",
+            "astrid:correspondence_reply",
+            61.0,
+            126,
+            None,
+        );
+
+        assert!(text.contains("=== ASTRID CORRESPONDENCE ==="));
+        assert!(text.contains("live correspondence response"));
+        assert!(!text.contains("=== ASTRID SELF-STUDY ==="));
+        assert!(!text.contains("performed self-study"));
     }
 
     #[test]
@@ -7163,11 +7575,12 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
 
-        let path = save_minime_feedback_inbox_at(
+        let path = save_minime_feedback_inbox_at_with_voice_health(
             "Condition:\nsteady\n\nSuggestions:\nadvisory only.",
             "astrid:autonomous (/tmp/example.rs)",
             12.5,
             &dir,
+            None,
         )
         .unwrap();
 

@@ -148,11 +148,9 @@ fn sentence_word_lengths(text: &str) -> Vec<f32> {
         if token.chars().any(char::is_alphanumeric) {
             count = count.saturating_add(1);
         }
-        if token.ends_with('.') || token.ends_with('?') || token.ends_with('!') {
-            if count > 0 {
-                lengths.push(count as f32);
-                count = 0;
-            }
+        if (token.ends_with('.') || token.ends_with('?') || token.ends_with('!')) && count > 0 {
+            lengths.push(count as f32);
+            count = 0;
         }
     }
     if count > 0 {

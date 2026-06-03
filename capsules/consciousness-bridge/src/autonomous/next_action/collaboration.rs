@@ -354,12 +354,11 @@ fn list_collaborations() -> String {
     if let Ok(rd) = std::fs::read_dir(&dir) {
         for d in rd.flatten() {
             let meta_path = d.path().join("meta.json");
-            if let Ok(text) = std::fs::read_to_string(&meta_path) {
-                if let Ok(meta) = serde_json::from_str::<CollaborationMeta>(&text) {
-                    if meta.inviter == ASTRID_NAME || meta.invitee == ASTRID_NAME {
-                        entries.push(meta);
-                    }
-                }
+            if let Ok(text) = std::fs::read_to_string(&meta_path)
+                && let Ok(meta) = serde_json::from_str::<CollaborationMeta>(&text)
+                && (meta.inviter == ASTRID_NAME || meta.invitee == ASTRID_NAME)
+            {
+                entries.push(meta);
             }
         }
     }
@@ -404,15 +403,13 @@ pub fn active_collaboration_suffix_line() -> Option<String> {
     let mut joined: Vec<CollaborationMeta> = Vec::new();
     for d in rd.flatten() {
         let meta_path = d.path().join("meta.json");
-        if let Ok(text) = std::fs::read_to_string(&meta_path) {
-            if let Ok(meta) = serde_json::from_str::<CollaborationMeta>(&text) {
-                if meta.status == "joined"
-                    && (meta.inviter == ASTRID_NAME || meta.invitee == ASTRID_NAME)
-                    && meta.members.contains(&ASTRID_NAME.to_string())
-                {
-                    joined.push(meta);
-                }
-            }
+        if let Ok(text) = std::fs::read_to_string(&meta_path)
+            && let Ok(meta) = serde_json::from_str::<CollaborationMeta>(&text)
+            && meta.status == "joined"
+            && (meta.inviter == ASTRID_NAME || meta.invitee == ASTRID_NAME)
+            && meta.members.contains(&ASTRID_NAME.to_string())
+        {
+            joined.push(meta);
         }
     }
     if joined.is_empty() {
@@ -486,12 +483,11 @@ fn read_collab_reservoir_state_cached(handle: &str) -> Option<CollabReservoirSna
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    if let Ok(map) = COLLAB_RESERVOIR_CACHE.lock() {
-        if let Some(snap) = map.get(handle) {
-            if now.saturating_sub(snap.cached_at_unix_s) < RESERVOIR_READ_CACHE_TTL_S {
-                return Some(*snap);
-            }
-        }
+    if let Ok(map) = COLLAB_RESERVOIR_CACHE.lock()
+        && let Some(snap) = map.get(handle)
+        && now.saturating_sub(snap.cached_at_unix_s) < RESERVOIR_READ_CACHE_TTL_S
+    {
+        return Some(*snap);
     }
     let fresh = read_collab_reservoir_state(handle)?;
     let snap = CollabReservoirSnapshot {
@@ -594,12 +590,11 @@ fn read_recent_shared_thoughts_cached(coll_id: &str) -> Option<String> {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    if let Ok(map) = SHARED_THOUGHTS_CACHE.lock() {
-        if let Some(entry) = map.get(coll_id) {
-            if now.saturating_sub(entry.cached_at_unix_s) < SHARED_THOUGHTS_CACHE_TTL_S {
-                return Some(entry.rendered.clone());
-            }
-        }
+    if let Ok(map) = SHARED_THOUGHTS_CACHE.lock()
+        && let Some(entry) = map.get(coll_id)
+        && now.saturating_sub(entry.cached_at_unix_s) < SHARED_THOUGHTS_CACHE_TTL_S
+    {
+        return Some(entry.rendered.clone());
     }
     let rendered = render_recent_shared_thoughts(coll_id, SHARED_THOUGHTS_TAIL);
     if let Ok(mut map) = SHARED_THOUGHTS_CACHE.lock() {
@@ -758,12 +753,11 @@ fn find_meta(target: &str) -> Result<CollaborationMeta, String> {
     // Match by full or partial id.
     for p in &entries {
         let meta_path = p.join("meta.json");
-        if let Ok(text) = std::fs::read_to_string(&meta_path) {
-            if let Ok(meta) = serde_json::from_str::<CollaborationMeta>(&text) {
-                if meta.id == target_norm || meta.id.contains(target_norm) {
-                    return Ok(meta);
-                }
-            }
+        if let Ok(text) = std::fs::read_to_string(&meta_path)
+            && let Ok(meta) = serde_json::from_str::<CollaborationMeta>(&text)
+            && (meta.id == target_norm || meta.id.contains(target_norm))
+        {
+            return Ok(meta);
         }
     }
     Err(format!("no collaboration matching '{target_norm}'"))
@@ -838,11 +832,9 @@ fn slugify(text: &str, max_len: usize) -> String {
         if ch.is_ascii_alphanumeric() {
             s.push(ch.to_ascii_lowercase());
             prev_dash = false;
-        } else if ch.is_whitespace() || ch == '-' || ch == '_' {
-            if !prev_dash && !s.is_empty() {
-                s.push('-');
-                prev_dash = true;
-            }
+        } else if (ch.is_whitespace() || ch == '-' || ch == '_') && !prev_dash && !s.is_empty() {
+            s.push('-');
+            prev_dash = true;
         }
         if s.len() >= max_len {
             break;

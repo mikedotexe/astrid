@@ -111,6 +111,10 @@ fn nonsemantic_messages_are_not_blocked() {
         pi_kp: None,
         pi_ki: None,
         pi_max_step: None,
+        pi_integrator_leak: None,
+        esn_leak_override: None,
+        esn_leak_override_ticks: None,
+        esn_leak_authority_request_id: None,
     };
 
     assert_eq!(semantic_write_block_reason_for_path(&msg, &path), None);

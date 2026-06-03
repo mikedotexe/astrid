@@ -9,6 +9,7 @@
 //! - Log all bridged messages to `SQLite`
 //! - Expose MCP tools for the WASM component to call
 //! - Enforce spectral safety protocol
+#![allow(clippy::pedantic)]
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -60,7 +61,7 @@ struct Cli {
     #[arg(long)]
     maintenance_once: bool,
 
-    /// Run full SQLite VACUUM after one-shot maintenance. Intended for controlled downtime.
+    /// Run full `SQLite` VACUUM after one-shot maintenance. Intended for controlled downtime.
     #[arg(long)]
     vacuum_after_maintenance: bool,
 

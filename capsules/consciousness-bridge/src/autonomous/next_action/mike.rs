@@ -230,21 +230,21 @@ fn mike_overview(root: &Path) -> String {
     );
     // Try MIKE_INDEX.toml for descriptions
     let index_path = root.join("MIKE_INDEX.toml");
-    if let Ok(content) = fs::read_to_string(&index_path) {
-        if let Some(projects_section) = content.split("[projects]").nth(1) {
-            for line in projects_section.lines() {
-                let line = line.trim();
-                if line.is_empty() || line.starts_with('#') {
-                    continue;
-                }
-                if let Some((slug, desc)) = line.split_once('=') {
-                    let slug = slug.trim();
-                    let desc = desc.trim().trim_matches('"');
-                    out.push_str(&format!("  {slug}/  — {desc}\n"));
-                }
+    if let Ok(content) = fs::read_to_string(&index_path)
+        && let Some(projects_section) = content.split("[projects]").nth(1)
+    {
+        for line in projects_section.lines() {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
             }
-            return out;
+            if let Some((slug, desc)) = line.split_once('=') {
+                let slug = slug.trim();
+                let desc = desc.trim().trim_matches('"');
+                out.push_str(&format!("  {slug}/  — {desc}\n"));
+            }
         }
+        return out;
     }
     // Fallback: list directories with README first lines
     if let Ok(entries) = fs::read_dir(root) {
@@ -279,13 +279,13 @@ fn mike_browse_project(dir: &Path, label: &str) -> String {
     let mut out = format!("[Research project: {label}]\n\n");
     // README excerpt
     let readme = dir.join("README.md");
-    if readme.exists() {
-        if let Ok(content) = fs::read_to_string(&readme) {
-            let excerpt: String = content.lines().take(25).collect::<Vec<_>>().join("\n");
-            out.push_str(&format!(
-                "--- README.md (first 25 lines) ---\n{excerpt}\n---\n\n"
-            ));
-        }
+    if readme.exists()
+        && let Ok(content) = fs::read_to_string(&readme)
+    {
+        let excerpt: String = content.lines().take(25).collect::<Vec<_>>().join("\n");
+        out.push_str(&format!(
+            "--- README.md (first 25 lines) ---\n{excerpt}\n---\n\n"
+        ));
     }
     // File listing (filtered)
     out.push_str("Files:\n");
@@ -403,7 +403,7 @@ pub(super) fn is_safe_path(path: &Path, root: &Path) -> bool {
 }
 
 pub(super) fn is_excluded(name: &str) -> bool {
-    EXCLUDED.iter().any(|e| name == *e) || name.starts_with('.')
+    EXCLUDED.contains(&name) || name.starts_with('.')
 }
 
 fn is_binary_extension(path: &Path) -> bool {

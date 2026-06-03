@@ -301,7 +301,7 @@ impl LlmJobStore {
         }
         jobs.sort_by(|a, b| a.created_at.cmp(&b.created_at));
         if jobs.len() > limit {
-            Ok(jobs.split_off(jobs.len() - limit))
+            Ok(jobs.split_off(jobs.len().saturating_sub(limit)))
         } else {
             Ok(jobs)
         }
@@ -400,7 +400,7 @@ impl LlmJobStore {
             .collect::<Vec<_>>();
         recent.push(json!(job.job_id));
         if recent.len() > 30 {
-            recent = recent.split_off(recent.len() - 30);
+            recent = recent.split_off(recent.len().saturating_sub(30));
         }
         index["latest_job_id"] = json!(job.job_id);
         index["recent_jobs"] = json!(recent);

@@ -32,10 +32,10 @@ pub fn build_attractor_atlas_from_rows(
             if let Ok(intent) = serde_json::from_str::<AttractorIntentV1>(&row.payload) {
                 merge_intent(&mut entries, &intent);
             }
-        } else if row.record_type == "observation" {
-            if let Ok(observation) = serde_json::from_str::<AttractorObservationV1>(&row.payload) {
-                merge_observation(&mut entries, &observation);
-            }
+        } else if row.record_type == "observation"
+            && let Ok(observation) = serde_json::from_str::<AttractorObservationV1>(&row.payload)
+        {
+            merge_observation(&mut entries, &observation);
         }
     }
     let mut entries = entries.into_values().collect::<Vec<_>>();

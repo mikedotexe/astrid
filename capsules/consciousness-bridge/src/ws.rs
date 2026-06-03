@@ -16,6 +16,10 @@ use tokio_tungstenite::tungstenite::protocol::{CloseFrame, Message};
 use tracing::{debug, debug_span, error, info, info_span, warn};
 
 use crate::db::BridgeDb;
+use crate::lambda_edge::{self, LambdaEdgePerceptionV1};
+use crate::lambda_tail::{self, ArtifactScanSummary, LambdaTailTelemetryV1};
+use crate::paths::bridge_paths;
+use crate::sticky_mode::{self, StickyModeAuditV1};
 use crate::types::{
     LambdaContribution, LambdaProfile, MessageDirection, PullModeRate, PullTopologyProfile,
     SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry, WebSocketLaneTrace,
@@ -51,6 +55,16 @@ pub struct BridgeState {
     pub lambda_profile: Option<LambdaProfile>,
     /// Latest Pull-Oriented Map over lambda topology.
     pub pull_topology: Option<PullTopologyProfile>,
+    /// Latest lambda-tail state classifier output.
+    pub lambda_tail: Option<LambdaTailTelemetryV1>,
+    /// Latest read-only lambda-edge perception output.
+    pub lambda_edge_perception: Option<LambdaEdgePerceptionV1>,
+    /// Latest read-only sticky-mode audit output.
+    pub sticky_mode_audit: Option<StickyModeAuditV1>,
+    /// Latest artifact-grounding scan used by the lambda-tail classifier.
+    pub artifact_scan: Option<ArtifactScanSummary>,
+    /// Unix timestamp for the latest artifact scan.
+    pub artifact_scan_at_unix_s: Option<f64>,
     /// Latest safety decision explanation.
     pub safety_decision: Option<SafetyDecisionTrace>,
 
@@ -65,9 +79,9 @@ pub struct BridgeState {
     pub telemetry_reconnects: u64,
     /// Number of sensory reconnections.
     pub sensory_reconnects: u64,
-    /// Telemetry WebSocket lifecycle metrics.
+    /// Telemetry `WebSocket` lifecycle metrics.
     pub telemetry_ws: WebSocketLaneTrace,
-    /// Sensory WebSocket lifecycle metrics.
+    /// Sensory `WebSocket` lifecycle metrics.
     pub sensory_ws: WebSocketLaneTrace,
     /// Total safety incidents logged.
     pub incidents_total: u64,
@@ -97,6 +111,11 @@ impl BridgeState {
             eigenvector_field: None,
             lambda_profile: None,
             pull_topology: None,
+            lambda_tail: None,
+            lambda_edge_perception: None,
+            sticky_mode_audit: None,
+            artifact_scan: None,
+            artifact_scan_at_unix_s: None,
             safety_decision: None,
             telemetry_received: 0,
             sensory_sent: 0,
@@ -520,6 +539,9 @@ async fn handle_telemetry_message(
     state: &Arc<RwLock<BridgeState>>,
     db: &Arc<BridgeDb>,
 ) -> bool {
+    const ARTIFACT_SCAN_WINDOW_SECS: f64 = 1_200.0;
+    const ARTIFACT_SCAN_MIN_INTERVAL_SECS: f64 = 30.0;
+
     let telemetry: SpectralTelemetry = match serde_json::from_slice(data) {
         Ok(t) => t,
         Err(e) => {
@@ -537,6 +559,7 @@ async fn handle_telemetry_message(
     };
 
     let lambda1 = telemetry.lambda1();
+    let observed_at_unix_s = unix_now_s();
     let lambda_profile = build_lambda_profile(&telemetry.eigenvalues);
 
     // minime sends fill_ratio as 0.0-1.0; convert to percentage.
@@ -555,16 +578,75 @@ async fn handle_telemetry_message(
     } else {
         "contracting"
     };
-    let previous_eigenvalues = {
+    let (
+        previous_eigenvalues,
+        previous_lambda_tail,
+        previous_lambda_edge,
+        previous_sticky_mode,
+        cached_scan,
+        scan_at,
+    ) = {
         let s = state.read().await;
-        s.latest_telemetry
-            .as_ref()
-            .map(|previous| previous.eigenvalues.clone())
+        (
+            s.latest_telemetry
+                .as_ref()
+                .map(|previous| previous.eigenvalues.clone()),
+            s.lambda_tail.clone(),
+            s.lambda_edge_perception.clone(),
+            s.sticky_mode_audit.clone(),
+            s.artifact_scan.clone(),
+            s.artifact_scan_at_unix_s,
+        )
     };
     let pull_topology = build_pull_topology_profile(
         &telemetry.eigenvalues,
         previous_eigenvalues.as_deref(),
         fill_pct,
+    );
+    let should_refresh_scan =
+        scan_at.is_none_or(|last| observed_at_unix_s - last >= ARTIFACT_SCAN_MIN_INTERVAL_SECS);
+    let artifact_scan = if should_refresh_scan {
+        let start = observed_at_unix_s - ARTIFACT_SCAN_WINDOW_SECS;
+        match lambda_tail::scan_artifacts(
+            bridge_paths().minime_workspace(),
+            start,
+            observed_at_unix_s,
+        ) {
+            Ok(scan) => Some(scan),
+            Err(error) => {
+                warn!(error = %error, "failed to scan lambda-tail artifacts");
+                cached_scan
+            },
+        }
+    } else {
+        cached_scan
+    };
+    let lambda_tail = lambda_tail::classify_lambda_tail(
+        &telemetry,
+        lambda_profile.as_ref(),
+        pull_topology.as_ref(),
+        previous_lambda_tail.as_ref(),
+        artifact_scan.as_ref(),
+        safety,
+        observed_at_unix_s,
+    );
+    let lambda_edge_perception = lambda_edge::classify_lambda_edge(
+        &telemetry,
+        lambda_profile.as_ref(),
+        pull_topology.as_ref(),
+        Some(&lambda_tail),
+        previous_lambda_edge.as_ref(),
+        artifact_scan.as_ref(),
+        safety,
+        observed_at_unix_s,
+    );
+    let sticky_mode_audit = sticky_mode::classify_sticky_mode(
+        &telemetry,
+        lambda_profile.as_ref(),
+        pull_topology.as_ref(),
+        previous_sticky_mode.as_ref(),
+        safety,
+        observed_at_unix_s,
     );
 
     // Update shared state.
@@ -576,8 +658,15 @@ async fn handle_telemetry_message(
         s.spectral_fingerprint
             .clone_from(&telemetry.spectral_fingerprint);
         s.eigenvector_field.clone_from(&telemetry.eigenvector_field);
-        s.lambda_profile = lambda_profile.clone();
-        s.pull_topology = pull_topology.clone();
+        s.lambda_profile.clone_from(&lambda_profile);
+        s.pull_topology.clone_from(&pull_topology);
+        s.lambda_tail = Some(lambda_tail.clone());
+        s.lambda_edge_perception = Some(lambda_edge_perception.clone());
+        s.sticky_mode_audit = Some(sticky_mode_audit.clone());
+        if should_refresh_scan {
+            s.artifact_scan.clone_from(&artifact_scan);
+            s.artifact_scan_at_unix_s = Some(observed_at_unix_s);
+        }
         s.safety_decision = Some(safety_decision.clone());
         s.prev_safety_level = s.safety_level;
         s.safety_level = safety;
@@ -612,6 +701,39 @@ async fn handle_telemetry_message(
     ) {
         warn!(error = %e, "failed to log telemetry to SQLite");
     }
+    let lambda_tail_json = serde_json::to_string(&lambda_tail).unwrap_or_default();
+    if let Err(e) = db.log_message(
+        MessageDirection::MinimeToAstrid,
+        "consciousness.v1.lambda_tail",
+        &lambda_tail_json,
+        Some(fill_pct),
+        Some(lambda1),
+        Some(phase),
+    ) {
+        warn!(error = %e, "failed to log lambda-tail telemetry to SQLite");
+    }
+    let lambda_edge_json = serde_json::to_string(&lambda_edge_perception).unwrap_or_default();
+    if let Err(e) = db.log_message(
+        MessageDirection::MinimeToAstrid,
+        lambda_edge::LAMBDA_EDGE_TOPIC,
+        &lambda_edge_json,
+        Some(fill_pct),
+        Some(lambda1),
+        Some(phase),
+    ) {
+        warn!(error = %e, "failed to log lambda-edge perception to SQLite");
+    }
+    let sticky_json = serde_json::to_string(&sticky_mode_audit).unwrap_or_default();
+    if let Err(e) = db.log_message(
+        MessageDirection::MinimeToAstrid,
+        sticky_mode::STICKY_MODE_TOPIC,
+        &sticky_json,
+        Some(fill_pct),
+        Some(lambda1),
+        Some(phase),
+    ) {
+        warn!(error = %e, "failed to log sticky-mode audit to SQLite");
+    }
 
     debug!(
         lambda1,
@@ -645,6 +767,11 @@ async fn handle_telemetry_message(
         pull_topology = pull_topology
             .as_ref()
             .map_or("unavailable", |profile| profile.classification.as_str()),
+        lambda_tail_state = lambda_tail.state.as_str(),
+        lambda_tail_returnability = lambda_tail.returnability_score,
+        lambda_edge_state = lambda_edge_perception.state.as_str(),
+        sticky_mode_state = sticky_mode_audit.state.as_str(),
+        lambda_edge_guardrail = lambda_edge_perception.guardrail_level.as_str(),
         safety_reason = %safety_decision.reason,
         safety = ?safety,
         "telemetry received"
@@ -680,15 +807,16 @@ fn build_lambda_profile(eigenvalues: &[f32]) -> Option<LambdaProfile> {
         .iter()
         .enumerate()
         .map(|(index, value)| {
+            let display_index = index.saturating_add(1);
             let share = *value / total_energy;
             cumulative += share;
             let ratio_to_next = positive
-                .get(index + 1)
+                .get(display_index)
                 .filter(|next| **next > 0.01)
                 .map(|next| *value / *next);
             let outlier = share >= 0.45 || ratio_to_next.is_some_and(|ratio| ratio >= 2.5);
             LambdaContribution {
-                index: index + 1,
+                index: display_index,
                 value: *value,
                 share,
                 cumulative_share: cumulative.clamp(0.0, 1.0),
@@ -707,7 +835,7 @@ fn build_lambda_profile(eigenvalues: &[f32]) -> Option<LambdaProfile> {
     for (index, value) in positive.iter().enumerate() {
         running += *value / total_energy;
         if running >= 0.90 {
-            effective_modes_90 = index + 1;
+            effective_modes_90 = index.saturating_add(1);
             break;
         }
     }
@@ -896,7 +1024,7 @@ fn build_pull_topology_profile(
         .take(8)
         .map(
             |(index, (((_, share), log_rate), weighted_rate))| PullModeRate {
-                index: index + 1,
+                index: index.saturating_add(1),
                 share: *share,
                 log_rate: *log_rate,
                 weighted_rate: *weighted_rate,
@@ -911,7 +1039,7 @@ fn build_pull_topology_profile(
         lambda1_share,
         shoulder_share,
         tail_share,
-        largest_gap_from: gap_index + 1,
+        largest_gap_from: gap_index.saturating_add(1),
         largest_gap,
         rate_available: rates.iter().any(Option::is_some),
         core_rate,
@@ -924,7 +1052,7 @@ fn build_pull_topology_profile(
 
 fn ratio_at(values: &[f32], index: usize) -> Option<f32> {
     let left = *values.get(index)?;
-    let right = *values.get(index + 1)?;
+    let right = *values.get(index.saturating_add(1))?;
     if right > 0.01 {
         Some(left / right)
     } else {
@@ -1411,6 +1539,8 @@ mod tests {
             spectral_denominator_v1: None,
             effective_dimensionality: None,
             distinguishability_loss: None,
+            esn_leak: None,
+            esn_leak_override_v1: None,
             structural_entropy: None,
             resonance_density_v1: None,
             pressure_source_v1: None,
@@ -1662,10 +1792,21 @@ mod tests {
         handle_telemetry_message(&make_eigenpacket(0.55, 793.0), &state, &db).await;
         handle_telemetry_message(&make_eigenpacket(0.60, 820.0), &state, &db).await;
 
-        assert_eq!(db.message_count().unwrap(), 2);
+        assert_eq!(db.message_count().unwrap(), 6);
         let rows = db.query_messages(0.0, f64::MAX, None, 10).unwrap();
-        assert_eq!(rows.len(), 2);
-        assert_eq!(rows[0].topic, "consciousness.v1.telemetry");
+        assert_eq!(rows.len(), 6);
+        assert!(
+            rows.iter()
+                .any(|row| row.topic == "consciousness.v1.telemetry")
+        );
+        assert!(
+            rows.iter()
+                .any(|row| row.topic == "consciousness.v1.lambda_tail")
+        );
+        assert!(
+            rows.iter()
+                .any(|row| row.topic == lambda_edge::LAMBDA_EDGE_TOPIC)
+        );
     }
 
     #[tokio::test]

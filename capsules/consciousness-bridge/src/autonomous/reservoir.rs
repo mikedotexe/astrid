@@ -455,15 +455,15 @@ pub(super) fn handle_reservoir_action(
                         .collect();
                     report.push_str(&format!("Delta:  [{}]\n", deltas.join(", ")));
                 }
-                if let Some(ref t) = tick_result {
-                    if let Some(output) = t.get("output").and_then(|v| v.as_array()) {
-                        let out_summary: Vec<String> = output
-                            .iter()
-                            .take(5)
-                            .filter_map(|v| v.as_f64().map(|f| format!("{f:.3}")))
-                            .collect();
-                        report.push_str(&format!("Output: [{}...]\n", out_summary.join(", ")));
-                    }
+                if let Some(ref t) = tick_result
+                    && let Some(output) = t.get("output").and_then(|v| v.as_array())
+                {
+                    let out_summary: Vec<String> = output
+                        .iter()
+                        .take(5)
+                        .filter_map(|v| v.as_f64().map(|f| format!("{f:.3}")))
+                        .collect();
+                    report.push_str(&format!("Output: [{}...]\n", out_summary.join(", ")));
                 }
                 report.push_str(
                     "\nYour real reservoir state was NOT changed. \

@@ -45,6 +45,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from proactive_scan_architecture import probe_architecture_drift
+from proactive_scan_journal_hygiene import JournalHygieneProbeTests, probe_journal_hygiene
+
 # ----------------------------------------------------------------------
 # Paths & constants
 # ----------------------------------------------------------------------
@@ -171,6 +174,10 @@ DOMAIN_PHRASES = frozenset(
 BENIGN_LOG_ERROR_PATTERNS = [
     re.compile(
         r"WS recv error: WebSocket protocol error: Connection reset without closing handshake",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"WS recv error: IO error: Connection reset by peer",
         re.IGNORECASE,
     ),
     re.compile(
@@ -573,13 +580,54 @@ def probe_dispatch_menu_drift(prior: dict[str, Any]) -> dict[str, Any]:
         return _finding("dispatch_menu_drift", "notice", "dispatch_menu_drift.py failed to run")
     try:
         report = json.loads(stdout)
-        starv = len(report.get("silent_starvation", []))
-        unknown = len(report.get("unknown_next", []))
+        summary = report.get("summary", {})
+        starv = int(
+            summary.get(
+                "new_silent_starvation_public",
+                len(
+                    report.get(
+                        "new_silent_starvation_public",
+                        report.get("silent_starvation_public", []),
+                    )
+                ),
+            )
+        )
+        unknown = int(
+            summary.get(
+                "unknown_next_current",
+                len(report.get("unknown_next_current", report.get("unknown_next", []))),
+            )
+        )
+        raw_starv = int(summary.get("silent_starvation", len(report.get("silent_starvation", []))))
+        raw_unknown = int(summary.get("unknown_next", len(report.get("unknown_next", []))))
+        accepted_starv = int(
+            summary.get(
+                "accepted_silent_starvation_public",
+                len(report.get("accepted_silent_starvation_public", [])),
+            )
+        )
     except Exception:
         return _finding("dispatch_menu_drift", "notice", "could not parse dispatch_menu_drift.py JSON")
 
-    snapshot = {"silent_starvation": starv, "unknown_next": unknown}
-    prior_starv = (prior or {}).get("silent_starvation") if isinstance(prior, dict) else None
+    snapshot = {
+        "new_silent_starvation_public": starv,
+        "accepted_silent_starvation_public": accepted_starv,
+        "silent_starvation_public": int(
+            summary.get(
+                "silent_starvation_public",
+                len(report.get("silent_starvation_public", [])),
+            )
+        ),
+        "unknown_next_current": unknown,
+        "silent_starvation": raw_starv,
+        "unknown_next": raw_unknown,
+    }
+    prior_starv = None
+    if isinstance(prior, dict):
+        prior_starv = prior.get(
+            "new_silent_starvation_public",
+            prior.get("silent_starvation_public", prior.get("silent_starvation")),
+        )
     delta_msg = ""
     if prior_starv is not None:
         delta = starv - prior_starv
@@ -590,60 +638,64 @@ def probe_dispatch_menu_drift(prior: dict[str, Any]) -> dict[str, Any]:
 
     if starv == 0 and unknown == 0:
         sev = "ok"
-        summ = "no dispatch/menu drift"
+        summ = f"no new dispatch/menu drift ({accepted_starv} accepted public backlog)"
     elif starv >= 30 or unknown >= 30:
         sev = "notice"
-        summ = f"{starv} silent-starvation, {unknown} unknown-NEXT{delta_msg} (mostly aliases — review)"
+        summ = (
+            f"{starv} new public silent-starvation, {unknown} current unknown-NEXT"
+            f"{delta_msg} (raw: {raw_starv}/{raw_unknown}; mostly aliases — review)"
+        )
     else:
         sev = "notice"
-        summ = f"{starv} silent-starvation, {unknown} unknown-NEXT{delta_msg}"
+        summ = (
+            f"{starv} new public silent-starvation, {unknown} current unknown-NEXT"
+            f"{delta_msg} (raw: {raw_starv}/{raw_unknown})"
+        )
     return _finding("dispatch_menu_drift", sev, summ, snapshot=snapshot)
 
 
-def probe_architecture_drift(prior: dict[str, Any]) -> dict[str, Any]:
-    """Wrap architecture_health.py; report files crossing thresholds vs prior."""
-    script = ASTRID_REPO / "scripts/architecture_health.py"
+def probe_capsule_runtime_health(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Report installed/discovered/loadable capsule runtime compatibility."""
+    script = ASTRID_REPO / "scripts/capsule_runtime_health.py"
     if not script.is_file():
-        return _finding("architecture_drift", "notice", "architecture_health.py not found")
+        return _finding("capsule_runtime_health", "notice", "capsule_runtime_health.py not found")
     rc, stdout, _ = _wrap_existing_script(
-        "architecture_health", ["python3", str(script), "--json"], timeout=30
+        "capsule_runtime_health",
+        ["python3", str(script), "--json"],
+        timeout=20,
     )
     if rc != 0:
-        return _finding("architecture_drift", "notice", "architecture_health.py failed to run")
+        return _finding("capsule_runtime_health", "notice", "capsule runtime health probe failed")
     try:
         report = json.loads(stdout)
+        summary = report.get("summary", {})
     except Exception:
-        return _finding("architecture_drift", "notice", "could not parse architecture_health.py JSON")
+        return _finding("capsule_runtime_health", "notice", "could not parse capsule runtime health JSON")
 
-    # The script emits per-file entries with severity. Count by severity.
-    files = report.get("files") if isinstance(report, dict) else None
-    if not isinstance(files, list):
-        # Fallback: just count top-level keys with severity attribute.
-        return _finding("architecture_drift", "ok", "architecture_health ran (output shape unrecognized)")
-    sev_counts: Counter[str] = Counter(
-        (f.get("severity") or "ok") for f in files if isinstance(f, dict)
+    status = str(summary.get("status", "notice"))
+    severity = "ok" if status == "ok" else "warning"
+    text = (
+        f"{summary.get('installed_manifests', 0)} installed, "
+        f"{summary.get('discovered_manifests', 0)} discovered, "
+        f"{summary.get('loadable_component_model', 0)} Component Model, "
+        f"{summary.get('accepted_legacy_extism_mvp', 0)}/"
+        f"{summary.get('legacy_extism_mvp', 0)} accepted legacy, "
+        f"{summary.get('actionable_incompatible', 0)} incompatible, "
+        f"{summary.get('actionable_missing_payloads', 0)} missing"
     )
-    snapshot = {"sev_counts": dict(sev_counts)}
-    prior_counts = (prior or {}).get("sev_counts", {}) if isinstance(prior, dict) else {}
-    delta_msgs: list[str] = []
-    for sev in ("critical", "review", "watch"):
-        cur = sev_counts.get(sev, 0)
-        old = prior_counts.get(sev, 0)
-        if cur != old:
-            delta_msgs.append(f"{sev}: {old} → {cur}")
-    summary = (
-        f"{sev_counts.get('critical', 0)} critical, "
-        f"{sev_counts.get('review', 0)} review, "
-        f"{sev_counts.get('watch', 0)} watch"
+    if severity == "ok":
+        return _finding(
+            "capsule_runtime_health",
+            "ok",
+            f"capsule runtime baseline clean ({text})",
+            snapshot=summary,
+        )
+    return _finding(
+        "capsule_runtime_health",
+        severity,
+        f"capsule runtime drift needs review ({text})",
+        snapshot=summary,
     )
-    if delta_msgs:
-        summary += " | delta: " + ", ".join(delta_msgs)
-    severity = "ok"
-    if sev_counts.get("critical", 0) > 0:
-        severity = "warning"
-    elif sev_counts.get("review", 0) > 0:
-        severity = "notice"
-    return _finding("architecture_drift", severity, summary, snapshot=snapshot)
 
 
 def probe_db_growth(prior: dict[str, Any]) -> dict[str, Any]:
@@ -745,8 +797,10 @@ BLIND_SPOT_PROBES = [
     ("plist_drift", probe_plist_drift),
     ("dispatch_menu_drift", probe_dispatch_menu_drift),
     ("architecture_drift", probe_architecture_drift),
+    ("capsule_runtime_health", probe_capsule_runtime_health),
     ("db_growth", probe_db_growth),
     ("journal_volume", probe_journal_volume),
+    ("journal_hygiene", probe_journal_hygiene),
 ]
 
 
@@ -1296,6 +1350,7 @@ class ConvergenceTests(unittest.TestCase):
                 log.write_text(
                     "WS recv error: WebSocket protocol error: "
                     "Connection reset without closing handshake\n"
+                    "WS recv error: IO error: Connection reset by peer (os error 54)\n"
                     "WS recv error: ❌ Client disconnected: 127.0.0.1:59592\n"
                     "WebSocket protocol error: ❌ Client disconnected: 127.0.0.1:59592\n"
                 )
@@ -1309,7 +1364,7 @@ class ConvergenceTests(unittest.TestCase):
 
         self.assertEqual(finding["severity"], "ok")
         self.assertEqual(finding["snapshot"]["active_errors"], 0)
-        self.assertEqual(finding["snapshot"]["ignored_transient_errors"], 3)
+        self.assertEqual(finding["snapshot"]["ignored_transient_errors"], 4)
         self.assertIn("0 actionable errors", finding["summary"])
 
     def test_mirror_mode_filtered_from_sample(self) -> None:
@@ -1327,7 +1382,9 @@ class ConvergenceTests(unittest.TestCase):
 
 def run_self_tests() -> int:
     loader = unittest.TestLoader()
-    suite = loader.loadTestsFromTestCase(ConvergenceTests)
+    suite = unittest.TestSuite()
+    suite.addTests(loader.loadTestsFromTestCase(ConvergenceTests))
+    suite.addTests(loader.loadTestsFromTestCase(JournalHygieneProbeTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1

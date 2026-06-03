@@ -55,7 +55,11 @@ impl BridgePaths {
             .bridge_root
             .clone()
             .or_else(|| env_path("ASTRID_BRIDGE_ROOT"))
-            .or_else(|| bridge_workspace_hint.as_ref().and_then(parent_dir))
+            .or_else(|| {
+                bridge_workspace_hint
+                    .as_ref()
+                    .and_then(|path| parent_dir(path))
+            })
             .unwrap_or_else(default_bridge_root);
 
         let bridge_workspace =
@@ -81,7 +85,11 @@ impl BridgePaths {
             .minime_root
             .clone()
             .or_else(|| env_path("MINIME_ROOT"))
-            .or_else(|| minime_workspace_hint.as_ref().and_then(parent_dir))
+            .or_else(|| {
+                minime_workspace_hint
+                    .as_ref()
+                    .and_then(|path| parent_dir(path))
+            })
             .unwrap_or_else(|| default_minime_root(&astrid_root));
         let minime_workspace =
             minime_workspace_hint.unwrap_or_else(|| minime_root.join("workspace"));
@@ -443,7 +451,7 @@ fn default_autoresearch_root(astrid_root: &Path) -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("autoresearch"))
 }
 
-fn parent_dir(path: &PathBuf) -> Option<PathBuf> {
+fn parent_dir(path: &Path) -> Option<PathBuf> {
     path.parent().map(Path::to_path_buf)
 }
 

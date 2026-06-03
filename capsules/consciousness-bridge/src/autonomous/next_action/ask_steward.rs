@@ -247,7 +247,7 @@ fn auto_subject(body: &str) -> String {
         if matches!(chars[i], '.' | '!' | '?') {
             let next_is_ws_or_end = chars
                 .get(i.saturating_add(1))
-                .map_or(true, |c| c.is_whitespace());
+                .is_none_or(|c| c.is_whitespace());
             if next_is_ws_or_end {
                 end = i;
                 break;

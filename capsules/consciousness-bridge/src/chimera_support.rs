@@ -284,7 +284,7 @@ pub(super) fn median(values: &[f32]) -> f32 {
     let mut sorted = values.to_vec();
     sorted.sort_by(|left, right| left.total_cmp(right));
     let mid = sorted.len() / 2;
-    if sorted.len() % 2 == 0 {
+    if sorted.len().is_multiple_of(2) {
         (sorted[mid.saturating_sub(1)] + sorted[mid]) * 0.5_f32
     } else {
         sorted[mid]

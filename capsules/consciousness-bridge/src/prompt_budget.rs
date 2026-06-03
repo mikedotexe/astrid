@@ -255,30 +255,30 @@ fn find_paragraph_break(text: &str, target_pos: usize) -> usize {
     // Snap both endpoints to char boundaries to avoid panicking on multi-byte UTF-8.
     let mut target = target_pos.min(text.len());
     while target > 0 && !text.is_char_boundary(target) {
-        target -= 1;
+        target = target.saturating_sub(1);
     }
     let mut search_start = target.saturating_sub(200);
     while search_start > 0 && !text.is_char_boundary(search_start) {
-        search_start -= 1;
+        search_start = search_start.saturating_sub(1);
     }
     let slice = &text[search_start..target];
 
     // Prefer blank line.
     if let Some(pos) = slice.rfind("\n\n") {
-        return search_start + pos + 2;
+        return search_start.saturating_add(pos).saturating_add(2);
     }
     // Then period + space/newline.
     if let Some(pos) = slice.rfind(". ").or_else(|| slice.rfind(".\n")) {
-        return search_start + pos + 2;
+        return search_start.saturating_add(pos).saturating_add(2);
     }
     // Then any newline.
     if let Some(pos) = slice.rfind('\n') {
-        return search_start + pos + 1;
+        return search_start.saturating_add(pos).saturating_add(1);
     }
     // Fall back to exact position (snap to char boundary).
     let mut i = target;
     while i > 0 && !text.is_char_boundary(i) {
-        i -= 1;
+        i = i.saturating_sub(1);
     }
     i
 }

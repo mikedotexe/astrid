@@ -411,9 +411,7 @@ fn live_transition_descriptor(controller_health: Option<&Value>) -> Option<&str>
 }
 
 fn fill_band_crossing(controller_health: Option<&Value>) -> Option<&str> {
-    let Some(health) = controller_health else {
-        return None;
-    };
+    let health = controller_health?;
     if health
         .get("transition_event_v1")
         .and_then(|transition| transition.get("crossed_fill_band"))

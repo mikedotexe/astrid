@@ -113,14 +113,14 @@ fn refresh_rollups(bucket: &mut SignalLedger, now: DateTime<chrono::FixedOffset>
         .recent_events
         .iter()
         .filter_map(|event| parse_event_time(&event.timestamp))
-        .filter_map(|ts| (now >= ts).then_some(now - ts))
+        .filter_map(|ts| (now >= ts).then_some(now.signed_duration_since(ts)))
         .filter(|age| *age <= day)
         .count();
     bucket.last_7d_count = bucket
         .recent_events
         .iter()
         .filter_map(|event| parse_event_time(&event.timestamp))
-        .filter_map(|ts| (now >= ts).then_some(now - ts))
+        .filter_map(|ts| (now >= ts).then_some(now.signed_duration_since(ts)))
         .filter(|age| *age <= week)
         .count();
 }
@@ -137,7 +137,7 @@ fn record_signal_at(path: &Path, kind: &str, event: Value) -> std::io::Result<()
         fields: event_fields(event),
     });
     if bucket.recent_events.len() > MAX_RECENT_EVENTS {
-        let drop_count = bucket.recent_events.len() - MAX_RECENT_EVENTS;
+        let drop_count = bucket.recent_events.len().saturating_sub(MAX_RECENT_EVENTS);
         bucket.recent_events.drain(..drop_count);
     }
     refresh_rollups(bucket, now);

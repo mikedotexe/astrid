@@ -668,7 +668,7 @@ fn find_paragraph_break(text: &str, target: usize) -> usize {
 }
 
 fn estimate_pages(total_len: usize, page_size: usize) -> usize {
-    (total_len + page_size - 1) / page_size
+    total_len.div_ceil(page_size)
 }
 
 /// Snap a byte index down to the nearest char boundary in a UTF-8 string.

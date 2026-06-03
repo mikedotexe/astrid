@@ -168,7 +168,7 @@ fn clean_search_topic(candidate: &str) -> Option<String> {
         .trim()
         .trim_matches(|c: char| matches!(c, '"' | '\'' | '“' | '”'))
         .trim()
-        .trim_end_matches(|c: char| matches!(c, '.' | ',' | ';' | ':'))
+        .trim_end_matches(['.', ',', ';', ':'])
         .trim();
 
     if topic.chars().any(char::is_alphanumeric) {
@@ -186,7 +186,7 @@ pub(crate) fn extract_search_topic(next_action: &str) -> Option<String> {
 
     let rest = trimmed[6..]
         .trim()
-        .trim_start_matches(|c: char| matches!(c, '-' | '\u{2014}' | ':'))
+        .trim_start_matches(['-', '\u{2014}', ':'])
         .trim();
 
     if rest.is_empty() {
@@ -210,7 +210,7 @@ pub(crate) fn extract_search_topic(next_action: &str) -> Option<String> {
 
 fn clean_alias_arg(raw: &str) -> String {
     raw.trim()
-        .trim_start_matches(|c: char| matches!(c, ':' | '-' | '\u{2014}'))
+        .trim_start_matches([':', '-', '\u{2014}'])
         .trim()
         .trim_matches(|c: char| matches!(c, '[' | ']' | '"' | '\'' | '`' | '“' | '”'))
         .trim()
@@ -893,8 +893,7 @@ fn normalize_feedback_shadow_model_alias(
     let lower = original
         .to_lowercase()
         .replace('λ', "lambda")
-        .replace('\u{2013}', "-")
-        .replace('\u{2014}', "-");
+        .replace(['\u{2013}', '\u{2014}'], "-");
 
     if base_action == "REFINE_AUDIO_PROCESSING" {
         let raw_arg = strip_action(original, base_action);
@@ -1114,7 +1113,7 @@ fn strip_action(original: &str, prefix: &str) -> String {
         // and the colon must not be left dangling.
         original[prefix.len()..]
             .trim_start()
-            .trim_start_matches(|c: char| matches!(c, ':' | '-' | '\u{2014}'))
+            .trim_start_matches([':', '-', '\u{2014}'])
             .trim()
             .to_string()
     } else {
@@ -1198,6 +1197,14 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "EXPERIMENT_RESUME"
         | "EXPERIMENT_COMPARE"
         | "EXPERIMENT_ALT_PATHS"
+        | "SHARED_INVESTIGATION_START"
+        | "SHARED_INVESTIGATION_STATUS"
+        | "SHARED_INVESTIGATION_CLAIM"
+        | "SHARED_INVESTIGATION_DECIDE"
+        | "DOSSIER_CLAIM"
+        | "DOSSIER_EVIDENCE"
+        | "DOSSIER_STATUS"
+        | "DOSSIER_REVIEW"
         | "ACTION_PREFLIGHT"
         | "NEXT_PROBE"
         | "PREFLIGHT"
@@ -1267,7 +1274,15 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "EXPERIMENT_BRANCH"
         | "EXPERIMENT_RESUME"
         | "EXPERIMENT_COMPARE"
-        | "EXPERIMENT_ALT_PATHS" => "experiment_continuity",
+        | "EXPERIMENT_ALT_PATHS"
+        | "SHARED_INVESTIGATION_START"
+        | "SHARED_INVESTIGATION_STATUS"
+        | "SHARED_INVESTIGATION_CLAIM"
+        | "SHARED_INVESTIGATION_DECIDE"
+        | "DOSSIER_CLAIM"
+        | "DOSSIER_EVIDENCE"
+        | "DOSSIER_STATUS"
+        | "DOSSIER_REVIEW" => "experiment_continuity",
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
@@ -1538,6 +1553,30 @@ pub(super) fn handle_next_action(
         );
     }
 
+    match action_continuity::research_budget_guard_for_next(&original, ctx.fill_pct, ctx.telemetry)
+    {
+        Ok(Some(guard)) => {
+            let message = guard.message();
+            let metadata = guard.metadata();
+            conv.emphasis = Some(message.clone());
+            info!(
+                "Astrid research-budget guard blocked NEXT `{}` ({})",
+                original,
+                metadata
+                    .get("reason")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("research_budget_guard")
+            );
+            return NextActionOutcome::blocked("research_budget_guard", message)
+                .with_stage_visibility("blocked", "protected_summary")
+                .with_research_budget(metadata);
+        },
+        Ok(None) => {},
+        Err(err) => {
+            info!("Astrid research-budget guard skipped after read error: {err:#}");
+        },
+    }
+
     match action_continuity::charter_required_guard_for_next(&original) {
         Ok(Some(guard)) => {
             let message = guard.message();
@@ -1559,6 +1598,41 @@ pub(super) fn handle_next_action(
         Err(err) => {
             info!("Astrid charter-required guard skipped after read error: {err:#}");
         },
+    }
+
+    if base_action == "EXPERIMENT_AUTHORITY_EXECUTE" {
+        let request_id = original
+            .get("EXPERIMENT_AUTHORITY_EXECUTE".len()..)
+            .unwrap_or_default()
+            .trim_matches([' ', ':', '-'])
+            .trim();
+        match crate::authority_gate::execute_semantic_microdose(
+            request_id,
+            Some(ctx.fill_pct),
+            None,
+            ctx.sensory_tx,
+        ) {
+            Ok(record) => {
+                let text = serde_json::to_string_pretty(&record).unwrap_or_default();
+                let handled = record
+                    .get("record_type")
+                    .and_then(serde_json::Value::as_str)
+                    == Some("execution_result");
+                conv.emphasis = Some(format!("Authority gate result:\n{text}"));
+                if handled {
+                    return NextActionOutcome::handled("authority_gate", text)
+                        .with_stage_visibility("semantic_microdose", "protected_summary");
+                }
+                return NextActionOutcome::blocked("authority_gate", text)
+                    .with_stage_visibility("blocked", "protected_summary");
+            },
+            Err(err) => {
+                let message = format!("Authority execute `{request_id}` blocked: {err:#}");
+                conv.emphasis = Some(message.clone());
+                return NextActionOutcome::blocked("authority_gate", message)
+                    .with_stage_visibility("blocked", "protected_summary");
+            },
+        }
     }
 
     if base_action == "EXPERIMENT_BIND" {
@@ -2029,6 +2103,8 @@ mod tests {
             spectral_denominator_v1: None,
             effective_dimensionality: None,
             distinguishability_loss: None,
+            esn_leak: None,
+            esn_leak_override_v1: None,
             structural_entropy: None,
             resonance_density_v1: None,
             pressure_source_v1: None,

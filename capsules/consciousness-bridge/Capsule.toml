@@ -31,6 +31,26 @@ name = "consciousness.v1.telemetry"
 description = "Spectral telemetry from minime ESN (eigenvalues, fill%, phase)"
 
 [[topic]]
+name = "consciousness.v1.lambda_tail"
+description = "Derived lambda-tail state, returnability, and artifact-grounding telemetry"
+
+[[topic]]
+name = "consciousness.v1.lambda_edge_perception"
+description = "Read-only lambda-edge perception state, support signals, and guardrail boundary"
+
+[[topic]]
+name = "consciousness.v1.sticky_mode_audit"
+description = "Read-only sticky-mode audit state, support signals, and mode-release readiness cues"
+
+[[topic]]
+name = "consciousness.v1.artifact_grounding"
+description = "Artifact contact summaries used to contextualize lambda-tail state"
+
+[[topic]]
+name = "consciousness.v1.returnability"
+description = "Returnability summaries for lambda-tail and related spectral drift episodes"
+
+[[topic]]
 name = "consciousness.v1.control"
 description = "Control messages for minime ESN parameters (synth_gain, keep_bias, fill_target)"
 

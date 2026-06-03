@@ -582,6 +582,7 @@ def intervention_shaped_text(value: Any) -> bool:
 def latest_decompose_snapshot_summary(continuity: dict[str, Any] | None = None) -> dict[str, Any]:
     minime_continuity = ((continuity or {}).get("by_being") or {}).get("Minime") or {}
     active_id = minime_continuity.get("active_experiment")
+    active_status = str(minime_continuity.get("classification") or "").casefold()
     last_summary = minime_continuity.get("last_experiment_summary_v1") or {}
     last_id = last_summary.get("experiment_id") if isinstance(last_summary, dict) else None
     last_status = str(last_summary.get("status") or "").casefold() if isinstance(last_summary, dict) else ""
@@ -594,14 +595,37 @@ def latest_decompose_snapshot_summary(continuity: dict[str, Any] | None = None) 
         hypothesis = row.get("hypothesis_check_v1")
         hypothesis = hypothesis if isinstance(hypothesis, dict) else {}
         snapshot_experiment_id = row.get("active_experiment_id")
-        if snapshot_experiment_id and snapshot_experiment_id == active_id:
+        snapshot_status = str(row.get("active_experiment_classification") or "").casefold()
+        paused_or_complete = {"paused", "complete", "completed"}
+        if (
+            snapshot_experiment_id
+            and snapshot_experiment_id == active_id
+            and active_status not in paused_or_complete
+            and snapshot_status not in paused_or_complete
+        ):
             relevance_status = "current_active"
+        elif (
+            snapshot_experiment_id
+            and (
+                (snapshot_experiment_id == active_id and (active_status in paused_or_complete or snapshot_status in paused_or_complete))
+                or (snapshot_experiment_id == last_id and last_status in paused_or_complete)
+            )
+        ):
+            relevance_status = "paused_summary_match"
         elif snapshot_experiment_id and snapshot_experiment_id == last_id and last_status in {"paused", "complete", "completed"}:
             relevance_status = "paused_summary_match"
         else:
             relevance_status = "historical_inactive"
         raw_suggested_next = hypothesis.get("suggested_next") or temporal.get("suggested_read")
-        suppress_current_guidance = relevance_status == "historical_inactive"
+        suppress_current_guidance = relevance_status != "current_active"
+        resume_next = minime_continuity.get("continuity_return")
+        if not resume_next and isinstance(last_summary, dict) and last_id and last_status == "paused":
+            resume_next = f"EXPERIMENT_RESUME {last_id}"
+        inspect_next = (
+            f"EXPERIMENT_STATUS {snapshot_experiment_id} or EXPERIMENT_REVIEW {snapshot_experiment_id}"
+            if relevance_status == "paused_summary_match" and snapshot_experiment_id
+            else None
+        )
         return {
             "schema_version": 1,
             "available": True,
@@ -612,10 +636,19 @@ def latest_decompose_snapshot_summary(continuity: dict[str, Any] | None = None) 
             "relevance_status": relevance_status,
             "suggested_next_suppressed": suppress_current_guidance,
             "historical_guidance_note": (
-                "Historical DECOMPOSE snapshot kept as evidence; suggested_next is not current guidance."
+                "Paused DECOMPOSE snapshot kept as evidence; resume or inspect explicitly before deciding."
+                if relevance_status == "paused_summary_match"
+                else "Historical DECOMPOSE snapshot kept as evidence; suggested_next is not current guidance."
                 if suppress_current_guidance
                 else None
             ),
+            "paused_guidance_v1": {
+                "resume_next": resume_next if relevance_status == "paused_summary_match" else None,
+                "inspect_next": inspect_next,
+                "message": "Paused experiment remains paused; DECOMPOSE evidence is context, not a current decision prompt."
+                if relevance_status == "paused_summary_match"
+                else None,
+            },
             "temporal_decompose_v1": {
                 "classification": temporal.get("classification"),
                 "share_motion": temporal.get("share_motion"),
@@ -895,10 +928,17 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"- Latest snapshot: `{decompose.get('recorded_at')}` active_experiment=`{decompose.get('active_experiment_id')}` classification=`{decompose.get('active_experiment_classification')}` relevance=`{decompose.get('relevance_status')}`",
             f"- Temporal read: `{temporal.get('classification')}` share_motion=`{temporal.get('share_motion')}` entropy_delta=`{temporal.get('entropy_delta')}` effective_modes_delta=`{temporal.get('effective_modes_delta')}`",
             f"- Hypothesis check: status=`{hypothesis.get('status')}` evidence_label=`{hypothesis.get('evidence_label')}`",
-            f"- Suggested next: `{hypothesis.get('suggested_next') or temporal.get('suggested_read')}`",
         ])
+        suggested_next = hypothesis.get("suggested_next") or temporal.get("suggested_read")
+        if suggested_next:
+            lines.append(f"- Suggested next: `{suggested_next}`")
         if decompose.get("suggested_next_suppressed"):
             lines.append(f"- Current guidance: {decompose.get('historical_guidance_note')}")
+            paused_guidance = decompose.get("paused_guidance_v1") or {}
+            if paused_guidance.get("resume_next"):
+                lines.append(f"  Resume NEXT: `{paused_guidance.get('resume_next')}`")
+            if paused_guidance.get("inspect_next"):
+                lines.append(f"  Inspect NEXT: `{paused_guidance.get('inspect_next')}`")
         historical_guidance = decompose.get("historical_intervention_shaped_guidance_v1") or {}
         if historical_guidance.get("present"):
             lines.append(f"- Historical guidance snag: {historical_guidance.get('snag')}")
@@ -1077,6 +1117,49 @@ class MemoryReasoningAuditTests(unittest.TestCase):
         self.assertTrue(summary["suggested_next_suppressed"])
         self.assertIsNone(summary["hypothesis_check_v1"]["suggested_next"])
         self.assertTrue(summary["historical_intervention_shaped_guidance_v1"]["present"])
+
+    def test_latest_decompose_snapshot_paused_match_suppresses_decide_current(self) -> None:
+        global MINIME_DECOMPOSE_SNAPSHOTS
+        old_path = MINIME_DECOMPOSE_SNAPSHOTS
+        with tempfile.TemporaryDirectory() as tmp:
+            snapshot_path = Path(tmp) / "decompose_snapshots.jsonl"
+            MINIME_DECOMPOSE_SNAPSHOTS = snapshot_path
+            snapshot_path.write_text(json.dumps({
+                "schema_version": 1,
+                "recorded_at": "2026-05-18T00:00:00Z",
+                "active_experiment_id": "exp_paused",
+                "active_experiment_classification": "paused",
+                "temporal_decompose_v1": {
+                    "classification": "same_read_repeating",
+                    "suggested_read": "DECOMPOSE",
+                },
+                "hypothesis_check_v1": {
+                    "status": "decision_ready",
+                    "suggested_next": "EXPERIMENT_DECIDE current :: pause because evidence is ready",
+                },
+            }) + "\n")
+            try:
+                summary = latest_decompose_snapshot_summary({
+                    "by_being": {
+                        "Minime": {
+                            "active_experiment": "exp_paused",
+                            "classification": "paused",
+                            "continuity_return": "EXPERIMENT_RESUME exp_paused",
+                            "last_experiment_summary_v1": {
+                                "experiment_id": "exp_paused",
+                                "status": "paused",
+                            },
+                        }
+                    }
+                })
+            finally:
+                MINIME_DECOMPOSE_SNAPSHOTS = old_path
+        self.assertEqual(summary["relevance_status"], "paused_summary_match")
+        self.assertTrue(summary["suggested_next_suppressed"])
+        self.assertIsNone(summary["hypothesis_check_v1"]["suggested_next"])
+        self.assertEqual(summary["hypothesis_check_v1"]["historical_suggested_next"], "EXPERIMENT_DECIDE current :: pause because evidence is ready")
+        self.assertEqual(summary["paused_guidance_v1"]["resume_next"], "EXPERIMENT_RESUME exp_paused")
+        self.assertIn("EXPERIMENT_STATUS exp_paused", summary["paused_guidance_v1"]["inspect_next"])
 
     def test_compact_continuity_keeps_decompose_cue(self) -> None:
         report = {

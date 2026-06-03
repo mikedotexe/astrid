@@ -29,11 +29,15 @@ where this pattern bites; pass `--target` to point at a different file.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+BASELINE_DIR = Path(__file__).resolve().parent / "baselines"
+DEFAULT_BASELINE = BASELINE_DIR / "dispatch_menu_drift.json"
 
 # Heuristics for dispatch arms. We look for:
 #   if base == 'X':
@@ -49,6 +53,7 @@ DISPATCH_PATTERNS = [
 ]
 DISPATCH_SET_PATTERN = re.compile(r"""base\s+in\s+(?:\{|\()(?P<body>[^})]+)(?:\}|\))""")
 ACTION_LITERAL_PATTERN = re.compile(r"""['"]([A-Z_][A-Z0-9_]*)['"]""")
+ACTION_NAME_PATTERN = re.compile(r"""^[A-Z_][A-Z0-9_]*$""")
 
 # Heuristics for "mentioned in a prompt menu". The action name appears
 # in a string literal, typically with NEXT: prefix or as a menu/listing
@@ -141,6 +146,28 @@ def internal_or_alias_reason(action: str) -> str | None:
     return None
 
 
+def docstring_start_lines(source: str) -> set[int]:
+    """Return starting line numbers for module/class/function docstrings."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return set()
+
+    starts: set[int] = set()
+    docstring_owner_types = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+    for node in [tree, *ast.walk(tree)]:
+        if not isinstance(node, docstring_owner_types) or not node.body:
+            continue
+        first = node.body[0]
+        if (
+            isinstance(first, ast.Expr)
+            and isinstance(first.value, ast.Constant)
+            and isinstance(first.value.value, str)
+        ):
+            starts.add(first.lineno)
+    return starts
+
+
 def find_string_literals(source: str) -> list[tuple[int, str]]:
     """Yield (lineno, content) for every string literal in source.
 
@@ -149,6 +176,7 @@ def find_string_literals(source: str) -> list[tuple[int, str]]:
     interpolations). Lineno is the start line of the literal.
     """
     out: list[tuple[int, str]] = []
+    docstring_lines = docstring_start_lines(source)
     # Triple-quoted strings (greedy)
     for m in re.finditer(
         r'(?P<prefix>[fFrRbBuU]*)(?P<q>\'\'\'|""")(?P<body>.*?)(?P=q)',
@@ -156,6 +184,8 @@ def find_string_literals(source: str) -> list[tuple[int, str]]:
         re.DOTALL,
     ):
         line = source[: m.start()].count("\n") + 1
+        if line in docstring_lines:
+            continue
         out.append((line, m.group("body")))
     # Single-line single/double quoted strings
     for m in re.finditer(
@@ -163,8 +193,115 @@ def find_string_literals(source: str) -> list[tuple[int, str]]:
         source,
     ):
         line = source[: m.start()].count("\n") + 1
+        if line in docstring_lines:
+            continue
         out.append((line, m.group("body")))
     return out
+
+
+def _action_constant(value: str) -> str | None:
+    if ACTION_NAME_PATTERN.fullmatch(value) and value not in EXCLUDE:
+        return value
+    return None
+
+
+def _literal_action_entries(node: ast.AST, constants: dict[str, dict[str, int]]) -> list[tuple[str, int]]:
+    """Extract uppercase action literals from AST expressions.
+
+    Supports direct string literals, tuple/list/set literals, and names bound
+    to module-level string collections such as VISUAL_CASCADE_ACTION_ALIASES.
+    """
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        action = _action_constant(node.value)
+        return [(action, node.lineno)] if action else []
+    if isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+        out: list[tuple[str, int]] = []
+        for child in node.elts:
+            out.extend(_literal_action_entries(child, constants))
+        return out
+    if isinstance(node, ast.Name):
+        return list(constants.get(node.id, {}).items())
+    return []
+
+
+def _string_collection(node: ast.AST) -> dict[str, int] | None:
+    if not isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+        return None
+    entries: dict[str, int] = {}
+    for child in node.elts:
+        if not isinstance(child, ast.Constant) or not isinstance(child.value, str):
+            return None
+        action = _action_constant(child.value)
+        if action:
+            entries[action] = child.lineno
+    return entries
+
+
+def _module_string_collections(tree: ast.Module) -> dict[str, dict[str, int]]:
+    collections: dict[str, dict[str, int]] = {}
+    for node in tree.body:
+        name: str | None = None
+        value: ast.AST | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target = node.targets[0]
+            if isinstance(target, ast.Name):
+                name = target.id
+                value = node.value
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            name = node.target.id
+            value = node.value
+        if not name or value is None:
+            continue
+        entries = _string_collection(value)
+        if entries:
+            collections[name] = entries
+    return collections
+
+
+def _assigns_loop_var_to_action_map(node: ast.AST, loop_var: str) -> bool:
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Assign):
+            continue
+        for target in child.targets:
+            if not isinstance(target, ast.Subscript):
+                continue
+            if not isinstance(target.value, ast.Name) or target.value.id != "action_map":
+                continue
+            subscript_key = target.slice
+            if isinstance(subscript_key, ast.Name) and subscript_key.id == loop_var:
+                return True
+    return False
+
+
+def scan_ast_dispatched(source: str) -> dict[str, list[int]]:
+    """Find dispatch arms with Python AST where regexes lose structure."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return {}
+
+    constants = _module_string_collections(tree)
+    found: dict[str, list[int]] = defaultdict(list)
+
+    def add_entries(entries: list[tuple[str, int]]) -> None:
+        for name, lineno in entries:
+            if name in EXCLUDE:
+                continue
+            found[name].append(lineno)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Compare) and isinstance(node.left, ast.Name) and node.left.id == "base":
+            for op, comparator in zip(node.ops, node.comparators):
+                if isinstance(op, ast.Eq):
+                    add_entries(_literal_action_entries(comparator, constants))
+                elif isinstance(op, ast.In):
+                    add_entries(_literal_action_entries(comparator, constants))
+        elif isinstance(node, ast.For) and isinstance(node.target, ast.Name):
+            loop_var = node.target.id
+            if _assigns_loop_var_to_action_map(node, loop_var):
+                add_entries(_literal_action_entries(node.iter, constants))
+
+    return dict(found)
 
 
 def scan_dispatched(source: str) -> dict[str, list[int]]:
@@ -173,6 +310,8 @@ def scan_dispatched(source: str) -> dict[str, list[int]]:
     Returns map of ACTION_NAME → [line numbers where dispatch is wired].
     """
     found: dict[str, list[int]] = defaultdict(list)
+    for name, lines in scan_ast_dispatched(source).items():
+        found[name].extend(lines)
     for ln, line in enumerate(source.splitlines(), start=1):
         for pat in DISPATCH_PATTERNS:
             for m in pat.finditer(line):
@@ -304,7 +443,99 @@ def audit(target: Path) -> dict:
     }
 
 
-def render_markdown(report: dict) -> str:
+def load_baseline(path: Path | None) -> dict | None:
+    if path is None or not path.is_file():
+        return None
+    with path.open(encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError(f"baseline must be a JSON object: {path}")
+    return data
+
+
+def baseline_action_set(baseline: dict | None) -> set[str]:
+    if not baseline:
+        return set()
+    raw = baseline.get("accepted_silent_starvation_public", [])
+    actions: set[str] = set()
+    if isinstance(raw, list):
+        for entry in raw:
+            if isinstance(entry, str):
+                actions.add(entry)
+            elif isinstance(entry, dict) and isinstance(entry.get("action"), str):
+                actions.add(entry["action"])
+    return actions
+
+
+def apply_baseline(report: dict, baseline_path: Path | None, disabled: bool) -> dict:
+    public_entries = [
+        entry
+        for entry in report.get("silent_starvation_public", [])
+        if isinstance(entry, dict)
+    ]
+    summary = report["summary"]
+
+    if disabled:
+        report["baseline"] = {"enabled": False, "reason": "disabled"}
+        report["new_silent_starvation_public"] = public_entries
+        report["accepted_silent_starvation_public"] = []
+        report["resolved_baseline_silent_starvation_public"] = []
+        summary["new_silent_starvation_public"] = len(public_entries)
+        summary["accepted_silent_starvation_public"] = 0
+        summary["resolved_silent_starvation_public"] = 0
+        return report
+
+    baseline = load_baseline(baseline_path)
+    if baseline is None:
+        report["baseline"] = {
+            "enabled": False,
+            "reason": "not found",
+            "path": baseline_path.as_posix() if baseline_path else None,
+        }
+        report["new_silent_starvation_public"] = public_entries
+        report["accepted_silent_starvation_public"] = []
+        report["resolved_baseline_silent_starvation_public"] = []
+        summary["new_silent_starvation_public"] = len(public_entries)
+        summary["accepted_silent_starvation_public"] = 0
+        summary["resolved_silent_starvation_public"] = 0
+        return report
+
+    accepted_actions = baseline_action_set(baseline)
+    current_actions = {
+        entry["action"] for entry in public_entries if isinstance(entry.get("action"), str)
+    }
+    accepted_entries: list[dict] = []
+    new_entries: list[dict] = []
+    for entry in public_entries:
+        annotated = dict(entry)
+        if entry.get("action") in accepted_actions:
+            annotated["baseline_status"] = "accepted"
+            annotated["baseline_reason"] = "accepted public silent-starvation backlog"
+            accepted_entries.append(annotated)
+        else:
+            annotated["baseline_status"] = "new"
+            annotated["baseline_reason"] = "not present in accepted baseline"
+            new_entries.append(annotated)
+
+    resolved = sorted(accepted_actions - current_actions)
+    report["silent_starvation_public"] = [*new_entries, *accepted_entries]
+    report["new_silent_starvation_public"] = new_entries
+    report["accepted_silent_starvation_public"] = accepted_entries
+    report["resolved_baseline_silent_starvation_public"] = resolved
+    report["baseline"] = {
+        "enabled": True,
+        "path": baseline_path.as_posix() if baseline_path else None,
+        "accepted_silent_starvation_public": len(accepted_entries),
+        "new_silent_starvation_public": len(new_entries),
+        "resolved_silent_starvation_public": len(resolved),
+    }
+    summary["new_silent_starvation_public"] = len(new_entries)
+    summary["accepted_silent_starvation_public"] = len(accepted_entries)
+    summary["resolved_silent_starvation_public"] = len(resolved)
+    return report
+
+
+def render_markdown(report: dict, show_accepted: bool = False) -> str:
     out: list[str] = []
     out.append(f"# Dispatch-vs-Menu Drift Audit\n")
     out.append(f"**Target**: `{report['target']}`\n")
@@ -313,22 +544,24 @@ def render_markdown(report: dict) -> str:
         f"**Summary**: {s['dispatched_total']} dispatched / {s['menu_total']} menu-mentioned / "
         f"{s['both']} both / **{s['silent_starvation']} silent-starvation** / "
         f"**{s['unknown_next']} unknown-NEXT**\n"
-        f"**Actionable tiers**: {s['silent_starvation_public']} silent-starvation public / "
+        f"**Actionable tiers**: {s.get('new_silent_starvation_public', s['silent_starvation_public'])} new silent-starvation public / "
         f"{s['unknown_next_current']} unknown-NEXT current / "
+        f"{s.get('accepted_silent_starvation_public', 0)} accepted public backlog / "
         f"{s['internal_or_alias']} internal-or-alias excluded\n"
     )
     out.append(
-        "## Silent Starvation Public\n\n"
+        "## New Silent Starvation Public\n\n"
         "These actions WORK if the LLM picks them, but the LLM has no way "
         "to discover them — the prompt never lists them as options. This is "
         "the Kink #18 shape.\n"
     )
-    if not report["silent_starvation_public"]:
+    new_public = report.get("new_silent_starvation_public", report["silent_starvation_public"])
+    if not new_public:
         out.append("_None._\n")
     else:
         out.append("| Action | Dispatch line(s) |")
         out.append("| --- | --- |")
-        for entry in report["silent_starvation_public"]:
+        for entry in new_public:
             lines = ", ".join(str(l) for l in entry["dispatch_lines"])
             out.append(f"| `{entry['action']}` | {lines} |")
     out.append("")
@@ -346,6 +579,22 @@ def render_markdown(report: dict) -> str:
         for entry in report["unknown_next_current"]:
             lines = ", ".join(str(l) for l in entry["menu_lines"])
             out.append(f"| `{entry['action']}` | {lines} |")
+    if show_accepted:
+        out.append("")
+        out.append(
+            "## Accepted Silent Starvation Public\n\n"
+            "These current entries are intentionally carried as backlog, so "
+            "they stay visible without escalating the daily scan.\n"
+        )
+        accepted = report.get("accepted_silent_starvation_public", [])
+        if not accepted:
+            out.append("_None._\n")
+        else:
+            out.append("| Action | Dispatch line(s) |")
+            out.append("| --- | --- |")
+            for entry in accepted:
+                lines = ", ".join(str(l) for l in entry["dispatch_lines"])
+                out.append(f"| `{entry['action']}` | {lines} |")
     out.append("")
     out.append(
         "## Internal Or Alias\n\n"
@@ -391,6 +640,22 @@ def main() -> int:
         action="store_true",
         help="Emit JSON instead of Markdown",
     )
+    parser.add_argument(
+        "--baseline",
+        type=Path,
+        default=DEFAULT_BASELINE,
+        help=f"Accepted-debt baseline JSON (default: {DEFAULT_BASELINE})",
+    )
+    parser.add_argument(
+        "--no-baseline",
+        action="store_true",
+        help="Disable accepted-debt baseline classification",
+    )
+    parser.add_argument(
+        "--show-accepted",
+        action="store_true",
+        help="Show accepted baseline backlog in Markdown output",
+    )
     args = parser.parse_args()
 
     if not args.target.is_file():
@@ -398,10 +663,11 @@ def main() -> int:
         return 2
 
     report = audit(args.target)
+    report = apply_baseline(report, args.baseline.resolve(), args.no_baseline)
     if args.json:
         print(json.dumps(report, indent=2))
     else:
-        print(render_markdown(report))
+        print(render_markdown(report, args.show_accepted))
     return 0
 
 

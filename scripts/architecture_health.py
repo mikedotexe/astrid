@@ -64,6 +64,11 @@ REVIEW_LINES = 1_500
 CRITICAL_LINES = 2_500
 LONG_FUNCTION_LINES = 120
 VERY_LONG_FUNCTION_LINES = 220
+BASELINE_DIR = Path(__file__).resolve().parent / "baselines"
+DEFAULT_BASELINE = BASELINE_DIR / "architecture_health.json"
+LEVEL_RANK = {"watch": 1, "review": 2, "critical": 3}
+DEFAULT_GROWTH_TOLERANCE_LINES = 50
+DEFAULT_GROWTH_TOLERANCE_RATIO = 0.05
 
 
 @dataclass(frozen=True)
@@ -103,6 +108,22 @@ def parse_args() -> argparse.Namespace:
         "--json",
         action="store_true",
         help="Emit machine-readable JSON instead of Markdown.",
+    )
+    parser.add_argument(
+        "--baseline",
+        type=Path,
+        default=DEFAULT_BASELINE,
+        help=f"Accepted-debt baseline JSON (default: {DEFAULT_BASELINE}).",
+    )
+    parser.add_argument(
+        "--no-baseline",
+        action="store_true",
+        help="Disable accepted-debt baseline classification.",
+    )
+    parser.add_argument(
+        "--show-accepted",
+        action="store_true",
+        help="Show accepted baseline entries in Markdown output.",
     )
     parser.add_argument(
         "--limit",
@@ -266,52 +287,293 @@ def collect(root: Path, include_docs: bool) -> dict[str, object]:
     }
 
 
-def markdown(report: dict[str, object], limit: int) -> str:
-    large_files = report["large_files"]
-    long_functions = report["long_functions"]
+def load_baseline(path: Path | None) -> dict[str, object] | None:
+    if path is None or not path.is_file():
+        return None
+    with path.open(encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError(f"baseline must be a JSON object: {path}")
+    return data
+
+
+def baseline_entries(value: object) -> list[dict[str, object]]:
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, dict)]
+    if isinstance(value, dict):
+        return [item for item in value.values() if isinstance(item, dict)]
+    return []
+
+
+def function_key(item: dict[str, object]) -> tuple[str, str]:
+    return (str(item.get("path", "")), str(item.get("name", "")))
+
+
+def line_count(item: dict[str, object]) -> int:
+    try:
+        return int(item.get("lines", 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def material_growth(
+    current: dict[str, object],
+    accepted: dict[str, object],
+    tolerance_lines: int,
+    tolerance_ratio: float,
+) -> bool:
+    accepted_lines = line_count(accepted)
+    current_lines = line_count(current)
+    tolerated = max(
+        accepted_lines + tolerance_lines,
+        int(accepted_lines * (1.0 + tolerance_ratio)),
+    )
+    return current_lines > tolerated
+
+
+def classify_item(
+    current: dict[str, object],
+    accepted: dict[str, object] | None,
+    tolerance_lines: int,
+    tolerance_ratio: float,
+) -> dict[str, object]:
+    out = dict(current)
+    if accepted is None:
+        out["baseline_status"] = "new"
+        out["baseline_reason"] = "not present in accepted baseline"
+        return out
+
+    accepted_level = str(accepted.get("level") or accepted.get("severity") or "watch")
+    current_level = str(current.get("level") or current.get("severity") or "watch")
+    out["baseline_level"] = accepted_level
+    out["baseline_lines"] = line_count(accepted)
+
+    if LEVEL_RANK.get(current_level, 0) > LEVEL_RANK.get(accepted_level, 0):
+        out["baseline_status"] = "worsened"
+        out["baseline_reason"] = f"level rose from {accepted_level} to {current_level}"
+    elif material_growth(current, accepted, tolerance_lines, tolerance_ratio):
+        out["baseline_status"] = "worsened"
+        out["baseline_reason"] = (
+            f"grew from {line_count(accepted)} to {line_count(current)} lines"
+        )
+    else:
+        out["baseline_status"] = "accepted"
+        out["baseline_reason"] = "within accepted baseline"
+    return out
+
+
+def set_unbaselined_report(
+    report: dict[str, object],
+    large_files: list[dict[str, object]],
+    long_functions: list[dict[str, object]],
+    reason: str,
+    baseline_path: Path | None = None,
+) -> dict[str, object]:
+    report["baseline"] = {
+        "enabled": False,
+        "reason": reason,
+        "path": baseline_path.as_posix() if baseline_path else None,
+    }
+    report["actionable_large_files"] = large_files
+    report["actionable_long_functions"] = long_functions
+    report["accepted_large_files"] = []
+    report["accepted_long_functions"] = []
+    report["actionable_critical_signal_count"] = report["critical_signal_count"]
+    return report
+
+
+def partition_classified(
+    items: list[dict[str, object]],
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    actionable = [item for item in items if item.get("baseline_status") != "accepted"]
+    accepted = [item for item in items if item.get("baseline_status") == "accepted"]
+    return actionable, accepted
+
+
+def attach_summary(report: dict[str, object]) -> dict[str, object]:
+    report["summary"] = {
+        "raw_large_files": len(report.get("large_files", [])),
+        "raw_long_functions": len(report.get("long_functions", [])),
+        "accepted_large_files": len(report.get("accepted_large_files", [])),
+        "accepted_long_functions": len(report.get("accepted_long_functions", [])),
+        "actionable_large_files": len(report.get("actionable_large_files", [])),
+        "actionable_long_functions": len(report.get("actionable_long_functions", [])),
+        "critical_signal_count": report.get("critical_signal_count", 0),
+        "actionable_critical_signal_count": report.get(
+            "actionable_critical_signal_count", 0
+        ),
+    }
+    return report
+
+
+def apply_baseline(
+    report: dict[str, object],
+    baseline_path: Path | None,
+    disabled: bool,
+) -> dict[str, object]:
+    large_files = [item for item in report["large_files"] if isinstance(item, dict)]
+    long_functions = [
+        item for item in report["long_functions"] if isinstance(item, dict)
+    ]
+
+    if disabled:
+        return attach_summary(
+            set_unbaselined_report(report, large_files, long_functions, "disabled")
+        )
+
+    baseline = load_baseline(baseline_path)
+    if baseline is None:
+        return attach_summary(
+            set_unbaselined_report(
+                report, large_files, long_functions, "not found", baseline_path
+            )
+        )
+
+    tolerance_lines = int(
+        baseline.get("growth_tolerance_lines", DEFAULT_GROWTH_TOLERANCE_LINES)
+    )
+    tolerance_ratio = float(
+        baseline.get("growth_tolerance_ratio", DEFAULT_GROWTH_TOLERANCE_RATIO)
+    )
+    accepted_large_by_path = {
+        str(item.get("path", "")): item
+        for item in baseline_entries(baseline.get("large_files"))
+    }
+    accepted_fn_by_key = {
+        function_key(item): item
+        for item in baseline_entries(baseline.get("long_functions"))
+    }
+
+    classified_large = [
+        classify_item(
+            item,
+            accepted_large_by_path.get(str(item.get("path", ""))),
+            tolerance_lines,
+            tolerance_ratio,
+        )
+        for item in large_files
+    ]
+    classified_functions = [
+        classify_item(
+            item,
+            accepted_fn_by_key.get(function_key(item)),
+            tolerance_lines,
+            tolerance_ratio,
+        )
+        for item in long_functions
+    ]
+
+    actionable_large, accepted_large = partition_classified(classified_large)
+    actionable_functions, accepted_functions = partition_classified(classified_functions)
+    actionable_critical_count = sum(
+        1
+        for item in [*actionable_large, *actionable_functions]
+        if item.get("level") == "critical"
+    )
+
+    current_large_paths = {str(item.get("path", "")) for item in large_files}
+    current_function_keys = {function_key(item) for item in long_functions}
+    resolved_large = sorted(set(accepted_large_by_path) - current_large_paths)
+    resolved_functions = sorted(
+        f"{path}::{name}"
+        for path, name in set(accepted_fn_by_key) - current_function_keys
+    )
+
+    report["large_files"] = classified_large
+    report["long_functions"] = classified_functions
+    report["actionable_large_files"] = actionable_large
+    report["actionable_long_functions"] = actionable_functions
+    report["accepted_large_files"] = accepted_large
+    report["accepted_long_functions"] = accepted_functions
+    report["actionable_critical_signal_count"] = actionable_critical_count
+    report["baseline"] = {
+        "enabled": True,
+        "path": baseline_path.as_posix() if baseline_path else None,
+        "growth_tolerance_lines": tolerance_lines,
+        "growth_tolerance_ratio": tolerance_ratio,
+        "accepted_large_files": len(accepted_large),
+        "accepted_long_functions": len(accepted_functions),
+        "actionable_large_files": len(actionable_large),
+        "actionable_long_functions": len(actionable_functions),
+        "resolved_large_files": len(resolved_large),
+        "resolved_long_functions": len(resolved_functions),
+    }
+    report["resolved_baseline_large_files"] = resolved_large
+    report["resolved_baseline_long_functions"] = resolved_functions
+    return attach_summary(report)
+
+
+def markdown(report: dict[str, object], limit: int, show_accepted: bool) -> str:
+    baseline = report.get("baseline")
+    baseline_enabled = isinstance(baseline, dict) and bool(baseline.get("enabled"))
+    large_files = report["actionable_large_files"] if baseline_enabled else report["large_files"]
+    long_functions = (
+        report["actionable_long_functions"] if baseline_enabled else report["long_functions"]
+    )
     lines = [
         "# Architecture Health Report",
         "",
         f"- Root: `{report['root']}`",
         f"- Source files scanned: `{report['scanned_files']}`",
-        f"- Large-file signals: `{len(large_files)}`",
-        f"- Long-function signals: `{len(long_functions)}`",
-        f"- Critical signals: `{report['critical_signal_count']}`",
+        f"- Actionable large-file signals: `{len(large_files)}`",
+        f"- Actionable long-function signals: `{len(long_functions)}`",
+        f"- Actionable critical signals: `{report['actionable_critical_signal_count']}`",
+        f"- Raw accepted/current signals: `{len(report['large_files'])}` large files, `{len(report['long_functions'])}` long functions",
         "",
         "This report is advisory by default. A large file is a review prompt, not an automatic failure.",
         "",
     ]
+    if baseline_enabled:
+        lines.insert(
+            8,
+            f"- Accepted baseline: `{baseline['accepted_large_files']}` large files, `{baseline['accepted_long_functions']}` long functions",
+        )
 
-    lines.append("## Large Files")
+    lines.append("## Actionable Large Files")
     if large_files:
         lines.append("")
-        lines.append("| Lines | Level | Public Items | Path | Suggestion |")
-        lines.append("| ---: | --- | ---: | --- | --- |")
+        lines.append("| Lines | Level | Public Items | Path | Reason | Suggestion |")
+        lines.append("| ---: | --- | ---: | --- | --- | --- |")
         for item in large_files[:limit]:
             lines.append(
                 f"| {item['lines']} | {item['level']} | {item['public_items']} | "
-                f"`{item['path']}` | {item['suggestion']} |"
+                f"`{item['path']}` | {item.get('baseline_reason', 'current signal')} | "
+                f"{item['suggestion']} |"
             )
         if len(large_files) > limit:
             lines.append(f"\n_...{len(large_files) - limit} more large files omitted._")
     else:
-        lines.append("\nNo large source files found.")
+        lines.append("\nNo new or worsened large source files found.")
 
     lines.append("")
-    lines.append("## Long Functions")
+    lines.append("## Actionable Long Functions")
     if long_functions:
         lines.append("")
-        lines.append("| Lines | Level | Function | Path |")
-        lines.append("| ---: | --- | --- | --- |")
+        lines.append("| Lines | Level | Function | Path | Reason |")
+        lines.append("| ---: | --- | --- | --- | --- |")
         for item in long_functions[:limit]:
             lines.append(
                 f"| {item['lines']} | {item['level']} | `{item['name']}` "
-                f"at line {item['start_line']} | `{item['path']}` |"
+                f"at line {item['start_line']} | `{item['path']}` | "
+                f"{item.get('baseline_reason', 'current signal')} |"
             )
         if len(long_functions) > limit:
             lines.append(f"\n_...{len(long_functions) - limit} more long functions omitted._")
     else:
-        lines.append("\nNo long function spans found.")
+        lines.append("\nNo new or worsened long function spans found.")
+
+    if baseline_enabled and show_accepted:
+        lines.append("")
+        lines.append("## Accepted Baseline")
+        lines.append("")
+        lines.append(
+            f"- Large files: `{len(report['accepted_large_files'])}` accepted, "
+            f"`{len(report['resolved_baseline_large_files'])}` resolved since baseline."
+        )
+        lines.append(
+            f"- Long functions: `{len(report['accepted_long_functions'])}` accepted, "
+            f"`{len(report['resolved_baseline_long_functions'])}` resolved since baseline."
+        )
 
     lines.append("")
     lines.append("## Review Lens")
@@ -327,11 +589,12 @@ def main() -> int:
     args = parse_args()
     root = Path(args.root).resolve()
     report = collect(root, args.include_docs)
+    report = apply_baseline(report, args.baseline.resolve(), args.no_baseline)
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
-        print(markdown(report, args.limit))
-    if args.fail_on_critical and report["critical_signal_count"]:
+        print(markdown(report, args.limit, args.show_accepted))
+    if args.fail_on_critical and report["actionable_critical_signal_count"]:
         return 1
     return 0
 

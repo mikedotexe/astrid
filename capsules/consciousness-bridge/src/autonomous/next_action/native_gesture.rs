@@ -728,6 +728,10 @@ pub(super) fn control_to_sensory(gesture: &str) -> Option<SensoryMsg> {
         pi_kp: None,
         pi_ki: None,
         pi_max_step: None,
+        pi_integrator_leak: None,
+        esn_leak_override: None,
+        esn_leak_override_ticks: None,
+        esn_leak_authority_request_id: None,
     };
     match &mut msg {
         SensoryMsg::Control {

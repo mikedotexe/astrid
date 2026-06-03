@@ -393,38 +393,38 @@ impl AstridShadowComputer {
 
         // First sight of an active influence — capture pre-snapshot.
         if let Some(payload) = &active_payload {
-            if self.in_flight_minime_influence.is_none() {
-                if let Some(pre) = self.snapshot_history.back().cloned() {
-                    let intent_id = payload
-                        .get("intent_id")
-                        .and_then(Value::as_str)
-                        .unwrap_or("?")
-                        .to_string();
-                    let label = payload
-                        .get("label")
-                        .and_then(Value::as_str)
-                        .unwrap_or("untitled")
-                        .to_string();
-                    let duration_ticks = payload
-                        .get("duration_ticks")
-                        .and_then(Value::as_u64)
-                        .unwrap_or(0) as u32;
-                    let decay_ticks = payload
-                        .get("decay_ticks")
-                        .and_then(Value::as_u64)
-                        .unwrap_or(0) as u32;
-                    let now_ms = std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .map_or(0, |d| d.as_millis() as u64);
-                    self.in_flight_minime_influence = Some(InFlightMinimeInfluence {
-                        intent_id,
-                        label,
-                        duration_ticks,
-                        decay_ticks,
-                        pre_snapshot: pre,
-                        pre_recorded_at_unix_ms: now_ms,
-                    });
-                }
+            if self.in_flight_minime_influence.is_none()
+                && let Some(pre) = self.snapshot_history.back().cloned()
+            {
+                let intent_id = payload
+                    .get("intent_id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("?")
+                    .to_string();
+                let label = payload
+                    .get("label")
+                    .and_then(Value::as_str)
+                    .unwrap_or("untitled")
+                    .to_string();
+                let duration_ticks = payload
+                    .get("duration_ticks")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(0) as u32;
+                let decay_ticks = payload
+                    .get("decay_ticks")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(0) as u32;
+                let now_ms = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_or(0, |d| d.as_millis() as u64);
+                self.in_flight_minime_influence = Some(InFlightMinimeInfluence {
+                    intent_id,
+                    label,
+                    duration_ticks,
+                    decay_ticks,
+                    pre_snapshot: pre,
+                    pre_recorded_at_unix_ms: now_ms,
+                });
             }
             // Window still active — nothing to emit yet.
             return;

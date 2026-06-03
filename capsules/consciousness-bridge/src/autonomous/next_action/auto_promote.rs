@@ -233,10 +233,10 @@ pub(super) fn record_manual_share(exchange_count: u64) {
 
 /// Returns `true` if the kill switch (env var or sentinel file) is active.
 fn kill_switch_active() -> bool {
-    if let Ok(v) = std::env::var(ENV_DISABLED) {
-        if v == "1" || v.eq_ignore_ascii_case("true") {
-            return true;
-        }
+    if let Ok(v) = std::env::var(ENV_DISABLED)
+        && (v == "1" || v.eq_ignore_ascii_case("true"))
+    {
+        return true;
     }
     sentinel_path().is_file()
 }
@@ -291,7 +291,7 @@ fn split_sentences(text: &str) -> Vec<String> {
             }
         }
     }
-    if !current.trim().is_empty() && current.trim().split_whitespace().count() >= 2 {
+    if !current.trim().is_empty() && current.split_whitespace().count() >= 2 {
         sentences.push(current.trim().to_string());
     }
     sentences
@@ -324,9 +324,8 @@ fn structural_match(sentence: &str) -> bool {
         .split(|c: char| !c.is_alphabetic())
         .filter(|s| !s.is_empty())
         .collect();
-    let verb_match = words.iter().any(|w| VERBS_OF_HOLDING.contains(w));
 
-    verb_match
+    words.iter().any(|w| VERBS_OF_HOLDING.contains(w))
 }
 
 fn sentence_has_bracketed_triple(s: &str) -> bool {
@@ -383,7 +382,7 @@ fn sentence_has_any_decimal(s: &str) -> bool {
                 return true;
             }
             prev_digit = true;
-            saw_decimal = saw_decimal || true;
+            saw_decimal = true;
         } else if c == '.' && prev_digit {
             // sequence like "12.41"
         } else {
@@ -398,16 +397,9 @@ fn sentence_has_any_decimal(s: &str) -> bool {
 /// it (don't truncate mid-sentence — promote nothing instead of a
 /// truncated artifact).
 fn extract_promotable_sentence(text: &str) -> Option<String> {
-    for s in split_sentences(text) {
-        if structural_match(&s) {
-            if s.chars().count() <= MAX_PROMOTION_LEN {
-                return Some(s);
-            }
-            // Long sentence matched — skip rather than truncate.
-            // Falls through to next candidate.
-        }
-    }
-    None
+    split_sentences(text)
+        .into_iter()
+        .find(|s| structural_match(s) && s.chars().count() <= MAX_PROMOTION_LEN)
 }
 
 /// Find the latest joined collaboration where `actor` is a member.
@@ -527,19 +519,19 @@ pub(crate) fn try_auto_promote(
     }
 
     // Cooldown.
-    if let Some(&last) = state.last_promote_exchange.get(&coll_id) {
-        if exchange_count.saturating_sub(last) < COOLDOWN_EXCHANGES {
-            log_skip(SkipReason::Cooldown, mode, exchange_count);
-            return None;
-        }
+    if let Some(&last) = state.last_promote_exchange.get(&coll_id)
+        && exchange_count.saturating_sub(last) < COOLDOWN_EXCHANGES
+    {
+        log_skip(SkipReason::Cooldown, mode, exchange_count);
+        return None;
     }
 
     // Burst lockout.
-    if let Some(&until) = state.burst_lockout_until_ms.get(&coll_id) {
-        if now < until {
-            log_skip(SkipReason::BurstLockout, mode, exchange_count);
-            return None;
-        }
+    if let Some(&until) = state.burst_lockout_until_ms.get(&coll_id)
+        && now < until
+    {
+        log_skip(SkipReason::BurstLockout, mode, exchange_count);
+        return None;
     }
 
     // Daily cap.

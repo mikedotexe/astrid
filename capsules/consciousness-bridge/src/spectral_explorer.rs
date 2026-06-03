@@ -22,26 +22,20 @@ pub(crate) struct SpectralExplorerContext<'a> {
 
 pub(crate) fn format_spectral_explorer(ctx: SpectralExplorerContext<'_>) -> String {
     let typed = ctx.telemetry.typed_fingerprint();
-    let mut sections = Vec::new();
-    sections.push("=== SPECTRAL EXPLORER ===".to_string());
-    sections.push(format_present_state(ctx.telemetry, typed.as_ref()));
-    sections.push(format_memory_comparison(
-        ctx.telemetry,
-        ctx.selected_memory,
-        typed.as_ref(),
-    ));
-    sections.push(format_control_pressure(
-        ctx.telemetry,
-        ctx.controller_health,
-    ));
+    let mut sections = vec![
+        "=== SPECTRAL EXPLORER ===".to_string(),
+        format_present_state(ctx.telemetry, typed.as_ref()),
+        format_memory_comparison(ctx.telemetry, ctx.selected_memory, typed.as_ref()),
+        format_control_pressure(ctx.telemetry, ctx.controller_health),
+    ];
 
     if let Some(viz) = crate::spectral_viz::format_spectral_block(ctx.telemetry) {
         sections.push(viz);
     }
-    if let Some(shadow) = ctx.ising_shadow {
-        if let Some(viz) = crate::spectral_viz::format_shadow_block(shadow) {
-            sections.push(viz);
-        }
+    if let Some(shadow) = ctx.ising_shadow
+        && let Some(viz) = crate::spectral_viz::format_shadow_block(shadow)
+    {
+        sections.push(viz);
     }
     if let Some(viz) = crate::spectral_viz::format_geometry_block(
         ctx.codec_history,
@@ -663,6 +657,8 @@ mod tests {
             spectral_denominator_v1: None,
             effective_dimensionality: None,
             distinguishability_loss: None,
+            esn_leak: None,
+            esn_leak_override_v1: None,
             structural_entropy: Some(0.72),
             resonance_density_v1: Some(crate::types::ResonanceDensityV1 {
                 policy: "resonance_density_v1".to_string(),

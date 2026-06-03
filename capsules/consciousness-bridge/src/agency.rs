@@ -646,7 +646,7 @@ fn local_journal_entries(journal_dir: &Path) -> Vec<(PathBuf, SystemTime, String
         .filter_map(|entry| entry.ok())
         .filter_map(|entry| {
             let path = entry.path();
-            if !path.extension().is_some_and(|ext| ext == "txt") {
+            if path.extension().is_none_or(|ext| ext != "txt") {
                 return None;
             }
             let modified = entry.metadata().ok()?.modified().ok()?;
@@ -802,7 +802,8 @@ fn journal_priority(entry: &(PathBuf, SystemTime, String)) -> u8 {
         .and_then(|name| name.to_str())
         .unwrap_or_default();
     let content = &entry.2;
-    let rank = if filename.starts_with('!') {
+
+    if filename.starts_with('!') {
         0
     } else if content.contains("Mode: aspiration_longform")
         || content.contains("Mode: dialogue_live_longform")
@@ -819,9 +820,7 @@ fn journal_priority(entry: &(PathBuf, SystemTime, String)) -> u8 {
         5
     } else {
         10
-    };
-
-    rank
+    }
 }
 
 fn clean_option(value: Option<String>) -> Option<String> {

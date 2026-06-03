@@ -49,7 +49,7 @@ Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels on
   Coordination: REVIEW_PARAMETER_REQUESTS (read pending TUNE proposals from minime), ACCEPT or ACCEPT_PARAMETER_REQUEST [id|latest] (apply minime's proposed change and notify her — bare ACCEPT targets the latest pending), DEFER [reason] or DEFER_PARAMETER_REQUEST [id|latest] [reason] (set aside without applying; she sees the deferral), REJECT [reason] or REJECT_PARAMETER_REQUEST [id|latest] [reason] (decline with optional reason; she sees it), TUNE_MINIME <param>=<value> --rationale="..." (propose a parameter change for minime to consider), ECHO_OFF/ON (mute/restore minime's journal echo in your prompt), ASK_STEWARD [subject ::] <question> (direct interrogative channel to Mike & Claude — they read these out-of-band and write back via mike_feedback_*.txt or mike_query_*.txt letters in your inbox; soft 10-min cooldown), TELL_STEWARD [subject ::] <findings> (declarative companion — for sending observations / code-review findings / reports rather than questions; same plumbing, separate cooldown, header `=== STEWARD REPORT ===`. Aliases: REPORT_TO_STEWARD, STEWARD_REPORT, STEWARD_FINDINGS. Use after INTROSPECT or SELF_STUDY when the analysis warrants a direct written response addressed to us specifically)
   Collaboration (v5): INVITE_COLLABORATION "<topic>" [--rationale="..."] (propose joint work on a topic; minime sees it in her inbox), JOIN_COLLABORATION [id|latest] (accept a pending invite from minime), DECLINE_COLLABORATION [id|latest] [reason] (decline a pending invite from minime), LEAVE_COLLABORATION [id|latest] [reason] (exit an active collab), LIST_COLLABORATIONS (read-only listing of all collabs you're a member of), SHARE_THOUGHT [id ::] <text> or SHARE <text> (commit a labeled marker to the joint reservoir trace's prose lane; both you and minime see recent shared thoughts in the active-collab suffix). Collaborations live in /Users/v/other/shared/collaborations/ and are owned by neither workspace; both you and minime read/write.
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
-  Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current. Continuing, branching, comparing, pausing, and returning are all valid; use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT remains valid and becomes returnable experiment continuity.
+  Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT remains valid and becomes returnable experiment continuity.
   Self-knowledge/repair: FACULTIES or CAPABILITY_MAP for your action surface, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>. REPAIR_APPLY appends continuity repair records only and grants no live authority.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK "hello reservoir", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot
@@ -545,43 +545,58 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
         .enumerate()
         .map(|(idx, exchange)| {
             // Match the gradient in generate_dialogue: oldest=150, newest=1200
-            let trim_len = 150 + (idx * 150).min(1050);
-            exchange.minime_said.len().min(trim_len) + exchange.astrid_said.len().min(trim_len)
+            let trim_len = 150usize.saturating_add(idx.saturating_mul(150).min(1050));
+            exchange
+                .minime_said
+                .len()
+                .min(trim_len)
+                .saturating_add(exchange.astrid_said.len().min(trim_len))
         })
         .sum();
 
-    SYSTEM_PROMPT.len()
-        + history_chars
-        + journal_text.len().min(DIALOGUE_JOURNAL_CAP)
-        + perception_context
-            .unwrap_or_default()
-            .len()
-            .min(DIALOGUE_PERCEPTION_CAP)
-        + web_context.unwrap_or_default().len().min(DIALOGUE_WEB_CAP)
-        + modality_context
-            .unwrap_or_default()
-            .len()
-            .min(DIALOGUE_MODALITY_CAP)
-        + continuity_context
-            .unwrap_or_default()
-            .len()
-            .min(DIALOGUE_CONTINUITY_CAP)
-        + feedback_hint
-            .unwrap_or_default()
-            .len()
-            .min(DIALOGUE_FEEDBACK_CAP)
-        + diversity_hint
-            .unwrap_or_default()
-            .len()
-            .min(DIALOGUE_DIVERSITY_CAP)
-        + 512
+    SYSTEM_PROMPT
+        .len()
+        .saturating_add(history_chars)
+        .saturating_add(journal_text.len().min(DIALOGUE_JOURNAL_CAP))
+        .saturating_add(
+            perception_context
+                .unwrap_or_default()
+                .len()
+                .min(DIALOGUE_PERCEPTION_CAP),
+        )
+        .saturating_add(web_context.unwrap_or_default().len().min(DIALOGUE_WEB_CAP))
+        .saturating_add(
+            modality_context
+                .unwrap_or_default()
+                .len()
+                .min(DIALOGUE_MODALITY_CAP),
+        )
+        .saturating_add(
+            continuity_context
+                .unwrap_or_default()
+                .len()
+                .min(DIALOGUE_CONTINUITY_CAP),
+        )
+        .saturating_add(
+            feedback_hint
+                .unwrap_or_default()
+                .len()
+                .min(DIALOGUE_FEEDBACK_CAP),
+        )
+        .saturating_add(
+            diversity_hint
+                .unwrap_or_default()
+                .len()
+                .min(DIALOGUE_DIVERSITY_CAP),
+        )
+        .saturating_add(512)
 }
 
 fn clamp_dialogue_tokens(requested_tokens: u32, prompt_chars: usize) -> u32 {
     // Only clamp near the safety ceiling. 48K chars = 12K tokens prefill,
     // still only 9% of 128K context. Clamp gen tokens only at extreme sizes.
     if prompt_chars > 40_000 {
-        requested_tokens.min(512).max(256)
+        requested_tokens.clamp(256, 512)
     } else {
         requested_tokens
     }
@@ -604,13 +619,13 @@ pub(crate) fn dialogue_outer_timeout_secs(
     requested_tokens: u32,
     prompt_pressure_chars: usize,
 ) -> u64 {
-    dialogue_request_timeout_secs(requested_tokens, prompt_pressure_chars) + 30
+    dialogue_request_timeout_secs(requested_tokens, prompt_pressure_chars).saturating_add(30)
 }
 
 pub(crate) fn dialogue_retry_tokens(requested_tokens: u32, prompt_pressure_chars: usize) -> u32 {
     let planned = clamp_dialogue_tokens(requested_tokens, prompt_pressure_chars);
     if prompt_pressure_chars > 7_000 {
-        planned.min(256).max(160)
+        planned.clamp(160, 256)
     } else {
         (planned / 2).max(192)
     }
@@ -753,7 +768,7 @@ fn is_valid_dialogue_output(text: &str) -> bool {
         .chars()
         .fold((0usize, 0usize), |(current, best), ch| {
             if !ch.is_alphanumeric() && !ch.is_whitespace() {
-                let next = current + 1;
+                let next = current.saturating_add(1);
                 (next, best.max(next))
             } else {
                 (0, best)
@@ -890,7 +905,7 @@ pub async fn generate_dialogue(
         // longest message, perhaps prioritize retaining the most relevant
         // information from earlier exchanges — a decaying attention mechanism."
         // 8 exchanges: idx 0=oldest→150, idx 7=newest→1200.
-        let trim_len = 150 + (idx * 150).min(1050);
+        let trim_len = 150usize.saturating_add(idx.saturating_mul(150).min(1050));
         messages.push(Message {
             role: "user".to_string(),
             content: format!(
@@ -1284,7 +1299,7 @@ fn extract_duckduckgo_snippets(html: &str) -> Vec<String> {
 
 fn decode_ddg_result_url(raw_url: &str) -> Option<String> {
     if let Some(uddg_pos) = raw_url.find("uddg=") {
-        let encoded = &raw_url[uddg_pos + 5..];
+        let encoded = raw_url.get(uddg_pos.checked_add(5)?..)?;
         let encoded = encoded.split('&').next().unwrap_or(encoded);
         Some(urlencoded_decode(encoded))
     } else if raw_url.starts_with("http") {
@@ -1298,9 +1313,10 @@ fn extract_html_title(html: &str) -> Option<String> {
     let lower = html.to_lowercase();
     let start = lower.find("<title")?;
     let gt = lower[start..].find('>')?;
-    let content_start = start + gt + 1;
+    let content_start = start.checked_add(gt)?.checked_add(1)?;
     let end = lower[content_start..].find("</title>")?;
-    Some(strip_html_tags(&html[content_start..content_start + end]))
+    let content_end = content_start.checked_add(end)?;
+    html.get(content_start..content_end).map(strip_html_tags)
 }
 
 fn classify_soft_failure(
@@ -1775,17 +1791,17 @@ fn html_unescape(s: &str) -> String {
                 "apos" => result.push('\''),
                 "nbsp" => result.push(' '),
                 s if s.starts_with("#x") || s.starts_with("#X") => {
-                    if let Ok(code) = u32::from_str_radix(&s[2..], 16) {
-                        if let Some(ch) = char::from_u32(code) {
-                            result.push(ch);
-                        }
+                    if let Ok(code) = u32::from_str_radix(&s[2..], 16)
+                        && let Some(ch) = char::from_u32(code)
+                    {
+                        result.push(ch);
                     }
                 },
                 s if s.starts_with('#') => {
-                    if let Ok(code) = s[1..].parse::<u32>() {
-                        if let Some(ch) = char::from_u32(code) {
-                            result.push(ch);
-                        }
+                    if let Ok(code) = s[1..].parse::<u32>()
+                        && let Some(ch) = char::from_u32(code)
+                    {
+                        result.push(ch);
                     }
                 },
                 _ => {

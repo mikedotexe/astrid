@@ -222,10 +222,7 @@ pub fn write_recall_request(requested_by: &str, target: &str) -> io::Result<Path
             .iter()
             .find(|role| **role == normalized_lower.as_str())
             .map(|role| (*role).to_string()),
-        memory_id: if ROLE_ORDER
-            .iter()
-            .any(|role| *role == normalized_lower.as_str())
-        {
+        memory_id: if ROLE_ORDER.contains(&normalized_lower.as_str()) {
             None
         } else {
             Some(normalized.to_string())

@@ -389,16 +389,15 @@ impl RescueBridgePolicy {
         let text = context.text.unwrap_or_default();
         let lower = text.to_lowercase();
         if self.limited_write_v2_active() {
-            if self.limited_write_block_terms_always {
-                if let Some(term) = self
+            if self.limited_write_block_terms_always
+                && let Some(term) = self
                     .limited_write_block_terms
                     .iter()
                     .find(|term| lower.contains(&term.to_lowercase()))
-                {
-                    return Some(format!(
-                        "limited-write profile blocks trigger language '{term}'"
-                    ));
-                }
+            {
+                return Some(format!(
+                    "limited-write profile blocks trigger language '{term}'"
+                ));
             }
             if let Some(reason) = self.v2_health_block_reason(context, health.as_ref()?) {
                 return Some(reason);
@@ -443,31 +442,30 @@ impl RescueBridgePolicy {
             );
         }
 
-        if self.limited_write_block_terms_always {
-            if let Some(term) = self
+        if self.limited_write_block_terms_always
+            && let Some(term) = self
                 .limited_write_block_terms
                 .iter()
                 .find(|term| lower.contains(&term.to_lowercase()))
-            {
-                return Some(format!(
-                    "limited-write profile blocks trigger language '{term}'"
-                ));
-            }
+        {
+            return Some(format!(
+                "limited-write profile blocks trigger language '{term}'"
+            ));
         }
 
         let fill_rising = context
             .previous_fill_pct
             .is_some_and(|previous| fill_pct - previous > self.limited_write_rising_epsilon_pct);
-        if fill_rising && self.limited_write_block_terms_on_rising {
-            if let Some(term) = self
+        if fill_rising
+            && self.limited_write_block_terms_on_rising
+            && let Some(term) = self
                 .limited_write_block_terms
                 .iter()
                 .find(|term| lower.contains(&term.to_lowercase()))
-            {
-                return Some(format!(
-                    "limited-write profile blocks rising-fill trigger language '{term}'"
-                ));
-            }
+        {
+            return Some(format!(
+                "limited-write profile blocks rising-fill trigger language '{term}'"
+            ));
         }
 
         None
@@ -517,15 +515,14 @@ impl RescueBridgePolicy {
                 self.limited_write_peak_fill_max_pct
             ));
         }
-        if let Some(watchdog_state) = health.watchdog_state.as_deref() {
-            if !(watchdog_state == "monitoring"
+        if let Some(watchdog_state) = health.watchdog_state.as_deref()
+            && !(watchdog_state == "monitoring"
                 || watchdog_state == "warmup"
                 || watchdog_state == "monitoring:degraded")
-            {
-                return Some(format!(
-                    "semantic heartbeat blocked by watchdog state '{watchdog_state}'"
-                ));
-            }
+        {
+            return Some(format!(
+                "semantic heartbeat blocked by watchdog state '{watchdog_state}'"
+            ));
         }
         None
     }
@@ -541,17 +538,16 @@ impl RescueBridgePolicy {
         if !status_matches_policy(status, self) {
             return None;
         }
-        if self.limited_write_v2_active() {
-            if let Some(cooldown_until) =
+        if self.limited_write_v2_active()
+            && let Some(cooldown_until) =
                 status.get("cooldown_until_unix_s").and_then(Value::as_f64)
-            {
-                let cooldown_remaining = cooldown_until - now;
-                if cooldown_remaining > 0.0 {
-                    return Some(format!(
-                        "limited-write cooldown active for {:.0}s",
-                        cooldown_remaining.ceil()
-                    ));
-                }
+        {
+            let cooldown_remaining = cooldown_until - now;
+            if cooldown_remaining > 0.0 {
+                return Some(format!(
+                    "limited-write cooldown active for {:.0}s",
+                    cooldown_remaining.ceil()
+                ));
             }
         }
         if let Some(last_sent_at) = status.get("last_sent_at_unix_s").and_then(Value::as_f64) {
@@ -571,12 +567,12 @@ impl RescueBridgePolicy {
         context: &SemanticWriteContext<'_>,
         health: &LimitedWriteHealth,
     ) -> Option<String> {
-        if let Some(watchdog_state) = health.watchdog_state.as_deref() {
-            if watchdog_state != "monitoring" {
-                return Some(format!(
-                    "limited-write v2 requires watchdog monitoring; saw '{watchdog_state}'"
-                ));
-            }
+        if let Some(watchdog_state) = health.watchdog_state.as_deref()
+            && watchdog_state != "monitoring"
+        {
+            return Some(format!(
+                "limited-write v2 requires watchdog monitoring; saw '{watchdog_state}'"
+            ));
         }
         if !self
             .limited_write_allowed_stages
@@ -661,32 +657,32 @@ impl RescueBridgePolicy {
 
         let fill_delta = health.fill_pct - last_sent_fill_pct;
         if elapsed <= eval_window {
-            if let Some(watchdog_state) = health.watchdog_state.as_deref() {
-                if watchdog_state != "monitoring" {
-                    if matches!(watchdog_state, "warmup" | "monitoring:degraded") {
-                        if !already_final {
-                            status["last_send_evaluation"] = json!({
-                                "state": "watching",
-                                "sent_at_unix_s": last_sent_at,
-                                "evaluated_at_unix_s": now,
-                                "seconds_since_send": elapsed,
-                                "health_fill_pct": health.fill_pct,
-                                "watchdog_state": watchdog_state
-                            });
-                            write_status(status_path, status);
-                        }
-                        return Some(format!(
-                            "limited-write v2 waiting for watchdog monitoring; saw '{watchdog_state}'"
-                        ));
+            if let Some(watchdog_state) = health.watchdog_state.as_deref()
+                && watchdog_state != "monitoring"
+            {
+                if matches!(watchdog_state, "warmup" | "monitoring:degraded") {
+                    if !already_final {
+                        status["last_send_evaluation"] = json!({
+                            "state": "watching",
+                            "sent_at_unix_s": last_sent_at,
+                            "evaluated_at_unix_s": now,
+                            "seconds_since_send": elapsed,
+                            "health_fill_pct": health.fill_pct,
+                            "watchdog_state": watchdog_state
+                        });
+                        write_status(status_path, status);
                     }
-                    return self.rollback_v2(
-                        profile_path,
-                        status_path,
-                        status,
-                        &format!("post-write watchdog state became '{watchdog_state}'"),
-                        now,
-                    );
+                    return Some(format!(
+                        "limited-write v2 waiting for watchdog monitoring; saw '{watchdog_state}'"
+                    ));
                 }
+                return self.rollback_v2(
+                    profile_path,
+                    status_path,
+                    status,
+                    &format!("post-write watchdog state became '{watchdog_state}'"),
+                    now,
+                );
             }
             if health.fill_pct >= self.limited_write_rollback_fill_pct {
                 return self.rollback_v2(

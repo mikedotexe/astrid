@@ -742,8 +742,8 @@ fn expand_reduced_magnitudes(reduced: &DMatrix<f32>, spec: &SignalSpec) -> DMatr
 
         let first_bin = spec.selected_bins[0];
         let first_val = full_frame[first_bin];
-        for bin in 0..=first_bin {
-            full_frame[bin] = first_val;
+        for sample in full_frame.iter_mut().take(first_bin.saturating_add(1)) {
+            *sample = first_val;
         }
 
         for pair_idx in 0..actual_bins.saturating_sub(1) {
@@ -761,12 +761,12 @@ fn expand_reduced_magnitudes(reduced: &DMatrix<f32>, spec: &SignalSpec) -> DMatr
 
         let last_bin = spec.selected_bins[actual_bins.saturating_sub(1)];
         let last_val = full_frame[last_bin];
-        for bin in last_bin..spec.n_freq() {
-            full_frame[bin] = last_val;
+        for sample in full_frame.iter_mut().take(spec.n_freq()).skip(last_bin) {
+            *sample = last_val;
         }
 
-        for bin in 0..spec.n_freq() {
-            expanded[(row, bin)] = full_frame[bin];
+        for (bin, sample) in full_frame.iter().enumerate().take(spec.n_freq()) {
+            expanded[(row, bin)] = *sample;
         }
     }
 
@@ -802,11 +802,11 @@ fn istft(frames: &[Vec<Complex32>], spec: &SignalSpec, original_len: usize) -> V
         }
         ifft.process(&mut spectrum);
 
-        for sample_idx in 0..spec.n_fft {
+        for (sample_idx, spectrum_sample) in spectrum.iter().enumerate().take(spec.n_fft) {
             let pos = start.saturating_add(sample_idx);
             if let Some(out_sample) = output.get_mut(pos) {
                 let window = spec.window[sample_idx];
-                let value = (spectrum[sample_idx].re / (spec.n_fft as f32)) * window;
+                let value = (spectrum_sample.re / (spec.n_fft as f32)) * window;
                 *out_sample += value;
                 norm[pos] += window * window;
             }

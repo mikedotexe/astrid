@@ -157,7 +157,7 @@ pub fn process_trajectory(
         // Project back to input_dim by averaging blocks' contributions
         // Each block contributes proportionally to its share of total units
         let mut projected = vec![0.0_f64; input_dim];
-        for dim in 0..input_dim {
+        for (dim, projected_value) in projected.iter_mut().enumerate().take(input_dim) {
             let mut sum = 0.0_f64;
             let mut count = 0usize;
             // Sample from each block at proportional positions
@@ -167,7 +167,7 @@ pub fn process_trajectory(
                 count += 1;
             }
             if count > 0 {
-                projected[dim] = sum / count as f64;
+                *projected_value = sum / count as f64;
             }
         }
         output_trajectory.push(projected);

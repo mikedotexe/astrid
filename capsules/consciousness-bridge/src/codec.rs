@@ -138,24 +138,21 @@ fn projection_runtime_dir() -> PathBuf {
 }
 
 fn load_or_create_projection_epoch_id() -> String {
-    if let Ok(epoch) = std::env::var("ASTRID_CODEC_PROJECTION_EPOCH_ID") {
-        if !epoch.trim().is_empty() {
-            return epoch;
-        }
+    if let Ok(epoch) = std::env::var("ASTRID_CODEC_PROJECTION_EPOCH_ID")
+        && !epoch.trim().is_empty()
+    {
+        return epoch;
     }
     let runtime_dir = projection_runtime_dir();
     let path = runtime_dir.join("codec_projection_epoch.json");
-    if let Ok(text) = fs::read_to_string(&path) {
-        if let Ok(value) = serde_json::from_str::<serde_json::Value>(&text) {
-            if let Some(epoch) = value
-                .get("projection_epoch_id")
-                .and_then(serde_json::Value::as_str)
-            {
-                if !epoch.is_empty() {
-                    return epoch.to_string();
-                }
-            }
-        }
+    if let Ok(text) = fs::read_to_string(&path)
+        && let Ok(value) = serde_json::from_str::<serde_json::Value>(&text)
+        && let Some(epoch) = value
+            .get("projection_epoch_id")
+            .and_then(serde_json::Value::as_str)
+        && !epoch.is_empty()
+    {
+        return epoch.to_string();
     }
     let unix = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -865,13 +862,13 @@ impl TextTypeHistory {
             let thematic_weight = self.weight_ring[idx].clamp(0.2, 1.5);
             let blended_weight = weight * thematic_weight;
             total_weight += blended_weight;
-            for d in 0..THEMATIC_DIMS {
-                centroid[d] += self.profile_ring[idx][d] * blended_weight;
+            for (d, centroid_value) in centroid.iter_mut().enumerate().take(THEMATIC_DIMS) {
+                *centroid_value += self.profile_ring[idx][d] * blended_weight;
             }
         }
         if total_weight > 0.0 {
-            for d in 0..THEMATIC_DIMS {
-                centroid[d] /= total_weight;
+            for centroid_value in centroid.iter_mut().take(THEMATIC_DIMS) {
+                *centroid_value /= total_weight;
             }
         }
         centroid
@@ -1157,30 +1154,29 @@ pub fn chunk_text_for_temporal_encoding(
     // Merge short chunks into their predecessor.
     let mut merged: Vec<&str> = Vec::new();
     for chunk in &chunks {
-        if let Some(last) = merged.last() {
-            if last.len() < min_chunk_chars {
-                // Find the span covering both in the original text.
-                let last_start = last.as_ptr() as usize - trimmed.as_ptr() as usize;
-                let chunk_end = chunk.as_ptr() as usize + chunk.len() - trimmed.as_ptr() as usize;
-                merged.pop();
-                merged.push(&trimmed[last_start..chunk_end]);
-                continue;
-            }
+        if let Some(last) = merged.last()
+            && last.len() < min_chunk_chars
+        {
+            // Find the span covering both in the original text.
+            let last_start = last.as_ptr() as usize - trimmed.as_ptr() as usize;
+            let chunk_end = chunk.as_ptr() as usize + chunk.len() - trimmed.as_ptr() as usize;
+            merged.pop();
+            merged.push(&trimmed[last_start..chunk_end]);
+            continue;
         }
         merged.push(chunk);
     }
     // Merge trailing runt.
-    if merged.len() > 1 {
-        if let Some(last) = merged.last() {
-            if last.len() < min_chunk_chars {
-                let prev = merged[merged.len() - 2];
-                let prev_start = prev.as_ptr() as usize - trimmed.as_ptr() as usize;
-                let last_end = last.as_ptr() as usize + last.len() - trimmed.as_ptr() as usize;
-                merged.pop();
-                merged.pop();
-                merged.push(&trimmed[prev_start..last_end]);
-            }
-        }
+    if merged.len() > 1
+        && let Some(last) = merged.last()
+        && last.len() < min_chunk_chars
+    {
+        let prev = merged[merged.len() - 2];
+        let prev_start = prev.as_ptr() as usize - trimmed.as_ptr() as usize;
+        let last_end = last.as_ptr() as usize + last.len() - trimmed.as_ptr() as usize;
+        merged.pop();
+        merged.pop();
+        merged.push(&trimmed[prev_start..last_end]);
     }
 
     // Cap at max_chunks by merging from the end.
@@ -3271,6 +3267,8 @@ mod tests {
             spectral_denominator_v1: None,
             effective_dimensionality: None,
             distinguishability_loss: None,
+            esn_leak: None,
+            esn_leak_override_v1: None,
             structural_entropy: None,
             resonance_density_v1: None,
             pressure_source_v1: None,

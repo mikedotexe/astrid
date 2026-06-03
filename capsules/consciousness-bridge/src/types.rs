@@ -12,6 +12,10 @@ use std::{collections::BTreeMap, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+use crate::lambda_edge::LambdaEdgePerceptionV1;
+use crate::lambda_tail::LambdaTailTelemetryV1;
+use crate::sticky_mode::StickyModeAuditV1;
+
 pub use crate::spectral_schema::{
     EigenvectorFieldV1, SemanticEnergyV1, SpectralDenominatorV1, SpectralFingerprintV1,
     TransitionEventV1,
@@ -207,6 +211,13 @@ pub struct SpectralTelemetry {
     /// 0=open distributed fabric, 1=collapsed into the fewest active modes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub distinguishability_loss: Option<f32>,
+    /// Current effective ESN leak exported by Minime. Adaptive unless a gated
+    /// direct leak microdose override is active.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub esn_leak: Option<f32>,
+    /// Active direct leak override status, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub esn_leak_override_v1: Option<serde_json::Value>,
     /// Structural diversity of the live eigenvector/coupling geometry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub structural_entropy: Option<f32>,
@@ -706,6 +717,16 @@ pub enum SensoryMsg {
         /// Runtime PI maximum step. Bold field: require an attractor intent at MCP entry.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pi_max_step: Option<f32>,
+        /// Runtime PI integrator leak. Bold field: require an attractor intent at MCP entry.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pi_integrator_leak: Option<f32>,
+        /// Gated one-shot direct ESN leak override. Authority-gate execution only.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        esn_leak_override: Option<f32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        esn_leak_override_ticks: Option<u32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        esn_leak_authority_request_id: Option<String>,
     },
 }
 
@@ -748,6 +769,15 @@ pub struct BridgeStatus {
     /// Latest Pull-Oriented Map, if telemetry has arrived.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pull_topology: Option<PullTopologyProfile>,
+    /// Latest lambda-tail state classifier output, if telemetry has arrived.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lambda_tail: Option<LambdaTailTelemetryV1>,
+    /// Latest read-only lambda-edge perception output, if telemetry has arrived.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lambda_edge_perception: Option<LambdaEdgePerceptionV1>,
+    /// Latest sticky-mode audit, if telemetry has arrived.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sticky_mode_audit: Option<StickyModeAuditV1>,
     /// Latest safety decision explanation, if telemetry has arrived.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub safety_decision: Option<SafetyDecisionTrace>,
@@ -1100,6 +1130,8 @@ pub struct AttractorControlEnvelope {
     pub pi_ki: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pi_max_step: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pi_integrator_leak: Option<f32>,
 }
 
 /// Human/being-authored intervention plan for an attractor intent.
@@ -1379,6 +1411,8 @@ pub struct ControlRequest {
     pub pi_ki: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pi_max_step: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pi_integrator_leak: Option<f32>,
     /// Required by MCP for bolder control fields so they are tied to a ledger intent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub attractor_intent_id: Option<String>,
@@ -1395,6 +1429,7 @@ impl ControlRequest {
             || self.pi_kp.is_some()
             || self.pi_ki.is_some()
             || self.pi_max_step.is_some()
+            || self.pi_integrator_leak.is_some()
     }
 
     /// Convert to a `SensoryMsg::Control` for forwarding to minime.
@@ -1427,6 +1462,10 @@ impl ControlRequest {
             pi_kp: self.pi_kp,
             pi_ki: self.pi_ki,
             pi_max_step: self.pi_max_step,
+            pi_integrator_leak: self.pi_integrator_leak,
+            esn_leak_override: None,
+            esn_leak_override_ticks: None,
+            esn_leak_authority_request_id: None,
         }
     }
 }
@@ -1997,6 +2036,8 @@ mod tests {
             spectral_denominator_v1: None,
             effective_dimensionality: None,
             distinguishability_loss: None,
+            esn_leak: None,
+            esn_leak_override_v1: None,
             structural_entropy: None,
             resonance_density_v1: None,
             pressure_source_v1: None,
@@ -2174,6 +2215,10 @@ mod tests {
             pi_kp: None,
             pi_ki: None,
             pi_max_step: None,
+            pi_integrator_leak: None,
+            esn_leak_override: None,
+            esn_leak_override_ticks: None,
+            esn_leak_authority_request_id: None,
         };
         let json = serde_json::to_string(&msg).unwrap();
         assert!(json.contains(r#""kind":"control""#));
@@ -2249,6 +2294,7 @@ mod tests {
             pi_kp: None,
             pi_ki: None,
             pi_max_step: None,
+            pi_integrator_leak: None,
             attractor_intent_id: None,
         };
         let msg = req.to_sensory_msg();
@@ -2286,6 +2332,7 @@ mod tests {
             pi_kp: Some(0.12),
             pi_ki: None,
             pi_max_step: Some(0.02),
+            pi_integrator_leak: None,
             attractor_intent_id: Some("intent-1".to_string()),
         };
         assert!(req.uses_bold_attractor_fields());

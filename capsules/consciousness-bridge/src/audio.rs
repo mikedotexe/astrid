@@ -104,24 +104,24 @@ pub fn compose_from_spectral_state_details(
             let harmonic_freq = freq * h as f32;
             let harmonic_amp = amp / h as f32;
 
-            for s in 0..n_samples {
+            for (s, sample) in output.iter_mut().enumerate().take(n_samples) {
                 let t = s as f32 / SAMPLE_RATE as f32;
                 let tone = (2.0 * PI * harmonic_freq * t).sin() * harmonic_amp;
-                output[s] += tone;
+                *sample += tone;
             }
         }
     }
 
     // Apply rhythm modulation
-    for s in 0..n_samples {
+    for (s, sample) in output.iter_mut().enumerate().take(n_samples) {
         let t = s as f32 / SAMPLE_RATE as f32;
         let rhythm = 1.0 - rhythm_depth * (1.0 + (2.0 * PI * rhythm_rate * t).sin()) / 2.0;
-        output[s] *= rhythm;
+        *sample *= rhythm;
     }
 
     // Apply envelope
-    for s in 0..n_samples.min(attack) {
-        output[s] *= s as f32 / attack as f32;
+    for (s, sample) in output.iter_mut().enumerate().take(n_samples.min(attack)) {
+        *sample *= s as f32 / attack as f32;
     }
     for s in 0..n_samples.min(release) {
         let idx = n_samples - 1 - s;

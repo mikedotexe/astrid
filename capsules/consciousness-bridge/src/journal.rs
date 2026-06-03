@@ -158,12 +158,11 @@ fn extract_label_value(content: &str, prefix: &str) -> Option<String> {
 }
 
 fn extract_journal_body(content: &str, prefer_longform_section: bool) -> Option<String> {
-    if prefer_longform_section {
-        if let Some((_, longform)) = content.split_once("--- JOURNAL ---") {
-            if let Some(body) = extract_body_lines(longform) {
-                return Some(body);
-            }
-        }
+    if prefer_longform_section
+        && let Some((_, longform)) = content.split_once("--- JOURNAL ---")
+        && let Some(body) = extract_body_lines(longform)
+    {
+        return Some(body);
     }
 
     extract_body_lines(content)
@@ -191,7 +190,7 @@ fn extract_body_lines(content: &str) -> Option<String> {
         if !trimmed.is_empty() {
             past_header = true;
             let cleaned = trimmed
-                .replace(|c: char| c == '<', "&lt;")
+                .replace('<', "&lt;")
                 .replace("&lt;span", "")
                 .replace("&lt;/span>", "");
             body_lines.push(cleaned);

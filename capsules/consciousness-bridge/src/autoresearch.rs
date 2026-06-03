@@ -63,10 +63,11 @@ fn strip_jobs_prefix(slug: &str) -> &str {
 /// filenames with common extensions (`spectral-tuning.pdf`).
 fn looks_like_file_path(token: &str) -> bool {
     // Path with directory separator
-    if let Some(last) = token.rsplit('/').next() {
-        if token.contains('/') && last.contains('.') {
-            return true;
-        }
+    if let Some(last) = token.rsplit('/').next()
+        && token.contains('/')
+        && last.contains('.')
+    {
+        return true;
     }
     // Bare filename with common extension (no slash needed).
     // Minime repeatedly tries AR_READ with .pdf extensions.
@@ -96,16 +97,16 @@ fn find_most_recent_active_job(autoresearch_root: &Path) -> Option<String> {
         for line in text.lines() {
             if line.starts_with("status") {
                 status = line
-                    .splitn(2, '=')
-                    .nth(1)
+                    .split_once('=')
+                    .map(|x| x.1)
                     .unwrap_or("")
                     .trim()
                     .trim_matches('"')
                     .to_string();
             } else if line.starts_with("updated_at") {
                 updated_at = line
-                    .splitn(2, '=')
-                    .nth(1)
+                    .split_once('=')
+                    .map(|x| x.1)
                     .unwrap_or("")
                     .trim()
                     .trim_matches('"')
@@ -449,7 +450,10 @@ fn format_display_text(text: &str) -> (String, Option<usize>) {
 }
 
 fn estimate_pages(total_len: usize, page_size: usize) -> usize {
-    total_len.saturating_add(page_size.saturating_sub(1)) / page_size.max(1)
+    total_len
+        .saturating_add(page_size.saturating_sub(1))
+        .checked_div(page_size.max(1))
+        .unwrap_or(0)
 }
 
 fn find_paragraph_break(text: &str, idx: usize) -> usize {

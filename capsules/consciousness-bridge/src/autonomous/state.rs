@@ -1558,7 +1558,7 @@ impl ConversationState {
                         && *c2 >= pair_min
                     {
                         let loop_includes_research =
-                            is_research_like_action(*a1) && is_research_like_action(*a2);
+                            is_research_like_action(a1) && is_research_like_action(a2);
                         info!(
                             "pair-oscillation detected: {} ({}/{}) + {} ({}/{}) = {}/{}",
                             a1, c1, window, a2, c2, window, combined, window
@@ -1590,8 +1590,8 @@ impl ConversationState {
                         return NextChoiceFeedback::hinted(hint);
                     }
                     if new_ground_budget > 0
-                        && is_research_like_action(*a1)
-                        && is_research_like_action(*a2)
+                        && is_research_like_action(a1)
+                        && is_research_like_action(a2)
                     {
                         return NextChoiceFeedback::progress_hinted(
                             format!(

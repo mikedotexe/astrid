@@ -152,19 +152,11 @@ pub(super) fn canonicalize_introspect_target_label(text: &str) -> String {
 
     loop {
         let trimmed = cleaned.trim();
-        let unwrapped = if trimmed.starts_with('[') && trimmed.ends_with(']') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else if trimmed.starts_with('(') && trimmed.ends_with(')') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else if trimmed.starts_with('`') && trimmed.ends_with('`') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else if trimmed.starts_with('"') && trimmed.ends_with('"') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else if trimmed.starts_with('\'') && trimmed.ends_with('\'') && trimmed.len() > 2 {
-            &trimmed[1..trimmed.len() - 1]
-        } else {
-            trimmed
-        };
+        let unwrapped = [('[', ']'), ('(', ')'), ('`', '`'), ('"', '"'), ('\'', '\'')]
+            .iter()
+            .find_map(|(open, close)| trimmed.strip_prefix(*open)?.strip_suffix(*close))
+            .filter(|inner| !inner.is_empty())
+            .unwrap_or(trimmed);
         if unwrapped == cleaned {
             break;
         }
@@ -470,13 +462,13 @@ fn validate_introspect_path_with_roots(path: &Path, roots: &[PathBuf]) -> Result
 fn candidate_relative_variants(candidate: &str, paths: &BridgePaths) -> Vec<PathBuf> {
     let normalized = candidate.replace('\\', "/");
     let stripped_workspace = normalized.strip_prefix("workspace/").unwrap_or(&normalized);
-    let mut variants = Vec::new();
-
-    variants.push(paths.bridge_root().join(&normalized));
-    variants.push(paths.astrid_root().join(&normalized));
-    variants.push(paths.minime_root().join(&normalized));
-    variants.push(paths.bridge_workspace().join(stripped_workspace));
-    variants.push(paths.minime_workspace().join(stripped_workspace));
+    let mut variants = vec![
+        paths.bridge_root().join(&normalized),
+        paths.astrid_root().join(&normalized),
+        paths.minime_root().join(&normalized),
+        paths.bridge_workspace().join(stripped_workspace),
+        paths.minime_workspace().join(stripped_workspace),
+    ];
 
     if let Some(rest) = normalized.strip_prefix("src/") {
         variants.push(paths.bridge_root().join("src").join(rest));

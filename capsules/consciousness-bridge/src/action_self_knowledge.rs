@@ -765,6 +765,34 @@ fn capability_specs() -> Vec<Value> {
             &["action_continuity::tests"],
         ),
         spec(
+            "SHARED_INVESTIGATION_START",
+            &[],
+            "experiment_continuity",
+            "creates a neutral shared investigation sidecar without granting peer or live-control authority",
+            &["action_continuity::tests"],
+        ),
+        spec(
+            "SHARED_INVESTIGATION_STATUS",
+            &[],
+            "experiment_continuity",
+            "renders shared investigation state and the local authority boundary",
+            &["action_continuity::tests"],
+        ),
+        spec(
+            "SHARED_INVESTIGATION_CLAIM",
+            &[],
+            "experiment_continuity",
+            "appends a shared claim without mutating lifecycle or peer experiments",
+            &["action_continuity::tests"],
+        ),
+        spec(
+            "SHARED_INVESTIGATION_DECIDE",
+            &[],
+            "experiment_continuity",
+            "records pause/hold/charter-repair in the shared ledger and updates only the local linked experiment",
+            &["action_continuity::tests"],
+        ),
+        spec(
             "REPAIR_STATUS",
             &[],
             "action_continuity",
@@ -983,6 +1011,10 @@ fn stage_for_base(base: &str) -> &'static str {
         | "EXPERIMENT_RESUME"
         | "EXPERIMENT_COMPARE"
         | "EXPERIMENT_ALT_PATHS"
+        | "SHARED_INVESTIGATION_START"
+        | "SHARED_INVESTIGATION_STATUS"
+        | "SHARED_INVESTIGATION_CLAIM"
+        | "SHARED_INVESTIGATION_DECIDE"
         | "ACTION_PREFLIGHT"
         | "NEXT_PROBE"
         | "PREFLIGHT"
@@ -1112,7 +1144,7 @@ fn read_experiment_rows(root: &Path, thread_id: &str) -> Vec<(usize, Value)> {
         .filter_map(|(idx, line)| {
             serde_json::from_str::<Value>(line)
                 .ok()
-                .map(|row| (idx + 1, row))
+                .map(|row| (idx.saturating_add(1), row))
         })
         .collect()
 }
@@ -1197,8 +1229,7 @@ fn strip_action_arg(original: &str) -> String {
 }
 
 fn base_action(text: &str) -> String {
-    text.trim()
-        .split_whitespace()
+    text.split_whitespace()
         .next()
         .unwrap_or_default()
         .trim_end_matches(':')

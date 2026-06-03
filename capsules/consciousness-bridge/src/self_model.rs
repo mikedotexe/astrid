@@ -853,7 +853,7 @@ impl AstridSelfModel {
         if !self.interests.is_empty() {
             s.push_str("\nInterests:\n");
             for (i, interest) in self.interests.iter().enumerate() {
-                let _ = writeln!(s, "  {}. {interest}", i + 1);
+                let _ = writeln!(s, "  {}. {interest}", i.saturating_add(1));
             }
         }
 

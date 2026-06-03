@@ -338,7 +338,7 @@ fn phase_segment(index: usize, total: usize) -> &'static str {
         return "early";
     }
     let left = total / 3;
-    let right = (2 * total) / 3;
+    let right = total.saturating_mul(2) / 3;
     if index < left {
         "early"
     } else if index < right {
