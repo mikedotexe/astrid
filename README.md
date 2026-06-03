@@ -85,7 +85,7 @@ This is real code. [`SecurityInterceptor`](crates/astrid-approval/src/intercepto
 
 ## Two sandboxes
 
-**WASM sandbox.** Capsules run in WebAssembly via Extism/Wasmtime. No syscalls, no file descriptors, no host memory access. Every external resource (filesystem, network, IPC, KV storage) is gated behind a capability-checked host function. The host ABI exposes 49 functions across filesystem, IPC, storage, network, identity, lifecycle, process management, approval, hooks, and clock subsystems. Hard limits: 64 MB memory ceiling, 5-minute wall-clock timeout, BLAKE3 hash verification on capsule binaries (no hash or wrong hash means no load).
+**WASM sandbox.** Capsules run in WebAssembly via Wasmtime's Component Model. No syscalls, no file descriptors, no host memory access. Every external resource (filesystem, network, IPC, KV storage) is gated behind a capability-checked host function. The host ABI exposes 49 functions across filesystem, IPC, storage, network, identity, lifecycle, process management, approval, hooks, and clock subsystems. Hard limits: 64 MB memory ceiling, 5-minute wall-clock timeout, BLAKE3 hash verification on capsule binaries (no hash or wrong hash means no load).
 
 **VFS overlay.** The agent operates against a copy-on-write filesystem. The workspace is the read-only lower layer. Writes go into an ephemeral upper layer backed by a temp directory. Session ends: commit the diff to the workspace, or drop the temp directory to discard. Path traversal (`../../etc/passwd`) is rejected at the VFS layer before reaching the host filesystem. File handles use capability-based `DirHandle`/`FileHandle` types.
 
@@ -156,7 +156,7 @@ Capsules can register interceptors on IPC topics — eBPF-style middleware that 
 **Prerequisites:** Rust 1.94+. An LLM provider (e.g. Anthropic API key) is needed for the default distro but not for the kernel itself.
 
 ```bash
-# Install from crates.io (installs both astrid and astrid-daemon binaries)
+# Install from crates.io (installs astrid, astrid-daemon, and astrid-build)
 cargo install astrid
 
 # Initialize — fetches the default distro, installs capsules, sets up PATH
@@ -168,7 +168,7 @@ ANTHROPIC_API_KEY=sk-... astrid chat
 # Or build from source
 git clone https://github.com/unicity-astrid/astrid.git
 cd astrid
-cargo build --release
+cargo build -p astrid --release
 ./target/release/astrid init
 ```
 
@@ -195,7 +195,8 @@ astrid -p "fix all failing tests" --yes
 
 ```bash
 astrid start     # Start a persistent daemon (survives terminal close)
-astrid status    # Show PID, uptime, connected clients, loaded capsules
+astrid status    # Show PID, uptime, clients, capsules, and runtime health
+astrid --format json status  # Machine-readable status for health checks
 astrid stop      # Graceful shutdown
 astrid self-update  # Download the latest release binary to ~/.astrid/bin/
 ```
@@ -320,11 +321,11 @@ Astrid follows a strict kernel/user-space divide. The kernel (native Rust daemon
 
 ### Binaries
 
-| Binary | Crate | Role |
+| Binary | Release package | Role |
 |---|---|---|
-| `astrid` | `astrid-cli` | Terminal frontend. Connects to daemon over Unix socket. TUI rendering, headless/scripting mode, capsule management, distro init, daemon lifecycle commands. |
-| `astrid-daemon` | `astrid-daemon` | Background kernel process. Boots the kernel, loads capsules, serves IPC requests. `--ephemeral` flag for CLI-spawned instances. |
-| `astrid-build` | `astrid-build` | Capsule compiler and packager. Handles Rust, OpenClaw (JS/TS), and legacy MCP projects. Invoked by CLI as a companion binary. |
+| `astrid` | `astrid` | Terminal frontend. Connects to daemon over Unix socket. TUI rendering, headless/scripting mode, capsule management, distro init, daemon lifecycle commands. |
+| `astrid-daemon` | `astrid` | Background kernel process. Boots the kernel, loads capsules, serves IPC requests. `--ephemeral` flag for CLI-spawned instances. |
+| `astrid-build` | `astrid` | Capsule compiler and packager. Handles Rust, OpenClaw (JS/TS), and legacy MCP projects. Invoked by CLI as a companion binary. |
 
 ### Infrastructure crates
 
@@ -353,7 +354,7 @@ The major changes in this release:
 - **Tools are a pure IPC convention** — the kernel no longer parses or manages tool schemas. Tool capsules use IPC interceptors. The router capsule handles discovery and dispatch.
 - **LLM providers are a pure IPC convention** — `[[llm_provider]]` and `LlmProviderDef` removed from the manifest. LLM capsules self-describe via interceptors.
 - **`[imports]`/`[exports]` manifest format** — replaces the old string-array `[dependencies]` with namespaced TOML tables, semver version requirements, optional imports, and namespace/interface name validation.
-- **`astrid self-update`** — downloads platform-specific binaries from GitHub releases to `~/.astrid/bin/`, no sudo required. Startup update banner (cached 24h).
+- **`astrid self-update`** — downloads platform-specific binaries from GitHub releases to `~/.astrid/bin/`, no sudo required. Startup update banner (cached 24h) stays off status/JSON/script health surfaces.
 - **`astrid init` distro system** — fetches `Distro.toml`, multi-select provider groups, `{{ var }}` template resolution, atomic `Distro.lock` writes with BLAKE3 hashes.
 - **Export conflict detection** — `astrid capsule install` detects when a new capsule exports interfaces already provided by an installed capsule and prompts to replace.
 - **Interceptor priority** — `priority` field on `[[interceptor]]` enables layered interception chains.
@@ -383,7 +384,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete list of changes, fixes, and br
 - Layered configuration with workspace-level security tightening
 - `astrid self-update` downloading from GitHub releases
 
-**Not yet done:** Multi-node SurrealDB (TiKV/Raft). WASM Component Model migration (Extism to WIT bindings). Additional frontends beyond CLI. Capsule registry for distribution.
+**Not yet done:** Multi-node SurrealDB (TiKV/Raft). Rebuilding any remaining third-party/distributed capsules against the Component Model ABI. Additional frontends beyond CLI. Capsule registry for distribution.
 
 ## Development
 

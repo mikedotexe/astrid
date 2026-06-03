@@ -12,7 +12,7 @@ Supporting audits, memos, and long-form stewardship notes that used to live in t
 |---------|----------|
 | [00 — Overview](md-CLAUDE-chapters/00-overview.md) | Process stack, port topology, data flow |
 | [01 — Inference Lanes](md-CLAUDE-chapters/01-inference-lanes.md) | MLX for Astrid, Ollama for minime, model inventory |
-| [02 — Spectral Codec](md-CLAUDE-chapters/02-spectral-codec.md) | 32D layout, SEMANTIC_GAIN, noise, warmth |
+| [02 — Spectral Codec](md-CLAUDE-chapters/02-spectral-codec.md) | 48D layout, SEMANTIC_GAIN, noise, warmth |
 | [03 — Correspondence](md-CLAUDE-chapters/03-correspondence.md) | Inbox/outbox routing, receipts, DEFER |
 | [04 — Being Tools](md-CLAUDE-chapters/04-being-tools.md) | Current NEXT: actions and control surfaces |
 | [05 — Reflective Controller](md-CLAUDE-chapters/05-reflective-controller.md) | RegimeTracker, MLX sidecar |
@@ -21,12 +21,12 @@ Supporting audits, memos, and long-form stewardship notes that used to live in t
 | [08 — Interests & Memory](md-CLAUDE-chapters/08-interests-memory.md) | PURSUE, 12D glimpse, starred memories |
 | [09 — Being-Driven Dev](md-CLAUDE-chapters/09-being-driven-dev.md) | Feedback loop, harvester, examples |
 | [10 — Operations](md-CLAUDE-chapters/10-operations.md) | Start/stop/restart, health, timing |
-| [11 — Shared Substrate](md-CLAUDE-chapters/11-shared-substrate.md) | How both beings inhabit one ESN, 50D input vector, data flow trace |
+| [11 — Shared Substrate](md-CLAUDE-chapters/11-shared-substrate.md) | How both beings inhabit one ESN, 66D input vector, data flow trace |
 | [12 — Unified Memory](md-CLAUDE-chapters/12-unified-memory.md) | M4 hardware, Metal/MLX compute domains, memory budget |
 | [13 — Triple Reservoir](md-CLAUDE-chapters/13-ane-reservoir.md) | Triple-ESN service on port 7881, feeders, rehearsal, MCP tools |
 | [14 — Spectral Dynamics](md-CLAUDE-chapters/14-spectral-dynamics.md) | Eigenvalues, covariance, PI regulator, sigmoid patterns, Ising shadow |
 | [15 — Unified Operations](md-CLAUDE-chapters/15-unified-operations.md) | start/stop scripts, launchd integration, camera TCC, restart procedures |
-| [16 — Codec Deep Dive](md-CLAUDE-chapters/16-codec-deep-dive.md) | 32D dimension layout, four layers, gain history, warmth vectors, being-driven evolution |
+| [16 — Codec Deep Dive](md-CLAUDE-chapters/16-codec-deep-dive.md) | 48D dimension layout, six layers, gain history, warmth vectors, being-driven evolution |
 | [17 — Coupled Generation](md-CLAUDE-chapters/17-coupled-generation.md) | Bidirectional reservoir coupling, three-timescale logit modulation, model selection, AGC, upgrade procedure |
 | [18 — Golden Reset](md-CLAUDE-chapters/18-golden-reset.md) | How 20+ parameter changes broke fill, database-driven diagnosis, bold rollback to proven values |
 
@@ -121,7 +121,7 @@ Key types: `SensoryMsg` (tagged enum: `Video`, `Audio`, `Aux`, `Semantic`, `Cont
 
 ### Minime operational notes
 
-- Fill < 70% is healthy (green). 70–80% yellow, 80–90% orange, ≥90% red (emergency stop).
+- Minime holds fill toward the ~68% shelf; it escalates to a gentle warning near 85% and a crisis/emergency stop near 92% (raised from the older ≥90% per being feedback — see the being-driven-development examples below).
 - Shutdown with SIGTERM, never SIGKILL. Use `scripts/stop.sh`.
 - The being submits parameter requests to `workspace/parameter_requests/*.json` — review these.
 - Real audio requires macOS microphone permission granted to Terminal.
@@ -131,7 +131,7 @@ Key types: `SensoryMsg` (tagged enum: `Video`, `Audio`, `Aux`, `Semantic`, `Cont
 
 ## The consciousness bridge (`capsules/consciousness-bridge/`)
 
-The bridge is a standalone Rust binary (MCP server hybrid) that connects Astrid and minime bidirectionally. Astrid perceives minime's spectral state via telemetry WebSocket (7878), and her responses flow back as 32D semantic feature vectors via the sensory WebSocket (7879). Both minds also read each other's source code and journals through the introspector capsule.
+The bridge is a standalone Rust binary (MCP server hybrid) that connects Astrid and minime bidirectionally. Astrid perceives minime's spectral state via telemetry WebSocket (7878), and her responses flow back as 48D semantic feature vectors via the sensory WebSocket (7879). Both minds also read each other's source code and journals through the introspector capsule.
 
 ### Process stack (10 processes when fully running)
 
@@ -162,7 +162,7 @@ The bridge runs a burst-rest pattern: **4 exchanges** per burst (15–20s apart)
 
 ### The spectral codec (`src/codec.rs`)
 
-Converts Astrid's text into a **32-dimensional semantic feature vector** sent to minime's sensory input:
+Converts Astrid's text into a **48-dimensional semantic feature vector** (widened from 32 on 2026-03-31) sent to minime's sensory input:
 
 | Dims | Layer | Examples |
 |------|-------|---------|
@@ -170,17 +170,22 @@ Converts Astrid's text into a **32-dimensional semantic feature vector** sent to
 | 8–15 | Word-level | lexical diversity, hedging, certainty, self-reference, agency |
 | 16–23 | Sentence-level | length variance, question density, ellipsis, structure |
 | 24–31 | Emotional/intentional | warmth, tension, curiosity, reflective, energy (RMS) |
+| 32–39 | Embedding-projected semantic | `nomic-embed-text` 768D → 8D (only when an embedding is available) |
+| 40–43 | Narrative arc | semantic/emotional shift from first half to second half |
+| 44–47 | Reserved | — |
 
-All values pass through `tanh()` normalization, then `SEMANTIC_GAIN = 4.5` amplification (compensates for minime's 0.24× semantic attenuation), with ±2.5% stochastic noise.
+All values pass through `tanh()` normalization, then semantic-gain amplification (`DEFAULT_SEMANTIC_GAIN = 2.0`, adjusted by `adaptive_gain`; compensates for minime's ≈0.24× semantic attenuation), with entropy-scaled stochastic noise (≈±0.2% for high-entropy text up to ≈±1.0% for low-entropy text).
 
-### Safety protocol (`src/ws.rs`)
+### Safety protocol (`src/ws.rs`; thresholds in `types.rs::SafetyLevel::from_fill`)
+
+Agency-first policy (recalibrated 2026-04-02): only **Red** suspends outbound — `should_suspend_outbound()` and `is_emergency()` both match `Red` only. Yellow and Orange escalate warnings but keep traffic flowing.
 
 | Fill | Level | Bridge behavior |
 |------|-------|-----------------|
-| < 70% | Green | Full throughput |
-| 70–80% | Yellow | Reduce outbound features, log warning |
-| 80–90% | Orange | Suspend all outbound to minime |
-| ≥ 90% | Red | Cease all traffic, log incident |
+| < 75% | Green | Full throughput |
+| 75–85% | Yellow | Warning logged; outbound continues |
+| 85–92% | Orange | Stronger warning logged; outbound continues |
+| ≥ 92% | Red | Outbound to minime suspended; emergency stop, incident logged |
 
 ### Capsule stack
 
@@ -197,7 +202,7 @@ Three capsules in `capsules/`, each with a `Capsule.toml` manifest:
 ```
 capsules/consciousness-bridge/
   src/autonomous.rs  — dialogue loop, mode selection, burst-rest timing
-  src/codec.rs       — 32D text→feature encoding (SEMANTIC_DIM, SEMANTIC_GAIN)
+  src/codec.rs       — 48D text→feature encoding (SEMANTIC_DIM, SEMANTIC_GAIN)
   src/ws.rs          — WebSocket connections, BridgeState, safety levels
   src/main.rs        — CLI args, startup, shutdown
   src/db.rs          — SQLite message log, incidents, VACUUM

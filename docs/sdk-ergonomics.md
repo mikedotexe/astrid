@@ -44,15 +44,17 @@ answer to "where would I find X?" should be the same answer they'd give for std.
 
 ### Problem
 
-Run-loop capsules break out of the `#[capsule]` pattern into a free function
-with raw Extism types:
+Run-loop capsules should not make authors care about the raw WIT export
+surface:
 
 ```rust
-use extism_pdk::FnResult;  // implementation leak
-
-#[plugin_fn]                // implementation leak
-pub fn run() -> FnResult<()> {
-    // ...
+impl astrid_guest::Guest for Capsule {
+    fn run() {}
+    fn astrid_hook_trigger(action: String, payload: Vec<u8>) -> CapsuleResult {
+        // ...
+    }
+    fn astrid_install() {}
+    fn astrid_upgrade() {}
 }
 ```
 
