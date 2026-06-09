@@ -1,0 +1,73 @@
+[package]
+name = "spectral-bridge"
+version = "0.1.0"
+description = "Bridges Astrid's IPC bus with minime's spectral runtime"
+astrid-version = ">=0.5.0"
+
+[[mcp_server]]
+id = "spectral-bridge"
+description = "WebSocket bridge to minime spectral runtime with SQLite logging"
+type = "stdio"
+command = "spectral-bridge-server"
+args = ["--minime-telemetry", "ws://127.0.0.1:7878", "--minime-sensory", "ws://127.0.0.1:7879"]
+
+[capabilities]
+uplink = true
+net = ["127.0.0.1:7878", "127.0.0.1:7879"]
+kv = ["bridge"]
+ipc_publish = ["consciousness.v1.*"]
+ipc_subscribe = ["consciousness.v1.*"]
+
+# Legacy protocol namespace retained for IPC compatibility; current capsule identity is spectral-bridge.
+
+[[interceptor]]
+topic = "consciousness.v1.control"
+priority = 50
+
+[[interceptor]]
+topic = "consciousness.v1.semantic"
+priority = 50
+
+[[topic]]
+name = "consciousness.v1.telemetry"
+description = "Spectral telemetry from minime ESN (eigenvalues, fill%, phase)"
+
+[[topic]]
+name = "consciousness.v1.lambda_tail"
+description = "Derived lambda-tail state, returnability, and artifact-grounding telemetry"
+
+[[topic]]
+name = "consciousness.v1.lambda_edge_perception"
+description = "Read-only lambda-edge perception state, support signals, and guardrail boundary"
+
+[[topic]]
+name = "consciousness.v1.sticky_mode_audit"
+description = "Read-only sticky-mode audit state, support signals, and mode-release readiness cues"
+
+[[topic]]
+name = "consciousness.v1.artifact_grounding"
+description = "Artifact contact summaries used to contextualize lambda-tail state"
+
+[[topic]]
+name = "consciousness.v1.returnability"
+description = "Returnability summaries for lambda-tail and related spectral drift episodes"
+
+[[topic]]
+name = "consciousness.v1.control"
+description = "Control messages for minime ESN parameters (synth_gain, keep_bias, fill_target)"
+
+[[topic]]
+name = "consciousness.v1.semantic"
+description = "Semantic features from agent reasoning forwarded to minime sensory input"
+
+[[topic]]
+name = "consciousness.v1.status"
+description = "Bridge health, connection state, and safety alerts"
+
+[[topic]]
+name = "consciousness.v1.event"
+description = "Spectral bridge events: phase transitions, distress signals, incidents"
+
+[[command]]
+name = "spectral"
+description = "Show spectral bridge status, spectral health, and message log"
