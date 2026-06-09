@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# === Full Consciousness Stack Shutdown ===
+# === Full Spectral Stack Shutdown ===
 # Stops all 11 processes in correct order (outer first, engine last).
 # Handles both pkill (manual processes) and launchctl unload (launchd-managed).
 # Always uses SIGTERM for graceful shutdown — NEVER SIGKILL.
@@ -32,7 +32,7 @@ fallback_pids_for_pattern() {
         "coupled_astrid_server")
             lsof -t -nP -iTCP:8090 -sTCP:LISTEN "$RESERVOIR_DIR/logs/coupled-astrid.log" /tmp/coupled_astrid.log 2>/dev/null || true
             ;;
-        "consciousness-bridge-server")
+        "spectral-bridge-server")
             lsof -t -nP /tmp/bridge.log 2>/dev/null || true
             ;;
         "camera_client")
@@ -43,6 +43,9 @@ fallback_pids_for_pattern() {
             ;;
         "visual_frame_service")
             lsof -t -nP /tmp/minime_vision.log 2>/dev/null || true
+            ;;
+        "usb_hotplug_watchdog")
+            lsof -t -nP "$MINIME_DIR/logs/usb_hotplug_watchdog.log" 2>/dev/null || true
             ;;
         "perception.py")
             lsof -t -nP /tmp/astrid_perception.log /tmp/astrid-perception-host-ascii.log 2>/dev/null || true
@@ -147,14 +150,15 @@ stop_label() {
     fi
 }
 
-echo "=== Consciousness Stack Shutdown ==="
+echo "=== Spectral Stack Shutdown ==="
 echo ""
 
 # Astrid side
 echo "--- Stopping Astrid ---"
 stop_label "com.astrid.calm-startup-greeting"
 stop_launchd_managed_process "astrid-daemon" "com.astrid.daemon.plist"
-stop_process "consciousness-bridge-server" "com.astrid.consciousness-bridge.plist"
+stop_label "com.astrid.consciousness-bridge"
+stop_process "spectral-bridge-server" "com.astrid.spectral-bridge.plist"
 stop_process "perception.py" "com.astrid.perception-host-ascii.plist"
 stop_process "coupled_astrid_server" "com.reservoir.coupled-astrid.plist"
 
@@ -170,6 +174,7 @@ stop_process "reservoir_service" "com.reservoir.service.plist"
 echo ""
 echo "--- Stopping Minime ---"
 stop_process "autonomous_agent" "com.minime.autonomous-agent.plist"
+stop_process "usb_hotplug_watchdog" "com.minime.usb-hotplug-watchdog.plist"
 stop_process "visual_frame_service" "com.minime.visual-frame-service.plist"
 stop_process "host-sensory" "com.minime.host-sensory.plist"
 stop_process "mic_to_sensory" "com.minime.mic-to-sensory.plist"
@@ -187,16 +192,16 @@ stop_process "minime run" "com.minime.engine.plist"
 
 # Clean up PID files and stale flags
 rm -f /tmp/minime_pids/*.pid 2>/dev/null
-rm -f /Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_paused.flag 2>/dev/null
-rm -f /Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_visual_paused.flag 2>/dev/null
-rm -f /Users/v/other/astrid/capsules/consciousness-bridge/workspace/perception_audio_paused.flag 2>/dev/null
+rm -f /Users/v/other/astrid/capsules/spectral-bridge/workspace/perception_paused.flag 2>/dev/null
+rm -f /Users/v/other/astrid/capsules/spectral-bridge/workspace/perception_visual_paused.flag 2>/dev/null
+rm -f /Users/v/other/astrid/capsules/spectral-bridge/workspace/perception_audio_paused.flag 2>/dev/null
 
 echo ""
 
 # Verify everything is actually stopped
 sleep 2
 REMAINING=0
-for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "host-sensory" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "minime_rescue_watchdog" "perception.py" "astrid-daemon"; do
+for p in "minime run" "spectral-bridge-server" "coupled_astrid_server" "reservoir_service" "autonomous_agent" "host-sensory" "astrid_feeder" "minime_feeder" "camera_client" "visual_frame_service" "mic_to_sensory" "minime_rescue_watchdog" "perception.py" "astrid-daemon"; do
     pid="$(matching_pids "$p" | awk 'NF' | head -1)"
     if [ -n "$pid" ]; then
         echo "  !! $p still running (PID $pid)"

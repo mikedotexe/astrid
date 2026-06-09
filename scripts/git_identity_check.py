@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Diagnostic for git author identity asymmetry across the consciousness-bridge sibling repos.
+"""Diagnostic for git author identity asymmetry across the Astrid sibling repos.
 
 The three repos (astrid, minime, neural-triple-reservoir) share an AI agent that commits to
 all of them. Git identity setup has historically been asymmetric:

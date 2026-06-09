@@ -15,9 +15,9 @@ from pathlib import Path
 from typing import Any
 
 
-ASTRID_WORKSPACE = Path("/Users/v/other/astrid/capsules/consciousness-bridge/workspace")
+ASTRID_WORKSPACE = Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace")
 MINIME_WORKSPACE = Path("/Users/v/other/minime/workspace")
-ASTRID_SOURCE_ROOT = Path("/Users/v/other/astrid/capsules/consciousness-bridge/src")
+ASTRID_SOURCE_ROOT = Path("/Users/v/other/astrid/capsules/spectral-bridge/src")
 MINIME_SOURCE = Path("/Users/v/other/minime/autonomous_agent.py")
 MINIME_REPO = Path("/Users/v/other/minime")
 

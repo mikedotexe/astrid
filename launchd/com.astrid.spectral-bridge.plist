@@ -3,17 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.astrid.consciousness-bridge</string>
+	<string>com.astrid.spectral-bridge</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Users/v/other/astrid/capsules/consciousness-bridge/target/release/consciousness-bridge-server</string>
-		<string>--db-path</string>
-		<string>/Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db</string>
-		<string>--autonomous</string>
-		<string>--workspace-path</string>
-		<string>/Users/v/other/minime/workspace</string>
-		<string>--perception-path</string>
-		<string>/Users/v/other/astrid/capsules/perception/workspace/perceptions</string>
+		<string>/bin/bash</string>
+		<string>/Users/v/other/astrid/scripts/launchd_spectral_bridge.sh</string>
 	</array>
 	<key>EnvironmentVariables</key>
 	<dict>
@@ -21,7 +15,7 @@
 		<string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
 	</dict>
 	<key>WorkingDirectory</key>
-	<string>/Users/v/other/astrid/capsules/consciousness-bridge</string>
+	<string>/Users/v/other/astrid/capsules/spectral-bridge</string>
 	<key>KeepAlive</key>
 	<true/>
 	<key>RunAtLoad</key>

@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 
 
 LOCAL_TZ = ZoneInfo("America/Los_Angeles")
-TOOL = Path("/Users/v/other/astrid/capsules/consciousness-bridge/tools/being_action_canonicalization_scorecard.py")
+TOOL = Path("/Users/v/other/astrid/capsules/spectral-bridge/tools/being_action_canonicalization_scorecard.py")
 
 
 def parse_args() -> argparse.Namespace:

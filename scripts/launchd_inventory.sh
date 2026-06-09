@@ -33,7 +33,7 @@ prod_plists=(
     "$RESERVOIR_DIR/launchd/com.reservoir.astrid-feeder.plist"
     "$RESERVOIR_DIR/launchd/com.reservoir.minime-feeder.plist"
     "$ASTRID_DIR/launchd/com.astrid.daemon.plist"
-    "$ASTRID_DIR/launchd/com.astrid.consciousness-bridge.plist"
+    "$ASTRID_DIR/launchd/com.astrid.spectral-bridge.plist"
     "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist"
     "$ASTRID_DIR/launchd/com.astrid.calm-startup-greeting.plist"
 )
@@ -51,8 +51,12 @@ persistent_labels=(
     com.reservoir.astrid-feeder
     com.reservoir.minime-feeder
     com.astrid.daemon
-    com.astrid.consciousness-bridge
+    com.astrid.spectral-bridge
     com.astrid.perception-host-ascii
+)
+
+legacy_labels=(
+    com.astrid.consciousness-bridge
 )
 
 opt_in_plists=(
@@ -166,6 +170,21 @@ for src in "${opt_in_plists[@]}"; do
         state="$(label_state "$label")"
         pid="$(label_pid "$label")"
         warn "$label loaded for current session only; state=${state:-unknown} pid=${pid:-?}"
+    else
+        ok "$label not installed and not loaded"
+    fi
+done
+
+echo ""
+echo "--- Legacy renamed labels ---"
+for label in "${legacy_labels[@]}"; do
+    installed="$LAUNCH_AGENTS/$label.plist"
+    if [ -f "$installed" ]; then
+        fail "$label legacy plist still installed at $installed"
+    elif label_loaded "$label"; then
+        state="$(label_state "$label")"
+        pid="$(label_pid "$label")"
+        fail "$label legacy label still loaded; state=${state:-unknown} pid=${pid:-?}"
     else
         ok "$label not installed and not loaded"
     fi

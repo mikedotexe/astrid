@@ -37,12 +37,12 @@ ALLOWED_ROOTS = [
 # Journal locations for both minds.
 JOURNALS = {
     "minime": Path("/Users/v/other/minime/workspace/journal"),
-    "astrid": Path("/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal"),
+    "astrid": Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal"),
 }
 
 WORKSPACE = {
     "minime": Path("/Users/v/other/minime/workspace"),
-    "astrid": Path("/Users/v/other/astrid/capsules/consciousness-bridge/workspace"),
+    "astrid": Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace"),
 }
 
 

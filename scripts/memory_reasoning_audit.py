@@ -17,7 +17,7 @@ from typing import Any
 
 
 ASTRID_ROOT = Path("/Users/v/other/astrid")
-ASTRID_WORKSPACE = ASTRID_ROOT / "capsules/consciousness-bridge/workspace"
+ASTRID_WORKSPACE = ASTRID_ROOT / "capsules/spectral-bridge/workspace"
 ASTRID_JOURNAL = ASTRID_WORKSPACE / "journal"
 MINIME_ROOT = Path("/Users/v/other/minime")
 MINIME_WORKSPACE = MINIME_ROOT / "workspace"
@@ -33,7 +33,7 @@ MINIME_DB_CANDIDATES = (
     MINIME_ROOT / "minime/minime_consciousness.db",
 )
 SCRIPT_DIR = Path(__file__).resolve().parent
-BTSP_TOOL_DIR = ASTRID_ROOT / "capsules/consciousness-bridge/tools"
+BTSP_TOOL_DIR = ASTRID_ROOT / "capsules/spectral-bridge/tools"
 
 sys.path.insert(0, str(SCRIPT_DIR))
 sys.path.insert(0, str(BTSP_TOOL_DIR))

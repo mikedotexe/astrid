@@ -22,7 +22,7 @@ done
 
 ASTRID_DIR="/Users/v/other/astrid"
 MINIME_DIR="/Users/v/other/minime"
-BRIDGE_DIR="$ASTRID_DIR/capsules/consciousness-bridge"
+BRIDGE_DIR="$ASTRID_DIR/capsules/spectral-bridge"
 STAMP_DIR="$BRIDGE_DIR/workspace/runtime"
 STAMP_FILE="$STAMP_DIR/startup_greeting_boot_id"
 DOMAIN="gui/$(id -u)"
@@ -61,7 +61,7 @@ if [ "$ASTRID_ONLY" = false ]; then
 fi
 
 if [ "$MINIME_ONLY" = false ]; then
-    wait_for_label com.astrid.consciousness-bridge 180 || echo "Astrid bridge not ready before greeting timeout" >&2
+    wait_for_label com.astrid.spectral-bridge 180 || echo "Astrid bridge not ready before greeting timeout" >&2
 fi
 
 if [ "$ASTRID_ONLY" = false ]; then

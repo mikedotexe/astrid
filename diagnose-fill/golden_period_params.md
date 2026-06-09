@@ -65,7 +65,7 @@ cd /Users/v/other/astrid && git checkout c0543ed6
 
 # Build
 cd /Users/v/other/minime && cargo build --release
-cd /Users/v/other/astrid/capsules/consciousness-bridge && cargo build --release
+cd /Users/v/other/astrid/capsules/spectral-bridge && cargo build --release
 
 # Run with original target
 # Note: start_all.sh may not exist in this commit

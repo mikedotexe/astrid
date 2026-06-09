@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# === Launchd-canonical consciousness stack startup ===
+# === Launchd-canonical spectral stack startup ===
 # Repo-owned plists are the source of truth. This script syncs those plists
 # into ~/Library/LaunchAgents, bootstraps/kickstarts the expected labels, and
 # reports drift. It intentionally avoids nohup/direct background starts.
@@ -25,7 +25,7 @@ done
 
 ASTRID_DIR="/Users/v/other/astrid"
 MINIME_DIR="/Users/v/other/minime"
-BRIDGE_DIR="$ASTRID_DIR/capsules/consciousness-bridge"
+BRIDGE_DIR="$ASTRID_DIR/capsules/spectral-bridge"
 RESERVOIR_DIR="/Users/v/other/neural-triple-reservoir"
 LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
 DOMAIN="gui/$(id -u)"
@@ -50,6 +50,18 @@ label_loaded() {
 label_running() {
     local label="$1"
     launchctl print "$DOMAIN/$label" 2>/dev/null | grep -q "state = running"
+}
+
+wait_label_running() {
+    local label="$1"
+    local timeout="${2:-5}"
+    for _ in $(seq 1 "$timeout"); do
+        if label_running "$label"; then
+            return 0
+        fi
+        sleep 1
+    done
+    return 1
 }
 
 label_path() {
@@ -90,6 +102,19 @@ bootout_label() {
             sleep 1
         done
         warn "$label still appears loaded after bootout; continuing with caution"
+    fi
+}
+
+cleanup_legacy_launch_agent() {
+    local label="$1"
+    local installed="$LAUNCH_AGENTS/$label.plist"
+    if label_loaded "$label"; then
+        warn "$label is a legacy launchd label; booting it out before starting the renamed label"
+        bootout_label "$label"
+    fi
+    if [ -f "$installed" ]; then
+        rm -f "$installed"
+        ok "$label legacy plist removed from LaunchAgents"
     fi
 }
 
@@ -163,6 +188,17 @@ ensure_launchd_label() {
         ok "$description running ($label)"
     else
         kickstart_label "$label"
+        if wait_label_running "$label" 5; then
+            ok "$description running ($label)"
+            return 0
+        fi
+        warn "$label did not reach running after kickstart; reloading from installed plist"
+        bootout_label "$label"
+        bootstrap_label "$installed"
+        kickstart_label "$label"
+        if wait_label_running "$label" 5; then
+            ok "$description running ($label)"
+        fi
     fi
 }
 
@@ -221,7 +257,7 @@ check_duplicate_processes() {
     local duplicates=0
     for pattern in \
         "minime run" \
-        "consciousness-bridge-server" \
+        "spectral-bridge-server" \
         "reservoir_service" \
         "coupled_astrid_server" \
         "autonomous_agent" \
@@ -270,7 +306,7 @@ health_check_labels() {
     return 1
 }
 
-echo "=== Launchd Consciousness Stack Startup ==="
+echo "=== Launchd Spectral Stack Startup ==="
 echo "Domain: $DOMAIN"
 echo ""
 
@@ -298,6 +334,9 @@ if [ "$ASTRID_ONLY" = false ]; then
 
     ensure_launchd_label "$MINIME_DIR/launchd/com.minime.visual-frame-service.plist" "visual frame service"
     EXPECTED_LABELS+=("com.minime.visual-frame-service")
+
+    ensure_launchd_label "$MINIME_DIR/launchd/com.minime.usb-hotplug-watchdog.plist" "USB hotplug watchdog"
+    EXPECTED_LABELS+=("com.minime.usb-hotplug-watchdog")
 
     ensure_launchd_label "$MINIME_DIR/launchd/com.minime.autonomous-agent.plist" "autonomous agent"
     EXPECTED_LABELS+=("com.minime.autonomous-agent")
@@ -329,8 +368,9 @@ if [ "$MINIME_ONLY" = false ]; then
     wait_socket "$HOME/.astrid/run/system.sock" "Astrid daemon socket" 60
     EXPECTED_LABELS+=("com.astrid.daemon")
 
-    ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.consciousness-bridge.plist" "consciousness bridge"
-    EXPECTED_LABELS+=("com.astrid.consciousness-bridge")
+    cleanup_legacy_launch_agent "com.astrid.consciousness-bridge"
+    ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.spectral-bridge.plist" "Astrid-Minime spectral bridge"
+    EXPECTED_LABELS+=("com.astrid.spectral-bridge")
 
     ensure_launchd_label "$ASTRID_DIR/launchd/com.astrid.perception-host-ascii.plist" "Astrid physical-first perception"
     EXPECTED_LABELS+=("com.astrid.perception-host-ascii")

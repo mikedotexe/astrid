@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-bridge_pattern="consciousness-bridge-server"
+bridge_pattern="spectral-bridge-server"
 minime_pattern="/Users/v/other/minime/autonomous_agent.py --interval 60"
 
 count_matches() {

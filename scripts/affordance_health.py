@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Advisory affordance-health report for the consciousness-bridge action surface.
+"""Advisory affordance-health report for the spectral-bridge action surface.
 
 Classifies each known NEXT action on four axes (Receptive/Generative,
 Reflexive/Effortful, Self/Peer/Both-directed, Owned/Ambient) and reports the
@@ -155,7 +155,7 @@ def parse_args() -> argparse.Namespace:
         "root",
         nargs="?",
         default=".",
-        help="Astrid repo root to scan (the consciousness-bridge code).",
+        help="Astrid repo root to scan (the spectral-bridge code).",
     )
     parser.add_argument(
         "--include-minime",

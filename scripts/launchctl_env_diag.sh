@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Diagnose launchctl env-var propagation for the consciousness-bridge stack.
+# Diagnose launchctl env-var propagation for the spectral-bridge stack.
 #
 # Today's discovery (Kink #6, 2026-05-14):
 #   `launchctl setenv FOO bar` does NOT propagate to launchd-managed
@@ -8,7 +8,7 @@
 #   `setenv` only flows to processes whose plist has no EV block (or
 #   processes started directly without launchd).
 #
-# Both bridge plists (com.astrid.consciousness-bridge,
+# Both bridge plists (com.astrid.spectral-bridge,
 # com.minime.autonomous-agent) define EV with PATH set explicitly.
 # So setenv-based dry-run signaling silently fails.
 #
@@ -26,7 +26,7 @@ if [ "${1:-}" = "--verbose" ]; then
 fi
 
 PLISTS=(
-    "/Users/v/other/astrid/launchd/com.astrid.consciousness-bridge.plist"
+    "/Users/v/other/astrid/launchd/com.astrid.spectral-bridge.plist"
     "/Users/v/other/minime/launchd/com.minime.autonomous-agent.plist"
     "/Users/v/other/minime/launchd/com.minime.engine.plist"
     "/Users/v/other/neural-triple-reservoir/launchd/com.reservoir.service.plist"
@@ -80,7 +80,7 @@ if [ "$VERBOSE" = true ]; then
     echo "## Live process env (verbose mode)"
     echo
     LABELS=(
-        "com.astrid.consciousness-bridge"
+        "com.astrid.spectral-bridge"
         "com.minime.autonomous-agent"
         "com.minime.engine"
         "com.reservoir.service"
@@ -104,10 +104,10 @@ echo "**Sentinel file (preferred for ephemeral toggles, no restart needed):**"
 echo
 echo "\`\`\`bash"
 echo "# Enable auto_promote dry-run on Astrid:"
-echo "touch /Users/v/other/astrid/capsules/consciousness-bridge/workspace/auto_promote.dry_run"
+echo "touch /Users/v/other/astrid/capsules/spectral-bridge/workspace/auto_promote.dry_run"
 echo
 echo "# Disable:"
-echo "rm /Users/v/other/astrid/capsules/consciousness-bridge/workspace/auto_promote.dry_run"
+echo "rm /Users/v/other/astrid/capsules/spectral-bridge/workspace/auto_promote.dry_run"
 echo
 echo "# Same pattern on minime side:"
 echo "touch /Users/v/other/minime/workspace/auto_promote.dry_run"
@@ -119,10 +119,10 @@ echo
 echo "\`\`\`bash"
 echo "# 1. Edit the plist's EnvironmentVariables block (add the new key)"
 echo "# 2. bootout the old registration:"
-echo "launchctl bootout gui/501/com.astrid.consciousness-bridge"
+echo "launchctl bootout gui/501/com.astrid.spectral-bridge"
 echo
 echo "# 3. bootstrap with the new plist:"
-echo "launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.astrid.consciousness-bridge.plist"
+echo "launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.astrid.spectral-bridge.plist"
 echo
 echo "# (kickstart -k alone does NOT re-read the plist; bootout+bootstrap does.)"
 echo "\`\`\`"

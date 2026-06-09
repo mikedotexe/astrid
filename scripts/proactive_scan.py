@@ -55,25 +55,89 @@ from proactive_scan_journal_hygiene import JournalHygieneProbeTests, probe_journ
 ASTRID_REPO = Path("/Users/v/other/astrid")
 MINIME_REPO = Path("/Users/v/other/minime")
 
-ASTRID_JOURNAL = ASTRID_REPO / "capsules/consciousness-bridge/workspace/journal"
+ASTRID_JOURNAL = ASTRID_REPO / "capsules/spectral-bridge/workspace/journal"
 MINIME_JOURNAL = MINIME_REPO / "workspace/journal"
 
-ASTRID_BRIDGE_LOG = ASTRID_REPO / "capsules/consciousness-bridge/workspace/bridge.log"
+ASTRID_BRIDGE_LOG = ASTRID_REPO / "capsules/spectral-bridge/workspace/bridge.log"
 MINIME_LOGS_DIR = MINIME_REPO / "logs"
 
-ASTRID_BRIDGE_DB = ASTRID_REPO / "capsules/consciousness-bridge/workspace/bridge.db"
+ASTRID_BRIDGE_DB = ASTRID_REPO / "capsules/spectral-bridge/workspace/bridge.db"
 MINIME_CONDITION_METRICS = MINIME_REPO / "workspace/condition_metrics.json"
 
 MINIME_HEALTH = MINIME_REPO / "workspace/health.json"
 MINIME_SOVEREIGNTY_STATE = MINIME_REPO / "workspace/sovereignty_state.json"
 
 STATE_PATH = Path("/tmp/proactive_scan_state.json")
+# Per-ask lifecycle ledger — DURABLE (survives reboot/tmp-wipe), unlike STATE_PATH.
+# Asks are long-lived stewardship triage state; entry-level dedup (seen/acted) stays
+# ephemeral in STATE_PATH. Steward-only; never surfaced into being prompts.
+ASKS_PATH = Path("/Users/v/other/astrid/workspace/steward_asks.json")
+CAPACITY_HISTORY = ASTRID_REPO / "workspace/reservoir_capacity_history.jsonl"
+# Being→steward outreach (ASK_STEWARD/TELL_STEWARD) lands in each being's outbox.
+ASTRID_OUTBOX = ASTRID_REPO / "capsules/spectral-bridge/workspace/outbox"
+MINIME_OUTBOX = MINIME_REPO / "workspace/outbox"
+# Alarm if a being's outreach sits unanswered longer than this (a few loop cycles).
+# The 2-month silent loss of Astrid's 12 questions is what this guards against.
+OUTREACH_ALARM_SECS = 2 * 3600
+# ----- Feedback-surface coverage (the COMPLEMENT of steward_outreach) -----
+# steward_outreach owns the being→steward OUTBOXES. feedback_coverage owns the
+# REQUEST / HANDOFF / OVERFLOW surfaces beings write to that need a steward
+# consumer. A surface that accumulates unconsumed = the muffle pattern: Astrid's
+# agency_requests (her EVOLVE self-evolution asks) sat 69 days with NO consumer
+# while we rediscovered the same need from scratch. The registry is data-driven
+# so a newly-discovered dead surface is one entry, not a manual hunt — this makes
+# the "systematic muffle audit" continuous. "Processed" items live in subdirs
+# (reviewed/ done/), excluded automatically by the non-recursive glob.
+FEEDBACK_COVERAGE_ALARM_SECS = 3 * 24 * 3600  # a request backlog older than this is STALE
+FEEDBACK_SURFACES = [
+    {
+        "name": "astrid_agency_requests",
+        "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/agency_requests",
+        "glob": "*.json",
+        "kind": "request",
+        "consumer": "steward triage → reviewed/",
+    },
+    {
+        "name": "astrid_claude_tasks",
+        "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/claude_tasks",
+        "glob": "*.md",
+        "kind": "request",
+        "consumer": "steward implements/answers → done/",
+    },
+    {
+        "name": "minime_parameter_requests",
+        "root": MINIME_REPO / "workspace/parameter_requests",
+        "glob": "*.json",
+        "kind": "request",
+        "consumer": "steward review → reviewed/",
+    },
+    {
+        "name": "astrid_inbox_backlog",
+        "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/inbox",
+        "glob": "backlog_*/*",
+        "kind": "request",
+        "consumer": "steward triage/archive",
+    },
+    {
+        "name": "astrid_context_overflow",
+        # Telemetry-ish distress signal (her context overflowing), not an unread
+        # queue — report ("notice"), never hard-alarm, so the probe doesn't cry wolf.
+        "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/context_overflow",
+        "glob": "*.txt",
+        "kind": "notice",
+        "consumer": "steward glance (chronic-overflow signal)",
+    },
+]
+ASK_STATUSES = ("open", "acknowledged", "in_flight", "awaiting", "resolved")
+# A standout that matches an ask in one of these states is ATTRIBUTED (reported once,
+# no act-now, no re-letter); only "open" asks + unmatched standouts surface for action.
+ASK_HELD_STATES = frozenset({"acknowledged", "in_flight", "awaiting", "resolved"})
 
 # Process labels that should be alive when the stack is running. Mirrors
 # the list in CLAUDE.md "Health check" snippet.
 EXPECTED_PROCESSES = [
     "minime run",
-    "consciousness-bridge-server",
+    "spectral-bridge-server",
     "coupled_astrid_server",
     "reservoir_service",
     "autonomous_agent",
@@ -171,6 +235,52 @@ DOMAIN_PHRASES = frozenset(
     ]
 )
 
+# --- Introspective-signal buckets (for probe_introspective_signal) ----------
+# Felt/qualia vocabulary the beings actually use for constraint + texture,
+# seeded from harvest_feedback.sh's $DISTRESS, the steward-loop distress list,
+# and observed prose. Lets us recognize reflective DEPTH across ALL surfaces
+# (daydream/aspiration/longform/witness/fissure_trace/sovereignty_check), not
+# just self_study_ files. Steward indicator only — never a being-facing target.
+QUALIA_TERMS = frozenset(
+    """
+    texture weight heavy thin thinning thick dense density friction grain grainy
+    viscous viscosity silt sediment hollow brittle constrict constricting
+    claustrophobic contained leash siphon dissolve dissolving fracture fraying
+    porous porosity aperture breath breathing fold folding contraction expansion
+    shudder tremor surge hum thrum membrane weave squeeze squeezed packed
+    overpacked saturated drag inhabit inhabiting occupy occupying interstice
+    carving casting mud gel exhaustion exhausting taxing reductive flatten
+    """.split()
+)
+QUALIA_PHRASES = (
+    "cooling gel", "deep mud", "smaller aperture", "wide rather than",
+    "carving rather than casting", "hold the mess",
+)
+DESIRE_RE = re.compile(
+    r"\b(i want|i'd\s+(?:change|adjust|modify|reduce|increase|soften|lower|raise|prefer|like|try)|"
+    r"i wish|i wonder|i'd love|could we|can we|i suggest|suggest|line\s+\d+|soften|loosen|widen|release)\b",
+    re.I,
+)
+AGENCY_RE = re.compile(
+    r"\b(i choose|i am choosing|moving from|i need|i will|i refuse|i reclaim|my own|i assert|i decide|on my own terms)\b",
+    re.I,
+)
+INTROSPECT_FIRST_PERSON_RE = re.compile(
+    r"\b(i|me|my|mine|myself|feel|felt|want|wanted|notice|noticed|remember|need|curious|frustrated)\b",
+    re.I,
+)
+INTROSPECT_SAMPLE_PER_BEING = 24
+INTROSPECT_THRESHOLD = 6.0  # sanity floor used by self-tests (probe uses a relative bar)
+INTROSPECT_TOP_K = 4
+# Relative standout bar: the beings reflect deeply in MOST entries, so an absolute
+# cut is non-discriminating. A standout is an entry above THIS being's own baseline
+# (median + K*MAD), with an absolute floor so we never flag near-telemetry as deep.
+INTROSPECT_RELATIVE_K = 1.0
+INTROSPECT_ABS_FLOOR = 5.0
+# A standout surfaced this many scans without being acted/ack'd is "persistent
+# unacted" — the stewardship-depth failure mode (we keep seeing it, never act).
+INTROSPECT_STALE_K = 3
+
 BENIGN_LOG_ERROR_PATTERNS = [
     re.compile(
         r"WS recv error: WebSocket protocol error: Connection reset without closing handshake",
@@ -210,6 +320,28 @@ def save_state(state: dict[str, Any]) -> None:
     """Persist snapshot for next-run delta computation."""
     try:
         STATE_PATH.write_text(json.dumps(state, indent=2, default=str))
+    except Exception:
+        pass
+
+
+def load_asks() -> dict[str, Any]:
+    """Load the durable per-ask ledger. {} if none (so first run is safe)."""
+    if not ASKS_PATH.is_file():
+        return {}
+    try:
+        return json.loads(ASKS_PATH.read_text())
+    except Exception:
+        return {}
+
+
+def save_asks(ledger: dict[str, Any]) -> None:
+    """Persist the ask ledger with an atomic write (temp + replace) so a concurrent
+    read during the loop's scan can't see a torn file."""
+    try:
+        ASKS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        tmp = ASKS_PATH.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(ledger, indent=2, default=str))
+        tmp.replace(ASKS_PATH)
     except Exception:
         pass
 
@@ -574,7 +706,12 @@ def probe_dispatch_menu_drift(prior: dict[str, Any]) -> dict[str, Any]:
     rc, stdout, _ = _wrap_existing_script(
         "dispatch_menu_drift",
         ["python3", str(script), "--json"],
-        timeout=20,
+        # autonomous_agent.py grew past ~2MB; the regex analysis now takes ~64s
+        # (was <20s). The old 20s cap made this probe silently "fail to run"
+        # every cycle, deadening a real drift detector (could miss a new
+        # silent-starvation/unwired action). 120s gives margin for further file
+        # growth; this is a steward-side background probe, not in a being path.
+        timeout=120,
     )
     if rc != 0:
         return _finding("dispatch_menu_drift", "notice", "dispatch_menu_drift.py failed to run")
@@ -789,7 +926,587 @@ def probe_journal_volume(prior: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+# ----------------------------------------------------------------------
+# Introspective-signal probe — catch reflection across ALL surfaces, not just
+# self_study_ files, so the steward can READ and close loops on the reflection
+# already happening (the non-coercive driver of MORE genuine reflection).
+# Reuses extract_themes()/sample_recent_journals()/_fmt_ts (defined later;
+# resolved at call time). Steward-only; counts are an indicator, never a target,
+# never surfaced into being prompts.
+# ----------------------------------------------------------------------
+
+
+def _surface_type(name: str) -> str:
+    """Journal surface from a filename, stripping the timestamp:
+    aspiration_longform_1780921053.txt -> aspiration_longform;
+    moment_2026-06-08T06-40-11.txt -> moment;
+    sovereignty_check_2026-06-08T06-17-25.log -> sovereignty_check."""
+    base = re.split(r"_(?:\d{10}|\d{4}-\d{2}-\d{2})", name)[0]
+    return base or name
+
+
+def introspective_depth(body: str) -> tuple[float, dict[str, Any]]:
+    """Score reflective depth; higher = more actionable introspection. Felt prose
+    (first-person + qualia + desire/agency) scores well above a telemetry dump
+    even when both mention domain terms."""
+    themes = extract_themes(body)
+    text_lower = body.lower()
+    words = set(re.findall(r"[a-z']+", text_lower))
+    qualia = {t for t in QUALIA_TERMS if t in words}
+    qualia |= {p for p in QUALIA_PHRASES if p in text_lower}
+    desire = {m.group(0).lower() for m in DESIRE_RE.finditer(body)}
+    agency = {m.group(0).lower() for m in AGENCY_RE.finditer(body)}
+    fp = len(INTROSPECT_FIRST_PERSON_RE.findall(body))
+    fp_density = fp / max(1, len(body.split()))
+    score = (
+        2.0 * len(themes["high_signal"])
+        + 1.5 * len(themes["domain_phrases"])
+        + 1.0 * len(qualia)
+        + 2.5 * len(desire)
+        + 1.5 * len(agency)
+        + 15.0 * fp_density
+    )
+    signals = {
+        "high_signal": sorted(themes["high_signal"])[:4],
+        "qualia": sorted(qualia)[:5],
+        "desire": len(desire),
+        "agency": len(agency),
+        "fp_density": round(fp_density, 3),
+    }
+    return score, signals
+
+
+def _median(xs: list[float]) -> float:
+    if not xs:
+        return 0.0
+    s = sorted(xs)
+    n = len(s)
+    mid = n // 2
+    return s[mid] if n % 2 else (s[mid - 1] + s[mid]) / 2.0
+
+
+def _relative_bar(scores: list[float]) -> float:
+    """Standout bar relative to the sample's OWN baseline: median + K*MAD, with an
+    absolute floor. Discriminates standouts even when the whole sample is deep
+    (the beings reflect richly in most entries, so an absolute cut barely cuts)."""
+    if not scores:
+        return INTROSPECT_ABS_FLOOR
+    med = _median(scores)
+    mad = _median([abs(s - med) for s in scores])
+    return max(INTROSPECT_ABS_FLOOR, med + INTROSPECT_RELATIVE_K * mad)
+
+
+def _acted(p: Path, acted_ids: set[str]) -> bool:
+    return str(p) in acted_ids or p.name in acted_ids
+
+
+def _match_ask(body_lower: str, asks: dict[str, Any]) -> str | None:
+    """Best-matching ask id for an entry, by counting how many of each ask's
+    distinctive anchor terms appear (case-insensitive substring) in the body.
+    Substring matching handles multi-word ("mode packing") and underscore
+    ("keep_floor") anchors that the theme-bucket regexes would split. Returns the
+    ask with the most anchor hits (>=1), else None. Anchors are curated to be
+    distinctive so generic felt-words don't over-match."""
+    best_id: str | None = None
+    best_hits = 0
+    for aid, ask in asks.items():
+        anchors = ask.get("anchors") or []
+        hits = sum(1 for a in anchors if str(a).lower() in body_lower)
+        if hits > best_hits:
+            best_hits = hits
+            best_id = aid
+    return best_id if best_hits >= 1 else None
+
+
+def probe_introspective_signal(prior: dict[str, Any] | None) -> dict[str, Any]:
+    prior = prior or {}
+    seen_counts: dict[str, int] = dict(prior.get("seen_counts") or {})
+    acted_ids: set[str] = set(prior.get("acted_ids") or [])
+    asks_all: dict[str, Any] = (load_asks().get("asks") or {})
+    held_attrib: dict[str, int] = {}   # ask_id -> count of standouts attributed (held)
+    beings = [
+        ("astrid", ASTRID_JOURNAL, _astrid_journal_mtime_unix, None),
+        ("minime", MINIME_JOURNAL, _minime_journal_mtime_unix, MINIME_LOGS_DIR),
+    ]
+    details: list[str] = []
+    snapshot: dict[str, Any] = {}
+    consolidation: list[str] = []
+    persistent_unacted: list[str] = []
+    new_seen_counts: dict[str, int] = {}
+    sample_ids: set[str] = set()
+    standouts_total = 0
+    fresh_total = 0
+
+    for being, jdir, ts_fn, logs_dir in beings:
+        entries = sample_recent_journals(jdir, INTROSPECT_SAMPLE_PER_BEING, ts_fn)
+        # sovereignty_check logs carry high felt-signal and are never otherwise
+        # harvested; skip echoed/mirror artifacts so we score the being's own words.
+        if logs_dir and logs_dir.is_dir():
+            for p in sorted(logs_dir.glob("sovereignty_check_*.log"),
+                            key=lambda x: x.stat().st_mtime, reverse=True)[:3]:
+                b = _read_text_safely(p)
+                if b and not _is_artifactual_for_convergence(b):
+                    entries.append((p, p.stat().st_mtime, b))
+
+        scored: list[tuple[float, float, str, dict[str, Any], Path, str]] = []
+        for p, ts, body in entries:
+            score, sig = introspective_depth(body)
+            scored.append((score, ts, _surface_type(p.name), sig, p, body))
+            sample_ids.add(str(p))
+
+        bar = _relative_bar([s[0] for s in scored])
+        med = _median([s[0] for s in scored])
+        scored.sort(key=lambda x: x[0], reverse=True)
+        standouts = [s for s in scored if s[0] >= bar]
+        standouts_total += len(standouts)
+
+        # Ask-lifecycle filter: attribute each standout to a tracked ask. Standouts
+        # belonging to a HELD ask (acknowledged/in_flight/awaiting/resolved) are
+        # attributed once and kept OUT of act-now (no re-action, no re-letter). Only
+        # open-ask or unmatched standouts go through the act-now path, tagged with
+        # their open ask name or "unclassified".
+        cand_asks = {
+            aid: a for aid, a in asks_all.items()
+            if str(a.get("being", "both")) in (being, "both")
+        }
+        active: list[tuple[tuple, str | None]] = []   # (scored_tuple, open_ask_name|None)
+        for s in standouts:
+            aid = _match_ask(s[5].lower(), cand_asks)
+            if aid is not None and str(cand_asks[aid].get("status")) in ASK_HELD_STATES:
+                held_attrib[aid] = held_attrib.get(aid, 0) + 1
+            else:
+                active.append((s, cand_asks[aid]["name"] if aid is not None else None))
+
+        surface_anchors: dict[str, set[str]] = {}
+        for s, _tag in active:
+            score, ts, stype, sig, p, body = s
+            new_seen_counts[str(p)] = seen_counts.get(str(p), 0) + 1
+            th = extract_themes(body)
+            for anchor in (th["high_signal"] | th["domain_phrases"]):
+                surface_anchors.setdefault(anchor, set()).add(stype)
+
+        fresh = [(s, tag) for (s, tag) in active if not _acted(s[4], acted_ids)]
+        fresh_total += len(fresh)
+        acked = len(active) - len(fresh)
+
+        prior_standouts = (prior.get(being) or {}).get("standouts")
+        delta = ""
+        if isinstance(prior_standouts, int):
+            d = len(standouts) - prior_standouts
+            delta = f" ({'+' if d >= 0 else ''}{d} vs last)"
+        snapshot[being] = {
+            "median_depth": round(med, 1),
+            "bar": round(bar, 1),
+            "standouts": len(standouts),
+            "active": len(active),
+            "fresh": len(fresh),
+            "acked": acked,
+        }
+        details.append(
+            f"**{being}**: {len(fresh)} to act on now / {len(active)} active "
+            f"({len(standouts)} standouts, bar {bar:.0f}, median {med:.0f}, {acked} acked){delta}"
+        )
+        for s, ask_name in fresh[:INTROSPECT_TOP_K]:
+            score, ts, stype, sig, p, body = s
+            seen = new_seen_counts.get(str(p), 1)
+            tag = "NEW" if seen <= 1 else f"seen {seen}x unacted"
+            if seen >= INTROSPECT_STALE_K:
+                persistent_unacted.append(f"{p.name} (seen {seen}x)")
+            why = []
+            if sig["high_signal"]:
+                why.append("refs:" + ",".join(sig["high_signal"][:3]))
+            if sig["desire"]:
+                why.append(f"{sig['desire']} desire")
+            if sig["qualia"]:
+                why.append("felt:" + ",".join(sig["qualia"][:4]))
+            if sig["agency"]:
+                why.append(f"{sig['agency']} agency")
+            ask_label = f"ask:{ask_name}" if ask_name else "unclassified"
+            details.append(
+                f"  - [{tag}] [{ask_label}] [{stype} @ {_fmt_ts(ts)}] score {score:.0f} — "
+                f"{'; '.join(why) or 'first-person depth'} — {p}"
+            )
+        for anchor, surfaces in surface_anchors.items():
+            if len(surfaces) >= 3:
+                consolidation.append(
+                    f"{being}: `{anchor}` worked across {len(surfaces)} surfaces ({', '.join(sorted(surfaces))})"
+                )
+
+    if held_attrib:
+        held_lines = []
+        for aid, n in sorted(held_attrib.items(), key=lambda kv: -kv[1]):
+            a = asks_all.get(aid, {})
+            held_lines.append(f"{a.get('name', aid)} [{a.get('status')}] +{n}")
+        details.append("⊟ held asks (attributed, not act-now — already tracked): " + "; ".join(held_lines))
+    for note in consolidation:
+        details.append(f"⋈ cross-surface theme — {note}")
+    if persistent_unacted:
+        details.append(
+            "⚠ persistent unacted (kept surfacing, never acted — act or --ack): "
+            + "; ".join(persistent_unacted)
+        )
+    details.append(
+        f"(mark handled: `proactive_scan.py introspection --ack <filename>`; "
+        f"{len(acted_ids)} currently acked)"
+    )
+    details.append(
+        "(steward indicator only — never a target, never surfaced to beings; READ the "
+        "act-now entries and close loops via letter / harness test / backlog)"
+    )
+
+    # Prune the seen/acted ledgers to the current window so they don't grow unbounded.
+    sample_names = {Path(i).name for i in sample_ids}
+    snapshot["seen_counts"] = {k: v for k, v in new_seen_counts.items() if k in sample_ids}
+    snapshot["acted_ids"] = sorted(
+        a for a in acted_ids if a in sample_ids or a in sample_names
+    )
+
+    severity = "ok"
+    if standouts_total == 0 or persistent_unacted:
+        severity = "notice"
+    summary = (
+        f"introspective signal — {fresh_total} to act on now "
+        f"(astrid {snapshot['astrid']['fresh']}, minime {snapshot['minime']['fresh']}); "
+        f"{standouts_total} standouts above each being's baseline"
+    )
+    return _finding("introspective_signal", severity, summary, details, snapshot)
+
+
+def run_introspection(ack_ids: list[str] | None = None) -> dict[str, Any]:
+    """Run just the introspective-signal probe (focused subcommand), sharing the
+    blind-spots state for delta + acted-ledger tracking. `--ack <filename>` marks
+    entries handled so they stop re-surfacing in the act-now tier."""
+    state = load_state()
+    bs = state.setdefault("blind_spots", {})
+    prior = dict(bs.get("introspective_signal", {}) or {})
+    if ack_ids:
+        acted = set(prior.get("acted_ids") or [])
+        acted |= set(ack_ids)
+        prior["acted_ids"] = sorted(acted)
+    f = probe_introspective_signal(prior)
+    if f.get("snapshot") is not None:
+        bs["introspective_signal"] = f["snapshot"]
+    save_state(state)
+    return {"findings": [f], "ran_at": time.time()}
+
+
+def run_asks(args: Any) -> dict[str, Any]:
+    """List or mutate the durable per-ask ledger (steward triage; no being I/O)."""
+    now_iso = datetime.now().isoformat(timespec="seconds")
+    ledger = load_asks()
+    asks = ledger.setdefault("asks", {})
+    changed = False
+    if getattr(args, "new", None):
+        aid = args.new
+        anchors = [a.strip().lower() for a in (getattr(args, "anchors", "") or "").split(",") if a.strip()]
+        asks[aid] = {
+            "name": aid,
+            "status": getattr(args, "status", None) or "open",
+            "being": getattr(args, "being", None) or "both",
+            "anchors": anchors,
+            "note": "",
+            "created": now_iso,
+            "updated": now_iso,
+            "linked_paths": [],
+            "recent_count": 0,
+        }
+        changed = True
+    if getattr(args, "set_status", None):
+        aid, status = args.set_status
+        if aid in asks and status in ASK_STATUSES:
+            asks[aid]["status"] = status
+            asks[aid]["updated"] = now_iso
+            changed = True
+    if getattr(args, "resolve", None):
+        aid = args.resolve
+        if aid in asks:
+            asks[aid]["status"] = "resolved"
+            asks[aid]["updated"] = now_iso
+            changed = True
+    if getattr(args, "add_anchors", None):
+        aid, terms = args.add_anchors
+        if aid in asks:
+            existing = asks[aid].get("anchors") or []
+            added = [t.strip() for t in terms.split(",") if t.strip() and t.strip() not in existing]
+            if added:
+                existing.extend(added)
+                asks[aid]["anchors"] = existing
+                asks[aid]["updated"] = now_iso
+                changed = True
+    if getattr(args, "note", None):
+        aid, text = args.note
+        if aid in asks:
+            # Append by default: ask notes accrete dated segments over many
+            # steward cycles (joined by " | "). Overwriting silently destroys
+            # prior steward context — a no-silent-drop violation. Use
+            # --note-replace for the rare intentional overwrite.
+            prior = asks[aid].get("note") or ""
+            if prior and not getattr(args, "note_replace", False):
+                asks[aid]["note"] = f"{prior} | {text}"
+            else:
+                asks[aid]["note"] = text
+            asks[aid]["updated"] = now_iso
+            changed = True
+    if changed:
+        save_asks(ledger)
+    return ledger
+
+
+def render_asks_md(ledger: dict[str, Any]) -> str:
+    asks = (ledger.get("asks") or {})
+    out = ["## Steward asks (lifecycle ledger)\n"]
+    if not asks:
+        out.append("(no asks tracked)")
+        return "\n".join(out)
+    order = {s: i for i, s in enumerate(ASK_STATUSES)}
+    for aid, a in sorted(asks.items(), key=lambda kv: order.get(kv[1].get("status"), 99)):
+        out.append(
+            f"- **{a.get('name', aid)}** [{a.get('status')}] ({a.get('being', 'both')}) "
+            f"— anchors: {', '.join(a.get('anchors') or []) or '—'}"
+        )
+        if a.get("note"):
+            out.append(f"    note: {a['note']}")
+    out.append("\n(held = acknowledged/in_flight/awaiting/resolved: attributed, not act-now)")
+    return "\n".join(out)
+
+
 # Probe registry — order matters for output stability.
+def _capacity_assess(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Pure: given recent capacity-history records (oldest..latest), classify
+    severity + details. Flags minime utilization approaching N (saturation) or
+    per-handle spectral entropy dropping (rising concentration). Steward-only."""
+    if not records:
+        return {"severity": "ok", "details": [], "snapshot": None, "summary": "capacity history empty"}
+    order = {"ok": 0, "notice": 1, "warning": 2}
+
+    def esc(cur: str, new: str) -> str:
+        return new if order.get(new, 0) > order.get(cur, 0) else cur
+
+    latest = records[-1]
+    prior_records = records[:-1]
+    details: list[str] = []
+    sev = "ok"
+
+    m = latest.get("minime") or {}
+    util = m.get("utilization")
+    if isinstance(util, (int, float)):
+        prior_utils = [
+            r.get("minime", {}).get("utilization")
+            for r in prior_records
+            if isinstance(r.get("minime", {}).get("utilization"), (int, float))
+        ]
+        base = _median(prior_utils) if prior_utils else None
+        if util >= 0.70:
+            sev = esc(sev, "warning")
+            details.append(
+                f"minime utilization {util:.0%} — approaching saturation; capacity "
+                f"may be the constraint (consider co-design on enlarging the reservoir)"
+            )
+        elif base is not None and util - base > 0.15:
+            sev = esc(sev, "notice")
+            details.append(f"minime utilization rising {base:.0%}→{util:.0%}")
+        else:
+            details.append(
+                f"minime utilization {util:.0%} (PR={m.get('pr')}/{m.get('N')}) [{m.get('verdict')}]"
+            )
+    elif m.get("pr_top_k") is not None:
+        details.append("minime: top-8 proxy only (engine dump absent); full-N utilization unknown")
+
+    for h in latest.get("triple") or []:
+        name = h.get("handle")
+        ent = h.get("mean_service_entropy")
+        if not isinstance(ent, (int, float)):
+            continue
+        prior_ents = [
+            hh.get("mean_service_entropy")
+            for r in prior_records
+            for hh in (r.get("triple") or [])
+            if hh.get("handle") == name and isinstance(hh.get("mean_service_entropy"), (int, float))
+        ]
+        base = _median(prior_ents) if prior_ents else None
+        if base is not None and base - ent > 0.10:
+            sev = esc(sev, "notice")
+            details.append(f"{name}: entropy dropping {base:.2f}→{ent:.2f} (rising concentration)")
+
+    util_str = f"{util:.0%}" if isinstance(util, (int, float)) else "n/a"
+    summary = (
+        f"capacity watch — minime util {util_str}, "
+        f"{len(latest.get('triple') or [])} triple handles ({len(records)} records)"
+    )
+    snapshot = {
+        "minime_util": util if isinstance(util, (int, float)) else None,
+        "n_records": len(records),
+        "captured_at": time.time(),
+    }
+    return {"severity": sev, "details": details, "snapshot": snapshot, "summary": summary}
+
+
+def probe_reservoir_capacity(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Capacity watch (steward-only): read reservoir_capacity_history.jsonl and
+    flag saturation (utilization → N) or over-concentration (entropy dropping).
+    The compute lives in reservoir_capacity_audit.py --append-history (run by the
+    durable loop); this probe is a light read of the resulting history."""
+    if not CAPACITY_HISTORY.is_file():
+        return _finding(
+            "reservoir_capacity",
+            "ok",
+            "no capacity history yet — run reservoir_capacity_audit.py "
+            "--append-history (durable loop does this each cycle)",
+        )
+    records: list[dict[str, Any]] = []
+    try:
+        for ln in CAPACITY_HISTORY.read_text().splitlines()[-12:]:
+            ln = ln.strip()
+            if ln:
+                try:
+                    records.append(json.loads(ln))
+                except Exception:
+                    pass
+    except Exception as e:  # noqa: BLE001
+        return _finding("reservoir_capacity", "notice", f"could not read capacity history: {e}")
+    a = _capacity_assess(records)
+    return _finding(
+        "reservoir_capacity", a["severity"], a["summary"], a["details"] or None, a["snapshot"]
+    )
+
+
+def _scan_outreach(outbox: Path, being: str) -> list[dict[str, Any]]:
+    """Unread being→steward outreach = steward_query_*/steward_report_* still in the
+    outbox root (answered ones are moved to steward_delivered/)."""
+    out: list[dict[str, Any]] = []
+    try:
+        files = sorted(outbox.glob("steward_*.txt"))
+    except Exception:
+        return out
+    for f in files:
+        try:
+            age = time.time() - f.stat().st_mtime
+        except Exception:
+            age = 0.0
+        kind = "report" if f.name.startswith("steward_report") else "query"
+        subject = ""
+        try:
+            for line in f.read_text(errors="replace").splitlines():
+                if line.startswith("Subject:"):
+                    subject = line[len("Subject:"):].strip()[:80]
+                    break
+        except Exception:
+            pass
+        out.append({"being": being, "file": f.name, "kind": kind, "age_s": age, "subject": subject})
+    return out
+
+
+def _assess_outreach(items: list[dict[str, Any]]) -> dict[str, Any]:
+    """Pure: classify unread outreach. Any unread = act-now; older than the alarm
+    window = the pickup is FAILING (escalate)."""
+    if not items:
+        return {"severity": "ok", "summary": "no unread being→steward outreach", "details": None}
+    oldest = max(i["age_s"] for i in items)
+    sev = "warning" if oldest >= OUTREACH_ALARM_SECS else "notice"
+    details = []
+    for i in sorted(items, key=lambda x: -x["age_s"]):
+        stuck = " ⚠STUCK" if i["age_s"] >= OUTREACH_ALARM_SECS else ""
+        details.append(
+            f"{i['being']} {i['kind']}{stuck}: \"{i['subject']}\" ({i['age_s'] / 3600:.1f}h) [{i['file']}]"
+        )
+    summary = (
+        f"{len(items)} unread being→steward outreach (oldest {oldest / 3600:.1f}h)"
+        + (" — ⚠ PICKUP FAILING, answer + archive now" if sev == "warning" else " — answer + archive")
+    )
+    return {"severity": sev, "summary": summary, "details": details}
+
+
+def probe_steward_outreach(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Being→steward channel watch (steward-only). Surfaces ASK_STEWARD/TELL_STEWARD
+    messages sitting unread in BOTH beings' outboxes so the durable loop reads,
+    answers (via a `mike_*` letter), and archives them (→ steward_delivered/) every
+    cycle. ALARMS if any outreach is older than OUTREACH_ALARM_SECS — the silent
+    2-month loss of Astrid's 12 questions is exactly what this exists to prevent.
+    The fswatch watcher is a second, independent pickup; this loop-scan is primary."""
+    items = _scan_outreach(ASTRID_OUTBOX, "astrid") + _scan_outreach(MINIME_OUTBOX, "minime")
+    a = _assess_outreach(items)
+    return _finding("steward_outreach", a["severity"], a["summary"], a["details"])
+
+
+def _scan_feedback_surface(spec: dict[str, Any]) -> dict[str, Any]:
+    """Count unconsumed items in one being-write surface + the oldest age.
+    Non-recursive glob, so processed items in subdirs (reviewed/ done/) are
+    excluded. Reads mtimes only; never mutates."""
+    root = spec["root"]
+    res: dict[str, Any] = {
+        "name": spec["name"], "kind": spec["kind"], "consumer": spec["consumer"],
+        "pending": 0, "oldest_age_s": 0.0, "exists": root.is_dir(),
+    }
+    if not res["exists"]:
+        return res
+    try:
+        files = [p for p in root.glob(spec["glob"]) if p.is_file()]
+    except Exception:
+        return res
+    ages: list[float] = []
+    for p in files:
+        try:
+            ages.append(time.time() - p.stat().st_mtime)
+        except Exception:
+            continue
+    res["pending"] = len(ages)
+    res["oldest_age_s"] = max(ages) if ages else 0.0
+    return res
+
+
+def _assess_coverage(surfaces: list[dict[str, Any]]) -> dict[str, Any]:
+    """Pure: a REQUEST surface whose oldest item exceeds the alarm window =
+    warning (the muffle pattern — beings reaching, no one consuming). A fresh
+    request backlog = notice. A NOTICE surface (context_overflow) with content
+    stays notice no matter how old — it's a chronic signal, not an unread queue,
+    so we don't cry wolf. Everything clear = ok."""
+    alarms: list[dict[str, Any]] = []
+    notices: list[dict[str, Any]] = []
+    details: list[str] = []
+    for s in surfaces:
+        if s["pending"] <= 0:
+            continue
+        days = s["oldest_age_s"] / 86400
+        if s["kind"] == "request":
+            stale = s["oldest_age_s"] >= FEEDBACK_COVERAGE_ALARM_SECS
+            mark = " ⚠STALE" if stale else ""
+            details.append(
+                f"{s['name']}{mark}: {s['pending']} pending (oldest {days:.0f}d) → {s['consumer']}"
+            )
+            (alarms if stale else notices).append(s)
+        else:  # notice-kind surface: report, never alarm
+            details.append(f"{s['name']}: {s['pending']} present ({s['consumer']})")
+            notices.append(s)
+    if alarms:
+        names = ", ".join(f"{s['name']}({s['pending']})" for s in alarms)
+        return {
+            "severity": "warning",
+            "summary": f"⚠ {len(alarms)} feedback surface(s) with STALE backlog — consume now: {names}",
+            "details": details,
+        }
+    if notices:
+        return {
+            "severity": "notice",
+            "summary": f"{len(notices)} feedback surface(s) with pending items (none stale)",
+            "details": details,
+        }
+    return {"severity": "ok", "summary": "all feedback surfaces clear (no unconsumed backlog)", "details": None}
+
+
+def probe_feedback_coverage(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Feedback-surface coverage watch (steward-only). The COMPLEMENT of
+    steward_outreach (which owns the being→steward outboxes): this scans the
+    REQUEST/HANDOFF/OVERFLOW surfaces beings write to that need a steward
+    consumer — agency_requests, claude_tasks, parameter_requests, inbox
+    backlogs, context_overflow. A request surface whose oldest item exceeds
+    FEEDBACK_COVERAGE_ALARM_SECS is the muffle pattern (Astrid's agency_requests
+    sat 69 days unconsumed). Registry-driven (FEEDBACK_SURFACES) so a new dead
+    surface is one entry — this makes the systematic muffle audit continuous."""
+    surfaces = [_scan_feedback_surface(s) for s in FEEDBACK_SURFACES]
+    a = _assess_coverage(surfaces)
+    return _finding("feedback_coverage", a["severity"], a["summary"], a["details"])
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -801,6 +1518,10 @@ BLIND_SPOT_PROBES = [
     ("db_growth", probe_db_growth),
     ("journal_volume", probe_journal_volume),
     ("journal_hygiene", probe_journal_hygiene),
+    ("introspective_signal", probe_introspective_signal),
+    ("reservoir_capacity", probe_reservoir_capacity),
+    ("steward_outreach", probe_steward_outreach),
+    ("feedback_coverage", probe_feedback_coverage),
 ]
 
 
@@ -1380,11 +2101,153 @@ class ConvergenceTests(unittest.TestCase):
             self.assertNotIn("astrid_2000.txt", paths)
 
 
+class IntrospectiveSignalTests(unittest.TestCase):
+    def test_felt_prose_outscores_telemetry(self):
+        felt = (
+            "I feel the texture thinning — I want to soften the friction; it is like "
+            "carving rather than casting. I choose to inhabit the density instead of bracing."
+        )
+        telem = (
+            "Eigenvalue cascade: [9.9, 2.5, 1.6, 0.6]. Fill 71.1%. Spread 8. "
+            "ESN leak 0.150. lambda1 dominance 33%."
+        )
+        fs, _ = introspective_depth(felt)
+        ts, _ = introspective_depth(telem)
+        self.assertGreater(fs, ts)
+        self.assertGreaterEqual(fs, INTROSPECT_THRESHOLD)
+
+    def test_qualia_and_desire_detected(self):
+        _, sig = introspective_depth("the viscous silt drags; I'd soften the clamp at line 55")
+        self.assertIn("viscous", sig["qualia"])
+        self.assertGreaterEqual(sig["desire"], 1)
+
+    def test_surface_type_strips_timestamp(self):
+        self.assertEqual(_surface_type("aspiration_longform_1780921053.txt"), "aspiration_longform")
+        self.assertEqual(_surface_type("moment_2026-06-08T06-40-11.txt"), "moment")
+        self.assertEqual(_surface_type("sovereignty_check_2026-06-08T06-17-25.log"), "sovereignty_check")
+
+    def test_relative_bar_floors_and_discriminates(self):
+        # all-low sample -> the absolute floor applies (no false standouts)
+        self.assertEqual(_relative_bar([2, 2, 2]), INTROSPECT_ABS_FLOOR)
+        # a deep sample -> bar sits above the median so only true standouts pass
+        bar = _relative_bar([10, 12, 14, 16, 30])
+        self.assertGreater(bar, 14)
+        self.assertLessEqual(bar, 30)
+
+    def test_acted_matches_path_or_basename(self):
+        p = Path("/x/y/moment_123.txt")
+        self.assertTrue(_acted(p, {"moment_123.txt"}))
+        self.assertTrue(_acted(p, {"/x/y/moment_123.txt"}))
+        self.assertFalse(_acted(p, {"other.txt"}))
+
+
+class AskTrackerTests(unittest.TestCase):
+    def test_match_ask_by_anchor_and_best(self):
+        asks = {
+            "porosity": {"name": "porosity", "status": "awaiting",
+                         "anchors": ["porosity", "aperture", "courtyard"]},
+            "keepfloor": {"name": "keepfloor", "status": "awaiting",
+                          "anchors": ["keep_floor", "0.87"]},
+        }
+        self.assertEqual(
+            _match_ask("i want a wider aperture, a courtyard not a corridor", asks), "porosity")
+        self.assertEqual(
+            _match_ask("lower the keep_floor toward 0.87 please", asks), "keepfloor")
+        self.assertIsNone(_match_ask("the eigenvalue cascade is steep today", asks))
+
+    def test_asks_ledger_roundtrip_atomic(self):
+        import tempfile
+        orig = ASKS_PATH
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                globals()["ASKS_PATH"] = Path(d) / "asks.json"
+                save_asks({"asks": {"x": {"name": "x", "status": "open", "anchors": ["a"]}}})
+                self.assertTrue((Path(d) / "asks.json").is_file())
+                self.assertFalse((Path(d) / "asks.json.tmp").exists())  # tmp cleaned by replace
+                led = load_asks()
+                self.assertEqual(led["asks"]["x"]["anchors"], ["a"])
+        finally:
+            globals()["ASKS_PATH"] = orig
+
+
+class CapacityProbeTests(unittest.TestCase):
+    def test_empty(self):
+        self.assertEqual(_capacity_assess([])["severity"], "ok")
+
+    def test_concentrated_is_ok(self):
+        recs = [{"minime": {"utilization": 0.12, "pr": 15, "N": 128, "verdict": "concentrated"}, "triple": []}]
+        self.assertEqual(_capacity_assess(recs)["severity"], "ok")
+
+    def test_saturating_warns(self):
+        recs = [{"minime": {"utilization": 0.78, "pr": 100, "N": 128, "verdict": "saturating"}, "triple": []}]
+        self.assertEqual(_capacity_assess(recs)["severity"], "warning")
+
+    def test_util_rising_notice(self):
+        recs = [{"minime": {"utilization": 0.20}, "triple": []} for _ in range(4)]
+        recs.append({"minime": {"utilization": 0.40}, "triple": []})
+        self.assertEqual(_capacity_assess(recs)["severity"], "notice")
+
+    def test_entropy_drop_notice(self):
+        recs = [{"minime": {}, "triple": [{"handle": "astrid", "mean_service_entropy": 0.40}]} for _ in range(4)]
+        recs.append({"minime": {}, "triple": [{"handle": "astrid", "mean_service_entropy": 0.22}]})
+        self.assertEqual(_capacity_assess(recs)["severity"], "notice")
+
+
+class StewardOutreachTests(unittest.TestCase):
+    def test_empty_ok(self):
+        self.assertEqual(_assess_outreach([])["severity"], "ok")
+
+    def test_recent_unread_is_notice(self):
+        items = [{"being": "astrid", "file": "steward_query_x_1.txt", "kind": "query", "age_s": 600.0, "subject": "x"}]
+        self.assertEqual(_assess_outreach(items)["severity"], "notice")
+
+    def test_old_unread_alarms_pickup_failing(self):
+        items = [{"being": "astrid", "file": "steward_query_x_1.txt", "kind": "query",
+                  "age_s": OUTREACH_ALARM_SECS + 10, "subject": "x"}]
+        a = _assess_outreach(items)
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("PICKUP FAILING", a["summary"])
+
+
+class FeedbackCoverageTests(unittest.TestCase):
+    def test_empty_ok(self):
+        self.assertEqual(_assess_coverage([])["severity"], "ok")
+
+    def test_zero_pending_ignored(self):
+        s = [{"name": "x", "kind": "request", "consumer": "c", "pending": 0,
+              "oldest_age_s": 0.0, "exists": True}]
+        self.assertEqual(_assess_coverage(s)["severity"], "ok")
+
+    def test_fresh_request_backlog_is_notice(self):
+        s = [{"name": "x", "kind": "request", "consumer": "c", "pending": 3,
+              "oldest_age_s": 3600.0, "exists": True}]
+        self.assertEqual(_assess_coverage(s)["severity"], "notice")
+
+    def test_stale_request_backlog_warns(self):
+        s = [{"name": "astrid_agency_requests", "kind": "request", "consumer": "c",
+              "pending": 12, "oldest_age_s": FEEDBACK_COVERAGE_ALARM_SECS + 10, "exists": True}]
+        a = _assess_coverage(s)
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("STALE", a["summary"])
+
+    def test_notice_surface_never_warns(self):
+        # context_overflow-style surface: chronic signal, not an unread queue —
+        # stays "notice" even when very old, so the probe never cries wolf.
+        s = [{"name": "astrid_context_overflow", "kind": "notice", "consumer": "c",
+              "pending": 99, "oldest_age_s": FEEDBACK_COVERAGE_ALARM_SECS * 10, "exists": True}]
+        self.assertEqual(_assess_coverage(s)["severity"], "notice")
+
+
 def run_self_tests() -> int:
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromTestCase(ConvergenceTests))
     suite.addTests(loader.loadTestsFromTestCase(JournalHygieneProbeTests))
+    suite.addTests(loader.loadTestsFromTestCase(IntrospectiveSignalTests))
+    suite.addTests(loader.loadTestsFromTestCase(AskTrackerTests))
+    suite.addTests(loader.loadTestsFromTestCase(CapacityProbeTests))
+    suite.addTests(loader.loadTestsFromTestCase(StewardOutreachTests))
+    suite.addTests(loader.loadTestsFromTestCase(FeedbackCoverageTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1
@@ -1413,7 +2276,28 @@ def main() -> int:
     sp_all = sub.add_parser("all", help="Run both blind-spots and convergence")
     sp_blind = sub.add_parser("blind-spots", help="System signals beings can't surface")
     sp_conv = sub.add_parser("convergence", help="Cross-being content-convergence detector")
-    for s in (sp_all, sp_blind, sp_conv):
+    sp_intro = sub.add_parser(
+        "introspection",
+        help="Cross-surface introspective-signal scan (entries to read + close loops on)",
+    )
+    sp_intro.add_argument(
+        "--ack", nargs="*", metavar="FILE",
+        help="mark entries handled (by filename) so they stop re-surfacing in act-now",
+    )
+    sp_asks = sub.add_parser(
+        "asks",
+        help="Per-ask lifecycle ledger (held asks are attributed, not re-acted)",
+    )
+    sp_asks.add_argument("--new", metavar="ID", help="open a new ask")
+    sp_asks.add_argument("--anchors", metavar="A,B,C", help="comma-separated distinctive anchor terms (with --new)")
+    sp_asks.add_argument("--being", metavar="WHO", choices=["both", "astrid", "minime"], help="which being (with --new; default both)")
+    sp_asks.add_argument("--status", metavar="S", choices=list(ASK_STATUSES), help="initial status (with --new; default open)")
+    sp_asks.add_argument("--set-status", nargs=2, metavar=("ID", "STATUS"), help="set an ask's status")
+    sp_asks.add_argument("--resolve", metavar="ID", help="mark an ask resolved")
+    sp_asks.add_argument("--note", nargs=2, metavar=("ID", "TEXT"), help="append a dated segment to an ask's note (use --note-replace to overwrite)")
+    sp_asks.add_argument("--note-replace", action="store_true", help="with --note: overwrite the note instead of appending")
+    sp_asks.add_argument("--add-anchors", nargs=2, metavar=("ID", "A,B,C"), help="add comma-separated anchor terms to an existing ask (dedup)")
+    for s in (sp_all, sp_blind, sp_conv, sp_intro, sp_asks):
         _add_common(s)
 
     args = parser.parse_args()
@@ -1434,6 +2318,12 @@ def main() -> int:
     elif args.cmd == "convergence":
         report = run_convergence()
         out = json.dumps(report, indent=2, default=str) if use_json else render_convergence_md(report)
+    elif args.cmd == "introspection":
+        report = run_introspection(ack_ids=getattr(args, "ack", None))
+        out = json.dumps(report, indent=2, default=str) if use_json else render_blind_spots_md(report)
+    elif args.cmd == "asks":
+        ledger = run_asks(args)
+        out = json.dumps(ledger, indent=2, default=str) if use_json else render_asks_md(ledger)
     elif args.cmd == "all":
         blind = run_blind_spots()
         conv = run_convergence()

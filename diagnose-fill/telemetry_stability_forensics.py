@@ -773,7 +773,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--db-path",
-        default=str(repo_root / "capsules/consciousness-bridge/workspace/bridge.db"),
+        default=str(repo_root / "capsules/spectral-bridge/workspace/bridge.db"),
         help="Path to bridge.db",
     )
     parser.add_argument(

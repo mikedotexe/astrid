@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 
-ASTRID_WORKSPACE = Path("/Users/v/other/astrid/capsules/consciousness-bridge/workspace")
+ASTRID_WORKSPACE = Path("/Users/v/other/astrid/capsules/spectral-bridge/workspace")
 MINIME_WORKSPACE = Path("/Users/v/other/minime/workspace")
 
 RUNNING_EVENT_STATUSES = {"running", "llm_running"}

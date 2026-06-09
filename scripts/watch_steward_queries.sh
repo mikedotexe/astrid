@@ -23,7 +23,7 @@ if ! command -v fswatch >/dev/null 2>&1; then
 fi
 
 MINIME_OUT="/Users/v/other/minime/workspace/outbox"
-ASTRID_OUT="/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox"
+ASTRID_OUT="/Users/v/other/astrid/capsules/spectral-bridge/workspace/outbox"
 
 mkdir -p "$MINIME_OUT" "$ASTRID_OUT"
 
