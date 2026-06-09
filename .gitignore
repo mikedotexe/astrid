@@ -45,49 +45,17 @@ packages/*/dist/
 .mcp.json
 
 # Generated capsule workspace state
-capsules/consciousness-bridge/workspace/bridge.db
-capsules/consciousness-bridge/workspace/bridge.db-shm
-capsules/consciousness-bridge/workspace/bridge.db-wal
-capsules/consciousness-bridge/workspace/state.json
-capsules/consciousness-bridge/workspace/contact_state.json
-capsules/consciousness-bridge/workspace/agency_requests/
-capsules/consciousness-bridge/workspace/archive/
-capsules/consciousness-bridge/workspace/audio_creations/
-capsules/consciousness-bridge/workspace/claude_tasks/
-capsules/consciousness-bridge/workspace/creations/
-capsules/consciousness-bridge/workspace/codex_responses/
-capsules/consciousness-bridge/workspace/condition_metrics.json
-capsules/consciousness-bridge/workspace/context_overflow/
-capsules/consciousness-bridge/workspace/diagnostics/
-capsules/consciousness-bridge/workspace/experiments/
-capsules/consciousness-bridge/workspace/action_threads/
-capsules/consciousness-bridge/workspace/attractor_assessment/
-capsules/consciousness-bridge/workspace/attractor_atlas/
-capsules/consciousness-bridge/workspace/attractor_suggestions.json
-capsules/consciousness-bridge/workspace/auto_promote_state.json
-capsules/consciousness-bridge/workspace/resource_budget.json
-capsules/consciousness-bridge/workspace/inbox/
-capsules/consciousness-bridge/workspace/inbox_audio/
-capsules/consciousness-bridge/workspace/introspections/
-capsules/consciousness-bridge/workspace/journal/
-capsules/consciousness-bridge/workspace/llm_jobs/
-capsules/consciousness-bridge/workspace/memory/daily_*.md
-capsules/consciousness-bridge/workspace/outbox/
-capsules/consciousness-bridge/workspace/parameter_requests/
-capsules/consciousness-bridge/workspace/perception_paused.flag
-capsules/consciousness-bridge/workspace/perception_visual_paused.flag
-capsules/consciousness-bridge/workspace/research/
-capsules/consciousness-bridge/workspace/runtime/
-capsules/consciousness-bridge/workspace/shadow_cartography/
-capsules/consciousness-bridge/workspace/shadow_preflight_cache.json
-capsules/consciousness-bridge/workspace/spectral_cartography/
-capsules/consciousness-bridge/workspace/reservoir_config.json
-capsules/consciousness-bridge/workspace/btsp_episode_bank.json
-capsules/consciousness-bridge/workspace/btsp_minime_choice_cursor.json
-capsules/consciousness-bridge/workspace/btsp_signal_catalog.json
-capsules/consciousness-bridge/workspace/btsp_signal_events.jsonl
-capsules/consciousness-bridge/workspace/btsp_signal_status.json
-capsules/consciousness-bridge/workspace/sovereignty_proposals.json
+# Renamed consciousness-bridge → spectral-bridge (2026-06-08). Blanket-ignore the
+# whole runtime workspace (5.1 GB / ~400k files) + the bridge.db/binary backups —
+# never commit runtime state. (/target is already ignored globally above.)
+capsules/spectral-bridge/workspace/
+capsules/spectral-bridge/backups/
+
+# Steward runtime state (top-level) + editor/build junk
+/workspace/
+.DS_Store
+**/__pycache__/
+*.pyc
 capsules/perception/workspace/
 capsules/perception/workspace/audio/
 capsules/perception/workspace/perceptions/
