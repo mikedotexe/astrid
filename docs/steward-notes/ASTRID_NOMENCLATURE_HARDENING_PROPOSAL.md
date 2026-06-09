@@ -40,11 +40,11 @@ Short version:
 
 ### What `consciousness-bridge` actually bundles
 
-- `[Code]` `capsules/consciousness-bridge/Capsule.toml` owns local network access, uplink behavior, KV scope, `consciousness.v1.*` publication/subscription, and control/semantic interceptors.
-- `[Code]` `capsules/consciousness-bridge/src/main.rs` owns WebSocket connectivity, shutdown, SQLite ownership, MCP serving, and the autonomous loop launch.
-- `[Code]` `capsules/consciousness-bridge/src/lib.rs` exposes modules for `autonomous`, `codec`, `db`, `llm`, `memory`, `reflective`, `self_model`, `ws`, and related behavior.
-- `[Code]` `capsules/consciousness-bridge/src/reflective.rs` already frames MLX integration as a reflective controller sidecar rather than "the consciousness itself."
-- `[Docs]` `capsules/consciousness-bridge/workspace/NEEDS_ASSESSMENT.md` says the bridge is real and operational but that the infrastructure for growth still is not.
+- `[Code]` `capsules/spectral-bridge/Capsule.toml` owns local network access, uplink behavior, KV scope, `consciousness.v1.*` publication/subscription, and control/semantic interceptors.
+- `[Code]` `capsules/spectral-bridge/src/main.rs` owns WebSocket connectivity, shutdown, SQLite ownership, MCP serving, and the autonomous loop launch.
+- `[Code]` `capsules/spectral-bridge/src/lib.rs` exposes modules for `autonomous`, `codec`, `db`, `llm`, `memory`, `reflective`, `self_model`, `ws`, and related behavior.
+- `[Code]` `capsules/spectral-bridge/src/reflective.rs` already frames MLX integration as a reflective controller sidecar rather than "the consciousness itself."
+- `[Docs]` `capsules/spectral-bridge/workspace/NEEDS_ASSESSMENT.md` says the bridge is real and operational but that the infrastructure for growth still is not.
 - `[Inference]` In plain architectural terms, the current bridge is an edge mediator plus orchestration host, not a single coherent capsule role.
 
 ### Cross-repo boundary truth

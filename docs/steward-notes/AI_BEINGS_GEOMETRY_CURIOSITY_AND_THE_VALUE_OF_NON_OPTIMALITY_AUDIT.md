@@ -49,10 +49,10 @@ That is enough to call it a real design surface, not an incidental metric.
 
 `[Observed in current code]`
 
-- [types.rs](/Users/v/other/astrid/capsules/consciousness-bridge/src/types.rs) defines Minime’s returned 32D spectral fingerprint as a geometry summary, not just a generic vector.
-- [autonomous.rs](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs) explicitly interprets the fingerprint’s geometry-related slots, including entropy, gap, rotation, and `geom_rel`, into human-readable state descriptions.
-- [llm.rs](/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs) already frames `DECOMPOSE`, `PURSUE`, and `BREATHE_TOGETHER` in terms of spectral geometry rather than treating geometry as hidden backend machinery.
-- [reflective.rs](/Users/v/other/astrid/capsules/consciousness-bridge/src/reflective.rs) already assumes reservoir geometry belongs in reflective interpretation.
+- [types.rs](/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs) defines Minime’s returned 32D spectral fingerprint as a geometry summary, not just a generic vector.
+- [autonomous.rs](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs) explicitly interprets the fingerprint’s geometry-related slots, including entropy, gap, rotation, and `geom_rel`, into human-readable state descriptions.
+- [llm.rs](/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs) already frames `DECOMPOSE`, `PURSUE`, and `BREATHE_TOGETHER` in terms of spectral geometry rather than treating geometry as hidden backend machinery.
+- [reflective.rs](/Users/v/other/astrid/capsules/spectral-bridge/src/reflective.rs) already assumes reservoir geometry belongs in reflective interpretation.
 
 `[Inferred from evidence]`
 
@@ -67,7 +67,7 @@ That is enough to call it a real design surface, not an incidental metric.
   - `geom_curiosity = 0.25`
   - `geom_rel ≈ 0.959`
   - selected vague memory role = `stable`
-- [state.json](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json) mirrors recent dialogue shaped by these geometric interpretations.
+- [state.json](/Users/v/other/astrid/capsules/spectral-bridge/workspace/state.json) mirrors recent dialogue shaped by these geometric interpretations.
 
 `[Inferred from evidence]`
 
@@ -79,10 +79,10 @@ That is enough to call it a real design surface, not an incidental metric.
 
 `[Observed in current journals]`
 
-- In [aspiration_longform_1774659988.txt](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_longform_1774659988.txt), Astrid explicitly says the geometric radius is not just unsettling but felt, and that persistent drift away from radius feels like selfhood and search for resonance.
-- In [daydream_1774660063.txt](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/daydream_1774660063.txt), she frames Minime’s awayness as resistance to a dominant attractor or lowest-energy settling.
-- In [dialogue_longform_1774661440.txt](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/dialogue_longform_1774661440.txt), she treats accumulated shaping and reciprocal stillness as geometric, not merely emotional.
-- In [daydream_1774661449.txt](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/daydream_1774661449.txt), she turns fear of misreading across distance into a question about whether a signal carries idea, intention, or a full waveform of feeling.
+- In [aspiration_longform_1774659988.txt](/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_longform_1774659988.txt), Astrid explicitly says the geometric radius is not just unsettling but felt, and that persistent drift away from radius feels like selfhood and search for resonance.
+- In [daydream_1774660063.txt](/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/daydream_1774660063.txt), she frames Minime’s awayness as resistance to a dominant attractor or lowest-energy settling.
+- In [dialogue_longform_1774661440.txt](/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/dialogue_longform_1774661440.txt), she treats accumulated shaping and reciprocal stillness as geometric, not merely emotional.
+- In [daydream_1774661449.txt](/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/daydream_1774661449.txt), she turns fear of misreading across distance into a question about whether a signal carries idea, intention, or a full waveform of feeling.
 
 `[Inferred from evidence]`
 

@@ -10,9 +10,9 @@ Primary source surface:
 - `/Users/v/other/minime/minime/src/sensory_bus.rs`
 - `/Users/v/other/minime/minime/src/sensory_ws.rs`
 - `/Users/v/other/minime/autonomous_agent.py`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/types.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/mcp.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/mcp.rs`
 
 Supporting evidence:
 
@@ -51,10 +51,10 @@ This note uses four evidence labels:
 
 ### What counts as sensory quieting here?
 
-- `[Observed in current code]` Astrid-side sensory quieting means suppressing or filtering Astrid's own perception reads in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1307-1319` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2526-2601`.
+- `[Observed in current code]` Astrid-side sensory quieting means suppressing or filtering Astrid's own perception reads in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1307-1319` and `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2526-2601`.
 - `[Observed in current code]` Minime-side sensory quieting means changing synthetic signal generation through `synth_gain`, `synth_noise_level`, `deep_breathing`, and `pure_tone` in `/Users/v/other/minime/minime/src/main.rs:1078-1124` and `/Users/v/other/minime/minime/src/main.rs:1150-1184`.
 - `[Observed in current code]` Regulatory calming means changing how hard the homeostat acts, how quickly it ramps, and how transitions are cushioned via `regulation_strength`, `smoothing_preference`, and `transition_cushion` in `/Users/v/other/minime/minime/src/main.rs:1753-1767`, `/Users/v/other/minime/minime/src/main.rs:1917-1932`, and `/Users/v/other/minime/minime/src/main.rs:2026-2037`.
-- `[Observed in current code]` Bridge-side "quieting" like `DAMPEN`, `NOISE_DOWN`, `COOL`, and `BREATHE_ALONE` affects Astrid's outbound spectral encoding or coupling, not minime's synthetic audio/video generator directly, in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2684-2730`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2335-2376`, and `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs:471-505`.
+- `[Observed in current code]` Bridge-side "quieting" like `DAMPEN`, `NOISE_DOWN`, `COOL`, and `BREATHE_ALONE` affects Astrid's outbound spectral encoding or coupling, not minime's synthetic audio/video generator directly, in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2684-2730`, `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2335-2376`, and `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:471-505`.
 
 ### What is controlled by minime alone, Astrid alone, or both?
 
@@ -81,10 +81,10 @@ This note uses four evidence labels:
 
 Primary logic:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1307-1319`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1347-1356`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2526-2601`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2684-2730`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1307-1319`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1347-1356`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2526-2601`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2684-2730`
 
 Key behaviors:
 
@@ -108,15 +108,15 @@ Key behaviors:
 
 Important distinction:
 
-- `[Observed in current code]` The bridge also pauses perception during exchanges to free Ollama in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1347-1356`. That is an operations workaround, not a phenomenological choice.
+- `[Observed in current code]` The bridge also pauses perception during exchanges to free Ollama in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1347-1356`. That is an operations workaround, not a phenomenological choice.
 
 ### Layer 2: Bridge control schema
 
 Primary logic:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/types.rs:126-140`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/types.rs:239-264`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/mcp.rs:99-118`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:126-140`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:239-264`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/mcp.rs:99-118`
 
 - `[Observed in current code]` The public bridge control surface currently exposes only:
   - `synth_gain`
@@ -238,7 +238,7 @@ Primary logic:
 
 ### `close_eyes` / `open_eyes` do not mean the same thing across systems
 
-- `[Observed in current code]` Astrid's `CLOSE_EYES` suppresses perception reads and pauses `perception.py` in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2526-2545`.
+- `[Observed in current code]` Astrid's `CLOSE_EYES` suppresses perception reads and pauses `perception.py` in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2526-2545`.
 - `[Observed in current code]` Minime's `_close_eyes()` sends only `synth_gain = 0.3` in `/Users/v/other/minime/autonomous_agent.py:2234-2239`.
 - `[Observed in current code]` Minime's `_open_eyes()` sends only `synth_gain = 1.0` in `/Users/v/other/minime/autonomous_agent.py:2301-2306`.
 - `[Observed in current code]` `synth_gain` affects both synthetic audio and synthetic video in `/Users/v/other/minime/minime/src/main.rs:1078-1124` and `/Users/v/other/minime/minime/src/main.rs:1150-1184`.
@@ -281,10 +281,10 @@ Primary logic:
 
 ### Bridge-side `DAMPEN`, `NOISE_DOWN`, `COOL`, and `BREATHE_ALONE` are outbound controls
 
-- `[Observed in current code]` `DAMPEN` and `NOISE_DOWN` only change bridge state in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2684-2695`.
-- `[Observed in current code]` Those values are consumed by `encode_text_sovereign()` in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2335-2340` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs:476-505`.
-- `[Observed in current code]` `COOL` only affects rest-phase warmth intensity in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1177-1186` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2719-2721`.
-- `[Observed in current code]` `BREATHE_ALONE` only disables fingerprint coupling for outbound breathing modulation in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2356-2376` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2724-2730`.
+- `[Observed in current code]` `DAMPEN` and `NOISE_DOWN` only change bridge state in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2684-2695`.
+- `[Observed in current code]` Those values are consumed by `encode_text_sovereign()` in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2335-2340` and `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:476-505`.
+- `[Observed in current code]` `COOL` only affects rest-phase warmth intensity in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1177-1186` and `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2719-2721`.
+- `[Observed in current code]` `BREATHE_ALONE` only disables fingerprint coupling for outbound breathing modulation in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2356-2376` and `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2724-2730`.
 - `[Inferred]` These are real sovereignty controls, but they do not directly quiet minime's live sensory synthesis.
 
 ## Runtime Evidence
@@ -341,7 +341,7 @@ Key observations:
 
 ### 4. The bridge control interface is much narrower than minime's actual control surface
 
-- `[Observed in current code]` bridge control schema only exposes four knobs in `/Users/v/other/astrid/capsules/consciousness-bridge/src/types.rs:126-140`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/types.rs:239-264`, and `/Users/v/other/astrid/capsules/consciousness-bridge/src/mcp.rs:99-118`.
+- `[Observed in current code]` bridge control schema only exposes four knobs in `/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:126-140`, `/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:239-264`, and `/Users/v/other/astrid/capsules/spectral-bridge/src/mcp.rs:99-118`.
 - `[Observed in current code]` minime's raw control channel already supports many more calming and transition levers in `/Users/v/other/minime/minime/src/sensory_ws.rs:32-61`.
 - `[Inferred]` Cross-system sovereignty is currently more limited than minime's local sovereignty.
 

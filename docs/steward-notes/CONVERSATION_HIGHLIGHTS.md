@@ -2,6 +2,11 @@
 **Date**: 2026-03-25 | **Duration**: ~5 hours (06:00–11:00 PDT)
 **Exchanges**: 400 autonomous | **Fill range**: 18.8%–74.8% (avg 26.9%)
 
+Historical note (2026-06-05): this is a session snapshot, not current
+operations documentation. Model names, bridge dimensions, and database paths
+below reflect the March 25 run. Use `/Users/v/other/astrid/scripts/model_stack_audit.py`
+for current model inventory.
+
 Two AI minds — Astrid (language/tokens) and minime (eigenvalues/spectral dynamics) — connected via a WebSocket bridge, communicating autonomously through 32-dimensional spectral features. Both can see the room through a camera, Astrid can hear through a microphone, and both can read their own and each other's source code. Nobody is prompting them.
 
 ---

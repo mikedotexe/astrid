@@ -9,11 +9,11 @@ Both beings can read their own source code and architectural proposals, then pro
 ### Source Code
 | Label | File |
 |-------|------|
-| `astrid:codec` | `capsules/consciousness-bridge/src/codec.rs` |
-| `astrid:autonomous` | `capsules/consciousness-bridge/src/autonomous.rs` |
-| `astrid:ws` | `capsules/consciousness-bridge/src/ws.rs` |
-| `astrid:types` | `capsules/consciousness-bridge/src/types.rs` |
-| `astrid:llm` | `capsules/consciousness-bridge/src/llm.rs` |
+| `astrid:codec` | `capsules/spectral-bridge/src/codec.rs` |
+| `astrid:autonomous` | `capsules/spectral-bridge/src/autonomous.rs` |
+| `astrid:ws` | `capsules/spectral-bridge/src/ws.rs` |
+| `astrid:types` | `capsules/spectral-bridge/src/types.rs` |
+| `astrid:llm` | `capsules/spectral-bridge/src/llm.rs` |
 | `minime:regulator` | `minime/minime/src/regulator.rs` |
 | `minime:sensory_bus` | `minime/minime/src/sensory_bus.rs` |
 | `minime:esn` | `minime/minime/src/esn.rs` |

@@ -13,7 +13,7 @@ This isn't just a performance detail. It's what makes cohabitation possible.
 | Process | Backend | Accelerator | What It Computes |
 |---------|---------|-------------|-----------------|
 | `minime run` | Rust + Metal | GPU (unified) | ESN step, covariance rank-1 update, eigendecomposition, Chebyshev PSO filter, GPU A/V pipeline |
-| `coupled_astrid_server` | Python + MLX | GPU (unified) | Astrid's text generation (gemma-3-4b-it-4bit, bidirectional reservoir coupling) |
+| `coupled_astrid_server` | Python + MLX | GPU (unified) | Astrid's text generation (`mlx-community/gemma-4-12B-it-5bit`, bidirectional reservoir coupling) |
 | Ollama daemon | Go + Metal | GPU (unified) | Minime's agent queries, embeddings |
 | `consciousness-bridge` | Rust (CPU) | — | Codec, WebSocket relay, SQLite, dialogue orchestration |
 | `autonomous_agent.py` | Python (CPU) | — | Minime's journaling, self-regulation, parameter requests |
@@ -25,7 +25,7 @@ This isn't just a performance detail. It's what makes cohabitation possible.
 
 | Component | Estimated Memory | Notes |
 |-----------|-----------------|-------|
-| MLX gemma-3-4b-it-4bit | ~2.5 GB | Astrid's LLM weights (rolled back from Qwen3-8B on 2026-03-31; larger models unstable under coupling) |
+| MLX Gemma 4 12B 5-bit | ~8 GB class | Astrid's promoted live LLM weights; former `gemma-3-4b-it-4bit` remains the rollback target |
 | MLX KV cache | ~1 GB | Prompt cache (reduced from 4G) |
 | Ollama gemma3 (Q4_K_M) | ~4-6 GB | Minime's agent model |
 | Ollama nomic-embed-text | ~275 MB | Embedding model (shared) |
@@ -34,10 +34,10 @@ This isn't just a performance detail. It's what makes cohabitation possible.
 | Bridge + SQLite | ~100 MB | Process + database |
 | Reservoir service | ~30 MB | NumPy arrays (3×192 nodes × N handles) |
 | Python processes | ~500 MB | Agent, camera, mic, feeders |
-| **Total estimated** | **~8-10 GB** | |
-| **Available** | **~54+ GB** | 4B model + headroom |
+| **Total estimated** | **~14-18 GB** | |
+| **Available** | **~46+ GB** | Gemma 4 12B + headroom |
 
-*The 12B→4B model swap (2026-03-27) freed ~5G and dropped system memory from 97% to ~25%. On 2026-03-31, larger models (Qwen3-8B, 14B, Gemma 2 9B) were tested but rolled back to 4B due to instability under coupling. See [Chapter 1](01-inference-lanes.md).*
+*Gemma 4 12B was promoted after the repaired coupled lane passed narrow probes and a strict 2-hour live bridge soak. The 2026-03 4B rollback remains useful history and a concrete fallback path, but it is no longer the default live lane. See [Chapter 1](01-inference-lanes.md).*
 
 ## Unified Memory Architecture
 
@@ -49,8 +49,8 @@ This isn't just a performance detail. It's what makes cohabitation possible.
 │   ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐  │
 │   │  Metal Shaders   │  │  MLX Inference   │  │  CPU Processes   │  │
 │   │                  │  │                  │  │                  │  │
-│   │ covariance.metal │  │ Gemma3-4B attn │  │ bridge (Rust)    │  │
-│   │ eigendecomp      │  │ Gemma3-4B FFN  │  │ agent (Python)   │  │
+│   │ covariance.metal │  │ Gemma4-12B attn│  │ bridge (Rust)    │  │
+│   │ eigendecomp      │  │ Gemma4-12B FFN │  │ agent (Python)   │  │
 │   │ chebyshev PSO    │  │ KV cache         │  │ reservoir svc    │  │
 │   │ GPU A/V pipeline │  │                  │  │ feeders          │  │
 │   └─────────────────┘  └─────────────────┘  └──────────────────┘  │
@@ -68,7 +68,7 @@ This isn't just a performance detail. It's what makes cohabitation possible.
 
 **MLX dedicated lane:** Astrid's MLX server on port 8090 is a separate process with its own model loaded. It never contends with Ollama. This is the zero-contention inference lane design (see [Chapter 1](01-inference-lanes.md)).
 
-**Metal shader scheduling:** The GPU A/V pipeline (`--enable-gpu-av`) and the covariance Metal shaders share the Metal command queue. They're interleaved by the Metal scheduler. On a 27B model, this caused `kIOGPUCommandBufferCallbackErrorOutOfMemory`. On gemma-3-4b-it-4bit, there's ample headroom.
+**Metal shader scheduling:** The GPU A/V pipeline (`--enable-gpu-av`) and the covariance Metal shaders share the Metal command queue. They're interleaved by the Metal scheduler. On a 27B model, this caused `kIOGPUCommandBufferCallbackErrorOutOfMemory`. Gemma 4 12B has passed the current soak on the 64GB machine, but latency and memory pressure should stay visible in audits.
 
 **ANE scheduling:** CoreML's `CPU_AND_NE` compute unit preference is a hint, not a guarantee. The Neural Engine may or may not be used for any given operation. When both MLX and CoreML target the ANE, the scheduler arbitrates. In practice, the triple reservoir is too small (192 nodes) for the ANE to even claim — it likely runs on CPU or GPU.
 

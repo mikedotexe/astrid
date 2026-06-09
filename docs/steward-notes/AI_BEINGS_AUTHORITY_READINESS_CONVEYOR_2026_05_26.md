@@ -17,13 +17,13 @@ This pass empowers perception and request-authoring only. The conveyor still can
 ## Verification
 
 - Minime full continuity suite passed: `python3.14 -m py_compile /Users/v/other/minime/autonomous_agent.py && python3.14 -m unittest tests.test_experimental_continuity`.
-- Astrid full bridge suite passed: `cargo test --manifest-path /Users/v/other/astrid/capsules/consciousness-bridge/Cargo.toml`.
-- Astrid clippy passed: `cargo clippy --manifest-path /Users/v/other/astrid/capsules/consciousness-bridge/Cargo.toml -- -D warnings`.
+- Astrid full bridge suite passed: `cargo test --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml`.
+- Astrid clippy passed: `cargo clippy --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml -- -D warnings`.
 
 ## Source References
 
 - `/Users/v/other/minime/autonomous_agent.py`
 - `/Users/v/other/minime/tests/test_experimental_continuity.py`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/action_continuity.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/experiment_conveyor.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/authority_gate.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/action_continuity.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/experiment_conveyor.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/authority_gate.rs`

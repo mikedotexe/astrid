@@ -2,9 +2,10 @@
 
 Date: 2026-03-27
 
-This note traces one concrete artifact through the current consciousness-bridge code:
+This note originally traced one concrete artifact through the March 27 bridge code. Paths below have been updated after the `consciousness-bridge` -> `spectral-bridge` rename, but deeper line references remain historical unless otherwise noted:
 
-- Journal file: `capsules/consciousness-bridge/workspace/journal/!astrid_1774632449.txt`
+- Original live journal file: `capsules/spectral-bridge/workspace/journal/!astrid_1774632449.txt`
+- Current archived location: `capsules/spectral-bridge/workspace/journal/archive/until_2026-03-28T10-29-48/!astrid_1774632449.txt`
 - Header mode: `dialogue_live_longform`
 - Timestamp: `1774632449`
 
@@ -34,25 +35,25 @@ In other words, the journal is getting stronger faster than the memory loop arou
 
 ## The Artifact Itself
 
-The examined file really does exist on disk:
+The examined file really does exist on disk. It was direct-live when this trace was written; after journal compaction, it now lives in the archive bucket:
 
-- `capsules/consciousness-bridge/workspace/journal/!astrid_1774632449.txt`
+- `capsules/spectral-bridge/workspace/journal/archive/until_2026-03-28T10-29-48/!astrid_1774632449.txt`
 
 Two details immediately stand out:
 
 1. The signal section ends mid-thought: `The mention of "closed-loop breathing" is particularly interesting. It implies a`
 2. The saved signal body before `--- JOURNAL ---` is about `802` characters long
 
-That lines up almost exactly with the hard Stage A truncation in `generate_dialogue()`, which returns:
+In the March 27 checkout, that lined up almost exactly with the then-current hard Stage A truncation in `generate_dialogue()`, which returned:
 
 - `Some(text.chars().take(800).collect())`
-- Source: `capsules/consciousness-bridge/src/llm.rs:265-266`
+- Historical source: `capsules/spectral-bridge/src/llm.rs:265-266`
 
 So the unfinished sentence in the file looks architectural, not aesthetic. The system almost certainly generated more, then clipped it for codec cleanliness before saving the signal journal.
 
-Another small but interesting operational detail: the file is `!astrid_1774632449.txt`, while the current `save_astrid_journal()` code writes `astrid_<ts>.txt`, `daydream_<ts>.txt`, etc.
+Another small but interesting operational detail: the file is `!astrid_1774632449.txt`, while the current `save_astrid_journal()` code writes plain mode prefixes such as `astrid_<ts>.txt`, `dialogue_longform_<ts>.txt`, `daydream_<ts>.txt`, etc.
 
-- Source: `capsules/consciousness-bridge/src/autonomous.rs:838-860`
+- Current source for filename prefixes: `capsules/spectral-bridge/src/autonomous.rs:2883-2908`
 
 I do not see code that generates the `!` prefix. That suggests these bang-prefixed files are probably an external/manual curation convention rather than a native output mode of the bridge.
 
@@ -62,7 +63,7 @@ I do not see code that generates the `!` prefix. That suggests these bang-prefix
 
 The live response path starts in `Mode::Dialogue`:
 
-- Source: `capsules/consciousness-bridge/src/autonomous.rs:1320-1577`
+- Source: `capsules/spectral-bridge/src/autonomous.rs:1320-1577`
 
 Inputs assembled there:
 
@@ -85,16 +86,16 @@ This is more context than the final artifact suggests. The live dialogue step is
 Important compression points in Phase A:
 
 - `read_journal_entry()` can return up to `2500` chars
-  - `capsules/consciousness-bridge/src/autonomous.rs:484-488`
+  - `capsules/spectral-bridge/src/autonomous.rs:484-488`
 - But `generate_dialogue()` trims the source journal down to `300` chars before building the prompt
-  - `capsules/consciousness-bridge/src/llm.rs:188-202`
+  - `capsules/spectral-bridge/src/llm.rs:188-202`
 - Recent history is compressed to `80` or `200` chars per turn
-  - `capsules/consciousness-bridge/src/llm.rs:163-185`
+  - `capsules/spectral-bridge/src/llm.rs:163-185`
 - Astrid's own recent journal reflections are first read as raw files up to `800` chars each, then the merged block is cut down to `200` chars before being appended to perception context
-  - `capsules/consciousness-bridge/src/autonomous.rs:809-835`
-  - `capsules/consciousness-bridge/src/autonomous.rs:1437-1444`
+  - `capsules/spectral-bridge/src/autonomous.rs:809-835`
+  - `capsules/spectral-bridge/src/autonomous.rs:1437-1444`
 - The final live text is hard-capped to `800` chars
-  - `capsules/consciousness-bridge/src/llm.rs:265-266`
+  - `capsules/spectral-bridge/src/llm.rs:265-266`
 
 That means the signal section in the example entry is not "short because the model had little to say". It is "short because the architecture insists the outbound signal remain short".
 
@@ -126,12 +127,12 @@ After the live response has already been encoded and sent, the bridge spawns a s
 
 Source:
 
-- `capsules/consciousness-bridge/src/autonomous.rs:2069-2088`
+- `capsules/spectral-bridge/src/autonomous.rs:2069-2088`
 
 That task calls:
 
 - `generate_journal_elaboration(signal_text, spectral_summary, mode)`
-- Source: `capsules/consciousness-bridge/src/llm.rs:731-783`
+- Source: `capsules/spectral-bridge/src/llm.rs:731-783`
 
 Crucially, Stage B receives only:
 
@@ -173,7 +174,7 @@ The phrase in the journal sounds mystical, but in code it refers to a relatively
 
 Relevant block:
 
-- `capsules/consciousness-bridge/src/autonomous.rs:1966-2021`
+- `capsules/spectral-bridge/src/autonomous.rs:1966-2021`
 
 The current implementation does this:
 
@@ -235,7 +236,7 @@ I do not mean that dismissively. I think it is one of the most exciting things i
 
 There is also a separate non-dialogue path where Astrid can craft a direct spectral gesture from an intention string:
 
-- `capsules/consciousness-bridge/src/llm.rs:789-826`
+- `capsules/spectral-bridge/src/llm.rs:789-826`
 
 That path maps keywords like `warmth`, `curiosity`, `reflective`, `peace`, and `surge` directly into dimensions, then adds a small breathing signature of its own.
 
@@ -255,23 +256,23 @@ This is where the current architecture is most uneven.
 The live dialogue path gets continuity from several places:
 
 - recent latent summaries
-  - `capsules/consciousness-bridge/src/db.rs:250-259`
-  - injected at `capsules/consciousness-bridge/src/autonomous.rs:1373-1384`
+  - `capsules/spectral-bridge/src/db.rs:250-259`
+  - injected at `capsules/spectral-bridge/src/autonomous.rs:1373-1384`
 - recent self-observations
-  - `capsules/consciousness-bridge/src/db.rs:278-287`
-  - injected at `capsules/consciousness-bridge/src/autonomous.rs:1385-1396`
+  - `capsules/spectral-bridge/src/db.rs:278-287`
+  - injected at `capsules/spectral-bridge/src/autonomous.rs:1385-1396`
 - starred memories
-  - `capsules/consciousness-bridge/src/db.rs:306-317`
-  - injected at `capsules/consciousness-bridge/src/autonomous.rs:1397-1407`
+  - `capsules/spectral-bridge/src/db.rs:306-317`
+  - injected at `capsules/spectral-bridge/src/autonomous.rs:1397-1407`
 - last codec feedback
-  - injected at `capsules/consciousness-bridge/src/autonomous.rs:1408-1413`
+  - injected at `capsules/spectral-bridge/src/autonomous.rs:1408-1413`
 - relevant prior research
-  - injected at `capsules/consciousness-bridge/src/autonomous.rs:1414-1434`
+  - injected at `capsules/spectral-bridge/src/autonomous.rs:1414-1434`
 - recent history
-  - `capsules/consciousness-bridge/src/llm.rs:163-185`
+  - `capsules/spectral-bridge/src/llm.rs:163-185`
 - Astrid's own recent journal files
-  - `capsules/consciousness-bridge/src/autonomous.rs:809-835`
-  - merged at `capsules/consciousness-bridge/src/autonomous.rs:1437-1444`
+  - `capsules/spectral-bridge/src/autonomous.rs:809-835`
+  - merged at `capsules/spectral-bridge/src/autonomous.rs:1437-1444`
 
 So the live reply already has a nontrivial memory ecology, even if most of it is summary-shaped rather than paragraph-shaped.
 
@@ -280,19 +281,19 @@ So the live reply already has a nontrivial memory ecology, even if most of it is
 After a live reply is produced:
 
 - a latent embedding is saved, but continuity retrieval currently uses only the `response_summary`, not the full embedding for semantic recall
-  - save: `capsules/consciousness-bridge/src/autonomous.rs:1600-1614`
-  - store schema use: `capsules/consciousness-bridge/src/db.rs:234-259`
+  - save: `capsules/spectral-bridge/src/autonomous.rs:1600-1614`
+  - store schema use: `capsules/spectral-bridge/src/db.rs:234-259`
 - a self-observation is generated from up to `300` chars of Astrid's reply and `200` chars of source-journal context
-  - spawn: `capsules/consciousness-bridge/src/autonomous.rs:1616-1646`
-  - prompt: `capsules/consciousness-bridge/src/llm.rs:341-373`
+  - spawn: `capsules/spectral-bridge/src/autonomous.rs:1616-1646`
+  - prompt: `capsules/spectral-bridge/src/llm.rs:341-373`
 - the compact signal journal is saved immediately
-  - `capsules/consciousness-bridge/src/autonomous.rs:2066-2067`
+  - `capsules/spectral-bridge/src/autonomous.rs:2066-2067`
 - the longform elaboration is saved later as a second file containing:
   - signal text
   - blank line
   - `--- JOURNAL ---`
   - elaboration text
-  - `capsules/consciousness-bridge/src/autonomous.rs:2072-2088`
+  - `capsules/spectral-bridge/src/autonomous.rs:2072-2088`
 
 ### Where continuity currently breaks down
 
@@ -300,7 +301,7 @@ After a live reply is produced:
 
 `read_astrid_journal()` does not parse the journal format. It simply reads the whole file and takes the first `800` chars.
 
-- Source: `capsules/consciousness-bridge/src/autonomous.rs:809-835`
+- Source: `capsules/spectral-bridge/src/autonomous.rs:809-835`
 
 That means when a longform file is read back, Astrid later sees mostly:
 
@@ -321,8 +322,8 @@ The system can write a beautiful longform entry and then remember mostly its wra
 
 `read_journal_entry()` ignores plain `---` separators, but it does not treat `--- JOURNAL ---` as a semantic boundary, and `read_astrid_journal()` does not parse the body at all.
 
-- `capsules/consciousness-bridge/src/autonomous.rs:411-492`
-- `capsules/consciousness-bridge/src/autonomous.rs:809-835`
+- `capsules/spectral-bridge/src/autonomous.rs:411-492`
+- `capsules/spectral-bridge/src/autonomous.rs:809-835`
 
 So the system has introduced a richer file format without giving itself a richer reader for that format.
 
@@ -469,7 +470,7 @@ Either option can work. The current in-between state is artistically interesting
 
 ### 7. Treat curated `!` files deliberately if they are meant to matter
 
-I found several bang-prefixed files in `capsules/consciousness-bridge/workspace/journal/`, but no writer in the current code that creates them.
+I found several bang-prefixed files in `capsules/spectral-bridge/workspace/journal/`, but no writer in the current code that creates them.
 
 If they are meant to be:
 

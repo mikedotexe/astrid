@@ -353,11 +353,11 @@ This distinction matters a lot.
 
 ### What Astrid does today
 
-- `[Code]` `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs` encodes text into a deterministic 32D semantic vector.
-- `[Code]` `/Users/v/other/astrid/capsules/consciousness-bridge/src/types.rs` defines `SensoryMsg::Semantic { features: Vec<f32> }`.
+- `[Code]` `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs` encodes text into a deterministic 32D semantic vector.
+- `[Code]` `/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs` defines `SensoryMsg::Semantic { features: Vec<f32> }`.
 - `[Code]` `/Users/v/other/minime/minime/src/sensory_bus.rs` defines `LLAVA_DIM = 32`, which forms Minime’s semantic lane.
 - `[Code]` `/Users/v/other/minime/mikemind/mind.py` down-samples 4096D embeddings to 32D before sending them to the Rust side.
-- `[Code]` `/Users/v/other/astrid/capsules/consciousness-bridge/src/ws.rs` stores Minime’s returned `spectral_fingerprint` as a 32D geometry summary.
+- `[Code]` `/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs` stores Minime’s returned `spectral_fingerprint` as a 32D geometry summary.
 
 ### What Astrid does not do today
 

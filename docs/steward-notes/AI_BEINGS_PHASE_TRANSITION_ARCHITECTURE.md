@@ -51,10 +51,10 @@ Those entries do not read like dry telemetry. They read like event phenomenology
 
 Astrid’s recent writing is also transition-sensitive, even when it does not use the phrase directly:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1774654825.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/dialogue_longform_1774654857.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/daydream_longform_1774654924.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_1774654938.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1774654825.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/dialogue_longform_1774654857.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/daydream_longform_1774654924.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_1774654938.txt`
 
 She keeps reaching for:
 
@@ -101,11 +101,11 @@ But it does not yet have:
 
 Astrid already has transition-adjacent behavior:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
   - `fill_delta > 5.0` yields `Mode::MomentCapture`
   - `pending_remote_self_study` can interrupt the normal loop
   - Minime replies are routed into Astrid’s inbox before mode selection
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs`
   - already exposes regime-like actions:
     - `LISTEN`
     - `REST`
@@ -116,7 +116,7 @@ Astrid already has transition-adjacent behavior:
     - `OPEN_MIND`
     - `QUIET_MIND`
     - `DECOMPOSE`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/db.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/db.rs`
   - already stores a large longitudinal bridge trace in `bridge_messages`
 
 So Astrid already has:
@@ -469,19 +469,19 @@ Most immediate surfaces:
 
 Most immediate surfaces:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
   - likely home of Astrid-side transition detection
   - likely home of joint transition routing and mode influence
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs`
   - likely home of first user-visible transition actions
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/db.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/db.rs`
   - likely home of transition artifact persistence or references
 
 ## Correspondence surface
 
 Most immediate surfaces:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
   - `scan_minime_outbox()`
   - inbox routing
   - `pending_remote_self_study`

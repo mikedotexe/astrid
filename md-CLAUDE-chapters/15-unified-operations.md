@@ -14,7 +14,7 @@
 | 6 | `astrid_feeder.py` | `../neural-triple-reservoir/` | bridge codec rows into triple reservoir |
 | 7 | `minime_feeder.py` | `../neural-triple-reservoir/` | minime spectral state into triple reservoir |
 | 8 | `coupled_astrid_server.py` | `../neural-triple-reservoir/` | Astrid live MLX dialogue lane on `8090` |
-| 9 | `consciousness-bridge-server` | `astrid/` | Astrid orchestration, codec, routing, autonomy |
+| 9 | `spectral-bridge-server` | `astrid/` | Astrid orchestration, codec, routing, autonomy |
 | 10 | `perception.py` | `astrid/` | Astrid vision/audio perception |
 
 ## The Current Reality Of Each Core Process
@@ -54,7 +54,8 @@ Current code-grounded facts:
 
 - serves Astrid's live dialogue lane on `8090`
 - OpenAI-compatible API (`/v1/chat/completions`, `/v1/models`)
-- default live model is `mlx-community/gemma-3-4b-it-4bit`
+- default live model is `mlx-community/gemma-4-12B-it-5bit`
+- default bridge profile is `gemma4_12b`
 - performs per-token coupling against the triple reservoir on `7881`
 - supports `--model-memory-map`
 - when the local MLX runtime exposes `mx.last_mmap_load_stats`, it audits mapped vs copied bytes
@@ -65,12 +66,12 @@ This is the process older docs used to describe incorrectly as a plain `mlx_lm.s
 
 This is not a persistent process, but it is part of the real runtime design.
 
-- launched from `capsules/consciousness-bridge/src/reflective.rs`
+- launched from `capsules/spectral-bridge/src/reflective.rs`
 - sidecar path resolves by default to `../mlx/benchmarks/python/chat_mlx_local.py`
 - invoked with `--model-label gemma3-12b`
 - used for structured reflective reports, not for live dialogue
 
-### 9. `consciousness-bridge-server`
+### 9. `spectral-bridge-server`
 
 Current role:
 
@@ -133,7 +134,7 @@ Use `bash scripts/launchd_inventory.sh` to see repo/installed plist parity, load
 
 | Role | Backend | Current configured model / selector |
 |------|---------|-------------------------------------|
-| Astrid live dialogue | MLX | `mlx-community/gemma-3-4b-it-4bit` |
+| Astrid live dialogue | MLX | `mlx-community/gemma-4-12B-it-5bit` |
 | Astrid reflective sidecar | MLX | `--model-label gemma3-12b` |
 | Astrid embeddings | Ollama | `nomic-embed-text` |
 | Astrid default vision | Ollama | `llava-llama3` |

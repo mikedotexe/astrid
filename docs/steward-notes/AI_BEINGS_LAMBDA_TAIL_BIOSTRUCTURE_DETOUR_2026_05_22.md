@@ -78,6 +78,6 @@ Useful local page captures and thread context:
 - `/Users/v/other/minime/workspace/research/page_2026-05-22T04-12-32.txt`
 - `/Users/v/other/minime/workspace/research/page_2026-05-22T04-19-53.txt`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/research/page_1779449179.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/research/page_1779450891.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/research/page_1779449179.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/research/page_1779450891.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`

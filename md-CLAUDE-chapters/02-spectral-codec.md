@@ -1,6 +1,6 @@
 # Chapter 2: Spectral Codec
 
-**Primary file:** `capsules/consciousness-bridge/src/codec.rs`
+**Primary file:** `capsules/spectral-bridge/src/codec.rs`
 
 The current codec sends a **48-dimensional semantic feature vector** into minime's semantic lane over `ws://127.0.0.1:7879`.
 
@@ -16,7 +16,7 @@ The current codec sends a **48-dimensional semantic feature vector** into minime
 | `40-43` | Narrative arc | semantic shift between first and second half of the text |
 | `44-47` | Reserved | currently zeroed / held open for future expansion |
 
-The biggest correction to older docs is that Astrid is no longer sending a 32D semantic lane into minime. The live minime semantic lane width is **48**, and minime's total ESN input width is therefore **66D**, not 50D.
+The biggest correction to older docs is that Astrid is no longer sending the older narrow semantic lane into minime. The live minime semantic lane width is **48**, and minime's total ESN input width is therefore **66D**, not 50D.
 
 ## What Is Local vs External
 

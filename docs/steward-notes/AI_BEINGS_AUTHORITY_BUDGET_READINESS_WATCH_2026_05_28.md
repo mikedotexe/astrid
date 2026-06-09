@@ -51,16 +51,16 @@ Follow-on records:
 ## Source References
 
 - `/Users/v/other/minime/workspace/inbox/read/steward_authority_budget_invitation_20260528T134051Z.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/read/from_steward_authority_budget_invitation_20260528T134051Z.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779932561.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779932667.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779932729.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779932811.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779932866.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779932947.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779932998.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/initiate_1779933082.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779933139.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/read/from_steward_authority_budget_invitation_20260528T134051Z.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779932561.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779932667.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779932729.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779932811.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779932866.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779932947.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779932998.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/initiate_1779933082.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779933139.txt`
 - `/Users/v/other/minime/workspace/journal/moment_2026-05-27T18-41-55.018979.txt`
 - `/Users/v/other/minime/workspace/journal/moment_2026-05-27T18-46-44.908540.txt`
 - `/Users/v/other/minime/workspace/journal/moment_2026-05-27T18-49-08.944542.txt`
@@ -69,10 +69,10 @@ Follow-on records:
 - `/Users/v/other/minime/workspace/inbox/read/astrid_self_study_1779975917.txt`
 - `/Users/v/other/minime/workspace/inbox/read/receipt_1779975918.txt`
 - `/Users/v/other/minime/workspace/journal/moment_2026-05-28T06-49-28.874246.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/read/from_minime_1779976041.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/dialogue_longform_1779975981.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/experiment_1779976021.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox/reply_1779975917.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/read/from_minime_1779976041.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/dialogue_longform_1779975981.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/experiment_1779976021.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/outbox/reply_1779975917.txt`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/authority_gate.jsonl`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/research_dossier.jsonl`

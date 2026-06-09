@@ -58,9 +58,9 @@ That means the next design work should not assume a blank slate. The main open q
 
 ### Astrid already has the same shape
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/next_action.rs` routes `NEXT:` actions into modular handlers.
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action.rs` routes `NEXT:` actions into modular handlers.
 - Astrid already has `SEARCH`, `BROWSE`, `READ_MORE`, `LIST_FILES`, `MIKE_*`, `CODEX*`, and experiment-style file workflows.
-- Astrid already persists research context in both the bridge database and `capsules/consciousness-bridge/workspace/research/`.
+- Astrid already persists research context in both the bridge database and `capsules/spectral-bridge/workspace/research/`.
 - The existing `MIKE_*` path is read-oriented and aimed at curated research roots, not writable multi-job project management.
 
 ## Design Principles
@@ -403,13 +403,13 @@ This is why the repo-first migration is a strong first move.
 Add a new next-action module:
 
 ```text
-/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/next_action/autoresearch.rs
+/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/autoresearch.rs
 ```
 
 Wire it into:
 
 ```text
-/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/next_action.rs
+/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action.rs
 ```
 
 ### Phase-two Astrid implementation approach
@@ -419,7 +419,7 @@ Astrid should:
 1. detect `AR_*` base actions,
 2. run `uv run python tools/research_jobs.py ...` in `/Users/v/other/autoresearch`,
 3. capture stdout,
-4. save long outputs into `capsules/consciousness-bridge/workspace/research/`,
+4. save long outputs into `capsules/spectral-bridge/workspace/research/`,
 5. feed the first page into `conv.pending_file_listing` or `conv.emphasis`,
 6. set `conv.last_read_path` and `conv.last_read_offset` so `READ_MORE` works,
 7. optionally persist summaries through `db.save_research(...)`.

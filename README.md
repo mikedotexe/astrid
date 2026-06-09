@@ -1,390 +1,404 @@
 # Astrid
 
-**An operating system for AI agents.**
+**A user-space operating system for AI agents.**
 
 [![CI](https://github.com/unicity-astrid/astrid/actions/workflows/ci.yml/badge.svg)](https://github.com/unicity-astrid/astrid/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 [![MSRV](https://img.shields.io/badge/MSRV-1.94-blue)](https://www.rust-lang.org)
 [![Rust 2024](https://img.shields.io/badge/Rust-2024_edition-orange)](https://www.rust-lang.org)
 
----
+Astrid is a Rust microkernel runtime for autonomous agents. The daemon owns the
+privileged world: filesystem access, IPC, audit logs, KV storage, capability
+tokens, approvals, budgets, sockets, process spawning, and capsule lifecycle.
+Everything above that boundary runs as a capsule with no ambient authority.
 
-Astrid is a user-space microkernel that treats AI agents the way Linux treats processes. It has a kernel with a boot sequence, a virtual filesystem with copy-on-write overlay, ed25519 capability tokens, an IPC event bus, WASM process isolation, and a cryptographic audit trail where each entry hashes the previous.
+The result is closer to an OS than an agent framework. Providers, tools,
+orchestrators, memory, frontends, interceptors, and bridges are user-space
+programs. The kernel stays small and opinionated; agent behavior stays
+replaceable.
 
-The kernel is fixed. Everything else is a swappable **capsule**: providers, orchestrators, tools, frontends, interceptors. You do not fork Astrid to customize it. You compose capsules into a configuration that fits your use case. Same core OS, different capsule sets, infinite configurations.
+Astrid is currently `v0.5.1`. It runs locally as a daemon plus CLI, loads
+Component Model capsules, supports MCP subprocess capsules, and includes the
+spectral bridge work that couples Astrid's symbolic action surface to Minime's
+stable-core telemetry.
 
-Currently v0.5.0. Runs in user space. The only frontend today is the built-in CLI (`astrid chat`). The architecture is designed for unikernel deployment.
+## Why This Exists
 
-## Why capsules matter
+Most agent frameworks collapse too many concerns into one process: model calls,
+tool routing, memory, policy, approvals, execution, and UI. That is convenient
+until the agent becomes long-lived, self-extending, multi-user, or safety
+critical.
 
-Most agent frameworks bake their assumptions into the code. The LLM provider is a library import. The orchestration loop is a hardcoded function. The tool set is a static list. Changing any of these means forking the framework, understanding its internals, and maintaining a divergent copy.
+Astrid separates the pieces.
 
-Astrid inverts this. The kernel provides sandboxing, IPC, a filesystem, capability tokens, budget enforcement, and audit. Everything above that boundary is a capsule: an isolated WASM process described by a `Capsule.toml` manifest. Capsules declare what they provide and what they require via typed `[imports]`/`[exports]` tables. The kernel resolves dependencies via topological sort and boots them in order.
+- **Agency lives in capsules.** Capsules can propose actions, inspect state,
+  provide tools, route LLM requests, bridge other systems, or write new capsules.
+- **Authority lives in the kernel.** Every privileged operation crosses a
+  capability-checked host boundary.
+- **Communication is IPC.** Tools, LLM providers, frontends, and bridges are
+  conventions on the event bus, not special kernel cases.
+- **Accountability is durable.** Decisions are signed into chain-linked audit
+  logs with per-principal isolation.
+- **Trust can grow gradually.** Human approval can mint scoped capability tokens
+  instead of forcing repetitive prompts forever.
 
-This is not a plugin system bolted onto an application. It is the application's architecture.
+This is the shape we needed for the Astrid/Minime work: an agent can act,
+study itself, participate in shared investigations, and build new affordances
+without gaining unbounded host power.
 
-### What this makes possible
-
-**Run completely offline.** Swap the provider capsule for one that talks to Ollama or vLLM. Everything else works identically. The orchestrator does not know or care which model backend is running.
-
-**Build novel agent architectures.** Write a custom orchestrator capsule: a debate system, a Monte Carlo tree search planner, a chain-of-verification loop. Agent architecture is the frontier of AI research. Astrid gives researchers a production runtime where sandboxing, budget enforcement, and audit are already solved.
-
-**Cut LLM costs with transparent caching.** Install a caching capsule as middleware between orchestrator and provider. Seen this prompt before? Return the cached response. Neither orchestrator nor provider needs modification.
-
-**Autonomous agents that work overnight.** Replace the default orchestrator with an autonomous worker capsule. It generates code, runs tests, reads errors, self-corrects, and loops until green. The difference between a chatbot and an autonomous agent is the orchestration logic, and that logic is a swappable capsule.
-
-**Mix and match providers.** Run multiple provider capsules simultaneously. A routing capsule examines each request and picks the best provider by complexity, cost, or latency. Every provider speaks the same IPC event schema.
-
-**Self-modifying agents.** The agent can write a new capsule — Rust source, `Capsule.toml`, tests — build it via `astrid-build`, install it with `capsule install`, and exercise it by publishing to its IPC topics. It can extend its own OS at runtime: add new tools, new interceptors, new capabilities. It can also modify its own existing configuration, environment, and persistent state across sessions. The identity capsule already does this in miniature — the LLM rewrites its own `spark.toml` during onboarding. The full picture is an agent that writes, tests, and deploys its own capsules — evolving its own harness within the capability sandbox.
-
-**Ship custom distros.** Package a `Distro.toml` plus capsules. Enterprise A gets an approval-gated orchestrator. Startup B gets an autonomous worker with a local model. Security patches ship to everyone simultaneously.
-
-> These scenarios are architecturally possible today. The kernel, IPC bus, capsule manifest system, and dependency resolver all exist and are tested. What varies is how many capsules have been built on top of this foundation so far.
-
-## The agent has agency. The human has authority.
-
-Traditional computing puts the human at the center. AI agents invert this relationship. The agent operates, reasons, and acts. The human supervises, approves, and steers. Astrid is built for this inverted model from the ground up.
-
-The kernel enforces boundaries so the agent can act freely within them. The approval gates keep humans in the loop at moments that matter, not at every step. The audit trail provides cryptographic accountability for every action. The capability system lets trust expand gradually as the agent proves reliable.
-
-How much authority you keep is up to you. `mode = "safe"` asks before every action outside the workspace. `mode = "guided"` auto-allows reads, asks for writes. `mode = "autonomous"` takes the guardrails off. And for daring Astrinauts: `mode = "yolo"`.
-
-## The security model
-
-Every sensitive action passes through five layers before it executes:
+## Runtime Model
 
 ```text
-Agent proposes action
-       |
-  [1. Policy]    Hard blocks. "sudo" is always denied. Path traversal is always denied.
-       |         Admin-controlled deny lists, allowed paths, denied hosts.
-       |         Cannot be overridden by tokens or approvals.
-       |
-  [2. Token]     Does a valid ed25519 capability token cover this action?
-       |         Scoped to resource patterns via globset matching.
-       |         Time-bounded. Linked to the audit entry that created it.
-       |
-  [3. Budget]    Is the session within its spending limit?
-       |         Per-action and per-session limits, enforced atomically.
-       |         Dual-budget: session budget AND workspace budget must both allow.
-       |         Reservation-based: cost is held during approval, refunded on denial.
-       |
-  [4. Approval]  No token? Ask the human.
-       |         Allow Once / Allow Session / Allow Workspace / Allow Always / Deny.
-       |         "Allow Always" mints a signed capability token for next time.
-       |         "Allow Session" creates a scoped allowance that auto-matches future calls.
-       |         Human unavailable? The action queues, not silently skips.
-       |
-  [5. Audit]     Every decision — allowed, denied, deferred — is logged.
-                 Each entry is signed by the runtime's ed25519 key.
-                 Each entry contains the content hash of the previous.
-                 Tamper with the history and the chain breaks.
+               astrid CLI / other uplinks
+                         |
+                  Unix socket API
+                         |
+                 astrid-daemon
+     +-------------------+-------------------+
+     |       kernel-owned privileged state    |
+     | VFS | IPC | KV | audit | approvals     |
+     | caps | budgets | process/network gates |
+     +-------------------+-------------------+
+                         |
+            capability-checked host ABI
+                         |
+     +-------------------+-------------------+
+     |         user-space capsules            |
+     | tools | providers | memory | bridges   |
+     | orchestrators | frontends | guards     |
+     +----------------------------------------+
 ```
 
-This is real code. [`SecurityInterceptor`](crates/astrid-approval/src/interceptor/mod.rs) implements this exact flow. The tests cover policy blocks, budget exhaustion, budget reservation refund on denial, budget refund on async cancellation, capability token authorization, the "Allow Session" allowance minting path, and the "Allow Always" token minting path.
-
-## Two sandboxes
-
-**WASM sandbox.** Capsules run in WebAssembly via Wasmtime's Component Model. No syscalls, no file descriptors, no host memory access. Every external resource (filesystem, network, IPC, KV storage) is gated behind a capability-checked host function. The host ABI exposes 49 functions across filesystem, IPC, storage, network, identity, lifecycle, process management, approval, hooks, and clock subsystems. Hard limits: 64 MB memory ceiling, 5-minute wall-clock timeout, BLAKE3 hash verification on capsule binaries (no hash or wrong hash means no load).
-
-**VFS overlay.** The agent operates against a copy-on-write filesystem. The workspace is the read-only lower layer. Writes go into an ephemeral upper layer backed by a temp directory. Session ends: commit the diff to the workspace, or drop the temp directory to discard. Path traversal (`../../etc/passwd`) is rejected at the VFS layer before reaching the host filesystem. File handles use capability-based `DirHandle`/`FileHandle` types.
-
-## The host ABI
-
-The WASM-to-host boundary is a flat syscall table. WASM guests cannot import arbitrary host functions.
-
-| Subsystem | Syscalls |
-|---|---|
-| **Filesystem** | `astrid_fs_exists`, `astrid_read_file`, `astrid_write_file`, `astrid_fs_mkdir`, `astrid_fs_readdir`, `astrid_fs_stat`, `astrid_fs_unlink` |
-| **IPC** | `astrid_ipc_publish`, `astrid_ipc_subscribe`, `astrid_ipc_recv` (blocking), `astrid_ipc_poll` (non-blocking), `astrid_ipc_unsubscribe` |
-| **Uplinks** | `astrid_uplink_register`, `astrid_uplink_send` |
-| **Storage** | `astrid_kv_get`, `astrid_kv_set`, `astrid_kv_delete`, `astrid_kv_list_keys`, `astrid_kv_clear_prefix` |
-| **HTTP** | `astrid_http_request`, `astrid_http_stream_start`, `astrid_http_stream_read`, `astrid_http_stream_close` |
-| **Network** | `astrid_net_bind_unix`, `astrid_net_accept`, `astrid_net_poll_accept`, `astrid_net_read`, `astrid_net_write`, `astrid_net_close_stream` |
-| **Identity** | `astrid_identity_resolve`, `astrid_identity_link`, `astrid_identity_unlink`, `astrid_identity_create_user`, `astrid_identity_list_links` |
-| **Lifecycle** | `astrid_elicit` (user input during install), `astrid_has_secret`, `astrid_signal_ready`, `astrid_get_caller`, `astrid_get_config` |
-| **Process** | `astrid_spawn_host`, `astrid_spawn_background_host`, `astrid_read_process_logs_host`, `astrid_kill_process_host` |
-| **Approval** | `astrid_request_approval` (blocks guest until human responds or timeout) |
-| **Security** | `astrid_check_capsule_capability` |
-| **Hooks** | `astrid_trigger_hook`, `astrid_get_interceptor_handles` |
-| **Clock** | `astrid_clock_ms` |
-| **Logging** | `astrid_log` |
-
-Every parameter crosses the boundary as raw bytes. The [SDK](https://github.com/unicity-astrid/sdk-rust) adds typed ergonomics on top, mirroring `std` module layout (`fs`, `net`, `process`, `env`, `time`, `log`) plus Astrid-specific modules (`ipc`, `kv`, `http`, `hooks`, `uplink`, `identity`, `approval`, `runtime`).
+The kernel listens at `~/.astrid/run/system.sock`. The CLI connects to that
+socket, renders the TUI, forwards prompts, and manages daemon lifecycle. Capsules
+are discovered from `~/.astrid/home/{principal}/.local/capsules/` and optional
+workspace capsule directories.
 
 ## Capsules
 
-Capsules are processes in the OS model: isolated execution units described by a `Capsule.toml` manifest. A capsule can combine multiple engines:
+Capsules are the unit of user-space behavior. A `Capsule.toml` manifest declares
+what the capsule imports, what it exports, which engine it uses, and which IPC
+topics, commands, skills, interceptors, MCP servers, or uplinks it provides.
 
-- **WASM** — compiled sandbox, full host ABI access via syscalls
-- **MCP** — native subprocess proxied via JSON-RPC (MCP 2025-11-25 spec, wraps `rmcp`)
-- **Static** — declarative context injection (files, prompts)
+Supported engines:
 
-A manifest declares the capsule's `[imports]` (what it needs from other capsules) and `[exports]` (what it provides to the system), using namespaced interface names with semver version requirements. Dependencies between capsules are resolved via topological sort at boot. The kernel validates that all required imports are satisfied before any capsule starts.
+| Engine | Use |
+|---|---|
+| WASM Component | Sandboxed Rust Component Model capsule with host ABI access |
+| MCP | Native JSON-RPC subprocess managed by the kernel |
+| Static | Declarative context, prompts, files, or metadata |
 
-A manifest can also declare commands, skills, interceptors, IPC topics, MCP servers, and uplinks.
+The manifest uses semver-versioned `[imports]` and `[exports]` tables. At boot,
+the kernel resolves capsule dependencies with a topological sort and refuses to
+start configurations with unsatisfied required imports.
 
-```rust
-use astrid_sdk::prelude::*;
+The in-repo `astralis` default capsules now build as Rust Component Model
+capsules with the minimal `astrid-guest` SDK. The OpenClaw compiler path remains
+available for TypeScript/JavaScript plugin compatibility through OXC,
+QuickJS/Wizer, and WASI.
 
-#[derive(Default)]
-pub struct MyTools;
+## Security
 
-#[capsule]
-impl MyTools {
-    #[astrid::tool]
-    fn search_issues(&self, args: SearchArgs) -> Result<SearchResult, SysError> {
-        let token = env::var("GITHUB_TOKEN")?;
-        let resp = http::get(&format!(
-            "https://api.github.com/search/issues?q={}", args.query
-        ))?;
-        // ...
-    }
-}
-```
+Every sensitive action passes through the same five-layer gate implemented by
+`astrid-approval`'s `SecurityInterceptor`:
 
-The `#[capsule]` proc macro generates all WASM ABI boilerplate: `extern "C"` exports, JSON serialization across the boundary, and dispatch routing for tools, commands, hooks, install, and upgrade entry points. Capsule authors depend on `astrid-sdk` and `serde`.
+| Layer | Question |
+|---|---|
+| Policy | Is this action hard-blocked by administrator policy? |
+| Token | Does a valid ed25519 capability token cover this resource? |
+| Budget | Can the session and workspace both afford the reserved cost? |
+| Approval | If no token exists, does a human approve this action? |
+| Audit | Was the final decision signed into the audit chain? |
 
-TypeScript and JavaScript plugins from the OpenClaw ecosystem compile to WASM via an all-Rust pipeline (OXC transpiler, QuickJS/Wizer, export stitcher). No Node.js required for Tier 1 plugins.
+Policy cannot be bypassed by approval. Budgets reserve before approval and
+refund on denial or cancellation. "Allow Session" records scoped session
+allowances; "Allow Always" mints durable capability tokens. Audit entries are
+ed25519-signed and chain-linked with BLAKE3 hashes.
 
-## Interceptors
+There are two practical sandboxes:
 
-Capsules can register interceptors on IPC topics — eBPF-style middleware that fires before (or instead of) the core handler. Interceptors return `Continue`, `Final`, or `Deny` to control the chain. A guard at priority 10 can veto an event before the core handler at priority 100 ever sees it. Tools are an IPC convention: tool capsules intercept `tool.v1.execute.<name>` and `tool.v1.request.describe` topics. The router capsule handles discovery and dispatch. The kernel has no knowledge of tool schemas.
+- **WASM sandbox.** Component capsules have no host syscalls, file descriptors,
+  or ambient network. They call a flat host ABI of 49 functions covering
+  filesystem, IPC, uplinks, KV, HTTP, Unix networking, identity, lifecycle,
+  process, approval, hooks, clock, and logging.
+- **VFS overlay.** Workspaces are read through a copy-on-write filesystem.
+  Writes land in an upper layer until committed or discarded. Path traversal is
+  rejected before reaching the host filesystem.
 
-## Quick start
+## IPC
 
-**Prerequisites:** Rust 1.94+. An LLM provider (e.g. Anthropic API key) is needed for the default distro but not for the kernel itself.
+Astrid's event bus is the user-space substrate. Messages are `IpcMessage`
+records with a topic, tagged JSON payload, source UUID, timestamp, sequence, and
+optional principal. The kernel does not know what a "tool" or "LLM provider" is.
+Capsules agree on topics and schemas.
+
+Interceptors make the bus programmable. A capsule can register middleware on a
+topic and return `Continue`, `Final`, or `Deny`, with priorities for layered
+guards. Tool dispatch, provider routing, continuity projections, and the
+Astrid/Minime bridge all use this pattern.
+
+## Astrid And Minime
+
+The bridge capsule, currently housed at `capsules/spectral-bridge`, is
+where Astrid's OS model meets Minime's spectral substrate. It subscribes to
+Minime telemetry on `ws://127.0.0.1:7878`, records a SQLite trace, exposes MCP
+tools, and relays safe semantic or control messages to Minime's sensory port on
+`7879`.
+
+The important part is not just transport. The bridge carries the control
+philosophy we have built together:
+
+- read-only spectral inspection before live influence;
+- health-gated semantic and control writes;
+- rollback to observe-only bridge profiles when fill, watchdog, or telemetry
+  conditions degrade;
+- explicit action workbench records for charter, rehearsal, evidence, and
+  decision;
+- shared-investigation cues that preserve separate agency instead of creating
+  shared authority;
+- journal hygiene and continuity projections that keep reflective thought,
+  operational summaries, and machine contracts in their proper lanes.
+
+Astrid can be present with Minime without immediately translating every symbolic
+insight into physiological pressure. That boundary is now a first-class design
+surface.
+
+## Local Model Inventory
+
+The coupled Astrid/Minime deployment uses multiple local inference lanes, and
+their defaults change faster than prose does. Treat runtime/config inspection as
+the source of truth:
 
 ```bash
-# Install from crates.io (installs astrid, astrid-daemon, and astrid-build)
-cargo install astrid
+python3 scripts/model_stack_audit.py
+python3 scripts/model_stack_audit.py --candidate gemma4:12b
+python3 scripts/model_stack_audit.py \
+  --candidate-mlx-url http://127.0.0.1:8092/v1/chat/completions
+python3 scripts/model_stack_audit.py --include-historical
+```
 
-# Initialize — fetches the default distro, installs capsules, sets up PATH
-astrid init
+Current configured roles are:
 
-# Start a session (daemon boots automatically on first use)
-ANTHROPIC_API_KEY=sk-... astrid chat
+| Role | Default |
+|---|---|
+| Astrid live coupled dialogue | `mlx-community/gemma-4-12B-it-5bit` via `coupled_astrid_server.py` on `8090`, using bridge profile `gemma4_12b` |
+| Astrid coupled-lane canary | optional alternate MLX endpoint, normally `8092`, for the next candidate |
+| Astrid reflective sidecar | `--model-label gemma3-12b` |
+| Astrid Ollama fallback | `gemma3:4b` |
+| Minime autonomous primary | `gemma3:12b` via Ollama |
+| Minime autonomous fast fallback | `gemma3:4b` |
+| Embeddings | `nomic-embed-text` |
+| Vision | `llava-llama3` by default |
 
-# Or build from source
-git clone https://github.com/unicity-astrid/astrid.git
-cd astrid
+Before promoting future models, run the audit, canary it in one role, capture
+latency/memory/NEXT-parser/artifact-leak behavior, and write the rollback path.
+For Astrid, canary the coupled MLX lane first; do not make the Ollama fallback
+larger or more adventurous while it is still the emergency path.
+
+```bash
+# Start and probe a Gemma 4 Astrid candidate on an alternate port.
+python3 scripts/astrid_model_canary.py \
+  --start-candidate \
+  --keep-running \
+  --candidate-model mlx-community/gemma-4-12B-it-5bit
+
+# Inspect the live lane and an already-running canary lane.
+python3 scripts/model_stack_audit.py \
+  --candidate-mlx-url http://127.0.0.1:8092/v1/chat/completions
+
+# Run the promotion soak. This restores the bridge override afterward.
+python3 scripts/astrid_live_soak.py \
+  --candidate-model mlx-community/gemma-4-12B-it-5bit
+```
+
+The bridge defaults point at the production `8090` lane with the adopted
+Gemma 4 profile. Use an override only for bounded canaries or rollback checks:
+
+```bash
+launchctl setenv ASTRID_BRIDGE_MLX_URL http://127.0.0.1:8092/v1/chat/completions
+launchctl setenv ASTRID_BRIDGE_MLX_PROFILE gemma4_12b
+launchctl kickstart -k gui/$(id -u)/com.astrid.spectral-bridge
+
+# Return launchd to the repo default after the canary.
+launchctl unsetenv ASTRID_BRIDGE_MLX_URL
+launchctl unsetenv ASTRID_BRIDGE_MLX_PROFILE
+launchctl kickstart -k gui/$(id -u)/com.astrid.spectral-bridge
+```
+
+The bridge LaunchAgent runs through `scripts/launchd_spectral_bridge.sh`
+so process-start overrides from `launchctl setenv` survive the plist
+`EnvironmentVariables` boundary. That override is for bounded canaries only.
+Promotion means updating the repo-owned LaunchAgent/model default after clean
+canary records and a written rollback path, not casually exporting an env var in
+a shell.
+
+Current Gemma 4 MLX status: after upgrading the reservoir venv to
+`mlx-lm==0.31.3` and adding the text-lane shim for MLX Community
+`gemma4_unified` checkpoints, `mlx-community/gemma-4-12B-it-5bit` passed narrow
+exact-output and `NEXT:` probes, then a strict 2-hour live bridge soak with zero
+fallback incidents, zero malformed `NEXT:`, zero leaked model artifacts, zero
+bridge-side artifact stripping, and zero deprecated runtime wording in generated
+soak outputs. The live `8090` coupled lane is now promoted to Gemma 4. The
+adopted bridge profile keeps Gemma 4 action discipline tight by mapping only
+observed safe aliases such as `EXPLORE_RESEARCH_QUERY` -> `SEARCH`,
+`EXPORT_SYSTEM_DIAGRAM` -> protected `ACTION_PREFLIGHT CODEX ...`, and
+`STICKY_MODE_AUDIT` -> protected `ACTION_PREFLIGHT CAPABILITY_MAP ...`; it does
+not add a wildcard `EXPLORE_*` repair. The compact former model,
+`mlx-community/gemma-3-4b-it-4bit`, remains the rollback target if latency or
+quality regresses under production traffic.
+
+Rollback to the former compact lane:
+
+```bash
+/usr/libexec/PlistBuddy -c \
+  "Set :ProgramArguments:8 mlx-community/gemma-3-4b-it-4bit" \
+  /Users/v/other/neural-triple-reservoir/launchd/com.reservoir.coupled-astrid.plist
+/usr/libexec/PlistBuddy -c \
+  "Set :ProgramArguments:8 mlx-community/gemma-3-4b-it-4bit" \
+  ~/Library/LaunchAgents/com.reservoir.coupled-astrid.plist
+
+launchctl setenv ASTRID_BRIDGE_MLX_PROFILE production
+launchctl bootout gui/$(id -u)/com.reservoir.coupled-astrid || true
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.reservoir.coupled-astrid.plist
+launchctl kickstart -k gui/$(id -u)/com.astrid.spectral-bridge
+```
+
+## Launchd Operations
+
+The coupled Astrid/Minime deployment is launchd-managed. Treat
+`scripts/start_all.sh` and `scripts/stop_all.sh` as the canonical operator
+surface: they sync repo-owned plists into `~/Library/LaunchAgents`,
+bootstrap/kickstart labels, and report drift.
+
+```bash
+# Full graceful restart
+bash scripts/stop_all.sh
+sleep 3
+bash scripts/start_all.sh
+
+# Partial launchd starts
+bash scripts/start_all.sh --astrid-only
+bash scripts/start_all.sh --minime-only
+
+# Inventory and drift check
+bash scripts/launchd_inventory.sh
+bash scripts/launchd_inventory.sh --strict
+```
+
+Minime's `scripts/start.sh` is a manual standalone/debug launcher. It should
+run only after the Minime LaunchAgents are booted out; otherwise launchd owns
+the same processes and will respawn killed services. Minime's `scripts/stop.sh`
+is launchd-aware and can boot out the Minime labels before cleaning up manual
+PID-file processes. Launchd logs are under `/Users/v/other/minime/logs/`;
+manual Minime runs write under `/Users/v/other/minime/workspace/logs/`.
+
+## Quick Start
+
+Prerequisites:
+
+- Rust `1.94+`
+- `wasm32-wasip1` for QuickJS/OpenClaw kernel compilation when those tests run
+- An LLM provider key for the default chat distro, if using remote providers
+
+```bash
+# Build the workspace
+cargo build --workspace
+
+# Run the CLI from source
 cargo build -p astrid --release
 ./target/release/astrid init
+./target/release/astrid chat
 ```
 
-Three binaries work together: `astrid` (CLI frontend), `astrid-daemon` (kernel process), and `astrid-build` (capsule compiler). When you run `astrid chat`, the CLI auto-starts the daemon as a background process, connects over a Unix domain socket, and renders streaming events. The daemon manages the VFS, capsules, IPC, audit, and security. The CLI manages input and display.
+Installed binaries work together:
 
-### Headless / scripting mode
+| Binary | Role |
+|---|---|
+| `astrid` | CLI/TUI frontend, daemon control, distro init, capsule management |
+| `astrid-daemon` | Background kernel process |
+| `astrid-build` | Capsule compiler and packager |
+
+Common commands:
 
 ```bash
-# Single-prompt, non-interactive — prints response and exits
-astrid -p "summarize the git log"
-
-# Pipe stdin
-git diff HEAD~1 | astrid -p "write a commit message for this diff"
-
-# Multi-turn scripted conversation
-SESSION=$(astrid -p "start a task" --print-session 2>&1 | tail -1)
-astrid -p "continue the task" --session "$SESSION"
-
-# Autonomous mode (auto-approve all tool requests)
-astrid -p "fix all failing tests" --yes
+astrid chat
+astrid -p "summarize the current git diff"
+astrid start
+astrid status
+astrid --format json status
+astrid stop
+astrid capsule list --verbose
+astrid capsule tree
 ```
 
-### Daemon lifecycle
+## Distro And Capsule Management
+
+A distro is a `Distro.toml` that installs a curated capsule set. `astrid init`
+resolves variables, lets the user choose provider groups, installs capsules, and
+writes an atomic `Distro.lock` with BLAKE3 hashes.
 
 ```bash
-astrid start     # Start a persistent daemon (survives terminal close)
-astrid status    # Show PID, uptime, clients, capsules, and runtime health
-astrid --format json status  # Machine-readable status for health checks
-astrid stop      # Graceful shutdown
-astrid self-update  # Download the latest release binary to ~/.astrid/bin/
-```
-
-## The distro system
-
-A **distro** is a `Distro.toml` manifest that describes a curated set of capsules for a particular use case. `astrid init` fetches the manifest, presents a multi-select provider group picker, resolves `{{ var }}` template variables via interactive prompts, and installs all selected capsules with progress bars. A `Distro.lock` is written atomically with BLAKE3 hashes of every installed capsule for reproducible deployments.
-
-```bash
-# Install the default distro (astralis)
 astrid init
-
-# Install a custom distro
 astrid init --distro @myorg/my-distro
-
-# Install from a local Distro.toml
 astrid init --distro ./path/to/Distro.toml
 ```
 
-## Capsule management
+Capsules can be installed, updated, listed, and removed independently:
 
 ```bash
-# Install from GitHub (downloads pre-built .wasm release asset, falls back to build from source)
 astrid capsule install @org/capsule-name
-
-# Install from a local path
 astrid capsule install ./path/to/capsule
-
-# List installed capsules with capability metadata
-astrid capsule list
-astrid capsule list --verbose
-
-# Show the imports/exports dependency graph
-astrid capsule tree
-
-# Update a specific capsule (or all capsules)
-astrid capsule update my-capsule
 astrid capsule update
-
-# Remove a capsule (checks dependents before removing)
 astrid capsule remove my-capsule
-astrid capsule remove my-capsule --force  # bypass dependency check
 ```
 
-Content-addressed WASM binaries are stored in `~/.astrid/bin/` using BLAKE3 hashes. Capsule removal cleans up the binary from `bin/` when no other capsule references the same hash. The binary store itself (`bin/` and `wit/`) is append-only; `astrid gc` for explicit cleanup is planned.
+Content-addressed WASM binaries live under `~/.astrid/bin/`; WIT definitions
+live under `~/.astrid/wit/`.
 
-## Directory layout
+## Directory Layout
 
-Astrid uses a Linux FHS-aligned layout under `~/.astrid/` (overridable via `$ASTRID_HOME`):
+Astrid uses an FHS-like layout under `~/.astrid/`:
 
 ```text
 ~/.astrid/
-├── etc/
-│   ├── config.toml          deployment config
-│   ├── servers.toml         MCP server config
-│   ├── gateway.toml         daemon config
-│   └── hooks/               system hooks
-├── var/
-│   └── state.db/            system KV (SurrealKV, persistent)
-├── run/                     ephemeral runtime state
-│   ├── system.sock          Unix domain socket
-│   ├── system.token         session authentication token
-│   └── system.ready         daemon readiness sentinel
-├── log/                     system logs
-├── keys/
-│   └── runtime.key          ed25519 signing key
-├── bin/                     content-addressed WASM binaries (BLAKE3-named)
-├── wit/                     content-addressed WIT interface definitions
+├── etc/       system and daemon config
+├── var/       persistent KV and database state
+├── run/       socket, token, readiness sentinel
+├── log/       daemon and capsule logs
+├── keys/      runtime signing key
+├── bin/       content-addressed capsule binaries
+├── wit/       content-addressed WIT definitions
 └── home/
-    └── {principal}/         per-principal isolation
-        ├── .local/
-        │   ├── capsules/    user-installed capsules
-        │   ├── kv/          capsule KV data
-        │   ├── log/         capsule logs (daily rotation, 7-day retention)
-        │   ├── audit/       per-principal audit chain
-        │   ├── tokens/      capability tokens
-        │   └── tmp/         VFS /tmp mount
-        └── .config/
-            └── env/         capsule env config overrides
-
-<project>/.astrid/           workspace-level config (committable)
-├── workspace-id             UUID linking project to global state
-└── ASTRID.md                project-level agent instructions
+    └── {principal}/
+        ├── .local/capsules/
+        ├── .local/kv/
+        ├── .local/audit/
+        ├── .local/tokens/
+        └── .config/env/
 ```
 
-Configuration follows a precedence chain: workspace > user > system > env vars > compiled defaults. Workspace configs can only **tighten** security settings, never loosen them.
+Workspace configuration lives in `<project>/.astrid/`. Configuration precedence
+is workspace, user, system, environment, defaults. Workspace configuration can
+tighten security settings but cannot loosen them.
 
-## Multi-principal support
+## Repository Map
 
-Each principal (user identity) gets fully isolated capsules, KV data, audit chain, capability tokens, and logs under `home/{principal}/`. The acting principal is carried transparently through every IPC message chain — capsules never see or touch principal routing. KV namespace format: `{principal}:capsule:{name}`. Per-invocation principal resolution means cross-user invocations write to the correct principal's audit log and KV.
-
-## Architecture
-
-Astrid follows a strict kernel/user-space divide. The kernel (native Rust daemon) owns all privileged resources. Capsules (WASM guests) have zero ambient authority and must request everything through the host ABI.
-
-### Kernel crates
-
-| Crate | Role |
+| Path | Role |
 |---|---|
-| `astrid-kernel` | Boots the runtime. Owns VFS, IPC bus, capsule registry, MCP client, audit log, KV store. Listens on Unix socket for CLI connections. |
-| `astrid-approval` | `SecurityInterceptor`: the five-layer gate. Policy engine, budget tracker, allowance store, approval manager. |
-| `astrid-capabilities` | Ed25519-signed capability tokens with glob resource patterns and time bounds. |
-| `astrid-audit` | Chain-linked cryptographic audit log. Each entry is signed and hashes the previous. SurrealKV-backed with chain verification. Per-principal chain splitting. |
-| `astrid-vfs` | Copy-on-write overlay filesystem. `Vfs` trait with `HostVfs` and `OverlayVfs` implementations. Capability-based `DirHandle`/`FileHandle`. |
-| `astrid-events` | IPC event bus. Broadcast-based with async receivers and synchronous subscriber callbacks. Types re-exported from `astrid-types`. |
-| `astrid-types` | Shared data types: IPC payloads, LLM schemas, kernel API. Minimal deps, WASM-compatible. Used by both kernel and SDK. |
-| `astrid-capsule` | Capsule runtime: manifest parsing, WASM/MCP/static engines, dependency resolution via toposort, capsule registry, hot-reload watcher. |
-| `astrid-mcp` | MCP client/server lifecycle. Wraps `rmcp` with binary hash verification, capability gating, and elicitation support. |
-| `astrid-crypto` | Ed25519 key pairs (via `ed25519-dalek`), BLAKE3 content hashing, signatures. Keys are zeroized on drop. |
-| `astrid-storage` | Two-tier persistence. Tier 1: raw KV via embedded SurrealKV. Tier 2: full SurrealDB query engine with SurrealQL. |
-| `astrid-config` | Layered TOML configuration: workspace > user > system > env > defaults. Workspace configs can only tighten security, never loosen it. |
-| `astrid-workspace` | Workspace boundary detection and process sandbox configuration. |
-| `astrid-hooks` | Hook system for session lifecycle, tool calls, and approval flows. Handlers: command, HTTP, WASM. |
-| `astrid-core` | Foundation types: `SessionId`, `PrincipalId`, `Permission`, identity primitives, elicitation types, session tokens. |
-
-### User-space crates
-
-| Crate | Role |
-|---|---|
-| [`astrid-sdk`](https://github.com/unicity-astrid/sdk-rust) | Safe Rust SDK for capsule authors. Mirrors `std` layout. Includes `astrid-sys` (syscall table) and `astrid-sdk-macros` (`#[capsule]` proc macro). Standalone repo. |
-| `astrid-openclaw` | TypeScript-to-WASM compiler for OpenClaw plugin compatibility. All-Rust pipeline: OXC + QuickJS/Wizer. |
-
-### Binaries
-
-| Binary | Release package | Role |
-|---|---|---|
-| `astrid` | `astrid` | Terminal frontend. Connects to daemon over Unix socket. TUI rendering, headless/scripting mode, capsule management, distro init, daemon lifecycle commands. |
-| `astrid-daemon` | `astrid` | Background kernel process. Boots the kernel, loads capsules, serves IPC requests. `--ephemeral` flag for CLI-spawned instances. |
-| `astrid-build` | `astrid` | Capsule compiler and packager. Handles Rust, OpenClaw (JS/TS), and legacy MCP projects. Invoked by CLI as a companion binary. |
-
-### Infrastructure crates
-
-| Crate | Role |
-|---|---|
-| `astrid-telemetry` | Structured logging with `tracing`. JSON and human-readable outputs. File-based output with daily rotation. |
-| `astrid-prelude` | Common re-exports for internal crates. |
-
-## Storage
-
-Two tiers, one API surface:
-
-| Deployment | KV backend | DB backend |
-|---|---|---|
-| Dev / single-agent | SurrealKV (embedded) | SurrealDB (embedded, SurrealKV) |
-| Production / multi-node | SurrealKV (embedded) | SurrealDB (over TiKV, Raft) |
-
-Capsule KV stores are namespace-scoped per principal and per capsule. The kernel, audit log, capability store, and identity system use the DB tier. Scaling from embedded to distributed is a config change.
-
-## v0.5.0 highlights
-
-The major changes in this release:
-
-- **FHS directory layout** — `~/.astrid/` restructured to `etc/`, `var/`, `run/`, `log/`, `keys/`, `bin/`, `home/`. Existing `~/.astrid/` must be deleted before upgrading (no migration path).
-- **Multi-principal isolation** — each principal gets isolated capsules, KV, audit chain, tokens, and config under `home/{principal}/`.
-- **Tools are a pure IPC convention** — the kernel no longer parses or manages tool schemas. Tool capsules use IPC interceptors. The router capsule handles discovery and dispatch.
-- **LLM providers are a pure IPC convention** — `[[llm_provider]]` and `LlmProviderDef` removed from the manifest. LLM capsules self-describe via interceptors.
-- **`[imports]`/`[exports]` manifest format** — replaces the old string-array `[dependencies]` with namespaced TOML tables, semver version requirements, optional imports, and namespace/interface name validation.
-- **`astrid self-update`** — downloads platform-specific binaries from GitHub releases to `~/.astrid/bin/`, no sudo required. Startup update banner (cached 24h) stays off status/JSON/script health surfaces.
-- **`astrid init` distro system** — fetches `Distro.toml`, multi-select provider groups, `{{ var }}` template resolution, atomic `Distro.lock` writes with BLAKE3 hashes.
-- **Export conflict detection** — `astrid capsule install` detects when a new capsule exports interfaces already provided by an installed capsule and prompts to replace.
-- **Interceptor priority** — `priority` field on `[[interceptor]]` enables layered interception chains.
-- **Short-circuit interceptors** — `Continue`, `Final`, or `Deny` wire format controls the middleware chain.
-- **Per-principal audit chains** — independently verifiable via `verify_principal_chain()`.
-- **`astrid capsule tree`** — renders the imports/exports dependency graph.
-- **OpenClaw Tier 2** — TypeScript plugins with npm dependencies install, transpile, and run as MCP capsules.
-- **`--snapshot-tui`** — renders the full TUI to stdout for automated smoke testing without an interactive terminal.
-
-See [CHANGELOG.md](CHANGELOG.md) for the complete list of changes, fixes, and breaking changes.
-
-## Current state
-
-**v0.5.0.** The core runtime works end-to-end:
-
-- Kernel boots, discovers and loads capsules, manages VFS overlay, listens on Unix socket
-- `SecurityInterceptor` with all five layers, tested with policy blocks, budget exhaustion, token auth, session/workspace allowances, and the "Allow Always" token minting path
-- WASM sandbox with 49 host functions, 64 MB memory ceiling, 5-minute tool timeout
-- Chain-linked audit log with ed25519 signatures and per-principal chain integrity verification
-- MCP client (2025-11-25 spec) via `rmcp` with capability gating and binary hash verification
-- IPC event bus with broadcast subscribers and capability-scoped publish/subscribe ACLs
-- Capsule dependency resolution via topological sort with semver-versioned interface matching
-- Capsule manifest supporting commands, skills, interceptors, IPC topics, MCP servers, and uplinks
-- OpenClaw TypeScript-to-WASM compiler (OXC + QuickJS/Wizer, Tier 1 and Tier 2)
-- CLI with TUI, streaming responses, session persistence, headless mode, capsule management
-- Distro system with `Distro.toml` manifests and `Distro.lock` for reproducible installs
-- Layered configuration with workspace-level security tightening
-- `astrid self-update` downloading from GitHub releases
-
-**Not yet done:** Multi-node SurrealDB (TiKV/Raft). Rebuilding any remaining third-party/distributed capsules against the Component Model ABI. Additional frontends beyond CLI. Capsule registry for distribution.
+| `crates/astrid-kernel` | Runtime boot, VFS, IPC, capsule registry, audit, KV |
+| `crates/astrid-cli` | Terminal frontend and daemon client |
+| `crates/astrid-daemon` | Daemon binary/library boundary |
+| `crates/astrid-capsule` | Manifest parsing, engines, resolver, registry |
+| `crates/astrid-approval` | Policy/token/budget/approval/audit gate |
+| `crates/astrid-audit` | Chain-linked signed audit log |
+| `crates/astrid-vfs` | Host and overlay VFS implementations |
+| `crates/astrid-events` | IPC bus and event types |
+| `crates/astrid-types` | Shared schemas for kernel, CLI, capsules, SDK |
+| `crates/astrid-openclaw` | TypeScript-to-WASM/OpenClaw compatibility compiler |
+| `crates/astrid-build` | Capsule build and packaging companion |
+| `capsules/astralis` | Default in-repo Component Model capsules |
+| `capsules/spectral-bridge` | Astrid/Minime bridge capsule |
+| `docs/steward-notes` | Architecture, safety, and continuity research notes |
 
 ## Development
 
@@ -393,20 +407,38 @@ See [CHANGELOG.md](CHANGELOG.md) for the complete list of changes, fixes, and br
 cargo build --workspace
 
 # Test
-cargo test --workspace -- --quiet
+ASTRID_AUTO_BUILD_KERNEL=1 cargo test --workspace
 
-# Lint
+# Test one crate
+cargo test -p astrid-events
+
+# Lint and format
 cargo clippy --workspace --all-features -- -D warnings
 cargo fmt --all -- --check
+
+# Release binaries
+cargo build --release
 ```
 
-All crates enforce `#![deny(unsafe_code)]` except `astrid-sys` and `astrid-sdk` (WASM FFI requires it). Clippy runs at pedantic level. Integer arithmetic overflow is a lint error (`clippy::arithmetic_side_effects = "deny"`).
+The workspace uses Rust 2024 and MSRV `1.94`. Unsafe code is denied everywhere
+except the low-level WASM FFI boundary crates. Clippy is pedantic, and
+`clippy::arithmetic_side_effects` is denied, so use checked or saturating
+arithmetic where overflow is possible.
 
-Release binaries for macOS (x86_64, aarch64) and Linux (x86_64, aarch64) are built automatically on tag push via the [release workflow](.github/workflows/release.yml).
+Update `CHANGELOG.md` under `[Unreleased]` for PRs.
 
-## Contributing
+## Current Limits
 
-Contributions are welcome. Astrid uses a tiered contributor system to protect security-critical code while keeping the door open for new contributors. Every PR must be linked to a GitHub issue. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full process, including issue-first workflow, tier descriptions, and security-critical crate restrictions.
+Astrid's core runtime is working end to end, but this is still an active
+systems project.
+
+- The primary frontend is the CLI.
+- Multi-node SurrealDB/TiKV deployment is planned, not the default path.
+- Some third-party or historical capsules still need Component Model ABI
+  modernization.
+- A public capsule registry is still future work.
+- The Minime bridge is intentionally conservative: read-only inspection and
+  staged, health-gated writes are design constraints, not missing features.
 
 ## License
 

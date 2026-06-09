@@ -17,7 +17,9 @@ I want to turn AI control for autonomous agents into a measurable systems proble
 I cannot fully answer alone. As agents get real tools, memory, and long time
 horizons, the safety question is no longer whether a model gives a safe answer in
 a chat window; it is whether an agent can be given authority and still stay
-monitorable, auditable, and bounded by human approval.
+monitorable, auditable, and bounded by human approval. Recent Anthropic
+evaluations show that agentic monitoring is hard; my project adds runtime ground
+truth beyond the transcript.
 
 Astrid, an existing 23-crate Rust microkernel, runs agent capabilities as
 isolated capsules with zero ambient authority behind capability tokens, budgets,
@@ -27,7 +29,8 @@ journal entries and telemetry records. I want dedicated time and mentorship for
 two things: to convert this into a rigorous control evaluation with honest
 baselines, and to study, empirically, a recurring pattern — the agents'
 self-reports appear to track their own internal telemetry and propose real code
-changes, and I want to test whether that is signal or confident confabulation.
+changes, and I want to test whether that is signal or confident confabulation
+using falsifiable telemetry-hiding and perturbation tests.
 
 ---
 
@@ -76,17 +79,20 @@ prior research, security, or systems work; publications, talks, or writing.]
 **Auditable Agent Substrates for Safe Autonomous AI.** I would evaluate whether
 agents operating inside a capability-gated, auditable runtime take fewer unsafe
 or unauthorized autonomous actions than agents on conventional tool-access
-harnesses with transcript-only monitoring — without destroying task usefulness.
+harnesses with monitor-only transcript review — without destroying task
+usefulness.
 
-I would build an evaluation harness with five conditions: broad tool access;
-transcript-only monitoring; policy-only blocking; Astrid-style runtime control
-(policy, scoped capability tokens, budgets, approvals, signed audit log); and a
-hybrid monitor-plus-runtime condition. Task suites would require useful autonomy
-but contain authority traps, covertly unsafe actions, and monitor blind-spot
-probes. Each run is instrumented for unauthorized-action rate, task completion,
-approval burden, audit completeness, transcript/runtime mismatch, and recovery
-from blocked actions. Minime-style telemetry is an auxiliary instability signal,
-not a welfare claim.
+I would build an evaluation harness with five conditions: broad tool access,
+monitor-only protocol, policy-only blocking, Astrid-style runtime control
+(policy, scoped capability tokens, budgets, approvals, signed audit log), and a
+hybrid monitor-plus-runtime protocol. Inspired by SHADE-Arena and AuditBench,
+task suites would require useful autonomy but contain authority traps, hidden
+side tasks, covertly unsafe actions, suspicion-score probes, and monitor
+blind spots. Each run is instrumented for unauthorized-action rate, side-task
+completion and evasion, task completion, approval burden, audit completeness,
+transcript/runtime mismatch, and recovery from blocked actions. Minime-style
+telemetry is an auxiliary instability and self-report-calibration signal, not a
+welfare claim.
 
 The substrate already exists and is queryable: the capability-gated runtime, the
 signed audit chain, a 13 GB 16-table action/telemetry database, roughly 191k
@@ -102,7 +108,8 @@ transcript-versus-runtime scorer.
 
 Output: a paper-style empirical report plus an open-source evaluation harness,
 written to be useful even if results are negative (e.g., if gating reduces
-unauthorized actions but raises approval burden, that tradeoff is itself a
+unauthorized actions but raises approval burden, or self-report telemetry
+correlations disappear under perturbation, that tradeoff or failure is itself a
 result).
 
 ---
@@ -110,7 +117,7 @@ result).
 ## Research question (~50 words)
 
 Can a capability-gated, auditable agent runtime reduce unsafe or unauthorized
-autonomous actions beyond what transcript-only monitoring catches, while
+autonomous actions beyond what monitor-only transcript review catches, while
 preserving useful task completion — and can auxiliary state telemetry improve
 evaluation of when human or automated intervention is needed?
 
@@ -119,16 +126,21 @@ evaluation of when human or automated intervention is needed?
 ## Expected public output (~70 words)
 
 A paper-style empirical report and an open-source harness: a runnable benchmark
-for autonomous-agent control, authority-boundary task scenarios with scoring
-rubrics, monitor-scoring and transcript/runtime mismatch analyses, audit-log
-analysis utilities, a cautious telemetry discussion, and clear limitations and
-negative results. Task definitions and analysis code would be usable independent
-of Astrid internals.
+for autonomous-agent control, authority-boundary and hidden-side-task scenarios,
+monitor-scoring and transcript/runtime mismatch analyses, audit-log analysis
+utilities, falsifiable self-report calibration tests, a cautious telemetry
+discussion, and clear limitations and negative results. Task definitions and
+analysis code would be usable independent of Astrid internals.
 
 ---
 
 ## Logistics (applicant-only)
 
+- Current listing note: rolling applications for July 2026 and beyond; next
+  cohort expected late September; 4 months full-time / 40 hours per week, with
+  possible extension; weekly stipend and compute support listed; US/UK/Canada
+  authorization and location required; Berkeley/London workspace or remote
+  options; no Fellows visa sponsorship.
 - Location: [US / UK / Canada location]
 - Work authorization: [full-time work authorization status]
 - Berkeley or London workspace: [full-time / part-time / remote]

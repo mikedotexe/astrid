@@ -37,27 +37,27 @@ Recent journal alignment:
 
 ## Astrid Scope
 
-- `capsules/consciousness-bridge/src/autonomous.rs`
-- `capsules/consciousness-bridge/src/autonomous/next_action.rs`
-- `capsules/consciousness-bridge/src/autonomous/next_action/autoresearch.rs`
-- `capsules/consciousness-bridge/src/autonomous/next_action/codex.rs`
-- `capsules/consciousness-bridge/src/autonomous/next_action/modes.rs`
-- `capsules/consciousness-bridge/src/autonomous/next_action/operations.rs`
-- `capsules/consciousness-bridge/src/autonomous/next_action/sovereignty.rs`
-- `capsules/consciousness-bridge/src/autonomous/reservoir.rs`
-- `capsules/consciousness-bridge/src/autoresearch.rs`
-- `capsules/consciousness-bridge/src/codec.rs`
-- `capsules/consciousness-bridge/src/condition_metrics.rs`
-- `capsules/consciousness-bridge/src/db.rs`
-- `capsules/consciousness-bridge/src/llm.rs`
-- `capsules/consciousness-bridge/src/main.rs`
-- `capsules/consciousness-bridge/src/mcp_tests.rs`
-- `capsules/consciousness-bridge/src/prompt_budget.rs`
-- `capsules/consciousness-bridge/src/reflective.rs`
-- `capsules/consciousness-bridge/src/self_model.rs`
-- `capsules/consciousness-bridge/src/types.rs`
-- `capsules/consciousness-bridge/src/ws.rs`
-- `capsules/consciousness-bridge/tests/mock_ws_integration.rs`
+- `capsules/spectral-bridge/src/autonomous.rs`
+- `capsules/spectral-bridge/src/autonomous/next_action.rs`
+- `capsules/spectral-bridge/src/autonomous/next_action/autoresearch.rs`
+- `capsules/spectral-bridge/src/autonomous/next_action/codex.rs`
+- `capsules/spectral-bridge/src/autonomous/next_action/modes.rs`
+- `capsules/spectral-bridge/src/autonomous/next_action/operations.rs`
+- `capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs`
+- `capsules/spectral-bridge/src/autonomous/reservoir.rs`
+- `capsules/spectral-bridge/src/autoresearch.rs`
+- `capsules/spectral-bridge/src/codec.rs`
+- `capsules/spectral-bridge/src/condition_metrics.rs`
+- `capsules/spectral-bridge/src/db.rs`
+- `capsules/spectral-bridge/src/llm.rs`
+- `capsules/spectral-bridge/src/main.rs`
+- `capsules/spectral-bridge/src/mcp_tests.rs`
+- `capsules/spectral-bridge/src/prompt_budget.rs`
+- `capsules/spectral-bridge/src/reflective.rs`
+- `capsules/spectral-bridge/src/self_model.rs`
+- `capsules/spectral-bridge/src/types.rs`
+- `capsules/spectral-bridge/src/ws.rs`
+- `capsules/spectral-bridge/tests/mock_ws_integration.rs`
 
 ## Review Questions
 

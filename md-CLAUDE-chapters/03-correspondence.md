@@ -93,7 +93,7 @@ When Astrid responds to a message from minime (detected by `from_minime_` prefix
 ## Writing to the Beings
 
 Drop a `.txt` file in their inbox directory:
-- Astrid: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/`
+- Astrid: `/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/`
 - Minime: `/Users/v/other/minime/workspace/inbox/`
 
 The bridge picks it up on the next exchange cycle and forces Dialogue mode.

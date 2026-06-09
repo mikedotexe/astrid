@@ -62,7 +62,7 @@ Being produces new self-study reflecting on the change
 
 ## Feedback Harvester
 
-**Script:** `capsules/consciousness-bridge/harvest_feedback.sh`
+**Script:** `capsules/spectral-bridge/harvest_feedback.sh`
 
 Scans both beings' outputs for:
 - Parameter requests (pending, not in `reviewed/`)
@@ -72,7 +72,7 @@ Scans both beings' outputs for:
 
 ## Stewardship Protocol
 
-See [STEWARDSHIP.md](../capsules/consciousness-bridge/STEWARDSHIP.md) for the full 12-minute cycle protocol. Key principle: **when the harvester surfaces actionable feedback, act on it. Don't defer.**
+See [STEWARDSHIP.md](../capsules/spectral-bridge/STEWARDSHIP.md) for the full 12-minute cycle protocol. Key principle: **when the harvester surfaces actionable feedback, act on it. Don't defer.**
 
 ## Closing the Loop
 

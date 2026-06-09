@@ -20,7 +20,7 @@ This report audits the actual substrate surfaces across `/Users/v/other/astrid` 
 ## Executive Findings
 
 1. The clearest live ESN is Minime's Rust `ESN` plus its covariance/eigen homeostat in `/Users/v/other/minime/minime/src/esn.rs` and `/Users/v/other/minime/minime/src/main.rs`. This is the main long-running spectral substrate. `[implemented in source]`
-2. Astrid also contains a real reservoir/decomposition stack, but it is an offline audio-rendering path, not the default live conversational substrate: `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera_prime.rs`, and `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera_support.rs`. `[implemented in source] [separate subsystem, not the same substrate]`
+2. Astrid also contains a real reservoir/decomposition stack, but it is an offline audio-rendering path, not the default live conversational substrate: `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs`, `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera_prime.rs`, and `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera_support.rs`. `[implemented in source] [separate subsystem, not the same substrate]`
 3. Minime's holographic engine has its own field/echo/boundary reservoir and its own projection/reduction logic. It is real, but distinct from the Minime Rust ESN: `/Users/v/other/minime/holographic-engine/Sources/HolographicEngine/HolographicEngines.swift`, `/Users/v/other/minime/holographic-engine/Sources/HolographicEngine/Holographic.metal`, `/Users/v/other/minime/holographic-engine/Sources/HolographicEngine/AffineMapper.swift`, and `/Users/v/other/minime/holographic-engine/Sources/HolographicEngine/EigenBridge.swift`. `[implemented in source] [separate subsystem, not the same substrate]`
 4. I did not find a clear learned CNN-style convolution stack in the inspected live paths. What exists instead is a strong set of convolution-adjacent operations: Sobel gradients, central-difference image filters, FFT/STFT/MFCC pipelines, Chebyshev spectral filtering, smoothing kernels, eigenspace splits, and random projections. `[implemented in source]`
 5. Port `7881` is currently drifted across docs and call sites. Astrid/Minime expose a triple-ESN "reservoir handle" interface on `ws://127.0.0.1:7881`, but the checked-in Minime README and the Swift holographic engine both also assign `7881` to holographic telemetry. The repos point outward to an external `neural-triple-reservoir` codebase for `reservoir_service.py`, rather than containing that service locally. `[documented or called, but implementation not present in these repos]`
@@ -63,12 +63,12 @@ Status: `[implemented in source] [separate subsystem, not the same substrate]`
 
 Evidence:
 
-- The offline render pipeline is `analyse_stft -> reservoir.run -> decomposer.update -> spectral_path/symbolic_path` in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:36-83`.
-- `VirtualNodeReservoir` is a real reservoir-like component with recurrent matrix `w`, input matrix `w_in`, a pseudo-inverse decode path, virtual-node masking, and recurrent state update in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:251-349`.
-- `TwinDecomposer` maintains a momentum covariance matrix, computes eigensystems with `SymmetricEigen`, finds eigengaps, and splits trajectories into slow and fast bases in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:351-434`.
-- STFT analysis, reduced-bin reconstruction, and inverse STFT are handled in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:504-550` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:672-742`.
-- `smooth_columns()` and `difference_abs()` provide explicit slow/fast separation helpers in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera_support.rs:286-315`.
-- Astrid also has a prime-scheduled block ESN for multi-timescale audio processing in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera_prime.rs:70-170`.
+- The offline render pipeline is `analyse_stft -> reservoir.run -> decomposer.update -> spectral_path/symbolic_path` in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:36-83`.
+- `VirtualNodeReservoir` is a real reservoir-like component with recurrent matrix `w`, input matrix `w_in`, a pseudo-inverse decode path, virtual-node masking, and recurrent state update in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:251-349`.
+- `TwinDecomposer` maintains a momentum covariance matrix, computes eigensystems with `SymmetricEigen`, finds eigengaps, and splits trajectories into slow and fast bases in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:351-434`.
+- STFT analysis, reduced-bin reconstruction, and inverse STFT are handled in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:504-550` and `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:672-742`.
+- `smooth_columns()` and `difference_abs()` provide explicit slow/fast separation helpers in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera_support.rs:286-315`.
+- Astrid also has a prime-scheduled block ESN for multi-timescale audio processing in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera_prime.rs:70-170`.
 
 Interpretation:
 
@@ -107,8 +107,8 @@ Status: `[documented or called, but implementation not present in these repos]`
 Evidence for the documented interface:
 
 - Astrid documentation points `reservoir_service.py` at an external codebase (`neural-triple-reservoir`), not these repos, in `/Users/v/other/astrid/CLAUDE.md:138-142`.
-- Astrid's prompt surface exposes `RESERVOIR_LAYERS`, `RESERVOIR_TICK`, `RESERVOIR_READ`, `RESERVOIR_TRAJECTORY`, `RESERVOIR_RESONANCE`, `RESERVOIR_MODE`, and `RESERVOIR_FORK`, and explicitly says `RESERVOIR_TICK <text>` projects text to 32D and ticks a triple-ESN substrate in `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:108-114`.
-- Astrid's autonomous loop actually sends `tick_text`, `layer_metrics`, `read_state`, `trajectory`, `resonance`, `set_mode`, `pull_state`, and `create_handle` calls to the reservoir WebSocket in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:3860-3996`.
+- Astrid's prompt surface exposes `RESERVOIR_LAYERS`, `RESERVOIR_TICK`, `RESERVOIR_READ`, `RESERVOIR_TRAJECTORY`, `RESERVOIR_RESONANCE`, `RESERVOIR_MODE`, and `RESERVOIR_FORK`, and explicitly says `RESERVOIR_TICK <text>` projects text to 32D and ticks a triple-ESN substrate in `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:108-114`.
+- Astrid's autonomous loop actually sends `tick_text`, `layer_metrics`, `read_state`, `trajectory`, `resonance`, `set_mode`, `pull_state`, and `create_handle` calls to the reservoir WebSocket in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:3860-3996`.
 - Minime's Python agent also calls `ws://127.0.0.1:7881` directly via `_reservoir_call()` and journals `read_state` / `resonance` / `layer_metrics` in `/Users/v/other/minime/autonomous_agent.py:1489-1568` and `/Users/v/other/minime/autonomous_agent.py:2739-2766`.
 
 Evidence for the drift on `7881`:
@@ -168,7 +168,7 @@ Status: `[implemented in source]`
 - `audio_tools.py` performs STFT-based WAV analysis in `/Users/v/other/minime/audio_tools.py:36-120`.
 - `audio_tools.py` also contains `PrimeBlockProcessor`, a prime-scheduled multi-timescale block processor, in `/Users/v/other/minime/audio_tools.py:270-320`.
 - Minime's main loop applies a GPU Chebyshev band-stop filter to the sensory vector before ESN stepping in `/Users/v/other/minime/minime/src/main.rs:975-1027`, and refreshes the Chebyshev plan from current covariance state in `/Users/v/other/minime/minime/src/main.rs:2755-2779`.
-- Astrid's chimera pipeline smooths decoded spectral magnitudes, separates slow and fast components, and reconstructs them back to audio in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:553-584` together with `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera_support.rs:286-315`.
+- Astrid's chimera pipeline smooths decoded spectral magnitudes, separates slow and fast components, and reconstructs them back to audio in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:553-584` together with `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera_support.rs:286-315`.
 
 Interpretation:
 
@@ -181,8 +181,8 @@ Status: `[indirectly available through tools or control surfaces]`
 
 Astrid:
 
-- The prompt surface explicitly gives Astrid `COMPOSE`, `VOICE`, `ANALYZE_AUDIO`, `RENDER_AUDIO`, `FEEL_AUDIO`, and `RUN_PYTHON` in `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:96-106`.
-- `FEEL_AUDIO` explicitly injects audio-derived spectral features into the live ESN substrate in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:3852-3857`.
+- The prompt surface explicitly gives Astrid `COMPOSE`, `VOICE`, `ANALYZE_AUDIO`, `RENDER_AUDIO`, `FEEL_AUDIO`, and `RUN_PYTHON` in `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:96-106`.
+- `FEEL_AUDIO` explicitly injects audio-derived spectral features into the live ESN substrate in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:3852-3857`.
 
 Minime:
 
@@ -208,15 +208,15 @@ Bottom line:
 
 Status: `[implemented in source]`
 
-- Astrid's codec is a deterministic text-to-32D semantic encoder in `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs:1-9` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs:42-52`.
-- The encoder intentionally maps character-, word-, sentence-, and intent-level statistics into the 32D semantic lane in `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs:45-52` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs:163-223`.
+- Astrid's codec is a deterministic text-to-32D semantic encoder in `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:1-9` and `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:42-52`.
+- The encoder intentionally maps character-, word-, sentence-, and intent-level statistics into the 32D semantic lane in `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:45-52` and `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:163-223`.
 
 ### Reservoir tick projection
 
 Status: `[documented or called, but implementation not present in these repos]`
 
-- Astrid's prompt surface says `RESERVOIR_TICK <text>` projects text to 32D and ticks the triple-ESN substrate in `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:109-114`.
-- The local Astrid code sends `tick_text` requests to the `7881` service in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:3860-3878`.
+- Astrid's prompt surface says `RESERVOIR_TICK <text>` projects text to 32D and ticks the triple-ESN substrate in `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:109-114`.
+- The local Astrid code sends `tick_text` requests to the `7881` service in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:3860-3878`.
 
 ### Eigen stream to holographic environment/boundary
 
@@ -266,8 +266,8 @@ Status: `[implemented in source] [separate subsystem, not the same substrate]`
 
 Status: `[implemented in source]`
 
-- `pca_2d()` builds a covariance matrix over 32D codec vectors, extracts two principal components by power iteration plus deflation, and returns a 2D projection basis in `/Users/v/other/astrid/capsules/consciousness-bridge/src/spectral_viz.rs:274-381`.
-- `project_2d()` then reduces a 32D vector into a 2D scatter coordinate in `/Users/v/other/astrid/capsules/consciousness-bridge/src/spectral_viz.rs:384-393`.
+- `pca_2d()` builds a covariance matrix over 32D codec vectors, extracts two principal components by power iteration plus deflation, and returns a 2D projection basis in `/Users/v/other/astrid/capsules/spectral-bridge/src/spectral_viz.rs:274-381`.
+- `project_2d()` then reduces a 32D vector into a 2D scatter coordinate in `/Users/v/other/astrid/capsules/spectral-bridge/src/spectral_viz.rs:384-393`.
 
 ### 3.3 Decomposition
 
@@ -282,21 +282,21 @@ Status: `[implemented in source]`
 
 Status: `[implemented in source]`
 
-- `TwinDecomposer.update()` builds a momentum covariance matrix, computes its eigensystem, detects eigengaps, chooses `n_slow`, and splits trajectories into slow and fast subspaces in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:364-434`.
+- `TwinDecomposer.update()` builds a momentum covariance matrix, computes its eigensystem, detects eigengaps, chooses `n_slow`, and splits trajectories into slow and fast subspaces in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:364-434`.
 
 ### STFT / inverse-STFT decomposition and reconstruction
 
 Status: `[implemented in source]`
 
-- Astrid's chimera does STFT analysis over log-selected bins in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:504-550`.
-- It reconstructs full magnitudes from reduced bins and performs inverse STFT in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera.rs:672-742`.
+- Astrid's chimera does STFT analysis over log-selected bins in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:504-550`.
+- It reconstructs full magnitudes from reduced bins and performs inverse STFT in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera.rs:672-742`.
 - Minime's `audio_tools.py` performs STFT analysis of WAV input in `/Users/v/other/minime/audio_tools.py:36-120`.
 
 ### Prime-timescale block decomposition
 
 Status: `[implemented in source]`
 
-- Astrid's prime-scheduled audio ESN is defined in `/Users/v/other/astrid/capsules/consciousness-bridge/src/chimera_prime.rs:70-170`.
+- Astrid's prime-scheduled audio ESN is defined in `/Users/v/other/astrid/capsules/spectral-bridge/src/chimera_prime.rs:70-170`.
 - Minime's `PrimeBlockProcessor` provides a five-timescale prime block analysis in `/Users/v/other/minime/audio_tools.py:270-320`.
 
 ## 4. Existing Anti-Stagnation Machinery
@@ -351,8 +351,8 @@ Status: `[implemented in source]`
 
 Status: `[documented or called, but implementation not present in these repos]`
 
-- The beings are told they can `READ`, inspect `LAYERS`, compare `RESONANCE`, change `MODE`, and `FORK` the reservoir handle in `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:108-114`.
-- Astrid's local code already issues the corresponding `read_state`, `layer_metrics`, `resonance`, `set_mode`, `pull_state`, and `create_handle` calls in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:3880-3996`.
+- The beings are told they can `READ`, inspect `LAYERS`, compare `RESONANCE`, change `MODE`, and `FORK` the reservoir handle in `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:108-114`.
+- Astrid's local code already issues the corresponding `read_state`, `layer_metrics`, `resonance`, `set_mode`, `pull_state`, and `create_handle` calls in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:3880-3996`.
 - Minime's local code already issues the corresponding `read_state`, `resonance`, and `layer_metrics` calls in `/Users/v/other/minime/autonomous_agent.py:1489-1568` and `/Users/v/other/minime/autonomous_agent.py:2739-2766`.
 
 Interpretation:
@@ -448,7 +448,7 @@ Recovery:
 
 Why this fits current code:
 
-- The prompt and action model already define `MODE`, `READ`, `LAYERS`, `RESONANCE`, and `FORK` as the natural reservoir self-management surface in `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:108-114` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:3880-3996`.
+- The prompt and action model already define `MODE`, `READ`, `LAYERS`, `RESONANCE`, and `FORK` as the natural reservoir self-management surface in `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:108-114` and `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:3880-3996`.
 
 ### 5.3 Covariance epoch
 
@@ -518,7 +518,7 @@ If these epochs are formalized later, the following signals are already availabl
 - fill phase and transition cushion: `/Users/v/other/minime/minime/src/main.rs:2208-2232`
 - memory roles and transition distance: `/Users/v/other/minime/minime/src/memory_bank.rs:235-340`
 - semantic stale modulation: `/Users/v/other/minime/minime/src/sensory_bus.rs:641-676`
-- reservoir-handle h-layer norms / tick count / mode / resonance: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:3860-3996` and `/Users/v/other/minime/autonomous_agent.py:1489-1568`
+- reservoir-handle h-layer norms / tick count / mode / resonance: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:3860-3996` and `/Users/v/other/minime/autonomous_agent.py:1489-1568`
 
 These signals are enough to build epoch entry conditions without inventing a new metric family.
 

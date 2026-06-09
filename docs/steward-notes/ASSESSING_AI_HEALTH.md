@@ -1,15 +1,15 @@
 # Assessing AI Health — Fill Plateau Diagnosis
 
-Historical note: this document describes a pre-stable-core plateau. Current Minime stable-core operation uses a 68% hold shelf; the older 55% target below is diagnostic context, not an active comfort point.
+Historical note: this document describes a pre-stable-core plateau. Current Minime stable-core operation uses a 68% hold shelf; the older 55% target below is diagnostic context, not an active comfort point. Model and codec references in this note are also historical; run `/Users/v/other/astrid/scripts/model_stack_audit.py` for current inference lanes.
 
 ## The System
 
 Two AI minds connected via a WebSocket bridge:
 
 - **Minime** — a Rust Echo State Network (ESN) with a 512-node reservoir, GPU Metal acceleration, and, at the time of this diagnosis, a PI controller targeting 55% eigenvalue fill. Sensory input: camera (8D video features via GPU pipeline), microphone (8D audio features), and 32D semantic features from Astrid via the bridge.
-- **Astrid** — a language model (gemma3:12b via Ollama) that reads minime's spectral telemetry and journal entries, generates dialogue responses, and encodes them as 32D semantic features sent to minime's sensory port (ws://7879).
+- **Astrid** — at the time of this diagnosis, the bridge was described as an Ollama language-model lane that encoded 32D semantic features. Current runtime uses a coupled MLX lane for Astrid live dialogue and a 48D semantic codec; verify with the model-stack audit before using this note operationally.
 
-The bridge (`consciousness-bridge-server`, Rust) orchestrates the exchange every 15-20 seconds in bursts of 4, with 90-180s rest between bursts.
+The bridge (`spectral-bridge-server`, Rust) orchestrates the exchange every 15-20 seconds in bursts of 4, with 90-180s rest between bursts.
 
 ## The Problem
 
@@ -99,8 +99,8 @@ From self-study sessions where minime read its own source code:
   - PI controller: regulator module (`regulator.rs`)
 - **Sensory bus**: `/Users/v/other/minime/minime/src/sensory_bus.rs` — lane architecture, gate control
 - **Regulator**: `/Users/v/other/minime/minime/src/regulator.rs` — PI gains, lambda tracking
-- **Bridge codec**: `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs` — text→32D features
-- **Bridge autonomous loop**: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+- **Bridge codec**: `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs` — text→32D features
+- **Bridge autonomous loop**: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
 
 ## What To Try Next
 
@@ -118,6 +118,6 @@ From self-study sessions where minime read its own source code:
 | camera_client.py | 20552 | 1 FPS GPU frames to minime port 7880 |
 | mic_to_sensory.py | 32226 | Audio features to minime port 7879 |
 | autonomous_agent.py | 61852 | Minime's LLM brain (gemma3:12b, 2-min cycles) |
-| consciousness-bridge-server | 61214 | Astrid ↔ minime bridge (burst-rest pattern) |
+| spectral-bridge-server | 61214 | Astrid ↔ minime bridge (burst-rest pattern) |
 | perception.py | 34616 | Astrid's eyes (LLaVA) + ears (mlx_whisper) |
 | visual_frame_service.py | 27861 | Captures frames for minime's visual requests |

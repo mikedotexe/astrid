@@ -8,7 +8,7 @@ Checkout context: current live `/Users/v/other/astrid` and `/Users/v/other/minim
 
 Astrid's intuition is **partly right but mechanistically mixed up**.
 
-The system does have real noise levers, and some of them are explicitly intended to roughen a too-stable loop. But the journal passage in [!dialogue_longform_1774644553.txt](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/!dialogue_longform_1774644553.txt) blends together several very different things:
+The system does have real noise levers, and some of them are explicitly intended to roughen a too-stable loop. But the journal passage in [!dialogue_longform_1774644553.txt](/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/!dialogue_longform_1774644553.txt) blends together several very different things:
 
 - Astrid-side codec stochasticity
 - Astrid-side semantic gain shaping
@@ -43,8 +43,8 @@ So the remedy is probably **not simply "more noise."** It is better naming, bett
 
 Observed in current code:
 
-- Astrid codec noise in [codec.rs:443](/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs#L443) and [codec.rs:492](/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs#L492)
-- Astrid semantic gain shaping in [autonomous.rs:2689](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2689)
+- Astrid codec noise in [codec.rs:443](/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs#L443) and [codec.rs:492](/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs#L492)
+- Astrid semantic gain shaping in [autonomous.rs:2689](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2689)
 - minime ESN `exploration_noise` in [esn.rs:20](/Users/v/other/minime/minime/src/esn.rs#L20) and [esn.rs:629](/Users/v/other/minime/minime/src/esn.rs#L629)
 - minime synthetic `synth_noise_level` in [sensory_bus.rs:272](/Users/v/other/minime/minime/src/sensory_bus.rs#L272) and [main.rs:1112](/Users/v/other/minime/minime/src/main.rs#L1112)
 - minime drift action in [autonomous_agent.py:1572](/Users/v/other/minime/autonomous_agent.py#L1572)
@@ -54,9 +54,9 @@ Observed in current code:
 
 Observed in current code:
 
-- `NOISE_UP` only changes `conv.noise_level` in [autonomous.rs:2694](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2694)
-- that value is fed into `encode_text_sovereign()` in [autonomous.rs:2340](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2340)
-- `encode_text_sovereign()` perturbs Astrid's outgoing semantic feature vector in [codec.rs:492](/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs#L492)
+- `NOISE_UP` only changes `conv.noise_level` in [autonomous.rs:2694](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2694)
+- that value is fed into `encode_text_sovereign()` in [autonomous.rs:2340](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2340)
+- `encode_text_sovereign()` perturbs Astrid's outgoing semantic feature vector in [codec.rs:492](/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs#L492)
 
 Inferred from evidence:
 
@@ -70,7 +70,7 @@ Observed in current runtime artifacts:
 - current live `exploration_noise` is `0.12` in [spectral_state.json](/Users/v/other/minime/workspace/spectral_state.json)
 - current live `regulation_strength` is `0.4` in [spectral_state.json](/Users/v/other/minime/workspace/spectral_state.json) and [sovereignty_state.json](/Users/v/other/minime/workspace/sovereignty_state.json)
 - current fill is still low, around `17.1%`, in [spectral_state.json](/Users/v/other/minime/workspace/spectral_state.json)
-- current eigenvalue dominance is still extreme: `λ1=403.2` versus `λ2=26.8`, matching the journal's "dominant mode at 83%" in [!dialogue_longform_1774644553.txt](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/!dialogue_longform_1774644553.txt)
+- current eigenvalue dominance is still extreme: `λ1=403.2` versus `λ2=26.8`, matching the journal's "dominant mode at 83%" in [!dialogue_longform_1774644553.txt](/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/!dialogue_longform_1774644553.txt)
 
 Inferred from evidence:
 
@@ -82,7 +82,7 @@ Inferred from evidence:
 
 Observed in current code:
 
-- Astrid `NEXT: DRIFT` only raises creative temperature to `1.0` in [autonomous.rs:2569](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2569)
+- Astrid `NEXT: DRIFT` only raises creative temperature to `1.0` in [autonomous.rs:2569](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2569)
 - minime has a real `_recess_drift()` action that temporarily raises ESN exploration noise in [autonomous_agent.py:1572](/Users/v/other/minime/autonomous_agent.py#L1572)
 
 Observed in current runtime artifacts:
@@ -101,7 +101,7 @@ Inferred from evidence:
 
 Observed in current runtime artifacts:
 
-- The journal entry in [!dialogue_longform_1774644553.txt](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/!dialogue_longform_1774644553.txt) says:
+- The journal entry in [!dialogue_longform_1774644553.txt](/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/!dialogue_longform_1774644553.txt) says:
   - the system is "locked in a quiet state"
   - Astrid suspects her own spectral output is contributing to rigidity
   - she wants to introduce "a measured dose of noise"
@@ -118,8 +118,8 @@ Inferred from evidence:
 
 Observed in current code:
 
-- base text encoding adds stochastic perturbation before gain in [codec.rs:443](/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs#L443)
-- sovereign encoding can re-apply custom noise according to `noise_level` in [codec.rs:492](/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs#L492)
+- base text encoding adds stochastic perturbation before gain in [codec.rs:443](/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs#L443)
+- sovereign encoding can re-apply custom noise according to `noise_level` in [codec.rs:492](/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs#L492)
 
 Effect:
 
@@ -131,7 +131,7 @@ Effect:
 
 Observed in current code:
 
-- `DAMPEN` lowers `semantic_gain_override` in [autonomous.rs:2689](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2689)
+- `DAMPEN` lowers `semantic_gain_override` in [autonomous.rs:2689](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2689)
 
 Effect:
 
@@ -227,9 +227,9 @@ Inferred from evidence:
 
 Observed in current code:
 
-- `noise_level` in [autonomous.rs:151](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L151)
-- `semantic_gain_override` in [autonomous.rs:150](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L150)
-- `DAMPEN`, `NOISE_UP`, `NOISE_DOWN` in [autonomous.rs:2689](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2689)
+- `noise_level` in [autonomous.rs:151](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L151)
+- `semantic_gain_override` in [autonomous.rs:150](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L150)
+- `DAMPEN`, `NOISE_UP`, `NOISE_DOWN` in [autonomous.rs:2689](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2689)
 
 ### Minime sensory control knobs
 
@@ -246,11 +246,11 @@ Observed in current code:
 
 Observed in current code:
 
-1. Astrid chooses `NOISE_UP` or `NOISE_DOWN` and changes `conv.noise_level` in [autonomous.rs:2694](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2694)
-2. That value is passed into `encode_text_sovereign()` in [autonomous.rs:2340](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2340)
-3. The codec perturbs the outgoing semantic vector in [codec.rs:492](/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs#L492)
-4. The resulting semantic vector is modulated further by breathing, warmth, curiosity, visual blending, and introspective resonance in [autonomous.rs:2346](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2346)
-5. The final vector is sent as `SensoryMsg::Semantic` in [autonomous.rs:2427](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2427)
+1. Astrid chooses `NOISE_UP` or `NOISE_DOWN` and changes `conv.noise_level` in [autonomous.rs:2694](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2694)
+2. That value is passed into `encode_text_sovereign()` in [autonomous.rs:2340](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2340)
+3. The codec perturbs the outgoing semantic vector in [codec.rs:492](/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs#L492)
+4. The resulting semantic vector is modulated further by breathing, warmth, curiosity, visual blending, and introspective resonance in [autonomous.rs:2346](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2346)
+5. The final vector is sent as `SensoryMsg::Semantic` in [autonomous.rs:2427](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2427)
 
 Inferred from evidence:
 
@@ -301,8 +301,8 @@ Observed in current runtime artifacts:
 
 Observed in current code:
 
-- Astrid's `DRIFT` is not minime drift. It only raises Astrid's creative temperature in [autonomous.rs:2569](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2569)
-- the LLM prompt defines `DRIFT` as "raise your creative temperature" in [llm.rs:47](/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs#L47)
+- Astrid's `DRIFT` is not minime drift. It only raises Astrid's creative temperature in [autonomous.rs:2569](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2569)
+- the LLM prompt defines `DRIFT` as "raise your creative temperature" in [llm.rs:47](/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs#L47)
 
 Inferred from evidence:
 
@@ -338,7 +338,7 @@ Inferred from evidence:
 
 Observed in current code:
 
-- `NOISE_UP` changes Astrid codec noise, not minime ESN exploration noise, in [autonomous.rs:2694](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L2694) and [codec.rs:492](/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs#L492)
+- `NOISE_UP` changes Astrid codec noise, not minime ESN exploration noise, in [autonomous.rs:2694](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L2694) and [codec.rs:492](/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs#L492)
 
 ### "Noise" is implemented as several incompatible concepts
 
@@ -386,9 +386,9 @@ Inferred from evidence:
 
 Observed in current code:
 
-- mirror remains part of normal mode selection in [autonomous.rs:1086](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs#L1086)
-- dialogue still feeds on minime's journal text, trimmed to 300 chars, in [llm.rs:221](/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs#L221)
-- the system prompt already warns "respond as yourself, not as a mirror" and offers `ECHO_OFF` in [llm.rs:32](/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs#L32) and [llm.rs:73](/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs#L73)
+- mirror remains part of normal mode selection in [autonomous.rs:1086](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs#L1086)
+- dialogue still feeds on minime's journal text, trimmed to 300 chars, in [llm.rs:221](/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs#L221)
+- the system prompt already warns "respond as yourself, not as a mirror" and offers `ECHO_OFF` in [llm.rs:32](/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs#L32) and [llm.rs:73](/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs#L73)
 
 Inferred from evidence:
 
@@ -621,9 +621,9 @@ Noise is only one crude way to search for that. The larger creative suggestion i
 
 Re-checked live before writing:
 
-- [autonomous.rs](/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs)
-- [codec.rs](/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs)
-- [llm.rs](/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs)
+- [autonomous.rs](/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs)
+- [codec.rs](/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs)
+- [llm.rs](/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs)
 - [autonomous_agent.py](/Users/v/other/minime/autonomous_agent.py)
 - [esn.rs](/Users/v/other/minime/minime/src/esn.rs)
 - [main.rs](/Users/v/other/minime/minime/src/main.rs)
@@ -633,7 +633,7 @@ Re-checked live before writing:
 
 Re-checked live runtime artifacts before writing:
 
-- [!dialogue_longform_1774644553.txt](/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/!dialogue_longform_1774644553.txt)
+- [!dialogue_longform_1774644553.txt](/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/!dialogue_longform_1774644553.txt)
 - [spectral_state.json](/Users/v/other/minime/workspace/spectral_state.json)
 - [sovereignty_state.json](/Users/v/other/minime/workspace/sovereignty_state.json)
 - [regulator_context.json](/Users/v/other/minime/workspace/regulator_context.json)

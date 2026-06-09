@@ -47,9 +47,9 @@ Astrid's related signal remains pressure/context only. The latest relevant reply
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/thread.json`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/experiments.jsonl`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1779714349.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox/reply_1779714349.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/events.jsonl`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1779714349.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/outbox/reply_1779714349.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/events.jsonl`
 
 ## Conclusion
 

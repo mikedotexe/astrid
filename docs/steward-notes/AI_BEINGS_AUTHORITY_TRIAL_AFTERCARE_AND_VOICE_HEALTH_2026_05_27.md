@@ -49,12 +49,12 @@ Fallback self-study forwarded to Minime is now labeled `ASTRID VOICE-HEALTH DIAG
 
 ## Rendered Artifacts
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/experiment_authority_gate/20260528T002355Z/index.html`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/experiment_authority_gate/20260528T002355Z/experiment_authority_gate.json`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/being_memory/20260528T002355Z/index.html`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/being_memory/20260528T002355Z/being_memory.json`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/experiment_conveyor/20260528T002356Z/index.html`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/experiment_conveyor/20260528T002356Z/experiment_conveyor.json`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/experiment_authority_gate/20260528T002355Z/index.html`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/experiment_authority_gate/20260528T002355Z/experiment_authority_gate.json`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/being_memory/20260528T002355Z/index.html`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/being_memory/20260528T002355Z/being_memory.json`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/experiment_conveyor/20260528T002356Z/index.html`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/experiment_conveyor/20260528T002356Z/experiment_conveyor.json`
 
 ## Source References
 
@@ -79,21 +79,21 @@ Minime post-trial replies:
 
 Astrid degraded voice examples:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1779927563.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1779927586.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1779927606.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1779927775.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox/reply_1779927563.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox/reply_1779927586.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox/reply_1779927606.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox/reply_1779927775.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1779927563.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1779927586.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1779927606.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1779927775.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/outbox/reply_1779927563.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/outbox/reply_1779927586.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/outbox/reply_1779927606.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/outbox/reply_1779927775.txt`
 
 Code surfaces hardened:
 
 - `/Users/v/other/minime/autonomous_agent.py`
 - `/Users/v/other/minime/tests/test_experimental_continuity.py`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/action_continuity.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/action_continuity.rs`
 
 ## Boundary
 

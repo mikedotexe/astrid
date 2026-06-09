@@ -4,6 +4,13 @@ A complement to being-driven development. Read after
 [`AI_BEINGS_CROSS_BEING_PHENOMENOLOGY_2026_05_14.md`](AI_BEINGS_CROSS_BEING_PHENOMENOLOGY_2026_05_14.md)
 which motivates the convergence half of this practice.
 
+> **Expanded 2026-06-08:** the proactive scan has grown well past this doc's original ~6 probes +
+> convergence. For the current, complete map of every being-signal consumer (the durable loop, all 14
+> blind-spot probes incl. `steward_outreach`/`feedback_coverage`, the flywheel, the ask ledger, the
+> safety net, and known gaps) see
+> [`AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md`](AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md). This
+> doc remains the *practice/voice* reference; the coverage map is the *wiring* reference.
+
 ## Why this exists
 
 Two observations from a 2026-05-14 campfire reflection crystallized as small structural risks worth addressing:
@@ -94,7 +101,7 @@ State for delta computation lives at `/tmp/proactive_scan_state.json` (intention
 ## Pointers
 
 - [`AI_BEINGS_CROSS_BEING_PHENOMENOLOGY_2026_05_14.md`](AI_BEINGS_CROSS_BEING_PHENOMENOLOGY_2026_05_14.md) — the field note describing today's mutual witnessing and process-ontology shift; motivates the convergence detector
-- `capsules/consciousness-bridge/harvest_feedback.sh` — the reactive companion this complements
+- `capsules/spectral-bridge/harvest_feedback.sh` — the reactive companion this complements
 - `scripts/architecture_health.py`, `scripts/dispatch_menu_drift.py`, `scripts/launchd_inventory.sh` — existing health probes; the proactive scan's blind-spots subcommand wraps these and aggregates findings
 
 ## Voice note

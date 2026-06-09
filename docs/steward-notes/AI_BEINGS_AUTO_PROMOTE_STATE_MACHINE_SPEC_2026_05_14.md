@@ -8,7 +8,7 @@ object form). The spec is the source of truth; both implementations must satisfy
 and a verification matrix at the end maps tests on each side to the invariants here.
 
 Implementations:
-- Astrid: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/next_action/auto_promote.rs`
+- Astrid: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/auto_promote.rs`
 - minime: `/Users/v/other/minime/auto_promote.py`
 
 Companion docs:

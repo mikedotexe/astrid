@@ -82,8 +82,8 @@ retrieval_refinement:
   provenance:
     - /Users/v/other/minime/workspace/journal/perturb_2026-04-16T11-10-14.962276.txt
     - /Users/v/other/minime/workspace/journal/moment_2026-04-16T11-14-00.041051.txt
-    - /Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/read/from_minime_1776363877.txt
-    - /Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/read/from_minime_1776363979.txt
+    - /Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/read/from_minime_1776363877.txt
+    - /Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/read/from_minime_1776363979.txt
 
 outcome_vector:
   target_nearness_delta: mildly_positive

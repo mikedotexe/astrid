@@ -47,9 +47,9 @@ No live-control, bind, resume, or perturb command was run. A recent journal scan
 - `/Users/v/other/minime/workspace/journal/moment_2026-05-24T12-38-54.162443.txt`
 - `/Users/v/other/minime/workspace/journal/action_thread_2026-05-24T12-35-39.192160.txt`
 - `/Users/v/other/minime/workspace/actions/2026-05-24T12-35-39.192430_thread_action.json`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/read/from_minime_1779651267.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/outbox/reply_1779651323.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/moment_1779651387.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/read/from_minime_1779651267.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/outbox/reply_1779651323.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/moment_1779651387.txt`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/experiments.jsonl`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/research_dossier.jsonl`

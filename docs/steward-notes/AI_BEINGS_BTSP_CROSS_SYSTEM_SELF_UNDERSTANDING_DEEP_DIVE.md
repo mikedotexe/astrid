@@ -9,7 +9,7 @@ Short answer: BTSP is a better fit than Astrid's current Hebbian sidecar if the 
 
 Current truth:
 
-- Astrid's `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/hebbian.rs` is a contact-scoped pairwise codec reweighting layer.
+- Astrid's `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/hebbian.rs` is a contact-scoped pairwise codec reweighting layer.
 - It stores pairwise semantic-dimension traces, waits for a newer telemetry sample, and updates those traces from a single comfort-centered fill outcome.
 - It is useful, but it is not a temporal memory system.
 
@@ -39,11 +39,11 @@ The strongest recommendation is:
 
 ### Astrid's Hebbian sidecar is delayed but narrow
 
-- `[Code]` `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/hebbian.rs` defines `HebbianCodecSidecar` as a bank of exhaustive pair traces over named codec dimensions, each storing `score`, `contact_updates`, and `impact_ema`.
+- `[Code]` `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/hebbian.rs` defines `HebbianCodecSidecar` as a bank of exhaustive pair traces over named codec dimensions, each storing `score`, `contact_updates`, and `impact_ema`.
 - `[Code]` `observe_outcome(previous_features, previous_fill, current_fill)` computes one `comfort_outcome` from distance-to-center around `COMFORT_FILL_CENTER = 50.0` and updates pair scores from coactivity.
 - `[Code]` `contextual_weights` and `apply_to_features` feed those pair scores back into small per-dimension multipliers, clamped to a gentle range.
-- `[Code]` `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/state.rs` stores a bounded FIFO of `pending_hebbian_outcomes`, explicitly described as one-shot contact receipts waiting for a newer Minime telemetry sample.
-- `[Code]` `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs` arms those receipts in `finalize_semantic_exchange`, then later consumes at most one pending receipt per newer telemetry tick before calling `observe_outcome`.
+- `[Code]` `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/state.rs` stores a bounded FIFO of `pending_hebbian_outcomes`, explicitly described as one-shot contact receipts waiting for a newer Minime telemetry sample.
+- `[Code]` `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs` arms those receipts in `finalize_semantic_exchange`, then later consumes at most one pending receipt per newer telemetry tick before calling `observe_outcome`.
 - `[Inference]` This is not useless. It is a bounded delayed-contact learning rule. But it still learns only "which semantic-dimension pairs tended to precede comfort change?"
 - `[Inference]` It does not bind context, phase, memory selection, attention policy, perception state, or later interpretation into a reusable episode.
 
@@ -248,10 +248,10 @@ struct BTSPEpisode {
 
 ### 8. Suggested hook points in the current codebase
 
-- `[Suggestion]` Use `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs` `finalize_semantic_exchange(...)` as the natural place to arm `EligibilityTrace` objects, because that is already where the bridge turns completed semantic contact into delayed Hebbian receipts.
+- `[Suggestion]` Use `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs` `finalize_semantic_exchange(...)` as the natural place to arm `EligibilityTrace` objects, because that is already where the bridge turns completed semantic contact into delayed Hebbian receipts.
 - `[Suggestion]` Use the later telemetry-processing loop near the current `take_pending_hebbian_outcome_for_telemetry(...)` call as the natural place to emit `InstructiveEvent` objects.
 - `[Suggestion]` Use the already mirrored `selected_memory_id` and `selected_memory_role` surfaces as trace context rather than inventing a second remote-memory mirror.
-- `[Suggestion]` Leave `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/hebbian.rs` intact in v1; any future BTSP-informed shaping can remain additive and optional.
+- `[Suggestion]` Leave `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/hebbian.rs` intact in v1; any future BTSP-informed shaping can remain additive and optional.
 
 ### 9. Where retrieval should show up first
 

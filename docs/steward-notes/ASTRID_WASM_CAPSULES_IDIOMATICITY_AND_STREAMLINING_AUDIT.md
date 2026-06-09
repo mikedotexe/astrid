@@ -44,7 +44,7 @@ Short verdict:
 
 - `[Code]` The live manifests in `capsules/*/Capsule.toml` are:
   - `capsules/camera-service/Capsule.toml`
-  - `capsules/consciousness-bridge/Capsule.toml`
+  - `capsules/spectral-bridge/Capsule.toml`
   - `capsules/introspector/Capsule.toml`
   - `capsules/perception/Capsule.toml`
 - `[Code]` All four are currently `[[mcp_server]]` capsules.
@@ -93,8 +93,8 @@ Short verdict:
 
 ### Some responsibilities are bundled too broadly
 
-- `[Code]` `capsules/consciousness-bridge/Capsule.toml` owns uplink behavior, local network access, KV access, multiple topic surfaces, and interceptors for both control and semantic pathways.
-- `[Docs]` `capsules/consciousness-bridge/workspace/NEEDS_ASSESSMENT.md` explicitly says the bridge is real but growth machinery is underbuilt, and that the bridge still runs as a standalone system rather than a more integrated capsule graph.
+- `[Code]` `capsules/spectral-bridge/Capsule.toml` owns uplink behavior, local network access, KV access, multiple topic surfaces, and interceptors for both control and semantic pathways.
+- `[Docs]` `capsules/spectral-bridge/workspace/NEEDS_ASSESSMENT.md` explicitly says the bridge is real but growth machinery is underbuilt, and that the bridge still runs as a standalone system rather than a more integrated capsule graph.
 - `[Inference]` `consciousness-bridge` is useful, but it is the clearest case where Astrid’s app layer has become “one big smart edge process” instead of a narrower cluster of capsule-shaped responsibilities.
 
 ### The docs openly acknowledge the guest-SDK gap
@@ -147,7 +147,7 @@ That is a reasonable choice, but it comes with a cost: if MCP/native capsules re
 
 - `[Code]` `consciousness-bridge` owns local networking, uplink registration, KV, topic publication/subscription, control interception, and semantic interception.
 - `[Docs]` `ROADMAP.md` explicitly describes a hybrid target where native MCP handles the minime and SQLite edge while a WASM component handles IPC integration.
-- `[Docs]` `capsules/consciousness-bridge/workspace/NEEDS_ASSESSMENT.md` explicitly notes the bridge still runs standalone and the kernel does not fully “know” it as an integrated capsule graph.
+- `[Docs]` `capsules/spectral-bridge/workspace/NEEDS_ASSESSMENT.md` explicitly notes the bridge still runs standalone and the kernel does not fully “know” it as an integrated capsule graph.
 - Judgment: **should be decomposed and become hybrid**
 - Reasoning:
   - `[Inference]` This is the best candidate in the repo for splitting edge transport from mediation, interpretation, replay/provenance logic, and orchestration.
@@ -437,7 +437,7 @@ Re-checked for this audit:
 - `RASCII_MIGRATION.md`
 - `ROADMAP.md`
 - `TODO.md`
-- `capsules/consciousness-bridge/workspace/NEEDS_ASSESSMENT.md`
+- `capsules/spectral-bridge/workspace/NEEDS_ASSESSMENT.md`
 - `crates/astrid-capsule/src/discovery.rs`
 - `crates/astrid-capsule/src/toposort.rs`
 - `crates/astrid-capsule/src/engine/wasm/mod.rs`

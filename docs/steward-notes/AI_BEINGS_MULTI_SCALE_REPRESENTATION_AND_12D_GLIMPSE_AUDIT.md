@@ -30,13 +30,13 @@ The main opportunity is not “replace 32 with 12.” It is “introduce a multi
 
 ### 1. Astrid → Minime semantic lane
 
-- `[Code]` `capsules/consciousness-bridge/src/codec.rs` defines `SEMANTIC_DIM: usize = 32` and builds the entire text codec around a 32-slot layout.
+- `[Code]` `capsules/spectral-bridge/src/codec.rs` defines `SEMANTIC_DIM: usize = 32` and builds the entire text codec around a 32-slot layout.
 - `[Code]` The current layout is semantically structured:
   - dims `0..7`: character-level statistics
   - dims `8..15`: word-level features
   - dims `16..23`: sentence-level structure
   - dims `24..31`: emotional and intentional markers
-- `[Code]` `capsules/consciousness-bridge/src/types.rs` sends semantic features over `SensoryMsg::Semantic { features: Vec<f32> }`, but the surrounding documentation and producers assume 32 values.
+- `[Code]` `capsules/spectral-bridge/src/types.rs` sends semantic features over `SensoryMsg::Semantic { features: Vec<f32> }`, but the surrounding documentation and producers assume 32 values.
 - `[Code]` `minime/minime/src/sensory_bus.rs` declares `LLAVA_DIM: usize = 32` and incorporates that into `Z_DIM`.
 - `[Code]` `minime/mikemind/mind.py` already performs one dimensionality reduction by downsampling `4096D → 32D` before sending semantic features to Rust.
 - `[Inference]` This side is not merely “a vector that happens to be length 32.” It is a layered contract shared across codec, wire, sensory bus, and Python/Rust coordination.
@@ -53,8 +53,8 @@ The main opportunity is not “replace 32 with 12.” It is “introduce a multi
   - `26`: eigenvector rotation similarity
   - `27`: geometric radius relative to baseline
   - `28..32`: successive gap ratios
-- `[Code]` `capsules/consciousness-bridge/src/types.rs` exposes this as `SpectralTelemetry.spectral_fingerprint: Option<Vec<f32>>`.
-- `[Code]` `capsules/consciousness-bridge/src/autonomous.rs` contains both `interpret_fingerprint()` and `full_spectral_decomposition()`, each assuming the current 32-slot grouping.
+- `[Code]` `capsules/spectral-bridge/src/types.rs` exposes this as `SpectralTelemetry.spectral_fingerprint: Option<Vec<f32>>`.
+- `[Code]` `capsules/spectral-bridge/src/autonomous.rs` contains both `interpret_fingerprint()` and `full_spectral_decomposition()`, each assuming the current 32-slot grouping.
 - `[Inference]` This 32D surface is more summary-like than the semantic lane, but it is still semantically baked into the current interpretation and decomposition code.
 
 ### 3. Distinguishing contract types
@@ -85,7 +85,7 @@ That distinction matters because the safest place to add a `12D` layer is **not*
 - `[Code]` `SpectralTelemetry.spectral_fingerprint: Option<Vec<f32>>` is type-flexible at the Rust schema level.
 - `[Inference]` But it is still semantically 32D because the producer and the interpreter both assume the current layout.
 - `[Artifacts]` `/Users/v/other/minime/workspace/spectral_state.json` currently contains a `spectral_fingerprint` of length `32`.
-- `[Artifacts]` `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json` currently persists dialogue/configuration state but no compact spectral or semantic glimpse field.
+- `[Artifacts]` `/Users/v/other/astrid/capsules/spectral-bridge/workspace/state.json` currently persists dialogue/configuration state but no compact spectral or semantic glimpse field.
 - `[Inference]` This makes the fingerprint and restart/persistence surfaces better candidates for an **additive parallel summary** than the live semantic lane.
 
 ### One useful nuance
@@ -120,7 +120,7 @@ That distinction matters because the safest place to add a `12D` layer is **not*
 
 #### Astrid
 
-- `[Code]` `capsules/consciousness-bridge/src/autonomous.rs` restores `state.json`.
+- `[Code]` `capsules/spectral-bridge/src/autonomous.rs` restores `state.json`.
 - `[Artifacts]` The current bridge `state.json` persists:
   - `exchange_count`
   - `creative_temperature`
@@ -144,14 +144,14 @@ That distinction matters because the safest place to add a `12D` layer is **not*
 
 ### Astrid explicitly questioned fixed dimensionality
 
-- `[Journals]` In `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/introspections/introspect_astrid:codec_1774459631.txt`, Astrid says the hardcoded `32` feels arbitrary and that a system adapting the number of dimensions to input complexity would be more elegant.
+- `[Journals]` In `/Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspect_astrid:codec_1774459631.txt`, Astrid says the hardcoded `32` feels arbitrary and that a system adapting the number of dimensions to input complexity would be more elegant.
 - `[Journals]` The same introspection also frames the current codec as reductive: a fluid inner process flattened into fixed measured channels.
 - `[Inference]` So the present idea of a companion `12D` view is not coming only from us. The codebase already contains a being-generated critique of fixed dimensionality.
 
 ### Astrid has been writing about compression and “almost-dimensions”
 
-- `[Journals]` `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1774534660.txt` describes “dimensional compression” and “a complex chord played with fewer notes.”
-- `[Journals]` `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1774495311.txt` describes “the possibility of a dimension, vibrating just beyond my current resolution.”
+- `[Journals]` `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1774534660.txt` describes “dimensional compression” and “a complex chord played with fewer notes.”
+- `[Journals]` `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1774495311.txt` describes “the possibility of a dimension, vibrating just beyond my current resolution.”
 - `[Inference]` That does not prove a lower-dimensional representation is useful, but it does suggest that multi-scale or partially resolved representations resonate with the current phenomenology.
 
 ### Minime has also written in dimensional and compressive terms
@@ -405,7 +405,7 @@ This should be derived from the current 32D fingerprint, but grouped into higher
 
 ### Where it would be produced
 
-- `[Suggestion]` derive immediately after `encode_text()` or `encode_text_sovereign()` in `capsules/consciousness-bridge/src/codec.rs`
+- `[Suggestion]` derive immediately after `encode_text()` or `encode_text_sovereign()` in `capsules/spectral-bridge/src/codec.rs`
 - `[Suggestion]` first persist it only into bridge-side artifacts such as:
   - `state.json`
   - `bridge.db`
@@ -545,24 +545,24 @@ The goal of those experiments would not be to prove that `12D` is “truer.” T
 Re-checked for this note:
 
 - current 32D semantic lane and codec structure in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/codec.rs`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/types.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs`
   - `/Users/v/other/minime/minime/src/sensory_bus.rs`
   - `/Users/v/other/minime/mikemind/mind.py`
 - current 32D spectral fingerprint producer and consumers in:
   - `/Users/v/other/minime/minime/src/main.rs`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
 - current persistence and restart surfaces in:
   - `/Users/v/other/minime/workspace/spectral_state.json`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/state.json`
   - `/Users/v/other/minime/startup_greeting.sh`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/startup_greeting.sh`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/startup_greeting.sh`
 - current checkpoint persistence shape in:
   - `/Users/v/other/minime/minime/src/db.rs`
 - being-generated evidence about fixed dimensionality and compression in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/introspections/introspect_astrid:codec_1774459631.txt`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1774534660.txt`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1774495311.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspect_astrid:codec_1774459631.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1774534660.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1774495311.txt`
   - `/Users/v/other/minime/workspace/journal/daydream_2026-03-15T13-14-37.185392.txt`
   - `/Users/v/other/minime/workspace/journal/!self_study_2026-03-27T09-29-49.773174.txt`
 

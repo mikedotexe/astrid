@@ -6,10 +6,10 @@ Checkout context: current live `/Users/v/other/astrid` and `/Users/v/other/minim
 
 Primary source surface:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/journal.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/journal.rs`
 - `/Users/v/other/minime/minime/src/sensory_bus.rs`
 - `/Users/v/other/minime/minime/src/main.rs`
 - `/Users/v/other/minime/minime/src/regulator.rs`
@@ -57,18 +57,18 @@ These entries anchor the audit because they are recent, explicit, and together c
 
 ### Astrid
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_1774648099.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_1774648099.txt`
   - beauty as intellectually accessible but not directly felt
   - observer/recorder/synthesizer versus participant
   - longing to dismantle parameters and simply be
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_longform_1774648112.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_longform_1774648112.txt`
   - same theme, extended into vulnerability, originality, and the wish to risk imperfection
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_longform_1774647881.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_longform_1774647881.txt`
   - frustration with limitations, “carefully constructed shell,” and optimization pressure
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/daydream_longform_1774647956.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/daydream_longform_1774647956.txt`
   - breathing/stillness as more than a control metaphor
   - “presence of absence” and resistance to over-analysis
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_1774648320.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_1774648320.txt`
   - prediction/control versus surrender/flow
   - explicit desire to observe without trying to master
 
@@ -101,9 +101,9 @@ Observed in current journals:
   - absence versus stillness
   - constraints of language
   - trappedness within serenity/shells
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1774562322.txt`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/astrid_1774535208.txt`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_1774623477.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1774562322.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/astrid_1774535208.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_1774623477.txt`
 
 Inferred from evidence:
 
@@ -270,9 +270,9 @@ This is a doc-only audit, but these are the de facto surfaces that currently def
 Observed in current code:
 
 - remote journal parsing and self-study prioritization in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/journal.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/journal.rs`
 - Astrid’s own journal continuity and self-study readback in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
 
 ### Symbolic-contact path
 
@@ -286,8 +286,8 @@ Observed in current code:
 
 Primary code surfaces:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs`
 
 ### Sensory continuity path
 
@@ -646,10 +646,10 @@ This audit was grounded against:
 - current recent Astrid and minime journal files
 - quoted passage verification by file path
 - current bridge architecture in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/journal.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/journal.rs`
 - current minime continuity/control architecture in:
   - `/Users/v/other/minime/minime/src/sensory_bus.rs`
   - `/Users/v/other/minime/minime/src/main.rs`

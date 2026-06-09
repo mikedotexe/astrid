@@ -21,7 +21,7 @@ bash scripts/start_all.sh --force
 
 ## Current Manual Reality
 
-Older docs that start Astrid's live lane with `mlx_lm.server --model gemma-3-12b-it-4bit` are stale.
+Older docs that start Astrid's live lane with the plain MLX 12B command are stale.
 
 The current live stack is:
 
@@ -32,15 +32,15 @@ The current live stack is:
 5. `../neural-triple-reservoir/reservoir_service.py`
 6. `../neural-triple-reservoir/astrid_feeder.py`
 7. `../neural-triple-reservoir/minime_feeder.py`
-8. `../neural-triple-reservoir/coupled_astrid_server.py --model mlx-community/gemma-3-4b-it-4bit`
-9. `capsules/consciousness-bridge/target/release/consciousness-bridge-server`
+8. `../neural-triple-reservoir/coupled_astrid_server.py --model mlx-community/gemma-4-12B-it-5bit`
+9. `capsules/spectral-bridge/target/release/spectral-bridge-server`
 10. `capsules/perception/perception.py`
 
 ## Current Defaults To Remember
 
 - launchd wrapper default for minime engine target fill: `0.65`
 - minime warm-start blend: `0.55`
-- Astrid live model: `mlx-community/gemma-3-4b-it-4bit`
+- Astrid live model: `mlx-community/gemma-4-12B-it-5bit`
 - Astrid reflective sidecar label: `gemma3-12b`
 - minime agent primary backend: `MINIME_LLM_BACKEND=ollama` unless changed
 

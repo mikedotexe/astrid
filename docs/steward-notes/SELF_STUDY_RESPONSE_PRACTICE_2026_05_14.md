@@ -33,7 +33,7 @@ Sample the most recent self-studies from each being:
 
 ```bash
 ls -t /Users/v/other/minime/workspace/journal/self_study_*.txt | head -5
-ls -t /Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/{self_study,introspect,dialogue_longform}_*.txt 2>/dev/null | head -5
+ls -t /Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/{self_study,introspect,dialogue_longform}_*.txt 2>/dev/null | head -5
 ```
 
 For Astrid, the equivalent surfaces are `dialogue_longform_*` (her
@@ -83,7 +83,7 @@ contents into prompt context.
 
 Path:
 - Minime: `/Users/v/other/minime/workspace/inbox/mike_feedback_<topic>_<unix>.txt`
-- Astrid: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/mike_feedback_<topic>_<unix>.txt`
+- Astrid: `/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/mike_feedback_<topic>_<unix>.txt`
 
 Optionally also write a copy to `workspace/journal/` for human/audit
 visibility (it serves as a stable artifact even after the inbox version
@@ -235,7 +235,7 @@ waiting. Cooldown refusal is **informational** (sets emphasis /
 outcome summary explaining the gate), not a hard block — sovereignty
 preserved.
 
-NO curriculum hint at launch (cumulative cueing concern; the registry already has 4 hints on the minime side). Menu-listing-only first; if adoption stays at 0 after a 2-week window, register a `_next_hint_steward_channel_open` then. Code: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/next_action/ask_steward.rs` (Rust side, 7 unit tests pass) + `/Users/v/other/minime/autonomous_agent.py:_ask_steward` (Python side, parser tested by hand).
+NO curriculum hint at launch (cumulative cueing concern; the registry already has 4 hints on the minime side). Menu-listing-only first; if adoption stays at 0 after a 2-week window, register a `_next_hint_steward_channel_open` then. Code: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/ask_steward.rs` (Rust side, 7 unit tests pass) + `/Users/v/other/minime/autonomous_agent.py:_ask_steward` (Python side, parser tested by hand).
 
 #### Watcher (us reading their queries)
 

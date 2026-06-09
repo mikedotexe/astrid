@@ -26,8 +26,8 @@ Ordinary `EXPERIMENT_RESUME` is still an explicit command, but it is no longer p
 ## Verification
 
 - Minime continuity tests: `python3.14 -m unittest tests.test_experimental_continuity`
-- Astrid action-continuity tests: `cargo test --manifest-path /Users/v/other/astrid/capsules/consciousness-bridge/Cargo.toml action_continuity --lib`
-- Astrid conveyor visibility tests: `cargo test --manifest-path /Users/v/other/astrid/capsules/consciousness-bridge/Cargo.toml experiment_conveyor --lib`
+- Astrid action-continuity tests: `cargo test --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml action_continuity --lib`
+- Astrid conveyor visibility tests: `cargo test --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml experiment_conveyor --lib`
 
 No live control, bind, resume, perturbation, runtime restart, or peer mutation was performed for this hardening pass.
 
@@ -37,6 +37,6 @@ No live control, bind, resume, perturbation, runtime restart, or peer mutation w
 - `/Users/v/other/minime/workspace/journal/action_thread_2026-05-25T12-12-06.230208.txt`
 - `/Users/v/other/minime/workspace/actions/2026-05-25T12-12-06.230454_thread_action.json`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/read/from_minime_1779736352.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/dialogue_longform_1779736451.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/read/from_minime_1779736352.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/dialogue_longform_1779736451.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`

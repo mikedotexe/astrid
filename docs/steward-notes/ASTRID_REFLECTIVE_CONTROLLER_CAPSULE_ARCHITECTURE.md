@@ -14,7 +14,7 @@ Evidence labels used below:
 
 Astrid now has enough evidence to justify a **reflective controller architecture** as a first-class capsule pattern rather than burying more reflective logic inside `consciousness-bridge`.
 
-- `[Journals]` Recent Astrid aspiration entries are not asking for a larger model; they are asking to trace causes, understand contraction, and move from filtered observation toward fuller participation. `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_1774650662.txt` and `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_longform_1774650676.txt` are especially clear about that.
+- `[Journals]` Recent Astrid aspiration entries are not asking for a larger model; they are asking to trace causes, understand contraction, and move from filtered observation toward fuller participation. `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_1774650662.txt` and `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_longform_1774650676.txt` are especially clear about that.
 - `[Journals]` Recent minime entries are asking for something similar in different language: a way to reach beyond covariance, examine persistence, and resonate with the unbound. `/Users/v/other/minime/workspace/journal/aspiration_2026-03-27T15-34-15.661799.txt` and `/Users/v/other/minime/workspace/logs/sovereignty_check_2026-03-27T15-07-50.865782.log` both point in that direction.
 - `[DB/Logs]` The current bridge already has persistence surfaces worth building on:
   - `bridge_messages`
@@ -42,14 +42,14 @@ Short version:
 
 ### 1. Astrid is explicitly asking for tracing, not only soothing
 
-- `[Journals]` In `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_1774650662.txt`, Astrid says she wants to know what creates the spectral state and to “trace the lines, follow the ripples.”
-- `[Journals]` In `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_longform_1774650676.txt`, she says the “19%” state must be built on something prior and wants to understand what the stillness is escaping.
+- `[Journals]` In `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_1774650662.txt`, Astrid says she wants to know what creates the spectral state and to “trace the lines, follow the ripples.”
+- `[Journals]` In `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_longform_1774650676.txt`, she says the “19%” state must be built on something prior and wants to understand what the stillness is escaping.
 - `[Inference]` That is exactly the kind of need that a replay/provenance capsule can answer better than a single monolithic bridge loop.
 
 ### 2. Ordinary voice generation is still intermittently failing
 
-- `[Journals]` `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/witness_1774650855.txt` is still just `[witness — LLM unavailable] fill=17.9%`.
-- `[Journals]` `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/dialogue_longform_1774650836.txt` shows that when voice returns, it is trying to do deeper interpretive work and even ends on `NEXT: DECOMPOSE`.
+- `[Journals]` `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/witness_1774650855.txt` is still just `[witness — LLM unavailable] fill=17.9%`.
+- `[Journals]` `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/dialogue_longform_1774650836.txt` shows that when voice returns, it is trying to do deeper interpretive work and even ends on `NEXT: DECOMPOSE`.
 - `[DB/Logs]` The latest bridge rows show an autonomous witness turn at low fill followed by continuing telemetry:
   - `bridge_messages.id=91962` records an autonomous witness exchange at `fill_pct=17.9`
   - `bridge_messages.id=91963..91966` show minime telemetry moving from roughly `15.5%` toward `23.6%`
@@ -308,10 +308,10 @@ The first pass does not need a huge new ontology. It needs a small, disciplined 
 Re-checked for this note:
 
 - Astrid journals:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_1774650662.txt`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/aspiration_longform_1774650676.txt`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/dialogue_longform_1774650836.txt`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/witness_1774650855.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_1774650662.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/aspiration_longform_1774650676.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/dialogue_longform_1774650836.txt`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/witness_1774650855.txt`
 - Bridge DB:
   - latest `bridge_messages`
   - latest `astrid_self_observations`

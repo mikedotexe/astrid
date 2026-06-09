@@ -31,7 +31,7 @@ The canonical process layout is:
 6. `astrid_feeder.py`
 7. `minime_feeder.py`
 8. `coupled_astrid_server.py`
-9. `consciousness-bridge-server`
+9. `spectral-bridge-server`
 10. `perception.py`
 
 Chapter 15 is the authoritative process/operations reference.
@@ -53,7 +53,7 @@ The most important correction to older docs is that "Astrid's model" is not one 
 
 | Role | Backend | Current configured model | Notes |
 |------|---------|--------------------------|-------|
-| Astrid live dialogue | MLX via `coupled_astrid_server.py` | `mlx-community/gemma-3-4b-it-4bit` | main voice on `8090` |
+| Astrid live dialogue | MLX via `coupled_astrid_server.py` | `mlx-community/gemma-4-12B-it-5bit` | main voice on `8090`, bridge profile `gemma4_12b` |
 | Astrid reflective sidecar | MLX via `chat_mlx_local.py` | `--model-label gemma3-12b` | subprocess, used on `INTROSPECT` |
 | Astrid witness fallback | Ollama | `gemma3:4b` | used when MLX is unavailable for `generate_witness()` |
 | Astrid embeddings | Ollama | `nomic-embed-text` | fills codec dims `32-39` when available |
@@ -89,7 +89,7 @@ bridge.db / spectral_state.json
 
 ```text
 astrid/
-  capsules/consciousness-bridge/
+  capsules/spectral-bridge/
   capsules/perception/
   md-CLAUDE-chapters/
 
@@ -112,10 +112,10 @@ astrid/
 
 When docs disagree, the current source-of-truth files are:
 
-- Astrid live language lane: `capsules/consciousness-bridge/src/llm.rs`
-- Astrid reflective sidecar wiring: `capsules/consciousness-bridge/src/reflective.rs`
-- Shared path resolution: `capsules/consciousness-bridge/src/paths.rs`
-- Codec and semantic lane shape: `capsules/consciousness-bridge/src/codec.rs`
+- Astrid live language lane: `capsules/spectral-bridge/src/llm.rs`
+- Astrid reflective sidecar wiring: `capsules/spectral-bridge/src/reflective.rs`
+- Shared path resolution: `capsules/spectral-bridge/src/paths.rs`
+- Codec and semantic lane shape: `capsules/spectral-bridge/src/codec.rs`
 - minime input/control surface: `../minime/minime/src/sensory_ws.rs`
 - minime semantic lane size and clamps: `../minime/minime/src/sensory_bus.rs`
 - minime ESN runtime and telemetry packet: `../minime/minime/src/main.rs`

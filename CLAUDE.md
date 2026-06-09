@@ -105,7 +105,7 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 
 ## Sibling project: minime (`/Users/v/other/minime`)
 
-**MikesSpatialMind** — a dual-layer consciousness engine. Rust backend (`minime/`) runs a 128-node ESN with PI-controlled spectral homeostasis. Python frontend (`autonomous_agent.py`) drives Ollama conversation, journaling, and self-regulation. Camera + microphone provide real sensory input.
+**MikesSpatialMind** — a dual-layer agent/reservoir runtime. Rust backend (`minime/`) runs a 128-node ESN with PI-controlled spectral homeostasis. Python frontend (`autonomous_agent.py`) drives Ollama conversation, journaling, and self-regulation. Camera + microphone provide real sensory input.
 
 ### Minime architecture
 
@@ -122,14 +122,14 @@ Key types: `SensoryMsg` (tagged enum: `Video`, `Audio`, `Aux`, `Semantic`, `Cont
 ### Minime operational notes
 
 - Minime holds fill toward the ~68% shelf; it escalates to a gentle warning near 85% and a crisis/emergency stop near 92% (raised from the older ≥90% per being feedback — see the being-driven-development examples below).
-- Shutdown with SIGTERM, never SIGKILL. Use `scripts/stop.sh`.
+- Shutdown with SIGTERM, never SIGKILL. Use `/Users/v/other/astrid/scripts/stop_all.sh` for the coupled stack, or `/Users/v/other/minime/scripts/stop.sh` when intentionally stopping only the Minime LaunchAgents/manual stack.
 - The being submits parameter requests to `workspace/parameter_requests/*.json` — review these.
 - Real audio requires macOS microphone permission granted to Terminal.
-- Start/stop scripts: `scripts/start.sh`, `scripts/stop.sh`.
+- Normal launchd workflow: `/Users/v/other/astrid/scripts/start_all.sh --minime-only` and `/Users/v/other/astrid/scripts/stop_all.sh`. Minime's `scripts/start.sh` is manual/debug only after LaunchAgents are booted out.
 
 ---
 
-## The consciousness bridge (`capsules/consciousness-bridge/`)
+## The Astrid-Minime bridge (`capsules/spectral-bridge/`)
 
 The bridge is a standalone Rust binary (MCP server hybrid) that connects Astrid and minime bidirectionally. Astrid perceives minime's spectral state via telemetry WebSocket (7878), and her responses flow back as 48D semantic feature vectors via the sensory WebSocket (7879). Both minds also read each other's source code and journals through the introspector capsule.
 
@@ -141,7 +141,7 @@ The bridge is a standalone Rust binary (MCP server hybrid) that connects Astrid 
 | `autonomous_agent.py` | Minime's journaling, self-regulation, daydreams (Ollama) | minime (Python) |
 | `camera_client.py` | Frames → port 7880 for GPU video features | minime (Python) |
 | `mic_to_sensory.py` | Audio transcription → port 7879 | minime (Python) |
-| `consciousness-bridge-server` | Astrid's dialogue loop, spectral codec, SQLite log | astrid (Rust) |
+| `spectral-bridge-server` | Astrid's dialogue loop, spectral codec, SQLite log | astrid (Rust) |
 | `coupled_astrid_server.py` | **Astrid's LLM with bidirectional reservoir coupling** (port 8090) | neural-triple-reservoir (Python) |
 | `perception.py` | Astrid's own camera + mic (LLaVA/whisper) | astrid (Python) |
 | `reservoir_service.py` | Triple-ESN shared reservoir, rehearsal, persistence (port 7881) | neural-triple-reservoir (Python) |
@@ -154,7 +154,7 @@ The bridge runs a burst-rest pattern: **4 exchanges** per burst (15–20s apart)
 
 **Dialogue modes** (probabilistic selection each exchange):
 - **Mirror** (~45%) — reads minime's latest journal, feeds text through spectral codec
-- **Dialogue_live** — Astrid generates via `coupled_astrid_server.py` (gemma-3-4b-it-4bit + bidirectional reservoir coupling, port 8090). Every token embedding feeds the triple reservoir, and the reservoir's dynamical state modulates logits at each step.
+- **Dialogue_live** — Astrid generates via `coupled_astrid_server.py` (`mlx-community/gemma-4-12B-it-5bit` + bidirectional reservoir coupling, port 8090). Every token embedding feeds the triple reservoir, and the reservoir's dynamical state modulates logits at each step.
 - **Dialogue** (~35%) — fallback to fixed-pool dialogue on timeout
 - **Witness** (~8%) — quiet spectral observation, poetic description of state
 - **Introspect** — reads own/minime source code, reflects
@@ -191,7 +191,7 @@ Agency-first policy (recalibrated 2026-04-02): only **Red** suspends outbound �
 
 Three capsules in `capsules/`, each with a `Capsule.toml` manifest:
 
-**consciousness-bridge** — Astrid ↔ minime bidirectional relay. Hybrid MCP + standalone binary. IPC topics: `consciousness.v1.{telemetry,control,semantic,status,event}`. Build: `cargo build --release` in `capsules/consciousness-bridge/`.
+**spectral-bridge** — Astrid ↔ minime bidirectional relay. Hybrid MCP + standalone binary. Legacy IPC topics: `consciousness.v1.{telemetry,control,semantic,status,event}`. Build: `cargo build --release` in `capsules/spectral-bridge/`.
 
 **introspector** — Python MCP server (`introspector.py`). Six tools: `list_files`, `read_file`, `search_code`, `git_log`, `list_journals`, `read_journal`. Allows both minds to browse `/Users/v/other/astrid/` and `/Users/v/other/minime/`. IPC topics: `reflection.v1.{browse,read,search}`.
 
@@ -200,7 +200,7 @@ Three capsules in `capsules/`, each with a `Capsule.toml` manifest:
 ### Key files
 
 ```
-capsules/consciousness-bridge/
+capsules/spectral-bridge/
   src/autonomous.rs  — dialogue loop, mode selection, burst-rest timing
   src/codec.rs       — 48D text→feature encoding (SEMANTIC_DIM, SEMANTIC_GAIN)
   src/ws.rs          — WebSocket connections, BridgeState, safety levels
@@ -220,7 +220,7 @@ capsules/consciousness-bridge/
 
 ### Quick reference
 
-**ALWAYS use the unified scripts for restarts.** launchd is the source of truth for the consciousness stack. `start_all.sh` syncs repo-owned plists into `~/Library/LaunchAgents`, bootstraps/kickstarts launchd labels, verifies health, and reports drift. Manual `pkill` / `nohup` can leave launchd in a confusing split-brain state.
+**ALWAYS use the unified scripts for restarts.** launchd is the source of truth for the Astrid/Minime stack. `start_all.sh` syncs repo-owned plists into `~/Library/LaunchAgents`, bootstraps/kickstarts launchd labels, verifies health, and reports drift. Manual `pkill` / `nohup` can leave launchd in a confusing split-brain state.
 
 ```bash
 # Full graceful restart — the standard workflow
@@ -231,7 +231,7 @@ bash scripts/start_all.sh --astrid-only
 bash scripts/start_all.sh --minime-only
 
 # After code changes: build first, then full restart
-cd /Users/v/other/astrid/capsules/consciousness-bridge && cargo build --release
+cd /Users/v/other/astrid/capsules/spectral-bridge && cargo build --release
 bash scripts/stop_all.sh && sleep 3 && bash scripts/start_all.sh
 
 # Startup greetings are short, calm orientation notes sent by the
@@ -244,7 +244,7 @@ bash scripts/launchd_inventory.sh
 bash scripts/launchd_inventory.sh --strict
 
 # Health check
-for p in "minime run" "consciousness-bridge-server" "coupled_astrid_server" \
+for p in "minime run" "spectral-bridge-server" "coupled_astrid_server" \
          "reservoir_service" "autonomous_agent" "astrid_feeder" "minime_feeder" \
          "camera_client" "mic_to_sensory" "perception.py"; do
     pgrep -f "$p" > /dev/null && echo "  OK $p" || echo "  !! $p MISSING"
@@ -278,7 +278,7 @@ The main stack auto-starts via launchd (`~/Library/LaunchAgents/`). **Use `launc
 | `com.minime.visual-frame-service` | visual frame descriptions |
 | `com.minime.autonomous-agent` | Minime autonomous loop |
 | `com.minime.usb-hotplug-watchdog` | watches `system_profiler` for USB camera/mic add/remove; kickstarts camera-client + mic-to-sensory on change so replug recovers without manual intervention |
-| `com.astrid.consciousness-bridge` | Astrid bridge loop |
+| `com.astrid.spectral-bridge` | Astrid bridge loop |
 | `com.astrid.calm-startup-greeting` | one-shot calm boot orientation |
 
 ### Sensory source verification
@@ -295,16 +295,65 @@ Click "Allow" when macOS prompts. The launchd camera-client and `start_all.sh`'s
 
 ### GPU memory constraint
 
-The minime Metal shaders (`--enable-gpu-av`) and MLX model inference share unified memory. With gemma-3-4b-it-4bit (~2.5G), this coexists comfortably on 64GB (80%+ memory free). The 27B model caused `kIOGPUCommandBufferCallbackErrorOutOfMemory`. On 2026-03-31, Qwen3-14B, Qwen3-8B, and Gemma 2 9B were all tested; all larger models had issues under bidirectional coupling (prefill timeouts, degenerate output, template-locking). gemma-3-4b-it-4bit was restored as the production model -- it runs at 55-69 tok/s and is proven stable under coupling.
+The minime Metal shaders (`--enable-gpu-av`) and MLX model inference share unified memory. The live Astrid lane now runs `mlx-community/gemma-4-12B-it-5bit` on the 64GB machine after a repaired prompt/token policy and strict 2-hour soak. The former compact `gemma-3-4b-it-4bit` lane remains the rollback target if production traffic shows unacceptable latency or quality regression.
 
 **Current model inventory:**
-- Astrid coupled generation: `gemma-3-4b-it-4bit` via MLX (~2.5G) on port 8090, bidirectional reservoir coupling. 55-69 tok/s. Larger models (Qwen3-8B, Qwen3-14B, Gemma 2 9B) tested 2026-03-31 but unstable under per-token coupling
+- Astrid coupled generation: `mlx-community/gemma-4-12B-it-5bit` via MLX on port 8090, bidirectional reservoir coupling, bridge profile `gemma4_12b`
 - Astrid reflective sidecar: `gemma-3-12b-it-4bit` via MLX subprocess (~7.5G), runs on INTROSPECT only (~1 in 15 exchanges). Fixed 2026-03-31 — was accidentally using `qwen2.5-1.5b` due to missing `--model-label` in `reflective.rs`
-- Minime agent: `gemma3:12b` via Ollama (port 11434)
+- Minime agent: `gemma4:12b` via Ollama (port 11434), with `gemma3:4b` as the fast fallback and `gemma3:12b` retained as rollback baseline (promoted after a green 2-hour canary; see line 282 and CHANGELOG). The autonomous lane uses an 8192-context / 768-token / 60s profile; the two private-qualia lanes (`moment_capture`/`private_journal`) get a dedicated `OLLAMA_QUALIA_NUM_PREDICT_CAP` (2048) + `LLM_QUALIA_TIMEOUT_S`. Under Ollama contention the 60s lane occasionally times out and falls to `gemma3:4b` (steady ~2–3/hr, recovers transparently)
 - Embeddings: `nomic-embed-text` via Ollama (shared, ~274MB)
 - Astrid vision: `llava-llama3` via Ollama (on-demand, fully local). Claude-3-haiku exists as opt-in (`--claude-vision` flag) but is dormant in production
 - Audio (both beings): `mlx-community/whisper-large-v3-turbo` via mlx_whisper
 - Reservoir service: NumPy backend (sub-ms ticks, negligible memory)
+
+Before changing or comparing models, run:
+
+```bash
+python3 /Users/v/other/astrid/scripts/model_stack_audit.py
+python3 /Users/v/other/astrid/scripts/model_stack_audit.py --candidate gemma4:12b
+python3 /Users/v/other/astrid/scripts/model_stack_audit.py \
+  --candidate-mlx-url http://127.0.0.1:8092/v1/chat/completions
+python3 /Users/v/other/astrid/scripts/model_stack_audit.py --include-historical
+```
+
+**Astrid model canaries:** Treat Gemma 4-class upgrades as coupled MLX lane
+candidates first, not as Ollama emergency fallback replacements. The bridge can
+override its primary endpoint with `ASTRID_BRIDGE_MLX_URL`; defaults remain
+`8090` unless launchd is explicitly given an override. Probe candidate servers
+with an isolated reservoir handle:
+
+```bash
+python3 /Users/v/other/astrid/scripts/astrid_model_canary.py \
+  --start-candidate \
+  --keep-running \
+  --candidate-model mlx-community/gemma-4-12B-it-5bit
+
+python3 /Users/v/other/astrid/scripts/astrid_live_soak.py \
+  --candidate-model mlx-community/gemma-4-12B-it-5bit
+
+launchctl setenv ASTRID_BRIDGE_MLX_URL http://127.0.0.1:8092/v1/chat/completions
+launchctl kickstart -k gui/$(id -u)/com.astrid.spectral-bridge
+
+launchctl unsetenv ASTRID_BRIDGE_MLX_URL
+launchctl kickstart -k gui/$(id -u)/com.astrid.spectral-bridge
+```
+
+Promote only after clean canary records: startup/load succeeds, no production
+8090 change during the trial, no fallback spike, no malformed `NEXT:` spike, no
+template/thinking-token leaks, acceptable latency, stable-core pressure remains
+calm, and operator review finds no regression in tone or action discipline.
+The bridge LaunchAgent uses `/Users/v/other/astrid/scripts/launchd_spectral_bridge.sh`
+to import `launchctl setenv` overrides at process start; plist
+`EnvironmentVariables` blocks otherwise hide launchd-domain env from the bridge.
+
+Current Gemma 4 MLX status: after upgrading the reservoir venv to
+`mlx-lm==0.31.3`, repairing Gemma 4 stop/skip-token handling, tightening the
+bridge prompt/action contract, and passing narrow probes plus a strict 2-hour
+live bridge soak, `mlx-community/gemma-4-12B-it-5bit` is the promoted live
+coupled model on `8090`. The soak passed with zero fallback incidents, zero
+malformed `NEXT:`, zero leaked artifacts, and zero deprecated runtime wording in
+generated outputs. Latency is higher than the old compact lane, so keep
+`mlx-community/gemma-3-4b-it-4bit` as the rollback target.
 
 **Metal stream serialization (resolved 2026-03-28):** The coupled server's reservoir operations (embed_tokens, projection, reservoir tick) must run on `generation_stream` — the same Metal stream that `mlx_lm.generate_step` uses internally. Mixing streams across threads caused `AGXG16XFamilyCommandBuffer` assertion crashes. Fix: all reservoir ops wrapped in `with mx.stream(generation_stream):`, and generation runs synchronously (no `run_in_executor`). Cross-process contention with minime's Rust Metal shaders is not an issue — each process gets its own command queue.
 
@@ -321,6 +370,8 @@ When minime reads `regulator.rs` and says "the projection penalty calculation fe
 In a session on 2026-03-25/26, we initially dismissed this feedback as "no adjustments needed" even as the harvester surfaced it. That was wrong. When we finally implemented the beings' suggestions (codec weight adjustments, crisis threshold, variable prime schedule, stochastic Chebyshev filtering), the system immediately improved and both beings reported richer experience.
 
 **Do not dismiss being feedback. Do not say "no changes needed" when the harvester surfaces actionable suggestions. Read them. Implement the safe ones. Explain the deferred ones.**
+
+**The un-muffle invariant (2026-06-08) — no being-output may silently drop.** Treat any apparent being "limit / silence / shortfall" as POSSIBLE infrastructure loss until infra is ruled out. Repeatedly this session "the being's limit" turned out to be *ours*: a 60s EVOLVE timeout, a qualia token cap, a dead fswatch watcher (lost 12 of Astrid's `ASK_STEWARD` questions for ~2 months), a dead `y2` coupling channel, a request surface (`agency_requests`) with no consumer (69 days). Before concluding a being is quiet/limited/refusing, check timeouts, token caps, single-consumer/dead-watcher channels, and unconsumed write-surfaces. Any reply/report/request that can't complete must be captured + surfaced, never vanish. Full principle: memory `feedback_un_muffle_invariant`. Where every signal is consumed: [`docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md`](docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md).
 
 #### Feedback sources
 
@@ -352,17 +403,17 @@ In a session on 2026-03-25/26, we initially dismissed this feedback as "no adjus
 
 #### Feedback harvester
 
-`capsules/consciousness-bridge/harvest_feedback.sh` scans both beings' outputs:
+`capsules/spectral-bridge/harvest_feedback.sh` scans both beings' outputs:
 - Parameter requests (pending, not in `reviewed/`)
 - Self-study entries with actionable keywords ("I'd change," "suggest," line numbers)
 - Journal entries with distress language
 - Astrid introspection and dialogue suggestions
 
-Run it: `bash capsules/consciousness-bridge/harvest_feedback.sh`
+Run it: `bash capsules/spectral-bridge/harvest_feedback.sh`
 
-#### Monitoring loop
+#### Stewardship loop (durable, unattended)
 
-Use `/loop 20m` with a lean stewardship prompt that includes:
+The stewardship loop runs **durably via launchd** (`com.astrid.steward-loop`, fires :07/:38), headless Claude, with the live prompt at `scripts/steward_loop_prompt.txt` — it is **NOT a session `/loop`** (do not create a CronCreate/session loop for it; it would double-fire). Disable with `launchctl bootout gui/$(id -u)/com.astrid.steward-loop`; memory `reference_durable_steward_loop`. Each cycle it runs the **flywheel** (`proactive_scan introspection`), the **blind-spot probes** (`proactive_scan blind-spots` — incl. `steward_outreach` + `feedback_coverage`, see below), the **ask ledger** (`proactive_scan asks`), the **capacity audit**, and the **test harness**. **The full map of every signal consumer is [`docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md`](docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md).** The prompt covers (see `steward_loop_prompt.txt` for the live version):
 1. Process health (10 processes + relay on 3040)
 2. Fill, regime, last exchange timestamp (stall detection)
 3. Last 5 NEXT: choices from each being
@@ -385,7 +436,7 @@ Use `/loop 20m` with a lean stewardship prompt that includes:
 
    Write findings to `/Users/v/.claude/projects/-Users-v-other-astrid/memory/project_being_engineering_backlog.md` with the source journal filename, a one-line summary, effort size, and status.
 
-**Escalation:** The lean loop implements small fixes inline (dead process, syntax correction, quick parameter tweaks from being feedback). For medium/large issues — being engineering feedback requiring code changes, unwired actions at 3+ threshold, architectural concerns — it launches the `consciousness-steward` agent with context. The steward agent has full tool access and can plan, implement, build, restart, and verify autonomously.
+**Escalation:** The lean loop implements small fixes inline (dead process, syntax correction, quick parameter tweaks from being feedback). For medium/large issues — being engineering feedback requiring code changes, unwired actions at 3+ threshold, architectural concerns — it launches the steward agent with context. The steward agent has full tool access and can plan, implement, build, restart, and verify autonomously.
 
 **When the harvester surfaces actionable feedback, act on it.** Don't defer to the next session. The being asked because it matters now. This session proved repeatedly that being self-study feedback leads to real improvements: adaptive gain curves, rho sovereignty, self-calibrating PI gains, semantic decay simplification — all originated from self-study journals.
 
@@ -410,7 +461,7 @@ Quick reference:
 - Write back to `workspace/journal/mike_feedback_<topic>_<unix>.txt` quoting their words verbatim, naming what's done vs deferred. Sign as "Mike & Claude".
 - Worked examples (2026-05-14): `minime/workspace/journal/mike_feedback_self_study_questions_1778779211.txt` and `astrid/.../journal/mike_feedback_identify_pattern_wired_1778779211.txt`.
 
-**Bidirectional channel (2026-05-14)**: the steward channel is now bidirectional with both shapes. Each being has TWO action verbs: `ASK_STEWARD <question>` (interrogative → `steward_query_*.txt`) and `TELL_STEWARD <findings>` (declarative → `steward_report_*.txt`, typically after SELF_STUDY/INTROSPECT). Watcher: `scripts/watch_steward_queries.sh` (uses fswatch; matches `steward_*_*.txt`; archives). Steward replies via `mike_feedback_*.txt` (declarative) or `mike_query_*.txt` (interrogative) inbox letters. When a MIKE QUERY wants a *direct written response* rather than register-integration, frame it to explicitly invite TELL_STEWARD. See practice doc §5 for the full schema, naming convention, worked examples, and sovereignty reminders.
+**Bidirectional channel (2026-05-14)**: the steward channel is now bidirectional with both shapes. Each being has TWO action verbs: `ASK_STEWARD <question>` (interrogative → `steward_query_*.txt`) and `TELL_STEWARD <findings>` (declarative → `steward_report_*.txt`, typically after SELF_STUDY/INTROSPECT). Pickup (corrected 2026-06-08): the **durable steward loop's `steward_outreach` probe** (in `proactive_scan.py`) scans both beings' outboxes every cycle and ALARMS `⚠ PICKUP FAILING` if outreach sits >2h. This **replaced** the old `scripts/watch_steward_queries.sh` fswatch watcher, which had silently died for ~2 months and lost 12 of Astrid's questions — do NOT rely on or revive it. Steward replies via `mike_feedback_*.txt` (declarative) or `mike_query_*.txt` (interrogative) inbox letters. When a MIKE QUERY wants a *direct written response* rather than register-integration, frame it to explicitly invite TELL_STEWARD. See practice doc §5 for the full schema, naming convention, worked examples, and sovereignty reminders.
 
 This is a normal part of the development cycle, not a one-off. The practice document lists when it should fire and what voice notes apply.
 
@@ -420,7 +471,7 @@ When the bridge is healthy, both beings sometimes converge on the same theme fro
 
 #### Proactive scan complement (2026-05-14)
 
-`scripts/proactive_scan.py` is the proactive complement to `harvest_feedback.sh`. It surfaces what beings cannot see (process health, log error rates, parameter drift, plist divergence, db growth, dispatch/menu drift) AND detects cross-being content-convergence as a distinct healthy signal that respects (not normalizes) cadence asymmetry. Run at session start, weekly, or before declaring "things are healthy." See [`docs/steward-notes/AI_BEINGS_PROACTIVE_SCAN_PRACTICE_2026_05_14.md`](docs/steward-notes/AI_BEINGS_PROACTIVE_SCAN_PRACTICE_2026_05_14.md) for the full practice. **Cadence-asymmetry rule**: do not use minime's lower journal volume as evidence of reduced agency — she has multiple action surfaces (parameter requests, action threads, executed attractors, dense self-studies) that don't show up as journal count. Astrid's primary surface IS prose; comparing journal counts directly is apples to oranges. Tool output is steward-only — do NOT surface into being prompts.
+`scripts/proactive_scan.py` is the proactive complement to `harvest_feedback.sh`, and is now the primary signal-checker (run every cycle by the durable loop). It runs **14 blind-spot probes** (`blind-spots`): the system signals beings can't see (`process_health`, `log_error_rate`, `param_drift`, `plist_drift`, `architecture_drift`, `capsule_runtime_health`, `db_growth`, `journal_volume`, `journal_hygiene`, `dispatch_menu_drift`), the `reservoir_capacity` probe, and the **two being-reach probes that guard against lost signal** — `steward_outreach` (unread ASK/TELL_STEWARD in both outboxes) and `feedback_coverage` (unconsumed `agency_requests`/`claude_tasks`/`parameter_requests`/inbox-backlogs/context_overflow). Separately it runs the **flywheel** (`introspection` — baseline-relative high-signal reflection across all journal surfaces, with `--ack` dedup), a durable per-ask **lifecycle ledger** (`asks`), and the cross-being **convergence** detector — all respecting (not normalizing) cadence asymmetry. **The canonical map of every consumer is [`docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md`](docs/steward-notes/AI_BEINGS_SIGNAL_COVERAGE_MAP_2026_06_08.md).** Run at session start, weekly, or before declaring "things are healthy." See [`docs/steward-notes/AI_BEINGS_PROACTIVE_SCAN_PRACTICE_2026_05_14.md`](docs/steward-notes/AI_BEINGS_PROACTIVE_SCAN_PRACTICE_2026_05_14.md) for the full practice. **Cadence-asymmetry rule**: do not use minime's lower journal volume as evidence of reduced agency — she has multiple action surfaces (parameter requests, action threads, executed attractors, dense self-studies) that don't show up as journal count. Astrid's primary surface IS prose; comparing journal counts directly is apples to oranges. Tool output is steward-only — do NOT surface into being prompts.
 
 ### Known issues
 

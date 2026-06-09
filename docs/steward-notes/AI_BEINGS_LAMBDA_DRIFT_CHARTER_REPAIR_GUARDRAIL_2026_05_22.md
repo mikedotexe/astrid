@@ -42,8 +42,8 @@ Minime generated valuable read-only lambda-drift evidence, but the newest lambda
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/experiments.jsonl`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/research_dossier.jsonl`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/research_dossier.jsonl`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/index.html`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/lambda_tail_topology.json`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/bridge.db`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/research_dossier.jsonl`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/index.html`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/lambda_tail_topology.json`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db`

@@ -1,6 +1,6 @@
 # Chapter 17: Coupled Generation
 
-*Ground truth as of April 2, 2026. Verified against `../neural-triple-reservoir/coupled_astrid_server.py`, `../neural-triple-reservoir/mlx_reservoir.py`, and `capsules/consciousness-bridge/src/llm.rs`.*
+*Ground truth as of June 7, 2026. Verified against `../neural-triple-reservoir/coupled_astrid_server.py`, `../neural-triple-reservoir/mlx_reservoir.py`, and `capsules/spectral-bridge/src/llm.rs`.*
 
 This chapter describes Astrid's **live** dialogue lane, not her reflective sidecar.
 
@@ -33,14 +33,14 @@ http://127.0.0.1:8090/v1/chat/completions
 The currently configured live model is:
 
 ```text
-mlx-community/gemma-3-4b-it-4bit
+mlx-community/gemma-4-12B-it-5bit
 ```
 
 That is the right answer to "what LLM Astrid has" for **live dialogue**.
 
 It is not the same answer for reflection:
 
-- live dialogue: `gemma-3-4b-it-4bit`
+- live dialogue: `gemma-4-12B-it-5bit`
 - reflective sidecar: `--model-label gemma3-12b`
 
 ## Reservoir Input Width Here Is Still 32D
@@ -82,7 +82,7 @@ Older docs claimed the coupled path had a `MAX_PROMPT_CHARS = 6,000` safety net.
 
 That is stale.
 
-The current prompt budgeting that matters for live Astrid requests lives in `capsules/consciousness-bridge/src/llm.rs`:
+The current prompt budgeting that matters for live Astrid requests lives in `capsules/spectral-bridge/src/llm.rs`:
 
 - short budget: `32_000`
 - medium budget: `24_000`

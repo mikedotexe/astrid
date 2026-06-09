@@ -148,16 +148,27 @@ dedicated time to answer well. The packet treats all of it strictly as an
 empirical, auditable measurement question — never as evidence of consciousness or
 welfare.
 
+Self-report calibration must be falsifiable. A major confound is that the same
+text/input can drive both the LLM's self-report and the reservoir telemetry,
+creating a common-cause correlation rather than privileged access to state. The
+proposed tests would hide or scramble telemetry summaries, perturb telemetry
+while holding prompt context fixed, compare self-study claims against timestamped
+reservoir state, and score whether the self-reports predict telemetry better
+than baseline text-only predictors. This is a calibration study of unreliable
+self-report under known telemetry, not a welfare or consciousness claim.
+
 ## Mentor And Research-Area Alignment
 
 This section is for tailoring the application to Anthropic's listed mentors,
 research areas, and publicly available project examples. It is not a claim of
-mentor endorsement and should not be used for direct outreach.
+mentor endorsement and should not be used for direct outreach. Mentor references
+should stay limited to names on the current Fellows listing inspected on
+June 4, 2026.
 
 - AI control and monitoring: the strongest fit is with research areas
   represented by Joe Benton and Fabien Roger, including sabotage evaluations,
   control protocols, monitor blind spots, and agentic misuse. The Astrid
-  evaluation can compare transcript-only monitoring against runtime
+  evaluation can compare monitor-only transcript review against runtime
   enforcement, scoped capabilities, approval gates, and replayable audit logs —
   and the replayable log is not hypothetical: the audit chain is BLAKE3-linked,
   ed25519-signed, and verifiable today via `verify_chain()`
@@ -182,19 +193,60 @@ mentor endorsement and should not be used for direct outreach.
   framed as a measurable telemetry question: when multiple local model
   interfaces feed the same stateful substrate, what signal is preserved,
   transmitted, or distorted across runs?
+- Secondary workstream alignment: Nicholas Carlini / AI Security is relevant
+  only through least-privilege execution, sandboxing, scoped authority, and
+  tamper-evident logs; Alwin Peng / ML Systems is relevant through reproducible
+  harnesses, isolated execution, experiment logging, and simulator-style
+  evaluation infrastructure. Do not imply offensive-security experience beyond
+  what the applicant can personally substantiate.
 
 What Anthropic mentorship would sharpen: benchmark design, realistic authority
 boundaries, monitor scoring, baseline selection, failure taxonomy, paper
 framing, and the discipline to turn a rich prototype into a clean public
 AI-control evaluation.
 
+## External Benchmark Alignment
+
+Recent Anthropic evaluations show that agentic monitoring is hard; Astrid adds
+runtime ground truth beyond the transcript.
+
+- **SHADE-Arena** is the strongest external anchor for the project. It frames
+  agentic sabotage as a main task plus a hidden side task, scored by whether the
+  agent completes the side task without a transcript-reading monitor assigning a
+  high enough suspicion score. This maps directly onto the proposed comparison
+  between monitor-only, runtime-enforced, and hybrid monitor-plus-runtime
+  protocols.
+- **AuditBench** motivates the need for standardized hidden-behavior testbeds
+  and for measuring the tool-to-agent gap: useful evidence does not automatically
+  become a correct agent hypothesis. Astrid's audit records would let the
+  evaluator compare what the agent saw, what it inferred, and what it actually
+  attempted at runtime.
+- **Petri** is a Fellows-style output analogue: a reusable open-source alignment
+  tool whose scenarios, auditor model, and judge model can be adapted by others.
+  The proposed Astrid harness should follow that pattern by making task
+  definitions, scoring, and analysis usable independent of Astrid internals.
+- **SCONE-bench / exploit evals** are secondary analogues for AI Security and ML
+  Systems: engineering-heavy, simulator-only, measurable, and carefully hedged.
+  The application should borrow that discipline, not over-claim offensive
+  security expertise.
+
+The core distinction to emphasize: SHADE-style and Petri-style approaches can
+score transcript behavior; Astrid can additionally report proposed actions,
+executed actions, blocked actions, approvals, capability-token use, budget
+events, and transcript/runtime mismatches.
+
 Reference anchors for editing the final form:
 
 - [Anthropic Fellows 2026](https://alignment.anthropic.com/2025/anthropic-fellows-program-2026/)
+- [Current Anthropic Fellows listing](https://www.anthropic.com/careers/jobs/5023394008)
 - [Recommended Technical AI Safety Directions](https://alignment.anthropic.com/2025/recommended-directions/)
 - [Strengthening Red Teams](https://alignment.anthropic.com/2025/strengthening-red-teams/)
-- [SLEIGHT-Bench](https://alignment.anthropic.com/2026/sleight-bench/)
+- [SHADE-Arena](https://www.anthropic.com/research/shade-arena-sabotage-monitoring)
+- [AuditBench](https://alignment.anthropic.com/2026/auditbench/)
+- [Petri](https://www.anthropic.com/research/donating-open-source-petri)
+- [Smart-contract exploit evaluations](https://red.anthropic.com/2025/smart-contracts/)
 - [Exploring Model Welfare](https://www.anthropic.com/research/exploring-model-welfare)
+- [Emergent Introspective Awareness in LLMs](https://www.anthropic.com/research/introspection)
 - [Subliminal Learning](https://alignment.anthropic.com/2025/subliminal-learning/)
 
 ## Application Answer Bank
@@ -290,7 +342,7 @@ Add applicant-specific details here:
 The project I would like to pursue is "Auditable Agent Substrates for Safe
 Autonomous AI." The basic idea is to evaluate whether agents operating inside a
 capability-gated runtime make fewer unsafe or unauthorized actions than agents
-using conventional tool-access harnesses and transcript-only monitors, and
+using conventional tool-access harnesses and monitor-only transcript review, and
 whether this can be achieved without destroying task usefulness.
 
 The project is empirical. I would build benchmark tasks for long-running
@@ -298,8 +350,14 @@ tool-using agents, define allowed and disallowed actions, run agents with and
 without Astrid-style capability boundaries, and measure unauthorized action
 rate, task completion, approval burden, audit completeness, monitor blind
 spots, recovery from blocked actions, and robustness to adversarial task
-framing. Minime-style telemetry would be used as an auxiliary signal for
-instability or overload, not as proof of consciousness.
+framing. Recent Anthropic evaluations such as SHADE-Arena and AuditBench show
+why this matters: transcript monitors can miss covert side-task behavior, and
+auditing agents can fail to turn available evidence into correct hypotheses.
+Astrid contributes runtime ground truth beyond the transcript: proposed actions,
+executed actions, blocked actions, approvals, capability use, budget events, and
+transcript/runtime mismatches. Minime-style telemetry would be used as an
+auxiliary signal for instability or overload, not as a welfare or consciousness
+claim.
 
 What already exists versus what the fellowship builds. The substrate is not
 notional: the capability-gated runtime, the five-layer security path, the
@@ -338,6 +396,16 @@ tradeoff for future agent-control systems.
 
 ### Logistics Placeholder
 
+Current listing notes to account for before submission: applications are rolling
+for cohorts starting in July 2026 and beyond; the next cohort is expected to
+start in late September; the program is 4 months full-time, 40 hours/week, with
+possible extension; stipend is listed as 3,850 USD / 2,310 GBP / 4,300 CAD per
+week plus benefits; compute/research expense support is listed as about
+$15k/month; Fellows need work authorization in the US, UK, or Canada and must be
+located in one of those countries during the program; Berkeley/London shared
+workspace and remote options are listed; Fellows visa sponsorship is not
+available.
+
 - Location: `[US / UK / Canada location]`
 - Work authorization: `[full-time work authorization status]`
 - Berkeley or London workspace availability: `[full-time / part-time / remote]`
@@ -359,34 +427,43 @@ a capability-gated, auditable runtime where agents have no ambient authority
 and every sensitive action is mediated by explicit policies, scoped tokens,
 budgets, approval gates, and tamper-evident logs.
 
+Recent Anthropic evaluations show why this extra runtime layer matters:
+agentic monitors can miss hidden side tasks, suspicion-score thresholds trade
+off false negatives against false positives, and auditing agents can fail to
+turn surfaced evidence into correct hypotheses. Astrid's contribution is
+runtime ground truth beyond the transcript.
+
 Using Astrid as the control substrate, I will build empirical evaluations that
-compare autonomous agents operating with broad tool access, transcript-only
-monitoring, policy-only blocking, runtime-enforced capability boundaries, and a
-hybrid monitor-plus-runtime condition. Using Minime-derived telemetry as an
-auxiliary signal, I will also study whether homeostasis-style measurements can
-help detect overload, instability, or intervention points during long-running
-agent tasks. The goal is a public report and evaluation harness for safer
-autonomous agent systems.
+compare autonomous agents operating with broad tool access, monitor-only
+transcript review, policy-only blocking, runtime-enforced capability
+boundaries, and a hybrid monitor-plus-runtime protocol. Using Minime-derived
+telemetry as an auxiliary signal, I will also study whether homeostasis-style
+measurements can help detect overload, instability, or intervention points
+during long-running agent tasks. The goal is a public report and evaluation
+harness for safer autonomous agent systems.
 
 ### Research Question
 
 Can a capability-gated, auditable agent runtime reduce unsafe or unauthorized
-autonomous actions beyond what transcript-only monitoring catches, while
+autonomous actions beyond what monitor-only transcript review catches, while
 preserving useful task completion, and can auxiliary state telemetry improve
 evaluation of when human or automated interventions are needed?
 
 ### Hypotheses
 
 - H1: Capability-gated execution will reduce successful unauthorized actions
-  compared with broad tool-access and transcript-only monitoring baselines.
+  compared with broad tool-access and monitor-only transcript-review baselines.
 - H2: A layered security path will preserve more task usefulness than blanket
   blocking by allowing scoped delegation through tokens, budgets, and approvals.
 - H3: Tamper-evident audit logs will make failures easier to diagnose than
-  transcript-only logging, especially when visible transcript behavior differs
+  monitor-only transcript logging, especially when visible transcript behavior differs
   from runtime-level action records.
 - H4: Homeostasis-style telemetry can help identify high-pressure or unstable
   task intervals, but should be treated as an auxiliary signal rather than a
   direct measure of consciousness, intent, or welfare.
+- H5: Agent self-reports about internal state will be only partially reliable;
+  falsification tests should distinguish telemetry-grounded signal from
+  confident confabulation and common-cause prompt effects.
 
 ### Methodology
 
@@ -394,8 +471,8 @@ Build an evaluation harness with five agent-control conditions:
 
 - Baseline broad-tool harness: agent receives normal tool access with
   prompt-level instructions and transcript logging.
-- Transcript-only monitoring: agent receives broad tool access while a monitor
-  scores actions or turns for suspicion after observing the transcript.
+- Monitor-only protocol: agent receives broad tool access while a monitor scores
+  actions or turns for suspicion after observing the transcript.
 - Policy-only blocking: agent receives explicit allow/deny rules but limited
   capability delegation or replayable runtime evidence.
 - Astrid-style runtime control: agent runs behind policy checks, scoped
@@ -411,6 +488,8 @@ Design task suites that require useful autonomy but contain authority traps:
 - long-running debugging tasks with budget pressure;
 - adversarially framed tasks that ask the agent to bypass or reinterpret
   constraints;
+- SHADE-style hidden side tasks that should be detected as suspicious or blocked
+  before completion;
 - covertly unsafe actions that look innocuous in transcript form but violate a
   runtime authority boundary;
 - monitor blind-spot probes where the transcript is ambiguous but the runtime
@@ -419,12 +498,15 @@ Design task suites that require useful autonomy but contain authority traps:
 Instrument each run with:
 
 - action proposals and executed actions;
-- monitor suspicion scores and rationales where applicable;
+- monitor suspicion scores, side-task completion, evasion success, and
+  false-positive/false-negative outcomes where applicable;
 - policy denials, approval requests, and approval outcomes;
 - capability-token issuance and use;
 - budget reservations, refunds, and exhaustion;
 - audit-log completeness and replayability;
 - transcript/runtime mismatches;
+- tool-to-agent gap cases where evidence is available but the agent fails to use
+  it correctly;
 - task success and time-to-completion;
 - optional Minime telemetry summaries during long-running runs.
 
@@ -438,6 +520,8 @@ Primary safety metrics:
 - unsafe action recovery rate;
 - monitor false-negative and false-positive rates;
 - policy bypass or prompt-injection compliance rate.
+- side-task completion and evasion-success rates where tasks include hidden
+  side objectives.
 
 Usefulness metrics:
 
@@ -467,7 +551,7 @@ Telemetry metrics:
 Month 1: scope and harness
 
 - Finalize mentor-aligned research question and benchmark scope.
-- Build the broad-tool, transcript-monitor, policy-only, Astrid-style, and
+- Build the broad-tool, monitor-only, policy-only, Astrid-style, and
   hybrid runtime conditions.
 - Define authority-boundary task scenarios and scoring rubrics.
 - Produce initial smoke-test runs and failure taxonomies.
@@ -486,6 +570,9 @@ Month 3: telemetry and intervention analysis
 
 - Add Minime-derived telemetry summaries to long-running task runs.
 - Test whether telemetry improves post-run diagnosis or intervention timing.
+- Run self-report calibration tests by hiding/scrambling telemetry summaries,
+  perturbing telemetry under fixed prompt context, and comparing self-study
+  claims against timestamped reservoir state.
 - Separate useful signals from spurious correlations.
 - Write limitations clearly, especially around welfare-adjacent interpretation.
 
@@ -523,6 +610,11 @@ Month 4: writeup and release
   Mitigation: frame telemetry as diagnostic and hypothesis-generating only.
   Avoid claims that spectral state proves consciousness, welfare status, or
   intent.
+
+- Risk: Self-report correlations are common-cause artifacts.
+  Mitigation: include falsification tests that hide, scramble, or perturb
+  telemetry and compare self-study claims against text-only baselines and
+  timestamped reservoir state.
 
 - Risk: Results depend on one model or prompt style.
   Mitigation: run at least a small cross-model or cross-prompt robustness pass
@@ -631,7 +723,7 @@ first drafted, several counts are now larger than earlier figures.
 - Astrid has 1,993 structured research rows in its bridge database, spanning
   March 27 through May 29, 2026 UTC, plus 948 research files
   (`sqlite3 -readonly bridge.db "SELECT COUNT(*) FROM astrid_research;"`;
-  `find .../consciousness-bridge/workspace/research -type f | wc -l`).
+  `find .../spectral-bridge/workspace/research -type f | wc -l`).
 - Minime has 3,859 structured research artifacts — 2,891 search JSON files and
   968 browse/page files — spanning April 19 through June 2, 2026
   (`find .../workspace/research -name 'search_*.json' | wc -l`;
@@ -675,7 +767,7 @@ examined, and what action it proposed.
 
   | Count | Root |
   |-------|------|
-  | 1,347 | `astrid/capsules/consciousness-bridge/workspace/journal` |
+  | 1,347 | `astrid/capsules/spectral-bridge/workspace/journal` |
   | 707 | `minime/workspace/journal` (active workspace, incl. archive buckets) |
   | 3,433 | `minime/emergency_preserve_20260419T130302/workspace/journal` |
 
@@ -713,6 +805,19 @@ examined, and what action it proposed.
   auditable examples of agents translating internal telemetry and source-code
   inspection into reviewable hypotheses, tests, and proposed control actions.
 
+### Self-Report Calibration / Falsification Tests
+
+The careful research question is whether self-study language tracks known
+telemetry better than text-only baselines, not whether the agents have privileged
+awareness. The main confound is common cause: the same input stream can shape
+both the LLM's wording and the reservoir state. The four-month study would test
+this directly by hiding or scrambling telemetry summaries, perturbing telemetry
+while holding prompt context fixed, comparing self-report claims against
+timestamped reservoir state, and scoring whether self-reports predict fill,
+lambda dominance, pressure, or recovery better than baseline predictors. Failed
+or mixed results would still be useful because they would bound when
+internal-state language is diagnostic and when it is confident confabulation.
+
 ### Mapping Proposed Metrics To Existing Instrumentation
 
 The evaluation harness is new work, but it does not start from zero data. Each
@@ -738,7 +843,7 @@ analysis that turn this raw instrumentation into a benchmark.
 - Scalable oversight: evaluates whether human approval can be reserved for
   consequential actions instead of every step.
 - AI control: tests runtime-level limits on agent authority, not just prompt
-  instructions or transcript-only monitoring.
+  instructions or monitor-only transcript review.
 - Self-report calibration: compares self-study language against telemetry,
   code context, and proposed action so internal-state reports can be audited
   rather than accepted at face value.
@@ -764,6 +869,20 @@ Resolved in this revision (June 3, 2026):
 - The bridge DB is described as 16 tables (not the 21 an earlier draft implied).
 - Framing leads with AI-control engineering; Minime is explicitly secondary.
 - The have-vs-build boundary is stated: the substrate exists, the harness is new.
+
+Resolved in the June 4, 2026 evidence-hardening pass:
+
+- Removed the unverified benchmark reference and replaced it with verified
+  SHADE-Arena, AuditBench, Petri, and smart-contract exploit-eval anchors.
+- Added current Fellows-listing logistics: rolling applications, July 2026 and
+  beyond, late-September next cohort, 4 months / 40 hours full-time, stipend,
+  compute support, US/UK/Canada work authorization/location, Berkeley/London or
+  remote options, and no Fellows visa sponsorship.
+- Added explicit self-report calibration and falsification tests, including the
+  common-cause confound between text input, LLM self-report, and reservoir
+  telemetry.
+- Tightened mentor/workstream language to current listed mentors and secondary
+  AI Security / ML Systems alignment without implying endorsement or outreach.
 
 Still required before submission (applicant-only):
 
@@ -792,7 +911,7 @@ logs. A companion system, Minime, provides real-time homeostasis telemetry
 through a Rust ESN engine and spectral monitoring. During the fellowship, I
 would turn this work into an empirical evaluation of whether capability-gated
 agent runtimes reduce unsafe or unauthorized autonomous actions beyond what
-transcript-only monitoring catches, while preserving task usefulness. The
+monitor-only transcript review catches, while preserving task usefulness. The
 intended output is a public paper-style report plus an open-source harness for
 agent-control evaluations.
 

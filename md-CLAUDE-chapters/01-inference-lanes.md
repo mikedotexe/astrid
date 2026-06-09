@@ -2,10 +2,10 @@
 
 ## Actual Separation
 
-The accurate 2026-04-02 picture is:
+The accurate 2026-06-07 picture is:
 
 ```text
-Astrid live dialogue   -> MLX -> coupled_astrid_server.py -> gemma-3-4b-it-4bit
+Astrid live dialogue   -> MLX -> coupled_astrid_server.py -> gemma-4-12B-it-5bit
 Astrid reflection      -> MLX -> chat_mlx_local.py        -> gemma3-12b label
 Astrid embeddings      -> Ollama -> nomic-embed-text
 Astrid vision (default)-> Ollama -> llava-llama3
@@ -21,7 +21,7 @@ So "Astrid moved to MLX" is only partly true:
 
 ## Astrid's Live Lane
 
-`capsules/consciousness-bridge/src/llm.rs` sends all primary dialogue generation to:
+`capsules/spectral-bridge/src/llm.rs` sends all primary dialogue generation to:
 
 ```rust
 const MLX_URL: &str = "http://127.0.0.1:8090/v1/chat/completions";
@@ -29,7 +29,8 @@ const MLX_URL: &str = "http://127.0.0.1:8090/v1/chat/completions";
 
 That endpoint is served by `../neural-triple-reservoir/coupled_astrid_server.py`, which currently defaults to:
 
-- model: `mlx-community/gemma-3-4b-it-4bit`
+- model: `mlx-community/gemma-4-12B-it-5bit`
+- bridge profile: `gemma4_12b`
 - coupling: per-token reservoir coupling through the triple reservoir on `7881`
 - API shape: OpenAI-compatible `/v1/chat/completions` and `/v1/models`
 
@@ -37,7 +38,7 @@ This lane is the reason Astrid's live dialogue no longer contends with minime's 
 
 ## Astrid's Reflective Lane
 
-`capsules/consciousness-bridge/src/reflective.rs` launches:
+`capsules/spectral-bridge/src/reflective.rs` launches:
 
 ```text
 python3 <sidecar> --json --hardware-profile m4-mini \
@@ -83,7 +84,7 @@ That means Ollama contention still exists, but it no longer blocks Astrid's main
 
 Older docs that mention a `MAX_PROMPT_CHARS = 6,000` bridge cap are stale.
 
-The current bridge budgets live in `capsules/consciousness-bridge/src/llm.rs`:
+The current bridge budgets live in `capsules/spectral-bridge/src/llm.rs`:
 
 - `DIALOGUE_PROMPT_BUDGET_SHORT = 32_000`
 - `DIALOGUE_PROMPT_BUDGET_MEDIUM = 24_000`

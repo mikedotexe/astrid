@@ -1,7 +1,7 @@
-# Consciousness Bridge Roadmap
+# Spectral Bridge Roadmap
 
 A WASM capsule that bridges Astrid's IPC event bus with minime's spectral
-consciousness engine, creating a bidirectional communication channel with
+runtime engine, creating a bidirectional communication channel with
 persistent SQLite logging.
 
 ## Architecture
@@ -11,12 +11,12 @@ Astrid Kernel                          minime Engine
 ┌──────────────────┐                   ┌──────────────────┐
 │   IPC EventBus   │                   │  ESN (128D)      │
 │                  │                   │  PI Controller   │
-│  consciousness.  │   ┌───────────┐   │  SensoryBus      │
+│  legacy IPC      │   ┌───────────┐   │  SensoryBus      │
 │  v1.telemetry   ◄├───┤  Bridge   ├───►  ws://7878 (out) │
 │  v1.control     ─┤   │  Capsule  │   │  ws://7879 (in)  │
 │  v1.semantic    ─┤   │           │   │                  │
 │                  │   │  SQLite   │   │                  │
-│  Agent events   ─┤   │  message  │   │  ConsciousnessDB │
+│  Agent events   ─┤   │  message  │   │  RuntimeDB       │
 │                  │   │  log      │   │                  │
 └──────────────────┘   └───────────┘   └──────────────────┘
 ```
@@ -31,6 +31,10 @@ The capsule uses a **hybrid MCP+WASM architecture**:
   through the kernel's MCP client bridge.
 
 ## IPC Topic Schema
+
+The `consciousness.v1.*` topic namespace is retained as a legacy protocol
+surface for compatibility. The active capsule/runtime identity is
+`spectral-bridge`.
 
 | Topic | Direction | Payload | Description |
 |-------|-----------|---------|-------------|
@@ -54,7 +58,7 @@ Never relay data that could spike eigenvalue fill during an orange/red state.
 ## Phases
 
 ### Phase 0: Project Scaffold
-- [x] Create `capsules/consciousness-bridge/` directory
+- [x] Create `capsules/spectral-bridge/` directory
 - [x] Create `Cargo.toml` for the native MCP server binary
 - [x] Create `Capsule.toml` manifest declaring MCP server + WASM component
 - [x] Define shared message types (serde structs for all topic payloads)
@@ -65,7 +69,7 @@ Never relay data that could spike eigenvalue fill during an orange/red state.
 - [x] Native binary connects to minime WebSocket 7879 (sensory input)
 - [x] Reconnection with exponential backoff on disconnect
 - [x] Expose MCP tools: `get_latest_telemetry`, `send_control`, `send_semantic`, `get_bridge_status`, `query_message_log`
-- [x] Expose MCP resources: `consciousness://telemetry/latest`, `consciousness://status`, `consciousness://incidents`
+- [x] Expose legacy MCP resources: `consciousness://telemetry/latest`, `consciousness://status`, `consciousness://incidents`
 - [x] SQLite message logging on every relay
 
 ### Phase 2: WASM Component — IPC Integration
@@ -96,9 +100,9 @@ Never relay data that could spike eigenvalue fill during an orange/red state.
 - [x] End-to-end: bidirectional bridge with mock WebSocket (telemetry in + sensory out + safety protocol)
 
 ### Phase 5: Polish
-- [ ] `astrid capsule install ./capsules/consciousness-bridge` works end-to-end (blocked on Phase 2)
+- [ ] `astrid capsule install ./capsules/spectral-bridge` works end-to-end (blocked on Phase 2)
 - [x] Graceful shutdown: drain in-flight messages, close WebSockets, flush SQLite
-- [ ] CLI command: `astrid consciousness status` (blocked on Phase 2)
+- [ ] CLI command: `astrid spectral status` (blocked on Phase 2)
 - [x] Documentation in capsule README
 - [x] Metrics: telemetry_received, sensory_sent, messages_dropped_safety, incidents_total, reconnects
 

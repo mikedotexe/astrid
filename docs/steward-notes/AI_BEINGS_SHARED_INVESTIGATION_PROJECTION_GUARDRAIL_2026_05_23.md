@@ -50,5 +50,5 @@ A final shared-investigation `charter_repair` decision restored the linked Minim
 - `/Users/v/other/minime/workspace/journal/experiment_bind_2026-05-23T10-25-33.062276.txt`
 - `/Users/v/other/minime/workspace/journal/experiment_bind_2026-05-23T10-26-14.698104.txt`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/moment_1779554816.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/moment_1779554816.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`

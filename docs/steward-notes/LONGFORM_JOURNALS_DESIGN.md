@@ -337,21 +337,21 @@ Older journal files remain readable because the parser falls back to current beh
 
 ### Files to touch
 
-- `capsules/consciousness-bridge/src/llm.rs`
+- `capsules/spectral-bridge/src/llm.rs`
   - split live signal generation from journal expansion generation
   - replace sentence-count prompt rules
 
-- `capsules/consciousness-bridge/src/autonomous.rs`
+- `capsules/spectral-bridge/src/autonomous.rs`
   - change mode handlers to work with `signal_text` and `journal_text`
   - send only `signal_text` through the codec
   - save longform `journal_text`
   - parse `NEXT:` from the signal path
 
-- `capsules/consciousness-bridge/src/db.rs`
+- `capsules/spectral-bridge/src/db.rs`
   - store journal metadata, summary text, and optional chunk embeddings
   - retrieve relevant journal chunks for continuity
 
-- `capsules/consciousness-bridge/src/codec.rs`
+- `capsules/spectral-bridge/src/codec.rs`
   - likely unchanged except for clarifying that encoding uses `signal_text`
 
 ## Recommended Rollout

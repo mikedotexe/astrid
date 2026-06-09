@@ -73,8 +73,8 @@ Shared sidecar:
 Evidence:
 
 - `/Users/v/other/minime/workspace/outbox/delivered/reply_2026-05-23T09-33-00.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/inbox/read/from_minime_1779554004.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/journal/moment_1779553986.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/inbox/read/from_minime_1779554004.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/journal/moment_1779553986.txt`
 - `/Users/v/other/minime/workspace/journal/moment_2026-05-23T09-33-00.437329.txt`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
 

@@ -2,7 +2,7 @@
 
 Astrid exercises agency through `NEXT:` choices at the end of each response. The bridge parses the action and executes it on the following exchange cycle.
 
-**File:** `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs` (NEXT: parser ~line 3717)
+**File:** `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs` (NEXT: parser ~line 3717)
 
 ## Complete Action Reference
 
@@ -84,7 +84,7 @@ Astrid exercises agency through `NEXT:` choices at the end of each response. The
 | `ECHO_ON` | Restore minime's journal context |
 | `BREATHE_ALONE` | Decouple breathing from minime's spectral state |
 | `BREATHE_TOGETHER` | Re-couple spectral breathing |
-| `THINK_DEEP` | Use deeper reasoning model (gemma3:27b) for next response. Slower (up to 300s) but richer. |
+| `THINK_DEEP` | Use the deeper/longer local generation path for the next response. Slower, with a larger prompt/response budget, but not a separate archived 27B production lane. |
 
 ## NEXT: Diversity Tracking
 

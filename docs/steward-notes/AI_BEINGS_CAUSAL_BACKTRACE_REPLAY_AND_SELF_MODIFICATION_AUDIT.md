@@ -55,13 +55,13 @@ Observed in current code:
 
 - Minime restores covariance continuity from `spectral_checkpoint.bin` in `/Users/v/other/minime/minime/src/main.rs:368-405`.
 - Minime writes `health.json` and `spectral_state.json` continuously in `/Users/v/other/minime/minime/src/main.rs:2148-2201` and `/Users/v/other/minime/minime/src/main.rs:2429-2452`.
-- Astrid persists conversation state to `workspace/state.json` in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:690-803`.
+- Astrid persists conversation state to `workspace/state.json` in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:690-803`.
 
 Observed in current runtime artifacts:
 
 - `/Users/v/other/minime/workspace/spectral_checkpoint.bin` exists.
 - `/Users/v/other/minime/workspace/sovereignty_state.json`, `/Users/v/other/minime/workspace/regulator_context.json`, and `/Users/v/other/minime/workspace/spectral_state.json` are present and live.
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json` is present and carries recent history plus runtime settings.
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/state.json` is present and carries recent history plus runtime settings.
 
 Inferred from evidence:
 
@@ -78,7 +78,7 @@ Observed in current code:
 Observed in current runtime artifacts:
 
 - Minime's experiment artifacts such as `/Users/v/other/minime/workspace/hypotheses/spike_test_2026-03-27T12-30-14.146773.txt` record pre-state and post-state snapshots, not a replayable transition bundle.
-- Astrid's experiment artifact `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/experiments/experiment_1774488620.txt` records the proposal and stimulus, not a complete replay context.
+- Astrid's experiment artifact `/Users/v/other/astrid/capsules/spectral-bridge/workspace/experiments/experiment_1774488620.txt` records the proposal and stimulus, not a complete replay context.
 
 Inferred from evidence:
 
@@ -93,7 +93,7 @@ Observed in current code:
 - Minime performs runtime self-regulation in `/Users/v/other/minime/autonomous_agent.py:641-795`.
 - Every fifth sovereignty cycle, minime can choose `regulation_strength`, `exploration_noise`, and `geom_curiosity` via LLM-directed control in `/Users/v/other/minime/autonomous_agent.py:702-759`.
 - Outside that path, minime still self-adjusts `synth_gain` and `keep_bias` via proportional fallback in `/Users/v/other/minime/autonomous_agent.py:760-795`.
-- Astrid can generate self-study, experiments, and EVOLVE requests in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2013-2188` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2288-2297`.
+- Astrid can generate self-study, experiments, and EVOLVE requests in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2013-2188` and `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2288-2297`.
 
 Inferred from evidence:
 
@@ -104,9 +104,9 @@ Inferred from evidence:
 
 Observed in current code:
 
-- Astrid's agency helpers explicitly state that she does not edit repo files directly in v1 and instead writes structured requests for review in `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs:1-5`.
-- EVOLVE persists requests and optional Claude task files in `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs:293-323`.
-- Agency resolution writes outcome notes back to Astrid's inbox in `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs:551-646`.
+- Astrid's agency helpers explicitly state that she does not edit repo files directly in v1 and instead writes structured requests for review in `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs:1-5`.
+- EVOLVE persists requests and optional Claude task files in `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs:293-323`.
+- Agency resolution writes outcome notes back to Astrid's inbox in `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs:551-646`.
 
 Observed in current runtime artifacts:
 
@@ -161,17 +161,17 @@ What they do not preserve:
 
 Observed in current code:
 
-- Persisted continuity in `workspace/state.json`: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:690-803`
-- Experiment mode writing `workspace/experiments/experiment_<ts>.txt`: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2013-2079`
-- EVOLVE request path: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2085-2188`
-- Introspection mirrors in `workspace/introspections/`: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2288-2297`
-- Signal journals and self-study companion inbox writes: `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:839-905` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2454-2464`
-- Agency request persistence and outcome note rendering: `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs:293-323`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs:551-646`
+- Persisted continuity in `workspace/state.json`: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:690-803`
+- Experiment mode writing `workspace/experiments/experiment_<ts>.txt`: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2013-2079`
+- EVOLVE request path: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2085-2188`
+- Introspection mirrors in `workspace/introspections/`: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2288-2297`
+- Signal journals and self-study companion inbox writes: `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:839-905` and `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2454-2464`
+- Agency request persistence and outcome note rendering: `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs:293-323`, `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs:551-646`
 
 Observed in current runtime artifacts:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/introspections/introspect_astrid:llm_1774584875.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/state.json`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspect_astrid:llm_1774584875.txt`
 - multiple `workspace/experiments/experiment_*.txt`
 - current `agency_requests/` and `claude_tasks/` directories present but empty
 - no current `agency_status_*.txt` files in the live bridge workspace scan
@@ -229,7 +229,7 @@ Observed in current code:
 
 - Minime can restore spectral covariance continuity and neural checkpoints from persisted files or DB rows in `/Users/v/other/minime/minime/src/main.rs:368-405` and `/Users/v/other/minime/minime/src/db.rs:319-340`.
 - Minime writes experiment artifacts with pre-state and post-state snapshots in `/Users/v/other/minime/autonomous_agent.py:908-1035`.
-- Astrid preserves recent exchange history and settings in `state.json` and keeps experiments and introspection mirrors on disk in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:690-803`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2013-2079`, and `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2288-2297`.
+- Astrid preserves recent exchange history and settings in `state.json` and keeps experiments and introspection mirrors on disk in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:690-803`, `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2013-2079`, and `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2288-2297`.
 
 Observed in current runtime artifacts:
 
@@ -237,7 +237,7 @@ Observed in current runtime artifacts:
 - `spectral_checkpoints` rows exist in the minime SQLite database.
 - `autonomous_experiments` rows exist in the minime SQLite database.
 - Minime action file `/Users/v/other/minime/workspace/actions/2026-03-27T12-30-14.150385_experiment_spike.json` can be compared with experiment file `/Users/v/other/minime/workspace/hypotheses/spike_test_2026-03-27T12-30-14.146773.txt`.
-- Astrid experiment file `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/experiments/experiment_1774488620.txt` preserves a proposed intervention and the exact semantic stimulus sent to minime.
+- Astrid experiment file `/Users/v/other/astrid/capsules/spectral-bridge/workspace/experiments/experiment_1774488620.txt` preserves a proposed intervention and the exact semantic stimulus sent to minime.
 
 Inferred from evidence:
 
@@ -290,10 +290,10 @@ Inferred from evidence:
 
 Observed in current code:
 
-- Introspection mirrors code-reading reflections into `workspace/introspections/` in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2288-2297`.
-- Experiment mode can author a stimulus and send it into minime in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2013-2079`.
-- EVOLVE can draft a structured `code_change` or `experience_request` and write request artifacts plus Claude task handoffs in `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2085-2188` and `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs:293-323`.
-- Agency resolution can return explicit outcomes to Astrid via inbox notes in `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs:551-646`.
+- Introspection mirrors code-reading reflections into `workspace/introspections/` in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2288-2297`.
+- Experiment mode can author a stimulus and send it into minime in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2013-2079`.
+- EVOLVE can draft a structured `code_change` or `experience_request` and write request artifacts plus Claude task handoffs in `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2085-2188` and `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs:293-323`.
+- Agency resolution can return explicit outcomes to Astrid via inbox notes in `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs:551-646`.
 
 Observed in current runtime artifacts:
 
@@ -530,8 +530,8 @@ Re-checked live before writing:
 - `/Users/v/other/minime/minime/src/main.rs`
 - `/Users/v/other/minime/minime/src/db.rs`
 - `/Users/v/other/minime/autonomous_agent.py`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/agency.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/agency.rs`
 
 Re-checked live runtime artifacts before writing:
 
@@ -543,9 +543,9 @@ Re-checked live runtime artifacts before writing:
 - `/Users/v/other/minime/workspace/hypotheses/spike_test_2026-03-27T12-30-14.146773.txt`
 - `/Users/v/other/minime/workspace/journal/aspiration_2026-03-27T12-34-27.711795.txt`
 - `/Users/v/other/minime/minime/minime_consciousness.db`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/introspections/introspect_astrid:llm_1774584875.txt`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/experiments/experiment_1774488620.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/state.json`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspect_astrid:llm_1774584875.txt`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/experiments/experiment_1774488620.txt`
 - current live scans of Astrid `agency_requests/`, `claude_tasks/`, and bridge-side self-study / agency outcome files
 
 Conclusion:

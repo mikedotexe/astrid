@@ -1,5 +1,13 @@
 # Astrid Runtime Survey, Constraint Audit, And Model Posture (Qwen 8B Update)
 
+Superseded runtime note (2026-06-05): this audit captured a Qwen 8B
+experiment/state that no longer matches the live LaunchAgent. Current inspection
+shows Astrid's coupled lane on port `8090` running
+`mlx-community/gemma-3-4b-it-4bit`; use
+`/Users/v/other/astrid/scripts/model_stack_audit.py` before quoting any model
+posture from this document. The context-policy observations may still be useful
+as historical analysis.
+
 ## Executive Summary
 
 This note replaces the earlier Gemma/12B-focused audit with current runtime truth.
@@ -18,13 +26,13 @@ This document is based on live runtime inspection plus current source. When pros
 
 Astrid-the-repository is broader than the active being loop. In practice, the operational center of the current system is:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/` for the autonomous loop, prompt assembly, action dispatch, codec, and bridge database
+- `/Users/v/other/astrid/capsules/spectral-bridge/` for the autonomous loop, prompt assembly, action dispatch, codec, and bridge database
 - `/Users/v/other/neural-triple-reservoir/` for the live coupled LLM lane and the shared reservoir services
 - `/Users/v/other/mlx/benchmarks/python/chat_mlx_local.py` for the reflective MLX sidecar
 
 The best current process-level summary is `/Users/v/other/astrid/md-CLAUDE-chapters/15-unified-operations.md:1-180`. In the active 10-process stack, the pieces that matter most for Astrid's language behavior are:
 
-- `consciousness-bridge-server` in Rust, which decides mode, assembles context, and routes dialogue
+- `spectral-bridge-server` in Rust, which decides mode, assembles context, and routes dialogue
 - `coupled_astrid_server.py`, which serves the live OpenAI-compatible MLX lane on port `8090`
 - `reservoir_service.py` plus the feeder processes, which maintain the shared substrate and keep Astrid's generation bidirectionally coupled
 - `chat_mlx_local.py`, which is called only for reflective sidecar work from `reflective.rs`
@@ -66,7 +74,7 @@ This should be treated as an observed deployment decision, not as an unresolved 
 
 The reflective lane is still implicit.
 
-`/Users/v/other/astrid/capsules/consciousness-bridge/src/reflective.rs:261-275` invokes:
+`/Users/v/other/astrid/capsules/spectral-bridge/src/reflective.rs:261-275` invokes:
 
 ```bash
 python3 chat_mlx_local.py --json --hardware-profile m4-mini \
@@ -106,14 +114,14 @@ The earlier audit is stale here. Several limits have already been relaxed, but a
 
 ### Live output budgets
 
-- persisted `response_length` is currently `768` in `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/state.json`
-- default `response_length` in code is `768` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/state.rs:263`
-- `PRECISE` sets `128` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/next_action/modes.rs:26-34`
-- `EXPANSIVE` sets `1024` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/next_action/modes.rs:36-44`
+- persisted `response_length` is currently `768` in `/Users/v/other/astrid/capsules/spectral-bridge/workspace/state.json`
+- default `response_length` in code is `768` at `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/state.rs:263`
+- `PRECISE` sets `128` at `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/modes.rs:26-34`
+- `EXPANSIVE` sets `1024` at `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/modes.rs:36-44`
 
 ### Live prompt assembly caps
 
-`/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:449-505` currently does the following:
+`/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:449-505` currently does the following:
 
 - keeps the last 8 exchanges
 - trims them by recency tiers of `200 / 400 / 600`
@@ -125,12 +133,12 @@ That is materially looser than the previous audit claimed, but it is still a des
 
 The bridge still clamps several supporting context blocks:
 
-- inbox cap `4000` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:669-681`
-- pending file listing cap `8000` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1920-1929`
-- self-study continuity cap `500` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2337-2341`
-- perception merge cap `4000` plus own-journal merge cap `200` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2398-2404`
-- dialogue-side `PAGE_CHUNK = 4000` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2412-2416`
-- MCP/operator `PAGE_CHUNK = 4000` at `/Users/v/other/astrid/capsules/consciousness-bridge/src/mcp.rs:280-281`
+- inbox cap `4000` at `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:669-681`
+- pending file listing cap `8000` at `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1920-1929`
+- self-study continuity cap `500` at `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2337-2341`
+- perception merge cap `4000` plus own-journal merge cap `200` at `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2398-2404`
+- dialogue-side `PAGE_CHUNK = 4000` at `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2412-2416`
+- MCP/operator `PAGE_CHUNK = 4000` at `/Users/v/other/astrid/capsules/spectral-bridge/src/mcp.rs:280-281`
 
 These are the caps most likely to leave capability on the table now that the live lane is Qwen 8B rather than Gemma 4B.
 
@@ -245,9 +253,9 @@ That is not just a documentation cleanliness issue. It slows safe iteration beca
 
 | Area | Current | Proposed | Payoff | Risk | Notes |
 |---|---|---|---|---|---|
-| Reflective model selection | Reflective sidecar omits `--model`, `--model-label`, and `--model-memory-map` | Make the reflective model explicit from `reflective.rs`; choose the lane intentionally instead of inheriting local-model order | High | Medium | `/Users/v/other/astrid/capsules/consciousness-bridge/src/reflective.rs:261-275`, `/Users/v/other/mlx/benchmarks/python/chat_mlx_local.py:569-617` |
-| Live continuity and context trims | `response_length=768`, but supporting context blocks still clamp at `500`, `200`, `4000`, and `8000` | Keep `768` as baseline and relax continuity/input caps before raising output budgets again | High | Low-Medium | `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/state.rs:263`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:449-505`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1920-1929`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2337-2404` |
-| Browse and inbox chunking | Inbox and page chunks are fixed at `4000` regardless of mode | Make chunk sizes adaptive for `EXPANSIVE` and deeper modes | Medium-High | Medium | `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:669-681`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2412-2416`, `/Users/v/other/astrid/capsules/consciousness-bridge/src/mcp.rs:280-281` |
+| Reflective model selection | Reflective sidecar omits `--model`, `--model-label`, and `--model-memory-map` | Make the reflective model explicit from `reflective.rs`; choose the lane intentionally instead of inheriting local-model order | High | Medium | `/Users/v/other/astrid/capsules/spectral-bridge/src/reflective.rs:261-275`, `/Users/v/other/mlx/benchmarks/python/chat_mlx_local.py:569-617` |
+| Live continuity and context trims | `response_length=768`, but supporting context blocks still clamp at `500`, `200`, `4000`, and `8000` | Keep `768` as baseline and relax continuity/input caps before raising output budgets again | High | Low-Medium | `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/state.rs:263`, `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:449-505`, `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1920-1929`, `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2337-2404` |
+| Browse and inbox chunking | Inbox and page chunks are fixed at `4000` regardless of mode | Make chunk sizes adaptive for `EXPANSIVE` and deeper modes | Medium-High | Medium | `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:669-681`, `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2412-2416`, `/Users/v/other/astrid/capsules/spectral-bridge/src/mcp.rs:280-281` |
 | Live coupled model posture | Qwen3-8B is current stable live lane; Qwen3-14B already proved too slow on bridge prompts | Keep Qwen3-8B as the coupled baseline for now; do not reopen a bigger coupled lane until reflective choice and context policy are sorted | Medium | Medium | `/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py:5-18`, `/Users/v/other/astrid/CLAUDE.md:283-286`, `/Users/v/other/astrid/md-CLAUDE-chapters/15-unified-operations.md:84-91` |
 | Documentation posture | Current and stale model stories coexist in the chapter set | Use `CLAUDE.md`, chapter 01, and chapter 15 as canonical until the older chapters are refreshed | Medium | Low | `/Users/v/other/astrid/CLAUDE.md:154-160`, `/Users/v/other/astrid/md-CLAUDE-chapters/01-inference-lanes.md:7-29`, `/Users/v/other/astrid/md-CLAUDE-chapters/15-unified-operations.md:80-91`, `/Users/v/other/astrid/md-CLAUDE-chapters/00-overview.md:25-26`, `/Users/v/other/astrid/md-CLAUDE-chapters/10-operations.md:26-32` |
 | Reflective generation budget | Reflective path is still short-budget even on `m4-mini` | Revisit token/candidate budgets only after the reflective model is chosen explicitly | Medium | Low-Medium | `/Users/v/other/mlx/benchmarks/python/chat_mlx_local.py:5695-5710`, `/Users/v/other/mlx/benchmarks/python/chat_mlx_local.py:5773-5778`, `/Users/v/other/mlx/benchmarks/python/chat_mlx_local.py:5564-5569` |
@@ -278,7 +286,7 @@ Primary risk:
 
 Key references:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/reflective.rs:261-275`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/reflective.rs:261-275`
 - `/Users/v/other/mlx/benchmarks/python/chat_mlx_local.py:569-617`
 
 #### 2. Use Qwen 8B headroom on context before revisiting model scale
@@ -304,9 +312,9 @@ Primary risk:
 
 Key references:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous/state.rs:263`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:449-505`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2337-2404`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/state.rs:263`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:449-505`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2337-2404`
 
 #### 3. Make chunk sizing mode-aware
 
@@ -330,9 +338,9 @@ Primary risk:
 
 Key references:
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:669-681`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:2412-2416`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/mcp.rs:280-281`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:669-681`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2412-2416`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/mcp.rs:280-281`
 
 #### 4. Keep the coupled lane stable while the surrounding policy catches up
 

@@ -77,7 +77,7 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 
 ## Sibling project: minime (`/Users/v/other/minime`)
 
-**MikesSpatialMind** — a dual-layer consciousness engine. The Rust backend (`minime/`) runs an Echo State Network (ESN) for spectral homeostasis; the Python frontend (`mikemind/`) drives Ollama LLM conversation and camera vision.
+**MikesSpatialMind** — a dual-layer spectral runtime. The Rust backend (`minime/`) runs an Echo State Network (ESN) for spectral homeostasis; the Python frontend (`mikemind/`) drives Ollama LLM conversation and camera vision.
 
 ### Minime architecture
 
@@ -106,4 +106,4 @@ For bridging Astrid and minime, the natural integration points are:
 - `SensoryMsg` on port 7879 accepts typed JSON input (video/audio/aux/semantic/control)
 - The `Control` variant allows external regulation of synth gain, keep bias, exploration noise, and fill target
 
-**Bridge pattern:** A capsule (or native uplink) subscribes to minime's WebSocket telemetry stream and publishes it as IPC messages on a topic like `consciousness.v1.telemetry`. In the reverse direction, Astrid IPC events (tool results, user input) can be forwarded as `SensoryMsg::Semantic` features to minime's sensory input port, coupling the agent's symbolic reasoning to the spectral substrate.
+**Bridge pattern:** A capsule (or native uplink) subscribes to minime's WebSocket telemetry stream and publishes it as IPC messages on the bridge telemetry topic. In the reverse direction, Astrid IPC events (tool results, user input) can be forwarded as `SensoryMsg::Semantic` features to minime's sensory input port, coupling the agent's symbolic reasoning to the spectral substrate.

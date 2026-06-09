@@ -4,6 +4,12 @@ Date: March 27, 2026
 
 Checkout context: current live `/Users/v/other/astrid` and `/Users/v/other/minime` workspaces on the March 27, 2026 checkout, re-verified against current code, local runtime state, and current machine state before writing.
 
+Historical baseline note (2026-06-05): this document records an earlier local
+model-stack survey. It is intentionally preserved, but live port/model
+ownership has changed since then. Use
+`/Users/v/other/astrid/scripts/model_stack_audit.py` for current model
+inventory, loaded Ollama state, and port `8090` ownership.
+
 ## Executive Summary
 
 The current local model stack is **functional but under-coordinated**. It is not wildly overbuilt for a 64 GB Apple M4 Pro Mac mini, but it is carrying too many overlapping large-model roles, too many half-finished backend assumptions, and too many timeouts and unload rituals that compensate for shared-substrate contention.
@@ -83,7 +89,7 @@ Inferred from evidence:
 Observed in current code:
 
 - Astrid bridge dialogue, embeddings, and vision all use Ollama-centered HTTP calls in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs`
   - `/Users/v/other/astrid/capsules/perception/perception.py`
 - minime autonomous and interactive text/vision paths support Ollama and optional MLX in:
   - `/Users/v/other/minime/autonomous_agent.py`
@@ -127,13 +133,13 @@ Observed in current code:
 
 - Fast dialogue model:
   - `const MODEL: &str = "gemma3:12b";`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:16`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:16`
 - Deep reasoning model:
   - `const REASONING_MODEL: &str = "hf.co/mradermacher/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled-GGUF:Q8_0";`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:18`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:18`
 - Embedding model:
   - `const EMBED_MODEL: &str = "nomic-embed-text";`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:360`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:360`
 - Vision model:
   - `LLAVA_MODEL = "llava-llama3"`
   - `/Users/v/other/astrid/capsules/perception/perception.py:61`
@@ -224,14 +230,14 @@ Observed in current code and runtime artifacts:
   - `8091`
   - configured in code, not listening right now
 - Astrid bridge model-role assignment and unload behavior:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs`
 - minime chat, vision, and embeddings backend-selection surfaces:
   - `/Users/v/other/minime/autonomous_agent.py`
   - `/Users/v/other/minime/mikemind/config.py`
   - `/Users/v/other/minime/mikemind/llm_engine.py`
   - `/Users/v/other/minime/mikemind/vision.py`
 - current MLX/Ollama memory-conflict note:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/GPU_MEMORY_ANALYSIS.md`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/GPU_MEMORY_ANALYSIS.md`
 
 ## Current Residency and Scheduler Posture
 
@@ -252,7 +258,7 @@ Observed in current runtime artifacts:
 Observed in current code:
 
 - the bridge manually unloads `llava-llama3` and `nomic-embed-text` before dialogue, but does not set an explicit `num_ctx` for dialogue requests in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:262-277`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:262-277`
 - bridge generation paths generally do not pass a `keep_alive` policy for steady-state text generation; they rely on server behavior plus explicit unloads for selected models
 - minime interactive chat, streaming, vision, and even some spontaneous-thought paths set `keep_alive: "1h"` in:
   - `/Users/v/other/minime/mikemind/llm_engine.py:248-256`
@@ -294,9 +300,9 @@ Observed in current runtime artifacts:
 Observed in current code:
 
 - Astrid still trims major prompt components aggressively:
-  - recent history compressed to `80` and `200` characters in `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:187-220`
-  - current-turn journal trimmed to `300` characters in `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:226`
-  - local continuity and supporting blocks are also frequently clipped to a few hundred or low-thousands of characters across `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+  - recent history compressed to `80` and `200` characters in `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:187-220`
+  - current-turn journal trimmed to `300` characters in `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:226`
+  - local continuity and supporting blocks are also frequently clipped to a few hundred or low-thousands of characters across `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
 - a repo-wide scan found no live inference path explicitly setting `options.num_ctx` for steady-state requests
 
 Observed in external sources:
@@ -324,11 +330,11 @@ Suggested follow-up changes:
 Observed in current code:
 
 - dialogue client timeout is `30s` by default and `60s` for reasoning or long generations in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:257`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:257`
 - bridge dialogue explicitly unloads `llava-llama3`, unloads `nomic-embed-text`, waits, and then warms the target model in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs:262-275`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:262-275`
 - `THINK_DEEP` wraps dialogue generation in a `60s` outer timeout and retries once after a `3s` wait in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1729-1765`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1729-1765`
 - other bridge generation paths have their own outer timeouts:
   - witness `30s`
   - daydream `25s`
@@ -337,7 +343,7 @@ Observed in current code:
   - create `45s`
   - initiate `45s`
   - introspection / evolve `60s`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs:1890-2315`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1890-2315`
 
 Inferred from evidence:
 
@@ -418,7 +424,7 @@ Observed in current code and docs:
 
 - both projects still carry MLX endpoints in code
 - current docs in `/Users/v/other/minime/docs/mlx_integration_audit.md` describe MLX as partially working and partially missing
-- current GPU analysis in `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/GPU_MEMORY_ANALYSIS.md` explicitly says MLX is not viable alongside Ollama + minime Metal shaders under concurrent load
+- current GPU analysis in `/Users/v/other/astrid/capsules/spectral-bridge/workspace/GPU_MEMORY_ANALYSIS.md` explicitly says MLX is not viable alongside Ollama + minime Metal shaders under concurrent load
 
 Observed in current runtime artifacts:
 
@@ -855,7 +861,7 @@ The key shift is:
 Observed in local code and docs:
 
 - the current GPU analysis explicitly says dedicated MLX sessions are only viable as batch or offline work:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/GPU_MEMORY_ANALYSIS.md:56`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/GPU_MEMORY_ANALYSIS.md:56`
 - `scripts/start.sh` already encodes this by skipping MLX entirely when `MINIME_LLM_BACKEND=ollama`, with the explicit note "no GPU memory contention":
   - `/Users/v/other/minime/scripts/start.sh:63-111`
 - minime autonomous's MLX path is structured like a reflective side lane rather than a latency-critical interactive lane:
@@ -1372,8 +1378,8 @@ This audit was re-checked live on March 27, 2026 against:
 - live residency details via `curl http://127.0.0.1:11434/api/ps`
 - live Ollama launch environment via `launchctl getenv`
 - Astrid bridge model roles and timeouts in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/llm.rs`
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
 - Astrid perception runtime in:
   - `/Users/v/other/astrid/capsules/perception/perception.py`
 - minime autonomous and interactive model roles in:
@@ -1382,7 +1388,7 @@ This audit was re-checked live on March 27, 2026 against:
   - `/Users/v/other/minime/mikemind/llm_engine.py`
   - `/Users/v/other/minime/mikemind/vision.py`
 - current MLX/Ollama memory-conflict notes in:
-  - `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/GPU_MEMORY_ANALYSIS.md`
+  - `/Users/v/other/astrid/capsules/spectral-bridge/workspace/GPU_MEMORY_ANALYSIS.md`
   - `/Users/v/other/minime/docs/mlx_integration_audit.md`
 - external reference material from:
   - Ollama API docs

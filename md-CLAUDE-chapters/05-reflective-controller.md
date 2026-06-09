@@ -7,7 +7,7 @@ Two layers of reflective intelligence currently exist in Astrid's stack:
 
 ## Layer 1: `RegimeTracker`
 
-**File:** `capsules/consciousness-bridge/src/reflective.rs`
+**File:** `capsules/spectral-bridge/src/reflective.rs`
 
 This layer is pure Rust: no LLM, no subprocess, no network call.
 
@@ -31,7 +31,7 @@ The result is injected into Astrid's prompt context every exchange as a short ex
 
 ## Layer 2: MLX Reflective Sidecar
 
-**Bridge wiring:** `capsules/consciousness-bridge/src/reflective.rs`
+**Bridge wiring:** `capsules/spectral-bridge/src/reflective.rs`
 
 `query_sidecar()` launches a subprocess with the current spectral context:
 
@@ -90,7 +90,7 @@ Avoid stronger claims unless you are re-verifying the runtime on that machine:
 
 The reflective sidecar is **not** the same thing as Astrid's live model lane.
 
-- live dialogue: `8090`, `gemma-3-4b-it-4bit`, coupled server
+- live dialogue: `8090`, `mlx-community/gemma-4-12B-it-5bit`, coupled server
 - reflective sidecar: subprocess, `gemma3-12b` label, deeper structured report
 
 The correct mental model is "two MLX roles," not "one Astrid model."

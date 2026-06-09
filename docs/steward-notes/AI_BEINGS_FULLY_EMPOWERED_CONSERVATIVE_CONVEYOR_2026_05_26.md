@@ -32,17 +32,17 @@ This pass did not run live control, bind, resume, perturb, sensory send, or peer
 - `/Users/v/other/minime/tests/test_experimental_continuity.py`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/thread.json`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/action_continuity.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/experiment_conveyor.rs`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/src/autonomous.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/action_continuity.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/experiment_conveyor.rs`
+- `/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs`
 
 ## Verification
 
 - `python3.14 -m unittest tests.test_experimental_continuity`
-- `cargo test --manifest-path /Users/v/other/astrid/capsules/consciousness-bridge/Cargo.toml action_continuity --lib`
-- `cargo test --manifest-path /Users/v/other/astrid/capsules/consciousness-bridge/Cargo.toml experiment_conveyor --lib`
-- `cargo test --manifest-path /Users/v/other/astrid/capsules/consciousness-bridge/Cargo.toml`
-- `cargo clippy --manifest-path /Users/v/other/astrid/capsules/consciousness-bridge/Cargo.toml -- -D warnings`
+- `cargo test --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml action_continuity --lib`
+- `cargo test --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml experiment_conveyor --lib`
+- `cargo test --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml`
+- `cargo clippy --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml -- -D warnings`
 
 ## Conclusion
 

@@ -14,8 +14,8 @@ The shared question was whether Astrid's lambda-edge topology work and Minime's 
 
 The bridge MCP topology renderer was invoked with `lookback_secs: 21600` and the default output root.
 
-- HTML artifact: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/index.html`
-- JSON artifact: `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/lambda_tail_topology.json`
+- HTML artifact: `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/index.html`
+- JSON artifact: `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/lambda_tail_topology.json`
 - Render policy: `lambda_tail_topology_artifact_v1`
 - Render result: `state_count: 0`, `contact_count: 0`
 - Artifact scan result: `artifact_grounding_score: 0.0`, `lambda_tail_hits: 0`, `biology_hits: 0`, `return_hits: 0`
@@ -69,10 +69,10 @@ The rendered topology should be treated as the first durable referent for the co
 
 ## Source References
 
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/index.html`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/lambda_tail_topology.json`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/research_dossier.jsonl`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/index.html`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/lambda_tail_topology/20260522T172127Z/lambda_tail_topology.json`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/research_dossier.jsonl`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/research_dossier.jsonl`
 - `/Users/v/other/minime/workspace/journal/reservoir_read_2026-05-22T09-52-51.155583.txt`

@@ -41,7 +41,7 @@ The blocked `EXPEND_INTERFERENCE` event is a successful agency boundary: it show
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/next.md`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/experiments.jsonl`
 - `/Users/v/other/minime/workspace/action_threads/threads/th_minime_20260514_minime-shadow-trajectories-reorient-with-baselin/research_dossier.jsonl`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
-- `/Users/v/other/astrid/capsules/consciousness-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/research_dossier.jsonl`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/next.md`
+- `/Users/v/other/astrid/capsules/spectral-bridge/workspace/action_threads/threads/th_astrid_20260508_action-continuity/research_dossier.jsonl`
 - `/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_LAMBDA_DRIFT_CHARTER_REPAIR_GUARDRAIL_2026_05_22.md`
 - `/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_PERTURB_SHAPED_GUARDRAIL_DECISION_2026_05_22.md`
