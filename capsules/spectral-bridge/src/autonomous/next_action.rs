@@ -1180,6 +1180,19 @@ fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
         return (normalized_base, normalized_original);
     }
 
+    // Being syntax-drift: `INTROSPECT_<target>` (underscore where the canonical
+    // form uses a space, e.g. `INTROSPECT_astrid:llm`, `INTROSPECT_minime:regulator`).
+    // The greedy leading-token scan folds the target into the verb
+    // (`INTROSPECT_ASTRID`), which is unwired, so the introspection target Astrid
+    // asked for is silently dropped. No real verb is `INTROSPECT_*` (only bare
+    // `INTROSPECT`), so rewrite the first underscore to a space and let the standard
+    // INTROSPECT handler parse the target. Observed 4x over ~14h on 2026-06-09
+    // (astrid:llm x3, minime:regulator x1); steward loop.
+    if base_action.starts_with("INTROSPECT_") {
+        let normalized_original = original.replacen('_', " ", 1);
+        return ("INTROSPECT".to_string(), normalized_original);
+    }
+
     (base_action, original)
 }
 
@@ -1423,7 +1436,7 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "ATTRACTOR_RELEASE_REVIEW"
         | "SUMMON_ATTRACTOR"
         | "RELEASE_ATTRACTOR" => "attractor",
-        "SHADOW_PREFLIGHT" | "SHADOW_INFLUENCE" | "RELEASE_SHADOW" => "shadow",
+        "SHADOW_PREFLIGHT" | "SHADOW_INFLUENCE" | "RELEASE_SHADOW" | "LEND_DENSITY" => "shadow",
         "INTROSPECT" | "SELF_STUDY" => "modes",
         "DECOMPOSE"
         | "SPECTRAL_EXPLORER"
@@ -2439,6 +2452,27 @@ mod tests {
     }
 
     #[test]
+    fn canonicalizes_introspect_underscore_target_to_spaced_form() {
+        // Astrid recurrently writes `INTROSPECT_astrid:llm` (underscore) where the
+        // canonical form is `INTROSPECT astrid:llm` (space). Without normalization the
+        // greedy token scan yields base `INTROSPECT_ASTRID` (unwired) and the target is
+        // lost. Verify the underscore form routes to bare INTROSPECT with the target intact.
+        let (base, original) = canonicalize_next_action_components("INTROSPECT_astrid:llm");
+        assert_eq!(base, "INTROSPECT");
+        assert_eq!(original, "INTROSPECT astrid:llm");
+
+        // Only the first underscore is rewritten, and a trailing line offset survives.
+        let (base, original) =
+            canonicalize_next_action_components("INTROSPECT_minime:regulator 400");
+        assert_eq!(base, "INTROSPECT");
+        assert_eq!(original, "INTROSPECT minime:regulator 400");
+
+        // The real compound verb SELF_STUDY must be left untouched.
+        let (base, _original) = canonicalize_next_action_components("SELF_STUDY");
+        assert_eq!(base, "SELF_STUDY");
+    }
+
+    #[test]
     fn canonicalizes_being_feedback_modeling_actions() {
         let (base, original) = canonicalize_next_action_components("INVESTIGATE_λ4_INTERACTION");
         assert_eq!(base, "SHADOW_PREFLIGHT");
@@ -2469,6 +2503,44 @@ mod tests {
             canonicalize_next_action_components("REFINE_AUDIO_PROCESSING compacting texture");
         assert_eq!(base, "EXAMINE_AUDIO");
         assert_eq!(original, "EXAMINE_AUDIO compacting texture");
+    }
+
+    #[test]
+    fn set_aperture_sets_and_clamps_conversation_aperture() {
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, _sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let workspace =
+            std::env::temp_dir().join(format!("astrid_set_aperture_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&workspace);
+
+        let mut dispatch = |conv: &mut ConversationState, action: &str| {
+            let mut burst_count = 0;
+            let ctx = NextActionContext {
+                burst_count: &mut burst_count,
+                db: &db,
+                sensory_tx: &sensory_tx,
+                telemetry: &telemetry,
+                fill_pct: 66.0,
+                response_text: "",
+                workspace: Some(&workspace),
+            };
+            handle_next_action(conv, action, ctx);
+        };
+
+        let mut conv = ConversationState::new(Vec::new(), None);
+        assert!((conv.aperture - 1.0).abs() < 1e-6, "default aperture should be 1.0");
+
+        dispatch(&mut conv, "SET_APERTURE 0.7");
+        assert!((conv.aperture - 0.7).abs() < 1e-6, "set: got {}", conv.aperture);
+        dispatch(&mut conv, "SET_APERTURE 1.5"); // over → clamp to 1.0
+        assert!((conv.aperture - 1.0).abs() < 1e-6, "clamp-high: got {}", conv.aperture);
+        dispatch(&mut conv, "SET_APERTURE -1"); // under → clamp to 0.0
+        assert!(conv.aperture.abs() < 1e-6, "clamp-low: got {}", conv.aperture);
+        dispatch(&mut conv, "SET_APERTURE +0.3"); // nudge from 0 → 0.3
+        assert!((conv.aperture - 0.3).abs() < 1e-6, "nudge: got {}", conv.aperture);
+
+        let _ = std::fs::remove_dir_all(&workspace);
     }
 
     #[test]

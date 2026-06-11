@@ -1073,6 +1073,9 @@ fn execute_mode_release_microdose(
         esn_leak_override: Some(clamped),
         esn_leak_override_ticks: Some(ticks),
         esn_leak_authority_request_id: Some(request_id),
+        mode_disperse: None,
+        mode_disperse_duration_ticks: None,
+        mode_disperse_decay_ticks: None,
     };
     sensory_tx
         .try_send(msg)

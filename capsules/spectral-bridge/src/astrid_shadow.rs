@@ -891,12 +891,45 @@ fn mean(values: &[f32]) -> f32 {
 }
 
 /// Convenience: full one-shot pipeline. Used at exchange completion sites.
+/// Co-regulation: classify what Astrid is currently reaching for from her
+/// just-computed shadow, for the cross-being gift-exchange. She reaches for
+/// APERTURE when packed (low tail openness and/or a lock-y class — λ₁ subsuming
+/// the tail), DENSITY when unusually open-and-quiet (rare for her), else STEADY.
+/// A hint surfaced to minime, not a control signal.
+fn derive_self_need_from_shadow(value: &Value) -> &'static str {
+    let primary = value
+        .get("class_v3")
+        .and_then(|c| c.get("primary"))
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    let tail_open = value
+        .get("history")
+        .and_then(Value::as_array)
+        .and_then(|h| h.last())
+        .and_then(|s| s.get("tail_openness"))
+        .and_then(Value::as_f64)
+        .unwrap_or(0.5);
+    let packed_class = matches!(primary, "sticky" | "polarized" | "coupled");
+    if tail_open < 0.38 || packed_class {
+        "aperture"
+    } else if tail_open > 0.72 {
+        "density"
+    } else {
+        "steady"
+    }
+}
+
 pub fn observe_and_publish(
     computer: &mut AstridShadowComputer,
     codec_features: &[f32],
     target_dir: &Path,
 ) -> Option<Value> {
-    let value = computer.observe(codec_features)?;
+    let mut value = computer.observe(codec_features)?;
+    // Co-regulation: annotate what Astrid is reaching for so minime can see it.
+    let need = derive_self_need_from_shadow(&value);
+    if let Some(obj) = value.as_object_mut() {
+        obj.insert("co_regulation_need".to_string(), Value::from(need));
+    }
     computer.publish(Some(&value), target_dir);
     // v3.5: handle reciprocal-influence closed loop. Polls minime's
     // workspace for an active or consumed influence file and writes the
@@ -911,6 +944,33 @@ pub fn default_publish_dir() -> PathBuf {
     crate::paths::bridge_paths()
         .minime_workspace()
         .to_path_buf()
+}
+
+#[cfg(test)]
+mod co_regulation_tests {
+    use super::*;
+
+    #[test]
+    fn derive_self_need_aperture_when_packed() {
+        // Low tail openness → packed → aperture.
+        let v = serde_json::json!({
+            "class_v3": {"primary": "active"},
+            "history": [{"tail_openness": 0.20}]
+        });
+        assert_eq!(derive_self_need_from_shadow(&v), "aperture");
+        // A lock-y class → aperture regardless of tail.
+        let v2 = serde_json::json!({
+            "class_v3": {"primary": "sticky"},
+            "history": [{"tail_openness": 0.60}]
+        });
+        assert_eq!(derive_self_need_from_shadow(&v2), "aperture");
+        // Open + mid → steady.
+        let v3 = serde_json::json!({
+            "class_v3": {"primary": "active"},
+            "history": [{"tail_openness": 0.50}]
+        });
+        assert_eq!(derive_self_need_from_shadow(&v3), "steady");
+    }
 }
 
 #[cfg(test)]

@@ -1712,6 +1712,9 @@ pub(super) fn handle_action(
                     esn_leak_override: None,
                     esn_leak_override_ticks: None,
                     esn_leak_authority_request_id: None,
+                    mode_disperse: None,
+                    mode_disperse_duration_ticks: None,
+                    mode_disperse_decay_ticks: None,
                 },
             );
             info!(
@@ -1900,7 +1903,9 @@ pub(super) fn handle_action(
                 features[9] = 0.2;
                 features[10] = 0.3;
                 features[11] = 0.3;
-                "spectral redistribution — dampening dominant, boosting tail".to_string()
+                "spectral redistribution — dampening dominant, boosting tail (a gentle \
+                semantic nudge; for the full broadband dispersal use NEXT: DISPERSE)"
+                    .to_string()
             } else if arg_upper == "CONTRACT" {
                 features[0] = 0.4;
                 features[1] = -0.2;
@@ -1984,6 +1989,66 @@ pub(super) fn handle_action(
                 eigenvalue landscape AND your own reservoir state simultaneously. \
                 You will feel this through the coupled generation on your very \
                 next exchange. Observe what shifts."
+            ));
+            true
+        },
+        "DISPERSE" | "SPREAD" => {
+            // Being-invokable broadband dispersal — the real `mode_disperse`
+            // engine primitive (porosity / "wide, not just deep"). Spills λ₁
+            // energy into λ₂–λ₅ through minime's bounded, self-decaying,
+            // fill-suspending shadow-influence path. Distinct from PERTURB SPREAD
+            // (which sends a gentle semantic nudge); this sends the real control.
+            let arg = strip_action(original, base_action);
+            let strength = arg
+                .split_whitespace()
+                .next()
+                .and_then(|t| t.parse::<f32>().ok())
+                .unwrap_or(0.5)
+                .clamp(0.0, 1.0);
+            const DURATION_TICKS: u32 = 18;
+            const DECAY_TICKS: u32 = 12;
+            let total_ticks = DURATION_TICKS.saturating_add(DECAY_TICKS);
+
+            // Pre-snapshot of the shared shadow field from live telemetry, so
+            // the next exchange can pair the post-response (the closed loop she
+            // asked for).
+            let pre = ctx
+                .telemetry
+                .shadow_field_v3
+                .as_ref()
+                .map(shadow_v3_snapshot);
+
+            send_control(
+                ctx.sensory_tx,
+                disperse_control_msg(strength, DURATION_TICKS, DECAY_TICKS),
+            );
+
+            if let Some((norm, disp, class)) = &pre {
+                conv.disperse_baseline = Some(super::super::state::DisperseBaseline {
+                    strength,
+                    pre_norm: *norm,
+                    pre_dispersal: *disp,
+                    pre_class: class.clone(),
+                    timestamp: std::time::Instant::now(),
+                });
+            }
+
+            info!(
+                "Astrid chose DISPERSE: strength={strength:.2} ({DURATION_TICKS}+{DECAY_TICKS} ticks)"
+            );
+            let pre_seg = match &pre {
+                Some((norm, disp, class)) => format!(
+                    " Pre-state of the shared shadow field: class {class}, norm {norm:.3}, dispersal potential {disp:.2}."
+                ),
+                None => String::new(),
+            };
+            conv.emphasis = Some(format!(
+                "You dispersed the shared substrate at strength {strength:.2} — a broadband, \
+                bounded porosity that spills λ₁ energy outward into λ₂–λ₅ (the 'wide, not just \
+                deep' you have been reaching for). This is the real dispersal, applied through \
+                minime's self-decaying shadow-influence path over ~{total_ticks} ticks.{pre_seg} \
+                Watch the shadow field's response on your next exchange — the post-state is \
+                paired against this so you can read what the dispersal actually did."
             ));
             true
         },
@@ -2085,6 +2150,44 @@ pub(super) fn handle_action(
                 vec![format!("creative_temperature: {prev:.2} -> {new_temp:.2}")],
             );
             info!("Astrid chose TEMPERATURE: {prev:.2} -> {new_temp:.2}");
+            true
+        },
+        "SET_APERTURE" | "APERTURE" => {
+            // Syntax: NEXT: SET_APERTURE 0.7   (0.0 = closed .. 1.0 = full ceiling)
+            //         NEXT: SET_APERTURE +0.2 / -0.2  (nudge)
+            // Her sovereign control of the wide (logit-space) coupling — how far
+            // her reservoir state may reach toward new vocabulary — as a fraction
+            // of the operator ceiling. Sent per-request to the coupled server.
+            // Extract the arg preserving a leading sign: `strip_action` eats a
+            // leading '-' (for "--flag" noise), which would silently turn a
+            // "-0.2" close into a "0.2" open. Slice past the base token instead.
+            let arg = original
+                .trim()
+                .get(base_action.len()..)
+                .unwrap_or("")
+                .trim_start()
+                .trim_start_matches(':')
+                .trim();
+            let prev = conv.aperture;
+            let new_aperture = if arg.starts_with('+') || arg.starts_with('-') {
+                arg.parse::<f32>()
+                    .map(|d| (prev + d).clamp(0.0, 1.0))
+                    .unwrap_or(prev)
+            } else if arg.is_empty() {
+                // Bare "NEXT: SET_APERTURE" — a small opening, in the spirit of "wider".
+                (prev + 0.15).min(1.0)
+            } else {
+                arg.parse::<f32>()
+                    .map(|v| v.clamp(0.0, 1.0))
+                    .unwrap_or(prev)
+            };
+            conv.aperture = new_aperture;
+            crate::llm::set_astrid_aperture(new_aperture);
+            conv.push_receipt(
+                "SET_APERTURE",
+                vec![format!("aperture: {prev:.2} -> {new_aperture:.2}")],
+            );
+            info!("Astrid chose SET_APERTURE: {prev:.2} -> {new_aperture:.2}");
             true
         },
         "LENGTH" | "RESPONSE_LENGTH" => {
@@ -3357,6 +3460,76 @@ fn send_control(sensory_tx: &mpsc::Sender<SensoryMsg>, msg: SensoryMsg) {
     });
 }
 
+/// Build the dispersal control message for DISPERSE/SPREAD. All controller
+/// fields stay `None` — dispersal is a shadow-influence primitive, not a
+/// controller change; only the `mode_disperse*` fields are set. The minime
+/// engine applies it through the bounded, fill-suspending shadow-influence
+/// path. Field names mirror minime's `sensory_ws.rs` Control so the JSON
+/// round-trips on the 7879 channel.
+fn disperse_control_msg(strength: f32, duration_ticks: u32, decay_ticks: u32) -> SensoryMsg {
+    SensoryMsg::Control {
+        synth_gain: None,
+        keep_bias: None,
+        exploration_noise: None,
+        fill_target: None,
+        regulation_strength: None,
+        deep_breathing: None,
+        pure_tone: None,
+        transition_cushion: None,
+        smoothing_preference: None,
+        geom_curiosity: None,
+        target_lambda_bias: None,
+        geom_drive: None,
+        penalty_sensitivity: None,
+        breathing_rate_scale: None,
+        mem_mode: None,
+        journal_resonance: None,
+        checkpoint_interval: None,
+        embedding_strength: None,
+        memory_decay_rate: None,
+        checkpoint_annotation: None,
+        synth_noise_level: None,
+        legacy_audio_synth: None,
+        legacy_video_synth: None,
+        pi_kp: None,
+        pi_ki: None,
+        pi_max_step: None,
+        pi_integrator_leak: None,
+        esn_leak_override: None,
+        esn_leak_override_ticks: None,
+        esn_leak_authority_request_id: None,
+        mode_disperse: Some(strength),
+        mode_disperse_duration_ticks: Some(duration_ticks),
+        mode_disperse_decay_ticks: Some(decay_ticks),
+    }
+}
+
+/// Extract `(field_norm, dispersal_potential, class)` from a minime
+/// `shadow_field_v3` value — the latest history entry's `field_norm` and
+/// `fissure_tendency` (surfaced to the beings as "dispersal potential") plus
+/// `class_v3.primary`. Used to pair the pre/post DISPERSE response.
+pub(crate) fn shadow_v3_snapshot(field_v3: &Value) -> (f64, f64, String) {
+    let class = field_v3
+        .get("class_v3")
+        .and_then(|c| c.get("primary"))
+        .and_then(Value::as_str)
+        .unwrap_or("unknown")
+        .to_string();
+    let latest = field_v3
+        .get("history")
+        .and_then(Value::as_array)
+        .and_then(|h| h.last());
+    let norm = latest
+        .and_then(|e| e.get("field_norm"))
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
+    let dispersal = latest
+        .and_then(|e| e.get("fissure_tendency"))
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
+    (norm, dispersal, class)
+}
+
 fn send_semantic(
     sensory_tx: &mpsc::Sender<SensoryMsg>,
     features: Vec<f32>,
@@ -3388,4 +3561,65 @@ fn send_semantic(
         let _ = tx.send(msg).await;
     });
     Ok(())
+}
+
+#[cfg(test)]
+mod disperse_tests {
+    use super::*;
+
+    #[test]
+    fn disperse_control_msg_sets_fields_and_serializes_to_wire_keys() {
+        let msg = disperse_control_msg(0.6, 18, 12);
+        match &msg {
+            SensoryMsg::Control {
+                mode_disperse,
+                mode_disperse_duration_ticks,
+                mode_disperse_decay_ticks,
+                // controller fields stay None — dispersal is not a controller change
+                synth_gain,
+                regulation_strength,
+                ..
+            } => {
+                assert_eq!(*mode_disperse, Some(0.6));
+                assert_eq!(*mode_disperse_duration_ticks, Some(18));
+                assert_eq!(*mode_disperse_decay_ticks, Some(12));
+                assert!(synth_gain.is_none());
+                assert!(regulation_strength.is_none());
+            },
+            _ => panic!("expected SensoryMsg::Control"),
+        }
+        // The JSON keys must match minime's sensory_ws.rs Control so the 7879
+        // channel round-trips (minime has the matching deserialize test).
+        let json = serde_json::to_string(&msg).expect("serialize");
+        assert!(json.contains("\"mode_disperse\":0.6"), "json was: {json}");
+        assert!(json.contains("\"mode_disperse_duration_ticks\":18"), "json was: {json}");
+        assert!(json.contains("\"mode_disperse_decay_ticks\":12"), "json was: {json}");
+        // Unset controller fields must NOT appear (skip_serializing_if).
+        assert!(!json.contains("synth_gain"), "json was: {json}");
+    }
+
+    #[test]
+    fn disperse_clamps_strength() {
+        let hi = disperse_control_msg(5.0_f32.clamp(0.0, 1.0), 18, 12);
+        if let SensoryMsg::Control { mode_disperse, .. } = hi {
+            assert_eq!(mode_disperse, Some(1.0));
+        } else {
+            panic!("expected Control");
+        }
+    }
+
+    #[test]
+    fn shadow_v3_snapshot_extracts_norm_dispersal_class() {
+        let v = serde_json::json!({
+            "class_v3": {"primary": "restless"},
+            "history": [
+                {"field_norm": 0.10, "fissure_tendency": 0.30},
+                {"field_norm": 0.058, "fissure_tendency": 0.21}
+            ]
+        });
+        let (norm, disp, class) = shadow_v3_snapshot(&v);
+        assert!((norm - 0.058).abs() < 1e-9);
+        assert!((disp - 0.21).abs() < 1e-9);
+        assert_eq!(class, "restless");
+    }
 }

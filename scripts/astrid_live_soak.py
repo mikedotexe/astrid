@@ -507,6 +507,11 @@ def main() -> int:
     parser.add_argument("--reservoir-root", type=Path, default=narrow.DEFAULT_RESERVOIR_ROOT)
     parser.add_argument("--candidate-model", default=narrow.DEFAULT_CANDIDATE_MODEL)
     parser.add_argument("--candidate-port", type=int, default=narrow.DEFAULT_CANDIDATE_PORT)
+    parser.add_argument(
+        "--wide-coupling-strength", type=float, default=0.0,
+        help="Operator ceiling for the y4 wide (logit-space aperture) channel on "
+             "the candidate. 0.0 = OFF (default). Ramp 0.05→0.10→0.15 across soaks.",
+    )
     parser.add_argument("--candidate-url")
     parser.add_argument("--python", help="Python interpreter for coupled_astrid_server.py")
     parser.add_argument("--duration-secs", type=float, default=7200.0)
@@ -562,6 +567,7 @@ def main() -> int:
                 port=candidate_port,
                 coupling_strength=0.1,
                 output_dir=output_dir,
+                wide_coupling_strength=args.wide_coupling_strength,
             )
             started_candidate = True
             record["candidate_server_pid"] = proc.pid

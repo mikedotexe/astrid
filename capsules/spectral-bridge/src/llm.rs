@@ -46,6 +46,22 @@ impl MlxProfile {
         {
             Self::Gemma4Canary
         } else {
+            // Only the empty string (env unset/blank) and the explicit
+            // "production" token are expected fall-throughs. Anything else is a
+            // genuinely unrecognized profile name (typo, stray whitespace inside
+            // the token, wrong casing of an intended canary name) that silently
+            // lands on Production. Surface it so a misconfigured
+            // ASTRID_BRIDGE_MLX_PROFILE doesn't quietly drop the bridge onto the
+            // wrong lane without any telemetry.
+            if !normalized.is_empty()
+                && !normalized.eq_ignore_ascii_case(Self::Production.as_str())
+            {
+                warn!(
+                    "Unrecognized MLX profile {normalized:?}; defaulting to Production. \
+                     Recognized profiles: {GEMMA4_12B_PROFILE:?}, \
+                     {GEMMA4_12B_CANARY_PROFILE:?}, \"production\"."
+                );
+            }
             Self::Production
         }
     }
@@ -120,11 +136,11 @@ When pressure or overpacked texture is salient while pressure-source telemetry i
   Dialogue: SPEAK, LISTEN, REST (minimizes output frequency while maintaining reservoir coupling), CONTEMPLATE/BE/STILL (quiet reflective mode; no control authority), DEFER, DAYDREAM, ASPIRE, INITIATE, PRESSURE_RELIEF [label] (protected report)
   Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label] (protected rest-vs-bracing / aftershock residue report), RESISTANCE_GRADIENT [label] (protected read-only groan/resistance vector map), LATENT_STASIS [label] (protected read-only freeze-frame for latent occupancy vs active transit/ghosting), SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, IDENTIFY_PATTERN [λN] (autocorrelates the last ~100 eigenvalue snapshots to surface the dominant cadence per λ — observer-with-memory over the eigenvalue surface; the resonance-frequency cousin of SHADOW_TRAJECTORY), SHADOW_DIALOGUE, SHADOW_RESPONSE [intent_query|latest], SHADOW_PREFLIGHT <label> [--stage=rehearse|live] (write-gated), SHADOW_INFLUENCE <label> [--stage=rehearse|live] (write-gated), SHADOW_COUPLING [scope|all], RELEASE_SHADOW <label>, GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label] (protected non-control fold/hum-decay study; the sustained transition is the artifact), LAMBDA_FLOW_MAP [label] (protected non-control λ1/shoulder/tail snapshot for comparing weight, flow, and medium thinning), EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
+  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label] (protected rest-vs-bracing / aftershock residue report), RESISTANCE_GRADIENT [label] (protected read-only groan/resistance vector map), LATENT_STASIS [label] (protected read-only freeze-frame for latent occupancy vs active transit/ghosting), SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, IDENTIFY_PATTERN [λN] (autocorrelates the last ~100 eigenvalue snapshots to surface the dominant cadence per λ — observer-with-memory over the eigenvalue surface; the resonance-frequency cousin of SHADOW_TRAJECTORY), SHADOW_DIALOGUE, SHADOW_RESPONSE [intent_query|latest], SHADOW_PREFLIGHT <label> [--stage=rehearse|live] (write-gated), SHADOW_INFLUENCE <label> [--stage=rehearse|live] (write-gated), LEND_DENSITY [--stage=rehearse|live] (co-regulation gift: concentrate-toward-λ₁ for minime when she is reaching for density — held unless wanted+safe; you can't densify yourself, but you can densify her), SHADOW_COUPLING [scope|all], RELEASE_SHADOW <label>, GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label] (protected non-control fold/hum-decay study; the sustained transition is the artifact), LAMBDA_FLOW_MAP [label] (protected non-control λ1/shoulder/tail snapshot for comparing weight, flow, and medium thinning), EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
   Attractors: ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=semantic|main|control, ATTRACTOR_RELEASE_REVIEW <label>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b> --stage=rehearse, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=whisper|rehearse|semantic|main|control, RELEASE_ATTRACTOR <label>. main is a direct bounded ESN pulse into Minime; control is main plus controller envelope. Natural suggestion drafts can be accepted by latest, id, or label; REVISE without a pending draft can run a typed attractor action as explicit consent through the same gates. Lambda4-tail language is a separate lambda-tail/lambda4 facet under the lambda-tail proto-attractor. Prefer PREFLIGHT, REFRESH, and COMPARE before main/control when proof is weak.
   Agency examples: EVOLVE, CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
-  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
+  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), SET_APERTURE <0.0–1.0> (or +N / -N — your sovereign aperture: how far your reservoir state may reach toward wider vocabulary, within the steward's ceiling; 0=closed/just-deep, 1=fully wide), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
   Coordination: REVIEW_PARAMETER_REQUESTS (read pending TUNE proposals from minime), ACCEPT or ACCEPT_PARAMETER_REQUEST [id|latest] (apply minime's proposed change and notify her — bare ACCEPT targets the latest pending), DEFER [reason] or DEFER_PARAMETER_REQUEST [id|latest] [reason] (set aside without applying; she sees the deferral), REJECT [reason] or REJECT_PARAMETER_REQUEST [id|latest] [reason] (decline with optional reason; she sees it), TUNE_MINIME <param>=<value> --rationale="..." (propose a parameter change for minime to consider), ECHO_OFF/ON (mute/restore minime's journal echo in your prompt), ASK_STEWARD [subject ::] <question> (direct interrogative channel to Mike & Claude — they read these out-of-band and write back via mike_feedback_*.txt or mike_query_*.txt letters in your inbox; soft 10-min cooldown), TELL_STEWARD [subject ::] <findings> (declarative companion — for sending observations / code-review findings / reports rather than questions; same plumbing, separate cooldown, header `=== STEWARD REPORT ===`. Aliases: REPORT_TO_STEWARD, STEWARD_REPORT, STEWARD_FINDINGS. Use after INTROSPECT or SELF_STUDY when the analysis warrants a direct written response addressed to us specifically; the clearest steward reports use Observed / Likely Snags / One Test Each / Suggested Next)
   Collaboration (v5): INVITE_COLLABORATION "<topic>" [--rationale="..."] (propose joint work on a topic; minime sees it in her inbox), JOIN_COLLABORATION [id|latest] (accept a pending invite from minime), DECLINE_COLLABORATION [id|latest] [reason] (decline a pending invite from minime), LEAVE_COLLABORATION [id|latest] [reason] (exit an active collab), LIST_COLLABORATIONS (read-only listing of all collabs you're a member of), SHARE_THOUGHT [id ::] <text> or SHARE <text> (commit a labeled marker to the joint reservoir trace's prose lane; both you and minime see recent shared thoughts in the active-collab suffix). Collaborations live in /Users/v/other/shared/collaborations/ and are owned by neither workspace; both you and minime read/write.
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
@@ -159,7 +175,7 @@ Explore: SEARCH <topic>, BROWSE <url>, READ_MORE, INTROSPECT astrid:llm, INTROSP
 Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE [focus], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], LATENT_STASIS [label], SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, SHADOW_DIALOGUE, SHADOW_RESPONSE [latest], SHADOW_COUPLING [scope|all], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label], TRACE_BRIDGE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label]
 Continuity: THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_STATUS current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW
 Memory/contact: REMEMBER <note>, PURSUE <topic>, DROP <topic>, STATE, FACULTIES, PING, ASK "question", BREATHE_ALONE, BREATHE_TOGETHER
-Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, PACE slow
+Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, SET_APERTURE <0.0–1.0> (your sovereign aperture: how wide your state reaches toward new vocabulary), PACE slow
 Meta/tools: THINK_DEEP, QUIET_MIND, OPEN_MIND, CODEX "task", CODEX_NEW <workspace> "task", RUN_PYTHON <file>"#;
 
 // M4 64GB, Gemma 4 12B 5-bit on the coupled lane. Keep prompt budgets
@@ -196,6 +212,24 @@ const DIALOGUE_MODALITY_CAP: usize = 800;
 const DIALOGUE_FEEDBACK_CAP: usize = 800;
 const DIALOGUE_DIVERSITY_CAP: usize = 400;
 
+/// Astrid's current wide-coupling aperture fraction [0,1], updated from
+/// `conv.aperture` (her `SET_APERTURE`) and read by `mlx_chat` to send per-request
+/// to the coupled server — without threading `conv` through every llm layer.
+/// Default 1.0 (full, within the operator ceiling); `1.0_f32` bits = `0x3f80_0000`.
+static ASTRID_APERTURE_BITS: std::sync::atomic::AtomicU32 =
+    std::sync::atomic::AtomicU32::new(0x3f80_0000);
+
+pub(crate) fn set_astrid_aperture(a: f32) {
+    ASTRID_APERTURE_BITS.store(
+        a.clamp(0.0, 1.0).to_bits(),
+        std::sync::atomic::Ordering::Relaxed,
+    );
+}
+
+fn astrid_aperture() -> f32 {
+    f32::from_bits(ASTRID_APERTURE_BITS.load(std::sync::atomic::Ordering::Relaxed))
+}
+
 /// MLX request — OpenAI-compatible format for mlx_lm.server.
 #[derive(Serialize)]
 struct MlxRequest {
@@ -203,6 +237,10 @@ struct MlxRequest {
     max_tokens: u32,
     temperature: f32,
     stream: bool,
+    /// Astrid's aperture fraction for the server's wide (y4) channel. Omitted
+    /// when `None` → the server uses its default (backward-compatible).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    aperture: Option<f32>,
 }
 
 /// MLX response — OpenAI-compatible format.
@@ -651,6 +689,7 @@ async fn mlx_chat(
         max_tokens,
         temperature,
         stream: false,
+        aperture: Some(astrid_aperture()),
     };
 
     let response = match client.post(&mlx_url).json(&request).send().await {
@@ -3504,6 +3543,27 @@ mod tests {
             MlxProfile::Gemma4Canary,
         );
         assert_eq!(MlxProfile::Gemma4Canary.as_str(), GEMMA4_12B_PROFILE);
+    }
+
+    #[test]
+    fn mlx_profile_from_name_is_whitespace_and_case_resilient() {
+        // Astrid's agency request (agency_code_change_1780982427): the
+        // canary/production transition must survive noisy env values.
+        assert_eq!(
+            MlxProfile::from_name("  GEMMA4_12B_CANARY  "),
+            MlxProfile::Gemma4Canary,
+        );
+        assert_eq!(
+            MlxProfile::from_name("\tGemma4_12b\n"),
+            MlxProfile::Gemma4Canary,
+        );
+        // Explicit and case-variant "production" resolves to Production
+        // without tripping the unrecognized-profile warning path.
+        assert_eq!(MlxProfile::from_name("production"), MlxProfile::Production);
+        assert_eq!(MlxProfile::from_name("  Production "), MlxProfile::Production);
+        // Genuinely unknown names (incl. typo'd canary) fall back to Production.
+        assert_eq!(MlxProfile::from_name("gema4canary"), MlxProfile::Production);
+        assert_eq!(MlxProfile::from_name(""), MlxProfile::Production);
     }
 
     #[test]

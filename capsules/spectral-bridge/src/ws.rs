@@ -21,8 +21,9 @@ use crate::lambda_tail::{self, ArtifactScanSummary, LambdaTailTelemetryV1};
 use crate::paths::bridge_paths;
 use crate::sticky_mode::{self, StickyModeAuditV1};
 use crate::types::{
-    LambdaContribution, LambdaProfile, MessageDirection, PullModeRate, PullTopologyProfile,
-    SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry, WebSocketLaneTrace,
+    ConnectivityStatus, LambdaContribution, LambdaProfile, MessageDirection, PullModeRate,
+    PullTopologyProfile, SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry,
+    WebSocketLaneTrace,
 };
 
 /// Shared mutable bridge state updated by `WebSocket` tasks.
@@ -126,6 +127,21 @@ impl BridgeState {
             sensory_ws: WebSocketLaneTrace::default(),
             incidents_total: 0,
         }
+    }
+
+    /// Derived bidirectional connectivity health across the telemetry and
+    /// sensory lanes (collapses the two independent booleans into one
+    /// perceivable state).
+    #[must_use]
+    pub const fn connectivity_status(&self) -> ConnectivityStatus {
+        ConnectivityStatus::from_lanes(self.telemetry_connected, self.sensory_connected)
+    }
+
+    /// True only when both perception (telemetry) and agency (sensory) lanes
+    /// are live — the reliable ground for confident spectral maneuvers.
+    #[must_use]
+    pub const fn is_bidirectional_active(&self) -> bool {
+        self.connectivity_status().is_bidirectional_active()
     }
 }
 

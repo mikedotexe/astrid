@@ -341,6 +341,13 @@ async fn bidirectional_bridge_with_safety_protocol() {
         pi_kp: None,
         pi_ki: None,
         pi_max_step: None,
+        pi_integrator_leak: None,
+        esn_leak_override: None,
+        esn_leak_override_ticks: None,
+        esn_leak_authority_request_id: None,
+        mode_disperse: None,
+        mode_disperse_duration_ticks: None,
+        mode_disperse_decay_ticks: None,
     };
     bridge_sensory_tx.send(control_msg).await.unwrap();
 

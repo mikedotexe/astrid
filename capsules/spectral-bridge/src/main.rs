@@ -69,6 +69,13 @@ struct Cli {
     #[arg(long, default_value_t = 21_600)]
     maintenance_interval_secs: u64,
 
+    /// Short retention in seconds for the high-cadence ephemeral telemetry
+    /// topics (default: 48 hours). These per-tick rows dominate DB growth and are
+    /// purged (not archived) on this clock instead of the 14-day dialogue
+    /// retention.
+    #[arg(long, default_value_t = message_archive::DEFAULT_TELEMETRY_RETENTION_SECS)]
+    telemetry_retention_secs: u64,
+
     /// Enable autonomous feedback loop (Astrid responds to minime's spectral
     /// state without manual stimulus).
     #[arg(long)]
@@ -155,6 +162,9 @@ async fn main() -> Result<()> {
         PathBuf::from(&cli.db_path),
     );
     maintenance_config.vacuum_after_maintenance = cli.vacuum_after_maintenance;
+    maintenance_config.telemetry_retention_secs = cli.telemetry_retention_secs;
+    // The periodic maintenance loop reclaims disk after the telemetry purge.
+    maintenance_config.auto_vacuum_when_recommended = true;
 
     if cli.maintenance_dry_run {
         maintenance_config.dry_run = true;

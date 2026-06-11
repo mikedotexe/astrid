@@ -750,6 +750,29 @@ impl BridgeDb {
         Ok(deleted)
     }
 
+    /// Delete rows for the given `topics` older than `cutoff_ts` (a unix
+    /// timestamp). Used to give the high-cadence, ephemeral telemetry topics a
+    /// much shorter retention than the global dialogue retention — they are
+    /// regenerated every tick and only read back over recent windows, so they
+    /// are not worth archiving. Returns the number of rows deleted.
+    pub fn purge_topics_older_than(&self, topics: &[&str], cutoff_ts: f64) -> Result<usize> {
+        if topics.is_empty() {
+            return Ok(0);
+        }
+        let placeholders = vec!["?"; topics.len()].join(",");
+        let sql = format!(
+            "DELETE FROM bridge_messages WHERE timestamp < ?1 AND topic IN ({placeholders})"
+        );
+        let conn = self.lock();
+        let mut params: Vec<&dyn rusqlite::ToSql> = Vec::with_capacity(topics.len().saturating_add(1));
+        params.push(&cutoff_ts);
+        for topic in topics {
+            params.push(topic);
+        }
+        let deleted = conn.execute(&sql, params.as_slice())?;
+        Ok(deleted)
+    }
+
     /// Run `SQLite` VACUUM to reclaim disk space after purges.
     pub fn vacuum(&self) -> Result<()> {
         self.lock().execute_batch("VACUUM")?;

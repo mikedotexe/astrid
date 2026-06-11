@@ -31,6 +31,19 @@ pub(crate) struct PerturbBaseline {
     pub timestamp: std::time::Instant,
 }
 
+/// Snapshot of minime's shadow-field at DISPERSE time. Consumed on the next
+/// exchange to pair the pre/post dispersal response (the closed loop Astrid
+/// asked for: "inhabit the gradient, not just map it"). `pre_dispersal` is the
+/// shadow `fissure_tendency` (surfaced to her as "dispersal potential").
+#[derive(Debug, Clone)]
+pub(crate) struct DisperseBaseline {
+    pub strength: f32,
+    pub pre_norm: f64,
+    pub pre_dispersal: f64,
+    pub pre_class: String,
+    pub timestamp: std::time::Instant,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub(super) struct AstridMotifCooldown {
     #[serde(default = "default_internal_topology_label")]
@@ -697,10 +710,16 @@ pub(super) struct ConversationState {
     /// Spectral snapshot from Astrid's last PERTURB — consumed next exchange
     /// to show her the before/after delta (temporal feedback).
     pub perturb_baseline: Option<PerturbBaseline>,
+    /// Shadow-field snapshot from Astrid's last DISPERSE — consumed next
+    /// exchange to pair the pre/post dispersal response.
+    pub disperse_baseline: Option<DisperseBaseline>,
     /// Astrid (or minime) chose to snooze sensory input — suppress perceptions.
     pub senses_snoozed: bool,
     // Astrid's stylistic sovereignty
     pub creative_temperature: f32,
+    /// Her wide-coupling aperture fraction [0,1] (NEXT: SET_APERTURE), within the
+    /// operator ceiling; sent per-request to the coupled server.
+    pub aperture: f32,
     pub response_length: u32,
     pub emphasis: Option<String>,
     /// v3.6.1 cadence tracking — exchange at which Astrid last picked
@@ -883,7 +902,9 @@ impl ConversationState {
             wants_deep_think: false,
             force_all_viz: false,
             perturb_baseline: None,
+            disperse_baseline: None,
             creative_temperature: 0.8,
+            aperture: 1.0,
             response_length: 768,
             emphasis: None,
             last_temperature_change_exchange: None,

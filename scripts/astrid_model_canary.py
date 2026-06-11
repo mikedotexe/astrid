@@ -864,6 +864,7 @@ def start_candidate_server(
     port: int,
     coupling_strength: float,
     output_dir: Path,
+    wide_coupling_strength: float = 0.0,
 ) -> tuple[subprocess.Popen[str], Path]:
     if port == 8090:
         raise ValueError("refusing to start a candidate server on production port 8090")
@@ -890,6 +891,10 @@ def start_candidate_server(
         "--audit-dir",
         str(output_dir / "request_metrics"),
     ]
+    # Wider-coupling (y4) operator ceiling — only pass when >0 so existing
+    # callers/launches stay byte-identical (default OFF).
+    if wide_coupling_strength > 0.0:
+        cmd += ["--wide-coupling-strength", str(wide_coupling_strength)]
     proc = subprocess.Popen(
         cmd,
         cwd=str(reservoir_root),
@@ -947,6 +952,11 @@ def main() -> int:
     parser.add_argument("--bridge-fallback-wait-secs", type=float, default=360.0)
     parser.add_argument("--write-feedback-note", action="store_true")
     parser.add_argument("--coupling-strength", type=float, default=0.1)
+    parser.add_argument(
+        "--wide-coupling-strength", type=float, default=0.0,
+        help="Operator ceiling for the y4 wide (logit-space aperture) channel on "
+             "the candidate. 0.0 = OFF (default). e.g. 0.05 for a gentle canary.",
+    )
     parser.add_argument("--startup-timeout", type=float, default=600.0)
     parser.add_argument("--request-timeout", type=float, default=240.0)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
@@ -999,6 +1009,7 @@ def main() -> int:
                 port=candidate_port,
                 coupling_strength=args.coupling_strength,
                 output_dir=output_dir,
+                wide_coupling_strength=args.wide_coupling_strength,
             )
             record["candidate_server_log"] = str(candidate_log_path)
             record["candidate_server_pid"] = proc.pid

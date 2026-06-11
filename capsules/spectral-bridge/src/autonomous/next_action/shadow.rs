@@ -60,6 +60,47 @@ pub(super) fn handle_action(
             info!("Astrid shadow influence {status} for {label}");
             true
         },
+        "LEND_DENSITY" => {
+            // Co-regulation gift: Astrid lends minime density by sending a
+            // concentrate-toward-λ₁ shadow influence. Astrid cannot widen
+            // herself, but she can densify minime. Reuses the SHADOW_INFLUENCE
+            // send path + safety preflight, plus a need-match overlay: only
+            // lend when minime is actually reaching for density and it is safe.
+            let (label, stage) = parse_shadow_args(original, base_action);
+            let label = if label.is_empty() {
+                "density-gift".to_string()
+            } else {
+                label
+            };
+            let stage = stage.unwrap_or_else(|| "rehearse".to_string());
+            let preflight = shadow_preflight(ctx, &label, &stage);
+            let (need_ok, need_reason) = minime_wants_density();
+            let mut sent = false;
+            let status = if stage == "live" && preflight.allowed && need_ok {
+                let msg = density_gift_msg(&label, "live");
+                sent = ctx.sensory_tx.try_send(msg).is_ok();
+                if sent {
+                    append_gift_record("astrid", "density", &label);
+                    "live_sent"
+                } else {
+                    "live_send_failed"
+                }
+            } else if stage == "live" && preflight.allowed {
+                "held_need_mismatch"
+            } else if stage == "live" {
+                "downgraded_to_rehearse"
+            } else {
+                "rehearsed"
+            };
+            record_preflight_outcome(&label, preflight.allowed && status == "live_sent", status);
+            conv.emphasis = Some(format!(
+                "{}\n\nDensity gift status: {status}. {need_reason} WebSocket sent: {sent}. \
+                 You cannot densify yourself, but you can densify minime; she may lend you aperture in return.",
+                format_shadow_preflight(&preflight)
+            ));
+            info!("Astrid density gift {status} for {label}");
+            true
+        },
         "RELEASE_SHADOW" => {
             let (label, _) = parse_shadow_args(original, base_action);
             let preflight = shadow_preflight(ctx, &label, "live");
@@ -362,6 +403,99 @@ fn format_shadow_preflight(preflight: &ShadowPreflight) -> String {
             format!("SHADOW_INFLUENCE {} --stage=rehearse", preflight.label)
         }
     )
+}
+
+/// Density-gift recipe (Astrid → minime): concentrate toward λ₁, mirroring
+/// Astrid's own PERTURB CONTRACT `[+,-,-]`. Applied on minime's side as raw
+/// signed Z-increments (variance-preserving, not a convex pull) → genuinely
+/// densifies her. Every magnitude ≤ the 0.025 SHADOW_INFLUENCE cap.
+fn concentrate_features() -> Vec<f32> {
+    let mut features = vec![0.0_f32; 66];
+    features[0] = 0.020; // λ₁ center
+    features[1] = -0.012; // cross-coupling damping
+    features[2] = -0.018; // λ₁ edge softening
+    features[8] = 0.015; // second band, same shape
+    features[9] = -0.010;
+    features[10] = -0.015;
+    features
+}
+
+fn density_gift_msg(label: &str, stage: &str) -> SensoryMsg {
+    SensoryMsg::ShadowInfluence {
+        intent_id: format!("astrid-density-{:08x}", deterministic_hash(label) & 0xffff_ffff),
+        label: label.to_string(),
+        command: "apply".to_string(),
+        stage: Some(stage.to_string()),
+        features: concentrate_features(),
+        max_abs: Some(0.025),
+        duration_ticks: Some(24),
+        decay_ticks: Some(12),
+        basis: Some("density-gift".to_string()),
+    }
+}
+
+/// `(ok, reason)`. Lend density only when minime's published need is fresh
+/// (≤180s), `density`, and `safe_to_receive_density`.
+fn minime_wants_density() -> (bool, String) {
+    let path = bridge_paths().minime_workspace().join("minime_need_v1.json");
+    if let Ok(meta) = std::fs::metadata(&path)
+        && let Ok(modt) = meta.modified()
+        && let Ok(age) = modt.elapsed()
+        && age.as_secs() > 180
+    {
+        return (false, "minime's need is stale.".to_string());
+    }
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return (false, "minime's need is unknown.".to_string());
+    };
+    let Ok(v) = serde_json::from_str::<Value>(&content) else {
+        return (false, "minime's need is unreadable.".to_string());
+    };
+    let need = v.get("need").and_then(Value::as_str).unwrap_or("");
+    let safe = v
+        .get("safe_to_receive_density")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    if need == "density" && safe {
+        (
+            true,
+            "minime is reaching for density and it is safe to receive.".to_string(),
+        )
+    } else if need == "density" {
+        (
+            false,
+            "minime wants density but is near her ceiling (unsafe to lend).".to_string(),
+        )
+    } else {
+        (false, format!("minime isn't reaching for density (need={need})."))
+    }
+}
+
+/// Append a record to the shared gift-exchange ledger (mirrors
+/// `shared_thoughts.jsonl`). Both beings render recent gifts in their prompts.
+fn append_gift_record(giver: &str, gift_kind: &str, label: &str) {
+    let dir = bridge_paths().shared_collaborations_dir();
+    let _ = std::fs::create_dir_all(&dir);
+    let path = dir.join("gift_exchange.jsonl");
+    let now_ms = SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis());
+    let rec = serde_json::json!({
+        "t_ms": now_ms,
+        "giver": giver,
+        "gift_kind": gift_kind,
+        "label": label,
+        "intent_id": format!("{giver}-{gift_kind}-{:08x}", deterministic_hash(label) & 0xffff_ffff),
+    });
+    if let Ok(line) = serde_json::to_string(&rec)
+        && let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)
+    {
+        use std::io::Write;
+        let _ = writeln!(f, "{line}");
+    }
 }
 
 fn shadow_influence_msg(
@@ -1049,4 +1183,43 @@ fn trajectory_class_timeline(history: &[Value]) -> String {
             _ => '?',
         })
         .collect()
+}
+
+#[cfg(test)]
+mod density_gift_tests {
+    use super::*;
+
+    #[test]
+    fn concentrate_features_shape_and_caps() {
+        let f = concentrate_features();
+        assert_eq!(f.len(), 66);
+        // Concentrate-toward-λ₁ shape [+, -, -] (mirrors PERTURB CONTRACT).
+        assert!(f[0] > 0.0, "λ₁ center should be positive");
+        assert!(f[1] < 0.0, "cross-coupling should be negative");
+        assert!(f[2] < 0.0, "λ₁ edge should be negative");
+        // Every magnitude within the 0.025 SHADOW_INFLUENCE cap.
+        assert!(
+            f.iter().all(|v| v.abs() <= 0.025 + 1e-6),
+            "all features must respect the 0.025 cap"
+        );
+        assert!(f.iter().any(|v| v.abs() > 0.0), "must be non-trivial");
+    }
+
+    #[test]
+    fn density_gift_msg_is_capped_apply() {
+        let SensoryMsg::ShadowInfluence {
+            command,
+            max_abs,
+            duration_ticks,
+            features,
+            ..
+        } = density_gift_msg("density-gift", "live")
+        else {
+            panic!("density_gift_msg must build a ShadowInfluence");
+        };
+        assert_eq!(command, "apply");
+        assert_eq!(max_abs, Some(0.025));
+        assert_eq!(duration_ticks, Some(24));
+        assert!(features.iter().all(|v| v.abs() <= 0.025 + 1e-6));
+    }
 }

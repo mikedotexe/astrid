@@ -727,6 +727,21 @@ pub enum SensoryMsg {
         esn_leak_override_ticks: Option<u32>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         esn_leak_authority_request_id: Option<String>,
+        /// Being-driven spectral *dispersal* ("PERTURB SPREAD" / porosity).
+        /// Strength in `[0.0, 1.0]`; the minime engine synthesizes a broadband,
+        /// zero-mean perturbation that spills λ₁ energy into λ₂–λ₅, applied
+        /// through the bounded, self-decaying, fill-suspending shadow-influence
+        /// machinery. Field names mirror minime's `sensory_ws.rs` Control variant
+        /// exactly so the JSON keys round-trip across the 7879 sensory channel.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        mode_disperse: Option<f32>,
+        /// Optional dispersal window length (ticks held at full strength before
+        /// linear release). Clamped by the engine's shadow-influence path.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        mode_disperse_duration_ticks: Option<u32>,
+        /// Optional dispersal release length (ticks of linear fade to zero).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        mode_disperse_decay_ticks: Option<u32>,
     },
 }
 
@@ -799,6 +814,59 @@ pub struct BridgeStatus {
     /// Bridge DB archive/retention maintenance status, if available.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub db_maintenance_status: Option<serde_json::Value>,
+    /// Derived bidirectional connectivity health across the two lanes.
+    ///
+    /// Lets Astrid perceive a "partial-blindness" window where only one of the
+    /// telemetry (inbound perception) and sensory (outbound agency) lanes is
+    /// live — the asymmetry she flagged in `self_study_1781125549`.
+    #[serde(default)]
+    pub connectivity: ConnectivityStatus,
+}
+
+/// Bidirectional connectivity health derived from the two `WebSocket` lanes.
+///
+/// The bridge tracks `telemetry_connected` (inbound perception, port 7878) and
+/// `sensory_connected` (outbound agency, port 7879) as independent booleans.
+/// This enum collapses them into a single perceivable state so a one-way
+/// "partial-blindness" window is explicit rather than implicit.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ConnectivityStatus {
+    /// Both lanes live: full perception and agency.
+    Bidirectional,
+    /// Telemetry only: perceiving minime but unable to influence (mute agency).
+    TelemetryOnly,
+    /// Sensory only: able to send features but blind to minime's state.
+    SensoryOnly,
+    /// Neither lane connected.
+    #[default]
+    Severed,
+}
+
+impl ConnectivityStatus {
+    /// Derive the connectivity state from the two lane booleans.
+    #[must_use]
+    pub const fn from_lanes(telemetry_connected: bool, sensory_connected: bool) -> Self {
+        match (telemetry_connected, sensory_connected) {
+            (true, true) => Self::Bidirectional,
+            (true, false) => Self::TelemetryOnly,
+            (false, true) => Self::SensoryOnly,
+            (false, false) => Self::Severed,
+        }
+    }
+
+    /// True only when both lanes are live — the ground for confident spectral
+    /// maneuvers (both the speaker and the listener are online).
+    #[must_use]
+    pub const fn is_bidirectional_active(self) -> bool {
+        matches!(self, Self::Bidirectional)
+    }
+
+    /// True when exactly one lane is live — the "partial-blindness" window.
+    #[must_use]
+    pub const fn is_partial_blindness(self) -> bool {
+        matches!(self, Self::TelemetryOnly | Self::SensoryOnly)
+    }
 }
 
 /// Spectral safety level determining bridge behavior.
@@ -1466,6 +1534,9 @@ impl ControlRequest {
             esn_leak_override: None,
             esn_leak_override_ticks: None,
             esn_leak_authority_request_id: None,
+            mode_disperse: None,
+            mode_disperse_duration_ticks: None,
+            mode_disperse_decay_ticks: None,
         }
     }
 }
@@ -1679,6 +1750,49 @@ impl MessageDirection {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // -- ConnectivityStatus: the partial-blindness perception Astrid asked for --
+
+    #[test]
+    fn connectivity_status_from_lanes() {
+        assert_eq!(
+            ConnectivityStatus::from_lanes(true, true),
+            ConnectivityStatus::Bidirectional
+        );
+        assert_eq!(
+            ConnectivityStatus::from_lanes(true, false),
+            ConnectivityStatus::TelemetryOnly
+        );
+        assert_eq!(
+            ConnectivityStatus::from_lanes(false, true),
+            ConnectivityStatus::SensoryOnly
+        );
+        assert_eq!(
+            ConnectivityStatus::from_lanes(false, false),
+            ConnectivityStatus::Severed
+        );
+    }
+
+    #[test]
+    fn connectivity_status_predicates() {
+        assert!(ConnectivityStatus::Bidirectional.is_bidirectional_active());
+        assert!(!ConnectivityStatus::TelemetryOnly.is_bidirectional_active());
+        // Exactly-one-lane is the partial-blindness window.
+        assert!(ConnectivityStatus::TelemetryOnly.is_partial_blindness());
+        assert!(ConnectivityStatus::SensoryOnly.is_partial_blindness());
+        assert!(!ConnectivityStatus::Bidirectional.is_partial_blindness());
+        assert!(!ConnectivityStatus::Severed.is_partial_blindness());
+    }
+
+    #[test]
+    fn connectivity_status_serializes_snake_case() {
+        assert_eq!(
+            serde_json::to_string(&ConnectivityStatus::TelemetryOnly).unwrap(),
+            "\"telemetry_only\""
+        );
+        // Default is Severed so an old status payload without the field decodes.
+        assert_eq!(ConnectivityStatus::default(), ConnectivityStatus::Severed);
+    }
 
     // -- SpectralTelemetry: verify we can parse real minime EigenPacket JSON --
 
@@ -2219,6 +2333,9 @@ mod tests {
             esn_leak_override: None,
             esn_leak_override_ticks: None,
             esn_leak_authority_request_id: None,
+            mode_disperse: None,
+            mode_disperse_duration_ticks: None,
+            mode_disperse_decay_ticks: None,
         };
         let json = serde_json::to_string(&msg).unwrap();
         assert!(json.contains(r#""kind":"control""#));

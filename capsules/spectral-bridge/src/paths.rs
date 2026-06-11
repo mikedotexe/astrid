@@ -208,6 +208,14 @@ impl BridgePaths {
         self.bridge_workspace.join("outbox")
     }
 
+    /// Single-slot persistence for an unanswered steward question, so a
+    /// `mike_query_*` letter stays visible in the prompt until answered
+    /// (the un-muffle invariant) instead of scrolling away after one read.
+    #[must_use]
+    pub fn open_steward_query_path(&self) -> PathBuf {
+        self.bridge_workspace.join("open_steward_query.json")
+    }
+
     #[must_use]
     pub fn state_path(&self) -> PathBuf {
         self.bridge_workspace.join("state.json")

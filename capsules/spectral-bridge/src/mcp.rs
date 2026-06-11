@@ -1167,6 +1167,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
             .and_then(|telemetry| telemetry.inhabitable_fluctuation_v1.clone()),
         source_status: crate::autonomous::read_astrid_source_status(),
         db_maintenance_status: crate::message_archive::read_runtime_status(),
+        connectivity: s.connectivity_status(),
     };
     Ok(json!({
         "content": [{
@@ -3160,6 +3161,7 @@ async fn handle_resource_read(
                     .and_then(|telemetry| telemetry.inhabitable_fluctuation_v1.clone()),
                 source_status: crate::autonomous::read_astrid_source_status(),
                 db_maintenance_status: crate::message_archive::read_runtime_status(),
+                connectivity: s.connectivity_status(),
             };
             Ok(json!({
                 "contents": [{

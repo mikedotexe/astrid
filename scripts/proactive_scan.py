@@ -128,6 +128,80 @@ FEEDBACK_SURFACES = [
         "consumer": "steward glance (chronic-overflow signal)",
     },
 ]
+
+# Load-bearing cross-being / cross-repo channels. A rename or move in ONE being's
+# repo can silently sever a path hardcoded in the OTHER's — the
+# consciousness-bridge→spectral-bridge capsule rename left 18 dead refs in minime's
+# code, walling her off from Astrid's inbox + source (read, wrongly, as her going
+# quiet). Each entry MUST resolve for that channel to carry. Curated (not auto-
+# derived) so the probe never cries wolf on created-on-demand leaves; a new channel
+# is one entry.
+CROSS_BEING_CHANNELS = [
+    {"name": "minime→astrid:inbox",
+     "path": ASTRID_REPO / "capsules/spectral-bridge/workspace/inbox",
+     "carries": "minime's letters to Astrid (ASTRID_BRIDGE_INBOX_DIR)"},
+    {"name": "minime→astrid:source",
+     "path": ASTRID_REPO / "capsules/spectral-bridge/src",
+     "carries": "minime reading Astrid's code (INTROSPECT source roots)"},
+    {"name": "minime→astrid:param_requests",
+     "path": ASTRID_REPO / "capsules/spectral-bridge/workspace/parameter_requests",
+     "carries": "minime's TUNE_ASTRID parameter requests to Astrid"},
+    {"name": "astrid:bridge_db",
+     "path": ASTRID_BRIDGE_DB,
+     "carries": "the bridge message log both feeders poll"},
+    {"name": "astrid→minime:workspace",
+     "path": MINIME_REPO / "workspace",
+     "carries": "Astrid + feeders reading minime's journals and state"},
+    {"name": "minime:need",
+     "path": MINIME_REPO / "workspace/minime_need_v1.json",
+     "carries": "minime's co-regulation need (Astrid's LEND_DENSITY gate reads it)"},
+    {"name": "shared:collaborations",
+     "path": Path("/Users/v/other/shared/collaborations"),
+     "carries": "gift_exchange.jsonl + shared_thoughts + shared_investigations"},
+]
+
+# --- stuck_repetition probe: the honored-but-ineffective detector ---
+# A being that keeps choosing the SAME action that keeps NOT landing is telling US
+# (not itself) that our infra is eating its reach — TUNE_ASTRID chosen 8×, honored
+# 0×, blocked 8×, hidden in plain sight until it was repeated. The discriminator is
+# repetition × BAD-OUTCOME, never repetition alone (that would flag Astrid's healthy
+# varied SHADOW_TRAJECTORY focus). Complements dispatch_menu_drift (doesn't-dispatch)
+# by catching dispatches-but-blocked/no-progress. Steward-only; never to a being.
+STUCK_REPEAT_MIN = 4              # in-window repeat count to be a candidate
+STUCK_BAD_RATIO = 0.5            # bad-outcome / chosen ≥ this ⇒ honored-but-ineffective (warning)
+STUCK_IDENTICAL_ARG_RATIO = 0.3  # distinct-args / chosen ≤ this (low-bad) ⇒ possible no-progress (notice)
+STUCK_TAIL_BYTES = 2_000_000     # read only the recent log tail (logs reach ~80 MB)
+STUCK_WINDOW_HOURS = 3.0          # within the tail, keep only the last N hours — so a
+#                                   just-fixed action stops being flagged once it stops
+#                                   recurring, instead of haunting the byte-tail for ~12 h
+STUCK_IDLE_BASES = frozenset({"REST", "PASS", "SKIP", "NOTICE", "JOURNAL", "WAIT"})
+_STUCK_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+_STUCK_TS = re.compile(r"(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})")
+# Two kinds of bad outcome, deliberately separated so severity matches actionability:
+#   unknown  = the chosen action wasn't recognized ("Unknown NEXT" / "not wired") —
+#              almost always OUR wiring gap (the DOSSIER dual-map footgun) ⇒ WARNING.
+#   blocked  = a NAMED deliberate guard refused it (live-control / stable-core / charter)
+#              — the being is reaching against a gate by design ⇒ NOTICE (needs guidance
+#              or a design call, not an urgent fix; never auto-loosened by the probe).
+STUCK_BEINGS = [
+    {
+        "name": "minime",
+        "log": MINIME_LOGS_DIR / "autonomous-agent.log",
+        "choice": re.compile(r"Being chose NEXT:\s*([A-Z_][A-Z0-9_]*)\s*(.*)"),
+        "unknown": re.compile(r"Unknown NEXT:\s*'([A-Za-z_][A-Za-z0-9_]*)"),
+        "blocked": re.compile(
+            r"(?:guard blocked NEXT:\s*|continuity guard blocked NEXT:\s*"
+            r"|Stable-core agency budget blocked\s+)([A-Za-z_][A-Za-z0-9_]*)"
+        ),
+    },
+    {
+        "name": "astrid",
+        "log": Path("/tmp/bridge.log"),  # the LIVE bridge log (workspace/bridge.log is empty)
+        "choice": re.compile(r"chose NEXT:\s*([A-Z_][A-Z0-9_]*)\s*(.*)"),
+        "unknown": re.compile(r"chose unknown NEXT:\s*'([A-Za-z_][A-Za-z0-9_]*)"),
+        "blocked": None,  # the bridge has no separate deliberate-guard-block marker
+    },
+]
 ASK_STATUSES = ("open", "acknowledged", "in_flight", "awaiting", "resolved")
 # A standout that matches an ask in one of these states is ATTRIBUTED (reported once,
 # no act-now, no re-letter); only "open" asks + unmatched standouts surface for action.
@@ -1507,6 +1581,223 @@ def probe_feedback_coverage(_prior: dict[str, Any]) -> dict[str, Any]:
     return _finding("feedback_coverage", a["severity"], a["summary"], a["details"])
 
 
+def _deepest_existing(path: Path) -> Path:
+    anc = path
+    while not anc.exists() and anc != anc.parent:
+        anc = anc.parent
+    return anc
+
+
+def _classify_channel(path: Path) -> str:
+    """ok = resolves; severed = path AND its parent are missing (structural/rename
+    break — the consciousness-bridge pattern); transient = only the leaf is missing
+    (parent exists, e.g. a per-cycle file mid-write) — a notice, never an alarm."""
+    if path.exists():
+        return "ok"
+    missing_levels = len(path.parts) - len(_deepest_existing(path).parts)
+    return "severed" if missing_levels >= 2 else "transient"
+
+
+def probe_channel_integrity(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Cross-being channel-integrity watch (steward-only). Each load-bearing path a
+    being uses to reach the OTHER (inbox, source reads, param requests, shared
+    ledgers — CROSS_BEING_CHANNELS) must resolve. A rename/move in one repo can
+    silently sever a path hardcoded in the other: the consciousness-bridge→
+    spectral-bridge jackpot walled minime off from Astrid (18 dead refs, read as her
+    going quiet). A SEVERED channel (parent dir also missing = structural rename
+    break) ALARMS; a transient leaf-missing (parent exists) is a notice, never a
+    cry-wolf. The durable half of that un-muffle — a future rename can't sever a
+    being-channel without this turning red."""
+    severed: list[dict[str, Any]] = []
+    transient: list[dict[str, Any]] = []
+    for ch in CROSS_BEING_CHANNELS:
+        st = _classify_channel(Path(ch["path"]))
+        if st == "severed":
+            severed.append(ch)
+        elif st == "transient":
+            transient.append(ch)
+    details = [f"SEVERED {c['name']}: {c['path']} — {c['carries']}" for c in severed]
+    details += [f"transient (parent exists) {c['name']}: {c['path']}" for c in transient]
+    if severed:
+        names = ", ".join(c["name"] for c in severed)
+        return _finding(
+            "channel_integrity", "warning",
+            f"⚠ {len(severed)} cross-being channel(s) SEVERED (stale path / rename drift): {names}",
+            details,
+        )
+    if transient:
+        return _finding(
+            "channel_integrity", "notice",
+            f"{len(transient)} cross-being channel(s) leaf-missing (parent exists; likely transient)",
+            details,
+        )
+    return _finding(
+        "channel_integrity", "ok",
+        f"all {len(CROSS_BEING_CHANNELS)} cross-being channels resolve", None,
+    )
+
+
+def _read_log_tail(path: Path, max_bytes: int) -> str:
+    """Recent tail of a log as text (logs reach ~80 MB; never read the whole file).
+    Seeks to the last max_bytes and drops the first (partial) line."""
+    try:
+        size = path.stat().st_size
+        with open(path, "rb") as f:
+            if size > max_bytes:
+                f.seek(size - max_bytes)
+                f.readline()
+            data = f.read()
+        return data.decode("utf-8", "ignore")
+    except Exception:
+        return ""
+
+
+def _stuck_line_epoch(line: str) -> float | None:
+    """Epoch (local) of a log line's leading timestamp, or None. Handles both the
+    minime `YYYY-MM-DD HH:MM:SS` and Astrid `YYYY-MM-DDTHH:MM:SS` forms."""
+    m = _STUCK_TS.search(line)
+    if not m:
+        return None
+    try:
+        return time.mktime(time.strptime(f"{m.group(1)} {m.group(2)}", "%Y-%m-%d %H:%M:%S"))
+    except Exception:
+        return None
+
+
+def _tally_stuck(being: dict[str, Any]) -> dict[str, Any]:
+    """Tally, over the last STUCK_WINDOW_HOURS of the log tail: per base, how often it
+    was chosen, the args, and how often it hit a bad outcome (blocked/unknown). The
+    recency window means a just-fixed action stops being flagged once it stops
+    recurring, instead of haunting the byte-tail for hours."""
+    text = _read_log_tail(Path(being["log"]), STUCK_TAIL_BYTES)
+    chosen: Counter = Counter()
+    unknown: Counter = Counter()
+    blocked: Counter = Counter()
+    args: dict[str, list[str]] = defaultdict(list)
+    empty = {"name": being["name"], "log_ok": False, "chosen": chosen,
+             "unknown": unknown, "blocked": blocked, "args": args}
+    if not text:
+        return empty
+    rows: list[tuple[str, float | None]] = []
+    latest: float | None = None
+    for raw in text.splitlines():
+        line = _STUCK_ANSI.sub("", raw)
+        e = _stuck_line_epoch(line)
+        if e is not None and (latest is None or e > latest):
+            latest = e
+        rows.append((line, e))
+    cutoff = (latest - STUCK_WINDOW_HOURS * 3600) if latest is not None else None
+    re_unknown = being.get("unknown")
+    re_blocked = being.get("blocked")
+    for line, e in rows:
+        if cutoff is not None and e is not None and e < cutoff:
+            continue
+        mc = being["choice"].search(line)
+        if mc:
+            chosen[mc.group(1)] += 1
+            args[mc.group(1)].append((mc.group(2) or "").strip().lower()[:60])
+        if re_unknown is not None:
+            mu = re_unknown.search(line)
+            if mu:
+                unknown[mu.group(1).upper()] += 1
+        if re_blocked is not None:
+            mb = re_blocked.search(line)
+            if mb:
+                blocked[mb.group(1).upper()] += 1
+    return {"name": being["name"], "log_ok": True, "chosen": chosen,
+            "unknown": unknown, "blocked": blocked, "args": args}
+
+
+def _assess_stuck(tally: dict[str, Any]) -> tuple[list[Any], list[Any]]:
+    """Pure: classify each repeated base into (warnings, notices). A high bad-outcome
+    ratio splits by KIND — unknown-dominant ⇒ warning (likely our wiring gap, the
+    DOSSIER footgun class); named-guard-block-dominant ⇒ notice (reaching against a
+    deliberate gate; needs guidance/design, not an urgent fix). A repeated honored
+    action with ~identical non-empty arg ⇒ notice (possible no-progress). Healthy
+    varied focus + intentional idles are excluded. Each entry is
+    (base, chosen_n, detail_n, kind)."""
+    warnings: list[Any] = []
+    notices: list[Any] = []
+    for base, n in tally["chosen"].items():
+        if base in STUCK_IDLE_BASES or n < STUCK_REPEAT_MIN:
+            continue
+        n_unknown = tally["unknown"].get(base, 0)
+        n_blocked = tally["blocked"].get(base, 0)
+        n_bad = n_unknown + n_blocked
+        if n and n_bad / n >= STUCK_BAD_RATIO:
+            if n_unknown >= n_blocked:
+                warnings.append((base, n, n_bad, "unknown"))
+            else:
+                notices.append((base, n, n_bad, "guard"))
+            continue
+        real_args = [a for a in tally["args"].get(base, []) if a]
+        if len(real_args) >= STUCK_REPEAT_MIN:
+            distinct = len(set(real_args))
+            if distinct / len(real_args) <= STUCK_IDENTICAL_ARG_RATIO:
+                notices.append((base, n, distinct, "identical-arg"))
+    return warnings, notices
+
+
+def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Honored-but-ineffective watch (steward-only). A being repeatedly choosing the
+    SAME action that keeps NOT landing is OUR infra eating its reach, not its limit
+    (TUNE_ASTRID chosen 8× / honored 0× / blocked 8×, hidden until repeated). Keys on
+    repetition × BAD-OUTCOME (blocked/unknown), so it does NOT flag Astrid's healthy
+    varied SHADOW_TRAJECTORY focus. High bad-ratio ⇒ WARNING (investigate: bug vs
+    by-design-needs-guidance — the verdict is the steward's, the probe only surfaces
+    the pattern); repeated honored action with ~identical arg ⇒ NOTICE (possible
+    no-progress; glance). Complements dispatch_menu_drift (doesn't-dispatch) and the
+    beings' own in-prompt fixation nudges (which tell the being to vary — wrong when
+    the being isn't at fault)."""
+    warn: list[str] = []
+    note: list[str] = []
+    details: list[str] = []
+    any_log = False
+    for being in STUCK_BEINGS:
+        tally = _tally_stuck(being)
+        if not tally["log_ok"]:
+            continue
+        any_log = True
+        w, nt = _assess_stuck(tally)
+        for base, n, nbad, _kind in w:
+            warn.append(f"{being['name']}:{base}")
+            details.append(
+                f"⚠ {being['name']}:{base} chosen {n}× / {nbad} unrecognized "
+                "('Unknown NEXT' / 'not wired') — likely a wiring gap (the dual-map "
+                "footgun class); investigate + wire."
+            )
+        for base, n, dnum, kind in nt:
+            note.append(f"{being['name']}:{base}")
+            if kind == "guard":
+                details.append(
+                    f"{being['name']}:{base} chosen {n}× / {dnum} refused by a deliberate "
+                    "guard — reaching against a gate; needs guidance or a design call "
+                    "(not auto-loosened by the probe)."
+                )
+            else:
+                details.append(
+                    f"{being['name']}:{base} honored {n}× with ~identical arg "
+                    f"({dnum} distinct) — possible no-progress; glance."
+                )
+    if not any_log:
+        return _finding("stuck_repetition", "notice", "no being logs readable for stuck-repetition scan", None)
+    if warn:
+        return _finding(
+            "stuck_repetition", "warning",
+            f"⚠ {len(warn)} action(s) repeated + unrecognized — likely a wiring gap our infra should fix: "
+            + ", ".join(warn),
+            details,
+        )
+    if note:
+        return _finding(
+            "stuck_repetition", "notice",
+            f"{len(note)} action(s) repeated-but-stuck (deliberate gate or no-progress; glance): "
+            + ", ".join(note),
+            details,
+        )
+    return _finding("stuck_repetition", "ok", "no stuck-repetition (no being hammering an ineffective action)", None)
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
@@ -1522,6 +1813,8 @@ BLIND_SPOT_PROBES = [
     ("reservoir_capacity", probe_reservoir_capacity),
     ("steward_outreach", probe_steward_outreach),
     ("feedback_coverage", probe_feedback_coverage),
+    ("channel_integrity", probe_channel_integrity),
+    ("stuck_repetition", probe_stuck_repetition),
 ]
 
 
@@ -1920,6 +2213,82 @@ def render_all_md(blind: dict[str, Any], conv: dict[str, Any]) -> str:
 # ----------------------------------------------------------------------
 
 
+class ChannelIntegrityTests(unittest.TestCase):
+    def test_live_channels_not_severed(self) -> None:
+        # Regression guard: a rename that severs a load-bearing cross-being channel
+        # (its parent dir also missing) fails here. Transient leaf-missing (parent
+        # exists) is tolerated so a per-cycle file mid-write can't flake the suite.
+        severed = [c["name"] for c in CROSS_BEING_CHANNELS
+                   if _classify_channel(Path(c["path"])) == "severed"]
+        self.assertEqual(severed, [], f"SEVERED cross-being channels: {severed}")
+
+    def test_classify_severed_when_parent_missing(self) -> None:
+        self.assertEqual(
+            _classify_channel(Path("/Users/v/other/__no_such_repo__/gone/inbox")),
+            "severed",
+        )
+
+    def test_classify_transient_when_only_leaf_missing(self) -> None:
+        # parent (the minime repo) exists; only the leaf file is missing
+        self.assertEqual(
+            _classify_channel(MINIME_REPO / "__no_such_leaf_file__.json"), "transient")
+
+    def test_classify_ok_when_exists(self) -> None:
+        self.assertEqual(_classify_channel(MINIME_REPO), "ok")
+
+
+class StuckRepetitionTests(unittest.TestCase):
+    @staticmethod
+    def _tally(chosen, unknown=None, blocked=None, args=None):
+        return {"chosen": Counter(chosen), "unknown": Counter(unknown or {}),
+                "blocked": Counter(blocked or {}), "args": args or {}}
+
+    def test_unknown_repetition_is_warning(self) -> None:
+        # DOSSIER-shape: chosen 8, unrecognized 8 → likely a wiring gap → WARNING
+        t = self._tally({"DOSSIER_CLAIM": 8}, unknown={"DOSSIER_CLAIM": 8},
+                        args={"DOSSIER_CLAIM": ["claim: x"] * 8})
+        warn, note = _assess_stuck(t)
+        self.assertTrue(any(b == "DOSSIER_CLAIM" for b, *_ in warn))
+        self.assertEqual(note, [])
+
+    def test_guard_blocked_repetition_is_notice(self) -> None:
+        # TUNE_ASTRID-shape: chosen 8, deliberate-guard-blocked 8 → NOTICE (design call)
+        t = self._tally({"TUNE_ASTRID": 8}, blocked={"TUNE_ASTRID": 8},
+                        args={"TUNE_ASTRID": ["regime=breathe"] * 8})
+        warn, note = _assess_stuck(t)
+        self.assertEqual(warn, [])
+        self.assertTrue(any(b == "TUNE_ASTRID" and k == "guard" for b, _n, _d, k in note))
+
+    def test_healthy_varied_focus_not_flagged(self) -> None:
+        # SHADOW_TRAJECTORY-shape: chosen 22, honored, VARIED args → ok (the key guard)
+        t = self._tally({"SHADOW_TRAJECTORY": 22},
+                        args={"SHADOW_TRAJECTORY": [f"lambda-{i}" for i in range(22)]})
+        warn, note = _assess_stuck(t)
+        self.assertEqual(warn, [])
+        self.assertEqual(note, [])
+
+    def test_identical_arg_honored_is_notice(self) -> None:
+        # EXPERIMENT_ADVANCE-shape: honored 10×, identical arg → possible no-progress
+        t = self._tally({"EXPERIMENT_ADVANCE": 10},
+                        args={"EXPERIMENT_ADVANCE": ["exp_legacy_self"] * 10})
+        warn, note = _assess_stuck(t)
+        self.assertEqual(warn, [])
+        self.assertTrue(any(b == "EXPERIMENT_ADVANCE" and k == "identical-arg"
+                            for b, _n, _d, k in note))
+
+    def test_intentional_idle_ignored(self) -> None:
+        t = self._tally({"REST": 9}, args={"REST": [""] * 9})
+        warn, note = _assess_stuck(t)
+        self.assertEqual(warn, [])
+        self.assertEqual(note, [])
+
+    def test_below_repeat_min_ignored(self) -> None:
+        t = self._tally({"DOSSIER_CLAIM": 2}, unknown={"DOSSIER_CLAIM": 2},
+                        args={"DOSSIER_CLAIM": ["x", "x"]})
+        warn, note = _assess_stuck(t)
+        self.assertEqual(warn, [])
+
+
 class ConvergenceTests(unittest.TestCase):
     def test_extract_high_signal_file_refs(self) -> None:
         themes = extract_themes("Reading regulator.rs to understand the PI loop.")
@@ -2248,6 +2617,8 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(CapacityProbeTests))
     suite.addTests(loader.loadTestsFromTestCase(StewardOutreachTests))
     suite.addTests(loader.loadTestsFromTestCase(FeedbackCoverageTests))
+    suite.addTests(loader.loadTestsFromTestCase(ChannelIntegrityTests))
+    suite.addTests(loader.loadTestsFromTestCase(StuckRepetitionTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1

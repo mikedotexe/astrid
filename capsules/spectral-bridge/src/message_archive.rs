@@ -18,6 +18,29 @@ const ARCHIVE_SCHEMA_VERSION: &str = "bridge_message_archive_v1";
 const COMPRESSION: &str = "zstd";
 const DEFAULT_MAX_SPANS_PER_RUN: usize = 366;
 
+/// Default short retention for the high-cadence, ephemeral telemetry topics
+/// (6 hours). They are written every tick (~1/s) at ~33 MB/h for `telemetry`
+/// alone (~0.9 GB/day across the firehose), and are only read back over recent
+/// windows (MCP reads `telemetry` over the last 1 h and lambda-tail/edge over
+/// ≤500 rows ≈ 8 min). 6 h keeps a 6× margin over the longest read window while
+/// bounding the firehose at a few hundred MB, instead of the 14-day dialogue
+/// retention. Purged outright (not archived — ephemeral, regenerated each tick).
+/// Env/CLI tunable via `--telemetry-retention-secs`.
+pub const DEFAULT_TELEMETRY_RETENTION_SECS: u64 = 21_600;
+
+/// High-cadence, ephemeral minime→Astrid spectral-readout topics. These are
+/// purged at `telemetry_retention_secs` (not archived). Kept in sync with the
+/// per-tick `db.log_message` writes in `ws.rs::handle_telemetry_message` and the
+/// topic constants in `sticky_mode.rs` / `lambda_edge.rs`. The dialogue/sensory
+/// topics (`consciousness.v1.autonomous`, `consciousness.v1.sensory`) are
+/// deliberately NOT listed — they are low-volume and keep the full retention.
+pub const HIGH_CADENCE_TOPICS: &[&str] = &[
+    "consciousness.v1.telemetry",
+    "consciousness.v1.lambda_tail",
+    "consciousness.v1.lambda_edge_perception",
+    "consciousness.v1.sticky_mode_audit",
+];
+
 #[derive(Debug, Clone)]
 pub struct BridgeMessageMaintenanceConfig {
     pub retention_secs: u64,
@@ -26,6 +49,13 @@ pub struct BridgeMessageMaintenanceConfig {
     pub db_path: PathBuf,
     pub dry_run: bool,
     pub vacuum_after_maintenance: bool,
+    /// Short retention for the high-cadence ephemeral telemetry topics; these
+    /// rows are purged (not archived) once older than this many seconds.
+    pub telemetry_retention_secs: u64,
+    /// Vacuum automatically when the freelist makes it worthwhile (so the disk
+    /// freed by the telemetry purge is actually reclaimed under the periodic
+    /// maintenance loop, not only on a manual one-shot run).
+    pub auto_vacuum_when_recommended: bool,
     pub max_spans_per_run: usize,
     pub now_override: Option<f64>,
 }
@@ -45,6 +75,8 @@ impl BridgeMessageMaintenanceConfig {
             db_path,
             dry_run: false,
             vacuum_after_maintenance: false,
+            telemetry_retention_secs: DEFAULT_TELEMETRY_RETENTION_SECS,
+            auto_vacuum_when_recommended: false,
             max_spans_per_run: DEFAULT_MAX_SPANS_PER_RUN,
             now_override: None,
         }
@@ -66,6 +98,10 @@ pub struct BridgeMessageMaintenanceOutcome {
     pub archivable_message_count_after: u64,
     pub archived_rows: u64,
     pub deleted_rows: u64,
+    /// Rows deleted by the high-cadence telemetry purge (short retention, not
+    /// archived). Separate from `deleted_rows`, which counts archive-span deletes.
+    pub high_cadence_purged_rows: u64,
+    pub telemetry_retention_secs: u64,
     pub spans: Vec<BridgeMessageArchiveSpanReport>,
     pub vacuum_recommended: bool,
     pub vacuum_performed: bool,
@@ -134,17 +170,27 @@ pub fn run_bridge_message_maintenance(
     let retention_secs = config.retention_secs as f64;
     let cutoff_ts = now - retention_secs;
 
+    #[expect(clippy::cast_precision_loss)]
+    let telemetry_retention_secs = config.telemetry_retention_secs as f64;
+    let telemetry_cutoff_ts = now - telemetry_retention_secs;
+
     let stats_before = db.bridge_message_live_stats(cutoff_ts)?;
     let spans = db.bridge_message_archive_spans(cutoff_ts, config.max_spans_per_run)?;
     let mut span_reports = Vec::new();
     let mut archived_rows = 0_u64;
     let mut deleted_rows = 0_u64;
+    let mut high_cadence_purged_rows = 0_u64;
 
     if config.dry_run {
         for span in spans {
             span_reports.push(report_for_span(&span, "would_archive", None, None));
         }
     } else {
+        // Purge the high-cadence ephemeral telemetry topics on the short clock
+        // first (they are not archived — regenerated every tick, read back only
+        // over recent windows). This is the dominant source of DB growth.
+        let purged = db.purge_topics_older_than(HIGH_CADENCE_TOPICS, telemetry_cutoff_ts)?;
+        high_cadence_purged_rows = usize_to_u64(purged)?;
         fs::create_dir_all(&config.archive_dir)
             .with_context(|| format!("create archive dir {}", config.archive_dir.display()))?;
         if let Some(parent) = config.status_path.parent() {
@@ -211,7 +257,19 @@ pub fn run_bridge_message_maintenance(
         db.checkpoint_wal()?;
     }
 
-    if config.vacuum_after_maintenance && !config.dry_run {
+    // Decide whether to vacuum based on the post-purge freelist: the telemetry
+    // purge frees many pages, and without a vacuum the file never shrinks. Honor
+    // the explicit one-shot flag as well as the periodic auto-vacuum.
+    let pre_vacuum_stats = db.sqlite_page_stats()?;
+    let vacuum_now = !config.dry_run
+        && (config.vacuum_after_maintenance
+            || (config.auto_vacuum_when_recommended
+                && vacuum_recommended(
+                    pre_vacuum_stats.page_count,
+                    pre_vacuum_stats.freelist_count,
+                    pre_vacuum_stats.page_size,
+                )));
+    if vacuum_now {
         db.vacuum()?;
         db.checkpoint_wal()?;
     }
@@ -243,9 +301,11 @@ pub fn run_bridge_message_maintenance(
         archivable_message_count_after: stats_after.archivable_count,
         archived_rows,
         deleted_rows,
+        high_cadence_purged_rows,
+        telemetry_retention_secs: config.telemetry_retention_secs,
         spans: span_reports,
         vacuum_recommended,
-        vacuum_performed: config.vacuum_after_maintenance && !config.dry_run,
+        vacuum_performed: vacuum_now,
         page_count: page_stats.page_count,
         freelist_count: page_stats.freelist_count,
         page_size: page_stats.page_size,
@@ -288,6 +348,8 @@ pub fn write_bridge_db_status(
         archivable_message_count_after: stats.archivable_count,
         archived_rows: 0,
         deleted_rows: 0,
+        high_cadence_purged_rows: 0,
+        telemetry_retention_secs: status_config.telemetry_retention_secs,
         spans: Vec::new(),
         vacuum_recommended: vacuum_recommended(
             page_stats.page_count,
@@ -561,6 +623,43 @@ mod tests {
     fn open_temp_db(root: &Path) -> (BridgeDb, PathBuf) {
         let db_path = root.join("bridge.db");
         (BridgeDb::open(&db_path).expect("open db"), db_path)
+    }
+
+    #[test]
+    fn high_cadence_telemetry_purged_on_short_clock_dialogue_kept() {
+        let root = temp_dir("telemetry_purge");
+        let (db, db_path) = open_temp_db(&root);
+        // Old + fresh telemetry (high-cadence, ephemeral) and an old dialogue row.
+        db.insert_bridge_message_for_test(1_800.0, "minime_to_astrid", "consciousness.v1.telemetry", "{\"old\":1}")
+            .expect("insert old telemetry");
+        db.insert_bridge_message_for_test(1_950.0, "minime_to_astrid", "consciousness.v1.telemetry", "{\"new\":1}")
+            .expect("insert fresh telemetry");
+        db.insert_bridge_message_for_test(1_800.0, "astrid_to_minime", "consciousness.v1.autonomous", "{\"dialogue\":1}")
+            .expect("insert old dialogue");
+
+        let mut config = config(&root, &db_path);
+        // Global (archive) retention far enough back that nothing is archived,
+        // so we isolate the telemetry purge. Telemetry cutoff lands at 1_900.
+        config.retention_secs = 10_000;
+        config.telemetry_retention_secs = 100;
+
+        let outcome = run_bridge_message_maintenance(&db, &config).expect("maintenance");
+
+        // Only the old telemetry row is purged; nothing archived/deleted.
+        assert_eq!(outcome.high_cadence_purged_rows, 1);
+        assert_eq!(outcome.archived_rows, 0);
+        assert_eq!(outcome.deleted_rows, 0);
+        assert_eq!(outcome.telemetry_retention_secs, 100);
+        // The fresh telemetry row and the old dialogue row both survive.
+        assert_eq!(db.message_count().expect("count"), 2);
+        let remaining = db
+            .query_messages(0.0, f64::MAX, Some("consciousness.v1.telemetry"), 100)
+            .expect("query telemetry");
+        assert_eq!(remaining.len(), 1);
+        let dialogue = db
+            .query_messages(0.0, f64::MAX, Some("consciousness.v1.autonomous"), 100)
+            .expect("query dialogue");
+        assert_eq!(dialogue.len(), 1, "old dialogue must NOT be purged by the telemetry clock");
     }
 
     #[test]

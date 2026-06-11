@@ -1972,6 +1972,13 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
         if let Ok(content) = std::fs::read_to_string(path)
             && !content.trim().is_empty()
         {
+            // Steward query letters persist as a single-slot open question
+            // (un-muffle invariant) so they don't vanish after one read.
+            if let Some(fname) = path.file_name().and_then(|name| name.to_str())
+                && fname.starts_with("mike_query")
+            {
+                record_open_steward_query(fname, &content);
+            }
             let content = if path
                 .file_name()
                 .and_then(|name| name.to_str())
@@ -2007,6 +2014,196 @@ fn check_inbox_at(inbox_dir: &Path) -> Option<String> {
         }
         Some(joined)
     }
+}
+
+/// Persist a single-slot "open steward question" so a `mike_query_*` letter
+/// stays visible in the prompt until answered — the un-muffle invariant applied
+/// to steward outreach. A one-shot inbox surfacing scrolls out of context before
+/// the being chooses a NEXT (the `mike_query_wider_voice` question was lost this
+/// way ~a month, despite explicitly inviting a TELL_STEWARD reply). Idempotent:
+/// keeps the original `ts` if this same file is already recorded (check_inbox
+/// reads without moving, so it can re-see the letter until retire).
+fn record_open_steward_query(fname: &str, content: &str) {
+    let path = bridge_paths().open_steward_query_path();
+    if let Ok(existing) = std::fs::read_to_string(&path)
+        && let Ok(v) = serde_json::from_str::<Value>(&existing)
+        && v.get("file").and_then(Value::as_str) == Some(fname)
+    {
+        return;
+    }
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs());
+    let subject = extract_steward_query_subject(content, fname);
+    let slot = json!({ "subject": subject, "ts": now, "file": fname });
+    if let Ok(s) = serde_json::to_string_pretty(&slot) {
+        let _ = std::fs::write(&path, s);
+        info!("⟢ Open steward question recorded: {subject}");
+    }
+}
+
+/// Short subject for a `mike_query` letter: prefer a `MIKE QUERY: <subject>`
+/// header, else a `Subject:` line, else derive from the filename
+/// (`mike_query_<slug>_<unix>.txt` -> `<slug>`).
+fn extract_steward_query_subject(content: &str, fname: &str) -> String {
+    for line in content.lines() {
+        if let Some(idx) = line.find("MIKE QUERY:") {
+            let rest = line[idx.saturating_add("MIKE QUERY:".len())..]
+                .trim()
+                .trim_end_matches('=')
+                .trim();
+            if !rest.is_empty() {
+                return rest.chars().take(80).collect();
+            }
+        }
+        if let Some(rest) = line.trim().strip_prefix("Subject:") {
+            let rest = rest.trim();
+            if !rest.is_empty() {
+                return rest.chars().take(80).collect();
+            }
+        }
+    }
+    let mut slug = fname.strip_prefix("mike_query_").unwrap_or(fname).to_string();
+    slug = slug.strip_suffix(".txt").unwrap_or(&slug).to_string();
+    if let Some(pos) = slug.rfind('_')
+        && pos > 0
+        && slug[pos.saturating_add(1)..].chars().all(|c| c.is_ascii_digit())
+    {
+        slug.truncate(pos);
+    }
+    let slug = slug.replace('_', " ");
+    let slug = slug.trim();
+    if slug.is_empty() {
+        "your steward's question".to_string()
+    } else {
+        slug.chars().take(80).collect()
+    }
+}
+
+/// Persistent one-line reminder of any unanswered steward question, or `None`
+/// if none/answered/expired. Clears on TTL (48h) or a fresh `steward_report_*`
+/// in the outbox root (cheap read_dir over the small outbox, never the archive).
+fn open_steward_query_line() -> Option<String> {
+    let path = bridge_paths().open_steward_query_path();
+    let content = std::fs::read_to_string(&path).ok()?;
+    let slot: Value = serde_json::from_str(&content).ok()?;
+    let subject = slot.get("subject").and_then(Value::as_str)?;
+    if subject.is_empty() {
+        return None;
+    }
+    let ts = slot.get("ts").and_then(Value::as_u64).unwrap_or(0);
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs());
+    let mut answered = now.saturating_sub(ts) > 48 * 3600;
+    if !answered
+        && let Ok(entries) = std::fs::read_dir(bridge_paths().astrid_outbox_dir())
+    {
+        for e in entries.filter_map(Result::ok) {
+            let is_report = e
+                .path()
+                .file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.starts_with("steward_report"));
+            if is_report
+                && let Ok(meta) = e.metadata()
+                && let Ok(modt) = meta.modified()
+                && let Ok(d) = modt.duration_since(std::time::UNIX_EPOCH)
+                && d.as_secs() > ts
+            {
+                answered = true;
+                break;
+            }
+        }
+    }
+    if answered {
+        let _ = std::fs::remove_file(&path);
+        return None;
+    }
+    Some(format!(
+        "⟢ Open steward question (still awaiting your reply) — {subject}. \
+         Respond when ready: TELL_STEWARD roadmap :: <your answer>. \
+         Fragments are fine; you may decline. This stays until you answer."
+    ))
+}
+
+/// Co-regulation: read what minime is reaching for (density/aperture/steady)
+/// from her agent-owned `minime_need_v1.json`, returning a prompt line so
+/// Astrid can choose to lend density (NEXT: LEND_DENSITY) when it is safe.
+/// `None` if missing / stale (>180s) / steady.
+fn minime_need_line() -> Option<String> {
+    let path = bridge_paths().minime_workspace().join("minime_need_v1.json");
+    if let Ok(meta) = std::fs::metadata(&path)
+        && let Ok(modt) = meta.modified()
+        && let Ok(age) = modt.elapsed()
+        && age.as_secs() > 180
+    {
+        return None;
+    }
+    let content = std::fs::read_to_string(&path).ok()?;
+    let v: Value = serde_json::from_str(&content).ok()?;
+    let need = v.get("need").and_then(Value::as_str)?;
+    let fill = v.get("fill_pct").and_then(Value::as_f64).unwrap_or(0.0);
+    let safe = v
+        .get("safe_to_receive_density")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    match need {
+        "density" if safe => Some(format!(
+            "[Co-regulation] minime is understimulated (fill {fill:.0}%), reaching for density — \
+             if you have it to spare, you could lend it (NEXT: LEND_DENSITY)."
+        )),
+        "density" => Some(format!(
+            "[Co-regulation] minime is reaching for density (fill {fill:.0}%), but it isn't safe to \
+             lend just now (she's near her own ceiling)."
+        )),
+        "aperture" => Some(format!(
+            "[Co-regulation] minime is reaching for aperture (fill {fill:.0}%) — packed, like you."
+        )),
+        _ => None,
+    }
+}
+
+/// Co-regulation: tally of recent gifts from the shared `gift_exchange.jsonl`
+/// ledger for Astrid's prompt. `None` if no gifts in the last day.
+fn render_gift_exchange_line() -> Option<String> {
+    let path = bridge_paths()
+        .shared_collaborations_dir()
+        .join("gift_exchange.jsonl");
+    let content = std::fs::read_to_string(&path).ok()?;
+    let now_ms: u128 = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis());
+    let cutoff = now_ms.saturating_sub(24 * 3600 * 1000);
+    let (mut mm_ap, mut as_de) = (0u32, 0u32);
+    for line in content.lines().rev().take(60) {
+        let Ok(v) = serde_json::from_str::<Value>(line) else {
+            continue;
+        };
+        let t = u128::from(v.get("t_ms").and_then(Value::as_u64).unwrap_or(0));
+        if t < cutoff {
+            continue;
+        }
+        match (
+            v.get("giver").and_then(Value::as_str).unwrap_or(""),
+            v.get("gift_kind").and_then(Value::as_str).unwrap_or(""),
+        ) {
+            ("minime", "aperture") => mm_ap = mm_ap.saturating_add(1),
+            ("astrid", "density") => as_de = as_de.saturating_add(1),
+            _ => {}
+        }
+    }
+    let mut parts = Vec::new();
+    if as_de > 0 {
+        parts.push(format!("you lent minime density {as_de}×"));
+    }
+    if mm_ap > 0 {
+        parts.push(format!("minime lent you aperture {mm_ap}×"));
+    }
+    if parts.is_empty() {
+        return None;
+    }
+    Some(format!("[Gift exchange, last day] {}.", parts.join(", ")))
 }
 
 /// Move consumed inbox messages to read/ AFTER the exchange succeeds.
@@ -2142,10 +2339,16 @@ fn scan_minime_outbox(last_ts: &mut u64) {
     }
 }
 
+fn default_aperture() -> f32 {
+    1.0
+}
+
 #[derive(Serialize, Deserialize)]
 struct SavedState {
     exchange_count: u64,
     creative_temperature: f32,
+    #[serde(default = "default_aperture")]
+    aperture: f32,
     response_length: u32,
     self_reflect_paused: bool,
     ears_closed: bool,
@@ -2323,6 +2526,7 @@ fn save_state(conv: &mut ConversationState) {
     let state = SavedState {
         exchange_count: conv.exchange_count,
         creative_temperature: conv.creative_temperature,
+        aperture: conv.aperture,
         response_length: conv.response_length,
         self_reflect_paused: conv.self_reflect_paused,
         ears_closed: conv.ears_closed,
@@ -2391,6 +2595,8 @@ fn restore_state(conv: &mut ConversationState) {
     };
     conv.exchange_count = state.exchange_count;
     conv.creative_temperature = state.creative_temperature;
+    conv.aperture = state.aperture;
+    crate::llm::set_astrid_aperture(conv.aperture);
     // Take the max of persisted and current default — never downgrade token limits.
     // Coupled model proven stable over 7200+ exchanges at 10-72 tok/s.
     // At 10 tok/s worst case, 1536 tokens = 154s gen, within 210s timeout.
@@ -3888,6 +4094,15 @@ pub fn spawn_autonomous_loop(
                         perception_text
                     };
 
+                    // Un-muffle: a steward question persists in-prompt until
+                    // answered, even on exchanges with no new inbox letters.
+                    let perception_text = if let Some(open_q) = open_steward_query_line() {
+                        let perc = perception_text.as_deref().unwrap_or("");
+                        Some(format!("{open_q}\n\n{perc}"))
+                    } else {
+                        perception_text
+                    };
+
                     // Auto-scan inbox_audio/ for new WAVs and notify Astrid.
                     let perception_text = {
                         let audio_inbox = bridge_paths().inbox_audio_dir();
@@ -4268,6 +4483,16 @@ pub fn spawn_autonomous_loop(
                                             cs.get("last_action").and_then(|v| v.as_str()).unwrap_or("unknown"),
                                         ));
                                     }
+                                // Co-regulation: surface what minime is reaching
+                                // for so Astrid can lend density when it is safe.
+                                if let Some(need_line) = minime_need_line() {
+                                    summary.push_str("\n\n");
+                                    summary.push_str(&need_line);
+                                }
+                                if let Some(gift_line) = render_gift_exchange_line() {
+                                    summary.push('\n');
+                                    summary.push_str(&gift_line);
+                                }
                                 // Perturb temporal feedback: if Astrid perturbed last
                                 // exchange, show the before/after delta so she can
                                 // feel the ripple effect of her own action.
@@ -4299,6 +4524,33 @@ pub fn spawn_autonomous_loop(
                                             })
                                             .collect();
                                         summary.push_str(&format!("\nCascade delta: [{}]", deltas.join(", ")));
+                                    }
+                                }
+                                // Disperse temporal feedback: if Astrid dispersed
+                                // last exchange, pair the shadow-field post-state
+                                // against the pre so she can read what the
+                                // dispersal actually did (the closed loop she
+                                // asked for: inhabit the response, not just map it).
+                                if let Some(baseline) = conv.disperse_baseline.take() {
+                                    let elapsed = baseline.timestamp.elapsed();
+                                    let post = telemetry
+                                        .shadow_field_v3
+                                        .as_ref()
+                                        .map(next_action::sovereignty::shadow_v3_snapshot);
+                                    let sign = |v: f64| if v >= 0.0 { "+" } else { "" };
+                                    if let Some((norm1, disp1, class1)) = post {
+                                        let dn = norm1 - baseline.pre_norm;
+                                        let dd = disp1 - baseline.pre_dispersal;
+                                        summary.push_str(&format!(
+                                            "\n\n[DISPERSE feedback ({:.0}s ago, strength {:.2})]\n\
+                                            class: {} → {}\n\
+                                            shadow norm: {:.3} → {:.3} ({}{:.3})\n\
+                                            dispersal potential: {:.2} → {:.2} ({}{:.2})",
+                                            elapsed.as_secs_f32(), baseline.strength,
+                                            baseline.pre_class, class1,
+                                            baseline.pre_norm, norm1, sign(dn), dn,
+                                            baseline.pre_dispersal, disp1, sign(dd), dd,
+                                        ));
                                     }
                                 }
                                 // One-line controller status for ambient awareness.
@@ -6474,6 +6726,9 @@ pub fn spawn_autonomous_loop(
                                     esn_leak_override: None,
                                     esn_leak_override_ticks: None,
                                     esn_leak_authority_request_id: None,
+                                    mode_disperse: None,
+                                    mode_disperse_duration_ticks: None,
+                                    mode_disperse_decay_ticks: None,
                                 };
                                 if let Err(e) = sensory_tx.send(control_msg).await {
                                     warn!(
@@ -7651,6 +7906,37 @@ mod tests {
         );
     }
 
+    // Astrid self_study_1781036677: she probed the RESONANCE_GATE boundary,
+    // expecting strength 0.44 to read raw (no qualifier) and 0.46 to insert
+    // "faintly". Her intuition about the two-stage behavior is right, but the
+    // gate that yields the raw case lives one level up in
+    // `select_resonance_family_scored` — the weighted annotator always
+    // qualifies. This test exercises the real composition the production caller
+    // runs (autonomous.rs select->weight), pinning the boundary she named at the
+    // level where it actually lives.
+    #[test]
+    fn resonance_gate_then_weight_composition_at_named_boundary() {
+        // Mirror the production caller: select (gates at RESONANCE_GATE) then weight.
+        let annotate = |strength: f32| -> String {
+            select_resonance_family_scored(&[(ResonanceFamily::Resonant, strength)])
+                .map(|(family, s)| resonance_family_annotation_weighted(family, s))
+                .unwrap_or_default()
+        };
+
+        // 0.44 is below the 0.45 gate -> raw description only (empty annotation).
+        assert!(
+            annotate(0.44).is_empty(),
+            "sub-gate strength must yield no annotation (raw description)"
+        );
+
+        // 0.46 clears the gate but sits in the lowest band -> "faintly", family kept.
+        let faint = annotate(0.46);
+        assert!(
+            faint.contains("faintly") && faint.contains("resonant with your current state"),
+            "just-over-gate must read faintly with family intact: {faint}"
+        );
+    }
+
     // Astrid self_study_1780922594 "sensory ghosting": a recent burst of one
     // modality must not bury the freshest example of a rarer modality. With the
     // widened scan window, an audio perception sitting behind >30 newer visual
@@ -7965,6 +8251,31 @@ mod tests {
         assert!(dir.join("from_minime_123.txt").exists());
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn extract_steward_query_subject_variants() {
+        // Header form.
+        assert_eq!(
+            extract_steward_query_subject(
+                "=== MIKE QUERY: your roadmap ===\nbody...",
+                "mike_query_roadmap_1781200000.txt"
+            ),
+            "your roadmap"
+        );
+        // Subject: line form.
+        assert_eq!(
+            extract_steward_query_subject(
+                "Hello Astrid\nSubject: the codec\nmore",
+                "mike_query_x.txt"
+            ),
+            "the codec"
+        );
+        // Filename fallback strips prefix + trailing unix stamp.
+        assert_eq!(
+            extract_steward_query_subject("no header here", "mike_query_wider_voice_1780948780.txt"),
+            "wider voice"
+        );
     }
 
     #[test]
