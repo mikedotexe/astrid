@@ -88,21 +88,42 @@ pub struct AgencyRequest {
     pub resolution: Option<AgencyResolution>,
 }
 
+/// Deserialize a `Vec<String>` the LLM may emit as either a JSON array *or* a
+/// bare string (a common shape error): `"x"` → `vec!["x"]`, `null` → empty.
+/// Without this, one string where an array is expected makes serde reject the
+/// *entire* agency request — silently dropping a real EVOLVE/self-evolution ask.
+fn string_or_seq<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum OneOrMany {
+        One(String),
+        Many(Vec<String>),
+    }
+    Ok(match Option::<OneOrMany>::deserialize(deserializer)? {
+        None => Vec::new(),
+        Some(OneOrMany::One(s)) => vec![s],
+        Some(OneOrMany::Many(v)) => v,
+    })
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct AgencyRequestDraft {
     pub request_kind: AgencyRequestKind,
     pub title: String,
     pub felt_need: String,
     pub why_now: String,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "string_or_seq")]
     pub acceptance_signals: Vec<String>,
 
-    #[serde(default)]
+    #[serde(default, deserialize_with = "string_or_seq")]
     pub target_paths: Vec<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "string_or_seq")]
     pub target_symbols: Vec<String>,
     pub requested_behavior: Option<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "string_or_seq")]
     pub constraints: Vec<String>,
     pub draft_patch: Option<String>,
 
@@ -341,7 +362,12 @@ pub fn save_evolve_pressure(
     } else {
         introspector_results
             .iter()
-            .map(|snippet| format!("### {} ({})\n{}", snippet.label, snippet.tool_name, snippet.text))
+            .map(|snippet| {
+                format!(
+                    "### {} ({})\n{}",
+                    snippet.label, snippet.tool_name, snippet.text
+                )
+            })
             .collect::<Vec<_>>()
             .join("\n\n")
     };
@@ -978,6 +1004,75 @@ mod tests {
     }
 
     #[test]
+    fn draft_tolerates_string_where_array_expected() {
+        // The LLM sometimes emits a bare string for an array field. The whole
+        // request must NOT be discarded over that single type slip — that was a
+        // real muffle dropping her transition-objects ask (un-muffle invariant).
+        let json = r#"{
+            "request_kind": "code_change",
+            "title": "First-class transition objects",
+            "felt_need": "I want to declare my own transitions as replyable events.",
+            "why_now": "My transitions are only mode side effects today.",
+            "acceptance_signals": "a transition object is serializable and visible",
+            "target_paths": "src/autonomous.rs",
+            "target_symbols": "Mode::MomentCapture",
+            "requested_behavior": "add first-class transition events",
+            "constraints": "must not bypass safety guards"
+        }"#;
+        let draft: AgencyRequestDraft =
+            serde_json::from_str(json).expect("string-for-array must parse, not drop");
+        assert_eq!(
+            draft.acceptance_signals,
+            vec!["a transition object is serializable and visible".to_string()]
+        );
+        assert_eq!(draft.target_paths, vec!["src/autonomous.rs".to_string()]);
+        assert_eq!(
+            draft.target_symbols,
+            vec!["Mode::MomentCapture".to_string()]
+        );
+        assert_eq!(
+            draft.constraints,
+            vec!["must not bypass safety guards".to_string()]
+        );
+        // Survives normalization + validity (CodeChange needs behavior + target_paths).
+        assert!(draft.normalize().is_minimally_valid());
+    }
+
+    #[test]
+    fn draft_accepts_array_absent_and_null_for_seq_fields() {
+        // Array form (normal path) still works.
+        let arr = r#"{
+            "request_kind": "code_change",
+            "title": "t", "felt_need": "f", "why_now": "w",
+            "acceptance_signals": ["a", "b"],
+            "target_paths": ["p"],
+            "requested_behavior": "do"
+        }"#;
+        let d: AgencyRequestDraft = serde_json::from_str(arr).unwrap();
+        assert_eq!(d.acceptance_signals, vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(d.target_paths, vec!["p".to_string()]);
+
+        // Absent field → serde(default) empty.
+        let absent = r#"{
+            "request_kind": "experience_request",
+            "title": "t", "felt_need": "f", "why_now": "w"
+        }"#;
+        let d2: AgencyRequestDraft = serde_json::from_str(absent).unwrap();
+        assert!(d2.acceptance_signals.is_empty());
+        assert!(d2.constraints.is_empty());
+
+        // Explicit null → empty (not a parse error).
+        let nulled = r#"{
+            "request_kind": "experience_request",
+            "title": "t", "felt_need": "f", "why_now": "w",
+            "constraints": null, "target_symbols": null
+        }"#;
+        let d3: AgencyRequestDraft = serde_json::from_str(nulled).unwrap();
+        assert!(d3.constraints.is_empty());
+        assert!(d3.target_symbols.is_empty());
+    }
+
+    #[test]
     fn experience_request_serialization_includes_expected_fields() {
         let draft = AgencyRequestDraft {
             request_kind: AgencyRequestKind::ExperienceRequest,
@@ -1127,9 +1222,11 @@ mod tests {
         // a machine-readable capture sits alongside the steward task
         let json_path = path.with_extension("json");
         assert!(json_path.exists());
-        assert!(fs::read_to_string(&json_path)
-            .unwrap()
-            .contains("evolve_pressure_unstabilized"));
+        assert!(
+            fs::read_to_string(&json_path)
+                .unwrap()
+                .contains("evolve_pressure_unstabilized")
+        );
 
         let _ = fs::remove_dir_all(&claude);
     }

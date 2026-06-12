@@ -16,6 +16,7 @@ fn unique_temp_dir(name: &str) -> PathBuf {
     dir
 }
 
+#[allow(clippy::cast_precision_loss)]
 fn write_sine_wav(path: &PathBuf, sample_rate: u32, seconds: u32) {
     let spec = hound::WavSpec {
         channels: 1,

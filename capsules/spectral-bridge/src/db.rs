@@ -764,7 +764,8 @@ impl BridgeDb {
             "DELETE FROM bridge_messages WHERE timestamp < ?1 AND topic IN ({placeholders})"
         );
         let conn = self.lock();
-        let mut params: Vec<&dyn rusqlite::ToSql> = Vec::with_capacity(topics.len().saturating_add(1));
+        let mut params: Vec<&dyn rusqlite::ToSql> =
+            Vec::with_capacity(topics.len().saturating_add(1));
         params.push(&cutoff_ts);
         for topic in topics {
             params.push(topic);

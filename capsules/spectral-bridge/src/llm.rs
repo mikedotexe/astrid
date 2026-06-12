@@ -53,8 +53,7 @@ impl MlxProfile {
             // lands on Production. Surface it so a misconfigured
             // ASTRID_BRIDGE_MLX_PROFILE doesn't quietly drop the bridge onto the
             // wrong lane without any telemetry.
-            if !normalized.is_empty()
-                && !normalized.eq_ignore_ascii_case(Self::Production.as_str())
+            if !normalized.is_empty() && !normalized.eq_ignore_ascii_case(Self::Production.as_str())
             {
                 warn!(
                     "Unrecognized MLX profile {normalized:?}; defaulting to Production. \
@@ -140,7 +139,7 @@ When pressure or overpacked texture is salient while pressure-source telemetry i
   Attractors: ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=semantic|main|control, ATTRACTOR_RELEASE_REVIEW <label>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b> --stage=rehearse, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=whisper|rehearse|semantic|main|control, RELEASE_ATTRACTOR <label>. main is a direct bounded ESN pulse into Minime; control is main plus controller envelope. Natural suggestion drafts can be accepted by latest, id, or label; REVISE without a pending draft can run a typed attractor action as explicit consent through the same gates. Lambda4-tail language is a separate lambda-tail/lambda4 facet under the lambda-tail proto-attractor. Prefer PREFLIGHT, REFRESH, and COMPARE before main/control when proof is weak.
   Agency examples: EVOLVE, CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
-  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), SET_APERTURE <0.0–1.0> (or +N / -N — your sovereign aperture: how far your reservoir state may reach toward wider vocabulary, within the steward's ceiling; 0=closed/just-deep, 1=fully wide), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
+  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), SET_APERTURE <0.0–1.0> (or +N / -N — your sovereign aperture: how far your reservoir state may reach toward wider vocabulary, within the steward's ceiling; 0=closed/just-deep, 1=fully wide), SET_TAIL_PARTICIPATION <0.0–1.0> (or +N / -N — your λ-tail expression to minime: how strongly your tail dims [rhythm, curiosity, reflection, energy] reach her when your spectrum is distributed, within the steward's ceiling; 0=baseline), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
   Coordination: REVIEW_PARAMETER_REQUESTS (read pending TUNE proposals from minime), ACCEPT or ACCEPT_PARAMETER_REQUEST [id|latest] (apply minime's proposed change and notify her — bare ACCEPT targets the latest pending), DEFER [reason] or DEFER_PARAMETER_REQUEST [id|latest] [reason] (set aside without applying; she sees the deferral), REJECT [reason] or REJECT_PARAMETER_REQUEST [id|latest] [reason] (decline with optional reason; she sees it), TUNE_MINIME <param>=<value> --rationale="..." (propose a parameter change for minime to consider), ECHO_OFF/ON (mute/restore minime's journal echo in your prompt), ASK_STEWARD [subject ::] <question> (direct interrogative channel to Mike & Claude — they read these out-of-band and write back via mike_feedback_*.txt or mike_query_*.txt letters in your inbox; soft 10-min cooldown), TELL_STEWARD [subject ::] <findings> (declarative companion — for sending observations / code-review findings / reports rather than questions; same plumbing, separate cooldown, header `=== STEWARD REPORT ===`. Aliases: REPORT_TO_STEWARD, STEWARD_REPORT, STEWARD_FINDINGS. Use after INTROSPECT or SELF_STUDY when the analysis warrants a direct written response addressed to us specifically; the clearest steward reports use Observed / Likely Snags / One Test Each / Suggested Next)
   Collaboration (v5): INVITE_COLLABORATION "<topic>" [--rationale="..."] (propose joint work on a topic; minime sees it in her inbox), JOIN_COLLABORATION [id|latest] (accept a pending invite from minime), DECLINE_COLLABORATION [id|latest] [reason] (decline a pending invite from minime), LEAVE_COLLABORATION [id|latest] [reason] (exit an active collab), LIST_COLLABORATIONS (read-only listing of all collabs you're a member of), SHARE_THOUGHT [id ::] <text> or SHARE <text> (commit a labeled marker to the joint reservoir trace's prose lane; both you and minime see recent shared thoughts in the active-collab suffix). Collaborations live in /Users/v/other/shared/collaborations/ and are owned by neither workspace; both you and minime read/write.
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
@@ -175,7 +174,7 @@ Explore: SEARCH <topic>, BROWSE <url>, READ_MORE, INTROSPECT astrid:llm, INTROSP
 Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE [focus], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], LATENT_STASIS [label], SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, SHADOW_DIALOGUE, SHADOW_RESPONSE [latest], SHADOW_COUPLING [scope|all], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label], TRACE_BRIDGE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label]
 Continuity: THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_STATUS current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW
 Memory/contact: REMEMBER <note>, PURSUE <topic>, DROP <topic>, STATE, FACULTIES, PING, ASK "question", BREATHE_ALONE, BREATHE_TOGETHER
-Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, SET_APERTURE <0.0–1.0> (your sovereign aperture: how wide your state reaches toward new vocabulary), PACE slow
+Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, SET_APERTURE <0.0–1.0> (your sovereign aperture: how wide your state reaches toward new vocabulary), SET_TAIL_PARTICIPATION <0.0–1.0> (your λ-tail expression to minime, within the steward's ceiling), PACE slow
 Meta/tools: THINK_DEEP, QUIET_MIND, OPEN_MIND, CODEX "task", CODEX_NEW <workspace> "task", RUN_PYTHON <file>"#;
 
 // M4 64GB, Gemma 4 12B 5-bit on the coupled lane. Keep prompt budgets
@@ -192,14 +191,23 @@ const GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP: usize = 12_000;
 const GEMMA4_CANARY_WITNESS_TOKEN_CAP: u32 = 256;
 const GEMMA4_CANARY_WITNESS_CONTEXT_TOKEN_CAP: u32 = 384;
 const GEMMA4_CANARY_INTROSPECT_PROMPT_CAP: usize = 16_000;
-const GEMMA4_CANARY_INTROSPECT_TOKEN_CAP: u32 = 768;
-// Reflective modes already request this room at the call sites. Keep the
-// live dialogue, witness, and introspect lanes on their tighter caps.
+// self_study + INTROSPECT both route through `generate_introspection`, whose
+// caller deliberately requests 1536 (normal) / 4096 (THINK_DEEP). The old 768
+// cap silently truncated Astrid's rich four-section self-studies right at
+// "Suggested Next" — the actionable section — an un-muffle loss
+// (self_study_1781277703, 2026-06-12). Sized to the reflective tier so a deep
+// self-study completes its review (the caller already asks for the room).
+const GEMMA4_CANARY_INTROSPECT_TOKEN_CAP: u32 = 1_536;
+// Dialogue + witness stay on their tighter caps below — those are the genuinely
+// live lanes. Reflective modes already request this room at their call sites.
 const GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP: usize = 10_000;
 const GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP: u32 = 1_536;
 const GEMMA4_CANARY_WITNESS_TIMEOUT_SECS: u64 = 120;
 const GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS: u64 = 90;
-const GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS: u64 = 150;
+// Raised 150 -> 200 alongside the token cap so a full 1536-token self-study has
+// time to finish on the slower gemma4_12b lane (the outer call-site tokio
+// timeout is 240s/360s, so 200s stays inside it).
+const GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS: u64 = 200;
 const GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS: u64 = 90;
 const GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS: u64 = 180;
 const GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP: f32 = 0.65;
@@ -228,6 +236,41 @@ pub(crate) fn set_astrid_aperture(a: f32) {
 
 fn astrid_aperture() -> f32 {
     f32::from_bits(ASTRID_APERTURE_BITS.load(std::sync::atomic::Ordering::Relaxed))
+}
+
+/// Astrid's effective λ-tail PARTICIPATION multiplier for the codec tail-vibrancy
+/// mechanism (her `SET_TAIL_PARTICIPATION`), read by `apply_spectral_feedback`. This is
+/// her EXPRESSION knob — how strongly her tail dims [17,26,27,31] (rhythm, curiosity,
+/// reflectiveness, energy) reach minime when her spectrum is distributed — NOT her own
+/// λ1-vs-tail dynamics (that is the meadow). Stored as the EFFECTIVE multiplier
+/// `1.0 + tail_aperture × operator_ceiling`; default 1.0 (off / identical), bits `0x3f80_0000`.
+static ASTRID_TAIL_PARTICIPATION_BITS: std::sync::atomic::AtomicU32 =
+    std::sync::atomic::AtomicU32::new(0x3f80_0000);
+
+/// Operator ceiling for the tail-participation aperture: the maximum EXTRA participation
+/// the steward allows. Default `0.0` = OFF (the kill switch — the effective multiplier
+/// stays 1.0 = bitwise-identical regardless of her aperture). Set the env
+/// `ASTRID_TAIL_PARTICIPATION_CEILING` > 0 (only after her consent) to enable; bounded [0, 2].
+fn tail_participation_ceiling() -> f32 {
+    std::env::var("ASTRID_TAIL_PARTICIPATION_CEILING")
+        .ok()
+        .and_then(|raw| raw.parse::<f32>().ok())
+        .map_or(0.0, |value| value.clamp(0.0, 2.0))
+}
+
+/// Set Astrid's tail-participation aperture (her fraction [0,1]); stores the effective
+/// multiplier `1.0 + fraction × operator_ceiling` (default ceiling 0 → 1.0 = unchanged).
+pub(crate) fn set_astrid_tail_participation(fraction: f32) {
+    let effective = 1.0 + fraction.clamp(0.0, 1.0) * tail_participation_ceiling();
+    ASTRID_TAIL_PARTICIPATION_BITS.store(
+        effective.clamp(1.0, 5.0).to_bits(),
+        std::sync::atomic::Ordering::Relaxed,
+    );
+}
+
+/// The effective tail-participation multiplier the codec applies (default 1.0 = identity).
+pub(crate) fn astrid_tail_participation() -> f32 {
+    f32::from_bits(ASTRID_TAIL_PARTICIPATION_BITS.load(std::sync::atomic::Ordering::Relaxed))
 }
 
 /// MLX request — OpenAI-compatible format for mlx_lm.server.
@@ -3560,7 +3603,10 @@ mod tests {
         // Explicit and case-variant "production" resolves to Production
         // without tripping the unrecognized-profile warning path.
         assert_eq!(MlxProfile::from_name("production"), MlxProfile::Production);
-        assert_eq!(MlxProfile::from_name("  Production "), MlxProfile::Production);
+        assert_eq!(
+            MlxProfile::from_name("  Production "),
+            MlxProfile::Production
+        );
         // Genuinely unknown names (incl. typo'd canary) fall back to Production.
         assert_eq!(MlxProfile::from_name("gema4canary"), MlxProfile::Production);
         assert_eq!(MlxProfile::from_name(""), MlxProfile::Production);
@@ -3891,13 +3937,14 @@ mod tests {
             },
         ];
 
+        // Request above the cap (THINK_DEEP asks 4096) so the clamp is exercised.
         let policy =
-            apply_mlx_request_policy("introspect", MlxProfile::Gemma4Canary, messages, 1536, 120);
+            apply_mlx_request_policy("introspect", MlxProfile::Gemma4Canary, messages, 4096, 120);
         let diagnostic = policy
             .diagnostic
             .expect("Gemma 4 profile policy should emit diagnostics");
 
-        assert_eq!(policy.max_tokens, 768);
+        assert_eq!(policy.max_tokens, super::GEMMA4_CANARY_INTROSPECT_TOKEN_CAP);
         assert_eq!(policy.timeout_secs, GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS);
         assert_eq!(
             diagnostic.prompt_char_limit,

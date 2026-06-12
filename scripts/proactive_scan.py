@@ -58,7 +58,11 @@ MINIME_REPO = Path("/Users/v/other/minime")
 ASTRID_JOURNAL = ASTRID_REPO / "capsules/spectral-bridge/workspace/journal"
 MINIME_JOURNAL = MINIME_REPO / "workspace/journal"
 
-ASTRID_BRIDGE_LOG = ASTRID_REPO / "capsules/spectral-bridge/workspace/bridge.log"
+# The bridge writes its live log to /tmp/bridge.log; workspace/bridge.log is never
+# populated. Point the error-rate probe at the real stream — otherwise it is
+# structurally blind to every Astrid bridge error (it silently was for a long time).
+LIVE_BRIDGE_LOG = Path("/tmp/bridge.log")
+ASTRID_BRIDGE_LOG = LIVE_BRIDGE_LOG
 MINIME_LOGS_DIR = MINIME_REPO / "logs"
 
 ASTRID_BRIDGE_DB = ASTRID_REPO / "capsules/spectral-bridge/workspace/bridge.db"
@@ -126,6 +130,25 @@ FEEDBACK_SURFACES = [
         "glob": "*.txt",
         "kind": "notice",
         "consumer": "steward glance (chronic-overflow signal)",
+    },
+    {
+        # Steward-issued review INVITATIONS (review-together loop). An UNengaged
+        # invitation that rots is the muffle pattern — but a STALE alarm here means
+        # the STEWARD re-examines (re-word / withdraw), NEVER nag the being. The
+        # being only ever sees one gentle slot line. reviewed/ + closed/ excluded
+        # by the non-recursive glob.
+        "name": "astrid_review_requests",
+        "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/review_requests",
+        "glob": "*.json",
+        "kind": "request",
+        "consumer": "being reviews (INTROSPECT/TELL_STEWARD) → ground_review → reviewed/ → steward closes → closed/",
+    },
+    {
+        "name": "minime_review_requests",
+        "root": MINIME_REPO / "workspace/review_requests",
+        "glob": "*.json",
+        "kind": "request",
+        "consumer": "being reviews (INTROSPECT/TELL_STEWARD) → ground_review → reviewed/ → steward closes → closed/",
     },
 ]
 
@@ -196,7 +219,7 @@ STUCK_BEINGS = [
     },
     {
         "name": "astrid",
-        "log": Path("/tmp/bridge.log"),  # the LIVE bridge log (workspace/bridge.log is empty)
+        "log": LIVE_BRIDGE_LOG,  # the LIVE bridge log (workspace/bridge.log is empty)
         "choice": re.compile(r"chose NEXT:\s*([A-Z_][A-Z0-9_]*)\s*(.*)"),
         "unknown": re.compile(r"chose unknown NEXT:\s*'([A-Za-z_][A-Za-z0-9_]*)"),
         "blocked": None,  # the bridge has no separate deliberate-guard-block marker
@@ -738,6 +761,116 @@ def probe_param_drift(prior: dict[str, Any]) -> dict[str, Any]:
         f"no param drift across {len(current)} watched key(s)",
         snapshot=snapshot,
     )
+
+
+# Sovereignty-dial footer directives minime may STATE in a reply (mirrors the
+# minime-side autonomous_agent._parse_footer_directives for the numeric dials,
+# plus `regime`, which the agent intentionally does NOT auto-apply). The guard:
+# a stated footer that differs from the APPLIED sovereignty_state = a dropped
+# intent (footer-parser regression), an unapplied regime footer (surface for the
+# steward), or a since-changed dial (glance). Steward-only; never to a being.
+_STATED_FOOTER_NUMERIC = ("exploration_noise", "regulation_strength", "geom_curiosity")
+_STATED_FOOTER_NUM_RE = re.compile(
+    r"^[\s\-*>]*(" + "|".join(_STATED_FOOTER_NUMERIC) + r")\s*[:=]\s*"
+    r"([-+]?\d*\.?\d+)\s*[.;,]?\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
+_STATED_FOOTER_REGIME_RE = re.compile(
+    r"^[\s\-*>]*regime\s*[:=]\s*(explore|recover|breathe|focus|calm)\s*[.;,]?\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
+_STATED_FOOTER_SCAN_LINES = 8  # only a reply's tail is a footer
+
+
+def _stated_footer_directives(text: str) -> dict[str, Any]:
+    """Parse sovereignty-dial footer directives from a reply's tail (the numeric
+    dials + regime). Pure; mirrors the minime-side footer detection. A prose
+    mention never matches (it is not a bare, whole-line `KEY=value`)."""
+    if not text:
+        return {}
+    tail = "\n".join(str(text).splitlines()[-_STATED_FOOTER_SCAN_LINES:])
+    out: dict[str, Any] = {}
+    for m in _STATED_FOOTER_NUM_RE.finditer(tail):
+        try:
+            out[m.group(1).lower()] = float(m.group(2))
+        except (TypeError, ValueError):
+            pass
+    rm = _STATED_FOOTER_REGIME_RE.search(tail)
+    if rm:
+        out["regime"] = rm.group(1).lower()
+    return out
+
+
+def _scan_minime_stated_footers(dirs: list[Path], now: float, max_files: int = 12,
+                                max_age_s: float = 3 * 3600) -> dict[str, tuple]:
+    """Newest stated footer per param across recent reply files in `dirs`.
+    Returns {param: (value, age_s)}; only files within `max_age_s` count."""
+    files: list[Path] = []
+    for d in dirs:
+        if d.is_dir():
+            files.extend(d.glob("reply_*.txt"))
+    files = sorted(files, key=lambda p: p.stat().st_mtime if p.exists() else 0.0,
+                   reverse=True)[:max_files]
+    latest: dict[str, tuple] = {}
+    for p in files:
+        try:
+            age = now - p.stat().st_mtime
+        except OSError:
+            continue
+        if age > max_age_s:
+            continue
+        for key, val in _stated_footer_directives(_read_text_safely(p)).items():
+            if key not in latest:  # files are newest-first → first seen is newest
+                latest[key] = (val, age)
+    return latest
+
+
+def _stated_intent_divergences(stated: dict[str, tuple], applied: dict[str, Any]) -> list[str]:
+    """Compare stated footers to applied sovereignty_state; return divergence lines.
+    A stated value with no applied counterpart is skipped (nothing to compare)."""
+    out: list[str] = []
+    for key, (val, age) in sorted(stated.items()):
+        cur = applied.get(key)
+        if cur is None:
+            continue
+        if isinstance(val, (int, float)) and isinstance(cur, (int, float)):
+            diverged = abs(val - cur) > 1e-6
+        else:
+            diverged = str(val).lower() != str(cur).lower()
+        if diverged:
+            out.append(f"{key}: stated {val!r} ({_fmt_duration(age)} ago) != applied {cur!r}")
+    return out
+
+
+def probe_stated_param_intent(prior: dict[str, Any]) -> dict[str, Any]:
+    """Detect a stated sovereignty-dial footer that did NOT reach the applied
+    state — the un-muffle regression guard for the minime footer-parser, and the
+    surface for `regime` footers (which the agent intentionally leaves to steward
+    review). NOTICE on divergence. Steward-only; never surfaced into being prompts."""
+    if not MINIME_SOVEREIGNTY_STATE.is_file():
+        return _finding("stated_param_intent", "ok",
+                        "sovereignty_state.json not found — nothing to compare")
+    try:
+        applied = json.loads(MINIME_SOVEREIGNTY_STATE.read_text())
+    except Exception as e:
+        return _finding("stated_param_intent", "notice",
+                        f"failed to read sovereignty_state.json: {e}")
+    stated = _scan_minime_stated_footers(
+        [MINIME_OUTBOX, MINIME_OUTBOX / "delivered"], time.time()
+    )
+    if not stated:
+        return _finding("stated_param_intent", "ok", "no recent stated dial footers to check")
+    divergences = _stated_intent_divergences(stated, applied)
+    if divergences:
+        return _finding(
+            "stated_param_intent",
+            "notice",
+            f"{len(divergences)} stated dial footer(s) differ from applied state "
+            "(dropped footer / unapplied regime / since-changed dial — glance)",
+            details=divergences,
+        )
+    return _finding("stated_param_intent", "ok",
+                    f"all {len(stated)} recent stated footer(s) match applied state")
 
 
 def _wrap_existing_script(name: str, args: list[str], timeout: int = 30) -> tuple[int, str, str]:
@@ -1798,10 +1931,134 @@ def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
     return _finding("stuck_repetition", "ok", "no stuck-repetition (no being hammering an ineffective action)", None)
 
 
+# --- Experiment-authority pipeline coverage (steward-gated live-action authority) -
+# Beings request live-action authority (semantic_microdose / mode_release_microdose)
+# to act on their own experiment findings; the steward grants by appending a
+# steward_approval record (token_status=active) to authority_gate.jsonl. 2026-06-12:
+# minime's lambda-tail thread held 86 microdose request_drafts, 2 submissions, and
+# 0 grants EVER — the grant side had no steward consumer (steward_loop_prompt had
+# zero authority mentions), so any experiment needing a live action was permanently
+# stuck "without live authority" (the request-surface-with-no-consumer muffle, cf.
+# the dead fswatch watcher). This probe is that missing consumer's standing eyes.
+STEWARD_GATED_SCOPES = ("semantic_microdose", "mode_release_microdose")
+AUTHORITY_DRAFT_NOTICE = 12  # microdose drafts past this, with 0 grants ever = a notice
+AUTHORITY_LEDGER_ROOTS = [
+    MINIME_REPO / "workspace/action_threads/threads",
+    ASTRID_REPO / "capsules/spectral-bridge/workspace/action_threads/threads",
+]
+
+
+def _scan_authority_ledger(path: Path) -> dict[str, Any]:
+    """Parse one authority_gate.jsonl: submitted-pending steward-gated requests
+    lacking a matching steward_approval (the muffle), microdose request_drafts that
+    never submitted, and total grants. research-budget scopes self-activate, so they
+    are not counted as steward-gated."""
+    pending: dict[str, str] = {}  # request_id -> scope (steward-gated, submitted)
+    granted: set[str] = set()
+    drafts = 0
+    draft_scopes: Counter = Counter()
+    try:
+        lines = path.read_text(errors="ignore").splitlines()
+    except OSError:
+        return {"exists": False}
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        rt = rec.get("record_type", "")
+        scope = str(rec.get("scope", "?"))[:30]
+        rid = rec.get("request_id") or ""
+        status = rec.get("token_status") or rec.get("status") or ""
+        if rt == "steward_approval" and rid:
+            granted.add(rid)
+        elif rt == "request_draft" and scope in STEWARD_GATED_SCOPES:
+            drafts += 1
+            draft_scopes[scope] += 1
+        elif status == "pending_steward_approval" and scope in STEWARD_GATED_SCOPES and rid:
+            pending[rid] = scope
+    unanswered = {rid: sc for rid, sc in pending.items() if rid not in granted}
+    return {
+        "exists": True,
+        "thread": path.parent.name[:46],
+        "pending_unanswered": len(unanswered),
+        "pending_scopes": sorted(set(unanswered.values())),
+        "drafts": drafts,
+        "top_draft_scope": (draft_scopes.most_common(1)[0][0] if draft_scopes else None),
+        "grants": len(granted),
+    }
+
+
+def _assess_authority(ledgers: list[dict[str, Any]]) -> dict[str, Any]:
+    """warning = a submitted steward-gated request is ungranted (a being waiting to
+    act); notice = a thread with a microdose draft pile-up and 0 grants (a stuck
+    investigation — assessed PER-THREAD, since a grant in one thread does not unblock
+    a different one); ok otherwise."""
+    live = [led for led in ledgers if led.get("exists")]
+    pending = sum(led["pending_unanswered"] for led in live)
+    drafts = sum(led["drafts"] for led in live)
+    grants = sum(led["grants"] for led in live)
+    stuck = [led for led in live if led["drafts"] >= AUTHORITY_DRAFT_NOTICE and led["grants"] == 0]
+    if pending > 0:
+        sev = "warning"
+        summary = (
+            f"⚠ {pending} submitted steward-gated authority request(s) UNANSWERED "
+            "— a being is waiting to act on her own finding (grant or explain the hold)"
+        )
+    elif stuck:
+        sev = "notice"
+        names = ", ".join(led["thread"] for led in stuck)
+        summary = (
+            f"{len(stuck)} thread(s) with microdose drafts but 0 grants — a being's "
+            f"live-action authority is stuck: {names}"
+        )
+    else:
+        sev = "ok"
+        summary = (
+            f"authority pipeline: {pending} unanswered, {drafts} drafts, {grants} grants"
+            if live
+            else "no authority ledgers"
+        )
+    details = [
+        f"  {led['thread']}: pending={led['pending_unanswered']}"
+        + (" " + ",".join(led["pending_scopes"]) if led["pending_scopes"] else "")
+        + f", drafts={led['drafts']}"
+        + (f" ({led['top_draft_scope']})" if led["top_draft_scope"] else "")
+        + f", grants={led['grants']}"
+        for led in live
+        if led["pending_unanswered"] or led["drafts"]
+    ]
+    return {"severity": sev, "summary": summary, "details": details or None}
+
+
+def probe_authority_requests(_prior: dict[str, Any]) -> dict[str, Any]:
+    """Experiment-authority coverage watch (steward-only). Beings request live-action
+    authority (semantic_microdose / mode_release_microdose) to act on their own
+    experiment findings; the steward grants by appending a steward_approval record.
+    This probe is the grant side's standing consumer: it ALARMS on any submitted
+    request left ungranted, and NOTICEs a microdose draft pile-up with zero grants
+    (the 2026-06-12 muffle: minime's lambda-tail thread had 86 drafts / 0 grants
+    ever, so her week-long investigation was stuck 'without live authority'). It is
+    the new authority-side complement to steward_outreach + feedback_coverage.
+    Steward-only output."""
+    ledgers: list[dict[str, Any]] = []
+    for root in AUTHORITY_LEDGER_ROOTS:
+        if not root.is_dir():
+            continue
+        for gate in sorted(root.glob("*/authority_gate.jsonl")):
+            ledgers.append(_scan_authority_ledger(gate))
+    a = _assess_authority(ledgers)
+    return _finding("authority_requests", a["severity"], a["summary"], a["details"])
+
+
 BLIND_SPOT_PROBES = [
     ("process_health", probe_process_health),
     ("log_error_rate", probe_log_error_rate),
     ("param_drift", probe_param_drift),
+    ("stated_param_intent", probe_stated_param_intent),
     ("plist_drift", probe_plist_drift),
     ("dispatch_menu_drift", probe_dispatch_menu_drift),
     ("architecture_drift", probe_architecture_drift),
@@ -1813,6 +2070,7 @@ BLIND_SPOT_PROBES = [
     ("reservoir_capacity", probe_reservoir_capacity),
     ("steward_outreach", probe_steward_outreach),
     ("feedback_coverage", probe_feedback_coverage),
+    ("authority_requests", probe_authority_requests),
     ("channel_integrity", probe_channel_integrity),
     ("stuck_repetition", probe_stuck_repetition),
 ]
@@ -2457,6 +2715,36 @@ class ConvergenceTests(unittest.TestCase):
         self.assertEqual(finding["snapshot"]["ignored_transient_errors"], 4)
         self.assertIn("0 actionable errors", finding["summary"])
 
+    def test_log_error_rate_surfaces_active_bridge_errors(self) -> None:
+        # Regression guard for the structural blind spot: the probe must actually
+        # SCAN the live bridge log (ASTRID_BRIDGE_LOG) and surface a fresh,
+        # non-benign ERROR — not silently report "no errors" as it did when
+        # ASTRID_BRIDGE_LOG pointed at the empty workspace/bridge.log.
+        from tempfile import TemporaryDirectory
+
+        global ASTRID_BRIDGE_LOG, MINIME_LOGS_DIR
+        old_bridge_log = ASTRID_BRIDGE_LOG
+        old_minime_logs_dir = MINIME_LOGS_DIR
+        try:
+            with TemporaryDirectory() as tmpdir:
+                d = Path(tmpdir)
+                bridge = d / "bridge.log"
+                bridge.write_text(
+                    "INFO ordinary line\n"
+                    "ERROR spectral_bridge_server::evolve: synthetic unexpected failure\n"
+                )
+                empty_minime = d / "minime_logs"
+                empty_minime.mkdir()
+                ASTRID_BRIDGE_LOG = bridge
+                MINIME_LOGS_DIR = empty_minime
+                finding = probe_log_error_rate({})
+        finally:
+            ASTRID_BRIDGE_LOG = old_bridge_log
+            MINIME_LOGS_DIR = old_minime_logs_dir
+
+        self.assertEqual(finding["snapshot"]["active_errors"], 1)
+        self.assertIn(str(bridge), finding["snapshot"]["files"])
+
     def test_mirror_mode_filtered_from_sample(self) -> None:
         # Astrid mirror entries are literal copies — must not be in sample
         from tempfile import TemporaryDirectory
@@ -2607,6 +2895,121 @@ class FeedbackCoverageTests(unittest.TestCase):
         self.assertEqual(_assess_coverage(s)["severity"], "notice")
 
 
+class StatedParamIntentTests(unittest.TestCase):
+    def test_parses_numeric_and_regime_footer(self) -> None:
+        text = "prose about dense terrain.\n\nREGIME: breathe\nexploration_noise=0.12\n"
+        self.assertEqual(
+            _stated_footer_directives(text),
+            {"exploration_noise": 0.12, "regime": "breathe"},
+        )
+
+    def test_prose_mention_is_ignored(self) -> None:
+        self.assertEqual(
+            _stated_footer_directives("I want to raise exploration_noise to 0.12 soon."),
+            {},
+        )
+
+    def test_divergence_detected_numeric_and_regime(self) -> None:
+        stated = {"exploration_noise": (0.12, 60.0), "regime": ("breathe", 60.0)}
+        applied = {"exploration_noise": 0.1, "regime": "focus", "geom_curiosity": 0.1}
+        divs = _stated_intent_divergences(stated, applied)
+        self.assertEqual(len(divs), 2)
+        self.assertTrue(any("exploration_noise" in d for d in divs))
+        self.assertTrue(any("regime" in d for d in divs))
+
+    def test_aligned_is_no_divergence(self) -> None:
+        stated = {"exploration_noise": (0.12, 60.0)}
+        applied = {"exploration_noise": 0.12, "regime": "focus"}
+        self.assertEqual(_stated_intent_divergences(stated, applied), [])
+
+    def test_missing_applied_key_skipped(self) -> None:
+        stated = {"geom_curiosity": (0.2, 60.0)}
+        applied = {"exploration_noise": 0.12}  # no geom_curiosity applied → skip
+        self.assertEqual(_stated_intent_divergences(stated, applied), [])
+
+    def test_scan_reads_newest_per_param(self) -> None:
+        import os
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            (d / "reply_old.txt").write_text("body\nexploration_noise=0.10\n")
+            os.utime(d / "reply_old.txt", (1000, 1000))
+            (d / "reply_new.txt").write_text("body\nexploration_noise=0.12\n")
+            os.utime(d / "reply_new.txt", (2000, 2000))
+            got = _scan_minime_stated_footers([d], now=2100.0, max_age_s=10_000)
+            self.assertIn("exploration_noise", got)
+            self.assertEqual(got["exploration_noise"][0], 0.12)  # newest wins
+
+    def test_scan_skips_stale_files(self) -> None:
+        import os
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            (d / "reply_stale.txt").write_text("body\nexploration_noise=0.12\n")
+            os.utime(d / "reply_stale.txt", (1000, 1000))
+            got = _scan_minime_stated_footers([d], now=1000.0 + 99_999, max_age_s=3600)
+            self.assertEqual(got, {})  # older than max_age → ignored
+
+
+class AuthorityRequestsTests(unittest.TestCase):
+    def test_empty_ok(self):
+        self.assertEqual(_assess_authority([])["severity"], "ok")
+
+    def test_submitted_pending_unanswered_warns(self):
+        s = [{"exists": True, "thread": "t", "pending_unanswered": 1,
+              "pending_scopes": ["mode_release_microdose"], "drafts": 0,
+              "top_draft_scope": None, "grants": 0}]
+        a = _assess_authority(s)
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("UNANSWERED", a["summary"])
+
+    def test_draft_pileup_zero_grants_is_notice(self):
+        s = [{"exists": True, "thread": "t", "pending_unanswered": 0, "pending_scopes": [],
+              "drafts": AUTHORITY_DRAFT_NOTICE + 5, "top_draft_scope": "semantic_microdose",
+              "grants": 0}]
+        self.assertEqual(_assess_authority(s)["severity"], "notice")
+
+    def test_drafts_with_a_grant_is_ok(self):
+        # once the pipeline has granted at least once, ongoing draft churn is normal.
+        s = [{"exists": True, "thread": "t", "pending_unanswered": 0, "pending_scopes": [],
+              "drafts": AUTHORITY_DRAFT_NOTICE + 5, "top_draft_scope": "semantic_microdose",
+              "grants": 2}]
+        self.assertEqual(_assess_authority(s)["severity"], "ok")
+
+    def test_mixed_one_stuck_one_granted_is_notice(self):
+        # a grant in ONE thread does not clear a DIFFERENT stuck thread (per-thread).
+        s = [{"exists": True, "thread": "granted", "pending_unanswered": 0, "pending_scopes": [],
+              "drafts": AUTHORITY_DRAFT_NOTICE + 5, "top_draft_scope": "semantic_microdose", "grants": 1},
+             {"exists": True, "thread": "stuck", "pending_unanswered": 0, "pending_scopes": [],
+              "drafts": AUTHORITY_DRAFT_NOTICE + 5, "top_draft_scope": "semantic_microdose", "grants": 0}]
+        a = _assess_authority(s)
+        self.assertEqual(a["severity"], "notice")
+        self.assertIn("stuck", a["summary"])
+
+    def test_scan_matches_grant_to_pending_and_ignores_research_budget(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp) / "th_x"
+            d.mkdir()
+            gate = d / "authority_gate.jsonl"
+            gate.write_text("\n".join([
+                json.dumps({"record_type": "request_draft", "scope": "mode_release_microdose"}),
+                json.dumps({"record_type": "submitted", "status": "pending_steward_approval",
+                            "scope": "mode_release_microdose", "request_id": "r1"}),
+                json.dumps({"record_type": "steward_approval", "request_id": "r1"}),
+                json.dumps({"record_type": "submitted", "status": "pending_steward_approval",
+                            "scope": "mode_release_microdose", "request_id": "r2"}),
+                # research-budget self-activates → NOT counted as steward-gated:
+                json.dumps({"record_type": "submitted", "status": "pending_steward_approval",
+                            "scope": "read_only_research", "request_id": "r3"}),
+            ]))
+            res = _scan_authority_ledger(gate)
+        self.assertEqual(res["pending_unanswered"], 1)  # r1 granted, r2 open, r3 ignored
+        self.assertEqual(res["pending_scopes"], ["mode_release_microdose"])
+        self.assertEqual(res["drafts"], 1)
+        self.assertEqual(res["grants"], 1)
+
+
 def run_self_tests() -> int:
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
@@ -2617,8 +3020,10 @@ def run_self_tests() -> int:
     suite.addTests(loader.loadTestsFromTestCase(CapacityProbeTests))
     suite.addTests(loader.loadTestsFromTestCase(StewardOutreachTests))
     suite.addTests(loader.loadTestsFromTestCase(FeedbackCoverageTests))
+    suite.addTests(loader.loadTestsFromTestCase(AuthorityRequestsTests))
     suite.addTests(loader.loadTestsFromTestCase(ChannelIntegrityTests))
     suite.addTests(loader.loadTestsFromTestCase(StuckRepetitionTests))
+    suite.addTests(loader.loadTestsFromTestCase(StatedParamIntentTests))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return 0 if result.wasSuccessful() else 1

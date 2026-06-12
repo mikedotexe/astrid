@@ -825,7 +825,7 @@ mod tests {
         );
         // Attempt at exchange 103: 103 - 100 = 3, not < 3 → allowed.
         assert!(
-            !(103_u64.saturating_sub(last) < COOLDOWN_EXCHANGES),
+            103_u64.saturating_sub(last) >= COOLDOWN_EXCHANGES,
             "cooldown should clear at +3 exchanges"
         );
     }

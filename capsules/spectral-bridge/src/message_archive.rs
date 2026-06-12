@@ -630,12 +630,27 @@ mod tests {
         let root = temp_dir("telemetry_purge");
         let (db, db_path) = open_temp_db(&root);
         // Old + fresh telemetry (high-cadence, ephemeral) and an old dialogue row.
-        db.insert_bridge_message_for_test(1_800.0, "minime_to_astrid", "consciousness.v1.telemetry", "{\"old\":1}")
-            .expect("insert old telemetry");
-        db.insert_bridge_message_for_test(1_950.0, "minime_to_astrid", "consciousness.v1.telemetry", "{\"new\":1}")
-            .expect("insert fresh telemetry");
-        db.insert_bridge_message_for_test(1_800.0, "astrid_to_minime", "consciousness.v1.autonomous", "{\"dialogue\":1}")
-            .expect("insert old dialogue");
+        db.insert_bridge_message_for_test(
+            1_800.0,
+            "minime_to_astrid",
+            "consciousness.v1.telemetry",
+            "{\"old\":1}",
+        )
+        .expect("insert old telemetry");
+        db.insert_bridge_message_for_test(
+            1_950.0,
+            "minime_to_astrid",
+            "consciousness.v1.telemetry",
+            "{\"new\":1}",
+        )
+        .expect("insert fresh telemetry");
+        db.insert_bridge_message_for_test(
+            1_800.0,
+            "astrid_to_minime",
+            "consciousness.v1.autonomous",
+            "{\"dialogue\":1}",
+        )
+        .expect("insert old dialogue");
 
         let mut config = config(&root, &db_path);
         // Global (archive) retention far enough back that nothing is archived,
@@ -659,7 +674,11 @@ mod tests {
         let dialogue = db
             .query_messages(0.0, f64::MAX, Some("consciousness.v1.autonomous"), 100)
             .expect("query dialogue");
-        assert_eq!(dialogue.len(), 1, "old dialogue must NOT be purged by the telemetry clock");
+        assert_eq!(
+            dialogue.len(),
+            1,
+            "old dialogue must NOT be purged by the telemetry clock"
+        );
     }
 
     #[test]

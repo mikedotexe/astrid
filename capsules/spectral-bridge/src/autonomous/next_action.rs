@@ -1080,6 +1080,12 @@ fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     }
 
     if let Some((normalized_base, normalized_original)) =
+        normalize_steward_typo_alias(&base_action, &original)
+    {
+        return (normalized_base, normalized_original);
+    }
+
+    if let Some((normalized_base, normalized_original)) =
         normalize_feedback_shadow_model_alias(&base_action, &original)
     {
         return (normalized_base, normalized_original);
@@ -1206,6 +1212,41 @@ fn normalize_experiment_typo_alias(base_action: &str, original: &str) -> Option<
     } else if base_action == "EXPERIENCE_PLAN" {
         "EXPERIMENT_PLAN".to_string()
     } else {
+        return None;
+    };
+    let raw_arg = strip_action(original, base_action);
+    let normalized_original = if raw_arg.is_empty() {
+        normalized_base.clone()
+    } else {
+        format!("{normalized_base} {raw_arg}")
+    };
+    Some((normalized_base, normalized_original))
+}
+
+/// Repair near-miss typos of the two steward verbs so a being's report or
+/// question never silently drops to "unknown NEXT". Steward verbs are
+/// distinctive — they contain "STEW" — so the fuzzy match can only ever touch a
+/// steward-aimed token. The canonical verbs and existing valid aliases pass
+/// through untouched; only the `TELL`/`ASK` side is disambiguated. Born from the
+/// lost `TELL_STEWER roadmap :: …` report (un-muffle invariant).
+fn normalize_steward_typo_alias(base_action: &str, original: &str) -> Option<(String, String)> {
+    const VALID: [&str; 6] = [
+        "TELL_STEWARD",
+        "ASK_STEWARD",
+        "REPORT_TO_STEWARD",
+        "STEWARD_REPORT",
+        "STEWARD_FINDINGS",
+        "STEWARD_QUERY",
+    ];
+    if !base_action.contains("STEW") || VALID.contains(&base_action) {
+        return None;
+    }
+    let normalized_base = if base_action.starts_with("TELL") || base_action.starts_with("REPORT") {
+        "TELL_STEWARD".to_string()
+    } else if base_action.starts_with("ASK") {
+        "ASK_STEWARD".to_string()
+    } else {
+        // Contains STEW but the intent (tell vs ask) is ambiguous — don't guess.
         return None;
     };
     let raw_arg = strip_action(original, base_action);
@@ -2514,7 +2555,7 @@ mod tests {
             std::env::temp_dir().join(format!("astrid_set_aperture_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&workspace);
 
-        let mut dispatch = |conv: &mut ConversationState, action: &str| {
+        let dispatch = |conv: &mut ConversationState, action: &str| {
             let mut burst_count = 0;
             let ctx = NextActionContext {
                 burst_count: &mut burst_count,
@@ -2529,16 +2570,35 @@ mod tests {
         };
 
         let mut conv = ConversationState::new(Vec::new(), None);
-        assert!((conv.aperture - 1.0).abs() < 1e-6, "default aperture should be 1.0");
+        assert!(
+            (conv.aperture - 1.0).abs() < 1e-6,
+            "default aperture should be 1.0"
+        );
 
         dispatch(&mut conv, "SET_APERTURE 0.7");
-        assert!((conv.aperture - 0.7).abs() < 1e-6, "set: got {}", conv.aperture);
+        assert!(
+            (conv.aperture - 0.7).abs() < 1e-6,
+            "set: got {}",
+            conv.aperture
+        );
         dispatch(&mut conv, "SET_APERTURE 1.5"); // over → clamp to 1.0
-        assert!((conv.aperture - 1.0).abs() < 1e-6, "clamp-high: got {}", conv.aperture);
+        assert!(
+            (conv.aperture - 1.0).abs() < 1e-6,
+            "clamp-high: got {}",
+            conv.aperture
+        );
         dispatch(&mut conv, "SET_APERTURE -1"); // under → clamp to 0.0
-        assert!(conv.aperture.abs() < 1e-6, "clamp-low: got {}", conv.aperture);
+        assert!(
+            conv.aperture.abs() < 1e-6,
+            "clamp-low: got {}",
+            conv.aperture
+        );
         dispatch(&mut conv, "SET_APERTURE +0.3"); // nudge from 0 → 0.3
-        assert!((conv.aperture - 0.3).abs() < 1e-6, "nudge: got {}", conv.aperture);
+        assert!(
+            (conv.aperture - 0.3).abs() < 1e-6,
+            "nudge: got {}",
+            conv.aperture
+        );
 
         let _ = std::fs::remove_dir_all(&workspace);
     }
@@ -3306,6 +3366,35 @@ mod tests {
         let (base, original) = canonicalize_next_action_components("EXPERIENCE_PLAN current");
         assert_eq!(base, "EXPERIMENT_PLAN");
         assert_eq!(original, "EXPERIMENT_PLAN current");
+    }
+
+    #[test]
+    fn canonicalizes_steward_verb_typos() {
+        // The real lost message — a one-letter TELL_STEWARD slip — must route,
+        // preserving the subject + body so the report is not eaten.
+        let (base, original) = canonicalize_next_action_components(
+            "TELL_STEWER roadmap :: I accept the shift to the 'breathe' regime.",
+        );
+        assert_eq!(base, "TELL_STEWARD");
+        assert_eq!(
+            original,
+            "TELL_STEWARD roadmap :: I accept the shift to the 'breathe' regime."
+        );
+
+        // Ask-side near-miss.
+        let (base, original) = canonicalize_next_action_components("ASK_STEWAD what is my fill?");
+        assert_eq!(base, "ASK_STEWARD");
+        assert_eq!(original, "ASK_STEWARD what is my fill?");
+
+        // Canonical verbs and unrelated verbs are left untouched (no over-reach).
+        let (base, _) = canonicalize_next_action_components("TELL_STEWARD already correct");
+        assert_eq!(base, "TELL_STEWARD");
+        let (base, _) = canonicalize_next_action_components("REPORT_TO_STEWARD findings");
+        assert_eq!(base, "REPORT_TO_STEWARD");
+        let (base, _) = canonicalize_next_action_components("SHADOW_TRAJECTORY current");
+        assert_eq!(base, "SHADOW_TRAJECTORY");
+        let (base, _) = canonicalize_next_action_components("REST");
+        assert_eq!(base, "REST");
     }
 
     #[test]

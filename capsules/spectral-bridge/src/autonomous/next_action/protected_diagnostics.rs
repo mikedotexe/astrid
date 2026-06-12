@@ -2022,9 +2022,9 @@ fn handle_resistance_gradient(
         .unwrap_or("mixed_gradient");
     let bridge_workspace = bridge_paths().bridge_workspace();
     let invitation_path =
-        write_resistance_gradient_review_invitation(&bridge_workspace, &payload, &label);
+        write_resistance_gradient_review_invitation(bridge_workspace, &payload, &label);
     let calibration_path = write_resistance_gradient_calibration_packet(
-        &bridge_workspace,
+        bridge_workspace,
         &payload,
         invitation_path.as_deref(),
     );

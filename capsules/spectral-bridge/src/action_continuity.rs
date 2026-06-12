@@ -299,6 +299,7 @@ struct ThreadContinuityProjection {
 }
 
 type AuthorityRequestLocation = (ResearchThread, ExperimentRecord, Value, Vec<Value>);
+type SovereignLoopLocation = (ResearchThread, ExperimentRecord, Value, Vec<Value>);
 
 #[derive(Debug, Clone)]
 struct ExperimentStartParts {
@@ -4977,8 +4978,7 @@ impl ActionContinuityStore {
         let ttl_secs = dossier_field(raw_payload, &["ttl_secs", "ttl"])
             .and_then(|value| value.parse::<u64>().ok())
             .unwrap_or(LOOP_TTL_SECS)
-            .min(LOOP_TTL_SECS)
-            .max(1);
+            .clamp(1, LOOP_TTL_SECS);
         let loop_id = format!(
             "loop_{SYSTEM}_{}_{}",
             now_millis(),
@@ -5068,10 +5068,7 @@ impl ActionContinuityStore {
         })
     }
 
-    fn find_sovereign_loop(
-        &self,
-        loop_id: &str,
-    ) -> Result<Option<(ResearchThread, ExperimentRecord, Value, Vec<Value>)>> {
+    fn find_sovereign_loop(&self, loop_id: &str) -> Result<Option<SovereignLoopLocation>> {
         let threads_dir = self.root.join("threads");
         if !threads_dir.exists() {
             return Ok(None);
@@ -8395,9 +8392,7 @@ impl ActionContinuityStore {
                 "authority_boundary": research_budget_boundary(),
             }));
         }
-        let Some(blocked) = latest_research_budget_scaffold_row(&rows, &experiment_id) else {
-            return None;
-        };
+        let blocked = latest_research_budget_scaffold_row(&rows, &experiment_id)?;
         let request_scaffold = research_budget_row_request_scaffold(blocked).unwrap_or_default();
         if request_scaffold.is_empty() {
             return None;
@@ -19964,7 +19959,7 @@ mod tests {
             rows[0].get("record_type").and_then(Value::as_str),
             Some("session_start")
         );
-        assert_eq!(rows[0].get("accepted_from_draft_id").is_some(), true);
+        assert!(rows[0].get("accepted_from_draft_id").is_some());
 
         let second_guard = store
             .research_budget_guard_assessment(

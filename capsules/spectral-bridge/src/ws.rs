@@ -1498,7 +1498,7 @@ mod tests {
         for lambda1 in [0.0, 50.0, 154.0, 500.0, 1000.0, 5000.0] {
             let fill = estimate_fill_pct(lambda1);
             assert!(
-                fill >= 0.0 && fill <= 100.0,
+                (0.0..=100.0).contains(&fill),
                 "fill out of range for lambda1={lambda1}: {fill}"
             );
         }

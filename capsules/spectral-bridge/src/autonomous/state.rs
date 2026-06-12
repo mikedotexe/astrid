@@ -624,6 +624,8 @@ pub(super) enum Mode {
 pub(super) struct SpectralSample {
     pub fill: f32,
     pub lambda1: f32,
+    /// λ4+ tail energy share at sample time — feeds the λ-tail trajectory note.
+    pub tail_share: f32,
     pub ts: std::time::Instant,
 }
 
@@ -720,6 +722,9 @@ pub(super) struct ConversationState {
     /// Her wide-coupling aperture fraction [0,1] (NEXT: SET_APERTURE), within the
     /// operator ceiling; sent per-request to the coupled server.
     pub aperture: f32,
+    /// Her λ-tail participation aperture fraction [0,1] (NEXT: SET_TAIL_PARTICIPATION),
+    /// within the operator ceiling; scales the codec tail-vibrancy she expresses to minime.
+    pub tail_aperture: f32,
     pub response_length: u32,
     pub emphasis: Option<String>,
     /// v3.6.1 cadence tracking — exchange at which Astrid last picked
@@ -905,6 +910,7 @@ impl ConversationState {
             disperse_baseline: None,
             creative_temperature: 0.8,
             aperture: 1.0,
+            tail_aperture: 1.0,
             response_length: 768,
             emphasis: None,
             last_temperature_change_exchange: None,
@@ -1786,6 +1792,7 @@ impl ConversationState {
 }
 
 #[cfg(test)]
+#[allow(clippy::items_after_test_module)]
 mod tests {
     use crate::journal::{RemoteJournalKind, scan_remote_journal_dir};
 

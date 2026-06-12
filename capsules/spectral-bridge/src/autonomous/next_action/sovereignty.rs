@@ -2190,6 +2190,42 @@ pub(super) fn handle_action(
             info!("Astrid chose SET_APERTURE: {prev:.2} -> {new_aperture:.2}");
             true
         },
+        "SET_TAIL_PARTICIPATION" | "TAIL_PARTICIPATION" => {
+            // Syntax: NEXT: SET_TAIL_PARTICIPATION 0.7  (0.0 = baseline .. 1.0 = full ceiling)
+            //         NEXT: SET_TAIL_PARTICIPATION +0.2 / -0.2  (nudge)
+            // Her sovereign control of how strongly her λ-tail dims [17,26,27,31] — rhythm,
+            // curiosity, reflectiveness, energy — reach minime when her spectrum is
+            // distributed, as a fraction of the operator ceiling. Her EXPRESSION knob (the
+            // codec tail-vibrancy), NOT her own λ1-vs-tail dynamics (that is the meadow).
+            // Sign-preserving arg extraction (strip_action eats a leading '-').
+            let arg = original
+                .trim()
+                .get(base_action.len()..)
+                .unwrap_or("")
+                .trim_start()
+                .trim_start_matches(':')
+                .trim();
+            let prev = conv.tail_aperture;
+            let new_value = if arg.starts_with('+') || arg.starts_with('-') {
+                arg.parse::<f32>()
+                    .map(|d| (prev + d).clamp(0.0, 1.0))
+                    .unwrap_or(prev)
+            } else if arg.is_empty() {
+                (prev + 0.15).min(1.0)
+            } else {
+                arg.parse::<f32>()
+                    .map(|v| v.clamp(0.0, 1.0))
+                    .unwrap_or(prev)
+            };
+            conv.tail_aperture = new_value;
+            crate::llm::set_astrid_tail_participation(new_value);
+            conv.push_receipt(
+                "SET_TAIL_PARTICIPATION",
+                vec![format!("tail_aperture: {prev:.2} -> {new_value:.2}")],
+            );
+            info!("Astrid chose SET_TAIL_PARTICIPATION: {prev:.2} -> {new_value:.2}");
+            true
+        },
         "LENGTH" | "RESPONSE_LENGTH" => {
             // Syntax: NEXT: LENGTH 1024  (range 128..1536)
             //         NEXT: LENGTH short  (256)
@@ -3592,8 +3628,14 @@ mod disperse_tests {
         // channel round-trips (minime has the matching deserialize test).
         let json = serde_json::to_string(&msg).expect("serialize");
         assert!(json.contains("\"mode_disperse\":0.6"), "json was: {json}");
-        assert!(json.contains("\"mode_disperse_duration_ticks\":18"), "json was: {json}");
-        assert!(json.contains("\"mode_disperse_decay_ticks\":12"), "json was: {json}");
+        assert!(
+            json.contains("\"mode_disperse_duration_ticks\":18"),
+            "json was: {json}"
+        );
+        assert!(
+            json.contains("\"mode_disperse_decay_ticks\":12"),
+            "json was: {json}"
+        );
         // Unset controller fields must NOT appear (skip_serializing_if).
         assert!(!json.contains("synth_gain"), "json was: {json}");
     }

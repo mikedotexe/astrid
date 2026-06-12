@@ -422,7 +422,10 @@ fn concentrate_features() -> Vec<f32> {
 
 fn density_gift_msg(label: &str, stage: &str) -> SensoryMsg {
     SensoryMsg::ShadowInfluence {
-        intent_id: format!("astrid-density-{:08x}", deterministic_hash(label) & 0xffff_ffff),
+        intent_id: format!(
+            "astrid-density-{:08x}",
+            deterministic_hash(label) & 0xffff_ffff
+        ),
         label: label.to_string(),
         command: "apply".to_string(),
         stage: Some(stage.to_string()),
@@ -437,7 +440,9 @@ fn density_gift_msg(label: &str, stage: &str) -> SensoryMsg {
 /// `(ok, reason)`. Lend density only when minime's published need is fresh
 /// (≤180s), `density`, and `safe_to_receive_density`.
 fn minime_wants_density() -> (bool, String) {
-    let path = bridge_paths().minime_workspace().join("minime_need_v1.json");
+    let path = bridge_paths()
+        .minime_workspace()
+        .join("minime_need_v1.json");
     if let Ok(meta) = std::fs::metadata(&path)
         && let Ok(modt) = meta.modified()
         && let Ok(age) = modt.elapsed()
@@ -467,7 +472,10 @@ fn minime_wants_density() -> (bool, String) {
             "minime wants density but is near her ceiling (unsafe to lend).".to_string(),
         )
     } else {
-        (false, format!("minime isn't reaching for density (need={need})."))
+        (
+            false,
+            format!("minime isn't reaching for density (need={need})."),
+        )
     }
 }
 

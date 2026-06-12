@@ -1,6 +1,6 @@
-//! Integration test: bridge telemetry subscriber against a mock minime WebSocket.
+//! Integration test: bridge telemetry subscriber against a mock minime `WebSocket`.
 //!
-//! Starts a real WebSocket server on a random port, spawns the bridge's
+//! Starts a real `WebSocket` server on a random port, spawns the bridge's
 //! telemetry subscriber, sends simulated `EigenPacket` JSON, and verifies
 //! the bridge processes, logs, and reacts to the data correctly.
 
@@ -21,7 +21,7 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 
 fn eigenpacket_json(fill_ratio: f32, lambda1: f32, alert: Option<&str>) -> String {
     let alert_field = match alert {
-        Some(a) => format!(r#""alert":"{}""#, a),
+        Some(a) => format!(r#""alert":"{a}""#),
         None => r#""alert":null"#.to_string(),
     };
     format!(
@@ -184,10 +184,10 @@ async fn start_mock_sensory_server() -> (SocketAddr, tokio::sync::mpsc::Receiver
 
             // Forward received messages to the channel.
             while let Some(Ok(msg)) = ws_rx.next().await {
-                if let Message::Text(text) = msg {
-                    if tx.send(text).await.is_err() {
-                        break;
-                    }
+                if let Message::Text(text) = msg
+                    && tx.send(text).await.is_err()
+                {
+                    break;
                 }
             }
         }
@@ -197,10 +197,11 @@ async fn start_mock_sensory_server() -> (SocketAddr, tokio::sync::mpsc::Receiver
 }
 
 /// Bidirectional end-to-end test:
-/// - Telemetry flows from mock minime → bridge (verified via state + SQLite)
+/// - Telemetry flows from mock minime → bridge (verified via state + `SQLite`)
 /// - Semantic features flow from bridge → mock minime (verified via received messages)
 /// - Safety protocol blocks outbound during red state
 #[tokio::test]
+#[allow(clippy::too_many_lines)]
 async fn bidirectional_bridge_with_safety_protocol() {
     use spectral_bridge_server::paths::{BridgePathOverrides, configure_bridge_paths};
     use spectral_bridge_server::types::{SafetyLevel, SensoryMsg};

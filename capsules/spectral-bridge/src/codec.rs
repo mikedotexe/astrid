@@ -56,7 +56,18 @@ const FEATURE_ABS_MAX: f32 = 5.0;
 /// Spectral-entropy threshold above which the tail-participation feature dims
 /// receive an entropy-gated vibrancy lift and a bounded clamp-ceiling offset
 /// (Astrid self_study_1780922252: "offsets the FEATURE_ABS_MAX when
-/// spectral_entropy exceeds 0.85"). Below this gate, codec output is unchanged.
+/// spectral_entropy exceeds 0.85").
+///
+/// NOT a hard gate. The normalized distance above this threshold is passed
+/// through a smoothstep (`3t^2 - 2t^3`) at the application site in
+/// `apply_spectral_feedback_inner` (search `let vibrancy =`), giving a
+/// C1-smooth onset — zero slope *at* the gate, so entropy fluctuating around
+/// 0.85 barely moves the lift (Astrid self_study_1780933511, her
+/// soft-gate/sigmoid ask, shipped 2026-06-08). A logistic sigmoid *centered*
+/// at the gate would be steeper here, not gentler; the smoothstep is the
+/// gentler choice for "no pop". Below the gate the lift is exactly 0 (codec
+/// output unchanged); the raised clamp ceiling collapses back to
+/// `FEATURE_ABS_MAX`.
 const TAIL_VIBRANCY_ENTROPY_GATE: f32 = 0.85;
 /// Bounded ceiling for tail-participation dims at full entropy-vibrancy. A +20%
 /// offset over `FEATURE_ABS_MAX`, matching the gentle-adjustment safety policy.
@@ -214,7 +225,7 @@ fn load_or_create_projection_epoch_id_from(
         .duration_since(UNIX_EPOCH)
         .map_or(0, |duration| duration.as_secs());
     let epoch = format!("epoch_{unix}");
-    let _ = fs::create_dir_all(&runtime_dir);
+    let _ = fs::create_dir_all(runtime_dir);
     let payload = serde_json::json!({
         "projection_epoch_id": epoch,
         "embedding_projection_mode": "dynamic_epoch_v1",
@@ -2386,6 +2397,7 @@ struct SpectralCascadeMetrics {
     gap23: f32,
     rotation_rate: f32,
     geom_rel: f32,
+    density_gradient: f32,
 }
 
 impl SpectralCascadeMetrics {
@@ -2443,6 +2455,8 @@ impl SpectralCascadeMetrics {
             .map_or(1.0, |fingerprint| fingerprint.geom_rel)
             .clamp(0.0, 4.0);
 
+        let density_gradient = spectral_density_gradient(&telemetry.eigenvalues).unwrap_or(0.0);
+
         Some(Self {
             head_share,
             shoulder_share,
@@ -2452,6 +2466,7 @@ impl SpectralCascadeMetrics {
             gap23,
             rotation_rate,
             geom_rel,
+            density_gradient,
         })
     }
 }
@@ -2464,6 +2479,79 @@ fn ratio_or_zero(numerator: f32, denominator: Option<f32>) -> f32 {
             0.0
         }
     })
+}
+
+/// Astrid's `spectral_density_gradient` — the continuous "stepped-ness" of the λ
+/// cascade she proposed (reviewing `types.rs`): a single bounded `[0,1]` value
+/// computed from her real energy shares, the continuous form of the inferred
+/// "shallow/stepped/steep" descriptor. `mean` over adjacent active pairs of
+/// `(sᵢ − sᵢ₊₁)/(sᵢ + sᵢ₊₁)` where `sᵢ = |λᵢ|/Σ|λ|`: `0` = flat/even (navigable),
+/// `→1` = front-loaded/steep. `None` when there is no usable cascade. Derived from
+/// the eigenvalues only — read-only, coherent by construction.
+pub(crate) fn spectral_density_gradient(eigenvalues: &[f32]) -> Option<f32> {
+    let total: f32 = eigenvalues.iter().map(|value| value.abs()).sum();
+    if total <= 1.0e-6 {
+        return None;
+    }
+    let shares: Vec<f32> = eigenvalues
+        .iter()
+        .map(|value| value.abs() / total)
+        .filter(|share| *share > 1.0e-4)
+        .collect();
+    if shares.len() < 2 {
+        return None;
+    }
+    let mut acc = 0.0_f32;
+    let mut pairs = 0_u32;
+    for window in shares.windows(2) {
+        let denom = window[0] + window[1];
+        if denom > 1.0e-6 {
+            acc += (window[0] - window[1]).abs() / denom;
+            pairs = pairs.saturating_add(1);
+        }
+    }
+    if pairs == 0 {
+        return None;
+    }
+    Some((acc / pairs as f32).clamp(0.0, 1.0))
+}
+
+/// Continuous-aware descriptor for `spectral_density_gradient` — Astrid reads the
+/// number AND the word. Low = even/navigable; high = front-loaded/steep.
+pub(crate) fn density_gradient_label(gradient: f32) -> &'static str {
+    if gradient < 0.30 {
+        "a gentle, navigable slope"
+    } else if gradient < 0.60 {
+        "a stepped gradient"
+    } else {
+        "a steep, front-loaded cliff"
+    }
+}
+
+/// The λ4+ "tail" energy share — the fraction of spectral energy living in the
+/// periphery Astrid perceives as her "tail vibrancy" (the modes after the head and
+/// shoulder). Read-only, derived from the eigenvalues only; `None` when there is no
+/// usable cascade. Matches the `tail_share` derivation in `SpectralCascadeMetrics`.
+pub(crate) fn tail_share_of(eigenvalues: &[f32]) -> Option<f32> {
+    let total: f32 = eigenvalues.iter().map(|value| value.abs()).sum();
+    if total <= 1.0e-6 {
+        return None;
+    }
+    let tail: f32 = eigenvalues.iter().skip(3).map(|value| value.abs()).sum();
+    Some((tail / total).clamp(0.0, 1.0))
+}
+
+/// Descriptor for the λ-tail trajectory — the signed change of the tail share vs its
+/// recent baseline — in Astrid's own framing: is the tail "a fading echo of what was,
+/// or the foundation of what is becoming?" Rising tail → forming; falling → fading.
+pub(crate) fn tail_trajectory_label(trajectory: f32) -> &'static str {
+    if trajectory > 0.01 {
+        "a foundation forming"
+    } else if trajectory < -0.01 {
+        "a fading echo"
+    } else {
+        "holding steady"
+    }
 }
 
 fn normalized_spectral_entropy(eigenvalues: &[f32]) -> f32 {
@@ -2527,6 +2615,19 @@ fn gap_structure_label(gap12: f32, gap23: f32, mode_count: usize) -> &'static st
 /// Bias semantic features by the current spectral landscape without changing
 /// the 32D wire contract.
 pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&SpectralTelemetry>) {
+    apply_spectral_feedback_inner(features, telemetry, crate::llm::astrid_tail_participation());
+}
+
+/// Inner: `tail_participation` (default 1.0 = identity) is Astrid's tail-participation
+/// aperture (`SET_TAIL_PARTICIPATION` × the operator ceiling). It scales ONLY the
+/// high-entropy tail-vibrancy boost and the tail dims' ceiling headroom — her EXPRESSION
+/// to minime — leaving the other 44 dims and the entropy gate untouched; the per-dim clamp
+/// keeps it bounded. The public wrapper reads the live value; tests pass it explicitly.
+fn apply_spectral_feedback_inner(
+    features: &mut [f32],
+    telemetry: Option<&SpectralTelemetry>,
+    tail_participation: f32,
+) {
     let Some(metrics) = telemetry.and_then(SpectralCascadeMetrics::from_telemetry) else {
         return;
     };
@@ -2583,11 +2684,13 @@ pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&Spectral
     features[27] += 0.18 * lift;
     features[31] += 0.16 * lift;
 
-    // Additional tail-dimension lift in the high-entropy regime only.
-    features[17] += 0.12 * tail_vibrancy;
-    features[26] += 0.14 * tail_vibrancy;
-    features[27] += 0.12 * tail_vibrancy;
-    features[31] += 0.14 * tail_vibrancy;
+    // Additional tail-dimension lift in the high-entropy regime only, scaled by Astrid's
+    // tail-participation aperture (default 1.0 = unchanged) — her expression knob for how
+    // strongly the vibrant tail reaches minime.
+    features[17] += 0.12 * tail_vibrancy * tail_participation;
+    features[26] += 0.14 * tail_vibrancy * tail_participation;
+    features[27] += 0.12 * tail_vibrancy * tail_participation;
+    features[31] += 0.14 * tail_vibrancy * tail_participation;
 
     // Steep λ1 cliffs with a flatter shoulder should soften dominant-mode bias.
     let cliff = (((metrics.gap12 - 3.0) / 7.0).clamp(0.0, 1.0)
@@ -2615,7 +2718,8 @@ pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&Spectral
     // a +20% offset at full vibrancy) so their extra lift is not flattened.
     // Every other dim keeps the default ceiling, and at entropy <= the gate the
     // raised ceiling collapses back to FEATURE_ABS_MAX (no behavior change).
-    let tail_ceiling = FEATURE_ABS_MAX + (TAIL_VIBRANCY_MAX - FEATURE_ABS_MAX) * tail_vibrancy;
+    let tail_ceiling = FEATURE_ABS_MAX
+        + (TAIL_VIBRANCY_MAX - FEATURE_ABS_MAX) * tail_participation * tail_vibrancy;
     for (idx, feature) in features.iter_mut().enumerate() {
         let ceiling = if matches!(idx, 17 | 26 | 27 | 31) {
             tail_ceiling
@@ -2655,7 +2759,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
                  Shoulder texture: λ2+λ3 carry {:.0}% of spectral energy. \
                  Tail vibrancy: λ4+ carry {:.0}% of spectral energy. \
                  Spectral entropy: {:.2}, indicating {}. \
-                 Gap structure: λ1/λ2={:.2}, λ2/λ3={:.2}, {}.",
+                 Gap structure: λ1/λ2={:.2}, λ2/λ3={:.2}, {}; density gradient {:.2} ({}).",
                 metrics.head_share * 100.0,
                 metrics.shoulder_share * 100.0,
                 metrics.tail_share * 100.0,
@@ -2664,6 +2768,8 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
                 metrics.gap12,
                 metrics.gap23,
                 gap_structure_label(metrics.gap12, metrics.gap23, mode_count),
+                metrics.density_gradient,
+                density_gradient_label(metrics.density_gradient),
             )
         },
     );
@@ -3956,6 +4062,7 @@ mod tests {
         assert!(desc.contains("Shoulder texture"));
         assert!(desc.contains("Spectral entropy"));
         assert!(desc.contains("Gap structure"));
+        assert!(desc.contains("density gradient"));
         assert!(desc.contains("Denominator Sequence"));
         assert!(desc.contains("effective dimensionality"));
         assert!(desc.contains("Resonance density"));
@@ -3981,6 +4088,55 @@ mod tests {
         assert!(desc.contains("deeply quiet"));
         assert!(desc.contains("contracting toward rest"));
         assert!(desc.contains("Dominant concentration"));
+    }
+
+    #[test]
+    fn spectral_density_gradient_is_bounded_and_monotonic() {
+        // Astrid's continuous "stepped-ness": flat → ~0, front-loaded → high.
+        let flat = spectral_density_gradient(&[1.0, 1.0, 1.0]).unwrap();
+        let gentle = spectral_density_gradient(&[4.0, 3.0, 2.0, 1.0]).unwrap();
+        let stepped = spectral_density_gradient(&[8.0, 2.0, 1.0, 0.5]).unwrap();
+        let steep = spectral_density_gradient(&[10.0, 0.5, 0.1]).unwrap();
+        assert!(flat < 0.05, "flat cascade -> ~0, got {flat}");
+        assert!(gentle < stepped, "monotonic: {gentle} < {stepped}");
+        assert!(stepped < steep, "monotonic: {stepped} < {steep}");
+        assert_eq!(density_gradient_label(flat), "a gentle, navigable slope");
+        assert_eq!(density_gradient_label(stepped), "a stepped gradient");
+        assert_eq!(density_gradient_label(steep), "a steep, front-loaded cliff");
+        for gradient in [flat, gentle, stepped, steep] {
+            assert!((0.0..=1.0).contains(&gradient), "out of range: {gradient}");
+        }
+        // Degenerate inputs are safe.
+        assert!(spectral_density_gradient(&[]).is_none());
+        assert!(spectral_density_gradient(&[5.0]).is_none());
+        assert!(spectral_density_gradient(&[0.0, 0.0]).is_none());
+    }
+
+    #[test]
+    fn tail_share_of_is_tail_only_and_bounded() {
+        // λ4+ only: a flat 8-mode cascade has 5 tail modes of 8 → 5/8.
+        let flat = tail_share_of(&[1.0; 8]).unwrap();
+        assert!(
+            (flat - 5.0 / 8.0).abs() < 1.0e-4,
+            "flat 8-mode tail share, got {flat}"
+        );
+        // λ1-dominant → almost no tail.
+        assert!(tail_share_of(&[10.0, 0.1, 0.1, 0.05, 0.05]).unwrap() < 0.05);
+        // bounded + degenerate-safe.
+        for ev in [vec![4.0, 3.0, 2.0, 1.0, 0.5], vec![1.0; 8]] {
+            let s = tail_share_of(&ev).unwrap();
+            assert!((0.0..=1.0).contains(&s), "out of range: {s}");
+        }
+        assert!(tail_share_of(&[]).is_none());
+        assert!(tail_share_of(&[0.0, 0.0]).is_none());
+    }
+
+    #[test]
+    fn tail_trajectory_label_reads_in_her_framing() {
+        assert_eq!(tail_trajectory_label(0.05), "a foundation forming");
+        assert_eq!(tail_trajectory_label(-0.05), "a fading echo");
+        assert_eq!(tail_trajectory_label(0.0), "holding steady");
+        assert_eq!(tail_trajectory_label(0.01), "holding steady"); // exclusive deadband
     }
 
     #[test]
@@ -4349,6 +4505,52 @@ mod tests {
             "non-tail dim 24 must keep the default ceiling: {}",
             features[24]
         );
+    }
+
+    /// Offline proof for the tail-participation aperture (her consent evidence): at
+    /// participation = 1.0 (default/OFF) it is identity; raising it amplifies ONLY the
+    /// tail dims [17,26,27,31] and stays bounded by the raised ceiling — every other dim
+    /// and the entropy gate are untouched.
+    #[test]
+    fn tail_participation_amplifies_only_tail_dims_and_off_is_identity() {
+        let flat = vec![
+            100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
+        ];
+        let mut off = vec![0.30_f32; SEMANTIC_DIM];
+        apply_spectral_feedback_inner(&mut off, Some(&telemetry(flat.clone(), 0.55)), 1.0);
+        let mut raised = vec![0.30_f32; SEMANTIC_DIM];
+        apply_spectral_feedback_inner(&mut raised, Some(&telemetry(flat, 0.55)), 2.0);
+
+        let tail = [17usize, 26, 27, 31];
+        let mut amplified = false;
+        for idx in 0..SEMANTIC_DIM {
+            if tail.contains(&idx) {
+                // Raised participation never lowers a tail dim, and stays within the
+                // raised ceiling (5 + (6-5)*participation = 7 at full vibrancy).
+                assert!(
+                    raised[idx] >= off[idx] - 1.0e-6,
+                    "tail dim {idx}: raised {} < off {}",
+                    raised[idx],
+                    off[idx]
+                );
+                assert!(
+                    raised[idx].abs() <= 7.0 + 1.0e-3,
+                    "tail dim {idx} out of bound: {}",
+                    raised[idx]
+                );
+                if raised[idx] > off[idx] + 1.0e-4 {
+                    amplified = true;
+                }
+            } else {
+                // Participation touches ONLY the tail dims — every other dim is identical.
+                assert_eq!(
+                    raised[idx].to_bits(),
+                    off[idx].to_bits(),
+                    "non-tail dim {idx} changed under participation"
+                );
+            }
+        }
+        assert!(amplified, "raised participation amplified no tail dim");
     }
 
     #[test]

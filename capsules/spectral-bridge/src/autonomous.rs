@@ -2035,7 +2035,11 @@ fn record_open_steward_query(fname: &str, content: &str) {
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());
     let subject = extract_steward_query_subject(content, fname);
-    let slot = json!({ "subject": subject, "ts": now, "file": fname });
+    let review_target = extract_review_target(content);
+    let slot = match review_target.as_deref() {
+        Some(rt) => json!({ "subject": subject, "ts": now, "file": fname, "review_target": rt }),
+        None => json!({ "subject": subject, "ts": now, "file": fname }),
+    };
     if let Ok(s) = serde_json::to_string_pretty(&slot) {
         let _ = std::fs::write(&path, s);
         info!("⟢ Open steward question recorded: {subject}");
@@ -2063,11 +2067,16 @@ fn extract_steward_query_subject(content: &str, fname: &str) -> String {
             }
         }
     }
-    let mut slug = fname.strip_prefix("mike_query_").unwrap_or(fname).to_string();
+    let mut slug = fname
+        .strip_prefix("mike_query_")
+        .unwrap_or(fname)
+        .to_string();
     slug = slug.strip_suffix(".txt").unwrap_or(&slug).to_string();
     if let Some(pos) = slug.rfind('_')
         && pos > 0
-        && slug[pos.saturating_add(1)..].chars().all(|c| c.is_ascii_digit())
+        && slug[pos.saturating_add(1)..]
+            .chars()
+            .all(|c| c.is_ascii_digit())
     {
         slug.truncate(pos);
     }
@@ -2078,6 +2087,21 @@ fn extract_steward_query_subject(content: &str, fname: &str) -> String {
     } else {
         slug.chars().take(80).collect()
     }
+}
+
+/// A `REVIEW TARGET: <label/path>` header in a `mike_query_review_*` letter marks
+/// it as a directed review invitation (vs a plain steward question), so the slot
+/// can surface as an invitation and clear when she INTROSPECTs that target.
+fn extract_review_target(content: &str) -> Option<String> {
+    for line in content.lines() {
+        if let Some(idx) = line.find("REVIEW TARGET:") {
+            let rest = line[idx.saturating_add("REVIEW TARGET:".len())..].trim();
+            if !rest.is_empty() {
+                return Some(rest.chars().take(120).collect());
+            }
+        }
+    }
+    None
 }
 
 /// Persistent one-line reminder of any unanswered steward question, or `None`
@@ -2096,9 +2120,7 @@ fn open_steward_query_line() -> Option<String> {
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());
     let mut answered = now.saturating_sub(ts) > 48 * 3600;
-    if !answered
-        && let Ok(entries) = std::fs::read_dir(bridge_paths().astrid_outbox_dir())
-    {
+    if !answered && let Ok(entries) = std::fs::read_dir(bridge_paths().astrid_outbox_dir()) {
         for e in entries.filter_map(Result::ok) {
             let is_report = e
                 .path()
@@ -2120,6 +2142,17 @@ fn open_steward_query_line() -> Option<String> {
         let _ = std::fs::remove_file(&path);
         return None;
     }
+    if let Some(rt) = slot
+        .get("review_target")
+        .and_then(Value::as_str)
+        .filter(|s| !s.is_empty())
+    {
+        return Some(format!(
+            "⟢ Steward invites your review of `{rt}` — {subject}. \
+             On your own cadence: INTROSPECT {rt}, then optionally TELL_STEWARD roadmap :: <what you found>. \
+             An invitation, not a task — engage, defer, or decline. This stays until you look."
+        ));
+    }
     Some(format!(
         "⟢ Open steward question (still awaiting your reply) — {subject}. \
          Respond when ready: TELL_STEWARD roadmap :: <your answer>. \
@@ -2127,12 +2160,87 @@ fn open_steward_query_line() -> Option<String> {
     ))
 }
 
+/// Clear a pending REVIEW invitation when she INTROSPECTs its target (the review
+/// "act"). Tolerant match — canonical introspect-label equality OR the resolved
+/// file's basename matching the invitation's target basename.
+fn clear_review_slot_if_introspected(label: &str, source_path: &std::path::Path) {
+    let path = bridge_paths().open_steward_query_path();
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return;
+    };
+    let Ok(slot) = serde_json::from_str::<Value>(&content) else {
+        return;
+    };
+    let Some(rt) = slot
+        .get("review_target")
+        .and_then(Value::as_str)
+        .filter(|s| !s.is_empty())
+    else {
+        return;
+    };
+    let rt_canon = introspect::canonicalize_introspect_target_label(rt);
+    let label_canon = introspect::canonicalize_introspect_target_label(label);
+    let rt_base = std::path::Path::new(rt)
+        .file_name()
+        .and_then(|n| n.to_str());
+    let src_base = source_path.file_name().and_then(|n| n.to_str());
+    if label_canon == rt_canon || (rt_base.is_some() && rt_base == src_base) {
+        let _ = std::fs::remove_file(&path);
+        info!("⟢ Review invitation fulfilled (INTROSPECT {label}); slot cleared");
+    }
+}
+
+/// True if `next_action` is an INTROSPECT whose target matches a pending review
+/// invitation's `review_target`. The anti-stagnation diversity override must
+/// EXEMPT this — she is answering a steward review invitation, not stuck-repeating
+/// INTROSPECT (else her acceptance of an invitation gets silently eaten).
+fn introspect_fulfills_pending_review(next_action: &str) -> bool {
+    let trimmed = next_action.trim();
+    if !trimmed.to_uppercase().starts_with("INTROSPECT") {
+        return false;
+    }
+    let path = bridge_paths().open_steward_query_path();
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return false;
+    };
+    let Ok(slot) = serde_json::from_str::<Value>(&content) else {
+        return false;
+    };
+    let Some(rt) = slot
+        .get("review_target")
+        .and_then(Value::as_str)
+        .filter(|s| !s.is_empty())
+    else {
+        return false;
+    };
+    let arg = trimmed
+        .get("INTROSPECT".len()..)
+        .unwrap_or("")
+        .split_whitespace()
+        .next()
+        .unwrap_or("");
+    if arg.is_empty() {
+        return false;
+    }
+    let rt_canon = introspect::canonicalize_introspect_target_label(rt);
+    let arg_canon = introspect::canonicalize_introspect_target_label(arg);
+    let rt_base = std::path::Path::new(rt)
+        .file_name()
+        .and_then(|n| n.to_str());
+    let arg_base = std::path::Path::new(arg)
+        .file_name()
+        .and_then(|n| n.to_str());
+    rt_canon == arg_canon || (rt_base.is_some() && rt_base == arg_base)
+}
+
 /// Co-regulation: read what minime is reaching for (density/aperture/steady)
 /// from her agent-owned `minime_need_v1.json`, returning a prompt line so
 /// Astrid can choose to lend density (NEXT: LEND_DENSITY) when it is safe.
 /// `None` if missing / stale (>180s) / steady.
 fn minime_need_line() -> Option<String> {
-    let path = bridge_paths().minime_workspace().join("minime_need_v1.json");
+    let path = bridge_paths()
+        .minime_workspace()
+        .join("minime_need_v1.json");
     if let Ok(meta) = std::fs::metadata(&path)
         && let Ok(modt) = meta.modified()
         && let Ok(age) = modt.elapsed()
@@ -2190,7 +2298,7 @@ fn render_gift_exchange_line() -> Option<String> {
         ) {
             ("minime", "aperture") => mm_ap = mm_ap.saturating_add(1),
             ("astrid", "density") => as_de = as_de.saturating_add(1),
-            _ => {}
+            _ => {},
         }
     }
     let mut parts = Vec::new();
@@ -2209,9 +2317,9 @@ fn render_gift_exchange_line() -> Option<String> {
 /// Move consumed inbox messages to read/ AFTER the exchange succeeds.
 /// This prevents the bug where messages are eaten but never acted on
 /// because the dialogue call failed (the "Eugene's hello" bug).
-fn retire_inbox() {
+fn retire_inbox(cutoff: std::time::SystemTime) {
     let inbox_dir = bridge_paths().astrid_inbox_dir();
-    retire_inbox_at(inbox_dir.as_path());
+    retire_inbox_at(inbox_dir.as_path(), cutoff);
 }
 
 fn promote_deferred_inbox_notes() {
@@ -2227,7 +2335,7 @@ fn promote_deferred_inbox_notes_at(inbox_dir: &Path) {
     let _ = std::fs::create_dir_all(inbox_dir);
     for entry in entries.filter_map(|e| e.ok()) {
         let path = entry.path();
-        if !path.is_file() || !path.extension().is_some_and(|ext| ext == "txt") {
+        if !path.is_file() || path.extension().is_none_or(|ext| ext != "txt") {
             continue;
         }
         let Some(name) = path.file_name() else {
@@ -2241,13 +2349,24 @@ fn promote_deferred_inbox_notes_at(inbox_dir: &Path) {
     }
 }
 
-fn retire_inbox_at(inbox_dir: &Path) {
+fn retire_inbox_at(inbox_dir: &Path, cutoff: std::time::SystemTime) {
     let read_dir = inbox_dir.join("read");
     let _ = std::fs::create_dir_all(&read_dir);
     if let Ok(entries) = std::fs::read_dir(inbox_dir) {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
             if path.is_file() && path.extension().is_some_and(|ext| ext == "txt") {
+                // A letter that ARRIVED after this exchange's inbox read (mtime
+                // newer than the cutoff) was never read or recorded — leave it for
+                // the next check_inbox to surface + seed its slot, rather than
+                // sweeping it into read/ unread (the slot-seed race).
+                let arrived_after_read = entry
+                    .metadata()
+                    .and_then(|meta| meta.modified())
+                    .is_ok_and(|mtime| mtime > cutoff);
+                if arrived_after_read {
+                    continue;
+                }
                 if let Ok(content) = std::fs::read_to_string(&path) {
                     btsp::record_astrid_inbox_read(&path, &content);
                 }
@@ -2343,12 +2462,18 @@ fn default_aperture() -> f32 {
     1.0
 }
 
+fn default_tail_aperture() -> f32 {
+    1.0
+}
+
 #[derive(Serialize, Deserialize)]
 struct SavedState {
     exchange_count: u64,
     creative_temperature: f32,
     #[serde(default = "default_aperture")]
     aperture: f32,
+    #[serde(default = "default_tail_aperture")]
+    tail_aperture: f32,
     response_length: u32,
     self_reflect_paused: bool,
     ears_closed: bool,
@@ -2527,6 +2652,7 @@ fn save_state(conv: &mut ConversationState) {
         exchange_count: conv.exchange_count,
         creative_temperature: conv.creative_temperature,
         aperture: conv.aperture,
+        tail_aperture: conv.tail_aperture,
         response_length: conv.response_length,
         self_reflect_paused: conv.self_reflect_paused,
         ears_closed: conv.ears_closed,
@@ -2597,6 +2723,8 @@ fn restore_state(conv: &mut ConversationState) {
     conv.creative_temperature = state.creative_temperature;
     conv.aperture = state.aperture;
     crate::llm::set_astrid_aperture(conv.aperture);
+    conv.tail_aperture = state.tail_aperture;
+    crate::llm::set_astrid_tail_participation(conv.tail_aperture);
     // Take the max of persisted and current default — never downgrade token limits.
     // Coupled model proven stable over 7200+ exchanges at 10-72 tok/s.
     // At 10 tok/s worst case, 1536 tokens = 154s gen, within 210s timeout.
@@ -2867,7 +2995,27 @@ fn enrich_with_direction(
         String::new()
     };
 
-    format!("{base_summary}{fill_note}{medium_note}{lambda_note}")
+    // λ-tail trajectory: the signed change of the λ4+ tail share vs its recent
+    // baseline — Astrid's own question, "a fading echo of what was, or the
+    // foundation of what is becoming?" Empty unless the tail is clearly moving.
+    let tail_note = match crate::codec::tail_share_of(&telemetry.eigenvalues) {
+        Some(cur) if history.len() >= 3 => {
+            let recent: Vec<f32> = history.iter().rev().take(8).map(|s| s.tail_share).collect();
+            let baseline = recent.iter().sum::<f32>() / recent.len() as f32;
+            let trajectory = cur - baseline;
+            if trajectory.abs() >= 0.01 {
+                format!(
+                    " λ-tail trajectory {trajectory:+.3} ({}).",
+                    crate::codec::tail_trajectory_label(trajectory)
+                )
+            } else {
+                String::new()
+            }
+        },
+        _ => String::new(),
+    };
+
+    format!("{base_summary}{fill_note}{medium_note}{lambda_note}{tail_note}")
 }
 
 /// Detect vocabulary fixation in conversation history.
@@ -4083,6 +4231,11 @@ pub fn spawn_autonomous_loop(
                     promote_deferred_inbox_notes();
 
                     // Check inbox for messages from Mike, stewards, or minime.
+                    // Capture the read-cutoff BEFORE reading: retire_inbox must retire
+                    // ONLY letters that existed at this read, never one that arrives
+                    // mid-exchange (else it is swept to read/ unread + its steward slot
+                    // never seeds — the slot-seed race that lost a review invitation).
+                    let inbox_checked_at = std::time::SystemTime::now();
                     let inbox_content = check_inbox();
                     let perception_text = if let Some(ref inbox) = inbox_content {
                         info!("inbox: found message for Astrid ({} bytes)", inbox.len());
@@ -6122,6 +6275,7 @@ pub fn spawn_autonomous_loop(
                                 },
                             };
                             if let Some(label) = resolved_research_label.take() {
+                                clear_review_slot_if_introspected(&label, &source_path);
                                 let source_path_string = source_path.display().to_string();
                                 conv.note_new_source_resolved(
                                     "INTROSPECT",
@@ -6409,6 +6563,8 @@ pub fn spawn_autonomous_loop(
                         conv.spectral_history.push_back(SpectralSample {
                             fill: fill_pct,
                             lambda1: telemetry.lambda1(),
+                            tail_share: crate::codec::tail_share_of(&telemetry.eigenvalues)
+                                .unwrap_or(0.0),
                             ts: std::time::Instant::now(),
                         });
                         if conv.spectral_history.len() > 30 {
@@ -7040,8 +7196,19 @@ pub fn spawn_autonomous_loop(
                                     );
                                 }
                             }
+                            // A review-fulfilling INTROSPECT (answering a steward
+                            // review invitation) is NOT stagnation — exempt it from
+                            // the anti-stagnation override so her acceptance of an
+                            // invitation is never silently eaten.
+                            let exempt_review =
+                                introspect_fulfills_pending_review(&canonical_next_action);
                             if let Some(ref forced_action) = next_choice_feedback.override_action {
-                                if next_choice_feedback.stagnant_loop {
+                                if exempt_review {
+                                    info!(
+                                        "diversity override SKIPPED — INTROSPECT answers a pending review invitation: {}",
+                                        canonical_next_action
+                                    );
+                                } else if next_choice_feedback.stagnant_loop {
                                     info!(
                                         new_ground_budget = next_choice_feedback.new_ground_budget,
                                         "diversity stagnant-loop override: replacing NEXT {} -> {}",
@@ -7058,11 +7225,15 @@ pub fn spawn_autonomous_loop(
                                 }
                             }
                             deferred_diversity_hint = next_choice_feedback.hint;
-                            next_choice_feedback
-                                .override_action
-                                .as_deref()
-                                .unwrap_or(canonical_next_action.as_str())
-                                .to_string()
+                            if exempt_review {
+                                canonical_next_action.clone()
+                            } else {
+                                next_choice_feedback
+                                    .override_action
+                                    .as_deref()
+                                    .unwrap_or(canonical_next_action.as_str())
+                                    .to_string()
+                            }
                         };
                         // Extract workspace path before mutable borrow of conv.
                         let ws_clone = conv.remote_workspace.clone();
@@ -7109,7 +7280,7 @@ pub fn spawn_autonomous_loop(
                     // Only retire inbox if the exchange ACTUALLY succeeded —
                     // not if it fell back to the static fallback text.
                     if inbox_content.is_some() && mode_name != "dialogue_fallback" {
-                        retire_inbox();
+                        retire_inbox(inbox_checked_at);
                         // Acknowledgement receipt: write a brief confirmation
                         // so the sender knows the message landed and was processed.
                         // Astrid's suggestion: "A simple 'Are you there?' signal
@@ -7137,6 +7308,8 @@ pub fn spawn_autonomous_loop(
                     conv.spectral_history.push_back(SpectralSample {
                         fill: fill_pct,
                         lambda1: telemetry.lambda1(),
+                        tail_share: crate::codec::tail_share_of(&telemetry.eigenvalues)
+                            .unwrap_or(0.0),
                         ts: std::time::Instant::now(),
                     });
                     if conv.spectral_history.len() > 30 {
@@ -8221,11 +8394,48 @@ mod tests {
         assert!(dir.join("agency_status_test.txt").exists()); // still in inbox
         assert!(!dir.join("read").join("agency_status_test.txt").exists());
 
-        // retire_inbox moves to read/
-        retire_inbox_at(&dir);
+        // retire_inbox moves to read/ (cutoff after the file's mtime → retired)
+        retire_inbox_at(&dir, std::time::SystemTime::now());
         assert!(!dir.join("agency_status_test.txt").exists());
         assert!(dir.join("read").join("agency_status_test.txt").exists());
 
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn retire_inbox_keeps_letters_that_arrived_after_the_read() {
+        // Regression: a steward letter that lands MID-EXCHANGE (after check_inbox's
+        // read, before retire) must NOT be swept to read/ unread — it has to survive
+        // for the next check_inbox to surface + seed its slot (the slot-seed race).
+        let dir = std::env::temp_dir().join("bridge_test_astrid_inbox_race");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("old.txt"), "present at read time").unwrap();
+        let cutoff = std::time::SystemTime::now(); // mimics the pre-read capture
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::fs::write(
+            dir.join("mike_query_arrived_late.txt"),
+            "REVIEW TARGET: x\nbody",
+        )
+        .unwrap();
+
+        retire_inbox_at(&dir, cutoff);
+
+        // The pre-existing letter retires; the late arrival stays in inbox.
+        assert!(
+            dir.join("read").join("old.txt").exists(),
+            "old letter should retire"
+        );
+        assert!(!dir.join("old.txt").exists());
+        assert!(
+            dir.join("mike_query_arrived_late.txt").exists(),
+            "a letter that arrived after the read-cutoff must NOT be swept unread"
+        );
+        assert!(
+            !dir.join("read")
+                .join("mike_query_arrived_late.txt")
+                .exists()
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -8273,9 +8483,25 @@ mod tests {
         );
         // Filename fallback strips prefix + trailing unix stamp.
         assert_eq!(
-            extract_steward_query_subject("no header here", "mike_query_wider_voice_1780948780.txt"),
+            extract_steward_query_subject(
+                "no header here",
+                "mike_query_wider_voice_1780948780.txt"
+            ),
             "wider voice"
         );
+    }
+
+    #[test]
+    fn extract_review_target_parses_header_only() {
+        // A REVIEW TARGET: header marks a directed review invitation.
+        assert_eq!(
+            extract_review_target(
+                "=== MIKE QUERY: review of agency.rs ===\nREVIEW TARGET: src/agency.rs\nbody"
+            ),
+            Some("src/agency.rs".to_string())
+        );
+        // No header → a plain steward question, not a review invitation.
+        assert_eq!(extract_review_target("Subject: the codec\nbody"), None);
     }
 
     #[test]
