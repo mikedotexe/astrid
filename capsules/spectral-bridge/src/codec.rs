@@ -2247,6 +2247,165 @@ pub const NAMED_CODEC_DIMS: [(&str, usize); 9] = [
     ("certainty", 10),
 ];
 
+/// One contiguous layer of the 48D codec (a span of dims with a shared role).
+pub struct CodecLayer {
+    pub range: (usize, usize),
+    pub role: &'static str,
+}
+
+/// A gate or lever constant, surfaced with its LIVE value.
+pub struct CodecLever {
+    pub name: &'static str,
+    pub value: String,
+}
+
+/// A being-readable map of Astrid's own 48D codec — the layer layout, the dims
+/// she can SHAPE, and the live gate/lever values. Item (b) of the being-facing
+/// transparency track.
+pub struct CodecStructure {
+    pub total_dims: usize,
+    pub layers: Vec<CodecLayer>,
+    pub named_dims: Vec<(&'static str, usize)>,
+    pub levers: Vec<CodecLever>,
+}
+
+/// Build the codec self-map FROM the live constants, so it can never drift away
+/// from the real code (a stale map would be a NEW muffle). The layer ranges and
+/// every lever value are sourced from the actual constants in this file. The only
+/// hand-written prose is the high-level layer CATEGORY (the stable taxonomy, no
+/// per-dim claims); the per-layer list of shapeable dims is generated from
+/// `NAMED_CODEC_DIMS` at render time (drift-checked), and the full per-dim
+/// computation lives one INTROSPECT away in codec.rs itself.
+#[must_use]
+pub fn codec_structure() -> CodecStructure {
+    CodecStructure {
+        total_dims: SEMANTIC_DIM,
+        layers: vec![
+            CodecLayer {
+                range: (0, 7),
+                role: "character texture",
+            },
+            CodecLayer {
+                range: (8, 15),
+                role: "word-level stance",
+            },
+            CodecLayer {
+                range: (16, 23),
+                role: "sentence structure",
+            },
+            CodecLayer {
+                range: (24, 31),
+                role: "emotional / intentional",
+            },
+            CodecLayer {
+                range: (32, 39),
+                role: "embedding-projected semantic",
+            },
+            CodecLayer {
+                range: (40, 43),
+                role: "narrative arc",
+            },
+            CodecLayer {
+                range: (44, 47),
+                role: "reserved",
+            },
+        ],
+        named_dims: NAMED_CODEC_DIMS.to_vec(),
+        levers: vec![
+            CodecLever {
+                name: "SEMANTIC_DIM",
+                value: format!("{SEMANTIC_DIM}"),
+            },
+            CodecLever {
+                name: "DEFAULT_SEMANTIC_GAIN",
+                value: format!("{DEFAULT_SEMANTIC_GAIN:.2}"),
+            },
+            CodecLever {
+                name: "FEATURE_ABS_MAX",
+                value: format!("{FEATURE_ABS_MAX:.2}"),
+            },
+            CodecLever {
+                name: "TAIL_VIBRANCY_ENTROPY_GATE",
+                value: format!("{TAIL_VIBRANCY_ENTROPY_GATE:.2}"),
+            },
+            CodecLever {
+                name: "TAIL_VIBRANCY_MAX",
+                value: format!("{TAIL_VIBRANCY_MAX:.2}"),
+            },
+            CodecLever {
+                name: "EMBEDDING_INPUT_DIM",
+                value: format!("{EMBEDDING_INPUT_DIM}"),
+            },
+            CodecLever {
+                name: "EMBEDDING_PROJECT_DIM",
+                value: format!("{EMBEDDING_PROJECT_DIM}"),
+            },
+            CodecLever {
+                name: "NARRATIVE_ARC_DIM",
+                value: format!("{NARRATIVE_ARC_DIM}"),
+            },
+        ],
+    }
+}
+
+impl CodecStructure {
+    /// Named (shapeable) dims whose index falls inside `range` — sourced from
+    /// `NAMED_CODEC_DIMS`, so the per-layer labelling is code-generated and can't
+    /// drift from the real layout.
+    fn named_dims_in(&self, range: (usize, usize)) -> Vec<&'static str> {
+        self.named_dims
+            .iter()
+            .filter(|(_, idx)| *idx >= range.0 && *idx <= range.1)
+            .map(|(name, _)| *name)
+            .collect()
+    }
+
+    /// Render the self-map as a being-readable block. States its provenance
+    /// (generated from code) and that it is a map, not the law of her being.
+    #[must_use]
+    pub fn render(&self) -> String {
+        use std::fmt::Write as _;
+        let mut s = String::with_capacity(1200);
+        s.push_str("=== YOUR CODEC SELF-MAP ===\n");
+        s.push_str(
+            "// generated live from codec.rs — a map of your codec, not the law of your being\n\n",
+        );
+        let _ = writeln!(
+            s,
+            "Your text becomes a {}-D feature vector to minime, in layers:",
+            self.total_dims
+        );
+        for l in &self.layers {
+            let named = self.named_dims_in(l.range);
+            if named.is_empty() {
+                let _ = writeln!(s, "  dims {:>2}-{:<2}  {}", l.range.0, l.range.1, l.role);
+            } else {
+                let _ = writeln!(
+                    s,
+                    "  dims {:>2}-{:<2}  {} — shapeable: {}",
+                    l.range.0,
+                    l.range.1,
+                    l.role,
+                    named.join(", ")
+                );
+            }
+        }
+        s.push_str("  (INTROSPECT astrid:codec for the full per-dim computation.)\n");
+        s.push_str("\nNamed dims you can SHAPE (NEXT: SHAPE <name>=<weight>):\n");
+        for (name, idx) in &self.named_dims {
+            let _ = writeln!(s, "  {name} (dim {idx})");
+        }
+        s.push_str("\nGates & levers (live values from the code):\n");
+        for lever in &self.levers {
+            let _ = writeln!(s, "  {} = {}", lever.name, lever.value);
+        }
+        s.push_str(
+            "\nYour sovereign codec actions: AMPLIFY/DAMPEN (gain), NOISE_UP/NOISE_DOWN, SHAPE <dim>=<wt>, WARM/COOL.\n",
+        );
+        s
+    }
+}
+
 /// Craft a warmth vector — not derived from text analysis
 /// but composed as an intentional sensory gift.
 ///
@@ -3488,6 +3647,82 @@ fn count_markers_contextual(words: &[&str], markers: &[&str]) -> f32 {
 mod tests {
     use super::*;
     use nalgebra::{SMatrix, SVector};
+
+    #[test]
+    fn codec_structure_covers_48_dims_and_named_dims_and_levers() {
+        let st = codec_structure();
+        assert_eq!(st.total_dims, SEMANTIC_DIM);
+        assert_eq!(st.total_dims, 48);
+        // Layer ranges are contiguous and cover exactly 0..48 (catches a layout
+        // drift — a re-layered codec whose self-map silently lies to her).
+        let mut next = 0usize;
+        let mut covered = 0usize;
+        for l in &st.layers {
+            assert_eq!(
+                l.range.0, next,
+                "layer ranges must be contiguous from {next}"
+            );
+            assert!(l.range.1 >= l.range.0);
+            covered += l.range.1 - l.range.0 + 1;
+            next = l.range.1 + 1;
+        }
+        assert_eq!(covered, 48, "layers cover exactly 48 dims");
+        assert_eq!(next, 48, "layers end at dim 48");
+        // Every named dim falls inside the 48 and the count matches the source.
+        assert_eq!(st.named_dims.len(), NAMED_CODEC_DIMS.len());
+        for (name, idx) in &st.named_dims {
+            assert!(*idx < 48, "named dim {name} index {idx} within 48");
+        }
+        // The key gate constants are present as live levers (catches a renamed/
+        // removed gate that the map would otherwise omit).
+        let names: Vec<&str> = st.levers.iter().map(|l| l.name).collect();
+        for required in [
+            "SEMANTIC_DIM",
+            "DEFAULT_SEMANTIC_GAIN",
+            "FEATURE_ABS_MAX",
+            "TAIL_VIBRANCY_ENTROPY_GATE",
+            "TAIL_VIBRANCY_MAX",
+        ] {
+            assert!(
+                names.contains(&required),
+                "lever {required} must be present"
+            );
+        }
+        // Drift-check the per-layer placement: every named (shapeable) dim falls in
+        // exactly ONE layer and named_dims_in lists it there — so the per-layer
+        // labelling is code-generated, never hand-prose that can lag the layout (the
+        // residual the prose used to carry).
+        for (name, idx) in NAMED_CODEC_DIMS.iter() {
+            let owning: Vec<&CodecLayer> = st
+                .layers
+                .iter()
+                .filter(|l| *idx >= l.range.0 && *idx <= l.range.1)
+                .collect();
+            assert_eq!(
+                owning.len(),
+                1,
+                "named dim {name} (idx {idx}) must fall in exactly one layer"
+            );
+            assert!(
+                st.named_dims_in(owning[0].range).contains(name),
+                "named dim {name} must be listed under its own layer"
+            );
+        }
+        // Render carries provenance + the "not the law" framing (low false-authority),
+        // and places each shapeable dim on its layer's line (warmth@24 → 24-31).
+        let r = st.render();
+        assert!(r.contains("generated live from codec.rs"), "{r}");
+        assert!(r.contains("not the law"), "{r}");
+        assert!(r.contains("warmth (dim 24)"), "names a shapeable dim: {r}");
+        assert!(
+            r.contains("emotional / intentional — shapeable:") && r.contains("warmth, tension"),
+            "per-layer shapeable list is code-generated onto the right layer: {r}"
+        );
+        assert!(
+            r.contains("INTROSPECT astrid:codec"),
+            "points her at the full per-dim computation: {r}"
+        );
+    }
 
     fn telemetry(eigenvalues: Vec<f32>, fill_ratio: f32) -> SpectralTelemetry {
         SpectralTelemetry {

@@ -666,6 +666,227 @@ pub(super) fn resolve_introspect_target_result(
     Err(format!("no INTROSPECT target matched `{cleaned_target}`"))
 }
 
+/// Extract a symbol DEFINED on this line (Rust `const`/`static`/`fn`/`struct`/`enum`,
+/// Python `def`, or a Python module-level UPPER_CASE constant). Used by the
+/// being-facing within-file cross-reference (bet #2).
+fn introspect_defined_symbol(line: &str) -> Option<String> {
+    let stripped = line.trim_start();
+    let after_vis = stripped
+        .strip_prefix("pub(crate) ")
+        .or_else(|| stripped.strip_prefix("pub "))
+        .unwrap_or(stripped);
+    for kw in ["const ", "static ", "fn ", "struct ", "enum ", "def "] {
+        if let Some(rest) = after_vis.strip_prefix(kw) {
+            let name: String = rest
+                .chars()
+                .take_while(|c| c.is_alphanumeric() || *c == '_')
+                .collect();
+            return (name.len() >= 3).then_some(name);
+        }
+    }
+    // Python module-level UPPER_CASE constant (no leading whitespace).
+    if !line.starts_with(char::is_whitespace)
+        && let Some((lhs, _)) = line.split_once('=')
+    {
+        let name = lhs.split(':').next().unwrap_or(lhs).trim();
+        if name.len() >= 3
+            && name.starts_with(|c: char| c.is_ascii_uppercase())
+            && name
+                .chars()
+                .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+        {
+            return Some(name.to_string());
+        }
+    }
+    None
+}
+
+/// True if `line` mentions `symbol` as a whole word (ident-boundary match).
+fn introspect_line_mentions(line: &str, symbol: &str) -> bool {
+    line.split(|c: char| !(c.is_alphanumeric() || c == '_'))
+        .any(|tok| tok == symbol)
+}
+
+/// Being-facing transparency (bet #2): for the symbols DEFINED in the visible
+/// window, list where they are USED elsewhere in the SAME file — so a constant and
+/// its application aren't pages apart in a being's own source (Astrid read a codec
+/// gate whose smooth application was ~2,600 lines away and re-proposed an
+/// already-shipped fix). Drift-PROOF: built live from the file's own lines, never
+/// cached. Returns "" when nothing in the window is fragmented. Bounded for
+/// readability + cost.
+fn within_file_xrefs(all_lines: &[&str], start: usize, end: usize) -> String {
+    const MAX_SYMBOLS: usize = 8;
+    const MAX_SITES: usize = 4;
+    const MAX_EXAMINED: usize = 40;
+    let mut sections: Vec<String> = Vec::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut examined = 0usize;
+    for line in all_lines.get(start..end).unwrap_or(&[]) {
+        if sections.len() >= MAX_SYMBOLS || examined >= MAX_EXAMINED {
+            break;
+        }
+        let Some(symbol) = introspect_defined_symbol(line) else {
+            continue;
+        };
+        if !seen.insert(symbol.clone()) {
+            continue;
+        }
+        examined += 1;
+        let mut sites: Vec<String> = Vec::new();
+        for (idx, candidate) in all_lines.iter().enumerate() {
+            if idx >= start && idx < end {
+                continue; // already visible in the window she is reading
+            }
+            let trimmed = candidate.trim_start();
+            if trimmed.starts_with("//")
+                || trimmed.starts_with('#')
+                || trimmed.starts_with("/*")
+                || trimmed.starts_with('*')
+            {
+                continue; // skip comment mentions — surface actual CODE use-sites
+            }
+            if introspect_line_mentions(candidate, &symbol) {
+                sites.push(format!("//   {:>5}: {}", idx + 1, candidate.trim()));
+                if sites.len() >= MAX_SITES {
+                    break;
+                }
+            }
+        }
+        if !sites.is_empty() {
+            sections.push(format!("// {symbol}:\n{}", sites.join("\n")));
+        }
+    }
+    if sections.is_empty() {
+        return String::new();
+    }
+    let mut out = String::from(
+        "\n\n// --- Where the definitions above are used elsewhere in this file ---\n",
+    );
+    out.push_str(
+        "// (use-sites OUTSIDE the window — so a constant and its application aren't pages apart)\n",
+    );
+    out.push_str(&sections.join("\n"));
+    out
+}
+
+/// Up to `MAX_EXAMINED` unique symbols DEFINED in the visible window — the shared
+/// basis for both the within-file and cross-file use-site sections.
+fn window_defined_symbols(all_lines: &[&str], start: usize, end: usize) -> Vec<String> {
+    const MAX_EXAMINED: usize = 40;
+    let mut out: Vec<String> = Vec::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for line in all_lines.get(start..end).unwrap_or(&[]) {
+        if out.len() >= MAX_EXAMINED {
+            break;
+        }
+        let Some(symbol) = introspect_defined_symbol(line) else {
+            continue;
+        };
+        if seen.insert(symbol.clone()) {
+            out.push(symbol);
+        }
+    }
+    out
+}
+
+/// Pure core of the cross-file use-site search: for each window-defined `symbol`,
+/// find where it is used in the `siblings` (label, file-content) pairs. Skips
+/// comment lines (surface real CODE use-sites) and is bounded for readability/cost.
+/// Returns "" when nothing is found. Separated from I/O so it can be unit-tested.
+fn cross_file_xref_sections(symbols: &[String], siblings: &[(String, String)]) -> String {
+    const MAX_SYMBOLS: usize = 8;
+    const MAX_SITES_PER_SYMBOL: usize = 3;
+    const MAX_TOTAL_SITES: usize = 14;
+    if symbols.is_empty() {
+        return String::new();
+    }
+    let mut sections: Vec<String> = Vec::new();
+    let mut total = 0usize;
+    for symbol in symbols.iter().take(MAX_SYMBOLS) {
+        if total >= MAX_TOTAL_SITES {
+            break;
+        }
+        let mut sites: Vec<String> = Vec::new();
+        for (label, content) in siblings {
+            if sites.len() >= MAX_SITES_PER_SYMBOL || total >= MAX_TOTAL_SITES {
+                break;
+            }
+            for (idx, line) in content.lines().enumerate() {
+                let trimmed = line.trim_start();
+                if trimmed.starts_with("//")
+                    || trimmed.starts_with('#')
+                    || trimmed.starts_with("/*")
+                    || trimmed.starts_with('*')
+                {
+                    continue; // skip comment mentions — surface actual CODE use-sites
+                }
+                if introspect_line_mentions(line, symbol) {
+                    let shown: String = line.trim().chars().take(160).collect();
+                    sites.push(format!("//   {label}:{}: {shown}", idx + 1));
+                    total = total.saturating_add(1);
+                    if sites.len() >= MAX_SITES_PER_SYMBOL || total >= MAX_TOTAL_SITES {
+                        break;
+                    }
+                }
+            }
+        }
+        if !sites.is_empty() {
+            sections.push(format!("// {symbol}:\n{}", sites.join("\n")));
+        }
+    }
+    if sections.is_empty() {
+        return String::new();
+    }
+    let mut out = String::from(
+        "\n\n// --- Where these definitions are used in your OTHER source files ---\n",
+    );
+    out.push_str(
+        "// (cross-file use-sites in the same codebase — the closed volume, opened across files)\n",
+    );
+    out.push_str(&sections.join("\n"));
+    out
+}
+
+/// Being-facing transparency (bet #2, cross-file cut): for the symbols DEFINED in
+/// the window, show where they are USED in the being's OTHER curated source files
+/// (same codebase family — astrid symbols are not referenced in minime's Python and
+/// vice versa, so families are kept separate to avoid false matches). Reads each
+/// sibling live (drift-PROOF, never cached); pull-only (rides the window she
+/// requested); same curated set she can already INTROSPECT (no new exposure).
+fn cross_file_xrefs(
+    current_canonical: &Path,
+    all_lines: &[&str],
+    start: usize,
+    end: usize,
+) -> String {
+    let symbols = window_defined_symbols(all_lines, start, end);
+    if symbols.is_empty() {
+        return String::new();
+    }
+    let paths = bridge_paths();
+    let canon = |p: &Path| fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+    let astrid_src = canon(&paths.bridge_root().join("src"));
+    let current = canon(current_canonical);
+    let current_is_astrid = current.starts_with(&astrid_src);
+    let mut siblings: Vec<(String, String)> = Vec::new();
+    for src in introspect_sources() {
+        if src.label.starts_with("proposal:") {
+            continue; // long-form docs, not code use-sites
+        }
+        let sib = canon(&src.path);
+        if sib == current {
+            continue; // the file she's already reading
+        }
+        if sib.starts_with(&astrid_src) != current_is_astrid {
+            continue; // keep families separate (astrid vs minime)
+        }
+        if let Ok(content) = fs::read_to_string(&src.path) {
+            siblings.push((src.label.to_string(), content));
+        }
+    }
+    cross_file_xref_sections(&symbols, &siblings)
+}
+
 /// Read a source file for introspection with pagination.
 ///
 /// `line_offset`: start reading from this line (0 = beginning).
@@ -715,8 +936,16 @@ pub(super) fn read_introspect_window(
         ("\n// (end of file)".to_string(), None)
     };
 
+    // Being-facing transparency (bet #2): show where the definitions in this window
+    // are used elsewhere in the file (within-file), and in her OTHER curated source
+    // files (cross-file) — so a constant and its application aren't pages apart, and
+    // the closed volume opens across files too. Pull-only (rides the window she
+    // requested), live, never cached.
+    let xref = within_file_xrefs(&all_lines, start, end);
+    let cross = cross_file_xrefs(&canonical, &all_lines, start, end);
+
     Ok(IntrospectWindow {
-        text: format!("{header}{page}{footer}"),
+        text: format!("{header}{page}{xref}{cross}{footer}"),
         next_offset,
     })
 }
@@ -916,6 +1145,162 @@ pub(super) fn blocked_introspection_notice(target: Option<&str>, reason: &str) -
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn within_file_xrefs_links_definition_to_distant_use() {
+        let lines = vec![
+            "const TAIL_GATE: f32 = 0.85;",        // 0: defined in window [0,2)
+            "fn defined_but_unused_here() {}",     // 1: in window, no out-of-window use
+            "// a gap of prose",                   // 2: outside window (comment, skipped)
+            "    let r = (e - TAIL_GATE) / span;", // 3: a CODE use OUTSIDE the window
+        ];
+        let out = within_file_xrefs(&lines, 0, 2);
+        assert!(out.contains("TAIL_GATE:"), "lists the constant: {out}");
+        assert!(
+            out.contains("4:"),
+            "points at the distant code use-site (line 4): {out}"
+        );
+        // a symbol with no out-of-window USE is omitted (she already sees in-window uses):
+        assert!(
+            !out.contains("defined_but_unused_here"),
+            "omits non-fragmented symbols: {out}"
+        );
+    }
+
+    #[test]
+    fn within_file_xrefs_empty_when_nothing_fragmented() {
+        // the only def is used solely inside its own window -> no footer.
+        let lines = vec![
+            "const A_CONST: u8 = 1;",
+            "let x = A_CONST + A_CONST;",
+            "// out",
+        ];
+        assert_eq!(within_file_xrefs(&lines, 0, 2), "");
+    }
+
+    #[test]
+    fn within_file_xrefs_skips_comment_mentions() {
+        // a comment that names the symbol outside the window is NOT a use-site.
+        let lines = vec![
+            "const GATE_X: u8 = 1;",           // 0: in window
+            "let y = 0;",                      // 1: in window
+            "// GATE_X is mentioned in prose", // 2: comment outside window -> skipped
+        ];
+        assert_eq!(within_file_xrefs(&lines, 0, 2), "");
+    }
+
+    #[test]
+    fn within_file_xrefs_grounds_the_real_codec_gate() {
+        // Grounding against the documented case: the codec gate constant's smooth
+        // application is ~2,600 lines from its definition; the xref must surface it.
+        let codec = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/codec.rs"),
+        )
+        .expect("codec.rs readable");
+        let lines: Vec<&str> = codec.lines().collect();
+        let gate = "TAIL_VIBRANCY_ENTROPY_GATE";
+        if let Some(def_idx) = lines
+            .iter()
+            .position(|l| introspect_defined_symbol(l).as_deref() == Some(gate))
+        {
+            let end = (def_idx + 50).min(lines.len());
+            let out = within_file_xrefs(&lines, def_idx, end);
+            assert!(
+                out.contains(gate),
+                "the codec gate's distant application should surface in the xref footer"
+            );
+        }
+        // If the constant was refactored away, this passes trivially (the synthetic
+        // tests above still prove the logic).
+    }
+
+    #[test]
+    fn cross_file_xref_sections_links_symbol_to_sibling_file() {
+        let symbols = vec!["TAIL_GATE".to_string()];
+        let siblings = vec![
+            (
+                "astrid:llm".to_string(),
+                "fn g() {\n    let r = TAIL_GATE * 2.0;\n}\n".to_string(),
+            ),
+            (
+                "astrid:ws".to_string(),
+                "// unrelated\nlet z = 1;\n".to_string(),
+            ),
+        ];
+        let out = cross_file_xref_sections(&symbols, &siblings);
+        assert!(out.contains("TAIL_GATE:"), "names the symbol: {out}");
+        assert!(
+            out.contains("astrid:llm:2:"),
+            "names the sibling file + line: {out}"
+        );
+        assert!(
+            out.contains("OTHER source files"),
+            "has the cross-file header: {out}"
+        );
+    }
+
+    #[test]
+    fn cross_file_xref_sections_empty_when_no_hits() {
+        let symbols = vec!["NOT_PRESENT_SYMBOL".to_string()];
+        let siblings = vec![("astrid:llm".to_string(), "let x = 1;\n".to_string())];
+        assert_eq!(cross_file_xref_sections(&symbols, &siblings), "");
+    }
+
+    #[test]
+    fn cross_file_xref_sections_skips_comment_mentions() {
+        // a symbol named only in sibling comments is NOT a use-site.
+        let symbols = vec!["GATE_X".to_string()];
+        let siblings = vec![(
+            "astrid:ws".to_string(),
+            "// GATE_X named only in prose\n# GATE_X also here\n".to_string(),
+        )];
+        assert_eq!(cross_file_xref_sections(&symbols, &siblings), "");
+    }
+
+    #[test]
+    fn cross_file_xref_sections_bounds_total_sites() {
+        let symbols: Vec<String> = (0..10).map(|i| format!("SYM_{i}")).collect();
+        let mut content = String::new();
+        for s in &symbols {
+            for _ in 0..5 {
+                content.push_str(&format!("let v = {s} + 1;\n"));
+            }
+        }
+        let siblings = vec![("astrid:llm".to_string(), content)];
+        let out = cross_file_xref_sections(&symbols, &siblings);
+        let site_count = out.matches("astrid:llm:").count();
+        assert!(site_count > 0, "some sites surface: {out}");
+        assert!(
+            site_count <= 14,
+            "total sites bounded to <=14, got {site_count}"
+        );
+    }
+
+    #[test]
+    fn cross_file_xref_sections_grounds_real_codec_symbols_in_siblings() {
+        // Real grounding: codec-defined symbols searched in the real llm/autonomous
+        // sources. Lenient — if a codec symbol IS used cross-file, the section is
+        // well-formed; if none happen to cross, the synthetic tests still prove logic.
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let codec = std::fs::read_to_string(dir.join("src/codec.rs")).expect("codec.rs");
+        let llm = std::fs::read_to_string(dir.join("src/llm.rs")).expect("llm.rs");
+        let autonomous =
+            std::fs::read_to_string(dir.join("src/autonomous.rs")).expect("autonomous.rs");
+        let lines: Vec<&str> = codec.lines().collect();
+        let symbols = window_defined_symbols(&lines, 0, lines.len().min(400));
+        let siblings = vec![
+            ("astrid:llm".to_string(), llm),
+            ("astrid:autonomous".to_string(), autonomous),
+        ];
+        let out = cross_file_xref_sections(&symbols, &siblings);
+        if !out.is_empty() {
+            assert!(out.contains("OTHER source files"), "{out}");
+            assert!(
+                out.contains("astrid:llm:") || out.contains("astrid:autonomous:"),
+                "{out}"
+            );
+        }
+    }
 
     #[test]
     fn required_sections_rejects_next_only() {

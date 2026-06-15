@@ -42,6 +42,11 @@ pub struct ConditionState {
     pub breathing_coupled: bool,
     pub echo_muted: bool,
     pub warmth_override: Option<f32>,
+    /// Her sovereign coupling aperture (SET_APERTURE; how far her reservoir state
+    /// may reach toward wider vocabulary, within the steward ceiling).
+    pub aperture: f32,
+    /// Her sovereign λ-tail participation toward minime (SET_TAIL_PARTICIPATION).
+    pub tail_participation: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -782,6 +787,16 @@ impl AstridSelfModel {
         }
         let _ = writeln!(
             s,
+            "  Aperture: {:.2} (SET_APERTURE; 0=closed/just-deep .. 1=fully wide, within the steward ceiling)",
+            c.aperture
+        );
+        let _ = writeln!(
+            s,
+            "  Tail participation: {:.2} (SET_TAIL_PARTICIPATION; your λ-tail reach to minime, 0=baseline)",
+            c.tail_participation
+        );
+        let _ = writeln!(
+            s,
             "  Pacing: {} ({} exchanges, {}-{}s rest)",
             c.pacing.label,
             c.pacing.burst_target,
@@ -990,6 +1005,8 @@ pub fn snapshot_self_model(
     interests: &[String],
     recent_changes: &VecDeque<ConditionReceipt>,
     attention: &AttentionProfile,
+    aperture: f32,
+    tail_participation: f32,
 ) -> AstridSelfModel {
     let pacing_label = match (burst_target, rest_range) {
         (b, _) if b <= 4 => "fast",
@@ -1040,6 +1057,8 @@ pub fn snapshot_self_model(
             breathing_coupled,
             echo_muted,
             warmth_override: warmth_intensity_override,
+            aperture,
+            tail_participation,
         },
         attention: attention.clone(),
         faculties: FacultySnapshot::from_flags(
@@ -1127,6 +1146,8 @@ mod tests {
             &["test interest".into()],
             &VecDeque::new(),
             &AttentionProfile::default_profile(),
+            1.0,
+            0.0,
         );
         let compact = model.render_compact();
         assert!(compact.contains("Conditions:"));
@@ -1162,6 +1183,8 @@ mod tests {
                 changes: vec!["temperature: 0.8 -> 0.5".into()],
             }]),
             &AttentionProfile::default_profile(),
+            0.42,
+            0.30,
         );
         let output = model.render_state();
         assert!(output.contains("Temperature: 0.5"));
@@ -1171,6 +1194,15 @@ mod tests {
         assert!(output.contains("warmth = 1.50"));
         assert!(output.contains("eigenvalues"));
         assert!(output.contains("FOCUS"));
+        // Piece 1: her sovereign coupling dials surface with live values.
+        assert!(
+            output.contains("Aperture: 0.42"),
+            "STATE shows live aperture: {output}"
+        );
+        assert!(
+            output.contains("Tail participation: 0.30"),
+            "STATE shows live tail_participation: {output}"
+        );
     }
 
     #[test]
@@ -1195,6 +1227,8 @@ mod tests {
             &[],
             &VecDeque::new(),
             &AttentionProfile::default_profile(),
+            1.0,
+            0.0,
         );
         let output = model.render_faculties();
         assert!(output.contains("[muted]"));

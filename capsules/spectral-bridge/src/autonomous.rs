@@ -4920,6 +4920,8 @@ pub fn spawn_autonomous_loop(
                                     &conv.interests,
                                     &conv.condition_receipts,
                                     &conv.attention,
+                                    crate::llm::astrid_aperture(),
+                                    crate::llm::astrid_tail_participation(),
                                 );
                                 continuity_parts.push(self_model.render_compact());
                             }

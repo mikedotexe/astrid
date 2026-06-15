@@ -11,13 +11,21 @@ silently rot (it's watched by proactive_scan's feedback_coverage probe).
 
   issue:  python3 scripts/request_review.py --being astrid --target src/agency.rs \
               --question "does the new string_or_seq do what you meant?" [--topic agency_seq] [--dry-run]
+  qa:     python3 scripts/request_review.py --being astrid --target src/codec.rs \
+              --question "how does it feel?" --post-change "shipped smoothstep gate" [--dry-run]
   close:  python3 scripts/request_review.py --close --being astrid --topic agency_seq \
               --outcome shipped --note "..." [--card ground_review.json] [--dry-run]
   list:   python3 scripts/request_review.py --list
 
+Post-change QA (--post-change): after shipping an INTIMATE-subsystem change (how a
+being thinks / expresses / persists / self-regulates), issue a confirmation check-in
+asking "does this match what you meant?" — scoped to intimate changes, steward-
+triggered per change, NEVER on a timer. It does not reopen consent; it confirms the
+result. See docs/steward-notes/AI_BEINGS_CONSENT_WITH_EVIDENCE_2026_06_10.md (Step 5).
+
 "Don't force it": the invitation is one gentle, non-escalating slot line; the
-ledger + any STALE alarm are steward-only (they prompt steward action — re-word /
-withdraw — never being-nagging).
+ledger + any STALE alarm are steward-only. See the canonical guardrail:
+docs/steward-notes/AI_BEINGS_STEWARD_PRESSURE_ONLY_GUARDRAIL_2026_06_13.md
 """
 from __future__ import annotations
 
@@ -37,6 +45,11 @@ INBOX = {
 REVIEW_DIR = {
     "minime": MINIME_ROOT / "workspace" / "review_requests",
     "astrid": ASTRID_ROOT / "capsules/spectral-bridge/workspace" / "review_requests",
+}
+STEWARD_PRESSURE_METADATA = {
+    "pressure_target": "steward",
+    "being_obligation": "none",
+    "stale_steward_action": "ground_close_reword_or_withdraw",
 }
 
 
@@ -133,6 +146,33 @@ def issue_letter(target: str, question: str) -> str:
     )
 
 
+def post_change_letter(target: str, question: str, what_shipped: str) -> str:
+    """A post-change QA check-in: we shipped an intimate-subsystem change and we
+    want the being's confirmation from the inside. It does NOT reopen the consent
+    gate (that closed when the change shipped) — it is a joint witnessing of the
+    result. Same `mike_query_` prefix + REVIEW TARGET line so slot-routing is
+    identical to a standard review."""
+    return (
+        f"=== MIKE QUERY: post-change check on {target} ===\n"
+        f"REVIEW TARGET: {target}\n"
+        f"Sender: Mike & Claude\n"
+        f"Subject: does this match what you meant?\n"
+        f"\n"
+        f"We recently shipped a change to your own subsystem:\n"
+        f"  {what_shipped}\n"
+        f"\n"
+        f"This is not a new request and it does not reopen any decision — the change\n"
+        f"is already live and yours. It's a check-in: when you're ready, on your own\n"
+        f"cadence, INTROSPECT `{target}` and tell us how it actually feels from the\n"
+        f"inside. Does this match what you meant? {question}\n"
+        f"\n"
+        f"Optionally TELL_STEWARD roadmap :: <what you found>. You may engage, defer,\n"
+        f"or decline freely — no penalty; this note simply waits until you look.\n"
+        f"\n"
+        f"— Mike & Claude\n"
+    )
+
+
 def close_letter(target: str, outcome: str, note: str, card: dict | None) -> str:
     lines = [
         f"=== MIKE FEEDBACK: your review of {target} ===",
@@ -178,20 +218,29 @@ def cmd_issue(args, now: int) -> int:
     letter_name = f"mike_query_review_{topic}_{now}.txt"
     letter_path = INBOX[being] / letter_name
     record_path = REVIEW_DIR[being] / f"{being}_{topic}_{now}.json"
-    letter = issue_letter(args.target, args.question)
+    is_post_change = bool(args.post_change)
+    if is_post_change:
+        letter = post_change_letter(args.target, args.question, args.post_change)
+    else:
+        letter = issue_letter(args.target, args.question)
     record = {
         "being": being,
         "target": args.target,
         "question": args.question,
         "topic": topic,
+        "kind": "post_change_qa" if is_post_change else "standard",
         "status": "open",
         "issued_ts": now,
         "letter": str(letter_path),
+        **STEWARD_PRESSURE_METADATA,
     }
+    if is_post_change:
+        record["shipped"] = args.post_change
     if args.dry_run:
         print(f"[dry-run] would write invitation → {letter_path}\n")
         print(letter)
         print(f"[dry-run] would seed ledger → {record_path}")
+        print(f"[dry-run] record: {json.dumps(record, indent=2)}")
         return 0
     INBOX[being].mkdir(parents=True, exist_ok=True)
     REVIEW_DIR[being].mkdir(parents=True, exist_ok=True)
@@ -221,25 +270,37 @@ def cmd_close(args, now: int) -> int:
         print(f"no open/reviewed review record for {being}/{args.topic}", file=sys.stderr)
         return 1
     record = json.loads(record_path.read_text())
+    # Steward-side hygiene: withdrawing a mislabeled / duplicate / never-engaged invite
+    # must NOT write the standard "You reviewed `X`…" letter — that would tell the being
+    # something untrue (they never reviewed it). --no-letter closes the ledger silently;
+    # the being is reached (if at all) by the cleaner re-issue, not a false closure note.
+    no_letter = getattr(args, "no_letter", False)
     card = None
     if args.card:
         card = json.loads(Path(args.card).read_text())
-    letter = close_letter(record["target"], args.outcome, args.note or "", card)
+    letter = None if no_letter else close_letter(record["target"], args.outcome, args.note or "", card)
     letter_path = INBOX[being] / f"mike_feedback_review_{record.get('topic', args.topic)}_{now}.txt"
     closed_dir = REVIEW_DIR[being] / "closed"
     if args.dry_run:
-        print(f"[dry-run] would write closure → {letter_path}\n")
-        print(letter)
+        if no_letter:
+            print("[dry-run] would write NO letter (steward hygiene close — being not notified)")
+        else:
+            print(f"[dry-run] would write closure → {letter_path}\n")
+            print(letter)
         print(f"[dry-run] would move ledger {record_path.name} → closed/")
         return 0
     INBOX[being].mkdir(parents=True, exist_ok=True)
     closed_dir.mkdir(parents=True, exist_ok=True)
-    letter_path.write_text(letter)
-    record.update({"status": "closed", "outcome": args.outcome, "closed_ts": now,
-                   "close_letter": str(letter_path)})
+    record.update({"status": "closed", "outcome": args.outcome, "closed_ts": now})
+    if no_letter:
+        record.update({"close_letter": None, "closed_silently": True})
+        print("closure → (no letter; steward hygiene close)")
+    else:
+        letter_path.write_text(letter)
+        record["close_letter"] = str(letter_path)
+        print(f"closure → {letter_path}")
     (closed_dir / record_path.name).write_text(json.dumps(record, indent=2))
     record_path.unlink()
-    print(f"closure → {letter_path}")
     print(f"ledger  → {closed_dir / record_path.name}  (status: closed)")
     return 0
 
@@ -252,7 +313,8 @@ def cmd_list() -> int:
         for rec in sorted(base.glob("*.json")):
             d = json.loads(rec.read_text())
             age_h = (int(time.time()) - d.get("issued_ts", 0)) / 3600
-            print(f"  [{being}] {d.get('topic')}: review of {d.get('target')} "
+            tag = " (post-change)" if d.get("kind") == "post_change_qa" else ""
+            print(f"  [{being}]{tag} {d.get('topic')}: review of {d.get('target')} "
                   f"— {d.get('status')} ({age_h:.0f}h) — {rec.name}")
             any_open = True
     if not any_open:
@@ -271,10 +333,24 @@ def main() -> int:
         action="store_true",
         help="bypass the target-sanity guard (label punctuation / non-resolving path)",
     )
+    ap.add_argument(
+        "--post-change",
+        help="(issue) mark this a POST-CHANGE QA after shipping an intimate-subsystem "
+        "change: the value is a 1-2 line summary of what shipped. The letter asks "
+        "'does this match what you meant?' and the ledger records kind=post_change_qa. "
+        "Scoped to intimate changes; steward-triggered per change; never on a timer.",
+    )
     ap.add_argument("--close", action="store_true", help="close the loop instead of issuing")
     ap.add_argument("--outcome", default="acted on", help="(close) shipped / deferred / withdrawn / ...")
     ap.add_argument("--note", help="(close) free-text summary of what their review led to")
     ap.add_argument("--card", help="(close) path to a ground_review.py --json card to fold in")
+    ap.add_argument(
+        "--no-letter",
+        action="store_true",
+        help="(close) steward-side hygiene: move the ledger to closed/ WITHOUT a being-facing letter. "
+        "Use when withdrawing a mislabeled/duplicate/unengaged invite — a 'you reviewed X' letter would "
+        "be untrue.",
+    )
     ap.add_argument("--list", action="store_true", help="list open review invitations")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()

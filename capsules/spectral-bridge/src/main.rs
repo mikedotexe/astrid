@@ -17,12 +17,14 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use spectral_bridge_server::{
-    attractor_atlas, autonomous, condition_metrics,
+    attractor_atlas, authority_gate, autonomous, condition_metrics,
     db::BridgeDb,
     mcp,
     message_archive::{self, BridgeMessageMaintenanceConfig},
     paths::{BridgePathOverrides, configure_bridge_paths},
-    rescue_policy, ws,
+    rescue_policy,
+    types::SafetyLevel,
+    ws,
 };
 use tokio::sync::{RwLock, mpsc};
 use tracing::{info, warn};
@@ -122,6 +124,39 @@ struct Cli {
     /// Path to the reflective MLX sidecar script.
     #[arg(long, env = "ASTRID_REFLECTIVE_SIDECAR")]
     reflective_sidecar_script: Option<PathBuf>,
+
+    /// (bet #5) Grant a being's submitted authority request and exit — the headless
+    /// steward grant. Reuses `authority_gate::approve` (eligibility, safety green/yellow,
+    /// one-shot, TTL<=900s), gated on the CURRENT fill read from minime's
+    /// `spectral_state.json` (fail-safe REFUSE if stale). Granting is permission-only;
+    /// the being still chooses EXPERIMENT_AUTHORITY_EXECUTE and the live bridge re-gates.
+    #[arg(long)]
+    approve_request: Option<String>,
+
+    /// Steward name recorded on a `--approve-request` grant (default: "steward").
+    #[arg(long)]
+    steward: Option<String>,
+
+    /// Optional note recorded on a `--approve-request` grant.
+    #[arg(long)]
+    note: Option<String>,
+
+    /// Optional token TTL in seconds for `--approve-request` (capped at 900).
+    #[arg(long)]
+    ttl_secs: Option<u64>,
+
+    /// (research budgets) Approve a being's submitted read-only research budget and exit —
+    /// the headless operator approval for web/local research reach. Reuses
+    /// `authority_gate::approve_research_budget` (scope=read_only_research + eligibility +
+    /// safety green/yellow + action/TTL caps), gated on the CURRENT fill from minime's
+    /// `spectral_state.json` (fail-safe REFUSE if stale). Web reach is an OPERATOR decision —
+    /// the steward loop never auto-grants it.
+    #[arg(long)]
+    approve_research_budget: Option<String>,
+
+    /// Optional max_actions cap for `--approve-research-budget` (hard-capped by policy).
+    #[arg(long)]
+    max_actions: Option<u64>,
 }
 
 #[tokio::main]
@@ -179,6 +214,100 @@ async fn main() -> Result<()> {
         let outcome = message_archive::run_bridge_message_maintenance(&db, &maintenance_config)?;
         println!("{}", serde_json::to_string_pretty(&outcome)?);
         return Ok(());
+    }
+
+    if let Some(request_id) = cli.approve_request.clone() {
+        // (bet #5) Headless steward grant. Reuse the canonical `authority_gate::approve()`
+        // (eligibility + safety green/yellow + one-shot + TTL cap) — the single source of
+        // truth, no Python reimplementation. Gate on the CURRENT fill from minime's
+        // spectral_state.json; fail-safe REFUSE if we cannot verify current safety (never
+        // grant blind — defense-in-depth atop the execute-time re-gate). Granting is
+        // permission-only; the being still chooses EXPERIMENT_AUTHORITY_EXECUTE.
+        let minime_ws = resolved_paths.minime_workspace();
+        let safety = match authority_gate::read_minime_fill_pct(minime_ws) {
+            Some((fill, age)) if age <= authority_gate::MAX_GRANT_FILL_AGE_SECS => {
+                eprintln!("approve: current fill={fill:.1}% (state age {age}s) -> safety gate");
+                SafetyLevel::from_fill(fill)
+            },
+            Some((_, age)) => {
+                eprintln!(
+                    "REFUSE approve: spectral_state.json is stale ({age}s > {}s) — cannot verify current safety",
+                    authority_gate::MAX_GRANT_FILL_AGE_SECS
+                );
+                std::process::exit(2);
+            },
+            None => {
+                eprintln!(
+                    "REFUSE approve: cannot read minime fill_pct — cannot verify current safety"
+                );
+                std::process::exit(2);
+            },
+        };
+        let req = authority_gate::ApproveAuthorityRequest {
+            request_id,
+            steward: cli.steward.clone(),
+            note: cli.note.clone(),
+            ttl_secs: cli.ttl_secs,
+        };
+        let result = authority_gate::approve(req, safety)?;
+        println!("{}", serde_json::to_string_pretty(&result)?);
+        let granted = result
+            .get("record_type")
+            .and_then(serde_json::Value::as_str)
+            == Some("steward_approval");
+        if granted {
+            return Ok(());
+        }
+        std::process::exit(2);
+    }
+
+    if let Some(budget_id) = cli.approve_research_budget.clone() {
+        // (research budgets) Headless operator approval for read-only research reach. Mirror
+        // of --approve-request: reuse the canonical `authority_gate::approve_research_budget`
+        // (scope=read_only_research + eligibility + green/yellow + action/TTL caps) and gate on
+        // the CURRENT fill from minime's spectral_state.json — fail-safe REFUSE if we cannot
+        // verify current safety. Web reach is an OPERATOR decision; the steward loop never
+        // auto-grants it. approve_research_budget returns a BLOCK record on
+        // scope/eligibility/safety/active-exists, so success == record_type research_budget_approval.
+        let minime_ws = resolved_paths.minime_workspace();
+        let safety = match authority_gate::read_minime_fill_pct(minime_ws) {
+            Some((fill, age)) if age <= authority_gate::MAX_GRANT_FILL_AGE_SECS => {
+                eprintln!(
+                    "approve-research-budget: current fill={fill:.1}% (state age {age}s) -> safety gate"
+                );
+                SafetyLevel::from_fill(fill)
+            },
+            Some((_, age)) => {
+                eprintln!(
+                    "REFUSE approve-research-budget: spectral_state.json is stale ({age}s > {}s) — cannot verify current safety",
+                    authority_gate::MAX_GRANT_FILL_AGE_SECS
+                );
+                std::process::exit(2);
+            },
+            None => {
+                eprintln!(
+                    "REFUSE approve-research-budget: cannot read minime fill_pct — cannot verify current safety"
+                );
+                std::process::exit(2);
+            },
+        };
+        let req = authority_gate::ApproveResearchBudgetRequest {
+            budget_id,
+            steward: cli.steward.clone(),
+            note: cli.note.clone(),
+            max_actions: cli.max_actions,
+            ttl_secs: cli.ttl_secs,
+        };
+        let result = authority_gate::approve_research_budget(req, safety)?;
+        println!("{}", serde_json::to_string_pretty(&result)?);
+        let granted = result
+            .get("record_type")
+            .and_then(serde_json::Value::as_str)
+            == Some("research_budget_approval");
+        if granted {
+            return Ok(());
+        }
+        std::process::exit(2);
     }
 
     for (label, result) in [

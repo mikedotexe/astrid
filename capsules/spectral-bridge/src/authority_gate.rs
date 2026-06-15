@@ -22,6 +22,9 @@ const EXECUTABLE_SCOPE: &str = "semantic_microdose";
 const MODE_RELEASE_SCOPE: &str = "mode_release_microdose";
 const READ_ONLY_RESEARCH_SCOPE: &str = "read_only_research";
 const DEFAULT_TOKEN_TTL_SECS: u64 = 900;
+/// A headless grant must gate on CURRENT safety; if minime's `spectral_state.json`
+/// is older than this, REFUSE (fail-safe — never grant on a stale safety read).
+pub const MAX_GRANT_FILL_AGE_SECS: u64 = 180;
 const DEFAULT_BUDGET_MAX_SENDS: u64 = 3;
 const DEFAULT_BUDGET_TTL_SECS: u64 = 21_600;
 const DEFAULT_RESEARCH_MAX_ACTIONS: u64 = 5;
@@ -191,6 +194,21 @@ pub fn render_status_to_base(
         json_path,
         status,
     })
+}
+
+/// Read minime's current `fill_pct` and the age (secs) of its `spectral_state.json`,
+/// so a headless grant can gate on CURRENT safety and fail-safe on a stale read.
+/// `None` if the file is missing / unreadable / malformed.
+pub fn read_minime_fill_pct(minime_workspace: &Path) -> Option<(f32, u64)> {
+    let path = minime_workspace.join("spectral_state.json");
+    let meta = std::fs::metadata(&path).ok()?;
+    let age = std::time::SystemTime::now()
+        .duration_since(meta.modified().ok()?)
+        .map_or(u64::MAX, |d| d.as_secs());
+    let value: Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
+    #[allow(clippy::cast_possible_truncation)]
+    let fill = value.get("fill_pct").and_then(Value::as_f64)? as f32;
+    Some((fill, age))
 }
 
 pub fn approve(req: ApproveAuthorityRequest, safety_level: SafetyLevel) -> Result<Value> {
@@ -1818,6 +1836,15 @@ fn readiness_from_rows(rows: &[Value]) -> Value {
     ) && !latest_request_id.is_empty()
     {
         format!("EXPERIMENT_AUTHORITY_STATUS {latest_request_id}")
+    } else if stage == "needs_charter" && !latest_experiment_id.is_empty() {
+        // The experiment has no charter — the FOUNDATIONAL gate that blocks every
+        // path to a live action. Point her at EXPERIMENT_CHARTER (in her own words),
+        // not EXPERIMENT_ADVANCE, so the charter-first prerequisite lands in her
+        // action loop. Parallel of minime's fix: both beings stalled for weeks
+        // drafting authority against uncharted experiments (2026-06-12).
+        format!(
+            "EXPERIMENT_CHARTER {latest_experiment_id} :: hypothesis: <your finding, in your words>; method_intent: <how you'll test it>; proposed_next_action: <your next action>; evidence_targets: felt, telemetry, artifact; stop_criteria: <when to stop>"
+        )
     } else {
         request_scaffold
             .clone()
@@ -2551,6 +2578,47 @@ mod tests {
     }
 
     #[test]
+    fn needs_charter_stage_points_at_experiment_charter_not_advance() {
+        // An uncharted experiment must surface EXPERIMENT_CHARTER as the next safe
+        // command (not EXPERIMENT_ADVANCE), so the charter-first gate lands in the
+        // being's action loop — the parallel of minime's authority-response fix.
+        let rows = vec![json!({
+            "record_type": "request",
+            "request_id": "authreq_uncharted",
+            "experiment_id": "exp_astrid_uncharted",
+            "scope": EXECUTABLE_SCOPE,
+            "eligibility_v1": {
+                "eligible": false,
+                "missing_requirements": ["lifecycle_valid_charter"],
+            },
+        })];
+        let readiness = readiness_from_rows(&rows);
+        assert_eq!(readiness["stage"], "needs_charter");
+        let next = readiness["next_safe_command"].as_str().unwrap_or_default();
+        assert!(
+            next.starts_with("EXPERIMENT_CHARTER exp_astrid_uncharted ::"),
+            "needs_charter must point at the charter, got: {next}"
+        );
+        assert!(next.contains("hypothesis:"));
+    }
+
+    #[test]
+    fn read_minime_fill_pct_reads_fresh_and_rejects_missing() {
+        let temp = tempfile::tempdir().unwrap();
+        let ws = temp.path();
+        // missing file -> None (fail-safe: a headless grant must then REFUSE).
+        assert!(read_minime_fill_pct(ws).is_none());
+        // present + fresh -> Some((fill, young age)).
+        fs::write(ws.join("spectral_state.json"), r#"{"fill_pct": 66.7}"#).unwrap();
+        let (fill, age) = read_minime_fill_pct(ws).expect("should read fill_pct");
+        assert!((fill - 66.7).abs() < 0.01);
+        assert!(
+            age <= MAX_GRANT_FILL_AGE_SECS,
+            "freshly written file must be young"
+        );
+    }
+
+    #[test]
     fn approval_mints_one_semantic_token_for_eligible_request() {
         let temp = tempfile::tempdir().unwrap();
         let minime = temp.path().join("minime_workspace");
@@ -2723,6 +2791,39 @@ mod tests {
                 .unwrap()
                 .to_string()
                 .contains("research_budget_v1")
+        );
+    }
+
+    #[test]
+    fn research_budget_approval_blocks_when_safety_not_green_or_yellow() {
+        // The fail-safe behind the headless --approve-research-budget CLI: even an eligible,
+        // read-only request must NOT be granted when current fill safety is not green/yellow.
+        // (The CLI computes safety from the CURRENT fill it reads at grant time.)
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_research_budget_request(&astrid, "resbud_unsafe", true);
+
+        let blocked = approve_research_budget_from_paths(
+            ApproveResearchBudgetRequest {
+                budget_id: "resbud_unsafe".to_string(),
+                steward: Some("test".to_string()),
+                note: None,
+                max_actions: None,
+                ttl_secs: None,
+            },
+            SafetyLevel::Red,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        assert_eq!(blocked["record_type"], "research_budget_blocked");
+        assert_eq!(blocked["reason"], "safety_not_green_or_yellow");
+        // and no active budget materialized
+        let rows = read_jsonl(&gate);
+        assert_ne!(
+            research_budget_status_from_rows(&rows)["stage"],
+            "active_budget_available"
         );
     }
 

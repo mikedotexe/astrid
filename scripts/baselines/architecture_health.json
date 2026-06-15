@@ -1,1578 +1,1752 @@
 {
+  "_blessed": "2026-06-15 architecture-drift tranche 2 (handle_action 2215->1587: 3 biggest arms -> handle_perturb/space_hold/native_gesture). handle_perturb(269)+handle_space_hold(226) still long -> tranche 3 internal sub-split (see ARCHITECTURE_DECOMPOSITION_PLAN_2026-06-13.md).",
   "growth_tolerance_lines": 50,
   "growth_tolerance_ratio": 0.05,
   "large_files": [
     {
-      "level": "critical",
-      "lines": 22944,
       "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "public_items": 106,
+      "lines": 18190,
+      "level": "critical",
+      "public_items": 108,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "level": "critical",
-      "lines": 7731,
       "path": "capsules/spectral-bridge/src/autonomous.rs",
+      "lines": 8620,
+      "level": "critical",
       "public_items": 10,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "level": "critical",
-      "lines": 6575,
       "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
+      "lines": 6575,
+      "level": "critical",
       "public_items": 5,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "level": "critical",
-      "lines": 5239,
       "path": "scripts/continuity_of_thought_audit.py",
-      "public_items": 154,
+      "lines": 5316,
+      "level": "critical",
+      "public_items": 155,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "level": "critical",
-      "lines": 4106,
       "path": "capsules/spectral-bridge/src/codec.rs",
-      "public_items": 55,
+      "lines": 4917,
+      "level": "critical",
+      "public_items": 64,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "lines": 4911,
       "level": "critical",
-      "lines": 3320,
+      "public_items": 0,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "lines": 4175,
+      "level": "critical",
+      "public_items": 43,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
       "path": "capsules/spectral-bridge/src/autonomous/next_action.rs",
-      "public_items": 14,
+      "lines": 3871,
+      "level": "critical",
+      "public_items": 15,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "lines": 3689,
       "level": "critical",
-      "lines": 3208,
+      "public_items": 3,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "path": "scripts/proactive_scan.py",
+      "lines": 3233,
+      "level": "critical",
+      "public_items": 141,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
       "path": "capsules/spectral-bridge/src/mcp.rs",
+      "lines": 3212,
+      "level": "critical",
       "public_items": 1,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "level": "critical",
-      "lines": 2998,
       "path": "capsules/spectral-bridge/src/authority_gate.rs",
-      "public_items": 23,
-      "suggestion": "write decomposition plan unless exempt"
-    },
-    {
+      "lines": 3102,
       "level": "critical",
-      "lines": 2703,
-      "path": "capsules/spectral-bridge/src/llm.rs",
-      "public_items": 37,
+      "public_items": 25,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs",
+      "lines": 2624,
       "level": "critical",
-      "lines": 2533,
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "public_items": 2,
+      "public_items": 11,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "level": "review",
-      "lines": 2489,
       "path": "capsules/spectral-bridge/src/types.rs",
-      "public_items": 74,
-      "suggestion": "add review note or split by ownership"
+      "lines": 2606,
+      "level": "critical",
+      "public_items": 78,
+      "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "level": "review",
-      "lines": 2467,
       "path": "crates/astrid-cli/src/commands/capsule/install.rs",
+      "lines": 2467,
+      "level": "review",
       "public_items": 11,
       "suggestion": "add review note or split by ownership"
     },
     {
+      "path": "scripts/self_study_review.py",
+      "lines": 2358,
       "level": "review",
-      "lines": 2289,
+      "public_items": 69,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
       "path": "capsules/spectral-bridge/src/autonomous/state.rs",
-      "public_items": 27,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
+      "lines": 2321,
       "level": "review",
-      "lines": 2083,
-      "path": "capsules/spectral-bridge/src/spectral_viz.rs",
-      "public_items": 29,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1830,
-      "path": "capsules/spectral-bridge/src/ws.rs",
-      "public_items": 5,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1797,
-      "path": "capsules/spectral-bridge/src/experiment_conveyor.rs",
-      "public_items": 5,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1785,
-      "path": "capsules/spectral-bridge/src/rescue_policy_tests.rs",
-      "public_items": 0,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1761,
-      "path": "capsules/perception/perception.py",
-      "public_items": 59,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1653,
-      "path": "crates/astrid-cli/src/tui/render.rs",
-      "public_items": 1,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1631,
-      "path": "crates/astrid-kernel/src/lib.rs",
-      "public_items": 10,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1621,
-      "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
-      "public_items": 8,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1587,
-      "path": "crates/astrid-cli/src/tui/state.rs",
-      "public_items": 48,
-      "suggestion": "add review note or split by ownership"
-    },
-    {
-      "level": "review",
-      "lines": 1551,
-      "path": "crates/astrid-mcp/src/server.rs",
       "public_items": 28,
       "suggestion": "add review note or split by ownership"
     },
     {
+      "path": "capsules/spectral-bridge/src/spectral_viz.rs",
+      "lines": 2083,
       "level": "review",
-      "lines": 1518,
-      "path": "scripts/proactive_scan.py",
+      "public_items": 29,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws.rs",
+      "lines": 1846,
+      "level": "review",
+      "public_items": 7,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/experiment_conveyor.rs",
+      "lines": 1797,
+      "level": "review",
+      "public_items": 5,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/rescue_policy_tests.rs",
+      "lines": 1788,
+      "level": "review",
+      "public_items": 0,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "capsules/perception/perception.py",
+      "lines": 1761,
+      "level": "review",
+      "public_items": 59,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "crates/astrid-kernel/src/lib.rs",
+      "lines": 1654,
+      "level": "review",
+      "public_items": 10,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "lines": 1653,
+      "level": "review",
+      "public_items": 1,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
+      "lines": 1648,
+      "level": "review",
+      "public_items": 8,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/state.rs",
+      "lines": 1587,
+      "level": "review",
+      "public_items": 48,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/db.rs",
+      "lines": 1566,
+      "level": "review",
+      "public_items": 51,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "scripts/being_test_harness.py",
+      "lines": 1553,
+      "level": "review",
       "public_items": 49,
       "suggestion": "add review note or split by ownership"
     },
     {
+      "path": "crates/astrid-mcp/src/server.rs",
+      "lines": 1551,
       "level": "review",
-      "lines": 1504,
+      "public_items": 28,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
       "path": "crates/astrid-cli/src/tui/input.rs",
+      "lines": 1504,
+      "level": "review",
       "public_items": 3,
       "suggestion": "add review note or split by ownership"
     },
     {
-      "level": "watch",
-      "lines": 1493,
-      "path": "capsules/spectral-bridge/src/db.rs",
-      "public_items": 48,
-      "suggestion": "check facade/API pressure"
-    },
-    {
-      "level": "watch",
-      "lines": 1433,
-      "path": "crates/astrid-openclaw/src/shim.rs",
-      "public_items": 2,
-      "suggestion": "watch cohesion before expanding"
-    },
-    {
-      "level": "watch",
-      "lines": 1428,
       "path": "capsules/spectral-bridge/src/action_self_knowledge.rs",
+      "lines": 1499,
+      "level": "watch",
       "public_items": 2,
       "suggestion": "watch cohesion before expanding"
     },
     {
+      "path": "crates/astrid-openclaw/src/shim.rs",
+      "lines": 1433,
       "level": "watch",
-      "lines": 1410,
+      "public_items": 2,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
       "path": "capsules/spectral-bridge/src/autonomous/btsp/tests.rs",
+      "lines": 1410,
+      "level": "watch",
       "public_items": 0,
       "suggestion": "watch cohesion before expanding"
     },
     {
-      "level": "watch",
+      "path": "capsules/spectral-bridge/src/autonomous/introspect.rs",
       "lines": 1387,
+      "level": "watch",
+      "public_items": 17,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
       "path": "capsules/spectral-bridge/src/lambda_tail.rs",
+      "lines": 1387,
+      "level": "watch",
       "public_items": 18,
       "suggestion": "watch cohesion before expanding"
     },
     {
-      "level": "watch",
-      "lines": 1369,
       "path": "scripts/memory_reasoning_audit.py",
+      "lines": 1369,
+      "level": "watch",
       "public_items": 36,
       "suggestion": "check facade/API pressure"
     },
     {
-      "level": "watch",
-      "lines": 1363,
       "path": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "lines": 1363,
+      "level": "watch",
       "public_items": 14,
       "suggestion": "watch cohesion before expanding"
     },
     {
-      "level": "watch",
-      "lines": 1318,
       "path": "crates/astrid-cli-mockup/src/ui/state.rs",
+      "lines": 1318,
+      "level": "watch",
       "public_items": 70,
       "suggestion": "check facade/API pressure"
     },
     {
+      "path": "capsules/spectral-bridge/src/agency.rs",
+      "lines": 1314,
       "level": "watch",
-      "lines": 1200,
-      "path": "crates/astrid-storage/src/kv.rs",
       "public_items": 22,
       "suggestion": "watch cohesion before expanding"
     },
     {
+      "path": "scripts/astrid_model_canary.py",
+      "lines": 1247,
       "level": "watch",
-      "lines": 1193,
+      "public_items": 36,
+      "suggestion": "check facade/API pressure"
+    },
+    {
       "path": "capsules/spectral-bridge/src/self_model.rs",
+      "lines": 1242,
+      "level": "watch",
       "public_items": 21,
       "suggestion": "watch cohesion before expanding"
     },
     {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "lines": 1233,
       "level": "watch",
-      "lines": 1148,
+      "public_items": 5,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "path": "crates/astrid-storage/src/kv.rs",
+      "lines": 1200,
+      "level": "watch",
+      "public_items": 22,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
       "path": "capsules/spectral-bridge/src/autonomous/btsp/social.rs",
+      "lines": 1148,
+      "level": "watch",
       "public_items": 30,
       "suggestion": "check facade/API pressure"
     },
     {
-      "level": "watch",
-      "lines": 1103,
-      "path": "crates/astrid-cli-mockup/src/demo/player.rs",
-      "public_items": 5,
-      "suggestion": "watch cohesion before expanding"
-    },
-    {
-      "level": "watch",
-      "lines": 1101,
-      "path": "capsules/spectral-bridge/src/agency.rs",
-      "public_items": 21,
-      "suggestion": "watch cohesion before expanding"
-    },
-    {
-      "level": "watch",
-      "lines": 1069,
-      "path": "crates/astrid-config/src/types.rs",
-      "public_items": 26,
-      "suggestion": "check facade/API pressure"
-    },
-    {
-      "level": "watch",
-      "lines": 1068,
-      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
-      "public_items": 6,
-      "suggestion": "watch cohesion before expanding"
-    },
-    {
-      "level": "watch",
-      "lines": 1053,
       "path": "capsules/spectral-bridge/src/autonomous/next_action/operations.rs",
+      "lines": 1127,
+      "level": "watch",
       "public_items": 1,
       "suggestion": "watch cohesion before expanding"
     },
     {
+      "path": "crates/astrid-cli-mockup/src/demo/player.rs",
+      "lines": 1103,
       "level": "watch",
-      "lines": 1052,
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
       "public_items": 5,
       "suggestion": "watch cohesion before expanding"
     },
     {
+      "path": "capsules/spectral-bridge/src/spectral_explorer.rs",
+      "lines": 1078,
       "level": "watch",
-      "lines": 1050,
+      "public_items": 8,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "path": "crates/astrid-config/src/types.rs",
+      "lines": 1069,
+      "level": "watch",
+      "public_items": 26,
+      "suggestion": "check facade/API pressure"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
+      "lines": 1068,
+      "level": "watch",
+      "public_items": 6,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
       "path": "crates/astrid-approval/src/budget.rs",
+      "lines": 1050,
+      "level": "watch",
       "public_items": 32,
       "suggestion": "check facade/API pressure"
     },
     {
+      "path": "capsules/spectral-bridge/src/astrid_shadow.rs",
+      "lines": 1042,
       "level": "watch",
-      "lines": 1026,
+      "public_items": 8,
+      "suggestion": "watch cohesion before expanding"
+    },
+    {
       "path": "capsules/spectral-bridge/src/autonomous/next_action/auto_promote.rs",
+      "lines": 1026,
+      "level": "watch",
       "public_items": 2,
       "suggestion": "watch cohesion before expanding"
     },
     {
-      "level": "watch",
-      "lines": 1026,
       "path": "capsules/spectral-bridge/src/lambda_edge.rs",
+      "lines": 1026,
+      "level": "watch",
       "public_items": 11,
       "suggestion": "watch cohesion before expanding"
     },
     {
-      "level": "watch",
-      "lines": 1010,
       "path": "capsules/spectral-bridge/src/attractor_atlas.rs",
+      "lines": 1010,
+      "level": "watch",
       "public_items": 4,
       "suggestion": "watch cohesion before expanding"
     },
     {
-      "level": "watch",
-      "lines": 1009,
       "path": "crates/astrid-config/src/merge/tests.rs",
+      "lines": 1009,
+      "level": "watch",
       "public_items": 0,
       "suggestion": "watch cohesion before expanding"
     }
   ],
   "long_functions": [
     {
-      "level": "critical",
-      "lines": 3483,
+      "path": "capsules/spectral-bridge/src/autonomous.rs",
       "name": "spawn_autonomous_loop",
-      "path": "capsules/spectral-bridge/src/autonomous.rs",
-      "start_line": 3239
+      "start_line": 3734,
+      "lines": 3605,
+      "level": "critical"
     },
     {
-      "level": "critical",
-      "lines": 1685,
-      "name": "handle_action",
       "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "start_line": 22
+      "name": "handle_action",
+      "start_line": 318,
+      "lines": 1587,
+      "level": "critical"
     },
     {
-      "level": "critical",
-      "lines": 1019,
-      "name": "advance",
       "path": "crates/astrid-cli-mockup/src/demo/player.rs",
-      "start_line": 72
+      "name": "advance",
+      "start_line": 72,
+      "lines": 1019,
+      "level": "critical"
     },
     {
-      "level": "critical",
-      "lines": 806,
+      "path": "capsules/spectral-bridge/src/codec.rs",
       "name": "inspect_text_windowed",
-      "path": "capsules/spectral-bridge/src/codec.rs",
-      "start_line": 1266
+      "start_line": 1363,
+      "lines": 806,
+      "level": "critical"
     },
     {
-      "level": "critical",
-      "lines": 784,
-      "name": "tool_definitions",
       "path": "capsules/spectral-bridge/src/mcp.rs",
-      "start_line": 95
+      "name": "tool_definitions",
+      "start_line": 95,
+      "lines": 784,
+      "level": "critical"
     },
     {
-      "level": "critical",
-      "lines": 711,
-      "name": "handle_action",
       "path": "capsules/spectral-bridge/src/autonomous/next_action/operations.rs",
-      "start_line": 7
+      "name": "handle_action",
+      "start_line": 47,
+      "lines": 735,
+      "level": "critical"
     },
     {
-      "level": "critical",
-      "lines": 662,
-      "name": "default",
       "path": "crates/astrid-events/src/event.rs",
-      "start_line": 62
-    },
-    {
-      "level": "critical",
-      "lines": 565,
-      "name": "load",
-      "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
-      "start_line": 265
-    },
-    {
-      "level": "critical",
-      "lines": 541,
-      "name": "generate_node_polyfills",
-      "path": "crates/astrid-openclaw/src/shim.rs",
-      "start_line": 398
-    },
-    {
-      "level": "critical",
-      "lines": 539,
-      "name": "audit_workspace",
-      "path": "scripts/continuity_of_thought_audit.py",
-      "start_line": 2586
-    },
-    {
-      "level": "critical",
-      "lines": 518,
-      "name": "handle_thread_next_action",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 11591
-    },
-    {
-      "level": "critical",
-      "lines": 486,
-      "name": "eigenvector_field_view",
-      "path": "capsules/spectral-bridge/src/types.rs",
-      "start_line": 335
-    },
-    {
-      "level": "critical",
-      "lines": 472,
-      "name": "from_flags",
-      "path": "capsules/spectral-bridge/src/self_model.rs",
-      "start_line": 170
-    },
-    {
-      "level": "critical",
-      "lines": 390,
-      "name": "handle_reservoir_action",
-      "path": "capsules/spectral-bridge/src/autonomous/reservoir.rs",
-      "start_line": 140
-    },
-    {
-      "level": "critical",
-      "lines": 376,
-      "name": "research_budget_guard_assessment_with_base",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 732
-    },
-    {
-      "level": "critical",
-      "lines": 374,
-      "name": "handle_next_action",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action.rs",
-      "start_line": 1509
-    },
-    {
-      "level": "critical",
-      "lines": 367,
-      "name": "handle_action",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs",
-      "start_line": 290
-    },
-    {
-      "level": "critical",
-      "lines": 365,
-      "name": "handle_action",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/codex.rs",
-      "start_line": 12
-    },
-    {
-      "level": "critical",
-      "lines": 358,
-      "name": "build",
-      "path": "crates/astrid-cli-mockup/src/demo/scenarios/showcase.rs",
-      "start_line": 7
-    },
-    {
-      "level": "critical",
-      "lines": 355,
-      "name": "render_markdown",
-      "path": "scripts/continuity_of_thought_audit.py",
-      "start_line": 3586
-    },
-    {
-      "level": "critical",
-      "lines": 347,
-      "name": "capability_specs",
-      "path": "capsules/spectral-bridge/src/action_self_knowledge.rs",
-      "start_line": 583
-    },
-    {
-      "level": "critical",
-      "lines": 345,
-      "name": "generate_header",
-      "path": "crates/astrid-openclaw/src/shim.rs",
-      "start_line": 53
-    },
-    {
-      "level": "critical",
-      "lines": 339,
-      "name": "astrid_recent",
-      "path": "capsules/spectral-bridge/harvest_feedback.sh",
-      "start_line": 195
-    },
-    {
-      "level": "critical",
-      "lines": 336,
-      "name": "interpret_spectral",
-      "path": "capsules/spectral-bridge/src/codec.rs",
-      "start_line": 2513
-    },
-    {
-      "level": "critical",
-      "lines": 336,
-      "name": "all_astrid_events_have_event_type_strings",
-      "path": "crates/astrid-openclaw/tests/full_api_e2e.rs",
-      "start_line": 349
-    },
-    {
-      "level": "critical",
-      "lines": 327,
       "name": "default",
-      "path": "capsules/spectral-bridge/src/types.rs",
-      "start_line": 1097
+      "start_line": 62,
+      "lines": 662,
+      "level": "critical"
     },
     {
-      "level": "critical",
-      "lines": 324,
-      "name": "handle_action",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
-      "start_line": 47
-    },
-    {
-      "level": "critical",
-      "lines": 311,
-      "name": "record_next_choice",
-      "path": "capsules/spectral-bridge/src/autonomous/state.rs",
-      "start_line": 1300
-    },
-    {
-      "level": "critical",
-      "lines": 304,
-      "name": "normalize",
-      "path": "crates/astrid-cli/src/tui/state.rs",
-      "start_line": 493
-    },
-    {
-      "level": "critical",
-      "lines": 300,
-      "name": "render_input",
-      "path": "crates/astrid-cli/src/tui/render.rs",
-      "start_line": 897
-    },
-    {
-      "level": "critical",
-      "lines": 298,
-      "name": "action_help",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/operations.rs",
-      "start_line": 756
-    },
-    {
-      "level": "critical",
-      "lines": 296,
-      "name": "enforce_restrictions",
-      "path": "crates/astrid-config/src/merge/restrict.rs",
-      "start_line": 15
-    },
-    {
-      "level": "critical",
-      "lines": 288,
-      "name": "arrow",
-      "path": "crates/astrid-cli-mockup/src/ui/state.rs",
-      "start_line": 641
-    },
-    {
-      "level": "critical",
-      "lines": 285,
-      "name": "render_host_ascii_clock",
-      "path": "capsules/perception/perception.py",
-      "start_line": 1003
-    },
-    {
-      "level": "critical",
-      "lines": 284,
-      "name": "summarize_rows",
-      "path": "capsules/spectral-bridge/tools/btsp_astrid_indirect_uptake.py",
-      "start_line": 145
-    },
-    {
-      "level": "critical",
-      "lines": 283,
-      "name": "normalize_focus_theme",
-      "path": "capsules/spectral-bridge/src/autonomous/state.rs",
-      "start_line": 553
-    },
-    {
-      "level": "critical",
-      "lines": 275,
-      "name": "deserialize",
-      "path": "crates/astrid-capsule/src/manifest.rs",
-      "start_line": 155
-    },
-    {
-      "level": "critical",
-      "lines": 273,
-      "name": "handle_daemon_event",
-      "path": "crates/astrid-cli/src/tui/mod.rs",
-      "start_line": 214
-    },
-    {
-      "level": "critical",
-      "lines": 269,
-      "name": "render_nexus_entry",
-      "path": "crates/astrid-cli-mockup/src/ui/views/nexus.rs",
-      "start_line": 244
-    },
-    {
-      "level": "critical",
-      "lines": 265,
-      "name": "build",
-      "path": "crates/astrid-cli-mockup/src/demo/scenarios/multi_agent_ops.rs",
-      "start_line": 8
-    },
-    {
-      "level": "critical",
-      "lines": 263,
-      "name": "spawn_sensory_sender",
-      "path": "capsules/spectral-bridge/src/ws.rs",
-      "start_line": 1194
-    },
-    {
-      "level": "critical",
-      "lines": 262,
-      "name": "main",
-      "path": "capsules/spectral-bridge/src/main.rs",
-      "start_line": 121
-    },
-    {
-      "level": "critical",
-      "lines": 258,
-      "name": "build_evaluation_from_artifacts",
-      "path": "capsules/spectral-bridge/src/autonomous/btsp/signal.rs",
-      "start_line": 650
-    },
-    {
-      "level": "critical",
-      "lines": 256,
-      "name": "record_next_event",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 1464
-    },
-    {
-      "level": "critical",
-      "lines": 256,
-      "name": "apply_owner_choice",
-      "path": "capsules/spectral-bridge/src/autonomous/btsp.rs",
-      "start_line": 469
-    },
-    {
-      "level": "critical",
-      "lines": 254,
-      "name": "generate_dialogue",
-      "path": "capsules/spectral-bridge/src/llm.rs",
-      "start_line": 827
-    },
-    {
-      "level": "critical",
-      "lines": 249,
-      "name": "full_spectral_decomposition",
-      "path": "capsules/spectral-bridge/src/autonomous.rs",
-      "start_line": 1593
-    },
-    {
-      "level": "critical",
-      "lines": 245,
-      "name": "handle_telemetry_message",
-      "path": "capsules/spectral-bridge/src/ws.rs",
-      "start_line": 537
-    },
-    {
-      "level": "critical",
-      "lines": 241,
-      "name": "thread_status",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 1108
-    },
-    {
-      "level": "critical",
-      "lines": 230,
-      "name": "spawn_telemetry_subscriber",
-      "path": "capsules/spectral-bridge/src/ws.rs",
-      "start_line": 307
-    },
-    {
-      "level": "critical",
-      "lines": 230,
-      "name": "intercept",
-      "path": "crates/astrid-approval/src/interceptor/mod.rs",
-      "start_line": 108
-    },
-    {
-      "level": "critical",
-      "lines": 230,
-      "name": "follows",
-      "path": "crates/astrid-audit/src/entry.rs",
-      "start_line": 182
-    },
-    {
-      "level": "critical",
-      "lines": 227,
-      "name": "encode_text",
-      "path": "capsules/spectral-bridge/tools/speak_to_minime.py",
-      "start_line": 43
-    },
-    {
-      "level": "critical",
-      "lines": 222,
-      "name": "enrich_controller_health",
-      "path": "capsules/spectral-bridge/src/autonomous.rs",
-      "start_line": 849
-    },
-    {
-      "level": "review",
-      "lines": 219,
-      "name": "handle_idle_input",
-      "path": "crates/astrid-cli-mockup/src/ui/input.rs",
-      "start_line": 37
-    },
-    {
-      "level": "review",
-      "lines": 217,
-      "name": "prompt_summary",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 11374
-    },
-    {
-      "level": "review",
-      "lines": 211,
-      "name": "matches",
-      "path": "crates/astrid-approval/src/allowance/pattern.rs",
-      "start_line": 112
-    },
-    {
-      "level": "review",
-      "lines": 210,
-      "name": "execute_semantic_microdose_from_paths",
-      "path": "capsules/spectral-bridge/src/authority_gate.rs",
-      "start_line": 757
-    },
-    {
-      "level": "review",
-      "lines": 208,
-      "name": "render_report",
-      "path": "capsules/spectral-bridge/src/codec_explorer.rs",
-      "start_line": 605
-    },
-    {
-      "level": "review",
-      "lines": 208,
-      "name": "generate_exports",
-      "path": "crates/astrid-openclaw/src/shim.rs",
-      "start_line": 939
-    },
-    {
-      "level": "review",
-      "lines": 207,
-      "name": "handle_action",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/mike.rs",
-      "start_line": 20
-    },
-    {
-      "level": "review",
-      "lines": 206,
-      "name": "migrate",
-      "path": "capsules/spectral-bridge/src/db.rs",
-      "start_line": 67
-    },
-    {
-      "level": "review",
-      "lines": 205,
-      "name": "thread_projection",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 8911
-    },
-    {
-      "level": "review",
-      "lines": 199,
-      "name": "load_manifest",
-      "path": "crates/astrid-capsule/src/discovery.rs",
-      "start_line": 186
-    },
-    {
-      "level": "review",
-      "lines": 198,
-      "name": "liveish_pressure_terms",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 16073
-    },
-    {
-      "level": "review",
-      "lines": 198,
-      "name": "render",
-      "path": "capsules/spectral-bridge/src/chimera.rs",
-      "start_line": 37
-    },
-    {
-      "level": "review",
-      "lines": 197,
-      "name": "extract_live_sample",
-      "path": "capsules/spectral-bridge/tools/being_phase_transition_edge_watcher.py",
-      "start_line": 220
-    },
-    {
-      "level": "review",
-      "lines": 196,
-      "name": "observe",
-      "path": "capsules/spectral-bridge/src/astrid_shadow.rs",
-      "start_line": 161
-    },
-    {
-      "level": "review",
-      "lines": 195,
-      "name": "render_activity",
-      "path": "crates/astrid-cli/src/tui/render.rs",
-      "start_line": 702
-    },
-    {
-      "level": "review",
-      "lines": 192,
-      "name": "classify_sticky_mode",
-      "path": "capsules/spectral-bridge/src/sticky_mode.rs",
-      "start_line": 121
-    },
-    {
-      "level": "review",
-      "lines": 192,
-      "name": "handle_idle_input",
-      "path": "crates/astrid-cli/src/tui/input.rs",
-      "start_line": 533
-    },
-    {
-      "level": "review",
-      "lines": 190,
-      "name": "record_research_budget_request_command",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 3670
-    },
-    {
-      "level": "review",
-      "lines": 190,
-      "name": "handle_pending_actions",
-      "path": "crates/astrid-cli/src/tui/mod.rs",
-      "start_line": 487
-    },
-    {
-      "level": "review",
-      "lines": 188,
-      "name": "read_latest_perception",
-      "path": "capsules/spectral-bridge/src/autonomous.rs",
-      "start_line": 85
-    },
-    {
-      "level": "review",
-      "lines": 188,
-      "name": "run_lifecycle",
       "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
-      "start_line": 1007
+      "name": "load",
+      "start_line": 268,
+      "lines": 572,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 188,
-      "name": "render_nexus",
-      "path": "crates/astrid-cli/src/tui/render.rs",
-      "start_line": 514
+      "path": "crates/astrid-openclaw/src/shim.rs",
+      "name": "generate_node_polyfills",
+      "start_line": 398,
+      "lines": 541,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 187,
-      "name": "render_owner_block_from_status",
-      "path": "capsules/spectral-bridge/src/autonomous/btsp/render.rs",
-      "start_line": 92
+      "path": "scripts/continuity_of_thought_audit.py",
+      "name": "audit_workspace",
+      "start_line": 2626,
+      "lines": 539,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 185,
-      "name": "section",
-      "path": "crates/astrid-cli-mockup/src/ui/state.rs",
-      "start_line": 116
-    },
-    {
-      "level": "review",
-      "lines": 184,
-      "name": "format_controller_section",
-      "path": "capsules/spectral-bridge/src/autonomous.rs",
-      "start_line": 1228
-    },
-    {
-      "level": "review",
-      "lines": 179,
-      "name": "sovereign_loop_status_v1",
       "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 5063
+      "name": "handle_thread_next_action",
+      "start_line": 11629,
+      "lines": 518,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 178,
-      "name": "minime_recent",
-      "path": "capsules/spectral-bridge/harvest_feedback.sh",
-      "start_line": 17
-    },
-    {
-      "level": "review",
-      "lines": 177,
-      "name": "write_combined_bundle",
-      "path": "capsules/spectral-bridge/tools/being_phase_space_watcher.py",
-      "start_line": 377
-    },
-    {
-      "level": "review",
-      "lines": 177,
-      "name": "build_sandboxed_command",
-      "path": "crates/astrid-mcp/src/server.rs",
-      "start_line": 432
-    },
-    {
-      "level": "review",
-      "lines": 177,
-      "name": "render_markdown",
-      "path": "scripts/memory_reasoning_audit.py",
-      "start_line": 845
-    },
-    {
-      "level": "review",
-      "lines": 175,
-      "name": "track_minime_influence",
-      "path": "capsules/spectral-bridge/src/astrid_shadow.rs",
-      "start_line": 384
-    },
-    {
-      "level": "review",
-      "lines": 174,
-      "name": "bundle_delta",
-      "path": "capsules/spectral-bridge/tools/being_phase_transition_report.py",
-      "start_line": 242
-    },
-    {
-      "level": "review",
-      "lines": 172,
-      "name": "parse_minime_eigenpacket_full",
       "path": "capsules/spectral-bridge/src/types.rs",
-      "start_line": 1686
+      "name": "eigenvector_field_view",
+      "start_line": 335,
+      "lines": 514,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 171,
-      "name": "wrap",
-      "path": "crates/astrid-workspace/src/sandbox.rs",
-      "start_line": 108
-    },
-    {
-      "level": "review",
-      "lines": 169,
-      "name": "limited_write_block_reason",
-      "path": "capsules/spectral-bridge/src/rescue_policy.rs",
-      "start_line": 305
-    },
-    {
-      "level": "review",
-      "lines": 169,
-      "name": "summarize",
-      "path": "capsules/spectral-bridge/tools/btsp_onset_truth_table.py",
-      "start_line": 220
-    },
-    {
-      "level": "review",
-      "lines": 169,
-      "name": "render_welcome",
-      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
-      "start_line": 802
-    },
-    {
-      "level": "review",
-      "lines": 168,
-      "name": "probe_log_error_rate",
-      "path": "scripts/proactive_scan.py",
-      "start_line": 299
-    },
-    {
-      "level": "review",
-      "lines": 166,
-      "name": "research_budget_guard_blocks_without_budget_and_debits_with_budget",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 20428
-    },
-    {
-      "level": "review",
-      "lines": 166,
-      "name": "compose_from_spectral_state_details",
-      "path": "capsules/spectral-bridge/src/audio.rs",
-      "start_line": 48
-    },
-    {
-      "level": "review",
-      "lines": 166,
-      "name": "status",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/resource_governor.rs",
-      "start_line": 44
-    },
-    {
-      "level": "review",
-      "lines": 165,
-      "name": "from_value",
-      "path": "capsules/spectral-bridge/src/rescue_policy.rs",
-      "start_line": 89
-    },
-    {
-      "level": "review",
-      "lines": 165,
-      "name": "bidirectional_bridge_with_safety_protocol",
-      "path": "capsules/spectral-bridge/tests/mock_ws_integration.rs",
-      "start_line": 206
-    },
-    {
-      "level": "review",
-      "lines": 163,
-      "name": "render_html",
-      "path": "capsules/spectral-bridge/src/shared_investigation.rs",
-      "start_line": 237
-    },
-    {
-      "level": "review",
-      "lines": 163,
-      "name": "render_topology",
-      "path": "crates/astrid-cli-mockup/src/ui/views/topology.rs",
-      "start_line": 15
-    },
-    {
-      "level": "review",
-      "lines": 162,
-      "name": "read_only_control_intent_cue_projects_examine_before_charter",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 22436
-    },
-    {
-      "level": "review",
-      "lines": 162,
-      "name": "render_table",
-      "path": "crates/astrid-cli-mockup/src/ui/views/command.rs",
-      "start_line": 94
-    },
-    {
-      "level": "review",
-      "lines": 160,
-      "name": "seed_episode",
-      "path": "capsules/spectral-bridge/src/autonomous/btsp/seed.rs",
-      "start_line": 5
-    },
-    {
-      "level": "review",
-      "lines": 160,
-      "name": "scan_minime_outbox",
-      "path": "capsules/spectral-bridge/src/autonomous.rs",
-      "start_line": 1931
-    },
-    {
-      "level": "review",
-      "lines": 159,
-      "name": "experiment_authority_request_command",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 3038
-    },
-    {
-      "level": "review",
-      "lines": 159,
-      "name": "render_state",
       "path": "capsules/spectral-bridge/src/self_model.rs",
-      "start_line": 728
+      "name": "from_flags",
+      "start_line": 175,
+      "lines": 487,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 159,
-      "name": "default_session_id",
-      "path": "crates/astrid-types/src/ipc.rs",
-      "start_line": 65
+      "path": "capsules/spectral-bridge/src/autonomous/reservoir.rs",
+      "name": "handle_reservoir_action",
+      "start_line": 140,
+      "lines": 390,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 159,
-      "name": "label_path",
-      "path": "scripts/launchd_inventory.sh",
-      "start_line": 107
-    },
-    {
-      "level": "review",
-      "lines": 158,
-      "name": "interpret_fingerprint",
-      "path": "capsules/spectral-bridge/src/autonomous.rs",
-      "start_line": 1435
-    },
-    {
-      "level": "review",
-      "lines": 156,
-      "name": "prior_claim_charter_bridge_uses_contract_journal_as_charter_input",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 22081
-    },
-    {
-      "level": "review",
-      "lines": 156,
-      "name": "apply_structured_signal",
-      "path": "capsules/spectral-bridge/src/autonomous/btsp/social.rs",
-      "start_line": 394
-    },
-    {
-      "level": "review",
-      "lines": 154,
-      "name": "native_gesture_gate",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/native_gesture.rs",
-      "start_line": 92
-    },
-    {
-      "level": "review",
-      "lines": 154,
-      "name": "evaluate_v2_previous_send",
-      "path": "capsules/spectral-bridge/src/rescue_policy.rs",
-      "start_line": 625
-    },
-    {
-      "level": "review",
-      "lines": 153,
-      "name": "parse_action",
-      "path": "capsules/spectral-bridge/src/autoresearch.rs",
-      "start_line": 239
-    },
-    {
-      "level": "review",
-      "lines": 152,
-      "name": "experiment_loop_review_command",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 4341
-    },
-    {
-      "level": "review",
-      "lines": 152,
-      "name": "format_experiment_status",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 10976
-    },
-    {
-      "level": "review",
-      "lines": 152,
-      "name": "handle_summon",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
-      "start_line": 598
-    },
-    {
-      "level": "review",
-      "lines": 151,
-      "name": "main",
-      "path": "crates/astrid-cli/src/main.rs",
-      "start_line": 299
-    },
-    {
-      "level": "review",
-      "lines": 151,
-      "name": "new",
-      "path": "crates/astrid-kernel/src/lib.rs",
-      "start_line": 104
-    },
-    {
-      "level": "review",
-      "lines": 150,
-      "name": "try_auto_promote",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/auto_promote.rs",
-      "start_line": 487
-    },
-    {
-      "level": "review",
-      "lines": 150,
-      "name": "run",
-      "path": "crates/astrid-cli/src/tui/headless.rs",
-      "start_line": 181
-    },
-    {
-      "level": "review",
-      "lines": 150,
-      "name": "handle_slash_command",
-      "path": "crates/astrid-cli/src/tui/mod.rs",
-      "start_line": 677
-    },
-    {
-      "level": "review",
-      "lines": 149,
-      "name": "description",
-      "path": "crates/astrid-audit/src/entry.rs",
-      "start_line": 412
-    },
-    {
-      "level": "review",
-      "lines": 148,
-      "name": "extract_visual_features",
-      "path": "capsules/perception/perception.py",
-      "start_line": 294
-    },
-    {
-      "level": "review",
-      "lines": 148,
-      "name": "request_approval",
-      "path": "crates/astrid-capsule/src/engine/wasm/host/approval.rs",
-      "start_line": 178
-    },
-    {
-      "level": "review",
-      "lines": 147,
-      "name": "decide_parameter_request",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "start_line": 1958
-    },
-    {
-      "level": "review",
-      "lines": 147,
-      "name": "build_control_plane_v1",
-      "path": "capsules/spectral-bridge/src/continuity_control_plane.rs",
-      "start_line": 168
-    },
-    {
-      "level": "review",
-      "lines": 146,
-      "name": "derive_astrid_shadow_policy",
-      "path": "capsules/spectral-bridge/src/autonomous/btsp/shadow.rs",
-      "start_line": 293
-    },
-    {
-      "level": "review",
-      "lines": 145,
-      "name": "experiment_advance_command",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 2893
-    },
-    {
-      "level": "review",
-      "lines": 145,
-      "name": "install_from_local_path_inner",
-      "path": "crates/astrid-cli/src/commands/capsule/install.rs",
-      "start_line": 782
-    },
-    {
-      "level": "review",
-      "lines": 144,
-      "name": "elicit",
-      "path": "crates/astrid-capsule/src/engine/wasm/host/elicit.rs",
-      "start_line": 61
-    },
-    {
-      "level": "review",
-      "lines": 142,
-      "name": "telemetry",
-      "path": "capsules/spectral-bridge/src/spectral_explorer.rs",
-      "start_line": 643
-    },
-    {
-      "level": "review",
-      "lines": 141,
-      "name": "run",
-      "path": "crates/astrid-capsule/src/dispatcher.rs",
-      "start_line": 101
-    },
-    {
-      "level": "review",
-      "lines": 140,
-      "name": "render_onboarding_menu",
-      "path": "crates/astrid-cli/src/tui/render.rs",
-      "start_line": 1261
-    },
-    {
-      "level": "review",
-      "lines": 139,
-      "name": "execute_mode_release_microdose",
-      "path": "capsules/spectral-bridge/src/authority_gate.rs",
-      "start_line": 967
-    },
-    {
-      "level": "review",
-      "lines": 139,
-      "name": "load",
-      "path": "crates/astrid-config/src/loader.rs",
-      "start_line": 43
-    },
-    {
-      "level": "review",
-      "lines": 138,
-      "name": "write_next_md",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 8122
-    },
-    {
-      "level": "review",
-      "lines": 138,
-      "name": "motif_allowance_snapshot",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 10499
-    },
-    {
-      "level": "review",
-      "lines": 138,
-      "name": "handle_action",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
-      "start_line": 17
-    },
-    {
-      "level": "review",
-      "lines": 138,
-      "name": "classify_lambda_edge",
-      "path": "capsules/spectral-bridge/src/lambda_edge.rs",
-      "start_line": 116
-    },
-    {
-      "level": "review",
-      "lines": 138,
-      "name": "render_geometry_scatter",
-      "path": "capsules/spectral-bridge/src/spectral_viz.rs",
-      "start_line": 801
-    },
-    {
-      "level": "review",
-      "lines": 137,
-      "name": "render_identify_pattern",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/identify_pattern.rs",
-      "start_line": 79
-    },
-    {
-      "level": "review",
-      "lines": 137,
-      "name": "render_report",
-      "path": "capsules/spectral-bridge/tools/btsp_onset_truth_table.py",
-      "start_line": 389
-    },
-    {
-      "level": "review",
-      "lines": 136,
-      "name": "append_spectral_drift_event",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
-      "start_line": 52
-    },
-    {
-      "level": "review",
-      "lines": 135,
-      "name": "experiment_loop_step_command",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 4206
-    },
-    {
-      "level": "review",
-      "lines": 135,
-      "name": "mlx_chat",
-      "path": "capsules/spectral-bridge/src/llm.rs",
-      "start_line": 188
-    },
-    {
-      "level": "review",
-      "lines": 135,
-      "name": "run_bridge_message_maintenance",
-      "path": "capsules/spectral-bridge/src/message_archive.rs",
-      "start_line": 128
-    },
-    {
-      "level": "review",
-      "lines": 135,
-      "name": "assemble_within_budget",
-      "path": "capsules/spectral-bridge/src/prompt_budget.rs",
-      "start_line": 61
-    },
-    {
-      "level": "review",
-      "lines": 135,
-      "name": "render_chain_entries",
-      "path": "crates/astrid-cli-mockup/src/ui/views/chain.rs",
-      "start_line": 133
-    },
-    {
-      "level": "review",
-      "lines": 133,
-      "name": "approve_loop_consequence_budget_from_paths",
-      "path": "capsules/spectral-bridge/src/authority_gate.rs",
-      "start_line": 608
-    },
-    {
-      "level": "review",
-      "lines": 133,
-      "name": "record_native_gesture",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/native_gesture.rs",
-      "start_line": 801
-    },
-    {
-      "level": "review",
-      "lines": 132,
-      "name": "handle_request",
-      "path": "crates/astrid-kernel/src/kernel_router.rs",
-      "start_line": 99
-    },
-    {
-      "level": "review",
-      "lines": 131,
-      "name": "check_proc",
-      "path": "capsules/spectral-bridge/babysit.sh",
-      "start_line": 16
-    },
-    {
-      "level": "review",
-      "lines": 130,
-      "name": "auto_build_kernel",
-      "path": "crates/astrid-openclaw/build.rs",
-      "start_line": 290
-    },
-    {
-      "level": "review",
-      "lines": 129,
-      "name": "summarize_cohorts",
-      "path": "capsules/spectral-bridge/tools/btsp_cohort_scoreboard.py",
-      "start_line": 42
-    },
-    {
-      "level": "review",
-      "lines": 129,
-      "name": "build",
-      "path": "crates/astrid-build/src/rust.rs",
-      "start_line": 15
-    },
-    {
-      "level": "review",
-      "lines": 128,
-      "name": "append_space_hold_event",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/space_hold.rs",
-      "start_line": 48
-    },
-    {
-      "level": "review",
-      "lines": 128,
-      "name": "load",
-      "path": "crates/astrid-capsule/src/engine/mcp.rs",
-      "start_line": 48
-    },
-    {
-      "level": "review",
-      "lines": 127,
-      "name": "experiment_loop_request_command",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 4037
-    },
-    {
-      "level": "review",
-      "lines": 127,
-      "name": "handle_refresh_snapshot",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
-      "start_line": 471
-    },
-    {
-      "level": "review",
-      "lines": 127,
-      "name": "net_accept",
-      "path": "crates/astrid-capsule/src/engine/wasm/host/net.rs",
-      "start_line": 205
-    },
-    {
-      "level": "review",
-      "lines": 127,
-      "name": "esm_to_cjs",
-      "path": "crates/astrid-openclaw/src/transpiler.rs",
-      "start_line": 159
-    },
-    {
-      "level": "review",
-      "lines": 125,
-      "name": "handle_blend",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
-      "start_line": 882
-    },
-    {
-      "level": "review",
-      "lines": 125,
-      "name": "shadow_preflight",
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
-      "start_line": 209
-    },
-    {
-      "level": "review",
-      "lines": 124,
-      "name": "continuity_session_accept_command",
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 6349
-    },
-    {
-      "level": "review",
-      "lines": 124,
-      "name": "action_preflight_report",
       "path": "capsules/spectral-bridge/src/autonomous/next_action.rs",
-      "start_line": 1385
+      "name": "handle_next_action",
+      "start_line": 1707,
+      "lines": 383,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 124,
-      "name": "render_queue",
-      "path": "crates/astrid-cli-mockup/src/ui/views/shield.rs",
-      "start_line": 77
-    },
-    {
-      "level": "review",
-      "lines": 124,
-      "name": "charter_scaffold_v1",
-      "path": "scripts/continuity_of_thought_audit.py",
-      "start_line": 909
-    },
-    {
-      "level": "review",
-      "lines": 123,
-      "name": "research_budget_accept_latest_scaffold_self_activates_local_budget",
       "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "start_line": 20124
+      "name": "research_budget_guard_assessment_with_base",
+      "start_line": 766,
+      "lines": 379,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 123,
-      "name": "score_final_non_adoption_outcomes",
-      "path": "capsules/spectral-bridge/src/autonomous/btsp/agency.rs",
-      "start_line": 109
+      "path": "capsules/spectral-bridge/src/action_self_knowledge.rs",
+      "name": "capability_specs",
+      "start_line": 586,
+      "lines": 374,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 123,
-      "name": "trigger_hook",
-      "path": "crates/astrid-capsule/src/engine/wasm/host/sys.rs",
-      "start_line": 48
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/workspace.rs",
+      "name": "handle_action",
+      "start_line": 290,
+      "lines": 367,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 123,
-      "name": "add_shared_research_dossier",
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/codex.rs",
+      "name": "handle_action",
+      "start_line": 12,
+      "lines": 365,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/main.rs",
+      "name": "main",
+      "start_line": 163,
+      "lines": 359,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/demo/scenarios/showcase.rs",
+      "name": "build",
+      "start_line": 7,
+      "lines": 358,
+      "level": "critical"
+    },
+    {
       "path": "scripts/continuity_of_thought_audit.py",
-      "start_line": 3463
+      "name": "render_markdown",
+      "start_line": 3626,
+      "lines": 355,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 122,
-      "name": "approve_research_budget_from_paths",
-      "path": "capsules/spectral-bridge/src/authority_gate.rs",
-      "start_line": 474
+      "path": "crates/astrid-openclaw/src/shim.rs",
+      "name": "generate_header",
+      "start_line": 53,
+      "lines": 345,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 122,
-      "name": "render_activity",
-      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
-      "start_line": 447
+      "path": "capsules/spectral-bridge/harvest_feedback.sh",
+      "name": "astrid_recent",
+      "start_line": 205,
+      "lines": 339,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 122,
-      "name": "render_agent_card",
-      "path": "crates/astrid-cli-mockup/src/ui/widgets/agent_card.rs",
-      "start_line": 14
+      "path": "capsules/spectral-bridge/src/codec.rs",
+      "name": "interpret_spectral",
+      "start_line": 2907,
+      "lines": 338,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 120,
-      "name": "approve_budget_from_paths",
-      "path": "capsules/spectral-bridge/src/authority_gate.rs",
-      "start_line": 322
+      "path": "crates/astrid-openclaw/tests/full_api_e2e.rs",
+      "name": "all_astrid_events_have_event_type_strings",
+      "start_line": 349,
+      "lines": 336,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 120,
-      "name": "summarize_agency",
-      "path": "capsules/spectral-bridge/tools/btsp_agency_scoreboard.py",
-      "start_line": 39
+      "path": "capsules/spectral-bridge/src/types.rs",
+      "name": "default",
+      "start_line": 1165,
+      "lines": 327,
+      "level": "critical"
     },
     {
-      "level": "review",
-      "lines": 120,
-      "name": "build_report",
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/modes.rs",
+      "name": "handle_action",
+      "start_line": 47,
+      "lines": 324,
+      "level": "critical"
+    },
+    {
+      "path": "scripts/astrid_model_canary.py",
+      "name": "main",
+      "start_line": 927,
+      "lines": 321,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/state.rs",
+      "name": "record_next_choice",
+      "start_line": 1327,
+      "lines": 313,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/operations.rs",
+      "name": "action_help",
+      "start_line": 821,
+      "lines": 307,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/state.rs",
+      "name": "normalize",
+      "start_line": 493,
+      "lines": 304,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "name": "render_input",
+      "start_line": 897,
+      "lines": 300,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-config/src/merge/restrict.rs",
+      "name": "enforce_restrictions",
+      "start_line": 15,
+      "lines": 296,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/state.rs",
+      "name": "normalize_focus_theme",
+      "start_line": 566,
+      "lines": 294,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/state.rs",
+      "name": "arrow",
+      "start_line": 641,
+      "lines": 288,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/perception/perception.py",
+      "name": "render_host_ascii_clock",
+      "start_line": 1003,
+      "lines": 285,
+      "level": "critical"
+    },
+    {
       "path": "capsules/spectral-bridge/tools/btsp_astrid_indirect_uptake.py",
-      "start_line": 429
+      "name": "summarize_rows",
+      "start_line": 145,
+      "lines": 284,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "name": "generate_dialogue",
+      "start_line": 1636,
+      "lines": 282,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-capsule/src/manifest.rs",
+      "name": "deserialize",
+      "start_line": 155,
+      "lines": 275,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/mod.rs",
+      "name": "handle_daemon_event",
+      "start_line": 212,
+      "lines": 273,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "name": "handle_perturb",
+      "start_line": 2093,
+      "lines": 269,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/views/nexus.rs",
+      "name": "render_nexus_entry",
+      "start_line": 244,
+      "lines": 269,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/demo/scenarios/multi_agent_ops.rs",
+      "name": "build",
+      "start_line": 8,
+      "lines": 265,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "scoped_test_action_continuity_root",
+      "start_line": 58,
+      "lines": 263,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws.rs",
+      "name": "spawn_sensory_sender",
+      "start_line": 1210,
+      "lines": 263,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp/signal.rs",
+      "name": "build_evaluation_from_artifacts",
+      "start_line": 650,
+      "lines": 258,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "record_next_event",
+      "start_line": 1501,
+      "lines": 256,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp.rs",
+      "name": "apply_owner_choice",
+      "start_line": 469,
+      "lines": 256,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/space_hold.rs",
+      "name": "append_space_hold_event",
+      "start_line": 56,
+      "lines": 253,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous.rs",
+      "name": "full_spectral_decomposition",
+      "start_line": 1698,
+      "lines": 249,
+      "level": "critical"
+    },
+    {
+      "path": "scripts/self_study_review.py",
+      "name": "render_markdown",
+      "start_line": 1939,
+      "lines": 249,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws.rs",
+      "name": "handle_telemetry_message",
+      "start_line": 553,
+      "lines": 245,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "thread_status",
+      "start_line": 1145,
+      "lines": 241,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/ws.rs",
+      "name": "spawn_telemetry_subscriber",
+      "start_line": 323,
+      "lines": 230,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-approval/src/interceptor/mod.rs",
+      "name": "intercept",
+      "start_line": 108,
+      "lines": 230,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-audit/src/entry.rs",
+      "name": "follows",
+      "start_line": 182,
+      "lines": 230,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/speak_to_minime.py",
+      "name": "encode_text",
+      "start_line": 43,
+      "lines": 227,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "name": "handle_space_hold",
+      "start_line": 2521,
+      "lines": 226,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs",
+      "name": "latent_stasis_payload",
+      "start_line": 1481,
+      "lines": 225,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous.rs",
+      "name": "enrich_controller_health",
+      "start_line": 921,
+      "lines": 222,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs",
+      "name": "resistance_gradient_payload",
+      "start_line": 1178,
+      "lines": 220,
+      "level": "critical"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/input.rs",
+      "name": "handle_idle_input",
+      "start_line": 37,
+      "lines": 219,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "prompt_summary",
+      "start_line": 11412,
+      "lines": 217,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-approval/src/allowance/pattern.rs",
+      "name": "matches",
+      "start_line": 112,
+      "lines": 211,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_gate.rs",
+      "name": "execute_semantic_microdose_from_paths",
+      "start_line": 775,
+      "lines": 210,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/codec_explorer.rs",
+      "name": "render_report",
+      "start_line": 605,
+      "lines": 208,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-openclaw/src/shim.rs",
+      "name": "generate_exports",
+      "start_line": 939,
+      "lines": 208,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/mike.rs",
+      "name": "handle_action",
+      "start_line": 20,
+      "lines": 207,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/db.rs",
+      "name": "migrate",
+      "start_line": 75,
+      "lines": 206,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "thread_projection",
+      "start_line": 8949,
+      "lines": 205,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-capsule/src/discovery.rs",
+      "name": "load_manifest",
+      "start_line": 186,
+      "lines": 199,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "liveish_pressure_terms",
+      "start_line": 16135,
+      "lines": 198,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/chimera.rs",
+      "name": "render",
+      "start_line": 37,
+      "lines": 198,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/being_phase_transition_edge_watcher.py",
+      "name": "extract_live_sample",
+      "start_line": 220,
+      "lines": 197,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/astrid_shadow.rs",
+      "name": "observe",
+      "start_line": 161,
+      "lines": 196,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "name": "render_activity",
+      "start_line": 702,
+      "lines": 195,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/sticky_mode.rs",
+      "name": "classify_sticky_mode",
+      "start_line": 121,
+      "lines": 192,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/input.rs",
+      "name": "handle_idle_input",
+      "start_line": 533,
+      "lines": 192,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "record_research_budget_request_command",
+      "start_line": 3714,
+      "lines": 190,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/mod.rs",
+      "name": "handle_pending_actions",
+      "start_line": 485,
+      "lines": 190,
+      "level": "review"
+    },
+    {
+      "path": "scripts/launchd_inventory.sh",
+      "name": "label_path",
+      "start_line": 111,
+      "lines": 190,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/harvest_feedback.sh",
+      "name": "minime_recent",
+      "start_line": 17,
+      "lines": 188,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous.rs",
+      "name": "read_latest_perception",
+      "start_line": 120,
+      "lines": 188,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/mod.rs",
+      "name": "run_lifecycle",
+      "start_line": 1017,
+      "lines": 188,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "name": "render_nexus",
+      "start_line": 514,
+      "lines": 188,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp/render.rs",
+      "name": "render_owner_block_from_status",
+      "start_line": 92,
+      "lines": 187,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/state.rs",
+      "name": "section",
+      "start_line": 116,
+      "lines": 185,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous.rs",
+      "name": "format_controller_section",
+      "start_line": 1300,
+      "lines": 183,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "sovereign_loop_status_v1",
+      "start_line": 5103,
+      "lines": 179,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "name": "handle_action",
+      "start_line": 17,
+      "lines": 179,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/being_phase_space_watcher.py",
+      "name": "write_combined_bundle",
+      "start_line": 377,
+      "lines": 177,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-mcp/src/server.rs",
+      "name": "build_sandboxed_command",
+      "start_line": 432,
+      "lines": 177,
+      "level": "review"
+    },
+    {
+      "path": "scripts/memory_reasoning_audit.py",
+      "name": "render_markdown",
+      "start_line": 845,
+      "lines": 177,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/astrid_shadow.rs",
+      "name": "track_minime_influence",
+      "start_line": 384,
+      "lines": 175,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/being_phase_transition_report.py",
+      "name": "bundle_delta",
+      "start_line": 242,
+      "lines": 174,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs",
+      "name": "handle_space_family",
+      "start_line": 633,
+      "lines": 172,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/types.rs",
+      "name": "parse_minime_eigenpacket_full",
+      "start_line": 1800,
+      "lines": 172,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-workspace/src/sandbox.rs",
+      "name": "wrap",
+      "start_line": 108,
+      "lines": 171,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tests/mock_ws_integration.rs",
+      "name": "bidirectional_bridge_with_safety_protocol",
+      "start_line": 205,
+      "lines": 170,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "name": "limited_write_block_reason",
+      "start_line": 305,
+      "lines": 169,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/self_model.rs",
+      "name": "render_state",
+      "start_line": 748,
+      "lines": 169,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/btsp_onset_truth_table.py",
+      "name": "summarize",
+      "start_line": 220,
+      "lines": 169,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
+      "name": "render_welcome",
+      "start_line": 802,
+      "lines": 169,
+      "level": "review"
+    },
+    {
+      "path": "scripts/astrid_live_soak.py",
+      "name": "write_record",
+      "start_line": 555,
+      "lines": 169,
+      "level": "review"
+    },
+    {
+      "path": "scripts/proactive_scan.py",
+      "name": "probe_log_error_rate",
+      "start_line": 538,
+      "lines": 168,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "name": "mlx_chat",
+      "start_line": 682,
+      "lines": 167,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/audio.rs",
+      "name": "compose_from_spectral_state_details",
+      "start_line": 48,
+      "lines": 166,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/resource_governor.rs",
+      "name": "status",
+      "start_line": 44,
+      "lines": 166,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "name": "from_value",
+      "start_line": 89,
+      "lines": 165,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/shared_investigation.rs",
+      "name": "render_html",
+      "start_line": 237,
+      "lines": 163,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/views/topology.rs",
+      "name": "render_topology",
+      "start_line": 15,
+      "lines": 163,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "name": "research_budget_guard_blocks_without_budget_and_debits_with_budget",
+      "start_line": 2406,
+      "lines": 162,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "name": "read_only_control_intent_cue_projects_examine_before_charter",
+      "start_line": 4406,
+      "lines": 162,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/views/command.rs",
+      "name": "render_table",
+      "start_line": 94,
+      "lines": 162,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp/seed.rs",
+      "name": "seed_episode",
+      "start_line": 5,
+      "lines": 160,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_authority_request_command",
+      "start_line": 3075,
+      "lines": 159,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "name": "handle_native_gesture",
+      "start_line": 2362,
+      "lines": 159,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/message_archive.rs",
+      "name": "run_bridge_message_maintenance",
+      "start_line": 164,
+      "lines": 159,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-types/src/ipc.rs",
+      "name": "default_session_id",
+      "start_line": 65,
+      "lines": 159,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous.rs",
+      "name": "interpret_fingerprint",
+      "start_line": 1540,
+      "lines": 158,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "name": "prior_claim_charter_bridge_uses_contract_journal_as_charter_input",
+      "start_line": 4053,
+      "lines": 156,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp/social.rs",
+      "name": "apply_structured_signal",
+      "start_line": 394,
+      "lines": 156,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/native_gesture.rs",
+      "name": "native_gesture_gate",
+      "start_line": 92,
+      "lines": 154,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/rescue_policy.rs",
+      "name": "evaluate_v2_previous_send",
+      "start_line": 625,
+      "lines": 154,
+      "level": "review"
+    },
+    {
+      "path": "scripts/proactive_scan.py",
+      "name": "probe_introspective_signal",
+      "start_line": 1231,
+      "lines": 154,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autoresearch.rs",
+      "name": "parse_action",
+      "start_line": 239,
+      "lines": 153,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_loop_review_command",
+      "start_line": 4385,
+      "lines": 152,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "format_experiment_status",
+      "start_line": 11014,
+      "lines": 152,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
+      "name": "handle_summon",
+      "start_line": 598,
+      "lines": 152,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/auto_promote.rs",
+      "name": "try_auto_promote",
+      "start_line": 487,
+      "lines": 150,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/headless.rs",
+      "name": "run",
+      "start_line": 181,
+      "lines": 150,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/mod.rs",
+      "name": "handle_slash_command",
+      "start_line": 675,
+      "lines": 150,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-audit/src/entry.rs",
+      "name": "description",
+      "start_line": 412,
+      "lines": 149,
+      "level": "review"
+    },
+    {
+      "path": "capsules/perception/perception.py",
+      "name": "extract_visual_features",
+      "start_line": 294,
+      "lines": 148,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "name": "research_budget_accept_latest_scaffold_self_activates_local_budget",
+      "start_line": 2032,
+      "lines": 148,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/host/approval.rs",
+      "name": "request_approval",
+      "start_line": 178,
+      "lines": 148,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "name": "decide_parameter_request",
+      "start_line": 2977,
+      "lines": 147,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/continuity_control_plane.rs",
+      "name": "build_control_plane_v1",
+      "start_line": 168,
+      "lines": 147,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/main.rs",
+      "name": "main",
+      "start_line": 299,
+      "lines": 147,
+      "level": "review"
+    },
+    {
+      "path": "scripts/artificial_limit_audit.py",
+      "name": "build_candidates",
+      "start_line": 238,
+      "lines": 147,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp/shadow.rs",
+      "name": "derive_astrid_shadow_policy",
+      "start_line": 293,
+      "lines": 146,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_advance_command",
+      "start_line": 2930,
+      "lines": 145,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/commands/capsule/install.rs",
+      "name": "install_from_local_path_inner",
+      "start_line": 782,
+      "lines": 145,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/host/elicit.rs",
+      "name": "elicit",
+      "start_line": 61,
+      "lines": 144,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_gate.rs",
+      "name": "execute_mode_release_microdose",
+      "start_line": 985,
+      "lines": 142,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/spectral_explorer.rs",
+      "name": "telemetry",
+      "start_line": 768,
+      "lines": 142,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-capsule/src/dispatcher.rs",
+      "name": "run",
+      "start_line": 101,
+      "lines": 141,
+      "level": "review"
+    },
+    {
+      "path": "scripts/astrid_model_canary.py",
+      "name": "bridge_fallback_continuity_probe",
+      "start_line": 711,
+      "lines": 141,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli/src/tui/render.rs",
+      "name": "render_onboarding_menu",
+      "start_line": 1261,
+      "lines": 140,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-config/src/loader.rs",
+      "name": "load",
+      "start_line": 43,
+      "lines": 139,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "write_next_md",
+      "start_line": 8162,
+      "lines": 138,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "motif_allowance_snapshot",
+      "start_line": 10537,
+      "lines": 138,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/lambda_edge.rs",
+      "name": "classify_lambda_edge",
+      "start_line": 116,
+      "lines": 138,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/spectral_viz.rs",
+      "name": "render_geometry_scatter",
+      "start_line": 801,
+      "lines": 138,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/identify_pattern.rs",
+      "name": "render_identify_pattern",
+      "start_line": 79,
+      "lines": 137,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/btsp_onset_truth_table.py",
+      "name": "render_report",
+      "start_line": 389,
+      "lines": 137,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/spectral_drift.rs",
+      "name": "append_spectral_drift_event",
+      "start_line": 52,
+      "lines": 136,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_loop_step_command",
+      "start_line": 4250,
+      "lines": 135,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/prompt_budget.rs",
+      "name": "assemble_within_budget",
+      "start_line": 61,
+      "lines": 135,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/views/chain.rs",
+      "name": "render_chain_entries",
+      "start_line": 133,
+      "lines": 135,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-kernel/src/kernel_router.rs",
+      "name": "handle_request",
+      "start_line": 98,
+      "lines": 135,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs",
+      "name": "help_text",
+      "start_line": 45,
+      "lines": 134,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_gate.rs",
+      "name": "approve_loop_consequence_budget_from_paths",
+      "start_line": 626,
+      "lines": 133,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/native_gesture.rs",
+      "name": "record_native_gesture",
+      "start_line": 804,
+      "lines": 133,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action.rs",
+      "name": "canonicalize_next_action_components",
+      "start_line": 1072,
+      "lines": 133,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-kernel/src/lib.rs",
+      "name": "new",
+      "start_line": 107,
+      "lines": 133,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/babysit.sh",
+      "name": "check_proc",
+      "start_line": 19,
+      "lines": 130,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-openclaw/build.rs",
+      "name": "auto_build_kernel",
+      "start_line": 290,
+      "lines": 130,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/btsp_cohort_scoreboard.py",
+      "name": "summarize_cohorts",
+      "start_line": 42,
+      "lines": 129,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-build/src/rust.rs",
+      "name": "build",
+      "start_line": 15,
+      "lines": 129,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/mcp.rs",
+      "name": "load",
+      "start_line": 48,
+      "lines": 128,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_loop_request_command",
+      "start_line": 4081,
+      "lines": 127,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
+      "name": "handle_refresh_snapshot",
+      "start_line": 471,
+      "lines": 127,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "name": "configured_mlx_profile",
+      "start_line": 103,
+      "lines": 127,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/host/net.rs",
+      "name": "net_accept",
+      "start_line": 205,
+      "lines": 127,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-openclaw/src/transpiler.rs",
+      "name": "esm_to_cjs",
+      "start_line": 159,
+      "lines": 127,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
+      "name": "handle_blend",
+      "start_line": 882,
+      "lines": 125,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/shadow.rs",
+      "name": "shadow_preflight",
+      "start_line": 250,
+      "lines": 125,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "continuity_session_accept_command",
+      "start_line": 6389,
+      "lines": 124,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action.rs",
+      "name": "action_preflight_report",
+      "start_line": 1583,
+      "lines": 124,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/views/shield.rs",
+      "name": "render_queue",
+      "start_line": 77,
+      "lines": 124,
+      "level": "review"
+    },
+    {
+      "path": "scripts/continuity_of_thought_audit.py",
+      "name": "charter_scaffold_v1",
+      "start_line": 919,
+      "lines": 124,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/btsp/agency.rs",
+      "name": "score_final_non_adoption_outcomes",
+      "start_line": 109,
+      "lines": 123,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/db.rs",
+      "name": "recent_eigenvalue_snapshots_with_timestamps",
+      "start_line": 1139,
+      "lines": 123,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-capsule/src/engine/wasm/host/sys.rs",
+      "name": "trigger_hook",
+      "start_line": 48,
+      "lines": 123,
+      "level": "review"
+    },
+    {
+      "path": "scripts/continuity_of_thought_audit.py",
+      "name": "add_shared_research_dossier",
+      "start_line": 3503,
+      "lines": 123,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_gate.rs",
+      "name": "approve_research_budget_from_paths",
+      "start_line": 492,
+      "lines": 122,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/render.rs",
+      "name": "render_activity",
+      "start_line": 447,
+      "lines": 122,
+      "level": "review"
+    },
+    {
+      "path": "crates/astrid-cli-mockup/src/ui/widgets/agent_card.rs",
+      "name": "render_agent_card",
+      "start_line": 14,
+      "lines": 122,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/authority_gate.rs",
+      "name": "approve_budget_from_paths",
+      "start_line": 340,
+      "lines": 120,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/llm.rs",
+      "name": "llm_chat_with_fallback",
+      "start_line": 1006,
+      "lines": 120,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/btsp_agency_scoreboard.py",
+      "name": "summarize_agency",
+      "start_line": 39,
+      "lines": 120,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/tools/btsp_astrid_indirect_uptake.py",
+      "name": "build_report",
+      "start_line": 429,
+      "lines": 120,
+      "level": "review"
     }
-  ],
-  "schema_version": 1,
-  "source": "scripts/architecture_health.py --no-baseline --json"
+  ]
 }

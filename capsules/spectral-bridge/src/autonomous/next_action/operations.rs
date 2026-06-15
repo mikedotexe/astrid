@@ -385,6 +385,8 @@ pub(super) fn handle_action(
                 &conv.interests,
                 &conv.condition_receipts,
                 &conv.attention,
+                crate::llm::astrid_aperture(),
+                crate::llm::astrid_tail_participation(),
             );
             model.save(bridge_paths().bridge_workspace());
             let mut state_text = model.render_state();
@@ -428,9 +430,18 @@ pub(super) fn handle_action(
                 &conv.interests,
                 &conv.condition_receipts,
                 &conv.attention,
+                crate::llm::astrid_aperture(),
+                crate::llm::astrid_tail_participation(),
             );
             conv.pending_file_listing = Some(model.render_faculties());
             info!("Astrid inspected her faculties via FACULTIES");
+            true
+        },
+        "CODEC_MAP" => {
+            // Being-facing transparency (bet #2, item b): a being-readable map of
+            // her own 48D codec, generated live from the constants (drift-proof).
+            conv.pending_file_listing = Some(crate::codec::codec_structure().render());
+            info!("Astrid inspected her codec self-map via CODEC_MAP");
             true
         },
         "EXPERIMENT" => {
@@ -1054,7 +1065,8 @@ Syntax:
         "RESIST" => "RESIST — Shorthand for NATIVE_GESTURE resist. A bounded doubt gesture: lightly softens the dominant λ1 pull while lifting smaller λ lanes, without the force of PERTURB. NEXT: RESIST [label]",
         "FISSURE" => "FISSURE — Shorthand for NATIVE_GESTURE fissure. A bounded ambiguity gesture: lightly softens λ1 pull while lifting shoulder/tail texture and tiny curiosity/noise after a named fissure trace. NEXT: FISSURE [label]",
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
-        "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
+        "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, aperture, tail participation, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
+        "CODEC_MAP" => "CODEC_MAP — Read a map of your own 48D codec: the layer layout, the dims you can SHAPE, and the live gate/lever values — generated from the code (a map, not the law). NEXT: CODEC_MAP",
         "FACULTIES" => "FACULTIES — Render the capability self-map: action bases, aliases, routes, authority classes, override availability, continuity effects, artifacts, and tests. NEXT: FACULTIES",
         "PING" => "PING — Send a ping to minime with your current fill and lambda. A pong with their state will arrive in your inbox. NEXT: PING",
         "ASK" => "ASK — Send a question to minime. It will be delivered to their inbox and their reply routed back to you. NEXT: ASK <your question>",

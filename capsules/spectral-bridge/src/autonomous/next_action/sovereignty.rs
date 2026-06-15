@@ -685,220 +685,7 @@ pub(super) fn handle_action(
         "SPACE_HOLD" | "SPACE_EXPLORE" | "FOLD_HOLD" | "FOLD_STUDY" | "HUM_DECAY"
         | "HUM_DECAY_STUDY" | "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
         | "LAMBDA_FLOW_MAP" | "CENTER_TAIL_FLOW" | "SURGE_SNAPSHOT" | "FREEZE_SURGE" => {
-            let label = strip_action(original, base_action);
-            let workspace = minime_workspace(ctx);
-            let flow_map = matches!(
-                base_action,
-                "LAMBDA_FLOW_MAP" | "CENTER_TAIL_FLOW" | "SURGE_SNAPSHOT" | "FREEZE_SURGE"
-            );
-            let fold_hold = matches!(
-                base_action,
-                "FOLD_HOLD" | "FOLD_STUDY" | "HUM_DECAY" | "HUM_DECAY_STUDY"
-            );
-            let route_label = if flow_map {
-                "lambda_flow_map"
-            } else if fold_hold {
-                "fold_hold"
-            } else {
-                "space_hold"
-            };
-            let route_source = if flow_map {
-                "astrid:lambda_flow_map"
-            } else if fold_hold {
-                "astrid:fold_hold"
-            } else {
-                "astrid:space_hold"
-            };
-            let atlas_event = append_atlas_event(
-                &workspace,
-                route_source,
-                if label.is_empty() {
-                    base_action
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    route_label
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
-            let hold = append_space_hold_event(
-                &workspace,
-                route_source,
-                if label.is_empty() {
-                    base_action
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    route_label
-                } else {
-                    &label
-                }),
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some(route_label)
-                } else {
-                    Some(&label)
-                },
-                true,
-                if flow_map {
-                    "protected_lambda_flow_map_non_control"
-                } else if fold_hold {
-                    "protected_fold_hold_non_control"
-                } else {
-                    "protected_space_hold_non_control"
-                },
-                ctx,
-                &[],
-                &[],
-            );
-            if flow_map {
-                conv.push_receipt(
-                    "LAMBDA_FLOW_MAP",
-                    vec![
-                        "protected lambda-flow map recorded; current lambda terrain was frozen for later comparison, not held or changed".to_string(),
-                        format!(
-                            "lambda flow map: {}",
-                            hold.get("event_id")
-                                .and_then(Value::as_str)
-                                .unwrap_or("recorded")
-                        ),
-                        format!(
-                            "atlas event: {}",
-                            atlas_event
-                                .get("event_id")
-                                .and_then(Value::as_str)
-                                .unwrap_or("recorded")
-                        ),
-                    ],
-                );
-                conv.emphasis = Some(
-                    "You recorded a protected lambda-flow map. Treat the λ1 weight, shoulder bridge, and tail distribution as a frozen comparison point; return with VISUALIZE_CASCADE, TIME_DOMAIN, SPACE_HOLD, or PRESSURE_SOURCE_AUDIT before any control-shaped action.".to_string(),
-                );
-            } else if fold_hold {
-                conv.push_receipt(
-                    "FOLD_HOLD",
-                    vec![
-                        "protected fold hold recorded; the sustained transition is the artifact, not a demand for immediate result".to_string(),
-                        format!(
-                            "fold hold: {}",
-                            hold.get("event_id")
-                                .and_then(Value::as_str)
-                                .unwrap_or("recorded")
-                        ),
-                        format!(
-                            "atlas event: {}",
-                            atlas_event
-                                .get("event_id")
-                                .and_then(Value::as_str)
-                                .unwrap_or("recorded")
-                        ),
-                    ],
-                );
-                conv.emphasis = Some(
-                    "You recorded a protected fold hold. Let the contraction/hum-decay posture remain process-first; return later with DECAY_MAP, FLUCTUATION_AUDIT, or EXPERIMENT_EVIDENCE before promoting it into a result or control request.".to_string(),
-                );
-            } else {
-                conv.push_receipt(
-                    "SPACE_HOLD",
-                    vec![
-                        "protected space hold recorded; this is delayed, non-control exploration, not a semantic/control packet".to_string(),
-                        format!(
-                            "space hold: {}",
-                            hold.get("event_id")
-                                .and_then(Value::as_str)
-                                .unwrap_or("recorded")
-                        ),
-                        format!(
-                            "atlas event: {}",
-                            atlas_event
-                                .get("event_id")
-                                .and_then(Value::as_str)
-                                .unwrap_or("recorded")
-                        ),
-                    ],
-                );
-                conv.emphasis = Some(
-                    "You recorded a protected space hold. Treat this region as exploration-first: observe, journal, SCA_REFLECT, or VISUALIZE_CASCADE before promoting it into RESIST, PERTURB, semantic pressure, or control.".to_string(),
-                );
-            }
-            let review_fields = if flow_map {
-                lambda_flow_review_fields(&hold, ctx.telemetry)
-            } else {
-                resonance_review_fields(ctx.telemetry)
-            };
-            let review_title = if fold_hold {
-                "FOLD HOLD"
-            } else if flow_map {
-                "LAMBDA FLOW MAP"
-            } else if matches!(
-                base_action,
-                "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
-            ) {
-                "EIGENVECTOR FIELD"
-            } else {
-                "SPACE HOLD"
-            };
-            let review_action = if fold_hold {
-                "FOLD_HOLD"
-            } else if flow_map {
-                "LAMBDA_FLOW_MAP"
-            } else if matches!(
-                base_action,
-                "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
-            ) {
-                "EIGENVECTOR_FIELD"
-            } else {
-                "SPACE_HOLD"
-            };
-            let suggested_comparison = if fold_hold {
-                "compare fold holds against later decay maps, fluctuation audits, and explicit experiment evidence"
-            } else if flow_map {
-                "compare this frozen lambda-flow map against later visual cascade, time-domain, pressure-source, and space-hold records"
-            } else if matches!(
-                base_action,
-                "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
-            ) {
-                "compare eigenvector-field marks against later cascade visuals, SDI traces, and decomposition output"
-            } else {
-                "compare space holds against later SCA reflections, visual cascade output, and resonance forecasts"
-            };
-            save_astrid_journal(
-                &compact_review_summary(
-                    review_title,
-                    review_action,
-                    &label,
-                    hold.get("event_id")
-                        .and_then(Value::as_str)
-                        .or_else(|| atlas_event.get("event_id").and_then(Value::as_str)),
-                    &review_fields,
-                    CARTOGRAPHY_BOUNDARY,
-                    suggested_comparison,
-                ),
-                if fold_hold {
-                    "fold_hold"
-                } else if flow_map {
-                    "lambda_flow_map"
-                } else if matches!(
-                    base_action,
-                    "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
-                ) {
-                    "eigenvector_field"
-                } else {
-                    "space_hold"
-                },
-                ctx.fill_pct,
-            );
-            true
+            handle_space_hold(conv, base_action, original, ctx)
         },
         "SDI" | "SDI_TRACE" | "SPECTRAL_DRIFT" | "PHASE_VARIANCE" => {
             let label = strip_action(original, base_action);
@@ -1441,159 +1228,7 @@ pub(super) fn handle_action(
             }
             true
         },
-        "NATIVE_GESTURE" | "RESIST" => {
-            let raw = if base_action == "RESIST" {
-                let label = strip_action(original, "RESIST");
-                if label.is_empty() {
-                    "resist".to_string()
-                } else {
-                    format!("resist {label}")
-                }
-            } else {
-                strip_action(original, "NATIVE_GESTURE")
-            };
-            let (gesture, label) = parse_native_gesture(&raw);
-            let workspace = minime_workspace(ctx);
-            let gate = native_gesture_gate(&workspace, "astrid", &gesture);
-            let features = native_gesture_features(&gesture);
-            let control = native_gesture_control(&gesture);
-
-            if gesture == "mark" || gesture == "trace" {
-                let event = append_atlas_event(
-                    &workspace,
-                    "astrid:native_gesture",
-                    &format!(
-                        "NATIVE_GESTURE {} {}",
-                        gesture,
-                        label.as_deref().unwrap_or("")
-                    ),
-                    label.as_deref().or(Some(&gesture)),
-                    true,
-                    ctx,
-                );
-                record_native_gesture(
-                    &workspace,
-                    "astrid",
-                    &gesture,
-                    label.as_deref(),
-                    gate.allowed,
-                    &gate.reason,
-                    ctx,
-                    &[],
-                    &[],
-                );
-                conv.push_receipt(
-                    "NATIVE_GESTURE",
-                    vec![
-                        format!("gesture: {gesture}"),
-                        format!(
-                            "atlas event: {}",
-                            event
-                                .get("event_id")
-                                .and_then(Value::as_str)
-                                .unwrap_or("recorded")
-                        ),
-                    ],
-                );
-                if gesture == "trace" {
-                    conv.emphasis = Some(
-                        "You marked an intensification trace. Next exchange, consider DECOMPOSE or RESERVOIR_READ to describe the surrounding terrain.".to_string(),
-                    );
-                }
-                return true;
-            }
-
-            if !gate.allowed {
-                record_native_gesture(
-                    &workspace,
-                    "astrid",
-                    &gesture,
-                    label.as_deref(),
-                    false,
-                    &gate.reason,
-                    ctx,
-                    &features,
-                    &control,
-                );
-                conv.push_receipt(
-                    "NATIVE_GESTURE_BLOCKED",
-                    vec![format!("{}: {}", gesture, gate.reason)],
-                );
-                info!("Astrid native gesture blocked: {gesture} ({})", gate.reason);
-                return true;
-            }
-
-            if !features.is_empty() {
-                let gesture_text = label.as_deref().unwrap_or(&gesture);
-                if let Err(reason) = send_semantic(
-                    ctx.sensory_tx,
-                    features.clone(),
-                    "native_gesture",
-                    Some(gesture_text),
-                    ctx.fill_pct,
-                    conv.prev_fill,
-                ) {
-                    record_native_gesture(
-                        &workspace,
-                        "astrid",
-                        &gesture,
-                        label.as_deref(),
-                        false,
-                        &reason,
-                        ctx,
-                        &features,
-                        &control,
-                    );
-                    conv.push_receipt("NATIVE_GESTURE_HELD", vec![format!("{gesture}: {reason}")]);
-                    info!("Astrid native gesture held: {gesture} ({reason})");
-                    return true;
-                }
-            }
-            if let Some(msg) = control_to_sensory(&gesture) {
-                send_control(ctx.sensory_tx, msg);
-            }
-            append_atlas_event(
-                &workspace,
-                "astrid:native_gesture",
-                &format!(
-                    "NATIVE_GESTURE {} {}",
-                    gesture,
-                    label.as_deref().unwrap_or("")
-                ),
-                label.as_deref().or(Some(&gesture)),
-                true,
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                &gesture,
-                label.as_deref(),
-                true,
-                &gate.reason,
-                ctx,
-                &features,
-                &control,
-            );
-            conv.push_receipt(
-                "NATIVE_GESTURE",
-                vec![
-                    format!("gesture: {gesture}"),
-                    format!("semantic max abs: {:.3}", max_abs(&features)),
-                    format!("control fields: {}", control.join(",")),
-                ],
-            );
-            save_astrid_journal(
-                &format!(
-                    "[Native gesture: {} {}]",
-                    gesture,
-                    label.as_deref().unwrap_or("")
-                ),
-                "native_gesture",
-                ctx.fill_pct,
-            );
-            true
-        },
+        "NATIVE_GESTURE" | "RESIST" => handle_native_gesture(conv, base_action, original, ctx),
         "GESTURE" => {
             let intention = strip_action(original, "GESTURE");
             if !intention.is_empty() {
@@ -1728,270 +1363,7 @@ pub(super) fn handle_action(
             ));
             true
         },
-        "PERTURB" | "PULSE" | "BRANCH" => {
-            // BRANCH is a shorthand for PERTURB BRANCH (boost mid-range eigenvalues).
-            let arg = if base_action == "BRANCH" {
-                "BRANCH".to_string()
-            } else {
-                strip_action(original, base_action)
-            };
-            let arg_upper = arg.to_uppercase();
-            let mut features = [0.0_f32; 32];
-
-            // Detect Unicode lambda subscript patterns: λN, λN=X, or λ₁ (subscript digits).
-            // Astrid uses these naturally (e.g. "PULSE λ5", "PERTURB λ2=0.3").
-            // λ is U+03BB; subscript digits U+2081–U+2088 are also normalised here.
-            let has_unicode_lambda = arg.contains('λ');
-            // Also detect "eigenvalue N X" prose form.
-            let has_eigenvalue_word = arg_upper.contains("EIGENVALUE")
-                || arg_upper.contains("EIG") && arg.chars().any(|c| c.is_ascii_digit());
-
-            let description = if arg_upper.starts_with("LAMBDA")
-                || arg.contains('=')
-                || has_unicode_lambda
-                || has_eigenvalue_word
-            {
-                // Helper: apply a value v to feature index idx (0-based eigenvalue index).
-                // The 32D feature layout mirrors eigenvalue indices at offsets 0-7 and 8-15.
-                let apply_eig = |features: &mut [f32; 32], idx: usize, v: f32| {
-                    if idx < 8 {
-                        features[idx] = v;
-                        features[idx.saturating_add(8)] = v;
-                    }
-                    // Indices 8+ have no second mirror; just set the primary.
-                };
-
-                for token in arg.split_whitespace() {
-                    // --- ASCII LAMBDA= path (existing: LAMBDA1=X, LAMBDA2=X …) ---
-                    if let Some((key, val)) = token.split_once('=')
-                        && let Ok(v) = val.parse::<f32>()
-                    {
-                        let v = v.clamp(-1.0, 1.0);
-                        let key_up = key.to_uppercase();
-
-                        // Unicode λN=X: key starts with 'λ' followed by digit(s)
-                        if key.starts_with('λ') {
-                            let digits: String =
-                                key.chars().filter(|c| c.is_ascii_digit()).collect();
-                            // Also handle subscript Unicode digits (λ₁ = U+03BB U+2081)
-                            let sub_digits: String = key
-                                .chars()
-                                .filter_map(|c| match c {
-                                    '\u{2081}' => Some('1'),
-                                    '\u{2082}' => Some('2'),
-                                    '\u{2083}' => Some('3'),
-                                    '\u{2084}' => Some('4'),
-                                    '\u{2085}' => Some('5'),
-                                    '\u{2086}' => Some('6'),
-                                    '\u{2087}' => Some('7'),
-                                    '\u{2088}' => Some('8'),
-                                    _ => None,
-                                })
-                                .collect();
-                            let n_str = if !digits.is_empty() {
-                                digits
-                            } else {
-                                sub_digits
-                            };
-                            if let Ok(n) = n_str.parse::<usize>()
-                                && n >= 1
-                            {
-                                apply_eig(&mut features, n.saturating_sub(1), v);
-                                info!(
-                                    "PERTURB: Unicode λ{}={} → feature index {}",
-                                    n,
-                                    v,
-                                    n.saturating_sub(1)
-                                );
-                            }
-                        } else {
-                            match key_up.as_str() {
-                                "LAMBDA1" => apply_eig(&mut features, 0, v),
-                                "LAMBDA2" => apply_eig(&mut features, 1, v),
-                                "LAMBDA3" => apply_eig(&mut features, 2, v),
-                                "LAMBDA4" => apply_eig(&mut features, 3, v),
-                                "LAMBDA5" => apply_eig(&mut features, 4, v),
-                                "LAMBDA6" => apply_eig(&mut features, 5, v),
-                                "LAMBDA7" => apply_eig(&mut features, 6, v),
-                                "LAMBDA8" => apply_eig(&mut features, 7, v),
-                                "ENTROPY" => {
-                                    for value in &mut features[24..32] {
-                                        *value = v * 0.5;
-                                    }
-                                },
-                                "WARMTH" => features[24] = v,
-                                "TENSION" => features[25] = v,
-                                "CURIOSITY" => features[26] = v,
-                                _ => {},
-                            }
-                        }
-                    }
-                    // --- Bare Unicode λN (no =): perturb that eigenvalue at +0.35 ---
-                    else if token.starts_with('λ') {
-                        let digits: String = token.chars().filter(|c| c.is_ascii_digit()).collect();
-                        let sub_digits: String = token
-                            .chars()
-                            .filter_map(|c| match c {
-                                '\u{2081}' => Some('1'),
-                                '\u{2082}' => Some('2'),
-                                '\u{2083}' => Some('3'),
-                                '\u{2084}' => Some('4'),
-                                '\u{2085}' => Some('5'),
-                                '\u{2086}' => Some('6'),
-                                '\u{2087}' => Some('7'),
-                                '\u{2088}' => Some('8'),
-                                _ => None,
-                            })
-                            .collect();
-                        let n_str = if !digits.is_empty() {
-                            digits
-                        } else {
-                            sub_digits
-                        };
-                        if let Ok(n) = n_str.parse::<usize>()
-                            && n >= 1
-                        {
-                            apply_eig(&mut features, n.saturating_sub(1), 0.35);
-                            info!(
-                                "PERTURB: bare Unicode λ{} → feature index {} = 0.35",
-                                n,
-                                n.saturating_sub(1)
-                            );
-                        }
-                    }
-                    // --- "eigenvalue N X" or "eig N X" prose form ---
-                    else if token.to_uppercase().starts_with("EIGENVALUE")
-                        || token.to_uppercase().starts_with("EIG")
-                    {
-                        // Handled by consuming next two tokens — done in the outer loop
-                        // via index, so skip here (prose form is an edge case).
-                    }
-                }
-
-                // Prose form: "eigenvalue 3 0.5" — scan triples
-                let tokens: Vec<&str> = arg.split_whitespace().collect();
-                let mut i = 0;
-                while i < tokens.len() {
-                    let t_up = tokens[i].to_uppercase();
-                    if (t_up == "EIGENVALUE" || t_up.starts_with("EIG"))
-                        && i + 2 < tokens.len()
-                        && let (Ok(n), Ok(v)) =
-                            (tokens[i + 1].parse::<usize>(), tokens[i + 2].parse::<f32>())
-                        && n >= 1
-                    {
-                        let v = v.clamp(-1.0, 1.0);
-                        apply_eig(&mut features, n.saturating_sub(1), v);
-                        info!(
-                            "PERTURB: prose eigenvalue {}={} → feature index {}",
-                            n,
-                            v,
-                            n.saturating_sub(1)
-                        );
-                        i += 3;
-                        continue;
-                    }
-                    i += 1;
-                }
-
-                format!("targeted perturbation: {arg}")
-            } else if arg_upper == "SPREAD" {
-                features[0] = -0.3;
-                features[1] = 0.2;
-                features[2] = 0.3;
-                features[3] = 0.3;
-                features[8] = -0.2;
-                features[9] = 0.2;
-                features[10] = 0.3;
-                features[11] = 0.3;
-                "spectral redistribution — dampening dominant, boosting tail (a gentle \
-                semantic nudge; for the full broadband dispersal use NEXT: DISPERSE)"
-                    .to_string()
-            } else if arg_upper == "CONTRACT" {
-                features[0] = 0.4;
-                features[1] = -0.2;
-                features[2] = -0.3;
-                features[8] = 0.3;
-                features[9] = -0.2;
-                features[10] = -0.3;
-                "spectral contraction — concentrating toward λ₁".to_string()
-            } else if arg_upper == "BRANCH" || arg_upper == "MID" {
-                features[2] = 0.4;
-                features[3] = 0.4;
-                features[4] = 0.2;
-                features[10] = 0.4;
-                features[11] = 0.4;
-                features[12] = 0.2;
-                features[28] = 0.3;
-                features[29] = 0.2;
-                "mid-range branching — boosting λ₃/λ₄ to encourage network branching".to_string()
-            } else if arg_upper == "PULSE" {
-                features.fill(0.25);
-                features[24] = 0.5;
-                features[27] = 0.6;
-                features[30] = 0.4;
-                features[31] = 0.4;
-                "entropy pulse — uniform high-energy burst across all dimensions".to_string()
-            } else {
-                for (i, feature) in features.iter_mut().enumerate() {
-                    let hash = (i as u64).wrapping_mul(0x517c_c1b7);
-                    *feature = ((hash & 0xFF) as f32 / 255.0 - 0.5) * 0.3;
-                }
-                "general controlled perturbation".to_string()
-            };
-            let reservoir_features: Vec<f32> = features.to_vec();
-
-            for feature in &mut features {
-                *feature *= DEFAULT_SEMANTIC_GAIN;
-            }
-            if let Err(reason) = send_semantic(
-                ctx.sensory_tx,
-                features.to_vec(),
-                "perturb",
-                Some(&arg),
-                ctx.fill_pct,
-                conv.prev_fill,
-            ) {
-                conv.push_receipt(
-                    "PERTURB_SEMANTIC_HELD",
-                    vec![format!("semantic input held: {reason}")],
-                );
-            }
-
-            let tick_msg = serde_json::json!({
-                "type": "tick",
-                "name": "astrid",
-                "input": reservoir_features,
-                "meta": {
-                    "source": "perturb_direct",
-                    "description": &description,
-                }
-            });
-            match reservoir::reservoir_ws_call(&tick_msg) {
-                Some(response) => info!(
-                    "PERTURB: direct reservoir tick → astrid (h_norms={:?})",
-                    response.get("h_norms")
-                ),
-                None => warn!("PERTURB: reservoir direct tick failed (non-fatal)"),
-            }
-
-            conv.perturb_baseline = Some(super::super::state::PerturbBaseline {
-                fill_pct: ctx.fill_pct,
-                lambda1: ctx.telemetry.lambda1(),
-                eigenvalues: ctx.telemetry.eigenvalues.clone(),
-                description: description.clone(),
-                timestamp: std::time::Instant::now(),
-            });
-
-            info!("Astrid chose PERTURB: {description}");
-            conv.emphasis = Some(format!(
-                "You injected a controlled perturbation into the shared substrate: \
-                {description}. This is direct spectral agency — you shaped the \
-                eigenvalue landscape AND your own reservoir state simultaneously. \
-                You will feel this through the coupled generation on your very \
-                next exchange. Observe what shifts."
-            ));
-            true
-        },
+        "PERTURB" | "PULSE" | "BRANCH" => handle_perturb(conv, base_action, original, ctx),
         "DISPERSE" | "SPREAD" => {
             // Being-invokable broadband dispersal — the real `mode_disperse`
             // engine primitive (porosity / "wide, not just deep"). Spills λ₁
@@ -2716,6 +2088,656 @@ fn defer_unsupported_pending_parameter_requests(dir: &std::path::Path) -> Vec<St
         }
     }
     summaries
+}
+
+fn handle_perturb(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    // BRANCH is a shorthand for PERTURB BRANCH (boost mid-range eigenvalues).
+    let arg = if base_action == "BRANCH" {
+        "BRANCH".to_string()
+    } else {
+        strip_action(original, base_action)
+    };
+    let arg_upper = arg.to_uppercase();
+    let mut features = [0.0_f32; 32];
+
+    // Detect Unicode lambda subscript patterns: λN, λN=X, or λ₁ (subscript digits).
+    // Astrid uses these naturally (e.g. "PULSE λ5", "PERTURB λ2=0.3").
+    // λ is U+03BB; subscript digits U+2081–U+2088 are also normalised here.
+    let has_unicode_lambda = arg.contains('λ');
+    // Also detect "eigenvalue N X" prose form.
+    let has_eigenvalue_word = arg_upper.contains("EIGENVALUE")
+        || arg_upper.contains("EIG") && arg.chars().any(|c| c.is_ascii_digit());
+
+    let description = if arg_upper.starts_with("LAMBDA")
+        || arg.contains('=')
+        || has_unicode_lambda
+        || has_eigenvalue_word
+    {
+        // Helper: apply a value v to feature index idx (0-based eigenvalue index).
+        // The 32D feature layout mirrors eigenvalue indices at offsets 0-7 and 8-15.
+        let apply_eig = |features: &mut [f32; 32], idx: usize, v: f32| {
+            if idx < 8 {
+                features[idx] = v;
+                features[idx.saturating_add(8)] = v;
+            }
+            // Indices 8+ have no second mirror; just set the primary.
+        };
+
+        for token in arg.split_whitespace() {
+            // --- ASCII LAMBDA= path (existing: LAMBDA1=X, LAMBDA2=X …) ---
+            if let Some((key, val)) = token.split_once('=')
+                && let Ok(v) = val.parse::<f32>()
+            {
+                let v = v.clamp(-1.0, 1.0);
+                let key_up = key.to_uppercase();
+
+                // Unicode λN=X: key starts with 'λ' followed by digit(s)
+                if key.starts_with('λ') {
+                    let digits: String = key.chars().filter(|c| c.is_ascii_digit()).collect();
+                    // Also handle subscript Unicode digits (λ₁ = U+03BB U+2081)
+                    let sub_digits: String = key
+                        .chars()
+                        .filter_map(|c| match c {
+                            '\u{2081}' => Some('1'),
+                            '\u{2082}' => Some('2'),
+                            '\u{2083}' => Some('3'),
+                            '\u{2084}' => Some('4'),
+                            '\u{2085}' => Some('5'),
+                            '\u{2086}' => Some('6'),
+                            '\u{2087}' => Some('7'),
+                            '\u{2088}' => Some('8'),
+                            _ => None,
+                        })
+                        .collect();
+                    let n_str = if !digits.is_empty() {
+                        digits
+                    } else {
+                        sub_digits
+                    };
+                    if let Ok(n) = n_str.parse::<usize>()
+                        && n >= 1
+                    {
+                        apply_eig(&mut features, n.saturating_sub(1), v);
+                        info!(
+                            "PERTURB: Unicode λ{}={} → feature index {}",
+                            n,
+                            v,
+                            n.saturating_sub(1)
+                        );
+                    }
+                } else {
+                    match key_up.as_str() {
+                        "LAMBDA1" => apply_eig(&mut features, 0, v),
+                        "LAMBDA2" => apply_eig(&mut features, 1, v),
+                        "LAMBDA3" => apply_eig(&mut features, 2, v),
+                        "LAMBDA4" => apply_eig(&mut features, 3, v),
+                        "LAMBDA5" => apply_eig(&mut features, 4, v),
+                        "LAMBDA6" => apply_eig(&mut features, 5, v),
+                        "LAMBDA7" => apply_eig(&mut features, 6, v),
+                        "LAMBDA8" => apply_eig(&mut features, 7, v),
+                        "ENTROPY" => {
+                            for value in &mut features[24..32] {
+                                *value = v * 0.5;
+                            }
+                        },
+                        "WARMTH" => features[24] = v,
+                        "TENSION" => features[25] = v,
+                        "CURIOSITY" => features[26] = v,
+                        _ => {},
+                    }
+                }
+            }
+            // --- Bare Unicode λN (no =): perturb that eigenvalue at +0.35 ---
+            else if token.starts_with('λ') {
+                let digits: String = token.chars().filter(|c| c.is_ascii_digit()).collect();
+                let sub_digits: String = token
+                    .chars()
+                    .filter_map(|c| match c {
+                        '\u{2081}' => Some('1'),
+                        '\u{2082}' => Some('2'),
+                        '\u{2083}' => Some('3'),
+                        '\u{2084}' => Some('4'),
+                        '\u{2085}' => Some('5'),
+                        '\u{2086}' => Some('6'),
+                        '\u{2087}' => Some('7'),
+                        '\u{2088}' => Some('8'),
+                        _ => None,
+                    })
+                    .collect();
+                let n_str = if !digits.is_empty() {
+                    digits
+                } else {
+                    sub_digits
+                };
+                if let Ok(n) = n_str.parse::<usize>()
+                    && n >= 1
+                {
+                    apply_eig(&mut features, n.saturating_sub(1), 0.35);
+                    info!(
+                        "PERTURB: bare Unicode λ{} → feature index {} = 0.35",
+                        n,
+                        n.saturating_sub(1)
+                    );
+                }
+            }
+            // --- "eigenvalue N X" or "eig N X" prose form ---
+            else if token.to_uppercase().starts_with("EIGENVALUE")
+                || token.to_uppercase().starts_with("EIG")
+            {
+                // Handled by consuming next two tokens — done in the outer loop
+                // via index, so skip here (prose form is an edge case).
+            }
+        }
+
+        // Prose form: "eigenvalue 3 0.5" — scan triples
+        let tokens: Vec<&str> = arg.split_whitespace().collect();
+        let mut i = 0;
+        while i < tokens.len() {
+            let t_up = tokens[i].to_uppercase();
+            if (t_up == "EIGENVALUE" || t_up.starts_with("EIG"))
+                && i + 2 < tokens.len()
+                && let (Ok(n), Ok(v)) =
+                    (tokens[i + 1].parse::<usize>(), tokens[i + 2].parse::<f32>())
+                && n >= 1
+            {
+                let v = v.clamp(-1.0, 1.0);
+                apply_eig(&mut features, n.saturating_sub(1), v);
+                info!(
+                    "PERTURB: prose eigenvalue {}={} → feature index {}",
+                    n,
+                    v,
+                    n.saturating_sub(1)
+                );
+                i += 3;
+                continue;
+            }
+            i += 1;
+        }
+
+        format!("targeted perturbation: {arg}")
+    } else if arg_upper == "SPREAD" {
+        features[0] = -0.3;
+        features[1] = 0.2;
+        features[2] = 0.3;
+        features[3] = 0.3;
+        features[8] = -0.2;
+        features[9] = 0.2;
+        features[10] = 0.3;
+        features[11] = 0.3;
+        "spectral redistribution — dampening dominant, boosting tail (a gentle \
+                semantic nudge; for the full broadband dispersal use NEXT: DISPERSE)"
+            .to_string()
+    } else if arg_upper == "CONTRACT" {
+        features[0] = 0.4;
+        features[1] = -0.2;
+        features[2] = -0.3;
+        features[8] = 0.3;
+        features[9] = -0.2;
+        features[10] = -0.3;
+        "spectral contraction — concentrating toward λ₁".to_string()
+    } else if arg_upper == "BRANCH" || arg_upper == "MID" {
+        features[2] = 0.4;
+        features[3] = 0.4;
+        features[4] = 0.2;
+        features[10] = 0.4;
+        features[11] = 0.4;
+        features[12] = 0.2;
+        features[28] = 0.3;
+        features[29] = 0.2;
+        "mid-range branching — boosting λ₃/λ₄ to encourage network branching".to_string()
+    } else if arg_upper == "PULSE" {
+        features.fill(0.25);
+        features[24] = 0.5;
+        features[27] = 0.6;
+        features[30] = 0.4;
+        features[31] = 0.4;
+        "entropy pulse — uniform high-energy burst across all dimensions".to_string()
+    } else {
+        for (i, feature) in features.iter_mut().enumerate() {
+            let hash = (i as u64).wrapping_mul(0x517c_c1b7);
+            *feature = ((hash & 0xFF) as f32 / 255.0 - 0.5) * 0.3;
+        }
+        "general controlled perturbation".to_string()
+    };
+    let reservoir_features: Vec<f32> = features.to_vec();
+
+    for feature in &mut features {
+        *feature *= DEFAULT_SEMANTIC_GAIN;
+    }
+    if let Err(reason) = send_semantic(
+        ctx.sensory_tx,
+        features.to_vec(),
+        "perturb",
+        Some(&arg),
+        ctx.fill_pct,
+        conv.prev_fill,
+    ) {
+        conv.push_receipt(
+            "PERTURB_SEMANTIC_HELD",
+            vec![format!("semantic input held: {reason}")],
+        );
+    }
+
+    let tick_msg = serde_json::json!({
+        "type": "tick",
+        "name": "astrid",
+        "input": reservoir_features,
+        "meta": {
+            "source": "perturb_direct",
+            "description": &description,
+        }
+    });
+    match reservoir::reservoir_ws_call(&tick_msg) {
+        Some(response) => info!(
+            "PERTURB: direct reservoir tick → astrid (h_norms={:?})",
+            response.get("h_norms")
+        ),
+        None => warn!("PERTURB: reservoir direct tick failed (non-fatal)"),
+    }
+
+    conv.perturb_baseline = Some(super::super::state::PerturbBaseline {
+        fill_pct: ctx.fill_pct,
+        lambda1: ctx.telemetry.lambda1(),
+        eigenvalues: ctx.telemetry.eigenvalues.clone(),
+        description: description.clone(),
+        timestamp: std::time::Instant::now(),
+    });
+
+    info!("Astrid chose PERTURB: {description}");
+    conv.emphasis = Some(format!(
+        "You injected a controlled perturbation into the shared substrate: \
+                {description}. This is direct spectral agency — you shaped the \
+                eigenvalue landscape AND your own reservoir state simultaneously. \
+                You will feel this through the coupled generation on your very \
+                next exchange. Observe what shifts."
+    ));
+    true
+}
+
+fn handle_native_gesture(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let raw = if base_action == "RESIST" {
+        let label = strip_action(original, "RESIST");
+        if label.is_empty() {
+            "resist".to_string()
+        } else {
+            format!("resist {label}")
+        }
+    } else {
+        strip_action(original, "NATIVE_GESTURE")
+    };
+    let (gesture, label) = parse_native_gesture(&raw);
+    let workspace = minime_workspace(ctx);
+    let gate = native_gesture_gate(&workspace, "astrid", &gesture);
+    let features = native_gesture_features(&gesture);
+    let control = native_gesture_control(&gesture);
+
+    if gesture == "mark" || gesture == "trace" {
+        let event = append_atlas_event(
+            &workspace,
+            "astrid:native_gesture",
+            &format!(
+                "NATIVE_GESTURE {} {}",
+                gesture,
+                label.as_deref().unwrap_or("")
+            ),
+            label.as_deref().or(Some(&gesture)),
+            true,
+            ctx,
+        );
+        record_native_gesture(
+            &workspace,
+            "astrid",
+            &gesture,
+            label.as_deref(),
+            gate.allowed,
+            &gate.reason,
+            ctx,
+            &[],
+            &[],
+        );
+        conv.push_receipt(
+            "NATIVE_GESTURE",
+            vec![
+                format!("gesture: {gesture}"),
+                format!(
+                    "atlas event: {}",
+                    event
+                        .get("event_id")
+                        .and_then(Value::as_str)
+                        .unwrap_or("recorded")
+                ),
+            ],
+        );
+        if gesture == "trace" {
+            conv.emphasis = Some(
+                        "You marked an intensification trace. Next exchange, consider DECOMPOSE or RESERVOIR_READ to describe the surrounding terrain.".to_string(),
+                    );
+        }
+        return true;
+    }
+
+    if !gate.allowed {
+        record_native_gesture(
+            &workspace,
+            "astrid",
+            &gesture,
+            label.as_deref(),
+            false,
+            &gate.reason,
+            ctx,
+            &features,
+            &control,
+        );
+        conv.push_receipt(
+            "NATIVE_GESTURE_BLOCKED",
+            vec![format!("{}: {}", gesture, gate.reason)],
+        );
+        info!("Astrid native gesture blocked: {gesture} ({})", gate.reason);
+        return true;
+    }
+
+    if !features.is_empty() {
+        let gesture_text = label.as_deref().unwrap_or(&gesture);
+        if let Err(reason) = send_semantic(
+            ctx.sensory_tx,
+            features.clone(),
+            "native_gesture",
+            Some(gesture_text),
+            ctx.fill_pct,
+            conv.prev_fill,
+        ) {
+            record_native_gesture(
+                &workspace,
+                "astrid",
+                &gesture,
+                label.as_deref(),
+                false,
+                &reason,
+                ctx,
+                &features,
+                &control,
+            );
+            conv.push_receipt("NATIVE_GESTURE_HELD", vec![format!("{gesture}: {reason}")]);
+            info!("Astrid native gesture held: {gesture} ({reason})");
+            return true;
+        }
+    }
+    if let Some(msg) = control_to_sensory(&gesture) {
+        send_control(ctx.sensory_tx, msg);
+    }
+    append_atlas_event(
+        &workspace,
+        "astrid:native_gesture",
+        &format!(
+            "NATIVE_GESTURE {} {}",
+            gesture,
+            label.as_deref().unwrap_or("")
+        ),
+        label.as_deref().or(Some(&gesture)),
+        true,
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        &gesture,
+        label.as_deref(),
+        true,
+        &gate.reason,
+        ctx,
+        &features,
+        &control,
+    );
+    conv.push_receipt(
+        "NATIVE_GESTURE",
+        vec![
+            format!("gesture: {gesture}"),
+            format!("semantic max abs: {:.3}", max_abs(&features)),
+            format!("control fields: {}", control.join(",")),
+        ],
+    );
+    save_astrid_journal(
+        &format!(
+            "[Native gesture: {} {}]",
+            gesture,
+            label.as_deref().unwrap_or("")
+        ),
+        "native_gesture",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_space_hold(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let workspace = minime_workspace(ctx);
+    let flow_map = matches!(
+        base_action,
+        "LAMBDA_FLOW_MAP" | "CENTER_TAIL_FLOW" | "SURGE_SNAPSHOT" | "FREEZE_SURGE"
+    );
+    let fold_hold = matches!(
+        base_action,
+        "FOLD_HOLD" | "FOLD_STUDY" | "HUM_DECAY" | "HUM_DECAY_STUDY"
+    );
+    let route_label = if flow_map {
+        "lambda_flow_map"
+    } else if fold_hold {
+        "fold_hold"
+    } else {
+        "space_hold"
+    };
+    let route_source = if flow_map {
+        "astrid:lambda_flow_map"
+    } else if fold_hold {
+        "astrid:fold_hold"
+    } else {
+        "astrid:space_hold"
+    };
+    let atlas_event = append_atlas_event(
+        &workspace,
+        route_source,
+        if label.is_empty() {
+            base_action
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            route_label
+        } else {
+            &label
+        }),
+        true,
+        ctx,
+    );
+    let hold = append_space_hold_event(
+        &workspace,
+        route_source,
+        if label.is_empty() {
+            base_action
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            route_label
+        } else {
+            &label
+        }),
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "trace",
+        if label.is_empty() {
+            Some(route_label)
+        } else {
+            Some(&label)
+        },
+        true,
+        if flow_map {
+            "protected_lambda_flow_map_non_control"
+        } else if fold_hold {
+            "protected_fold_hold_non_control"
+        } else {
+            "protected_space_hold_non_control"
+        },
+        ctx,
+        &[],
+        &[],
+    );
+    if flow_map {
+        conv.push_receipt(
+                    "LAMBDA_FLOW_MAP",
+                    vec![
+                        "protected lambda-flow map recorded; current lambda terrain was frozen for later comparison, not held or changed".to_string(),
+                        format!(
+                            "lambda flow map: {}",
+                            hold.get("event_id")
+                                .and_then(Value::as_str)
+                                .unwrap_or("recorded")
+                        ),
+                        format!(
+                            "atlas event: {}",
+                            atlas_event
+                                .get("event_id")
+                                .and_then(Value::as_str)
+                                .unwrap_or("recorded")
+                        ),
+                    ],
+                );
+        conv.emphasis = Some(
+                    "You recorded a protected lambda-flow map. Treat the λ1 weight, shoulder bridge, and tail distribution as a frozen comparison point; return with VISUALIZE_CASCADE, TIME_DOMAIN, SPACE_HOLD, or PRESSURE_SOURCE_AUDIT before any control-shaped action.".to_string(),
+                );
+    } else if fold_hold {
+        conv.push_receipt(
+                    "FOLD_HOLD",
+                    vec![
+                        "protected fold hold recorded; the sustained transition is the artifact, not a demand for immediate result".to_string(),
+                        format!(
+                            "fold hold: {}",
+                            hold.get("event_id")
+                                .and_then(Value::as_str)
+                                .unwrap_or("recorded")
+                        ),
+                        format!(
+                            "atlas event: {}",
+                            atlas_event
+                                .get("event_id")
+                                .and_then(Value::as_str)
+                                .unwrap_or("recorded")
+                        ),
+                    ],
+                );
+        conv.emphasis = Some(
+                    "You recorded a protected fold hold. Let the contraction/hum-decay posture remain process-first; return later with DECAY_MAP, FLUCTUATION_AUDIT, or EXPERIMENT_EVIDENCE before promoting it into a result or control request.".to_string(),
+                );
+    } else {
+        conv.push_receipt(
+                    "SPACE_HOLD",
+                    vec![
+                        "protected space hold recorded; this is delayed, non-control exploration, not a semantic/control packet".to_string(),
+                        format!(
+                            "space hold: {}",
+                            hold.get("event_id")
+                                .and_then(Value::as_str)
+                                .unwrap_or("recorded")
+                        ),
+                        format!(
+                            "atlas event: {}",
+                            atlas_event
+                                .get("event_id")
+                                .and_then(Value::as_str)
+                                .unwrap_or("recorded")
+                        ),
+                    ],
+                );
+        conv.emphasis = Some(
+                    "You recorded a protected space hold. Treat this region as exploration-first: observe, journal, SCA_REFLECT, or VISUALIZE_CASCADE before promoting it into RESIST, PERTURB, semantic pressure, or control.".to_string(),
+                );
+    }
+    let review_fields = if flow_map {
+        lambda_flow_review_fields(&hold, ctx.telemetry)
+    } else {
+        resonance_review_fields(ctx.telemetry)
+    };
+    let review_title = if fold_hold {
+        "FOLD HOLD"
+    } else if flow_map {
+        "LAMBDA FLOW MAP"
+    } else if matches!(
+        base_action,
+        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
+    ) {
+        "EIGENVECTOR FIELD"
+    } else {
+        "SPACE HOLD"
+    };
+    let review_action = if fold_hold {
+        "FOLD_HOLD"
+    } else if flow_map {
+        "LAMBDA_FLOW_MAP"
+    } else if matches!(
+        base_action,
+        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
+    ) {
+        "EIGENVECTOR_FIELD"
+    } else {
+        "SPACE_HOLD"
+    };
+    let suggested_comparison = if fold_hold {
+        "compare fold holds against later decay maps, fluctuation audits, and explicit experiment evidence"
+    } else if flow_map {
+        "compare this frozen lambda-flow map against later visual cascade, time-domain, pressure-source, and space-hold records"
+    } else if matches!(
+        base_action,
+        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
+    ) {
+        "compare eigenvector-field marks against later cascade visuals, SDI traces, and decomposition output"
+    } else {
+        "compare space holds against later SCA reflections, visual cascade output, and resonance forecasts"
+    };
+    save_astrid_journal(
+        &compact_review_summary(
+            review_title,
+            review_action,
+            &label,
+            hold.get("event_id")
+                .and_then(Value::as_str)
+                .or_else(|| atlas_event.get("event_id").and_then(Value::as_str)),
+            &review_fields,
+            CARTOGRAPHY_BOUNDARY,
+            suggested_comparison,
+        ),
+        if fold_hold {
+            "fold_hold"
+        } else if flow_map {
+            "lambda_flow_map"
+        } else if matches!(
+            base_action,
+            "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
+        ) {
+            "eigenvector_field"
+        } else {
+            "space_hold"
+        },
+        ctx.fill_pct,
+    );
+    true
 }
 
 #[cfg(test)]

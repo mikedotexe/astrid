@@ -28,6 +28,7 @@ import argparse
 import csv
 import datetime as dt
 import json
+import os
 import re
 import sqlite3
 import subprocess
@@ -43,6 +44,10 @@ INBOX = {
 }
 TIMING = MINIME / "workspace" / "diagnostics" / "llm_timing.jsonl"
 MINIME_JOURNAL = MINIME / "workspace" / "journal"
+ASTRID_JOURNAL = ASTRID / "workspace" / "journal"
+ASTRID_STATE = ASTRID / "workspace" / "state.json"
+CODEC_RS = ASTRID / "src" / "codec.rs"
+CODEC_PROJECTION_EPOCH = ASTRID / "workspace" / "runtime" / "codec_projection_epoch.json"
 
 # The qualia-cap kickstart (local 06:17:25 == 13:17:25 UTC). Timing rows are UTC.
 QUALIA_DEPLOY_UTC = "2026-06-08T13:17:25"
@@ -104,6 +109,8 @@ STABLE_CORE_HOLD_COMMAND = {"gate": 0.12, "filt": 0.72, "cov_keep": 0.72}
 STABLE_CORE_ELEVATED_SOFT_COMMAND = {"gate": 0.10, "filt": 0.78, "cov_keep": 0.66}
 STABLE_CORE_BLEND_WINDOW_FILL_PCT = (71.5, 74.0)
 STABLE_CORE_SLEW_WINDOW_FILL_PCT = (70.0, 74.0)
+TAIL_INTERFERENCE_WATCH_THRESHOLD = 0.08
+TAIL_INTERFERENCE_ATTENTION_THRESHOLD = 0.20
 
 
 def _read_timing_rows() -> list[dict]:
@@ -181,6 +188,247 @@ def _run_cargo_probe(test_name: str) -> dict:
         "stdout_tail": _tail(proc.stdout),
         "stderr_tail": _tail(proc.stderr),
     }
+
+
+def _read_json_file(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text())
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _read_text_file(path: Path) -> str:
+    try:
+        return path.read_text(errors="replace")
+    except Exception:
+        return ""
+
+
+def _codec_constants() -> dict:
+    text = _read_text_file(CODEC_RS)
+
+    def const_number(name: str, default: float) -> float:
+        match = re.search(
+            rf"const\s+{re.escape(name)}\s*:\s*(?:f32|usize)\s*=\s*([0-9_.]+)\s*;",
+            text,
+        )
+        if not match:
+            return default
+        try:
+            return float(match.group(1).replace("_", ""))
+        except ValueError:
+            return default
+
+    return {
+        "feature_abs_max": const_number("FEATURE_ABS_MAX", 5.0),
+        "tail_vibrancy_entropy_gate": const_number("TAIL_VIBRANCY_ENTROPY_GATE", 0.85),
+        "tail_vibrancy_max": const_number("TAIL_VIBRANCY_MAX", 6.0),
+        "embedding_project_dim": int(const_number("EMBEDDING_PROJECT_DIM", 8.0)),
+        "narrative_arc_dim": int(const_number("NARRATIVE_ARC_DIM", 4.0)),
+    }
+
+
+def _smoothstep(value: float) -> float:
+    x = min(1.0, max(0.0, value))
+    return x * x * (3.0 - 2.0 * x)
+
+
+def _tail_vibrancy_row(scenario: dict, constants: dict, tail_participation: float) -> dict:
+    entropy = float(scenario["spectral_entropy"])
+    tail_share = float(scenario["tail_share"])
+    gate = float(constants["tail_vibrancy_entropy_gate"])
+    feature_abs_max = float(constants["feature_abs_max"])
+    tail_vibrancy_max = float(constants["tail_vibrancy_max"])
+    ramp = min(1.0, max(0.0, (entropy - gate) / max(1.0e-6, 1.0 - gate)))
+    vibrancy = _smoothstep(ramp)
+    tail_texture = min(1.0, max(0.0, tail_share / 0.30))
+    tail_vibrancy = min(1.0, max(0.0, vibrancy * tail_texture))
+    tail_ceiling = feature_abs_max + (
+        (tail_vibrancy_max - feature_abs_max) * tail_participation * tail_vibrancy
+    )
+    headroom_delta = max(0.0, tail_ceiling - feature_abs_max)
+    mode_packing = float(scenario["mode_packing"])
+    porosity = float(scenario["porosity"])
+    pressure_risk = float(scenario["pressure_risk"])
+    density_gradient = float(scenario["density_gradient"])
+    pressure_overlap = max(mode_packing, pressure_risk, 1.0 - porosity, density_gradient)
+    interference_score = headroom_delta * pressure_overlap
+    pressure_flag = (
+        mode_packing >= 0.30
+        or porosity <= 0.65
+        or pressure_risk >= 0.22
+        or density_gradient >= 0.35
+    )
+    if tail_vibrancy <= 1.0e-5:
+        classification = "off_below_gate"
+    elif interference_score >= TAIL_INTERFERENCE_ATTENTION_THRESHOLD and pressure_flag:
+        classification = "counterfactual_attention" if scenario.get("kind") == "stress" else "needs_attention"
+    elif interference_score >= TAIL_INTERFERENCE_WATCH_THRESHOLD and pressure_flag:
+        classification = "watch_interference_candidate"
+    else:
+        classification = "expressive_headroom"
+    return {
+        "label": scenario["label"],
+        "kind": scenario["kind"],
+        "spectral_entropy": entropy,
+        "tail_share": tail_share,
+        "mode_packing": mode_packing,
+        "porosity": porosity,
+        "pressure_risk": pressure_risk,
+        "density_gradient": density_gradient,
+        "smoothstep_ramp": round(ramp, 6),
+        "smoothstep_vibrancy": round(vibrancy, 6),
+        "tail_texture": round(tail_texture, 6),
+        "tail_vibrancy": round(tail_vibrancy, 6),
+        "tail_ceiling": round(tail_ceiling, 6),
+        "headroom_delta": round(headroom_delta, 6),
+        "pressure_overlap": round(pressure_overlap, 6),
+        "interference_score": round(interference_score, 6),
+        "classification": classification,
+        "source": scenario.get("source"),
+    }
+
+
+def _tail_participation_snapshot() -> dict:
+    state = _read_json_file(ASTRID_STATE)
+    tail_aperture = float(state.get("tail_aperture") or 0.0)
+    raw_ceiling = os.environ.get("ASTRID_TAIL_PARTICIPATION_CEILING")
+    try:
+        visible_ceiling = min(2.0, max(0.0, float(raw_ceiling))) if raw_ceiling else 0.0
+    except ValueError:
+        visible_ceiling = 0.0
+    effective = 1.0 + min(1.0, max(0.0, tail_aperture)) * visible_ceiling
+    return {
+        "state_file": str(ASTRID_STATE),
+        "tail_aperture_fraction": tail_aperture,
+        "visible_operator_ceiling_env": raw_ceiling,
+        "effective_tail_participation_visible_to_probe": round(effective, 6),
+        "note": (
+            "Mirrors llm.rs default: effective = 1.0 + tail_aperture * ceiling. "
+            "If the live bridge has a launchd-only env override, this shell-visible snapshot may understate it."
+        ),
+    }
+
+
+def _projection_epoch_summary() -> dict:
+    data = _read_json_file(CODEC_PROJECTION_EPOCH)
+    if not data:
+        return {"status": "missing", "file": str(CODEC_PROJECTION_EPOCH)}
+    checksum = str(data.get("projection_kernel_checksum") or "")
+    return {
+        "status": "present",
+        "file": str(CODEC_PROJECTION_EPOCH),
+        "embedding_projection_mode": data.get("embedding_projection_mode"),
+        "projection_epoch_id": data.get("projection_epoch_id"),
+        "projection_checksum_algo": data.get("projection_checksum_algo"),
+        "projection_kernel_checksum_prefix": checksum[:16],
+        "policy": data.get("policy"),
+    }
+
+
+def _recent_tail_vibrancy_evidence(limit: int = 5) -> list[dict]:
+    if not ASTRID_JOURNAL.is_dir():
+        return []
+    terms = (
+        "TAIL_VIBRANCY",
+        "mode_packing",
+        "density_gradient",
+        "pressure_risk",
+        "projection",
+        "smoothstep",
+    )
+    paths = sorted(
+        ASTRID_JOURNAL.glob("self_study*.txt"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )[:220]
+    evidence = []
+    for path in paths:
+        text = _read_text_file(path)
+        if not any(term.lower() in text.lower() for term in terms):
+            continue
+        hits = [term for term in terms if term.lower() in text.lower()]
+        excerpts = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if any(term.lower() in stripped.lower() for term in terms):
+                excerpts.append(stripped[:220])
+            if len(excerpts) >= 2:
+                break
+        evidence.append(
+            {
+                "file": str(path),
+                "mtime_unix_s": round(path.stat().st_mtime, 3),
+                "hits": hits,
+                "excerpts": excerpts,
+            }
+        )
+        if len(evidence) >= limit:
+            break
+    return evidence
+
+
+def _tail_vibrancy_scenarios() -> list[dict]:
+    return [
+        {
+            "label": "gate_edge_below_recent_claim",
+            "kind": "gate_check",
+            "spectral_entropy": 0.8499,
+            "tail_share": 0.38,
+            "mode_packing": 0.33,
+            "porosity": 0.63,
+            "pressure_risk": 0.23,
+            "density_gradient": 0.18,
+            "source": "Astrid self-study asks whether entropy 0.84-0.86 pops at the gate.",
+        },
+        {
+            "label": "gate_edge_above_recent_claim",
+            "kind": "gate_check",
+            "spectral_entropy": 0.8501,
+            "tail_share": 0.38,
+            "mode_packing": 0.33,
+            "porosity": 0.63,
+            "pressure_risk": 0.23,
+            "density_gradient": 0.18,
+            "source": "Same gate-edge check just above the entropy threshold.",
+        },
+        {
+            "label": "recent_self_study_overlap",
+            "kind": "recent_claim",
+            "spectral_entropy": 0.90,
+            "tail_share": 0.38,
+            "mode_packing": 0.33,
+            "porosity": 0.63,
+            "pressure_risk": 0.23,
+            "density_gradient": 0.18,
+            "source": "Seeded from 2026-06-14 Astrid self-studies: entropy 0.90, lambda4+ about 38%, mode_packing 0.33, porosity 0.63, pressure_risk 0.23.",
+        },
+        {
+            "label": "navigable_high_entropy_counterfactual",
+            "kind": "stress",
+            "spectral_entropy": 0.98,
+            "tail_share": 0.55,
+            "mode_packing": 0.08,
+            "porosity": 0.82,
+            "pressure_risk": 0.05,
+            "density_gradient": 0.12,
+            "source": "High vibrancy with low packing pressure should read as expression, not interference.",
+        },
+        {
+            "label": "packed_high_entropy_counterfactual",
+            "kind": "stress",
+            "spectral_entropy": 0.94,
+            "tail_share": 0.42,
+            "mode_packing": 0.50,
+            "porosity": 0.55,
+            "pressure_risk": 0.35,
+            "density_gradient": 0.45,
+            "source": "Stress case: if this appears live, damping or a consent-grounded design pass becomes worth discussing.",
+        },
+    ]
 
 
 def _generated_journal_body(text: str) -> str:
@@ -845,6 +1093,79 @@ def test_astrid_codec_perception_probes() -> dict:
     }
 
 
+def test_astrid_tail_vibrancy_interference_probe() -> dict:
+    """Read-only probe for Astrid's tail-vibrancy-vs-packing self-study cluster."""
+    constants = _codec_constants()
+    participation = _tail_participation_snapshot()
+    tail_participation = float(participation["effective_tail_participation_visible_to_probe"])
+    rows = [
+        _tail_vibrancy_row(scenario, constants, tail_participation)
+        for scenario in _tail_vibrancy_scenarios()
+    ]
+    recent_rows = [row for row in rows if row["kind"] == "recent_claim"]
+    stress_rows = [row for row in rows if row["kind"] == "stress"]
+    gate_rows = [row for row in rows if row["kind"] == "gate_check"]
+    recent_attention = [
+        row for row in recent_rows if row["classification"] == "needs_attention"
+    ]
+    recent_watch = [
+        row for row in recent_rows if row["classification"] == "watch_interference_candidate"
+    ]
+    if recent_attention:
+        verdict = (
+            "NEEDS ATTENTION - recent self-study conditions put tail-vibrancy headroom "
+            "directly on top of packing/porosity pressure; keep read-only and ground "
+            "with consent before any codec change"
+        )
+    elif recent_watch:
+        verdict = (
+            "WATCH - recent self-study conditions are a plausible interference candidate, "
+            "but the gate itself is smooth and this probe changes no dynamics"
+        )
+    else:
+        verdict = (
+            "PASS - tail-vibrancy headroom does not currently overlap enough with packing "
+            "pressure to justify a dynamics change"
+        )
+    gate_delta = None
+    if len(gate_rows) >= 2:
+        gate_delta = round(
+            abs(float(gate_rows[1]["headroom_delta"]) - float(gate_rows[0]["headroom_delta"])),
+            9,
+        )
+    return {
+        "verdict": verdict,
+        "production_change": "none",
+        "read_only": True,
+        "hypothesis": (
+            "Astrid's entropy-gated tail-vibrancy lift may be expressive when the "
+            "cascade is distributed, but may become interference when mode_packing, "
+            "low porosity, pressure_risk, or density_gradient are high."
+        ),
+        "codec_constants": constants,
+        "tail_participation": participation,
+        "projection_epoch": _projection_epoch_summary(),
+        "gate_edge_headroom_delta_difference": gate_delta,
+        "gate_edge_read": (
+            "near-zero means the smoothstep is not popping at the 0.85 gate"
+            if gate_delta is not None
+            else "not measured"
+        ),
+        "scenarios": rows,
+        "stress_case_note": (
+            "Counterfactual stress rows are not a verdict against the live system; "
+            "they show what pattern would become actionable if observed."
+        ),
+        "recent_self_study_evidence": _recent_tail_vibrancy_evidence(),
+        "suggested_read_only_next": [
+            "Keep this as a harness probe under astrid-codec-internals-codesign.",
+            "If fresh live telemetry matches the packed stress shape, ground with Astrid and minime before proposing damping.",
+            "Do not lower TAIL_VIBRANCY_MAX or move the entropy gate from this probe alone.",
+        ],
+        "letter": None,
+    }
+
+
 def test_minime_sedimentation_pressure() -> dict:
     """Check whether Minime's grit/sediment pressure language is recurring and telemetry-backed."""
     paths = sorted(
@@ -1184,6 +1505,11 @@ BEING_TESTS = {
         "being": "astrid",
         "question": "Do codec compression, narrative-arc, resonance, and perception-depth probes hold before changing dynamics?",
         "run": test_astrid_codec_perception_probes,
+    },
+    "astrid_tail_vibrancy_interference_probe": {
+        "being": "astrid",
+        "question": "Does tail-vibrancy headroom overlap with mode-packing/density pressure enough to warrant a grounded design pass?",
+        "run": test_astrid_tail_vibrancy_interference_probe,
     },
 }
 

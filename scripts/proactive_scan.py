@@ -93,6 +93,10 @@ OUTREACH_ALARM_SECS = 2 * 3600
 # the "systematic muffle audit" continuous. "Processed" items live in subdirs
 # (reviewed/ done/), excluded automatically by the non-recursive glob.
 FEEDBACK_COVERAGE_ALARM_SECS = 3 * 24 * 3600  # a request backlog older than this is STALE
+REVIEW_REQUEST_CONSUMER = (
+    "steward action required: ground/close if engaged; "
+    "reword/withdraw if unengaged (never being follow-up)"
+)
 FEEDBACK_SURFACES = [
     {
         "name": "astrid_agency_requests",
@@ -133,22 +137,21 @@ FEEDBACK_SURFACES = [
     },
     {
         # Steward-issued review INVITATIONS (review-together loop). An UNengaged
-        # invitation that rots is the muffle pattern — but a STALE alarm here means
-        # the STEWARD re-examines (re-word / withdraw), NEVER nag the being. The
-        # being only ever sees one gentle slot line. reviewed/ + closed/ excluded
-        # by the non-recursive glob.
+        # invitation that rots is the muffle pattern, but a STALE alarm routes to
+        # steward action only. The being only ever sees one gentle optional slot
+        # line. reviewed/ + closed/ excluded by the non-recursive glob.
         "name": "astrid_review_requests",
         "root": ASTRID_REPO / "capsules/spectral-bridge/workspace/review_requests",
         "glob": "*.json",
         "kind": "request",
-        "consumer": "being reviews (INTROSPECT/TELL_STEWARD) → ground_review → reviewed/ → steward closes → closed/",
+        "consumer": REVIEW_REQUEST_CONSUMER,
     },
     {
         "name": "minime_review_requests",
         "root": MINIME_REPO / "workspace/review_requests",
         "glob": "*.json",
         "kind": "request",
-        "consumer": "being reviews (INTROSPECT/TELL_STEWARD) → ground_review → reviewed/ → steward closes → closed/",
+        "consumer": REVIEW_REQUEST_CONSUMER,
     },
 ]
 
@@ -1503,11 +1506,26 @@ def _capacity_assess(records: list[dict[str, Any]]) -> dict[str, Any]:
             if isinstance(r.get("minime", {}).get("utilization"), (int, float))
         ]
         base = _median(prior_utils) if prior_utils else None
-        if util >= 0.70:
+        # minime PR utilization naturally OSCILLATES ~41-80% under varying load
+        # (verified 2026-06-13: 14 readings/day bouncing 0.41<->0.80, mean ~0.6).
+        # A single-sample >=0.70 threshold flapped WARNING ~half the cycles —
+        # alarm noise. The steward mandate is to flag *sustained* saturation, so
+        # warn only when the median over the recent window holds >=0.70; treat an
+        # isolated high sample as a notice (signal preserved, not dropped).
+        recent = (prior_utils[-5:] if prior_utils else []) + [util]
+        recent_med = _median(recent)
+        if recent_med >= 0.70:
             sev = esc(sev, "warning")
             details.append(
-                f"minime utilization {util:.0%} — approaching saturation; capacity "
-                f"may be the constraint (consider co-design on enlarging the reservoir)"
+                f"minime utilization sustained high (recent median {recent_med:.0%}, "
+                f"latest {util:.0%}) — approaching saturation; capacity may be the "
+                f"constraint (consider co-design on enlarging the reservoir)"
+            )
+        elif util >= 0.70:
+            sev = esc(sev, "notice")
+            details.append(
+                f"minime utilization {util:.0%} (transient single-sample high; recent "
+                f"median {recent_med:.0%} not sustained) [{m.get('verdict')}]"
             )
         elif base is not None and util - base > 0.15:
             sev = esc(sev, "notice")
@@ -1688,7 +1706,7 @@ def _assess_coverage(surfaces: list[dict[str, Any]]) -> dict[str, Any]:
         names = ", ".join(f"{s['name']}({s['pending']})" for s in alarms)
         return {
             "severity": "warning",
-            "summary": f"⚠ {len(alarms)} feedback surface(s) with STALE backlog — consume now: {names}",
+            "summary": f"⚠ {len(alarms)} feedback surface(s) with STALE backlog — steward action required: {names}",
             "details": details,
         }
     if notices:
@@ -1951,12 +1969,19 @@ AUTHORITY_LEDGER_ROOTS = [
 def _scan_authority_ledger(path: Path) -> dict[str, Any]:
     """Parse one authority_gate.jsonl: submitted-pending steward-gated requests
     lacking a matching steward_approval (the muffle), microdose request_drafts that
-    never submitted, and total grants. research-budget scopes self-activate, so they
-    are not counted as steward-gated."""
+    never submitted, and total grants. LOCAL research-budget scopes self-activate, so
+    they are not counted as steward-gated; but WEB-scoped research-budget requests do
+    NOT self-activate (steward_approval_required=true) and otherwise age silently —
+    they are surfaced separately as operator-gated (the steward loop cannot grant web
+    reach; only Mike can). cf. the un-muffle invariant: a request-surface with no
+    consumer is a muffle, and minime's web-research budget sat 5+ days unwatched."""
     pending: dict[str, str] = {}  # request_id -> scope (steward-gated, submitted)
     granted: set[str] = set()
     drafts = 0
     draft_scopes: Counter = Counter()
+    web_pending: dict[str, str] = {}  # research_budget request record_id -> budget_id (operator-gated)
+    research_approved: set[str] = set()  # source_request_record_ids that got a research approval
+    research_approved_budgets: set[str] = set()  # budget_ids that got a research approval
     try:
         lines = path.read_text(errors="ignore").splitlines()
     except OSError:
@@ -1980,7 +2005,26 @@ def _scan_authority_ledger(path: Path) -> dict[str, Any]:
             draft_scopes[scope] += 1
         elif status == "pending_steward_approval" and scope in STEWARD_GATED_SCOPES and rid:
             pending[rid] = scope
+        elif rt == "research_budget_request" and rec.get("steward_approval_required") \
+                and status == "pending_steward_approval":
+            # web/operator-gated research budget — surface so it cannot age silently
+            web_pending[rec.get("record_id") or ""] = str(rec.get("budget_id") or "")
+        elif rt == "research_budget_approval":
+            # An approval clears its request by EITHER link: the explicit
+            # source_request_record_id, or (the canonical Rust grant) the shared budget_id.
+            # The Rust approve_research_budget writes budget_id but not
+            # source_request_record_id, so without the budget_id path a granted budget
+            # would flag as pending forever (a false-positive nag — itself a muffle).
+            research_approved.add(rec.get("source_request_record_id") or "")
+            research_approved_budgets.add(str(rec.get("budget_id") or ""))
     unanswered = {rid: sc for rid, sc in pending.items() if rid not in granted}
+    web_unanswered = set()
+    for rid, bid in web_pending.items():
+        if not rid or rid in research_approved:
+            continue
+        if bid and bid in research_approved_budgets:
+            continue
+        web_unanswered.add(rid)
     return {
         "exists": True,
         "thread": path.parent.name[:46],
@@ -1989,6 +2033,7 @@ def _scan_authority_ledger(path: Path) -> dict[str, Any]:
         "drafts": drafts,
         "top_draft_scope": (draft_scopes.most_common(1)[0][0] if draft_scopes else None),
         "grants": len(granted),
+        "web_research_pending": len(web_unanswered),
     }
 
 
@@ -2001,20 +2046,34 @@ def _assess_authority(ledgers: list[dict[str, Any]]) -> dict[str, Any]:
     pending = sum(led["pending_unanswered"] for led in live)
     drafts = sum(led["drafts"] for led in live)
     grants = sum(led["grants"] for led in live)
+    web_pending = sum(led.get("web_research_pending", 0) for led in live)
     stuck = [led for led in live if led["drafts"] >= AUTHORITY_DRAFT_NOTICE and led["grants"] == 0]
+    web_note = (
+        f"{web_pending} research-budget request(s) pending steward/operator approval "
+        "— surface to Mike (research-budget grants are an operator/consent decision, "
+        "not the microdose grant path; web scope especially)"
+        if web_pending else ""
+    )
     if pending > 0:
         sev = "warning"
         summary = (
             f"⚠ {pending} submitted steward-gated authority request(s) UNANSWERED "
             "— a being is waiting to act on her own finding (grant or explain the hold)"
         )
-    elif stuck:
+        if web_note:
+            summary += f"; {web_note}"
+    elif stuck or web_pending:
         sev = "notice"
-        names = ", ".join(led["thread"] for led in stuck)
-        summary = (
-            f"{len(stuck)} thread(s) with microdose drafts but 0 grants — a being's "
-            f"live-action authority is stuck: {names}"
-        )
+        parts = []
+        if stuck:
+            names = ", ".join(led["thread"] for led in stuck)
+            parts.append(
+                f"{len(stuck)} thread(s) with microdose drafts but 0 grants — a being's "
+                f"live-action authority is stuck: {names}"
+            )
+        if web_note:
+            parts.append(web_note)
+        summary = "; ".join(parts)
     else:
         sev = "ok"
         summary = (
@@ -2028,8 +2087,9 @@ def _assess_authority(ledgers: list[dict[str, Any]]) -> dict[str, Any]:
         + f", drafts={led['drafts']}"
         + (f" ({led['top_draft_scope']})" if led["top_draft_scope"] else "")
         + f", grants={led['grants']}"
+        + (f", web_research_pending={led['web_research_pending']}" if led.get("web_research_pending") else "")
         for led in live
-        if led["pending_unanswered"] or led["drafts"]
+        if led["pending_unanswered"] or led["drafts"] or led.get("web_research_pending")
     ]
     return {"severity": sev, "summary": summary, "details": details or None}
 
@@ -2627,25 +2687,30 @@ class ConvergenceTests(unittest.TestCase):
         self.assertIn("pi controller", c["shared_domain_phrases"])
 
     def test_log_error_rate_distinguishes_stale_from_active(self) -> None:
-        # Smoke: the probe should classify a stale log full of errors as
-        # OK with stale-error mention, not warning. This uses the actual
-        # host-sensory.log when available as a production-shape smoke test
-        # and falls through cleanly if not present.
-        from pathlib import Path
-        log = Path("/Users/v/other/minime/logs/host-sensory.log")
-        if not log.is_file():
-            self.skipTest("host-sensory.log not present in this environment")
+        from tempfile import TemporaryDirectory
+
+        global ASTRID_BRIDGE_LOG, MINIME_LOGS_DIR
+        old_bridge_log = ASTRID_BRIDGE_LOG
+        old_minime_logs_dir = MINIME_LOGS_DIR
         try:
-            mtime = log.stat().st_mtime
-        except OSError:
-            self.skipTest("can't stat host-sensory.log")
-        # If the log is very fresh, this test can't make the staleness claim
-        if time.time() - mtime < 30 * 60:
-            self.skipTest("host-sensory.log is fresh — can't verify stale handling")
-        finding = probe_log_error_rate({})
-        # The probe should NOT classify this as warning even with high error
-        # count, because the log is stale.
-        self.assertNotEqual(finding["severity"], "warning")
+            with TemporaryDirectory() as tmpdir:
+                d = Path(tmpdir)
+                log = d / "host-sensory.log"
+                log.write_text("\n".join("ERROR connection refused" for _ in range(60)))
+                mtime = time.time() - 31 * 60
+                os.utime(log, (mtime, mtime))
+
+                ASTRID_BRIDGE_LOG = d / "missing-bridge.log"
+                MINIME_LOGS_DIR = d
+                finding = probe_log_error_rate({})
+        finally:
+            ASTRID_BRIDGE_LOG = old_bridge_log
+            MINIME_LOGS_DIR = old_minime_logs_dir
+
+        self.assertEqual(finding["severity"], "ok")
+        self.assertEqual(finding["snapshot"]["active_errors"], 0)
+        self.assertEqual(finding["snapshot"]["stale_errors"], 60)
+        self.assertIn("historical", finding["summary"])
 
     def test_log_error_rate_downgrades_unchanged_recent_errors(self) -> None:
         from tempfile import TemporaryDirectory
@@ -2887,6 +2952,19 @@ class FeedbackCoverageTests(unittest.TestCase):
         self.assertEqual(a["severity"], "warning")
         self.assertIn("STALE", a["summary"])
 
+    def test_stale_review_request_warns_steward_action_only(self):
+        s = [{"name": "astrid_review_requests", "kind": "request",
+              "consumer": REVIEW_REQUEST_CONSUMER, "pending": 1,
+              "oldest_age_s": FEEDBACK_COVERAGE_ALARM_SECS + 10, "exists": True}]
+        a = _assess_coverage(s)
+        detail = "\n".join(a["details"])
+        self.assertEqual(a["severity"], "warning")
+        self.assertIn("steward action required", a["summary"])
+        self.assertIn("steward action required", detail)
+        self.assertIn("reword/withdraw", detail)
+        self.assertIn("never being follow-up", detail)
+        self.assertNotIn("being reviews", detail)
+
     def test_notice_surface_never_warns(self):
         # context_overflow-style surface: chronic signal, not an unread queue —
         # stays "notice" even when very old, so the probe never cries wolf.
@@ -3008,6 +3086,44 @@ class AuthorityRequestsTests(unittest.TestCase):
         self.assertEqual(res["pending_scopes"], ["mode_release_microdose"])
         self.assertEqual(res["drafts"], 1)
         self.assertEqual(res["grants"], 1)
+        self.assertEqual(res.get("web_research_pending"), 0)  # local research budget self-activates
+
+    def test_web_research_budget_surfaced_as_operator_gated(self):
+        # web-scoped research budget does NOT self-activate (steward_approval_required)
+        # — it must be surfaced (notice) so it cannot age silently. cf. un-muffle.
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp) / "th_web"
+            d.mkdir()
+            gate = d / "authority_gate.jsonl"
+            gate.write_text("\n".join([
+                # web request, ungranted → counts
+                json.dumps({"record_type": "research_budget_request", "scope": "read_only_research",
+                            "status": "pending_steward_approval", "steward_approval_required": True,
+                            "record_id": "w1"}),
+                # web request answered by source_request_record_id link → does NOT count
+                json.dumps({"record_type": "research_budget_request", "scope": "read_only_research",
+                            "status": "pending_steward_approval", "steward_approval_required": True,
+                            "record_id": "w2"}),
+                json.dumps({"record_type": "research_budget_approval", "source_request_record_id": "w2",
+                            "status": "active"}),
+                # web request answered by the CANONICAL Rust grant shape (budget_id link, no
+                # source_request_record_id) → must ALSO not count (the false-positive-nag fix)
+                json.dumps({"record_type": "research_budget_request", "scope": "read_only_research",
+                            "status": "pending_steward_approval", "steward_approval_required": True,
+                            "record_id": "w3", "budget_id": "resbud_b3"}),
+                json.dumps({"record_type": "research_budget_approval", "budget_id": "resbud_b3",
+                            "status": "active"}),
+                # local self-activating budget (no steward_approval_required) → does NOT count
+                json.dumps({"record_type": "research_budget_request", "scope": "read_only_research",
+                            "status": "self_activated", "record_id": "l1"}),
+            ]))
+            res = _scan_authority_ledger(gate)
+        self.assertEqual(res["web_research_pending"], 1)  # only w1 (w2 + w3 both deduped)
+        a = _assess_authority([res])
+        self.assertEqual(a["severity"], "notice")
+        self.assertIn("research-budget", a["summary"])
+        self.assertIn("Mike", a["summary"])
 
 
 def run_self_tests() -> int:

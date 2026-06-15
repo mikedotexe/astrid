@@ -54,8 +54,10 @@ python3 scripts/request_review.py --close --being astrid --topic density_levers 
 ## "Don't force it" — the load-bearing guarantees
 
 - The invitation is **one gentle, persistent-but-non-escalating slot line** they can engage / defer /
-  decline; no penalty, no nag. The ledger + STALE alarm are **steward-only** — a stale invitation
-  prompts the *steward* to re-word or withdraw, never the being to be chased.
+  decline; no penalty, no nag. The ledger + STALE alarm follow the
+  [Steward Pressure Only guardrail](AI_BEINGS_STEWARD_PRESSURE_ONLY_GUARDRAIL_2026_06_13.md):
+  a stale invitation prompts the *steward* to ground, close, re-word, or withdraw, never the being
+  to be chased.
 - We **verify their output, not change how they introspect.** **Felt-observations are preserved and
   labeled as signal**, never flattened. Single-slot contention (a new invitation overwrites a pending
   query) is the known v1 limit — the ledger is the durable record.
@@ -98,6 +100,10 @@ precisely than we do — that is the partner the loop is meant to find.
 ## When to use it
 
 - After shipping a diff to a being's own subsystem (consent-with-evidence on real work).
+- As **post-change QA** (bet #9) after shipping an *intimate*-subsystem change: `request_review.py
+  --post-change "<what shipped>"` issues a confirmation check-in ("does this match what you meant? how
+  does it feel from the inside?") — not a reopening of consent, a joint witnessing of the result. The
+  ledger tags it `kind: post_change_qa` (visible in `--list`). See consent-with-evidence step 5.
 - When a being's journal/aspiration surfaces a felt direction you want made *concrete and groundable*
   ("what would you actually change, and where?").
 - When you want their read on a specific design question, with line-numbered, verified output.
