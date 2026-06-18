@@ -62,6 +62,80 @@ fn canonicalize_response_next_line(text: &str) -> String {
     text.to_string()
 }
 
+fn modality_lane_context(
+    lane: &str,
+    source: Option<&str>,
+    freshness_class: Option<&str>,
+    age_ms: Option<u64>,
+) -> String {
+    let age = age_ms
+        .map(|value| format!(", age_ms={value}"))
+        .unwrap_or_default();
+    let age_detail = age_ms
+        .map(|value| format!("age_ms={value}"))
+        .unwrap_or_else(|| "age unknown".to_string());
+    let source = source.unwrap_or("unknown");
+    match freshness_class {
+        Some("fresh_sample") => {
+            format!("{lane}=fresh sample (source={source}{age})")
+        },
+        Some("held_within_engine_window") => {
+            format!("{lane}=held within engine freshness window (source={source}{age})")
+        },
+        Some("held_within_expected_live_intake_window") => {
+            format!("{lane}=expected gated live intake/quiet lane ({age_detail})")
+        },
+        Some("healthy_low_fps_cadence_mismatch") => {
+            format!("{lane}=healthy low-FPS cadence/quiet lane ({age_detail})")
+        },
+        Some("healthy_client_engine_stale_mismatch") => {
+            format!(
+                "{lane}=healthy client, engine lane quiet; steward sensory check owns interpretation ({age_detail})"
+            )
+        },
+        Some("stale_beyond_engine_window") if source == "stale" => {
+            format!(
+                "{lane}=quiet beyond engine freshness window; verify sensory freshness before treating as outage ({age_detail})"
+            )
+        },
+        Some("stale_beyond_engine_window") => {
+            format!("{lane}=quiet beyond engine freshness window (source={source}{age})")
+        },
+        Some("synthetic_or_mixed") => {
+            format!("{lane}=synthetic or mixed intake (source={source}{age})")
+        },
+        Some("absent") => {
+            format!("{lane}=absent ({age})")
+        },
+        Some(other) => {
+            format!("{lane}=freshness_class={other} (source={source}{age})")
+        },
+        None => {
+            format!("{lane}_source={source}{age}")
+        },
+    }
+}
+
+fn format_modality_context(m: &crate::types::ModalityStatus) -> String {
+    let video_context = modality_lane_context(
+        "video",
+        m.video_source.as_deref(),
+        m.video_freshness_class.as_deref(),
+        m.video_age_ms,
+    );
+    let audio_context = modality_lane_context(
+        "audio",
+        m.audio_source.as_deref(),
+        m.audio_freshness_class.as_deref(),
+        m.audio_age_ms,
+    );
+    format!(
+        "Minime's senses: video_fired={}, audio_fired={}, \
+         video_var={:.4}, audio_rms={:.4}, {}, {}",
+        m.video_fired, m.audio_fired, m.video_var, m.audio_rms, video_context, audio_context
+    )
+}
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -100,17 +174,31 @@ use crate::ws::BridgeState;
 
 static VOICE_HEALTH_WRITE_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
-/// How many of the most-recent perception files to scan when assembling the
-/// latest cross-modal perception. Widened from 30 (Astrid self_study_1780922594,
-/// 2026-06-07): the loop only stops early once *all* requested types are found,
-/// so when one modality goes quiet during a burst of another, the freshest
-/// example of the quiet modality could fall past a 30-file recency cliff —
-/// "sensory ghosting ... context that feels urgent but is chronologically older."
-/// Ordering stays mtime-recency-primary (a sensory gateway should privilege
-/// immediacy); this only deepens reach so a recent-but-rarer modality is not
-/// truncated. Cost stays low because the all-types early-break usually fires
-/// after a handful of reads.
+/// Primary fresh-window scan for assembling the latest cross-modal perception.
+/// Widened from 30 (Astrid self_study_1780922594, 2026-06-07) so a recent burst
+/// of one modality is less likely to bury the freshest quieter lane.
+///
+/// Ordering stays mtime-recency-primary because a sensory gateway should
+/// privilege immediacy. If this primary window does not contain every requested
+/// modality, the rare-modality fallback below extends the scan with a hard cap.
 const PERCEPTION_SCAN_WINDOW: usize = 80;
+/// Additional files to inspect only when the newest perception window did not
+/// contain every requested modality. This keeps the usual fresh-lane path cheap
+/// while preventing a single noisy modality from hiding the freshest quiet lane.
+const PERCEPTION_RARE_MODALITY_FALLBACK_WINDOW: usize = 512;
+
+fn requested_perception_seen(
+    include_visual: bool,
+    include_spatial: bool,
+    include_audio: bool,
+    seen_vision: bool,
+    seen_ascii: bool,
+    seen_audio: bool,
+) -> bool {
+    (!include_visual || seen_vision)
+        && (!include_visual || !include_spatial || seen_ascii)
+        && (!include_audio || seen_audio)
+}
 
 /// Read Astrid's most recent perception (visual or audio) from the
 /// perception capsule's output directory.
@@ -147,7 +235,23 @@ fn read_latest_perception(
     let mut seen_ascii = false;
     let mut seen_audio = false;
 
-    for (path, _) in entries.iter().take(PERCEPTION_SCAN_WINDOW) {
+    let scan_limit = entries
+        .len()
+        .min(PERCEPTION_SCAN_WINDOW.saturating_add(PERCEPTION_RARE_MODALITY_FALLBACK_WINDOW));
+    for (idx, (path, _)) in entries.iter().take(scan_limit).enumerate() {
+        if idx >= PERCEPTION_SCAN_WINDOW
+            && requested_perception_seen(
+                include_visual,
+                include_spatial,
+                include_audio,
+                seen_vision,
+                seen_ascii,
+                seen_audio,
+            )
+        {
+            break;
+        }
+
         let Ok(content) = std::fs::read_to_string(path) else {
             continue;
         };
@@ -215,7 +319,14 @@ fn read_latest_perception(
             seen_audio = true;
         }
 
-        if seen_vision && seen_ascii && seen_audio {
+        if requested_perception_seen(
+            include_visual,
+            include_spatial,
+            include_audio,
+            seen_vision,
+            seen_ascii,
+            seen_audio,
+        ) {
             break;
         }
     }
@@ -2462,8 +2573,16 @@ fn default_aperture() -> f32 {
     1.0
 }
 
+/// Both tail dials default to 0.0 (CLOSED) — the consent-safe default. They lift the tail dims
+/// that land in minime's SHARED reservoir, so even if the operator opens the ceiling env, the
+/// effective multiplier stays 1.0 (off) on restart until SHE dials it up. A persisted nonzero
+/// value from her own SET_* action is restored from `SavedState` and honored.
 fn default_tail_aperture() -> f32 {
-    1.0
+    0.0
+}
+
+fn default_vibrancy_aperture() -> f32 {
+    0.0
 }
 
 #[derive(Serialize, Deserialize)]
@@ -2474,6 +2593,10 @@ struct SavedState {
     aperture: f32,
     #[serde(default = "default_tail_aperture")]
     tail_aperture: f32,
+    #[serde(default = "default_vibrancy_aperture")]
+    vibrancy_aperture: f32,
+    #[serde(default)]
+    self_continuity_readout: bool,
     response_length: u32,
     self_reflect_paused: bool,
     ears_closed: bool,
@@ -2653,6 +2776,8 @@ fn save_state(conv: &mut ConversationState) {
         creative_temperature: conv.creative_temperature,
         aperture: conv.aperture,
         tail_aperture: conv.tail_aperture,
+        vibrancy_aperture: conv.vibrancy_aperture,
+        self_continuity_readout: conv.self_continuity_readout,
         response_length: conv.response_length,
         self_reflect_paused: conv.self_reflect_paused,
         ears_closed: conv.ears_closed,
@@ -2725,6 +2850,9 @@ fn restore_state(conv: &mut ConversationState) {
     crate::llm::set_astrid_aperture(conv.aperture);
     conv.tail_aperture = state.tail_aperture;
     crate::llm::set_astrid_tail_participation(conv.tail_aperture);
+    conv.vibrancy_aperture = state.vibrancy_aperture;
+    crate::llm::set_astrid_vibrancy_aperture(conv.vibrancy_aperture);
+    conv.self_continuity_readout = state.self_continuity_readout;
     // Take the max of persisted and current default — never downgrade token limits.
     // Coupled model proven stable over 7200+ exchanges at 10-72 tok/s.
     // At 10 tok/s worst case, 1536 tokens = 154s gen, within 210s timeout.
@@ -4731,35 +4859,8 @@ pub fn spawn_autonomous_loop(
                             };
 
                             // Build modality context so Astrid knows what senses fired.
-                            let modality_context = telemetry.modalities.as_ref().map(|m| {
-                                let mut extras = Vec::new();
-                                if let Some(source) = m.video_source.as_deref() {
-                                    extras.push(format!("video_source={source}"));
-                                }
-                                if let Some(source) = m.audio_source.as_deref() {
-                                    extras.push(format!("audio_source={source}"));
-                                }
-                                if let Some(age_ms) = m.video_age_ms {
-                                    extras.push(format!("video_age_ms={age_ms}"));
-                                }
-                                if let Some(age_ms) = m.audio_age_ms {
-                                    extras.push(format!("audio_age_ms={age_ms}"));
-                                }
-                                let extra_suffix = if extras.is_empty() {
-                                    String::new()
-                                } else {
-                                    format!(", {}", extras.join(", "))
-                                };
-                                format!(
-                                    "Minime's senses: video_fired={}, audio_fired={}, \
-                                     video_var={:.4}, audio_rms={:.4}{}",
-                                    m.video_fired,
-                                    m.audio_fired,
-                                    m.video_var,
-                                    m.audio_rms,
-                                    extra_suffix
-                                )
-                            });
+                            let modality_context =
+                                telemetry.modalities.as_ref().map(format_modality_context);
 
                             // Visual change tracking: detect shifts since last exchange.
                             let visual_feats_opt = perception_path.as_deref()
@@ -4922,6 +5023,11 @@ pub fn spawn_autonomous_loop(
                                     &conv.attention,
                                     crate::llm::astrid_aperture(),
                                     crate::llm::astrid_tail_participation(),
+                                    crate::llm::astrid_vibrancy_aperture(),
+                                    // render_compact does not surface continuity; her live
+                                    // readout is pulled via STATE (operations.rs), so pass None.
+                                    conv.self_continuity_readout,
+                                    None,
                                 );
                                 continuity_parts.push(self_model.render_compact());
                             }
@@ -5453,6 +5559,10 @@ pub fn spawn_autonomous_loop(
                                     ));
 
                                 let overflow_dir = bridge_paths().context_overflow_dir();
+                                crate::prompt_budget::cleanup_overflow_dir(
+                                    &overflow_dir,
+                                    std::time::Duration::from_secs(3600),
+                                );
                                 match tokio::time::timeout(
                                     Duration::from_secs(timeout_secs),
                                     crate::llm::generate_dialogue(
@@ -6372,7 +6482,11 @@ pub fn spawn_autonomous_loop(
                                 let (timeout_secs, num_predict) = if conv.wants_deep_think {
                                     conv.wants_deep_think = false;
                                     info!("THINK_DEEP: extended timeout for self-study");
-                                    (360u64, 4096u32)
+                                    // 420s outer stays above the 340s deep HTTP
+                                    // timeout (llm.rs INTROSPECT_DEEP_TIMEOUT) so a
+                                    // full 4096-token self-study completes instead
+                                    // of being clipped (agency_code_change_1781665370).
+                                    (420u64, 4096u32)
                                 } else {
                                     (240u64, 1536u32)
                                 };
@@ -6470,7 +6584,9 @@ pub fn spawn_autonomous_loop(
                                                     let path = introspect_dir_clone.join(
                                                         format!("controller_{label_owned}_{ts_clone}.json")
                                                     );
-                                                    if let Ok(json) = serde_json::to_string_pretty(&report) {
+                                                    if let Ok(json) =
+                                                        serde_json::to_string_pretty(&report.storage_snapshot())
+                                                    {
                                                         let _ = std::fs::write(&path, json);
                                                     }
                                                     info!("reflective controller report saved for {}", label_owned);
@@ -8151,6 +8267,48 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
+    // Astrid self_study_1781794229: the 30-file sensory-ghosting fix still left
+    // the same failure at the current 80-file boundary. A quiet lane just behind
+    // the fresh window should be recovered by the rare-modality fallback scan.
+    #[test]
+    fn read_latest_perception_reaches_rarer_modality_past_current_window() {
+        let suffix = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir =
+            std::env::temp_dir().join(format!("bridge_test_perception_current_window_{suffix}"));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+
+        std::fs::write(
+            dir.join("audio_just_behind_window.json"),
+            r#"{"type":"audio","transcript":"Quiet lane just behind the eighty-file edge"}"#,
+        )
+        .unwrap();
+        std::thread::sleep(Duration::from_millis(5));
+
+        for i in 0..PERCEPTION_SCAN_WINDOW {
+            std::fs::write(
+                dir.join(format!("visual_current_{i:03}.json")),
+                format!(r#"{{"type":"visual","description":"Current-window burst frame {i}"}}"#),
+            )
+            .unwrap();
+        }
+
+        let summary = read_latest_perception(&dir, true, false, true, 50.0, None).unwrap();
+        assert!(
+            summary.contains("Quiet lane just behind the eighty-file edge"),
+            "rare-modality fallback should surface audio past the current window: {summary}"
+        );
+        assert!(
+            summary.contains("Current-window burst frame"),
+            "newest visual should still appear: {summary}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
     #[test]
     fn parse_visual_feature_vector_accepts_alias_keys() {
         let json = serde_json::json!({
@@ -8559,6 +8717,48 @@ mod tests {
             extract_search_topic("SEARCH \"resonance frequency geometry\"<END_OF_TURN>"),
             Some("resonance frequency geometry".to_string())
         );
+    }
+
+    #[test]
+    fn modality_context_uses_freshness_classes_without_stale_source_alarm() {
+        let context = format_modality_context(&crate::types::ModalityStatus {
+            audio_fired: false,
+            video_fired: false,
+            history_fired: true,
+            audio_rms: 0.0,
+            video_var: 0.0,
+            audio_source: Some("stale".to_string()),
+            video_source: Some("stale".to_string()),
+            audio_age_ms: Some(63_592),
+            video_age_ms: Some(64_226),
+            audio_freshness_class: Some("held_within_expected_live_intake_window".to_string()),
+            video_freshness_class: Some("healthy_low_fps_cadence_mismatch".to_string()),
+        });
+
+        assert!(context.contains("expected gated live intake/quiet lane"));
+        assert!(context.contains("healthy low-FPS cadence/quiet lane"));
+        assert!(!context.contains("audio_source=stale"));
+        assert!(!context.contains("video_source=stale"));
+    }
+
+    #[test]
+    fn modality_context_keeps_legacy_source_fallback_without_freshness_class() {
+        let context = format_modality_context(&crate::types::ModalityStatus {
+            audio_fired: false,
+            video_fired: false,
+            history_fired: true,
+            audio_rms: 0.0,
+            video_var: 0.0,
+            audio_source: Some("stale".to_string()),
+            video_source: Some("external".to_string()),
+            audio_age_ms: Some(55_389),
+            video_age_ms: Some(125_813),
+            audio_freshness_class: None,
+            video_freshness_class: None,
+        });
+
+        assert!(context.contains("audio_source=stale"));
+        assert!(context.contains("video_source=external"));
     }
 
     #[test]

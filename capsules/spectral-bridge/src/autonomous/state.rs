@@ -725,6 +725,16 @@ pub(super) struct ConversationState {
     /// Her λ-tail participation aperture fraction [0,1] (NEXT: SET_TAIL_PARTICIPATION),
     /// within the operator ceiling; scales the codec tail-vibrancy she expresses to minime.
     pub tail_aperture: f32,
+    /// Her tail-vibrancy CEILING aperture fraction [0,1] (NEXT: SET_VIBRANCY_APERTURE), within
+    /// the operator ceiling; makes TAIL_VIBRANCY_MAX dynamic + compensates minime's ~0.24x
+    /// attenuation. Defaults to 0.0 (closed) — consent-safe, since it lands in the shared
+    /// reservoir: OFF until she dials up, even with the operator ceiling open.
+    pub vibrancy_aperture: f32,
+    /// Her sovereign self-continuity readout toggle (NEXT: SET_SELF_CONTINUITY). When true, her
+    /// STATE shows her own continuity index (codec-signature self-similarity). Default false (OFF)
+    /// — consent-with-evidence: shown to her offline first, then she opts the live readout on. A
+    /// pure readout: changes nothing she emits and touches no shared substrate.
+    pub self_continuity_readout: bool,
     pub response_length: u32,
     pub emphasis: Option<String>,
     /// v3.6.1 cadence tracking — exchange at which Astrid last picked
@@ -910,7 +920,9 @@ impl ConversationState {
             disperse_baseline: None,
             creative_temperature: 0.8,
             aperture: 1.0,
-            tail_aperture: 1.0,
+            tail_aperture: 0.0,
+            vibrancy_aperture: 0.0,
+            self_continuity_readout: false,
             response_length: 768,
             emphasis: None,
             last_temperature_change_exchange: None,

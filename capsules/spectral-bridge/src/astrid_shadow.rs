@@ -35,6 +35,8 @@
 )]
 
 use std::collections::VecDeque;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
@@ -43,9 +45,20 @@ use serde_json::Value;
 const CODEC_DIM: usize = 32;
 const MODE_DIM: usize = 8;
 const HISTORY_CAP: usize = 32;
+const INFLUENCE_RESPONSE_HISTORY_CAP: usize = 128;
 const TRANSITIONS_CAP: usize = 6;
 const QUIET_THRESHOLD: f32 = 0.025;
 const POLICY: &str = "shadow_field_v3_astrid_observer_minimal";
+
+fn append_jsonl(path: &Path, value: &Value) {
+    let Ok(text) = serde_json::to_string(value) else {
+        return;
+    };
+    let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) else {
+        return;
+    };
+    let _ = writeln!(file, "{text}");
+}
 
 #[derive(Debug, Clone, Serialize, Default)]
 struct ShadowSnapshotV3 {
@@ -386,6 +399,7 @@ impl AstridShadowComputer {
         let consumed_path = target_dir.join("astrid_influence_v3.consumed.json");
         let response_path = target_dir.join("astrid_influence_response_v3.json");
         let history_path = target_dir.join("astrid_influence_response_history_v3.json");
+        let history_jsonl_path = target_dir.join("astrid_influence_response_history_v3.jsonl");
 
         let active_payload: Option<Value> = std::fs::read_to_string(&active_path)
             .ok()
@@ -434,14 +448,18 @@ impl AstridShadowComputer {
         // fall back to a degraded reconstruction from the consumed file's
         // payload + an early snapshot (so missed-capture windows still
         // close the loop with a best-effort pre).
+        let consumed_payload: Option<Value> = if consumed_path.exists() {
+            std::fs::read_to_string(&consumed_path)
+                .ok()
+                .and_then(|t| serde_json::from_str(&t).ok())
+        } else {
+            None
+        };
         let in_flight = match self.in_flight_minime_influence.take() {
             Some(tracked) => Some(tracked),
             None if consumed_path.exists() => {
                 // Reconstruct from consumed payload + earliest available snap.
-                let consumed_payload: Option<Value> = std::fs::read_to_string(&consumed_path)
-                    .ok()
-                    .and_then(|t| serde_json::from_str(&t).ok());
-                consumed_payload.and_then(|p| {
+                consumed_payload.clone().and_then(|p| {
                     self.snapshot_history.front().cloned().map(|pre| {
                         let intent_id = p
                             .get("intent_id")
@@ -502,13 +520,31 @@ impl AstridShadowComputer {
             .map_or(0, |d| d.as_millis() as u64);
         let delta = post.field_norm - in_flight.pre_snapshot.field_norm;
         let class_changed = post.class_primary != in_flight.pre_snapshot.class_primary;
+        let planned_ticks = in_flight.duration_ticks + in_flight.decay_ticks;
+        let feeder_terminal = consumed_payload
+            .as_ref()
+            .and_then(|payload| payload.get("feeder_terminal_v1"))
+            .cloned();
+        let applied_ticks = feeder_terminal
+            .as_ref()
+            .and_then(|terminal| terminal.get("applied_ticks"))
+            .and_then(Value::as_u64)
+            .map_or(planned_ticks, |ticks| ticks as u32);
+        let applied_ticks_source = if feeder_terminal.is_some() {
+            "feeder_terminal_v1"
+        } else {
+            "planned_window_fallback"
+        };
         let response = serde_json::json!({
             "schema_version": 3,
             "policy": "astrid_influence_response_v3_minimal",
             "intent_id": in_flight.intent_id,
             "label": in_flight.label,
             "completed_at_unix_ms": now_ms,
-            "applied_ticks": in_flight.duration_ticks + in_flight.decay_ticks,
+            "applied_ticks": applied_ticks,
+            "applied_ticks_source": applied_ticks_source,
+            "planned_ticks": planned_ticks,
+            "feeder_terminal_v1": feeder_terminal,
             "pre_snapshot": &in_flight.pre_snapshot,
             "post_snapshot": &post,
             "delta_field_norm": delta,
@@ -527,14 +563,15 @@ impl AstridShadowComputer {
                 let _ = std::fs::rename(&tmp, &response_path);
             }
         }
-        // Append to history ring (cap 8) — atomic write.
+        append_jsonl(&history_jsonl_path, &response);
+        // Append to compatibility history ring — atomic write.
         let mut history: Vec<Value> = std::fs::read_to_string(&history_path)
             .ok()
             .and_then(|t| serde_json::from_str::<Vec<Value>>(&t).ok())
             .unwrap_or_default();
         history.push(response);
-        if history.len() > 8 {
-            let drop = history.len() - 8;
+        if history.len() > INFLUENCE_RESPONSE_HISTORY_CAP {
+            let drop = history.len() - INFLUENCE_RESPONSE_HISTORY_CAP;
             history.drain(0..drop);
         }
         if let Ok(text) = serde_json::to_string_pretty(&history) {
@@ -950,6 +987,23 @@ pub fn default_publish_dir() -> PathBuf {
 mod co_regulation_tests {
     use super::*;
 
+    fn response_snap(field_norm: f32, class_primary: &str) -> ShadowSnapshotV3 {
+        ShadowSnapshotV3 {
+            t_ms: 0,
+            field_norm,
+            class_primary: class_primary.to_string(),
+            traits: vec![],
+            recurrence: 0.0,
+            mode_tension: 0.0,
+            binary_flip_rate: 0.0,
+            lock_tendency: 0.0,
+            fissure_tendency: 0.0,
+            tail_openness: 0.5,
+            coupling_mean_abs: 0.0,
+            influence_eligible: true,
+        }
+    }
+
     #[test]
     fn derive_self_need_aperture_when_packed() {
         // Low tail openness → packed → aperture.
@@ -970,6 +1024,95 @@ mod co_regulation_tests {
             "history": [{"tail_openness": 0.50}]
         });
         assert_eq!(derive_self_need_from_shadow(&v3), "steady");
+    }
+
+    #[test]
+    fn minime_influence_response_writes_durable_jsonl_and_capped_history() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let dir = temp.path();
+        std::fs::write(
+            dir.join("astrid_influence_v3.consumed.json"),
+            serde_json::json!({
+                "intent_id": "gift-1",
+                "label": "aperture-gift",
+                "duration_ticks": 14,
+                "decay_ticks": 10,
+                "feeder_terminal_v1": {
+                    "schema_version": 1,
+                    "status": "expired_unapplied",
+                    "intent_id": "gift-1",
+                    "label": "aperture-gift",
+                    "issued_t_ms": 1000,
+                    "completed_at_unix_ms": 2000,
+                    "applied_ticks": 0,
+                    "reason": "walltime_expired_without_codec_ticks"
+                },
+            })
+            .to_string(),
+        )
+        .expect("write consumed");
+        let existing: Vec<Value> = (0..140)
+            .map(|idx| {
+                serde_json::json!({
+                    "intent_id": format!("old-{idx}"),
+                    "completed_at_unix_ms": idx,
+                })
+            })
+            .collect();
+        std::fs::write(
+            dir.join("astrid_influence_response_history_v3.json"),
+            serde_json::to_string(&existing).expect("history json"),
+        )
+        .expect("write history");
+
+        let mut computer = AstridShadowComputer::new();
+        computer
+            .snapshot_history
+            .push_back(response_snap(0.10, "sticky"));
+        computer
+            .snapshot_history
+            .push_back(response_snap(0.24, "active"));
+        computer.in_flight_minime_influence = Some(InFlightMinimeInfluence {
+            intent_id: "gift-1".to_string(),
+            label: "aperture-gift".to_string(),
+            duration_ticks: 14,
+            decay_ticks: 10,
+            pre_snapshot: response_snap(0.10, "sticky"),
+            pre_recorded_at_unix_ms: 1000,
+        });
+
+        computer.track_minime_influence(dir);
+
+        let latest: Value = serde_json::from_str(
+            &std::fs::read_to_string(dir.join("astrid_influence_response_v3.json"))
+                .expect("latest response"),
+        )
+        .expect("latest json");
+        assert_eq!(latest["intent_id"], "gift-1");
+        assert_eq!(latest["applied_ticks"], Value::from(0));
+        assert_eq!(latest["planned_ticks"], Value::from(24));
+        assert_eq!(
+            latest["applied_ticks_source"],
+            Value::from("feeder_terminal_v1")
+        );
+        let history: Vec<Value> = serde_json::from_str(
+            &std::fs::read_to_string(dir.join("astrid_influence_response_history_v3.json"))
+                .expect("history response"),
+        )
+        .expect("history json");
+        assert_eq!(history.len(), INFLUENCE_RESPONSE_HISTORY_CAP);
+        assert_eq!(
+            history.last().and_then(|row| row.get("intent_id")),
+            Some(&Value::from("gift-1"))
+        );
+        let jsonl = std::fs::read_to_string(dir.join("astrid_influence_response_history_v3.jsonl"))
+            .expect("history jsonl");
+        assert!(
+            jsonl
+                .lines()
+                .any(|line| line.contains("\"intent_id\":\"gift-1\""))
+        );
+        assert!(!dir.join("astrid_influence_v3.consumed.json").exists());
     }
 }
 

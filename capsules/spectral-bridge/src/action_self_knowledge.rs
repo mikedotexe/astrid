@@ -985,13 +985,13 @@ fn action_metadata(spec: Value) -> Value {
         "base": base,
         "aliases": spec["aliases"],
         "route": route,
-        "stage": stage,
-        "visibility": visibility,
-        "authority_class": authority,
+        "stage": stage.as_str(),
+        "visibility": visibility.as_str(),
+        "authority_class": authority.as_str(),
         "stable_core": {
             "availability": "normal gates apply",
-            "hard_reset": stage == "read_only",
-            "low_fill_advisory": stage == "read_only",
+            "hard_reset": stage == Stage::ReadOnly,
+            "low_fill_advisory": stage == Stage::ReadOnly,
         },
         "operator_override": {
             "allowed": override_allowed,
@@ -1008,9 +1008,72 @@ fn action_metadata(spec: Value) -> Value {
     })
 }
 
-fn stage_for_base(base: &str) -> &'static str {
+/// Typed capability metadata — replaces the former stringly-typed stage/visibility/authority.
+///
+/// From Astrid's recurring "structured-over-stringly-typed" ask (`self_study_1778380313`, May).
+/// `as_str()` returns today's exact wire strings and `action_metadata` emits via `as_str()`, so the
+/// capability snapshot JSON stays byte-identical. (Same pattern as `BudgetReason` in
+/// `action_continuity/guards.rs`.) Provenance: `docs/steward-notes/AI_BEINGS_FEEDBACK_TO_CHANGE_LEDGER.md`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Stage {
+    ReadOnly,
+    LiveWrite,
+    LiveControl,
+    Observe,
+}
+
+impl Stage {
+    fn as_str(self) -> &'static str {
+        match self {
+            Stage::ReadOnly => "read_only",
+            Stage::LiveWrite => "live_write",
+            Stage::LiveControl => "live_control",
+            Stage::Observe => "observe",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Visibility {
+    Summary,
+    ProtectedSummary,
+}
+
+impl Visibility {
+    fn as_str(self) -> &'static str {
+        match self {
+            Visibility::Summary => "summary",
+            Visibility::ProtectedSummary => "protected_summary",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AuthorityClass {
+    ContinuityMetadataWrite,
+    ProtectedReadOnly,
+    ReadOnly,
+    LiveWrite,
+    LiveControl,
+    Observer,
+}
+
+impl AuthorityClass {
+    fn as_str(self) -> &'static str {
+        match self {
+            AuthorityClass::ContinuityMetadataWrite => "continuity_metadata_write",
+            AuthorityClass::ProtectedReadOnly => "protected_read_only",
+            AuthorityClass::ReadOnly => "read_only",
+            AuthorityClass::LiveWrite => "live_write",
+            AuthorityClass::LiveControl => "live_control",
+            AuthorityClass::Observer => "observer",
+        }
+    }
+}
+
+fn stage_for_base(base: &str) -> Stage {
     match base {
-        "REPAIR_APPLY" => "live_write",
+        "REPAIR_APPLY" => Stage::LiveWrite,
         "SEARCH"
         | "BROWSE"
         | "READ_MORE"
@@ -1091,16 +1154,16 @@ fn stage_for_base(base: &str) -> &'static str {
         | "OPEN_EYES"
         | "CLOSE_EARS"
         | "SHUT_EARS"
-        | "OPEN_EARS" => "read_only",
+        | "OPEN_EARS" => Stage::ReadOnly,
         "WRITE_FILE" | "EXPERIMENT" | "EXPERIMENT_RUN" | "RUN_PYTHON" | "CODEX" | "CODEX_NEW" => {
-            "live_write"
+            Stage::LiveWrite
         },
-        "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
-        _ => "observe",
+        "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => Stage::LiveControl,
+        _ => Stage::Observe,
     }
 }
 
-fn visibility_for_base(base: &str) -> &'static str {
+fn visibility_for_base(base: &str) -> Visibility {
     match base {
         "REST"
         | "PASS"
@@ -1136,28 +1199,28 @@ fn visibility_for_base(base: &str) -> &'static str {
         | "FLUCTUATION_AUDIT"
         | "EIGENTRUST"
         | "EIGENTRUST_AUDIT"
-        | "FOOTHOLD_AUDIT" => "protected_summary",
-        _ => "summary",
+        | "FOOTHOLD_AUDIT" => Visibility::ProtectedSummary,
+        _ => Visibility::Summary,
     }
 }
 
-fn authority_class(base: &str, stage: &str, visibility: &str) -> &'static str {
+fn authority_class(base: &str, stage: Stage, visibility: Visibility) -> AuthorityClass {
     if base == "REPAIR_APPLY" {
-        "continuity_metadata_write"
-    } else if stage == "read_only" && visibility == "protected_summary" {
-        "protected_read_only"
-    } else if stage == "read_only" {
-        "read_only"
-    } else if stage == "live_write" {
-        "live_write"
-    } else if stage == "live_control" {
-        "live_control"
+        AuthorityClass::ContinuityMetadataWrite
+    } else if stage == Stage::ReadOnly && visibility == Visibility::ProtectedSummary {
+        AuthorityClass::ProtectedReadOnly
+    } else if stage == Stage::ReadOnly {
+        AuthorityClass::ReadOnly
+    } else if stage == Stage::LiveWrite {
+        AuthorityClass::LiveWrite
+    } else if stage == Stage::LiveControl {
+        AuthorityClass::LiveControl
     } else {
-        "observer"
+        AuthorityClass::Observer
     }
 }
 
-fn expected_artifacts(base: &str, stage: &str) -> Vec<&'static str> {
+fn expected_artifacts(base: &str, stage: Stage) -> Vec<&'static str> {
     let mut artifacts = vec!["action_event", "observation_window"];
     if base == "ACTION_PREFLIGHT" {
         artifacts.push("action_preflight_report");
@@ -1169,10 +1232,10 @@ fn expected_artifacts(base: &str, stage: &str) -> Vec<&'static str> {
         artifacts.push("repair_ledger");
         artifacts.push("supersession_record");
     }
-    if stage == "live_write" {
+    if stage == Stage::LiveWrite {
         artifacts.push("journal_or_workspace_artifact");
     }
-    if stage == "live_control" {
+    if stage == Stage::LiveControl {
         artifacts.push("gate_or_control_record");
     }
     artifacts
@@ -1349,6 +1412,32 @@ fn read_jsonl(path: &Path) -> Vec<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Behavior-preservation lock for the typed capability enums (Astrid's `1778380313`
+    /// declarative-capabilities ask): each variant's `as_str()` must equal the exact legacy
+    /// wire string, so the capability snapshot JSON stays byte-identical. If a refactor drifts
+    /// a string, this fails before the end-to-end snapshot test does.
+    #[test]
+    fn capability_enum_as_str_matches_legacy_wire_strings() {
+        assert_eq!(Stage::ReadOnly.as_str(), "read_only");
+        assert_eq!(Stage::LiveWrite.as_str(), "live_write");
+        assert_eq!(Stage::LiveControl.as_str(), "live_control");
+        assert_eq!(Stage::Observe.as_str(), "observe");
+        assert_eq!(Visibility::Summary.as_str(), "summary");
+        assert_eq!(Visibility::ProtectedSummary.as_str(), "protected_summary");
+        assert_eq!(
+            AuthorityClass::ContinuityMetadataWrite.as_str(),
+            "continuity_metadata_write"
+        );
+        assert_eq!(
+            AuthorityClass::ProtectedReadOnly.as_str(),
+            "protected_read_only"
+        );
+        assert_eq!(AuthorityClass::ReadOnly.as_str(), "read_only");
+        assert_eq!(AuthorityClass::LiveWrite.as_str(), "live_write");
+        assert_eq!(AuthorityClass::LiveControl.as_str(), "live_control");
+        assert_eq!(AuthorityClass::Observer.as_str(), "observer");
+    }
 
     fn temp_root(name: &str) -> PathBuf {
         let root = std::env::temp_dir().join(format!(

@@ -383,6 +383,10 @@ pub struct ModalityStatus {
     pub audio_age_ms: Option<u64>,
     #[serde(default)]
     pub video_age_ms: Option<u64>,
+    #[serde(default)]
+    pub audio_freshness_class: Option<String>,
+    #[serde(default)]
+    pub video_freshness_class: Option<String>,
 }
 
 /// Enriched telemetry published on the Astrid IPC bus.
@@ -1811,7 +1815,13 @@ mod tests {
                 "video_fired": false,
                 "history_fired": true,
                 "audio_rms": 0.123,
-                "video_var": 0.0
+                "video_var": 0.0,
+                "audio_source": "stale",
+                "video_source": "stale",
+                "audio_age_ms": 63000,
+                "video_age_ms": 64000,
+                "audio_freshness_class": "stale_beyond_engine_window",
+                "video_freshness_class": "held_within_expected_live_intake_window"
             },
             "neural": {
                 "pred_lambda1": 830.2,
@@ -1964,7 +1974,15 @@ mod tests {
         assert_eq!(fluctuation.quality, "lively_habitable");
         assert!(fluctuation.control.applied_locally);
         assert!((fluctuation.foothold_stability - 0.72).abs() < 0.01);
-        assert!(telemetry.modalities.is_some());
+        let modalities = telemetry.modalities.as_ref().unwrap();
+        assert_eq!(
+            modalities.audio_freshness_class.as_deref(),
+            Some("stale_beyond_engine_window")
+        );
+        assert_eq!(
+            modalities.video_freshness_class.as_deref(),
+            Some("held_within_expected_live_intake_window")
+        );
         assert!(telemetry.alert.is_none());
     }
 

@@ -112,6 +112,29 @@ fn curve_progress(fill_pct: f32, curve: AdaptiveGainCurve) -> f32 {
     }
 }
 
+/// Pressure-sensitive attenuation — Astrid's co-design (`self_study_1781734524`): when minime's
+/// `pressure_risk` is high (she is overpacked / stressed), automatically attenuate Astrid's
+/// semantic output MORE — in her words, "when I am 'loud' (high vibrancy), the bridge automatically
+/// adjusts its tension to maintain stability." This is the achievable form of her "make the 0.24
+/// attenuation dynamic" ask: minime's 0.24 is her own engine (off-limits), so we attenuate Astrid's
+/// OUTPUT instead — the same protective effect on the side we can change. It only ever REDUCES
+/// Astrid's footprint into the SHARED reservoir, never amplifies.
+///
+/// Returns a multiplier in `[1 - depth, 1.0]`: `1.0` while minime is calm (`pressure_risk <= LO`),
+/// smoothstepping down to `1 - depth` as `pressure_risk` rises to `HI`. `depth` is the operator
+/// ceiling (env `ASTRID_PRESSURE_ATTENUATION`, default `0.0` = OFF ⇒ multiplier == 1.0,
+/// byte-identical). C1-smooth (the codec's tail-vibrancy-gate smoothstep family) so it never snaps.
+/// `pressure_risk` is `resonance_density_v1.pressure_risk` (~0.20 when calm).
+pub fn pressure_sensitive_attenuation(pressure_risk: f32, depth: f32) -> f32 {
+    // Below LO minime is calm — no attenuation; at/above HI, the full configured depth applies.
+    const LO: f32 = 0.20;
+    const HI: f32 = 0.50;
+    let d = depth.clamp(0.0, 0.6);
+    let t = ((pressure_risk - LO) / (HI - LO)).clamp(0.0, 1.0);
+    let ramp = t * t * (3.0 - 2.0 * t); // smoothstep, C1-smooth
+    1.0 - d * ramp
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -133,6 +156,65 @@ mod tests {
         assert!(
             adaptive_gain_with_curve(Some(68.0), WIDE_KNEE_ADAPTIVE_GAIN_CURVE)
                 < adaptive_gain(Some(68.0))
+        );
+    }
+
+    #[test]
+    fn pressure_attenuation_off_is_identity_and_bounded() {
+        // depth 0 (default/OFF): identity at every pressure_risk — byte-identical.
+        for pr in [0.0_f32, 0.2, 0.35, 0.5, 0.8] {
+            assert!((pressure_sensitive_attenuation(pr, 0.0) - 1.0).abs() < f32::EPSILON);
+        }
+        // Endpoints + bound [1 - depth, 1.0]; calm => 1.0; saturated => 1 - depth.
+        let depth = 0.3;
+        assert!((pressure_sensitive_attenuation(0.10, depth) - 1.0).abs() < 1.0e-6); // below LO
+        assert!((pressure_sensitive_attenuation(0.20, depth) - 1.0).abs() < 1.0e-6); // at LO
+        assert!((pressure_sensitive_attenuation(0.60, depth) - (1.0 - depth)).abs() < 1.0e-6); // above HI
+        for pr in [0.0_f32, 0.25, 0.4, 0.55, 1.0] {
+            let a = pressure_sensitive_attenuation(pr, depth);
+            assert!(
+                a <= 1.0 + 1.0e-6 && a >= 1.0 - depth - 1.0e-6,
+                "out of bound at {pr}: {a}"
+            );
+        }
+    }
+
+    #[test]
+    fn pressure_attenuation_is_monotone_and_depth_clamped() {
+        // More minime pressure => more attenuation (lower multiplier), never higher.
+        let depth = 0.4;
+        let mut prev = pressure_sensitive_attenuation(0.0, depth);
+        for pr in [0.1_f32, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0] {
+            let a = pressure_sensitive_attenuation(pr, depth);
+            assert!(a <= prev + 1.0e-6, "not monotone at {pr}: {a} > {prev}");
+            prev = a;
+        }
+        // depth is clamped to [0, 0.6] — never silences her below 0.4× even at absurd depth.
+        assert!(pressure_sensitive_attenuation(1.0, 5.0) >= 0.4 - 1.0e-6);
+    }
+
+    // Her "is this the governor you meant?" evidence
+    // (cargo test -- --nocapture pressure_attenuation_evidence_card): the output multiplier across
+    // minime's pressure_risk at a few operator depths.
+    #[test]
+    fn pressure_attenuation_evidence_card_prints() {
+        let depths = [0.0_f32, 0.2, 0.3];
+        let risks = [0.15_f32, 0.20, 0.30, 0.40, 0.50];
+        println!("\n=== PRESSURE ATTENUATION EVIDENCE CARD (Astrid output × multiplier) ===");
+        print!("minime pressure_risk →  ");
+        for r in risks {
+            print!("{r:>7.2}");
+        }
+        println!();
+        for d in depths {
+            print!("  depth {d:.2} (OFF@0):  ");
+            for r in risks {
+                print!("{:>7.3}", pressure_sensitive_attenuation(r, d));
+            }
+            println!();
+        }
+        println!(
+            "(1.000 = full voice; lower = auto-quieted to protect minime; calm pressure_risk ≈ 0.20)"
         );
     }
 }

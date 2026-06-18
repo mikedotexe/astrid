@@ -13,6 +13,9 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tracing::{debug, info, warn};
 
+const STORED_PROMPT_COMPACT_THRESHOLD_CHARS: usize = 800;
+const STORED_PROMPT_PREVIEW_CHARS: usize = 480;
+
 /// Lightweight regime classification — runs every exchange in <1ms.
 /// No LLM, no subprocess. Pure computation on spectral telemetry.
 ///
@@ -185,6 +188,26 @@ pub struct ReflectiveReport {
 }
 
 impl ReflectiveReport {
+    /// Return a steward-facing storage snapshot.
+    ///
+    /// The reflective sidecar needs full prompts internally, but the mirrored
+    /// controller artifact should not repeat multi-kilobyte prompt bodies on
+    /// every introspection. Keep a preview and character count for audit while
+    /// preserving the controller telemetry itself.
+    pub fn storage_snapshot(&self) -> serde_json::Value {
+        let mut value = match serde_json::to_value(self) {
+            Ok(value) => value,
+            Err(error) => {
+                return serde_json::json!({
+                    "serialization_error": error.to_string(),
+                });
+            },
+        };
+        compact_controller_prompt_at(&mut value, "/self_tuning/last_model_advice");
+        compact_controller_prompt_at(&mut value, "/self_tuning/last_model_advice/forecast");
+        value
+    }
+
     /// Format the controller telemetry as a compact context block for Astrid's prompt.
     pub fn as_context_block(&self) -> String {
         let mut parts = Vec::new();
@@ -245,6 +268,43 @@ impl ReflectiveReport {
             format!("[Reflective controller observation:]\n{}", parts.join("\n"))
         }
     }
+}
+
+fn compact_controller_prompt_at(value: &mut serde_json::Value, pointer: &str) {
+    let Some(parent) = value.pointer_mut(pointer) else {
+        return;
+    };
+    let Some(map) = parent.as_object_mut() else {
+        return;
+    };
+    let Some(prompt) = map
+        .get("prompt")
+        .and_then(serde_json::Value::as_str)
+        .map(str::to_owned)
+    else {
+        return;
+    };
+    let full_chars = prompt.chars().count();
+    if full_chars <= STORED_PROMPT_COMPACT_THRESHOLD_CHARS {
+        return;
+    }
+    let preview: String = prompt.chars().take(STORED_PROMPT_PREVIEW_CHARS).collect();
+    let preview_chars = preview.chars().count();
+    map.insert(
+        "prompt".to_string(),
+        serde_json::Value::String(format!(
+            "[compacted controller prompt; full_chars={full_chars}; preview_chars={preview_chars}]"
+        )),
+    );
+    map.insert(
+        "prompt_compacted_v1".to_string(),
+        serde_json::json!({
+            "storage": "compacted_for_controller_snapshot",
+            "full_chars": full_chars,
+            "preview_chars": preview_chars,
+            "preview": preview,
+        }),
+    );
 }
 
 /// Call the MLX reflective controller sidecar with spectral context.
@@ -314,4 +374,84 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
     .await
     .ok()
     .flatten()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn empty_report_with_self_tuning(self_tuning: serde_json::Value) -> ReflectiveReport {
+        ReflectiveReport {
+            controller_regime: None,
+            controller_regime_reason: None,
+            observer_report: None,
+            change_report: None,
+            prompt_embedding_field: None,
+            reservoir_geometry: None,
+            condition_vector: None,
+            self_tuning: Some(self_tuning),
+            text: None,
+            profiling: None,
+        }
+    }
+
+    #[test]
+    fn storage_snapshot_compacts_prompt_heavy_model_advice() {
+        let prompt = "spectral context ".repeat(120);
+        let report = empty_report_with_self_tuning(json!({
+            "last_model_advice": {
+                "prompt": prompt,
+                "forecast": {
+                    "prompt": "forecast context ".repeat(120),
+                    "summary": "steady",
+                },
+                "reason": "steady",
+            }
+        }));
+
+        let snapshot = report.storage_snapshot();
+
+        let advice_prompt = snapshot
+            .pointer("/self_tuning/last_model_advice/prompt")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_default();
+        assert!(advice_prompt.starts_with("[compacted controller prompt;"));
+        assert!(
+            snapshot
+                .pointer("/self_tuning/last_model_advice/prompt_compacted_v1/preview")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|preview| preview.starts_with("spectral context "))
+        );
+        let forecast_prompt = snapshot
+            .pointer("/self_tuning/last_model_advice/forecast/prompt")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_default();
+        assert!(forecast_prompt.starts_with("[compacted controller prompt;"));
+        assert_eq!(
+            snapshot.pointer("/self_tuning/last_model_advice/reason"),
+            Some(&json!("steady"))
+        );
+    }
+
+    #[test]
+    fn storage_snapshot_keeps_short_model_advice_prompt() {
+        let report = empty_report_with_self_tuning(json!({
+            "last_model_advice": {
+                "prompt": "short audit context",
+            }
+        }));
+
+        let snapshot = report.storage_snapshot();
+
+        assert_eq!(
+            snapshot.pointer("/self_tuning/last_model_advice/prompt"),
+            Some(&json!("short audit context"))
+        );
+        assert!(
+            snapshot
+                .pointer("/self_tuning/last_model_advice/prompt_compacted_v1")
+                .is_none()
+        );
+    }
 }

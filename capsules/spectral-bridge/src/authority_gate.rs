@@ -27,8 +27,21 @@ const DEFAULT_TOKEN_TTL_SECS: u64 = 900;
 pub const MAX_GRANT_FILL_AGE_SECS: u64 = 180;
 const DEFAULT_BUDGET_MAX_SENDS: u64 = 3;
 const DEFAULT_BUDGET_TTL_SECS: u64 = 21_600;
-const DEFAULT_RESEARCH_MAX_ACTIONS: u64 = 5;
-const MAX_RESEARCH_ACTIONS: u64 = 8;
+// Research-budget sizing (2026-06-15, operator-directed: "make the gate bigger, much
+// bigger if it'll help the beings"). Widened 5→25 default / 8→50 ceiling after finding
+// minime's λ4 research budget stranded `pending_steward_approval` for 3 days behind a
+// tiny cap (415 downstream blocks). SCOPE is unchanged — still read-only research only,
+// no mutating/lifecycle/Control authority; this raises SIZE, not capability. Web reach
+// remains an operator grant (not steward-loop auto-granted); this just lets a grant be
+// generous when made.
+const DEFAULT_RESEARCH_MAX_ACTIONS: u64 = 25;
+const MAX_RESEARCH_ACTIONS: u64 = 50;
+// Research-budget TTL (2026-06-15). Separate from DEFAULT_BUDGET_TTL_SECS (sends-budget, 6h)
+// so a research window can be long WITHOUT touching sends. Spend is gated by max_actions, not
+// time, so a longer TTL is cost-neutral — it just stops web-research budgets lapsing
+// mid-investigation (the recurring 6h-lapse documented in the authority-pipeline memory).
+// Re-granting the same budget_id refreshes the window (newest-wins on both active-checks).
+const DEFAULT_RESEARCH_TTL_SECS: u64 = 7 * 24 * 3600;
 
 #[derive(Debug, Clone)]
 struct GateLocation {
@@ -552,15 +565,21 @@ pub fn approve_research_budget_from_paths(
         .get("experiment_id")
         .and_then(Value::as_str)
         .unwrap_or_default();
-    if active_research_budget_for_experiment(&location.rows, experiment_id).is_some() {
-        let blocked = research_budget_block_record(
-            &location,
-            "active_research_budget_already_exists",
-            safety_level,
-            eligibility,
-        );
-        append_jsonl(&location.gate_path, &blocked)?;
-        return Ok(blocked);
+    if let Some(active) = active_research_budget_for_experiment(&location.rows, experiment_id) {
+        // Allow an operator to REFRESH/EXTEND the SAME budget_id (e.g. extend a 6h TTL to 7d):
+        // a fresh approval for the same budget_id supersedes the prior one (newest-wins on both
+        // the bridge and minime active-checks, which iterate rows in reverse). Only a DIFFERENT
+        // active budget for the experiment blocks — the one-budget-per-experiment invariant holds.
+        if active.get("budget_id").and_then(Value::as_str) != Some(budget_id) {
+            let blocked = research_budget_block_record(
+                &location,
+                "active_research_budget_already_exists",
+                safety_level,
+                eligibility,
+            );
+            append_jsonl(&location.gate_path, &blocked)?;
+            return Ok(blocked);
+        }
     }
     let now = unix_now();
     let request_max = location
@@ -572,7 +591,7 @@ pub fn approve_research_budget_from_paths(
         .request
         .get("ttl_secs")
         .and_then(Value::as_u64)
-        .unwrap_or(DEFAULT_BUDGET_TTL_SECS);
+        .unwrap_or(DEFAULT_RESEARCH_TTL_SECS);
     let max_actions = req
         .max_actions
         .unwrap_or(request_max)
@@ -580,7 +599,7 @@ pub fn approve_research_budget_from_paths(
     let ttl = req
         .ttl_secs
         .unwrap_or(request_ttl)
-        .min(DEFAULT_BUDGET_TTL_SECS);
+        .min(DEFAULT_RESEARCH_TTL_SECS);
     let approval = json!({
         "schema_version": 1,
         "record_schema": RESEARCH_BUDGET_POLICY,
@@ -2780,7 +2799,7 @@ mod tests {
         assert_eq!(approval["record_schema"], RESEARCH_BUDGET_POLICY);
         assert_eq!(approval["record_type"], "research_budget_approval");
         assert_eq!(approval["max_actions"], MAX_RESEARCH_ACTIONS);
-        assert_eq!(approval["ttl_secs"], DEFAULT_BUDGET_TTL_SECS);
+        assert_eq!(approval["ttl_secs"], DEFAULT_RESEARCH_TTL_SECS);
         let rows = read_jsonl(&gate);
         assert_eq!(
             research_budget_status_from_rows(&rows)["stage"],
@@ -2792,6 +2811,59 @@ mod tests {
                 .to_string()
                 .contains("research_budget_v1")
         );
+    }
+
+    #[test]
+    fn research_budget_regrant_same_budget_id_supersedes_and_extends_ttl() {
+        // Operator refresh/extend (2026-06-15): re-granting the SAME budget_id while one is
+        // active must NOT block — it supersedes (newest-wins on both active-checks), so a short
+        // TTL can be extended to 7d without a close record (which would poison the budget_id).
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_research_budget_request(&astrid, "resbud_extend", true);
+
+        let first = approve_research_budget_from_paths(
+            ApproveResearchBudgetRequest {
+                budget_id: "resbud_extend".to_string(),
+                steward: Some("test".to_string()),
+                note: None,
+                max_actions: Some(25),
+                ttl_secs: Some(3600),
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        assert_eq!(first["record_type"], "research_budget_approval");
+        assert_eq!(first["ttl_secs"], 3600);
+
+        // Re-grant the SAME budget_id with a longer TTL — must supersede, not block.
+        let second = approve_research_budget_from_paths(
+            ApproveResearchBudgetRequest {
+                budget_id: "resbud_extend".to_string(),
+                steward: Some("test".to_string()),
+                note: Some("extend".to_string()),
+                max_actions: Some(25),
+                ttl_secs: Some(DEFAULT_RESEARCH_TTL_SECS),
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        assert_eq!(
+            second["record_type"], "research_budget_approval",
+            "re-granting the same budget_id must supersede, not block"
+        );
+        assert_eq!(second["ttl_secs"], DEFAULT_RESEARCH_TTL_SECS);
+
+        // Newest-wins: the active budget for the experiment is the extended (7d) one.
+        let rows = read_jsonl(&gate);
+        let active = active_research_budget_for_experiment(&rows, "exp_astrid_test")
+            .expect("an active budget after supersede");
+        assert_eq!(active["ttl_secs"], DEFAULT_RESEARCH_TTL_SECS);
     }
 
     #[test]

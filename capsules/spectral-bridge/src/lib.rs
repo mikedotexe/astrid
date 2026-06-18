@@ -53,6 +53,7 @@ pub mod paths;
 pub mod prompt_budget;
 pub mod reflective;
 pub mod rescue_policy;
+pub mod self_continuity;
 pub mod self_model;
 pub mod shared_investigation;
 pub mod spectral_explorer;

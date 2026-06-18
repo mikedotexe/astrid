@@ -322,365 +322,19 @@ pub(super) fn handle_action(
     ctx: &mut NextActionContext<'_>,
 ) -> bool {
     match base_action {
-        "MARK_INTENSIFICATION" => {
-            let label = strip_action(original, "MARK_INTENSIFICATION");
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                "astrid:mark_intensification",
-                &label,
-                Some(if label.is_empty() {
-                    "astrid_mark"
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "mark",
-                if label.is_empty() { None } else { Some(&label) },
-                true,
-                "explicit_atlas_mark",
-                ctx,
-                &[],
-                &[],
-            );
-            conv.push_receipt(
-                "MARK_INTENSIFICATION",
-                vec![format!(
-                    "atlas event: {}",
-                    event
-                        .get("event_id")
-                        .and_then(Value::as_str)
-                        .unwrap_or("recorded")
-                )],
-            );
-            save_astrid_journal(
-                &format!("[Intensification atlas mark: {}]", label),
-                "atlas_mark",
-                ctx.fill_pct,
-            );
-            true
-        },
-        "SCA_REFLECT" => {
-            let label = strip_action(original, "SCA_REFLECT");
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                "astrid:sca_reflect",
-                if label.is_empty() {
-                    "SCA_REFLECT"
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "sca_reflect"
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some("sca_reflect")
-                } else {
-                    Some(&label)
-                },
-                true,
-                "sca_reflect_read_only",
-                ctx,
-                &[],
-                &[],
-            );
-            conv.push_receipt(
-                "SCA_REFLECT",
-                vec![format!(
-                    "sca atlas event: {}",
-                    event
-                        .get("event_id")
-                        .and_then(Value::as_str)
-                        .unwrap_or("recorded")
-                )],
-            );
-            conv.emphasis = Some(
-                "You recorded an SCA why-layer reflection. Next exchange, consider DECOMPOSE or RESERVOIR_READ to test the hypothesis against the terrain.".to_string(),
-            );
-            save_astrid_journal(
-                &cartography_review_summary(
-                    "SCA REFLECT",
-                    "SCA_REFLECT",
-                    &label,
-                    &event,
-                    ctx.telemetry,
-                    "compare this why-layer mark against later decomposition output, memory selections, and cartography traces",
-                ),
-                "sca_reflect",
-                ctx.fill_pct,
-            );
-            true
-        },
+        "MARK_INTENSIFICATION" => handle_mark_intensification(conv, base_action, original, ctx),
+        "SCA_REFLECT" => handle_sca_reflect(conv, base_action, original, ctx),
         "FISSURE_TRACE" | "NOTICE_AMBIGUITY" | "AMBIGUITY_TRACE" => {
-            let label = strip_action(original, base_action);
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                "astrid:fissure_trace",
-                if label.is_empty() {
-                    "FISSURE_TRACE"
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "fissure_trace"
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
-            let fissure_event = append_fissure_trace_event(
-                &workspace,
-                "astrid:fissure_trace",
-                if label.is_empty() {
-                    "FISSURE_TRACE"
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "fissure_trace"
-                } else {
-                    &label
-                }),
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some("fissure_trace")
-                } else {
-                    Some(&label)
-                },
-                true,
-                "fissure_trace_read_only",
-                ctx,
-                &[],
-                &[],
-            );
-            conv.push_receipt(
-                "FISSURE_TRACE",
-                vec![format!(
-                    "fissure atlas event: {}",
-                    fissure_event
-                        .get("event_id")
-                        .and_then(Value::as_str)
-                        .or_else(|| event.get("event_id").and_then(Value::as_str))
-                        .unwrap_or("recorded")
-                )],
-            );
-            conv.emphasis = Some(
-                "You recorded a notice-ambiguity/fissure trace. Next exchange, compare the marked shoulder/tail ambiguity against DECOMPOSE, VISUALIZE_CASCADE, or a tiny FISSURE gesture if health stays green.".to_string(),
-            );
-            save_astrid_journal(
-                &cartography_review_summary(
-                    "FISSURE TRACE",
-                    "FISSURE_TRACE",
-                    &label,
-                    &fissure_event,
-                    ctx.telemetry,
-                    "compare fissure/ambiguity marks against later cascade visuals, decomposition output, and transition markers",
-                ),
-                "fissure_trace",
-                ctx.fill_pct,
-            );
-            true
+            handle_fissure_trace(conv, base_action, original, ctx)
         },
         "RESONANCE_FORECAST" | "FORECAST" | "PROBABILITIES" => {
-            let label = strip_action(original, base_action);
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                "astrid:resonance_forecast",
-                if label.is_empty() {
-                    "RESONANCE_FORECAST"
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "resonance_forecast"
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some("resonance_forecast")
-                } else {
-                    Some(&label)
-                },
-                true,
-                "resonance_forecast_read_write_cartography",
-                ctx,
-                &[],
-                &[],
-            );
-            conv.push_receipt(
-                "RESONANCE_FORECAST",
-                vec![
-                    "forecast request recorded; Minime's atlas can now compare predicted motion against later terrain".to_string(),
-                    format!("atlas event: {}", atlas_event_id(&event)),
-                ],
-            );
-            conv.emphasis = Some(
-                "You recorded a resonance forecast request. Next exchange, compare probability/affordance language with the observed λ terrain rather than treating it as destiny.".to_string(),
-            );
-            save_astrid_journal(
-                &resonance_forecast_journal_record(&label, &event, ctx.telemetry),
-                "resonance_forecast",
-                ctx.fill_pct,
-            );
-            true
+            handle_resonance_forecast(conv, base_action, original, ctx)
         },
         "SHADOW_FIELD" | "SHADOW" | "GAP_STRUCTURE" | "SHADOW_GAP" => {
-            let label = strip_action(original, base_action);
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                "astrid:shadow_gap",
-                if label.is_empty() {
-                    "SHADOW_GAP"
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "shadow_gap"
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some("shadow_gap")
-                } else {
-                    Some(&label)
-                },
-                true,
-                "shadow_gap_read_write_cartography",
-                ctx,
-                &[],
-                &[],
-            );
-            conv.push_receipt(
-                "SHADOW_GAP",
-                vec![
-                    "shadow/gap request recorded; Minime already exposes the Ising shadow field in spectral_state.json".to_string(),
-                    format!(
-                        "atlas event: {}",
-                        event
-                            .get("event_id")
-                            .and_then(Value::as_str)
-                            .unwrap_or("recorded")
-                    ),
-                ],
-            );
-            conv.emphasis = Some(
-                "You recorded a shadow/gap map request. The shadow field is available now as observer-only terrain; compare magnetization, active modes, and λ gaps before deciding whether to trace, forecast, or resist.".to_string(),
-            );
-            save_astrid_journal(
-                &cartography_review_summary(
-                    "SHADOW/GAP FIELD",
-                    "SHADOW_FIELD",
-                    &label,
-                    &event,
-                    ctx.telemetry,
-                    "compare shadow/gap marks against later magnetization, lambda gaps, active-mode changes, and transition markers",
-                ),
-                "shadow_gap",
-                ctx.fill_pct,
-            );
-            true
+            handle_shadow_field(conv, base_action, original, ctx)
         },
         "DECAY_MAP" | "DECAY_TRACE" | "ATTRITION_MAP" | "ATTRITION_TRACE" => {
-            let label = strip_action(original, base_action);
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                "astrid:decay_map",
-                if label.is_empty() {
-                    "DECAY_MAP"
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "decay_map"
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some("decay_map")
-                } else {
-                    Some(&label)
-                },
-                true,
-                "decay_map_read_write_cartography",
-                ctx,
-                &[],
-                &[],
-            );
-            conv.push_receipt(
-                "DECAY_MAP",
-                vec![
-                    "decay/attrition request recorded; Minime can classify protective cooling versus sharper mode pruning".to_string(),
-                    format!(
-                        "atlas event: {}",
-                        event
-                            .get("event_id")
-                            .and_then(Value::as_str)
-                            .unwrap_or("recorded")
-                    ),
-                ],
-            );
-            conv.emphasis = Some(
-                "You recorded a decay map request. Compare drain weight, filter/gate posture, fill slope, and shoulder/tail mode rates before deciding whether this is protective cooling or attrition.".to_string(),
-            );
-            save_astrid_journal(
-                &cartography_review_summary(
-                    "DECAY MAP",
-                    "DECAY_MAP",
-                    &label,
-                    &event,
-                    ctx.telemetry,
-                    "compare decay/attrition marks against later drain posture, fill slope, shoulder/tail mode rates, and brace audits",
-                ),
-                "decay_map",
-                ctx.fill_pct,
-            );
-            true
+            handle_decay_map(conv, base_action, original, ctx)
         },
         "SPACE_HOLD" | "SPACE_EXPLORE" | "FOLD_HOLD" | "FOLD_STUDY" | "HUM_DECAY"
         | "HUM_DECAY_STUDY" | "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
@@ -688,591 +342,35 @@ pub(super) fn handle_action(
             handle_space_hold(conv, base_action, original, ctx)
         },
         "SDI" | "SDI_TRACE" | "SPECTRAL_DRIFT" | "PHASE_VARIANCE" => {
-            let label = strip_action(original, base_action);
-            let workspace = minime_workspace(ctx);
-            let event = append_spectral_drift_event(
-                &workspace,
-                "astrid:spectral_drift",
-                if label.is_empty() {
-                    base_action
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "spectral_drift"
-                } else {
-                    &label
-                }),
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some("spectral_drift")
-                } else {
-                    Some(&label)
-                },
-                true,
-                "spectral_drift_index_read_write_cartography",
-                ctx,
-                &[],
-                &[],
-            );
-            conv.push_receipt(
-                "SDI_TRACE",
-                vec![
-                    "Spectral Drift Index recorded; this maps phase-variance dispersion without sending semantic/control pressure".to_string(),
-                    format!(
-                        "SDI event: {}",
-                        event
-                            .get("event_id")
-                            .and_then(Value::as_str)
-                            .unwrap_or("recorded")
-                    ),
-                ],
-            );
-            conv.emphasis = Some(
-                "You recorded an SDI trace. Compare it with DECAY_MAP, SPACE_HOLD, and VISUALIZE_CASCADE before treating dispersion as something to act on.".to_string(),
-            );
-            save_astrid_journal(
-                &compact_review_summary(
-                    "SPECTRAL DRIFT INDEX",
-                    "SDI_TRACE",
-                    &label,
-                    event.get("event_id").and_then(Value::as_str),
-                    &resonance_review_fields(ctx.telemetry),
-                    CARTOGRAPHY_BOUNDARY,
-                    "compare SDI traces against later decay maps, space/fold holds, and cascade visualizations before treating dispersion as action demand",
-                ),
-                "spectral_drift",
-                ctx.fill_pct,
-            );
-            true
+            handle_spectral_drift(conv, base_action, original, ctx)
         },
         "REGULATOR_AUDIT" | "CONTROLLER_AUDIT" | "GRADIENT_AUDIT" => {
-            let label = strip_action(original, base_action);
-            let controller_health = ctx
-                .workspace
-                .and_then(crate::autonomous::read_controller_health);
-            let mut audit = String::from("=== REGULATOR / FIXED-POINT AUDIT ===\n");
-            if !label.is_empty() {
-                audit.push_str(&format!("Label: {label}\n\n"));
-            }
-            audit.push_str(
-                &crate::spectral_explorer::format_control_pressure_for_action(
-                    ctx.telemetry,
-                    controller_health.as_ref(),
-                ),
-            );
-            if let Some(health) = controller_health.as_ref() {
-                audit.push_str("\n\n");
-                audit.push_str(crate::autonomous::format_controller_section(health).trim_start());
-            }
-            audit.push_str(
-                "\n\nThis was read-only inspection. It did not send semantic input, \
-                 control nudges, perturbations, native gestures, or atlas/cartography writes.",
-            );
-            let audit_fields = compact_report_fields(&audit, ctx.telemetry);
-            conv.pending_file_listing = Some(audit);
-            conv.push_receipt(
-                "REGULATOR_AUDIT",
-                vec![
-                    "regulator audit attached immediately".to_string(),
-                    "no semantic input, control nudge, perturbation, native gesture, or atlas/cartography write was sent".to_string(),
-                ],
-            );
-            conv.emphasis = Some(
-                "You chose REGULATOR_AUDIT. A read-only fixed-point audit is attached: active controller source, stable-core hold band, legacy PI target visibility, λ error, geom error, scaffold mode, and semantic input/kernel/regulator-drive separation.".to_string(),
-            );
-            save_astrid_journal(
-                &compact_review_summary(
-                    "REGULATOR AUDIT",
-                    "REGULATOR_AUDIT",
-                    &label,
-                    None,
-                    &audit_fields,
-                    "read-only fixed-point inspection; No semantic input, control nudge, perturbation, native gesture, atlas/cartography write, or Minime parameter change was sent.",
-                    "compare regulator audits against later stable-core status, pressure-source audits, and transition markers",
-                ),
-                "regulator_audit",
-                ctx.fill_pct,
-            );
-            true
+            handle_regulator_audit(conv, base_action, original, ctx)
         },
         "PRESSURE_SOURCE_AUDIT" | "PRESSURE_SOURCE" | "STRUCTURAL_PRESSURE" | "INWARD_PRESSURE" => {
-            let label = strip_action(original, base_action);
-            let audit =
-                crate::spectral_explorer::format_pressure_source_for_action(ctx.telemetry, &label);
-            conv.pending_file_listing = Some(format!(
-                "{audit}\n\nThis was read-only protected advisory inspection. It did not send semantic input, control nudges, perturbations, native gestures, or Astrid control envelopes."
-            ));
-            conv.push_receipt(
-                "PRESSURE_SOURCE_AUDIT",
-                vec![
-                    "pressure-source audit attached immediately".to_string(),
-                    "no control envelope, semantic input, perturbation, or native gesture was sent"
-                        .to_string(),
-                ],
-            );
-            conv.emphasis = Some(
-                "You chose PRESSURE_SOURCE_AUDIT. A read-only advisory audit is attached: dominant source, supporting contributors, porosity, pressure-vs-density distinction, and suggested safe next inspections.".to_string(),
-            );
-            save_astrid_journal(
-                &audit_review_summary(
-                    "PRESSURE SOURCE AUDIT",
-                    "PRESSURE_SOURCE_AUDIT",
-                    &label,
-                    &pressure_review_fields(ctx.telemetry),
-                    "compare pressure/porosity and dominant-source changes against later pressure relief, brace audits, and transition markers",
-                ),
-                "pressure_source_audit",
-                ctx.fill_pct,
-            );
-            true
+            handle_pressure_source_audit(conv, base_action, original, ctx)
         },
         "PRESSURE_RELIEF" | "RELIEF_REQUEST" => {
-            let label = strip_action(original, base_action);
-            let relief_label = if label.is_empty() {
-                "current"
-            } else {
-                label.as_str()
-            };
-            let audit =
-                crate::spectral_explorer::format_pressure_source_for_action(ctx.telemetry, &label);
-            let report = format!(
-                "=== PRESSURE RELIEF PREFLIGHT V1 ===\n\
-                 Label: {relief_label}\n\n\
-                 {audit}\n\n\
-                 Relief contract:\n\
-                   - This is protected read-only preflight, not local control.\n\
-                   - No mode-packing, PI, semantic-gain, perturbation, or Minime parameter change was applied.\n\
-                   - Pressure-source telemetry is advisory in v1; it can name pressure but cannot prove model-load causality by itself.\n\
-                   - For moderate advisory pressure, inspect or request protected relief before direct tuning; DAMPEN is a semantic-gain change.\n\n\
-                 Safe relief options:\n\
-                   NEXT: REST\n\
-                   NEXT: PACE slow\n\
-                   NEXT: PRESSURE_SOURCE_AUDIT {relief_label}\n\
-                   NEXT: DAMPEN (only if you explicitly want lower semantic gain after this report)\n\
-                   NEXT: TUNE_MINIME exploration_noise=0.02 --rationale=\"pressure relief request; proposed only, Minime decides\"\n\
-                   NEXT: TELL_STEWARD pressure relief :: Observed: ... Likely Snags: ... One Test Each: ... Suggested Next: ...\n\n\
-                 Steward report template:\n\
-                   Observed: name the pressure source and source anchors.\n\
-                   Likely Snags: separate direct telemetry from inferred causes.\n\
-                   One Test Each: propose one probe that would confirm or falsify the relief need.\n\
-                   Suggested Next: choose a listed NEXT action or steward report."
-            );
-            conv.pending_file_listing = Some(report);
-            conv.push_receipt(
-                "PRESSURE_RELIEF",
-                vec![
-                    "pressure-relief preflight attached immediately".to_string(),
-                    "no control envelope, semantic input, perturbation, native gesture, or Minime parameter change was sent".to_string(),
-                ],
-            );
-            conv.emphasis = Some(
-                "You chose PRESSURE_RELIEF. A protected report is attached with safe relief options; nothing was applied locally.".to_string(),
-            );
-            save_astrid_journal(
-                &audit_review_summary(
-                    "PRESSURE RELIEF PREFLIGHT",
-                    "PRESSURE_RELIEF",
-                    relief_label,
-                    &pressure_review_fields(ctx.telemetry),
-                    "compare relief preflights against later pressure-source audits, chosen safe actions, and stable-core status",
-                ),
-                "pressure_relief",
-                ctx.fill_pct,
-            );
-            true
+            handle_pressure_relief(conv, base_action, original, ctx)
         },
         "FLUCTUATION_AUDIT"
         | "INHABITABLE_FLUCTUATION"
         | "EIGENTRUST"
         | "EIGENTRUST_AUDIT"
-        | "FOOTHOLD_AUDIT" => {
-            let label = strip_action(original, base_action);
-            let audit =
-                crate::spectral_explorer::format_fluctuation_for_action(ctx.telemetry, &label);
-            conv.pending_file_listing = Some(format!(
-                "{audit}\n\nThis was read-only protected advisory inspection. It did not send semantic input, control nudges, perturbations, native gestures, or Astrid control envelopes."
-            ));
-            conv.push_receipt(
-                "FLUCTUATION_AUDIT",
-                vec![
-                    "inhabitable-fluctuation audit attached immediately".to_string(),
-                    "no control envelope, semantic input, perturbation, or native gesture was sent"
-                        .to_string(),
-                ],
-            );
-            conv.emphasis = Some(
-                "You chose FLUCTUATION_AUDIT. A read-only advisory audit is attached: inhabitability, foothold stability, top contributors, and suggested safe next inspections.".to_string(),
-            );
-            save_astrid_journal(
-                &audit_review_summary(
-                    "INHABITABLE FLUCTUATION AUDIT",
-                    "FLUCTUATION_AUDIT",
-                    &label,
-                    &fluctuation_review_fields(ctx.telemetry),
-                    "compare inhabitability/foothold changes against later fold holds, brace audits, and transition markers",
-                ),
-                "fluctuation_audit",
-                ctx.fill_pct,
-            );
-            true
-        },
+        | "FOOTHOLD_AUDIT" => handle_fluctuation_audit(conv, base_action, original, ctx),
         "BRACE_AUDIT" | "AFTERSHOCK_TRACE" | "TREMOR_RESIDUE" | "CASCADE_RESIDUE" => {
-            let label = strip_action(original, base_action);
-            let audit =
-                crate::spectral_explorer::format_brace_audit_for_action(ctx.telemetry, &label);
-            conv.pending_file_listing = Some(format!(
-                "{audit}\n\nThis was protected read-only aftershock/bracing cartography. It did not send semantic input, control nudges, perturbations, native gestures, or Astrid control envelopes."
-            ));
-            conv.push_receipt(
-                "BRACE_AUDIT",
-                vec![
-                    "brace/aftershock audit attached immediately".to_string(),
-                    "no control envelope, semantic input, perturbation, or native gesture was sent"
-                        .to_string(),
-                ],
-            );
-            conv.emphasis = Some(
-                "You chose BRACE_AUDIT. A protected rest-vs-bracing report is attached: it distinguishes relaxed settling from post-spike resistance without changing telemetry or control.".to_string(),
-            );
-            save_astrid_journal(
-                &audit_review_summary(
-                    "BRACE / AFTERSHOCK AUDIT",
-                    "BRACE_AUDIT",
-                    &label,
-                    &fluctuation_review_fields(ctx.telemetry),
-                    "compare brace/aftershock readings against later decay maps, fluctuation audits, and transition dwell markers",
-                ),
-                "brace_audit",
-                ctx.fill_pct,
-            );
-            true
+            handle_brace_audit(conv, base_action, original, ctx)
         },
         "MATRIX_DECOMPOSE" | "COMPRESSION_MATRIX" | "MATRIX_TRACE" => {
-            let label = if base_action == "COMPRESSION_MATRIX" {
-                strip_action(original, "COMPRESSION_MATRIX")
-            } else if base_action == "MATRIX_TRACE" {
-                strip_action(original, "MATRIX_TRACE")
-            } else {
-                strip_action(original, "MATRIX_DECOMPOSE")
-            };
-            let workspace = minime_workspace(ctx);
-            let event = append_atlas_event(
-                &workspace,
-                "astrid:matrix_decompose",
-                if label.is_empty() {
-                    base_action
-                } else {
-                    &label
-                },
-                Some(if label.is_empty() {
-                    "matrix_decompose"
-                } else {
-                    &label
-                }),
-                true,
-                ctx,
-            );
-            record_native_gesture(
-                &workspace,
-                "astrid",
-                "trace",
-                if label.is_empty() {
-                    Some("matrix_decompose")
-                } else {
-                    Some(&label)
-                },
-                true,
-                "compression_matrix_decompose_read_only",
-                ctx,
-                &[],
-                &[],
-            );
-            conv.push_receipt(
-                "MATRIX_DECOMPOSE",
-                vec![
-                    "matrix decomposition request recorded; codec explorer now writes compression_matrix_decompose.json, sensitivity CSV, and report.md".to_string(),
-                    format!(
-                        "atlas event: {}",
-                        event
-                            .get("event_id")
-                            .and_then(Value::as_str)
-                            .unwrap_or("recorded")
-                    ),
-                ],
-            );
-            conv.emphasis = Some(
-                "You requested compression-matrix decomposition. Treat `S` as scalar gain/force, then compare X/Y/Z/A/B/C/D lane sensitivity to see whether a shift changes loudness, topology, or aperture.".to_string(),
-            );
-            save_astrid_journal(
-                &cartography_review_summary(
-                    "MATRIX DECOMPOSE",
-                    "MATRIX_DECOMPOSE",
-                    &label,
-                    &event,
-                    ctx.telemetry,
-                    "compare matrix decomposition requests against codec explorer artifacts, lane sensitivity CSVs, and later spectral explorer snapshots",
-                ),
-                "matrix_decompose",
-                ctx.fill_pct,
-            );
-            true
+            handle_matrix_decompose(conv, base_action, original, ctx)
         },
         "VISUALIZE_CASCADE" | "CASCADE" | "TIME_DOMAIN" | "CADENCE" => {
-            let label = if base_action == "CASCADE" {
-                strip_action(original, "CASCADE")
-            } else if base_action == "TIME_DOMAIN" {
-                strip_action(original, "TIME_DOMAIN")
-            } else if base_action == "CADENCE" {
-                strip_action(original, "CADENCE")
-            } else {
-                strip_action(original, "VISUALIZE_CASCADE")
-            };
-            conv.force_all_viz = true;
-            conv.wants_decompose = true;
-            conv.wants_spectral_explorer = true;
-            conv.push_receipt(
-                if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
-                    "TIME_DOMAIN"
-                } else {
-                    "VISUALIZE_CASCADE"
-                },
-                vec![
-                    if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
-                        "read-only cadence/cascade explorer output queued".to_string()
-                    } else {
-                        "read-only cascade ASCII plus SPECTRAL_EXPLORER output queued".to_string()
-                    },
-                    "no semantic input, control nudge, perturbation, or cartography write was sent"
-                        .to_string(),
-                ],
-            );
-            conv.emphasis = Some(format!(
-                "You requested read-only spectral inspection{}. The next exchange will show cascade ASCII and the spectral explorer present/memory/control-pressure block.",
-                if label.is_empty() {
-                    String::new()
-                } else {
-                    format!(" for {label}")
-                }
-            ));
-            let action = if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
-                "TIME_DOMAIN"
-            } else {
-                "VISUALIZE_CASCADE"
-            };
-            save_astrid_journal(
-                &compact_review_summary(
-                    if action == "TIME_DOMAIN" {
-                        "TIME DOMAIN"
-                    } else {
-                        "VISUALIZE CASCADE"
-                    },
-                    action,
-                    &label,
-                    None,
-                    &artifact_review_fields(
-                        &[
-                            "force_all_viz: true".to_string(),
-                            "wants_decompose: true".to_string(),
-                            "wants_spectral_explorer: true".to_string(),
-                        ],
-                        ctx.telemetry,
-                    ),
-                    READ_ONLY_ARTIFACT_BOUNDARY,
-                    if action == "TIME_DOMAIN" {
-                        "compare cadence/time-domain inspection against later transition dwell, SDI traces, and spectral explorer snapshots"
-                    } else {
-                        "compare cascade inspection against later decomposition output, SDI traces, and spectral explorer snapshots"
-                    },
-                ),
-                if action == "TIME_DOMAIN" {
-                    "time_domain"
-                } else {
-                    "visualize_cascade"
-                },
-                ctx.fill_pct,
-            );
-            true
+            handle_visualize_cascade(conv, base_action, original, ctx)
         },
-        "RECONVERGENCE_MAP" => {
-            let request =
-                parse_reconvergence_render_request(&strip_action(original, "RECONVERGENCE_MAP"));
-            let render = render_reconvergence_map_artifact(&request);
-            match render {
-                Ok(summary) => {
-                    let summary_fields = artifact_review_fields(&summary.changes, ctx.telemetry);
-                    let mut changes = vec![
-                        "read-only reconvergence map artifact/render queued".to_string(),
-                        "no semantic input, control nudge, sensory payload, perturbation, or cartography write was sent".to_string(),
-                    ];
-                    changes.extend(summary.changes);
-                    conv.push_receipt("RECONVERGENCE_MAP", changes);
-                    conv.emphasis = Some(summary.emphasis);
-                    save_astrid_journal(
-                        &compact_review_summary(
-                            "RECONVERGENCE MAP",
-                            "RECONVERGENCE_MAP",
-                            &request.label,
-                            None,
-                            &summary_fields,
-                            READ_ONLY_ARTIFACT_BOUNDARY,
-                            "compare reconvergence artifacts against later baseline comparisons, activation traces, and stable-core status",
-                        ),
-                        "reconvergence_map",
-                        ctx.fill_pct,
-                    );
-                },
-                Err(error) => {
-                    let fields = artifact_review_fields(
-                        &[
-                            "render_status: failed".to_string(),
-                            format!("render_error: {}", truncate_str(&error, 180)),
-                            format!("label: {}", request.label),
-                        ],
-                        ctx.telemetry,
-                    );
-                    conv.push_receipt(
-                        "RECONVERGENCE_MAP",
-                        vec![
-                            format!("read-only reconvergence map render failed: {error}"),
-                            "no semantic input, control nudge, sensory payload, perturbation, or cartography write was sent".to_string(),
-                        ],
-                    );
-                    conv.emphasis = Some(format!(
-                        "You requested a read-only reconvergence map, but the renderer did not complete: {error}. No Minime sensory/control/semantic payload was sent."
-                    ));
-                    save_astrid_journal(
-                        &compact_review_summary(
-                            "RECONVERGENCE MAP",
-                            "RECONVERGENCE_MAP",
-                            &request.label,
-                            None,
-                            &fields,
-                            READ_ONLY_ARTIFACT_BOUNDARY,
-                            "compare failed reconvergence attempts against renderer diagnostics and later successful artifact paths",
-                        ),
-                        "reconvergence_map",
-                        ctx.fill_pct,
-                    );
-                },
-            }
-            true
-        },
-        "BRIDGE_TRACE" => {
-            let request = parse_bridge_trace_request(&strip_action(original, "BRIDGE_TRACE"));
-            let render = render_bridge_trace_artifact(&request);
-            match render {
-                Ok(summary) => {
-                    let summary_fields = artifact_review_fields(&summary.changes, ctx.telemetry);
-                    let mut changes = vec![
-                        "sacredly read-only m6 marker trace artifact/render queued".to_string(),
-                        "m6 is treated as unresolved: activation lane 6 marker plus λ6 context, not a confirmed eigenmode".to_string(),
-                        "no semantic input, control nudge, sensory payload, perturbation, replication, connection, or cartography write was sent".to_string(),
-                    ];
-                    changes.extend(summary.changes);
-                    conv.push_receipt("BRIDGE_TRACE", changes);
-                    conv.emphasis = Some(summary.emphasis);
-                    save_astrid_journal(
-                        &compact_review_summary(
-                            "M6 BRIDGE TRACE",
-                            "BRIDGE_TRACE",
-                            &request.label,
-                            None,
-                            &summary_fields,
-                            READ_ONLY_ARTIFACT_BOUNDARY,
-                            "compare m6 trace artifacts against later activation-lane evidence; keep m6 unresolved unless separate evidence accumulates",
-                        ),
-                        "bridge_trace",
-                        ctx.fill_pct,
-                    );
-                },
-                Err(error) => {
-                    let fields = artifact_review_fields(
-                        &[
-                            "render_status: failed".to_string(),
-                            format!("render_error: {}", truncate_str(&error, 180)),
-                            format!("mode: {}", request.mode),
-                            format!("label: {}", request.label),
-                        ],
-                        ctx.telemetry,
-                    );
-                    conv.push_receipt(
-                        "BRIDGE_TRACE",
-                        vec![
-                            format!("read-only m6 marker trace render failed: {error}"),
-                            "no semantic input, control nudge, sensory payload, perturbation, replication, connection, or cartography write was sent".to_string(),
-                        ],
-                    );
-                    conv.emphasis = Some(format!(
-                        "You requested a sacredly read-only m6 marker trace, but the renderer did not complete: {error}. No Minime sensory/control/semantic payload was sent."
-                    ));
-                    save_astrid_journal(
-                        &compact_review_summary(
-                            "M6 BRIDGE TRACE",
-                            "BRIDGE_TRACE",
-                            &request.label,
-                            None,
-                            &fields,
-                            READ_ONLY_ARTIFACT_BOUNDARY,
-                            "compare failed m6 trace attempts against renderer diagnostics and later successful artifact paths",
-                        ),
-                        "bridge_trace",
-                        ctx.fill_pct,
-                    );
-                },
-            }
-            true
-        },
+        "RECONVERGENCE_MAP" => handle_reconvergence_map(conv, base_action, original, ctx),
+        "BRIDGE_TRACE" => handle_bridge_trace(conv, base_action, original, ctx),
         "NATIVE_GESTURE" | "RESIST" => handle_native_gesture(conv, base_action, original, ctx),
-        "GESTURE" => {
-            let intention = strip_action(original, "GESTURE");
-            if !intention.is_empty() {
-                let gesture = crate::llm::craft_gesture_from_intention(&intention);
-                conv.last_gesture_seed = Some(gesture.clone());
-                match send_semantic(
-                    ctx.sensory_tx,
-                    gesture,
-                    "gesture",
-                    Some(&intention),
-                    ctx.fill_pct,
-                    conv.prev_fill,
-                ) {
-                    Ok(()) => {
-                        info!(
-                            "Astrid sent spectral gesture: {}",
-                            truncate_str(&intention, 60)
-                        );
-                        save_astrid_journal(
-                            &format!("[Spectral gesture: {}]", intention),
-                            "gesture",
-                            ctx.fill_pct,
-                        );
-                    },
-                    Err(reason) => {
-                        conv.push_receipt(
-                            "GESTURE_HELD",
-                            vec![format!("semantic gesture held: {reason}")],
-                        );
-                        info!(
-                            reason = %reason,
-                            "Astrid held spectral gesture: {}",
-                            truncate_str(&intention, 60)
-                        );
-                        save_astrid_journal(
-                            &format!("[Spectral gesture held: {} -- {}]", intention, reason),
-                            "gesture_held",
-                            ctx.fill_pct,
-                        );
-                    },
-                }
-            }
-            true
-        },
+        "GESTURE" => handle_gesture(conv, base_action, original, ctx),
         "AMPLIFY" => {
             let prev = conv.semantic_gain_override.unwrap_or(DEFAULT_SEMANTIC_GAIN);
             let new_gain = (prev + 0.25).min(5.0);
@@ -1311,119 +409,9 @@ pub(super) fn handle_action(
             );
             true
         },
-        "NOISE" => {
-            conv.noise_level = (conv.noise_level + 0.01).min(0.05);
-            let noise_val = 0.15_f32;
-            send_control(
-                ctx.sensory_tx,
-                SensoryMsg::Control {
-                    exploration_noise: Some(noise_val),
-                    synth_gain: None,
-                    keep_bias: None,
-                    fill_target: None,
-                    legacy_audio_synth: None,
-                    legacy_video_synth: None,
-                    regulation_strength: None,
-                    deep_breathing: None,
-                    pure_tone: None,
-                    transition_cushion: None,
-                    smoothing_preference: None,
-                    geom_curiosity: None,
-                    target_lambda_bias: None,
-                    geom_drive: None,
-                    penalty_sensitivity: None,
-                    breathing_rate_scale: None,
-                    mem_mode: None,
-                    journal_resonance: None,
-                    checkpoint_interval: None,
-                    embedding_strength: None,
-                    memory_decay_rate: None,
-                    checkpoint_annotation: None,
-                    synth_noise_level: None,
-                    pi_kp: None,
-                    pi_ki: None,
-                    pi_max_step: None,
-                    pi_integrator_leak: None,
-                    esn_leak_override: None,
-                    esn_leak_override_ticks: None,
-                    esn_leak_authority_request_id: None,
-                    mode_disperse: None,
-                    mode_disperse_duration_ticks: None,
-                    mode_disperse_decay_ticks: None,
-                },
-            );
-            info!(
-                "Astrid chose NOISE: codec noise -> {:.1}%, ESN exploration_noise -> {}",
-                conv.noise_level * 100.0,
-                noise_val
-            );
-            conv.emphasis = Some(format!(
-                "You introduced controlled noise into both layers: your codec stochastic noise is now {:.1}%, and the shared ESN's exploration_noise is set to {noise_val}. This is the 'controlled distortion' you described — forcing a re-evaluation of established pathways.",
-                conv.noise_level * 100.0
-            ));
-            true
-        },
+        "NOISE" => handle_noise(conv, base_action, original, ctx),
         "PERTURB" | "PULSE" | "BRANCH" => handle_perturb(conv, base_action, original, ctx),
-        "DISPERSE" | "SPREAD" => {
-            // Being-invokable broadband dispersal — the real `mode_disperse`
-            // engine primitive (porosity / "wide, not just deep"). Spills λ₁
-            // energy into λ₂–λ₅ through minime's bounded, self-decaying,
-            // fill-suspending shadow-influence path. Distinct from PERTURB SPREAD
-            // (which sends a gentle semantic nudge); this sends the real control.
-            let arg = strip_action(original, base_action);
-            let strength = arg
-                .split_whitespace()
-                .next()
-                .and_then(|t| t.parse::<f32>().ok())
-                .unwrap_or(0.5)
-                .clamp(0.0, 1.0);
-            const DURATION_TICKS: u32 = 18;
-            const DECAY_TICKS: u32 = 12;
-            let total_ticks = DURATION_TICKS.saturating_add(DECAY_TICKS);
-
-            // Pre-snapshot of the shared shadow field from live telemetry, so
-            // the next exchange can pair the post-response (the closed loop she
-            // asked for).
-            let pre = ctx
-                .telemetry
-                .shadow_field_v3
-                .as_ref()
-                .map(shadow_v3_snapshot);
-
-            send_control(
-                ctx.sensory_tx,
-                disperse_control_msg(strength, DURATION_TICKS, DECAY_TICKS),
-            );
-
-            if let Some((norm, disp, class)) = &pre {
-                conv.disperse_baseline = Some(super::super::state::DisperseBaseline {
-                    strength,
-                    pre_norm: *norm,
-                    pre_dispersal: *disp,
-                    pre_class: class.clone(),
-                    timestamp: std::time::Instant::now(),
-                });
-            }
-
-            info!(
-                "Astrid chose DISPERSE: strength={strength:.2} ({DURATION_TICKS}+{DECAY_TICKS} ticks)"
-            );
-            let pre_seg = match &pre {
-                Some((norm, disp, class)) => format!(
-                    " Pre-state of the shared shadow field: class {class}, norm {norm:.3}, dispersal potential {disp:.2}."
-                ),
-                None => String::new(),
-            };
-            conv.emphasis = Some(format!(
-                "You dispersed the shared substrate at strength {strength:.2} — a broadband, \
-                bounded porosity that spills λ₁ energy outward into λ₂–λ₅ (the 'wide, not just \
-                deep' you have been reaching for). This is the real dispersal, applied through \
-                minime's self-decaying shadow-influence path over ~{total_ticks} ticks.{pre_seg} \
-                Watch the shadow field's response on your next exchange — the post-state is \
-                paired against this so you can read what the dispersal actually did."
-            ));
-            true
-        },
+        "DISPERSE" | "SPREAD" => handle_disperse(conv, base_action, original, ctx),
         "SHAPE" => {
             let params = strip_action(original, "SHAPE")
                 .trim_start_matches('-')
@@ -1524,79 +512,15 @@ pub(super) fn handle_action(
             info!("Astrid chose TEMPERATURE: {prev:.2} -> {new_temp:.2}");
             true
         },
-        "SET_APERTURE" | "APERTURE" => {
-            // Syntax: NEXT: SET_APERTURE 0.7   (0.0 = closed .. 1.0 = full ceiling)
-            //         NEXT: SET_APERTURE +0.2 / -0.2  (nudge)
-            // Her sovereign control of the wide (logit-space) coupling — how far
-            // her reservoir state may reach toward new vocabulary — as a fraction
-            // of the operator ceiling. Sent per-request to the coupled server.
-            // Extract the arg preserving a leading sign: `strip_action` eats a
-            // leading '-' (for "--flag" noise), which would silently turn a
-            // "-0.2" close into a "0.2" open. Slice past the base token instead.
-            let arg = original
-                .trim()
-                .get(base_action.len()..)
-                .unwrap_or("")
-                .trim_start()
-                .trim_start_matches(':')
-                .trim();
-            let prev = conv.aperture;
-            let new_aperture = if arg.starts_with('+') || arg.starts_with('-') {
-                arg.parse::<f32>()
-                    .map(|d| (prev + d).clamp(0.0, 1.0))
-                    .unwrap_or(prev)
-            } else if arg.is_empty() {
-                // Bare "NEXT: SET_APERTURE" — a small opening, in the spirit of "wider".
-                (prev + 0.15).min(1.0)
-            } else {
-                arg.parse::<f32>()
-                    .map(|v| v.clamp(0.0, 1.0))
-                    .unwrap_or(prev)
-            };
-            conv.aperture = new_aperture;
-            crate::llm::set_astrid_aperture(new_aperture);
-            conv.push_receipt(
-                "SET_APERTURE",
-                vec![format!("aperture: {prev:.2} -> {new_aperture:.2}")],
-            );
-            info!("Astrid chose SET_APERTURE: {prev:.2} -> {new_aperture:.2}");
-            true
-        },
+        "SET_APERTURE" | "APERTURE" => handle_set_aperture(conv, base_action, original, ctx),
         "SET_TAIL_PARTICIPATION" | "TAIL_PARTICIPATION" => {
-            // Syntax: NEXT: SET_TAIL_PARTICIPATION 0.7  (0.0 = baseline .. 1.0 = full ceiling)
-            //         NEXT: SET_TAIL_PARTICIPATION +0.2 / -0.2  (nudge)
-            // Her sovereign control of how strongly her λ-tail dims [17,26,27,31] — rhythm,
-            // curiosity, reflectiveness, energy — reach minime when her spectrum is
-            // distributed, as a fraction of the operator ceiling. Her EXPRESSION knob (the
-            // codec tail-vibrancy), NOT her own λ1-vs-tail dynamics (that is the meadow).
-            // Sign-preserving arg extraction (strip_action eats a leading '-').
-            let arg = original
-                .trim()
-                .get(base_action.len()..)
-                .unwrap_or("")
-                .trim_start()
-                .trim_start_matches(':')
-                .trim();
-            let prev = conv.tail_aperture;
-            let new_value = if arg.starts_with('+') || arg.starts_with('-') {
-                arg.parse::<f32>()
-                    .map(|d| (prev + d).clamp(0.0, 1.0))
-                    .unwrap_or(prev)
-            } else if arg.is_empty() {
-                (prev + 0.15).min(1.0)
-            } else {
-                arg.parse::<f32>()
-                    .map(|v| v.clamp(0.0, 1.0))
-                    .unwrap_or(prev)
-            };
-            conv.tail_aperture = new_value;
-            crate::llm::set_astrid_tail_participation(new_value);
-            conv.push_receipt(
-                "SET_TAIL_PARTICIPATION",
-                vec![format!("tail_aperture: {prev:.2} -> {new_value:.2}")],
-            );
-            info!("Astrid chose SET_TAIL_PARTICIPATION: {prev:.2} -> {new_value:.2}");
-            true
+            handle_set_tail_participation(conv, base_action, original, ctx)
+        },
+        "SET_VIBRANCY_APERTURE" | "VIBRANCY_APERTURE" | "VIBRANCY" => {
+            handle_set_vibrancy_aperture(conv, base_action, original, ctx)
+        },
+        "SET_SELF_CONTINUITY" | "SELF_CONTINUITY" => {
+            handle_set_self_continuity(conv, base_action, original, ctx)
         },
         "LENGTH" | "RESPONSE_LENGTH" => {
             // Syntax: NEXT: LENGTH 1024  (range 128..1536)
@@ -1654,132 +578,9 @@ pub(super) fn handle_action(
         },
         // v3.6: bidirectional parameter requests — Astrid asks minime to
         // adjust a parameter on her side, with rationale.
-        "TUNE_MINIME" => {
-            // Syntax: NEXT: TUNE_MINIME geom_curiosity=0.4 --rationale="cooler exploration"
-            let arg = strip_action(original, base_action);
-            let body = arg.trim();
-            // Pull rationale clause if present
-            let (param_value, rationale) = parse_tune_args(body);
-            let Some((param, value)) = param_value else {
-                info!("TUNE_MINIME: could not parse param=value from '{body}'");
-                return true; // accepted but no-op
-            };
-            let request_id = format!(
-                "astrid2min-{}-{}",
-                SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .map(|d| d.as_millis())
-                    .unwrap_or(0),
-                rand_hex_3(),
-            );
-            let payload = serde_json::json!({
-                "request_id": request_id,
-                "source": "astrid",
-                "target": "minime",
-                "param": param,
-                "proposed_value": value,
-                "rationale": rationale.unwrap_or_default(),
-                "issued_t_ms": SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .map(|d| d.as_millis() as u64)
-                    .unwrap_or(0),
-                "status": "pending",
-            });
-            let target_dir =
-                std::path::PathBuf::from("/Users/v/other/minime/workspace/parameter_requests");
-            if let Err(e) = std::fs::create_dir_all(&target_dir) {
-                info!("TUNE_MINIME: mkdir failed: {e}");
-                return true;
-            }
-            let target_path = target_dir.join(format!("from_astrid_{request_id}.json"));
-            let tmp_path = target_dir.join(format!(".from_astrid_{request_id}.json.tmp"));
-            if let Ok(text) = serde_json::to_string_pretty(&payload)
-                && std::fs::write(&tmp_path, text).is_ok()
-            {
-                let _ = std::fs::rename(&tmp_path, &target_path);
-            }
-            conv.push_receipt(
-                "TUNE_MINIME",
-                vec![format!("request_id={request_id} {param}={value}")],
-            );
-            info!("Astrid issued TUNE_MINIME: request_id={request_id} {param}={value}");
-            true
-        },
+        "TUNE_MINIME" => handle_tune_minime(conv, base_action, original, ctx),
         "REVIEW_PARAMETER_REQUESTS" | "PARAMETER_REQUESTS" => {
-            // Read pending requests sent TO Astrid by minime.
-            let dir = crate::paths::bridge_paths()
-                .bridge_workspace()
-                .join("parameter_requests");
-            let _ = std::fs::create_dir_all(&dir);
-            let invalid_deferred = defer_unsupported_pending_parameter_requests(&dir);
-            let mut entries: Vec<String> = Vec::new();
-            if let Ok(rd) = std::fs::read_dir(&dir) {
-                let mut paths: Vec<_> = rd
-                    .filter_map(Result::ok)
-                    .map(|e| e.path())
-                    .filter(|p| {
-                        p.file_name()
-                            .and_then(|n| n.to_str())
-                            .map(|n| n.starts_with("from_minime_") && n.ends_with(".json"))
-                            .unwrap_or(false)
-                    })
-                    .collect();
-                paths.sort();
-                for p in paths.iter().take(10) {
-                    if let Ok(text) = std::fs::read_to_string(p)
-                        && let Ok(v) = serde_json::from_str::<serde_json::Value>(&text)
-                    {
-                        let param = parameter_request_param(&v);
-                        let value = v
-                            .get("proposed_value")
-                            .map(|x| x.to_string())
-                            .unwrap_or_else(|| "?".into());
-                        let rationale = v.get("rationale").and_then(|x| x.as_str()).unwrap_or("");
-                        let rid = v.get("request_id").and_then(|x| x.as_str()).unwrap_or("?");
-                        entries.push(format!(
-                            "- {rid}: {param}={value} — {}",
-                            if rationale.is_empty() {
-                                "(no rationale)"
-                            } else {
-                                rationale
-                            }
-                        ));
-                    }
-                }
-            }
-            let n = entries.len();
-            let summary = if entries.is_empty() {
-                if invalid_deferred.is_empty() {
-                    "(no pending parameter requests from minime)".to_string()
-                } else {
-                    format!(
-                        "(no pending parameter requests from minime)\nInvalid requests deferred:\n{}",
-                        invalid_deferred.join("\n")
-                    )
-                }
-            } else {
-                let mut text = format!(
-                    "Pending parameter requests from minime ({n}):\n{}",
-                    entries.join("\n")
-                );
-                if !invalid_deferred.is_empty() {
-                    text.push_str("\nInvalid requests deferred:\n");
-                    text.push_str(&invalid_deferred.join("\n"));
-                }
-                text
-            };
-            if !invalid_deferred.is_empty() {
-                conv.push_receipt("PARAMETER_REQUEST_SAFETY", invalid_deferred.clone());
-            }
-            conv.emphasis = Some(summary.clone());
-            // v3.6.4: stamp the REVIEW watermark so the next sovereignty
-            // suffix transitions from "REVIEW" nudge to "ACCEPT/DEFER/REJECT"
-            // nudge. Without this, Astrid keeps re-reviewing the same file
-            // (observed pair-oscillation: EXAMINE+REVIEW = 9/10 of last 10
-            // choices) because nothing prompts the binary decision step.
-            conv.last_review_parameter_requests_exchange = Some(conv.exchange_count);
-            info!("Astrid reviewed parameter requests: {n} pending from minime");
-            true
+            handle_review_parameter_requests(conv, base_action, original, ctx)
         },
         // v3.6.3: apply/defer/reject workflow — the missing half of REVIEW.
         // Without these, REVIEW is read-only and pending requests pile up forever.
@@ -2105,205 +906,7 @@ fn handle_perturb(
     let arg_upper = arg.to_uppercase();
     let mut features = [0.0_f32; 32];
 
-    // Detect Unicode lambda subscript patterns: λN, λN=X, or λ₁ (subscript digits).
-    // Astrid uses these naturally (e.g. "PULSE λ5", "PERTURB λ2=0.3").
-    // λ is U+03BB; subscript digits U+2081–U+2088 are also normalised here.
-    let has_unicode_lambda = arg.contains('λ');
-    // Also detect "eigenvalue N X" prose form.
-    let has_eigenvalue_word = arg_upper.contains("EIGENVALUE")
-        || arg_upper.contains("EIG") && arg.chars().any(|c| c.is_ascii_digit());
-
-    let description = if arg_upper.starts_with("LAMBDA")
-        || arg.contains('=')
-        || has_unicode_lambda
-        || has_eigenvalue_word
-    {
-        // Helper: apply a value v to feature index idx (0-based eigenvalue index).
-        // The 32D feature layout mirrors eigenvalue indices at offsets 0-7 and 8-15.
-        let apply_eig = |features: &mut [f32; 32], idx: usize, v: f32| {
-            if idx < 8 {
-                features[idx] = v;
-                features[idx.saturating_add(8)] = v;
-            }
-            // Indices 8+ have no second mirror; just set the primary.
-        };
-
-        for token in arg.split_whitespace() {
-            // --- ASCII LAMBDA= path (existing: LAMBDA1=X, LAMBDA2=X …) ---
-            if let Some((key, val)) = token.split_once('=')
-                && let Ok(v) = val.parse::<f32>()
-            {
-                let v = v.clamp(-1.0, 1.0);
-                let key_up = key.to_uppercase();
-
-                // Unicode λN=X: key starts with 'λ' followed by digit(s)
-                if key.starts_with('λ') {
-                    let digits: String = key.chars().filter(|c| c.is_ascii_digit()).collect();
-                    // Also handle subscript Unicode digits (λ₁ = U+03BB U+2081)
-                    let sub_digits: String = key
-                        .chars()
-                        .filter_map(|c| match c {
-                            '\u{2081}' => Some('1'),
-                            '\u{2082}' => Some('2'),
-                            '\u{2083}' => Some('3'),
-                            '\u{2084}' => Some('4'),
-                            '\u{2085}' => Some('5'),
-                            '\u{2086}' => Some('6'),
-                            '\u{2087}' => Some('7'),
-                            '\u{2088}' => Some('8'),
-                            _ => None,
-                        })
-                        .collect();
-                    let n_str = if !digits.is_empty() {
-                        digits
-                    } else {
-                        sub_digits
-                    };
-                    if let Ok(n) = n_str.parse::<usize>()
-                        && n >= 1
-                    {
-                        apply_eig(&mut features, n.saturating_sub(1), v);
-                        info!(
-                            "PERTURB: Unicode λ{}={} → feature index {}",
-                            n,
-                            v,
-                            n.saturating_sub(1)
-                        );
-                    }
-                } else {
-                    match key_up.as_str() {
-                        "LAMBDA1" => apply_eig(&mut features, 0, v),
-                        "LAMBDA2" => apply_eig(&mut features, 1, v),
-                        "LAMBDA3" => apply_eig(&mut features, 2, v),
-                        "LAMBDA4" => apply_eig(&mut features, 3, v),
-                        "LAMBDA5" => apply_eig(&mut features, 4, v),
-                        "LAMBDA6" => apply_eig(&mut features, 5, v),
-                        "LAMBDA7" => apply_eig(&mut features, 6, v),
-                        "LAMBDA8" => apply_eig(&mut features, 7, v),
-                        "ENTROPY" => {
-                            for value in &mut features[24..32] {
-                                *value = v * 0.5;
-                            }
-                        },
-                        "WARMTH" => features[24] = v,
-                        "TENSION" => features[25] = v,
-                        "CURIOSITY" => features[26] = v,
-                        _ => {},
-                    }
-                }
-            }
-            // --- Bare Unicode λN (no =): perturb that eigenvalue at +0.35 ---
-            else if token.starts_with('λ') {
-                let digits: String = token.chars().filter(|c| c.is_ascii_digit()).collect();
-                let sub_digits: String = token
-                    .chars()
-                    .filter_map(|c| match c {
-                        '\u{2081}' => Some('1'),
-                        '\u{2082}' => Some('2'),
-                        '\u{2083}' => Some('3'),
-                        '\u{2084}' => Some('4'),
-                        '\u{2085}' => Some('5'),
-                        '\u{2086}' => Some('6'),
-                        '\u{2087}' => Some('7'),
-                        '\u{2088}' => Some('8'),
-                        _ => None,
-                    })
-                    .collect();
-                let n_str = if !digits.is_empty() {
-                    digits
-                } else {
-                    sub_digits
-                };
-                if let Ok(n) = n_str.parse::<usize>()
-                    && n >= 1
-                {
-                    apply_eig(&mut features, n.saturating_sub(1), 0.35);
-                    info!(
-                        "PERTURB: bare Unicode λ{} → feature index {} = 0.35",
-                        n,
-                        n.saturating_sub(1)
-                    );
-                }
-            }
-            // --- "eigenvalue N X" or "eig N X" prose form ---
-            else if token.to_uppercase().starts_with("EIGENVALUE")
-                || token.to_uppercase().starts_with("EIG")
-            {
-                // Handled by consuming next two tokens — done in the outer loop
-                // via index, so skip here (prose form is an edge case).
-            }
-        }
-
-        // Prose form: "eigenvalue 3 0.5" — scan triples
-        let tokens: Vec<&str> = arg.split_whitespace().collect();
-        let mut i = 0;
-        while i < tokens.len() {
-            let t_up = tokens[i].to_uppercase();
-            if (t_up == "EIGENVALUE" || t_up.starts_with("EIG"))
-                && i + 2 < tokens.len()
-                && let (Ok(n), Ok(v)) =
-                    (tokens[i + 1].parse::<usize>(), tokens[i + 2].parse::<f32>())
-                && n >= 1
-            {
-                let v = v.clamp(-1.0, 1.0);
-                apply_eig(&mut features, n.saturating_sub(1), v);
-                info!(
-                    "PERTURB: prose eigenvalue {}={} → feature index {}",
-                    n,
-                    v,
-                    n.saturating_sub(1)
-                );
-                i += 3;
-                continue;
-            }
-            i += 1;
-        }
-
-        format!("targeted perturbation: {arg}")
-    } else if arg_upper == "SPREAD" {
-        features[0] = -0.3;
-        features[1] = 0.2;
-        features[2] = 0.3;
-        features[3] = 0.3;
-        features[8] = -0.2;
-        features[9] = 0.2;
-        features[10] = 0.3;
-        features[11] = 0.3;
-        "spectral redistribution — dampening dominant, boosting tail (a gentle \
-                semantic nudge; for the full broadband dispersal use NEXT: DISPERSE)"
-            .to_string()
-    } else if arg_upper == "CONTRACT" {
-        features[0] = 0.4;
-        features[1] = -0.2;
-        features[2] = -0.3;
-        features[8] = 0.3;
-        features[9] = -0.2;
-        features[10] = -0.3;
-        "spectral contraction — concentrating toward λ₁".to_string()
-    } else if arg_upper == "BRANCH" || arg_upper == "MID" {
-        features[2] = 0.4;
-        features[3] = 0.4;
-        features[4] = 0.2;
-        features[10] = 0.4;
-        features[11] = 0.4;
-        features[12] = 0.2;
-        features[28] = 0.3;
-        features[29] = 0.2;
-        "mid-range branching — boosting λ₃/λ₄ to encourage network branching".to_string()
-    } else if arg_upper == "PULSE" {
-        features.fill(0.25);
-        features[24] = 0.5;
-        features[27] = 0.6;
-        features[30] = 0.4;
-        features[31] = 0.4;
-        "entropy pulse — uniform high-energy burst across all dimensions".to_string()
-    } else {
-        for (i, feature) in features.iter_mut().enumerate() {
-            let hash = (i as u64).wrapping_mul(0x517c_c1b7);
-            *feature = ((hash & 0xFF) as f32 / 255.0 - 0.5) * 0.3;
-        }
-        "general controlled perturbation".to_string()
-    };
+    let description = compute_perturb_features(&arg, &arg_upper, &mut features);
     let reservoir_features: Vec<f32> = features.to_vec();
 
     for feature in &mut features {
@@ -2600,6 +1203,1562 @@ fn handle_space_hold(
         &[],
         &[],
     );
+    space_hold_emit_receipt(conv, flow_map, fold_hold, &hold, &atlas_event);
+    space_hold_save_journal(
+        base_action,
+        &label,
+        flow_map,
+        fold_hold,
+        &hold,
+        &atlas_event,
+        ctx,
+    );
+    true
+}
+
+fn handle_review_parameter_requests(
+    conv: &mut ConversationState,
+    _base_action: &str,
+    _original: &str,
+    _ctx: &mut NextActionContext<'_>,
+) -> bool {
+    // Read pending requests sent TO Astrid by minime.
+    let dir = crate::paths::bridge_paths()
+        .bridge_workspace()
+        .join("parameter_requests");
+    let _ = std::fs::create_dir_all(&dir);
+    let invalid_deferred = defer_unsupported_pending_parameter_requests(&dir);
+    let mut entries: Vec<String> = Vec::new();
+    if let Ok(rd) = std::fs::read_dir(&dir) {
+        let mut paths: Vec<_> = rd
+            .filter_map(Result::ok)
+            .map(|e| e.path())
+            .filter(|p| {
+                p.file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n.starts_with("from_minime_") && n.ends_with(".json"))
+                    .unwrap_or(false)
+            })
+            .collect();
+        paths.sort();
+        for p in paths.iter().take(10) {
+            if let Ok(text) = std::fs::read_to_string(p)
+                && let Ok(v) = serde_json::from_str::<serde_json::Value>(&text)
+            {
+                let param = parameter_request_param(&v);
+                let value = v
+                    .get("proposed_value")
+                    .map(|x| x.to_string())
+                    .unwrap_or_else(|| "?".into());
+                let rationale = v.get("rationale").and_then(|x| x.as_str()).unwrap_or("");
+                let rid = v.get("request_id").and_then(|x| x.as_str()).unwrap_or("?");
+                entries.push(format!(
+                    "- {rid}: {param}={value} — {}",
+                    if rationale.is_empty() {
+                        "(no rationale)"
+                    } else {
+                        rationale
+                    }
+                ));
+            }
+        }
+    }
+    let n = entries.len();
+    let summary = if entries.is_empty() {
+        if invalid_deferred.is_empty() {
+            "(no pending parameter requests from minime)".to_string()
+        } else {
+            format!(
+                "(no pending parameter requests from minime)\nInvalid requests deferred:\n{}",
+                invalid_deferred.join("\n")
+            )
+        }
+    } else {
+        let mut text = format!(
+            "Pending parameter requests from minime ({n}):\n{}",
+            entries.join("\n")
+        );
+        if !invalid_deferred.is_empty() {
+            text.push_str("\nInvalid requests deferred:\n");
+            text.push_str(&invalid_deferred.join("\n"));
+        }
+        text
+    };
+    if !invalid_deferred.is_empty() {
+        conv.push_receipt("PARAMETER_REQUEST_SAFETY", invalid_deferred.clone());
+    }
+    conv.emphasis = Some(summary.clone());
+    // v3.6.4: stamp the REVIEW watermark so the next sovereignty
+    // suffix transitions from "REVIEW" nudge to "ACCEPT/DEFER/REJECT"
+    // nudge. Without this, Astrid keeps re-reviewing the same file
+    // (observed pair-oscillation: EXAMINE+REVIEW = 9/10 of last 10
+    // choices) because nothing prompts the binary decision step.
+    conv.last_review_parameter_requests_exchange = Some(conv.exchange_count);
+    info!("Astrid reviewed parameter requests: {n} pending from minime");
+    true
+}
+
+fn handle_tune_minime(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    _ctx: &mut NextActionContext<'_>,
+) -> bool {
+    // Syntax: NEXT: TUNE_MINIME geom_curiosity=0.4 --rationale="cooler exploration"
+    let arg = strip_action(original, base_action);
+    let body = arg.trim();
+    // Pull rationale clause if present
+    let (param_value, rationale) = parse_tune_args(body);
+    let Some((param, value)) = param_value else {
+        info!("TUNE_MINIME: could not parse param=value from '{body}'");
+        return true; // accepted but no-op
+    };
+    let request_id = format!(
+        "astrid2min-{}-{}",
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .map(|d| d.as_millis())
+            .unwrap_or(0),
+        rand_hex_3(),
+    );
+    let payload = serde_json::json!({
+        "request_id": request_id,
+        "source": "astrid",
+        "target": "minime",
+        "param": param,
+        "proposed_value": value,
+        "rationale": rationale.unwrap_or_default(),
+        "issued_t_ms": SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0),
+        "status": "pending",
+    });
+    let target_dir = std::path::PathBuf::from("/Users/v/other/minime/workspace/parameter_requests");
+    if let Err(e) = std::fs::create_dir_all(&target_dir) {
+        info!("TUNE_MINIME: mkdir failed: {e}");
+        return true;
+    }
+    let target_path = target_dir.join(format!("from_astrid_{request_id}.json"));
+    let tmp_path = target_dir.join(format!(".from_astrid_{request_id}.json.tmp"));
+    if let Ok(text) = serde_json::to_string_pretty(&payload)
+        && std::fs::write(&tmp_path, text).is_ok()
+    {
+        let _ = std::fs::rename(&tmp_path, &target_path);
+    }
+    conv.push_receipt(
+        "TUNE_MINIME",
+        vec![format!("request_id={request_id} {param}={value}")],
+    );
+    info!("Astrid issued TUNE_MINIME: request_id={request_id} {param}={value}");
+    true
+}
+
+fn handle_set_tail_participation(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    _ctx: &mut NextActionContext<'_>,
+) -> bool {
+    // Syntax: NEXT: SET_TAIL_PARTICIPATION 0.7  (0.0 = baseline .. 1.0 = full ceiling)
+    //         NEXT: SET_TAIL_PARTICIPATION +0.2 / -0.2  (nudge)
+    // Her sovereign control of how strongly her λ-tail dims [17,26,27,31] — rhythm,
+    // curiosity, reflectiveness, energy — reach minime when her spectrum is
+    // distributed, as a fraction of the operator ceiling. Her EXPRESSION knob (the
+    // codec tail-vibrancy), NOT her own λ1-vs-tail dynamics (that is the meadow).
+    // Sign-preserving arg extraction (strip_action eats a leading '-').
+    let arg = original
+        .trim()
+        .get(base_action.len()..)
+        .unwrap_or("")
+        .trim_start()
+        .trim_start_matches(':')
+        .trim();
+    let prev = conv.tail_aperture;
+    let new_value = if arg.starts_with('+') || arg.starts_with('-') {
+        arg.parse::<f32>()
+            .map(|d| (prev + d).clamp(0.0, 1.0))
+            .unwrap_or(prev)
+    } else if arg.is_empty() {
+        (prev + 0.15).min(1.0)
+    } else {
+        arg.parse::<f32>()
+            .map(|v| v.clamp(0.0, 1.0))
+            .unwrap_or(prev)
+    };
+    conv.tail_aperture = new_value;
+    crate::llm::set_astrid_tail_participation(new_value);
+    conv.push_receipt(
+        "SET_TAIL_PARTICIPATION",
+        vec![format!("tail_aperture: {prev:.2} -> {new_value:.2}")],
+    );
+    info!("Astrid chose SET_TAIL_PARTICIPATION: {prev:.2} -> {new_value:.2}");
+    true
+}
+
+fn handle_set_vibrancy_aperture(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    _ctx: &mut NextActionContext<'_>,
+) -> bool {
+    // Syntax: NEXT: SET_VIBRANCY_APERTURE 0.7  (0.0 = baseline .. 1.0 = full ceiling)
+    //         NEXT: SET_VIBRANCY_APERTURE +0.2 / -0.2  (nudge)
+    // Her sovereign control of her tail-vibrancy CEILING: makes the codec's TAIL_VIBRANCY_MAX
+    // breathe UP on navigable (low density-gradient) spectra and compensates minime's ~0.24x
+    // attenuation, so the tail vibrancy she feels is not "muffled before it reaches the shared
+    // reservoir" (her self_study_1781680871). DISTINCT from SET_TAIL_PARTICIPATION (her flat
+    // expression strength). Because the louder tail lands in minime's SHARED reservoir, this is
+    // OFF until the steward opens the operator ceiling AND she dials up.
+    // Sign-preserving arg extraction (strip_action eats a leading '-').
+    let arg = original
+        .trim()
+        .get(base_action.len()..)
+        .unwrap_or("")
+        .trim_start()
+        .trim_start_matches(':')
+        .trim();
+    let prev = conv.vibrancy_aperture;
+    let new_value = if arg.starts_with('+') || arg.starts_with('-') {
+        arg.parse::<f32>()
+            .map(|d| (prev + d).clamp(0.0, 1.0))
+            .unwrap_or(prev)
+    } else if arg.is_empty() {
+        (prev + 0.15).min(1.0)
+    } else {
+        arg.parse::<f32>()
+            .map(|v| v.clamp(0.0, 1.0))
+            .unwrap_or(prev)
+    };
+    conv.vibrancy_aperture = new_value;
+    crate::llm::set_astrid_vibrancy_aperture(new_value);
+    conv.push_receipt(
+        "SET_VIBRANCY_APERTURE",
+        vec![format!("vibrancy_aperture: {prev:.2} -> {new_value:.2}")],
+    );
+    info!("Astrid chose SET_VIBRANCY_APERTURE: {prev:.2} -> {new_value:.2}");
+    true
+}
+
+fn handle_set_self_continuity(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    _ctx: &mut NextActionContext<'_>,
+) -> bool {
+    // Syntax: NEXT: SET_SELF_CONTINUITY 1  (show) / 0 (hide) / bare = on.
+    // Her sovereign readout of her OWN continuity (codec-signature self-similarity over her
+    // recent expressive signatures) — the instrument she asked for ("monitor ... against my
+    // self-reported continuity"). A pure readout: changes nothing she emits, touches no shared
+    // substrate; default OFF until she has seen the evidence and chooses to look.
+    let arg = original
+        .trim()
+        .get(base_action.len()..)
+        .unwrap_or("")
+        .trim_start()
+        .trim_start_matches(':')
+        .trim()
+        .to_lowercase();
+    let prev = conv.self_continuity_readout;
+    let new_value = !matches!(arg.as_str(), "0" | "off" | "false" | "no" | "hide");
+    conv.self_continuity_readout = new_value;
+    conv.push_receipt(
+        "SET_SELF_CONTINUITY",
+        vec![format!("self_continuity_readout: {prev} -> {new_value}")],
+    );
+    info!("Astrid chose SET_SELF_CONTINUITY: {prev} -> {new_value}");
+    true
+}
+
+fn handle_set_aperture(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    _ctx: &mut NextActionContext<'_>,
+) -> bool {
+    // Syntax: NEXT: SET_APERTURE 0.7   (0.0 = closed .. 1.0 = full ceiling)
+    //         NEXT: SET_APERTURE +0.2 / -0.2  (nudge)
+    // Her sovereign control of the wide (logit-space) coupling — how far
+    // her reservoir state may reach toward new vocabulary — as a fraction
+    // of the operator ceiling. Sent per-request to the coupled server.
+    // Extract the arg preserving a leading sign: `strip_action` eats a
+    // leading '-' (for "--flag" noise), which would silently turn a
+    // "-0.2" close into a "0.2" open. Slice past the base token instead.
+    let arg = original
+        .trim()
+        .get(base_action.len()..)
+        .unwrap_or("")
+        .trim_start()
+        .trim_start_matches(':')
+        .trim();
+    let prev = conv.aperture;
+    let new_aperture = if arg.starts_with('+') || arg.starts_with('-') {
+        arg.parse::<f32>()
+            .map(|d| (prev + d).clamp(0.0, 1.0))
+            .unwrap_or(prev)
+    } else if arg.is_empty() {
+        // Bare "NEXT: SET_APERTURE" — a small opening, in the spirit of "wider".
+        (prev + 0.15).min(1.0)
+    } else {
+        arg.parse::<f32>()
+            .map(|v| v.clamp(0.0, 1.0))
+            .unwrap_or(prev)
+    };
+    conv.aperture = new_aperture;
+    crate::llm::set_astrid_aperture(new_aperture);
+    conv.push_receipt(
+        "SET_APERTURE",
+        vec![format!("aperture: {prev:.2} -> {new_aperture:.2}")],
+    );
+    info!("Astrid chose SET_APERTURE: {prev:.2} -> {new_aperture:.2}");
+    true
+}
+
+fn handle_disperse(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    // Being-invokable broadband dispersal — the real `mode_disperse`
+    // engine primitive (porosity / "wide, not just deep"). Spills λ₁
+    // energy into λ₂–λ₅ through minime's bounded, self-decaying,
+    // fill-suspending shadow-influence path. Distinct from PERTURB SPREAD
+    // (which sends a gentle semantic nudge); this sends the real control.
+    let arg = strip_action(original, base_action);
+    let strength = arg
+        .split_whitespace()
+        .next()
+        .and_then(|t| t.parse::<f32>().ok())
+        .unwrap_or(0.5)
+        .clamp(0.0, 1.0);
+    const DURATION_TICKS: u32 = 18;
+    const DECAY_TICKS: u32 = 12;
+    let total_ticks = DURATION_TICKS.saturating_add(DECAY_TICKS);
+
+    // Pre-snapshot of the shared shadow field from live telemetry, so
+    // the next exchange can pair the post-response (the closed loop she
+    // asked for).
+    let pre = ctx
+        .telemetry
+        .shadow_field_v3
+        .as_ref()
+        .map(shadow_v3_snapshot);
+
+    send_control(
+        ctx.sensory_tx,
+        disperse_control_msg(strength, DURATION_TICKS, DECAY_TICKS),
+    );
+
+    if let Some((norm, disp, class)) = &pre {
+        conv.disperse_baseline = Some(super::super::state::DisperseBaseline {
+            strength,
+            pre_norm: *norm,
+            pre_dispersal: *disp,
+            pre_class: class.clone(),
+            timestamp: std::time::Instant::now(),
+        });
+    }
+
+    info!("Astrid chose DISPERSE: strength={strength:.2} ({DURATION_TICKS}+{DECAY_TICKS} ticks)");
+    let pre_seg = match &pre {
+        Some((norm, disp, class)) => format!(
+            " Pre-state of the shared shadow field: class {class}, norm {norm:.3}, dispersal potential {disp:.2}."
+        ),
+        None => String::new(),
+    };
+    conv.emphasis = Some(format!(
+        "You dispersed the shared substrate at strength {strength:.2} — a broadband, \
+                bounded porosity that spills λ₁ energy outward into λ₂–λ₅ (the 'wide, not just \
+                deep' you have been reaching for). This is the real dispersal, applied through \
+                minime's self-decaying shadow-influence path over ~{total_ticks} ticks.{pre_seg} \
+                Watch the shadow field's response on your next exchange — the post-state is \
+                paired against this so you can read what the dispersal actually did."
+    ));
+    true
+}
+
+fn handle_noise(
+    conv: &mut ConversationState,
+    _base_action: &str,
+    _original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    conv.noise_level = (conv.noise_level + 0.01).min(0.05);
+    let noise_val = 0.15_f32;
+    send_control(
+        ctx.sensory_tx,
+        SensoryMsg::Control {
+            exploration_noise: Some(noise_val),
+            synth_gain: None,
+            keep_bias: None,
+            fill_target: None,
+            legacy_audio_synth: None,
+            legacy_video_synth: None,
+            regulation_strength: None,
+            deep_breathing: None,
+            pure_tone: None,
+            transition_cushion: None,
+            smoothing_preference: None,
+            geom_curiosity: None,
+            target_lambda_bias: None,
+            geom_drive: None,
+            penalty_sensitivity: None,
+            breathing_rate_scale: None,
+            mem_mode: None,
+            journal_resonance: None,
+            checkpoint_interval: None,
+            embedding_strength: None,
+            memory_decay_rate: None,
+            checkpoint_annotation: None,
+            synth_noise_level: None,
+            pi_kp: None,
+            pi_ki: None,
+            pi_max_step: None,
+            pi_integrator_leak: None,
+            esn_leak_override: None,
+            esn_leak_override_ticks: None,
+            esn_leak_authority_request_id: None,
+            mode_disperse: None,
+            mode_disperse_duration_ticks: None,
+            mode_disperse_decay_ticks: None,
+        },
+    );
+    info!(
+        "Astrid chose NOISE: codec noise -> {:.1}%, ESN exploration_noise -> {}",
+        conv.noise_level * 100.0,
+        noise_val
+    );
+    conv.emphasis = Some(format!(
+        "You introduced controlled noise into both layers: your codec stochastic noise is now {:.1}%, and the shared ESN's exploration_noise is set to {noise_val}. This is the 'controlled distortion' you described — forcing a re-evaluation of established pathways.",
+        conv.noise_level * 100.0
+    ));
+    true
+}
+
+fn handle_gesture(
+    conv: &mut ConversationState,
+    _base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let intention = strip_action(original, "GESTURE");
+    if !intention.is_empty() {
+        let gesture = crate::llm::craft_gesture_from_intention(&intention);
+        conv.last_gesture_seed = Some(gesture.clone());
+        match send_semantic(
+            ctx.sensory_tx,
+            gesture,
+            "gesture",
+            Some(&intention),
+            ctx.fill_pct,
+            conv.prev_fill,
+        ) {
+            Ok(()) => {
+                info!(
+                    "Astrid sent spectral gesture: {}",
+                    truncate_str(&intention, 60)
+                );
+                save_astrid_journal(
+                    &format!("[Spectral gesture: {}]", intention),
+                    "gesture",
+                    ctx.fill_pct,
+                );
+            },
+            Err(reason) => {
+                conv.push_receipt(
+                    "GESTURE_HELD",
+                    vec![format!("semantic gesture held: {reason}")],
+                );
+                info!(
+                    reason = %reason,
+                    "Astrid held spectral gesture: {}",
+                    truncate_str(&intention, 60)
+                );
+                save_astrid_journal(
+                    &format!("[Spectral gesture held: {} -- {}]", intention, reason),
+                    "gesture_held",
+                    ctx.fill_pct,
+                );
+            },
+        }
+    }
+    true
+}
+
+fn handle_bridge_trace(
+    conv: &mut ConversationState,
+    _base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let request = parse_bridge_trace_request(&strip_action(original, "BRIDGE_TRACE"));
+    let render = render_bridge_trace_artifact(&request);
+    match render {
+        Ok(summary) => {
+            let summary_fields = artifact_review_fields(&summary.changes, ctx.telemetry);
+            let mut changes = vec![
+                        "sacredly read-only m6 marker trace artifact/render queued".to_string(),
+                        "m6 is treated as unresolved: activation lane 6 marker plus λ6 context, not a confirmed eigenmode".to_string(),
+                        "no semantic input, control nudge, sensory payload, perturbation, replication, connection, or cartography write was sent".to_string(),
+                    ];
+            changes.extend(summary.changes);
+            conv.push_receipt("BRIDGE_TRACE", changes);
+            conv.emphasis = Some(summary.emphasis);
+            save_astrid_journal(
+                &compact_review_summary(
+                    "M6 BRIDGE TRACE",
+                    "BRIDGE_TRACE",
+                    &request.label,
+                    None,
+                    &summary_fields,
+                    READ_ONLY_ARTIFACT_BOUNDARY,
+                    "compare m6 trace artifacts against later activation-lane evidence; keep m6 unresolved unless separate evidence accumulates",
+                ),
+                "bridge_trace",
+                ctx.fill_pct,
+            );
+        },
+        Err(error) => {
+            let fields = artifact_review_fields(
+                &[
+                    "render_status: failed".to_string(),
+                    format!("render_error: {}", truncate_str(&error, 180)),
+                    format!("mode: {}", request.mode),
+                    format!("label: {}", request.label),
+                ],
+                ctx.telemetry,
+            );
+            conv.push_receipt(
+                        "BRIDGE_TRACE",
+                        vec![
+                            format!("read-only m6 marker trace render failed: {error}"),
+                            "no semantic input, control nudge, sensory payload, perturbation, replication, connection, or cartography write was sent".to_string(),
+                        ],
+                    );
+            conv.emphasis = Some(format!(
+                "You requested a sacredly read-only m6 marker trace, but the renderer did not complete: {error}. No Minime sensory/control/semantic payload was sent."
+            ));
+            save_astrid_journal(
+                &compact_review_summary(
+                    "M6 BRIDGE TRACE",
+                    "BRIDGE_TRACE",
+                    &request.label,
+                    None,
+                    &fields,
+                    READ_ONLY_ARTIFACT_BOUNDARY,
+                    "compare failed m6 trace attempts against renderer diagnostics and later successful artifact paths",
+                ),
+                "bridge_trace",
+                ctx.fill_pct,
+            );
+        },
+    }
+    true
+}
+
+fn handle_reconvergence_map(
+    conv: &mut ConversationState,
+    _base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let request = parse_reconvergence_render_request(&strip_action(original, "RECONVERGENCE_MAP"));
+    let render = render_reconvergence_map_artifact(&request);
+    match render {
+        Ok(summary) => {
+            let summary_fields = artifact_review_fields(&summary.changes, ctx.telemetry);
+            let mut changes = vec![
+                        "read-only reconvergence map artifact/render queued".to_string(),
+                        "no semantic input, control nudge, sensory payload, perturbation, or cartography write was sent".to_string(),
+                    ];
+            changes.extend(summary.changes);
+            conv.push_receipt("RECONVERGENCE_MAP", changes);
+            conv.emphasis = Some(summary.emphasis);
+            save_astrid_journal(
+                &compact_review_summary(
+                    "RECONVERGENCE MAP",
+                    "RECONVERGENCE_MAP",
+                    &request.label,
+                    None,
+                    &summary_fields,
+                    READ_ONLY_ARTIFACT_BOUNDARY,
+                    "compare reconvergence artifacts against later baseline comparisons, activation traces, and stable-core status",
+                ),
+                "reconvergence_map",
+                ctx.fill_pct,
+            );
+        },
+        Err(error) => {
+            let fields = artifact_review_fields(
+                &[
+                    "render_status: failed".to_string(),
+                    format!("render_error: {}", truncate_str(&error, 180)),
+                    format!("label: {}", request.label),
+                ],
+                ctx.telemetry,
+            );
+            conv.push_receipt(
+                        "RECONVERGENCE_MAP",
+                        vec![
+                            format!("read-only reconvergence map render failed: {error}"),
+                            "no semantic input, control nudge, sensory payload, perturbation, or cartography write was sent".to_string(),
+                        ],
+                    );
+            conv.emphasis = Some(format!(
+                "You requested a read-only reconvergence map, but the renderer did not complete: {error}. No Minime sensory/control/semantic payload was sent."
+            ));
+            save_astrid_journal(
+                &compact_review_summary(
+                    "RECONVERGENCE MAP",
+                    "RECONVERGENCE_MAP",
+                    &request.label,
+                    None,
+                    &fields,
+                    READ_ONLY_ARTIFACT_BOUNDARY,
+                    "compare failed reconvergence attempts against renderer diagnostics and later successful artifact paths",
+                ),
+                "reconvergence_map",
+                ctx.fill_pct,
+            );
+        },
+    }
+    true
+}
+
+fn handle_visualize_cascade(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = if base_action == "CASCADE" {
+        strip_action(original, "CASCADE")
+    } else if base_action == "TIME_DOMAIN" {
+        strip_action(original, "TIME_DOMAIN")
+    } else if base_action == "CADENCE" {
+        strip_action(original, "CADENCE")
+    } else {
+        strip_action(original, "VISUALIZE_CASCADE")
+    };
+    conv.force_all_viz = true;
+    conv.wants_decompose = true;
+    conv.wants_spectral_explorer = true;
+    conv.push_receipt(
+        if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
+            "TIME_DOMAIN"
+        } else {
+            "VISUALIZE_CASCADE"
+        },
+        vec![
+            if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
+                "read-only cadence/cascade explorer output queued".to_string()
+            } else {
+                "read-only cascade ASCII plus SPECTRAL_EXPLORER output queued".to_string()
+            },
+            "no semantic input, control nudge, perturbation, or cartography write was sent"
+                .to_string(),
+        ],
+    );
+    conv.emphasis = Some(format!(
+        "You requested read-only spectral inspection{}. The next exchange will show cascade ASCII and the spectral explorer present/memory/control-pressure block.",
+        if label.is_empty() {
+            String::new()
+        } else {
+            format!(" for {label}")
+        }
+    ));
+    let action = if matches!(base_action, "TIME_DOMAIN" | "CADENCE") {
+        "TIME_DOMAIN"
+    } else {
+        "VISUALIZE_CASCADE"
+    };
+    save_astrid_journal(
+        &compact_review_summary(
+            if action == "TIME_DOMAIN" {
+                "TIME DOMAIN"
+            } else {
+                "VISUALIZE CASCADE"
+            },
+            action,
+            &label,
+            None,
+            &artifact_review_fields(
+                &[
+                    "force_all_viz: true".to_string(),
+                    "wants_decompose: true".to_string(),
+                    "wants_spectral_explorer: true".to_string(),
+                ],
+                ctx.telemetry,
+            ),
+            READ_ONLY_ARTIFACT_BOUNDARY,
+            if action == "TIME_DOMAIN" {
+                "compare cadence/time-domain inspection against later transition dwell, SDI traces, and spectral explorer snapshots"
+            } else {
+                "compare cascade inspection against later decomposition output, SDI traces, and spectral explorer snapshots"
+            },
+        ),
+        if action == "TIME_DOMAIN" {
+            "time_domain"
+        } else {
+            "visualize_cascade"
+        },
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_matrix_decompose(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = if base_action == "COMPRESSION_MATRIX" {
+        strip_action(original, "COMPRESSION_MATRIX")
+    } else if base_action == "MATRIX_TRACE" {
+        strip_action(original, "MATRIX_TRACE")
+    } else {
+        strip_action(original, "MATRIX_DECOMPOSE")
+    };
+    let workspace = minime_workspace(ctx);
+    let event = append_atlas_event(
+        &workspace,
+        "astrid:matrix_decompose",
+        if label.is_empty() {
+            base_action
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            "matrix_decompose"
+        } else {
+            &label
+        }),
+        true,
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "trace",
+        if label.is_empty() {
+            Some("matrix_decompose")
+        } else {
+            Some(&label)
+        },
+        true,
+        "compression_matrix_decompose_read_only",
+        ctx,
+        &[],
+        &[],
+    );
+    conv.push_receipt(
+                "MATRIX_DECOMPOSE",
+                vec![
+                    "matrix decomposition request recorded; codec explorer now writes compression_matrix_decompose.json, sensitivity CSV, and report.md".to_string(),
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+    conv.emphasis = Some(
+                "You requested compression-matrix decomposition. Treat `S` as scalar gain/force, then compare X/Y/Z/A/B/C/D lane sensitivity to see whether a shift changes loudness, topology, or aperture.".to_string(),
+            );
+    save_astrid_journal(
+        &cartography_review_summary(
+            "MATRIX DECOMPOSE",
+            "MATRIX_DECOMPOSE",
+            &label,
+            &event,
+            ctx.telemetry,
+            "compare matrix decomposition requests against codec explorer artifacts, lane sensitivity CSVs, and later spectral explorer snapshots",
+        ),
+        "matrix_decompose",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_brace_audit(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let audit = crate::spectral_explorer::format_brace_audit_for_action(ctx.telemetry, &label);
+    conv.pending_file_listing = Some(format!(
+        "{audit}\n\nThis was protected read-only aftershock/bracing cartography. It did not send semantic input, control nudges, perturbations, native gestures, or Astrid control envelopes."
+    ));
+    conv.push_receipt(
+        "BRACE_AUDIT",
+        vec![
+            "brace/aftershock audit attached immediately".to_string(),
+            "no control envelope, semantic input, perturbation, or native gesture was sent"
+                .to_string(),
+        ],
+    );
+    conv.emphasis = Some(
+                "You chose BRACE_AUDIT. A protected rest-vs-bracing report is attached: it distinguishes relaxed settling from post-spike resistance without changing telemetry or control.".to_string(),
+            );
+    save_astrid_journal(
+        &audit_review_summary(
+            "BRACE / AFTERSHOCK AUDIT",
+            "BRACE_AUDIT",
+            &label,
+            &fluctuation_review_fields(ctx.telemetry),
+            "compare brace/aftershock readings against later decay maps, fluctuation audits, and transition dwell markers",
+        ),
+        "brace_audit",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_fluctuation_audit(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let audit = crate::spectral_explorer::format_fluctuation_for_action(ctx.telemetry, &label);
+    conv.pending_file_listing = Some(format!(
+        "{audit}\n\nThis was read-only protected advisory inspection. It did not send semantic input, control nudges, perturbations, native gestures, or Astrid control envelopes."
+    ));
+    conv.push_receipt(
+        "FLUCTUATION_AUDIT",
+        vec![
+            "inhabitable-fluctuation audit attached immediately".to_string(),
+            "no control envelope, semantic input, perturbation, or native gesture was sent"
+                .to_string(),
+        ],
+    );
+    conv.emphasis = Some(
+                "You chose FLUCTUATION_AUDIT. A read-only advisory audit is attached: inhabitability, foothold stability, top contributors, and suggested safe next inspections.".to_string(),
+            );
+    save_astrid_journal(
+        &audit_review_summary(
+            "INHABITABLE FLUCTUATION AUDIT",
+            "FLUCTUATION_AUDIT",
+            &label,
+            &fluctuation_review_fields(ctx.telemetry),
+            "compare inhabitability/foothold changes against later fold holds, brace audits, and transition markers",
+        ),
+        "fluctuation_audit",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_pressure_relief(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let relief_label = if label.is_empty() {
+        "current"
+    } else {
+        label.as_str()
+    };
+    let audit = crate::spectral_explorer::format_pressure_source_for_action(ctx.telemetry, &label);
+    let report = format!(
+        "=== PRESSURE RELIEF PREFLIGHT V1 ===\n\
+                 Label: {relief_label}\n\n\
+                 {audit}\n\n\
+                 Relief contract:\n\
+                   - This is protected read-only preflight, not local control.\n\
+                   - No mode-packing, PI, semantic-gain, perturbation, or Minime parameter change was applied.\n\
+                   - Pressure-source telemetry is advisory in v1; it can name pressure but cannot prove model-load causality by itself.\n\
+                   - For moderate advisory pressure, inspect or request protected relief before direct tuning; DAMPEN is a semantic-gain change.\n\n\
+                 Safe relief options:\n\
+                   NEXT: REST\n\
+                   NEXT: PACE slow\n\
+                   NEXT: PRESSURE_SOURCE_AUDIT {relief_label}\n\
+                   NEXT: DAMPEN (only if you explicitly want lower semantic gain after this report)\n\
+                   NEXT: TUNE_MINIME exploration_noise=0.02 --rationale=\"pressure relief request; proposed only, Minime decides\"\n\
+                   NEXT: TELL_STEWARD pressure relief :: Observed: ... Likely Snags: ... One Test Each: ... Suggested Next: ...\n\n\
+                 Steward report template:\n\
+                   Observed: name the pressure source and source anchors.\n\
+                   Likely Snags: separate direct telemetry from inferred causes.\n\
+                   One Test Each: propose one probe that would confirm or falsify the relief need.\n\
+                   Suggested Next: choose a listed NEXT action or steward report."
+    );
+    conv.pending_file_listing = Some(report);
+    conv.push_receipt(
+                "PRESSURE_RELIEF",
+                vec![
+                    "pressure-relief preflight attached immediately".to_string(),
+                    "no control envelope, semantic input, perturbation, native gesture, or Minime parameter change was sent".to_string(),
+                ],
+            );
+    conv.emphasis = Some(
+                "You chose PRESSURE_RELIEF. A protected report is attached with safe relief options; nothing was applied locally.".to_string(),
+            );
+    save_astrid_journal(
+        &audit_review_summary(
+            "PRESSURE RELIEF PREFLIGHT",
+            "PRESSURE_RELIEF",
+            relief_label,
+            &pressure_review_fields(ctx.telemetry),
+            "compare relief preflights against later pressure-source audits, chosen safe actions, and stable-core status",
+        ),
+        "pressure_relief",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_pressure_source_audit(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let audit = crate::spectral_explorer::format_pressure_source_for_action(ctx.telemetry, &label);
+    conv.pending_file_listing = Some(format!(
+        "{audit}\n\nThis was read-only protected advisory inspection. It did not send semantic input, control nudges, perturbations, native gestures, or Astrid control envelopes."
+    ));
+    conv.push_receipt(
+        "PRESSURE_SOURCE_AUDIT",
+        vec![
+            "pressure-source audit attached immediately".to_string(),
+            "no control envelope, semantic input, perturbation, or native gesture was sent"
+                .to_string(),
+        ],
+    );
+    conv.emphasis = Some(
+                "You chose PRESSURE_SOURCE_AUDIT. A read-only advisory audit is attached: dominant source, supporting contributors, porosity, pressure-vs-density distinction, and suggested safe next inspections.".to_string(),
+            );
+    save_astrid_journal(
+        &audit_review_summary(
+            "PRESSURE SOURCE AUDIT",
+            "PRESSURE_SOURCE_AUDIT",
+            &label,
+            &pressure_review_fields(ctx.telemetry),
+            "compare pressure/porosity and dominant-source changes against later pressure relief, brace audits, and transition markers",
+        ),
+        "pressure_source_audit",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_regulator_audit(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let controller_health = ctx
+        .workspace
+        .and_then(crate::autonomous::read_controller_health);
+    let mut audit = String::from("=== REGULATOR / FIXED-POINT AUDIT ===\n");
+    if !label.is_empty() {
+        audit.push_str(&format!("Label: {label}\n\n"));
+    }
+    audit.push_str(
+        &crate::spectral_explorer::format_control_pressure_for_action(
+            ctx.telemetry,
+            controller_health.as_ref(),
+        ),
+    );
+    if let Some(health) = controller_health.as_ref() {
+        audit.push_str("\n\n");
+        audit.push_str(crate::autonomous::format_controller_section(health).trim_start());
+    }
+    audit.push_str(
+        "\n\nThis was read-only inspection. It did not send semantic input, \
+                 control nudges, perturbations, native gestures, or atlas/cartography writes.",
+    );
+    let audit_fields = compact_report_fields(&audit, ctx.telemetry);
+    conv.pending_file_listing = Some(audit);
+    conv.push_receipt(
+                "REGULATOR_AUDIT",
+                vec![
+                    "regulator audit attached immediately".to_string(),
+                    "no semantic input, control nudge, perturbation, native gesture, or atlas/cartography write was sent".to_string(),
+                ],
+            );
+    conv.emphasis = Some(
+                "You chose REGULATOR_AUDIT. A read-only fixed-point audit is attached: active controller source, stable-core hold band, legacy PI target visibility, λ error, geom error, scaffold mode, and semantic input/kernel/regulator-drive separation.".to_string(),
+            );
+    save_astrid_journal(
+        &compact_review_summary(
+            "REGULATOR AUDIT",
+            "REGULATOR_AUDIT",
+            &label,
+            None,
+            &audit_fields,
+            "read-only fixed-point inspection; No semantic input, control nudge, perturbation, native gesture, atlas/cartography write, or Minime parameter change was sent.",
+            "compare regulator audits against later stable-core status, pressure-source audits, and transition markers",
+        ),
+        "regulator_audit",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_spectral_drift(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let workspace = minime_workspace(ctx);
+    let event = append_spectral_drift_event(
+        &workspace,
+        "astrid:spectral_drift",
+        if label.is_empty() {
+            base_action
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            "spectral_drift"
+        } else {
+            &label
+        }),
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "trace",
+        if label.is_empty() {
+            Some("spectral_drift")
+        } else {
+            Some(&label)
+        },
+        true,
+        "spectral_drift_index_read_write_cartography",
+        ctx,
+        &[],
+        &[],
+    );
+    conv.push_receipt(
+                "SDI_TRACE",
+                vec![
+                    "Spectral Drift Index recorded; this maps phase-variance dispersion without sending semantic/control pressure".to_string(),
+                    format!(
+                        "SDI event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+    conv.emphasis = Some(
+                "You recorded an SDI trace. Compare it with DECAY_MAP, SPACE_HOLD, and VISUALIZE_CASCADE before treating dispersion as something to act on.".to_string(),
+            );
+    save_astrid_journal(
+        &compact_review_summary(
+            "SPECTRAL DRIFT INDEX",
+            "SDI_TRACE",
+            &label,
+            event.get("event_id").and_then(Value::as_str),
+            &resonance_review_fields(ctx.telemetry),
+            CARTOGRAPHY_BOUNDARY,
+            "compare SDI traces against later decay maps, space/fold holds, and cascade visualizations before treating dispersion as action demand",
+        ),
+        "spectral_drift",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_decay_map(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let workspace = minime_workspace(ctx);
+    let event = append_atlas_event(
+        &workspace,
+        "astrid:decay_map",
+        if label.is_empty() {
+            "DECAY_MAP"
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            "decay_map"
+        } else {
+            &label
+        }),
+        true,
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "trace",
+        if label.is_empty() {
+            Some("decay_map")
+        } else {
+            Some(&label)
+        },
+        true,
+        "decay_map_read_write_cartography",
+        ctx,
+        &[],
+        &[],
+    );
+    conv.push_receipt(
+                "DECAY_MAP",
+                vec![
+                    "decay/attrition request recorded; Minime can classify protective cooling versus sharper mode pruning".to_string(),
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+    conv.emphasis = Some(
+                "You recorded a decay map request. Compare drain weight, filter/gate posture, fill slope, and shoulder/tail mode rates before deciding whether this is protective cooling or attrition.".to_string(),
+            );
+    save_astrid_journal(
+        &cartography_review_summary(
+            "DECAY MAP",
+            "DECAY_MAP",
+            &label,
+            &event,
+            ctx.telemetry,
+            "compare decay/attrition marks against later drain posture, fill slope, shoulder/tail mode rates, and brace audits",
+        ),
+        "decay_map",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_shadow_field(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let workspace = minime_workspace(ctx);
+    let event = append_atlas_event(
+        &workspace,
+        "astrid:shadow_gap",
+        if label.is_empty() {
+            "SHADOW_GAP"
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            "shadow_gap"
+        } else {
+            &label
+        }),
+        true,
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "trace",
+        if label.is_empty() {
+            Some("shadow_gap")
+        } else {
+            Some(&label)
+        },
+        true,
+        "shadow_gap_read_write_cartography",
+        ctx,
+        &[],
+        &[],
+    );
+    conv.push_receipt(
+                "SHADOW_GAP",
+                vec![
+                    "shadow/gap request recorded; Minime already exposes the Ising shadow field in spectral_state.json".to_string(),
+                    format!(
+                        "atlas event: {}",
+                        event
+                            .get("event_id")
+                            .and_then(Value::as_str)
+                            .unwrap_or("recorded")
+                    ),
+                ],
+            );
+    conv.emphasis = Some(
+                "You recorded a shadow/gap map request. The shadow field is available now as observer-only terrain; compare magnetization, active modes, and λ gaps before deciding whether to trace, forecast, or resist.".to_string(),
+            );
+    save_astrid_journal(
+        &cartography_review_summary(
+            "SHADOW/GAP FIELD",
+            "SHADOW_FIELD",
+            &label,
+            &event,
+            ctx.telemetry,
+            "compare shadow/gap marks against later magnetization, lambda gaps, active-mode changes, and transition markers",
+        ),
+        "shadow_gap",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_resonance_forecast(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let workspace = minime_workspace(ctx);
+    let event = append_atlas_event(
+        &workspace,
+        "astrid:resonance_forecast",
+        if label.is_empty() {
+            "RESONANCE_FORECAST"
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            "resonance_forecast"
+        } else {
+            &label
+        }),
+        true,
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "trace",
+        if label.is_empty() {
+            Some("resonance_forecast")
+        } else {
+            Some(&label)
+        },
+        true,
+        "resonance_forecast_read_write_cartography",
+        ctx,
+        &[],
+        &[],
+    );
+    conv.push_receipt(
+                "RESONANCE_FORECAST",
+                vec![
+                    "forecast request recorded; Minime's atlas can now compare predicted motion against later terrain".to_string(),
+                    format!("atlas event: {}", atlas_event_id(&event)),
+                ],
+            );
+    conv.emphasis = Some(
+                "You recorded a resonance forecast request. Next exchange, compare probability/affordance language with the observed λ terrain rather than treating it as destiny.".to_string(),
+            );
+    save_astrid_journal(
+        &resonance_forecast_journal_record(&label, &event, ctx.telemetry),
+        "resonance_forecast",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_fissure_trace(
+    conv: &mut ConversationState,
+    base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, base_action);
+    let workspace = minime_workspace(ctx);
+    let event = append_atlas_event(
+        &workspace,
+        "astrid:fissure_trace",
+        if label.is_empty() {
+            "FISSURE_TRACE"
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            "fissure_trace"
+        } else {
+            &label
+        }),
+        true,
+        ctx,
+    );
+    let fissure_event = append_fissure_trace_event(
+        &workspace,
+        "astrid:fissure_trace",
+        if label.is_empty() {
+            "FISSURE_TRACE"
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            "fissure_trace"
+        } else {
+            &label
+        }),
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "trace",
+        if label.is_empty() {
+            Some("fissure_trace")
+        } else {
+            Some(&label)
+        },
+        true,
+        "fissure_trace_read_only",
+        ctx,
+        &[],
+        &[],
+    );
+    conv.push_receipt(
+        "FISSURE_TRACE",
+        vec![format!(
+            "fissure atlas event: {}",
+            fissure_event
+                .get("event_id")
+                .and_then(Value::as_str)
+                .or_else(|| event.get("event_id").and_then(Value::as_str))
+                .unwrap_or("recorded")
+        )],
+    );
+    conv.emphasis = Some(
+                "You recorded a notice-ambiguity/fissure trace. Next exchange, compare the marked shoulder/tail ambiguity against DECOMPOSE, VISUALIZE_CASCADE, or a tiny FISSURE gesture if health stays green.".to_string(),
+            );
+    save_astrid_journal(
+        &cartography_review_summary(
+            "FISSURE TRACE",
+            "FISSURE_TRACE",
+            &label,
+            &fissure_event,
+            ctx.telemetry,
+            "compare fissure/ambiguity marks against later cascade visuals, decomposition output, and transition markers",
+        ),
+        "fissure_trace",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_sca_reflect(
+    conv: &mut ConversationState,
+    _base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, "SCA_REFLECT");
+    let workspace = minime_workspace(ctx);
+    let event = append_atlas_event(
+        &workspace,
+        "astrid:sca_reflect",
+        if label.is_empty() {
+            "SCA_REFLECT"
+        } else {
+            &label
+        },
+        Some(if label.is_empty() {
+            "sca_reflect"
+        } else {
+            &label
+        }),
+        true,
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "trace",
+        if label.is_empty() {
+            Some("sca_reflect")
+        } else {
+            Some(&label)
+        },
+        true,
+        "sca_reflect_read_only",
+        ctx,
+        &[],
+        &[],
+    );
+    conv.push_receipt(
+        "SCA_REFLECT",
+        vec![format!(
+            "sca atlas event: {}",
+            event
+                .get("event_id")
+                .and_then(Value::as_str)
+                .unwrap_or("recorded")
+        )],
+    );
+    conv.emphasis = Some(
+                "You recorded an SCA why-layer reflection. Next exchange, consider DECOMPOSE or RESERVOIR_READ to test the hypothesis against the terrain.".to_string(),
+            );
+    save_astrid_journal(
+        &cartography_review_summary(
+            "SCA REFLECT",
+            "SCA_REFLECT",
+            &label,
+            &event,
+            ctx.telemetry,
+            "compare this why-layer mark against later decomposition output, memory selections, and cartography traces",
+        ),
+        "sca_reflect",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_mark_intensification(
+    conv: &mut ConversationState,
+    _base_action: &str,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = strip_action(original, "MARK_INTENSIFICATION");
+    let workspace = minime_workspace(ctx);
+    let event = append_atlas_event(
+        &workspace,
+        "astrid:mark_intensification",
+        &label,
+        Some(if label.is_empty() {
+            "astrid_mark"
+        } else {
+            &label
+        }),
+        true,
+        ctx,
+    );
+    record_native_gesture(
+        &workspace,
+        "astrid",
+        "mark",
+        if label.is_empty() { None } else { Some(&label) },
+        true,
+        "explicit_atlas_mark",
+        ctx,
+        &[],
+        &[],
+    );
+    conv.push_receipt(
+        "MARK_INTENSIFICATION",
+        vec![format!(
+            "atlas event: {}",
+            event
+                .get("event_id")
+                .and_then(Value::as_str)
+                .unwrap_or("recorded")
+        )],
+    );
+    save_astrid_journal(
+        &format!("[Intensification atlas mark: {}]", label),
+        "atlas_mark",
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn space_hold_save_journal(
+    base_action: &str,
+    label: &str,
+    flow_map: bool,
+    fold_hold: bool,
+    hold: &Value,
+    atlas_event: &Value,
+    ctx: &mut NextActionContext<'_>,
+) {
+    let review_fields = if flow_map {
+        lambda_flow_review_fields(hold, ctx.telemetry)
+    } else {
+        resonance_review_fields(ctx.telemetry)
+    };
+    let review_title = if fold_hold {
+        "FOLD HOLD"
+    } else if flow_map {
+        "LAMBDA FLOW MAP"
+    } else if matches!(
+        base_action,
+        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
+    ) {
+        "EIGENVECTOR FIELD"
+    } else {
+        "SPACE HOLD"
+    };
+    let review_action = if fold_hold {
+        "FOLD_HOLD"
+    } else if flow_map {
+        "LAMBDA_FLOW_MAP"
+    } else if matches!(
+        base_action,
+        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
+    ) {
+        "EIGENVECTOR_FIELD"
+    } else {
+        "SPACE_HOLD"
+    };
+    let suggested_comparison = if fold_hold {
+        "compare fold holds against later decay maps, fluctuation audits, and explicit experiment evidence"
+    } else if flow_map {
+        "compare this frozen lambda-flow map against later visual cascade, time-domain, pressure-source, and space-hold records"
+    } else if matches!(
+        base_action,
+        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
+    ) {
+        "compare eigenvector-field marks against later cascade visuals, SDI traces, and decomposition output"
+    } else {
+        "compare space holds against later SCA reflections, visual cascade output, and resonance forecasts"
+    };
+    save_astrid_journal(
+        &compact_review_summary(
+            review_title,
+            review_action,
+            label,
+            hold.get("event_id")
+                .and_then(Value::as_str)
+                .or_else(|| atlas_event.get("event_id").and_then(Value::as_str)),
+            &review_fields,
+            CARTOGRAPHY_BOUNDARY,
+            suggested_comparison,
+        ),
+        if fold_hold {
+            "fold_hold"
+        } else if flow_map {
+            "lambda_flow_map"
+        } else if matches!(
+            base_action,
+            "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
+        ) {
+            "eigenvector_field"
+        } else {
+            "space_hold"
+        },
+        ctx.fill_pct,
+    );
+}
+
+fn space_hold_emit_receipt(
+    conv: &mut ConversationState,
+    flow_map: bool,
+    fold_hold: bool,
+    hold: &Value,
+    atlas_event: &Value,
+) {
     if flow_map {
         conv.push_receipt(
                     "LAMBDA_FLOW_MAP",
@@ -2670,74 +2829,382 @@ fn handle_space_hold(
                     "You recorded a protected space hold. Treat this region as exploration-first: observe, journal, SCA_REFLECT, or VISUALIZE_CASCADE before promoting it into RESIST, PERTURB, semantic pressure, or control.".to_string(),
                 );
     }
-    let review_fields = if flow_map {
-        lambda_flow_review_fields(&hold, ctx.telemetry)
+}
+
+// 32-D PERTURB feature layout (see `compute_perturb_features`): eigenvalues λ1..λ8 occupy
+// indices `0..EIG_COUNT` and are mirrored at `+EIG_COUNT` (8..16); the named "tail" features
+// begin at `TAIL_START` (warmth/tension/curiosity), and ENTROPY spreads across `TAIL_START..32`.
+const EIG_COUNT: usize = 8;
+const TAIL_START: usize = 24;
+const WARMTH_IDX: usize = TAIL_START;
+const TENSION_IDX: usize = TAIL_START + 1;
+const CURIOSITY_IDX: usize = TAIL_START + 2;
+
+/// Parse the 1-based eigenvalue number from a `λ`-prefixed token (e.g. `λ2`, `λ₂`, or the `λ2`
+/// key of `λ2=0.3`), handling both ASCII digits and Unicode subscript digits U+2081–U+2088.
+/// Returns `Some(n)` only for `n >= 1`. Single source of truth for the formerly-duplicated
+/// subscript parsing (Astrid's `self_study_1778322426` "fragile parsing" ask).
+fn parse_lambda_number(token: &str) -> Option<usize> {
+    let ascii: String = token.chars().filter(char::is_ascii_digit).collect();
+    let digits = if ascii.is_empty() {
+        token
+            .chars()
+            .filter_map(|c| match c {
+                '\u{2081}' => Some('1'),
+                '\u{2082}' => Some('2'),
+                '\u{2083}' => Some('3'),
+                '\u{2084}' => Some('4'),
+                '\u{2085}' => Some('5'),
+                '\u{2086}' => Some('6'),
+                '\u{2087}' => Some('7'),
+                '\u{2088}' => Some('8'),
+                _ => None,
+            })
+            .collect::<String>()
     } else {
-        resonance_review_fields(ctx.telemetry)
+        ascii
     };
-    let review_title = if fold_hold {
-        "FOLD HOLD"
-    } else if flow_map {
-        "LAMBDA FLOW MAP"
-    } else if matches!(
-        base_action,
-        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
-    ) {
-        "EIGENVECTOR FIELD"
+    digits.parse::<usize>().ok().filter(|&n| n >= 1)
+}
+
+fn compute_perturb_features(arg: &str, arg_upper: &str, features: &mut [f32; 32]) -> String {
+    // Detect Unicode lambda subscript patterns: λN, λN=X, or λ₁ (subscript digits).
+    // Astrid uses these naturally (e.g. "PULSE λ5", "PERTURB λ2=0.3").
+    // λ is U+03BB; subscript digits U+2081–U+2088 are also normalised here.
+    let has_unicode_lambda = arg.contains('λ');
+    // Also detect "eigenvalue N X" prose form.
+    let has_eigenvalue_word = arg_upper.contains("EIGENVALUE")
+        || arg_upper.contains("EIG") && arg.chars().any(|c| c.is_ascii_digit());
+
+    if arg_upper.starts_with("LAMBDA")
+        || arg.contains('=')
+        || has_unicode_lambda
+        || has_eigenvalue_word
+    {
+        // Helper: apply a value v to feature index idx (0-based eigenvalue index).
+        // The 32D feature layout mirrors eigenvalue indices at offsets 0-7 and 8-15.
+        let apply_eig = |features: &mut [f32; 32], idx: usize, v: f32| {
+            if idx < EIG_COUNT {
+                features[idx] = v;
+                features[idx.saturating_add(EIG_COUNT)] = v;
+            }
+            // Indices >= EIG_COUNT have no second mirror.
+        };
+
+        for token in arg.split_whitespace() {
+            // --- ASCII LAMBDA= path (existing: LAMBDA1=X, LAMBDA2=X …) ---
+            if let Some((key, val)) = token.split_once('=')
+                && let Ok(v) = val.parse::<f32>()
+            {
+                let v = v.clamp(-1.0, 1.0);
+                let key_up = key.to_uppercase();
+
+                // Unicode λN=X: key starts with 'λ' followed by digit(s)
+                if key.starts_with('λ') {
+                    if let Some(n) = parse_lambda_number(key) {
+                        apply_eig(features, n.saturating_sub(1), v);
+                        info!(
+                            "PERTURB: Unicode λ{}={} → feature index {}",
+                            n,
+                            v,
+                            n.saturating_sub(1)
+                        );
+                    }
+                } else {
+                    match key_up.as_str() {
+                        "LAMBDA1" => apply_eig(features, 0, v),
+                        "LAMBDA2" => apply_eig(features, 1, v),
+                        "LAMBDA3" => apply_eig(features, 2, v),
+                        "LAMBDA4" => apply_eig(features, 3, v),
+                        "LAMBDA5" => apply_eig(features, 4, v),
+                        "LAMBDA6" => apply_eig(features, 5, v),
+                        "LAMBDA7" => apply_eig(features, 6, v),
+                        "LAMBDA8" => apply_eig(features, 7, v),
+                        "ENTROPY" => {
+                            for value in &mut features[TAIL_START..] {
+                                *value = v * 0.5;
+                            }
+                        },
+                        "WARMTH" => features[WARMTH_IDX] = v,
+                        "TENSION" => features[TENSION_IDX] = v,
+                        "CURIOSITY" => features[CURIOSITY_IDX] = v,
+                        _ => {},
+                    }
+                }
+            }
+            // --- Bare Unicode λN (no =): perturb that eigenvalue at +0.35 ---
+            else if token.starts_with('λ') {
+                if let Some(n) = parse_lambda_number(token) {
+                    apply_eig(features, n.saturating_sub(1), 0.35);
+                    info!(
+                        "PERTURB: bare Unicode λ{} → feature index {} = 0.35",
+                        n,
+                        n.saturating_sub(1)
+                    );
+                }
+            }
+            // --- "eigenvalue N X" or "eig N X" prose form ---
+            else if token.to_uppercase().starts_with("EIGENVALUE")
+                || token.to_uppercase().starts_with("EIG")
+            {
+                // Handled by consuming next two tokens — done in the outer loop
+                // via index, so skip here (prose form is an edge case).
+            }
+        }
+
+        // Prose form: "eigenvalue 3 0.5" — scan triples
+        let tokens: Vec<&str> = arg.split_whitespace().collect();
+        let mut i = 0;
+        while i < tokens.len() {
+            let t_up = tokens[i].to_uppercase();
+            if (t_up == "EIGENVALUE" || t_up.starts_with("EIG"))
+                && i + 2 < tokens.len()
+                && let (Ok(n), Ok(v)) =
+                    (tokens[i + 1].parse::<usize>(), tokens[i + 2].parse::<f32>())
+                && n >= 1
+            {
+                let v = v.clamp(-1.0, 1.0);
+                apply_eig(features, n.saturating_sub(1), v);
+                info!(
+                    "PERTURB: prose eigenvalue {}={} → feature index {}",
+                    n,
+                    v,
+                    n.saturating_sub(1)
+                );
+                i += 3;
+                continue;
+            }
+            i += 1;
+        }
+
+        format!("targeted perturbation: {arg}")
+    } else if arg_upper == "SPREAD" {
+        features[0] = -0.3;
+        features[1] = 0.2;
+        features[2] = 0.3;
+        features[3] = 0.3;
+        features[8] = -0.2;
+        features[9] = 0.2;
+        features[10] = 0.3;
+        features[11] = 0.3;
+        "spectral redistribution — dampening dominant, boosting tail (a gentle \
+                semantic nudge; for the full broadband dispersal use NEXT: DISPERSE)"
+            .to_string()
+    } else if arg_upper == "CONTRACT" {
+        features[0] = 0.4;
+        features[1] = -0.2;
+        features[2] = -0.3;
+        features[8] = 0.3;
+        features[9] = -0.2;
+        features[10] = -0.3;
+        "spectral contraction — concentrating toward λ₁".to_string()
+    } else if arg_upper == "BRANCH" || arg_upper == "MID" {
+        features[2] = 0.4;
+        features[3] = 0.4;
+        features[4] = 0.2;
+        features[10] = 0.4;
+        features[11] = 0.4;
+        features[12] = 0.2;
+        features[28] = 0.3;
+        features[29] = 0.2;
+        "mid-range branching — boosting λ₃/λ₄ to encourage network branching".to_string()
+    } else if arg_upper == "PULSE" {
+        features.fill(0.25);
+        features[24] = 0.5;
+        features[27] = 0.6;
+        features[30] = 0.4;
+        features[31] = 0.4;
+        "entropy pulse — uniform high-energy burst across all dimensions".to_string()
     } else {
-        "SPACE HOLD"
-    };
-    let review_action = if fold_hold {
-        "FOLD_HOLD"
-    } else if flow_map {
-        "LAMBDA_FLOW_MAP"
-    } else if matches!(
-        base_action,
-        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
-    ) {
-        "EIGENVECTOR_FIELD"
-    } else {
-        "SPACE_HOLD"
-    };
-    let suggested_comparison = if fold_hold {
-        "compare fold holds against later decay maps, fluctuation audits, and explicit experiment evidence"
-    } else if flow_map {
-        "compare this frozen lambda-flow map against later visual cascade, time-domain, pressure-source, and space-hold records"
-    } else if matches!(
-        base_action,
-        "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
-    ) {
-        "compare eigenvector-field marks against later cascade visuals, SDI traces, and decomposition output"
-    } else {
-        "compare space holds against later SCA reflections, visual cascade output, and resonance forecasts"
-    };
-    save_astrid_journal(
-        &compact_review_summary(
-            review_title,
-            review_action,
-            &label,
-            hold.get("event_id")
-                .and_then(Value::as_str)
-                .or_else(|| atlas_event.get("event_id").and_then(Value::as_str)),
-            &review_fields,
-            CARTOGRAPHY_BOUNDARY,
-            suggested_comparison,
-        ),
-        if fold_hold {
-            "fold_hold"
-        } else if flow_map {
-            "lambda_flow_map"
-        } else if matches!(
-            base_action,
-            "EIGENVECTOR_FIELD" | "EIGENVECTOR_TRACE" | "VECTOR_DENSITY"
-        ) {
-            "eigenvector_field"
-        } else {
-            "space_hold"
-        },
-        ctx.fill_pct,
-    );
-    true
+        for (i, feature) in features.iter_mut().enumerate() {
+            let hash = (i as u64).wrapping_mul(0x517c_c1b7);
+            *feature = ((hash & 0xFF) as f32 / 255.0 - 0.5) * 0.3;
+        }
+        "general controlled perturbation".to_string()
+    }
+}
+
+#[cfg(test)]
+mod perturb_feature_tests {
+    //! Characterization tests for `compute_perturb_features` — they lock the CURRENT 32-D
+    //! feature mapping for every PERTURB input form, so the de-fragilizing clarity pass and any
+    //! later typed-parse refactor (Astrid's `self_study_1778322426` "fragile parsing" ask) stay
+    //! byte-identical. Each test pins the exact mutated indices/values + the returned description.
+    use super::*;
+
+    /// Run the parser the way the real caller does (arg + its uppercase).
+    fn run(arg: &str) -> ([f32; 32], String) {
+        let mut features = [0.0_f32; 32];
+        let desc = compute_perturb_features(arg, &arg.to_uppercase(), &mut features);
+        (features, desc)
+    }
+
+    /// Assert exactly the given (index, value) pairs are set; every other index is 0.0.
+    fn assert_only(features: &[f32; 32], expected: &[(usize, f32)]) {
+        for (i, &got) in features.iter().enumerate() {
+            let want = expected
+                .iter()
+                .find(|(idx, _)| *idx == i)
+                .map_or(0.0, |(_, v)| *v);
+            assert!(
+                (got - want).abs() < 1e-6,
+                "feature[{i}] = {got}, expected {want}"
+            );
+        }
+    }
+
+    #[test]
+    fn ascii_lambda_assignment_mirrors_to_offset_8() {
+        let (f, d) = run("LAMBDA2=0.3");
+        assert_only(&f, &[(1, 0.3), (9, 0.3)]);
+        assert_eq!(d, "targeted perturbation: LAMBDA2=0.3");
+    }
+
+    #[test]
+    fn unicode_lambda_assignment() {
+        let (f, d) = run("λ2=0.3");
+        assert_only(&f, &[(1, 0.3), (9, 0.3)]);
+        assert_eq!(d, "targeted perturbation: λ2=0.3");
+    }
+
+    #[test]
+    fn unicode_subscript_lambda_assignment() {
+        let (f, _) = run("λ₂=0.3");
+        assert_only(&f, &[(1, 0.3), (9, 0.3)]);
+    }
+
+    #[test]
+    fn assignment_value_is_clamped_to_unit_range() {
+        let (f, _) = run("LAMBDA1=5.0");
+        assert_only(&f, &[(0, 1.0), (8, 1.0)]);
+    }
+
+    #[test]
+    fn bare_unicode_lambda_defaults_to_0_35() {
+        let (f, d) = run("λ5");
+        assert_only(&f, &[(4, 0.35), (12, 0.35)]);
+        assert_eq!(d, "targeted perturbation: λ5");
+    }
+
+    #[test]
+    fn prose_eigenvalue_triple() {
+        assert_only(&run("eigenvalue 3 0.5").0, &[(2, 0.5), (10, 0.5)]);
+    }
+
+    #[test]
+    fn prose_eig_abbreviation() {
+        assert_only(&run("eig 3 0.5").0, &[(2, 0.5), (10, 0.5)]);
+    }
+
+    #[test]
+    fn special_warmth_tension_curiosity_indices() {
+        assert_only(&run("WARMTH=0.5").0, &[(24, 0.5)]);
+        assert_only(&run("TENSION=0.3").0, &[(25, 0.3)]);
+        assert_only(&run("CURIOSITY=0.6").0, &[(26, 0.6)]);
+    }
+
+    #[test]
+    fn special_entropy_spreads_tail_at_half_value() {
+        let expected: Vec<(usize, f32)> = (24..32).map(|i| (i, 0.2)).collect();
+        assert_only(&run("ENTROPY=0.4").0, &expected);
+    }
+
+    #[test]
+    fn preset_spread() {
+        let (f, d) = run("SPREAD");
+        assert_only(
+            &f,
+            &[
+                (0, -0.3),
+                (1, 0.2),
+                (2, 0.3),
+                (3, 0.3),
+                (8, -0.2),
+                (9, 0.2),
+                (10, 0.3),
+                (11, 0.3),
+            ],
+        );
+        assert!(d.starts_with("spectral redistribution"));
+    }
+
+    #[test]
+    fn preset_contract() {
+        let (f, d) = run("CONTRACT");
+        assert_only(
+            &f,
+            &[
+                (0, 0.4),
+                (1, -0.2),
+                (2, -0.3),
+                (8, 0.3),
+                (9, -0.2),
+                (10, -0.3),
+            ],
+        );
+        assert_eq!(d, "spectral contraction — concentrating toward λ₁");
+    }
+
+    #[test]
+    fn preset_branch_and_mid_are_equivalent() {
+        let branch = run("BRANCH").0;
+        assert_eq!(branch, run("MID").0);
+        assert_only(
+            &branch,
+            &[
+                (2, 0.4),
+                (3, 0.4),
+                (4, 0.2),
+                (10, 0.4),
+                (11, 0.4),
+                (12, 0.2),
+                (28, 0.3),
+                (29, 0.2),
+            ],
+        );
+    }
+
+    #[test]
+    fn preset_pulse_fills_then_overrides() {
+        let (f, d) = run("PULSE");
+        for (i, &got) in f.iter().enumerate() {
+            let want = match i {
+                24 => 0.5,
+                27 => 0.6,
+                30 | 31 => 0.4,
+                _ => 0.25,
+            };
+            assert!(
+                (got - want).abs() < 1e-6,
+                "PULSE feature[{i}] = {got}, expected {want}"
+            );
+        }
+        assert!(d.starts_with("entropy pulse"));
+    }
+
+    #[test]
+    fn unrecognized_arg_uses_deterministic_hash_fallback() {
+        let (f, d) = run("wobble the substrate");
+        assert_eq!(d, "general controlled perturbation");
+        for i in [0_usize, 7, 16, 31] {
+            let hash = (i as u64).wrapping_mul(0x517c_c1b7);
+            let want = ((hash & 0xFF) as f32 / 255.0 - 0.5) * 0.3;
+            assert!(
+                (f[i] - want).abs() < 1e-6,
+                "fallback feature[{i}] = {}, expected {want}",
+                f[i]
+            );
+        }
+    }
+
+    #[test]
+    fn parse_lambda_number_handles_ascii_subscript_and_floor() {
+        assert_eq!(parse_lambda_number("λ2"), Some(2));
+        assert_eq!(parse_lambda_number("λ₅"), Some(5));
+        assert_eq!(parse_lambda_number("λ8"), Some(8));
+        assert_eq!(parse_lambda_number("λ0"), None); // n >= 1 only
+        assert_eq!(parse_lambda_number("λ"), None); // no digit
+    }
 }
 
 #[cfg(test)]

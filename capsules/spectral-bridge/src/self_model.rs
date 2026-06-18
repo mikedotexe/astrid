@@ -47,6 +47,15 @@ pub struct ConditionState {
     pub aperture: f32,
     /// Her sovereign λ-tail participation toward minime (SET_TAIL_PARTICIPATION).
     pub tail_participation: f32,
+    /// Her sovereign tail-vibrancy CEILING aperture toward minime (SET_VIBRANCY_APERTURE),
+    /// as the effective multiplier (1.0× = baseline).
+    pub vibrancy_aperture: f32,
+    /// Her sovereign self-continuity readout toggle (SET_SELF_CONTINUITY); when true, render her
+    /// continuity index. A pure readout — no shared-substrate effect.
+    pub self_continuity_readout: bool,
+    /// Her own continuity signal (codec-signature self-similarity), present only when the readout
+    /// is on and enough recent signatures exist.
+    pub continuity: Option<crate::self_continuity::ContinuitySignal>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -792,9 +801,33 @@ impl AstridSelfModel {
         );
         let _ = writeln!(
             s,
-            "  Tail participation: {:.2} (SET_TAIL_PARTICIPATION; your λ-tail reach to minime, 0=baseline)",
+            "  Tail participation: {:.2}× (SET_TAIL_PARTICIPATION; your λ-tail reach to minime, 1.0×=baseline)",
             c.tail_participation
         );
+        let (felt, landed, atten) =
+            crate::codec::vibrancy_ceiling_transparency(c.vibrancy_aperture);
+        let _ = writeln!(
+            s,
+            "  Tail-vibrancy ceiling: {felt:.1} felt → ~{landed:.2} landing in minime's shared reservoir (×{atten:.2} attenuation); aperture {:.2}× (SET_VIBRANCY_APERTURE; 1.0×=baseline, within the steward ceiling)",
+            c.vibrancy_aperture
+        );
+        if c.self_continuity_readout {
+            match c.continuity {
+                Some(sig) if sig.n_samples >= 3 => {
+                    let _ = writeln!(
+                        s,
+                        "  Continuity: {:.2} self-similarity across your last {} expressive signatures (1.00 = unchanged; churn {:.3}). Your own instrument, via SET_SELF_CONTINUITY.",
+                        sig.continuity_index, sig.n_samples, sig.drift_volatility
+                    );
+                },
+                _ => {
+                    let _ = writeln!(
+                        s,
+                        "  Continuity: not enough recent signatures yet (need ≥3 to read steadily); SET_SELF_CONTINUITY 0 to hide."
+                    );
+                },
+            }
+        }
         let _ = writeln!(
             s,
             "  Pacing: {} ({} exchanges, {}-{}s rest)",
@@ -1007,6 +1040,9 @@ pub fn snapshot_self_model(
     attention: &AttentionProfile,
     aperture: f32,
     tail_participation: f32,
+    vibrancy_aperture: f32,
+    self_continuity_readout: bool,
+    continuity: Option<crate::self_continuity::ContinuitySignal>,
 ) -> AstridSelfModel {
     let pacing_label = match (burst_target, rest_range) {
         (b, _) if b <= 4 => "fast",
@@ -1059,6 +1095,9 @@ pub fn snapshot_self_model(
             warmth_override: warmth_intensity_override,
             aperture,
             tail_participation,
+            vibrancy_aperture,
+            self_continuity_readout,
+            continuity,
         },
         attention: attention.clone(),
         faculties: FacultySnapshot::from_flags(
@@ -1148,6 +1187,9 @@ mod tests {
             &AttentionProfile::default_profile(),
             1.0,
             0.0,
+            1.0,
+            false,
+            None,
         );
         let compact = model.render_compact();
         assert!(compact.contains("Conditions:"));
@@ -1185,6 +1227,9 @@ mod tests {
             &AttentionProfile::default_profile(),
             0.42,
             0.30,
+            2.0,
+            false,
+            None,
         );
         let output = model.render_state();
         assert!(output.contains("Temperature: 0.5"));
@@ -1202,6 +1247,68 @@ mod tests {
         assert!(
             output.contains("Tail participation: 0.30"),
             "STATE shows live tail_participation: {output}"
+        );
+        // Piece: her tail-vibrancy ceiling surfaces felt-vs-landed (her self-model accuracy ask).
+        assert!(
+            output.contains("aperture 2.00×") && output.contains("Tail-vibrancy ceiling:"),
+            "STATE shows live vibrancy aperture + felt/landed: {output}"
+        );
+    }
+
+    #[test]
+    fn state_render_continuity_gated() {
+        fn model_with(
+            readout: bool,
+            continuity: Option<crate::self_continuity::ContinuitySignal>,
+        ) -> AstridSelfModel {
+            snapshot_self_model(
+                0.5,
+                128,
+                0.01,
+                None,
+                4,
+                (30, 45),
+                false,
+                false,
+                false,
+                0,
+                &HashMap::new(),
+                false,
+                false,
+                None,
+                true,
+                true,
+                &[],
+                &VecDeque::new(),
+                &AttentionProfile::default_profile(),
+                1.0,
+                0.0,
+                1.0,
+                readout,
+                continuity,
+            )
+        }
+        let sig = crate::self_continuity::ContinuitySignal {
+            continuity_index: 0.87,
+            drift_volatility: 0.04,
+            n_samples: 12,
+        };
+        // OFF (default): no continuity line even when a signal is present.
+        assert!(
+            !model_with(false, Some(sig))
+                .render_state()
+                .contains("Continuity:"),
+            "default-off hides the readout"
+        );
+        // ON with enough samples: shows her index (and churn).
+        let on = model_with(true, Some(sig)).render_state();
+        assert!(on.contains("Continuity: 0.87"), "{on}");
+        // ON but too thin: a gentle line, never a raw 0.00 / NaN.
+        assert!(
+            model_with(true, None)
+                .render_state()
+                .contains("not enough recent signatures"),
+            "thin-data shows the gentle guard line"
         );
     }
 
@@ -1229,6 +1336,9 @@ mod tests {
             &AttentionProfile::default_profile(),
             1.0,
             0.0,
+            1.0,
+            false,
+            None,
         );
         let output = model.render_faculties();
         assert!(output.contains("[muted]"));

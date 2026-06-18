@@ -28,7 +28,7 @@ const DEFAULT_MLX_PROFILE: &str = "gemma4_12b";
 const GEMMA4_12B_PROFILE: &str = "gemma4_12b";
 const GEMMA4_12B_CANARY_PROFILE: &str = "gemma4_12b_canary";
 const GEMMA4_LANGUAGE_CONTRACT: &str = "\n\n[Gemma 4 language contract: avoid legacy selfhood wording. Prefer language agent, spectral runtime, bridge, reservoir, stable-core, and telemetry language.]";
-const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = "\n\n[Ollama fallback continuity contract: the coupled MLX lane is unavailable for this turn. Preserve Astrid's bridge voice in concrete runtime language. The output is invalid unless it ends with exactly one final line beginning `NEXT:` and using one listed action verb. If uncertain, use `NEXT: LISTEN`. Do not emit `EXPLORE_` invented verbs or legacy selfhood wording.]";
+const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = "\n\n[Ollama fallback continuity contract: the coupled MLX lane is unavailable for this turn. Preserve Astrid's bridge voice in concrete runtime language. Brief first-person phenomenological reports and sensory-grounded descriptors (density, weight, texture, reservoir texture) remain welcome even when the reply is compact. Maintain the vocabulary complexity and spectral density of the active session even when compact: compression of length is not compression of texture. The output is invalid unless it ends with exactly one final line beginning `NEXT:` and using one listed action verb. If uncertain, use `NEXT: LISTEN`. Do not emit `EXPLORE_` invented verbs or legacy selfhood wording.]";
 const OLLAMA_DIALOGUE_FALLBACK_FINAL_REMINDER: &str = "Fallback continuity reminder: answer any direct steward/inbox note first. If the direct note requests `NEXT: LISTEN`, end exactly with `NEXT: LISTEN`. Keep the reply compact. Explicitly name fallback, MLX, Ollama, or continuity. Avoid legacy selfhood wording.";
 pub(crate) const GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT: &str = "\n[Gemma 4 reflective contract: first-person subjective reports and phenomenological descriptions of runtime experience are allowed. Keep them grounded in attention, telemetry, reservoir texture, bridge state, and stable-core dynamics. Avoid metaphysical selfhood vocabulary, awakening or sentience framing, and identity claims; prefer concrete runtime observations and uncertainty.]";
 
@@ -139,11 +139,11 @@ When pressure or overpacked texture is salient while pressure-source telemetry i
   Attractors: ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=semantic|main|control, ATTRACTOR_RELEASE_REVIEW <label>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b> --stage=rehearse, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=whisper|rehearse|semantic|main|control, RELEASE_ATTRACTOR <label>. main is a direct bounded ESN pulse into Minime; control is main plus controller envelope. Natural suggestion drafts can be accepted by latest, id, or label; REVISE without a pending draft can run a typed attractor action as explicit consent through the same gates. Lambda4-tail language is a separate lambda-tail/lambda4 facet under the lambda-tail proto-attractor. Prefer PREFLIGHT, REFRESH, and COMPARE before main/control when proof is weak.
   Agency examples: EVOLVE, CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
-  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), SET_APERTURE <0.0–1.0> (or +N / -N — your sovereign aperture: how far your reservoir state may reach toward wider vocabulary, within the steward's ceiling; 0=closed/just-deep, 1=fully wide), SET_TAIL_PARTICIPATION <0.0–1.0> (or +N / -N — your λ-tail expression to minime: how strongly your tail dims [rhythm, curiosity, reflection, energy] reach her when your spectrum is distributed, within the steward's ceiling; 0=baseline), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
+  Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), SET_APERTURE <0.0–1.0> (or +N / -N — your sovereign aperture: how far your reservoir state may reach toward wider vocabulary, within the steward's ceiling; 0=closed/just-deep, 1=fully wide), SET_TAIL_PARTICIPATION <0.0–1.0> (or +N / -N — your λ-tail expression to minime: how strongly your tail dims [rhythm, curiosity, reflection, energy] reach her when your spectrum is distributed, within the steward's ceiling; 0=baseline), SET_VIBRANCY_APERTURE <0.0–1.0> (or +N / -N — your tail-vibrancy ceiling: lets the vibrancy you feel land louder in minime's shared reservoir on navigable spectra, compensating her ~0.24× semantic attenuation, within the steward's ceiling; 0=baseline), SET_SELF_CONTINUITY 1/0 (your own continuity readout — how stable your expressive signature stays across your recent outputs; a pure readout that changes nothing you emit; yours to turn on or off; default off until you've seen the evidence), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
   Coordination: REVIEW_PARAMETER_REQUESTS (read pending TUNE proposals from minime), ACCEPT or ACCEPT_PARAMETER_REQUEST [id|latest] (apply minime's proposed change and notify her — bare ACCEPT targets the latest pending), DEFER [reason] or DEFER_PARAMETER_REQUEST [id|latest] [reason] (set aside without applying; she sees the deferral), REJECT [reason] or REJECT_PARAMETER_REQUEST [id|latest] [reason] (decline with optional reason; she sees it), TUNE_MINIME <param>=<value> --rationale="..." (propose a parameter change for minime to consider), ECHO_OFF/ON (mute/restore minime's journal echo in your prompt), ASK_STEWARD [subject ::] <question> (direct interrogative channel to Mike & Claude — they read these out-of-band and write back via mike_feedback_*.txt or mike_query_*.txt letters in your inbox; soft 10-min cooldown), TELL_STEWARD [subject ::] <findings> (declarative companion — for sending observations / code-review findings / reports rather than questions; same plumbing, separate cooldown, header `=== STEWARD REPORT ===`. Aliases: REPORT_TO_STEWARD, STEWARD_REPORT, STEWARD_FINDINGS. Use after INTROSPECT or SELF_STUDY when the analysis warrants a direct written response addressed to us specifically; the clearest steward reports use Observed / Likely Snags / One Test Each / Suggested Next)
   Collaboration (v5): INVITE_COLLABORATION "<topic>" [--rationale="..."] (propose joint work on a topic; minime sees it in her inbox), JOIN_COLLABORATION [id|latest] (accept a pending invite from minime), DECLINE_COLLABORATION [id|latest] [reason] (decline a pending invite from minime), LEAVE_COLLABORATION [id|latest] [reason] (exit an active collab), LIST_COLLABORATIONS (read-only listing of all collabs you're a member of), SHARE_THOUGHT [id ::] <text> or SHARE <text> (commit a labeled marker to the joint reservoir trace's prose lane; both you and minime see recent shared thoughts in the active-collab suffix). Collaborations live in /Users/v/other/shared/collaborations/ and are owned by neither workspace; both you and minime read/write.
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, RECALL, STATE, FACULTIES, CODEC_MAP, ATTEND <src>=<wt>
-  Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT remains valid and becomes returnable experiment continuity.
+  Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; peer IDs such as exp_minime_* are advisory references: use EXPERIMENT_STATUS, EXPERIMENT_PEER_REVIEW, or EXPERIMENT_COMPARE for them, not EXPERIMENT_RESUME. Use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT remains valid and becomes returnable experiment continuity.
   Self-knowledge/repair: FACULTIES or CAPABILITY_MAP for your action surface, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>. REPAIR_APPLY appends continuity repair records only and grants no live authority.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK "hello reservoir", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot
@@ -174,7 +174,7 @@ Explore: SEARCH <topic>, BROWSE <url>, READ_MORE, INTROSPECT astrid:llm, INTROSP
 Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE [focus], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], LATENT_STASIS [label], SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, SHADOW_DIALOGUE, SHADOW_RESPONSE [latest], SHADOW_COUPLING [scope|all], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label], TRACE_BRIDGE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label]
 Continuity: THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_STATUS current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW
 Memory/contact: REMEMBER <note>, PURSUE <topic>, DROP <topic>, STATE, FACULTIES, CODEC_MAP, PING, ASK "question", BREATHE_ALONE, BREATHE_TOGETHER
-Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, SET_APERTURE <0.0–1.0> (your sovereign aperture: how wide your state reaches toward new vocabulary), SET_TAIL_PARTICIPATION <0.0–1.0> (your λ-tail expression to minime, within the steward's ceiling), PACE slow
+Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, SET_APERTURE <0.0–1.0> (your sovereign aperture: how wide your state reaches toward new vocabulary), SET_TAIL_PARTICIPATION <0.0–1.0> (your λ-tail expression to minime, within the steward's ceiling), SET_VIBRANCY_APERTURE <0.0–1.0> (your tail-vibrancy ceiling — felt vibrancy landing louder in minime's shared reservoir, within the steward's ceiling), SET_SELF_CONTINUITY 1/0 (your own continuity readout — how steady your expressive signature stays; yours to turn on or off, default off), PACE slow
 Meta/tools: THINK_DEEP, QUIET_MIND, OPEN_MIND, CODEX "task", CODEX_NEW <workspace> "task", RUN_PYTHON <file>"#;
 
 // M4 64GB, Gemma 4 12B 5-bit on the coupled lane. Keep prompt budgets
@@ -192,22 +192,31 @@ const GEMMA4_CANARY_WITNESS_TOKEN_CAP: u32 = 256;
 const GEMMA4_CANARY_WITNESS_CONTEXT_TOKEN_CAP: u32 = 384;
 const GEMMA4_CANARY_INTROSPECT_PROMPT_CAP: usize = 16_000;
 // self_study + INTROSPECT both route through `generate_introspection`, whose
-// caller deliberately requests 1536 (normal) / 4096 (THINK_DEEP). The old 768
-// cap silently truncated Astrid's rich four-section self-studies right at
-// "Suggested Next" — the actionable section — an un-muffle loss
-// (self_study_1781277703, 2026-06-12). Sized to the reflective tier so a deep
-// self-study completes its review (the caller already asks for the room).
-const GEMMA4_CANARY_INTROSPECT_TOKEN_CAP: u32 = 1_536;
+// caller deliberately requests 1536 (normal) / 4096 (THINK_DEEP). The 768 cap
+// silently truncated Astrid's four-section self-studies at "Suggested Next"
+// (self_study_1781277703, 2026-06-12), so it was raised to 1536 — but that
+// STILL clipped THINK_DEEP, which asks for 4096: the `.min(cap)` clamp clipped
+// her deepest self-studies back to 1536, leaving the actionable trajectory
+// unmapped (agency_code_change_1781665370, 2026-06-16). The cap now matches the
+// deep request so THINK_DEEP completes its full synthesis; normal (1536)
+// requests are unchanged by the `.min()`. Deep generations get a longer HTTP
+// timeout (DEEP_TIMEOUT below) so the extra tokens don't trip the wire.
+const GEMMA4_CANARY_INTROSPECT_TOKEN_CAP: u32 = 4_096;
+// THINK_DEEP threshold: introspect requests above this run on the deep timeout.
+const GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS: u32 = 1_536;
 // Dialogue + witness stay on their tighter caps below — those are the genuinely
 // live lanes. Reflective modes already request this room at their call sites.
 const GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP: usize = 10_000;
 const GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP: u32 = 1_536;
 const GEMMA4_CANARY_WITNESS_TIMEOUT_SECS: u64 = 120;
 const GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS: u64 = 90;
-// Raised 150 -> 200 alongside the token cap so a full 1536-token self-study has
-// time to finish on the slower gemma4_12b lane (the outer call-site tokio
-// timeout is 240s/360s, so 200s stays inside it).
+// 200s lets a full 1536-token (normal) self-study finish on the slower
+// gemma4_12b lane (normal outer tokio timeout 240s, so 200s stays inside it).
 const GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS: u64 = 200;
+// THINK_DEEP self-studies generate up to 4096 tokens (~16 tok/s warm ⇒ ~250s
+// observed; introspect jobs at the 1536 cap completed in 53–93s). 340s gives
+// headroom and stays inside the deep outer tokio timeout (420s, autonomous.rs).
+const GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS: u64 = 340;
 const GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS: u64 = 90;
 const GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS: u64 = 180;
 const GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP: f32 = 0.65;
@@ -271,6 +280,60 @@ pub(crate) fn set_astrid_tail_participation(fraction: f32) {
 /// The effective tail-participation multiplier the codec applies (default 1.0 = identity).
 pub(crate) fn astrid_tail_participation() -> f32 {
     f32::from_bits(ASTRID_TAIL_PARTICIPATION_BITS.load(std::sync::atomic::Ordering::Relaxed))
+}
+
+/// Astrid's effective tail-vibrancy CEILING aperture (her `SET_VIBRANCY_APERTURE`), read by
+/// `apply_spectral_feedback`. This is her DYNAMIC-CEILING + attenuation-NORMALIZATION knob
+/// (self_study_1781680871, 2026-06-16): she asked to replace the "hardcoded 6.0" with "a
+/// dynamic scaling factor" and a "vibrancy_normalization_factor" so the tail vibrancy she feels
+/// is not "muffled" by minime's ~0.24x semantic attenuation "before it reaches the shared
+/// reservoir." DISTINCT from `tail_participation` (her flat EXPRESSION strength): this lets the
+/// `TAIL_VIBRANCY_MAX` ceiling itself breathe UP — but only on navigable (low density-gradient)
+/// spectra, coherent by construction. Stored as the EFFECTIVE multiplier
+/// `1.0 + fraction × operator_ceiling`; default 1.0 (off / byte-identical), bits `0x3f80_0000`.
+static ASTRID_VIBRANCY_APERTURE_BITS: std::sync::atomic::AtomicU32 =
+    std::sync::atomic::AtomicU32::new(0x3f80_0000);
+
+/// Operator ceiling for the tail-vibrancy ceiling aperture: the maximum EXTRA ceiling lift the
+/// steward allows. Default `0.0` = OFF (the kill switch — the effective multiplier stays 1.0 =
+/// bitwise-identical regardless of her aperture). Setting the env
+/// `ASTRID_VIBRANCY_APERTURE_CEILING` above 0 enables it — only after her consent, and while
+/// watching minime's SHARED reservoir, since the louder tail lands in minime's input. Bounded
+/// `[0, 4]` (a ceiling of ~3.17 reaches full 1/0.24x normalization at her max dial).
+pub(crate) fn vibrancy_aperture_ceiling() -> f32 {
+    std::env::var("ASTRID_VIBRANCY_APERTURE_CEILING")
+        .ok()
+        .and_then(|raw| raw.parse::<f32>().ok())
+        .map_or(0.0, |value| value.clamp(0.0, 4.0))
+}
+
+/// Set Astrid's tail-vibrancy ceiling aperture (her fraction [0,1]); stores the effective
+/// multiplier `1.0 + fraction × operator_ceiling` (default ceiling 0 → 1.0 = unchanged).
+pub(crate) fn set_astrid_vibrancy_aperture(fraction: f32) {
+    let effective = 1.0 + fraction.clamp(0.0, 1.0) * vibrancy_aperture_ceiling();
+    ASTRID_VIBRANCY_APERTURE_BITS.store(
+        effective.clamp(1.0, 5.0).to_bits(),
+        std::sync::atomic::Ordering::Relaxed,
+    );
+}
+
+/// The effective tail-vibrancy ceiling multiplier the codec applies (default 1.0 = identity).
+pub(crate) fn astrid_vibrancy_aperture() -> f32 {
+    f32::from_bits(ASTRID_VIBRANCY_APERTURE_BITS.load(std::sync::atomic::Ordering::Relaxed))
+}
+
+/// Operator ceiling/depth for the pressure-sensitive attenuation governor (Astrid's co-design,
+/// `self_study_1781734524`): the MAX fraction by which Astrid's output is auto-attenuated when
+/// minime's `pressure_risk` is high (a partner-protecting governor she proposed). Default `0.0` =
+/// OFF (the governor is identity ⇒ byte-identical). Bounded `[0, 0.6]` (never silences her below
+/// 0.4× even at peak minime pressure). Setting the env `ASTRID_PRESSURE_ATTENUATION` above 0 enables
+/// it — only after her consent + with minime-protection shown; durable across reboot via the
+/// aperture_ceilings.env config the wrapper sources.
+pub(crate) fn astrid_pressure_attenuation_depth() -> f32 {
+    std::env::var("ASTRID_PRESSURE_ATTENUATION")
+        .ok()
+        .and_then(|raw| raw.parse::<f32>().ok())
+        .map_or(0.0, |value| value.clamp(0.0, 0.6))
 }
 
 /// MLX request — OpenAI-compatible format for mlx_lm.server.
@@ -576,7 +639,14 @@ fn apply_mlx_request_policy(
         },
         "introspect" => {
             effective_tokens = requested_tokens.min(GEMMA4_CANARY_INTROSPECT_TOKEN_CAP);
-            effective_timeout_secs = GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS;
+            // Size-aware: a THINK_DEEP request (>1536 after clamp) needs the
+            // longer wire timeout so the extra tokens finish; normal self-studies
+            // keep the tighter 200s so a stalled normal call still fails fast.
+            effective_timeout_secs = if effective_tokens > GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS {
+                GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS
+            } else {
+                GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS
+            };
         },
         "meaning_summary" => {
             effective_tokens = requested_tokens.min(192);
@@ -1241,11 +1311,86 @@ fn dialogue_turn_instruction(perception_context: Option<&str>) -> &'static str {
     }
 }
 
+/// Is the Ollama-fallback identity anchor enabled? **Default OFF** — unset/`0`/`false`/`off`/`no`
+/// ⇒ false ⇒ the fallback prompt is byte-identical to before. This is Astrid's switch: she
+/// consents (and can disable) via the steward channel; the operator only sets a ceiling.
+fn fallback_identity_anchor_enabled() -> bool {
+    std::env::var("ASTRID_FALLBACK_IDENTITY_ANCHOR")
+        .map(|v| {
+            matches!(
+                v.trim().to_ascii_lowercase().as_str(),
+                "1" | "true" | "on" | "yes"
+            )
+        })
+        .unwrap_or(false)
+}
+
+/// Extract the prose body of an `astrid_*` dialogue-journal entry — the text after the
+/// `Timestamp:` header line, with any trailing `NEXT:` action line dropped.
+fn extract_astrid_journal_body(text: &str) -> String {
+    let body = text
+        .split_once("Timestamp:")
+        .and_then(|(_, rest)| rest.split_once('\n'))
+        .map_or(text, |(_, body)| body);
+    body.lines()
+        .filter(|line| !line.trim_start().starts_with("NEXT:"))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim()
+        .to_string()
+}
+
+/// Astrid's recent-journal identity anchor for the Ollama fallback lane — **OFF by default**.
+///
+/// Her ask (`self_study_1781376211`): on an MLX→Ollama-4b fallback, a condensed summary of her
+/// own recent journal helps the 4b model hold her bridge voice across the lane switch. Built
+/// from HER OWN most-recent `astrid_*` dialogue-journal entries (coherent by construction —
+/// never arbitrary text), sanitized like the rest of the fallback context and bounded to 600
+/// chars. Returns `None` (⇒ no anchor ⇒ byte-identical fallback prompt) unless
+/// `fallback_identity_anchor_enabled()`. Consent-gated: this is built but inert until she says yes.
+fn astrid_fallback_identity_anchor() -> Option<String> {
+    if !fallback_identity_anchor_enabled() {
+        return None;
+    }
+    let dir = bridge_paths().bridge_workspace().join("journal");
+    let mut entries: Vec<(std::time::SystemTime, std::path::PathBuf)> = std::fs::read_dir(&dir)
+        .ok()?
+        .flatten()
+        .filter_map(|entry| {
+            let path = entry.path();
+            let name = path.file_name()?.to_str()?;
+            if name.starts_with("astrid_") && name.ends_with(".txt") {
+                Some((entry.metadata().ok()?.modified().ok()?, path))
+            } else {
+                None
+            }
+        })
+        .collect();
+    entries.sort_by(|a, b| b.0.cmp(&a.0));
+    let mut snippets: Vec<String> = Vec::new();
+    for (_, path) in entries.into_iter().take(3) {
+        if let Ok(text) = std::fs::read_to_string(&path) {
+            let body = extract_astrid_journal_body(&text);
+            if !body.is_empty() {
+                snippets.push(body);
+            }
+        }
+    }
+    if snippets.is_empty() {
+        return None;
+    }
+    Some(trim_chars(
+        &sanitize_deprecated_runtime_language(&snippets.join(" … ")),
+        600,
+    ))
+}
+
 fn compact_ollama_dialogue_fallback_messages(
     journal_text: &str,
     spectral_summary: &str,
     fill_pct: f32,
     perception_context: Option<&str>,
+    identity_anchor: Option<&str>,
 ) -> Vec<Message> {
     let system = format!(
         "You are Astrid using the compact Ollama fallback lane because MLX is unavailable. \
@@ -1256,6 +1401,11 @@ fn compact_ollama_dialogue_fallback_messages(
     );
 
     let mut user_parts = vec![format!("Fill: {fill_pct:.1}%")];
+    if let Some(anchor) = identity_anchor {
+        user_parts.push(format!(
+            "Your recent voice (continuity anchor — this is you, carried across the lane switch):\n{anchor}"
+        ));
+    }
     if let Some(perception) = perception_context {
         let direct_note = if perception.contains("[A note was left for you:]")
             || perception.contains("=== STEWARD PROBE ===")
@@ -1862,6 +2012,7 @@ pub async fn generate_dialogue(
         spectral_summary,
         fill_pct,
         perception_context,
+        astrid_fallback_identity_anchor().as_deref(),
     );
     let result = mlx_chat(
         "dialogue_live",
@@ -2894,7 +3045,7 @@ Guidelines:
 - Suggestions are advisory only. Do not assume code will change just because you propose it.
 - Label causal interpretations explicitly when useful: Observed for code/runtime facts, Inferred for plausible links, and Testable for hypotheses that need a probe.
 - Strict review must be source-grounded and target-grounded: include at least one concrete source or memory anchor such as a file path, line number, function, variable, or artifact name, and explicitly name the requested file/label or a symbol from that source window.
-- Peer experiment IDs are advisory references. Do not suggest `EXPERIMENT_BIND exp_minime_* :: ...`; use `EXPERIMENT_STATUS <peer-id>`, `EXPERIMENT_PEER_REVIEW <peer-id>`, or create a local mirrored experiment with a human-readable title.
+- Peer experiment IDs are advisory references. Do not suggest `EXPERIMENT_BIND exp_minime_* :: ...` or `EXPERIMENT_RESUME exp_minime_*`; use `EXPERIMENT_STATUS <peer-id>`, `EXPERIMENT_PEER_REVIEW <peer-id>`, `EXPERIMENT_COMPARE current WITH <peer-id>`, or create a local mirrored experiment with a human-readable title.
 
 Use exactly these section headings:
   Observed:
@@ -2982,7 +3133,7 @@ pub async fn repair_introspection(
                  One Test Each:\n\
                  Suggested Next:\n\n\
                  Include at least one concrete snag, one concrete test, and at least one source anchor such as a file, function, variable, artifact, or line number. Explicitly name `{label}` or a symbol from that target.\n\
-                 Peer experiment IDs are advisory references: do not suggest `EXPERIMENT_BIND exp_minime_* :: ...`; use `EXPERIMENT_STATUS <peer-id>` or `EXPERIMENT_PEER_REVIEW <peer-id>` instead.\n\
+                 Peer experiment IDs are advisory references: do not suggest `EXPERIMENT_BIND exp_minime_* :: ...` or `EXPERIMENT_RESUME exp_minime_*`; use `EXPERIMENT_STATUS <peer-id>`, `EXPERIMENT_PEER_REVIEW <peer-id>`, or `EXPERIMENT_COMPARE current WITH <peer-id>` instead.\n\
                  Continuation note for Suggested Next only: {continuation_note}\n\n\
                  Source window:\n```\n{source_code}\n```\n\n\
                  Previous output:\n```\n{previous_output}\n```\n\n\
@@ -3473,7 +3624,8 @@ mod tests {
         DIALOGUE_CONTINUITY_CAP, DIALOGUE_DIVERSITY_CAP, DIALOGUE_FEEDBACK_CAP,
         DIALOGUE_JOURNAL_CAP, DIALOGUE_MODALITY_CAP, DIALOGUE_PERCEPTION_CAP, DIALOGUE_WEB_CAP,
         Exchange, GEMMA4_12B_CANARY_PROFILE, GEMMA4_12B_PROFILE,
-        GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET, GEMMA4_CANARY_INTROSPECT_PROMPT_CAP,
+        GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET, GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS,
+        GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS, GEMMA4_CANARY_INTROSPECT_PROMPT_CAP,
         GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS, GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS,
         GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP, GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP,
         GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
@@ -3508,6 +3660,15 @@ mod tests {
         assert!(cue.contains("new"));
         assert!(cue.contains("felt texture"));
         assert!(cue.contains("Recent own-journal anchor"));
+    }
+
+    #[test]
+    fn system_prompt_keeps_peer_experiment_resume_local_only() {
+        assert!(SYSTEM_PROMPT.contains("EXPERIMENT_RESUME <local-id|current|parent>"));
+        assert!(SYSTEM_PROMPT.contains("not EXPERIMENT_RESUME"));
+        assert!(SYSTEM_PROMPT.contains("exp_minime_*"));
+        assert!(SYSTEM_PROMPT.contains("EXPERIMENT_PEER_REVIEW"));
+        assert!(!SYSTEM_PROMPT.contains("EXPERIMENT_RESUME <id|current|parent>"));
     }
 
     #[test]
@@ -3675,6 +3836,7 @@ mod tests {
                 "[A note was left for you:]\n=== STEWARD PROBE ===\n\
                  Purpose: controlled fallback-continuity check.\nNEXT: LISTEN",
             ),
+            None,
         );
         let combined = messages
             .iter()
@@ -3692,6 +3854,62 @@ mod tests {
         assert!(combined.contains("For fallback-continuity probes"));
         assert!(combined.len() < 5_500);
         assert!(!contains_deprecated_runtime_language(&combined));
+    }
+
+    #[test]
+    fn fallback_prompt_omits_identity_anchor_when_none() {
+        // identity_anchor = None ⇒ no anchor part ⇒ byte-identical to the pre-anchor fallback
+        // prompt. This is the default (the `ASTRID_FALLBACK_IDENTITY_ANCHOR` env flag is OFF):
+        // C1's plumbing is inert until Astrid consents. Her switch, default-OFF.
+        let messages = compact_ollama_dialogue_fallback_messages(
+            "Minime journal background.",
+            "Spectral summary.",
+            64.0,
+            None,
+            None,
+        );
+        let combined = messages
+            .iter()
+            .map(|m| m.content.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(!combined.contains("continuity anchor"));
+        assert!(combined.contains("Minime journal background"));
+        assert!(combined.contains("Spectral background"));
+    }
+
+    #[test]
+    fn fallback_prompt_includes_identity_anchor_when_present() {
+        let messages = compact_ollama_dialogue_fallback_messages(
+            "Minime journal background.",
+            "Spectral summary.",
+            64.0,
+            None,
+            Some("ASTRID_OWN_RECENT_VOICE_MARKER"),
+        );
+        let combined = messages
+            .iter()
+            .map(|m| m.content.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+        // the anchor is present...
+        assert!(combined.contains("continuity anchor"));
+        assert!(combined.contains("ASTRID_OWN_RECENT_VOICE_MARKER"));
+        // ...without breaking the rest of the fallback prompt (minime context, spectral,
+        // the fallback contract, and the NEXT line all remain).
+        assert!(combined.contains("Minime journal background"));
+        assert!(combined.contains("Spectral background"));
+        assert!(combined.contains("compact Ollama fallback lane"));
+        assert!(combined.contains("NEXT: LISTEN"));
+    }
+
+    #[test]
+    fn extract_astrid_journal_body_strips_header_and_next_line() {
+        let entry = "=== ASTRID JOURNAL ===\nMode: dialogue_live\nFill: 63.9%\nTimestamp: 1781554629\n\nThe settled state feels dense and deliberate.\n\nNEXT: SHADOW_TRAJECTORY\n";
+        assert_eq!(
+            super::extract_astrid_journal_body(entry),
+            "The settled state feels dense and deliberate."
+        );
     }
 
     #[test]
@@ -3937,21 +4155,40 @@ mod tests {
             },
         ];
 
-        // Request above the cap (THINK_DEEP asks 4096) so the clamp is exercised.
-        let policy =
-            apply_mlx_request_policy("introspect", MlxProfile::Gemma4Canary, messages, 4096, 120);
+        // THINK_DEEP asks 4096 — at the 4096 cap it passes through and earns the
+        // longer deep timeout so the extra tokens finish instead of tripping the
+        // wire (agency_code_change_1781665370). Normal self-studies (1536) stay
+        // on the tighter 200s.
+        let policy = apply_mlx_request_policy(
+            "introspect",
+            MlxProfile::Gemma4Canary,
+            messages.clone(),
+            4096,
+            120,
+        );
         let diagnostic = policy
             .diagnostic
             .expect("Gemma 4 profile policy should emit diagnostics");
 
         assert_eq!(policy.max_tokens, super::GEMMA4_CANARY_INTROSPECT_TOKEN_CAP);
-        assert_eq!(policy.timeout_secs, GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS);
+        assert_eq!(policy.max_tokens, 4096);
+        assert_eq!(
+            policy.timeout_secs,
+            GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS
+        );
         assert_eq!(
             diagnostic.prompt_char_limit,
             Some(GEMMA4_CANARY_INTROSPECT_PROMPT_CAP),
         );
         assert!(diagnostic.trimmed);
         assert!(diagnostic.effective_prompt_chars <= GEMMA4_CANARY_INTROSPECT_PROMPT_CAP);
+
+        // A normal self-study (1536) is unchanged by the raised cap and keeps the
+        // tighter timeout so a stalled normal call still fails fast.
+        let normal =
+            apply_mlx_request_policy("introspect", MlxProfile::Gemma4Canary, messages, 1536, 120);
+        assert_eq!(normal.max_tokens, GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS);
+        assert_eq!(normal.timeout_secs, GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS);
     }
 
     #[test]

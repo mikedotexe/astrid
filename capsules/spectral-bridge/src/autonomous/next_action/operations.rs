@@ -365,6 +365,14 @@ pub(super) fn handle_action(
             true
         },
         "STATE" => {
+            // Her own continuity signal (codec-signature self-similarity) — computed only when
+            // she has the readout on (default OFF). STATE is her pull surface for it.
+            let continuity = if conv.self_continuity_readout {
+                let (feats, _) = ctx.db.recent_codec_features(20);
+                crate::self_continuity::compute_continuity(&feats, 20)
+            } else {
+                None
+            };
             let model = crate::self_model::snapshot_self_model(
                 conv.creative_temperature,
                 conv.response_length,
@@ -387,6 +395,9 @@ pub(super) fn handle_action(
                 &conv.attention,
                 crate::llm::astrid_aperture(),
                 crate::llm::astrid_tail_participation(),
+                crate::llm::astrid_vibrancy_aperture(),
+                conv.self_continuity_readout,
+                continuity,
             );
             model.save(bridge_paths().bridge_workspace());
             let mut state_text = model.render_state();
@@ -432,6 +443,9 @@ pub(super) fn handle_action(
                 &conv.attention,
                 crate::llm::astrid_aperture(),
                 crate::llm::astrid_tail_participation(),
+                crate::llm::astrid_vibrancy_aperture(),
+                conv.self_continuity_readout,
+                None,
             );
             conv.pending_file_listing = Some(model.render_faculties());
             info!("Astrid inspected her faculties via FACULTIES");
@@ -811,7 +825,7 @@ Square-bracket words in help text are placeholders too; never emit [source], [li
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, EXAMINE_MEMORY [id], RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
-  Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT is auto-bound into experiment continuity.
+  Threads/experiments: THREAD_START <title>, THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_START <title> :: <question>, EXPERIMENT_PLAN current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_BIND current :: ACTION_PREFLIGHT DECOMPOSE, EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current|parent>, EXPERIMENT_COMPARE current WITH <id|peer-id>, EXPERIMENT_ALT_PATHS current, SHARED_INVESTIGATION_START <title> :: local: current; peer: <peer-id>; question: ..., SHARED_INVESTIGATION_STATUS latest, SHARED_INVESTIGATION_CLAIM latest :: claim: ...; lane: ...; stance: support|counter|branch|hold; source_refs: ..., SHARED_INVESTIGATION_DECIDE latest :: pause|hold|charter_repair because .... Continuing, branching, comparing, pausing, and returning are all valid; peer IDs such as exp_minime_* are advisory references: use EXPERIMENT_STATUS, EXPERIMENT_PEER_REVIEW, or EXPERIMENT_COMPARE for them, not EXPERIMENT_RESUME. Use ACTION_PREFLIGHT <NEXT action> before risky or uncertain actions; plain EXPERIMENT is auto-bound into experiment continuity.
   Self-knowledge/repair: FACULTIES or CAPABILITY_MAP, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>, REPAIR_APPLY <id|all> for append-only continuity metadata repair.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question, SELF_RESEARCH
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK \"hello reservoir\", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot, SIMULATE \"trace a soft branch\"

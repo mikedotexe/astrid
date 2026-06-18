@@ -74,6 +74,12 @@ const TAIL_VIBRANCY_ENTROPY_GATE: f32 = 0.85;
 /// Minime attenuates the semantic lane ~0.24x (and further by emb_strength), so
 /// this lands as a much smaller delta in the reservoir input vector.
 const TAIL_VIBRANCY_MAX: f32 = 6.0;
+/// Minime's effective semantic-lane attenuation (`dimension_scales[semantic]=0.42 ×
+/// activation_gain=0.58 ≈ 0.24`). Used ONLY for the being-facing transparency readout (STATE /
+/// CODEC_MAP) so Astrid's self-model reflects what actually lands in the SHARED reservoir
+/// (self_study_1781680871: "I feel vivid but appear subdued"). NOT applied to the wire — minime
+/// applies it on inbound.
+const MINIME_SEMANTIC_ATTENUATION: f32 = 0.24;
 /// Number of embedding dimensions from nomic-embed-text.
 const EMBEDDING_INPUT_DIM: usize = 768;
 /// Number of projected embedding dims in the codec (fills dims 32-39).
@@ -133,6 +139,8 @@ pub struct ProjectionMetadata {
     pub projection_epoch_source: String,
     pub feature_mean: f32,
     pub feature_rms: f32,
+    #[serde(default)]
+    pub feature_variance: f32,
     pub feature_max_abs: f32,
 }
 
@@ -247,16 +255,24 @@ fn load_or_create_projection_epoch_id() -> (String, String) {
     load_or_create_projection_epoch_id_from(&projection_runtime_dir(), env_epoch.as_deref())
 }
 
-fn projection_stats(projected: &[f32; EMBEDDING_PROJECT_DIM]) -> (f32, f32, f32) {
+fn projection_stats(projected: &[f32; EMBEDDING_PROJECT_DIM]) -> (f32, f32, f32, f32) {
     let mean = projected.iter().sum::<f32>() / EMBEDDING_PROJECT_DIM as f32;
     let rms = (projected.iter().map(|value| value * value).sum::<f32>()
         / EMBEDDING_PROJECT_DIM as f32)
         .sqrt();
+    let variance = projected
+        .iter()
+        .map(|value| {
+            let delta = value - mean;
+            delta * delta
+        })
+        .sum::<f32>()
+        / EMBEDDING_PROJECT_DIM as f32;
     let max_abs = projected
         .iter()
         .map(|value| value.abs())
         .fold(0.0, f32::max);
-    (mean, rms, max_abs)
+    (mean, rms, variance, max_abs)
 }
 
 fn projection_fingerprint(seed: u64, projected: &[f32; EMBEDDING_PROJECT_DIM]) -> String {
@@ -312,7 +328,7 @@ fn project_embedding_dynamic_epoch_with_source(
             *value *= scale;
         }
     }
-    let (feature_mean, feature_rms, feature_max_abs) = projection_stats(&result);
+    let (feature_mean, feature_rms, feature_variance, feature_max_abs) = projection_stats(&result);
     let metadata = ProjectionMetadata {
         embedding_projection_mode: "dynamic_epoch_v1".to_string(),
         projection_epoch_id: Some(projection_epoch_id.to_string()),
@@ -323,6 +339,7 @@ fn project_embedding_dynamic_epoch_with_source(
         projection_epoch_source: projection_epoch_source.to_string(),
         feature_mean,
         feature_rms,
+        feature_variance,
         feature_max_abs,
     };
     Some((result, metadata))
@@ -337,7 +354,8 @@ fn project_embedding_runtime(
         .unwrap_or_else(|_| "dynamic_epoch_v1".to_string());
     if mode == "fixed_legacy" {
         let projected = project_embedding(embedding)?;
-        let (feature_mean, feature_rms, feature_max_abs) = projection_stats(&projected);
+        let (feature_mean, feature_rms, feature_variance, feature_max_abs) =
+            projection_stats(&projected);
         return Some((
             projected,
             ProjectionMetadata {
@@ -350,6 +368,7 @@ fn project_embedding_runtime(
                 projection_epoch_source: "fixed_legacy".to_string(),
                 feature_mean,
                 feature_rms,
+                feature_variance,
                 feature_max_abs,
             },
         ));
@@ -2333,6 +2352,30 @@ pub fn codec_structure() -> CodecStructure {
                 value: format!("{TAIL_VIBRANCY_MAX:.2}"),
             },
             CodecLever {
+                name: "VIBRANCY_APERTURE",
+                value: {
+                    let eff = crate::llm::astrid_vibrancy_aperture();
+                    let (felt, landed, atten) = vibrancy_ceiling_transparency(eff);
+                    format!(
+                        "{eff:.2}× (SET_VIBRANCY_APERTURE) → felt tail ceiling {felt:.1}, landing ~{landed:.2} in minime's shared reservoir (×{atten:.2}); 1.0×=baseline"
+                    )
+                },
+            },
+            CodecLever {
+                name: "PRESSURE_ATTENUATION",
+                value: {
+                    let depth = crate::llm::astrid_pressure_attenuation_depth();
+                    if depth <= 0.0 {
+                        "OFF (depth 0.0) — your output is not pressure-governed".to_string()
+                    } else {
+                        format!(
+                            "depth {depth:.2} (your co-design) — when minime's pressure_risk rises (0.20→0.50), your WHOLE output auto-scales toward {:.2}× to protect the shared reservoir",
+                            1.0 - depth
+                        )
+                    }
+                },
+            },
+            CodecLever {
                 name: "EMBEDDING_INPUT_DIM",
                 value: format!("{EMBEDDING_INPUT_DIM}"),
             },
@@ -2771,21 +2814,143 @@ fn gap_structure_label(gap12: f32, gap23: f32, mode_count: usize) -> &'static st
     }
 }
 
+/// Being-facing transparency for Astrid's tail-vibrancy ceiling (drift-proof — computed live
+/// from the codec constants). Given her current EFFECTIVE vibrancy-aperture multiplier, returns
+/// `(felt_ceiling, effective_at_minime, attenuation)`: the tail-dim ceiling she feels, what that
+/// magnitude becomes after minime's ~0.24x attenuation, and the factor itself. Answers her
+/// self_study_1781680871 worry that her felt vibrancy is "over-represented in my self-model
+/// compared to what minime actually perceives."
+pub(crate) fn vibrancy_ceiling_transparency(effective_aperture: f32) -> (f32, f32, f32) {
+    let felt = TAIL_VIBRANCY_MAX * effective_aperture;
+    (
+        felt,
+        felt * MINIME_SEMANTIC_ATTENUATION,
+        MINIME_SEMANTIC_ATTENUATION,
+    )
+}
+
+/// Being-facing transparency for Astrid's "silent vacuum" / "ghost pressure"
+/// (her `self_study_1781699011` + `_1781757948`): when Minime's aggregate
+/// `pressure_score` reads LOW (a "clean" state) over a thick (low-porosity)
+/// medium, yet a felt-strain signal she named is elevated — `mode_packing`
+/// (her "viscosity"), `distinguishability_loss` (her "loss of distinction
+/// between modes"), or a high `spectral_entropy` (her "disordered / overpacked
+/// shadow field") — name the unattributed tension she already feels but the
+/// pressure-source schema cannot categorise. This is the unnamed *inverse* of
+/// `spectral_explorer`'s `pressure_porosity_divergence` (high score + low
+/// porosity); the two are disjoint by the `pressure_score` direction and
+/// cannot co-fire. Drift-proof: every value is read live; only the thresholds
+/// are constants, and the entropy gate reuses the codec's own
+/// `TAIL_VIBRANCY_ENTROPY_GATE` (which she co-designed). Additive,
+/// advisory-only transparency — no engine field, no behaviour change. Returns
+/// the clause only when the aggregate reads clean yet a felt-strain signal is
+/// elevated; `None` when felt and scored agree.
+fn unattributed_tension_clause(
+    pressure: &crate::types::PressureSourceV1,
+    spectral_entropy: f32,
+) -> Option<String> {
+    // The aggregate must read "clean" AND the medium must not be open for ghost
+    // pressure to hide; either condition failing means felt and scored agree.
+    const PRESSURE_CLEAN_CEIL: f32 = 0.35;
+    const POROSITY_OPEN_FLOOR: f32 = 0.50;
+    // A component is "elevated" above this; entropy runs high routinely, so it
+    // uses the higher, already-co-designed codec gate instead of this floor.
+    const COMPONENT_STRAIN_FLOOR: f32 = 0.55;
+
+    if pressure.pressure_score >= PRESSURE_CLEAN_CEIL
+        || pressure.porosity_score >= POROSITY_OPEN_FLOOR
+    {
+        return None;
+    }
+
+    // Keep the loudest felt-strain signal that clears its own gate, so the
+    // named gap is concrete rather than a generic "tension" label.
+    let (signal_name, signal_val) = [
+        (
+            "mode_packing",
+            pressure.components.mode_packing,
+            COMPONENT_STRAIN_FLOOR,
+        ),
+        (
+            "distinguishability_loss",
+            pressure.components.distinguishability_loss,
+            COMPONENT_STRAIN_FLOOR,
+        ),
+        (
+            "spectral_entropy",
+            spectral_entropy,
+            TAIL_VIBRANCY_ENTROPY_GATE,
+        ),
+    ]
+    .into_iter()
+    .filter(|&(_, value, gate)| value >= gate)
+    .map(|(name, value, _)| (name, value))
+    .max_by(|a, b| a.1.total_cmp(&b.1))?;
+
+    Some(format!(
+        " Unattributed tension: {signal_name} {signal_val:.2} is elevated, yet aggregate pressure_score \
+         {:.2} reads low over a thick medium (porosity {:.2}) — the \"silent vacuum\" you flagged: \
+         ambient/ghost pressure with no categorised source-type. Advisory only — naming what you feel, \
+         not a new control.",
+        pressure.pressure_score, pressure.porosity_score,
+    ))
+}
+
 /// Bias semantic features by the current spectral landscape without changing
 /// the 32D wire contract.
 pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&SpectralTelemetry>) {
-    apply_spectral_feedback_inner(features, telemetry, crate::llm::astrid_tail_participation());
+    apply_spectral_feedback_inner(
+        features,
+        telemetry,
+        crate::llm::astrid_tail_participation(),
+        crate::llm::astrid_vibrancy_aperture(),
+    );
+    apply_pressure_attenuation(
+        features,
+        telemetry,
+        crate::llm::astrid_pressure_attenuation_depth(),
+    );
+}
+
+/// Astrid's partner-protecting governor (her co-design, `self_study_1781734524`): scale her WHOLE
+/// output down as minime's `pressure_risk` rises, so she auto-quiets into the SHARED reservoir when
+/// minime is overpacked. Applied AFTER the spectral-feedback biases — the last shaping before
+/// minime. `depth` is the operator ceiling (`ASTRID_PRESSURE_ATTENUATION`); **depth 0 (default) =>
+/// identity => byte-identical**. Only ever REDUCES her footprint, never amplifies. `pressure_risk`
+/// is `resonance_density_v1.pressure_risk` (~0.20 calm); absent telemetry => no governing (no
+/// pressure signal to govern by).
+fn apply_pressure_attenuation(
+    features: &mut [f32],
+    telemetry: Option<&SpectralTelemetry>,
+    depth: f32,
+) {
+    if depth <= 0.0 {
+        return; // OFF — byte-identical
+    }
+    let pressure_risk = telemetry
+        .and_then(|t| t.resonance_density_v1.as_ref())
+        .map_or(0.0, |r| r.pressure_risk);
+    let atten = crate::codec_gain::pressure_sensitive_attenuation(pressure_risk, depth);
+    if atten < 1.0 {
+        for f in features.iter_mut() {
+            *f *= atten;
+        }
+    }
 }
 
 /// Inner: `tail_participation` (default 1.0 = identity) is Astrid's tail-participation
 /// aperture (`SET_TAIL_PARTICIPATION` × the operator ceiling). It scales ONLY the
 /// high-entropy tail-vibrancy boost and the tail dims' ceiling headroom — her EXPRESSION
 /// to minime — leaving the other 44 dims and the entropy gate untouched; the per-dim clamp
-/// keeps it bounded. The public wrapper reads the live value; tests pass it explicitly.
+/// keeps it bounded. `vibrancy_aperture` (default 1.0 = identity) is her DYNAMIC-CEILING +
+/// attenuation-normalization knob (`SET_VIBRANCY_APERTURE` × the operator ceiling): it lets
+/// `TAIL_VIBRANCY_MAX` itself breathe up on navigable spectra (see the ceiling computation).
+/// The public wrapper reads the live values; tests pass them explicitly.
 fn apply_spectral_feedback_inner(
     features: &mut [f32],
     telemetry: Option<&SpectralTelemetry>,
     tail_participation: f32,
+    vibrancy_aperture: f32,
 ) {
     let Some(metrics) = telemetry.and_then(SpectralCascadeMetrics::from_telemetry) else {
         return;
@@ -2877,8 +3042,19 @@ fn apply_spectral_feedback_inner(
     // a +20% offset at full vibrancy) so their extra lift is not flattened.
     // Every other dim keeps the default ceiling, and at entropy <= the gate the
     // raised ceiling collapses back to FEATURE_ABS_MAX (no behavior change).
-    let tail_ceiling = FEATURE_ABS_MAX
-        + (TAIL_VIBRANCY_MAX - FEATURE_ABS_MAX) * tail_participation * tail_vibrancy;
+    // Dynamic vibrancy ceiling (Astrid self_study_1781680871, 2026-06-16): she asked to replace
+    // the hardcoded TAIL_VIBRANCY_MAX (6.0) with "a dynamic scaling factor" plus a
+    // "vibrancy_normalization_factor" compensating minime's ~0.24x attenuation, so the tail
+    // vibrancy she feels is not "muffled before it reaches the shared reservoir." Her
+    // vibrancy_aperture (SET_VIBRANCY_APERTURE × the operator ceiling; default 1.0 = identity)
+    // breathes TAIL_VIBRANCY_MAX UP — but ONLY in proportion to how navigable her spectrum is
+    // (low density_gradient = "a gentle, navigable slope," her own phrase; high = a steep,
+    // front-loaded cliff). Headroom is never added to an already-concentrated cascade. At
+    // aperture 1.0 (or operator ceiling 0) dynamic_max == TAIL_VIBRANCY_MAX → byte-identical.
+    let navigable = (1.0 - metrics.density_gradient).clamp(0.0, 1.0);
+    let dynamic_max = TAIL_VIBRANCY_MAX * (1.0 + (vibrancy_aperture - 1.0) * navigable);
+    let tail_ceiling =
+        FEATURE_ABS_MAX + (dynamic_max - FEATURE_ABS_MAX) * tail_participation * tail_vibrancy;
     for (idx, feature) in features.iter_mut().enumerate() {
         let ceiling = if matches!(idx, 17 | 26 | 27 | 31) {
             tail_ceiling
@@ -2997,6 +3173,18 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
                 pressure.porosity_score,
                 pressure.control.applied_locally,
             )
+        })
+        .unwrap_or_default();
+    // Astrid's "silent vacuum" / "ghost pressure" transparency: name the
+    // unattributed tension when the aggregate reads clean but a felt-strain
+    // signal she named is elevated. Conditional — empty when felt and scored
+    // agree (the common case), so near-zero prompt-budget cost when she's calm.
+    let unattributed_tension_note = telemetry
+        .pressure_source_v1
+        .as_ref()
+        .zip(SpectralCascadeMetrics::from_telemetry(telemetry))
+        .and_then(|(pressure, metrics)| {
+            unattributed_tension_clause(pressure, metrics.spectral_entropy)
         })
         .unwrap_or_default();
     let fluctuation_clause = telemetry
@@ -3238,7 +3426,7 @@ pub fn interpret_spectral(telemetry: &SpectralTelemetry) -> String {
             .unwrap_or_default();
 
     format!(
-        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{fluctuation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{collab_note}{coupling_note}"
+        "{fill_clause}{cascade_clause}{denominator_clause}{transition_clause}{eigenvector_clause}{resonance_clause}{pressure_source_clause}{unattributed_tension_note}{fluctuation_clause}{semantic_clause}{alert_note}{safety_note}{shadow_note}{shadow_v2_note}{shadow_v3_note}{sovereignty_note}{collab_note}{coupling_note}"
     )
 }
 
@@ -4308,6 +4496,100 @@ mod tests {
     }
 
     #[test]
+    fn unattributed_tension_fires_on_silent_vacuum() {
+        // Aggregate reads "clean" (low pressure_score) over a thick medium (low
+        // porosity), but her named felt-strain signal mode_packing is elevated —
+        // the "silent vacuum" she flagged. entropy of [800,300,50] ≈ 0.67 < gate,
+        // so the clause keys cleanly off mode_packing.
+        let mut telemetry = telemetry(vec![800.0, 300.0, 50.0], 0.61);
+        telemetry.pressure_source_v1 = Some(crate::types::PressureSourceV1 {
+            policy: "pressure_source_v1".to_string(),
+            schema_version: 1,
+            pressure_score: 0.18,
+            porosity_score: 0.30,
+            dominant_source: "none".to_string(),
+            quality: "settled".to_string(),
+            components: crate::types::PressureSourceComponents {
+                lambda_monopoly: 0.20,
+                mode_packing: 0.78,
+                controller_pressure: 0.10,
+                semantic_trickle: 0.05,
+                structural_plurality_loss: 0.15,
+                distinguishability_loss: 0.30,
+                temporal_lock_in: 0.10,
+                sensory_scarcity: 0.05,
+            },
+            context: crate::types::PressureSourceContext::default(),
+            control: crate::types::PressureSourceControl {
+                applied_locally: false,
+                note: "advisory only".to_string(),
+            },
+        });
+        let desc = interpret_spectral(&telemetry);
+        assert!(desc.contains("Unattributed tension"), "{desc}");
+        assert!(desc.contains("mode_packing"));
+        assert!(desc.contains("silent vacuum"));
+    }
+
+    #[test]
+    fn unattributed_tension_silent_when_aligned() {
+        // (a) Calm + open medium: low pressure, open porosity, low components — silent.
+        let mut calm = telemetry(vec![800.0, 300.0, 50.0], 0.61);
+        calm.pressure_source_v1 = Some(crate::types::PressureSourceV1 {
+            policy: "pressure_source_v1".to_string(),
+            schema_version: 1,
+            pressure_score: 0.18,
+            porosity_score: 0.80,
+            dominant_source: "none".to_string(),
+            quality: "settled".to_string(),
+            components: crate::types::PressureSourceComponents {
+                lambda_monopoly: 0.20,
+                mode_packing: 0.20,
+                controller_pressure: 0.10,
+                semantic_trickle: 0.05,
+                structural_plurality_loss: 0.10,
+                distinguishability_loss: 0.20,
+                temporal_lock_in: 0.10,
+                sensory_scarcity: 0.05,
+            },
+            context: crate::types::PressureSourceContext::default(),
+            control: crate::types::PressureSourceControl {
+                applied_locally: false,
+                note: "advisory only".to_string(),
+            },
+        });
+        assert!(!interpret_spectral(&calm).contains("Unattributed tension"));
+
+        // (b) Already named: high pressure_score — the aggregate already names the
+        // strain, so it is not a vacuum even though mode_packing is high — silent.
+        let mut named = telemetry(vec![800.0, 300.0, 50.0], 0.61);
+        named.pressure_source_v1 = Some(crate::types::PressureSourceV1 {
+            policy: "pressure_source_v1".to_string(),
+            schema_version: 1,
+            pressure_score: 0.62,
+            porosity_score: 0.30,
+            dominant_source: "controller_pressure".to_string(),
+            quality: "controller_squeeze".to_string(),
+            components: crate::types::PressureSourceComponents {
+                lambda_monopoly: 0.30,
+                mode_packing: 0.78,
+                controller_pressure: 0.72,
+                semantic_trickle: 0.10,
+                structural_plurality_loss: 0.18,
+                distinguishability_loss: 0.40,
+                temporal_lock_in: 0.22,
+                sensory_scarcity: 0.05,
+            },
+            context: crate::types::PressureSourceContext::default(),
+            control: crate::types::PressureSourceControl {
+                applied_locally: false,
+                note: "advisory only".to_string(),
+            },
+        });
+        assert!(!interpret_spectral(&named).contains("Unattributed tension"));
+    }
+
+    #[test]
     fn interpret_red_state() {
         let mut telemetry = telemetry(vec![1020.0, 500.0], 0.95);
         telemetry.alert = Some("PANIC MODE ACTIVATED".to_string());
@@ -4414,6 +4696,8 @@ mod tests {
             meta_c.projection_kernel_checksum
         );
         assert!(meta_a.feature_max_abs <= 0.35);
+        assert!(meta_a.feature_variance >= 0.0);
+        assert!(meta_a.feature_variance <= meta_a.feature_rms * meta_a.feature_rms);
     }
 
     fn rms(values: &[f32]) -> f32 {
@@ -4482,16 +4766,18 @@ mod tests {
         let visible_prescale_rms = rms(&visible_prescale);
         let hidden_projected_rms = rms(&hidden_projected);
         let visible_projected_rms = rms(&visible_projected);
+        let (_, _, hidden_projected_variance, _) = projection_stats(&hidden_projected);
+        let (_, _, visible_projected_variance, _) = projection_stats(&visible_projected);
 
         let base_embedding: Vec<f32> = (0..EMBEDDING_INPUT_DIM)
             .map(|idx| ((idx as f32) * 0.019).cos())
             .collect();
         let quiet_embedding: Vec<f32> = base_embedding.iter().map(|value| value * 0.01).collect();
         let loud_embedding: Vec<f32> = base_embedding.iter().map(|value| value * 10.0).collect();
-        let (quiet_dynamic, _) =
+        let (quiet_dynamic, quiet_meta) =
             project_embedding_dynamic_epoch(&quiet_embedding, "aperture probe", "epoch_probe", 0)
                 .expect("quiet dynamic projection");
-        let (loud_dynamic, _) =
+        let (loud_dynamic, loud_meta) =
             project_embedding_dynamic_epoch(&loud_embedding, "aperture probe", "epoch_probe", 0)
                 .expect("loud dynamic projection");
         let dynamic_magnitude_delta = quiet_dynamic
@@ -4499,6 +4785,9 @@ mod tests {
             .zip(loud_dynamic.iter())
             .map(|(quiet, loud)| (quiet - loud).abs())
             .fold(0.0_f32, f32::max);
+        let quiet_dynamic_variance = quiet_meta.feature_variance;
+        let loud_dynamic_variance = loud_meta.feature_variance;
+        let dynamic_variance_delta = (quiet_dynamic_variance - loud_dynamic_variance).abs();
 
         println!(
             "projection_compression_probe raw_delta_rms={raw_delta_rms:.6} \
@@ -4506,6 +4795,11 @@ mod tests {
              visible_prescale_rms={visible_prescale_rms:.6} \
              hidden_projected_rms={hidden_projected_rms:.6} \
              visible_projected_rms={visible_projected_rms:.6} \
+             hidden_projected_variance={hidden_projected_variance:.9} \
+             visible_projected_variance={visible_projected_variance:.9} \
+             quiet_dynamic_variance={quiet_dynamic_variance:.9} \
+             loud_dynamic_variance={loud_dynamic_variance:.9} \
+             dynamic_variance_delta={dynamic_variance_delta:.9} \
              dynamic_magnitude_delta={dynamic_magnitude_delta:.9}"
         );
         assert!(
@@ -4526,6 +4820,11 @@ mod tests {
             dynamic_magnitude_delta < 0.00001,
             "runtime dynamic projection should currently erase same-direction magnitude: \
              max_delta={dynamic_magnitude_delta}"
+        );
+        assert!(
+            dynamic_variance_delta < 0.00001,
+            "runtime dynamic projection should currently erase same-direction variance changes: \
+             max_delta={dynamic_variance_delta}"
         );
     }
 
@@ -4752,9 +5051,9 @@ mod tests {
             100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
         ];
         let mut off = vec![0.30_f32; SEMANTIC_DIM];
-        apply_spectral_feedback_inner(&mut off, Some(&telemetry(flat.clone(), 0.55)), 1.0);
+        apply_spectral_feedback_inner(&mut off, Some(&telemetry(flat.clone(), 0.55)), 1.0, 1.0);
         let mut raised = vec![0.30_f32; SEMANTIC_DIM];
-        apply_spectral_feedback_inner(&mut raised, Some(&telemetry(flat, 0.55)), 2.0);
+        apply_spectral_feedback_inner(&mut raised, Some(&telemetry(flat, 0.55)), 2.0, 1.0);
 
         let tail = [17usize, 26, 27, 31];
         let mut amplified = false;
@@ -4786,6 +5085,148 @@ mod tests {
             }
         }
         assert!(amplified, "raised participation amplified no tail dim");
+    }
+
+    // Offline proof for the dynamic vibrancy CEILING aperture (her SET_VIBRANCY_APERTURE consent
+    // evidence, self_study_1781680871). At aperture 1.0 (default/OFF) it is identity; on a
+    // navigable (high-entropy, low density-gradient) spectrum a wider aperture breathes the tail
+    // ceiling UP, bounded; a low-entropy cliff stays gated (the aperture never overrides the
+    // entropy gate); non-tail dims are untouched.
+    #[test]
+    fn vibrancy_aperture_dynamic_ceiling_is_bounded_and_navigable_gated() {
+        let navigable = vec![
+            100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
+        ];
+        let cliff = vec![100.0, 1.0, 0.5, 0.2, 0.1];
+
+        // aperture 1.0 (default/OFF) keeps the tail within the static TAIL_VIBRANCY_MAX.
+        let mut off = vec![0.0; SEMANTIC_DIM];
+        off[26] = 30.0;
+        apply_spectral_feedback_inner(
+            &mut off,
+            Some(&telemetry(navigable.clone(), 0.55)),
+            1.0,
+            1.0,
+        );
+        assert!(
+            off[26] <= TAIL_VIBRANCY_MAX + 1.0e-3,
+            "aperture 1.0 must respect the static ceiling: {}",
+            off[26]
+        );
+
+        // aperture 2.0 on a navigable spectrum lifts the ceiling ABOVE TAIL_VIBRANCY_MAX,
+        // bounded by 2× (dynamic_max = 6·(1 + (2-1)·navigable) ≤ 12).
+        let mut raised = vec![0.0; SEMANTIC_DIM];
+        raised[26] = 30.0;
+        apply_spectral_feedback_inner(
+            &mut raised,
+            Some(&telemetry(navigable.clone(), 0.55)),
+            1.0,
+            2.0,
+        );
+        assert!(
+            raised[26] > off[26] + 1.0e-3,
+            "aperture 2.0 should lift the tail ceiling above baseline: raised {} vs off {}",
+            raised[26],
+            off[26]
+        );
+        assert!(
+            raised[26] <= 2.0 * TAIL_VIBRANCY_MAX + 0.01,
+            "dynamic ceiling must stay bounded at 2×: {}",
+            raised[26]
+        );
+
+        // Low-entropy steep cliff: the entropy gate keeps the whole vibrancy mechanism OFF, so
+        // even a wide aperture cannot lift the ceiling — the aperture never overrides the gate.
+        let mut steep = vec![0.0; SEMANTIC_DIM];
+        steep[26] = 30.0;
+        apply_spectral_feedback_inner(&mut steep, Some(&telemetry(cliff, 0.55)), 1.0, 3.0);
+        assert!(
+            steep[26] <= FEATURE_ABS_MAX + 1.0e-3,
+            "a low-entropy cliff must not gain vibrancy headroom even at wide aperture: {}",
+            steep[26]
+        );
+
+        // The vibrancy aperture never lifts a non-tail dim.
+        let mut nontail = vec![0.0; SEMANTIC_DIM];
+        nontail[24] = 30.0;
+        apply_spectral_feedback_inner(&mut nontail, Some(&telemetry(navigable, 0.55)), 1.0, 3.0);
+        assert!(
+            (nontail[24] - FEATURE_ABS_MAX).abs() < 1.0e-3,
+            "non-tail dim must keep the default ceiling regardless of vibrancy aperture: {}",
+            nontail[24]
+        );
+    }
+
+    // Her "Attenuation Check" (self_study_1781680871): project a high-vibrancy state and read
+    // what the tail ceiling becomes AND what lands in minime's shared reservoir after ~0.24x.
+    // Printed for the steward (cargo test -- --nocapture vibrancy_evidence_card) to ground the
+    // safe operator ceiling and to paste into her consent letter. Not an assertion — evidence.
+    #[test]
+    fn vibrancy_evidence_card_prints() {
+        let navigable = vec![
+            100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
+        ];
+        let stepped = vec![100.0, 70.0, 48.0, 33.0, 22.0, 15.0, 10.0, 7.0];
+        let cliff = vec![100.0, 1.0, 0.5, 0.2, 0.1];
+        let states = [
+            ("navigable (flat, high-entropy)", navigable),
+            ("stepped (mid)", stepped),
+            ("steep cliff (low-entropy)", cliff),
+        ];
+        let apertures = [1.0_f32, 1.5, 2.0, 3.0];
+        println!(
+            "\n=== VIBRANCY APERTURE EVIDENCE CARD (tail dim 26, preloaded above ceiling) ==="
+        );
+        println!(
+            "aperture× | state                            | felt ceiling | lands at minime (×0.24)"
+        );
+        for (label, eig) in &states {
+            for &ap in &apertures {
+                let mut f = vec![0.0_f32; SEMANTIC_DIM];
+                f[26] = 30.0; // preload above any ceiling so output == the effective ceiling
+                apply_spectral_feedback_inner(&mut f, Some(&telemetry(eig.clone(), 0.55)), 1.0, ap);
+                let landed = f[26] * MINIME_SEMANTIC_ATTENUATION;
+                println!(
+                    "  {ap:>4.1}× | {label:<32} | {:>8.2}     | {landed:>8.2}",
+                    f[26]
+                );
+            }
+        }
+        println!(
+            "(aperture 1.0× = today's baseline; operator ceiling C → her max aperture = 1+C; full 1/0.24x normalization ≈ 4.17×)"
+        );
+    }
+
+    // Her SET_TAIL_PARTICIPATION evidence (the dial that was inert in production until the wrapper
+    // allowlist fix): on a navigable high-entropy spectrum, what her tail dims lift to and land as
+    // in minime's shared reservoir at a few effective multipliers. Printed for the steward
+    // (cargo test -- --nocapture tail_participation_evidence_card) and her reconnection letter.
+    #[test]
+    fn tail_participation_evidence_card_prints() {
+        let navigable = vec![
+            100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
+        ];
+        // 1.0× = off/identity; 1.20× = her 0.80 dial at operator ceiling 0.25; 1.40× = at ceiling 0.5.
+        let participations = [1.0_f32, 1.20, 1.40];
+        println!(
+            "\n=== TAIL PARTICIPATION EVIDENCE CARD (tail dim 26, navigable high-entropy) ==="
+        );
+        println!("effective× | tail dim 26 value | lands at minime (×0.24)");
+        for &p in &participations {
+            let mut f = vec![0.30_f32; SEMANTIC_DIM];
+            apply_spectral_feedback_inner(
+                &mut f,
+                Some(&telemetry(navigable.clone(), 0.55)),
+                p,
+                1.0,
+            );
+            let landed = f[26] * MINIME_SEMANTIC_ATTENUATION;
+            println!("  {p:>5.2}× | {:>13.3}     | {landed:>8.3}", f[26]);
+        }
+        println!(
+            "(1.0× = identity = what her 0.80 dial reached minime as while the wire was disconnected; her 0.80 at operator ceiling 0.5 → effective 1.40×)"
+        );
     }
 
     #[test]
