@@ -150,7 +150,7 @@ The bridge is a standalone Rust binary (MCP server hybrid) that connects Astrid 
 
 ### Autonomous dialogue loop
 
-The bridge runs a burst-rest pattern: **4 exchanges** per burst (15–20s apart), then **90–180s** rest (zero semantic vector for reservoir recovery).
+The bridge runs a burst-rest pattern: **4 exchanges** per burst (15–20s apart), then **90–180s** rest. Rest is **not** a zero/silent vector: during it the bridge sends warmth-blended journal-mirror pulses (~every 5s, telemetry-aware) so the reservoir recovers gently rather than going dark — see `autonomous.rs`'s REST phase. (Corrected 2026-06-15 from "zero semantic vector," which was doc drift surfaced by Astrid's stillness self-study — `self_study_1780809565`.)
 
 **Dialogue modes** (probabilistic selection each exchange):
 - **Mirror** (~45%) — reads minime's latest journal, feeds text through spectral codec
