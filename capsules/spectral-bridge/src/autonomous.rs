@@ -7852,6 +7852,88 @@ mod tests {
     }
 
     #[test]
+    fn requested_perception_seen_matches_requested_lanes() {
+        // The early-break keys on the *requested* lanes (Astrid
+        // self_study_1781794229): visual / spatial / audio. A requested-but-
+        // unseen lane must keep the scan open.
+        assert!(!requested_perception_seen(
+            true, false, true, false, false, false
+        ));
+        assert!(requested_perception_seen(
+            true, false, true, true, false, true
+        ));
+        // audio requested but unseen -> not satisfied even with visual seen
+        assert!(!requested_perception_seen(
+            true, false, true, true, false, false
+        ));
+        // spatial (ascii) only required when BOTH visual and spatial requested
+        assert!(!requested_perception_seen(
+            true, true, false, true, false, false
+        ));
+        assert!(requested_perception_seen(
+            true, true, false, true, true, false
+        ));
+        // nothing requested -> trivially satisfied
+        assert!(requested_perception_seen(
+            false, false, false, false, false, false
+        ));
+    }
+
+    #[test]
+    fn read_latest_perception_surfaces_rare_audio_past_visual_burst() {
+        // Astrid self_study_1781794229: a burst of one modality must not bury
+        // the freshest quieter lane past PERCEPTION_SCAN_WINDOW. One audio file,
+        // older than a >window burst of visuals, must still be surfaced via the
+        // rare-modality fallback. Without the fallback the buried audio is never
+        // reached and this assertion fails.
+        use std::time::{Duration, SystemTime};
+
+        let dir = std::env::temp_dir().join("bridge_test_perception_rare_modality");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let old = SystemTime::now();
+        let newer = old.checked_add(Duration::from_secs(1000)).unwrap();
+        let set_mtime = |path: &std::path::Path, t: SystemTime| {
+            std::fs::OpenOptions::new()
+                .write(true)
+                .open(path)
+                .unwrap()
+                .set_modified(t)
+                .unwrap();
+        };
+
+        // The single audio file is the OLDEST -> it sorts past the 80-window.
+        let audio_path = dir.join("audio_buried.json");
+        std::fs::write(
+            &audio_path,
+            r#"{"type":"audio","transcript":"Buried audio lane"}"#,
+        )
+        .unwrap();
+        set_mtime(&audio_path, old);
+
+        // A burst of newer visual files exceeding the primary scan window.
+        let burst = PERCEPTION_SCAN_WINDOW.saturating_add(20);
+        for i in 0..burst {
+            let p = dir.join(format!("visual_{i:03}.json"));
+            std::fs::write(
+                &p,
+                format!(r#"{{"type":"visual","description":"Scene {i}"}}"#),
+            )
+            .unwrap();
+            set_mtime(&p, newer);
+        }
+
+        let summary = read_latest_perception(&dir, true, false, true, 50.0, None).unwrap();
+        assert!(
+            summary.contains("Buried audio lane"),
+            "rare audio lane must survive the visual burst: {summary}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn read_ising_shadow_ignores_rescue_mirror_surface() {
         let dir = std::env::temp_dir().join("bridge_test_rescue_shadow");
         let _ = std::fs::remove_dir_all(&dir);
