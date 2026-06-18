@@ -33,6 +33,7 @@ import ast
 import json
 import re
 import sys
+import unittest
 from collections import defaultdict
 from pathlib import Path
 
@@ -65,6 +66,21 @@ MENU_NEXT_PATTERN = re.compile(r"""NEXT:\s*([A-Z_][A-Z0-9_]+)""")
 MENU_CONTEXT_PATTERN = re.compile(
     r"""\b(NEXT|ACTION|ACTIONS|OPTION|OPTIONS|CHOOSE|AVAILABLE|ALLOWED|MENU|VERB|VERBS)\b""",
     re.IGNORECASE,
+)
+NEGATIVE_NEXT_CONTEXT_MARKERS = (
+    "examples to avoid",
+    "example to avoid",
+    "do not write",
+    "don't write",
+    "invalid",
+    "malformed",
+    "wrong",
+)
+POSITIVE_NEXT_CONTEXT_MARKERS = (
+    "correct form",
+    "correct forms",
+    "next options",
+    "next: options",
 )
 # Bare uppercase tokens inside string content that look like action names.
 # Filter to tokens of ≥4 chars to avoid catching abbreviations.
@@ -186,7 +202,10 @@ def find_string_literals(source: str) -> list[tuple[int, str]]:
         line = source[: m.start()].count("\n") + 1
         if line in docstring_lines:
             continue
-        out.append((line, m.group("body")))
+        body = m.group("body")
+        if "f" in m.group("prefix").casefold():
+            body = _strip_fstring_interpolations(body)
+        out.append((line, body))
     # Single-line single/double quoted strings
     for m in re.finditer(
         r'(?P<prefix>[fFrRbBuU]*)(?P<q>[\'"])(?P<body>(?:\\.|[^\\\n])*?)(?P=q)',
@@ -195,8 +214,23 @@ def find_string_literals(source: str) -> list[tuple[int, str]]:
         line = source[: m.start()].count("\n") + 1
         if line in docstring_lines:
             continue
-        out.append((line, m.group("body")))
+        body = m.group("body")
+        if "f" in m.group("prefix").casefold():
+            body = _strip_fstring_interpolations(body)
+        out.append((line, body))
     return out
+
+
+def _strip_fstring_interpolations(body: str) -> str:
+    return re.sub(r"\{[^{}\n]*\}", "", body)
+
+
+def _next_match_is_negative_example(body: str, start: int) -> bool:
+    line_start = body.rfind("\n", 0, start) + 1
+    prefix = body[line_start:start].casefold()
+    last_negative = max(prefix.rfind(marker) for marker in NEGATIVE_NEXT_CONTEXT_MARKERS)
+    last_positive = max(prefix.rfind(marker) for marker in POSITIVE_NEXT_CONTEXT_MARKERS)
+    return last_negative >= 0 and last_negative > last_positive
 
 
 def _action_constant(value: str) -> str | None:
@@ -338,6 +372,8 @@ def scan_menu(source: str, known_actions: set[str] | None = None) -> dict[str, l
     for ln, body in find_string_literals(source):
         # Strict signal: explicit "NEXT: X" within the string.
         for m in MENU_NEXT_PATTERN.finditer(body):
+            if _next_match_is_negative_example(body, m.start()):
+                continue
             name = m.group(1)
             if name in EXCLUDE:
                 continue
@@ -625,6 +661,53 @@ def render_markdown(report: dict, show_accepted: bool = False) -> str:
     return "\n".join(out)
 
 
+class DispatchMenuDriftSelfTests(unittest.TestCase):
+    def test_fstring_placeholder_is_not_menu_action(self) -> None:
+        source = '''
+RUNTIME_WORDING_GUIDANCE = "wording hygiene"
+def prompt():
+    return f"""NEXT options:
+{RUNTIME_WORDING_GUIDANCE}
+NEXT: REAL_ACTION
+"""
+'''
+        menu = scan_menu(source, {"REAL_ACTION"})
+        self.assertIn("REAL_ACTION", menu)
+        self.assertNotIn("RUNTIME_WORDING_GUIDANCE", menu)
+
+    def test_negative_next_example_is_not_advertised_action(self) -> None:
+        source = '''
+def prompt():
+    return (
+        "NEXT grammar gate: Examples to avoid: NEXT: SEEK_BALANCE -- [regime=recover]. "
+        "Correct forms: NEXT: REGIME focus."
+    )
+'''
+        menu = scan_menu(source, {"REGIME"})
+        self.assertIn("REGIME", menu)
+        self.assertNotIn("SEEK_BALANCE", menu)
+
+    def test_real_unknown_next_is_still_detected(self) -> None:
+        source = '''
+def prompt():
+    return "NEXT options:\\n  NEXT: UNWIRED_ACTION"
+
+def dispatch(base):
+    if base == "KNOWN_ACTION":
+        return True
+    return False
+'''
+        dispatched = set(scan_dispatched(source))
+        menu = set(scan_menu(source, dispatched))
+        self.assertIn("UNWIRED_ACTION", menu - dispatched)
+
+
+def run_self_tests() -> int:
+    suite = unittest.TestLoader().loadTestsFromTestCase(DispatchMenuDriftSelfTests)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    return 0 if result.wasSuccessful() else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Audit dispatch-vs-menu drift in autonomous_agent.py."
@@ -656,7 +739,15 @@ def main() -> int:
         action="store_true",
         help="Show accepted baseline backlog in Markdown output",
     )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="Run focused self-tests and exit",
+    )
     args = parser.parse_args()
+
+    if args.self_test:
+        return run_self_tests()
 
     if not args.target.is_file():
         print(f"target not found: {args.target}", file=sys.stderr)

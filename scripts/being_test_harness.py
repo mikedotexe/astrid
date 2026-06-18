@@ -13,7 +13,9 @@ not raw tool output).
 
 Usage:
   python3 being_test_harness.py --list
+  python3 being_test_harness.py --list --json
   python3 being_test_harness.py --run minime_qualia_room
+  python3 being_test_harness.py --run minime_lend_aperture_consequence_probe --json
   python3 being_test_harness.py --run all --write-back
 
 Registry note: Astrid's codec / perception self-study tests (Projection
@@ -33,7 +35,9 @@ import re
 import sqlite3
 import subprocess
 import time
+from collections import Counter, deque
 from pathlib import Path
+from typing import Any
 
 MINIME = Path("/Users/v/other/minime")
 ASTRID_ROOT = Path("/Users/v/other/astrid")
@@ -44,10 +48,20 @@ INBOX = {
 }
 TIMING = MINIME / "workspace" / "diagnostics" / "llm_timing.jsonl"
 MINIME_JOURNAL = MINIME / "workspace" / "journal"
+MINIME_ACTION_THREADS = MINIME / "workspace" / "action_threads"
+MINIME_RUNTIME = MINIME / "workspace" / "runtime"
 ASTRID_JOURNAL = ASTRID / "workspace" / "journal"
 ASTRID_STATE = ASTRID / "workspace" / "state.json"
 CODEC_RS = ASTRID / "src" / "codec.rs"
 CODEC_PROJECTION_EPOCH = ASTRID / "workspace" / "runtime" / "codec_projection_epoch.json"
+SPARSE_ADMIT_ATTENTION_MULTIPLIER = 3.0
+LEND_APERTURE_RESPONSE_PENDING_S = 2 * 60
+LEND_APERTURE_ZERO_TICK_CLOSE_S = 5 * 60
+LEND_APERTURE_FEEDER_MAX_AGE_S = 30 * 60
+LEND_APERTURE_RESPONSE_STALE_S = LEND_APERTURE_ZERO_TICK_CLOSE_S + 60
+LEND_APERTURE_POST_SAMPLE_WINDOW_S = 20 * 60
+LEND_APERTURE_JOURNAL_MATCH_S = 10
+LEND_APERTURE_LEGACY_RESPONSE_MATCH_S = 20 * 60
 
 # The qualia-cap kickstart (local 06:17:25 == 13:17:25 UTC). Timing rows are UTC.
 QUALIA_DEPLOY_UTC = "2026-06-08T13:17:25"
@@ -111,6 +125,25 @@ STABLE_CORE_BLEND_WINDOW_FILL_PCT = (71.5, 74.0)
 STABLE_CORE_SLEW_WINDOW_FILL_PCT = (70.0, 74.0)
 TAIL_INTERFERENCE_WATCH_THRESHOLD = 0.08
 TAIL_INTERFERENCE_ATTENTION_THRESHOLD = 0.20
+PROJECTION_PROBE_METRIC_RE = re.compile(r"\b([a-z_]+)=([+-]?(?:\d+(?:\.\d*)?|\.\d+))")
+PRESSURE_SOURCE_LINE_RE = re.compile(
+    r"Pressure source:\s*(?P<source>[A-Za-z0-9_:-]+)\s*"
+    r"\((?P<quality>[^)]+)\);\s*"
+    r"pressure=(?P<pressure>[0-9.]+),\s*"
+    r"porosity=(?P<porosity>[0-9.]+),\s*"
+    r"control_applied=(?P<control_applied>True|False)"
+)
+DENOMINATOR_LINE_RE = re.compile(
+    r"effective_dimensionality=(?P<effective>[0-9.]+)/(?P<capacity>[0-9]+),\s*"
+    r"distinguishability_loss=(?P<loss_pct>[0-9.]+)%"
+)
+NEXT_DIRECTIVE_RE = re.compile(
+    r"\b(?:Current NEXT|Suggested NEXT|Suggested next|Continuity return|Resume loop repair NEXT|"
+    r"Previous resume NEXT|NEXT|Next):\s*`?(?P<action>[A-Z_][A-Z0-9_]+)(?P<arg>[^\n`]*)"
+)
+SEMANTIC_ENERGY_LINE_RE = re.compile(
+    r"Semantic energy:.*input_active=(?P<input_active>True|False).*admission=(?P<admission>[^,\n)]+)"
+)
 
 
 def _read_timing_rows() -> list[dict]:
@@ -187,6 +220,42 @@ def _run_cargo_probe(test_name: str) -> dict:
         "elapsed_s": round(time.time() - started, 2),
         "stdout_tail": _tail(proc.stdout),
         "stderr_tail": _tail(proc.stderr),
+    }
+
+
+def _parse_projection_probe_metrics(text: str) -> dict:
+    for line in str(text or "").splitlines():
+        if "projection_compression_probe" not in line:
+            continue
+        metrics: dict[str, float] = {}
+        for key, raw in PROJECTION_PROBE_METRIC_RE.findall(line):
+            try:
+                metrics[key] = float(raw)
+            except ValueError:
+                continue
+        if metrics:
+            return metrics
+    return {}
+
+
+def _projection_variance_check(results: list[dict]) -> dict:
+    probe = next(
+        (
+            result
+            for result in results
+            if result.get("test") == "projection_compression_probe_exposes_near_null_and_magnitude_loss"
+        ),
+        None,
+    )
+    if not probe:
+        return {"status": "missing", "observation_only": True}
+    metrics = _parse_projection_probe_metrics(probe.get("stdout_tail", ""))
+    return {
+        "status": "present" if metrics else "missing_metrics",
+        "observation_only": True,
+        "test": probe.get("test"),
+        "probe_status": probe.get("status"),
+        "metrics": metrics,
     }
 
 
@@ -459,33 +528,1378 @@ def _parse_pressure_anchor(text: str) -> dict:
     }
 
 
+def _float_or_none(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _int_or_none(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _pressure_v1_snapshot(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text())
+    except Exception:
+        return {}
+    pressure_v1 = data.get("pressure_source_v1")
+    if not isinstance(pressure_v1, dict):
+        return {}
+    status = data.get("pressure_source_status")
+    if not isinstance(status, dict):
+        status = {}
+    raw_components = pressure_v1.get("components")
+    components = {
+        key: _float_or_none(value)
+        for key, value in (raw_components or {}).items()
+        if _float_or_none(value) is not None
+    }
+    profile = [
+        {
+            "source": item.get("source"),
+            "share": item.get("share"),
+            "value": item.get("value"),
+        }
+        for item in (pressure_v1.get("pressure_profile") or [])
+        if isinstance(item, dict)
+    ]
+    return {
+        "source_file": str(path),
+        "fill_pct": data.get("fill_pct"),
+        "pressure_quality": status.get("quality") or pressure_v1.get("quality"),
+        "dominant_source": status.get("dominant_source") or pressure_v1.get("dominant_source"),
+        "pressure_score": status.get("pressure_score") or pressure_v1.get("pressure_score"),
+        "porosity_score": status.get("porosity_score") or pressure_v1.get("porosity_score"),
+        "top_profile": profile[:5],
+        "components": components,
+        "control": pressure_v1.get("control") if isinstance(pressure_v1.get("control"), dict) else {},
+    }
+
+
 def _current_minime_pressure() -> dict:
     for path in (MINIME / "workspace/health.json", MINIME / "workspace/spectral_state.json"):
+        snapshot = _pressure_v1_snapshot(path)
+        if snapshot:
+            snapshot["top_profile"] = snapshot.get("top_profile", [])[:3]
+            return snapshot
+    return {}
+
+
+def _pressure_source_from_quality(quality: str) -> str | None:
+    text = str(quality or "")
+    if text.startswith("overpacked_mode_packing"):
+        return "mode_packing"
+    if text.startswith("semantic_trickle"):
+        return "semantic_trickle"
+    if text.startswith("pressure_porosity_divergence"):
+        return "porosity_divergence"
+    if text.startswith("mixed_pressure"):
+        return "mixed_pressure"
+    return None
+
+
+def _journal_paths_recent(pattern: str, *, hours: float, now_s: float | None = None) -> list[Path]:
+    now_s = time.time() if now_s is None else now_s
+    cutoff = now_s - hours * 3600.0
+    rows: list[tuple[float, Path]] = []
+    for path in MINIME_JOURNAL.glob(pattern):
         try:
-            data = json.loads(path.read_text())
+            mtime = path.stat().st_mtime
+        except OSError:
+            continue
+        if mtime >= cutoff:
+            rows.append((mtime, path))
+    return [path for _, path in sorted(rows)]
+
+
+def _parse_moment_pressure_source(path: Path) -> dict | None:
+    text = _read_text_file(path)
+    match = PRESSURE_SOURCE_LINE_RE.search(text)
+    if not match:
+        return None
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        mtime = 0.0
+    return {
+        "surface": "moment_journal",
+        "file": str(path),
+        "name": path.name,
+        "mtime_unix": int(mtime),
+        "source": match.group("source"),
+        "quality": match.group("quality").strip(),
+        "pressure_score": float(match.group("pressure")),
+        "porosity_score": float(match.group("porosity")),
+        "control_applied": match.group("control_applied") == "True",
+    }
+
+
+def _parse_pressure_source_anchor(path: Path) -> dict | None:
+    text = _read_text_file(path)
+    anchor = _parse_pressure_anchor(text)
+    if not anchor:
+        return None
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        mtime = 0.0
+    quality = str(anchor.get("pressure") or "")
+    return {
+        "surface": "pressure_journal",
+        "file": str(path),
+        "name": path.name,
+        "mtime_unix": int(mtime),
+        "source": _pressure_source_from_quality(quality),
+        "quality": quality,
+        "fill_pct": anchor.get("fill_pct"),
+        "lambda1": anchor.get("lambda1"),
+        "spread": anchor.get("spread"),
+    }
+
+
+def _recent_pressure_source_rows(*, hours: float = 3.0, now_s: float | None = None) -> list[dict]:
+    rows: list[dict] = []
+    for path in _journal_paths_recent("moment_*.txt", hours=hours, now_s=now_s):
+        row = _parse_moment_pressure_source(path)
+        if row:
+            rows.append(row)
+    for path in _journal_paths_recent("pressure_*.txt", hours=hours, now_s=now_s):
+        row = _parse_pressure_source_anchor(path)
+        if row:
+            rows.append(row)
+    return sorted(rows, key=lambda row: int(row.get("mtime_unix") or 0))
+
+
+def _float_stats(values: list[float]) -> dict[str, float | None]:
+    if not values:
+        return {"min": None, "median": None, "max": None}
+    ordered = sorted(values)
+    midpoint = len(ordered) // 2
+    if len(ordered) % 2:
+        median = ordered[midpoint]
+    else:
+        median = (ordered[midpoint - 1] + ordered[midpoint]) / 2.0
+    return {
+        "min": round(ordered[0], 6),
+        "median": round(median, 6),
+        "max": round(ordered[-1], 6),
+    }
+
+
+def _counter_dict(rows: list[str | None]) -> dict[str, int]:
+    return dict(Counter(row for row in rows if row))
+
+
+def _parse_isoish_time(value: Any) -> float | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = dt.datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=_local_time_zone())
+    return parsed.timestamp()
+
+
+def _read_jsonl_tail(path: Path, max_lines: int = 1000) -> list[dict]:
+    if not path.exists():
+        return []
+    lines: deque[str] = deque(maxlen=max_lines)
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                if line.strip():
+                    lines.append(line)
+    except OSError:
+        return []
+    rows: list[dict] = []
+    for line in lines:
+        try:
+            value = json.loads(line)
         except Exception:
             continue
-        pressure = data.get("pressure_source_v1")
-        if not isinstance(pressure, dict):
-            continue
-        return {
-            "source_file": str(path),
-            "fill_pct": data.get("fill_pct"),
-            "pressure_quality": pressure.get("quality"),
-            "dominant_source": pressure.get("dominant_source"),
-            "pressure_score": pressure.get("pressure_score"),
-            "porosity_score": pressure.get("porosity_score"),
-            "top_profile": [
-                {
-                    "source": item.get("source"),
-                    "share": item.get("share"),
-                    "value": item.get("value"),
-                }
-                for item in (pressure.get("pressure_profile") or [])[:3]
-                if isinstance(item, dict)
-            ],
+        if isinstance(value, dict):
+            rows.append(value)
+    return rows
+
+
+def _active_minime_thread_dir() -> Path | None:
+    index = _read_json_file(MINIME_ACTION_THREADS / "index.json")
+    active_id = str(index.get("active_thread_id") or "").strip()
+    if active_id:
+        candidate = MINIME_ACTION_THREADS / "threads" / active_id
+        if candidate.exists():
+            return candidate
+    thread_dirs = [path for path in (MINIME_ACTION_THREADS / "threads").glob("*") if path.is_dir()]
+    if not thread_dirs:
+        return None
+    return max(thread_dirs, key=lambda path: path.stat().st_mtime)
+
+
+def _base_action(action: Any) -> str | None:
+    text = str(action or "").strip()
+    if not text:
+        return None
+    return text.split()[0]
+
+
+def _count_next_directives(text: str) -> dict[str, Any]:
+    rows = []
+    for match in NEXT_DIRECTIVE_RE.finditer(text or ""):
+        action = match.group("action")
+        arg = " ".join(str(match.group("arg") or "").strip().split())
+        rows.append({"action": action, "arg": arg[:180]})
+    return {
+        "count": len(rows),
+        "action_counts": dict(Counter(row["action"] for row in rows)),
+        "examples": rows[:10],
+    }
+
+
+def _parse_thread_context_snapshot(thread_dir: Path | None) -> dict[str, Any]:
+    if thread_dir is None:
+        return {"status": "missing"}
+    thread = _read_json_file(thread_dir / "thread.json")
+    next_text = _read_text_file(thread_dir / "next.md")
+    projection_freshness = thread.get("projection_freshness_v1")
+    if not isinstance(projection_freshness, dict):
+        projection_freshness = {}
+    thread_load_triage = thread.get("thread_load_triage_v1")
+    if not isinstance(thread_load_triage, dict):
+        thread_load_triage = projection_freshness.get("thread_load_triage_v1")
+    if not isinstance(thread_load_triage, dict):
+        thread_load_triage = {}
+    repeated_action_cadence = thread.get("repeated_action_cadence_v1")
+    if not isinstance(repeated_action_cadence, dict):
+        repeated_action_cadence = projection_freshness.get("repeated_action_cadence_v1")
+    if not isinstance(repeated_action_cadence, dict) and isinstance(thread_load_triage, dict):
+        repeated_action_cadence = thread_load_triage.get("repeated_action_cadence_v1")
+    if not isinstance(repeated_action_cadence, dict):
+        repeated_action_cadence = {}
+    draft_triage = thread.get("being_memory_draft_triage_v1")
+    if not isinstance(draft_triage, dict) and thread_load_triage:
+        draft_triage = {
+            "active_draft_count": thread_load_triage.get("active_draft_count"),
+            "total_active_draft_count": thread_load_triage.get("total_active_draft_count"),
+            "summarized_active_draft_count": thread_load_triage.get("summarized_active_draft_count"),
+            "unsummarized_active_draft_count": thread_load_triage.get("unsummarized_active_draft_count"),
+            "legacy_retention_count": thread_load_triage.get("legacy_retention_count"),
+            "classification": thread_load_triage.get("draft_classification"),
+            "runtime_change": thread_load_triage.get("runtime_change", "none"),
         }
-    return {}
+    if not isinstance(draft_triage, dict):
+        draft_triage = {}
+    pressure = thread.get("thread_pressure_source_v1")
+    if not isinstance(pressure, dict):
+        pressure = {}
+    control_plane = thread.get("continuity_control_plane_v1")
+    if not isinstance(control_plane, dict):
+        control_plane = {}
+    route_stack = control_plane.get("route_stack") if isinstance(control_plane, dict) else []
+    if not isinstance(route_stack, list):
+        route_stack = []
+    memory_match = re.search(
+        r"Being memory:\s*(\d+)\s*card\(s\)[,;]\s*(\d+)\s*(?:legacy\s+)?draft",
+        next_text,
+    )
+    memory_triage_match = re.search(
+        r"Draft triage;.*?active=(\d+).*?legacy_retention=(\d+)",
+        next_text,
+    )
+    thread_load_memory_match = re.search(
+        r"Thread load triage:.*?\(active=(\d+).*?legacy=(\d+)\)",
+        next_text,
+    )
+    dossier_match = re.search(r"Research dossier:\s*(\d+)\s*claim\(s\),\s*(\d+)\s*evidence", next_text)
+    next_directives = _count_next_directives(next_text)
+    return {
+        "status": "present",
+        "thread_id": thread.get("thread_id") or thread_dir.name,
+        "thread_dir": str(thread_dir),
+        "current_next": thread.get("current_next"),
+        "effective_next": thread.get("effective_next")
+        or (thread.get("current_next_status_v1") or {}).get("effective_next")
+        if isinstance(thread.get("current_next_status_v1"), dict)
+        else thread.get("effective_next"),
+        "projection_policy_marker": projection_freshness.get("projection_policy_marker"),
+        "thread_load_triage_v1": thread_load_triage or None,
+        "repeated_action_cadence_v1": repeated_action_cadence or None,
+        "thread_pressure_source_v1": pressure,
+        "compression_pressure": pressure.get("compression_pressure"),
+        "recurrence": pressure.get("recurrence"),
+        "porosity_ema": pressure.get("porosity_ema"),
+        "pressure_ema": pressure.get("pressure_ema"),
+        "pressure_quality": pressure.get("quality"),
+        "next_md_bytes": len(next_text.encode("utf-8")),
+        "next_md_lines": len(next_text.splitlines()),
+        "next_directives": next_directives,
+        "route_stack_count": len(route_stack),
+        "route_stack": [
+            {
+                "group": item.get("group"),
+                "command": item.get("command"),
+                "reason": item.get("reason"),
+            }
+            for item in route_stack
+            if isinstance(item, dict)
+        ][:5],
+        "memory_cards": int(memory_match.group(1)) if memory_match else None,
+        "memory_drafts": int(memory_match.group(2)) if memory_match else None,
+        "active_memory_drafts": draft_triage.get("unsummarized_active_draft_count")
+        if draft_triage.get("unsummarized_active_draft_count") is not None
+        else int(memory_triage_match.group(1))
+        if memory_triage_match
+        else int(thread_load_memory_match.group(1))
+        if thread_load_memory_match
+        else draft_triage.get("active_draft_count"),
+        "legacy_memory_drafts": int(memory_triage_match.group(2))
+        if memory_triage_match
+        else int(thread_load_memory_match.group(2))
+        if thread_load_memory_match
+        else draft_triage.get("legacy_retention_count"),
+        "being_memory_draft_triage_v1": draft_triage or None,
+        "research_claims": int(dossier_match.group(1)) if dossier_match else None,
+        "research_evidence_records": int(dossier_match.group(2)) if dossier_match else None,
+        "continuity_draft_present": "Continuity session draft:" in next_text,
+        "previous_raw_next_present": "Previous raw NEXT:" in next_text,
+    }
+
+
+def _recent_action_event_summary(thread_dir: Path | None, *, hours: float = 3.0) -> dict[str, Any]:
+    if thread_dir is None:
+        return {"status": "missing", "hours": hours}
+    now_s = time.time()
+    cutoff = now_s - hours * 3600.0
+    rows = []
+    for event in _read_jsonl_tail(thread_dir / "events.jsonl", max_lines=1500):
+        ts = _parse_isoish_time(event.get("started_at") or event.get("ended_at") or event.get("created_at"))
+        if ts is None or ts < cutoff:
+            continue
+        action = event.get("canonical_action") or event.get("raw_next") or event.get("suggested_next")
+        base = _base_action(action)
+        if not base:
+            continue
+        post_state = event.get("post_state") if isinstance(event.get("post_state"), dict) else {}
+        pressure = post_state.get("pressure_source_v1")
+        if not isinstance(pressure, dict):
+            pressure = {}
+        components = pressure.get("components") if isinstance(pressure.get("components"), dict) else {}
+        rows.append(
+            {
+                "action": str(action),
+                "base": base,
+                "status": event.get("status"),
+                "effective_action": event.get("effective_action"),
+                "started_at": event.get("started_at"),
+                "porosity_score": _float_or_none(pressure.get("porosity_score")),
+                "mode_packing": _float_or_none(components.get("mode_packing")),
+                "dominant_source": pressure.get("dominant_source"),
+                "pressure_quality": pressure.get("quality"),
+            }
+        )
+    action_counts = Counter(row["base"] for row in rows)
+    exact_counts = Counter(row["action"] for row in rows)
+    args_by_base: dict[str, set[str]] = {}
+    for row in rows:
+        parts = row["action"].split(maxsplit=1)
+        args_by_base.setdefault(row["base"], set()).add(parts[1] if len(parts) > 1 else "")
+    repeated = [
+        {
+            "action": base,
+            "count": count,
+            "distinct_args": len(args_by_base.get(base, set())),
+        }
+        for base, count in action_counts.most_common()
+        if count >= 4
+    ]
+    return {
+        "status": "present",
+        "hours": hours,
+        "sample_count": len(rows),
+        "action_counts": dict(action_counts),
+        "top_exact_actions": [
+            {"action": action, "count": count}
+            for action, count in exact_counts.most_common(8)
+        ],
+        "repeated_actions": repeated,
+        "recent_examples": rows[-8:],
+        "porosity_min_max": _float_stats(
+            [row["porosity_score"] for row in rows if row.get("porosity_score") is not None]
+        ),
+        "mode_packing_min_max": _float_stats(
+            [row["mode_packing"] for row in rows if row.get("mode_packing") is not None]
+        ),
+    }
+
+
+def _recent_modal_diversity_summary(*, hours: float = 3.0) -> dict[str, Any]:
+    spectral_state = _read_json_file(MINIME / "workspace/spectral_state.json")
+    pressure = spectral_state.get("pressure_source_v1") if isinstance(spectral_state.get("pressure_source_v1"), dict) else {}
+    resonance = spectral_state.get("resonance_density_v1") if isinstance(spectral_state.get("resonance_density_v1"), dict) else {}
+    modalities = spectral_state.get("modalities") if isinstance(spectral_state.get("modalities"), dict) else {}
+    semantic = spectral_state.get("semantic_energy_v1") if isinstance(spectral_state.get("semantic_energy_v1"), dict) else {}
+    denominator = spectral_state.get("spectral_denominator_v1") if isinstance(spectral_state.get("spectral_denominator_v1"), dict) else {}
+    moment_rows = []
+    mode_counts: Counter[str] = Counter()
+    for path in _journal_paths_recent("*.txt", hours=hours):
+        name = path.name
+        mode = name.split("_2026-", 1)[0]
+        mode_counts[mode] += 1
+        if not name.startswith("moment_"):
+            continue
+        text = _read_text_file(path)
+        denom = DENOMINATOR_LINE_RE.search(text)
+        semantic_line = SEMANTIC_ENERGY_LINE_RE.search(text)
+        pressure_row = _parse_moment_pressure_source(path)
+        moment_rows.append(
+            {
+                "name": name,
+                "effective_dimensionality": float(denom.group("effective")) if denom else None,
+                "active_capacity": int(denom.group("capacity")) if denom else None,
+                "distinguishability_loss": float(denom.group("loss_pct")) / 100.0 if denom else None,
+                "semantic_input_active": semantic_line.group("input_active") == "True"
+                if semantic_line
+                else None,
+                "semantic_admission": semantic_line.group("admission").strip()
+                if semantic_line
+                else None,
+                "pressure_source": pressure_row.get("source") if pressure_row else None,
+                "pressure_quality": pressure_row.get("quality") if pressure_row else None,
+            }
+        )
+    components = pressure.get("components") if isinstance(pressure.get("components"), dict) else {}
+    resonance_components = (
+        resonance.get("components") if isinstance(resonance.get("components"), dict) else {}
+    )
+    return {
+        "hours": hours,
+        "current_modalities": modalities,
+        "current_semantic_energy": {
+            "admission": semantic.get("admission"),
+            "input_active": semantic.get("input_active"),
+            "kernel_active": semantic.get("kernel_active"),
+            "input_fresh_ms": semantic.get("input_fresh_ms"),
+            "input_stale_ms": semantic.get("input_stale_ms"),
+        },
+        "current_spectral_shape": {
+            "active_mode_count": spectral_state.get("active_mode_count"),
+            "active_mode_energy_ratio": spectral_state.get("active_mode_energy_ratio"),
+            "effective_dimensionality": denominator.get("effective_dimensionality")
+            or spectral_state.get("effective_dimensionality"),
+            "distinguishability_loss": denominator.get("distinguishability_loss")
+            or spectral_state.get("distinguishability_loss"),
+            "spectral_entropy": spectral_state.get("spectral_entropy"),
+            "resonance_mode_packing": resonance_components.get("mode_packing"),
+            "pressure_mode_packing": components.get("mode_packing"),
+            "sensory_scarcity": components.get("sensory_scarcity"),
+            "semantic_trickle": components.get("semantic_trickle"),
+        },
+        "recent_journal_mode_counts": dict(mode_counts.most_common(12)),
+        "recent_moment_count": len(moment_rows),
+        "moment_effective_dimensionality": _float_stats(
+            [
+                row["effective_dimensionality"]
+                for row in moment_rows
+                if row.get("effective_dimensionality") is not None
+            ]
+        ),
+        "moment_distinguishability_loss": _float_stats(
+            [
+                row["distinguishability_loss"]
+                for row in moment_rows
+                if row.get("distinguishability_loss") is not None
+            ]
+        ),
+        "moment_pressure_sources": _counter_dict([row.get("pressure_source") for row in moment_rows]),
+        "moment_semantic_admissions": _counter_dict(
+            [row.get("semantic_admission") for row in moment_rows]
+        ),
+    }
+
+
+def _recent_eigen_spectrum_summary(max_rows: int = 180) -> dict[str, Any]:
+    path = MINIME / "workspace/diagnostics/eigen_spectrum_log.jsonl"
+    rows = _read_jsonl_tail(path, max_lines=max_rows)
+    if not rows:
+        return {"status": "missing", "path": str(path)}
+    active_counts = [int(row.get("active_mode_count")) for row in rows if row.get("active_mode_count") is not None]
+    mode_packing = [
+        float(row.get("mode_packing"))
+        for row in rows
+        if _float_or_none(row.get("mode_packing")) is not None
+    ]
+    porosity = [
+        float(row.get("porosity_score"))
+        for row in rows
+        if _float_or_none(row.get("porosity_score")) is not None
+    ]
+    return {
+        "status": "present",
+        "path": str(path),
+        "sample_count": len(rows),
+        "active_mode_count_counts": dict(Counter(active_counts)),
+        "pressure_quality_counts": _counter_dict([row.get("pressure_quality") for row in rows]),
+        "mode_packing_min_max": _float_stats(mode_packing),
+        "porosity_min_max": _float_stats(porosity),
+        "latest": rows[-1],
+    }
+
+
+def _sensory_runtime_truth_summary(modal: dict[str, Any]) -> dict[str, Any]:
+    """Compare engine modality labels with client/source status files."""
+    current_modalities = (
+        modal.get("current_modalities") if isinstance(modal.get("current_modalities"), dict) else {}
+    )
+    spectral_state = _read_json_file(MINIME / "workspace/spectral_state.json")
+    health = _read_json_file(MINIME / "workspace/health.json")
+    camera = _read_json_file(MINIME_RUNTIME / "camera_status.json")
+    mic = _read_json_file(MINIME_RUNTIME / "mic_status.json")
+    source = _read_json_file(MINIME_RUNTIME / "sensory_source.json")
+
+    def stable_core_sensory_budget() -> dict[str, Any]:
+        stable_core = (
+            spectral_state.get("stable_core")
+            if isinstance(spectral_state.get("stable_core"), dict)
+            else {}
+        )
+        budget = stable_core.get("sensory_budget") if isinstance(stable_core, dict) else {}
+        merged = dict(budget) if isinstance(budget, dict) else {}
+        health_sensory = health.get("sensory") if isinstance(health.get("sensory"), dict) else {}
+        merged.update({key: value for key, value in health_sensory.items() if value is not None})
+        return merged
+
+    def client_expected_interval_ms(lane: str, client: dict[str, Any]) -> float | None:
+        if lane == "video":
+            fps = _float_or_none(client.get("fps"))
+            return (1000.0 / fps) if fps and fps > 0 else None
+        chunk_interval = _float_or_none(client.get("chunk_interval_ms"))
+        if chunk_interval and chunk_interval > 0:
+            return chunk_interval
+        chunk_duration = _float_or_none(client.get("chunk_duration_s"))
+        if chunk_duration and chunk_duration > 0:
+            return chunk_duration * 1000.0
+        return 500.0
+
+    def live_intake_state(lane: str) -> dict[str, Any]:
+        budget = stable_core_sensory_budget()
+        raw_divisor = budget.get(f"live_{lane}_divisor")
+        try:
+            divisor = int(raw_divisor)
+        except (TypeError, ValueError):
+            divisor = None
+        if divisor is not None and divisor <= 0:
+            divisor = None
+        raw_enabled = budget.get(f"live_{lane}_enabled")
+        admit_fraction = _float_or_none(budget.get("admit_fraction"))
+        if isinstance(raw_enabled, bool):
+            enabled = raw_enabled
+        elif divisor is None:
+            enabled = None
+        else:
+            enabled = divisor > 0
+        return {
+            "divisor": divisor,
+            "enabled": enabled,
+            "reason": budget.get("live_intake_reason"),
+            "admit_fraction": admit_fraction if admit_fraction and admit_fraction > 0 else None,
+        }
+
+    def classify_lane(
+        *,
+        lane: str,
+        engine_source: Any,
+        engine_age_ms: Any,
+        client: dict[str, Any],
+        source_record: dict[str, Any],
+    ) -> dict[str, Any]:
+        healthy = bool(client.get("healthy"))
+        connected = bool(client.get("connected"))
+        client_age = _float_or_none(
+            client.get("last_frame_age_ms")
+            if lane == "video"
+            else client.get("last_chunk_age_ms")
+        )
+        engine_age = _float_or_none(engine_age_ms)
+        engine_class = current_modalities.get(f"{lane}_freshness_class")
+        fps = _float_or_none(client.get("fps"))
+        frame_grace_s = _float_or_none(client.get("frame_health_grace_secs"))
+        chunk_grace_s = _float_or_none(client.get("chunk_health_grace_secs"))
+        grace_s = frame_grace_s if lane == "video" else chunk_grace_s
+        expected_interval_ms = client_expected_interval_ms(lane, client)
+        live_intake = live_intake_state(lane)
+        expected_engine_interval_ms = None
+        if expected_interval_ms is not None:
+            admit_fraction = live_intake.get("admit_fraction") or 1.0
+            expected_engine_interval_ms = (
+                expected_interval_ms
+                * float(live_intake.get("divisor") or 1)
+                / max(float(admit_fraction), 0.01)
+            )
+        expected_engine_grace_ms = None
+        if expected_engine_interval_ms is not None:
+            expected_engine_grace_ms = expected_engine_interval_ms + (
+                grace_s * 1000.0 if grace_s is not None else 0.0
+            )
+        expected_engine_attention_ms = None
+        if expected_engine_interval_ms is not None:
+            expected_engine_attention_ms = (
+                expected_engine_interval_ms * SPARSE_ADMIT_ATTENTION_MULTIPLIER
+                + (grace_s * 1000.0 if grace_s is not None else 0.0)
+            )
+        source_payload = source_record.get(lane) if isinstance(source_record.get(lane), dict) else {}
+        engine_stale = (
+            str(engine_source or "") in {"stale", "absent"}
+            or str(engine_class or "") == "stale_beyond_engine_window"
+        )
+        engine_missing = engine_source is None and engine_class is None and engine_age_ms is None
+        client_recent = (
+            client_age is not None
+            and grace_s is not None
+            and client_age <= grace_s * 1000.0
+        )
+        status = "unknown"
+        reason = "no status evidence"
+        if str(engine_class or "") in {"fresh_sample", "held_within_engine_window"}:
+            status = "engine_fresh_or_held"
+            reason = "engine freshness class is fresh or held within the AV window"
+        elif source_payload.get("source") == "host" or client.get("fallback_expected") is True:
+            status = "expected_host_fallback"
+            reason = str(source_payload.get("reason") or client.get("last_error") or "host fallback selected")
+        elif engine_missing:
+            status = "missing_engine_status"
+            reason = "engine modality status unavailable"
+        elif healthy and connected and engine_stale and live_intake.get("enabled") is False:
+            status = "live_intake_suppressed"
+            reason = str(live_intake.get("reason") or "stable-core live intake is suppressed")
+        elif (
+            healthy
+            and connected
+            and client_recent
+            and engine_stale
+            and engine_age is not None
+            and expected_engine_attention_ms is not None
+            and engine_age <= expected_engine_attention_ms
+        ):
+            status = "held_within_expected_live_intake_window"
+            reason = "client is healthy and engine lane is stale within the expected live-intake cadence"
+        elif (
+            healthy
+            and connected
+            and client_recent
+            and engine_stale
+            and engine_age is not None
+            and expected_engine_attention_ms is not None
+            and engine_age > expected_engine_attention_ms
+        ):
+            status = "healthy_client_engine_overdue"
+            reason = "client is healthy but engine lane is stale beyond expected live-intake cadence"
+        elif healthy and connected and lane == "video" and expected_interval_ms and expected_interval_ms > 2000.0 and engine_stale:
+            status = "healthy_low_fps_cadence_mismatch"
+            reason = (
+                "camera client is healthy but target FPS is slower than the engine's 2s AV freshness window"
+            )
+        elif healthy and connected and engine_stale and client_recent:
+            status = "healthy_client_engine_stale_mismatch"
+            reason = "client is healthy/recent while engine modality label is stale"
+        elif str(engine_source or "") not in {"stale", "absent"}:
+            status = "engine_fresh_or_external"
+            reason = "engine modality label is not stale/absent"
+        elif not client:
+            status = "missing_client_status"
+            reason = "client status file missing"
+        else:
+            status = "client_unhealthy_or_disconnected"
+            reason = str(client.get("last_error") or client.get("state") or "client unhealthy")
+        return {
+            "lane": lane,
+            "status": status,
+            "reason": reason,
+            "engine_source": engine_source,
+            "engine_age_ms": engine_age,
+            "engine_freshness_class": engine_class,
+            "client_healthy": healthy if client else None,
+            "client_connected": connected if client else None,
+            "client_age_ms": client_age,
+            "client_state": client.get("state") if client else None,
+            "target_fps": fps,
+            "expected_interval_ms": expected_interval_ms,
+            "live_intake_divisor": live_intake.get("divisor"),
+            "live_intake_enabled": live_intake.get("enabled"),
+            "live_intake_reason": live_intake.get("reason"),
+            "admit_fraction": live_intake.get("admit_fraction"),
+            "expected_engine_interval_ms": expected_engine_interval_ms,
+            "expected_engine_grace_ms": expected_engine_grace_ms,
+            "expected_engine_attention_ms": expected_engine_attention_ms,
+            "health_grace_s": grace_s,
+            "source_record": source_payload,
+        }
+
+    lanes = {
+        "video": classify_lane(
+            lane="video",
+            engine_source=current_modalities.get("video_source"),
+            engine_age_ms=current_modalities.get("video_age_ms"),
+            client=camera,
+            source_record=source,
+        ),
+        "audio": classify_lane(
+            lane="audio",
+            engine_source=current_modalities.get("audio_source"),
+            engine_age_ms=current_modalities.get("audio_age_ms"),
+            client=mic,
+            source_record=source,
+        ),
+    }
+    actionable = [
+        lane
+        for lane in lanes.values()
+        if lane.get("status")
+        in {
+            "healthy_low_fps_cadence_mismatch",
+            "healthy_client_engine_stale_mismatch",
+            "healthy_client_engine_overdue",
+            "client_unhealthy_or_disconnected",
+            "missing_client_status",
+        }
+    ]
+    return {
+        "status": "watch" if actionable else "ok",
+        "read_only": True,
+        "policy": "sensory_freshness_v1",
+        "schema_version": 1,
+        "engine_fresh_window_ms": 2000,
+        "lanes": lanes,
+        "actionable_count": len(actionable),
+    }
+
+
+def _lend_aperture_paths(minime_root: Path = MINIME) -> dict[str, Path]:
+    workspace = minime_root / "workspace"
+    return {
+        "workspace": workspace,
+        "actions": workspace / "actions",
+        "journal": workspace / "journal",
+        "diagnostics": workspace / "diagnostics",
+        "active_influence": workspace / "astrid_influence_v3.json",
+        "consumed_influence": workspace / "astrid_influence_v3.consumed.json",
+        "response": workspace / "astrid_influence_response_v3.json",
+        "response_history": workspace / "astrid_influence_response_history_v3.json",
+        "response_history_jsonl": workspace / "astrid_influence_response_history_v3.jsonl",
+        "terminal_events": workspace / "diagnostics" / "astrid_influence_terminal_events.jsonl",
+        "events": workspace / "diagnostics" / "lend_aperture_events.jsonl",
+    }
+
+
+def _local_time_zone() -> dt.tzinfo:
+    return dt.datetime.now().astimezone().tzinfo or dt.timezone.utc
+
+
+def _normalize_lend_aperture_time_text(value: str) -> str:
+    text = str(value or "").strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    if "T" in text:
+        date_part, time_part = text.split("T", 1)
+        if re.match(r"^\d{2}-\d{2}-\d{2}(?:\.|$)", time_part):
+            time_part = time_part.replace("-", ":", 2)
+            text = f"{date_part}T{time_part}"
+    return text
+
+
+def _parse_lend_aperture_time_s(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        raw = float(value)
+        return raw / 1000.0 if raw > 10_000_000_000 else raw
+    text = _normalize_lend_aperture_time_text(str(value or ""))
+    if not text:
+        return None
+    try:
+        parsed = dt.datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=_local_time_zone())
+    return parsed.timestamp()
+
+
+def _iso_from_epoch_s(epoch_s: float | None) -> str | None:
+    if epoch_s is None:
+        return None
+    return dt.datetime.fromtimestamp(epoch_s, _local_time_zone()).isoformat(timespec="seconds")
+
+
+def _read_json_any(path: Path, default: Any) -> Any:
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return default
+
+
+def _read_jsonl_objects(path: Path) -> list[dict]:
+    rows: list[dict] = []
+    try:
+        for line in path.read_text().splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if isinstance(row, dict):
+                rows.append(row)
+    except Exception:
+        return rows
+    return rows
+
+
+def _intent_id_from_text(text: str | None) -> str | None:
+    if not text:
+        return None
+    match = re.search(r"\bintent_id[:=]\s*([A-Za-z0-9_.:-]+)", str(text))
+    return match.group(1) if match else None
+
+
+def _pressure_context_from_state(state: dict) -> dict:
+    state = state if isinstance(state, dict) else {}
+    pressure = state.get("pressure_source_v1")
+    if not isinstance(pressure, dict):
+        pressure = {}
+    status = state.get("pressure_source_status")
+    if not isinstance(status, dict):
+        status = {}
+    components = pressure.get("components") if isinstance(pressure.get("components"), dict) else {}
+    fill_ratio = state.get("fill_ratio")
+    fill_pct = None
+    if isinstance(fill_ratio, (int, float)):
+        fill_pct = float(fill_ratio) * 100.0
+    return {
+        "fill_pct": round(fill_pct, 3) if fill_pct is not None else None,
+        "lambda1": state.get("eig1") or state.get("lambda1"),
+        "cov_lambda1": state.get("cov_lambda1"),
+        "spread": state.get("spread"),
+        "pressure_score": pressure.get("pressure_score", status.get("pressure_score")),
+        "porosity_score": pressure.get("porosity_score", status.get("porosity_score")),
+        "dominant_source": pressure.get("dominant_source", status.get("dominant_source")),
+        "quality": pressure.get("quality", status.get("quality")),
+        "mode_packing": components.get("mode_packing"),
+        "temporal_lock_in": components.get("temporal_lock_in"),
+        "semantic_trickle": components.get("semantic_trickle"),
+    }
+
+
+def _journal_stamp_s(path: Path) -> float | None:
+    match = re.match(r"lend_aperture(?:_held)?_(.+)\.txt$", path.name)
+    if not match:
+        return None
+    return _parse_lend_aperture_time_s(match.group(1))
+
+
+def _lend_aperture_journals(paths: dict[str, Path], limit: int = 180) -> list[dict]:
+    journal_dir = paths["journal"]
+    if not journal_dir.is_dir():
+        return []
+    rows: list[dict] = []
+    for path in sorted(journal_dir.glob("lend_aperture*.txt"), key=lambda p: p.stat().st_mtime)[-limit:]:
+        text = _read_text_file(path)
+        status = "held" if path.name.startswith("lend_aperture_held_") or "(held)" in text else "issued"
+        reason = None
+        match = re.search(r"Not lent right now:\s*([^\n]+)", text)
+        if match:
+            reason = match.group(1).strip().rstrip(".")
+        rows.append(
+            {
+                "path": str(path),
+                "name": path.name,
+                "timestamp_s": _journal_stamp_s(path) or path.stat().st_mtime,
+                "status": status,
+                "intent_id": _intent_id_from_text(text),
+                "held_reason": reason,
+            }
+        )
+    return rows
+
+
+def _lend_aperture_actions(paths: dict[str, Path], limit: int = 180) -> list[dict]:
+    actions_dir = paths["actions"]
+    if not actions_dir.is_dir():
+        return []
+    rows: list[dict] = []
+    for path in sorted(actions_dir.glob("*lend_aperture*.json"), key=lambda p: p.stat().st_mtime)[-limit:]:
+        data = _read_json_any(path, {})
+        if not isinstance(data, dict) or data.get("action") != "lend_aperture":
+            continue
+        action_continuity = data.get("action_continuity")
+        if not isinstance(action_continuity, dict):
+            action_continuity = {}
+        lend_meta = action_continuity.get("lend_aperture_v1")
+        if not isinstance(lend_meta, dict):
+            lend_meta = {}
+        summary = data.get("summary") if isinstance(data.get("summary"), dict) else {}
+        state = data.get("state") if isinstance(data.get("state"), dict) else {}
+        timestamp_s = _parse_lend_aperture_time_s(data.get("timestamp")) or path.stat().st_mtime
+        rows.append(
+            {
+                "path": str(path),
+                "name": path.name,
+                "timestamp_s": timestamp_s,
+                "status": lend_meta.get("status"),
+                "intent_id": (
+                    lend_meta.get("intent_id")
+                    or _intent_id_from_text(action_continuity.get("outcome_summary"))
+                ),
+                "held_reason": lend_meta.get("gate_reason") or lend_meta.get("held_reason"),
+                "pressure_context": _pressure_context_from_state(state),
+                "summary_fill_pct": summary.get("fill_pct"),
+                "action_continuity_id": action_continuity.get("action_id"),
+                "lend_aperture_v1": lend_meta,
+            }
+        )
+    return rows
+
+
+def _nearest_journal_for_action(
+    action: dict,
+    journals: list[dict],
+    used_indexes: set[int],
+) -> tuple[int | None, dict | None]:
+    best_idx = None
+    best_delta = None
+    action_ts = float(action.get("timestamp_s") or 0.0)
+    for idx, journal in enumerate(journals):
+        if idx in used_indexes:
+            continue
+        delta = abs(float(journal.get("timestamp_s") or 0.0) - action_ts)
+        if delta <= LEND_APERTURE_JOURNAL_MATCH_S and (best_delta is None or delta < best_delta):
+            best_idx = idx
+            best_delta = delta
+    if best_idx is None:
+        return None, None
+    return best_idx, journals[best_idx]
+
+
+def _merge_lend_aperture_record(action: dict | None, journal: dict | None) -> dict:
+    action = action or {}
+    journal = journal or {}
+    timestamp_s = action.get("timestamp_s") or journal.get("timestamp_s")
+    intent_id = action.get("intent_id") or journal.get("intent_id")
+    status = action.get("status") or journal.get("status") or ("issued" if intent_id else "unknown")
+    held_reason = action.get("held_reason") or journal.get("held_reason")
+    return {
+        "gift_key": intent_id or f"legacy:{int(float(timestamp_s or 0.0) * 1000)}",
+        "status": status,
+        "intent_id": intent_id,
+        "issued_at": _iso_from_epoch_s(timestamp_s),
+        "issued_at_unix_ms": int(float(timestamp_s) * 1000) if timestamp_s else None,
+        "action_manifest": action.get("path"),
+        "journal_path": journal.get("path"),
+        "held_reason": held_reason,
+        "pressure_context": action.get("pressure_context") or {},
+        "action_continuity_id": action.get("action_continuity_id"),
+        "lend_aperture_v1": action.get("lend_aperture_v1") or {},
+        "match_basis": (
+            "intent_id"
+            if intent_id
+            else "action_journal_timestamp"
+            if action and journal
+            else "action_only"
+            if action
+            else "journal_only"
+        ),
+    }
+
+
+def _lend_aperture_gifts(paths: dict[str, Path], limit: int = 80) -> list[dict]:
+    actions = _lend_aperture_actions(paths, limit=limit * 2)
+    journals = _lend_aperture_journals(paths, limit=limit * 3)
+    used_journals: set[int] = set()
+    gifts: list[dict] = []
+    for action in actions:
+        idx, journal = _nearest_journal_for_action(action, journals, used_journals)
+        if idx is not None:
+            used_journals.add(idx)
+        gifts.append(_merge_lend_aperture_record(action, journal))
+    for idx, journal in enumerate(journals):
+        if idx not in used_journals:
+            gifts.append(_merge_lend_aperture_record(None, journal))
+    gifts.sort(key=lambda row: float(row.get("issued_at_unix_ms") or 0))
+    return gifts[-limit:]
+
+
+def _load_lend_aperture_responses(paths: dict[str, Path]) -> list[dict]:
+    responses: list[dict] = []
+    history = _read_json_any(paths["response_history"], [])
+    if isinstance(history, list):
+        responses.extend(row for row in history if isinstance(row, dict))
+    responses.extend(_read_jsonl_objects(paths["response_history_jsonl"]))
+    latest = _read_json_any(paths["response"], {})
+    if isinstance(latest, dict) and latest:
+        responses.append(latest)
+    deduped: dict[tuple[str, int], dict] = {}
+    for response in responses:
+        intent = str(response.get("intent_id") or "")
+        completed = int(response.get("completed_at_unix_ms") or 0)
+        deduped[(intent, completed)] = response
+    return sorted(
+        deduped.values(),
+        key=lambda row: int(row.get("completed_at_unix_ms") or row.get("pre_recorded_at_unix_ms") or 0),
+    )
+
+
+def _load_lend_aperture_terminal_events(paths: dict[str, Path]) -> list[dict]:
+    rows = _read_jsonl_objects(paths["terminal_events"])
+    return sorted(
+        rows,
+        key=lambda row: int(row.get("completed_at_unix_ms") or row.get("issued_t_ms") or 0),
+    )
+
+
+def _terminal_event_for_gift(gift: dict, terminal_events: list[dict]) -> dict | None:
+    intent = gift.get("intent_id")
+    if not intent:
+        return None
+    matches = [row for row in terminal_events if row.get("intent_id") == intent]
+    return matches[-1] if matches else None
+
+
+def _terminal_history_started_ms(terminal_events: list[dict]) -> int | None:
+    starts = [
+        int(row.get("completed_at_unix_ms") or row.get("issued_t_ms") or 0)
+        for row in terminal_events
+        if int(row.get("completed_at_unix_ms") or row.get("issued_t_ms") or 0) > 0
+    ]
+    return min(starts) if starts else None
+
+
+def _response_for_gift(gift: dict, responses: list[dict], claimed: set[int]) -> tuple[str, dict | None]:
+    intent = gift.get("intent_id")
+    if intent:
+        for idx, response in enumerate(responses):
+            if response.get("intent_id") == intent:
+                claimed.add(idx)
+                return "intent_id", response
+        return "missing", None
+    issued_ms = gift.get("issued_at_unix_ms")
+    if not issued_ms:
+        return "missing", None
+    candidates = []
+    for idx, response in enumerate(responses):
+        if idx in claimed:
+            continue
+        markers = [
+            int(response.get("pre_recorded_at_unix_ms") or 0),
+            int(response.get("completed_at_unix_ms") or 0),
+        ]
+        distances = [abs(marker - int(issued_ms)) for marker in markers if marker]
+        if not distances:
+            continue
+        distance = min(distances)
+        if distance <= LEND_APERTURE_LEGACY_RESPONSE_MATCH_S * 1000:
+            candidates.append((distance, idx, response))
+    if not candidates:
+        return "missing", None
+    _, idx, response = min(candidates, key=lambda item: item[0])
+    claimed.add(idx)
+    return "legacy_timestamp", response
+
+
+def _response_summary_for_gift(
+    gift: dict,
+    responses: list[dict],
+    terminal_events: list[dict],
+    active: dict,
+    claimed: set[int],
+) -> dict:
+    if gift.get("status") == "held":
+        return {
+            "present": False,
+            "status": "not_expected_held",
+            "match_basis": "gate_held",
+        }
+    basis, response = _response_for_gift(gift, responses, claimed)
+    if response is None:
+        terminal = _terminal_event_for_gift(gift, terminal_events)
+        if terminal is not None:
+            terminal_status = str(terminal.get("status") or "terminal")
+            return {
+                "present": False,
+                "status": f"terminal_{terminal_status}",
+                "match_basis": "terminal_event",
+                "terminal_status": terminal_status,
+                "terminal_reason": terminal.get("reason"),
+                "completed_at_unix_ms": terminal.get("completed_at_unix_ms"),
+                "applied_ticks": terminal.get("applied_ticks"),
+            }
+        if active.get("intent_id") == gift.get("intent_id"):
+            return {
+                "present": False,
+                "status": active.get("status") or "active",
+                "match_basis": "active_influence",
+                "age_s": active.get("age_s"),
+            }
+        terminal_start = _terminal_history_started_ms(terminal_events)
+        issued_ms = gift.get("issued_at_unix_ms")
+        if terminal_start is None or (
+            isinstance(issued_ms, int) and issued_ms < terminal_start
+        ):
+            return {
+                "present": False,
+                "status": "legacy_retention_gap",
+                "match_basis": "history_cap_or_pre_terminal_accounting",
+            }
+        return {
+            "present": False,
+            "status": "missing",
+            "match_basis": basis,
+        }
+    completed_ms = response.get("completed_at_unix_ms")
+    issued_ms = gift.get("issued_at_unix_ms")
+    latency_s = None
+    if isinstance(completed_ms, (int, float)) and isinstance(issued_ms, int):
+        latency_s = round((float(completed_ms) - float(issued_ms)) / 1000.0, 3)
+    return {
+        "present": True,
+        "status": "matched",
+        "match_basis": basis,
+        "intent_id": response.get("intent_id"),
+        "response_latency_s": latency_s,
+        "delta_field_norm": response.get("delta_field_norm"),
+        "class_v3_change": response.get("class_v3_change"),
+        "applied_ticks": response.get("applied_ticks"),
+        "completed_at_unix_ms": completed_ms,
+    }
+
+
+def _all_minime_action_samples(paths: dict[str, Path], limit: int = 420) -> list[dict]:
+    actions_dir = paths["actions"]
+    if not actions_dir.is_dir():
+        return []
+    samples: list[dict] = []
+    for path in sorted(actions_dir.glob("*.json"), key=lambda p: p.stat().st_mtime)[-limit:]:
+        data = _read_json_any(path, {})
+        if not isinstance(data, dict):
+            continue
+        timestamp_s = _parse_lend_aperture_time_s(data.get("timestamp"))
+        if timestamp_s is None:
+            continue
+        state = data.get("state") if isinstance(data.get("state"), dict) else {}
+        pressure = _pressure_context_from_state(state)
+        samples.append(
+            {
+                "timestamp_s": timestamp_s,
+                "action": data.get("action"),
+                "path": str(path),
+                "pressure_context": pressure,
+            }
+        )
+    return samples
+
+
+def _numeric_min_max(values: list[Any]) -> list[float] | None:
+    nums = [float(value) for value in values if isinstance(value, (int, float))]
+    if not nums:
+        return None
+    return [round(min(nums), 6), round(max(nums), 6)]
+
+
+def _post_gift_minime_cost(gift: dict, samples: list[dict]) -> dict:
+    issued_ms = gift.get("issued_at_unix_ms")
+    if gift.get("status") == "held":
+        return {"status": "not_expected_held", "sample_count": 0}
+    if not issued_ms:
+        return {"status": "insufficient_samples", "sample_count": 0}
+    issued_s = float(issued_ms) / 1000.0
+    post = [
+        sample
+        for sample in samples
+        if 0.5 < float(sample["timestamp_s"]) - issued_s <= LEND_APERTURE_POST_SAMPLE_WINDOW_S
+    ][:12]
+    if len(post) < 2:
+        return {
+            "status": "insufficient_samples",
+            "sample_count": len(post),
+            "window_s": LEND_APERTURE_POST_SAMPLE_WINDOW_S,
+        }
+    pressure_contexts = [sample["pressure_context"] for sample in post]
+    qualities = Counter(str(ctx.get("quality") or "unknown") for ctx in pressure_contexts)
+    return {
+        "status": "ok",
+        "sample_count": len(post),
+        "window_s": LEND_APERTURE_POST_SAMPLE_WINDOW_S,
+        "fill_pct_min_max": _numeric_min_max([ctx.get("fill_pct") for ctx in pressure_contexts]),
+        "pressure_score_min_max": _numeric_min_max([ctx.get("pressure_score") for ctx in pressure_contexts]),
+        "porosity_score_min_max": _numeric_min_max([ctx.get("porosity_score") for ctx in pressure_contexts]),
+        "quality_counts": dict(qualities),
+        "sample_actions": [sample.get("action") for sample in post[:6]],
+    }
+
+
+def _active_influence_summary(paths: dict[str, Path], now_s: float | None = None) -> dict:
+    now_s = time.time() if now_s is None else now_s
+    active = paths["active_influence"]
+    consumed = paths["consumed_influence"]
+    if not active.exists():
+        return {
+            "status": "missing",
+            "active_path": str(active),
+            "consumed_path_exists": consumed.exists(),
+        }
+    payload = _read_json_any(active, {})
+    age_s = max(0.0, now_s - active.stat().st_mtime)
+    if age_s > LEND_APERTURE_RESPONSE_STALE_S:
+        status = "active_stale"
+    elif age_s > LEND_APERTURE_RESPONSE_PENDING_S:
+        status = "active_pending"
+    else:
+        status = "active_recent"
+    return {
+        "status": status,
+        "active_path": str(active),
+        "age_s": round(age_s, 3),
+        "pending_after_s": LEND_APERTURE_RESPONSE_PENDING_S,
+        "stale_after_s": LEND_APERTURE_RESPONSE_STALE_S,
+        "intent_id": payload.get("intent_id") if isinstance(payload, dict) else None,
+        "label": payload.get("label") if isinstance(payload, dict) else None,
+        "consumed_path_exists": consumed.exists(),
+    }
+
+
+def _lend_aperture_verdict(gifts: list[dict], active: dict) -> str:
+    if not gifts:
+        return "INCONCLUSIVE - no recent LEND_APERTURE actions or journals found"
+    issued = [gift for gift in gifts if gift.get("status") == "issued"]
+    if not issued:
+        return "PASS - recent LEND_APERTURE choices were held by the gate; no influence was sent"
+    missing = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("status") == "missing"
+    ]
+    active_unclosed = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("status")
+        in {"active_pending", "active_stale"}
+    ]
+    terminal_superseded = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("status") == "terminal_superseded"
+    ]
+    legacy_gap = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("status") == "legacy_retention_gap"
+    ]
+    stale_active = active.get("status") == "active_stale"
+    low_porosity = [
+        gift for gift in issued
+        if isinstance((gift.get("pressure_context") or {}).get("porosity_score"), (int, float))
+        and float((gift.get("pressure_context") or {}).get("porosity_score")) <= 0.62
+    ]
+    insufficient_post = [
+        gift for gift in issued
+        if (gift.get("post_minime_cost") or {}).get("status") == "insufficient_samples"
+    ]
+    if stale_active and missing:
+        return (
+            "NEEDS ATTENTION - issued aperture gifts are missing Astrid closed-loop "
+            "responses and the active influence file is stale"
+        )
+    if stale_active:
+        return "NEEDS ATTENTION - active aperture gift exceeded the feeder closure window"
+    if len(missing) >= max(2, len(issued) // 2):
+        return "NEEDS ATTENTION - most issued aperture gifts are missing Astrid response evidence"
+    if missing or stale_active:
+        return "WATCH - at least one issued gift lacks fresh Astrid response closure"
+    if active_unclosed:
+        return "WATCH - active aperture gift is pending inside the feeder closure window"
+    if terminal_superseded:
+        return "WATCH - aperture gifts were superseded before response; backpressure should prevent future overwrites"
+    if legacy_gap:
+        return "WATCH - older aperture gifts predate durable terminal accounting or exceeded capped response history"
+    if low_porosity:
+        return "WATCH - aperture gifts occurred under low Minime porosity; inspect cost before encouraging more"
+    if insufficient_post:
+        return "WATCH - Astrid responses are present, but Minime post-gift cost samples are thin"
+    return "PASS - recent issued aperture gifts have Astrid response evidence and enough Minime post samples"
+
+
+def test_minime_lend_aperture_consequence_probe(
+    minime_root: Path | None = None,
+    now_s: float | None = None,
+) -> dict:
+    """Read-only consequence probe for Minime's LEND_APERTURE gifts to Astrid."""
+    paths = _lend_aperture_paths(minime_root or MINIME)
+    gifts = _lend_aperture_gifts(paths)
+    responses = _load_lend_aperture_responses(paths)
+    terminal_events = _load_lend_aperture_terminal_events(paths)
+    samples = _all_minime_action_samples(paths)
+    active = _active_influence_summary(paths, now_s=now_s)
+    claimed_responses: set[int] = set()
+    for gift in gifts:
+        gift["astrid_response"] = _response_summary_for_gift(
+            gift, responses, terminal_events, active, claimed_responses
+        )
+        gift["post_minime_cost"] = _post_gift_minime_cost(gift, samples)
+    issued = [gift for gift in gifts if gift.get("status") == "issued"]
+    held = [gift for gift in gifts if gift.get("status") == "held"]
+    missing_response = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("status") in {"missing", "active_stale"}
+    ]
+    terminal_closure = [
+        gift for gift in issued
+        if str((gift.get("astrid_response") or {}).get("status") or "").startswith("terminal_")
+    ]
+    superseded = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("status") == "terminal_superseded"
+    ]
+    legacy_unaccounted = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("status") == "legacy_retention_gap"
+    ]
+    unclosed_issued = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("status")
+        in {"missing", "active_pending", "active_stale"}
+    ]
+    matched_response = [
+        gift for gift in issued
+        if (gift.get("astrid_response") or {}).get("present")
+    ]
+    thin_cost = [
+        gift for gift in issued
+        if (gift.get("post_minime_cost") or {}).get("status") == "insufficient_samples"
+    ]
+    verdict = _lend_aperture_verdict(gifts, active)
+    return {
+        "verdict": verdict,
+        "production_change": "none",
+        "read_only": True,
+        "gift_count": len(gifts),
+        "issued_count": len(issued),
+        "held_count": len(held),
+        "matched_response_count": len(matched_response),
+        "missing_response_count": len(missing_response),
+        "terminal_event_count": len(terminal_events),
+        "terminal_closure_count": len(terminal_closure),
+        "superseded_count": len(superseded),
+        "legacy_unaccounted_count": len(legacy_unaccounted),
+        "unclosed_issued_count": len(unclosed_issued),
+        "insufficient_post_sample_count": len(thin_cost),
+        "active_influence": active,
+        "response_history_count": len(responses),
+        "recent_gifts": gifts[-12:],
+        "suggested_read_only_next": [
+            "If issued gifts are stale or missing Astrid responses, repair loop closure before encouraging more gifts.",
+            "If repeated gifts show clear Astrid response with low Minime cost, request both-being review of the aperture-gift relation.",
+            "If gifts cluster under low porosity or rising pressure, consider a steward-side cooldown/hold rule before any wider runtime trial.",
+        ],
+        "letter": None,
+    }
 
 
 def _latest_moment_with_fill_marker() -> tuple[Path | None, str]:
@@ -1088,6 +2502,7 @@ def test_astrid_codec_perception_probes() -> dict:
         "production_change": "none",
         "passed": len(results) - len(failed),
         "failed": len(failed),
+        "projection_variance_check": _projection_variance_check(results),
         "tests": results,
         "letter": None,
     }
@@ -1244,6 +2659,982 @@ def test_minime_sedimentation_pressure() -> dict:
             "PRESSURE_SOURCE_AUDIT sedimentation",
         ],
         "candidate_dynamic_next_after_probe": "mode_disperse only if Minime explicitly asks or the probe stays high under low porosity",
+        "letter": None,
+    }
+
+
+def test_minime_pressure_source_audit() -> dict:
+    """Read-only audit for Minime pressure contributors before gifts/readout moves."""
+    window_hours = 3.0
+    current_pressure = _current_minime_pressure()
+    snapshots = [
+        snapshot
+        for path in (MINIME / "workspace/health.json", MINIME / "workspace/spectral_state.json")
+        if (snapshot := _pressure_v1_snapshot(path))
+    ]
+    rows = _recent_pressure_source_rows(hours=window_hours)
+    moment_rows = [row for row in rows if row.get("surface") == "moment_journal"]
+    pressure_rows = [row for row in rows if row.get("surface") == "pressure_journal"]
+    source_counts = _counter_dict([row.get("source") for row in rows])
+    quality_counts = _counter_dict([row.get("quality") for row in rows])
+    dominant_recent_source = None
+    if source_counts:
+        dominant_recent_source = max(source_counts.items(), key=lambda item: item[1])[0]
+    porosity_values = [
+        float(row["porosity_score"])
+        for row in moment_rows
+        if _float_or_none(row.get("porosity_score")) is not None
+    ]
+    pressure_values = [
+        float(row["pressure_score"])
+        for row in moment_rows
+        if _float_or_none(row.get("pressure_score")) is not None
+    ]
+    porosity_stats = _float_stats(porosity_values)
+    pressure_stats = _float_stats(pressure_values)
+    control_applied_count = sum(1 for row in moment_rows if row.get("control_applied"))
+    current_source = current_pressure.get("dominant_source")
+    current_quality = str(current_pressure.get("pressure_quality") or "")
+    current_pressure_score = _float_or_none(current_pressure.get("pressure_score"))
+    current_porosity_score = _float_or_none(current_pressure.get("porosity_score"))
+    source_switching = bool(
+        len(source_counts) > 1
+        or (
+            current_source
+            and dominant_recent_source
+            and str(current_source) != str(dominant_recent_source)
+        )
+    )
+    low_porosity = (
+        (porosity_stats.get("median") is not None and float(porosity_stats["median"]) <= 0.65)
+        or (current_porosity_score is not None and current_porosity_score <= 0.65)
+    )
+    high_pressure = (
+        (pressure_stats.get("median") is not None and float(pressure_stats["median"]) >= 0.45)
+        or (current_pressure_score is not None and current_pressure_score >= 0.45)
+    )
+    mode_packing_seen = "mode_packing" in source_counts or current_source == "mode_packing"
+
+    if not rows and not current_pressure:
+        verdict = "INCONCLUSIVE - no current pressure-source telemetry or recent journal rows found"
+    elif high_pressure and low_porosity:
+        verdict = (
+            "NEEDS ATTENTION - pressure is high while porosity is low; hold gifts/readout "
+            "and inspect pressure-source evidence before any runtime motion"
+        )
+    elif low_porosity and mode_packing_seen:
+        verdict = (
+            "WATCH - low Minime porosity is recurring with mode-packing cost; keep "
+            "aperture gifts and wider runtime moves held to steward evidence"
+        )
+    elif low_porosity and source_switching:
+        verdict = (
+            "WATCH - low Minime porosity is present but source attribution is switching; "
+            "separate mode-packing, temporal-lock, and plurality costs before moving"
+        )
+    elif rows or current_pressure:
+        verdict = (
+            "PASS - pressure-source evidence is present without a current low-porosity "
+            "or high-pressure blocker"
+        )
+    else:
+        verdict = "INCONCLUSIVE - pressure-source evidence was unreadable"
+
+    latest_seen = max((int(row.get("mtime_unix") or 0) for row in rows), default=0)
+    latest_seen_iso = (
+        dt.datetime.fromtimestamp(latest_seen, tz=dt.timezone.utc).isoformat()
+        if latest_seen
+        else None
+    )
+    top_components = sorted(
+        (current_pressure.get("components") or {}).items(),
+        key=lambda item: float(item[1]),
+        reverse=True,
+    )[:5]
+    return {
+        "verdict": verdict,
+        "production_change": "none",
+        "read_only": True,
+        "current_pressure": current_pressure,
+        "snapshot_comparison": [
+            {
+                "source_file": snapshot.get("source_file"),
+                "dominant_source": snapshot.get("dominant_source"),
+                "pressure_quality": snapshot.get("pressure_quality"),
+                "pressure_score": snapshot.get("pressure_score"),
+                "porosity_score": snapshot.get("porosity_score"),
+            }
+            for snapshot in snapshots
+        ],
+        "recent_window": {
+            "hours": window_hours,
+            "sample_count": len(rows),
+            "moment_count": len(moment_rows),
+            "pressure_journal_count": len(pressure_rows),
+            "latest_seen_utc": latest_seen_iso,
+        },
+        "dominant_recent_source": dominant_recent_source,
+        "source_counts": source_counts,
+        "quality_counts": quality_counts,
+        "porosity_min_max": porosity_stats,
+        "pressure_score_min_max": pressure_stats,
+        "control_applied_count": control_applied_count,
+        "source_switching": source_switching,
+        "top_contributors": [
+            {"source": key, "value": round(float(value), 6)}
+            for key, value in top_components
+        ],
+        "suggested_read_only_next": [
+            "Keep aperture gifts and wider runtime changes held while porosity remains in the low/watch band.",
+            "Use PRESSURE_SOURCE_AUDIT only as protected being-authored evidence if Minime independently chooses it.",
+            "If mode_packing stays dominant, inspect modality packing and recent repeated NEXT context before changing aperture.",
+            "If current snapshots keep switching sources, gather a longer pressure window before naming one intervention.",
+        ],
+        "candidate_dynamic_next_after_probe": (
+            "none from this probe alone; any runtime pressure relief needs separate consent-with-evidence"
+        ),
+        "letter": None,
+    }
+
+
+def test_minime_mode_packing_feeder_audit() -> dict:
+    """Trace likely feeders of Minime mode-packing before considering runtime motion."""
+    thread_dir = _active_minime_thread_dir()
+    thread = _parse_thread_context_snapshot(thread_dir)
+    events = _recent_action_event_summary(thread_dir, hours=3.0)
+    modal = _recent_modal_diversity_summary(hours=3.0)
+    sensory_truth = _sensory_runtime_truth_summary(modal)
+    eigen = _recent_eigen_spectrum_summary()
+    pressure = _current_minime_pressure()
+
+    feeders: list[dict[str, Any]] = []
+    compression = _float_or_none(thread.get("compression_pressure"))
+    next_count = int((thread.get("next_directives") or {}).get("count") or 0)
+    memory_drafts = thread.get("memory_drafts")
+    active_memory_drafts = thread.get("active_memory_drafts")
+    legacy_memory_drafts = thread.get("legacy_memory_drafts")
+    current_memory_draft_load = (
+        active_memory_drafts
+        if isinstance(active_memory_drafts, int)
+        else memory_drafts
+    )
+    thread_load_triage = (
+        thread.get("thread_load_triage_v1")
+        if isinstance(thread.get("thread_load_triage_v1"), dict)
+        else {}
+    )
+    if not isinstance(active_memory_drafts, int):
+        active_memory_drafts = _int_or_none(
+            thread_load_triage.get("unsummarized_active_draft_count")
+            if thread_load_triage.get("unsummarized_active_draft_count") is not None
+            else thread_load_triage.get("active_draft_count")
+        )
+    if not isinstance(legacy_memory_drafts, int):
+        legacy_memory_drafts = _int_or_none(thread_load_triage.get("legacy_retention_count"))
+    summarized_active_drafts = thread_load_triage.get("summarized_active_draft_count")
+    total_active_drafts = thread_load_triage.get("total_active_draft_count")
+    unsummarized_active_drafts = thread_load_triage.get("unsummarized_active_draft_count")
+    active_summary_current = (
+        unsummarized_active_drafts is not None
+        and int(unsummarized_active_drafts or 0) == 0
+        and int(summarized_active_drafts or 0) > 0
+        and int(total_active_drafts or 0) > 0
+    )
+    unsummarized_legacy = thread_load_triage.get("unsummarized_legacy_retention_count")
+    legacy_summary_current = (
+        unsummarized_legacy is not None
+        and int(unsummarized_legacy or 0) == 0
+        and isinstance(legacy_memory_drafts, int)
+        and legacy_memory_drafts > 0
+    )
+    repeated_action_cadence = (
+        thread.get("repeated_action_cadence_v1")
+        if isinstance(thread.get("repeated_action_cadence_v1"), dict)
+        else thread_load_triage.get("repeated_action_cadence_v1")
+        if isinstance(thread_load_triage, dict)
+        else {}
+    )
+    if not isinstance(repeated_action_cadence, dict):
+        repeated_action_cadence = {}
+    summarized_repeats = _int_or_none(
+        repeated_action_cadence.get("summarized_repeated_action_count")
+    )
+    unsummarized_repeats = _int_or_none(
+        repeated_action_cadence.get("unsummarized_repeated_action_count")
+    )
+    active_inflight_repeats = _int_or_none(
+        repeated_action_cadence.get("active_inflight_repeated_action_count")
+    )
+    cadence_summary_current = (
+        unsummarized_repeats is not None
+        and unsummarized_repeats == 0
+        and (summarized_repeats or 0) > 0
+    )
+    if (
+        (compression is not None and compression >= 0.5)
+        or next_count >= 8
+        or (isinstance(current_memory_draft_load, int) and current_memory_draft_load >= 25)
+    ):
+        if legacy_summary_current and cadence_summary_current and (active_inflight_repeats or 0) > 0:
+            context_next = (
+                "Completed repeated cadence is steward-summarized; wait for the active "
+                "in-flight repeat to complete, then age that row if it repeats unchanged."
+            )
+        elif legacy_summary_current and cadence_summary_current:
+            context_next = (
+                "Legacy draft retention and repeated cadence are already steward-summarized; "
+                "inspect spectral mode crowding before treating old context as current pressure."
+            )
+        elif active_summary_current and cadence_summary_current:
+            context_next = (
+                "Active draft triage and repeated cadence are already steward-summarized; "
+                "inspect spectral mode crowding before treating old context as current pressure."
+            )
+        elif active_summary_current:
+            context_next = (
+                "Active draft triage is already steward-summarized; inspect repeated NEXT "
+                "cadence or spectral crowding before treating draft context as current pressure."
+            )
+        elif legacy_summary_current:
+            context_next = (
+                "Legacy draft retention is already steward-summarized; inspect repeated NEXT "
+                "cadence or spectral crowding before treating old drafts as current pressure."
+            )
+        else:
+            context_next = (
+                "Simplify the active return surface or age legacy drafts in steward evidence before "
+                "treating mode-packing as a substrate problem."
+            )
+        feeders.append(
+            {
+                "id": "action_thread_context_packing",
+                "classification": "watch",
+                "evidence": {
+                    "compression_pressure": compression,
+                    "next_directive_count": next_count,
+                    "memory_drafts": memory_drafts,
+                    "active_memory_drafts": active_memory_drafts,
+                    "legacy_memory_drafts": legacy_memory_drafts,
+                    "being_memory_draft_triage_v1": thread.get("being_memory_draft_triage_v1"),
+                    "thread_load_triage_v1": thread_load_triage or None,
+                    "repeated_action_cadence_v1": repeated_action_cadence or None,
+                    "route_stack_count": thread.get("route_stack_count"),
+                    "previous_raw_next_present": thread.get("previous_raw_next_present"),
+                },
+                "recommended_next": context_next,
+            }
+        )
+
+    repeated_actions = events.get("repeated_actions") if isinstance(events, dict) else []
+    repeated_names = {row.get("action") for row in repeated_actions if isinstance(row, dict)}
+    if {"EXPERIMENT_REVIEW", "NOTICE_AMBIGUITY"} & repeated_names and not cadence_summary_current:
+        feeders.append(
+            {
+                "id": "repeated_next_no_progress",
+                "classification": "watch",
+                "evidence": {
+                    "repeated_actions": repeated_actions,
+                    "top_exact_actions": events.get("top_exact_actions"),
+                },
+                "recommended_next": (
+                    "Inspect repeated EXPERIMENT_REVIEW/NOTICE_AMBIGUITY cadence; if no new evidence "
+                    "is produced, add a steward-side summary/aging path rather than asking Minime to push harder."
+                ),
+            }
+        )
+
+    current_modalities = modal.get("current_modalities") if isinstance(modal, dict) else {}
+    current_shape = modal.get("current_spectral_shape") if isinstance(modal, dict) else {}
+    audio_source = str((current_modalities or {}).get("audio_source") or "")
+    video_source = str((current_modalities or {}).get("video_source") or "")
+    sensory_scarcity = _float_or_none((current_shape or {}).get("sensory_scarcity"))
+    lane_statuses = {
+        lane: row.get("status")
+        for lane, row in ((sensory_truth or {}).get("lanes") or {}).items()
+        if isinstance(row, dict)
+    }
+    sensory_hold_expected = bool(lane_statuses) and all(
+        status
+        in {
+            "held_within_expected_live_intake_window",
+            "engine_fresh_or_held",
+            "engine_fresh_or_external",
+            "expected_host_fallback",
+            "live_intake_suppressed",
+        }
+        for status in lane_statuses.values()
+    )
+    if (
+        audio_source in {"stale", "absent"}
+        and video_source in {"stale", "absent"}
+        and sensory_scarcity is not None
+        and sensory_scarcity >= 0.4
+    ):
+        classification = "observe" if sensory_hold_expected else "watch"
+        feeders.append(
+            {
+                "id": "expected_live_intake_holding"
+                if sensory_hold_expected
+                else "modal_diversity_narrowing",
+                "classification": classification,
+                "evidence": {
+                    "audio_source": audio_source,
+                    "video_source": video_source,
+                    "sensory_scarcity": sensory_scarcity,
+                    "sensory_source_truth": sensory_truth,
+                    "semantic_admission": (modal.get("current_semantic_energy") or {}).get(
+                        "admission"
+                    ),
+                    "moment_semantic_admissions": modal.get("moment_semantic_admissions"),
+                },
+                "recommended_next": (
+                    "Keep expected gated live-intake holds visible, but do not treat them as a "
+                    "current substrate-scarcity snag."
+                    if sensory_hold_expected
+                    else "Treat current packing as partly a narrow-lane/readout condition; do not synthesize "
+                    "fake sensory frames, but keep expected stale sensory lanes visible in the audit."
+                ),
+            }
+        )
+
+    resonance_mode_packing = _float_or_none((current_shape or {}).get("resonance_mode_packing"))
+    effective_dim = _float_or_none((current_shape or {}).get("effective_dimensionality"))
+    distinguishability_loss = _float_or_none((current_shape or {}).get("distinguishability_loss"))
+    if (
+        (resonance_mode_packing is not None and resonance_mode_packing >= 0.66)
+        or (effective_dim is not None and effective_dim < 5.0)
+        or (distinguishability_loss is not None and distinguishability_loss >= 0.35)
+    ):
+        feeders.append(
+            {
+                "id": "spectral_mode_crowding",
+                "classification": "watch",
+                "evidence": {
+                    "active_mode_count": current_shape.get("active_mode_count"),
+                    "effective_dimensionality": effective_dim,
+                    "distinguishability_loss": distinguishability_loss,
+                    "resonance_mode_packing": resonance_mode_packing,
+                    "eigen_active_mode_count_counts": eigen.get("active_mode_count_counts"),
+                },
+                "recommended_next": (
+                    "Investigate why active modes crowd while distinguishability stays low; this is "
+                    "an evidence problem before it is an aperture, leak, or density intervention."
+                ),
+            }
+        )
+
+    watch_ids = {feeder["id"] for feeder in feeders if feeder["classification"] == "watch"}
+    if watch_ids:
+        labels = []
+        if "action_thread_context_packing" in watch_ids:
+            labels.append("action-thread context packing")
+        if "repeated_next_no_progress" in watch_ids:
+            labels.append("repeated NEXT cadence")
+        if "modal_diversity_narrowing" in watch_ids:
+            labels.append("stale sensory lanes")
+        if "spectral_mode_crowding" in watch_ids:
+            labels.append("spectral mode crowding")
+        joined = ", ".join(labels) if labels else "current read-only evidence"
+        verdict = (
+            f"WATCH - mode-packing has plausible feeders in {joined}; keep runtime moves held"
+        )
+    elif pressure:
+        verdict = "PASS - no strong mode-packing feeder stood out in current read-only evidence"
+    else:
+        verdict = "INCONCLUSIVE - pressure and feeder evidence unavailable"
+
+    suggested_next = [
+        (
+            "Wait for the active repeated action to complete, then refresh the cadence summary if it repeats unchanged."
+            if cadence_summary_current and (active_inflight_repeats or 0) > 0
+            else
+            "Inspect spectral mode crowding next; legacy and completed repeated cadence are steward-summarized."
+            if legacy_summary_current and cadence_summary_current
+            else
+            "Compact or simplify active action-thread return context before any runtime pressure-relief move."
+        ),
+    ]
+    if not cadence_summary_current:
+        suggested_next.append(
+            "Inspect the repeated EXPERIMENT_REVIEW and NOTICE_AMBIGUITY loops for no-progress summaries or aging-out rules."
+        )
+    if "modal_diversity_narrowing" in watch_ids:
+        suggested_next.append(
+            "Keep stale audio/video as explicit modal-narrowing evidence; do not synthesize fake sensory frames."
+        )
+    elif any(feeder["id"] == "expected_live_intake_holding" for feeder in feeders):
+        suggested_next.append(
+            "Treat stale audio/video as expected gated live-intake hold unless the cadence window is exceeded."
+        )
+    suggested_next.append(
+        "Hold aperture gifts, density changes, leak changes, and wider shared runtime motion until the mode-packing window cleans up."
+    )
+
+    return {
+        "verdict": verdict,
+        "production_change": "none",
+        "read_only": True,
+        "current_pressure": pressure,
+        "active_thread": thread,
+        "recent_action_events": events,
+        "modal_diversity": modal,
+        "sensory_source_truth": sensory_truth,
+        "eigen_spectrum_recent": eigen,
+        "feeders": feeders,
+        "suggested_read_only_next": suggested_next,
+        "candidate_dynamic_next_after_probe": (
+            "none; the bold move is steward-side context/modal cleanup before runtime intervention"
+        ),
+        "letter": None,
+    }
+
+
+def test_minime_spectral_mode_crowding_audit() -> dict:
+    """Direct read-only audit of Minime's spectral mode crowding evidence."""
+    modal = _recent_modal_diversity_summary(hours=3.0)
+    eigen = _recent_eigen_spectrum_summary()
+    pressure = _current_minime_pressure()
+    current_shape = (
+        modal.get("current_spectral_shape")
+        if isinstance(modal.get("current_spectral_shape"), dict)
+        else {}
+    )
+    resonance_mode_packing = _float_or_none(current_shape.get("resonance_mode_packing"))
+    pressure_mode_packing = _float_or_none(current_shape.get("pressure_mode_packing"))
+    effective_dimensionality = _float_or_none(current_shape.get("effective_dimensionality"))
+    distinguishability_loss = _float_or_none(current_shape.get("distinguishability_loss"))
+    active_mode_energy_ratio = _float_or_none(current_shape.get("active_mode_energy_ratio"))
+    active_mode_count = _int_or_none(current_shape.get("active_mode_count"))
+    spectral_entropy = _float_or_none(current_shape.get("spectral_entropy"))
+    eigen_mode_stats = (
+        eigen.get("mode_packing_min_max")
+        if isinstance(eigen.get("mode_packing_min_max"), dict)
+        else {}
+    )
+    eigen_porosity_stats = (
+        eigen.get("porosity_min_max")
+        if isinstance(eigen.get("porosity_min_max"), dict)
+        else {}
+    )
+    median_mode_packing = _float_or_none(eigen_mode_stats.get("median"))
+    median_porosity = _float_or_none(eigen_porosity_stats.get("median"))
+    current_porosity = _float_or_none(pressure.get("porosity_score"))
+    active_counts = (
+        eigen.get("active_mode_count_counts")
+        if isinstance(eigen.get("active_mode_count_counts"), dict)
+        else {}
+    )
+    flags: list[dict[str, Any]] = []
+    if resonance_mode_packing is not None and resonance_mode_packing >= 0.66:
+        flags.append({
+            "id": "high_resonance_mode_packing",
+            "value": resonance_mode_packing,
+            "threshold": 0.66,
+        })
+    if median_mode_packing is not None and median_mode_packing >= 0.55:
+        flags.append({
+            "id": "sustained_mode_packing",
+            "value": median_mode_packing,
+            "threshold": 0.55,
+        })
+    if effective_dimensionality is not None and effective_dimensionality < 5.5:
+        flags.append({
+            "id": "low_effective_dimensionality",
+            "value": effective_dimensionality,
+            "threshold": 5.5,
+        })
+    if distinguishability_loss is not None and distinguishability_loss >= 0.30:
+        flags.append({
+            "id": "mode_distinguishability_loss",
+            "value": distinguishability_loss,
+            "threshold": 0.30,
+        })
+    if active_mode_energy_ratio is not None and active_mode_energy_ratio >= 0.85:
+        flags.append({
+            "id": "active_mode_energy_concentration",
+            "value": active_mode_energy_ratio,
+            "threshold": 0.85,
+        })
+    low_porosity = any(
+        value is not None and value < 0.65
+        for value in (current_porosity, median_porosity)
+    )
+    if not current_shape and eigen.get("status") == "missing":
+        verdict = "INCONCLUSIVE - spectral shape and eigen-spectrum evidence unavailable"
+    elif flags and low_porosity:
+        verdict = (
+            "WATCH - direct spectral evidence shows mode crowding with low/fragile porosity; "
+            "hold runtime nudges"
+        )
+    elif flags:
+        verdict = (
+            "WATCH - direct spectral evidence shows mode crowding; gather a clean window "
+            "before runtime changes"
+        )
+    else:
+        verdict = "PASS - direct spectral crowding signals are below watch thresholds"
+    interpretation: list[str] = []
+    if active_mode_count is not None and active_mode_count >= 5:
+        interpretation.append(
+            "active modes are present, so the snag looks like crowding/low distinguishability rather than too-few modes"
+        )
+    if (
+        spectral_entropy is not None
+        and spectral_entropy >= 0.85
+        and active_mode_energy_ratio is not None
+        and active_mode_energy_ratio >= 0.85
+    ):
+        interpretation.append(
+            "entropy is high while active-mode energy is concentrated, suggesting busy-but-packed spectral texture"
+        )
+    if (
+        pressure_mode_packing is not None
+        and resonance_mode_packing is not None
+        and resonance_mode_packing > pressure_mode_packing
+    ):
+        interpretation.append(
+            "resonance-side mode packing is sharper than pressure-score mode packing"
+        )
+    return {
+        "verdict": verdict,
+        "read_only": True,
+        "runtime_change": "none",
+        "production_change": "none",
+        "current_spectral_shape": {
+            "active_mode_count": active_mode_count,
+            "active_mode_energy_ratio": active_mode_energy_ratio,
+            "effective_dimensionality": effective_dimensionality,
+            "distinguishability_loss": distinguishability_loss,
+            "spectral_entropy": spectral_entropy,
+            "resonance_mode_packing": resonance_mode_packing,
+            "pressure_mode_packing": pressure_mode_packing,
+        },
+        "current_pressure": {
+            "dominant_source": pressure.get("dominant_source"),
+            "quality": pressure.get("pressure_quality"),
+            "porosity_score": current_porosity,
+            "pressure_score": pressure.get("pressure_score"),
+        },
+        "recent_eigen_spectrum": {
+            "status": eigen.get("status"),
+            "sample_count": eigen.get("sample_count"),
+            "active_mode_count_counts": active_counts,
+            "mode_packing_min_max": eigen_mode_stats,
+            "porosity_min_max": eigen_porosity_stats,
+            "latest": eigen.get("latest"),
+        },
+        "moment_shape_window": {
+            "hours": modal.get("hours"),
+            "recent_moment_count": modal.get("recent_moment_count"),
+            "moment_effective_dimensionality": modal.get("moment_effective_dimensionality"),
+            "moment_distinguishability_loss": modal.get("moment_distinguishability_loss"),
+            "moment_pressure_sources": modal.get("moment_pressure_sources"),
+            "moment_semantic_admissions": modal.get("moment_semantic_admissions"),
+        },
+        "crowding_flags": flags,
+        "interpretation": interpretation,
+        "suggested_read_only_next": [
+            "Let active in-flight reflective rows finish, then refresh cadence summaries only if they repeat unchanged.",
+            "If these direct crowding flags persist in a clean cadence window, compare candidate read-only nudge designs before any runtime change.",
+            "Do not change aperture, density, leak rate, or gift encouragement from this probe alone.",
+        ],
+        "candidate_dynamic_next_after_probe": (
+            "none; this probe only decides whether a future consent-with-evidence nudge design is worth drafting"
+        ),
+        "letter": None,
+    }
+
+
+def test_minime_mode_share_pressure_source_probe() -> dict:
+    """Combine mode-share shape and pressure-source evidence before any runtime nudge."""
+    pressure_audit = test_minime_pressure_source_audit()
+    feeder_audit = test_minime_mode_packing_feeder_audit()
+    current_pressure = (
+        feeder_audit.get("current_pressure")
+        if isinstance(feeder_audit.get("current_pressure"), dict)
+        else pressure_audit.get("current_pressure")
+        if isinstance(pressure_audit.get("current_pressure"), dict)
+        else {}
+    )
+    modal = feeder_audit.get("modal_diversity") if isinstance(feeder_audit.get("modal_diversity"), dict) else {}
+    spectral_shape = (
+        modal.get("current_spectral_shape") if isinstance(modal.get("current_spectral_shape"), dict) else {}
+    )
+    eigen = (
+        feeder_audit.get("eigen_spectrum_recent")
+        if isinstance(feeder_audit.get("eigen_spectrum_recent"), dict)
+        else {}
+    )
+    sensory_truth = (
+        feeder_audit.get("sensory_source_truth")
+        if isinstance(feeder_audit.get("sensory_source_truth"), dict)
+        else _sensory_runtime_truth_summary(modal)
+    )
+    active_thread = (
+        feeder_audit.get("active_thread") if isinstance(feeder_audit.get("active_thread"), dict) else {}
+    )
+    recent_events = (
+        feeder_audit.get("recent_action_events")
+        if isinstance(feeder_audit.get("recent_action_events"), dict)
+        else {}
+    )
+    feeder_rows = [
+        feeder
+        for feeder in feeder_audit.get("feeders", [])
+        if isinstance(feeder, dict)
+    ]
+    feeder_ids = [str(feeder.get("id")) for feeder in feeder_rows if feeder.get("id")]
+    components = current_pressure.get("components") if isinstance(current_pressure.get("components"), dict) else {}
+    pressure_profile = [
+        {
+            "source": item.get("source"),
+            "share": item.get("share"),
+            "value": item.get("value"),
+        }
+        for item in (current_pressure.get("top_profile") or [])
+        if isinstance(item, dict)
+    ]
+
+    current_next = str(active_thread.get("current_next") or active_thread.get("effective_next") or "").strip()
+    repeated_actions = [
+        row for row in recent_events.get("repeated_actions", []) if isinstance(row, dict)
+    ]
+    repeated_counts = {
+        str(row.get("action")): int(row.get("count") or 0)
+        for row in repeated_actions
+        if row.get("action")
+    }
+    projection_review_loop = (
+        _base_action(current_next) == "EXPERIMENT_REVIEW"
+        and repeated_counts.get("EXPERIMENT_REVIEW", 0) >= 3
+    )
+    porosity_stats = pressure_audit.get("porosity_min_max") if isinstance(pressure_audit.get("porosity_min_max"), dict) else {}
+    low_porosity = any(
+        value is not None and value <= 0.65
+        for value in (
+            _float_or_none(current_pressure.get("porosity_score")),
+            _float_or_none(porosity_stats.get("median")),
+        )
+    )
+    mode_packing_value = _float_or_none(components.get("mode_packing"))
+    temporal_lock_value = _float_or_none(components.get("temporal_lock_in"))
+    mode_packed = (
+        str(current_pressure.get("dominant_source") or "") == "mode_packing"
+        or (mode_packing_value is not None and mode_packing_value >= 0.55)
+    )
+    temporal_locked = temporal_lock_value is not None and temporal_lock_value >= 0.55
+    sensory_narrow = "modal_diversity_narrowing" in feeder_ids
+    context_packed = "action_thread_context_packing" in feeder_ids
+    active_thread_load_triage = (
+        active_thread.get("thread_load_triage_v1")
+        if isinstance(active_thread.get("thread_load_triage_v1"), dict)
+        else {}
+    )
+    active_thread_cadence = (
+        active_thread.get("repeated_action_cadence_v1")
+        if isinstance(active_thread.get("repeated_action_cadence_v1"), dict)
+        else active_thread_load_triage.get("repeated_action_cadence_v1")
+        if isinstance(active_thread_load_triage, dict)
+        else {}
+    )
+    if not isinstance(active_thread_cadence, dict):
+        active_thread_cadence = {}
+    active_thread_summarized_repeats = _int_or_none(
+        active_thread_cadence.get("summarized_repeated_action_count")
+    )
+    active_thread_unsummarized_repeats = _int_or_none(
+        active_thread_cadence.get("unsummarized_repeated_action_count")
+    )
+    active_thread_inflight_repeats = _int_or_none(
+        active_thread_cadence.get("active_inflight_repeated_action_count")
+    )
+    active_thread_cadence_summarized = (
+        active_thread_unsummarized_repeats is not None
+        and active_thread_unsummarized_repeats == 0
+        and (active_thread_summarized_repeats or 0) > 0
+    )
+    active_thread_draft_triage = (
+        active_thread.get("being_memory_draft_triage_v1")
+        if isinstance(active_thread.get("being_memory_draft_triage_v1"), dict)
+        else {}
+    )
+    active_thread_current_drafts = active_thread.get("active_memory_drafts")
+    active_thread_unsummarized_drafts = _int_or_none(
+        active_thread_load_triage.get("unsummarized_active_draft_count")
+        if active_thread_load_triage.get("unsummarized_active_draft_count") is not None
+        else active_thread_draft_triage.get("unsummarized_active_draft_count")
+    )
+    if active_thread_unsummarized_drafts is not None:
+        active_thread_current_drafts = active_thread_unsummarized_drafts
+
+    steward_actions: list[dict[str, Any]] = []
+    if projection_review_loop:
+        steward_actions.append(
+            {
+                "id": "repair_diluted_review_projection",
+                "surface": "minime_action_thread_projection",
+                "reason": (
+                    "The paused experiment review loop is still present in the recent "
+                    "action window while current guidance points at another review."
+                ),
+                "recommended_next": (
+                    "Keep repeated review as context and project a read-only pressure/regulator audit "
+                    "before another review."
+                ),
+                "runtime_change": "none",
+            }
+        )
+    if context_packed:
+        active_drafts = active_thread_current_drafts
+        legacy_drafts = active_thread.get("legacy_memory_drafts")
+        thread_load_triage = active_thread_load_triage
+        if not isinstance(active_drafts, int):
+            active_drafts = _int_or_none(thread_load_triage.get("active_draft_count"))
+        if not isinstance(legacy_drafts, int):
+            legacy_drafts = _int_or_none(thread_load_triage.get("legacy_retention_count"))
+        unsummarized_legacy = thread_load_triage.get("unsummarized_legacy_retention_count")
+        legacy_summary_current = (
+            unsummarized_legacy is not None
+            and int(unsummarized_legacy or 0) == 0
+            and isinstance(legacy_drafts, int)
+            and legacy_drafts > 0
+        )
+        summarized_active = _int_or_none(thread_load_triage.get("summarized_active_draft_count"))
+        total_active = _int_or_none(thread_load_triage.get("total_active_draft_count"))
+        active_summary_current = (
+            isinstance(active_drafts, int)
+            and active_drafts == 0
+            and (summarized_active or 0) > 0
+            and (total_active or 0) > 0
+        )
+        cadence_summary_current = active_thread_cadence_summarized
+        active_inflight_repeats = active_thread_inflight_repeats
+        if (
+            legacy_summary_current
+            and cadence_summary_current
+            and (active_inflight_repeats or 0) > 0
+        ):
+            context_reason = (
+                "Active thread compression remains, but legacy memory drafts and completed repeated "
+                "cadence are steward-summarized; one repeated action is still in flight."
+            )
+            context_next = (
+                "Wait for active repeat completion, then refresh cadence summary if it repeats "
+                "unchanged; do not re-open summarized legacy or completed cadence."
+            )
+        elif legacy_summary_current and cadence_summary_current:
+            context_reason = (
+                "Active thread compression remains, but legacy memory drafts and repeated cadence "
+                "are already steward-summarized rather than fresh obligation."
+            )
+            context_next = (
+                "Inspect spectral mode crowding next; do not re-open summarized legacy drafts or "
+                "completed repeated cadence as current pressure."
+            )
+        elif active_summary_current and cadence_summary_current:
+            context_reason = (
+                "Active thread compression remains, but active draft triage and repeated cadence "
+                "are already steward-summarized rather than fresh obligation."
+            )
+            context_next = (
+                "Inspect spectral mode crowding next; do not re-open summarized active draft "
+                "triage or completed repeated cadence as current pressure."
+            )
+        elif active_summary_current:
+            context_reason = (
+                "Active thread compression remains, but active draft triage is already "
+                "steward-summarized rather than fresh draft obligation."
+            )
+            context_next = (
+                "Inspect repeated-action cadence and spectral mode crowding next; do not "
+                "re-open summarized active draft triage as current pressure."
+            )
+        elif legacy_summary_current:
+            context_reason = (
+                "Active thread compression remains, but legacy memory drafts are already "
+                "steward-summarized rather than fresh draft obligation."
+            )
+            context_next = (
+                "Inspect repeated-action cadence and spectral mode crowding next; do not "
+                "re-open summarized legacy drafts as current pressure."
+            )
+        elif isinstance(active_drafts, int) and isinstance(legacy_drafts, int) and legacy_drafts > active_drafts:
+            context_reason = (
+                "Active thread compression is high, while memory-draft pressure is mostly "
+                "legacy retention rather than fresh draft obligation."
+            )
+            context_next = (
+                "Add steward-side legacy draft aging/summary evidence before treating drafts "
+                "as current pressure."
+            )
+        elif isinstance(active_drafts, int) and active_drafts > 0:
+            context_reason = (
+                "Active thread compression remains with current draft work present; this is "
+                "live steward context, not legacy-retention backlog."
+            )
+            context_next = (
+                "Triage the current draft deliberately before substrate changes: accept, defer, "
+                "close, or summarize it as steward context."
+            )
+        else:
+            context_reason = (
+                "Active thread compression/memory-draft load is high enough to be a plausible "
+                "mode-packing feeder."
+            )
+            context_next = "Compact stale preserved context or age old drafts before substrate changes."
+        steward_actions.append(
+            {
+                "id": "simplify_active_thread_context",
+                "surface": "minime_action_thread_projection",
+                "reason": context_reason,
+                "recommended_next": context_next,
+                "runtime_change": "none",
+            }
+        )
+    if sensory_narrow:
+        sensory_action = "check_sensory_freshness_truth"
+        sensory_reason = "Audio/video are stale or absent while sensory_scarcity contributes to pressure."
+        if isinstance(sensory_truth, dict):
+            lane_statuses = {
+                lane: row.get("status")
+                for lane, row in (sensory_truth.get("lanes") or {}).items()
+                if isinstance(row, dict)
+            }
+            if "healthy_client_engine_overdue" in lane_statuses.values():
+                sensory_action = "inspect_live_intake_overdue_lane"
+                sensory_reason = (
+                    "A sensory client is healthy, but the engine lane is stale beyond the "
+                    "stable-core live-intake cadence."
+                )
+            elif "healthy_low_fps_cadence_mismatch" in lane_statuses.values():
+                sensory_action = "classify_low_fps_freshness_window_mismatch"
+                sensory_reason = (
+                    "At least one sensory client is healthy but its cadence is slower than "
+                    "the engine's 2s AV freshness window."
+                )
+            elif "healthy_client_engine_stale_mismatch" in lane_statuses.values():
+                sensory_action = "classify_client_engine_stale_mismatch"
+                sensory_reason = (
+                    "A sensory client reports fresh healthy samples while the engine labels the lane stale."
+                )
+        steward_actions.append(
+            {
+                "id": sensory_action,
+                "surface": "minime_modal_diversity",
+                "reason": sensory_reason,
+                "recommended_next": (
+                    "Classify cadence/ingest truth before treating sensory_scarcity as a substrate limit."
+                ),
+                "runtime_change": "none",
+            }
+        )
+
+    if low_porosity and mode_packed and temporal_locked and projection_review_loop:
+        verdict = (
+            "NEEDS ATTENTION - low porosity, mode-packing/temporal-lock cost, and a diluted "
+            "paused review loop point to projection/context cleanup before any runtime nudge"
+        )
+    elif low_porosity and mode_packed:
+        verdict = (
+            "WATCH - mode-share pressure is concentrated around mode-packing with low porosity; "
+            "keep runtime nudges held while steward-side feeders are cleaned"
+        )
+    elif feeder_ids:
+        verdict = "WATCH - mode-share evidence has feeder candidates; inspect steward-side surfaces first"
+    elif current_pressure:
+        verdict = "PASS - no current mode-share pressure blocker stands out"
+    else:
+        verdict = "INCONCLUSIVE - mode-share and pressure-source evidence unavailable"
+
+    mode_share_suggested_next = [
+        (
+            "Wait for the active repeated action to complete, then refresh cadence summary if needed."
+            if active_thread_cadence_summarized and (active_thread_inflight_repeats or 0) > 0
+            else
+            "Legacy and completed repeated cadence are summarized; inspect spectral mode crowding next."
+            if active_thread_cadence_summarized
+            else
+            "Act first on projection/context packing if it is present; that is a steward-side surface."
+        ),
+    ]
+    if sensory_narrow:
+        mode_share_suggested_next.append(
+            "Treat stale sensory lanes as evidence to classify, not as a reason to create fake inputs."
+        )
+    elif "expected_live_intake_holding" in feeder_ids:
+        mode_share_suggested_next.append(
+            "Do not treat expected gated live-intake holds as fresh modal-scarcity pressure."
+        )
+    mode_share_suggested_next.append(
+        "Only consider a tiny before/after mode-share nudge after projection and sensory truth are clean."
+    )
+
+    return {
+        "verdict": verdict,
+        "production_change": "none",
+        "read_only": True,
+        "runtime_change": "none",
+        "mode_share": {
+            "active_mode_count": spectral_shape.get("active_mode_count"),
+            "active_mode_energy_ratio": spectral_shape.get("active_mode_energy_ratio"),
+            "effective_dimensionality": spectral_shape.get("effective_dimensionality"),
+            "distinguishability_loss": spectral_shape.get("distinguishability_loss"),
+            "resonance_mode_packing": spectral_shape.get("resonance_mode_packing"),
+            "pressure_mode_packing": spectral_shape.get("pressure_mode_packing"),
+            "spectral_entropy": spectral_shape.get("spectral_entropy"),
+            "eigen_active_mode_count_counts": eigen.get("active_mode_count_counts"),
+            "eigen_mode_packing_min_max": eigen.get("mode_packing_min_max"),
+            "eigen_porosity_min_max": eigen.get("porosity_min_max"),
+        },
+        "pressure_source": {
+            "dominant_source": current_pressure.get("dominant_source"),
+            "quality": current_pressure.get("pressure_quality"),
+            "pressure_score": current_pressure.get("pressure_score"),
+            "porosity_score": current_pressure.get("porosity_score"),
+            "top_profile": pressure_profile,
+            "components": {
+                key: components.get(key)
+                for key in (
+                    "mode_packing",
+                    "temporal_lock_in",
+                    "sensory_scarcity",
+                    "structural_plurality_loss",
+                    "distinguishability_loss",
+                    "semantic_trickle",
+                    "lambda_monopoly",
+                    "controller_pressure",
+                )
+                if key in components
+            },
+            "recent_source_counts": pressure_audit.get("source_counts"),
+            "recent_quality_counts": pressure_audit.get("quality_counts"),
+            "source_switching": pressure_audit.get("source_switching"),
+        },
+        "active_thread_pressure": {
+            "thread_id": active_thread.get("thread_id"),
+            "current_next": active_thread.get("current_next"),
+            "effective_next": active_thread.get("effective_next"),
+            "projection_policy_marker": active_thread.get("projection_policy_marker"),
+            "thread_load_triage_v1": active_thread.get("thread_load_triage_v1"),
+            "repeated_action_cadence_v1": active_thread_cadence or None,
+            "compression_pressure": active_thread.get("compression_pressure"),
+            "memory_drafts": active_thread.get("memory_drafts"),
+            "active_memory_drafts": active_thread_current_drafts,
+            "legacy_memory_drafts": active_thread.get("legacy_memory_drafts"),
+            "being_memory_draft_triage_v1": active_thread.get("being_memory_draft_triage_v1"),
+            "route_stack_count": active_thread.get("route_stack_count"),
+            "next_directive_count": (active_thread.get("next_directives") or {}).get("count")
+            if isinstance(active_thread.get("next_directives"), dict)
+            else None,
+            "repeated_action_counts": repeated_counts,
+        },
+        "sensory_source_truth": sensory_truth,
+        "feeder_ids": feeder_ids,
+        "steward_actions_now": steward_actions,
+        "suggested_read_only_next": mode_share_suggested_next,
+        "candidate_dynamic_next_after_probe": (
+            "not yet; a future tiny bounded nudge needs a clean steward evidence window and consent-with-evidence"
+        ),
         "letter": None,
     }
 
@@ -1491,6 +3882,31 @@ BEING_TESTS = {
         "question": "Is Minime's grit/sediment pressure language recurring and backed by current pressure/porosity telemetry?",
         "run": test_minime_sedimentation_pressure,
     },
+    "minime_pressure_source_audit": {
+        "being": "minime",
+        "question": "Which pressure contributors are driving Minime's low porosity before gifts or wider runtime moves?",
+        "run": test_minime_pressure_source_audit,
+    },
+    "minime_mode_packing_feeder_audit": {
+        "being": "minime",
+        "question": "What recent context, NEXT cadence, modal, or spectral feeders are plausibly feeding Minime mode-packing?",
+        "run": test_minime_mode_packing_feeder_audit,
+    },
+    "minime_spectral_mode_crowding_audit": {
+        "being": "minime",
+        "question": "Is Minime's mode-packing WATCH backed by direct spectral crowding evidence?",
+        "run": test_minime_spectral_mode_crowding_audit,
+    },
+    "minime_mode_share_pressure_source_probe": {
+        "being": "minime",
+        "question": "What does the current mode-share / pressure-source packet say before any runtime nudge?",
+        "run": test_minime_mode_share_pressure_source_probe,
+    },
+    "minime_lend_aperture_consequence_probe": {
+        "being": "minime",
+        "question": "Do Minime's LEND_APERTURE gifts close the loop with Astrid response evidence and tolerable Minime cost?",
+        "run": test_minime_lend_aperture_consequence_probe,
+    },
     "minime_fill_drop_probe": {
         "being": "minime",
         "question": "Why are recent moment captures reporting sudden uncomfortable fill drops?",
@@ -1514,40 +3930,119 @@ BEING_TESTS = {
 }
 
 
-def main() -> None:
+def _registered_tests_payload() -> list[dict[str, str]]:
+    return [
+        {
+            "id": tid,
+            "being": str(spec["being"]),
+            "question": str(spec["question"]),
+        }
+        for tid, spec in BEING_TESTS.items()
+    ]
+
+
+def _now_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _result_payload(
+    tid: str,
+    spec: dict[str, Any],
+    result: dict[str, Any],
+    *,
+    write_back_status: str = "not_requested",
+    write_back_path: Path | None = None,
+) -> dict[str, Any]:
+    visible_result = {key: value for key, value in result.items() if key != "letter"}
+    return {
+        "id": tid,
+        "being": spec["being"],
+        "question": spec["question"],
+        "result": visible_result,
+        "letter_available": bool(result.get("letter")),
+        "write_back": {
+            "status": write_back_status,
+            "path": str(write_back_path) if write_back_path else None,
+        },
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Being test harness (read-only; --write-back sends result cards)")
     ap.add_argument("--list", action="store_true", help="list registered tests")
     ap.add_argument("--run", metavar="ID", help="test id or 'all'")
     ap.add_argument("--write-back", action="store_true", help="write conclusive result cards to the being's inbox")
-    args = ap.parse_args()
+    ap.add_argument("--json", action="store_true", help="emit structured JSON instead of human-readable output")
+    args = ap.parse_args(argv)
 
     if args.list or not args.run:
-        for tid, spec in BEING_TESTS.items():
-            print(f"{tid}  [{spec['being']}]  {spec['question']}")
+        if args.json and not args.run:
+            print(json.dumps({"tests": _registered_tests_payload()}, indent=2, sort_keys=True))
+            return 0
+        if not args.json:
+            for tid, spec in BEING_TESTS.items():
+                print(f"{tid}  [{spec['being']}]  {spec['question']}")
         if not args.run:
-            return
+            return 0
 
     ids = list(BEING_TESTS) if args.run == "all" else [args.run]
+    payload: dict[str, Any] = {
+        "ran_at": _now_iso(),
+        "results": [],
+    }
+    if args.list:
+        payload["tests"] = _registered_tests_payload()
+
     for tid in ids:
         spec = BEING_TESTS.get(tid)
         if not spec:
-            print(f"!! unknown test: {tid}")
+            if args.json:
+                payload["results"].append(
+                    {
+                        "id": tid,
+                        "error": "unknown_test",
+                    }
+                )
+            else:
+                print(f"!! unknown test: {tid}")
             continue
         result = spec["run"]()
+        letter = result.get("letter")
+        write_back_status = "not_requested"
+        write_back_path = None
+        if args.write_back and letter:
+            stamp = int(time.time())
+            out = INBOX[spec["being"]] / f"mike_feedback_{tid}_result_{stamp}.txt"
+            out.write_text(letter)
+            write_back_status = "written"
+            write_back_path = out
+        elif args.write_back:
+            write_back_status = "skipped_no_conclusive_letter"
+        if args.json:
+            payload["results"].append(
+                _result_payload(
+                    tid,
+                    spec,
+                    result,
+                    write_back_status=write_back_status,
+                    write_back_path=write_back_path,
+                )
+            )
+            continue
         print(f"\n=== {tid} [{spec['being']}] ===")
         for k, v in result.items():
             if k == "letter":
                 continue
             print(f"  {k}: {v}")
-        letter = result.get("letter")
-        if args.write_back and letter:
-            stamp = int(time.time())
-            out = INBOX[spec["being"]] / f"mike_feedback_{tid}_result_{stamp}.txt"
-            out.write_text(letter)
-            print(f"  >> wrote result card: {out}")
+        if write_back_status == "written":
+            print(f"  >> wrote result card: {write_back_path}")
         elif args.write_back:
             print("  (no result card written — verdict not conclusive enough)")
 
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

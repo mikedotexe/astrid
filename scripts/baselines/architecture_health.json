@@ -1,15 +1,8 @@
 {
-  "_blessed": "2026-06-15 architecture-drift tranche 2 (handle_action 2215->1587: 3 biggest arms -> handle_perturb/space_hold/native_gesture). handle_perturb(269)+handle_space_hold(226) still long -> tranche 3 internal sub-split (see ARCHITECTURE_DECOMPOSITION_PLAN_2026-06-13.md).",
+  "_blessed": "2026-06-15 decomposition roadmap item 2, Tranche A (action_continuity.rs 18,190->17,304): extracted foundations (paths/persistence/ids) + guards (charter-required + research-budget assessments + decision methods, incl research_budget_guard_assessment_with_base@379) into action_continuity/ submodules. Verbatim moves, behavior-identical (813/0). guards.rs(582)/ids.rs(251)/paths/persistence all <1000 (unflagged). See ARCHITECTURE_DECOMPOSITION_PLAN_2026-06-13.md. | 2026-06-15 S2 typed capability enums grew action_self_knowledge.rs to 1588 (review) — behavior-preserving (JSON byte-identical). | 2026-06-15 steward tooling review: accepted V1 floor for proactive_scan, being_test_harness, shared_substrate_workbench, consequence_memory_workbench, and astrid_shadow response-history growth after documenting split seams in ARCHITECTURE_DECOMPOSITION_PLAN_2026-06-13.md; steward-only/read-only surfaces, runtime_change=none. | 2026-06-16 sensory-fallback snag sweep: proactive_scan.py grew to 3697 while log-error classification was split into helpers; accepted as steward-only observability, with logs still the next split seam.",
   "growth_tolerance_lines": 50,
   "growth_tolerance_ratio": 0.05,
   "large_files": [
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "lines": 18190,
-      "level": "critical",
-      "public_items": 108,
-      "suggestion": "write decomposition plan unless exempt"
-    },
     {
       "path": "capsules/spectral-bridge/src/autonomous.rs",
       "lines": 8620,
@@ -39,13 +32,6 @@
       "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
-      "lines": 4911,
-      "level": "critical",
-      "public_items": 0,
-      "suggestion": "write decomposition plan unless exempt"
-    },
-    {
       "path": "capsules/spectral-bridge/src/llm.rs",
       "lines": 4175,
       "level": "critical",
@@ -60,17 +46,10 @@
       "suggestion": "write decomposition plan unless exempt"
     },
     {
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "lines": 3689,
-      "level": "critical",
-      "public_items": 3,
-      "suggestion": "write decomposition plan unless exempt"
-    },
-    {
       "path": "scripts/proactive_scan.py",
-      "lines": 3233,
+      "lines": 3697,
       "level": "critical",
-      "public_items": 141,
+      "public_items": 153,
       "suggestion": "write decomposition plan unless exempt"
     },
     {
@@ -194,9 +173,9 @@
     },
     {
       "path": "scripts/being_test_harness.py",
-      "lines": 1553,
+      "lines": 2224,
       "level": "review",
-      "public_items": 49,
+      "public_items": 78,
       "suggestion": "add review note or split by ownership"
     },
     {
@@ -212,13 +191,6 @@
       "level": "review",
       "public_items": 3,
       "suggestion": "add review note or split by ownership"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_self_knowledge.rs",
-      "lines": 1499,
-      "level": "watch",
-      "public_items": 2,
-      "suggestion": "watch cohesion before expanding"
     },
     {
       "path": "crates/astrid-openclaw/src/shim.rs",
@@ -355,7 +327,7 @@
     },
     {
       "path": "capsules/spectral-bridge/src/astrid_shadow.rs",
-      "lines": 1042,
+      "lines": 1147,
       "level": "watch",
       "public_items": 8,
       "suggestion": "watch cohesion before expanding"
@@ -387,6 +359,48 @@
       "level": "watch",
       "public_items": 0,
       "suggestion": "watch cohesion before expanding"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "lines": 3902,
+      "level": "critical",
+      "public_items": 3,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "lines": 17304,
+      "level": "critical",
+      "public_items": 100,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "lines": 4911,
+      "level": "critical",
+      "public_items": 0,
+      "suggestion": "write decomposition plan unless exempt"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_self_knowledge.rs",
+      "lines": 1588,
+      "level": "review",
+      "public_items": 2,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "scripts/consequence_memory_workbench.py",
+      "lines": 1815,
+      "level": "review",
+      "public_items": 59,
+      "suggestion": "add review note or split by ownership"
+    },
+    {
+      "path": "scripts/shared_substrate_workbench.py",
+      "lines": 1199,
+      "level": "watch",
+      "public_items": 36,
+      "suggestion": "check facade/API pressure"
     }
   ],
   "long_functions": [
@@ -395,13 +409,6 @@
       "name": "spawn_autonomous_loop",
       "start_line": 3734,
       "lines": 3605,
-      "level": "critical"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "name": "handle_action",
-      "start_line": 318,
-      "lines": 1587,
       "level": "critical"
     },
     {
@@ -461,13 +468,6 @@
       "level": "critical"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "handle_thread_next_action",
-      "start_line": 11629,
-      "lines": 518,
-      "level": "critical"
-    },
-    {
       "path": "capsules/spectral-bridge/src/types.rs",
       "name": "eigenvector_field_view",
       "start_line": 335,
@@ -493,13 +493,6 @@
       "name": "handle_next_action",
       "start_line": 1707,
       "lines": 383,
-      "level": "critical"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "research_budget_guard_assessment_with_base",
-      "start_line": 766,
-      "lines": 379,
       "level": "critical"
     },
     {
@@ -678,13 +671,6 @@
       "level": "critical"
     },
     {
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "name": "handle_perturb",
-      "start_line": 2093,
-      "lines": 269,
-      "level": "critical"
-    },
-    {
       "path": "crates/astrid-cli-mockup/src/ui/views/nexus.rs",
       "name": "render_nexus_entry",
       "start_line": 244,
@@ -699,13 +685,6 @@
       "level": "critical"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "scoped_test_action_continuity_root",
-      "start_line": 58,
-      "lines": 263,
-      "level": "critical"
-    },
-    {
       "path": "capsules/spectral-bridge/src/ws.rs",
       "name": "spawn_sensory_sender",
       "start_line": 1210,
@@ -717,13 +696,6 @@
       "name": "build_evaluation_from_artifacts",
       "start_line": 650,
       "lines": 258,
-      "level": "critical"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "record_next_event",
-      "start_line": 1501,
-      "lines": 256,
       "level": "critical"
     },
     {
@@ -762,13 +734,6 @@
       "level": "critical"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "thread_status",
-      "start_line": 1145,
-      "lines": 241,
-      "level": "critical"
-    },
-    {
       "path": "capsules/spectral-bridge/src/ws.rs",
       "name": "spawn_telemetry_subscriber",
       "start_line": 323,
@@ -797,13 +762,6 @@
       "level": "critical"
     },
     {
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "name": "handle_space_hold",
-      "start_line": 2521,
-      "lines": 226,
-      "level": "critical"
-    },
-    {
       "path": "capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs",
       "name": "latent_stasis_payload",
       "start_line": 1481,
@@ -829,13 +787,6 @@
       "name": "handle_idle_input",
       "start_line": 37,
       "lines": 219,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "prompt_summary",
-      "start_line": 11412,
-      "lines": 217,
       "level": "review"
     },
     {
@@ -881,24 +832,10 @@
       "level": "review"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "thread_projection",
-      "start_line": 8949,
-      "lines": 205,
-      "level": "review"
-    },
-    {
       "path": "crates/astrid-capsule/src/discovery.rs",
       "name": "load_manifest",
       "start_line": 186,
       "lines": 199,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "liveish_pressure_terms",
-      "start_line": 16135,
-      "lines": 198,
       "level": "review"
     },
     {
@@ -941,13 +878,6 @@
       "name": "handle_idle_input",
       "start_line": 533,
       "lines": 192,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "record_research_budget_request_command",
-      "start_line": 3714,
-      "lines": 190,
       "level": "review"
     },
     {
@@ -1011,13 +941,6 @@
       "name": "format_controller_section",
       "start_line": 1300,
       "lines": 183,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "sovereign_loop_status_v1",
-      "start_line": 5103,
-      "lines": 179,
       "level": "review"
     },
     {
@@ -1175,20 +1098,6 @@
       "level": "review"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
-      "name": "research_budget_guard_blocks_without_budget_and_debits_with_budget",
-      "start_line": 2406,
-      "lines": 162,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
-      "name": "read_only_control_intent_cue_projects_examine_before_charter",
-      "start_line": 4406,
-      "lines": 162,
-      "level": "review"
-    },
-    {
       "path": "crates/astrid-cli-mockup/src/ui/views/command.rs",
       "name": "render_table",
       "start_line": 94,
@@ -1200,20 +1109,6 @@
       "name": "seed_episode",
       "start_line": 5,
       "lines": 160,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "experiment_authority_request_command",
-      "start_line": 3075,
-      "lines": 159,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "name": "handle_native_gesture",
-      "start_line": 2362,
-      "lines": 159,
       "level": "review"
     },
     {
@@ -1235,13 +1130,6 @@
       "name": "interpret_fingerprint",
       "start_line": 1540,
       "lines": 158,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
-      "name": "prior_claim_charter_bridge_uses_contract_journal_as_charter_input",
-      "start_line": 4053,
-      "lines": 156,
       "level": "review"
     },
     {
@@ -1277,20 +1165,6 @@
       "name": "parse_action",
       "start_line": 239,
       "lines": 153,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "experiment_loop_review_command",
-      "start_line": 4385,
-      "lines": 152,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "format_experiment_status",
-      "start_line": 11014,
-      "lines": 152,
       "level": "review"
     },
     {
@@ -1336,24 +1210,10 @@
       "level": "review"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
-      "name": "research_budget_accept_latest_scaffold_self_activates_local_budget",
-      "start_line": 2032,
-      "lines": 148,
-      "level": "review"
-    },
-    {
       "path": "crates/astrid-capsule/src/engine/wasm/host/approval.rs",
       "name": "request_approval",
       "start_line": 178,
       "lines": 148,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
-      "name": "decide_parameter_request",
-      "start_line": 2977,
-      "lines": 147,
       "level": "review"
     },
     {
@@ -1382,13 +1242,6 @@
       "name": "derive_astrid_shadow_policy",
       "start_line": 293,
       "lines": 146,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "experiment_advance_command",
-      "start_line": 2930,
-      "lines": 145,
       "level": "review"
     },
     {
@@ -1448,20 +1301,6 @@
       "level": "review"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "write_next_md",
-      "start_line": 8162,
-      "lines": 138,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "motif_allowance_snapshot",
-      "start_line": 10537,
-      "lines": 138,
-      "level": "review"
-    },
-    {
       "path": "capsules/spectral-bridge/src/lambda_edge.rs",
       "name": "classify_lambda_edge",
       "start_line": 116,
@@ -1494,13 +1333,6 @@
       "name": "append_spectral_drift_event",
       "start_line": 52,
       "lines": 136,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "experiment_loop_step_command",
-      "start_line": 4250,
-      "lines": 135,
       "level": "review"
     },
     {
@@ -1595,13 +1427,6 @@
       "level": "review"
     },
     {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "experiment_loop_request_command",
-      "start_line": 4081,
-      "lines": 127,
-      "level": "review"
-    },
-    {
       "path": "capsules/spectral-bridge/src/autonomous/next_action/attractor.rs",
       "name": "handle_refresh_snapshot",
       "start_line": 471,
@@ -1641,13 +1466,6 @@
       "name": "shadow_preflight",
       "start_line": 250,
       "lines": 125,
-      "level": "review"
-    },
-    {
-      "path": "capsules/spectral-bridge/src/action_continuity.rs",
-      "name": "continuity_session_accept_command",
-      "start_line": 6389,
-      "lines": 124,
       "level": "review"
     },
     {
@@ -1746,6 +1564,216 @@
       "name": "build_report",
       "start_line": 429,
       "lines": 120,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "name": "handle_action",
+      "start_line": 318,
+      "lines": 382,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "name": "compute_perturb_features",
+      "start_line": 2754,
+      "lines": 206,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "name": "handle_native_gesture",
+      "start_line": 959,
+      "lines": 159,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/autonomous/next_action/sovereignty.rs",
+      "name": "decide_parameter_request",
+      "start_line": 3190,
+      "lines": 147,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "handle_thread_next_action",
+      "start_line": 10743,
+      "lines": 518,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/guards.rs",
+      "name": "research_budget_guard_assessment_with_base",
+      "start_line": 204,
+      "lines": 379,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "scoped_test_action_continuity_root",
+      "start_line": 64,
+      "lines": 263,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "record_next_event",
+      "start_line": 938,
+      "lines": 256,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "thread_status",
+      "start_line": 582,
+      "lines": 241,
+      "level": "critical"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "prompt_summary",
+      "start_line": 10526,
+      "lines": 217,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "thread_projection",
+      "start_line": 8386,
+      "lines": 205,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "liveish_pressure_terms",
+      "start_line": 15249,
+      "lines": 198,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "record_research_budget_request_command",
+      "start_line": 3151,
+      "lines": 190,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "sovereign_loop_status_v1",
+      "start_line": 4540,
+      "lines": 179,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "name": "research_budget_guard_blocks_without_budget_and_debits_with_budget",
+      "start_line": 2406,
+      "lines": 162,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "name": "read_only_control_intent_cue_projects_examine_before_charter",
+      "start_line": 4406,
+      "lines": 162,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_authority_request_command",
+      "start_line": 2512,
+      "lines": 159,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "name": "prior_claim_charter_bridge_uses_contract_journal_as_charter_input",
+      "start_line": 4053,
+      "lines": 156,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "format_experiment_status",
+      "start_line": 10373,
+      "lines": 153,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_loop_review_command",
+      "start_line": 3822,
+      "lines": 152,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity/tests.rs",
+      "name": "research_budget_accept_latest_scaffold_self_activates_local_budget",
+      "start_line": 2032,
+      "lines": 148,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_advance_command",
+      "start_line": 2367,
+      "lines": 145,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "write_next_md",
+      "start_line": 7599,
+      "lines": 138,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "motif_allowance_snapshot",
+      "start_line": 9896,
+      "lines": 138,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_loop_step_command",
+      "start_line": 3687,
+      "lines": 135,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "experiment_loop_request_command",
+      "start_line": 3518,
+      "lines": 127,
+      "level": "review"
+    },
+    {
+      "path": "capsules/spectral-bridge/src/action_continuity.rs",
+      "name": "continuity_session_accept_command",
+      "start_line": 5826,
+      "lines": 124,
+      "level": "review"
+    },
+    {
+      "path": "scripts/shared_substrate_workbench.py",
+      "name": "build_aperture_loci",
+      "start_line": 482,
+      "lines": 188,
+      "level": "review"
+    },
+    {
+      "path": "scripts/shared_substrate_workbench.py",
+      "name": "test_markdown_and_json_include_required_sections",
+      "start_line": 923,
+      "lines": 146,
+      "level": "review"
+    },
+    {
+      "path": "scripts/consequence_memory_workbench.py",
+      "name": "render_markdown",
+      "start_line": 1126,
+      "lines": 126,
       "level": "review"
     }
   ]

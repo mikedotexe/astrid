@@ -64,6 +64,9 @@ MINIME_JOURNAL = MINIME_REPO / "workspace/journal"
 LIVE_BRIDGE_LOG = Path("/tmp/bridge.log")
 ASTRID_BRIDGE_LOG = LIVE_BRIDGE_LOG
 MINIME_LOGS_DIR = MINIME_REPO / "logs"
+MINIME_RUNTIME_DIR = MINIME_REPO / "workspace/runtime"
+MINIME_CAMERA_STATUS = MINIME_RUNTIME_DIR / "camera_status.json"
+MINIME_SENSORY_SOURCE = MINIME_RUNTIME_DIR / "sensory_source.json"
 
 ASTRID_BRIDGE_DB = ASTRID_REPO / "capsules/spectral-bridge/workspace/bridge.db"
 MINIME_CONDITION_METRICS = MINIME_REPO / "workspace/condition_metrics.json"
@@ -76,6 +79,9 @@ STATE_PATH = Path("/tmp/proactive_scan_state.json")
 # Asks are long-lived stewardship triage state; entry-level dedup (seen/acted) stays
 # ephemeral in STATE_PATH. Steward-only; never surfaced into being prompts.
 ASKS_PATH = Path("/Users/v/other/astrid/workspace/steward_asks.json")
+STEWARD_CONSEQUENCE_CLOSURES = (
+    ASTRID_REPO / "workspace" / "steward_consequence_closures.jsonl"
+)
 CAPACITY_HISTORY = ASTRID_REPO / "workspace/reservoir_capacity_history.jsonl"
 # Being→steward outreach (ASK_STEWARD/TELL_STEWARD) lands in each being's outbox.
 ASTRID_OUTBOX = ASTRID_REPO / "capsules/spectral-bridge/workspace/outbox"
@@ -93,6 +99,7 @@ OUTREACH_ALARM_SECS = 2 * 3600
 # the "systematic muffle audit" continuous. "Processed" items live in subdirs
 # (reviewed/ done/), excluded automatically by the non-recursive glob.
 FEEDBACK_COVERAGE_ALARM_SECS = 3 * 24 * 3600  # a request backlog older than this is STALE
+CONTEXT_OVERFLOW_LABEL_RE = re.compile(r"^=== \[([^\]]+)\] ===\s*$", re.MULTILINE)
 REVIEW_REQUEST_CONSUMER = (
     "steward action required: ground/close if engaged; "
     "reword/withdraw if unengaged (never being follow-up)"
@@ -200,9 +207,23 @@ STUCK_TAIL_BYTES = 2_000_000     # read only the recent log tail (logs reach ~80
 STUCK_WINDOW_HOURS = 3.0          # within the tail, keep only the last N hours — so a
 #                                   just-fixed action stops being flagged once it stops
 #                                   recurring, instead of haunting the byte-tail for ~12 h
-STUCK_IDLE_BASES = frozenset({"REST", "PASS", "SKIP", "NOTICE", "JOURNAL", "WAIT"})
+STUCK_IDLE_BASES = frozenset({
+    "REST",
+    "PASS",
+    "SKIP",
+    "NOTICE",
+    "JOURNAL",
+    "WAIT",
+    "NOTICE_AMBIGUITY",
+    "FISSURE_TRACE",
+    "AMBIGUITY_TRACE",
+})
 _STUCK_ANSI = re.compile(r"\x1b\[[0-9;]*m")
 _STUCK_TS = re.compile(r"(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})")
+_STUCK_DIVERSITY_OVERRIDE = re.compile(
+    r"diversity stagnant-loop override:\s*replacing NEXT\s+"
+    r"([A-Z_][A-Z0-9_]*)\s*(.*?)\s*->\s*([A-Z_][A-Z0-9_]*)",
+)
 # Two kinds of bad outcome, deliberately separated so severity matches actionability:
 #   unknown  = the chosen action wasn't recognized ("Unknown NEXT" / "not wired") —
 #              almost always OUR wiring gap (the DOSSIER dual-map footgun) ⇒ WARNING.
@@ -397,8 +418,27 @@ BENIGN_LOG_ERROR_PATTERNS = [
     re.compile(
         r"WebSocket protocol error: .*Client disconnected:",
         re.IGNORECASE,
-    )
+    ),
+    re.compile(
+        r"WebSocket error: WebSocket protocol error: Connection reset without closing handshake",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"telemetry WebSocket connection ended .*pong_send_error:IO error: Broken pipe",
+        re.IGNORECASE,
+    ),
 ]
+
+CAMERA_STARTUP_FAILURE_RE = re.compile(
+    r"(Failed to start camera|camera failed to properly initialize)",
+    re.IGNORECASE,
+)
+CAMERA_RECOVERY_RE = re.compile(
+    r"(OpenCV camera \d+ started|Sent \d+ frames to GPU server)",
+    re.IGNORECASE,
+)
+LOG_ERROR_RE = re.compile(r"\b(ERROR|FATAL|Traceback|Exception|panic)\b", re.IGNORECASE)
+LOG_STALE_THRESHOLD_SECONDS = 30 * 60  # 30 min
 
 
 # ----------------------------------------------------------------------
@@ -485,6 +525,179 @@ def _is_benign_log_error(line: str) -> bool:
     return any(pattern.search(line) for pattern in BENIGN_LOG_ERROR_PATTERNS)
 
 
+def _load_json_dict(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text())
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _camera_absence_host_fallback_expected() -> bool:
+    camera = _load_json_dict(MINIME_CAMERA_STATUS)
+    sensory = _load_json_dict(MINIME_SENSORY_SOURCE)
+    video = sensory.get("video") if isinstance(sensory.get("video"), dict) else {}
+    return (
+        camera.get("state") == "device_absent"
+        and camera.get("physical_device_present") is False
+        and camera.get("fallback_expected") is True
+        and video.get("source") == "host"
+    )
+
+
+def _expected_absent_camera_startup_error_count(
+    log_name: str, matching_lines: list[tuple[int, str]]
+) -> int:
+    if log_name != "camera-client.log" or not _camera_absence_host_fallback_expected():
+        return 0
+    return sum(
+        1
+        for _, line in matching_lines
+        if CAMERA_STARTUP_FAILURE_RE.search(line)
+    )
+
+
+def _recovered_camera_startup_error_count(
+    log_name: str, lines: list[str], matching_lines: list[tuple[int, str]]
+) -> int:
+    """Count camera startup errors that have a later success marker in the tail."""
+    if log_name != "camera-client.log":
+        return 0
+    last_failure_index = max(
+        (
+            index
+            for index, line in enumerate(lines)
+            if CAMERA_STARTUP_FAILURE_RE.search(line)
+        ),
+        default=-1,
+    )
+    last_recovery_index = max(
+        (
+            index
+            for index, line in enumerate(lines)
+            if CAMERA_RECOVERY_RE.search(line)
+        ),
+        default=-1,
+    )
+    if last_failure_index < 0 or last_recovery_index <= last_failure_index:
+        return 0
+    return sum(
+        1
+        for index, line in matching_lines
+        if index <= last_failure_index and CAMERA_STARTUP_FAILURE_RE.search(line)
+    )
+
+
+def _scan_log_error_file(
+    lf: Path,
+    *,
+    prior_files: dict[str, Any],
+    prior_run_at: float | None,
+    now: float,
+) -> dict[str, Any] | None:
+    try:
+        stat = lf.stat()
+        mtime = stat.st_mtime
+        size = stat.st_size
+    except OSError:
+        return None
+    try:
+        res = subprocess.run(
+            ["tail", "-n", "2000", str(lf)],
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+    except Exception:
+        return None
+
+    log_lines = res.stdout.splitlines()
+    indexed_matching_lines = [
+        (index, line) for index, line in enumerate(log_lines) if LOG_ERROR_RE.search(line)
+    ]
+    matching_lines = [line for _, line in indexed_matching_lines]
+    benign_n = sum(1 for line in matching_lines if _is_benign_log_error(line))
+    expected_absent_n = _expected_absent_camera_startup_error_count(
+        lf.name, indexed_matching_lines
+    )
+    recovered_n = (
+        0
+        if expected_absent_n
+        else _recovered_camera_startup_error_count(lf.name, log_lines, indexed_matching_lines)
+    )
+    n = max(0, len(matching_lines) - benign_n - recovered_n - expected_absent_n)
+    result: dict[str, Any] = {
+        "active_errors": 0,
+        "settled_recent_errors": 0,
+        "stale_errors": 0,
+        "ignored_transient_errors": benign_n,
+        "ignored_recovered_errors": recovered_n,
+        "ignored_expected_absent_camera_errors": expected_absent_n,
+        "active_findings": [],
+        "settled_findings": [],
+        "stale_findings": [],
+        "benign_findings": [],
+        "recovered_findings": [],
+        "file_snapshot": {
+            "errors": n,
+            "raw_errors": len(matching_lines),
+            "ignored_transient_errors": benign_n,
+            "ignored_recovered_errors": recovered_n,
+            "ignored_expected_absent_camera_errors": expected_absent_n,
+            "mtime": mtime,
+            "size": size,
+        },
+    }
+    if benign_n > 0:
+        result["benign_findings"].append(
+            f"{lf.name}: ignored {benign_n} expected websocket disconnect error(s)"
+        )
+    if recovered_n > 0:
+        result["recovered_findings"].append(
+            f"{lf.name}: treated {recovered_n} camera startup error(s) as recovered"
+        )
+    if expected_absent_n > 0:
+        result["recovered_findings"].append(
+            f"{lf.name}: treated {expected_absent_n} camera startup error(s) "
+            "as expected host-sensory fallback while physical camera is absent"
+        )
+    if n == 0:
+        return result
+
+    age_s = now - mtime
+    if age_s > LOG_STALE_THRESHOLD_SECONDS:
+        result["stale_errors"] = n
+        result["stale_findings"].append(
+            f"{lf.name}: {n} historical error(s) (log stale {_fmt_duration(age_s)})"
+        )
+        return result
+
+    previous = prior_files.get(str(lf))
+    unchanged_since_prior = False
+    if isinstance(previous, dict):
+        previous_mtime = previous.get("mtime")
+        unchanged_since_prior = (
+            previous.get("errors") == n
+            and previous.get("size") == size
+            and isinstance(previous_mtime, (int, float))
+            and abs(float(previous_mtime) - mtime) < 1e-6
+        )
+    no_writes_since_prior = bool(prior_run_at is not None and mtime <= prior_run_at)
+    if unchanged_since_prior or no_writes_since_prior:
+        result["settled_recent_errors"] = n
+        result["settled_findings"].append(
+            f"{lf.name}: {n} recent settled error(s) "
+            f"(log age {_fmt_duration(age_s)}, no writes since prior scan)"
+        )
+    else:
+        result["active_errors"] = n
+        result["active_findings"].append(
+            f"{lf.name}: {n} new/current error(s) in last 2000 "
+            f"(log fresh, age {_fmt_duration(age_s)})"
+        )
+    return result
+
+
 def probe_process_health(prior: dict[str, Any]) -> dict[str, Any]:
     """All 10 stack processes alive? Track restart counts vs prior."""
     alive: dict[str, str] = {}  # process_label -> PID-as-string
@@ -561,11 +774,7 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
             "no log files found to scan",
         )
 
-    pattern = re.compile(r"\b(ERROR|FATAL|Traceback|Exception|panic)\b", re.IGNORECASE)
     now = time.time()
-    # A log is "stale" if it hasn't been written to in this window — its
-    # errors are historical and should not be surfaced as current signal.
-    STALE_THRESHOLD_SECONDS = 30 * 60  # 30 min
 
     prior = prior if isinstance(prior, dict) else {}
     prior_files = prior.get("files", {})
@@ -579,84 +788,46 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
     settled_findings: list[str] = []
     stale_findings: list[str] = []
     benign_findings: list[str] = []
+    recovered_findings: list[str] = []
     active_errors = 0
     settled_recent_errors = 0
     stale_errors = 0
     benign_transient_errors = 0
+    recovered_startup_errors = 0
+    expected_absent_camera_errors = 0
     file_snapshots: dict[str, dict[str, Any]] = {}
 
     for lf in log_files:
-        try:
-            stat = lf.stat()
-            mtime = stat.st_mtime
-            size = stat.st_size
-        except OSError:
+        scanned = _scan_log_error_file(
+            lf,
+            prior_files=prior_files,
+            prior_run_at=prior_run_at,
+            now=now,
+        )
+        if scanned is None:
             continue
-        try:
-            res = subprocess.run(
-                ["tail", "-n", "2000", str(lf)],
-                capture_output=True,
-                text=True,
-                timeout=8,
-            )
-        except Exception:
-            continue
-        matching_lines = [
-            line for line in res.stdout.splitlines() if pattern.search(line)
-        ]
-        benign_n = sum(1 for line in matching_lines if _is_benign_log_error(line))
-        n = len(matching_lines) - benign_n
-        benign_transient_errors += benign_n
-        file_snapshots[str(lf)] = {
-            "errors": n,
-            "raw_errors": len(matching_lines),
-            "ignored_transient_errors": benign_n,
-            "mtime": mtime,
-            "size": size,
-        }
-        if benign_n > 0:
-            benign_findings.append(
-                f"{lf.name}: ignored {benign_n} expected websocket disconnect error(s)"
-            )
-        if n == 0:
-            continue
-        age_s = now - mtime
-        if age_s > STALE_THRESHOLD_SECONDS:
-            stale_errors += n
-            stale_findings.append(
-                f"{lf.name}: {n} historical error(s) (log stale {_fmt_duration(age_s)})"
-            )
-            continue
-
-        previous = prior_files.get(str(lf))
-        unchanged_since_prior = False
-        if isinstance(previous, dict):
-            previous_mtime = previous.get("mtime")
-            unchanged_since_prior = (
-                previous.get("errors") == n
-                and previous.get("size") == size
-                and isinstance(previous_mtime, (int, float))
-                and abs(float(previous_mtime) - mtime) < 1e-6
-            )
-        no_writes_since_prior = bool(prior_run_at is not None and mtime <= prior_run_at)
-        if unchanged_since_prior or no_writes_since_prior:
-            settled_recent_errors += n
-            settled_findings.append(
-                f"{lf.name}: {n} recent settled error(s) "
-                f"(log age {_fmt_duration(age_s)}, no writes since prior scan)"
-            )
-        else:
-            active_errors += n
-            active_findings.append(
-                f"{lf.name}: {n} new/current error(s) in last 2000 "
-                f"(log fresh, age {_fmt_duration(age_s)})"
-            )
+        active_errors += int(scanned["active_errors"])
+        settled_recent_errors += int(scanned["settled_recent_errors"])
+        stale_errors += int(scanned["stale_errors"])
+        benign_transient_errors += int(scanned["ignored_transient_errors"])
+        recovered_startup_errors += int(scanned["ignored_recovered_errors"])
+        expected_absent_camera_errors += int(
+            scanned["ignored_expected_absent_camera_errors"]
+        )
+        active_findings.extend(scanned["active_findings"])
+        settled_findings.extend(scanned["settled_findings"])
+        stale_findings.extend(scanned["stale_findings"])
+        benign_findings.extend(scanned["benign_findings"])
+        recovered_findings.extend(scanned["recovered_findings"])
+        file_snapshots[str(lf)] = scanned["file_snapshot"]
 
     snapshot = {
         "active_errors": active_errors,
         "settled_recent_errors": settled_recent_errors,
         "stale_errors": stale_errors,
         "ignored_transient_errors": benign_transient_errors,
+        "ignored_recovered_errors": recovered_startup_errors,
+        "ignored_expected_absent_camera_errors": expected_absent_camera_errors,
         "files": file_snapshots,
     }
 
@@ -680,14 +851,29 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
         severity = "ok"
         summary = (
             f"no current errors — {stale_errors} historical error(s) in stale log(s) "
-            f"({len(stale_findings)} file(s) untouched >{STALE_THRESHOLD_SECONDS // 60}m)"
+            f"({len(stale_findings)} file(s) untouched >{LOG_STALE_THRESHOLD_SECONDS // 60}m)"
         )
-    elif benign_transient_errors > 0:
+    elif (
+        benign_transient_errors > 0
+        or recovered_startup_errors > 0
+        or expected_absent_camera_errors > 0
+    ):
         severity = "ok"
-        summary = (
-            f"clean — 0 actionable errors; ignored {benign_transient_errors} "
-            "expected transient websocket disconnect(s)"
-        )
+        ignored_parts = []
+        if benign_transient_errors > 0:
+            ignored_parts.append(
+                f"ignored {benign_transient_errors} expected transient websocket disconnect(s)"
+            )
+        if recovered_startup_errors > 0:
+            ignored_parts.append(
+                f"treated {recovered_startup_errors} recovered startup error(s) as settled"
+            )
+        if expected_absent_camera_errors > 0:
+            ignored_parts.append(
+                f"treated {expected_absent_camera_errors} camera startup error(s) "
+                "as expected host fallback"
+            )
+        summary = f"clean — 0 actionable errors; {'; '.join(ignored_parts)}"
     else:
         severity = "ok"
         summary = f"clean — 0 errors across {len(log_files)} log file(s)"
@@ -696,8 +882,20 @@ def probe_log_error_rate(prior: dict[str, Any]) -> dict[str, Any]:
         "log_error_rate",
         severity,
         summary,
-        details=(active_findings + settled_findings + stale_findings + benign_findings)
-        if (active_findings or settled_findings or stale_findings or benign_findings)
+        details=(
+            active_findings
+            + settled_findings
+            + stale_findings
+            + benign_findings
+            + recovered_findings
+        )
+        if (
+            active_findings
+            or settled_findings
+            or stale_findings
+            or benign_findings
+            or recovered_findings
+        )
         else None,
         snapshot=snapshot,
     )
@@ -1676,7 +1874,77 @@ def _scan_feedback_surface(spec: dict[str, Any]) -> dict[str, Any]:
             continue
     res["pending"] = len(ages)
     res["oldest_age_s"] = max(ages) if ages else 0.0
+    if spec.get("name") == "astrid_context_overflow":
+        res["context_overflow_labels"] = _classify_context_overflow_files(files)
     return res
+
+
+def _classify_context_overflow_files(files: list[Path]) -> dict[str, Any]:
+    """Read-only section-label classifier for Astrid context overflow spill files."""
+    label_counts: Counter[str] = Counter()
+    label_ages: dict[str, list[float]] = defaultdict(list)
+    now = time.time()
+    sampled = 0
+    def _mtime(path: Path) -> float:
+        try:
+            return path.stat().st_mtime
+        except Exception:
+            return 0.0
+
+    for path in sorted(files, key=_mtime, reverse=True):
+        try:
+            text = path.read_text(errors="ignore")
+            age_s = max(0.0, now - path.stat().st_mtime)
+        except Exception:
+            continue
+        sampled += 1
+        labels = [m.group(1).strip().lower() for m in CONTEXT_OVERFLOW_LABEL_RE.finditer(text)]
+        if not labels:
+            labels = ["unlabeled"]
+        for label in labels:
+            label_counts[label] += 1
+            label_ages[label].append(age_s)
+    top_labels = []
+    for label, count in label_counts.most_common(5):
+        ages = label_ages.get(label, [])
+        top_labels.append({
+            "label": label,
+            "count": count,
+            "newest_age_s": min(ages) if ages else 0.0,
+            "oldest_age_s": max(ages) if ages else 0.0,
+        })
+    recommended_next = _context_overflow_recommended_next(top_labels)
+    return {
+        "schema_version": 1,
+        "sampled_files": sampled,
+        "label_counts": dict(label_counts),
+        "top_labels": top_labels,
+        "recommended_next": recommended_next,
+        "severity_policy": "notice_only",
+    }
+
+
+def _context_overflow_recommended_next(top_labels: list[dict[str, Any]]) -> str:
+    if not top_labels:
+        return "none"
+    label_actions = {
+        "diversity": "inspect diversity-context packing and stagnant-loop override text",
+        "modality": "inspect modality-context packing before adding new sensory prose",
+        "perception": "inspect perception-context packing and duplicate readout blocks",
+        "review": "inspect review-context packing and close/defer stale steward loops",
+        "system": "inspect system-context packing for repeated static instructions",
+    }
+    actions: list[str] = []
+    for item in top_labels[:3]:
+        if not isinstance(item, dict):
+            continue
+        label = str(item.get("label") or "").strip().lower()
+        if not label:
+            continue
+        actions.append(label_actions.get(label, f"inspect {label}-context packing"))
+    if not actions:
+        return "none"
+    return "; ".join(actions)
 
 
 def _assess_coverage(surfaces: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1700,7 +1968,20 @@ def _assess_coverage(surfaces: list[dict[str, Any]]) -> dict[str, Any]:
             )
             (alarms if stale else notices).append(s)
         else:  # notice-kind surface: report, never alarm
-            details.append(f"{s['name']}: {s['pending']} present ({s['consumer']})")
+            label_summary = ""
+            labels = s.get("context_overflow_labels")
+            if isinstance(labels, dict) and labels.get("top_labels"):
+                top = ", ".join(
+                    f"{item['label']}={item['count']}"
+                    for item in labels["top_labels"][:3]
+                    if isinstance(item, dict)
+                )
+                if top:
+                    label_summary = f"; top labels: {top}"
+                recommended = str(labels.get("recommended_next") or "").strip()
+                if recommended and recommended != "none":
+                    label_summary += f"; steward next: {recommended}"
+            details.append(f"{s['name']}: {s['pending']} present ({s['consumer']}){label_summary}")
             notices.append(s)
     if alarms:
         names = ", ".join(f"{s['name']}({s['pending']})" for s in alarms)
@@ -1824,9 +2105,13 @@ def _tally_stuck(being: dict[str, Any]) -> dict[str, Any]:
     chosen: Counter = Counter()
     unknown: Counter = Counter()
     blocked: Counter = Counter()
+    overridden: Counter = Counter()
     args: dict[str, list[str]] = defaultdict(list)
+    override_args: dict[str, list[str]] = defaultdict(list)
+    choice_events: dict[str, list[dict[str, Any]]] = defaultdict(list)
     empty = {"name": being["name"], "log_ok": False, "chosen": chosen,
-             "unknown": unknown, "blocked": blocked, "args": args}
+             "unknown": unknown, "blocked": blocked, "overridden": overridden,
+             "args": args, "override_args": override_args, "choice_events": choice_events}
     if not text:
         return empty
     rows: list[tuple[str, float | None]] = []
@@ -1840,13 +2125,27 @@ def _tally_stuck(being: dict[str, Any]) -> dict[str, Any]:
     cutoff = (latest - STUCK_WINDOW_HOURS * 3600) if latest is not None else None
     re_unknown = being.get("unknown")
     re_blocked = being.get("blocked")
-    for line, e in rows:
+    for order, (line, e) in enumerate(rows):
         if cutoff is not None and e is not None and e < cutoff:
             continue
         mc = being["choice"].search(line)
         if mc:
-            chosen[mc.group(1)] += 1
-            args[mc.group(1)].append((mc.group(2) or "").strip().lower()[:60])
+            base = mc.group(1).upper()
+            raw_arg = (mc.group(2) or "").strip()
+            norm_arg = raw_arg.lower()[:120]
+            chosen[base] += 1
+            args[base].append(norm_arg[:60])
+            choice_events[base].append({
+                "arg": norm_arg,
+                "raw_arg": raw_arg[:200],
+                "ts": e,
+                "order": order,
+            })
+        mo = _STUCK_DIVERSITY_OVERRIDE.search(line)
+        if mo:
+            base = mo.group(1).upper()
+            overridden[base] += 1
+            override_args[base].append((mo.group(2) or "").strip().lower()[:60])
         if re_unknown is not None:
             mu = re_unknown.search(line)
             if mu:
@@ -1856,7 +2155,8 @@ def _tally_stuck(being: dict[str, Any]) -> dict[str, Any]:
             if mb:
                 blocked[mb.group(1).upper()] += 1
     return {"name": being["name"], "log_ok": True, "chosen": chosen,
-            "unknown": unknown, "blocked": blocked, "args": args}
+            "unknown": unknown, "blocked": blocked, "overridden": overridden,
+            "args": args, "override_args": override_args, "choice_events": choice_events}
 
 
 def _assess_stuck(tally: dict[str, Any]) -> tuple[list[Any], list[Any]]:
@@ -1881,12 +2181,216 @@ def _assess_stuck(tally: dict[str, Any]) -> tuple[list[Any], list[Any]]:
             else:
                 notices.append((base, n, n_bad, "guard"))
             continue
+        overridden = tally.get("overridden", Counter()).get(base, 0)
+        honored_n = max(0, n - overridden)
         real_args = [a for a in tally["args"].get(base, []) if a]
-        if len(real_args) >= STUCK_REPEAT_MIN:
+        for overridden_arg in tally.get("override_args", {}).get(base, []):
+            if overridden_arg in real_args:
+                real_args.remove(overridden_arg)
+        if honored_n >= STUCK_REPEAT_MIN and len(real_args) >= STUCK_REPEAT_MIN:
             distinct = len(set(real_args))
             if distinct / len(real_args) <= STUCK_IDENTICAL_ARG_RATIO:
-                notices.append((base, n, distinct, "identical-arg"))
+                notices.append((base, honored_n, distinct, "identical-arg"))
     return warnings, notices
+
+
+def _stuck_arg_key(arg: str) -> str:
+    return str(arg or "").strip().lower().split()[0] if str(arg or "").strip() else ""
+
+
+def _event_after(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    a_ts = a.get("ts")
+    b_ts = b.get("ts")
+    if isinstance(a_ts, (int, float)) and isinstance(b_ts, (int, float)):
+        return float(a_ts) > float(b_ts)
+    return int(a.get("order") or 0) > int(b.get("order") or 0)
+
+
+def _minime_resume_recovery_from_next_md(exp_id: str, latest_resume: dict[str, Any]) -> dict[str, Any] | None:
+    root = MINIME_REPO / "workspace/action_threads/threads"
+    if not root.is_dir():
+        return None
+    review = f"current next: experiment_review {exp_id}"
+    resume = f"experiment_resume {exp_id}"
+    try:
+        candidates = list(root.glob("*/next.md"))
+    except Exception:
+        return None
+    for path in candidates:
+        try:
+            text = path.read_text(errors="ignore").lower()
+            mtime = path.stat().st_mtime
+        except Exception:
+            continue
+        latest_ts = latest_resume.get("ts")
+        if isinstance(latest_ts, (int, float)) and mtime < float(latest_ts):
+            continue
+        if review not in text or resume not in text:
+            continue
+        if not (
+            "resume loop repair next:" in text
+            or "previous resume next:" in text
+            or "repeated resume is context" in text
+        ):
+            continue
+        return {
+            "source": "next_md_projection",
+            "path": str(path),
+            "mtime": mtime,
+        }
+    return None
+
+
+def _minime_review_recovery_from_next_md(exp_id: str, latest_review: dict[str, Any]) -> dict[str, Any] | None:
+    root = MINIME_REPO / "workspace/action_threads/threads"
+    if not root.is_dir():
+        return None
+    audit = "current next: regulator_audit current-fill_pressure"
+    try:
+        candidates = list(root.glob("*/next.md"))
+    except Exception:
+        return None
+    for path in candidates:
+        try:
+            text = path.read_text(errors="ignore").lower()
+            mtime = path.stat().st_mtime
+        except Exception:
+            continue
+        latest_ts = latest_review.get("ts")
+        if isinstance(latest_ts, (int, float)) and mtime < float(latest_ts):
+            continue
+        if audit not in text or str(exp_id).lower() not in text:
+            continue
+        if not (
+            "already reviewed repeatedly" in text
+            or "review-loop" in text
+            or "read-only regulator audit before another review" in text
+        ):
+            continue
+        return {
+            "source": "next_md_projection",
+            "path": str(path),
+            "mtime": mtime,
+            "projected_next": "REGULATOR_AUDIT current-fill_pressure",
+        }
+    return None
+
+
+def _astrid_peer_resume_recovery(exp_id: str) -> dict[str, Any] | None:
+    if not str(exp_id or "").startswith("exp_minime_"):
+        return None
+    return {
+        "source": "peer_experiment_boundary",
+        "peer": "minime",
+        "status": "peer_reference_guarded",
+        "note": "exp_minime_* references are advisory in Astrid; local resume is not executed.",
+    }
+
+
+def _recover_stuck_notices(
+    being: dict[str, Any],
+    tally: dict[str, Any],
+    notices: list[Any],
+) -> tuple[list[Any], list[dict[str, Any]]]:
+    """Move no-longer-live repetition notices into steward-visible recovery evidence."""
+    being_name = being.get("name")
+    if being_name not in {"minime", "astrid"}:
+        return notices, []
+    remaining: list[Any] = []
+    recovered: list[dict[str, Any]] = []
+    events = tally.get("choice_events") or {}
+    resume_events = events.get("EXPERIMENT_RESUME") or []
+    review_events = events.get("EXPERIMENT_REVIEW") or []
+    for notice in notices:
+        base, n, dnum, kind = notice
+        if base not in {"EXPERIMENT_RESUME", "EXPERIMENT_REVIEW"} or kind != "identical-arg":
+            remaining.append(notice)
+            continue
+        arg_counts = Counter(_stuck_arg_key(a) for a in tally.get("args", {}).get(base, []) if a)
+        exp_id = ""
+        for candidate, count in arg_counts.most_common():
+            if candidate and count >= STUCK_REPEAT_MIN:
+                exp_id = candidate
+                break
+        if not exp_id:
+            remaining.append(notice)
+            continue
+        if being_name == "astrid":
+            if base != "EXPERIMENT_RESUME":
+                remaining.append(notice)
+                continue
+            evidence = _astrid_peer_resume_recovery(exp_id)
+            if evidence is None:
+                remaining.append(notice)
+                continue
+            recovered.append({
+                "being": "astrid",
+                "base": base,
+                "arg": exp_id,
+                "chosen_n": n,
+                "distinct_args": dnum,
+                "status": "peer_reference_guarded",
+                "evidence": evidence,
+                "detail": "peer-owned resume reference guarded; aging out of log window",
+            })
+            continue
+        if base == "EXPERIMENT_REVIEW":
+            matching_reviews = [ev for ev in review_events if _stuck_arg_key(ev.get("arg", "")) == exp_id]
+            if not matching_reviews:
+                remaining.append(notice)
+                continue
+            latest_review = max(
+                matching_reviews,
+                key=lambda ev: (float(ev.get("ts") or 0.0), int(ev.get("order") or 0)),
+            )
+            evidence = _minime_review_recovery_from_next_md(exp_id, latest_review)
+            if evidence is None:
+                remaining.append(notice)
+                continue
+            recovered.append({
+                "being": "minime",
+                "base": base,
+                "arg": exp_id,
+                "chosen_n": n,
+                "distinct_args": dnum,
+                "status": "recently_repaired",
+                "evidence": evidence,
+                "detail": "recently repaired to read-only regulator audit; aging out of log window",
+            })
+            continue
+        matching_resumes = [ev for ev in resume_events if _stuck_arg_key(ev.get("arg", "")) == exp_id]
+        if not matching_resumes:
+            remaining.append(notice)
+            continue
+        latest_resume = max(
+            matching_resumes,
+            key=lambda ev: (float(ev.get("ts") or 0.0), int(ev.get("order") or 0)),
+        )
+        evidence = None
+        for ev in review_events:
+            if _stuck_arg_key(ev.get("arg", "")) == exp_id and _event_after(ev, latest_resume):
+                evidence = {
+                    "source": "later_experiment_review_choice",
+                    "ts": ev.get("ts"),
+                    "order": ev.get("order"),
+                }
+                break
+        if evidence is None:
+            evidence = _minime_resume_recovery_from_next_md(exp_id, latest_resume)
+        if evidence is None:
+            remaining.append(notice)
+            continue
+        recovered.append({
+            "being": "minime",
+            "base": base,
+            "arg": exp_id,
+            "chosen_n": n,
+            "distinct_args": dnum,
+            "status": "recently_repaired",
+            "evidence": evidence,
+            "detail": "recently repaired; aging out of log window",
+        })
+    return remaining, recovered
 
 
 def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
@@ -1903,6 +2407,7 @@ def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
     warn: list[str] = []
     note: list[str] = []
     details: list[str] = []
+    recovered_repetition: list[dict[str, Any]] = []
     any_log = False
     for being in STUCK_BEINGS:
         tally = _tally_stuck(being)
@@ -1910,6 +2415,8 @@ def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
             continue
         any_log = True
         w, nt = _assess_stuck(tally)
+        nt, recovered = _recover_stuck_notices(being, tally, nt)
+        recovered_repetition.extend(recovered)
         for base, n, nbad, _kind in w:
             warn.append(f"{being['name']}:{base}")
             details.append(
@@ -1930,6 +2437,12 @@ def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
                     f"{being['name']}:{base} honored {n}× with ~identical arg "
                     f"({dnum} distinct) — possible no-progress; glance."
                 )
+        for item in recovered:
+            details.append(
+                f"{item['being']}:{item['base']} {item['arg']} "
+                f"{item.get('detail') or 'recently repaired; aging out of log window'}."
+            )
+    snapshot = {"recovered_repetition": recovered_repetition} if recovered_repetition else None
     if not any_log:
         return _finding("stuck_repetition", "notice", "no being logs readable for stuck-repetition scan", None)
     if warn:
@@ -1938,6 +2451,7 @@ def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
             f"⚠ {len(warn)} action(s) repeated + unrecognized — likely a wiring gap our infra should fix: "
             + ", ".join(warn),
             details,
+            snapshot,
         )
     if note:
         return _finding(
@@ -1945,6 +2459,15 @@ def probe_stuck_repetition(_prior: dict[str, Any]) -> dict[str, Any]:
             f"{len(note)} action(s) repeated-but-stuck (deliberate gate or no-progress; glance): "
             + ", ".join(note),
             details,
+            snapshot,
+        )
+    if recovered_repetition:
+        return _finding(
+            "stuck_repetition",
+            "ok",
+            f"no stuck-repetition ({len(recovered_repetition)} recently repaired, aging out of log window)",
+            details,
+            snapshot,
         )
     return _finding("stuck_repetition", "ok", "no stuck-repetition (no being hammering an ineffective action)", None)
 
@@ -1966,6 +2489,48 @@ AUTHORITY_LEDGER_ROOTS = [
 ]
 
 
+def _load_authority_pileup_closures() -> dict[str, dict[str, Any]]:
+    closures: dict[str, dict[str, Any]] = {}
+    try:
+        lines = STEWARD_CONSEQUENCE_CLOSURES.read_text(errors="ignore").splitlines()
+    except OSError:
+        return closures
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if row.get("record_schema") != "steward_consequence_closure_v1":
+            continue
+        if row.get("surface") != "authority_request_draft_pileup":
+            continue
+        if row.get("decision") not in {"deferred_no_grant", "steward_deferred", "steward_closed"}:
+            continue
+        thread_id = str(row.get("thread_id") or "").strip()
+        if not thread_id:
+            continue
+        previous = closures.get(thread_id)
+        if previous is None or str(row.get("reviewed_at") or "") >= str(previous.get("reviewed_at") or ""):
+            closures[thread_id] = row
+    return closures
+
+
+def _authority_pileup_review_for_thread(thread_id: str, drafts: int) -> dict[str, Any] | None:
+    closure = _load_authority_pileup_closures().get(thread_id)
+    if not closure:
+        return None
+    try:
+        covered = int(closure.get("covered_request_drafts") or -1)
+    except (TypeError, ValueError):
+        covered = -1
+    if covered < drafts:
+        return None
+    return closure
+
+
 def _scan_authority_ledger(path: Path) -> dict[str, Any]:
     """Parse one authority_gate.jsonl: submitted-pending steward-gated requests
     lacking a matching steward_approval (the muffle), microdose request_drafts that
@@ -1979,6 +2544,7 @@ def _scan_authority_ledger(path: Path) -> dict[str, Any]:
     granted: set[str] = set()
     drafts = 0
     draft_scopes: Counter = Counter()
+    latest_draft_request_id = ""
     web_pending: dict[str, str] = {}  # research_budget request record_id -> budget_id (operator-gated)
     research_approved: set[str] = set()  # source_request_record_ids that got a research approval
     research_approved_budgets: set[str] = set()  # budget_ids that got a research approval
@@ -2003,6 +2569,7 @@ def _scan_authority_ledger(path: Path) -> dict[str, Any]:
         elif rt == "request_draft" and scope in STEWARD_GATED_SCOPES:
             drafts += 1
             draft_scopes[scope] += 1
+            latest_draft_request_id = str(rec.get("request_id") or rec.get("record_id") or latest_draft_request_id)
         elif status == "pending_steward_approval" and scope in STEWARD_GATED_SCOPES and rid:
             pending[rid] = scope
         elif rt == "research_budget_request" and rec.get("steward_approval_required") \
@@ -2025,15 +2592,25 @@ def _scan_authority_ledger(path: Path) -> dict[str, Any]:
         if bid and bid in research_approved_budgets:
             continue
         web_unanswered.add(rid)
+    pileup_review = _authority_pileup_review_for_thread(path.parent.name, drafts)
     return {
         "exists": True,
         "thread": path.parent.name[:46],
+        "thread_id": path.parent.name,
         "pending_unanswered": len(unanswered),
         "pending_scopes": sorted(set(unanswered.values())),
         "drafts": drafts,
         "top_draft_scope": (draft_scopes.most_common(1)[0][0] if draft_scopes else None),
+        "latest_draft_request_id": latest_draft_request_id,
         "grants": len(granted),
         "web_research_pending": len(web_unanswered),
+        "draft_pileup_reviewed": pileup_review is not None,
+        "draft_pileup_review": {
+            "closure_id": pileup_review.get("closure_id"),
+            "decision": pileup_review.get("decision"),
+            "reviewed_at": pileup_review.get("reviewed_at"),
+            "covered_request_drafts": pileup_review.get("covered_request_drafts"),
+        } if pileup_review else None,
     }
 
 
@@ -2047,7 +2624,12 @@ def _assess_authority(ledgers: list[dict[str, Any]]) -> dict[str, Any]:
     drafts = sum(led["drafts"] for led in live)
     grants = sum(led["grants"] for led in live)
     web_pending = sum(led.get("web_research_pending", 0) for led in live)
-    stuck = [led for led in live if led["drafts"] >= AUTHORITY_DRAFT_NOTICE and led["grants"] == 0]
+    stuck = [
+        led for led in live
+        if led["drafts"] >= AUTHORITY_DRAFT_NOTICE
+        and led["grants"] == 0
+        and not led.get("draft_pileup_reviewed")
+    ]
     web_note = (
         f"{web_pending} research-budget request(s) pending steward/operator approval "
         "— surface to Mike (research-budget grants are an operator/consent decision, "
@@ -2087,6 +2669,10 @@ def _assess_authority(ledgers: list[dict[str, Any]]) -> dict[str, Any]:
         + f", drafts={led['drafts']}"
         + (f" ({led['top_draft_scope']})" if led["top_draft_scope"] else "")
         + f", grants={led['grants']}"
+        + (
+            f", steward_reviewed={led['draft_pileup_review']['decision']}"
+            if led.get("draft_pileup_review") else ""
+        )
         + (f", web_research_pending={led['web_research_pending']}" if led.get("web_research_pending") else "")
         for led in live
         if led["pending_unanswered"] or led["drafts"] or led.get("web_research_pending")
@@ -2557,9 +3143,11 @@ class ChannelIntegrityTests(unittest.TestCase):
 
 class StuckRepetitionTests(unittest.TestCase):
     @staticmethod
-    def _tally(chosen, unknown=None, blocked=None, args=None):
+    def _tally(chosen, unknown=None, blocked=None, args=None, choice_events=None):
         return {"chosen": Counter(chosen), "unknown": Counter(unknown or {}),
-                "blocked": Counter(blocked or {}), "args": args or {}}
+                "blocked": Counter(blocked or {}), "overridden": Counter(),
+                "args": args or {}, "override_args": {},
+                "choice_events": choice_events or {}}
 
     def test_unknown_repetition_is_warning(self) -> None:
         # DOSSIER-shape: chosen 8, unrecognized 8 → likely a wiring gap → WARNING
@@ -2594,8 +3182,31 @@ class StuckRepetitionTests(unittest.TestCase):
         self.assertTrue(any(b == "EXPERIMENT_ADVANCE" and k == "identical-arg"
                             for b, _n, _d, k in note))
 
+    def test_diversity_overridden_repeats_are_not_counted_as_honored(self) -> None:
+        # Astrid can repeatedly choose a target and have the diversity guard replace
+        # it before dispatch. That is a real steward signal, but not an honored
+        # no-progress action.
+        t = self._tally(
+            {"INTROSPECT": 7},
+            args={"INTROSPECT": ["astrid:llm"] * 5 + ["", ""]},
+        )
+        t["overridden"] = Counter({"INTROSPECT": 5})
+        t["override_args"] = {"INTROSPECT": ["astrid:llm"] * 5}
+        warn, note = _assess_stuck(t)
+        self.assertEqual(warn, [])
+        self.assertEqual(note, [])
+
     def test_intentional_idle_ignored(self) -> None:
         t = self._tally({"REST": 9}, args={"REST": [""] * 9})
+        warn, note = _assess_stuck(t)
+        self.assertEqual(warn, [])
+        self.assertEqual(note, [])
+
+    def test_reflective_ambiguity_trace_ignored(self) -> None:
+        t = self._tally(
+            {"NOTICE_AMBIGUITY": 9},
+            args={"NOTICE_AMBIGUITY": ["shared-sight"] * 9},
+        )
         warn, note = _assess_stuck(t)
         self.assertEqual(warn, [])
         self.assertEqual(note, [])
@@ -2605,6 +3216,120 @@ class StuckRepetitionTests(unittest.TestCase):
                         args={"DOSSIER_CLAIM": ["x", "x"]})
         warn, note = _assess_stuck(t)
         self.assertEqual(warn, [])
+        self.assertEqual(note, [])
+
+    def test_recovered_experiment_resume_is_not_notice(self) -> None:
+        exp_id = "exp_minime_recovered"
+        t = self._tally(
+            {"EXPERIMENT_RESUME": 5, "EXPERIMENT_REVIEW": 1},
+            args={"EXPERIMENT_RESUME": [exp_id] * 5, "EXPERIMENT_REVIEW": [exp_id]},
+            choice_events={
+                "EXPERIMENT_RESUME": [
+                    {"arg": exp_id, "ts": float(i), "order": i}
+                    for i in range(1, 6)
+                ],
+                "EXPERIMENT_REVIEW": [{"arg": exp_id, "ts": 10.0, "order": 10}],
+            },
+        )
+        warn, note = _assess_stuck(t)
+        self.assertEqual(warn, [])
+        self.assertTrue(note)
+        remaining, recovered = _recover_stuck_notices({"name": "minime"}, t, note)
+        self.assertEqual(remaining, [])
+        self.assertEqual(recovered[0]["status"], "recently_repaired")
+
+    def test_unrepaired_experiment_resume_stays_notice(self) -> None:
+        exp_id = "exp_minime_unrepaired"
+        t = self._tally(
+            {"EXPERIMENT_RESUME": 5},
+            args={"EXPERIMENT_RESUME": [exp_id] * 5},
+            choice_events={
+                "EXPERIMENT_RESUME": [
+                    {"arg": exp_id, "ts": float(i), "order": i}
+                    for i in range(1, 6)
+                ],
+            },
+        )
+        _warn, note = _assess_stuck(t)
+        remaining, recovered = _recover_stuck_notices({"name": "minime"}, t, note)
+        self.assertEqual(recovered, [])
+        self.assertEqual(remaining, note)
+
+    def test_astrid_peer_experiment_resume_is_guarded_recovery(self) -> None:
+        exp_id = "exp_minime_20260614_legacy-self-experiment"
+        t = self._tally(
+            {"EXPERIMENT_RESUME": 7},
+            args={"EXPERIMENT_RESUME": [exp_id] * 7},
+            choice_events={
+                "EXPERIMENT_RESUME": [
+                    {"arg": exp_id, "ts": float(i), "order": i}
+                    for i in range(1, 8)
+                ],
+            },
+        )
+        _warn, note = _assess_stuck(t)
+        remaining, recovered = _recover_stuck_notices({"name": "astrid"}, t, note)
+        self.assertEqual(remaining, [])
+        self.assertEqual(recovered[0]["status"], "peer_reference_guarded")
+        self.assertEqual(recovered[0]["evidence"]["peer"], "minime")
+
+    def test_recovered_experiment_review_uses_next_md_audit_projection(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        global MINIME_REPO
+        old_repo = MINIME_REPO
+        exp_id = "exp_minime_review_repaired"
+        try:
+            with TemporaryDirectory() as tmpdir:
+                MINIME_REPO = Path(tmpdir)
+                thread_dir = MINIME_REPO / "workspace/action_threads/threads/th_test"
+                thread_dir.mkdir(parents=True)
+                (thread_dir / "next.md").write_text(
+                    "\n".join([
+                        "# test",
+                        "Current NEXT: REGULATOR_AUDIT current-fill_pressure",
+                        f"Previous review NEXT: EXPERIMENT_REVIEW {exp_id}",
+                        "Paused experiment already reviewed repeatedly; current repair guidance is a read-only regulator audit before another review.",
+                    ])
+                )
+                t = self._tally(
+                    {"EXPERIMENT_REVIEW": 5},
+                    args={"EXPERIMENT_REVIEW": [exp_id] * 5},
+                    choice_events={
+                        "EXPERIMENT_REVIEW": [
+                            {"arg": exp_id, "ts": float(i), "order": i}
+                            for i in range(1, 6)
+                        ],
+                    },
+                )
+                _warn, note = _assess_stuck(t)
+                remaining, recovered = _recover_stuck_notices({"name": "minime"}, t, note)
+        finally:
+            MINIME_REPO = old_repo
+        self.assertEqual(remaining, [])
+        self.assertEqual(recovered[0]["status"], "recently_repaired")
+        self.assertEqual(
+            recovered[0]["evidence"]["projected_next"],
+            "REGULATOR_AUDIT current-fill_pressure",
+        )
+
+    def test_post_repair_recurrence_stays_notice(self) -> None:
+        exp_id = "exp_minime_recurred"
+        t = self._tally(
+            {"EXPERIMENT_RESUME": 5, "EXPERIMENT_REVIEW": 1},
+            args={"EXPERIMENT_RESUME": [exp_id] * 5, "EXPERIMENT_REVIEW": [exp_id]},
+            choice_events={
+                "EXPERIMENT_REVIEW": [{"arg": exp_id, "ts": 3.0, "order": 3}],
+                "EXPERIMENT_RESUME": [
+                    {"arg": exp_id, "ts": float(i), "order": i}
+                    for i in [1, 2, 4, 5, 6]
+                ],
+            },
+        )
+        _warn, note = _assess_stuck(t)
+        remaining, recovered = _recover_stuck_notices({"name": "minime"}, t, note)
+        self.assertEqual(recovered, [])
+        self.assertEqual(remaining, note)
 
 
 class ConvergenceTests(unittest.TestCase):
@@ -2766,6 +3491,8 @@ class ConvergenceTests(unittest.TestCase):
                     "WS recv error: IO error: Connection reset by peer (os error 54)\n"
                     "WS recv error: ❌ Client disconnected: 127.0.0.1:59592\n"
                     "WebSocket protocol error: ❌ Client disconnected: 127.0.0.1:59592\n"
+                    "❌ WebSocket error: WebSocket protocol error: Connection reset without closing handshake\n"
+                    "telemetry WebSocket connection ended reason=pong_send_error:IO error: Broken pipe (os error 32)\n"
                 )
 
                 ASTRID_BRIDGE_LOG = d / "missing-bridge.log"
@@ -2777,8 +3504,162 @@ class ConvergenceTests(unittest.TestCase):
 
         self.assertEqual(finding["severity"], "ok")
         self.assertEqual(finding["snapshot"]["active_errors"], 0)
-        self.assertEqual(finding["snapshot"]["ignored_transient_errors"], 4)
+        self.assertEqual(finding["snapshot"]["ignored_transient_errors"], 6)
         self.assertIn("0 actionable errors", finding["summary"])
+
+    def test_log_error_rate_downgrades_recovered_camera_startup_errors(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        global ASTRID_BRIDGE_LOG, MINIME_LOGS_DIR
+        old_bridge_log = ASTRID_BRIDGE_LOG
+        old_minime_logs_dir = MINIME_LOGS_DIR
+        try:
+            with TemporaryDirectory() as tmpdir:
+                d = Path(tmpdir)
+                log = d / "camera-client.log"
+                log.write_text(
+                    "ERROR:__main__: Failed to start camera\n"
+                    "ERROR:__main__: Failed to start camera\n"
+                    "INFO:__main__: OpenCV camera 0 started\n"
+                    "INFO:__main__: Sent 30 frames to GPU server\n"
+                )
+
+                ASTRID_BRIDGE_LOG = d / "missing-bridge.log"
+                MINIME_LOGS_DIR = d
+                finding = probe_log_error_rate({})
+        finally:
+            ASTRID_BRIDGE_LOG = old_bridge_log
+            MINIME_LOGS_DIR = old_minime_logs_dir
+
+        self.assertEqual(finding["severity"], "ok")
+        self.assertEqual(finding["snapshot"]["active_errors"], 0)
+        self.assertEqual(finding["snapshot"]["ignored_recovered_errors"], 2)
+        self.assertIn("recovered startup", finding["summary"])
+
+    def test_log_error_rate_surfaces_unrecovered_camera_startup_errors(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        global ASTRID_BRIDGE_LOG, MINIME_LOGS_DIR
+        old_bridge_log = ASTRID_BRIDGE_LOG
+        old_minime_logs_dir = MINIME_LOGS_DIR
+        try:
+            with TemporaryDirectory() as tmpdir:
+                d = Path(tmpdir)
+                log = d / "camera-client.log"
+                log.write_text(
+                    "ERROR:__main__: Failed to start camera\n"
+                    "ERROR:__main__: Failed to start camera\n"
+                )
+
+                ASTRID_BRIDGE_LOG = d / "missing-bridge.log"
+                MINIME_LOGS_DIR = d
+                finding = probe_log_error_rate({})
+        finally:
+            ASTRID_BRIDGE_LOG = old_bridge_log
+            MINIME_LOGS_DIR = old_minime_logs_dir
+
+        self.assertEqual(finding["severity"], "notice")
+        self.assertEqual(finding["snapshot"]["active_errors"], 2)
+        self.assertIn("current error", finding["summary"])
+
+    def test_log_error_rate_downgrades_expected_absent_camera_with_host_fallback(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        global ASTRID_BRIDGE_LOG, MINIME_LOGS_DIR, MINIME_CAMERA_STATUS, MINIME_SENSORY_SOURCE
+        old_bridge_log = ASTRID_BRIDGE_LOG
+        old_minime_logs_dir = MINIME_LOGS_DIR
+        old_camera_status = MINIME_CAMERA_STATUS
+        old_sensory_source = MINIME_SENSORY_SOURCE
+        try:
+            with TemporaryDirectory() as tmpdir:
+                d = Path(tmpdir)
+                log_dir = d / "logs"
+                log_dir.mkdir()
+                log = log_dir / "camera-client.log"
+                log.write_text(
+                    "ERROR:__main__: Failed to start camera\n"
+                    "OpenCV: camera failed to properly initialize!\n"
+                )
+                runtime = d / "runtime"
+                runtime.mkdir()
+                camera_status = runtime / "camera_status.json"
+                camera_status.write_text(
+                    json.dumps(
+                        {
+                            "state": "device_absent",
+                            "physical_device_present": False,
+                            "fallback_expected": True,
+                        }
+                    )
+                )
+                sensory_source = runtime / "sensory_source.json"
+                sensory_source.write_text(
+                    json.dumps({"video": {"source": "host", "physical_healthy": False}})
+                )
+
+                ASTRID_BRIDGE_LOG = d / "missing-bridge.log"
+                MINIME_LOGS_DIR = log_dir
+                MINIME_CAMERA_STATUS = camera_status
+                MINIME_SENSORY_SOURCE = sensory_source
+                finding = probe_log_error_rate({})
+        finally:
+            ASTRID_BRIDGE_LOG = old_bridge_log
+            MINIME_LOGS_DIR = old_minime_logs_dir
+            MINIME_CAMERA_STATUS = old_camera_status
+            MINIME_SENSORY_SOURCE = old_sensory_source
+
+        self.assertEqual(finding["severity"], "ok")
+        self.assertEqual(finding["snapshot"]["active_errors"], 0)
+        self.assertEqual(
+            finding["snapshot"]["ignored_expected_absent_camera_errors"], 1
+        )
+        self.assertIn("expected host fallback", finding["summary"])
+
+    def test_log_error_rate_warns_when_absent_camera_has_no_host_fallback(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        global ASTRID_BRIDGE_LOG, MINIME_LOGS_DIR, MINIME_CAMERA_STATUS, MINIME_SENSORY_SOURCE
+        old_bridge_log = ASTRID_BRIDGE_LOG
+        old_minime_logs_dir = MINIME_LOGS_DIR
+        old_camera_status = MINIME_CAMERA_STATUS
+        old_sensory_source = MINIME_SENSORY_SOURCE
+        try:
+            with TemporaryDirectory() as tmpdir:
+                d = Path(tmpdir)
+                log_dir = d / "logs"
+                log_dir.mkdir()
+                log = log_dir / "camera-client.log"
+                log.write_text("ERROR:__main__: Failed to start camera\n")
+                runtime = d / "runtime"
+                runtime.mkdir()
+                camera_status = runtime / "camera_status.json"
+                camera_status.write_text(
+                    json.dumps(
+                        {
+                            "state": "device_absent",
+                            "physical_device_present": False,
+                            "fallback_expected": True,
+                        }
+                    )
+                )
+                sensory_source = runtime / "sensory_source.json"
+                sensory_source.write_text(
+                    json.dumps({"video": {"source": "physical", "physical_healthy": False}})
+                )
+
+                ASTRID_BRIDGE_LOG = d / "missing-bridge.log"
+                MINIME_LOGS_DIR = log_dir
+                MINIME_CAMERA_STATUS = camera_status
+                MINIME_SENSORY_SOURCE = sensory_source
+                finding = probe_log_error_rate({})
+        finally:
+            ASTRID_BRIDGE_LOG = old_bridge_log
+            MINIME_LOGS_DIR = old_minime_logs_dir
+            MINIME_CAMERA_STATUS = old_camera_status
+            MINIME_SENSORY_SOURCE = old_sensory_source
+
+        self.assertEqual(finding["severity"], "notice")
+        self.assertEqual(finding["snapshot"]["active_errors"], 1)
 
     def test_log_error_rate_surfaces_active_bridge_errors(self) -> None:
         # Regression guard for the structural blind spot: the probe must actually
@@ -2972,6 +3853,49 @@ class FeedbackCoverageTests(unittest.TestCase):
               "pending": 99, "oldest_age_s": FEEDBACK_COVERAGE_ALARM_SECS * 10, "exists": True}]
         self.assertEqual(_assess_coverage(s)["severity"], "notice")
 
+    def test_context_overflow_classifier_counts_section_labels(self):
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as tmpdir:
+            d = Path(tmpdir)
+            first = d / "context_overflow_a.txt"
+            second = d / "context_overflow_b.txt"
+            first.write_text("=== [modality] ===\nA\n=== [perception] ===\nB\n")
+            second.write_text("=== [modality] ===\nC\n")
+
+            summary = _classify_context_overflow_files([first, second])
+
+        self.assertEqual(summary["label_counts"]["modality"], 2)
+        self.assertEqual(summary["label_counts"]["perception"], 1)
+        self.assertEqual(summary["severity_policy"], "notice_only")
+        self.assertIn("modality-context packing", summary["recommended_next"])
+
+    def test_context_overflow_top_labels_are_notice_details(self):
+        labels = {
+            "schema_version": 1,
+            "top_labels": [{"label": "modality", "count": 2}],
+            "recommended_next": "inspect modality-context packing before adding new sensory prose",
+            "severity_policy": "notice_only",
+        }
+        s = [{
+            "name": "astrid_context_overflow",
+            "kind": "notice",
+            "consumer": "c",
+            "pending": 2,
+            "oldest_age_s": FEEDBACK_COVERAGE_ALARM_SECS * 10,
+            "exists": True,
+            "context_overflow_labels": labels,
+        }]
+        assessed = _assess_coverage(s)
+        self.assertEqual(assessed["severity"], "notice")
+        self.assertIn("top labels: modality=2", "\n".join(assessed["details"]))
+        self.assertIn("steward next: inspect modality-context packing", "\n".join(assessed["details"]))
+
+    def test_context_overflow_empty_directory_classifies_empty(self):
+        summary = _classify_context_overflow_files([])
+        self.assertEqual(summary["sampled_files"], 0)
+        self.assertEqual(summary["top_labels"], [])
+
 
 class StatedParamIntentTests(unittest.TestCase):
     def test_parses_numeric_and_regime_footer(self) -> None:
@@ -3063,6 +3987,68 @@ class AuthorityRequestsTests(unittest.TestCase):
         a = _assess_authority(s)
         self.assertEqual(a["severity"], "notice")
         self.assertIn("stuck", a["summary"])
+
+    def test_reviewed_draft_pileup_stays_quiet_until_new_draft(self):
+        import tempfile
+
+        global STEWARD_CONSEQUENCE_CLOSURES
+        old_closures = STEWARD_CONSEQUENCE_CLOSURES
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                tmp_path = Path(tmp)
+                STEWARD_CONSEQUENCE_CLOSURES = tmp_path / "closures.jsonl"
+                thread = tmp_path / "th_reviewed"
+                thread.mkdir()
+                gate = thread / "authority_gate.jsonl"
+                reviewed_rows = [
+                    json.dumps(
+                        {
+                            "record_type": "request_draft",
+                            "scope": "semantic_microdose",
+                            "request_id": f"authreq_{idx}",
+                        }
+                    )
+                    for idx in range(AUTHORITY_DRAFT_NOTICE)
+                ]
+                gate.write_text("\n".join(reviewed_rows) + "\n")
+                STEWARD_CONSEQUENCE_CLOSURES.write_text(
+                    json.dumps(
+                        {
+                            "record_schema": "steward_consequence_closure_v1",
+                            "surface": "authority_request_draft_pileup",
+                            "thread_id": "th_reviewed",
+                            "decision": "deferred_no_grant",
+                            "reviewed_at": "2026-06-15T20:52:12Z",
+                            "covered_request_drafts": AUTHORITY_DRAFT_NOTICE,
+                        }
+                    )
+                    + "\n"
+                )
+
+                reviewed = _scan_authority_ledger(gate)
+                self.assertTrue(reviewed["draft_pileup_reviewed"])
+                self.assertEqual(_assess_authority([reviewed])["severity"], "ok")
+
+                gate.write_text(
+                    "\n".join(
+                        reviewed_rows
+                        + [
+                            json.dumps(
+                                {
+                                    "record_type": "request_draft",
+                                    "scope": "semantic_microdose",
+                                    "request_id": "authreq_new",
+                                }
+                            )
+                        ]
+                    )
+                    + "\n"
+                )
+                reopened = _scan_authority_ledger(gate)
+                self.assertFalse(reopened["draft_pileup_reviewed"])
+                self.assertEqual(_assess_authority([reopened])["severity"], "notice")
+        finally:
+            STEWARD_CONSEQUENCE_CLOSURES = old_closures
 
     def test_scan_matches_grant_to_pending_and_ignores_research_budget(self):
         import tempfile

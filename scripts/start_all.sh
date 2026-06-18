@@ -340,6 +340,9 @@ if [ "$ASTRID_ONLY" = false ]; then
 
     ensure_launchd_label "$MINIME_DIR/launchd/com.minime.autonomous-agent.plist" "autonomous agent"
     EXPECTED_LABELS+=("com.minime.autonomous-agent")
+
+    ensure_launchd_label "$MINIME_DIR/launchd/com.minime.eigen-spectrum-logger.plist" "eigen-spectrum logger"
+    EXPECTED_LABELS+=("com.minime.eigen-spectrum-logger")
     echo ""
 fi
 

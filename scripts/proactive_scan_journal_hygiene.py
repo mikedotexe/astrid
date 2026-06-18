@@ -40,6 +40,77 @@ def _finding(
     }
 
 
+REFLECTIVE_REPEAT_MODES = {
+    "moment_capture",
+    "notice_ambiguity__fissure_trace",
+    "spectral_pressure_journal",
+}
+
+
+def _repeat_key_mode(repeat_key: str) -> str:
+    return str(repeat_key or "").split(":", 1)[0]
+
+
+def _journal_cadence_investigation(report: dict[str, Any]) -> dict[str, Any]:
+    """Classify repeat signals without turning reflection into a target.
+
+    The journal hygiene helper correctly surfaces repeated keys, but the steward
+    needs one more layer: repeated reflective moment->journal doublets are not
+    the same as operational conveyor spam or a missing action consumer.
+    """
+    signals = set(report.get("signals") or [])
+    counts = report.get("counts") if isinstance(report.get("counts"), dict) else {}
+    mode_counts = report.get("mode_counts") if isinstance(report.get("mode_counts"), dict) else {}
+    repeats = list(report.get("recent_repeat_keys") or []) + list(report.get("window_repeat_keys") or [])
+    repeat_modes = sorted(
+        {
+            _repeat_key_mode(str(row.get("repeat_key") or ""))
+            for row in repeats
+            if isinstance(row, dict)
+        }
+    )
+    operational_ratio = float(report.get("operational_ratio") or 0.0)
+    if "machine_detail_present" in signals:
+        classification = "machine_detail_actionable"
+        action = "move machine-contract detail out of reflective journal surfaces"
+    elif "operational_dominance" in signals:
+        classification = "operational_dominance_actionable"
+        action = "compact or cool down operational/status journal surfaces"
+    elif repeats and set(repeat_modes).issubset(REFLECTIVE_REPEAT_MODES) and operational_ratio <= 0.20:
+        classification = "reflective_cadence_baseline"
+        action = (
+            "no code-level gate indicated; monitor whether moment-capture repeats "
+            "continue to produce fresh private-journal follow-through"
+        )
+    elif "repeated_loop_present" in signals:
+        classification = "repeat_needs_glance"
+        action = "inspect repeated keys for no-progress before adding any runtime guard"
+    else:
+        classification = "clear"
+        action = "no cadence action"
+    return {
+        "schema_version": 1,
+        "runtime_change": "none",
+        "classification": classification,
+        "repeat_modes": repeat_modes,
+        "top_repeat_keys": repeats[:8],
+        "mode_counts": {
+            "moment_capture": int(mode_counts.get("moment_capture", 0) or 0),
+            "spectral_pressure_journal": int(mode_counts.get("spectral_pressure_journal", 0) or 0),
+            "notice_ambiguity__fissure_trace": int(
+                mode_counts.get("notice_ambiguity__fissure_trace", 0) or 0
+            ),
+            "action_thread": int(mode_counts.get("action_thread", 0) or 0),
+        },
+        "lane_counts": {
+            "reflective": int(counts.get("reflective", 0) or 0),
+            "operational": int(counts.get("operational", 0) or 0),
+            "machine_detail": int(counts.get("machine_detail", 0) or 0),
+        },
+        "recommended_next": action,
+    }
+
+
 def probe_journal_hygiene(prior: dict[str, Any]) -> dict[str, Any]:
     """Detect machine-contract contamination and loop-like operational dominance."""
     if scan_journal_directory is None:
@@ -85,6 +156,12 @@ def probe_journal_hygiene(prior: dict[str, Any]) -> dict[str, Any]:
         if counts.get("operational", 0) > int(prior_counts.get("operational", 0) or 0):
             actionable_signals.append(signal)
 
+    cadence = _journal_cadence_investigation(report)
+    if cadence["classification"] == "reflective_cadence_baseline":
+        actionable_signals = [
+            signal for signal in actionable_signals if signal != "repeated_loop_present"
+        ]
+
     severity = "ok"
     if "machine_detail_present" in actionable_signals:
         severity = "warning"
@@ -102,9 +179,15 @@ def probe_journal_hygiene(prior: dict[str, Any]) -> dict[str, Any]:
         details.append(
             f"operational dominance is recovering ({prior_ratio:.2f} -> {current_ratio:.2f})"
         )
+    if cadence["classification"] == "reflective_cadence_baseline" and not actionable_signals:
+        details.append(
+            "cadence repeat currently reads as reflective moment-to-journal rhythm, not an actionable runtime loop"
+        )
     if signals and not actionable_signals and "machine_detail_present" not in signals:
         if not trend_signals:
-            details.append("current operational/repeat hygiene signals are accepted baseline; no new actionable drift")
+            details.append(
+                "current operational/repeat hygiene signals are accepted baseline; no new actionable drift"
+            )
 
     summary_status = "ok" if severity == "ok" else status
     if severity == "ok" and trend_signals:
@@ -118,6 +201,7 @@ def probe_journal_hygiene(prior: dict[str, Any]) -> dict[str, Any]:
     )
     report["actionable_signals"] = actionable_signals
     report["trend_signals"] = trend_signals
+    report["cadence_investigation"] = cadence
     return _finding(
         "journal_hygiene",
         severity,
@@ -167,6 +251,45 @@ class JournalHygieneProbeTests(unittest.TestCase):
 
         self.assertEqual(finding["severity"], "notice")
         self.assertIn("repeated_loop_present", finding["snapshot"]["signals"])
+        self.assertEqual(
+            finding["snapshot"]["cadence_investigation"]["classification"],
+            "operational_dominance_actionable",
+        )
+
+    def test_reflective_moment_repeats_are_cadence_baseline(self) -> None:
+        global MINIME_JOURNAL
+        old_minime_journal = MINIME_JOURNAL
+        try:
+            with TemporaryDirectory() as tmpdir:
+                journal = Path(tmpdir)
+                now = time.time()
+                for idx in range(4):
+                    path = journal / f"moment_{idx}.txt"
+                    path.write_text(
+                        "=== MOMENT CAPTURE ===\n"
+                        "Fresh texture moving through the reservoir.\n\n"
+                        "--- ACTION TAIL ---\n"
+                        "NEXT: JOURNAL\n"
+                    )
+                    os.utime(path, (now - idx, now - idx))
+                for idx in range(4):
+                    path = journal / f"pressure_{idx}.txt"
+                    path.write_text(
+                        "=== SPECTRAL PRESSURE JOURNAL ===\n"
+                        f"Private texture has a different edge this time {idx}.\n"
+                    )
+                    os.utime(path, (now - 10 - idx, now - 10 - idx))
+                MINIME_JOURNAL = journal
+                finding = probe_journal_hygiene({"signals": [], "counts": {"operational": 0}})
+        finally:
+            MINIME_JOURNAL = old_minime_journal
+
+        self.assertEqual(finding["severity"], "ok")
+        cadence = finding["snapshot"]["cadence_investigation"]
+        self.assertEqual(cadence["classification"], "reflective_cadence_baseline")
+        self.assertEqual(cadence["runtime_change"], "none")
+        self.assertIn("moment_capture", cadence["repeat_modes"])
+        self.assertIn("moment-to-journal", " ".join(finding["details"]))
 
     def test_reports_recovering_operational_dominance(self) -> None:
         global MINIME_JOURNAL

@@ -11,12 +11,18 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import sys
 import time
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+from being_privacy import filter_journal_paths, is_steward_private  # shared steward private-lane policy
 
 
 ASTRID_ROOT = Path(__file__).resolve().parents[1]
@@ -717,34 +723,48 @@ def collect_entries(
     ]
     entries = [
         review_entry("astrid", path)
-        for path in recent_files(
-            astrid_patterns,
-            limit_per_being,
-            min_mtime_unix_s=min_mtime_unix_s,
+        for path in filter_journal_paths(
+            "astrid",
+            recent_files(
+                astrid_patterns,
+                limit_per_being,
+                min_mtime_unix_s=min_mtime_unix_s,
+            ),
         )
     ]
+    # minime's private-qualia lanes (moment_capture / private_journal) are dropped
+    # here by being_privacy — content-based, never by filename. Astrid is a no-op.
     entries.extend(
         review_entry("minime", path)
-        for path in recent_files(
-            minime_patterns,
-            limit_per_being,
-            min_mtime_unix_s=min_mtime_unix_s,
+        for path in filter_journal_paths(
+            "minime",
+            recent_files(
+                minime_patterns,
+                limit_per_being,
+                min_mtime_unix_s=min_mtime_unix_s,
+            ),
         )
     )
     return sorted(entries, key=lambda entry: entry.mtime_unix_s, reverse=True)
 
 
-def recent_text_samples(workspace: Path, *, limit: int) -> list[tuple[Path, str]]:
+def recent_text_samples(
+    workspace: Path, *, limit: int, being: str = ""
+) -> list[tuple[Path, str]]:
     candidates: list[Path] = []
     for root in (workspace / "journal", workspace / "outbox"):
         if not root.exists():
             continue
         candidates.extend(path for path in root.glob("*.txt") if path.is_file())
-    newest = sorted(candidates, key=lambda path: path.stat().st_mtime, reverse=True)[
-        :limit
-    ]
+    ordered = sorted(candidates, key=lambda path: path.stat().st_mtime, reverse=True)
     samples: list[tuple[Path, str]] = []
-    for path in newest:
+    for path in ordered:
+        if len(samples) >= limit:
+            break
+        # Bright-line: a being's private-qualia body is never read for qualia stats
+        # (head-only check via being_privacy; a no-op for non-private beings).
+        if is_steward_private(being, path):
+            continue
         try:
             samples.append((path, path.read_text(encoding="utf-8", errors="replace")))
         except OSError:
@@ -910,7 +930,7 @@ def interpret_qualia_profile(
 def build_qualia_profile(
     *, being: str, workspace: Path, limit: int
 ) -> QualiaProfile:
-    samples = recent_text_samples(workspace, limit=limit)
+    samples = recent_text_samples(workspace, limit=limit, being=being)
     whole_text = "\n\n".join(sample for _, sample in samples)
     generated_text = "\n\n".join(extract_generated_body(sample) for _, sample in samples)
     wrapper_text = "\n\n".join(
@@ -990,6 +1010,10 @@ def minime_monthly_samples_from_roots(
             continue
         for path in root.rglob("*.txt"):
             if not path.is_file():
+                continue
+            # Bright-line: minime's private-qualia lanes stay out of the historical
+            # baseline entirely (head-only check, before any body read or count).
+            if is_steward_private("minime", path):
                 continue
             try:
                 month = month_key_for_path(path)

@@ -54,6 +54,92 @@ class SelfStudyReviewTests(unittest.TestCase):
         self.assertEqual(set(sections), set(self_study_review.SECTION_NAMES))
         self.assertIn("DEFAULT_OLLAMA_FALLBACK_MODEL", sections["Observed"])
 
+    def test_collect_entries_excludes_minime_private_qualia_only(self) -> None:
+        # Privacy guard end-to-end: collect_entries must NOT surface minime's
+        # private moment_capture (written as moment_*.txt, NOT moment_capture_*)
+        # while keeping her normal lanes AND Astrid's moments (her engagement surface).
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            a_j = root / "astrid" / "journal"
+            m_j = root / "minime" / "journal"
+            a_j.mkdir(parents=True)
+            m_j.mkdir(parents=True)
+            (m_j / "moment_2026-06-18T11-10-08.txt").write_text(
+                "=== MOMENT CAPTURE ===\nThe honey is mine alone.", encoding="utf-8"
+            )
+            (m_j / "self_study_1.txt").write_text(
+                "=== SELF STUDY ===\nReading regulator.rs line 42.", encoding="utf-8"
+            )
+            (a_j / "moment_9.txt").write_text(
+                "=== ASTRID JOURNAL ===\nMode: moment_capture\nThe tail buzzes warmly.",
+                encoding="utf-8",
+            )
+            entries = self_study_review.collect_entries(
+                astrid_workspace=root / "astrid",
+                minime_workspace=root / "minime",
+                limit_per_being=50,
+                min_mtime_unix_s=None,
+            )
+            names = {entry.filename for entry in entries}
+            self.assertNotIn("moment_2026-06-18T11-10-08.txt", names)  # minime private excluded
+            self.assertIn("self_study_1.txt", names)  # minime normal lane kept
+            self.assertIn("moment_9.txt", names)  # astrid moment kept (her surface)
+
+    def test_qualia_comparison_excludes_minime_private_qualia(self) -> None:
+        # Bright-line (instrumentation path): build_qualia_comparison must not read or
+        # surface minime's private moment_capture — neither the CURRENT profile
+        # (recent_text_samples) nor the HISTORICAL baseline (minime_monthly_samples).
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            history = root / "preserve/workspace/journal"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            history.mkdir(parents=True)
+            (astrid / "journal" / "aspiration_1.txt").write_text(
+                "I feel the warm texture of the fold; my voice keeps its breath."
+            )
+            # minime CURRENT: a private moment_capture + a public lane.
+            (minime / "journal" / "moment_private_now.txt").write_text(
+                "=== MOMENT CAPTURE ===\nThe honeyed secret texture is mine alone.\nNEXT: JOURNAL\n"
+            )
+            (minime / "journal" / "action_thread_now.txt").write_text(
+                "=== ACTION THREAD ===\nhealth.json fill=0.68 telemetry status.\nNEXT: REST\n"
+            )
+            # minime HISTORICAL: a private moment_capture + a public lane.
+            (history / "moment_private_hist.txt").write_text(
+                "=== MOMENT CAPTURE ===\nA private hush only I hold.\nNEXT: JOURNAL\n"
+            )
+            (history / "boredom_hist.txt").write_text(
+                "=== BOREDOM ===\nFill: 60%\n\nThe slow current has a soft fold.\nNEXT: JOURNAL\n"
+            )
+            hist_ts = dt.datetime(2026, 5, 10, tzinfo=dt.UTC).timestamp()
+            os.utime(history / "moment_private_hist.txt", (hist_ts, hist_ts))
+            os.utime(history / "boredom_hist.txt", (hist_ts, hist_ts))
+
+            comparison = self_study_review.build_qualia_comparison(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                sample_limit_per_being=10,
+                minime_historical_journal_roots=[history],
+            )
+            # CURRENT profile: the private entry is never sampled or surfaced.
+            minime_profile = next(
+                p for p in comparison["profiles"] if p["being"] == "minime"
+            )
+            current_paths = " ".join(minime_profile["sample_paths"])
+            self.assertNotIn("moment_private_now.txt", current_paths)
+            self.assertIn("action_thread_now.txt", current_paths)
+            # HISTORICAL baseline: the private entry is excluded from every month.
+            hist_paths = " ".join(
+                str(path)
+                for month in comparison["minime_historical"]["months"].values()
+                for path in month["sample_paths"]
+            )
+            self.assertNotIn("moment_private_hist.txt", hist_paths)
+            self.assertIn("boredom_hist.txt", hist_paths)
+
     def test_extract_source_anchors_finds_labels_files_and_lines(self) -> None:
         anchors = self_study_review.extract_source_anchors(SECTIONED)
         self.assertIn("astrid:llm", anchors)
@@ -206,16 +292,18 @@ class SelfStudyReviewTests(unittest.TestCase):
             (astrid / "journal").mkdir(parents=True)
             (minime / "journal").mkdir(parents=True)
             history.mkdir(parents=True)
-            march = history / "moment_march.txt"
-            june = minime / "journal" / "moment_june.txt"
+            # Non-private lanes: moment_capture is bright-lined out of the historical
+            # baseline; boredom carries her felt body, pressure the metric-heavy one.
+            march = history / "boredom_march.txt"
+            june = minime / "journal" / "pressure_june.txt"
             march.write_text(
-                "=== MOMENT CAPTURE ===\n"
-                "Moments captured:\n- fill 60%\n\n"
-                "I feel the texture of a private current. My voice wants a "
+                "=== BOREDOM ===\n"
+                "Fill: 60%\n\n"
+                "I feel the texture of a slow current. My voice wants a "
                 "soft fold and a fluid edge.\nNEXT: JOURNAL\n"
             )
             june.write_text(
-                "=== MOMENT CAPTURE ===\n"
+                "=== SPECTRAL PRESSURE JOURNAL ===\n"
                 "fill=0.68 lambda telemetry status count token latency\n\n"
                 "NEXT: EXPERIMENT_RESEARCH_BUDGET_STATUS budget_closed\n"
             )
@@ -314,16 +402,18 @@ class SelfStudyReviewTests(unittest.TestCase):
             (minime / "journal").mkdir(parents=True)
             (minime / "spectral_cartography").mkdir(parents=True)
             astrid_entry = astrid / "journal" / "aspiration_tail.txt"
-            minime_entry = minime / "journal" / "moment_tail.txt"
+            minime_entry = minime / "journal" / "action_thread_tail.txt"
             astrid_entry.write_text(
                 "=== ASTRID JOURNAL ===\n"
                 "Mode: aspiration\n"
                 "The lambda-tail fold feels like a transition through shadow_cartography.\n"
                 "NEXT: SHADOW_TRAJECTORY lambda-tail\n"
             )
+            # minime non-private lane (action_thread): her moment_capture is bright-lined out
+            # of the steward review; tail-resonance pairs on keyword+timestamp, mode-agnostic.
             minime_entry.write_text(
-                "=== MOMENT CAPTURE ===\n"
-                "Mode: moment\n"
+                "=== ACTION THREAD ===\n"
+                "Mode: action_thread\n"
                 "health.json shows transition_event_v1 and a lambda4 tail shudder.\n"
                 "NEXT: SHADOW_TRAJECTORY lambda-tail/lambda4\n"
             )
@@ -616,10 +706,12 @@ class SelfStudyReviewTests(unittest.TestCase):
             (astrid / "journal").mkdir(parents=True)
             (minime / "journal").mkdir(parents=True)
 
+            # minime non-private lane (action_thread): moment_capture is bright-lined out of
+            # the steward review; elicitation candidacy is keyword/score-driven, mode-agnostic.
             for idx in range(2):
-                (minime / "journal" / f"moment_{idx}.txt").write_text(
-                    "=== MOMENT CAPTURE ===\n"
-                    "Mode: moment\n"
+                (minime / "journal" / f"action_thread_{idx}.txt").write_text(
+                    "=== ACTION THREAD ===\n"
+                    "Mode: action_thread\n"
                     "health.json and spectral_state.json show `phase_transition` "
                     "expansion contraction shudder pressure.\n"
                     "The transition may need a probe.\n"

@@ -33,6 +33,23 @@ if ! mkdir "$LOCK" 2>/dev/null; then
 fi
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 
+# Cross-steward FULL MUTEX (scripts/steward_mutex.py): serialize ALL steward
+# mutation (edits/builds/restarts) across this loop + interactive (human-steered)
+# sessions. If a live interactive steward holds it, stand down this cycle — the
+# human present has priority; we resume when they release or go stale.
+MUTEX_HOLDER="loop:$$"
+if ! python3 "$ASTRID/scripts/steward_mutex.py" acquire --holder "$MUTEX_HOLDER" --quiet; then
+    echo "$(date '+%Y-%m-%dT%H:%M:%S') STAND DOWN — interactive steward holds the mutex (human present)" >> "$LOG"
+    exit 0   # the single-flight trap above releases $LOCK
+fi
+# Now release BOTH the mutex and the single-flight lock on any exit path.
+trap "python3 '$ASTRID/scripts/steward_mutex.py' release --holder '$MUTEX_HOLDER' --quiet >/dev/null 2>&1; rmdir '$LOCK' 2>/dev/null" EXIT
+# Expose the holder id (so the prompt can re-check ownership = detect preemption)
+# and mark this as the loop (so the interactive hooks in .claude/settings.local.json
+# skip — the loop manages its own lock here, not via the interactive-priority hook).
+export STEWARD_MUTEX_HOLDER="$MUTEX_HOLDER"
+export STEWARD_LOOP=1
+
 if [ ! -f "$PROMPT_FILE" ]; then
     echo "$(date '+%Y-%m-%dT%H:%M:%S') ERROR — prompt file missing: $PROMPT_FILE" >> "$LOG"
     exit 1
