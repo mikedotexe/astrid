@@ -359,6 +359,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "test_foreign_activity_gate_keys_on_tree_not_codex",
                  "run": "cd /Users/v/other/astrid && python3 scripts/steward_mutex.py --self-test"},
     },
+    {
+        "id": "change_claim_verifier",
+        "shipped": "2026-06-19",
+        "surface": "CHANGELOG [Unreleased] + the feedback->change ledger — NAMED test-existence claims",
+        "failure_mode": "twice a claim outran the code: a CHANGELOG entry asserted 'a regression test covers the exact 80-file edge' before that test existed (backfilled 2026-06-18), and an ad-hoc verification grep was itself buggy — it searched only Rust `fn`, silently false-flagging every Python `def`. verify_change_claims.py makes the named-test class LOUD: every backticked test-name claimed in CHANGELOG [Unreleased] + the ledger must be DEFINED as fn/mod/def/class across astrid + minime + neural-triple-reservoir (handles BOTH Rust fn AND Python def — the exact dialect split the ad-hoc grep got wrong); a named-but-missing test (exit 3) is a claim-exceeds-evidence overclaim, and UNNAMED test claims are surfaced for manual review. Wired into the loop's §1 run-each-cycle cluster. Self-dogfooded green on the live CHANGELOG (12/12 named claims resolve across the three repos).",
+        "guard": {"repo": "astrid", "file": "scripts/verify_change_claims.py", "symbol": "find_missing"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/verify_change_claims.py",
+                 "name": "VerifyChangeClaimsTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/verify_change_claims.py --self-test"},
+    },
 ]
 
 
