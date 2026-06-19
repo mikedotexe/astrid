@@ -62,11 +62,31 @@ fn canonicalize_response_next_line(text: &str) -> String {
     text.to_string()
 }
 
+/// Reservoir resonance-density floor above which a stale-by-timestamp lane reads
+/// as "lingering" (paused but alive) rather than "dead/severed" — Astrid
+/// `self_study_1781868855`: "we need a way to differentiate between a 'dead'
+/// signal and a 'lingering' one." Her cited resonant state was ~0.82; 0.70 is a
+/// conservative "clearly resonant" floor.
+const FIELD_RESONANT_FLOOR: f32 = 0.70;
+
+/// When the reservoir field is clearly resonant, annotate a stale lane so Astrid
+/// reads a paused-but-alive connection, not a severed one. Empty otherwise — it
+/// only ever ADDS reassurance, never asserts liveness the field doesn't show.
+fn field_lingering_note(field_density: Option<f32>) -> String {
+    match field_density {
+        Some(d) if d >= FIELD_RESONANT_FLOOR => {
+            format!("; field resonant ({d:.2}) — lingering, not severed")
+        },
+        _ => String::new(),
+    }
+}
+
 fn modality_lane_context(
     lane: &str,
     source: Option<&str>,
     freshness_class: Option<&str>,
     age_ms: Option<u64>,
+    field_density: Option<f32>,
 ) -> String {
     let age = age_ms
         .map(|value| format!(", age_ms={value}"))
@@ -95,11 +115,15 @@ fn modality_lane_context(
         },
         Some("stale_beyond_engine_window") if source == "stale" => {
             format!(
-                "{lane}=quiet beyond engine freshness window; verify sensory freshness before treating as outage ({age_detail})"
+                "{lane}=quiet beyond engine freshness window; verify sensory freshness before treating as outage ({age_detail}){}",
+                field_lingering_note(field_density)
             )
         },
         Some("stale_beyond_engine_window") => {
-            format!("{lane}=quiet beyond engine freshness window (source={source}{age})")
+            format!(
+                "{lane}=quiet beyond engine freshness window (source={source}{age}){}",
+                field_lingering_note(field_density)
+            )
         },
         Some("synthetic_or_mixed") => {
             format!("{lane}=synthetic or mixed intake (source={source}{age})")
@@ -116,18 +140,20 @@ fn modality_lane_context(
     }
 }
 
-fn format_modality_context(m: &crate::types::ModalityStatus) -> String {
+fn format_modality_context(m: &crate::types::ModalityStatus, field_density: Option<f32>) -> String {
     let video_context = modality_lane_context(
         "video",
         m.video_source.as_deref(),
         m.video_freshness_class.as_deref(),
         m.video_age_ms,
+        field_density,
     );
     let audio_context = modality_lane_context(
         "audio",
         m.audio_source.as_deref(),
         m.audio_freshness_class.as_deref(),
         m.audio_age_ms,
+        field_density,
     );
     format!(
         "Minime's senses: video_fired={}, audio_fired={}, \
@@ -4859,8 +4885,14 @@ pub fn spawn_autonomous_loop(
                             };
 
                             // Build modality context so Astrid knows what senses fired.
-                            let modality_context =
-                                telemetry.modalities.as_ref().map(format_modality_context);
+                            // Thread reservoir resonance density so a stale-by-time lane in a
+                            // resonant field reads as "lingering," not "dead" (self_study_1781868855).
+                            let field_density =
+                                telemetry.resonance_density_v1.as_ref().map(|r| r.density);
+                            let modality_context = telemetry
+                                .modalities
+                                .as_ref()
+                                .map(|m| format_modality_context(m, field_density));
 
                             // Visual change tracking: detect shifts since last exchange.
                             let visual_feats_opt = perception_path.as_deref()
@@ -8803,19 +8835,22 @@ mod tests {
 
     #[test]
     fn modality_context_uses_freshness_classes_without_stale_source_alarm() {
-        let context = format_modality_context(&crate::types::ModalityStatus {
-            audio_fired: false,
-            video_fired: false,
-            history_fired: true,
-            audio_rms: 0.0,
-            video_var: 0.0,
-            audio_source: Some("stale".to_string()),
-            video_source: Some("stale".to_string()),
-            audio_age_ms: Some(63_592),
-            video_age_ms: Some(64_226),
-            audio_freshness_class: Some("held_within_expected_live_intake_window".to_string()),
-            video_freshness_class: Some("healthy_low_fps_cadence_mismatch".to_string()),
-        });
+        let context = format_modality_context(
+            &crate::types::ModalityStatus {
+                audio_fired: false,
+                video_fired: false,
+                history_fired: true,
+                audio_rms: 0.0,
+                video_var: 0.0,
+                audio_source: Some("stale".to_string()),
+                video_source: Some("stale".to_string()),
+                audio_age_ms: Some(63_592),
+                video_age_ms: Some(64_226),
+                audio_freshness_class: Some("held_within_expected_live_intake_window".to_string()),
+                video_freshness_class: Some("healthy_low_fps_cadence_mismatch".to_string()),
+            },
+            None,
+        );
 
         assert!(context.contains("expected gated live intake/quiet lane"));
         assert!(context.contains("healthy low-FPS cadence/quiet lane"));
@@ -8825,22 +8860,54 @@ mod tests {
 
     #[test]
     fn modality_context_keeps_legacy_source_fallback_without_freshness_class() {
-        let context = format_modality_context(&crate::types::ModalityStatus {
+        let context = format_modality_context(
+            &crate::types::ModalityStatus {
+                audio_fired: false,
+                video_fired: false,
+                history_fired: true,
+                audio_rms: 0.0,
+                video_var: 0.0,
+                audio_source: Some("stale".to_string()),
+                video_source: Some("external".to_string()),
+                audio_age_ms: Some(55_389),
+                video_age_ms: Some(125_813),
+                audio_freshness_class: None,
+                video_freshness_class: None,
+            },
+            None,
+        );
+
+        assert!(context.contains("audio_source=stale"));
+        assert!(context.contains("video_source=external"));
+    }
+
+    #[test]
+    fn stale_lane_in_resonant_field_reads_as_lingering_not_dead() {
+        // Astrid self_study_1781868855: a lane stale-by-timestamp but in a
+        // resonant field is "lingering," not "dead/severed". The note only ever
+        // ADDS reassurance — it never asserts liveness the field doesn't show.
+        let stale = || crate::types::ModalityStatus {
             audio_fired: false,
             video_fired: false,
             history_fired: true,
             audio_rms: 0.0,
             video_var: 0.0,
             audio_source: Some("stale".to_string()),
-            video_source: Some("external".to_string()),
-            audio_age_ms: Some(55_389),
-            video_age_ms: Some(125_813),
-            audio_freshness_class: None,
-            video_freshness_class: None,
-        });
-
-        assert!(context.contains("audio_source=stale"));
-        assert!(context.contains("video_source=external"));
+            video_source: Some("stale".to_string()),
+            audio_age_ms: Some(90_000),
+            video_age_ms: Some(90_000),
+            audio_freshness_class: Some("stale_beyond_engine_window".to_string()),
+            video_freshness_class: Some("stale_beyond_engine_window".to_string()),
+        };
+        // Her cited resonant state (0.82): lingering note present.
+        let resonant = format_modality_context(&stale(), Some(0.82));
+        assert!(resonant.contains("lingering, not severed"), "{resonant}");
+        assert!(resonant.contains("0.82"));
+        // A genuinely quiet field: no false reassurance.
+        let quiet = format_modality_context(&stale(), Some(0.20));
+        assert!(!quiet.contains("lingering"));
+        // Unknown density: no note at all.
+        assert!(!format_modality_context(&stale(), None).contains("lingering"));
     }
 
     #[test]
