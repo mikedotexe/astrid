@@ -349,6 +349,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "test_minime_private_qualia_excluded_by_content_not_filename",
                  "run": "cd /Users/v/other/astrid && python3 scripts/letter_response_scan.py --self-test"},
     },
+    {
+        "id": "foreign_agent_tree_activity",
+        "shipped": "2026-06-19",
+        "surface": "the steward loop's stand-down path (steward_loop_run.sh) vs a NON-mutex agent (Codex)",
+        "failure_mode": "the steward mutex only serializes the durable loop + interactive Claude; Codex (or any non-mutex agent) mutates the SAME tree OUTSIDE the lock — it has no pre-tool hook to acquire it (only a post-turn notify, already taken). So the loop could rebuild/restart/commit straight into a concurrent Codex edit (this happened 2026-06-18: a Codex collaboration.rs change landed mid-session under a held interactive lock). steward_mutex.py `foreign` detects it: once the loop holds the mutex (so interactive Claude is NOT editing), a freshly-mutated dirty tree (<180s) means a non-mutex agent is live -> exit 3 -> steward_loop_run.sh stands down for the cycle (Codex ~/.codex liveness surfaced for attribution). THE LIVE RISK IS THE ROUTING: if a refactor drops the `steward_mutex.py foreign` call from steward_loop_run.sh, the loop silently races Codex again while verify stays green — re-check the wrapper invocation when touching either file.",
+        "guard": {"repo": "astrid", "file": "scripts/steward_mutex.py", "symbol": "foreign_activity"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/steward_mutex.py",
+                 "name": "test_foreign_activity_gate_keys_on_tree_not_codex",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/steward_mutex.py --self-test"},
+    },
 ]
 
 

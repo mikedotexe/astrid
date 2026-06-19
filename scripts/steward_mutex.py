@@ -29,13 +29,22 @@ Commands (exit 0 = you hold it / done; nonzero = you do NOT hold it):
   release  --holder <type:pid>             release only if you hold it
   owns     --holder <type:pid>             exit 0 iff you currently hold it
   status                                   print current holder + ages
+  foreign  --repo <path>                   detect a non-mutex agent (e.g. Codex)
+                                           actively editing the tree (exit 3 if active)
   --self-test
+
+A note on Codex (and any non-mutex agent): it CANNOT acquire this lock — Codex
+exposes only a post-turn `notify` hook (already taken by Computer Use), no
+pre-tool/pre-command hook like Claude Code's PreToolUse. So mutual exclusion is
+impossible; we DETECT it instead (`foreign`) and stand the loop down rather than
+race a rebuild/restart/commit against it.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 import unittest
@@ -46,6 +55,16 @@ from pathlib import Path
 # ISOLATED throwaway lock without touching the production mutex.
 LOCK_DIR_DEFAULT = Path(os.environ.get("STEWARD_MUTEX_LOCK_DIR") or "~/.astrid/run/steward_mutex.lock").expanduser()
 DEFAULT_TTL = 1800.0  # 30 min; > the loop's STEWARD_LOOP_MAX_SECS (1500s) cap
+
+# Cross-agent foreign-activity detection. After the loop holds the mutex,
+# interactive Claude is NOT editing (it would hold the lock) — so a freshly
+# mutated dirty tree means a non-mutex agent (Codex) is live: stand down.
+FOREIGN_ACTIVITY_WINDOW_S = 180.0  # "actively editing right now" window
+CODEX_STATE_DIR_DEFAULT = Path("~/.codex").expanduser()
+# Files an active Codex session rewrites frequently — informational liveness
+# only; the operative gate is recent working-tree mutation, since Codex.app
+# churns these even when it is not touching our repo.
+CODEX_STATE_GLOBS = (".codex-global-state.json", "state_*.sqlite", "logs_*.sqlite")
 
 
 def parse_holder(holder: str) -> tuple[str, int]:
@@ -145,14 +164,88 @@ def status(lock_dir: Path, now: float, ttl: float) -> dict:
     }
 
 
+# ── foreign-agent (Codex / non-mutex) detection ──────────────────────────────
+def newest_age(mtimes: list[float], now: float) -> float | None:
+    """Age (s) of the most recently modified path, or None if the list is empty.
+    Pure, so the freshness logic is unit-testable without a real tree."""
+    if not mtimes:
+        return None
+    return now - max(mtimes)
+
+
+def _safe_mtime(p: Path) -> float | None:
+    try:
+        return p.stat().st_mtime
+    except OSError:
+        return None
+
+
+def tree_activity_age(repo: Path, now: float) -> float | None:
+    """Age (s) of the most recently modified UNCOMMITTED file in `repo`, or None
+    if the tree is clean or not a git repo. The operative cross-agent signal:
+    once the loop holds the mutex, a freshly-mutated dirty tree is a non-mutex
+    agent (Codex) editing — not interactive Claude, which would hold the lock."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(repo), "status", "--porcelain", "-z"],
+            capture_output=True, text=True, timeout=10, check=False,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    mtimes: list[float] = []
+    for entry in out.split("\0"):
+        if len(entry) < 4:
+            continue
+        path = entry[3:]  # strip the 2-char XY status + space
+        if " -> " in path:  # rename: "R  old -> new" → take the destination
+            path = path.split(" -> ", 1)[1]
+        m = _safe_mtime(repo / path)
+        if m is not None:
+            mtimes.append(m)
+    return newest_age(mtimes, now)
+
+
+def codex_liveness_age(state_dir: Path, now: float) -> float | None:
+    """Age (s) of the newest Codex session-state write, or None. Informational
+    (Codex.app churns state even when not editing our repo), not the gate."""
+    mtimes: list[float] = []
+    for pat in CODEX_STATE_GLOBS:
+        for p in state_dir.glob(pat):
+            m = _safe_mtime(p)
+            if m is not None:
+                mtimes.append(m)
+    return newest_age(mtimes, now)
+
+
+def foreign_activity(repo: Path, codex_state_dir: Path, window_s: float, now: float) -> dict:
+    """Is a non-mutex agent actively editing the tree right now? `active` gates on
+    recent working-tree mutation (the thing that races); Codex liveness is
+    surfaced alongside it for attribution/awareness."""
+    tree_age = tree_activity_age(repo, now)
+    codex_age = codex_liveness_age(codex_state_dir, now)
+    active = tree_age is not None and tree_age <= window_s
+    codex_live = codex_age is not None and codex_age <= window_s
+    return {
+        "active": active,
+        "tree_activity_age_s": None if tree_age is None else round(tree_age, 1),
+        "codex_live": codex_live,
+        "codex_age_s": None if codex_age is None else round(codex_age, 1),
+        "window_s": window_s,
+        "agent_guess": "codex" if (active and codex_live) else ("external" if active else None),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("cmd", nargs="?", choices=["acquire", "release", "owns", "status"])
+    ap.add_argument("cmd", nargs="?", choices=["acquire", "release", "owns", "status", "foreign"])
     ap.add_argument("--holder")
     ap.add_argument("--ttl", type=float, default=DEFAULT_TTL)
     ap.add_argument("--lock-dir", default=str(LOCK_DIR_DEFAULT))
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--repo", help="repo path for the `foreign` tree-activity scan")
+    ap.add_argument("--codex-state-dir", default=str(CODEX_STATE_DIR_DEFAULT))
+    ap.add_argument("--window-s", type=float, default=FOREIGN_ACTIVITY_WINDOW_S)
     args = ap.parse_args(argv)
 
     if args.self_test:
@@ -168,6 +261,13 @@ def main(argv: list[str] | None = None) -> int:
         if not args.quiet:
             print(json.dumps(st, indent=2))
         return 0
+
+    if args.cmd == "foreign":
+        fa = foreign_activity(Path(args.repo or "."), Path(args.codex_state_dir),
+                              args.window_s, now)
+        if not args.quiet:
+            print(json.dumps(fa, indent=2))
+        return 3 if fa["active"] else 0
 
     if not args.holder:
         ap.error(f"--holder is required for {args.cmd}")
@@ -252,6 +352,38 @@ class StewardMutexTests(unittest.TestCase):
         acquire(self.lock, f"interactive:{os.getpid()}", DEFAULT_TTL, now)
         self.assertFalse(release(self.lock, f"loop:{os.getpid()}"))  # not owner
         self.assertTrue(owns(self.lock, f"interactive:{os.getpid()}"))  # still held
+
+    def test_newest_age_empty_and_nonempty(self):
+        self.assertIsNone(newest_age([], 1000.0))
+        self.assertEqual(newest_age([900.0, 950.0, 990.0], 1000.0), 10.0)
+
+    def test_codex_liveness_fresh_stale_and_absent(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            state = Path(d)
+            p = state / ".codex-global-state.json"
+            p.write_text("{}", encoding="utf-8")
+            base = p.stat().st_mtime
+            self.assertLess(codex_liveness_age(state, base + 10.0), 20.0)  # fresh write
+            self.assertGreater(codex_liveness_age(state, base + 100_000), 1000.0)  # stale
+            self.assertIsNone(codex_liveness_age(state / "nope", base))  # absent
+
+    def test_foreign_activity_gate_keys_on_tree_not_codex(self):
+        # The gate keys on TREE mutation, NOT Codex liveness — else the loop
+        # would never run while Codex.app is merely open (it churns state).
+        # A non-git dir => no tree activity => gate closed even if Codex is live.
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            cdir = d / "codex"
+            cdir.mkdir()
+            sp = cdir / ".codex-global-state.json"
+            sp.write_text("{}", encoding="utf-8")
+            now = sp.stat().st_mtime + 5.0
+            fa = foreign_activity(d / "not_a_repo", cdir, 180.0, now)
+            self.assertFalse(fa["active"])  # no tree mutation -> gate closed
+            self.assertTrue(fa["codex_live"])  # but Codex liveness surfaced
+            self.assertIsNone(fa["agent_guess"])
 
 
 def _run_self_test() -> int:

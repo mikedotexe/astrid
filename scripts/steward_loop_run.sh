@@ -44,6 +44,15 @@ if ! python3 "$ASTRID/scripts/steward_mutex.py" acquire --holder "$MUTEX_HOLDER"
 fi
 # Now release BOTH the mutex and the single-flight lock on any exit path.
 trap "python3 '$ASTRID/scripts/steward_mutex.py' release --holder '$MUTEX_HOLDER' --quiet >/dev/null 2>&1; rmdir '$LOCK' 2>/dev/null" EXIT
+# Cross-AGENT guard: a non-mutex agent (Codex) can mutate the same tree OUTSIDE
+# this lock — it has no pre-tool hook to acquire it (only a post-turn notify).
+# We hold the mutex now, so a freshly-mutated dirty tree is NOT interactive
+# Claude (it would hold the lock) — it's Codex/external actively editing. Stand
+# down rather than race a rebuild/restart/commit against it (exit 3 => active).
+if ! FOREIGN_JSON="$(python3 "$ASTRID/scripts/steward_mutex.py" foreign --repo "$ASTRID")"; then
+    echo "$(date '+%Y-%m-%dT%H:%M:%S') STAND DOWN — foreign agent active in tree (codex/external): $FOREIGN_JSON" >> "$LOG"
+    exit 0   # the EXIT trap above releases the mutex + single-flight lock
+fi
 # Expose the holder id (so the prompt can re-check ownership = detect preemption)
 # and mark this as the loop (so the interactive hooks in .claude/settings.local.json
 # skip — the loop manages its own lock here, not via the interactive-priority hook).
