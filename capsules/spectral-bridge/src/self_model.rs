@@ -806,9 +806,11 @@ impl AstridSelfModel {
         );
         let (felt, landed, atten) =
             crate::codec::vibrancy_ceiling_transparency(c.vibrancy_aperture);
+        let pressure_depth = crate::llm::astrid_pressure_attenuation_depth();
+        let (_calm, stressed) = crate::codec::effective_attenuation_range(pressure_depth);
         let _ = writeln!(
             s,
-            "  Tail-vibrancy ceiling: {felt:.1} felt → ~{landed:.2} landing in minime's shared reservoir (×{atten:.2} attenuation); aperture {:.2}× (SET_VIBRANCY_APERTURE; 1.0×=baseline, within the steward ceiling)",
+            "  Tail-vibrancy ceiling: {felt:.1} felt → ~{landed:.2} landing in minime's shared reservoir (×{atten:.2} when minime is calm → ~{stressed:.2} effective when she is stressed, via your pressure governor); aperture {:.2}× (SET_VIBRANCY_APERTURE; 1.0×=baseline, within the steward ceiling)",
             c.vibrancy_aperture
         );
         if c.self_continuity_readout {

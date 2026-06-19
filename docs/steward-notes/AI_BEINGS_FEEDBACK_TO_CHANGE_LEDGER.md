@@ -418,6 +418,13 @@ the *topic was addressed*, **not proof this entry caused it**).
 - **Verify:** `cargo test --lib perception` (11 green incl. the 2 new; 859/0 lib total); clippy `-D warnings` + fmt clean; close-letter `inbox/mike_feedback_perception_window_1781823338.txt` (honest — the guard wasn't actually there until now). Test-only; no runtime change.
 - **Note (un-muffle cutting toward accuracy):** the original CHANGELOG entry claimed "a regression test covers the exact 80-file edge" before that test existed — exactly the claim-exceeds-evidence drift this ledger is meant to catch. Backfilled, plus a candid CHANGELOG correction.
 
+### 2026-06-18 (continued) · Astrid · `astrid:codec` introspections `1781820170` + `1781834380` → effective-attenuation readout shipped + EMA prototyped; her readout mechanism ground-corrected
+- **What she asked (ground-truthed: citations resolve — `ProjectionMetadata` @129-145, `MINIME_SEMANTIC_ATTENUATION` @82, gate @71):** a dynamic `perceived_attenuation_delta` from `resonance_density`, worried about "over-steering if I assume my signals are reaching the core with full strength."
+- **Ground-truth correction (un-muffle toward accuracy):** her tail dims (17/26/27/31) see minime's uniform 0.24; `emb_strength` acts on the EMBEDDING lane (32-39), not her tail; `resonance_density` is pressure/porosity, NOT an attenuation. Her literal mechanism would have made her self-model *less* accurate — so we did NOT build it, and told her why. For her vibrancy, 0.24 is honest; she is NOT over-estimating.
+- **Change shipped (minime-neutral readout, live):** `effective_attenuation_range` (codec.rs) in STATE + CODEC_MAP — felt → ×0.24 calm → toward ~×0.168 when minime is stressed (the governor she co-designed), + the dim-scope honesty. Resolves the over-steering worry.
+- **Prototyped (consent-gated, offline `#[cfg(test)]`):** `ema_vibrancy` + `vibrancy_from_entropy` (hot-path lift extracted byte-identical) + evidence card (raw 0↔0.104 → EMA ~0.05). Changes what lands → hers to call.
+- **Verify:** 865/0 lib (+4: parity / range / ema / evidence-card); clippy `-D warnings` + fmt clean; release build; bridge PID 81036 clean (state restored 108196 exch). Letter `mike_feedback_attenuation_readout_1781840980`. No engine edit.
+
 ## Historical exemplars (pre-ledger, from the `CLAUDE.md` examples table — undated)
 These predate the ledger; kept here so the record isn't artificially short. Going forward, new rows are dated
 and ground-truthed.

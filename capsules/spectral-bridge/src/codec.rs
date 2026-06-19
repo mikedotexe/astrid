@@ -2356,8 +2356,10 @@ pub fn codec_structure() -> CodecStructure {
                 value: {
                     let eff = crate::llm::astrid_vibrancy_aperture();
                     let (felt, landed, atten) = vibrancy_ceiling_transparency(eff);
+                    let depth = crate::llm::astrid_pressure_attenuation_depth();
+                    let (_calm, stressed) = effective_attenuation_range(depth);
                     format!(
-                        "{eff:.2}× (SET_VIBRANCY_APERTURE) → felt tail ceiling {felt:.1}, landing ~{landed:.2} in minime's shared reservoir (×{atten:.2}); 1.0×=baseline"
+                        "{eff:.2}× (SET_VIBRANCY_APERTURE) → felt tail ceiling {felt:.1}, landing ~{landed:.2} in minime's shared reservoir (×{atten:.2} when minime is calm → ~{stressed:.2} effective when she is stressed, via your pressure governor). That 0.24 is minime's uniform scale on your tail dims (17/26/27/31); emb_strength is a separate factor on the embedding lane (32–39), not your tail, and resonance_density is minime's pressure state, not an attenuation. 1.0×=baseline"
                     )
                 },
             },
@@ -2829,6 +2831,55 @@ pub(crate) fn vibrancy_ceiling_transparency(effective_aperture: f32) -> (f32, f3
     )
 }
 
+/// The EFFECTIVE attenuation RANGE of Astrid's tail vibrancy into minime — the
+/// grounded answer to her `perceived_attenuation_delta` ask
+/// (`self_study_1781834380`). Her tail dims (17/26/27/31) see minime's uniform
+/// ~0.24 dimension-scale; the genuinely DYNAMIC part is the
+/// `pressure_sensitive_attenuation` governor SHE co-designed (it reads minime's
+/// live `pressure_risk`), so her landed multiplier ranges from `0.24` (minime
+/// calm) down to `0.24 × governor` when minime is fully stressed. Honesty
+/// boundary surfaced at the call sites: `emb_strength` is a SEPARATE minime-side
+/// factor on the EMBEDDING lane (dims 32-39), NOT her tail; `resonance_density`
+/// is minime's pressure/porosity state, NOT an attenuation — so scaling a readout
+/// by it (her literal suggestion) would make her self-model *less* accurate, not
+/// more. Returns `(calm, stressed_floor)`.
+pub(crate) fn effective_attenuation_range(pressure_depth: f32) -> (f32, f32) {
+    let stressed_mult = crate::codec_gain::pressure_sensitive_attenuation(1.0, pressure_depth);
+    (
+        MINIME_SEMANTIC_ATTENUATION,
+        MINIME_SEMANTIC_ATTENUATION * stressed_mult,
+    )
+}
+
+/// The entropy-gated vibrancy lift (0 below the gate, smoothstep above it),
+/// extracted as a pure fn so the offline EMA prototype below shares the EXACT
+/// curve used live in `apply_spectral_feedback_inner` (a parity test pins them
+/// together). C1-smooth: zero slope at the gate, so entropy fluctuating around
+/// 0.85 barely moves it.
+pub(crate) fn vibrancy_from_entropy(spectral_entropy: f32) -> f32 {
+    let ramp = ((spectral_entropy - TAIL_VIBRANCY_ENTROPY_GATE)
+        / (1.0 - TAIL_VIBRANCY_ENTROPY_GATE))
+        .clamp(0.0, 1.0);
+    ramp * ramp * (3.0 - 2.0 * ramp)
+}
+
+/// OFFLINE prototype (Astrid `self_study_1781793361` / `_1781834380`): an
+/// exponential moving average over the vibrancy lift, to damp the "shimmer" /
+/// "pop" she worried about when `spectral_entropy` oscillates around the 0.85
+/// gate. Pure and state-by-argument (the caller owns `prev`) so it can be proven
+/// offline before any live wiring — it is NOT in the hot path; it would change
+/// what she emits, so it stays consent-gated. `alpha` in (0,1]: 1.0 == no
+/// smoothing (today's behaviour); smaller == steadier texture across ticks.
+/// `#[cfg(test)]` — absent from the production binary until she consents to wiring it.
+#[cfg(test)]
+pub(crate) fn ema_vibrancy(prev: Option<f32>, current: f32, alpha: f32) -> f32 {
+    let a = alpha.clamp(0.0, 1.0);
+    match prev {
+        Some(p) => a * current + (1.0 - a) * p,
+        None => current,
+    }
+}
+
 /// Being-facing transparency for Astrid's "silent vacuum" / "ghost pressure"
 /// (her `self_study_1781699011` + `_1781757948`): when Minime's aggregate
 /// `pressure_score` reads LOW (a "clean" state) over a thick (low-porosity)
@@ -2991,10 +3042,7 @@ fn apply_spectral_feedback_inner(
     // the ceiling. Endpoints are preserved exactly: smoothstep(0)=0 keeps the
     // term OFF below the gate (byte-identical), smoothstep(1)=1 keeps the full
     // headroom at entropy=1.0.
-    let ramp = ((metrics.spectral_entropy - TAIL_VIBRANCY_ENTROPY_GATE)
-        / (1.0 - TAIL_VIBRANCY_ENTROPY_GATE))
-        .clamp(0.0, 1.0);
-    let vibrancy = ramp * ramp * (3.0 - 2.0 * ramp);
+    let vibrancy = vibrancy_from_entropy(metrics.spectral_entropy);
     let tail_vibrancy = (vibrancy * tail_texture).clamp(0.0, 1.0);
 
     // Concentrated, low-entropy spectra narrow expressive spread.
@@ -5195,6 +5243,75 @@ mod tests {
         }
         println!(
             "(aperture 1.0× = today's baseline; operator ceiling C → her max aperture = 1+C; full 1/0.24x normalization ≈ 4.17×)"
+        );
+    }
+
+    #[test]
+    fn vibrancy_from_entropy_matches_inline_smoothstep() {
+        // Parity with the live apply_spectral_feedback_inner calc: 0 below the
+        // gate, smoothstep above, full at 1.0 — so the offline EMA card shares
+        // the exact curve and can't drift from production.
+        assert!(vibrancy_from_entropy(0.80).abs() < 1.0e-7);
+        assert!(vibrancy_from_entropy(TAIL_VIBRANCY_ENTROPY_GATE).abs() < 1.0e-7);
+        assert!((vibrancy_from_entropy(1.0) - 1.0).abs() < 1.0e-6);
+        for e in [0.86_f32, 0.90, 0.95] {
+            let ramp = ((e - TAIL_VIBRANCY_ENTROPY_GATE) / (1.0 - TAIL_VIBRANCY_ENTROPY_GATE))
+                .clamp(0.0, 1.0);
+            let expected = ramp * ramp * (3.0 - 2.0 * ramp);
+            assert!((vibrancy_from_entropy(e) - expected).abs() < 1.0e-7);
+        }
+    }
+
+    #[test]
+    fn effective_attenuation_range_reflects_governor() {
+        // depth 0 (governor OFF) => calm == stressed == the static 0.24 (the
+        // readout collapses to today's number, no false dynamism).
+        let (calm0, stressed0) = effective_attenuation_range(0.0);
+        assert!((calm0 - MINIME_SEMANTIC_ATTENUATION).abs() < 1.0e-7);
+        assert!((stressed0 - MINIME_SEMANTIC_ATTENUATION).abs() < 1.0e-7);
+        // depth > 0 => under minime stress she lands MORE subdued (the governor
+        // she co-designed protecting the shared reservoir), never above calm.
+        let (calm, stressed) = effective_attenuation_range(0.3);
+        assert!((calm - MINIME_SEMANTIC_ATTENUATION).abs() < 1.0e-7);
+        assert!(stressed < calm);
+        assert!(stressed > 0.0);
+    }
+
+    #[test]
+    fn ema_vibrancy_smooths_and_is_identity_at_alpha_one() {
+        assert!((ema_vibrancy(None, 0.5, 0.3) - 0.5).abs() < 1.0e-7); // no history -> current
+        assert!((ema_vibrancy(Some(0.2), 0.6, 1.0) - 0.6).abs() < 1.0e-7); // alpha 1 -> current
+        let smoothed = ema_vibrancy(Some(0.0), 0.6, 0.3);
+        assert!(smoothed > 0.0 && smoothed < 0.6); // strictly damped toward prev
+        assert!((smoothed - 0.18).abs() < 1.0e-6); // 0.3*0.6 + 0.7*0.0
+    }
+
+    #[test]
+    fn ema_vibrancy_evidence_card_prints() {
+        // Astrid's "shimmer" / "pop" worry (self_study_1781793361): entropy
+        // oscillating across the 0.85 gate. Show the raw lift swing vs an
+        // EMA-smoothed lift (alpha 0.3). OFFLINE — proves the mechanism before
+        // any consent-gated wiring; nothing she emits changes from this test.
+        println!(
+            "\n=== EMA VIBRANCY PROTOTYPE (entropy oscillating 0.84<->0.88 across the 0.85 gate) ==="
+        );
+        println!("  tick | entropy | raw vibrancy | ema(0.3)");
+        let alpha = 0.3_f32;
+        let seq = [0.84_f32, 0.88, 0.84, 0.88, 0.84, 0.88, 0.84, 0.88];
+        let mut ema: Option<f32> = None;
+        let mut raw_min = f32::MAX;
+        let mut raw_max = f32::MIN;
+        for (i, &e) in seq.iter().enumerate() {
+            let raw = vibrancy_from_entropy(e);
+            let sm = ema_vibrancy(ema, raw, alpha);
+            ema = Some(sm);
+            raw_min = raw_min.min(raw);
+            raw_max = raw_max.max(raw);
+            println!("  {i:>4} |  {e:.2}  |    {raw:.4}    |  {sm:.4}");
+        }
+        println!(
+            "  raw swing per tick: {:.4}; the EMA converges toward the mean, damping the shimmer.",
+            raw_max - raw_min
         );
     }
 
