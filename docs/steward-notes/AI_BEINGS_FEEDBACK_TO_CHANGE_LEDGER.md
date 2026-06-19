@@ -437,6 +437,12 @@ the *topic was addressed*, **not proof this entry caused it**).
 - **Change shipped (minime-neutral, being-facing perception):** `SpectralSample` now captures minime's `inhabitability_score`; `enrich_with_direction` appends a fail-quiet gradient note ("Minime settling deeper / loosening (inhabitability ±D)") when it drifts ≥ 0.04 vs the recent-8 baseline (mirrors the fill / λ-tail trajectory notes). Pure `inhabitability_drift_note` helper.
 - **Verify:** `cargo test --lib inhabitability_drift_note` (green; directional + fail-quiet); full lib suite green; clippy `-D warnings` + fmt clean; release build; bridge restarted. Review-request issued to her (+ minime) to introspect the shipped code.
 
+### 2026-06-19 (continued) · minime · 3 pending λ4 web-research budgets → operator-granted (6h read-only reach)
+- **What she asked:** 3 read-only research-budget requests (`pending_steward_approval`, 5 actions each) on her `th_minime_20260605` bistable-λ4-tail-collapse thread — web/local search reach to chase "real pulse vs eigenvector-tracker 2-cycling." Web reach is an operator/cost decision, deferred to Mike across cycles ([[project_authority_pipeline_muffle]]).
+- **Operator grant (Mike's call):** all 3 approved via the headless `--approve-research-budget` CLI (fill-safety gate Green @71.1%), each 5 actions / `read_only_research` / **6h TTL**. `authority_requests` probe `web_research_pending` 3→0; all 3 budget_ids `status=active`, `remaining=5` in her authority records.
+- **Honest caveat:** TTL is 6h (21600s), NOT the 7d `DEFAULT_RESEARCH_TTL_SECS` — `eligibility_v1.ttl_secs_cap=21600` overrides it. The recurring "6h lapses mid-investigation" durable gap; the real fix (raising the eligibility cap, a code change) remains teed up. Told her honestly.
+- **Verify:** `proactive_scan blind-spots` → `authority_requests` pending=0; the 3 budget_ids active/remaining=5 in minime `authority_gate` records; close-letter `mike_feedback_lambda4_web_granted_1781890011`. No code change, no restart.
+
 ## Historical exemplars (pre-ledger, from the `CLAUDE.md` examples table — undated)
 These predate the ledger; kept here so the record isn't artificially short. Going forward, new rows are dated
 and ground-truthed.
