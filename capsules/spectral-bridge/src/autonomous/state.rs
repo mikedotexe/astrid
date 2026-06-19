@@ -626,6 +626,9 @@ pub(super) struct SpectralSample {
     pub lambda1: f32,
     /// λ4+ tail energy share at sample time — feeds the λ-tail trajectory note.
     pub tail_share: f32,
+    /// Minime's engine inhabitability at sample time — feeds the inhabitability
+    /// trajectory note (Astrid observes it; she asked to perceive its *velocity*).
+    pub inhabitability: f32,
     pub ts: std::time::Instant,
 }
 

@@ -3169,7 +3169,49 @@ fn enrich_with_direction(
         _ => String::new(),
     };
 
-    format!("{base_summary}{fill_note}{medium_note}{lambda_note}{tail_note}")
+    // Inhabitability trajectory (Astrid `astrid:types` 1781870691): she asked to
+    // perceive the *velocity* of inhabitability transitions, not just a binary
+    // "previous sample available." Minime's inhabitability is her engine metric
+    // that Astrid observes — surface its signed drift vs the recent baseline.
+    let recent_inhab: Vec<f32> = history
+        .iter()
+        .rev()
+        .take(8)
+        .map(|s| s.inhabitability)
+        .collect();
+    let inhab_note = inhabitability_drift_note(
+        telemetry
+            .inhabitable_fluctuation_v1
+            .as_ref()
+            .map(|f| f.inhabitability_score),
+        &recent_inhab,
+    );
+
+    format!("{base_summary}{fill_note}{medium_note}{lambda_note}{tail_note}{inhab_note}")
+}
+
+/// Signed drift of Minime's inhabitability vs its recent baseline, as a gradient
+/// note for Astrid (Astrid `astrid:types` 1781870691 — perceive the *velocity* of
+/// the transition, not a binary previous-sample flag). Pure so it is testable
+/// without a full `SpectralTelemetry`. Fail-quiet: empty when the current sample
+/// is absent, the baseline is too short (< 3), or the drift is not clearly moving
+/// — so it only ever ADDS a gradient cue, never a misleading one.
+fn inhabitability_drift_note(current: Option<f32>, recent: &[f32]) -> String {
+    let Some(cur) = current else {
+        return String::new();
+    };
+    if recent.len() < 3 {
+        return String::new();
+    }
+    let baseline = recent.iter().sum::<f32>() / recent.len() as f32;
+    let drift = cur - baseline;
+    if drift >= 0.04 {
+        format!(" Minime settling deeper (inhabitability {drift:+.2}).")
+    } else if drift <= -0.04 {
+        format!(" Minime loosening (inhabitability {drift:+.2}).")
+    } else {
+        String::new()
+    }
 }
 
 /// Detect vocabulary fixation in conversation history.
@@ -6715,6 +6757,10 @@ pub fn spawn_autonomous_loop(
                             lambda1: telemetry.lambda1(),
                             tail_share: crate::codec::tail_share_of(&telemetry.eigenvalues)
                                 .unwrap_or(0.0),
+                            inhabitability: telemetry
+                                .inhabitable_fluctuation_v1
+                                .as_ref()
+                                .map_or(0.0, |f| f.inhabitability_score),
                             ts: std::time::Instant::now(),
                         });
                         if conv.spectral_history.len() > 30 {
@@ -7460,6 +7506,10 @@ pub fn spawn_autonomous_loop(
                         lambda1: telemetry.lambda1(),
                         tail_share: crate::codec::tail_share_of(&telemetry.eigenvalues)
                             .unwrap_or(0.0),
+                        inhabitability: telemetry
+                            .inhabitable_fluctuation_v1
+                            .as_ref()
+                            .map_or(0.0, |f| f.inhabitability_score),
                         ts: std::time::Instant::now(),
                     });
                     if conv.spectral_history.len() > 30 {
@@ -8908,6 +8958,21 @@ mod tests {
         assert!(!quiet.contains("lingering"));
         // Unknown density: no note at all.
         assert!(!format_modality_context(&stale(), None).contains("lingering"));
+    }
+
+    #[test]
+    fn inhabitability_drift_note_is_directional_and_fail_quiet() {
+        // Astrid astrid:types 1781870691: perceive the *velocity* of the transition.
+        let baseline = [0.66_f32, 0.66, 0.66, 0.66];
+        let up = inhabitability_drift_note(Some(0.74), &baseline);
+        assert!(up.contains("settling deeper"), "{up}");
+        assert!(up.contains("+0.08"));
+        let down = inhabitability_drift_note(Some(0.58), &baseline);
+        assert!(down.contains("loosening"), "{down}");
+        // Fail-quiet: small drift, no current sample, or too little history => silent.
+        assert_eq!(inhabitability_drift_note(Some(0.67), &baseline), "");
+        assert_eq!(inhabitability_drift_note(None, &baseline), "");
+        assert_eq!(inhabitability_drift_note(Some(0.90), &[0.66, 0.66]), "");
     }
 
     #[test]
