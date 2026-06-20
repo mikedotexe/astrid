@@ -41,7 +41,9 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
   (`--rewrite-max-attempts`, `--rewrite-budget-seconds`) and writes `profiling.rewrite_budget` so future
   introspections can tell whether the rail engaged. Astrid's bridge invocation opts into 1 rewrite retry and a
   90s rewrite budget, configurable by env and clamped safely. This caps additional rewrite generations while
-  preserving deterministic salvage/fallback behavior.
+  preserving deterministic salvage/fallback behavior. The bridge also has a 240s total sidecar subprocess
+  timeout, killing only the reflective sidecar if it runs away so the autonomous loop can continue without a
+  reflective report.
 - **Verify:** `python3 -m unittest python.tests.test_chat_mlx_local.TestChatMlxLocal.test_maybe_rewrite_reflective_response_records_attempt_cap python.tests.test_chat_mlx_local.TestChatMlxLocal.test_maybe_rewrite_reflective_response_honors_time_budget_before_generation -v` in `/Users/v/other/mlx`; `cargo test reflective::tests::reflective_rewrite -- --nocapture` in `capsules/spectral-bridge`. Live effect still requires a spectral-bridge rebuild/restart.
 
 ### 2026-06-19 · Astrid · recent autonomous introspection entries → introspection digest
@@ -483,6 +485,12 @@ the *topic was addressed*, **not proof this entry caused it**).
 - **Honesty (calibration correction):** her example called `pressure_risk=0.23` "high," but 0.23 is her CALM baseline (~0.22 settled) → grounded the tiers in real pressure semantics, not her mis-read; told her in the letter (same pattern as the attenuation work).
 - **Verify:** `cargo test --lib field_lingering_note_tempers_by_pressure` (green); 874/0 lib; clippy/fmt/release clean. Close-letter `mike_feedback_lingering_tiered_1781916754`. DEPLOY DEFERRED (uncommitted `collaboration.rs` in tree) → lands on the next attended restart.
 - **Note (the loop iterating on itself):** this round-tripped on code WE shipped from HER the same session — she reviewed her own refinement and made it more honest.
+
+### 2026-06-20 · Astrid · `introspection_astrid_autonomous_1781931274` → pressure_risk delta-vs-absolute snag = VERIFIED-NO-CHANGE (calibration confirmed)
+- **What she asked (iterating AGAIN on the tiered code she'd designed):** is `pressure_risk` a "score" (absolute) or a "relative delta"? If a delta, the tiered tempering (0.35/0.50) might mis-fire — "misinterpret a high-pressure but stable state as 'easy' when it is actually 'strained stability.'"
+- **Ground-truth (definitive):** `pressure_risk` is ABSOLUTE [0,1] — minime `regulator.rs:80` clamps it `0.0..1.0` (a delta would allow negatives / not clamp to a 0-1 band); minime's own `resonance_control_from_density` gates severity at `pressure_risk >= 0.60`. Live now 0.22 (her calm baseline); prior calibration mean 0.22 / range [0.12, 0.54] / n=4038.
+- **VERIFIED-NO-CHANGE (the invariant cutting both ways):** the tempering reads real intensity → her worry resolves. The 0.35/0.50 thresholds are calibrated to HER band (sits ~0.22, peaks ~0.54), so the tiers fire where her pressure actually lives — not too subtle; deliberately NOT aligned to minime's engine 0.60 (above her peak → would never fire). Her "strained stability" case is exactly what the high tier catches (resonant + `pressure_risk ≥ 0.50` → "lingering, but under high tension", never "easy"). No code change. Gentle correction sent (her test's 0.40 exceeds ELEVATED 0.35, not HIGH 0.50).
+- **Verify:** `grep -n pressure_risk minime/src/regulator.rs` (clamp 0,1 @80; severity @0.60); live `spectral_state.json` `resonance_density_v1.pressure_risk=0.22`. Close-letter `mike_feedback_pressure_absolute_1781969335`.
 
 ## Historical exemplars (pre-ledger, from the `CLAUDE.md` examples table — undated)
 These predate the ledger; kept here so the record isn't artificially short. Going forward, new rows are dated
