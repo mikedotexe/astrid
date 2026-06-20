@@ -409,6 +409,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "self_directed_introspect_recognized_for_override_exemption",
                  "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib self_directed_introspect_recognized"},
     },
+    {
+        "id": "deploy_from_clean_tree_gate",
+        "shipped": "2026-06-20",
+        "surface": "the two-agent deploy path — `cargo build --release` + restart of the live spectral-bridge, run by Claude (interactive + steward loop) AND Codex over ONE shared, chronically-dirty tree",
+        "failure_mode": "two agents mutate /Users/v/other/astrid and feed ONE live binary; Codex can't hold the steward mutex (no pre-tool hook) and the git author is shared (every commit reads `Codex`, Claude's included). A raw `cargo build --release` from the dirty tree folded Codex's UNCOMMITTED, unreviewed code (incl. being-facing llm.rs) into the LIVE bridge more than once this session — the running binary matched no clean commit, no rollback point. `kickstart -k` does NOT rebuild, so the capture point is the BUILD, not the restart. Fix: deploy ONLY via scripts/build_bridge.sh, gated by scripts/deploy_preflight.py — ABORT if a non-mutex agent is editing now (reuses steward_mutex.foreign_activity), REFUSE a build from dirty `capsules/spectral-bridge/{src,Cargo.toml,Cargo.lock}` unless `--ack \"reason\"` makes folding-in an explicit, logged decision; deploy receipt via environment_receipts.py. Etiquette protocol (commit-before-yield, stage-by-path, [claude]/[codex] tags, deploy-only-via-gate) in CLAUDE.md + AGENTS.md so Codex follows it. THE LIVE RISK IS ADOPTION: if a deploy hand-runs `cargo build --release` + kickstart instead of build_bridge.sh, the gate is bypassed — keep CLAUDE.md / AGENTS.md / steward_loop_prompt.txt pointed at the wrapper.",
+        "guard": {"repo": "astrid", "file": "scripts/deploy_preflight.py", "symbol": "preflight"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/deploy_preflight.py",
+                 "name": "DeployPreflightTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/deploy_preflight.py --self-test"},
+    },
 ]
 
 

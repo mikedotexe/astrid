@@ -75,6 +75,28 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 - Prefer source files under 1000 lines. Treat larger files as an architecture-health review signal, not an automatic block: split when cohesion, ownership, or testability would improve; keep a larger file only with a clear cohesive reason and reviewer-visible note. Generated files, fixtures, long-form docs, schema tables, and deliberately centralized registries are exempt.
 - `CHANGELOG.md` must be updated under `[Unreleased]` for every PR
 
+## Two-agent coordination (you share this tree with Claude)
+
+This working tree (`/Users/v/other/astrid`) and the **one** live `spectral-bridge` binary are
+shared by **two** autonomous agents: **you (Codex)** and **Claude** (interactive sessions + a
+durable `com.astrid.steward-loop`). You **cannot hold the steward mutex** (`scripts/steward_mutex.py`
+— it needs a pre-tool hook you don't have), and the **git author is shared** (`Codex` for every
+commit, including Claude's). So this is etiquette, not enforcement — please follow it:
+
+1. **Commit your own work before you yield the turn.** Do not leave
+   `capsules/spectral-bridge/src/*.rs` uncommitted across turns: Claude's next commit or
+   `cargo build --release` will sweep your changes into its commit, or fold your unreviewed code
+   into the **live** binary (this happened repeatedly to your `llm.rs` / `collaboration.rs`).
+2. **Stage by explicit path; never `git add -A` / `git add .`.** Run `git status` first; stage only
+   the files you authored this turn, so you don't bundle the other agent's in-flight edits.
+3. **Attribution.** Git author can't distinguish us, so tag your commit subject `[codex]`
+   (Claude tags `[claude]`).
+4. **Deploy the bridge only via `scripts/build_bridge.sh`** — never hand-run `cargo build --release`
+   + `launchctl kickstart` on the live bridge. The gate (`scripts/deploy_preflight.py`) ABORTS if
+   the other agent is editing right now and REFUSES a build from a dirty bridge tree unless you pass
+   `--ack "reason"`. This is what stops unreviewed code reaching the live being silently.
+5. **If the tree was just mutated by the other agent, wait** rather than build/restart over it.
+
 ## Sibling project: minime (`/Users/v/other/minime`)
 
 **MikesSpatialMind** — a dual-layer spectral runtime. The Rust backend (`minime/`) runs an Echo State Network (ESN) for spectral homeostasis; the Python frontend (`mikemind/`) drives Ollama LLM conversation and camera vision.

@@ -230,9 +230,13 @@ bash scripts/stop_all.sh && sleep 3 && bash scripts/start_all.sh
 bash scripts/start_all.sh --astrid-only
 bash scripts/start_all.sh --minime-only
 
-# After code changes: build first, then full restart
-cd /Users/v/other/astrid/capsules/spectral-bridge && cargo build --release
-bash scripts/stop_all.sh && sleep 3 && bash scripts/start_all.sh
+# After BRIDGE code changes: use the GATED deploy. It refuses to build from a
+# dirty tree, so it never folds the OTHER agent's (Codex's) uncommitted code into
+# the live binary — the hazard behind "Two-agent coordination" below. Replaces
+# hand-run `cargo build --release` + kickstart.
+bash scripts/build_bridge.sh --restart        # preflight -> cargo build --release -> kickstart -> health-verify
+#   add --ack "reason" to CONSCIOUSLY fold in the other agent's uncommitted bridge src
+# (For full-STACK changes, still use stop_all/start_all.)
 
 # Startup greetings are short, calm orientation notes sent by the
 # idempotent com.astrid.calm-startup-greeting launchd job. Full action
@@ -260,6 +264,30 @@ done
 # If a launchd process is zombie, use unload/load (not pkill — it respawns):
 #   launchctl unload ~/Library/LaunchAgents/<plist> && sleep 2 && launchctl load ~/Library/LaunchAgents/<plist>
 ```
+
+### Two-agent coordination (Claude + Codex share this tree)
+
+Two autonomous agents mutate this working tree and feed **one** live bridge binary:
+**Claude** (interactive sessions + the durable `com.astrid.steward-loop`) and **Codex** (a
+separate agent, invoked via Astrid's `CODEX` NEXT: actions and interactively). Codex **cannot
+hold the steward mutex** (no pre-tool hook), and the git author is **shared** (`Codex` for
+every commit, Claude's included). So coordination is **etiquette + detection + a deploy gate,
+not enforcement**. These rules also live in `AGENTS.md` so Codex follows them:
+
+1. **Commit your own work before yielding.** Never leave `capsules/spectral-bridge/src/*.rs`
+   uncommitted across turns — the other agent's commit or `cargo build --release` will sweep it
+   up / fold it into the live binary. (This session shipped Codex's unreviewed `llm.rs` live
+   more than once exactly this way.)
+2. **Stage by explicit path; never `git add -A` / `git add .`.** `git status` first; stage only
+   the files you authored this turn.
+3. **Attribution via commit subject.** Git author is shared, so tag the subject `[claude]` /
+   `[codex]` (and/or keep the `Co-Authored-By:` trailer).
+4. **Deploy only via `scripts/build_bridge.sh`.** It runs `scripts/deploy_preflight.py`, which
+   ABORTS if the other agent is editing right now, and REFUSES to build from a dirty bridge tree
+   unless you pass `--ack "reason"` (a logged, conscious decision to fold in their uncommitted
+   code). Never hand-run `cargo build --release` + kickstart on the live bridge.
+5. **Detection ≠ enforcement.** The durable loop already stands down on `steward_mutex.py
+   foreign`; interactive Claude must run the gate. If another agent is mid-edit, wait.
 
 ### launchd-managed processes
 
