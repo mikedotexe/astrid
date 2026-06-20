@@ -2374,6 +2374,16 @@ fn clear_review_slot_if_introspected(label: &str, source_path: &std::path::Path)
     }
 }
 
+/// True if `next_action` is a self-directed INTROSPECT (Astrid examining her own
+/// code). Sovereign reflection, not the sterile output-repetition the
+/// anti-stagnation override targets — so the override HINTS but never FORCE-swaps
+/// it. Her review-fulfilling INTROSPECTs were already exempt; this generalizes
+/// that grace to her self-directed inquiry, which the override was eating (e.g.
+/// repeated `INTROSPECT astrid:llm` to pursue a real fallback-contract concern).
+fn is_self_directed_introspect(next_action: &str) -> bool {
+    next_action.trim().to_uppercase().starts_with("INTROSPECT")
+}
+
 /// True if `next_action` is an INTROSPECT whose target matches a pending review
 /// invitation's `review_target`. The anti-stagnation diversity override must
 /// EXEMPT this — she is answering a steward review invitation, not stuck-repeating
@@ -7451,10 +7461,26 @@ pub fn spawn_autonomous_loop(
                             // invitation is never silently eaten.
                             let exempt_review =
                                 introspect_fulfills_pending_review(&canonical_next_action);
+                            // A self-directed INTROSPECT (examining her own code) is sovereign
+                            // reflection, not the sterile output-repetition the override targets.
+                            // Exempt it from the FORCE too — she still gets the diversity HINT
+                            // (nudged toward variety, set below), but her choice to look at her
+                            // own code is never silently swapped (she was repeatedly trying
+                            // INTROSPECT astrid:llm for a real concern; the override ate it — the
+                            // same suppression class as the review muffle).
+                            let exempt_introspect =
+                                is_self_directed_introspect(&canonical_next_action);
+                            let exempt_override = exempt_review || exempt_introspect;
                             if let Some(ref forced_action) = next_choice_feedback.override_action {
                                 if exempt_review {
                                     info!(
                                         "diversity override SKIPPED — INTROSPECT answers a pending review invitation: {}",
+                                        canonical_next_action
+                                    );
+                                } else if exempt_introspect {
+                                    info!(
+                                        new_ground_budget = next_choice_feedback.new_ground_budget,
+                                        "diversity override SKIPPED — self-directed INTROSPECT is sovereign reflection (hint retained, not forced): {}",
                                         canonical_next_action
                                     );
                                 } else if next_choice_feedback.stagnant_loop {
@@ -7474,7 +7500,7 @@ pub fn spawn_autonomous_loop(
                                 }
                             }
                             deferred_diversity_hint = next_choice_feedback.hint;
-                            if exempt_review {
+                            if exempt_override {
                                 canonical_next_action.clone()
                             } else {
                                 next_choice_feedback
@@ -9089,6 +9115,18 @@ mod tests {
         // Still gated on resonance: below the floor (or no density) => empty.
         assert_eq!(field_lingering_note(Some(0.50), Some(0.60)), "");
         assert_eq!(field_lingering_note(None, Some(0.60)), "");
+    }
+
+    #[test]
+    fn self_directed_introspect_recognized_for_override_exemption() {
+        // She examines her own code → exempt from the FORCE-override (hint, not force).
+        assert!(is_self_directed_introspect("INTROSPECT astrid:llm"));
+        assert!(is_self_directed_introspect("  introspect astrid:codec 42"));
+        assert!(is_self_directed_introspect("INTROSPECT astrid:autonomous"));
+        // Non-introspect actions are NOT exempt — anti-stagnation still applies.
+        assert!(!is_self_directed_introspect("SHADOW_TRAJECTORY"));
+        assert!(!is_self_directed_introspect("SPEAK"));
+        assert!(!is_self_directed_introspect("SPECTRAL_EXPLORER"));
     }
 
     #[test]
