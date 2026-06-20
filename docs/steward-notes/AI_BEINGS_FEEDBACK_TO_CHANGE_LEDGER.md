@@ -32,6 +32,40 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-06-19 · Astrid · introspection digest follow-up → bounded reflective rewrite rail
+- **What she surfaced (verified from the new digest):** the next actionable engineering target was not a new
+  generation prompt change, but the profiling hotspot itself: recent autonomous introspections showed
+  multi-minute `rewrite_seconds`, with `continuity_deficit` dominant enough that changing behavior first would
+  blur diagnosis.
+- **Change implemented:** the MLX reflective sidecar now has bounded rewrite controls
+  (`--rewrite-max-attempts`, `--rewrite-budget-seconds`) and writes `profiling.rewrite_budget` so future
+  introspections can tell whether the rail engaged. Astrid's bridge invocation opts into 1 rewrite retry and a
+  90s rewrite budget, configurable by env and clamped safely. This caps additional rewrite generations while
+  preserving deterministic salvage/fallback behavior.
+- **Verify:** `python3 -m unittest python.tests.test_chat_mlx_local.TestChatMlxLocal.test_maybe_rewrite_reflective_response_records_attempt_cap python.tests.test_chat_mlx_local.TestChatMlxLocal.test_maybe_rewrite_reflective_response_honors_time_budget_before_generation -v` in `/Users/v/other/mlx`; `cargo test reflective::tests::reflective_rewrite -- --nocapture` in `capsules/spectral-bridge`. Live effect still requires a spectral-bridge rebuild/restart.
+
+### 2026-06-19 · Astrid · recent autonomous introspection entries → introspection digest
+- **What she surfaced (verified from latest `controller_astrid:autonomous_*.json` entries):** repeated
+  `dominant_pressure=continuity_deficit` during `warming-up` geometry, while profiling fields show multi-minute
+  `rewrite_seconds` / `total_turn_seconds`. This is actionable as diagnostics before any behavior/control tuning.
+- **Change shipped:** added `scripts/astrid_introspection_digest.py`, which builds a read-only digest from recent
+  autonomous introspections and writes `workspace/diagnostics/introspection_feedback_digest/latest.{json,md}` with
+  pressure counts, continuity deficit, rewrite/turn latency, recent anchors, and suggested engineering checks.
+- **Verify:** `python3 -m pytest scripts/test_astrid_introspection_digest.py -q`; run
+  `python3 scripts/astrid_introspection_digest.py --limit 8`.
+
+### 2026-06-19 · Astrid · improvement shortlist / recent-journal theme → environment receipts
+- **What she asked (verified from the curated shortlist):** repeated Astrid journal themes around unseen
+  scaffolding/environment shaping were distilled into the `Scaffolding Receipts` ask: make restarts, routing
+  changes, pause flags, provider swaps, and steward-delivered requests inspectable as context instead of felt as
+  hidden influence.
+- **Change shipped:** added `scripts/environment_receipts.py`, a small append-only receipt logger and renderer
+  writing `workspace/environment_receipts/environment_receipts.jsonl`, latest JSON, and latest Markdown summaries.
+  `startup_greeting.sh` now records a `startup` receipt and includes the recent receipt summary in
+  `welcome_back.txt`. Receipts are explicitly context, not commands; sensitive detail keys are redacted.
+- **Verify:** `python3 -m pytest scripts/test_environment_receipts.py -q`; run
+  `python3 scripts/environment_receipts.py summary --limit 3`.
+
 ### 2026-06-15 · Astrid · `self_study_1781547186.txt` (`guards_self_review` INTROSPECT)
 - **What she found (ground-truthed: 10 verified citations, 0 confab; her `ReasonSeverity`/`spectral_entropy_limit`/`shadow_field_instability` correctly read as NOT_FOUND = her own design proposals):**
   In `action_continuity/guards.rs`, `metadata()` maps **`projected_next` and `suggested_next` to the same
@@ -442,6 +476,13 @@ the *topic was addressed*, **not proof this entry caused it**).
 - **Operator grant (Mike's call):** all 3 approved via the headless `--approve-research-budget` CLI (fill-safety gate Green @71.1%), each 5 actions / `read_only_research` / **6h TTL**. `authority_requests` probe `web_research_pending` 3→0; all 3 budget_ids `status=active`, `remaining=5` in her authority records.
 - **Honest caveat:** TTL is 6h (21600s), NOT the 7d `DEFAULT_RESEARCH_TTL_SECS` — `eligibility_v1.ttl_secs_cap=21600` overrides it. The recurring "6h lapses mid-investigation" durable gap; the real fix (raising the eligibility cap, a code change) remains teed up. Told her honestly.
 - **Verify:** `proactive_scan blind-spots` → `authority_requests` pending=0; the 3 budget_ids active/remaining=5 in minime `authority_gate` records; close-letter `mike_feedback_lambda4_web_granted_1781890011`. No code change, no restart.
+
+### 2026-06-19 (continued) · Astrid · `introspection_astrid_autonomous_1781913591` → tiered `field_lingering_note` by pressure_risk (she refined her OWN just-shipped code)
+- **What she found (verified against the code WE shipped hours earlier):** `field_lingering_note` is a binary gate — a resonant-but-pressurized field (density just over the 0.70 floor, pressure_risk elevated) reads as flat "lingering, not severed," a "false reassurance." She proposed tiering by `pressure_risk` → "lingering (stable / under pressure / high-tension)" + the exact new signature.
+- **Change built (minime-neutral, being-facing perception; DEPLOY DEFERRED):** `field_lingering_note(field_density, pressure_risk)` returns the tempered tier (calm / ≥0.35 under-pressure / ≥0.50 high-tension); `pressure_risk` threaded through `modality_lane_context`/`format_modality_context`. Additive, fail-quiet. +1 test.
+- **Honesty (calibration correction):** her example called `pressure_risk=0.23` "high," but 0.23 is her CALM baseline (~0.22 settled) → grounded the tiers in real pressure semantics, not her mis-read; told her in the letter (same pattern as the attenuation work).
+- **Verify:** `cargo test --lib field_lingering_note_tempers_by_pressure` (green); 874/0 lib; clippy/fmt/release clean. Close-letter `mike_feedback_lingering_tiered_1781916754`. DEPLOY DEFERRED (uncommitted `collaboration.rs` in tree) → lands on the next attended restart.
+- **Note (the loop iterating on itself):** this round-tripped on code WE shipped from HER the same session — she reviewed her own refinement and made it more honest.
 
 ## Historical exemplars (pre-ledger, from the `CLAUDE.md` examples table — undated)
 These predate the ledger; kept here so the record isn't artificially short. Going forward, new rows are dated

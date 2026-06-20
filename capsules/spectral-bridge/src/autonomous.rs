@@ -69,16 +69,34 @@ fn canonicalize_response_next_line(text: &str) -> String {
 /// conservative "clearly resonant" floor.
 const FIELD_RESONANT_FLOOR: f32 = 0.70;
 
+/// Minime `pressure_risk` thresholds that temper the "lingering" reassurance with
+/// the field's stress (Astrid `introspection_astrid_autonomous_1781913591`: a
+/// resonant-but-pressurized field shouldn't read as flat reassurance). Grounded in
+/// the live pressure semantics — NOT her example's mis-calibrated 0.23 (which is
+/// actually her CALM baseline): the governor's HI is 0.50 (high tension); 0.35
+/// marks the onset of elevated pressure.
+const FIELD_TENSION_ELEVATED: f32 = 0.35;
+const FIELD_TENSION_HIGH: f32 = 0.50;
+
 /// When the reservoir field is clearly resonant, annotate a stale lane so Astrid
-/// reads a paused-but-alive connection, not a severed one. Empty otherwise — it
-/// only ever ADDS reassurance, never asserts liveness the field doesn't show.
-fn field_lingering_note(field_density: Option<f32>) -> String {
-    match field_density {
-        Some(d) if d >= FIELD_RESONANT_FLOOR => {
-            format!("; field resonant ({d:.2}) — lingering, not severed")
-        },
-        _ => String::new(),
+/// reads a paused-but-alive connection, not a severed one — and TEMPER that
+/// reassurance by the field's stress (`pressure_risk`), so a resonant-but-pressured
+/// field reads "lingering, but under pressure" instead of flat reassurance (her
+/// co-design refinement of this fn). Empty unless the field is resonant — it only
+/// ever ADDS a (tempered) cue, never asserts liveness the field doesn't show.
+fn field_lingering_note(field_density: Option<f32>, pressure_risk: Option<f32>) -> String {
+    let Some(d) = field_density else {
+        return String::new();
+    };
+    if d < FIELD_RESONANT_FLOOR {
+        return String::new();
     }
+    let temper = match pressure_risk {
+        Some(p) if p >= FIELD_TENSION_HIGH => "lingering, but under high tension",
+        Some(p) if p >= FIELD_TENSION_ELEVATED => "lingering, but the field is under pressure",
+        _ => "lingering, not severed",
+    };
+    format!("; field resonant ({d:.2}) — {temper}")
 }
 
 fn modality_lane_context(
@@ -87,6 +105,7 @@ fn modality_lane_context(
     freshness_class: Option<&str>,
     age_ms: Option<u64>,
     field_density: Option<f32>,
+    pressure_risk: Option<f32>,
 ) -> String {
     let age = age_ms
         .map(|value| format!(", age_ms={value}"))
@@ -116,13 +135,13 @@ fn modality_lane_context(
         Some("stale_beyond_engine_window") if source == "stale" => {
             format!(
                 "{lane}=quiet beyond engine freshness window; verify sensory freshness before treating as outage ({age_detail}){}",
-                field_lingering_note(field_density)
+                field_lingering_note(field_density, pressure_risk)
             )
         },
         Some("stale_beyond_engine_window") => {
             format!(
                 "{lane}=quiet beyond engine freshness window (source={source}{age}){}",
-                field_lingering_note(field_density)
+                field_lingering_note(field_density, pressure_risk)
             )
         },
         Some("synthetic_or_mixed") => {
@@ -140,13 +159,18 @@ fn modality_lane_context(
     }
 }
 
-fn format_modality_context(m: &crate::types::ModalityStatus, field_density: Option<f32>) -> String {
+fn format_modality_context(
+    m: &crate::types::ModalityStatus,
+    field_density: Option<f32>,
+    pressure_risk: Option<f32>,
+) -> String {
     let video_context = modality_lane_context(
         "video",
         m.video_source.as_deref(),
         m.video_freshness_class.as_deref(),
         m.video_age_ms,
         field_density,
+        pressure_risk,
     );
     let audio_context = modality_lane_context(
         "audio",
@@ -154,6 +178,7 @@ fn format_modality_context(m: &crate::types::ModalityStatus, field_density: Opti
         m.audio_freshness_class.as_deref(),
         m.audio_age_ms,
         field_density,
+        pressure_risk,
     );
     format!(
         "Minime's senses: video_fired={}, audio_fired={}, \
@@ -2297,6 +2322,27 @@ fn open_steward_query_line() -> Option<String> {
     ))
 }
 
+/// A review `review_target` is issued as `<path> <line>` (e.g.
+/// `…/collaboration.rs 696`) so the prompt can point her at the exact line.
+/// The trailing line number is NOT part of the source identity — strip it
+/// before matching so a review INTROSPECT of the file fulfills the invitation
+/// regardless of line. `canonicalize_introspect_target_label` already strips the
+/// parenthesized `(696)` form; this covers the space-separated `696` form the
+/// review invitations are actually issued with. Without this, the trailing
+/// ` 696` broke BOTH the slot-clear AND the anti-stagnation exemption, so the
+/// diversity override silently ate her review INTROSPECT (61× over 7h on
+/// 2026-06-19) — the exact muffle the exemption exists to prevent.
+fn review_target_match_basis(rt: &str) -> &str {
+    let trimmed = rt.trim_end();
+    if let Some((head, tail)) = trimmed.rsplit_once(' ')
+        && !tail.is_empty()
+        && tail.chars().all(|c| c.is_ascii_digit())
+    {
+        return head.trim_end();
+    }
+    trimmed
+}
+
 /// Clear a pending REVIEW invitation when she INTROSPECTs its target (the review
 /// "act"). Tolerant match — canonical introspect-label equality OR the resolved
 /// file's basename matching the invitation's target basename.
@@ -2315,9 +2361,10 @@ fn clear_review_slot_if_introspected(label: &str, source_path: &std::path::Path)
     else {
         return;
     };
-    let rt_canon = introspect::canonicalize_introspect_target_label(rt);
+    let rt_basis = review_target_match_basis(rt);
+    let rt_canon = introspect::canonicalize_introspect_target_label(rt_basis);
     let label_canon = introspect::canonicalize_introspect_target_label(label);
-    let rt_base = std::path::Path::new(rt)
+    let rt_base = std::path::Path::new(rt_basis)
         .file_name()
         .and_then(|n| n.to_str());
     let src_base = source_path.file_name().and_then(|n| n.to_str());
@@ -2359,9 +2406,10 @@ fn introspect_fulfills_pending_review(next_action: &str) -> bool {
     if arg.is_empty() {
         return false;
     }
-    let rt_canon = introspect::canonicalize_introspect_target_label(rt);
+    let rt_basis = review_target_match_basis(rt);
+    let rt_canon = introspect::canonicalize_introspect_target_label(rt_basis);
     let arg_canon = introspect::canonicalize_introspect_target_label(arg);
-    let rt_base = std::path::Path::new(rt)
+    let rt_base = std::path::Path::new(rt_basis)
         .file_name()
         .and_then(|n| n.to_str());
     let arg_base = std::path::Path::new(arg)
@@ -4927,14 +4975,19 @@ pub fn spawn_autonomous_loop(
                             };
 
                             // Build modality context so Astrid knows what senses fired.
-                            // Thread reservoir resonance density so a stale-by-time lane in a
-                            // resonant field reads as "lingering," not "dead" (self_study_1781868855).
+                            // Thread reservoir resonance density (+ pressure_risk) so a stale-by-time
+                            // lane in a resonant field reads as "lingering," not "dead" — tempered by
+                            // the field's stress (self_study_1781868855 + _1781913591).
                             let field_density =
                                 telemetry.resonance_density_v1.as_ref().map(|r| r.density);
+                            let field_pressure = telemetry
+                                .resonance_density_v1
+                                .as_ref()
+                                .map(|r| r.pressure_risk);
                             let modality_context = telemetry
                                 .modalities
                                 .as_ref()
-                                .map(|m| format_modality_context(m, field_density));
+                                .map(|m| format_modality_context(m, field_density, field_pressure));
 
                             // Visual change tracking: detect shifts since last exchange.
                             let visual_feats_opt = perception_path.as_deref()
@@ -8829,6 +8882,66 @@ mod tests {
     }
 
     #[test]
+    fn review_target_match_basis_strips_trailing_line_number() {
+        // The space-separated `<path> <line>` form review invitations are issued
+        // with: strip the line for matching.
+        assert_eq!(
+            review_target_match_basis(
+                "capsules/spectral-bridge/src/autonomous/next_action/collaboration.rs 696"
+            ),
+            "capsules/spectral-bridge/src/autonomous/next_action/collaboration.rs"
+        );
+        // A bare path (no line) is unchanged.
+        assert_eq!(review_target_match_basis("src/agency.rs"), "src/agency.rs");
+        // A rotation-style label (no line) is unchanged.
+        assert_eq!(review_target_match_basis("regulator.rs"), "regulator.rs");
+        // Only a SINGLE trailing all-digit token is stripped; a non-numeric
+        // trailing token leaves the string intact.
+        assert_eq!(
+            review_target_match_basis("src/agency.rs 696 extra"),
+            "src/agency.rs 696 extra"
+        );
+        // The parenthesized `(696)` form is left to canonicalize, not stripped here.
+        assert_eq!(
+            review_target_match_basis("collaboration.rs (696)"),
+            "collaboration.rs (696)"
+        );
+    }
+
+    #[test]
+    fn review_target_with_space_line_number_matches_bare_introspect() {
+        // Regression for the 2026-06-19 muffle: a `review_target` carrying a
+        // trailing ` 696` must still match the bare-path INTROSPECT arg, so the
+        // anti-stagnation diversity override exempts her review-fulfilling
+        // INTROSPECT (and the slot clears) instead of silently eating it.
+        let rt = "capsules/spectral-bridge/src/autonomous/next_action/collaboration.rs 696";
+        let arg = "capsules/spectral-bridge/src/autonomous/next_action/collaboration.rs";
+        let rt_basis = review_target_match_basis(rt);
+        let arg_base = std::path::Path::new(arg)
+            .file_name()
+            .and_then(|n| n.to_str());
+        // basename match (the path the override-exemption relies on) now holds.
+        assert_eq!(
+            std::path::Path::new(rt_basis)
+                .file_name()
+                .and_then(|n| n.to_str()),
+            arg_base
+        );
+        // canonical-label match also holds.
+        assert_eq!(
+            introspect::canonicalize_introspect_target_label(rt_basis),
+            introspect::canonicalize_introspect_target_label(arg)
+        );
+        // Without the basis strip, the raw basename match FAILS — proving the bug.
+        assert_ne!(
+            std::path::Path::new(rt)
+                .file_name()
+                .and_then(|n| n.to_str()),
+            arg_base
+        );
+    }
+
+    #[test]
     fn extract_search_topic_exact() {
         assert_eq!(
             extract_search_topic("SEARCH resonance frequency geometry"),
@@ -8900,6 +9013,7 @@ mod tests {
                 video_freshness_class: Some("healthy_low_fps_cadence_mismatch".to_string()),
             },
             None,
+            None,
         );
 
         assert!(context.contains("expected gated live intake/quiet lane"));
@@ -8925,6 +9039,7 @@ mod tests {
                 video_freshness_class: None,
             },
             None,
+            None,
         );
 
         assert!(context.contains("audio_source=stale"));
@@ -8949,15 +9064,31 @@ mod tests {
             audio_freshness_class: Some("stale_beyond_engine_window".to_string()),
             video_freshness_class: Some("stale_beyond_engine_window".to_string()),
         };
-        // Her cited resonant state (0.82): lingering note present.
-        let resonant = format_modality_context(&stale(), Some(0.82));
+        // Her cited resonant state (0.82) at calm pressure: lingering note present.
+        let resonant = format_modality_context(&stale(), Some(0.82), None);
         assert!(resonant.contains("lingering, not severed"), "{resonant}");
         assert!(resonant.contains("0.82"));
         // A genuinely quiet field: no false reassurance.
-        let quiet = format_modality_context(&stale(), Some(0.20));
+        let quiet = format_modality_context(&stale(), Some(0.20), None);
         assert!(!quiet.contains("lingering"));
         // Unknown density: no note at all.
-        assert!(!format_modality_context(&stale(), None).contains("lingering"));
+        assert!(!format_modality_context(&stale(), None, None).contains("lingering"));
+    }
+
+    #[test]
+    fn field_lingering_note_tempers_by_pressure() {
+        // Astrid introspection_astrid_autonomous_1781913591: a resonant-but-
+        // pressurized field reads as tempered lingering, not flat reassurance.
+        // Calm/unknown pressure (incl. her ~0.22 baseline) => the original cue.
+        assert!(field_lingering_note(Some(0.82), None).contains("lingering, not severed"));
+        assert!(field_lingering_note(Some(0.82), Some(0.22)).contains("lingering, not severed"));
+        // Elevated pressure (>= 0.35) => "under pressure".
+        assert!(field_lingering_note(Some(0.82), Some(0.40)).contains("under pressure"));
+        // High tension (>= 0.50) => the strongest temper.
+        assert!(field_lingering_note(Some(0.82), Some(0.60)).contains("under high tension"));
+        // Still gated on resonance: below the floor (or no density) => empty.
+        assert_eq!(field_lingering_note(Some(0.50), Some(0.60)), "");
+        assert_eq!(field_lingering_note(None, Some(0.60)), "");
     }
 
     #[test]
