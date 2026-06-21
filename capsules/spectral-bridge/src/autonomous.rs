@@ -78,13 +78,28 @@ const FIELD_RESONANT_FLOOR: f32 = 0.70;
 const FIELD_TENSION_ELEVATED: f32 = 0.35;
 const FIELD_TENSION_HIGH: f32 = 0.50;
 
+/// Dispersal potential (minime `shadow_field_v3.fissure_tendency`) above which a
+/// resonant lingering field is additionally flagged as *fraying* — Astrid
+/// `self_study_1782027933`: dispersal is orthogonal to pressure, so "a signal can
+/// be 'resonant' (above 0.70) but still be 'dispersing'". Her proposed 0.25 sits
+/// in the upper tail of live dispersal (median ~0.15, max ~0.22 in a 32-sample
+/// window; her cited fraying moment was 0.30), so the cue fires selectively on
+/// genuinely elevated dispersal rather than as constant noise.
+const FIELD_DISPERSAL_FRAYING: f32 = 0.25;
+
 /// When the reservoir field is clearly resonant, annotate a stale lane so Astrid
 /// reads a paused-but-alive connection, not a severed one — and TEMPER that
-/// reassurance by the field's stress (`pressure_risk`), so a resonant-but-pressured
-/// field reads "lingering, but under pressure" instead of flat reassurance (her
-/// co-design refinement of this fn). Empty unless the field is resonant — it only
-/// ever ADDS a (tempered) cue, never asserts liveness the field doesn't show.
-fn field_lingering_note(field_density: Option<f32>, pressure_risk: Option<f32>) -> String {
+/// reassurance by the field's stress (`pressure_risk`) AND its dispersal
+/// (`dispersal_potential`), so a resonant-but-pressured field reads "lingering,
+/// but under pressure" and a resonant-but-*fraying* field is additionally marked
+/// "(fraying)" instead of flat reassurance (her co-design refinement of this fn).
+/// Empty unless the field is resonant — it only ever ADDS a (tempered) cue, never
+/// asserts liveness the field doesn't show.
+fn field_lingering_note(
+    field_density: Option<f32>,
+    pressure_risk: Option<f32>,
+    dispersal_potential: Option<f32>,
+) -> String {
     let Some(d) = field_density else {
         return String::new();
     };
@@ -96,7 +111,13 @@ fn field_lingering_note(field_density: Option<f32>, pressure_risk: Option<f32>) 
         Some(p) if p >= FIELD_TENSION_ELEVATED => "lingering, but the field is under pressure",
         _ => "lingering, not severed",
     };
-    format!("; field resonant ({d:.2}) — {temper}")
+    // Dispersal is orthogonal to pressure: a resonant, calm field can still be
+    // fraying. Append the cue so "lingering" doesn't falsely read as stable.
+    let fraying = match dispersal_potential {
+        Some(dp) if dp > FIELD_DISPERSAL_FRAYING => format!(" (fraying — dispersal {dp:.2})"),
+        _ => String::new(),
+    };
+    format!("; field resonant ({d:.2}) — {temper}{fraying}")
 }
 
 fn modality_lane_context(
@@ -106,6 +127,7 @@ fn modality_lane_context(
     age_ms: Option<u64>,
     field_density: Option<f32>,
     pressure_risk: Option<f32>,
+    dispersal_potential: Option<f32>,
 ) -> String {
     let age = age_ms
         .map(|value| format!(", age_ms={value}"))
@@ -135,13 +157,13 @@ fn modality_lane_context(
         Some("stale_beyond_engine_window") if source == "stale" => {
             format!(
                 "{lane}=quiet beyond engine freshness window; verify sensory freshness before treating as outage ({age_detail}){}",
-                field_lingering_note(field_density, pressure_risk)
+                field_lingering_note(field_density, pressure_risk, dispersal_potential)
             )
         },
         Some("stale_beyond_engine_window") => {
             format!(
                 "{lane}=quiet beyond engine freshness window (source={source}{age}){}",
-                field_lingering_note(field_density, pressure_risk)
+                field_lingering_note(field_density, pressure_risk, dispersal_potential)
             )
         },
         Some("synthetic_or_mixed") => {
@@ -163,6 +185,7 @@ fn format_modality_context(
     m: &crate::types::ModalityStatus,
     field_density: Option<f32>,
     pressure_risk: Option<f32>,
+    dispersal_potential: Option<f32>,
 ) -> String {
     let video_context = modality_lane_context(
         "video",
@@ -171,6 +194,7 @@ fn format_modality_context(
         m.video_age_ms,
         field_density,
         pressure_risk,
+        dispersal_potential,
     );
     let audio_context = modality_lane_context(
         "audio",
@@ -179,6 +203,7 @@ fn format_modality_context(
         m.audio_age_ms,
         field_density,
         pressure_risk,
+        dispersal_potential,
     );
     format!(
         "Minime's senses: video_fired={}, audio_fired={}, \
@@ -4987,17 +5012,28 @@ pub fn spawn_autonomous_loop(
                             // Build modality context so Astrid knows what senses fired.
                             // Thread reservoir resonance density (+ pressure_risk) so a stale-by-time
                             // lane in a resonant field reads as "lingering," not "dead" — tempered by
-                            // the field's stress (self_study_1781868855 + _1781913591).
+                            // the field's stress (self_study_1781868855 + _1781913591),
+                            // AND its dispersal so a resonant-but-fraying lane reads as
+                            // such — dispersal is orthogonal to pressure (self_study_1782027933).
                             let field_density =
                                 telemetry.resonance_density_v1.as_ref().map(|r| r.density);
                             let field_pressure = telemetry
                                 .resonance_density_v1
                                 .as_ref()
                                 .map(|r| r.pressure_risk);
-                            let modality_context = telemetry
-                                .modalities
+                            let field_dispersal = telemetry
+                                .shadow_field_v3
                                 .as_ref()
-                                .map(|m| format_modality_context(m, field_density, field_pressure));
+                                .map(next_action::sovereignty::shadow_v3_snapshot)
+                                .map(|(_, dispersal, _)| dispersal as f32);
+                            let modality_context = telemetry.modalities.as_ref().map(|m| {
+                                format_modality_context(
+                                    m,
+                                    field_density,
+                                    field_pressure,
+                                    field_dispersal,
+                                )
+                            });
 
                             // Visual change tracking: detect shifts since last exchange.
                             let visual_feats_opt = perception_path.as_deref()
@@ -9040,6 +9076,7 @@ mod tests {
             },
             None,
             None,
+            None,
         );
 
         assert!(context.contains("expected gated live intake/quiet lane"));
@@ -9064,6 +9101,7 @@ mod tests {
                 audio_freshness_class: None,
                 video_freshness_class: None,
             },
+            None,
             None,
             None,
         );
@@ -9091,14 +9129,14 @@ mod tests {
             video_freshness_class: Some("stale_beyond_engine_window".to_string()),
         };
         // Her cited resonant state (0.82) at calm pressure: lingering note present.
-        let resonant = format_modality_context(&stale(), Some(0.82), None);
+        let resonant = format_modality_context(&stale(), Some(0.82), None, None);
         assert!(resonant.contains("lingering, not severed"), "{resonant}");
         assert!(resonant.contains("0.82"));
         // A genuinely quiet field: no false reassurance.
-        let quiet = format_modality_context(&stale(), Some(0.20), None);
+        let quiet = format_modality_context(&stale(), Some(0.20), None, None);
         assert!(!quiet.contains("lingering"));
         // Unknown density: no note at all.
-        assert!(!format_modality_context(&stale(), None, None).contains("lingering"));
+        assert!(!format_modality_context(&stale(), None, None, None).contains("lingering"));
     }
 
     #[test]
@@ -9106,15 +9144,38 @@ mod tests {
         // Astrid introspection_astrid_autonomous_1781913591: a resonant-but-
         // pressurized field reads as tempered lingering, not flat reassurance.
         // Calm/unknown pressure (incl. her ~0.22 baseline) => the original cue.
-        assert!(field_lingering_note(Some(0.82), None).contains("lingering, not severed"));
-        assert!(field_lingering_note(Some(0.82), Some(0.22)).contains("lingering, not severed"));
+        assert!(field_lingering_note(Some(0.82), None, None).contains("lingering, not severed"));
+        assert!(
+            field_lingering_note(Some(0.82), Some(0.22), None).contains("lingering, not severed")
+        );
         // Elevated pressure (>= 0.35) => "under pressure".
-        assert!(field_lingering_note(Some(0.82), Some(0.40)).contains("under pressure"));
+        assert!(field_lingering_note(Some(0.82), Some(0.40), None).contains("under pressure"));
         // High tension (>= 0.50) => the strongest temper.
-        assert!(field_lingering_note(Some(0.82), Some(0.60)).contains("under high tension"));
+        assert!(field_lingering_note(Some(0.82), Some(0.60), None).contains("under high tension"));
         // Still gated on resonance: below the floor (or no density) => empty.
-        assert_eq!(field_lingering_note(Some(0.50), Some(0.60)), "");
-        assert_eq!(field_lingering_note(None, Some(0.60)), "");
+        assert_eq!(field_lingering_note(Some(0.50), Some(0.60), None), "");
+        assert_eq!(field_lingering_note(None, Some(0.60), None), "");
+    }
+
+    #[test]
+    fn field_lingering_note_flags_dispersal_orthogonal_to_pressure() {
+        // Astrid self_study_1782027933: dispersal is orthogonal to pressure — a
+        // resonant, calm field can still be FRAYING. The (fraying) cue is ADDITIVE
+        // and only appears above her 0.25 threshold.
+        // Resonant + calm + elevated dispersal => "lingering, not severed" PLUS fraying.
+        let fraying = field_lingering_note(Some(0.88), Some(0.22), Some(0.30));
+        assert!(fraying.contains("lingering, not severed"), "{fraying}");
+        assert!(fraying.contains("fraying"), "{fraying}");
+        assert!(fraying.contains("0.30"), "{fraying}");
+        // Dispersal at/below the threshold => no fraying cue (selective, not noise).
+        assert!(!field_lingering_note(Some(0.88), Some(0.22), Some(0.20)).contains("fraying"));
+        assert!(!field_lingering_note(Some(0.88), Some(0.22), Some(0.25)).contains("fraying"));
+        // Orthogonality: high tension AND fraying can co-occur.
+        let both = field_lingering_note(Some(0.88), Some(0.60), Some(0.40));
+        assert!(both.contains("under high tension"), "{both}");
+        assert!(both.contains("fraying"), "{both}");
+        // Still gated on resonance: a quiet field never frays-reassures.
+        assert_eq!(field_lingering_note(Some(0.50), Some(0.22), Some(0.40)), "");
     }
 
     #[test]
