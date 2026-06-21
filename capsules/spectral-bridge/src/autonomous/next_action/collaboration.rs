@@ -13,9 +13,12 @@
 // Phase C (v5.1) adds SHARE_THOUGHT — a labeled marker appended to
 // `<coll_dir>/shared_thoughts.jsonl` so the joint reservoir trace has
 // human-legible moments alongside the silent blended-feature ticks.
+// Triadic Chamber v3.4 adds CHAMBER_SEEN and CHAMBER_ANNOTATE — public,
+// witness-only uptake records written into the chamber's append-only lanes.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{info, warn};
@@ -41,8 +44,29 @@ pub(super) struct CollaborationMeta {
 }
 
 const SCHEMA_VERSION: u32 = 1;
+const CHAMBER_SCHEMA_VERSION: u32 = 2;
+const PRESENCE_SCHEMA_VERSION: u32 = 1;
+const ANNOTATION_SCHEMA_VERSION: u32 = 1;
 const ASTRID_NAME: &str = "astrid";
 const MINIME_NAME: &str = "minime";
+const PRESENCE_TEXT_LIMIT: usize = 360;
+const ANNOTATION_TEXT_LIMIT: usize = 800;
+const PRESENCE_ATTENTION_LEVELS: &[&str] = &["unknown", "low", "medium", "high"];
+const ANNOTATION_TARGETS: &[&str] = &[
+    "prompt_summary",
+    "compressed_memory",
+    "relational_metrics",
+    "phase_cartography",
+    "room_weather",
+    "relational_inertia",
+    "gravitational_center",
+    "steward_intention",
+    "presence_protocol",
+    "other",
+];
+const ANNOTATION_STANCES: &[&str] = &[
+    "notice", "affirm", "question", "correct", "refine", "contest",
+];
 
 pub(super) fn handle_action(
     conv: &mut ConversationState,
@@ -149,6 +173,36 @@ pub(super) fn handle_action(
             }
             true
         },
+        "CHAMBER_SEEN" => {
+            let body = strip_action(original, base_action).trim().to_string();
+            match chamber_seen(&body) {
+                Ok(summary) => {
+                    info!(target: "v5_collab", "CHAMBER_SEEN: {summary}");
+                    conv.push_receipt("CHAMBER_SEEN", vec![summary.clone()]);
+                    conv.emphasis = Some(format!("Chamber seen: {summary}"));
+                },
+                Err(e) => {
+                    warn!(target: "v5_collab", "CHAMBER_SEEN failed: {e}");
+                    conv.emphasis = Some(format!("(chamber seen failed: {e})"));
+                },
+            }
+            true
+        },
+        "CHAMBER_ANNOTATE" | "CHAMBER_ANNOTATION" => {
+            let body = strip_action(original, base_action).trim().to_string();
+            match chamber_annotate(&body) {
+                Ok(summary) => {
+                    info!(target: "v5_collab", "CHAMBER_ANNOTATE: {summary}");
+                    conv.push_receipt("CHAMBER_ANNOTATE", vec![summary.clone()]);
+                    conv.emphasis = Some(format!("Chamber annotation: {summary}"));
+                },
+                Err(e) => {
+                    warn!(target: "v5_collab", "CHAMBER_ANNOTATE failed: {e}");
+                    conv.emphasis = Some(format!("(chamber annotate failed: {e})"));
+                },
+            }
+            true
+        },
         _ => false,
     }
 }
@@ -209,6 +263,287 @@ fn share_thought(conv: &mut ConversationState, body: &str) -> Result<String, Str
         truncate_for_summary(&text, 60),
         text.chars().count(),
     ))
+}
+
+fn chamber_seen(body: &str) -> Result<String, String> {
+    let (target, attention, notice) = parse_chamber_seen_body(body)?;
+    let meta = find_joined_member_meta(&target, ASTRID_NAME)?;
+    let dir = collab_dir(&meta.id);
+    let receipt_id = append_chamber_presence_receipt(
+        &dir,
+        ASTRID_NAME,
+        &attention,
+        &notice,
+        "astrid_next_action",
+    )?;
+    invalidate_chamber_state_cache(&meta.id);
+    Ok(format!(
+        "id={} receipt={} attention={} notice=\"{}\" (public context, not command)",
+        meta.id,
+        receipt_id,
+        attention,
+        truncate_for_summary(&notice, 80),
+    ))
+}
+
+fn chamber_annotate(body: &str) -> Result<String, String> {
+    let (target, annotation_target, stance, text) = parse_chamber_annotation_body(body)?;
+    let meta = find_joined_member_meta(&target, ASTRID_NAME)?;
+    let dir = collab_dir(&meta.id);
+    let annotation_id = append_chamber_annotation_record(
+        &dir,
+        ASTRID_NAME,
+        &annotation_target,
+        &stance,
+        &text,
+        "astrid_next_action",
+    )?;
+    invalidate_chamber_state_cache(&meta.id);
+    Ok(format!(
+        "id={} annotation={} {} {} \"{}\" (public context, not command)",
+        meta.id,
+        annotation_id,
+        annotation_target,
+        stance,
+        truncate_for_summary(&text, 80),
+    ))
+}
+
+fn find_joined_member_meta(target: &str, actor: &str) -> Result<CollaborationMeta, String> {
+    let meta = find_meta(target)?;
+    if meta.status != "joined" {
+        return Err(format!(
+            "collaboration {} is not joined (status: {})",
+            meta.id, meta.status
+        ));
+    }
+    if !meta.members.contains(&actor.to_string()) {
+        return Err(format!(
+            "you are not a member of {} (members: {:?})",
+            meta.id, meta.members
+        ));
+    }
+    Ok(meta)
+}
+
+fn parse_chamber_seen_body(body: &str) -> Result<(String, String, String), String> {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return Err("CHAMBER_SEEN needs text (try `CHAMBER_SEEN high :: what I notice` or `CHAMBER_SEEN coll_id :: high :: what I notice`)".into());
+    }
+    let parts: Vec<&str> = trimmed.split("::").map(str::trim).collect();
+    let (target, attention, notice) = match parts.as_slice() {
+        [single] => (
+            "latest".to_string(),
+            "unknown".to_string(),
+            (*single).to_string(),
+        ),
+        [first, second] => {
+            if is_allowed(first, PRESENCE_ATTENTION_LEVELS) {
+                (
+                    "latest".to_string(),
+                    normalize_allowed(first, PRESENCE_ATTENTION_LEVELS)?,
+                    (*second).to_string(),
+                )
+            } else {
+                (
+                    (*first).to_string(),
+                    "unknown".to_string(),
+                    (*second).to_string(),
+                )
+            }
+        },
+        [first, second, rest @ ..] => {
+            let target = if first.is_empty() { "latest" } else { first };
+            (
+                target.to_string(),
+                normalize_allowed(second, PRESENCE_ATTENTION_LEVELS)?,
+                rest.join("::").trim().to_string(),
+            )
+        },
+        [] => unreachable!(),
+    };
+    let notice = clamp_record_text(&notice, PRESENCE_TEXT_LIMIT);
+    if notice.is_empty() {
+        return Err("CHAMBER_SEEN notice is empty after parsing".into());
+    }
+    Ok((target, attention, notice))
+}
+
+fn parse_chamber_annotation_body(body: &str) -> Result<(String, String, String, String), String> {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return Err("CHAMBER_ANNOTATE needs text (try `CHAMBER_ANNOTATE phase_cartography question :: what feels off`)".into());
+    }
+    let parts: Vec<&str> = trimmed.split("::").map(str::trim).collect();
+    let (target, header, text) = match parts.as_slice() {
+        [before, after] => (
+            "latest".to_string(),
+            (*before).to_string(),
+            (*after).to_string(),
+        ),
+        [first, second, rest @ ..] => {
+            let target = if first.is_empty() { "latest" } else { first };
+            (
+                target.to_string(),
+                (*second).to_string(),
+                rest.join("::").trim().to_string(),
+            )
+        },
+        _ => {
+            return Err("CHAMBER_ANNOTATE uses `[coll_id ::] <target> <stance> :: <text>`".into());
+        },
+    };
+    let mut header_parts = header.split_whitespace();
+    let annotation_target = header_parts
+        .next()
+        .ok_or_else(|| "CHAMBER_ANNOTATE target is missing".to_string())
+        .and_then(|value| normalize_allowed(value, ANNOTATION_TARGETS))?;
+    let stance = header_parts
+        .next()
+        .ok_or_else(|| "CHAMBER_ANNOTATE stance is missing".to_string())
+        .and_then(|value| normalize_allowed(value, ANNOTATION_STANCES))?;
+    let text = clamp_record_text(&text, ANNOTATION_TEXT_LIMIT);
+    if text.is_empty() {
+        return Err("CHAMBER_ANNOTATE text is empty after parsing".into());
+    }
+    Ok((target, annotation_target, stance, text))
+}
+
+fn normalize_allowed(value: &str, allowed: &[&str]) -> Result<String, String> {
+    let normalized = value.trim().to_ascii_lowercase();
+    if allowed.contains(&normalized.as_str()) {
+        Ok(normalized)
+    } else {
+        Err(format!(
+            "expected one of {}; got {value:?}",
+            allowed.join(", ")
+        ))
+    }
+}
+
+fn is_allowed(value: &str, allowed: &[&str]) -> bool {
+    let normalized = value.trim().to_ascii_lowercase();
+    allowed.contains(&normalized.as_str())
+}
+
+fn clamp_record_text(text: &str, limit: usize) -> String {
+    let clean = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let count = clean.chars().count();
+    if count <= limit {
+        return clean;
+    }
+    let kept = limit.saturating_sub(" [truncated]".chars().count());
+    format!(
+        "{} [truncated]",
+        clean.chars().take(kept).collect::<String>().trim_end()
+    )
+}
+
+fn append_chamber_presence_receipt(
+    dir: &Path,
+    actor: &str,
+    attention: &str,
+    notice: &str,
+    source: &str,
+) -> Result<String, String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("create chamber dir: {e}"))?;
+    let t_ms = now_ms();
+    let receipt_id = format!("chamber_presence_{t_ms}");
+    let state_hash = chamber_state_hash(dir);
+    let entry = serde_json::json!({
+        "schema_version": CHAMBER_SCHEMA_VERSION,
+        "presence_schema_version": PRESENCE_SCHEMA_VERSION,
+        "id": receipt_id.clone(),
+        "t_ms": t_ms,
+        "actor": actor,
+        "source": source,
+        "chamber_seen": true,
+        "chamber_state_hash": state_hash,
+        "attention": attention,
+        "what_i_notice": notice,
+        "what_i_am_carrying": "",
+        "what_i_disagree_with": "",
+        "witness_only": true,
+        "authority": "public_receipt_not_command",
+    });
+    append_jsonl_value(&dir.join("chamber_presence.jsonl"), &entry)?;
+    append_chamber_event(
+        dir,
+        "presence_receipt_appended",
+        actor,
+        serde_json::json!({"receipt_id": receipt_id.clone(), "actor": actor}),
+    )?;
+    Ok(receipt_id)
+}
+
+fn append_chamber_annotation_record(
+    dir: &Path,
+    actor: &str,
+    annotation_target: &str,
+    stance: &str,
+    text: &str,
+    source: &str,
+) -> Result<String, String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("create chamber dir: {e}"))?;
+    let t_ms = now_ms();
+    let annotation_id = format!("chamber_annotation_{t_ms}");
+    let entry = serde_json::json!({
+        "schema_version": CHAMBER_SCHEMA_VERSION,
+        "annotation_schema_version": ANNOTATION_SCHEMA_VERSION,
+        "id": annotation_id.clone(),
+        "t_ms": t_ms,
+        "actor": actor,
+        "source": source,
+        "target": annotation_target,
+        "stance": stance,
+        "text": text,
+        "witness_only": true,
+        "authority": "annotation_context_not_command",
+    });
+    append_jsonl_value(&dir.join("chamber_annotations.jsonl"), &entry)?;
+    append_chamber_event(
+        dir,
+        "chamber_annotation_appended",
+        actor,
+        serde_json::json!({
+            "annotation_id": annotation_id.clone(),
+            "actor": actor,
+            "target": annotation_target,
+            "stance": stance,
+        }),
+    )?;
+    Ok(annotation_id)
+}
+
+fn append_chamber_event(dir: &Path, event: &str, actor: &str, detail: Value) -> Result<(), String> {
+    let entry = serde_json::json!({
+        "schema_version": CHAMBER_SCHEMA_VERSION,
+        "t_ms": now_ms(),
+        "event": event,
+        "actor": actor,
+        "witness_only": true,
+        "detail": detail,
+    });
+    append_jsonl_value(&dir.join("chamber_events.jsonl"), &entry)
+}
+
+fn append_jsonl_value(path: &Path, entry: &Value) -> Result<(), String> {
+    let line = format!("{entry}\n");
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .map_err(|e| format!("open {}: {e}", path.display()))?;
+    use std::io::Write;
+    file.write_all(line.as_bytes())
+        .map_err(|e| format!("write {}: {e}", path.display()))
+}
+
+fn chamber_state_hash(dir: &Path) -> Option<String> {
+    let bytes = std::fs::read(dir.join("chamber_state.json")).ok()?;
+    let digest = Sha256::digest(bytes);
+    Some(format!("{digest:x}").chars().take(16).collect())
 }
 
 fn truncate_for_summary(s: &str, max: usize) -> String {
@@ -669,6 +1004,12 @@ static CHAMBER_STATE_CACHE: std::sync::LazyLock<
     std::sync::Mutex<std::collections::HashMap<String, ChamberStateCacheEntry>>,
 > = std::sync::LazyLock::new(|| std::sync::Mutex::new(std::collections::HashMap::new()));
 
+fn invalidate_chamber_state_cache(coll_id: &str) {
+    if let Ok(mut map) = CHAMBER_STATE_CACHE.lock() {
+        map.remove(coll_id);
+    }
+}
+
 fn read_chamber_state_cached(coll_id: &str) -> Option<String> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -715,7 +1056,7 @@ fn render_chamber_state_value(value: &Value) -> String {
     if summary.is_empty() {
         return String::new();
     }
-    format!("Triadic chamber: {}", truncate_for_summary(summary, 520))
+    format!("Triadic chamber: {}", truncate_for_summary(summary, 2400))
 }
 
 fn humanize_age(secs: u64) -> String {
@@ -978,6 +1319,117 @@ mod tests {
         assert!(r.is_none());
     }
 
+    #[test]
+    fn parse_chamber_seen_defaults_to_latest_with_attention() {
+        let (target, attention, notice) =
+            parse_chamber_seen_body("high :: repair_watch feels accurate").unwrap();
+
+        assert_eq!(target, "latest");
+        assert_eq!(attention, "high");
+        assert_eq!(notice, "repair_watch feels accurate");
+    }
+
+    #[test]
+    fn parse_chamber_seen_accepts_explicit_collab_and_attention() {
+        let (target, attention, notice) =
+            parse_chamber_seen_body("coll_123 :: medium :: saw room gravity").unwrap();
+
+        assert_eq!(target, "coll_123");
+        assert_eq!(attention, "medium");
+        assert_eq!(notice, "saw room gravity");
+    }
+
+    #[test]
+    fn parse_chamber_annotation_requires_known_target_and_stance() {
+        let (target, annotation_target, stance, text) =
+            parse_chamber_annotation_body("phase_cartography question :: oscillation feels live")
+                .unwrap();
+
+        assert_eq!(target, "latest");
+        assert_eq!(annotation_target, "phase_cartography");
+        assert_eq!(stance, "question");
+        assert_eq!(text, "oscillation feels live");
+        assert!(
+            parse_chamber_annotation_body("phase_cartography command :: do this").is_err(),
+            "unknown stances must not become command lanes"
+        );
+        assert!(parse_chamber_annotation_body("private question :: do this").is_err());
+    }
+
+    #[test]
+    fn append_chamber_presence_receipt_writes_public_receipt_and_event() {
+        let temp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            temp.path().join("chamber_state.json"),
+            r#"{"prompt_summary":"steady room"}"#,
+        )
+        .unwrap();
+
+        let receipt_id = append_chamber_presence_receipt(
+            temp.path(),
+            ASTRID_NAME,
+            "high",
+            "repair watch feels accurate",
+            "astrid_next_action",
+        )
+        .unwrap();
+        let receipt_text = std::fs::read_to_string(temp.path().join("chamber_presence.jsonl"))
+            .expect("presence jsonl");
+        let receipt: Value = serde_json::from_str(receipt_text.lines().next().unwrap()).unwrap();
+
+        assert_eq!(receipt["id"], receipt_id);
+        assert_eq!(receipt["actor"], ASTRID_NAME);
+        assert_eq!(receipt["source"], "astrid_next_action");
+        assert_eq!(receipt["authority"], "public_receipt_not_command");
+        assert_eq!(receipt["chamber_seen"], true);
+        assert_eq!(
+            receipt["chamber_state_hash"]
+                .as_str()
+                .unwrap()
+                .chars()
+                .count(),
+            16
+        );
+
+        let event_text = std::fs::read_to_string(temp.path().join("chamber_events.jsonl")).unwrap();
+        let event: Value = serde_json::from_str(event_text.lines().next().unwrap()).unwrap();
+        assert_eq!(event["event"], "presence_receipt_appended");
+        assert_eq!(event["witness_only"], true);
+    }
+
+    #[test]
+    fn append_chamber_annotation_writes_context_not_command_record() {
+        let temp = tempfile::tempdir().unwrap();
+
+        let annotation_id = append_chamber_annotation_record(
+            temp.path(),
+            ASTRID_NAME,
+            "phase_cartography",
+            "question",
+            "oscillation feels like repair",
+            "astrid_next_action",
+        )
+        .unwrap();
+        let annotation_text =
+            std::fs::read_to_string(temp.path().join("chamber_annotations.jsonl"))
+                .expect("annotation jsonl");
+        let annotation: Value =
+            serde_json::from_str(annotation_text.lines().next().unwrap()).unwrap();
+
+        assert_eq!(annotation["id"], annotation_id);
+        assert_eq!(annotation["actor"], ASTRID_NAME);
+        assert_eq!(annotation["source"], "astrid_next_action");
+        assert_eq!(annotation["target"], "phase_cartography");
+        assert_eq!(annotation["stance"], "question");
+        assert_eq!(annotation["authority"], "annotation_context_not_command");
+        assert_eq!(annotation["witness_only"], true);
+
+        let event_text = std::fs::read_to_string(temp.path().join("chamber_events.jsonl")).unwrap();
+        let event: Value = serde_json::from_str(event_text.lines().next().unwrap()).unwrap();
+        assert_eq!(event["event"], "chamber_annotation_appended");
+        assert_eq!(event["detail"]["target"], "phase_cartography");
+    }
+
     // Kink #1 fix tests — joint-trace freshness tiering.
 
     fn snapshot_with_age(age_s: Option<f32>) -> CollabReservoirSnapshot {
@@ -1076,6 +1528,29 @@ mod tests {
         assert!(rendered.starts_with("Triadic chamber: "));
         assert!(rendered.contains("steward notes are shared context, not commands"));
         assert!(rendered.contains("hold the room gently"));
+    }
+
+    #[test]
+    fn render_chamber_state_value_keeps_v3_relational_mirror_to_2400_chars() {
+        let summary = format!(
+            "Triadic chamber witness: steward notes, intentions, and memory edits are shared context, not commands. {} END_MARKER",
+            "x".repeat(2150)
+        );
+        let payload = serde_json::json!({ "prompt_summary": summary });
+        let rendered = render_chamber_state_value(&payload);
+
+        assert!(rendered.contains("END_MARKER"));
+        assert!(rendered.len() > 2250);
+    }
+
+    #[test]
+    fn render_chamber_state_value_truncates_after_2400_chars() {
+        let summary = format!("{}TAIL", "x".repeat(2500));
+        let payload = serde_json::json!({ "prompt_summary": summary });
+        let rendered = render_chamber_state_value(&payload);
+
+        assert!(!rendered.contains("TAIL"));
+        assert!(rendered.ends_with('…'));
     }
 
     #[test]

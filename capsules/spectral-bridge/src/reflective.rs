@@ -10,11 +10,27 @@
 
 use crate::paths::bridge_paths;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::{
+    path::Path,
+    process::{Command, Output, Stdio},
+    thread,
+    time::{Duration, Instant},
+};
 use tracing::{debug, info, warn};
 
 const STORED_PROMPT_COMPACT_THRESHOLD_CHARS: usize = 800;
 const STORED_PROMPT_PREVIEW_CHARS: usize = 480;
+const REFLECTIVE_REWRITE_MAX_ATTEMPTS_ENV: &str = "ASTRID_REFLECTIVE_REWRITE_MAX_ATTEMPTS";
+const REFLECTIVE_REWRITE_BUDGET_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_REWRITE_BUDGET_SECONDS";
+const DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS: u32 = 1;
+const MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS: u32 = 3;
+const DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS: u64 = 90;
+const MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS: u64 = 600;
+const REFLECTIVE_SIDECAR_TIMEOUT_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS";
+const DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 240;
+const MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 30;
+const MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 900;
+const SIDECAR_WAIT_POLL_MS: u64 = 200;
 
 /// Lightweight regime classification — runs every exchange in <1ms.
 /// No LLM, no subprocess. Pure computation on spectral telemetry.
@@ -307,6 +323,78 @@ fn compact_controller_prompt_at(value: &mut serde_json::Value, pointer: &str) {
     );
 }
 
+fn parse_bounded_u32(raw: Option<&str>, default: u32, max: u32) -> u32 {
+    raw.and_then(|value| value.trim().parse::<u32>().ok())
+        .map_or(default, |value| value.min(max))
+}
+
+fn parse_bounded_u64(raw: Option<&str>, default: u64, max: u64) -> u64 {
+    raw.and_then(|value| value.trim().parse::<u64>().ok())
+        .map_or(default, |value| value.min(max))
+}
+
+fn parse_bounded_u64_range(raw: Option<&str>, default: u64, min: u64, max: u64) -> u64 {
+    raw.and_then(|value| value.trim().parse::<u64>().ok())
+        .map_or(default, |value| value.clamp(min, max))
+}
+
+fn reflective_rewrite_max_attempts() -> u32 {
+    let raw = std::env::var(REFLECTIVE_REWRITE_MAX_ATTEMPTS_ENV).ok();
+    parse_bounded_u32(
+        raw.as_deref(),
+        DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+        MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+    )
+}
+
+fn reflective_rewrite_budget_seconds() -> u64 {
+    let raw = std::env::var(REFLECTIVE_REWRITE_BUDGET_SECONDS_ENV).ok();
+    parse_bounded_u64(
+        raw.as_deref(),
+        DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+        MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+    )
+}
+
+fn reflective_sidecar_timeout_seconds() -> u64 {
+    let raw = std::env::var(REFLECTIVE_SIDECAR_TIMEOUT_SECONDS_ENV).ok();
+    parse_bounded_u64_range(
+        raw.as_deref(),
+        DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+        MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+        MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+    )
+}
+
+struct TimedSidecarOutput {
+    output: Output,
+    timed_out: bool,
+}
+
+fn run_sidecar_command_with_timeout(
+    command: &mut Command,
+    timeout: Duration,
+) -> std::io::Result<TimedSidecarOutput> {
+    let mut child = command.spawn()?;
+    let started = Instant::now();
+    loop {
+        if child.try_wait()?.is_some() {
+            return child.wait_with_output().map(|output| TimedSidecarOutput {
+                output,
+                timed_out: false,
+            });
+        }
+        if started.elapsed() >= timeout {
+            let _ = child.kill();
+            return child.wait_with_output().map(|output| TimedSidecarOutput {
+                output,
+                timed_out: true,
+            });
+        }
+        thread::sleep(Duration::from_millis(SIDECAR_WAIT_POLL_MS));
+    }
+}
+
 /// Call the MLX reflective controller sidecar with spectral context.
 ///
 /// Returns structured controller telemetry. Runs as a subprocess —
@@ -325,7 +413,11 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
     debug!("calling MLX reflective sidecar");
 
     tokio::task::spawn_blocking(move || {
-        let output = std::process::Command::new("python3")
+        let rewrite_max_attempts = reflective_rewrite_max_attempts().to_string();
+        let rewrite_budget_seconds = reflective_rewrite_budget_seconds().to_string();
+        let sidecar_timeout = Duration::from_secs(reflective_sidecar_timeout_seconds());
+        let mut command = Command::new("python3");
+        command
             .arg(&sidecar_script)
             .arg("--json")
             .arg("--hardware-profile")
@@ -336,12 +428,23 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
             .arg("reflective")
             .arg("--architecture")
             .arg("reservoir-fixed")
+            .arg("--rewrite-max-attempts")
+            .arg(&rewrite_max_attempts)
+            .arg("--rewrite-budget-seconds")
+            .arg(&rewrite_budget_seconds)
             .arg("--prompt")
             .arg(&prompt)
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped())
-            .output()
-            .ok()?;
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        let run = run_sidecar_command_with_timeout(&mut command, sidecar_timeout).ok()?;
+        if run.timed_out {
+            warn!(
+                timeout_seconds = sidecar_timeout.as_secs(),
+                "MLX sidecar timed out; killed reflective subprocess"
+            );
+            return None;
+        }
+        let output = run.output;
 
         if !output.status.success() {
             warn!("MLX sidecar exited with status {}", output.status);
@@ -453,5 +556,143 @@ mod tests {
                 .pointer("/self_tuning/last_model_advice/prompt_compacted_v1")
                 .is_none()
         );
+    }
+
+    #[test]
+    fn reflective_rewrite_attempt_cap_parsing_defaults_and_clamps() {
+        assert_eq!(
+            parse_bounded_u32(
+                None,
+                DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+                MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+            ),
+            DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS
+        );
+        assert_eq!(
+            parse_bounded_u32(
+                Some("2"),
+                DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+                MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+            ),
+            2
+        );
+        assert_eq!(
+            parse_bounded_u32(
+                Some("99"),
+                DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+                MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+            ),
+            MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS
+        );
+        assert_eq!(
+            parse_bounded_u32(
+                Some("nope"),
+                DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+                MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS,
+            ),
+            DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS
+        );
+    }
+
+    #[test]
+    fn reflective_rewrite_budget_parsing_defaults_and_clamps() {
+        assert_eq!(
+            parse_bounded_u64(
+                None,
+                DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+                MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+            ),
+            DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS
+        );
+        assert_eq!(
+            parse_bounded_u64(
+                Some("120"),
+                DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+                MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+            ),
+            120
+        );
+        assert_eq!(
+            parse_bounded_u64(
+                Some("9999"),
+                DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+                MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+            ),
+            MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS
+        );
+        assert_eq!(
+            parse_bounded_u64(
+                Some(""),
+                DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+                MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS,
+            ),
+            DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS
+        );
+    }
+
+    #[test]
+    fn reflective_sidecar_timeout_parsing_defaults_and_clamps() {
+        assert_eq!(
+            parse_bounded_u64_range(
+                None,
+                DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+                MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+                MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+            ),
+            DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS
+        );
+        assert_eq!(
+            parse_bounded_u64_range(
+                Some("5"),
+                DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+                MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+                MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+            ),
+            MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS
+        );
+        assert_eq!(
+            parse_bounded_u64_range(
+                Some("1200"),
+                DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+                MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+                MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
+            ),
+            MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS
+        );
+    }
+
+    #[test]
+    fn sidecar_timeout_preserves_fast_output() {
+        let mut command = Command::new("python3");
+        command
+            .arg("-c")
+            .arg("print('reflective-ok')")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+
+        let run = run_sidecar_command_with_timeout(&mut command, Duration::from_secs(5)).unwrap();
+
+        assert!(!run.timed_out);
+        assert!(run.output.status.success());
+        assert_eq!(
+            String::from_utf8_lossy(&run.output.stdout).trim(),
+            "reflective-ok"
+        );
+    }
+
+    #[test]
+    fn sidecar_timeout_kills_slow_child() {
+        let mut command = Command::new("python3");
+        command
+            .arg("-c")
+            .arg("import time; time.sleep(5); print('late')")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+
+        let run = run_sidecar_command_with_timeout(&mut command, Duration::from_millis(50))
+            .expect("slow child should be killed and collected");
+
+        assert!(run.timed_out);
+        assert!(!run.output.status.success());
     }
 }
