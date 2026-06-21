@@ -114,6 +114,24 @@ def _context(text: str, pos: int, span: int = 90) -> str:
     return text[max(0, pos - span): pos + span].replace("\n", " ").strip()
 
 
+def _nearest_line_ref(text: str, pos: int, span: int = 90) -> int | None:
+    """Line number cited nearest to a symbol at `pos`, preferring a ref that
+    FOLLOWS the symbol — the dominant `SYMBOL ... (line N)` idiom. A symmetric
+    window + first-match (the old behavior) misattributes an *adjacent earlier*
+    symbol's trailing `(line K)` to this symbol when two are cited back-to-back,
+    each with its own line (e.g. `TAIL_VIBRANCY_ENTROPY_GATE` (line 71) and
+    `TAIL_VIBRANCY_MAX` (line 76) — the second wrongly read as line 71, a false
+    MISLOCATED). Forward-first avoids that; backward (nearest, i.e. last) is a
+    fallback for the rarer `line N ... SYMBOL` phrasing."""
+    m = LINE_REF_RE.search(text[pos: pos + span])
+    if m:
+        return int(m.group(1))
+    last = None
+    for m in LINE_REF_RE.finditer(text[max(0, pos - span): pos]):
+        last = m
+    return int(last.group(1)) if last else None
+
+
 def _is_path_like(tok: str) -> bool:
     return bool(PATH_EXT_RE.search(tok)) or "/" in tok
 
@@ -133,11 +151,8 @@ def parse_citations(text: str) -> list[Citation]:
         if key in seen:
             return
         ctx = _context(text, pos)
-        cl = None
+        cl = _nearest_line_ref(text, pos)
         cf = None
-        m = LINE_REF_RE.search(ctx)
-        if m:
-            cl = int(m.group(1))
         fm = FILENAME_RE.search(ctx)
         if fm:
             cf = fm.group(0)

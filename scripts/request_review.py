@@ -46,6 +46,18 @@ REVIEW_DIR = {
     "minime": MINIME_ROOT / "workspace" / "review_requests",
     "astrid": ASTRID_ROOT / "capsules/spectral-bridge/workspace" / "review_requests",
 }
+# The bridge keeps a SINGLE open-steward-query slot per being
+# (autonomous.rs::record_open_steward_query). It is last-writer-wins with no
+# queue: delivering a new `mike_query_*` overwrites the slot, and once the
+# displaced letter retires to inbox/read/ it can never reclaim it. So issuing a
+# second review invitation before the being engages the first silently orphans
+# the first (the wider_voice loss; the 2026-06-19 triadic-chamber displacement of
+# perception_lane_inhab / astrid_reads_my_state). Read here only to WARN the
+# steward pre-issue — never to block (superseding may be intentional).
+STEWARD_QUERY_SLOT = {
+    "minime": MINIME_ROOT / "workspace" / "open_steward_query.json",
+    "astrid": ASTRID_ROOT / "capsules/spectral-bridge/workspace" / "open_steward_query.json",
+}
 STEWARD_PRESSURE_METADATA = {
     "pressure_target": "steward",
     "being_obligation": "none",
@@ -208,6 +220,42 @@ def close_letter(target: str, outcome: str, note: str, card: dict | None) -> str
     return "\n".join(lines) + "\n"
 
 
+def occupied_review_slot(being: str) -> dict | None:
+    """Return the being's currently-pending UNENGAGED review invitation (slot dict
+    with a `review_target`), if any. The slot clears when the being INTROSPECTs the
+    target, so a non-None return means a directed review is still waiting and would
+    be DISPLACED by issuing a new one. Steward-only signal; never blocks. See the
+    STEWARD_QUERY_SLOT note above for the single-slot last-writer-wins mechanism.
+    """
+    path = STEWARD_QUERY_SLOT.get(being)
+    if not path or not path.is_file():
+        return None
+    try:
+        slot = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+    if isinstance(slot, dict) and slot.get("review_target"):
+        return slot
+    return None
+
+
+def _warn_if_slot_occupied(being: str, new_letter_name: str) -> None:
+    pending = occupied_review_slot(being)
+    if not pending or pending.get("file") == new_letter_name:
+        return
+    print(
+        f"⚠ {being}'s steward slot already holds an UNENGAGED review invitation: "
+        f"\"{pending.get('subject', '?')}\" "
+        f"(target {pending.get('review_target', '?')}, file {pending.get('file', '?')}).\n"
+        "  The bridge slot is single + last-writer-wins: delivering this WILL displace it,\n"
+        "  and once the displaced letter retires to inbox/read/ the being can no longer\n"
+        "  reach it (silent muffle). Prefer one review invitation per being at a time:\n"
+        "  let them engage/decline first, or close the pending one first\n"
+        f"  (request_review.py --close --being {being} --topic <t> --outcome withdrawn).",
+        file=sys.stderr,
+    )
+
+
 def cmd_issue(args, now: int) -> int:
     being = args.being
     err = validate_target(args.target, args.allow_unresolved_target)
@@ -216,6 +264,7 @@ def cmd_issue(args, now: int) -> int:
         return 2
     topic = args.topic or slugify(Path(args.target).name)
     letter_name = f"mike_query_review_{topic}_{now}.txt"
+    _warn_if_slot_occupied(being, letter_name)
     letter_path = INBOX[being] / letter_name
     record_path = REVIEW_DIR[being] / f"{being}_{topic}_{now}.json"
     is_post_change = bool(args.post_change)

@@ -224,5 +224,75 @@ class NoLetterCloseTests(unittest.TestCase):
         self.assertEqual(len(list(self._inbox.glob("mike_feedback_review_*"))), 1)
 
 
+class SlotDisplacementGuardTests(unittest.TestCase):
+    """The pre-issue warning that stops a new review invitation from silently
+    displacing an unengaged one (the bridge open-steward-query slot is single +
+    last-writer-wins; once a displaced letter retires to inbox/read/ the being can
+    never reach it — the 2026-06-19 triadic-chamber muffle that orphaned
+    perception_lane_inhab / astrid_reads_my_state)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self._slot = Path(self._tmp.name) / "open_steward_query.json"
+        self._orig = dict(request_review.STEWARD_QUERY_SLOT)
+        request_review.STEWARD_QUERY_SLOT["astrid"] = self._slot
+
+    def tearDown(self):
+        request_review.STEWARD_QUERY_SLOT.clear()
+        request_review.STEWARD_QUERY_SLOT.update(self._orig)
+        self._tmp.cleanup()
+
+    def _write_slot(self, payload):
+        self._slot.write_text(json.dumps(payload))
+
+    def test_no_slot_file_returns_none(self):
+        self.assertIsNone(request_review.occupied_review_slot("astrid"))
+
+    def test_plain_steward_query_without_review_target_is_not_flagged(self):
+        # A non-directed mike_query (no REVIEW TARGET) is not a review invitation,
+        # so it must not trip the displacement warning.
+        self._write_slot({"subject": "a question", "ts": 1, "file": "mike_query_x.txt"})
+        self.assertIsNone(request_review.occupied_review_slot("astrid"))
+
+    def test_pending_review_invitation_is_detected(self):
+        self._write_slot({
+            "subject": "Triadic Chamber V3 code review", "ts": 1,
+            "file": "mike_query_triadic_1.txt", "review_target": "collaboration.rs 696",
+        })
+        slot = request_review.occupied_review_slot("astrid")
+        self.assertIsNotNone(slot)
+        self.assertEqual(slot["review_target"], "collaboration.rs 696")
+
+    def test_warn_fires_on_occupied_slot(self):
+        self._write_slot({
+            "subject": "Triadic Chamber V3 code review", "ts": 1,
+            "file": "mike_query_triadic_1.txt", "review_target": "collaboration.rs 696",
+        })
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            request_review._warn_if_slot_occupied("astrid", "mike_query_review_new_2.txt")
+        warning = buf.getvalue()
+        self.assertIn("UNENGAGED review invitation", warning)
+        self.assertIn("Triadic Chamber V3 code review", warning)
+        self.assertIn("displace", warning)
+
+    def test_warn_silent_when_slot_empty(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            request_review._warn_if_slot_occupied("astrid", "mike_query_review_new_2.txt")
+        self.assertEqual(buf.getvalue(), "")
+
+    def test_warn_silent_when_slot_holds_same_letter(self):
+        # Re-recording the same letter (idempotent re-surface) must not warn.
+        self._write_slot({
+            "subject": "x", "ts": 1, "file": "mike_query_review_same_2.txt",
+            "review_target": "collaboration.rs 696",
+        })
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            request_review._warn_if_slot_occupied("astrid", "mike_query_review_same_2.txt")
+        self.assertEqual(buf.getvalue(), "")
+
+
 if __name__ == "__main__":
     unittest.main()

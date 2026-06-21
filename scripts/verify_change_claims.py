@@ -97,17 +97,26 @@ def sibling_repos(astrid_repo: Path) -> list[Path]:
 
 
 def find_missing(names: list[str], repos: list[Path]) -> list[str]:
-    """Names NOT defined as a fn/mod/def/class in any tracked .rs/.py file across
-    `repos`. Reuses the tested pure `symbol_defined_in_text` (Python `re`, so `\\b`
-    works for BOTH languages) over `git ls-files` — NOT `git grep -E`, whose POSIX
-    regex silently drops `\\b` and false-flagged everything."""
+    """Names NOT defined as a fn/mod/def/class in any .rs/.py file across `repos`.
+    Reuses the tested pure `symbol_defined_in_text` (Python `re`, so `\\b` works for
+    BOTH languages) over `git ls-files` — NOT `git grep -E`, whose POSIX regex
+    silently drops `\\b` and false-flagged everything.
+
+    Scans tracked (`--cached`) AND untracked-non-ignored (`--others
+    --exclude-standard`) files, because the steward ships a test and CLAIMS it in
+    the same cycle it writes it — before any commit. Tracked-only made the tool
+    blind to a just-written test file, false-flagging legitimately-shipped work as
+    an overclaim (e.g. `scripts/test_ground_review.py`, written 2026-06-20). Adding
+    untracked files can only surface tests that genuinely exist ON DISK — it cannot
+    manufacture a missing one, so it never masks a real overclaim."""
     remaining = {n for n in names if n not in KNOWN_NON_TEST_TOKENS}
     for repo in repos:
         if not remaining:
             break
         try:
             files = subprocess.run(
-                ["git", "-C", str(repo), "ls-files", "*.rs", "*.py"],
+                ["git", "-C", str(repo), "ls-files", "--cached", "--others",
+                 "--exclude-standard", "*.rs", "*.py"],
                 capture_output=True, text=True, timeout=20, check=False,
             ).stdout.splitlines()
         except (OSError, subprocess.SubprocessError):
@@ -206,6 +215,23 @@ class VerifyChangeClaimsTests(unittest.TestCase):
         self.assertEqual(
             find_missing(["test_does_not_exist_xyz"], []), ["test_does_not_exist_xyz"]
         )
+
+    def test_find_missing_sees_untracked_just_written_test(self):
+        """A test written but not yet committed (untracked, not gitignored) counts
+        as evidence — the steward claims it in the same cycle it writes it."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "-C", tmp, "init", "-q"], check=False)
+            (repo / "test_fresh.py").write_text(
+                "class FreshlyWrittenTests:\n    def test_a(self):\n        pass\n"
+            )
+            # Untracked-but-on-disk: must be FOUND (not reported missing).
+            self.assertEqual(find_missing(["FreshlyWrittenTests"], [repo]), [])
+            # A gitignored file is NOT evidence (excluded-standard still applies).
+            (repo / ".gitignore").write_text("ignored_*.py\n")
+            (repo / "ignored_test.py").write_text("class IgnoredTests:\n    pass\n")
+            self.assertEqual(find_missing(["IgnoredTests"], [repo]), ["IgnoredTests"])
 
 
 def _run_self_test() -> int:
