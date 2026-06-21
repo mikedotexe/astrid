@@ -13,7 +13,7 @@
 # last-built binary (that's what --no-build --restart is for).
 #
 # Usage: build_bridge.sh [--ack "reason"] [--restart] [--no-build]
-#   --ack "reason"  consciously fold in uncommitted bridge source (logged)
+#   --ack "reason"  consciously fold in uncommitted bridge source/deps (logged)
 #   --restart       kickstart + health-verify after building
 #   --no-build      skip the build (restart-only)
 set -euo pipefail
@@ -38,7 +38,7 @@ done
 
 SOURCE="claude"; [ -n "${STEWARD_LOOP:-}" ] && SOURCE="steward-loop"
 
-# 1. Preflight gate — foreign mid-edit → abort; dirty bridge source → refuse unless --ack.
+# 1. Preflight gate — foreign mid-edit → abort; dirty bridge source/deps → refuse unless --ack.
 PREFLIGHT_ARGS=(--repo "$ASTRID")
 [ -n "$ACK" ] && PREFLIGHT_ARGS+=(--ack "$ACK")
 if ! python3 "$ASTRID/scripts/deploy_preflight.py" "${PREFLIGHT_ARGS[@]}"; then
@@ -78,7 +78,7 @@ if [ "$DO_RESTART" -eq 1 ]; then
 fi
 
 # 4. Deploy receipt — inspectable, and surfaced to Astrid in welcome_back.txt.
-NOTE="build_bridge @ $HEAD"; [ -n "$ACK" ] && NOTE="$NOTE | acked-folds: $ACK"
+NOTE="build_bridge @ $HEAD"; [ -n "$ACK" ] && NOTE="$NOTE | acked-source-or-deps: $ACK"
 python3 "$ASTRID/scripts/environment_receipts.py" record deploy \
   --source "$SOURCE" --note "$NOTE" \
   --detail "head=$HEAD" --detail "built=$BUILT" --detail "restarted=$RESTARTED" \

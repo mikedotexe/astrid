@@ -1,6 +1,6 @@
 # Ready To Ship Ledger
 
-Last updated: 2026-06-20 16:23 PDT
+Last updated: 2026-06-21 10:36 PDT
 
 Purpose: keep recent work crisp in a dirty, active multi-repo workspace. This
 ledger separates live/source-readable tools, attended runtime bundles, untracked
@@ -48,6 +48,55 @@ runtime edits are described by newer changelog entries as deployed through an
 attended restart, while older entries in the same area still mention deferred
 status. Treat the Astrid bridge runtime set as one attended bundle until it is
 re-verified and staged explicitly.
+
+## Cleanup Pass Notes
+
+- Bridge deploy safety: `scripts/deploy_preflight.py` now treats local Cargo path
+  dependency roots for `capsules/spectral-bridge` as binary-affecting source.
+  Dirty path-dep files and unversioned path-dep roots require an explicit `--ack`
+  before build.
+- Reservoir aperture-gift accounting: malformed `astrid_influence_v3.json`
+  payloads are quarantined to diagnostics and emit one bounded `parse_failed`
+  event; they do not create `.consumed.json`.
+- Minime chamber uptake: `CHAMBER_SEEN` and `CHAMBER_ANNOTATE` public record IDs
+  now include a sub-millisecond suffix to avoid same-ms collisions.
+- No service restart was performed for this cleanup pass.
+
+## Hygiene Verification Snapshot
+
+Run on 2026-06-21 10:10 PDT:
+
+- Astrid steward/deploy tooling:
+  - `python3 -m py_compile scripts/deploy_preflight.py`
+  - `bash -n scripts/build_bridge.sh`
+  - `python3 scripts/deploy_preflight.py --self-test`
+  - `git diff --check`
+- Bridge dependency guard live check:
+  - Before dependency cleanup, `python3 scripts/deploy_preflight.py --json`
+    returned `dirty_no_ack` for `RASCII:src/camera.rs`,
+    `RASCII:src/image_renderer.rs`, `RASCII:src/main.rs`, and
+    `external-unversioned:/Users/v/other/prime_esn_wasm`.
+  - Dependency cleanup committed `/Users/v/other/RASCII` as `ca0fd862`
+    (`Format bridge dependency sources`) and initialized/committed
+    `/Users/v/other/prime_esn_wasm` as `78d7255`
+    (`Initial prime ESN WASM crate`).
+  - After those dependency commits, `python3 scripts/deploy_preflight.py --json`
+    returns `clean`.
+- Minime:
+  - `python3 scripts/sensory_source_check.py --self-test`
+  - `python3 scripts/active_memory_draft_triage_summary.py --self-test`
+  - `python3 scripts/legacy_memory_retention_summary.py --self-test`
+  - `python3 scripts/repeated_action_cadence_audit.py --self-test`
+  - `python3 -m py_compile autonomous_agent.py continuity_control_plane.py native_comm.py scripts/sensory_source_check.py scripts/active_memory_draft_triage_summary.py scripts/legacy_memory_retention_summary.py scripts/repeated_action_cadence_audit.py scripts/eigen_spectrum_logger.py minime/tools/camera_client.py tools/mic_to_sensory.py`
+  - `python3 -m pytest tests/test_autonomous_agent_low_fill_guard.py tests/test_sensory_device_absence.py tests/test_co_regulation.py tests/test_dispatch_coverage.py tests/test_experimental_continuity.py tests/test_native_comm.py -q` (`433 passed, 56 subtests passed`)
+  - `cargo test` in `/Users/v/other/minime/minime` (`153 + 138 Rust tests passed`)
+  - `cargo fmt -- --check`
+  - `plutil -lint launchd/com.minime.eigen-spectrum-logger.plist`
+  - `git diff --check`
+- Reservoir:
+  - `python3 -m py_compile astrid_feeder.py collab_feeder.py triadic_chamber.py`
+  - `python3 -m pytest test_feeder_policies.py test_triadic_chamber.py -q` (`47 passed, 6 subtests passed`)
+  - `git diff --check`
 
 ## Live Or Source-Readable Now
 

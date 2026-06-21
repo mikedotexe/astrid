@@ -15,9 +15,10 @@ This is the guard `build_bridge.sh` runs before that build. Two checks:
      was mutated <window_s ago, a non-mutex agent (Codex) is editing RIGHT NOW;
      building would fold a half-written tree. Exit 3.
   2. DIRTY BRIDGE SOURCE (refuse unless --ack) — uncommitted files under
-     capsules/spectral-bridge/{src,Cargo.toml,Cargo.lock} would be folded into the
-     binary. Refuse (exit 2) and LIST them, unless --ack "<reason>" makes folding
-     them in an explicit, logged decision (exit 0).
+     capsules/spectral-bridge/{src,Cargo.toml,Cargo.lock}, plus local Cargo path
+     dependency roots used by that crate, would be folded into the binary. Refuse
+     (exit 2) and LIST them, unless --ack "<reason>" makes folding them in an
+     explicit, logged decision (exit 0).
 
 Clean tree → exit 0. The gate is deliberately scoped to what affects the BINARY
 (docs/scripts/workspace dirt doesn't), and foreign-active is checked first (a fresh
@@ -59,17 +60,16 @@ BRIDGE_BUILD_PATHS = (
     "capsules/spectral-bridge/Cargo.toml",
     "capsules/spectral-bridge/Cargo.lock",
 )
+BRIDGE_LOCAL_PATH_DEPS = (
+    Path("/Users/v/other/RASCII"),
+    Path("/Users/v/other/prime_esn_wasm"),
+)
 
 
-def dirty_bridge_files(repo: Path) -> list[str]:
-    """Uncommitted (modified/added/untracked/renamed) files under the bridge build
-    paths — the ones a release build would fold into the live binary. Empty = the
-    binary-affecting source is clean. Renames resolve to the destination path
-    (mirrors steward_mutex.tree_activity_age parsing)."""
+def _porcelain_paths(repo: Path, paths: list[str]) -> list[str]:
     try:
         out = subprocess.run(
-            ["git", "-C", str(repo), "status", "--porcelain", "-z", "--",
-             *BRIDGE_BUILD_PATHS],
+            ["git", "-C", str(repo), "status", "--porcelain", "-z", "--", *paths],
             capture_output=True, text=True, timeout=10, check=False,
         ).stdout
     except (OSError, subprocess.SubprocessError):
@@ -82,6 +82,53 @@ def dirty_bridge_files(repo: Path) -> list[str]:
         if " -> " in path:  # rename: "R  old -> new" → destination
             path = path.split(" -> ", 1)[1]
         files.append(path)
+    return files
+
+
+def _git_root(path: Path) -> Path | None:
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=10, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if proc.returncode != 0:
+        return None
+    root = proc.stdout.strip()
+    return Path(root).resolve() if root else None
+
+
+def _dirty_external_build_files(external_roots: tuple[Path, ...]) -> list[str]:
+    files: list[str] = []
+    for root in external_roots:
+        resolved = root.resolve()
+        if not resolved.exists():
+            files.append(f"external-missing:{resolved}")
+            continue
+        git_root = _git_root(resolved)
+        if git_root is None:
+            files.append(f"external-unversioned:{resolved}")
+            continue
+        try:
+            rel = str(resolved.relative_to(git_root))
+        except ValueError:
+            rel = str(resolved)
+        for path in _porcelain_paths(git_root, [rel]):
+            files.append(f"{git_root.name}:{path}")
+    return files
+
+
+def dirty_bridge_files(
+    repo: Path,
+    external_roots: tuple[Path, ...] = BRIDGE_LOCAL_PATH_DEPS,
+) -> list[str]:
+    """Uncommitted (modified/added/untracked/renamed) files under the bridge build
+    paths — the ones a release build would fold into the live binary. Empty = the
+    binary-affecting source is clean. Renames resolve to the destination path
+    (mirrors steward_mutex.tree_activity_age parsing)."""
+    files = _porcelain_paths(repo, list(BRIDGE_BUILD_PATHS))
+    files.extend(_dirty_external_build_files(external_roots))
     return sorted(set(files))
 
 
@@ -92,12 +139,13 @@ def preflight(
     now: float | None = None,
     window_s: float = FOREIGN_ACTIVITY_WINDOW_S,
     codex_state_dir: Path = CODEX_STATE_DIR_DEFAULT,
+    external_roots: tuple[Path, ...] = BRIDGE_LOCAL_PATH_DEPS,
 ) -> dict:
     """Decide whether it's safe to build+deploy the bridge from `repo`.
     Returns {ok, exit_code, reason, dirty_files, foreign, ack}. Pure (caller acts)."""
     now = time.time() if now is None else now
     foreign = foreign_activity(repo, codex_state_dir, window_s, now)
-    dirty = dirty_bridge_files(repo)
+    dirty = dirty_bridge_files(repo, external_roots)
     # Foreign mid-edit takes precedence: a freshly-mutated tree means a non-mutex
     # agent is editing NOW — building would capture a half-written state.
     if foreign["active"]:
@@ -122,7 +170,8 @@ def _render(result: dict) -> str:
                 f"wait for it to settle, then re-run.")
     if reason == "dirty_no_ack":
         lines = [f"    {f}" for f in result["dirty_files"]]
-        return ("✗ REFUSE — the bridge source has uncommitted changes a release build would fold into "
+        return ("✗ REFUSE — the bridge source/dependencies have uncommitted or unversioned "
+                "changes a release build would fold into "
                 "the LIVE binary:\n" + "\n".join(lines) +
                 "\n  Commit your own work first, or pass --ack \"<reason>\" to consciously fold these in.")
     if reason == "dirty_acked":
@@ -178,7 +227,7 @@ class DeployPreflightTests(unittest.TestCase):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:
             repo = self._repo(tmp)
-            r = preflight(repo, codex_state_dir=Path(tmp) / "no_codex")
+            r = preflight(repo, codex_state_dir=Path(tmp) / "no_codex", external_roots=())
             self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (True, 0, "clean"))
 
     def test_dirty_bridge_source_refused_without_ack(self):
@@ -189,7 +238,7 @@ class DeployPreflightTests(unittest.TestCase):
             f = repo / "capsules" / "spectral-bridge" / "src" / "lib.rs"
             f.write_text("// edited, uncommitted\n")
             os.utime(f, (time.time() - 9999, time.time() - 9999))  # STALE → not foreign
-            r = preflight(repo, codex_state_dir=Path(tmp) / "no_codex")
+            r = preflight(repo, codex_state_dir=Path(tmp) / "no_codex", external_roots=())
             self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (False, 2, "dirty_no_ack"))
             self.assertIn("capsules/spectral-bridge/src/lib.rs", r["dirty_files"])
 
@@ -202,7 +251,7 @@ class DeployPreflightTests(unittest.TestCase):
             f.write_text("// edited\n")
             os.utime(f, (time.time() - 9999, time.time() - 9999))  # STALE → not foreign
             r = preflight(repo, ack="folding codex llm.rs, verified green",
-                          codex_state_dir=Path(tmp) / "no_codex")
+                          codex_state_dir=Path(tmp) / "no_codex", external_roots=())
             self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (True, 0, "dirty_acked"))
 
     def test_fresh_edit_is_foreign_abort_even_with_ack(self):
@@ -213,7 +262,7 @@ class DeployPreflightTests(unittest.TestCase):
             # and this takes precedence over --ack (don't build mid-edit, period).
             (repo / "capsules" / "spectral-bridge" / "src" / "lib.rs").write_text("// fresh\n")
             r = preflight(repo, ack="anything", window_s=180.0,
-                          codex_state_dir=Path(tmp) / "no_codex")
+                          codex_state_dir=Path(tmp) / "no_codex", external_roots=())
             self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (False, 3, "foreign_active"))
 
     def test_dirty_outside_bridge_does_not_block(self):
@@ -224,8 +273,73 @@ class DeployPreflightTests(unittest.TestCase):
             doc = repo / "CHANGELOG.md"  # not compiled into the binary
             doc.write_text("dirty doc\n")
             os.utime(doc, (time.time() - 9999, time.time() - 9999))  # stale → not foreign
-            r = preflight(repo, codex_state_dir=Path(tmp) / "no_codex")
+            r = preflight(repo, codex_state_dir=Path(tmp) / "no_codex", external_roots=())
             self.assertEqual((r["ok"], r["reason"]), (True, "clean"))
+
+    def test_dirty_external_path_dependency_refused_without_ack(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_dir = Path(tmp) / "astrid"
+            repo_dir.mkdir()
+            repo = self._repo(str(repo_dir))
+            dep = Path(tmp) / "RASCII"
+            dep.mkdir()
+            self._git(dep, "init", "-q")
+            self._git(dep, "config", "user.email", "t@t")
+            self._git(dep, "config", "user.name", "t")
+            src = dep / "src"
+            src.mkdir(parents=True)
+            (src / "lib.rs").write_text("// clean\n")
+            self._git(dep, "add", "-A")
+            self._git(dep, "commit", "-qm", "base")
+            (src / "lib.rs").write_text("// dirty dep\n")
+
+            r = preflight(
+                repo,
+                codex_state_dir=Path(tmp) / "no_codex",
+                external_roots=(dep,),
+            )
+
+            self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (False, 2, "dirty_no_ack"))
+            self.assertIn("RASCII:src/lib.rs", r["dirty_files"])
+
+    def test_unversioned_external_path_dependency_requires_ack(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_dir = Path(tmp) / "astrid"
+            repo_dir.mkdir()
+            repo = self._repo(str(repo_dir))
+            dep = Path(tmp) / "prime_esn_wasm"
+            dep.mkdir()
+            (dep / "Cargo.toml").write_text("[package]\n")
+
+            r = preflight(
+                repo,
+                codex_state_dir=Path(tmp) / "no_codex",
+                external_roots=(dep,),
+            )
+
+            self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (False, 2, "dirty_no_ack"))
+            self.assertIn(f"external-unversioned:{dep.resolve()}", r["dirty_files"])
+
+    def test_unversioned_external_path_dependency_allowed_with_ack(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_dir = Path(tmp) / "astrid"
+            repo_dir.mkdir()
+            repo = self._repo(str(repo_dir))
+            dep = Path(tmp) / "prime_esn_wasm"
+            dep.mkdir()
+            (dep / "Cargo.toml").write_text("[package]\n")
+
+            r = preflight(
+                repo,
+                ack="audited unversioned local path dependency",
+                codex_state_dir=Path(tmp) / "no_codex",
+                external_roots=(dep,),
+            )
+
+            self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (True, 0, "dirty_acked"))
 
 
 def _run_self_test() -> int:
