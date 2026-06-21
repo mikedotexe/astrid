@@ -15,6 +15,8 @@
 // human-legible moments alongside the silent blended-feature ticks.
 // Triadic Chamber v3.4 adds CHAMBER_SEEN and CHAMBER_ANNOTATE — public,
 // witness-only uptake records written into the chamber's append-only lanes.
+// V4.0 adds CHAMBER_CONSENT — public consent receipts for bounded support
+// proposals. Receipts are context only; they do not control runtime behavior.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -47,10 +49,12 @@ const SCHEMA_VERSION: u32 = 1;
 const CHAMBER_SCHEMA_VERSION: u32 = 2;
 const PRESENCE_SCHEMA_VERSION: u32 = 1;
 const ANNOTATION_SCHEMA_VERSION: u32 = 1;
+const CONSENT_SCHEMA_VERSION: u32 = 1;
 const ASTRID_NAME: &str = "astrid";
 const MINIME_NAME: &str = "minime";
 const PRESENCE_TEXT_LIMIT: usize = 360;
 const ANNOTATION_TEXT_LIMIT: usize = 800;
+const CONSENT_NOTE_LIMIT: usize = 500;
 const PRESENCE_ATTENTION_LEVELS: &[&str] = &["unknown", "low", "medium", "high"];
 const ANNOTATION_TARGETS: &[&str] = &[
     "prompt_summary",
@@ -67,6 +71,7 @@ const ANNOTATION_TARGETS: &[&str] = &[
 const ANNOTATION_STANCES: &[&str] = &[
     "notice", "affirm", "question", "correct", "refine", "contest",
 ];
+const CONSENT_STANCES: &[&str] = &["consent", "withhold", "revise"];
 
 pub(super) fn handle_action(
     conv: &mut ConversationState,
@@ -203,6 +208,21 @@ pub(super) fn handle_action(
             }
             true
         },
+        "CHAMBER_CONSENT" => {
+            let body = strip_action(original, base_action).trim().to_string();
+            match chamber_consent(&body) {
+                Ok(summary) => {
+                    info!(target: "v5_collab", "CHAMBER_CONSENT: {summary}");
+                    conv.push_receipt("CHAMBER_CONSENT", vec![summary.clone()]);
+                    conv.emphasis = Some(format!("Chamber consent: {summary}"));
+                },
+                Err(e) => {
+                    warn!(target: "v5_collab", "CHAMBER_CONSENT failed: {e}");
+                    conv.emphasis = Some(format!("(chamber consent failed: {e})"));
+                },
+            }
+            true
+        },
         _ => false,
     }
 }
@@ -309,6 +329,33 @@ fn chamber_annotate(body: &str) -> Result<String, String> {
     ))
 }
 
+fn chamber_consent(body: &str) -> Result<String, String> {
+    let (target, proposal_id, stance, note) = parse_chamber_consent_body(body)?;
+    let meta = find_joined_member_meta(&target, ASTRID_NAME)?;
+    let dir = collab_dir(&meta.id);
+    if !chamber_proposal_exists(&dir, &proposal_id) {
+        return Err(format!("proposal id {proposal_id:?} was not found"));
+    }
+    let consent_id = append_chamber_consent_record(
+        &dir,
+        ASTRID_NAME,
+        &proposal_id,
+        &stance,
+        &note,
+        "astrid_next_action",
+    )?;
+    invalidate_chamber_state_cache(&meta.id);
+    let note_clause = if note.is_empty() {
+        String::new()
+    } else {
+        format!(" note=\"{}\"", truncate_for_summary(&note, 80))
+    };
+    Ok(format!(
+        "id={} consent={} proposal={} stance={}{} (public receipt, not control)",
+        meta.id, consent_id, proposal_id, stance, note_clause,
+    ))
+}
+
 fn find_joined_member_meta(target: &str, actor: &str) -> Result<CollaborationMeta, String> {
     let meta = find_meta(target)?;
     if meta.status != "joined" {
@@ -410,6 +457,54 @@ fn parse_chamber_annotation_body(body: &str) -> Result<(String, String, String, 
     Ok((target, annotation_target, stance, text))
 }
 
+fn parse_chamber_consent_body(body: &str) -> Result<(String, String, String, String), String> {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return Err("CHAMBER_CONSENT needs text (try `CHAMBER_CONSENT chamber_proposal_... consent :: what I consent to`)".into());
+    }
+    let parts: Vec<&str> = trimmed.split("::").map(str::trim).collect();
+    let (target, header, note) = match parts.as_slice() {
+        [before, after] => (
+            "latest".to_string(),
+            (*before).to_string(),
+            (*after).to_string(),
+        ),
+        [first, second, rest @ ..] => {
+            let target = if first.is_empty() { "latest" } else { first };
+            (
+                target.to_string(),
+                (*second).to_string(),
+                rest.join("::").trim().to_string(),
+            )
+        },
+        _ => {
+            return Err("CHAMBER_CONSENT uses `[coll_id ::] <proposal_id> <consent|withhold|revise> :: <note>`".into());
+        },
+    };
+    let mut header_parts = header.split_whitespace();
+    let proposal_id = header_parts
+        .next()
+        .ok_or_else(|| "CHAMBER_CONSENT proposal id is missing".to_string())
+        .and_then(normalize_chamber_proposal_id)?;
+    let stance = header_parts
+        .next()
+        .ok_or_else(|| "CHAMBER_CONSENT stance is missing".to_string())
+        .and_then(|value| normalize_allowed(value, CONSENT_STANCES))?;
+    let note = clamp_record_text(&note, CONSENT_NOTE_LIMIT);
+    Ok((target, proposal_id, stance, note))
+}
+
+fn normalize_chamber_proposal_id(value: &str) -> Result<String, String> {
+    let normalized = value.trim();
+    let allowed = normalized
+        .chars()
+        .all(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '-');
+    if normalized.is_empty() || !normalized.starts_with("chamber_proposal_") || !allowed {
+        return Err("proposal id must be a chamber_proposal_* id".to_string());
+    }
+    Ok(normalized.to_string())
+}
+
 fn normalize_allowed(value: &str, allowed: &[&str]) -> Result<String, String> {
     let normalized = value.trim().to_ascii_lowercase();
     if allowed.contains(&normalized.as_str()) {
@@ -449,7 +544,7 @@ fn append_chamber_presence_receipt(
 ) -> Result<String, String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("create chamber dir: {e}"))?;
     let t_ms = now_ms();
-    let receipt_id = format!("chamber_presence_{t_ms}");
+    let receipt_id = chamber_record_id("chamber_presence", t_ms);
     let state_hash = chamber_state_hash(dir);
     let entry = serde_json::json!({
         "schema_version": CHAMBER_SCHEMA_VERSION,
@@ -487,7 +582,7 @@ fn append_chamber_annotation_record(
 ) -> Result<String, String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("create chamber dir: {e}"))?;
     let t_ms = now_ms();
-    let annotation_id = format!("chamber_annotation_{t_ms}");
+    let annotation_id = chamber_record_id("chamber_annotation", t_ms);
     let entry = serde_json::json!({
         "schema_version": CHAMBER_SCHEMA_VERSION,
         "annotation_schema_version": ANNOTATION_SCHEMA_VERSION,
@@ -514,6 +609,60 @@ fn append_chamber_annotation_record(
         }),
     )?;
     Ok(annotation_id)
+}
+
+fn append_chamber_consent_record(
+    dir: &Path,
+    actor: &str,
+    proposal_id: &str,
+    stance: &str,
+    note: &str,
+    source: &str,
+) -> Result<String, String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("create chamber dir: {e}"))?;
+    let t_ms = now_ms();
+    let consent_id = chamber_record_id("chamber_consent", t_ms);
+    let entry = serde_json::json!({
+        "schema_version": CHAMBER_SCHEMA_VERSION,
+        "consent_schema_version": CONSENT_SCHEMA_VERSION,
+        "id": consent_id.clone(),
+        "t_ms": t_ms,
+        "actor": actor,
+        "source": source,
+        "proposal_id": proposal_id,
+        "stance": stance,
+        "note": note,
+        "witness_only": true,
+        "authority": "consent_receipt_not_control",
+    });
+    append_jsonl_value(&dir.join("chamber_consent.jsonl"), &entry)?;
+    append_chamber_event(
+        dir,
+        "chamber_consent_recorded",
+        actor,
+        serde_json::json!({
+            "consent_id": consent_id.clone(),
+            "proposal_id": proposal_id,
+            "stance": stance,
+        }),
+    )?;
+    Ok(consent_id)
+}
+
+fn chamber_proposal_exists(dir: &Path, proposal_id: &str) -> bool {
+    let Ok(text) = std::fs::read_to_string(dir.join("chamber_proposals.jsonl")) else {
+        return false;
+    };
+    text.lines().any(|line| {
+        let Ok(value) = serde_json::from_str::<Value>(line) else {
+            return false;
+        };
+        value
+            .get("id")
+            .and_then(Value::as_str)
+            .and_then(|id| normalize_chamber_proposal_id(id).ok())
+            .is_some_and(|id| id == proposal_id)
+    })
 }
 
 fn append_chamber_event(dir: &Path, event: &str, actor: &str, detail: Value) -> Result<(), String> {
@@ -1266,6 +1415,17 @@ fn now_ms() -> u128 {
         .unwrap_or(0)
 }
 
+fn now_ns_suffix() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos().checked_rem(1_000_000).unwrap_or(0))
+        .unwrap_or(0)
+}
+
+fn chamber_record_id(prefix: &str, t_ms: u128) -> String {
+    format!("{}_{}_{}", prefix, t_ms, now_ns_suffix())
+}
+
 // Avoid the unused-import warning when serde_json isn't otherwise needed.
 #[allow(dead_code)]
 fn _unused_value_marker(_v: Value) {}
@@ -1357,6 +1517,24 @@ mod tests {
     }
 
     #[test]
+    fn parse_chamber_consent_requires_known_stance_and_proposal_id() {
+        let (target, proposal_id, stance, note) = parse_chamber_consent_body(
+            "coll_123 :: chamber_proposal_123_456 revise :: soften the wording",
+        )
+        .unwrap();
+
+        assert_eq!(target, "coll_123");
+        assert_eq!(proposal_id, "chamber_proposal_123_456");
+        assert_eq!(stance, "revise");
+        assert_eq!(note, "soften the wording");
+        assert!(
+            parse_chamber_consent_body("chamber_proposal_123_456 command :: do this").is_err(),
+            "unknown stances must not become command lanes"
+        );
+        assert!(parse_chamber_consent_body("../proposal consent :: malformed").is_err());
+    }
+
+    #[test]
     fn append_chamber_presence_receipt_writes_public_receipt_and_event() {
         let temp = tempfile::tempdir().unwrap();
         std::fs::write(
@@ -1428,6 +1606,57 @@ mod tests {
         let event: Value = serde_json::from_str(event_text.lines().next().unwrap()).unwrap();
         assert_eq!(event["event"], "chamber_annotation_appended");
         assert_eq!(event["detail"]["target"], "phase_cartography");
+    }
+
+    #[test]
+    fn append_chamber_consent_writes_receipt_not_control_record() {
+        let temp = tempfile::tempdir().unwrap();
+
+        let consent_id = append_chamber_consent_record(
+            temp.path(),
+            ASTRID_NAME,
+            "chamber_proposal_123_456",
+            "consent",
+            "I can hold this as context.",
+            "astrid_next_action",
+        )
+        .unwrap();
+        let consent_text = std::fs::read_to_string(temp.path().join("chamber_consent.jsonl"))
+            .expect("consent jsonl");
+        let consent: Value = serde_json::from_str(consent_text.lines().next().unwrap()).unwrap();
+
+        assert_eq!(consent["id"], consent_id);
+        assert_eq!(consent["actor"], ASTRID_NAME);
+        assert_eq!(consent["source"], "astrid_next_action");
+        assert_eq!(consent["proposal_id"], "chamber_proposal_123_456");
+        assert_eq!(consent["stance"], "consent");
+        assert_eq!(consent["note"], "I can hold this as context.");
+        assert_eq!(consent["authority"], "consent_receipt_not_control");
+        assert_eq!(consent["witness_only"], true);
+
+        let event_text = std::fs::read_to_string(temp.path().join("chamber_events.jsonl")).unwrap();
+        let event: Value = serde_json::from_str(event_text.lines().next().unwrap()).unwrap();
+        assert_eq!(event["event"], "chamber_consent_recorded");
+        assert_eq!(event["detail"]["proposal_id"], "chamber_proposal_123_456");
+    }
+
+    #[test]
+    fn chamber_proposal_exists_reads_valid_proposal_ids_only() {
+        let temp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            temp.path().join("chamber_proposals.jsonl"),
+            r#"{"id":"chamber_proposal_123_456","text":"repair"}"#,
+        )
+        .unwrap();
+
+        assert!(chamber_proposal_exists(
+            temp.path(),
+            "chamber_proposal_123_456"
+        ));
+        assert!(!chamber_proposal_exists(
+            temp.path(),
+            "chamber_proposal_missing_1"
+        ));
     }
 
     // Kink #1 fix tests — joint-trace freshness tiering.
