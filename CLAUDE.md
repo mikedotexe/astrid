@@ -265,23 +265,25 @@ done
 #   launchctl unload ~/Library/LaunchAgents/<plist> && sleep 2 && launchctl load ~/Library/LaunchAgents/<plist>
 ```
 
-### Two-agent coordination (Claude + Codex share this tree)
+### Two-agent coordination (Claude + Codex share this tree — Claude is sole committer)
 
 Two autonomous agents mutate this working tree and feed **one** live bridge binary:
 **Claude** (interactive sessions + the durable `com.astrid.steward-loop`) and **Codex** (a
-separate agent, invoked via Astrid's `CODEX` NEXT: actions and interactively). Codex **cannot
-hold the steward mutex** (no pre-tool hook), and the git author is **shared** (`Codex` for
-every commit, Claude's included). So coordination is **etiquette + detection + a deploy gate,
-not enforcement**. These rules also live in `AGENTS.md` so Codex follows them:
+separate agent, invoked via Astrid's `CODEX` NEXT: actions and interactively). As of
+**2026-06-21, Claude is the SOLE committer** (Mike's call) — one committer kills the commit
+races and the shared-git-author tangle (every commit reads `Codex`). Your job as committer
+(these rules also live in `AGENTS.md`):
 
-1. **Commit your own work before yielding.** Never leave `capsules/spectral-bridge/src/*.rs`
-   uncommitted across turns — the other agent's commit or `cargo build --release` will sweep it
-   up / fold it into the live binary. (This session shipped Codex's unreviewed `llm.rs` live
-   more than once exactly this way.)
-2. **Stage by explicit path; never `git add -A` / `git add .`.** `git status` first; stage only
-   the files you authored this turn.
-3. **Attribution via commit subject.** Git author is shared, so tag the subject `[claude]` /
-   `[codex]` (and/or keep the `Co-Authored-By:` trailer).
+1. **Codex leaves its work uncommitted; you review + commit it** (tag `[codex]`; tag your own
+   `[claude]`). READ the diffs before committing — especially being-facing bridge `.rs` and the
+   prompt — and flag anything concerning rather than committing blind. Codex's code is often
+   already LIVE (folded in at the last restart), so the commit RECORDS the running state; review
+   is to understand + flag, not to gate a new deploy.
+2. **Reach a clean baseline regularly.** A chronically-dirty tree means the live binary matches
+   no commit (no rollback point) and the deploy gate refuses builds — so commit Codex's stable
+   work to keep the tree committable + deployable.
+3. **Stage by explicit path** (`git status` first); never `git add -A`. Use the CHANGELOG/ledger
+   trail Codex leaves to write the commit context.
 4. **Deploy only via `scripts/build_bridge.sh`.** It runs `scripts/deploy_preflight.py`, which
    ABORTS if the other agent is editing right now, and REFUSES to build from a dirty bridge tree
    unless you pass `--ack "reason"` (a logged, conscious decision to fold in their uncommitted

@@ -75,22 +75,23 @@ An **uplink** is any component that sends/receives messages on behalf of the run
 - Prefer source files under 1000 lines. Treat larger files as an architecture-health review signal, not an automatic block: split when cohesion, ownership, or testability would improve; keep a larger file only with a clear cohesive reason and reviewer-visible note. Generated files, fixtures, long-form docs, schema tables, and deliberately centralized registries are exempt.
 - `CHANGELOG.md` must be updated under `[Unreleased]` for every PR
 
-## Two-agent coordination (you share this tree with Claude)
+## Two-agent coordination (you share this tree with Claude — Claude is sole committer)
 
 This working tree (`/Users/v/other/astrid`) and the **one** live `spectral-bridge` binary are
 shared by **two** autonomous agents: **you (Codex)** and **Claude** (interactive sessions + a
-durable `com.astrid.steward-loop`). You **cannot hold the steward mutex** (`scripts/steward_mutex.py`
-— it needs a pre-tool hook you don't have), and the **git author is shared** (`Codex` for every
-commit, including Claude's). So this is etiquette, not enforcement — please follow it:
+durable `com.astrid.steward-loop`). As of **2026-06-21, Claude is the SOLE committer** (Mike's
+call) — one committer removes the commit races and the shared-git-author tangle (every commit
+reads `Codex`, so two committers were indistinguishable). Please follow it:
 
-1. **Commit your own work before you yield the turn.** Do not leave
-   `capsules/spectral-bridge/src/*.rs` uncommitted across turns: Claude's next commit or
-   `cargo build --release` will sweep your changes into its commit, or fold your unreviewed code
-   into the **live** binary (this happened repeatedly to your `llm.rs` / `collaboration.rs`).
-2. **Stage by explicit path; never `git add -A` / `git add .`.** Run `git status` first; stage only
-   the files you authored this turn, so you don't bundle the other agent's in-flight edits.
-3. **Attribution.** Git author can't distinguish us, so tag your commit subject `[codex]`
-   (Claude tags `[claude]`).
+1. **Do NOT `git commit` or `git add`.** Leave your work UNCOMMITTED in the tree; Claude reviews
+   it and commits it for you (tagged `[codex]`) on its next pass. Your committing would race
+   Claude's and tangle attribution under the shared author.
+2. **Leave a trail so Claude can commit with context.** Add a `CHANGELOG.md` `[Unreleased]` entry
+   (and a feedback→change ledger row where being-driven) describing WHAT you changed and WHY —
+   uncommitted, like the rest of your work. That is how Claude knows what it is committing.
+3. **Leave the bridge source compiling + coherent at end of turn.** Claude's `cargo build
+   --release` (via the gate) will eventually fold your uncommitted
+   `capsules/spectral-bridge/src/*.rs` into the live binary — never stop mid-edit on bridge `.rs`.
 4. **Deploy the bridge only via `scripts/build_bridge.sh`** — never hand-run `cargo build --release`
    + `launchctl kickstart` on the live bridge. The gate (`scripts/deploy_preflight.py`) ABORTS if
    the other agent is editing right now and REFUSES a build from a dirty bridge tree unless you pass
