@@ -1,9 +1,12 @@
+use super::super::causality::CausalityAuditStatus;
 use super::super::choice::ChoiceInterpretation;
 use super::super::conversion::{ConversionEvidence, ConversionState};
+use super::super::lab::BTSPCausalLabReadV3;
 use super::super::policy::CooldownState;
 use super::super::render::{render_owner_block_from_status, render_signal_guidance_from_parts};
 use super::super::signal::{SignalCatalog, SignalFamily, SignalStatus};
 use super::super::social::StudyFirstRecord;
+use super::super::trace::BTSPAntiLoopState;
 use super::super::{ActiveSovereigntyProposal, OWNER_ASTRID, seed_episode, seeded_response_ids};
 use super::*;
 use std::collections::HashMap;
@@ -106,11 +109,13 @@ fn base_status() -> SignalStatus {
         teacher_signal_v2: None,
         replay_read: None,
         anti_loop_state: None,
+        causal_lab_v3: None,
         astrid_translation_guidance: None,
         astrid_translation_progress: None,
         astrid_shadow_policy: None,
         causality_audit: None,
         causality_audit_stale: false,
+        causality_audit_stale_read: None,
         updated_at_unix_s: 0,
     }
 }
@@ -172,6 +177,7 @@ fn shared_guidance_and_astrid_owner_block_render_translation_lines() {
         teacher_signal_v2: None,
         replay_read: None,
         anti_loop_state: None,
+        causal_lab_v3: None,
         astrid_translation_guidance: Some(AstridTranslationGuidance {
             shared_line: "Astrid translation read: nearby native softening may show up as inquiry, expressive holding, or gentler shaping before direct decompression.".to_string(),
             owner_line: "For you, softening may look like EXAMINE_CODE/DRIFT, CREATE/ASPIRE/FORM, or gentler GESTURE/SHAPE before DAMPEN, BREATHE_ALONE, or ECHO_OFF.".to_string(),
@@ -181,6 +187,7 @@ fn shared_guidance_and_astrid_owner_block_render_translation_lines() {
         astrid_shadow_policy: None,
         causality_audit: None,
         causality_audit_stale: false,
+        causality_audit_stale_read: None,
         updated_at_unix_s: 0,
     };
     let responses = episode
@@ -202,6 +209,134 @@ fn shared_guidance_and_astrid_owner_block_render_translation_lines() {
         &status,
     );
     assert!(owner_block.contains("For you, softening may look like EXAMINE_CODE/DRIFT, CREATE/ASPIRE/FORM, or gentler GESTURE/SHAPE before DAMPEN, BREATHE_ALONE, or ECHO_OFF."));
+}
+
+#[test]
+fn signal_guidance_renders_anti_loop_counter_prompt() {
+    let mut status = base_status();
+    status.anti_loop_state = Some(BTSPAntiLoopState {
+        active: true,
+        reason: "similar_fingerprints_overwhelmingly_reconcentrating".to_string(),
+        scope: "similar".to_string(),
+        fingerprint: "families=grinding_family".to_string(),
+        same_fingerprint_count: 0,
+        similar_fingerprint_count: 8,
+        reconcentrating_count: 8,
+        widening_count: 0,
+        mean_similarity_score: 85.0,
+        nearest_similarity_score: 85,
+        suggested_routes: vec![
+            "BTSP_STUDY_FIRST".to_string(),
+            "BTSP_REFUSAL".to_string(),
+            "BTSP_COUNTER".to_string(),
+            "new_evidence".to_string(),
+        ],
+        counter_prompt: "Nearby BTSP traces mostly recovered by reconcentrating, not widening."
+            .to_string(),
+        recommendation: "suppress_duplicate_proposal_until_counter_refusal_or_new_evidence"
+            .to_string(),
+    });
+
+    let guidance = render_signal_guidance_from_parts(&sample_catalog(), &status);
+
+    assert!(guidance.contains(
+        "Current anti-loop hold: Nearby BTSP traces mostly recovered by reconcentrating, not widening."
+    ));
+}
+
+#[test]
+fn signal_guidance_and_owner_block_render_causal_lab_read() {
+    let episode = seed_episode();
+    let proposal = active_astrid_proposal();
+    let mut status = base_status();
+    status.causal_lab_v3 = Some(BTSPCausalLabReadV3 {
+        schema_version: 3,
+        active: true,
+        experiment_id: "btsp_causal_lab_v3_test".to_string(),
+        case_key: "families=grinding_family;perturb=tightening;fill_band=near".to_string(),
+        representative_fingerprints: vec!["families=grinding_family;transition=none;crossing=none;perturb=tightening;fill_band=near".to_string()],
+        status: "pre_registered_holdout".to_string(),
+        consent_mode: "study_counter_refusal_or_new_evidence_required".to_string(),
+        proposal_policy: "withhold_duplicate_offer".to_string(),
+        question: "Does withholding another ordinary advisory produce softening?".to_string(),
+        hypothesis: "Holdout produces cleaner evidence.".to_string(),
+        holdout_route: "BTSP_STUDY_FIRST evidence_first".to_string(),
+        counterfactual: "ordinary_duplicate_advisory_proposal".to_string(),
+        consent_routes: vec![
+            "BTSP_COUNTER".to_string(),
+            "BTSP_REFUSAL".to_string(),
+            "BTSP_STUDY_FIRST".to_string(),
+            "new_evidence".to_string(),
+        ],
+        success_criteria: Vec::new(),
+        failure_criteria: Vec::new(),
+        evidence_needed: Vec::new(),
+        ghost_note: "I would have opened the ordinary BTSP advisory here, but replay says this family has reconcentrated; holding for study/refusal/counter/new evidence.".to_string(),
+        resolution_status: "pre_registered_holdout".to_string(),
+        resolution_summary: "No later structured BTSP outcome has resolved this holdout yet."
+            .to_string(),
+        post_registration_outcome_count: 0,
+        post_registration_reconcentrating_count: 0,
+        post_registration_softening_count: 0,
+        post_registration_widening_count: 0,
+        summary: "Causal lab V3: pre-registering a similar-fingerprint holdout.".to_string(),
+    });
+    let responses = episode
+        .nominated_responses
+        .iter()
+        .filter(|response| response.owner == OWNER_ASTRID)
+        .cloned()
+        .collect::<Vec<_>>();
+
+    let guidance = render_signal_guidance_from_parts(&sample_catalog(), &status);
+    assert!(guidance.contains("Causal lab V3: pre-registering a similar-fingerprint holdout."));
+    assert!(
+        guidance.contains(
+            "Current causal lab ghost: I would have opened the ordinary BTSP advisory here"
+        )
+    );
+    assert!(guidance.contains("Causal lab resolution: pre_registered_holdout"));
+
+    let owner_block = render_owner_block_from_status(
+        &episode,
+        &proposal,
+        OWNER_ASTRID,
+        &responses,
+        false,
+        &status,
+    );
+    assert!(owner_block.contains(
+        "BTSP causal lab question: Does withholding another ordinary advisory produce softening?"
+    ));
+    assert!(
+        owner_block
+            .contains("BTSP causal lab ghost: I would have opened the ordinary BTSP advisory here")
+    );
+    assert!(owner_block.contains("BTSP causal lab holdout: BTSP_STUDY_FIRST evidence_first"));
+    assert!(owner_block.contains("BTSP causal lab resolution: pre_registered_holdout"));
+}
+
+#[test]
+fn signal_guidance_renders_stale_causality_as_historical_context() {
+    let mut status = base_status();
+    status.causality_audit_stale = true;
+    status.causality_audit = None;
+    status.causality_audit_stale_read = Some(CausalityAuditStatus {
+        generated_at: "2026-04-20T12:00:00".to_string(),
+        read: "inquiry_load_candidate".to_string(),
+        summary: "old read".to_string(),
+        heavy_inquiry_reconcentrating_rate: "97.0%".to_string(),
+        bounded_regulation_reconcentrating_rate: "86.0%".to_string(),
+        fragile_recovery_observations: 18,
+        candidate_damp_lane: None,
+        candidate_damp_summary: None,
+    });
+
+    let guidance = render_signal_guidance_from_parts(&sample_catalog(), &status);
+
+    assert!(guidance.contains("Historical causality audit is stale"));
+    assert!(guidance.contains("generated_at=2026-04-20T12:00:00"));
+    assert!(guidance.contains("read=inquiry_load_candidate"));
 }
 
 #[test]

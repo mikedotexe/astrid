@@ -11,6 +11,7 @@ mod causality;
 mod choice;
 mod conversion;
 mod helpers;
+mod lab;
 mod policy;
 mod proposal;
 mod render;
@@ -197,7 +198,35 @@ pub(super) struct ResponseOutcomeNote {
     pub target_nearness: String,
     pub distress_or_recovery: String,
     pub opening_vs_reconcentration: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outcome_telemetry_v2: Option<BTSPOutcomeTelemetryV2>,
     pub note: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub(super) struct BTSPOutcomeTelemetryV2 {
+    #[serde(default)]
+    pub phase: String,
+    #[serde(default)]
+    pub fill_band: String,
+    #[serde(default)]
+    pub shape_verdict: String,
+    #[serde(default)]
+    pub fill_pct: Option<f32>,
+    #[serde(default)]
+    pub target_fill_pct: Option<f32>,
+    #[serde(default)]
+    pub internal_process_quadrant: String,
+    #[serde(default)]
+    pub pressure_source: String,
+    #[serde(default)]
+    pub active_mode_count: Option<u64>,
+    #[serde(default)]
+    pub effective_dimensionality: Option<f32>,
+    #[serde(default)]
+    pub distinguishability_loss: Option<f32>,
+    #[serde(default)]
+    pub inhabitability_score: Option<f32>,
 }
 
 pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Option<&Value>) {
@@ -210,6 +239,7 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
     changed |= score_adopted_outcomes(&mut bank, &mut ledger, controller_health);
     changed |= score_final_non_adoption_outcomes(&mut bank, &mut ledger, controller_health);
     changed |= refresh_seeded_episode_learning(&mut bank, &ledger);
+    changed |= trace::archive_and_prune_live_trace_episodes(&mut bank);
     let trace_bank = trace::sync_trace_bank_v2(&ledger, controller_health);
 
     let evaluation = evaluate_seeded_episode(controller_health);
@@ -232,6 +262,14 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
     let active_proposal = ledger.proposals.iter().find(|proposal| {
         proposal.episode_id == EPISODE_ID && is_active_state(&proposal.reply_state)
     });
+    let causal_lab_v3 = lab::sync_causal_lab_v3(
+        &signal_fingerprint,
+        trace_report.replay_read.as_ref(),
+        trace_report.anti_loop_state.as_ref(),
+        trace_report.current_teacher_signal.as_ref(),
+        active_proposal,
+        &trace_bank,
+    );
     let status = signal::decorate_signal_status(
         evaluation.status,
         previous_status.conversion_state.as_ref(),
@@ -241,6 +279,7 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
         active_proposal,
         controller_health,
         trace_report.clone(),
+        causal_lab_v3,
     );
     persist_signal_status(&status);
 

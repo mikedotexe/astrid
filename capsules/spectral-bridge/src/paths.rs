@@ -247,6 +247,17 @@ impl BridgePaths {
     }
 
     #[must_use]
+    pub fn btsp_live_trace_archive_v2_path(&self) -> PathBuf {
+        self.bridge_workspace
+            .join("btsp_live_trace_archive_v2.json")
+    }
+
+    #[must_use]
+    pub fn btsp_causal_lab_v3_path(&self) -> PathBuf {
+        self.bridge_workspace.join("btsp_causal_lab_v3.json")
+    }
+
+    #[must_use]
     pub fn sovereignty_proposals_path(&self) -> PathBuf {
         self.bridge_workspace.join("sovereignty_proposals.json")
     }

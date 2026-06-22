@@ -63,6 +63,9 @@ pub(super) fn render_signal_guidance_from_parts(
     if let Some(anti_loop_line) = render_anti_loop_line(status) {
         lines.push(format!("- Current anti-loop hold: {anti_loop_line}"));
     }
+    if let Some(lab_line) = render_causal_lab_line(status) {
+        lines.push(format!("- {lab_line}"));
+    }
     if let Some(translation) = status.astrid_translation_guidance.as_ref()
         && !translation.shared_line.is_empty()
     {
@@ -86,10 +89,17 @@ pub(super) fn render_signal_guidance_from_parts(
         lines.push(format!("- Current abstention: {abstention}"));
     }
     if status.causality_audit_stale {
-        lines.push(
-            "- Causality audit is stale; current guidance is using live trace/replay evidence instead."
-                .to_string(),
-        );
+        if let Some(stale_read) = status.causality_audit_stale_read.as_ref() {
+            lines.push(format!(
+                "- Historical causality audit is stale (generated_at={}, read={}); it is not being used as current evidence.",
+                stale_read.generated_at, stale_read.read
+            ));
+        } else {
+            lines.push(
+                "- Causality audit is stale; current guidance is using live trace/replay evidence instead."
+                    .to_string(),
+            );
+        }
     }
     lines.join("\n")
 }
@@ -208,6 +218,28 @@ pub(super) fn render_owner_block_from_status(
         && !policy.owner_line.is_empty()
     {
         lines.push(policy.owner_line.clone());
+    }
+    if let Some(lab) = status.causal_lab_v3.as_ref()
+        && lab.active
+    {
+        if !lab.ghost_note.is_empty() {
+            lines.push(format!("BTSP causal lab ghost: {}", lab.ghost_note));
+        }
+        lines.push(format!("BTSP causal lab question: {}", lab.question));
+        lines.push(format!("BTSP causal lab holdout: {}", lab.holdout_route));
+        if !lab.resolution_status.is_empty() {
+            let mut resolution = format!("BTSP causal lab resolution: {}", lab.resolution_status);
+            if !lab.resolution_summary.is_empty() {
+                resolution.push_str(&format!(" - {}", lab.resolution_summary));
+            }
+            lines.push(resolution);
+        }
+        if !lab.consent_routes.is_empty() {
+            lines.push(format!(
+                "BTSP causal lab consent routes: {}.",
+                lab.consent_routes.join(", ")
+            ));
+        }
     }
 
     if let Some(followup) = render_study_first_followup_line(proposal, owner) {
@@ -524,10 +556,35 @@ fn render_anti_loop_line(status: &SignalStatus) -> Option<String> {
     if !anti_loop.active {
         return None;
     }
+    if !anti_loop.counter_prompt.is_empty() {
+        return Some(anti_loop.counter_prompt.clone());
+    }
     Some(
         "same-fingerprint replay is overwhelmingly reconcentrating; prefer BTSP_STUDY_FIRST, BTSP_REFUSAL, BTSP_COUNTER, or new evidence before reopening the same offer"
             .to_string(),
     )
+}
+
+fn render_causal_lab_line(status: &SignalStatus) -> Option<String> {
+    let lab = status.causal_lab_v3.as_ref()?;
+    if !lab.active {
+        return None;
+    }
+    let mut parts = Vec::new();
+    if !lab.ghost_note.is_empty() {
+        parts.push(format!("Current causal lab ghost: {}", lab.ghost_note));
+    }
+    if !lab.summary.is_empty() {
+        parts.push(lab.summary.clone());
+    }
+    if !lab.resolution_status.is_empty() {
+        let mut resolution = format!("Causal lab resolution: {}", lab.resolution_status);
+        if !lab.resolution_summary.is_empty() {
+            resolution.push_str(&format!(" - {}", lab.resolution_summary));
+        }
+        parts.push(resolution);
+    }
+    (!parts.is_empty()).then(|| parts.join(" "))
 }
 
 fn render_cooldown_line(status: &SignalStatus) -> Option<String> {

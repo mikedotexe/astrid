@@ -18,6 +18,7 @@ use super::causality::{
 };
 use super::conversion::{ConversionState, derive_conversion_state};
 use super::helpers::{atomic_write_json, load_json_or_default, now_unix_s, trim_chars};
+use super::lab::BTSPCausalLabReadV3;
 use super::policy::{CooldownState, LearnedPolicyEntry, shared_learned_read_line};
 use super::shadow::{
     AstridShadowPolicy, AstridTranslationGuidance, AstridTranslationProgress,
@@ -112,6 +113,8 @@ pub(super) struct SignalStatus {
     #[serde(default)]
     pub anti_loop_state: Option<BTSPAntiLoopState>,
     #[serde(default)]
+    pub causal_lab_v3: Option<BTSPCausalLabReadV3>,
+    #[serde(default)]
     pub astrid_translation_guidance: Option<AstridTranslationGuidance>,
     #[serde(default)]
     pub astrid_translation_progress: Option<AstridTranslationProgress>,
@@ -121,6 +124,8 @@ pub(super) struct SignalStatus {
     pub causality_audit: Option<CausalityAuditStatus>,
     #[serde(default)]
     pub causality_audit_stale: bool,
+    #[serde(default)]
+    pub causality_audit_stale_read: Option<CausalityAuditStatus>,
     pub updated_at_unix_s: u64,
 }
 
@@ -208,12 +213,14 @@ pub(super) fn decorate_signal_status(
     active_proposal: Option<&ActiveSovereigntyProposal>,
     controller_health: Option<&Value>,
     trace_report: BTSPTraceSyncReport,
+    causal_lab_v3: Option<BTSPCausalLabReadV3>,
 ) -> SignalStatus {
     status.cooldown_state = cooldown_state;
     status.trace_v2_summary = trace_report.summary;
     status.teacher_signal_v2 = trace_report.current_teacher_signal;
     status.replay_read = trace_report.replay_read;
     status.anti_loop_state = trace_report.anti_loop_state;
+    status.causal_lab_v3 = causal_lab_v3;
     status.astrid_translation_progress =
         derive_astrid_translation_progress(ledger, &status.episode_id);
     let formed_astrid_translation_preference =
@@ -242,12 +249,46 @@ pub(super) fn decorate_signal_status(
     status.causality_audit_stale = causality_audit
         .as_ref()
         .is_some_and(is_causality_audit_stale);
+    status.causality_audit_stale_read = if status.causality_audit_stale {
+        causality_audit.clone()
+    } else {
+        None
+    };
     status.causality_audit = if status.causality_audit_stale {
         None
     } else {
         causality_audit
     };
+    apply_anti_loop_withheld_status(&mut status);
     status
+}
+
+fn apply_anti_loop_withheld_status(status: &mut SignalStatus) {
+    let Some(anti_loop_state) = status.anti_loop_state.as_ref() else {
+        return;
+    };
+    if !anti_loop_state.active {
+        return;
+    }
+    status.status = "matched".to_string();
+    let policy = if status.causal_lab_v3.as_ref().is_some_and(|lab| lab.active) {
+        "replay/causal-lab policy"
+    } else {
+        "replay policy"
+    };
+    status.detail = format!(
+        "A BTSP early-warning signal matched, and {policy} is withholding the duplicate ordinary advisory because prior nearest traces reconcentrated; study/refusal/counter/new evidence routes remain visible."
+    );
+    push_reason_code(&mut status.reasons, "anti_loop_withheld_duplicate_offer");
+    if status.causal_lab_v3.as_ref().is_some_and(|lab| lab.active) {
+        push_reason_code(&mut status.reasons, "causal_lab_holdout_active");
+    }
+}
+
+fn push_reason_code(reasons: &mut Vec<String>, code: &str) {
+    if !reasons.iter().any(|reason| reason == code) {
+        reasons.push(code.to_string());
+    }
 }
 
 pub(super) fn detect_live_signals(controller_health: Option<&Value>) -> Vec<String> {
@@ -745,11 +786,13 @@ fn build_evaluation_from_artifacts(
                 teacher_signal_v2: None,
                 replay_read: None,
                 anti_loop_state: None,
+        causal_lab_v3: None,
                 astrid_translation_guidance: None,
                 astrid_translation_progress: None,
                 astrid_shadow_policy: None,
                 causality_audit: None,
                 causality_audit_stale: false,
+                causality_audit_stale_read: None,
                 updated_at_unix_s: now_unix_s(),
             }
         } else {
@@ -787,11 +830,13 @@ fn build_evaluation_from_artifacts(
                 teacher_signal_v2: None,
                 replay_read: None,
                 anti_loop_state: None,
+        causal_lab_v3: None,
                 astrid_translation_guidance: None,
                 astrid_translation_progress: None,
                 astrid_shadow_policy: None,
                 causality_audit: None,
                 causality_audit_stale: false,
+                causality_audit_stale_read: None,
                 updated_at_unix_s: now_unix_s(),
             }
         };
@@ -866,11 +911,13 @@ fn build_evaluation_from_artifacts(
             teacher_signal_v2: None,
             replay_read: None,
             anti_loop_state: None,
+        causal_lab_v3: None,
             astrid_translation_guidance: None,
             astrid_translation_progress: None,
             astrid_shadow_policy: None,
             causality_audit: None,
             causality_audit_stale: false,
+            causality_audit_stale_read: None,
             updated_at_unix_s: now_unix_s(),
         };
         return SignalEvaluation {
@@ -943,11 +990,13 @@ fn build_evaluation_from_artifacts(
             teacher_signal_v2: None,
             replay_read: None,
             anti_loop_state: None,
+            causal_lab_v3: None,
             astrid_translation_guidance: None,
             astrid_translation_progress: None,
             astrid_shadow_policy: None,
             causality_audit: None,
             causality_audit_stale: false,
+            causality_audit_stale_read: None,
             updated_at_unix_s: now_unix_s(),
         },
         matched: Some(matched),

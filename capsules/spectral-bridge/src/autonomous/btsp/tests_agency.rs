@@ -89,6 +89,13 @@ fn exact_accept_scores_as_agency_recovery() {
         .expect("expected exact adoption outcome");
     assert!(outcome.note.contains("Agency outcome exact_accept"));
     assert!(outcome.note.contains("reason_codes=exact_accept"));
+    let telemetry = outcome
+        .outcome_telemetry_v2
+        .as_ref()
+        .expect("structured telemetry");
+    assert_eq!(telemetry.phase, "expanding");
+    assert_eq!(telemetry.fill_band, "near");
+    assert_eq!(telemetry.shape_verdict, "softened_only");
 }
 
 #[test]
@@ -141,6 +148,12 @@ BTSP_OBSERVED_NEXT DECOMPOSE
             .count(),
         1
     );
+    let telemetry = proposal.outcomes[0]
+        .outcome_telemetry_v2
+        .as_ref()
+        .expect("structured telemetry");
+    assert_eq!(telemetry.phase, "plateau");
+    assert_eq!(telemetry.shape_verdict, "softened_only");
 }
 
 #[test]
@@ -183,12 +196,69 @@ fn study_first_records_distinct_agency_outcome() {
             .count(),
         1
     );
+    let telemetry = proposal.outcomes[0]
+        .outcome_telemetry_v2
+        .as_ref()
+        .expect("structured telemetry");
+    assert_eq!(telemetry.fill_pct, Some(51.0));
+    assert_eq!(telemetry.target_fill_pct, Some(55.0));
     assert!(
         !proposal
             .outcomes
             .iter()
             .any(|outcome| outcome.response_id == "adjacent_uptake")
     );
+}
+
+#[test]
+fn expired_non_adoption_records_structured_telemetry() {
+    let mut bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut proposal = active_test_proposal("agency_expired");
+    proposal.reply_state = "expired".to_string();
+    proposal.outcome_status = "pending".to_string();
+    proposal.owner_reply_state =
+        HashMap::from([(OWNER_MINIME.to_string(), "witnessed".to_string())]);
+    let mut ledger = ProposalLedger {
+        proposals: vec![proposal],
+        last_updated_unix_s: 0,
+    };
+    let health = json!({
+        "fill_pct": 71.5,
+        "target_fill_pct": 68.0,
+        "fill_band": "over",
+        "phase": "contracting",
+        "perturb_visibility": {"shape_verdict": "tightening"},
+        "pressure_source_status": {"dominant_source": "semantic"},
+        "active_mode_count": 5,
+        "spectral_denominator_v1": {
+            "effective_dimensionality": 2.5,
+            "distinguishability_loss": 0.3
+        },
+        "inhabitable_fluctuation_v1": {"inhabitability_score": 0.7}
+    });
+
+    assert!(agency::score_final_non_adoption_outcomes(
+        &mut bank,
+        &mut ledger,
+        Some(&health)
+    ));
+
+    let outcome = ledger.proposals[0]
+        .outcomes
+        .iter()
+        .find(|outcome| outcome.response_id == "proposal_expired")
+        .expect("system expiry outcome");
+    let telemetry = outcome
+        .outcome_telemetry_v2
+        .as_ref()
+        .expect("structured telemetry");
+    assert_eq!(telemetry.fill_band, "over");
+    assert_eq!(telemetry.pressure_source, "semantic");
+    assert_eq!(telemetry.active_mode_count, Some(5));
+    assert_eq!(telemetry.effective_dimensionality, Some(2.5));
 }
 
 #[test]
@@ -264,12 +334,23 @@ fn anti_loop_state_suppresses_duplicate_advisory_proposal() {
     let anti_loop = trace::BTSPAntiLoopState {
         active: true,
         reason: "same_fingerprint_overwhelmingly_reconcentrating".to_string(),
+        scope: "exact".to_string(),
         fingerprint:
             "families=grinding_family;transition=none;crossing=none;perturb=tightening;fill_band=unknown"
                 .to_string(),
         same_fingerprint_count: 12,
+        similar_fingerprint_count: 0,
         reconcentrating_count: 12,
         widening_count: 0,
+        mean_similarity_score: 100.0,
+        nearest_similarity_score: 100,
+        suggested_routes: vec![
+            "BTSP_STUDY_FIRST".to_string(),
+            "BTSP_REFUSAL".to_string(),
+            "BTSP_COUNTER".to_string(),
+            "new_evidence".to_string(),
+        ],
+        counter_prompt: "This exact BTSP signal mostly recovered by reconcentrating.".to_string(),
         recommendation: "suppress_duplicate_proposal_until_counter_refusal_or_new_evidence"
             .to_string(),
     };

@@ -2,7 +2,8 @@ use serde_json::{Value, json};
 
 use super::adoption::exact_adoptions_for_scoring;
 use super::helpers::{
-    build_non_adoption_outcome, classify_live_state, now_unix_s, push_unique_outcome,
+    build_non_adoption_outcome, classify_live_state, now_unix_s, outcome_telemetry_from_health,
+    push_unique_outcome,
 };
 use super::signal::append_signal_event;
 use super::{
@@ -82,6 +83,7 @@ pub(super) fn score_adopted_outcomes(
                 target_nearness,
                 distress_or_recovery,
                 opening_vs_reconcentration,
+                outcome_telemetry_v2: outcome_telemetry_from_health(controller_health),
                 note,
             };
             if push_unique_outcome(episode, proposal, outcome.clone()) {
@@ -326,6 +328,7 @@ fn score_study_first_outcomes(
                 target_nearness,
                 distress_or_recovery,
                 opening_vs_reconcentration,
+                outcome_telemetry_v2: outcome_telemetry_from_health(controller_health),
                 note: format!(
                     "Owner requested study-first before deciding. reason={}. source={}.{} Agency outcome study_first score={agency_score:.2} reason_codes={}. {details}",
                     record.reason,
@@ -398,6 +401,7 @@ fn score_adjacent_outcomes(
             target_nearness,
             distress_or_recovery,
             opening_vs_reconcentration,
+            outcome_telemetry_v2: outcome_telemetry_from_health(controller_health),
             note: format!(
                 "Owner chose adjacent action {choice}. Agency outcome adjacent_uptake score={agency_score:.2} reason_codes={}. {details}",
                 reason_codes.join(",")

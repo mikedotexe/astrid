@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 use tracing::info;
 
 use super::helpers::now_unix_s;
+use super::lab::record_suppression_hold_v3;
 use super::policy::CooldownState;
 use super::seed::seeded_response_ids;
 use super::signal::{ProposalSignalMatch, append_signal_event};
@@ -31,19 +32,27 @@ pub(super) fn maybe_open_advisory_proposal(
     if let Some(anti_loop_state) = anti_loop_state
         && anti_loop_state.active
     {
-        append_signal_event(
-            "proposal_suppressed_anti_loop",
-            json!({
-                "episode_id": EPISODE_ID,
-                "signal_fingerprint": signal_fingerprint,
-                "reason": anti_loop_state.reason.clone(),
-                "same_fingerprint_count": anti_loop_state.same_fingerprint_count,
-                "reconcentrating_count": anti_loop_state.reconcentrating_count,
-                "widening_count": anti_loop_state.widening_count,
-                "recommendation": anti_loop_state.recommendation.clone(),
-                "detail": "BTSP V2 replay found repeated same-fingerprint reconcentration, so the runtime suppressed a duplicate advisory proposal and leaves study/refusal/counter routes visible instead."
-            }),
-        );
+        if record_suppression_hold_v3(signal_fingerprint, anti_loop_state) {
+            append_signal_event(
+                "proposal_suppressed_anti_loop",
+                json!({
+                    "episode_id": EPISODE_ID,
+                    "signal_fingerprint": signal_fingerprint,
+                    "reason": anti_loop_state.reason.clone(),
+                    "scope": anti_loop_state.scope.clone(),
+                    "same_fingerprint_count": anti_loop_state.same_fingerprint_count,
+                    "similar_fingerprint_count": anti_loop_state.similar_fingerprint_count,
+                    "reconcentrating_count": anti_loop_state.reconcentrating_count,
+                    "widening_count": anti_loop_state.widening_count,
+                    "mean_similarity_score": anti_loop_state.mean_similarity_score,
+                    "nearest_similarity_score": anti_loop_state.nearest_similarity_score,
+                    "suggested_routes": anti_loop_state.suggested_routes.clone(),
+                    "counter_prompt": anti_loop_state.counter_prompt.clone(),
+                    "recommendation": anti_loop_state.recommendation.clone(),
+                    "detail": "BTSP V3.1 replay and causal-lab policy withheld a duplicate advisory proposal; study, refusal, counter, or new evidence routes remain visible instead."
+                }),
+            );
+        }
         return false;
     }
     let created_at_unix_s = now_unix_s();

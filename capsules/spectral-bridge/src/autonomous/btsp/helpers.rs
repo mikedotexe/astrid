@@ -8,7 +8,10 @@ use tracing::warn;
 use crate::rescue_policy::STABLE_CORE_TARGET_FILL_PCT;
 
 use super::signal::{append_signal_event, learning_note_for_outcome};
-use super::{ActiveSovereigntyProposal, BTSPEpisodeRecord, NominatedResponse, ResponseOutcomeNote};
+use super::{
+    ActiveSovereigntyProposal, BTSPEpisodeRecord, BTSPOutcomeTelemetryV2, NominatedResponse,
+    ResponseOutcomeNote,
+};
 
 pub(super) fn response_matches_choice(
     response: &NominatedResponse,
@@ -85,24 +88,30 @@ pub(super) fn load_json_or_default<T: DeserializeOwned + Default>(path: &Path) -
 }
 
 pub(super) fn atomic_write_json<T: Serialize>(path: &Path, value: &T) {
+    let _ = atomic_write_json_checked(path, value);
+}
+
+pub(super) fn atomic_write_json_checked<T: Serialize>(path: &Path, value: &T) -> bool {
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
     let Ok(json) = serde_json::to_string_pretty(value) else {
         warn!(path = %path.display(), "btsp: failed to serialize runtime json");
-        return;
+        return false;
     };
     let tmp_path = path.with_extension("tmp");
     if std::fs::write(&tmp_path, json).is_err() {
         warn!(path = %tmp_path.display(), "btsp: failed to write temp runtime json");
-        return;
+        return false;
     }
     if std::fs::rename(&tmp_path, path).is_err() {
         let _ = std::fs::remove_file(path);
         if std::fs::rename(&tmp_path, path).is_err() {
             warn!(path = %path.display(), "btsp: failed to replace runtime json");
+            return false;
         }
     }
+    true
 }
 
 pub(super) fn trim_chars(text: &str, max_chars: usize) -> String {
@@ -129,6 +138,7 @@ pub(super) fn build_non_adoption_outcome(
         target_nearness,
         distress_or_recovery,
         opening_vs_reconcentration,
+        outcome_telemetry_v2: outcome_telemetry_from_health(controller_health),
         note: format!("{note_prefix} {details}"),
     }
 }
@@ -260,6 +270,73 @@ pub(super) fn classify_live_state(
         opening_vs_reconcentration,
         details,
     )
+}
+
+pub(super) fn outcome_telemetry_from_health(
+    controller_health: Option<&Value>,
+) -> Option<BTSPOutcomeTelemetryV2> {
+    let health = controller_health?;
+    Some(BTSPOutcomeTelemetryV2 {
+        phase: string_field(health, &["phase"], "unknown"),
+        fill_band: string_field(health, &["fill_band"], "unknown"),
+        shape_verdict: string_field(health, &["perturb_visibility", "shape_verdict"], "unknown"),
+        fill_pct: f32_field(health, &["fill_pct"]),
+        target_fill_pct: f32_field(health, &["target_fill_pct"]),
+        internal_process_quadrant: string_field(health, &["internal_process_quadrant"], "unknown"),
+        pressure_source: string_field(
+            health,
+            &["pressure_source_status", "dominant_source"],
+            "unknown",
+        ),
+        active_mode_count: u64_field(health, &["active_mode_count"]),
+        effective_dimensionality: f32_field(health, &["effective_dimensionality"]).or_else(|| {
+            f32_field(
+                health,
+                &["spectral_denominator_v1", "effective_dimensionality"],
+            )
+        }),
+        distinguishability_loss: f32_field(health, &["distinguishability_loss"]).or_else(|| {
+            f32_field(
+                health,
+                &["spectral_denominator_v1", "distinguishability_loss"],
+            )
+        }),
+        inhabitability_score: f32_field(
+            health,
+            &["inhabitable_fluctuation_status", "inhabitability_score"],
+        )
+        .or_else(|| {
+            f32_field(
+                health,
+                &["inhabitable_fluctuation_v1", "inhabitability_score"],
+            )
+        }),
+    })
+}
+
+fn string_field(value: &Value, path: &[&str], default: &str) -> String {
+    value_field(value, path)
+        .and_then(Value::as_str)
+        .unwrap_or(default)
+        .to_string()
+}
+
+fn u64_field(value: &Value, path: &[&str]) -> Option<u64> {
+    value_field(value, path).and_then(Value::as_u64)
+}
+
+fn f32_field(value: &Value, path: &[&str]) -> Option<f32> {
+    value_field(value, path)
+        .and_then(Value::as_f64)
+        .map(|field| field as f32)
+}
+
+fn value_field<'a>(value: &'a Value, path: &[&str]) -> Option<&'a Value> {
+    let mut current = value;
+    for key in path {
+        current = current.get(*key)?;
+    }
+    Some(current)
 }
 
 pub(super) fn now_unix_s() -> u64 {

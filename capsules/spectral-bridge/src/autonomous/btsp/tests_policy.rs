@@ -21,6 +21,7 @@ fn learned_policy_requires_three_observations_and_stays_owner_specific() {
             target_nearness: "mixed".to_string(),
             distress_or_recovery: "mixed".to_string(),
             opening_vs_reconcentration: "reconcentrating".to_string(),
+            outcome_telemetry_v2: None,
             note: "1".to_string(),
         },
         ResponseOutcomeNote {
@@ -31,6 +32,7 @@ fn learned_policy_requires_three_observations_and_stays_owner_specific() {
             target_nearness: "mixed".to_string(),
             distress_or_recovery: "mixed".to_string(),
             opening_vs_reconcentration: "reconcentrating".to_string(),
+            outcome_telemetry_v2: None,
             note: "2".to_string(),
         },
         ResponseOutcomeNote {
@@ -41,6 +43,7 @@ fn learned_policy_requires_three_observations_and_stays_owner_specific() {
             target_nearness: "positive".to_string(),
             distress_or_recovery: "recovery".to_string(),
             opening_vs_reconcentration: "reconcentrating".to_string(),
+            outcome_telemetry_v2: None,
             note: "3".to_string(),
         },
         ResponseOutcomeNote {
@@ -51,6 +54,7 @@ fn learned_policy_requires_three_observations_and_stays_owner_specific() {
             target_nearness: "positive".to_string(),
             distress_or_recovery: "recovery".to_string(),
             opening_vs_reconcentration: "opening".to_string(),
+            outcome_telemetry_v2: None,
             note: "4".to_string(),
         },
         ResponseOutcomeNote {
@@ -61,6 +65,7 @@ fn learned_policy_requires_three_observations_and_stays_owner_specific() {
             target_nearness: "positive".to_string(),
             distress_or_recovery: "recovery".to_string(),
             opening_vs_reconcentration: "opening".to_string(),
+            outcome_telemetry_v2: None,
             note: "5".to_string(),
         },
         ResponseOutcomeNote {
@@ -71,6 +76,7 @@ fn learned_policy_requires_three_observations_and_stays_owner_specific() {
             target_nearness: "positive".to_string(),
             distress_or_recovery: "recovery".to_string(),
             opening_vs_reconcentration: "mixed".to_string(),
+            outcome_telemetry_v2: None,
             note: "6".to_string(),
         },
     ];
@@ -114,6 +120,7 @@ fn shared_learned_read_warns_when_recent_outcomes_reconcentrate() {
             } else {
                 "mixed".to_string()
             },
+            outcome_telemetry_v2: None,
             note: "test".to_string(),
         })
         .collect::<Vec<_>>();

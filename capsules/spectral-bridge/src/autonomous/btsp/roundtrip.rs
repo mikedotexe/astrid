@@ -270,6 +270,19 @@ pub(in crate::autonomous) fn render_minime_inbox_note(
         "anti_loop_reason": status.anti_loop_state.as_ref().and_then(|state| {
             state.active.then(|| state.reason.clone())
         }),
+        "anti_loop_prompt": status.anti_loop_state.as_ref().and_then(|state| {
+            state.active.then(|| state.counter_prompt.clone())
+        }),
+        "anti_loop_routes": status.anti_loop_state.as_ref().map(|state| {
+            state.suggested_routes.clone()
+        }).unwrap_or_default(),
+        "causal_lab_v3": status.causal_lab_v3.clone(),
+        "causal_lab_question": status.causal_lab_v3.as_ref().and_then(|lab| {
+            lab.active.then(|| lab.question.clone())
+        }),
+        "causal_lab_routes": status.causal_lab_v3.as_ref().map(|lab| {
+            lab.consent_routes.clone()
+        }).unwrap_or_default(),
         "candidate_response_ids": proposal.candidate_response_ids,
         "candidates": responses.iter().map(|response| {
             json!({

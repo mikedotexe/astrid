@@ -106,6 +106,7 @@ fn adjacent_only_reconcentrating_same_fingerprint_cools_down() {
         target_nearness: "mixed".to_string(),
         distress_or_recovery: "recovery".to_string(),
         opening_vs_reconcentration: "reconcentrating".to_string(),
+        outcome_telemetry_v2: None,
         note: "adjacent-only reconcentration".to_string(),
     }];
     let fingerprint = proposal.signal_fingerprint.clone();
@@ -149,6 +150,7 @@ fn study_first_reconcentrating_same_fingerprint_cools_down_longer() {
         target_nearness: "mixed".to_string(),
         distress_or_recovery: "recovery".to_string(),
         opening_vs_reconcentration: "reconcentrating".to_string(),
+        outcome_telemetry_v2: None,
         note: "study-first reconcentration".to_string(),
     }];
     let fingerprint = proposal.signal_fingerprint.clone();
@@ -607,6 +609,7 @@ fn trace_bank_v2_records_roundtrip_outcome_without_live_episode() {
         target_nearness: "positive".to_string(),
         distress_or_recovery: "recovery".to_string(),
         opening_vs_reconcentration: "reconcentrating".to_string(),
+        outcome_telemetry_v2: None,
         note: "exact adoption remained recoverable but reconcentrating".to_string(),
     }];
     let ledger = ProposalLedger {
@@ -1163,6 +1166,7 @@ fn upsert_seed_episode_preserves_learning_fields() {
         target_nearness: "mixed".to_string(),
         distress_or_recovery: "mixed".to_string(),
         opening_vs_reconcentration: "reconcentrating".to_string(),
+        outcome_telemetry_v2: None,
         note: "test".to_string(),
     }];
     let mut bank = EpisodeBank {
@@ -1235,6 +1239,7 @@ fn cooldown_blocks_same_fingerprint_after_integrated_resolution() {
                 target_nearness: "mixed".to_string(),
                 distress_or_recovery: "mixed".to_string(),
                 opening_vs_reconcentration: "mixed".to_string(),
+                outcome_telemetry_v2: None,
                 note: "recent".to_string(),
             }],
             refusals: Vec::new(),
@@ -1322,6 +1327,7 @@ fn materially_changed_fingerprint_bypasses_cooldown() {
                 target_nearness: "mixed".to_string(),
                 distress_or_recovery: "mixed".to_string(),
                 opening_vs_reconcentration: "mixed".to_string(),
+                outcome_telemetry_v2: None,
                 note: "recent".to_string(),
             }],
             refusals: Vec::new(),
@@ -1399,6 +1405,7 @@ fn repeated_reconcentrating_same_fingerprint_extends_cooldown() {
                 target_nearness: "positive".to_string(),
                 distress_or_recovery: "recovery".to_string(),
                 opening_vs_reconcentration: "reconcentrating".to_string(),
+                outcome_telemetry_v2: None,
                 note: "reconcentrating".to_string(),
             }],
             refusals: Vec::new(),

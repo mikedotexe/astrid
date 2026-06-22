@@ -59,6 +59,7 @@ fn recovery_and_tightening_classifies_as_recovery_reconcentrating() {
         target_nearness: "positive".to_string(),
         distress_or_recovery: "recovery".to_string(),
         opening_vs_reconcentration: "reconcentrating".to_string(),
+        outcome_telemetry_v2: None,
         note: "test".to_string(),
     }]);
     let health = json!({
@@ -91,6 +92,7 @@ fn worsening_and_tightening_classifies_as_worsening_reconcentrating() {
         target_nearness: "negative".to_string(),
         distress_or_recovery: "worsening".to_string(),
         opening_vs_reconcentration: "reconcentrating".to_string(),
+        outcome_telemetry_v2: None,
         note: "test".to_string(),
     }]);
     let health = json!({
@@ -120,6 +122,7 @@ fn underfilled_pressured_reconcentration_registers_collapse_pressure() {
         target_nearness: "mixed".to_string(),
         distress_or_recovery: "mixed".to_string(),
         opening_vs_reconcentration: "reconcentrating".to_string(),
+        outcome_telemetry_v2: None,
         note: "test".to_string(),
     }]);
     let health = json!({
@@ -150,6 +153,7 @@ fn softened_only_with_recovery_evidence_classifies_as_recovery_softening() {
         target_nearness: "positive".to_string(),
         distress_or_recovery: "recovery".to_string(),
         opening_vs_reconcentration: "mixed".to_string(),
+        outcome_telemetry_v2: None,
         note: "test".to_string(),
     }]);
     let health = json!({
@@ -197,6 +201,7 @@ fn explicit_opening_evidence_is_required_for_widening() {
         target_nearness: "positive".to_string(),
         distress_or_recovery: "recovery".to_string(),
         opening_vs_reconcentration: "opening".to_string(),
+        outcome_telemetry_v2: None,
         note: "test".to_string(),
     }]);
     let health = json!({
@@ -236,6 +241,7 @@ fn changed_state_records_last_transition() {
         target_nearness: "positive".to_string(),
         distress_or_recovery: "recovery".to_string(),
         opening_vs_reconcentration: "mixed".to_string(),
+        outcome_telemetry_v2: None,
         note: "test".to_string(),
     }]);
     let health = json!({
@@ -279,6 +285,7 @@ fn unchanged_state_preserves_previous_transition() {
         target_nearness: "positive".to_string(),
         distress_or_recovery: "recovery".to_string(),
         opening_vs_reconcentration: "reconcentrating".to_string(),
+        outcome_telemetry_v2: None,
         note: "test".to_string(),
     }]);
     let health = json!({
@@ -334,11 +341,13 @@ fn prompt_guidance_renders_conversion_line_when_present() {
         teacher_signal_v2: None,
         replay_read: None,
         anti_loop_state: None,
+        causal_lab_v3: None,
         astrid_translation_guidance: None,
         astrid_translation_progress: None,
         astrid_shadow_policy: None,
         causality_audit: None,
         causality_audit_stale: false,
+        causality_audit_stale_read: None,
         updated_at_unix_s: 0,
     };
 

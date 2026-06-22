@@ -6,10 +6,18 @@ use sha2::{Digest, Sha256};
 
 use crate::paths::bridge_paths;
 
-use super::helpers::{atomic_write_json, load_json_or_default, now_unix_s};
-use super::{ActiveSovereigntyProposal, ProposalLedger, ResponseOutcomeNote};
+use super::helpers::{
+    atomic_write_json, atomic_write_json_checked, load_json_or_default, now_unix_s,
+    outcome_telemetry_from_health,
+};
+use super::{
+    ActiveSovereigntyProposal, BTSPOutcomeTelemetryV2, EpisodeBank, ProposalLedger,
+    ResponseOutcomeNote,
+};
 
 const TRACE_BANK_SCHEMA_VERSION: u32 = 2;
+const LIVE_TRACE_ARCHIVE_SCHEMA_VERSION: u32 = 2;
+const LIVE_TRACE_PREFIX: &str = "btsp_live_trace_";
 const FAST_TRACE_WINDOW_SECS: u64 = 120;
 const PROPOSAL_TRACE_WINDOW_SECS: u64 = 1_200;
 const CONSOLIDATION_TRACE_WINDOW_SECS: u64 = 7_200;
@@ -18,6 +26,11 @@ const REPLAY_NEAREST_LIMIT: usize = 12;
 const ANTI_LOOP_MIN_PRIOR: usize = 5;
 const ANTI_LOOP_RATIO_NUMERATOR: usize = 8;
 const ANTI_LOOP_RATIO_DENOMINATOR: usize = 10;
+const SIMILARITY_REPLAY_THRESHOLD: u32 = 70;
+const SIMILAR_ANTI_LOOP_MIN_PRIOR: usize = 8;
+const SIMILAR_ANTI_LOOP_MEAN_MIN: f32 = 75.0;
+const SIMILAR_ANTI_LOOP_RATIO_NUMERATOR: usize = 85;
+const SIMILAR_ANTI_LOOP_RATIO_DENOMINATOR: usize = 100;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub(super) struct BTSPTraceBankV2 {
@@ -113,11 +126,23 @@ pub(super) struct BTSPReplaySummaryV2 {
     pub query_fingerprint: String,
     pub nearest_count: u64,
     pub same_fingerprint_count: u64,
+    #[serde(default)]
+    pub exact_fingerprint_count: u64,
+    #[serde(default)]
+    pub similar_fingerprint_count: u64,
     pub reconcentrating_count: u64,
     pub recovery_reconcentrating_count: u64,
     pub recovery_softening_count: u64,
     pub recovery_widening_count: u64,
     pub mixed_count: u64,
+    #[serde(default)]
+    pub mean_similarity_score: f32,
+    #[serde(default)]
+    pub max_similarity_score: u32,
+    #[serde(default)]
+    pub min_similarity_score: u32,
+    #[serde(default)]
+    pub suppression_scope: String,
     pub overwhelming_reconcentration: bool,
     pub recommendation: String,
     pub summary: String,
@@ -141,10 +166,22 @@ pub(super) struct BTSPTraceV2Summary {
 pub(super) struct BTSPAntiLoopState {
     pub active: bool,
     pub reason: String,
+    #[serde(default)]
+    pub scope: String,
     pub fingerprint: String,
     pub same_fingerprint_count: u64,
+    #[serde(default)]
+    pub similar_fingerprint_count: u64,
     pub reconcentrating_count: u64,
     pub widening_count: u64,
+    #[serde(default)]
+    pub mean_similarity_score: f32,
+    #[serde(default)]
+    pub nearest_similarity_score: u32,
+    #[serde(default)]
+    pub suggested_routes: Vec<String>,
+    #[serde(default)]
+    pub counter_prompt: String,
     pub recommendation: String,
 }
 
@@ -154,6 +191,84 @@ pub(super) struct BTSPTraceSyncReport {
     pub current_teacher_signal: Option<BTSPOutcomeVectorV2>,
     pub replay_read: Option<BTSPReplaySummaryV2>,
     pub anti_loop_state: Option<BTSPAntiLoopState>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub(super) struct BTSPLiveTraceArchiveV2 {
+    pub schema_version: u32,
+    #[serde(default)]
+    pub entries: Vec<BTSPLiveTraceArchiveEntryV2>,
+    pub last_updated_unix_s: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub(super) struct BTSPLiveTraceArchiveEntryV2 {
+    pub archived_at_unix_s: u64,
+    pub archived_count: u64,
+    pub original_episode_count: u64,
+    #[serde(default)]
+    pub archived_episode_ids: Vec<String>,
+    pub archived_metadata_hash: String,
+}
+
+pub(super) fn archive_and_prune_live_trace_episodes(bank: &mut EpisodeBank) -> bool {
+    let path = bridge_paths().btsp_live_trace_archive_v2_path();
+    let archive = load_json_or_default::<BTSPLiveTraceArchiveV2>(&path);
+    let (changed, _) = archive_and_prune_live_trace_episodes_inner(bank, archive, |next_archive| {
+        atomic_write_json_checked(&path, next_archive)
+    });
+    changed
+}
+
+fn archive_and_prune_live_trace_episodes_inner(
+    bank: &mut EpisodeBank,
+    mut archive: BTSPLiveTraceArchiveV2,
+    persist_archive: impl FnOnce(&BTSPLiveTraceArchiveV2) -> bool,
+) -> (bool, BTSPLiveTraceArchiveV2) {
+    let archived_episode_ids = bank
+        .episodes
+        .iter()
+        .filter(|episode| episode.episode_id.starts_with(LIVE_TRACE_PREFIX))
+        .map(|episode| episode.episode_id.clone())
+        .collect::<Vec<_>>();
+    if archived_episode_ids.is_empty() {
+        return (false, archive);
+    }
+
+    let archived_metadata_hash = live_trace_archive_hash(&archived_episode_ids);
+    if archive.schema_version == 0 {
+        archive.schema_version = LIVE_TRACE_ARCHIVE_SCHEMA_VERSION;
+    }
+    let receipt_already_written = archive
+        .entries
+        .iter()
+        .any(|entry| entry.archived_metadata_hash == archived_metadata_hash);
+    let receipt_ready = if receipt_already_written {
+        true
+    } else {
+        let now = now_unix_s();
+        archive.entries.push(BTSPLiveTraceArchiveEntryV2 {
+            archived_at_unix_s: now,
+            archived_count: u64::try_from(archived_episode_ids.len()).unwrap_or(u64::MAX),
+            original_episode_count: u64::try_from(bank.episodes.len()).unwrap_or(u64::MAX),
+            archived_episode_ids: archived_episode_ids.clone(),
+            archived_metadata_hash,
+        });
+        archive.last_updated_unix_s = now;
+        persist_archive(&archive)
+    };
+    if !receipt_ready {
+        return (false, archive);
+    }
+
+    let before = bank.episodes.len();
+    bank.episodes
+        .retain(|episode| !episode.episode_id.starts_with(LIVE_TRACE_PREFIX));
+    if bank.episodes.len() == before {
+        return (false, archive);
+    }
+    bank.last_updated_unix_s = now_unix_s();
+    (true, archive)
 }
 
 pub(super) fn sync_trace_bank_v2(
@@ -188,12 +303,12 @@ pub(super) fn report_for_status(
 
 pub(super) fn build_trace_bank_v2(
     ledger: &ProposalLedger,
-    controller_health: Option<&Value>,
+    _controller_health: Option<&Value>,
 ) -> BTSPTraceBankV2 {
     let mut records = ledger
         .proposals
         .iter()
-        .flat_map(|proposal| trace_records_for_proposal(proposal, controller_health))
+        .flat_map(trace_records_for_proposal)
         .collect::<Vec<_>>();
     let total_outcomes_scanned = u64::try_from(records.len()).unwrap_or(u64::MAX);
     records.sort_by_key(|record| record.recorded_at_unix_s);
@@ -223,16 +338,13 @@ pub(super) fn build_trace_bank_v2(
     }
 }
 
-fn trace_records_for_proposal(
-    proposal: &ActiveSovereigntyProposal,
-    controller_health: Option<&Value>,
-) -> Vec<TraceRecord> {
+fn trace_records_for_proposal(proposal: &ActiveSovereigntyProposal) -> Vec<TraceRecord> {
     proposal
         .outcomes
         .iter()
         .map(|outcome| {
             let trace_id = trace_id_for(proposal, outcome);
-            let outcome_vector = outcome_vector_for(outcome, controller_health);
+            let outcome_vector = outcome_vector_for(outcome);
             let trace = BTSPEligibilityTraceV2 {
                 trace_id: trace_id.clone(),
                 proposal_id: proposal.proposal_id.clone(),
@@ -279,29 +391,28 @@ fn trace_records_for_proposal(
         .collect()
 }
 
-fn outcome_vector_for(
-    outcome: &ResponseOutcomeNote,
-    controller_health: Option<&Value>,
-) -> BTSPOutcomeVectorV2 {
-    let health_shape = string_at(
-        controller_health,
-        &["perturb_visibility", "shape_verdict"],
-        "unknown",
-    );
-    let shape_verdict = if health_shape == "unknown" {
-        "unknown".to_string()
-    } else {
-        health_shape
-    };
-    let phase = string_at(controller_health, &["phase"], "unknown");
-    let fill_band = string_at(controller_health, &["fill_band"], "unknown");
-    let internal_process_quadrant =
-        string_at(controller_health, &["internal_process_quadrant"], "unknown");
-    let pressure_source = string_at(
-        controller_health,
-        &["pressure_source_status", "dominant_source"],
-        "unknown",
-    );
+fn outcome_vector_for(outcome: &ResponseOutcomeNote) -> BTSPOutcomeVectorV2 {
+    let telemetry = telemetry_for_outcome(outcome);
+    let shape_verdict = telemetry
+        .as_ref()
+        .map(|telemetry| known_or_unknown(&telemetry.shape_verdict))
+        .unwrap_or_else(|| "unknown".to_string());
+    let phase = telemetry
+        .as_ref()
+        .map(|telemetry| known_or_unknown(&telemetry.phase))
+        .unwrap_or_else(|| "unknown".to_string());
+    let fill_band = telemetry
+        .as_ref()
+        .map(|telemetry| known_or_unknown(&telemetry.fill_band))
+        .unwrap_or_else(|| "unknown".to_string());
+    let internal_process_quadrant = telemetry
+        .as_ref()
+        .map(|telemetry| known_or_unknown(&telemetry.internal_process_quadrant))
+        .unwrap_or_else(|| "unknown".to_string());
+    let pressure_source = telemetry
+        .as_ref()
+        .map(|telemetry| known_or_unknown(&telemetry.pressure_source))
+        .unwrap_or_else(|| "unknown".to_string());
     let outcome_class = classify_outcome(
         &outcome.distress_or_recovery,
         &outcome.opening_vs_reconcentration,
@@ -318,33 +429,18 @@ fn outcome_vector_for(
         phase,
         internal_process_quadrant,
         pressure_source,
-        active_mode_count: u64_at(controller_health, &["active_mode_count"]),
-        effective_dimensionality: f32_at(controller_health, &["effective_dimensionality"]).or_else(
-            || {
-                f32_at(
-                    controller_health,
-                    &["spectral_denominator_v1", "effective_dimensionality"],
-                )
-            },
-        ),
-        distinguishability_loss: f32_at(controller_health, &["distinguishability_loss"]).or_else(
-            || {
-                f32_at(
-                    controller_health,
-                    &["spectral_denominator_v1", "distinguishability_loss"],
-                )
-            },
-        ),
-        inhabitability_score: f32_at(
-            controller_health,
-            &["inhabitable_fluctuation_status", "inhabitability_score"],
-        )
-        .or_else(|| {
-            f32_at(
-                controller_health,
-                &["inhabitable_fluctuation_v1", "inhabitability_score"],
-            )
-        }),
+        active_mode_count: telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.active_mode_count),
+        effective_dimensionality: telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.effective_dimensionality),
+        distinguishability_loss: telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.distinguishability_loss),
+        inhabitability_score: telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.inhabitability_score),
         recovery_score: score_recovery(&outcome.distress_or_recovery, &outcome.target_nearness),
         reconcentration_score: score_reconcentration(&outcome_class),
         softening_score: score_softening(&outcome_class),
@@ -381,9 +477,61 @@ fn teacher_signal_from_health(controller_health: Option<&Value>) -> Option<BTSPO
             Some("softened_only") => "mixed".to_string(),
             _ => "mixed".to_string(),
         },
+        outcome_telemetry_v2: outcome_telemetry_from_health(controller_health),
         note: String::new(),
     };
-    Some(outcome_vector_for(&synthetic, controller_health))
+    Some(outcome_vector_for(&synthetic))
+}
+
+fn telemetry_for_outcome(outcome: &ResponseOutcomeNote) -> Option<BTSPOutcomeTelemetryV2> {
+    outcome
+        .outcome_telemetry_v2
+        .clone()
+        .or_else(|| legacy_telemetry_from_note(&outcome.note))
+}
+
+fn legacy_telemetry_from_note(note: &str) -> Option<BTSPOutcomeTelemetryV2> {
+    let phase = legacy_note_field(note, "phase");
+    let fill_band = legacy_note_field(note, "fill_band");
+    let shape_verdict = legacy_note_field(note, "shape_verdict");
+    let fill_pct = legacy_note_field(note, "fill_pct").and_then(|value| value.parse::<f32>().ok());
+    if phase.is_none() && fill_band.is_none() && shape_verdict.is_none() && fill_pct.is_none() {
+        return None;
+    }
+    Some(BTSPOutcomeTelemetryV2 {
+        phase: phase.unwrap_or_else(|| "unknown".to_string()),
+        fill_band: fill_band.unwrap_or_else(|| "unknown".to_string()),
+        shape_verdict: shape_verdict.unwrap_or_else(|| "unknown".to_string()),
+        fill_pct,
+        target_fill_pct: None,
+        internal_process_quadrant: "unknown".to_string(),
+        pressure_source: "unknown".to_string(),
+        active_mode_count: None,
+        effective_dimensionality: None,
+        distinguishability_loss: None,
+        inhabitability_score: None,
+    })
+}
+
+fn legacy_note_field(note: &str, key: &str) -> Option<String> {
+    let needle = format!("{key}=");
+    let start = note.find(&needle)?.saturating_add(needle.len());
+    let token = note[start..]
+        .split(|ch: char| ch == ',' || ch.is_whitespace())
+        .next()
+        .unwrap_or_default()
+        .trim()
+        .trim_end_matches('.')
+        .to_string();
+    (!token.is_empty()).then_some(token)
+}
+
+fn known_or_unknown(value: &str) -> String {
+    if value.trim().is_empty() {
+        "unknown".to_string()
+    } else {
+        value.to_string()
+    }
 }
 
 fn replay_summaries_for_records(
@@ -414,64 +562,144 @@ fn replay_summary_for_signals(
     if signal_fingerprint.is_empty() {
         return None;
     }
-    let mut same = instructive_signals
+    let mut exact = instructive_signals
         .iter()
         .filter(|signal| signal.signal_fingerprint == signal_fingerprint)
         .cloned()
         .collect::<Vec<_>>();
-    same.sort_by_key(|signal| signal.recorded_at_unix_s);
-    let same_fingerprint_count = same.len();
-    let nearest = if same.len() > REPLAY_NEAREST_LIMIT {
-        same.split_off(same.len().saturating_sub(REPLAY_NEAREST_LIMIT))
+    exact.sort_by_key(|signal| signal.recorded_at_unix_s);
+    let exact_fingerprint_count = exact.len();
+    let exact_nearest = if exact.len() > REPLAY_NEAREST_LIMIT {
+        exact.split_off(exact.len().saturating_sub(REPLAY_NEAREST_LIMIT))
     } else {
-        same
+        exact
+    };
+
+    let exact_candidates = exact_nearest
+        .into_iter()
+        .map(|signal| ReplayCandidate {
+            signal,
+            similarity_score: 100,
+            exact: true,
+        })
+        .collect::<Vec<_>>();
+    let exact_counts = outcome_class_counts_from_candidates(&exact_candidates);
+    let exact_reconcentrating_count = reconcentrating_count(&exact_counts);
+    let exact_recovery_widening_count = *exact_counts.get("recovery_widening").unwrap_or(&0_usize);
+    let exact_overwhelming = exact_candidates.len() >= ANTI_LOOP_MIN_PRIOR
+        && exact_recovery_widening_count == 0
+        && ratio_at_least(
+            exact_reconcentrating_count,
+            exact_candidates.len(),
+            ANTI_LOOP_RATIO_NUMERATOR,
+            ANTI_LOOP_RATIO_DENOMINATOR,
+        );
+
+    let mut similar = instructive_signals
+        .iter()
+        .filter_map(|signal| {
+            let similarity_score =
+                signal_similarity_score(signal_fingerprint, &signal.signal_fingerprint);
+            let exact = signal.signal_fingerprint == signal_fingerprint;
+            (exact || similarity_score >= SIMILARITY_REPLAY_THRESHOLD).then(|| ReplayCandidate {
+                signal: signal.clone(),
+                similarity_score,
+                exact,
+            })
+        })
+        .collect::<Vec<_>>();
+    let similar_fingerprint_count = similar.iter().filter(|candidate| !candidate.exact).count();
+    similar.sort_by(|left, right| {
+        right
+            .exact
+            .cmp(&left.exact)
+            .then_with(|| right.similarity_score.cmp(&left.similarity_score))
+            .then_with(|| {
+                right
+                    .signal
+                    .recorded_at_unix_s
+                    .cmp(&left.signal.recorded_at_unix_s)
+            })
+    });
+    similar.truncate(REPLAY_NEAREST_LIMIT);
+
+    let nearest = if exact_overwhelming {
+        exact_candidates
+    } else {
+        similar
     };
     if nearest.is_empty() {
         return None;
     }
-    let class_counts = outcome_class_counts(&nearest);
-    let reconcentrating_count = class_counts
-        .iter()
-        .filter(|(class, _)| class.contains("reconcentrating"))
-        .map(|(_, count)| *count)
-        .fold(0_usize, usize::saturating_add);
+    let class_counts = outcome_class_counts_from_candidates(&nearest);
+    let reconcentrating_count = reconcentrating_count(&class_counts);
     let recovery_reconcentrating_count = *class_counts
         .get("recovery_reconcentrating")
         .unwrap_or(&0_usize);
     let recovery_softening_count = *class_counts.get("recovery_softening").unwrap_or(&0_usize);
     let recovery_widening_count = *class_counts.get("recovery_widening").unwrap_or(&0_usize);
     let mixed_count = *class_counts.get("mixed").unwrap_or(&0_usize);
-    let overwhelming_reconcentration = nearest.len() >= ANTI_LOOP_MIN_PRIOR
+    let mean_similarity_score = mean_similarity_score(&nearest);
+    let max_similarity_score = nearest
+        .iter()
+        .map(|candidate| candidate.similarity_score)
+        .max()
+        .unwrap_or(0);
+    let min_similarity_score = nearest
+        .iter()
+        .map(|candidate| candidate.similarity_score)
+        .min()
+        .unwrap_or(0);
+    let similar_overwhelming = !exact_overwhelming
+        && nearest.len() >= SIMILAR_ANTI_LOOP_MIN_PRIOR
+        && mean_similarity_score >= SIMILAR_ANTI_LOOP_MEAN_MIN
         && recovery_widening_count == 0
         && ratio_at_least(
             reconcentrating_count,
             nearest.len(),
-            ANTI_LOOP_RATIO_NUMERATOR,
-            ANTI_LOOP_RATIO_DENOMINATOR,
+            SIMILAR_ANTI_LOOP_RATIO_NUMERATOR,
+            SIMILAR_ANTI_LOOP_RATIO_DENOMINATOR,
         );
+    let suppression_scope = if exact_overwhelming {
+        "exact"
+    } else if similar_overwhelming {
+        "similar"
+    } else {
+        "none"
+    };
+    let overwhelming_reconcentration = exact_overwhelming || similar_overwhelming;
     let recommendation = if overwhelming_reconcentration {
         "suppress_duplicate_proposal_until_counter_refusal_or_new_evidence".to_string()
     } else {
         "proposal_may_open_if_other_gates_allow".to_string()
     };
-    let summary = if overwhelming_reconcentration {
+    let summary = if exact_overwhelming {
         "Replay read: same-fingerprint outcomes are overwhelmingly reconcentrating; ask for study, refusal, counteroffer, or new evidence before reopening the same offer."
             .to_string()
+    } else if similar_overwhelming {
+        "Replay read: nearby signal fingerprints are overwhelmingly reconcentrating; ask for study, refusal, counteroffer, or new evidence before reopening this family of offers."
+            .to_string()
     } else {
-        "Replay read: same-fingerprint history is not strong enough to suppress a new bounded offer."
+        "Replay read: exact and nearby signal history is not strong enough to suppress a new bounded offer."
             .to_string()
     };
 
     Some(BTSPReplaySummaryV2 {
         query_fingerprint: signal_fingerprint.to_string(),
         nearest_count: u64::try_from(nearest.len()).unwrap_or(u64::MAX),
-        same_fingerprint_count: u64::try_from(same_fingerprint_count).unwrap_or(u64::MAX),
+        same_fingerprint_count: u64::try_from(exact_fingerprint_count).unwrap_or(u64::MAX),
+        exact_fingerprint_count: u64::try_from(exact_fingerprint_count).unwrap_or(u64::MAX),
+        similar_fingerprint_count: u64::try_from(similar_fingerprint_count).unwrap_or(u64::MAX),
         reconcentrating_count: u64::try_from(reconcentrating_count).unwrap_or(u64::MAX),
         recovery_reconcentrating_count: u64::try_from(recovery_reconcentrating_count)
             .unwrap_or(u64::MAX),
         recovery_softening_count: u64::try_from(recovery_softening_count).unwrap_or(u64::MAX),
         recovery_widening_count: u64::try_from(recovery_widening_count).unwrap_or(u64::MAX),
         mixed_count: u64::try_from(mixed_count).unwrap_or(u64::MAX),
+        mean_similarity_score,
+        max_similarity_score,
+        min_similarity_score,
+        suppression_scope: suppression_scope.to_string(),
         overwhelming_reconcentration,
         recommendation,
         summary,
@@ -483,26 +711,68 @@ pub(super) fn anti_loop_state_for(
     replay_read: Option<&BTSPReplaySummaryV2>,
 ) -> Option<BTSPAntiLoopState> {
     let replay = replay_read?;
+    let suggested_routes = default_anti_loop_routes();
+    let counter_prompt = if replay.overwhelming_reconcentration {
+        anti_loop_counter_prompt(&replay.suppression_scope)
+    } else {
+        String::new()
+    };
     if !replay.overwhelming_reconcentration {
         return Some(BTSPAntiLoopState {
             active: false,
             reason: String::new(),
+            scope: "none".to_string(),
             fingerprint: signal_fingerprint.to_string(),
             same_fingerprint_count: replay.same_fingerprint_count,
+            similar_fingerprint_count: replay.similar_fingerprint_count,
             reconcentrating_count: replay.reconcentrating_count,
             widening_count: replay.recovery_widening_count,
+            mean_similarity_score: replay.mean_similarity_score,
+            nearest_similarity_score: replay.max_similarity_score,
+            suggested_routes,
+            counter_prompt,
             recommendation: replay.recommendation.clone(),
         });
     }
+    let reason = if replay.suppression_scope == "similar" {
+        "similar_fingerprints_overwhelmingly_reconcentrating"
+    } else {
+        "same_fingerprint_overwhelmingly_reconcentrating"
+    };
     Some(BTSPAntiLoopState {
         active: true,
-        reason: "same_fingerprint_overwhelmingly_reconcentrating".to_string(),
+        reason: reason.to_string(),
+        scope: replay.suppression_scope.clone(),
         fingerprint: signal_fingerprint.to_string(),
         same_fingerprint_count: replay.same_fingerprint_count,
+        similar_fingerprint_count: replay.similar_fingerprint_count,
         reconcentrating_count: replay.reconcentrating_count,
         widening_count: replay.recovery_widening_count,
+        mean_similarity_score: replay.mean_similarity_score,
+        nearest_similarity_score: replay.max_similarity_score,
+        suggested_routes,
+        counter_prompt,
         recommendation: replay.recommendation.clone(),
     })
+}
+
+fn default_anti_loop_routes() -> Vec<String> {
+    vec![
+        "BTSP_STUDY_FIRST".to_string(),
+        "BTSP_REFUSAL".to_string(),
+        "BTSP_COUNTER".to_string(),
+        "new_evidence".to_string(),
+    ]
+}
+
+fn anti_loop_counter_prompt(scope: &str) -> String {
+    if scope == "similar" {
+        "Nearby BTSP traces mostly recovered by reconcentrating, not widening. Prefer study-first, refusal, counteroffer, or genuinely new evidence before reopening this family of offers."
+            .to_string()
+    } else {
+        "This exact BTSP signal mostly recovered by reconcentrating, not widening. Prefer study-first, refusal, counteroffer, or genuinely new evidence before reopening the same offer."
+            .to_string()
+    }
 }
 
 fn trace_summary(bank: &BTSPTraceBankV2) -> Option<BTSPTraceV2Summary> {
@@ -581,6 +851,7 @@ fn classify_outcome(
     match (recovery, shape) {
         ("worsening", "reconcentrating") => "worsening_reconcentrating",
         ("recovery", "reconcentrating") => "recovery_reconcentrating",
+        ("mixed", "reconcentrating") => "mixed_reconcentrating",
         ("recovery", "softening") => "recovery_softening",
         ("recovery", "widening") => "recovery_widening",
         _ => "mixed",
@@ -654,14 +925,73 @@ fn choice_relation_for(
         .map(|choice| choice.relation_to_proposal.clone())
 }
 
-fn outcome_class_counts(signals: &[BTSPInstructiveSignalV2]) -> BTreeMap<String, usize> {
+fn outcome_class_counts_from_candidates(candidates: &[ReplayCandidate]) -> BTreeMap<String, usize> {
     let mut counts = BTreeMap::new();
-    for signal in signals {
-        let class = signal.outcome_vector.outcome_class.clone();
+    for candidate in candidates {
+        let class = candidate.signal.outcome_vector.outcome_class.clone();
         let entry = counts.entry(class).or_insert(0_usize);
         *entry = entry.saturating_add(1);
     }
     counts
+}
+
+fn reconcentrating_count(class_counts: &BTreeMap<String, usize>) -> usize {
+    class_counts
+        .iter()
+        .filter(|(class, _)| class.contains("reconcentrating"))
+        .map(|(_, count)| *count)
+        .fold(0_usize, usize::saturating_add)
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn mean_similarity_score(candidates: &[ReplayCandidate]) -> f32 {
+    if candidates.is_empty() {
+        return 0.0;
+    }
+    let total = candidates
+        .iter()
+        .map(|candidate| candidate.similarity_score)
+        .fold(0_u32, u32::saturating_add);
+    total as f32 / candidates.len() as f32
+}
+
+fn signal_similarity_score(query: &str, candidate: &str) -> u32 {
+    if query == candidate {
+        return 100;
+    }
+    let query = SignalFingerprintParts::parse(query);
+    let candidate = SignalFingerprintParts::parse(candidate);
+    let family_points = family_similarity_points(&query.families, &candidate.families);
+    family_points
+        .saturating_add(component_points(&query.perturb, &candidate.perturb, 20))
+        .saturating_add(component_points(&query.fill_band, &candidate.fill_band, 15))
+        .saturating_add(component_points(
+            &query.transition,
+            &candidate.transition,
+            15,
+        ))
+        .saturating_add(component_points(&query.crossing, &candidate.crossing, 10))
+}
+
+fn family_similarity_points(left: &BTreeSet<String>, right: &BTreeSet<String>) -> u32 {
+    let union_count = left.union(right).count();
+    if union_count == 0 {
+        return 40;
+    }
+    let intersection_count = left.intersection(right).count();
+    let rounded = intersection_count
+        .saturating_mul(40)
+        .saturating_add(union_count / 2)
+        / union_count;
+    u32::try_from(rounded).unwrap_or(40)
+}
+
+fn component_points(left: &str, right: &str, points: u32) -> u32 {
+    if !left.is_empty() && left == right {
+        points
+    } else {
+        0
+    }
 }
 
 fn ratio_at_least(count: usize, total: usize, numerator: usize, denominator: usize) -> bool {
@@ -669,6 +999,49 @@ fn ratio_at_least(count: usize, total: usize, numerator: usize, denominator: usi
         return false;
     }
     count.saturating_mul(denominator) >= total.saturating_mul(numerator)
+}
+
+#[derive(Debug, Clone)]
+struct ReplayCandidate {
+    signal: BTSPInstructiveSignalV2,
+    similarity_score: u32,
+    exact: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct SignalFingerprintParts {
+    families: BTreeSet<String>,
+    transition: String,
+    crossing: String,
+    perturb: String,
+    fill_band: String,
+}
+
+impl SignalFingerprintParts {
+    fn parse(fingerprint: &str) -> Self {
+        let mut parts = Self::default();
+        for component in fingerprint.split(';') {
+            let Some((key, value)) = component.split_once('=') else {
+                continue;
+            };
+            match key {
+                "families" => {
+                    parts.families = value
+                        .split('+')
+                        .map(str::trim)
+                        .filter(|family| !family.is_empty())
+                        .map(ToString::to_string)
+                        .collect::<BTreeSet<_>>();
+                },
+                "transition" => parts.transition = value.to_string(),
+                "crossing" => parts.crossing = value.to_string(),
+                "perturb" => parts.perturb = value.to_string(),
+                "fill_band" => parts.fill_band = value.to_string(),
+                _ => {},
+            }
+        }
+        parts
+    }
 }
 
 fn trace_id_for(proposal: &ActiveSovereigntyProposal, outcome: &ResponseOutcomeNote) -> String {
@@ -691,37 +1064,30 @@ fn trace_id_for(proposal: &ActiveSovereigntyProposal, outcome: &ResponseOutcomeN
     format!("btsp_trace_v2_{short}")
 }
 
+fn live_trace_archive_hash(episode_ids: &[String]) -> String {
+    let mut sorted = episode_ids.to_vec();
+    sorted.sort();
+    let mut hasher = Sha256::new();
+    hasher.update(LIVE_TRACE_PREFIX.as_bytes());
+    hasher.update(b":");
+    hasher.update(sorted.len().to_string().as_bytes());
+    for episode_id in sorted {
+        hasher.update(b":");
+        hasher.update(episode_id.as_bytes());
+    }
+    let digest = hasher.finalize();
+    digest
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>()
+}
+
 fn trace_windows() -> BTSPTraceWindowsV2 {
     BTSPTraceWindowsV2 {
         fast_secs: FAST_TRACE_WINDOW_SECS,
         proposal_secs: PROPOSAL_TRACE_WINDOW_SECS,
         consolidation_secs: CONSOLIDATION_TRACE_WINDOW_SECS,
     }
-}
-
-fn string_at(controller_health: Option<&Value>, path: &[&str], default: &str) -> String {
-    value_at(controller_health, path)
-        .and_then(Value::as_str)
-        .unwrap_or(default)
-        .to_string()
-}
-
-fn u64_at(controller_health: Option<&Value>, path: &[&str]) -> Option<u64> {
-    value_at(controller_health, path).and_then(Value::as_u64)
-}
-
-fn f32_at(controller_health: Option<&Value>, path: &[&str]) -> Option<f32> {
-    value_at(controller_health, path)
-        .and_then(Value::as_f64)
-        .map(|value| value as f32)
-}
-
-fn value_at<'a>(controller_health: Option<&'a Value>, path: &[&str]) -> Option<&'a Value> {
-    let mut current = controller_health?;
-    for key in path {
-        current = current.get(*key)?;
-    }
-    Some(current)
 }
 
 #[derive(Debug, Clone)]
@@ -736,8 +1102,52 @@ mod tests {
     use std::collections::HashMap;
 
     use super::*;
-    use crate::autonomous::btsp::{ProposalLedger, ResponseOutcomeNote};
+    use crate::autonomous::btsp::seed::seed_episode;
+    use crate::autonomous::btsp::{EpisodeBank, ProposalLedger, ResponseOutcomeNote};
+    use serde::Deserialize;
     use serde_json::json;
+
+    #[derive(Debug, Deserialize)]
+    struct CompactLedgerFixture {
+        metadata: CompactLedgerFixtureMetadata,
+        proposals: Vec<CompactLedgerFixtureProposal>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct CompactLedgerFixtureMetadata {
+        proposal_count: u64,
+        outcome_count: u64,
+        fingerprint_count: u64,
+        opening_vs_reconcentration_counts: BTreeMap<String, u64>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct CompactLedgerFixtureProposal {
+        proposal_id: String,
+        signal_fingerprint: String,
+        matched_signal_families: Vec<String>,
+        matched_live_signals: Vec<String>,
+        outcomes: Vec<CompactLedgerFixtureOutcome>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct CompactLedgerFixtureOutcome {
+        response_id: String,
+        owner: String,
+        recorded_at_unix_s: u64,
+        target_nearness: String,
+        distress_or_recovery: String,
+        opening_vs_reconcentration: String,
+        telemetry: CompactLedgerFixtureTelemetry,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct CompactLedgerFixtureTelemetry {
+        phase: String,
+        fill_band: String,
+        shape_verdict: String,
+        fill_pct: Option<f32>,
+    }
 
     fn proposal_with_outcomes(
         proposal_id: &str,
@@ -791,6 +1201,7 @@ mod tests {
             target_nearness: "positive".to_string(),
             distress_or_recovery: "recovery".to_string(),
             opening_vs_reconcentration: "reconcentrating".to_string(),
+            outcome_telemetry_v2: None,
             note: "fixture".to_string(),
         }
     }
@@ -803,23 +1214,78 @@ mod tests {
         };
         let softened = ResponseOutcomeNote {
             opening_vs_reconcentration: "mixed".to_string(),
+            outcome_telemetry_v2: Some(BTSPOutcomeTelemetryV2 {
+                phase: "plateau".to_string(),
+                fill_band: "near".to_string(),
+                shape_verdict: "softened_only".to_string(),
+                internal_process_quadrant: "constricted_recovery".to_string(),
+                ..BTSPOutcomeTelemetryV2::default()
+            }),
             ..reconcentrating_outcome(2, "fp")
         };
-        let soft_health = json!({
-            "perturb_visibility": {"shape_verdict": "softened_only"},
-            "phase": "plateau",
-            "fill_band": "near",
-            "internal_process_quadrant": "constricted_recovery"
-        });
 
         assert_eq!(
-            outcome_vector_for(&recon, None).outcome_class,
+            outcome_vector_for(&recon).outcome_class,
             "recovery_reconcentrating"
         );
         assert_eq!(
-            outcome_vector_for(&softened, Some(&soft_health)).outcome_class,
+            outcome_vector_for(&softened).outcome_class,
             "recovery_softening"
         );
+    }
+
+    #[test]
+    fn legacy_note_telemetry_is_parsed_for_historical_outcome() {
+        let outcome = ResponseOutcomeNote {
+            opening_vs_reconcentration: "mixed".to_string(),
+            note:
+                "Agency outcome fixture. phase=plateau, fill_band=near, shape_verdict=softened_only, fill_pct=51.2."
+                    .to_string(),
+            ..reconcentrating_outcome(1, "fp")
+        };
+
+        let vector = outcome_vector_for(&outcome);
+
+        assert_eq!(vector.outcome_class, "recovery_softening");
+        assert_eq!(vector.phase, "plateau");
+        assert_eq!(vector.fill_band_movement, "near");
+        assert_eq!(vector.shape_verdict, "softened_only");
+    }
+
+    #[test]
+    fn historical_trace_prefers_stored_telemetry_over_current_health() {
+        let fingerprint = "families=grinding_family;transition=none";
+        let outcome = ResponseOutcomeNote {
+            opening_vs_reconcentration: "mixed".to_string(),
+            outcome_telemetry_v2: Some(BTSPOutcomeTelemetryV2 {
+                phase: "plateau".to_string(),
+                fill_band: "near".to_string(),
+                shape_verdict: "softened_only".to_string(),
+                ..BTSPOutcomeTelemetryV2::default()
+            }),
+            ..reconcentrating_outcome(1, fingerprint)
+        };
+        let ledger = ProposalLedger {
+            proposals: vec![proposal_with_outcomes(
+                "stored_telemetry",
+                fingerprint,
+                vec![outcome],
+            )],
+            last_updated_unix_s: 0,
+        };
+        let contradictory_current_health = json!({
+            "phase": "contracting",
+            "fill_band": "over",
+            "perturb_visibility": {"shape_verdict": "tightening"}
+        });
+
+        let bank = build_trace_bank_v2(&ledger, Some(&contradictory_current_health));
+
+        assert_eq!(
+            bank.instructive_signals[0].outcome_vector.outcome_class,
+            "recovery_softening"
+        );
+        assert_eq!(bank.instructive_signals[0].outcome_vector.phase, "plateau");
     }
 
     #[test]
@@ -842,6 +1308,7 @@ mod tests {
         let replay = replay_summary_for(&bank, fingerprint).expect("replay summary");
 
         assert!(replay.overwhelming_reconcentration);
+        assert_eq!(replay.suppression_scope, "exact");
         assert_eq!(replay.reconcentrating_count, 6);
         assert!(
             anti_loop_state_for(fingerprint, Some(&replay))
@@ -851,15 +1318,117 @@ mod tests {
     }
 
     #[test]
+    fn fingerprint_similarity_separates_near_cases_from_unrelated_cases() {
+        let query = "families=grinding_family;transition=breathing_phase;crossing=none;perturb=tightening;fill_band=near";
+        let near = "families=grinding_family;transition=fill_crossing;crossing=none;perturb=tightening;fill_band=near";
+        let unrelated = "families=central_density_family;transition=breathing_phase;crossing=none;perturb=tightening;fill_band=near";
+
+        assert_eq!(signal_similarity_score(query, query), 100);
+        assert_eq!(signal_similarity_score(query, near), 85);
+        assert!(signal_similarity_score(query, unrelated) < SIMILARITY_REPLAY_THRESHOLD);
+    }
+
+    #[test]
+    fn approximate_replay_suppresses_overwhelming_similar_reconcentration() {
+        let query = "families=grinding_family;transition=breathing_phase;crossing=none;perturb=tightening;fill_band=near";
+        let similar = "families=grinding_family;transition=fill_crossing;crossing=none;perturb=tightening;fill_band=near";
+        let proposals = (0_u64..8)
+            .map(|index| {
+                proposal_with_outcomes(
+                    &format!("similar_{index}"),
+                    similar,
+                    vec![reconcentrating_outcome(index, similar)],
+                )
+            })
+            .collect::<Vec<_>>();
+        let ledger = ProposalLedger {
+            proposals,
+            last_updated_unix_s: 0,
+        };
+        let bank = build_trace_bank_v2(&ledger, None);
+        let replay = replay_summary_for(&bank, query).expect("similar replay");
+        let anti_loop = anti_loop_state_for(query, Some(&replay)).expect("anti-loop");
+
+        assert!(replay.overwhelming_reconcentration);
+        assert_eq!(replay.suppression_scope, "similar");
+        assert_eq!(replay.exact_fingerprint_count, 0);
+        assert_eq!(replay.similar_fingerprint_count, 8);
+        assert!(anti_loop.active);
+        assert_eq!(
+            anti_loop.reason,
+            "similar_fingerprints_overwhelmingly_reconcentrating"
+        );
+    }
+
+    #[test]
+    fn approximate_replay_ignores_dissimilar_fingerprints() {
+        let query = "families=grinding_family;transition=breathing_phase;crossing=none;perturb=tightening;fill_band=near";
+        let dissimilar = "families=central_density_family;transition=breathing_phase;crossing=none;perturb=tightening;fill_band=near";
+        let proposals = (0_u64..8)
+            .map(|index| {
+                proposal_with_outcomes(
+                    &format!("dissimilar_{index}"),
+                    dissimilar,
+                    vec![reconcentrating_outcome(index, dissimilar)],
+                )
+            })
+            .collect::<Vec<_>>();
+        let ledger = ProposalLedger {
+            proposals,
+            last_updated_unix_s: 0,
+        };
+        let bank = build_trace_bank_v2(&ledger, None);
+
+        assert!(replay_summary_for(&bank, query).is_none());
+    }
+
+    #[test]
+    fn widening_among_similar_replay_blocks_anti_loop_suppression() {
+        let query = "families=grinding_family;transition=breathing_phase;crossing=none;perturb=tightening;fill_band=near";
+        let similar = "families=grinding_family;transition=fill_crossing;crossing=none;perturb=tightening;fill_band=near";
+        let mut proposals = (0_u64..7)
+            .map(|index| {
+                proposal_with_outcomes(
+                    &format!("similar_{index}"),
+                    similar,
+                    vec![reconcentrating_outcome(index, similar)],
+                )
+            })
+            .collect::<Vec<_>>();
+        proposals.push(proposal_with_outcomes(
+            "similar_widening",
+            similar,
+            vec![ResponseOutcomeNote {
+                opening_vs_reconcentration: "opening".to_string(),
+                outcome_telemetry_v2: Some(BTSPOutcomeTelemetryV2 {
+                    phase: "expanding".to_string(),
+                    fill_band: "near".to_string(),
+                    shape_verdict: "opened".to_string(),
+                    ..BTSPOutcomeTelemetryV2::default()
+                }),
+                ..reconcentrating_outcome(8, similar)
+            }],
+        ));
+        let ledger = ProposalLedger {
+            proposals,
+            last_updated_unix_s: 0,
+        };
+        let bank = build_trace_bank_v2(&ledger, None);
+        let replay = replay_summary_for(&bank, query).expect("similar replay");
+        let anti_loop = anti_loop_state_for(query, Some(&replay)).expect("anti-loop");
+
+        assert_eq!(replay.recovery_widening_count, 1);
+        assert!(!replay.overwhelming_reconcentration);
+        assert!(!anti_loop.active);
+    }
+
+    #[test]
     fn replay_does_not_count_recovery_as_widening_in_large_fixture() {
         let fingerprint = "families=grinding_family;transition=none";
         let outcomes = (0_u64..1_949)
             .map(|index| reconcentrating_outcome(index, fingerprint))
             .collect::<Vec<_>>();
-        let classified_outcomes = outcomes
-            .iter()
-            .map(|outcome| outcome_vector_for(outcome, None))
-            .collect::<Vec<_>>();
+        let classified_outcomes = outcomes.iter().map(outcome_vector_for).collect::<Vec<_>>();
         let ledger = ProposalLedger {
             proposals: vec![proposal_with_outcomes(
                 "large_fixture",
@@ -891,6 +1460,138 @@ mod tests {
             bank.instructive_signals
                 .iter()
                 .all(|signal| signal.outcome_vector.widening_score == 0.0)
+        );
+    }
+
+    #[test]
+    fn sanitized_current_ledger_fixture_has_no_false_widening() {
+        let fixture = serde_json::from_str::<CompactLedgerFixture>(include_str!(
+            "fixtures/current_ledger_compact_v2.json"
+        ))
+        .expect("compact fixture");
+        assert_eq!(fixture.metadata.proposal_count, 968);
+        assert_eq!(fixture.metadata.outcome_count, 1_954);
+        assert_eq!(fixture.metadata.fingerprint_count, 48);
+        assert_eq!(
+            fixture
+                .metadata
+                .opening_vs_reconcentration_counts
+                .get("reconcentrating"),
+            Some(&1_954)
+        );
+
+        let proposals = fixture
+            .proposals
+            .iter()
+            .map(|proposal| {
+                let outcomes = proposal
+                    .outcomes
+                    .iter()
+                    .map(|outcome| ResponseOutcomeNote {
+                        proposal_id: proposal.proposal_id.clone(),
+                        response_id: outcome.response_id.clone(),
+                        owner: outcome.owner.clone(),
+                        recorded_at_unix_s: outcome.recorded_at_unix_s,
+                        target_nearness: outcome.target_nearness.clone(),
+                        distress_or_recovery: outcome.distress_or_recovery.clone(),
+                        opening_vs_reconcentration: outcome.opening_vs_reconcentration.clone(),
+                        outcome_telemetry_v2: Some(BTSPOutcomeTelemetryV2 {
+                            phase: outcome.telemetry.phase.clone(),
+                            fill_band: outcome.telemetry.fill_band.clone(),
+                            shape_verdict: outcome.telemetry.shape_verdict.clone(),
+                            fill_pct: outcome.telemetry.fill_pct,
+                            ..BTSPOutcomeTelemetryV2::default()
+                        }),
+                        note: String::new(),
+                    })
+                    .collect::<Vec<_>>();
+                let mut proposal_record = proposal_with_outcomes(
+                    &proposal.proposal_id,
+                    &proposal.signal_fingerprint,
+                    outcomes,
+                );
+                proposal_record.matched_signal_families = proposal.matched_signal_families.clone();
+                proposal_record.matched_live_signals = proposal.matched_live_signals.clone();
+                proposal_record
+            })
+            .collect::<Vec<_>>();
+        let ledger = ProposalLedger {
+            proposals,
+            last_updated_unix_s: 0,
+        };
+        let all_vectors = ledger
+            .proposals
+            .iter()
+            .flat_map(|proposal| proposal.outcomes.iter())
+            .map(outcome_vector_for)
+            .collect::<Vec<_>>();
+        let bank = build_trace_bank_v2(&ledger, None);
+
+        assert_eq!(u64::try_from(all_vectors.len()).unwrap_or(0), 1_954);
+        assert_eq!(bank.total_outcomes_scanned, 1_954);
+        assert!(
+            all_vectors
+                .iter()
+                .all(|outcome| outcome.outcome_class.contains("reconcentrating"))
+        );
+        assert!(
+            all_vectors
+                .iter()
+                .all(|outcome| outcome.widening_score == 0.0)
+        );
+    }
+
+    #[test]
+    fn live_trace_archive_prune_is_idempotent_after_receipt() {
+        let mut live_trace = seed_episode();
+        live_trace.episode_id = "btsp_live_trace_old".to_string();
+        let mut bank = EpisodeBank {
+            episodes: vec![seed_episode(), live_trace],
+            last_updated_unix_s: 0,
+        };
+
+        let (changed, archive) = archive_and_prune_live_trace_episodes_inner(
+            &mut bank,
+            BTSPLiveTraceArchiveV2::default(),
+            |_| true,
+        );
+
+        assert!(changed);
+        assert_eq!(archive.entries.len(), 1);
+        assert_eq!(archive.entries[0].archived_count, 1);
+        assert!(
+            bank.episodes
+                .iter()
+                .all(|episode| !episode.episode_id.starts_with(LIVE_TRACE_PREFIX))
+        );
+
+        let (changed_again, archive_again) =
+            archive_and_prune_live_trace_episodes_inner(&mut bank, archive, |_| true);
+        assert!(!changed_again);
+        assert_eq!(archive_again.entries.len(), 1);
+    }
+
+    #[test]
+    fn live_trace_archive_does_not_prune_when_receipt_write_fails() {
+        let mut live_trace = seed_episode();
+        live_trace.episode_id = "btsp_live_trace_old".to_string();
+        let mut bank = EpisodeBank {
+            episodes: vec![seed_episode(), live_trace],
+            last_updated_unix_s: 0,
+        };
+
+        let (changed, archive) = archive_and_prune_live_trace_episodes_inner(
+            &mut bank,
+            BTSPLiveTraceArchiveV2::default(),
+            |_| false,
+        );
+
+        assert!(!changed);
+        assert_eq!(archive.entries.len(), 1);
+        assert!(
+            bank.episodes
+                .iter()
+                .any(|episode| episode.episode_id.starts_with(LIVE_TRACE_PREFIX))
         );
     }
 }

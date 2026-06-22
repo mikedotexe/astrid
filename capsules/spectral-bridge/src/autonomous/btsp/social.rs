@@ -915,12 +915,13 @@ pub(super) fn dedupe_preference_memory(
             grouped.insert(key, entry);
             continue;
         };
+        let entry_summary_wins = preference_summary_entry_preferred(&entry, existing);
         let preferred_kind = prefer_kind(&existing.kind, &entry.kind).to_string();
         existing.kind = preferred_kind;
         existing.last_observed_unix_s = existing
             .last_observed_unix_s
             .max(entry.last_observed_unix_s);
-        if !entry.summary.is_empty() {
+        if entry_summary_wins && !entry.summary.is_empty() {
             existing.summary = entry.summary.clone();
         }
         for source_ref in entry.source_refs {
@@ -937,8 +938,12 @@ pub(super) fn dedupe_preference_memory(
             .evidence_count
             .max(entry.evidence_count)
             .max(evidence_from_refs);
+        existing.source_refs.sort();
     }
     let mut deduped = grouped.into_values().collect::<Vec<_>>();
+    for entry in &mut deduped {
+        entry.source_refs.sort();
+    }
     deduped.sort_by(|left, right| {
         left.owner
             .cmp(&right.owner)
@@ -946,6 +951,29 @@ pub(super) fn dedupe_preference_memory(
             .then_with(|| left.preference_key.cmp(&right.preference_key))
     });
     deduped
+}
+
+fn preference_summary_entry_preferred(
+    candidate: &PreferenceMemoryEntry,
+    current: &PreferenceMemoryEntry,
+) -> bool {
+    match (
+        candidate.kind.as_str() == KIND_DECLARED,
+        current.kind.as_str() == KIND_DECLARED,
+    ) {
+        (true, false) => return true,
+        (false, true) => return false,
+        _ => {},
+    }
+    candidate
+        .evidence_count
+        .cmp(&current.evidence_count)
+        .then_with(|| {
+            candidate
+                .last_observed_unix_s
+                .cmp(&current.last_observed_unix_s)
+        })
+        .is_gt()
 }
 
 pub(super) fn preference_for_refusal(reason: &str) -> Option<&'static str> {

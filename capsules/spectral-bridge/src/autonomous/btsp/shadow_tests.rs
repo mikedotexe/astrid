@@ -115,11 +115,13 @@ fn base_status() -> SignalStatus {
         teacher_signal_v2: None,
         replay_read: None,
         anti_loop_state: None,
+        causal_lab_v3: None,
         astrid_translation_guidance: None,
         astrid_translation_progress: None,
         astrid_shadow_policy: None,
         causality_audit: None,
         causality_audit_stale: false,
+        causality_audit_stale_read: None,
         updated_at_unix_s: 0,
     }
 }
@@ -266,6 +268,7 @@ fn repeated_high_confidence_shadow_patterns_create_astrid_behavioral_preferences
                 target_nearness: "mixed".to_string(),
                 distress_or_recovery: "mixed".to_string(),
                 opening_vs_reconcentration: "mixed".to_string(),
+                outcome_telemetry_v2: None,
                 note: "test".to_string(),
             }];
             proposal.shadow_equivalences = vec![ShadowEquivalenceRecord {
@@ -467,6 +470,7 @@ fn formed_translation_preference_is_rehydrated_and_status_stays_consistent() {
         Some(&active_astrid_proposal()),
         None,
         BTSPTraceSyncReport::default(),
+        None,
     );
     let progress = status
         .astrid_translation_progress
@@ -705,6 +709,7 @@ fn formed_translation_preference_surfaces_first_for_astrid_even_when_generic_cou
         Some(&active_astrid_proposal()),
         None,
         BTSPTraceSyncReport::default(),
+        None,
     );
     let astrid_summaries = status
         .shared_preference_summaries

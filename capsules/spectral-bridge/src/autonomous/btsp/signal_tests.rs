@@ -136,3 +136,57 @@ fn text_fingerprint_ignores_whitespace_noise() {
         artifact_text_fingerprint(right)
     );
 }
+
+#[test]
+fn anti_loop_active_rewrites_matched_status_as_withheld() {
+    let mut status = SignalStatus {
+        status: "matched".to_string(),
+        detail: "A curated early-warning family is present and live telemetry is active, so a bounded response should open."
+            .to_string(),
+        reasons: vec!["The current window satisfied the early-warning plus live-telemetry rule."
+            .to_string()],
+        anti_loop_state: Some(BTSPAntiLoopState {
+            active: true,
+            reason: "same_fingerprint_overwhelmingly_reconcentrating".to_string(),
+            scope: "exact".to_string(),
+            fingerprint: "families=grinding_family;transition=none;crossing=none;perturb=tightening;fill_band=near"
+                .to_string(),
+            same_fingerprint_count: 12,
+            similar_fingerprint_count: 0,
+            reconcentrating_count: 12,
+            widening_count: 0,
+            mean_similarity_score: 100.0,
+            nearest_similarity_score: 100,
+            suggested_routes: Vec::new(),
+            counter_prompt: String::new(),
+            recommendation: "suppress_duplicate_proposal_until_counter_refusal_or_new_evidence"
+                .to_string(),
+        }),
+        causal_lab_v3: Some(BTSPCausalLabReadV3 {
+            active: true,
+            ..BTSPCausalLabReadV3::default()
+        }),
+        ..SignalStatus::default()
+    };
+
+    apply_anti_loop_withheld_status(&mut status);
+
+    assert_eq!(status.status, "matched");
+    assert!(
+        status
+            .detail
+            .contains("withholding the duplicate ordinary advisory")
+    );
+    assert!(status.detail.contains("replay/causal-lab policy"));
+    assert!(!status.detail.contains("should open"));
+    assert!(
+        status
+            .reasons
+            .contains(&"anti_loop_withheld_duplicate_offer".to_string())
+    );
+    assert!(
+        status
+            .reasons
+            .contains(&"causal_lab_holdout_active".to_string())
+    );
+}
