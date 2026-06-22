@@ -140,6 +140,7 @@ INTERNAL_OR_ALIAS_PREFIXES = (
     "SYSTEM_",
 )
 INTERNAL_OR_ALIAS_ACTIONS = {
+    "CHAMBER_ANNOTATION",  # forgiving alias of menu-present CHAMBER_ANNOTATE (collaboration.rs:196)
     "EXPERIENCE_PLAN",
     "NEXT_PROBE",
     "PREFLIGHT",
