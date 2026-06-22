@@ -429,6 +429,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "BridgeDeployedGuardTests",
                  "run": "cd /Users/v/other/astrid && python3 scripts/check_bridge_deployed.py --selftest"},
     },
+    {
+        "id": "vibrancy_aperture_durable_baseline",
+        "shipped": "2026-06-22",
+        "surface": "the Astrid->minime aperture coupling watch (watch_vibrancy_aperture.py) — the 2026-06-17 'watch minime' consent model's baseline",
+        "failure_mode": "the watch only held an in-memory baseline during a --watch poll, and minime's raw tail telemetry (eigen_spectrum_log.jsonl) rotates every ~2 days (13,983 samples spanned only ~2 days on 2026-06-22), so the 'watch minime' promise had NO durable baseline surviving a restart or a week — the before/after across Astrid's 06-16/17 dial-up was already unrecoverable. --append-history now appends one low-frequency row (Astrid's EFFECTIVE dial lift + a 500-sample windowed mean of minime's eigen tail metrics) to a rotation-surviving jsonl; --report renders the trend + watch eval. load is EFFECTIVE lift, so an inert dial (frac high but ceiling never imported — the 2026-06-17 inert-tail muffle) reads as zero, not falsely high.",
+        "guard": {"repo": "astrid", "file": "scripts/watch_vibrancy_aperture.py", "symbol": "append_history"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/watch_vibrancy_aperture.py",
+                 "name": "self_test",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/watch_vibrancy_aperture.py --self-test"},
+    },
 ]
 
 
