@@ -11,6 +11,7 @@ mod modes;
 mod native_gesture;
 mod operations;
 mod pdf;
+mod probe_self;
 pub(crate) mod protected_diagnostics;
 mod resource_governor;
 pub(crate) mod shadow;
@@ -1979,6 +1980,11 @@ pub(super) fn handle_next_action(
 
     if modes::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
         return NextActionOutcome::handled("modes", format!("Handled `{original}`."))
+            .with_stage_visibility(stage, visibility);
+    }
+
+    if probe_self::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("probe_self", format!("Handled `{original}`."))
             .with_stage_visibility(stage, visibility);
     }
 
