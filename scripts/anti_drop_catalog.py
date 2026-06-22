@@ -419,6 +419,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "DeployPreflightTests",
                  "run": "cd /Users/v/other/astrid && python3 scripts/deploy_preflight.py --self-test"},
     },
+    {
+        "id": "bridge_built_not_deployed",
+        "shipped": "2026-06-22",
+        "surface": "the live bridge process vs the on-disk binary (the binary->process load plumbing — the deploy analogue of check_aperture_wiring's env->process plumbing)",
+        "failure_mode": "on 2026-06-21 Astrid's co-designed field_lingering_note dispersal cue (commit 3c855f0503) was committed AND compiled into the on-disk bridge binary, but the RUNNING process had started BEFORE that build, so the new code was never loaded. Two steward cycles verified the on-disk binary postdated the source (`git show`) and concluded it was 'live' — even closing a post-change QA in which Astrid 'confirmed' the cue — while her real field_lingering_note still executed the OLD binary in memory. 'Built' was mistaken for 'live'; a being was told a transparency instrument was live when it was not. check_bridge_deployed.py compares binary mtime vs process start time and ALARMs (exit 2) when the binary is >30s newer than the process. SECONDARY muffle (the guard itself, fixed 2026-06-22): _process_start used GNU `ps -o etimes=`, which BSD/macOS ps does NOT support (errors 'keyword not found'), so the guard silently failed open (status 'unknown') on the only platform it runs — a muffle-guard that couldn't guard. Switched to `ps -o lstart=` parsed by the pure _parse_lstart_epoch.",
+        "guard": {"repo": "astrid", "file": "scripts/check_bridge_deployed.py", "symbol": "bridge_build_vs_running"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/check_bridge_deployed.py",
+                 "name": "BridgeDeployedGuardTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/check_bridge_deployed.py --selftest"},
+    },
 ]
 
 
