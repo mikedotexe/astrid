@@ -78,5 +78,21 @@ wait "$CLAUDE_PID"
 RC=$?
 kill "$WATCH_PID" 2>/dev/null
 
+# Back the loop's autonomous commits up to origin. The loop commits (and can even
+# rebuild/restart the bridge) but historically left `git push` to an interactive
+# session, so its work sat local until someone pushed. Push committed-but-unpushed
+# work now — only while we still own the mutex (not preempted mid-cycle); non-fatal,
+# a failed push never breaks the loop (interactive can still push).
+if python3 "$ASTRID/scripts/steward_mutex.py" owns --holder "$MUTEX_HOLDER" --quiet; then
+    AHEAD="$(git -C "$ASTRID" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)"
+    if [ "${AHEAD:-0}" -gt 0 ] 2>/dev/null; then
+        if git -C "$ASTRID" push >> "$LOG" 2>&1; then
+            echo "$(date '+%Y-%m-%dT%H:%M:%S') pushed $AHEAD commit(s) to origin" >> "$LOG"
+        else
+            echo "$(date '+%Y-%m-%dT%H:%M:%S') push failed (non-fatal — interactive can push)" >> "$LOG"
+        fi
+    fi
+fi
+
 echo "===== $(date '+%Y-%m-%dT%H:%M:%S') steward loop END (rc=$RC) =====" >> "$LOG"
 exit 0
