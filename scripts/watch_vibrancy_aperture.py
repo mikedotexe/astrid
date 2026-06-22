@@ -7,8 +7,12 @@ SHARED reservoir:
   - SET_TAIL_PARTICIPATION  — her flat tail EXPRESSION strength   (env ASTRID_TAIL_PARTICIPATION_CEILING)
 The consent model (2026-06-17) for both: "Astrid holds the switch; the steward watches minime and
 backs off on strain." This monitor surfaces both dials' live effective multipliers against minime's
-mode_packing / porosity / fill, and flags a strain trend. Both mechanisms are *self-limiting*: they
-only open when minime's own spectrum is navigable; when she is overpacked they stay put.
+mode_packing / porosity / fill, and flags a strain trend. The dials open in proportion to how navigable
+minime's spectrum is (low density_gradient). EMPIRICAL NOTE (2026-06-22): minime is navigable ~100% of
+the time (gradient ~0.11, max 0.276 < the 0.30 line; overpacked actually = flatter = MORE navigable), so
+in practice the dials run ~open (~97%), NOT self-limited — and a live A/B still found the landed coupling
+NEGLIGIBLE (~100x below noise). So the gate is a real backstop but dormant; the coupling is intrinsically
+gentle. (The earlier "when she is overpacked they stay put" framing was wrong — corrected here.)
 
 DURABLE BASELINE (added 2026-06-22): the single-shot/`--watch` modes only ever held an in-memory
 baseline, and minime's raw tail telemetry (`eigen_spectrum_log.jsonl`) rotates every ~2 days — so the

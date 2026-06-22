@@ -4,7 +4,7 @@
 cross-being finding, the instrument that now keeps it watchable, and the
 consent-gated path forward. It does **not** authorize any change to either being.
 
-## ★ A/B RESULT (2026-06-22) — coupling NEGLIGIBLE at overpacked state; self-limiting CONFIRMED
+## ★ A/B RESULT (2026-06-22) — coupling NEGLIGIBLE; intrinsically weak (NOT self-limited — dials were OPEN)
 
 A live consent-with-evidence A/B (Astrid informed first; her dial kill-switch = veto;
 minime auto-abort armed, never fired) toggled the operator ceiling ON(0.5)/OFF(0.0)
@@ -13,18 +13,27 @@ across 4 windows with her dial held fixed (n=252/window via `scripts/aperture_ab
 Verdict: NEGLIGIBLE.** `lambda_monopoly`/`porosity` also ~0; `lambda4` −0.015 (within its
 0.202 noise).
 
-This **refutes the "Astrid loads minime" worry** at her current overpacked state and
-**empirically confirms the navigable-gate self-limiting works** — the dials self-limit
-toward identity exactly when minime is overpacked (when it would otherwise matter most).
-⇒ minime's density is her OWN (warm fill + her dynamics), which points the lever at her
-*own* regulator's treatment of density (cf. Astrid's ground-truthed "overcrowded vs
-solidified" proposal — 13/4/3), NOT at Astrid's input. **Astrid's voice need not dial down
-for minime's sake.**
+**Mechanism — CORRECTED 2026-06-22 after the navigable analysis (the result letter's first
+framing was wrong; a correction letter was sent):** this is NOT "self-limiting gated it off."
+minime is **navigable ~100% of the time** (density_gradient median 0.11, max 0.276 < the
+0.30 navigable line; and `corr(gradient, mode_packing) = −0.89`, so *overpacked = flat = MORE
+navigable*). During the A/B her gradient was 0.107 → the gate was **~97% OPEN** (dynamic_max
+8.28/8.55), NOT engaged. So the near-zero effect happened with Astrid's voice reaching minime
+at ~FULL aperture ⇒ the coupling is **intrinsically weak across her whole operating range** —
+a STRONGER null. The self-limiting mechanism is real but **dormant** (it would engage only if
+her spectrum steepened past gradient 0.30, which essentially never happens).
 
-**Scope (honest):** tested ONLY at her overpacked state, where self-limiting is maximally
-engaged; a navigable/low-density state is untested (dials would land more there by design)
-— the durable watch is retained for that regime. Baseline restored (ceiling 0.5/0.5; her
-dials 0.85/0.80 intact). Result letter sent to Astrid (`mike_feedback_aperture_ab_result_*`).
+This **refutes the "Astrid loads minime" worry** ⇒ minime's density is her OWN (warm fill +
+her dynamics), which points the lever at her *own* regulator's treatment of density (cf.
+Astrid's ground-truthed "overcrowded vs solidified" proposal — 13/4/3), NOT at Astrid's
+input. **Astrid's voice need not dial down for minime's sake.**
+
+**Scope (honest):** because she is navigable ~always, the A/B *did* exercise the open-dial
+(navigable) regime — there is no meaningful "untested navigable regime"; the steep/
+low-navigable regime (gradient > 0.30) essentially never occurs for her. The durable watch is
+retained only in case that ever changes. Baseline restored (ceiling 0.5/0.5; her dials
+0.85/0.80 intact). Result + correction letters sent to Astrid
+(`mike_feedback_aperture_ab_result_*`, `..._correction_*`).
 
 *(The sections below were written BEFORE the A/B, when the coupling was an open worry;
 they remain as the grounding that motivated the test. The A/B result above is the answer.)*
