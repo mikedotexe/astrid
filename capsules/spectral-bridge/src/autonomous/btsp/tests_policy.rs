@@ -6,6 +6,7 @@ use super::choice::ChoiceInterpretation;
 use super::policy::{
     candidate_policy_suffix, owner_policy_entries, refresh_learned_policy, shared_learned_read_line,
 };
+use super::social::{PreferenceMemoryEntry, dedupe_preference_memory};
 use super::*;
 
 #[test]
@@ -325,5 +326,40 @@ fn behavioral_preference_memory_appears_after_three_epistemic_adjacent_choices()
             .any(|entry| entry.owner == OWNER_MINIME
                 && entry.preference_key == "prefers_inquiry_before_intervention"
                 && entry.kind == "behavioral")
+    );
+}
+
+#[test]
+fn preference_memory_dedupes_repeated_inquiry_preference() {
+    let entries = vec![
+        PreferenceMemoryEntry {
+            owner: OWNER_MINIME.to_string(),
+            preference_key: "prefers_inquiry_before_intervention".to_string(),
+            kind: "behavioral".to_string(),
+            evidence_count: 1,
+            last_observed_unix_s: 10,
+            summary: "Minime tends to choose inquiry before intervention.".to_string(),
+            source_refs: vec!["proposal:a".to_string()],
+        },
+        PreferenceMemoryEntry {
+            owner: OWNER_MINIME.to_string(),
+            preference_key: "prefers_inquiry_before_intervention".to_string(),
+            kind: "declared".to_string(),
+            evidence_count: 1,
+            last_observed_unix_s: 20,
+            summary: "Minime directly prefers inquiry before intervention.".to_string(),
+            source_refs: vec!["proposal:b".to_string(), "proposal:a".to_string()],
+        },
+    ];
+
+    let deduped = dedupe_preference_memory(entries);
+
+    assert_eq!(deduped.len(), 1);
+    assert_eq!(deduped[0].kind, "declared");
+    assert_eq!(deduped[0].last_observed_unix_s, 20);
+    assert_eq!(deduped[0].evidence_count, 2);
+    assert_eq!(
+        deduped[0].source_refs,
+        vec!["proposal:a".to_string(), "proposal:b".to_string()]
     );
 }

@@ -30,3 +30,29 @@ fn mapped_audit_preserves_candidate_damp_fields() {
         Some("Temporary damp candidate.")
     );
 }
+
+#[test]
+fn april_causality_audit_is_stale_for_current_btsp_status() {
+    let audit = CausalityAuditStatus {
+        generated_at: "2026-04-20T12:00:00".to_string(),
+        read: "inquiry_load_candidate".to_string(),
+        summary: "April read".to_string(),
+        heavy_inquiry_reconcentrating_rate: "97.0%".to_string(),
+        bounded_regulation_reconcentrating_rate: "86.0%".to_string(),
+        fragile_recovery_observations: 18,
+        candidate_damp_lane: None,
+        candidate_damp_summary: None,
+    };
+
+    assert!(is_causality_audit_stale(&audit));
+}
+
+#[test]
+fn malformed_causality_audit_timestamp_is_stale() {
+    let audit = CausalityAuditStatus {
+        generated_at: "not-a-date".to_string(),
+        ..CausalityAuditStatus::default()
+    };
+
+    assert!(is_causality_audit_stale(&audit));
+}

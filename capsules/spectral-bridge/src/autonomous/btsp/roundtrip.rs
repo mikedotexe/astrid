@@ -249,6 +249,9 @@ pub(in crate::autonomous) fn render_minime_inbox_note(
     responses: &[NominatedResponse],
     rendered: &str,
 ) -> String {
+    let status = load_json_or_default::<super::signal::SignalStatus>(
+        &bridge_paths().btsp_signal_status_path(),
+    );
     let envelope = json!({
         "schema": "astrid.btsp.proposal.v2",
         "source": "astrid:btsp_sovereignty_proposal",
@@ -263,6 +266,10 @@ pub(in crate::autonomous) fn render_minime_inbox_note(
         "reason_codes": proposal_reason_codes(proposal),
         "lineage": proposal_lineage(proposal),
         "evidence_window": proposal_evidence_window(proposal),
+        "replay_read": status.replay_read.clone(),
+        "anti_loop_reason": status.anti_loop_state.as_ref().and_then(|state| {
+            state.active.then(|| state.reason.clone())
+        }),
         "candidate_response_ids": proposal.candidate_response_ids,
         "candidates": responses.iter().map(|response| {
             json!({

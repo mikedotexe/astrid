@@ -330,10 +330,15 @@ fn prompt_guidance_renders_conversion_line_when_present() {
             evidence: ConversionEvidence::default(),
             last_transition: None,
         }),
+        trace_v2_summary: None,
+        teacher_signal_v2: None,
+        replay_read: None,
+        anti_loop_state: None,
         astrid_translation_guidance: None,
         astrid_translation_progress: None,
         astrid_shadow_policy: None,
         causality_audit: None,
+        causality_audit_stale: false,
         updated_at_unix_s: 0,
     };
 

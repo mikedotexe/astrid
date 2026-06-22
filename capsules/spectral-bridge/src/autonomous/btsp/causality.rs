@@ -4,6 +4,8 @@ use crate::paths::bridge_paths;
 
 use super::helpers::load_json_or_default;
 
+const CAUSALITY_AUDIT_STALE_SECS: i64 = 86_400;
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub(super) struct CausalityAuditStatus {
     pub generated_at: String,
@@ -48,6 +50,14 @@ pub(super) fn load_latest_causality_audit() -> Option<CausalityAuditStatus> {
     map_causality_audit_summary(summary)
 }
 
+pub(super) fn is_causality_audit_stale(audit: &CausalityAuditStatus) -> bool {
+    let Some(generated_at_unix_s) = parse_generated_at_unix_s(&audit.generated_at) else {
+        return true;
+    };
+    let now = chrono::Utc::now().timestamp();
+    now.saturating_sub(generated_at_unix_s) > CAUSALITY_AUDIT_STALE_SECS
+}
+
 fn map_causality_audit_summary(summary: CausalityAuditSummary) -> Option<CausalityAuditStatus> {
     if summary.read.trim().is_empty() {
         return None;
@@ -62,6 +72,21 @@ fn map_causality_audit_summary(summary: CausalityAuditSummary) -> Option<Causali
         candidate_damp_lane: summary.candidate_damp_lane,
         candidate_damp_summary: summary.candidate_damp_summary,
     })
+}
+
+fn parse_generated_at_unix_s(raw: &str) -> Option<i64> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    chrono::DateTime::parse_from_rfc3339(trimmed)
+        .map(|dt| dt.timestamp())
+        .ok()
+        .or_else(|| {
+            chrono::NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%dT%H:%M:%S")
+                .ok()
+                .map(|dt| dt.and_utc().timestamp())
+        })
 }
 
 #[cfg(test)]

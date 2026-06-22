@@ -242,6 +242,11 @@ impl BridgePaths {
     }
 
     #[must_use]
+    pub fn btsp_trace_bank_v2_path(&self) -> PathBuf {
+        self.bridge_workspace.join("btsp_trace_bank_v2.json")
+    }
+
+    #[must_use]
     pub fn sovereignty_proposals_path(&self) -> PathBuf {
         self.bridge_workspace.join("sovereignty_proposals.json")
     }

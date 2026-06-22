@@ -234,6 +234,7 @@ fn parseable_counteroffer_seeds_future_candidate_ranking() {
         &matched,
         "families=grinding_family;transition=none;crossing=none;perturb=tightening;fill_band=unknown",
         &CooldownState::default(),
+        None,
     ));
 
     let opened = ledger.proposals.last().expect("expected opened proposal");
@@ -241,6 +242,49 @@ fn parseable_counteroffer_seeds_future_candidate_ranking() {
         opened.candidate_response_ids.first().map(String::as_str),
         Some("minime_recover_regime")
     );
+}
+
+#[test]
+fn anti_loop_state_suppresses_duplicate_advisory_proposal() {
+    let bank = EpisodeBank {
+        episodes: vec![seed_episode()],
+        last_updated_unix_s: 0,
+    };
+    let mut ledger = ProposalLedger {
+        proposals: Vec::new(),
+        last_updated_unix_s: 0,
+    };
+    let matched = signal::ProposalSignalMatch {
+        matched_cues: vec!["grinding".to_string()],
+        live_signals: vec!["perturb_visibility:tightening".to_string()],
+        matched_signal_families: vec!["grinding_family".to_string()],
+        matched_signal_roles: vec!["early_warning".to_string()],
+        signal_score: 0.81,
+    };
+    let anti_loop = trace::BTSPAntiLoopState {
+        active: true,
+        reason: "same_fingerprint_overwhelmingly_reconcentrating".to_string(),
+        fingerprint:
+            "families=grinding_family;transition=none;crossing=none;perturb=tightening;fill_band=unknown"
+                .to_string(),
+        same_fingerprint_count: 12,
+        reconcentrating_count: 12,
+        widening_count: 0,
+        recommendation: "suppress_duplicate_proposal_until_counter_refusal_or_new_evidence"
+            .to_string(),
+    };
+    let conv = ConversationState::new(Vec::new(), None);
+
+    assert!(!proposal::maybe_open_advisory_proposal(
+        &bank,
+        &mut ledger,
+        &conv,
+        &matched,
+        "families=grinding_family;transition=none;crossing=none;perturb=tightening;fill_band=unknown",
+        &CooldownState::default(),
+        Some(&anti_loop),
+    ));
+    assert!(ledger.proposals.is_empty());
 }
 
 #[test]

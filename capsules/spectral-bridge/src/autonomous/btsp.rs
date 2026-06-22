@@ -210,7 +210,7 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
     changed |= score_adopted_outcomes(&mut bank, &mut ledger, controller_health);
     changed |= score_final_non_adoption_outcomes(&mut bank, &mut ledger, controller_health);
     changed |= refresh_seeded_episode_learning(&mut bank, &ledger);
-    changed |= trace::sync_live_trace_episodes(&mut bank, &ledger);
+    let trace_bank = trace::sync_trace_bank_v2(&ledger, controller_health);
 
     let evaluation = evaluate_seeded_episode(controller_health);
     let previous_status =
@@ -223,6 +223,8 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
         })
         .unwrap_or_default();
     let cooldown_state = cooldown_state_for(&ledger, EPISODE_ID, &signal_fingerprint);
+    let trace_report =
+        trace::report_for_status(&trace_bank, &signal_fingerprint, controller_health);
     let episode = bank
         .episodes
         .iter()
@@ -238,6 +240,7 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
         cooldown_state.clone(),
         active_proposal,
         controller_health,
+        trace_report.clone(),
     );
     persist_signal_status(&status);
 
@@ -249,6 +252,7 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
             &matched,
             &signal_fingerprint,
             &cooldown_state,
+            trace_report.anti_loop_state.as_ref(),
         );
     }
 

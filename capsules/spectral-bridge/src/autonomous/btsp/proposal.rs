@@ -7,6 +7,7 @@ use super::helpers::now_unix_s;
 use super::policy::CooldownState;
 use super::seed::seeded_response_ids;
 use super::signal::{ProposalSignalMatch, append_signal_event};
+use super::trace::BTSPAntiLoopState;
 use super::{
     ACTIVE_WINDOW_SECS, ActiveSovereigntyProposal, BTSPEpisodeRecord, EPISODE_ID, EPISODE_NAME,
     EpisodeBank, OWNER_ASTRID, OWNER_MINIME, ProposalLedger,
@@ -22,8 +23,27 @@ pub(super) fn maybe_open_advisory_proposal(
     matched: &ProposalSignalMatch,
     signal_fingerprint: &str,
     cooldown_state: &CooldownState,
+    anti_loop_state: Option<&BTSPAntiLoopState>,
 ) -> bool {
     if has_active_for_any_owner(ledger) || cooldown_state.active {
+        return false;
+    }
+    if let Some(anti_loop_state) = anti_loop_state
+        && anti_loop_state.active
+    {
+        append_signal_event(
+            "proposal_suppressed_anti_loop",
+            json!({
+                "episode_id": EPISODE_ID,
+                "signal_fingerprint": signal_fingerprint,
+                "reason": anti_loop_state.reason.clone(),
+                "same_fingerprint_count": anti_loop_state.same_fingerprint_count,
+                "reconcentrating_count": anti_loop_state.reconcentrating_count,
+                "widening_count": anti_loop_state.widening_count,
+                "recommendation": anti_loop_state.recommendation.clone(),
+                "detail": "BTSP V2 replay found repeated same-fingerprint reconcentration, so the runtime suppressed a duplicate advisory proposal and leaves study/refusal/counter routes visible instead."
+            }),
+        );
         return false;
     }
     let created_at_unix_s = now_unix_s();

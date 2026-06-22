@@ -7,6 +7,7 @@ use super::super::helpers::now_unix_s;
 use super::super::policy::CooldownState;
 use super::super::signal::{SignalStatus, decorate_signal_status};
 use super::super::social::PreferenceMemoryEntry;
+use super::super::trace::BTSPTraceSyncReport;
 use super::super::{
     ActiveSovereigntyProposal, EPISODE_ID, EPISODE_NAME, EpisodeBank, OWNER_ASTRID, ProposalLedger,
     ResponseOutcomeNote, apply_owner_choice, refresh_seeded_episode_learning, seed_episode,
@@ -110,10 +111,15 @@ fn base_status() -> SignalStatus {
         shared_preference_summaries: Vec::new(),
         active_negotiation: None,
         conversion_state: None,
+        trace_v2_summary: None,
+        teacher_signal_v2: None,
+        replay_read: None,
+        anti_loop_state: None,
         astrid_translation_guidance: None,
         astrid_translation_progress: None,
         astrid_shadow_policy: None,
         causality_audit: None,
+        causality_audit_stale: false,
         updated_at_unix_s: 0,
     }
 }
@@ -460,6 +466,7 @@ fn formed_translation_preference_is_rehydrated_and_status_stays_consistent() {
         CooldownState::default(),
         Some(&active_astrid_proposal()),
         None,
+        BTSPTraceSyncReport::default(),
     );
     let progress = status
         .astrid_translation_progress
@@ -697,6 +704,7 @@ fn formed_translation_preference_surfaces_first_for_astrid_even_when_generic_cou
         CooldownState::default(),
         Some(&active_astrid_proposal()),
         None,
+        BTSPTraceSyncReport::default(),
     );
     let astrid_summaries = status
         .shared_preference_summaries

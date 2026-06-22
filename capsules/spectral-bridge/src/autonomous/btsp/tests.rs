@@ -588,11 +588,7 @@ fn refusal_after_study_first_resolves_study_window() {
 }
 
 #[test]
-fn live_trace_episode_is_created_from_exact_roundtrip_adoption() {
-    let mut bank = EpisodeBank {
-        episodes: vec![seed_episode()],
-        last_updated_unix_s: 0,
-    };
+fn trace_bank_v2_records_roundtrip_outcome_without_live_episode() {
     let mut proposal = active_test_proposal("trace_source");
     proposal.reply_state = "adopted".to_string();
     proposal.owner_reply_state = HashMap::from([(OWNER_MINIME.to_string(), "adopted".to_string())]);
@@ -603,16 +599,30 @@ fn live_trace_episode_is_created_from_exact_roundtrip_adoption() {
         "NOTICE",
         Some(json!({"fill_pct": 42.0})),
     )];
+    proposal.outcomes = vec![ResponseOutcomeNote {
+        proposal_id: "trace_source".to_string(),
+        response_id: "minime_notice_first".to_string(),
+        owner: OWNER_MINIME.to_string(),
+        recorded_at_unix_s: 42,
+        target_nearness: "positive".to_string(),
+        distress_or_recovery: "recovery".to_string(),
+        opening_vs_reconcentration: "reconcentrating".to_string(),
+        note: "exact adoption remained recoverable but reconcentrating".to_string(),
+    }];
     let ledger = ProposalLedger {
         proposals: vec![proposal],
         last_updated_unix_s: 0,
     };
 
-    assert!(trace::sync_live_trace_episodes(&mut bank, &ledger));
-    assert!(
-        bank.episodes
-            .iter()
-            .any(|episode| episode.kind == "BTSP live eligibility trace")
+    let trace_bank = trace::build_trace_bank_v2(&ledger, None);
+
+    assert_eq!(trace_bank.traces.len(), 1);
+    assert_eq!(trace_bank.instructive_signals.len(), 1);
+    assert_eq!(
+        trace_bank.instructive_signals[0]
+            .outcome_vector
+            .outcome_class,
+        "recovery_reconcentrating"
     );
 }
 

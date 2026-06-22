@@ -102,10 +102,15 @@ fn base_status() -> SignalStatus {
         shared_preference_summaries: Vec::new(),
         active_negotiation: None,
         conversion_state: None,
+        trace_v2_summary: None,
+        teacher_signal_v2: None,
+        replay_read: None,
+        anti_loop_state: None,
         astrid_translation_guidance: None,
         astrid_translation_progress: None,
         astrid_shadow_policy: None,
         causality_audit: None,
+        causality_audit_stale: false,
         updated_at_unix_s: 0,
     }
 }
@@ -163,6 +168,10 @@ fn shared_guidance_and_astrid_owner_block_render_translation_lines() {
         shared_preference_summaries: Vec::new(),
         active_negotiation: None,
         conversion_state: None,
+        trace_v2_summary: None,
+        teacher_signal_v2: None,
+        replay_read: None,
+        anti_loop_state: None,
         astrid_translation_guidance: Some(AstridTranslationGuidance {
             shared_line: "Astrid translation read: nearby native softening may show up as inquiry, expressive holding, or gentler shaping before direct decompression.".to_string(),
             owner_line: "For you, softening may look like EXAMINE_CODE/DRIFT, CREATE/ASPIRE/FORM, or gentler GESTURE/SHAPE before DAMPEN, BREATHE_ALONE, or ECHO_OFF.".to_string(),
@@ -171,6 +180,7 @@ fn shared_guidance_and_astrid_owner_block_render_translation_lines() {
         astrid_translation_progress: None,
         astrid_shadow_policy: None,
         causality_audit: None,
+        causality_audit_stale: false,
         updated_at_unix_s: 0,
     };
     let responses = episode

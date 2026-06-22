@@ -768,12 +768,7 @@ pub(super) fn refresh_preference_memory(
     ));
     let before = episode.preference_memory.clone();
     next.extend(derived);
-    next.sort_by(|left, right| {
-        left.owner
-            .cmp(&right.owner)
-            .then_with(|| right.evidence_count.cmp(&left.evidence_count))
-            .then_with(|| left.preference_key.cmp(&right.preference_key))
-    });
+    let next = dedupe_preference_memory(next);
     if before == next {
         return false;
     }
@@ -908,6 +903,49 @@ pub(super) fn merge_preference_memory(
         source_refs: vec![source_ref.to_string()],
     });
     true
+}
+
+pub(super) fn dedupe_preference_memory(
+    entries: Vec<PreferenceMemoryEntry>,
+) -> Vec<PreferenceMemoryEntry> {
+    let mut grouped = BTreeMap::<(String, String), PreferenceMemoryEntry>::new();
+    for entry in entries {
+        let key = (entry.owner.clone(), entry.preference_key.clone());
+        let Some(existing) = grouped.get_mut(&key) else {
+            grouped.insert(key, entry);
+            continue;
+        };
+        let preferred_kind = prefer_kind(&existing.kind, &entry.kind).to_string();
+        existing.kind = preferred_kind;
+        existing.last_observed_unix_s = existing
+            .last_observed_unix_s
+            .max(entry.last_observed_unix_s);
+        if !entry.summary.is_empty() {
+            existing.summary = entry.summary.clone();
+        }
+        for source_ref in entry.source_refs {
+            if !existing
+                .source_refs
+                .iter()
+                .any(|existing_ref| existing_ref == &source_ref)
+            {
+                existing.source_refs.push(source_ref);
+            }
+        }
+        let evidence_from_refs = u32::try_from(existing.source_refs.len()).unwrap_or(u32::MAX);
+        existing.evidence_count = existing
+            .evidence_count
+            .max(entry.evidence_count)
+            .max(evidence_from_refs);
+    }
+    let mut deduped = grouped.into_values().collect::<Vec<_>>();
+    deduped.sort_by(|left, right| {
+        left.owner
+            .cmp(&right.owner)
+            .then_with(|| right.evidence_count.cmp(&left.evidence_count))
+            .then_with(|| left.preference_key.cmp(&right.preference_key))
+    });
+    deduped
 }
 
 pub(super) fn preference_for_refusal(reason: &str) -> Option<&'static str> {

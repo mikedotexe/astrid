@@ -52,6 +52,17 @@ pub(super) fn render_signal_guidance_from_parts(
     if let Some(conversion_state) = status.conversion_state.as_ref() {
         lines.push(format!("- {}", render_conversion_line(conversion_state)));
     }
+    if let Some(trace_summary) = status.trace_v2_summary.as_ref() {
+        lines.push(format!("- {}", trace_summary.summary));
+    }
+    if let Some(replay_read) = status.replay_read.as_ref()
+        && !replay_read.summary.is_empty()
+    {
+        lines.push(format!("- {}", replay_read.summary));
+    }
+    if let Some(anti_loop_line) = render_anti_loop_line(status) {
+        lines.push(format!("- Current anti-loop hold: {anti_loop_line}"));
+    }
     if let Some(translation) = status.astrid_translation_guidance.as_ref()
         && !translation.shared_line.is_empty()
     {
@@ -73,6 +84,12 @@ pub(super) fn render_signal_guidance_from_parts(
     }
     if let Some(abstention) = render_signal_abstention_line(status) {
         lines.push(format!("- Current abstention: {abstention}"));
+    }
+    if status.causality_audit_stale {
+        lines.push(
+            "- Causality audit is stale; current guidance is using live trace/replay evidence instead."
+                .to_string(),
+        );
     }
     lines.join("\n")
 }
@@ -500,6 +517,17 @@ fn render_signal_abstention_line(status: &SignalStatus) -> Option<String> {
         return None;
     }
     Some(status.detail.clone())
+}
+
+fn render_anti_loop_line(status: &SignalStatus) -> Option<String> {
+    let anti_loop = status.anti_loop_state.as_ref()?;
+    if !anti_loop.active {
+        return None;
+    }
+    Some(
+        "same-fingerprint replay is overwhelmingly reconcentrating; prefer BTSP_STUDY_FIRST, BTSP_REFUSAL, BTSP_COUNTER, or new evidence before reopening the same offer"
+            .to_string(),
+    )
 }
 
 fn render_cooldown_line(status: &SignalStatus) -> Option<String> {

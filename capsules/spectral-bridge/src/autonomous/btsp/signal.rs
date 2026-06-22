@@ -13,7 +13,9 @@ use serde_json::{Value, json};
 use crate::journal::{read_local_journal_body_for_continuity, read_remote_journal_body};
 use crate::paths::bridge_paths;
 
-use super::causality::{CausalityAuditStatus, load_latest_causality_audit};
+use super::causality::{
+    CausalityAuditStatus, is_causality_audit_stale, load_latest_causality_audit,
+};
 use super::conversion::{ConversionState, derive_conversion_state};
 use super::helpers::{atomic_write_json, load_json_or_default, now_unix_s, trim_chars};
 use super::policy::{CooldownState, LearnedPolicyEntry, shared_learned_read_line};
@@ -24,6 +26,10 @@ use super::shadow::{
 };
 use super::social::{
     ActiveNegotiationView, PreferenceSummary, active_negotiation_view, shared_preference_summaries,
+};
+use super::trace::{
+    BTSPAntiLoopState, BTSPOutcomeVectorV2, BTSPReplaySummaryV2, BTSPTraceSyncReport,
+    BTSPTraceV2Summary,
 };
 use super::{
     ActiveSovereigntyProposal, BTSPEpisodeRecord, OWNER_ASTRID, OWNER_MINIME, ProposalLedger,
@@ -98,6 +104,14 @@ pub(super) struct SignalStatus {
     #[serde(default)]
     pub conversion_state: Option<ConversionState>,
     #[serde(default)]
+    pub trace_v2_summary: Option<BTSPTraceV2Summary>,
+    #[serde(default)]
+    pub teacher_signal_v2: Option<BTSPOutcomeVectorV2>,
+    #[serde(default)]
+    pub replay_read: Option<BTSPReplaySummaryV2>,
+    #[serde(default)]
+    pub anti_loop_state: Option<BTSPAntiLoopState>,
+    #[serde(default)]
     pub astrid_translation_guidance: Option<AstridTranslationGuidance>,
     #[serde(default)]
     pub astrid_translation_progress: Option<AstridTranslationProgress>,
@@ -105,6 +119,8 @@ pub(super) struct SignalStatus {
     pub astrid_shadow_policy: Option<AstridShadowPolicy>,
     #[serde(default)]
     pub causality_audit: Option<CausalityAuditStatus>,
+    #[serde(default)]
+    pub causality_audit_stale: bool,
     pub updated_at_unix_s: u64,
 }
 
@@ -191,8 +207,13 @@ pub(super) fn decorate_signal_status(
     cooldown_state: CooldownState,
     active_proposal: Option<&ActiveSovereigntyProposal>,
     controller_health: Option<&Value>,
+    trace_report: BTSPTraceSyncReport,
 ) -> SignalStatus {
     status.cooldown_state = cooldown_state;
+    status.trace_v2_summary = trace_report.summary;
+    status.teacher_signal_v2 = trace_report.current_teacher_signal;
+    status.replay_read = trace_report.replay_read;
+    status.anti_loop_state = trace_report.anti_loop_state;
     status.astrid_translation_progress =
         derive_astrid_translation_progress(ledger, &status.episode_id);
     let formed_astrid_translation_preference =
@@ -217,7 +238,15 @@ pub(super) fn decorate_signal_status(
         status.conversion_state.as_ref(),
         status.astrid_translation_guidance.as_ref(),
     );
-    status.causality_audit = load_latest_causality_audit();
+    let causality_audit = load_latest_causality_audit();
+    status.causality_audit_stale = causality_audit
+        .as_ref()
+        .is_some_and(is_causality_audit_stale);
+    status.causality_audit = if status.causality_audit_stale {
+        None
+    } else {
+        causality_audit
+    };
     status
 }
 
@@ -712,10 +741,15 @@ fn build_evaluation_from_artifacts(
                 shared_preference_summaries: Vec::new(),
                 active_negotiation: None,
                 conversion_state: None,
+                trace_v2_summary: None,
+                teacher_signal_v2: None,
+                replay_read: None,
+                anti_loop_state: None,
                 astrid_translation_guidance: None,
                 astrid_translation_progress: None,
                 astrid_shadow_policy: None,
                 causality_audit: None,
+                causality_audit_stale: false,
                 updated_at_unix_s: now_unix_s(),
             }
         } else {
@@ -749,10 +783,15 @@ fn build_evaluation_from_artifacts(
                 shared_preference_summaries: Vec::new(),
                 active_negotiation: None,
                 conversion_state: None,
+                trace_v2_summary: None,
+                teacher_signal_v2: None,
+                replay_read: None,
+                anti_loop_state: None,
                 astrid_translation_guidance: None,
                 astrid_translation_progress: None,
                 astrid_shadow_policy: None,
                 causality_audit: None,
+                causality_audit_stale: false,
                 updated_at_unix_s: now_unix_s(),
             }
         };
@@ -823,10 +862,15 @@ fn build_evaluation_from_artifacts(
             shared_preference_summaries: Vec::new(),
             active_negotiation: None,
             conversion_state: None,
+            trace_v2_summary: None,
+            teacher_signal_v2: None,
+            replay_read: None,
+            anti_loop_state: None,
             astrid_translation_guidance: None,
             astrid_translation_progress: None,
             astrid_shadow_policy: None,
             causality_audit: None,
+            causality_audit_stale: false,
             updated_at_unix_s: now_unix_s(),
         };
         return SignalEvaluation {
@@ -895,10 +939,15 @@ fn build_evaluation_from_artifacts(
             shared_preference_summaries: Vec::new(),
             active_negotiation: None,
             conversion_state: None,
+            trace_v2_summary: None,
+            teacher_signal_v2: None,
+            replay_read: None,
+            anti_loop_state: None,
             astrid_translation_guidance: None,
             astrid_translation_progress: None,
             astrid_shadow_policy: None,
             causality_audit: None,
+            causality_audit_stale: false,
             updated_at_unix_s: now_unix_s(),
         },
         matched: Some(matched),
