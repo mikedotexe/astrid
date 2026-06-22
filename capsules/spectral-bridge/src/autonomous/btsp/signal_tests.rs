@@ -7,6 +7,8 @@ use super::*;
 fn artifact(name: &str, text: &str) -> TextArtifact {
     TextArtifact {
         _path: PathBuf::from(name),
+        modified_unix_s: 10,
+        source_ref_hash: format!("source_{name}"),
         text: text.to_string(),
     }
 }
@@ -135,6 +137,27 @@ fn text_fingerprint_ignores_whitespace_noise() {
         artifact_text_fingerprint(left),
         artifact_text_fingerprint(right)
     );
+}
+
+#[test]
+fn negative_space_annotation_parser_sanitizes_source_ref() {
+    let artifact = artifact(
+        "owner_note.txt",
+        "BTSP_NEGATIVE_SPACE_OUTCOME case_key=families=grinding_family;perturb=tightening;fill_band=near scope=exact classification=quiet_stabilized bucket_index=2",
+    );
+
+    let annotations = negative_space_annotations_from_artifact(OWNER_MINIME, &artifact);
+
+    assert_eq!(annotations.len(), 1);
+    assert_eq!(annotations[0].owner, OWNER_MINIME);
+    assert_eq!(
+        annotations[0].case_key,
+        "families=grinding_family;perturb=tightening;fill_band=near"
+    );
+    assert_eq!(annotations[0].replay_scope, "exact");
+    assert_eq!(annotations[0].classification, "quiet_stabilized");
+    assert_eq!(annotations[0].consolidation_bucket_index, Some(2));
+    assert!(!annotations[0].source_ref_hash.contains("owner_note"));
 }
 
 #[test]

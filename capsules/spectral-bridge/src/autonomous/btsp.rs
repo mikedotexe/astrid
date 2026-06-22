@@ -255,6 +255,26 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
     let cooldown_state = cooldown_state_for(&ledger, EPISODE_ID, &signal_fingerprint);
     let trace_report =
         trace::report_for_status(&trace_bank, &signal_fingerprint, controller_health);
+    let negative_space_context = lab::BTSPNegativeSpaceContextV3 {
+        current_status: evaluation.status.status.clone(),
+        current_live_signal_count: u64::try_from(evaluation.status.live_signals.len())
+            .unwrap_or(u64::MAX),
+        telemetry_quiet: signal::telemetry_is_quiet(
+            controller_health,
+            &evaluation.status.live_signals,
+        ),
+        teacher_outcome_class: trace_report
+            .current_teacher_signal
+            .as_ref()
+            .map(|signal| signal.outcome_class.clone())
+            .unwrap_or_else(|| "unknown".to_string()),
+        teacher_shape_verdict: trace_report
+            .current_teacher_signal
+            .as_ref()
+            .map(|signal| signal.shape_verdict.clone())
+            .unwrap_or_else(|| "unknown".to_string()),
+    };
+    let negative_space_annotations = signal::negative_space_annotations_v3();
     let episode = bank
         .episodes
         .iter()
@@ -269,6 +289,8 @@ pub(super) fn refresh_runtime(conv: &ConversationState, controller_health: Optio
         trace_report.current_teacher_signal.as_ref(),
         active_proposal,
         &trace_bank,
+        &negative_space_context,
+        &negative_space_annotations,
     );
     let status = signal::decorate_signal_status(
         evaluation.status,

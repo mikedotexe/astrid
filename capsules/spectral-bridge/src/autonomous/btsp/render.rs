@@ -234,6 +234,27 @@ pub(super) fn render_owner_block_from_status(
             }
             lines.push(resolution);
         }
+        if !lab.negative_space_summary.is_empty() {
+            lines.push(format!(
+                "BTSP causal lab negative space: {}",
+                lab.negative_space_summary
+            ));
+        }
+        if !lab.forgiveness_state.forgiveness_summary.is_empty() {
+            lines.push(format!(
+                "BTSP causal lab forgiveness: {} remission_score={:.2} suppression_weight={:.2}",
+                lab.forgiveness_state.remission_status,
+                lab.forgiveness_state.remission_score,
+                lab.forgiveness_state.suppression_weight
+            ));
+            lines.push(lab.forgiveness_state.forgiveness_summary.clone());
+            if lab.forgiveness_state.consentful_trial_eligible {
+                lines.push(
+                    "BTSP causal lab route: ordinary duplicate remains withheld, but a consentful study/refusal/counter/new-evidence trial route is visible."
+                        .to_string(),
+                );
+            }
+        }
         if !lab.consent_routes.is_empty() {
             lines.push(format!(
                 "BTSP causal lab consent routes: {}.",
@@ -583,6 +604,27 @@ fn render_causal_lab_line(status: &SignalStatus) -> Option<String> {
             resolution.push_str(&format!(" - {}", lab.resolution_summary));
         }
         parts.push(resolution);
+    }
+    if !lab.negative_space_summary.is_empty() {
+        parts.push(format!(
+            "Causal lab negative space: {}",
+            lab.negative_space_summary
+        ));
+    }
+    if !lab.forgiveness_state.forgiveness_summary.is_empty() {
+        parts.push(format!(
+            "Causal lab forgiveness: {} remission_score={:.2} suppression_weight={:.2}. {}",
+            lab.forgiveness_state.remission_status,
+            lab.forgiveness_state.remission_score,
+            lab.forgiveness_state.suppression_weight,
+            lab.forgiveness_state.forgiveness_summary
+        ));
+        if lab.forgiveness_state.consentful_trial_eligible {
+            parts.push(
+                "Ordinary duplicate remains withheld; consentful study/refusal/counter/new-evidence trial route is visible."
+                    .to_string(),
+            );
+        }
     }
     (!parts.is_empty()).then(|| parts.join(" "))
 }

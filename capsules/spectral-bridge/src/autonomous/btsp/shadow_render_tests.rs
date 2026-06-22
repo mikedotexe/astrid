@@ -1,7 +1,7 @@
 use super::super::causality::CausalityAuditStatus;
 use super::super::choice::ChoiceInterpretation;
 use super::super::conversion::{ConversionEvidence, ConversionState};
-use super::super::lab::BTSPCausalLabReadV3;
+use super::super::lab::{BTSPCausalLabReadV3, BTSPForgivenessStateV3};
 use super::super::policy::CooldownState;
 use super::super::render::{render_owner_block_from_status, render_signal_guidance_from_parts};
 use super::super::signal::{SignalCatalog, SignalFamily, SignalStatus};
@@ -279,6 +279,24 @@ fn signal_guidance_and_owner_block_render_causal_lab_read() {
         post_registration_reconcentrating_count: 0,
         post_registration_softening_count: 0,
         post_registration_widening_count: 0,
+        negative_space_outcome_count: 2,
+        negative_space_positive_count: 2,
+        negative_space_continued_count: 0,
+        latest_negative_space_classification: "quiet_stabilized".to_string(),
+        negative_space_summary:
+            "Negative-space evidence: 2 consolidation bucket(s), 2 quiet/softening, 0 continued holds, 0 worsening; latest=quiet_stabilized."
+                .to_string(),
+        forgiveness_state: BTSPForgivenessStateV3 {
+            remission_score: 1.0,
+            remission_status: "consentful_trial_eligible".to_string(),
+            suppression_weight: 0.0,
+            consentful_trial_eligible: true,
+            forgiveness_summary:
+                "Evidence remission is strong enough to keep the ordinary duplicate withheld while making a consentful study/refusal/counter/new-evidence trial route visible."
+                    .to_string(),
+            positive_evidence_count: 2,
+            negative_evidence_count: 0,
+        },
         summary: "Causal lab V3: pre-registering a similar-fingerprint holdout.".to_string(),
     });
     let responses = episode
@@ -296,6 +314,8 @@ fn signal_guidance_and_owner_block_render_causal_lab_read() {
         )
     );
     assert!(guidance.contains("Causal lab resolution: pre_registered_holdout"));
+    assert!(guidance.contains("Causal lab negative space: Negative-space evidence"));
+    assert!(guidance.contains("Causal lab forgiveness: consentful_trial_eligible"));
 
     let owner_block = render_owner_block_from_status(
         &episode,
@@ -314,6 +334,8 @@ fn signal_guidance_and_owner_block_render_causal_lab_read() {
     );
     assert!(owner_block.contains("BTSP causal lab holdout: BTSP_STUDY_FIRST evidence_first"));
     assert!(owner_block.contains("BTSP causal lab resolution: pre_registered_holdout"));
+    assert!(owner_block.contains("BTSP causal lab negative space: Negative-space evidence"));
+    assert!(owner_block.contains("BTSP causal lab forgiveness: consentful_trial_eligible"));
 }
 
 #[test]

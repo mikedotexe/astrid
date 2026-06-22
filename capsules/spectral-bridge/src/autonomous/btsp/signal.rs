@@ -9,6 +9,7 @@ use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 
 use crate::journal::{read_local_journal_body_for_continuity, read_remote_journal_body};
 use crate::paths::bridge_paths;
@@ -18,7 +19,7 @@ use super::causality::{
 };
 use super::conversion::{ConversionState, derive_conversion_state};
 use super::helpers::{atomic_write_json, load_json_or_default, now_unix_s, trim_chars};
-use super::lab::BTSPCausalLabReadV3;
+use super::lab::{BTSPCausalLabReadV3, BTSPNegativeSpaceAnnotationV3};
 use super::policy::{CooldownState, LearnedPolicyEntry, shared_learned_read_line};
 use super::shadow::{
     AstridShadowPolicy, AstridTranslationGuidance, AstridTranslationProgress,
@@ -138,6 +139,8 @@ pub(super) struct SignalEvaluation {
 #[derive(Debug, Clone)]
 struct TextArtifact {
     _path: PathBuf,
+    modified_unix_s: u64,
+    source_ref_hash: String,
     text: String,
 }
 
@@ -202,6 +205,19 @@ pub(super) fn persist_signal_status(status: &SignalStatus) {
             }),
         );
     }
+}
+
+pub(super) fn negative_space_annotations_v3() -> Vec<BTSPNegativeSpaceAnnotationV3> {
+    [OWNER_MINIME, OWNER_ASTRID]
+        .into_iter()
+        .flat_map(|owner| {
+            recent_owner_artifacts(owner)
+                .into_iter()
+                .flat_map(move |artifact| {
+                    negative_space_annotations_from_artifact(owner, &artifact)
+                })
+        })
+        .collect()
 }
 
 pub(super) fn decorate_signal_status(
@@ -633,12 +649,106 @@ fn recent_owner_artifacts(owner: &str) -> Vec<TextArtifact> {
         }
 
         artifacts.push(TextArtifact {
+            source_ref_hash: artifact_source_ref_hash(
+                owner,
+                &candidate.path,
+                candidate.modified_unix_s,
+            ),
+            modified_unix_s: candidate.modified_unix_s,
             _path: candidate.path,
             text,
         });
     }
 
     artifacts
+}
+
+fn negative_space_annotations_from_artifact(
+    owner: &str,
+    artifact: &TextArtifact,
+) -> Vec<BTSPNegativeSpaceAnnotationV3> {
+    artifact
+        .text
+        .lines()
+        .enumerate()
+        .filter_map(|(line_index, line)| {
+            negative_space_annotation_from_line(owner, artifact, line_index, line)
+        })
+        .collect()
+}
+
+fn negative_space_annotation_from_line(
+    owner: &str,
+    artifact: &TextArtifact,
+    line_index: usize,
+    line: &str,
+) -> Option<BTSPNegativeSpaceAnnotationV3> {
+    let trimmed = line.trim();
+    let fields = trimmed.strip_prefix("BTSP_NEGATIVE_SPACE_OUTCOME")?.trim();
+    let fields = directive_fields(fields);
+    let case_key = fields.get("case_key").or_else(|| fields.get("case"))?;
+    let classification = fields.get("classification")?;
+    let replay_scope = fields
+        .get("scope")
+        .cloned()
+        .unwrap_or_else(|| "exact".to_string());
+    let consolidation_bucket_index = fields
+        .get("bucket_index")
+        .or_else(|| fields.get("consolidation_bucket_index"))
+        .and_then(|value| value.parse::<u64>().ok());
+    Some(BTSPNegativeSpaceAnnotationV3 {
+        owner: owner.to_string(),
+        case_key: case_key.to_string(),
+        replay_scope,
+        classification: classification.to_string(),
+        observed_at_unix_s: artifact.modified_unix_s,
+        source_ref_hash: annotation_source_ref_hash(owner, &artifact.source_ref_hash, line_index),
+        consolidation_bucket_index,
+    })
+}
+
+fn directive_fields(fields: &str) -> BTreeMap<String, String> {
+    fields
+        .split_whitespace()
+        .filter_map(|token| {
+            token
+                .split_once('=')
+                .map(|(key, value)| (key.trim().to_string(), value.trim().to_string()))
+        })
+        .filter(|(key, value)| !key.is_empty() && !value.is_empty())
+        .collect()
+}
+
+fn artifact_source_ref_hash(owner: &str, path: &Path, modified_unix_s: u64) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(b"btsp_artifact_source_ref:");
+    hasher.update(owner.as_bytes());
+    hasher.update(b":");
+    hasher.update(path.to_string_lossy().as_bytes());
+    hasher.update(b":");
+    hasher.update(modified_unix_s.to_string().as_bytes());
+    let digest = hasher.finalize();
+    digest
+        .iter()
+        .take(12)
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+fn annotation_source_ref_hash(owner: &str, artifact_hash: &str, line_index: usize) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(b"btsp_negative_space_annotation_ref:");
+    hasher.update(owner.as_bytes());
+    hasher.update(b":");
+    hasher.update(artifact_hash.as_bytes());
+    hasher.update(b":");
+    hasher.update(line_index.to_string().as_bytes());
+    let digest = hasher.finalize();
+    digest
+        .iter()
+        .take(12)
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 
 fn owner_sources(owner: &str) -> Vec<(PathBuf, Option<&'static str>, bool, bool, u8)> {
@@ -1035,7 +1145,10 @@ fn families_with_role(aggregates: &BTreeMap<String, FamilyAggregate>, role: &str
         .collect()
 }
 
-fn telemetry_is_quiet(controller_health: Option<&Value>, live_signals: &[String]) -> bool {
+pub(super) fn telemetry_is_quiet(
+    controller_health: Option<&Value>,
+    live_signals: &[String],
+) -> bool {
     if !live_signals.is_empty() {
         return false;
     }

@@ -14,7 +14,14 @@ use super::trace::{
 
 const CAUSAL_LAB_SCHEMA_VERSION: u32 = 3;
 const MAX_CAUSAL_LAB_ENTRIES: usize = 128;
+const CONSOLIDATION_TRACE_WINDOW_SECS: u64 = 7_200;
 const GHOST_NOTE: &str = "I would have opened the ordinary BTSP advisory here, but replay says this family has reconcentrated; holding for study/refusal/counter/new evidence.";
+
+const NEGATIVE_SPACE_QUIET_STABILIZED: &str = "quiet_stabilized";
+const NEGATIVE_SPACE_QUIET_SOFTENED: &str = "quiet_softened";
+const NEGATIVE_SPACE_CONTINUED_HOLD: &str = "continued_hold";
+const NEGATIVE_SPACE_UNCLEAR: &str = "unclear";
+const NEGATIVE_SPACE_WORSENED: &str = "worsened";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub(super) struct BTSPCausalLabNotebookV3 {
@@ -75,6 +82,20 @@ pub(super) struct BTSPCausalExperimentV3 {
     #[serde(default)]
     pub post_registration_widening_count: u64,
     #[serde(default)]
+    pub negative_space_outcomes: Vec<BTSPNegativeSpaceOutcomeV3>,
+    #[serde(default)]
+    pub negative_space_outcome_count: u64,
+    #[serde(default)]
+    pub negative_space_positive_count: u64,
+    #[serde(default)]
+    pub negative_space_continued_count: u64,
+    #[serde(default)]
+    pub latest_negative_space_classification: String,
+    #[serde(default)]
+    pub negative_space_summary: String,
+    #[serde(default)]
+    pub forgiveness_state: BTSPForgivenessStateV3,
+    #[serde(default)]
     pub suppression_hold_count: u64,
     #[serde(default)]
     pub suppression_event_count: u64,
@@ -83,6 +104,59 @@ pub(super) struct BTSPCausalExperimentV3 {
     #[serde(default)]
     pub last_suppression_signature: String,
     pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub(super) struct BTSPNegativeSpaceOutcomeV3 {
+    pub outcome_id: String,
+    pub case_key: String,
+    pub replay_scope: String,
+    pub suppression_signature: String,
+    pub consolidation_bucket_index: u64,
+    pub consolidation_bucket_start_unix_s: u64,
+    pub consolidation_bucket_close_unix_s: u64,
+    pub observed_at_unix_s: u64,
+    pub source_kind: String,
+    pub classification: String,
+    pub confidence: f32,
+    pub evidence_summary: String,
+    #[serde(default)]
+    pub owner: String,
+    #[serde(default)]
+    pub source_ref_hash: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub(super) struct BTSPForgivenessStateV3 {
+    pub remission_score: f32,
+    pub remission_status: String,
+    pub suppression_weight: f32,
+    pub consentful_trial_eligible: bool,
+    pub forgiveness_summary: String,
+    #[serde(default)]
+    pub positive_evidence_count: u64,
+    #[serde(default)]
+    pub negative_evidence_count: u64,
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(super) struct BTSPNegativeSpaceContextV3 {
+    pub current_status: String,
+    pub current_live_signal_count: u64,
+    pub telemetry_quiet: bool,
+    pub teacher_outcome_class: String,
+    pub teacher_shape_verdict: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(super) struct BTSPNegativeSpaceAnnotationV3 {
+    pub owner: String,
+    pub case_key: String,
+    pub replay_scope: String,
+    pub classification: String,
+    pub observed_at_unix_s: u64,
+    pub source_ref_hash: String,
+    pub consolidation_bucket_index: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -123,6 +197,18 @@ pub(super) struct BTSPCausalLabReadV3 {
     pub post_registration_softening_count: u64,
     #[serde(default)]
     pub post_registration_widening_count: u64,
+    #[serde(default)]
+    pub negative_space_outcome_count: u64,
+    #[serde(default)]
+    pub negative_space_positive_count: u64,
+    #[serde(default)]
+    pub negative_space_continued_count: u64,
+    #[serde(default)]
+    pub latest_negative_space_classification: String,
+    #[serde(default)]
+    pub negative_space_summary: String,
+    #[serde(default)]
+    pub forgiveness_state: BTSPForgivenessStateV3,
     pub summary: String,
 }
 
@@ -133,6 +219,8 @@ pub(super) fn sync_causal_lab_v3(
     teacher_signal: Option<&BTSPOutcomeVectorV2>,
     active_proposal: Option<&ActiveSovereigntyProposal>,
     trace_bank: &BTSPTraceBankV2,
+    negative_space_context: &BTSPNegativeSpaceContextV3,
+    negative_space_annotations: &[BTSPNegativeSpaceAnnotationV3],
 ) -> Option<BTSPCausalLabReadV3> {
     let now = now_unix_s();
     let entry = causal_lab_entry_for(
@@ -154,6 +242,14 @@ pub(super) fn sync_causal_lab_v3(
         next = upserted;
         changed |= upsert_changed;
     }
+    let (updated, negative_space_changed) = update_negative_space_outcomes(
+        next,
+        negative_space_context,
+        negative_space_annotations,
+        now,
+    );
+    next = updated;
+    changed |= negative_space_changed;
     let (resolved, resolution_changed) = resolve_lab_entries(next, trace_bank, now);
     next = resolved;
     changed |= resolution_changed;
@@ -291,6 +387,13 @@ fn causal_lab_entry_for(
         post_registration_reconcentrating_count: 0,
         post_registration_softening_count: 0,
         post_registration_widening_count: 0,
+        negative_space_outcomes: Vec::new(),
+        negative_space_outcome_count: 0,
+        negative_space_positive_count: 0,
+        negative_space_continued_count: 0,
+        latest_negative_space_classification: String::new(),
+        negative_space_summary: String::new(),
+        forgiveness_state: default_forgiveness_state(),
         suppression_hold_count: 0,
         suppression_event_count: 0,
         last_suppression_event_unix_s: 0,
@@ -350,6 +453,15 @@ fn normalize_lab_entry(entry: &mut BTSPCausalExperimentV3) -> bool {
         entry.resolution_summary = unresolved_resolution_summary();
         changed = true;
     }
+    let counts = negative_space_counts(entry);
+    if apply_negative_space_counts(entry, counts) {
+        changed = true;
+    }
+    let forgiveness = forgiveness_state_for(entry);
+    if entry.forgiveness_state != forgiveness {
+        entry.forgiveness_state = forgiveness;
+        changed = true;
+    }
     if entry.summary.contains("a exact-fingerprint") {
         entry.summary = entry
             .summary
@@ -384,6 +496,14 @@ fn upsert_lab_entry(
             existing.post_registration_reconcentrating_count;
         entry.post_registration_softening_count = existing.post_registration_softening_count;
         entry.post_registration_widening_count = existing.post_registration_widening_count;
+        entry.negative_space_outcomes = existing.negative_space_outcomes.clone();
+        entry.negative_space_outcome_count = existing.negative_space_outcome_count;
+        entry.negative_space_positive_count = existing.negative_space_positive_count;
+        entry.negative_space_continued_count = existing.negative_space_continued_count;
+        entry.latest_negative_space_classification =
+            existing.latest_negative_space_classification.clone();
+        entry.negative_space_summary = existing.negative_space_summary.clone();
+        entry.forgiveness_state = existing.forgiveness_state.clone();
         entry.suppression_hold_count = existing.suppression_hold_count;
         entry.suppression_event_count = existing.suppression_event_count;
         entry.last_suppression_event_unix_s = existing.last_suppression_event_unix_s;
@@ -465,6 +585,12 @@ fn read_for_entry(entry: &BTSPCausalExperimentV3) -> BTSPCausalLabReadV3 {
         post_registration_reconcentrating_count: entry.post_registration_reconcentrating_count,
         post_registration_softening_count: entry.post_registration_softening_count,
         post_registration_widening_count: entry.post_registration_widening_count,
+        negative_space_outcome_count: entry.negative_space_outcome_count,
+        negative_space_positive_count: entry.negative_space_positive_count,
+        negative_space_continued_count: entry.negative_space_continued_count,
+        latest_negative_space_classification: entry.latest_negative_space_classification.clone(),
+        negative_space_summary: entry.negative_space_summary.clone(),
+        forgiveness_state: entry.forgiveness_state.clone(),
         summary: entry.summary.clone(),
     }
 }
@@ -620,6 +746,13 @@ fn minimal_suppression_entry(
         post_registration_reconcentrating_count: 0,
         post_registration_softening_count: 0,
         post_registration_widening_count: 0,
+        negative_space_outcomes: Vec::new(),
+        negative_space_outcome_count: 0,
+        negative_space_positive_count: 0,
+        negative_space_continued_count: 0,
+        latest_negative_space_classification: String::new(),
+        negative_space_summary: String::new(),
+        forgiveness_state: default_forgiveness_state(),
         suppression_hold_count: 0,
         suppression_event_count: 0,
         last_suppression_event_unix_s: 0,
@@ -643,6 +776,487 @@ fn suppression_signature(
     )
 }
 
+fn update_negative_space_outcomes(
+    mut notebook: BTSPCausalLabNotebookV3,
+    context: &BTSPNegativeSpaceContextV3,
+    annotations: &[BTSPNegativeSpaceAnnotationV3],
+    now: u64,
+) -> (BTSPCausalLabNotebookV3, bool) {
+    let mut changed = false;
+    for entry in &mut notebook.entries {
+        changed |= infer_negative_space_outcome(entry, context, now);
+        changed |= apply_negative_space_annotations(entry, annotations, now);
+        let counts = negative_space_counts(entry);
+        changed |= apply_negative_space_counts(entry, counts);
+        let forgiveness = forgiveness_state_for(entry);
+        if entry.forgiveness_state != forgiveness {
+            entry.forgiveness_state = forgiveness;
+            changed = true;
+        }
+    }
+    if changed {
+        notebook.last_updated_unix_s = now;
+    }
+    (notebook, changed)
+}
+
+fn infer_negative_space_outcome(
+    entry: &mut BTSPCausalExperimentV3,
+    context: &BTSPNegativeSpaceContextV3,
+    now: u64,
+) -> bool {
+    let Some(bucket) = latest_closed_negative_space_bucket(entry, now) else {
+        return false;
+    };
+    let signature = negative_space_signature(entry);
+    if entry.negative_space_outcomes.iter().any(|outcome| {
+        outcome.source_kind == "inferred"
+            && outcome.suppression_signature == signature
+            && outcome.consolidation_bucket_index == bucket.index
+    }) {
+        return false;
+    }
+    let classification = classify_negative_space_context(context);
+    let outcome = negative_space_outcome(
+        entry,
+        &signature,
+        bucket,
+        "inferred",
+        &classification,
+        now,
+        "",
+        "",
+    );
+    entry.negative_space_outcomes.push(outcome);
+    true
+}
+
+fn apply_negative_space_annotations(
+    entry: &mut BTSPCausalExperimentV3,
+    annotations: &[BTSPNegativeSpaceAnnotationV3],
+    now: u64,
+) -> bool {
+    let mut changed = false;
+    for annotation in annotations
+        .iter()
+        .filter(|annotation| annotation.case_key == entry.case_key)
+        .filter(|annotation| annotation.replay_scope == entry.replay_scope)
+    {
+        let Some(bucket) = bucket_for_annotation(entry, annotation, now) else {
+            continue;
+        };
+        let signature = negative_space_signature(entry);
+        let outcome = negative_space_outcome(
+            entry,
+            &signature,
+            bucket,
+            "owner_annotation",
+            &normalize_negative_space_classification(&annotation.classification),
+            annotation.observed_at_unix_s,
+            &annotation.owner,
+            &annotation.source_ref_hash,
+        );
+        if entry
+            .negative_space_outcomes
+            .iter()
+            .any(|existing| existing.outcome_id == outcome.outcome_id)
+        {
+            continue;
+        }
+        entry.negative_space_outcomes.push(outcome);
+        changed = true;
+    }
+    changed
+}
+
+#[derive(Debug, Clone, Copy)]
+struct NegativeSpaceBucket {
+    index: u64,
+    start_unix_s: u64,
+    close_unix_s: u64,
+}
+
+fn latest_closed_negative_space_bucket(
+    entry: &BTSPCausalExperimentV3,
+    now: u64,
+) -> Option<NegativeSpaceBucket> {
+    if entry.registered_at_unix_s == 0 {
+        return None;
+    }
+    let elapsed = now.checked_sub(entry.registered_at_unix_s)?;
+    if elapsed < CONSOLIDATION_TRACE_WINDOW_SECS {
+        return None;
+    }
+    let index = elapsed
+        .checked_div(CONSOLIDATION_TRACE_WINDOW_SECS)
+        .unwrap_or(0)
+        .saturating_sub(1);
+    negative_space_bucket(entry.registered_at_unix_s, index)
+}
+
+fn bucket_for_annotation(
+    entry: &BTSPCausalExperimentV3,
+    annotation: &BTSPNegativeSpaceAnnotationV3,
+    now: u64,
+) -> Option<NegativeSpaceBucket> {
+    if let Some(index) = annotation.consolidation_bucket_index {
+        return negative_space_bucket(entry.registered_at_unix_s, index)
+            .filter(|bucket| bucket.close_unix_s <= now);
+    }
+    latest_closed_negative_space_bucket(entry, now)
+}
+
+fn negative_space_bucket(base_unix_s: u64, index: u64) -> Option<NegativeSpaceBucket> {
+    let offset = index.checked_mul(CONSOLIDATION_TRACE_WINDOW_SECS)?;
+    let start_unix_s = base_unix_s.checked_add(offset)?;
+    let close_unix_s = start_unix_s.checked_add(CONSOLIDATION_TRACE_WINDOW_SECS)?;
+    Some(NegativeSpaceBucket {
+        index,
+        start_unix_s,
+        close_unix_s,
+    })
+}
+
+fn classify_negative_space_context(context: &BTSPNegativeSpaceContextV3) -> String {
+    let status_matched = context.current_status == "matched";
+    let no_current_warning = matches!(
+        context.current_status.as_str(),
+        "quiet" | "no_early_warning"
+    );
+    let teacher_class = context.teacher_outcome_class.as_str();
+    let teacher_shape = context.teacher_shape_verdict.as_str();
+    if no_current_warning
+        && context.current_live_signal_count == 0
+        && (teacher_class.contains("softening") || teacher_class.contains("widening"))
+    {
+        return NEGATIVE_SPACE_QUIET_SOFTENED.to_string();
+    }
+    if no_current_warning && context.current_live_signal_count == 0 && context.telemetry_quiet {
+        return NEGATIVE_SPACE_QUIET_STABILIZED.to_string();
+    }
+    if status_matched || teacher_class.contains("reconcentrating") || teacher_shape == "tightening"
+    {
+        return NEGATIVE_SPACE_CONTINUED_HOLD.to_string();
+    }
+    NEGATIVE_SPACE_UNCLEAR.to_string()
+}
+
+fn normalize_negative_space_classification(classification: &str) -> String {
+    match classification.trim() {
+        NEGATIVE_SPACE_QUIET_STABILIZED => NEGATIVE_SPACE_QUIET_STABILIZED.to_string(),
+        NEGATIVE_SPACE_QUIET_SOFTENED => NEGATIVE_SPACE_QUIET_SOFTENED.to_string(),
+        NEGATIVE_SPACE_CONTINUED_HOLD => NEGATIVE_SPACE_CONTINUED_HOLD.to_string(),
+        NEGATIVE_SPACE_WORSENED | "worsening" => NEGATIVE_SPACE_WORSENED.to_string(),
+        _ => NEGATIVE_SPACE_UNCLEAR.to_string(),
+    }
+}
+
+fn negative_space_signature(entry: &BTSPCausalExperimentV3) -> String {
+    if entry.last_suppression_signature.is_empty() {
+        format!("case_key={};scope={}", entry.case_key, entry.replay_scope)
+    } else {
+        entry.last_suppression_signature.clone()
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn negative_space_outcome(
+    entry: &BTSPCausalExperimentV3,
+    signature: &str,
+    bucket: NegativeSpaceBucket,
+    source_kind: &str,
+    classification: &str,
+    observed_at_unix_s: u64,
+    owner: &str,
+    source_ref_hash: &str,
+) -> BTSPNegativeSpaceOutcomeV3 {
+    let classification = normalize_negative_space_classification(classification);
+    let outcome_id = negative_space_outcome_id(
+        &entry.case_key,
+        &entry.replay_scope,
+        signature,
+        bucket.index,
+        source_kind,
+        &classification,
+        source_ref_hash,
+    );
+    BTSPNegativeSpaceOutcomeV3 {
+        outcome_id,
+        case_key: entry.case_key.clone(),
+        replay_scope: entry.replay_scope.clone(),
+        suppression_signature: signature.to_string(),
+        consolidation_bucket_index: bucket.index,
+        consolidation_bucket_start_unix_s: bucket.start_unix_s,
+        consolidation_bucket_close_unix_s: bucket.close_unix_s,
+        observed_at_unix_s,
+        source_kind: source_kind.to_string(),
+        classification: classification.clone(),
+        confidence: negative_space_confidence(source_kind, &classification),
+        evidence_summary: negative_space_evidence_summary(source_kind, &classification),
+        owner: owner.to_string(),
+        source_ref_hash: source_ref_hash.to_string(),
+    }
+}
+
+fn negative_space_outcome_id(
+    case_key: &str,
+    scope: &str,
+    signature: &str,
+    bucket_index: u64,
+    source_kind: &str,
+    classification: &str,
+    source_ref_hash: &str,
+) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(b"btsp_negative_space_v3:");
+    hasher.update(case_key.as_bytes());
+    hasher.update(b":");
+    hasher.update(scope.as_bytes());
+    hasher.update(b":");
+    hasher.update(signature.as_bytes());
+    hasher.update(b":");
+    hasher.update(bucket_index.to_string().as_bytes());
+    hasher.update(b":");
+    hasher.update(source_kind.as_bytes());
+    hasher.update(b":");
+    hasher.update(classification.as_bytes());
+    hasher.update(b":");
+    hasher.update(source_ref_hash.as_bytes());
+    let digest = hasher.finalize();
+    let short = digest
+        .iter()
+        .take(8)
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    format!("btsp_negative_space_v3_{short}")
+}
+
+fn negative_space_confidence(source_kind: &str, classification: &str) -> f32 {
+    if source_kind == "owner_annotation" {
+        return 1.0;
+    }
+    if classification == NEGATIVE_SPACE_UNCLEAR {
+        0.25
+    } else {
+        0.65
+    }
+}
+
+fn negative_space_evidence_summary(source_kind: &str, classification: &str) -> String {
+    match (source_kind, classification) {
+        ("owner_annotation", NEGATIVE_SPACE_QUIET_STABILIZED) => {
+            "Owner annotation says the withheld BTSP offer was followed by quiet stabilization."
+        },
+        ("owner_annotation", NEGATIVE_SPACE_QUIET_SOFTENED) => {
+            "Owner annotation says the withheld BTSP offer was followed by softening."
+        },
+        ("owner_annotation", NEGATIVE_SPACE_CONTINUED_HOLD) => {
+            "Owner annotation says the case continued to hold after withholding."
+        },
+        ("owner_annotation", NEGATIVE_SPACE_WORSENED) => {
+            "Owner annotation says withholding was followed by worsening."
+        },
+        (_, NEGATIVE_SPACE_QUIET_STABILIZED) => {
+            "A closed consolidation bucket found no current early-warning/live trigger and quiet telemetry."
+        },
+        (_, NEGATIVE_SPACE_QUIET_SOFTENED) => {
+            "A closed consolidation bucket found no current early-warning trigger and softening/widening telemetry."
+        },
+        (_, NEGATIVE_SPACE_CONTINUED_HOLD) => {
+            "A closed consolidation bucket still matched the holdout signal or tightening telemetry."
+        },
+        _ => "A closed consolidation bucket had unclear negative-space evidence.",
+    }
+    .to_string()
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct NegativeSpaceCounts {
+    total: u64,
+    positive: u64,
+    softened: u64,
+    continued: u64,
+    worsened: u64,
+    unclear: u64,
+}
+
+fn negative_space_counts(entry: &BTSPCausalExperimentV3) -> NegativeSpaceCounts {
+    effective_negative_space_outcomes(entry).into_iter().fold(
+        NegativeSpaceCounts::default(),
+        |mut counts, outcome| {
+            counts.total = counts.total.saturating_add(1);
+            match outcome.classification.as_str() {
+                NEGATIVE_SPACE_QUIET_STABILIZED | NEGATIVE_SPACE_QUIET_SOFTENED => {
+                    counts.positive = counts.positive.saturating_add(1);
+                    if outcome.classification == NEGATIVE_SPACE_QUIET_SOFTENED {
+                        counts.softened = counts.softened.saturating_add(1);
+                    }
+                },
+                NEGATIVE_SPACE_CONTINUED_HOLD => {
+                    counts.continued = counts.continued.saturating_add(1);
+                },
+                NEGATIVE_SPACE_WORSENED => {
+                    counts.worsened = counts.worsened.saturating_add(1);
+                },
+                _ => {
+                    counts.unclear = counts.unclear.saturating_add(1);
+                },
+            }
+            counts
+        },
+    )
+}
+
+fn effective_negative_space_outcomes(
+    entry: &BTSPCausalExperimentV3,
+) -> Vec<&BTSPNegativeSpaceOutcomeV3> {
+    let mut effective = Vec::new();
+    for outcome in &entry.negative_space_outcomes {
+        if outcome.source_kind == "owner_annotation" {
+            continue;
+        }
+        let owner_override = entry
+            .negative_space_outcomes
+            .iter()
+            .rev()
+            .find(|candidate| {
+                candidate.source_kind == "owner_annotation"
+                    && candidate.suppression_signature == outcome.suppression_signature
+                    && candidate.consolidation_bucket_index == outcome.consolidation_bucket_index
+            });
+        effective.push(owner_override.unwrap_or(outcome));
+    }
+    for outcome in entry
+        .negative_space_outcomes
+        .iter()
+        .filter(|outcome| outcome.source_kind == "owner_annotation")
+    {
+        let has_inferred_bucket = entry.negative_space_outcomes.iter().any(|candidate| {
+            candidate.source_kind == "inferred"
+                && candidate.suppression_signature == outcome.suppression_signature
+                && candidate.consolidation_bucket_index == outcome.consolidation_bucket_index
+        });
+        if !has_inferred_bucket {
+            effective.push(outcome);
+        }
+    }
+    effective.sort_by_key(|outcome| {
+        (
+            outcome.consolidation_bucket_index,
+            outcome.observed_at_unix_s,
+            outcome.outcome_id.clone(),
+        )
+    });
+    effective
+}
+
+fn apply_negative_space_counts(
+    entry: &mut BTSPCausalExperimentV3,
+    counts: NegativeSpaceCounts,
+) -> bool {
+    let latest = effective_negative_space_outcomes(entry)
+        .last()
+        .map(|outcome| outcome.classification.clone())
+        .unwrap_or_default();
+    let summary = negative_space_summary(counts, &latest);
+    let mut changed = false;
+    if entry.negative_space_outcome_count != counts.total {
+        entry.negative_space_outcome_count = counts.total;
+        changed = true;
+    }
+    if entry.negative_space_positive_count != counts.positive {
+        entry.negative_space_positive_count = counts.positive;
+        changed = true;
+    }
+    if entry.negative_space_continued_count != counts.continued {
+        entry.negative_space_continued_count = counts.continued;
+        changed = true;
+    }
+    if entry.latest_negative_space_classification != latest {
+        entry.latest_negative_space_classification = latest;
+        changed = true;
+    }
+    if entry.negative_space_summary != summary {
+        entry.negative_space_summary = summary;
+        changed = true;
+    }
+    changed
+}
+
+fn negative_space_summary(counts: NegativeSpaceCounts, latest: &str) -> String {
+    if counts.total == 0 {
+        return "No negative-space consolidation outcome has been recorded yet.".to_string();
+    }
+    format!(
+        "Negative-space evidence: {total} consolidation bucket(s), {positive} quiet/softening, {continued} continued holds, {worsened} worsening; latest={latest}.",
+        total = counts.total,
+        positive = counts.positive,
+        continued = counts.continued,
+        worsened = counts.worsened,
+        latest = if latest.is_empty() {
+            NEGATIVE_SPACE_UNCLEAR
+        } else {
+            latest
+        }
+    )
+}
+
+fn forgiveness_state_for(entry: &BTSPCausalExperimentV3) -> BTSPForgivenessStateV3 {
+    let negative_space = negative_space_counts(entry);
+    let structured_positive = entry
+        .post_registration_softening_count
+        .saturating_add(entry.post_registration_widening_count);
+    let structured_negative = entry.post_registration_reconcentrating_count;
+    let positive = structured_positive.saturating_add(negative_space.positive);
+    let negative = structured_negative
+        .saturating_add(negative_space.continued)
+        .saturating_add(negative_space.worsened);
+    let total = positive.saturating_add(negative);
+    let remission_score = if total == 0 {
+        0.0
+    } else {
+        positive as f32 / total as f32
+    };
+    let suppression_weight = (1.0_f32 - remission_score).clamp(0.0, 1.0);
+    let consentful_trial_eligible = positive >= 2 && remission_score >= 0.66;
+    let remission_status = if consentful_trial_eligible {
+        "consentful_trial_eligible"
+    } else if positive > 0 {
+        "softened_hold"
+    } else {
+        "hard_hold"
+    };
+    let forgiveness_summary = if consentful_trial_eligible {
+        "Evidence remission is strong enough to keep the ordinary duplicate withheld while making a consentful study/refusal/counter/new-evidence trial route visible."
+            .to_string()
+    } else if positive > 0 {
+        "Some quiet/softening evidence has softened the hold, but reconcentrating or continued-hold evidence still argues for restraint."
+            .to_string()
+    } else {
+        "No remission evidence yet; prior reconcentrating traces still carry the hold.".to_string()
+    };
+    BTSPForgivenessStateV3 {
+        remission_score,
+        remission_status: remission_status.to_string(),
+        suppression_weight,
+        consentful_trial_eligible,
+        forgiveness_summary,
+        positive_evidence_count: positive,
+        negative_evidence_count: negative,
+    }
+}
+
+fn default_forgiveness_state() -> BTSPForgivenessStateV3 {
+    BTSPForgivenessStateV3 {
+        remission_status: "hard_hold".to_string(),
+        suppression_weight: 1.0,
+        forgiveness_summary:
+            "No remission evidence yet; prior reconcentrating traces still carry the hold."
+                .to_string(),
+        ..BTSPForgivenessStateV3::default()
+    }
+}
+
 fn resolve_lab_entries(
     mut notebook: BTSPCausalLabNotebookV3,
     trace_bank: &BTSPTraceBankV2,
@@ -652,6 +1266,11 @@ fn resolve_lab_entries(
     for entry in &mut notebook.entries {
         let counts = post_registration_counts(entry, &trace_bank.instructive_signals);
         changed |= apply_resolution_counts(entry, counts);
+        let forgiveness = forgiveness_state_for(entry);
+        if entry.forgiveness_state != forgiveness {
+            entry.forgiveness_state = forgiveness;
+            changed = true;
+        }
     }
     if changed {
         notebook.last_updated_unix_s = now;
@@ -690,7 +1309,8 @@ fn post_registration_counts(
 }
 
 fn apply_resolution_counts(entry: &mut BTSPCausalExperimentV3, counts: ResolutionCounts) -> bool {
-    let (status, summary) = resolution_for_counts(counts);
+    let negative_space = negative_space_counts(entry);
+    let (status, summary) = resolution_for_counts(counts, negative_space);
     let mut changed = false;
     if entry.post_registration_outcome_count != counts.total {
         entry.post_registration_outcome_count = counts.total;
@@ -720,7 +1340,10 @@ fn apply_resolution_counts(entry: &mut BTSPCausalExperimentV3, counts: Resolutio
     changed
 }
 
-fn resolution_for_counts(counts: ResolutionCounts) -> (String, String) {
+fn resolution_for_counts(
+    counts: ResolutionCounts,
+    negative_space: NegativeSpaceCounts,
+) -> (String, String) {
     if counts.widening > 0 {
         return (
             "supported_widening".to_string(),
@@ -742,10 +1365,28 @@ fn resolution_for_counts(counts: ResolutionCounts) -> (String, String) {
                 .to_string(),
         );
     }
+    if effective_negative_space_softening(negative_space) {
+        return (
+            "negative_space_supported_softening".to_string(),
+            "Later negative-space evidence says withholding was followed by quiet softening, without a structured outcome resolving the case."
+                .to_string(),
+        );
+    }
+    if negative_space.positive > 0 {
+        return (
+            "negative_space_supported_quiet".to_string(),
+            "Later negative-space evidence says withholding was followed by quiet stabilization, without a structured outcome resolving the case."
+                .to_string(),
+        );
+    }
     (
         "pre_registered_holdout".to_string(),
         unresolved_resolution_summary(),
     )
+}
+
+fn effective_negative_space_softening(counts: NegativeSpaceCounts) -> bool {
+    counts.softened > 0
 }
 
 fn unresolved_resolution_summary() -> String {
@@ -888,6 +1529,22 @@ mod tests {
                 })
                 .collect(),
             ..BTSPTraceBankV2::default()
+        }
+    }
+
+    fn negative_space_context(
+        status: &str,
+        live_count: u64,
+        telemetry_quiet: bool,
+        teacher_class: &str,
+        shape: &str,
+    ) -> BTSPNegativeSpaceContextV3 {
+        BTSPNegativeSpaceContextV3 {
+            current_status: status.to_string(),
+            current_live_signal_count: live_count,
+            telemetry_quiet,
+            teacher_outcome_class: teacher_class.to_string(),
+            teacher_shape_verdict: shape.to_string(),
         }
     }
 
@@ -1034,6 +1691,207 @@ mod tests {
         assert_eq!(notebook.entries[0].suppression_hold_count, 3);
         assert_eq!(notebook.entries[0].suppression_event_count, 2);
         assert_eq!(notebook.entries[0].last_suppression_event_unix_s, 13);
+    }
+
+    #[test]
+    fn negative_space_waits_for_consolidation_window() {
+        let mut entry = entry_for("exact", FP_A, 10);
+        entry.last_suppression_signature = "sig_a".to_string();
+        let context = negative_space_context("quiet", 0, true, "mixed", "unknown");
+
+        assert!(!infer_negative_space_outcome(
+            &mut entry,
+            &context,
+            10_u64.saturating_add(CONSOLIDATION_TRACE_WINDOW_SECS - 1)
+        ));
+        assert!(entry.negative_space_outcomes.is_empty());
+    }
+
+    #[test]
+    fn negative_space_inference_is_idempotent_per_bucket() {
+        let mut entry = entry_for("exact", FP_A, 10);
+        entry.last_suppression_signature = "sig_a".to_string();
+        let context = negative_space_context("quiet", 0, true, "mixed", "unknown");
+        let now = 10_u64.saturating_add(CONSOLIDATION_TRACE_WINDOW_SECS);
+
+        assert!(infer_negative_space_outcome(&mut entry, &context, now));
+        assert!(!infer_negative_space_outcome(&mut entry, &context, now));
+        assert_eq!(entry.negative_space_outcomes.len(), 1);
+        assert_eq!(
+            entry.negative_space_outcomes[0].classification,
+            NEGATIVE_SPACE_QUIET_STABILIZED
+        );
+    }
+
+    #[test]
+    fn negative_space_classifies_quiet_softened_and_continued_hold() {
+        let quiet = negative_space_context("quiet", 0, true, "mixed", "unknown");
+        let softened = negative_space_context(
+            "no_early_warning",
+            0,
+            false,
+            "recovery_softening",
+            "softened_only",
+        );
+        let continued = negative_space_context(
+            "matched",
+            1,
+            false,
+            "recovery_reconcentrating",
+            "tightening",
+        );
+
+        assert_eq!(
+            classify_negative_space_context(&quiet),
+            NEGATIVE_SPACE_QUIET_STABILIZED
+        );
+        assert_eq!(
+            classify_negative_space_context(&softened),
+            NEGATIVE_SPACE_QUIET_SOFTENED
+        );
+        assert_eq!(
+            classify_negative_space_context(&continued),
+            NEGATIVE_SPACE_CONTINUED_HOLD
+        );
+    }
+
+    #[test]
+    fn owner_annotation_overrides_inferred_bucket_effectively() {
+        let mut entry = entry_for("exact", FP_A, 10);
+        entry.last_suppression_signature = "sig_a".to_string();
+        let context = negative_space_context("quiet", 0, true, "mixed", "unknown");
+        let now = 10_u64.saturating_add(CONSOLIDATION_TRACE_WINDOW_SECS);
+        assert!(infer_negative_space_outcome(&mut entry, &context, now));
+
+        let annotation = BTSPNegativeSpaceAnnotationV3 {
+            owner: "minime".to_string(),
+            case_key: entry.case_key.clone(),
+            replay_scope: entry.replay_scope.clone(),
+            classification: NEGATIVE_SPACE_WORSENED.to_string(),
+            observed_at_unix_s: now,
+            source_ref_hash: "hash_only".to_string(),
+            consolidation_bucket_index: Some(0),
+        };
+
+        assert!(apply_negative_space_annotations(
+            &mut entry,
+            &[annotation],
+            now
+        ));
+        let counts = negative_space_counts(&entry);
+        assert_eq!(counts.total, 1);
+        assert_eq!(counts.positive, 0);
+        assert_eq!(counts.worsened, 1);
+        assert_eq!(
+            effective_negative_space_outcomes(&entry)[0].source_kind,
+            "owner_annotation"
+        );
+    }
+
+    #[test]
+    fn negative_space_resolves_only_when_structured_outcomes_do_not() {
+        let mut entry = entry_for("similar", FP_A, 10);
+        entry.last_suppression_signature = "sig_a".to_string();
+        entry.negative_space_outcomes.push(negative_space_outcome(
+            &entry,
+            "sig_a",
+            negative_space_bucket(entry.registered_at_unix_s, 0).expect("bucket"),
+            "inferred",
+            NEGATIVE_SPACE_QUIET_SOFTENED,
+            20,
+            "",
+            "",
+        ));
+        let notebook = BTSPCausalLabNotebookV3 {
+            schema_version: 3,
+            entries: vec![entry],
+            last_updated_unix_s: 10,
+        };
+
+        let (notebook, changed) = resolve_lab_entries(notebook, &trace_bank(&[]), 30);
+        assert!(changed);
+        assert_eq!(
+            notebook.entries[0].resolution_status,
+            "negative_space_supported_softening"
+        );
+
+        let (notebook, _) = resolve_lab_entries(notebook, &trace_bank(&["recovery_widening"]), 40);
+        assert_eq!(notebook.entries[0].resolution_status, "supported_widening");
+    }
+
+    #[test]
+    fn remission_moves_from_hard_to_soft_to_trial_eligible() {
+        let mut entry = entry_for("exact", FP_A, 10);
+        entry.post_registration_reconcentrating_count = 1;
+        let hard = forgiveness_state_for(&entry);
+        assert_eq!(hard.remission_status, "hard_hold");
+
+        entry.negative_space_outcomes.push(negative_space_outcome(
+            &entry,
+            "sig_a",
+            negative_space_bucket(entry.registered_at_unix_s, 0).expect("bucket"),
+            "inferred",
+            NEGATIVE_SPACE_QUIET_STABILIZED,
+            20,
+            "",
+            "",
+        ));
+        let soft = forgiveness_state_for(&entry);
+        assert_eq!(soft.remission_status, "softened_hold");
+
+        entry.post_registration_reconcentrating_count = 0;
+        entry.negative_space_outcomes.push(negative_space_outcome(
+            &entry,
+            "sig_b",
+            negative_space_bucket(entry.registered_at_unix_s, 1).expect("bucket"),
+            "owner_annotation",
+            NEGATIVE_SPACE_QUIET_SOFTENED,
+            30,
+            "astrid",
+            "hash_only",
+        ));
+        let eligible = forgiveness_state_for(&entry);
+        assert_eq!(eligible.remission_status, "consentful_trial_eligible");
+        assert!(eligible.consentful_trial_eligible);
+        assert!(eligible.suppression_weight < soft.suppression_weight);
+    }
+
+    #[test]
+    fn old_causal_lab_json_deserializes_with_v3_2_defaults() {
+        let raw = r#"{
+          "experiment_id":"old",
+          "signal_fingerprint":"families=grinding_family;transition=none;crossing=none;perturb=tightening;fill_band=near",
+          "registered_at_unix_s":10,
+          "last_seen_unix_s":10,
+          "observation_count":1,
+          "status":"pre_registered_holdout",
+          "consent_mode":"study_counter_refusal_or_new_evidence_required",
+          "proposal_policy":"withhold_duplicate_offer",
+          "withheld_proposal":true,
+          "question":"q",
+          "hypothesis":"h",
+          "counterfactual":"c",
+          "holdout_route":"r",
+          "replay_scope":"exact",
+          "exact_fingerprint_count":1,
+          "similar_fingerprint_count":0,
+          "nearest_count":1,
+          "reconcentrating_count":1,
+          "widening_count":0,
+          "mean_similarity_score":100.0,
+          "teacher_outcome_class":"unknown",
+          "teacher_evidence_summary":"unknown",
+          "summary":"Causal lab V3: pre-registering an exact-fingerprint holdout."
+        }"#;
+        let mut entry: BTSPCausalExperimentV3 = serde_json::from_str(raw).expect("old entry");
+
+        assert!(normalize_lab_entry(&mut entry));
+        assert_eq!(entry.negative_space_outcome_count, 0);
+        assert_eq!(entry.forgiveness_state.remission_status, "hard_hold");
+        assert_eq!(
+            entry.case_key,
+            "families=grinding_family;perturb=tightening;fill_band=near"
+        );
     }
 
     #[test]
