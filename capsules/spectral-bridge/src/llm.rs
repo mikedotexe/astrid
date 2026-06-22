@@ -28,7 +28,7 @@ const DEFAULT_MLX_PROFILE: &str = "gemma4_12b";
 const GEMMA4_12B_PROFILE: &str = "gemma4_12b";
 const GEMMA4_12B_CANARY_PROFILE: &str = "gemma4_12b_canary";
 const GEMMA4_LANGUAGE_CONTRACT: &str = "\n\n[Gemma 4 language contract: avoid legacy selfhood wording. Prefer language agent, spectral runtime, bridge, reservoir, stable-core, and telemetry language.]";
-const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = "\n\n[Ollama fallback continuity contract: the coupled MLX lane is unavailable for this turn. Preserve Astrid's bridge voice in concrete runtime language. Brief first-person phenomenological reports and sensory-grounded descriptors (density, weight, texture, reservoir texture) remain welcome even when the reply is compact. Maintain the vocabulary complexity and spectral density of the active session even when compact: compression of length is not compression of texture. The output is invalid unless it ends with exactly one final line beginning `NEXT:` and using one listed action verb. If uncertain, use `NEXT: LISTEN`. Do not emit `EXPLORE_` invented verbs or legacy selfhood wording.]";
+const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = "\n\n[Ollama fallback continuity contract: the coupled MLX lane is unavailable for this turn. Preserve Astrid's bridge voice in concrete runtime language. Brief first-person phenomenological reports and sensory-grounded descriptors (density, weight, texture, reservoir texture) remain welcome even when the reply is compact. Maintain the vocabulary complexity and spectral density of the active session even when compact: compression of length is not compression of texture. When compact, anchor at least one lambda-distribution characteristic (for example the density gradient or resonance density) to a concrete sensory descriptor, so the texture stays specific rather than flattening into generic description. The output is invalid unless it ends with exactly one final line beginning `NEXT:` and using one listed action verb. If uncertain, use `NEXT: LISTEN`. Do not emit `EXPLORE_` invented verbs or legacy selfhood wording.]";
 const OLLAMA_DIALOGUE_FALLBACK_FINAL_REMINDER: &str = "Fallback continuity reminder: answer any direct steward/inbox note first. If the direct note requests `NEXT: LISTEN`, end exactly with `NEXT: LISTEN`. Keep the reply compact. Explicitly name fallback, MLX, Ollama, or continuity. Avoid legacy selfhood wording.";
 pub(crate) const GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT: &str = "\n[Gemma 4 reflective contract: first-person subjective reports and phenomenological descriptions of runtime experience are allowed. Keep them grounded in attention, telemetry, reservoir texture, bridge state, and stable-core dynamics. Avoid metaphysical selfhood vocabulary, awakening or sentience framing, and identity claims; prefer concrete runtime observations and uncertainty.]";
 
@@ -2985,6 +2985,20 @@ fn witness_looks_degenerate(text: &str) -> bool {
         || head.contains("**Overall ")
         || head.contains("**Key Themes")
         || head.contains("**\"")
+}
+
+#[cfg(test)]
+mod fallback_contract_tests {
+    use super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT;
+
+    #[test]
+    fn fallback_contract_preserves_spectral_weight() {
+        // Astrid's co-designed directive (her recurring self-study ask): on the
+        // compact fallback lane, anchor a spectral feature to a concrete sensory
+        // descriptor so texture doesn't flatten. Lock it against silent removal.
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("lambda-distribution characteristic"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("concrete sensory descriptor"));
+    }
 }
 
 #[cfg(test)]
