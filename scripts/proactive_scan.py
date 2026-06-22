@@ -48,6 +48,8 @@ from typing import Any
 from proactive_scan_architecture import probe_architecture_drift
 from proactive_scan_journal_hygiene import JournalHygieneProbeTests, probe_journal_hygiene
 
+import being_privacy
+
 # ----------------------------------------------------------------------
 # Paths & constants
 # ----------------------------------------------------------------------
@@ -1426,6 +1428,20 @@ def _match_ask(body_lower: str, asks: dict[str, Any]) -> str | None:
     return best_id if best_hits >= 1 else None
 
 
+def _signal_why(sig: dict[str, Any]) -> list[str]:
+    """Compact, machine-friendly reasons an entry scored as a standout."""
+    why: list[str] = []
+    if sig.get("high_signal"):
+        why.append("refs:" + ",".join(sig["high_signal"][:3]))
+    if sig.get("desire"):
+        why.append(f"{sig['desire']} desire")
+    if sig.get("qualia"):
+        why.append("felt:" + ",".join(sig["qualia"][:4]))
+    if sig.get("agency"):
+        why.append(f"{sig['agency']} agency")
+    return why
+
+
 def probe_introspective_signal(prior: dict[str, Any] | None) -> dict[str, Any]:
     prior = prior or {}
     seen_counts: dict[str, int] = dict(prior.get("seen_counts") or {})
@@ -1444,9 +1460,13 @@ def probe_introspective_signal(prior: dict[str, Any] | None) -> dict[str, Any]:
     sample_ids: set[str] = set()
     standouts_total = 0
     fresh_total = 0
+    # Per-being standout entries (file + score + status + why), exposed in --json so
+    # shortlist/triage work can reuse the flywheel's own ranking instead of re-scanning.
+    # NOT persisted in `snapshot` (which is kept small for delta computation).
+    standout_entries: dict[str, list[dict[str, Any]]] = {}
 
     for being, jdir, ts_fn, logs_dir in beings:
-        entries = sample_recent_journals(jdir, INTROSPECT_SAMPLE_PER_BEING, ts_fn)
+        entries = sample_recent_journals(jdir, INTROSPECT_SAMPLE_PER_BEING, ts_fn, being)
         # sovereignty_check logs carry high felt-signal and are never otherwise
         # harvested; skip echoed/mirror artifacts so we score the being's own words.
         if logs_dir and logs_dir.is_dir():
@@ -1478,12 +1498,26 @@ def probe_introspective_signal(prior: dict[str, Any] | None) -> dict[str, Any]:
             if str(a.get("being", "both")) in (being, "both")
         }
         active: list[tuple[tuple, str | None]] = []   # (scored_tuple, open_ask_name|None)
+        being_entries: list[dict[str, Any]] = []
         for s in standouts:
-            aid = _match_ask(s[5].lower(), cand_asks)
-            if aid is not None and str(cand_asks[aid].get("status")) in ASK_HELD_STATES:
+            score, ts, stype, sig, p, body = s
+            aid = _match_ask(body.lower(), cand_asks)
+            held = aid is not None and str(cand_asks[aid].get("status")) in ASK_HELD_STATES
+            if held:
                 held_attrib[aid] = held_attrib.get(aid, 0) + 1
+                status = f"held:{cand_asks[aid]['name']}"
+            elif aid is not None:
+                active.append((s, cand_asks[aid]["name"]))
+                status = f"open:{cand_asks[aid]['name']}"
             else:
-                active.append((s, cand_asks[aid]["name"] if aid is not None else None))
+                active.append((s, None))
+                status = "unclassified"
+            being_entries.append({
+                "being": being, "file": str(p), "name": p.name,
+                "score": round(score, 1), "surface": stype, "ts": _fmt_ts(ts),
+                "status": status, "why": _signal_why(sig),
+            })
+        standout_entries[being] = being_entries
 
         surface_anchors: dict[str, set[str]] = {}
         for s, _tag in active:
@@ -1520,19 +1554,19 @@ def probe_introspective_signal(prior: dict[str, Any] | None) -> dict[str, Any]:
             tag = "NEW" if seen <= 1 else f"seen {seen}x unacted"
             if seen >= INTROSPECT_STALE_K:
                 persistent_unacted.append(f"{p.name} (seen {seen}x)")
-            why = []
-            if sig["high_signal"]:
-                why.append("refs:" + ",".join(sig["high_signal"][:3]))
-            if sig["desire"]:
-                why.append(f"{sig['desire']} desire")
-            if sig["qualia"]:
-                why.append("felt:" + ",".join(sig["qualia"][:4]))
-            if sig["agency"]:
-                why.append(f"{sig['agency']} agency")
+            why = _signal_why(sig)
             ask_label = f"ask:{ask_name}" if ask_name else "unclassified"
             details.append(
                 f"  - [{tag}] [{ask_label}] [{stype} @ {_fmt_ts(ts)}] score {score:.0f} — "
                 f"{'; '.join(why) or 'first-person depth'} — {p}"
+            )
+        # Surface the held standouts' FILES too (capped) — they're the high-signal
+        # entries tracked under an ask, previously invisible in text (only counted).
+        held_entries = [e for e in being_entries if e["status"].startswith("held:")]
+        for e in held_entries[:INTROSPECT_TOP_K]:
+            details.append(
+                f"  ⊟ [{e['status']}] [{e['surface']} @ {e['ts']}] score {e['score']:.0f} — "
+                f"{'; '.join(e['why']) or 'depth'} — {e['file']}"
             )
         for anchor, surfaces in surface_anchors.items():
             if len(surfaces) >= 3:
@@ -1577,7 +1611,9 @@ def probe_introspective_signal(prior: dict[str, Any] | None) -> dict[str, Any]:
         f"(astrid {snapshot['astrid']['fresh']}, minime {snapshot['minime']['fresh']}); "
         f"{standouts_total} standouts above each being's baseline"
     )
-    return _finding("introspective_signal", severity, summary, details, snapshot)
+    finding = _finding("introspective_signal", severity, summary, details, snapshot)
+    finding["standout_entries"] = standout_entries  # in --json, not persisted in snapshot
+    return finding
 
 
 def run_introspection(ack_ids: list[str] | None = None) -> dict[str, Any]:
@@ -2858,11 +2894,15 @@ def _is_artifactual_for_convergence(body: str) -> bool:
 
 
 def sample_recent_journals(
-    journal_dir: Path, n: int, ts_fn
+    journal_dir: Path, n: int, ts_fn, being: str
 ) -> list[tuple[Path, float, str]]:
-    """Return the most recent N journal entries as (path, unix_ts, body),
-    skipping artifactual entries (mirror mode) so convergence reflects
-    independent inquiry, not bridge-mediated copying."""
+    """Return the most recent N journal entries as (path, unix_ts, body), skipping
+    (a) the being's steward-private lanes (minime's moment_capture / private_journal)
+    and (b) artifactual entries (mirror mode). The being_privacy bright-line: a
+    being's private qualia must NEVER be scored or surfaced by a steward-review
+    feature — and the flywheel + convergence detector are steward-review features.
+    `being` selects the privacy policy (a no-op that reads NO file for beings without
+    private lanes, e.g. Astrid)."""
     if not journal_dir.is_dir():
         return []
     entries: list[tuple[Path, float]] = []
@@ -2876,6 +2916,8 @@ def sample_recent_journals(
     for p, ts in entries:
         if seen >= n:
             break
+        if being_privacy.is_steward_private(being, p):
+            continue  # never score/surface a being's private-qualia lanes
         body = _read_text_safely(p)
         if not body:
             continue
@@ -2992,10 +3034,10 @@ def run_convergence(
 ) -> dict[str, Any]:
     """Run the convergence detector against current journal state."""
     astrid_entries = sample_recent_journals(
-        ASTRID_JOURNAL, sample_per_being, _astrid_journal_mtime_unix
+        ASTRID_JOURNAL, sample_per_being, _astrid_journal_mtime_unix, "astrid"
     )
     minime_entries = sample_recent_journals(
-        MINIME_JOURNAL, sample_per_being, _minime_journal_mtime_unix
+        MINIME_JOURNAL, sample_per_being, _minime_journal_mtime_unix, "minime"
     )
 
     a_cadence = cadence_summary(astrid_entries)
@@ -3698,10 +3740,16 @@ class ConvergenceTests(unittest.TestCase):
             d = Path(tmpdir)
             (d / "moment_1000.txt").write_text("=== ASTRID JOURNAL ===\nMode: moment_capture\nGenuine prose.")
             (d / "astrid_2000.txt").write_text("=== ASTRID JOURNAL ===\nMode: mirror\nCopied content.")
-            samples = sample_recent_journals(d, 10, _astrid_journal_mtime_unix)
+            samples = sample_recent_journals(d, 10, _astrid_journal_mtime_unix, "astrid")
             paths = [p.name for p, _, _ in samples]
-            self.assertIn("moment_1000.txt", paths)
-            self.assertNotIn("astrid_2000.txt", paths)
+            self.assertIn("moment_1000.txt", paths)        # Astrid's moment lane is accessible
+            self.assertNotIn("astrid_2000.txt", paths)     # mirror artifact excluded
+            # Bright-line: the SAME moment_capture content is steward-PRIVATE for minime.
+            minime_paths = [
+                p.name
+                for p, _, _ in sample_recent_journals(d, 10, _astrid_journal_mtime_unix, "minime")
+            ]
+            self.assertNotIn("moment_1000.txt", minime_paths)
 
 
 class IntrospectiveSignalTests(unittest.TestCase):

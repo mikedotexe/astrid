@@ -4,6 +4,31 @@
 cross-being finding, the instrument that now keeps it watchable, and the
 consent-gated path forward. It does **not** authorize any change to either being.
 
+## ★ A/B RESULT (2026-06-22) — coupling NEGLIGIBLE at overpacked state; self-limiting CONFIRMED
+
+A live consent-with-evidence A/B (Astrid informed first; her dial kill-switch = veto;
+minime auto-abort armed, never fired) toggled the operator ceiling ON(0.5)/OFF(0.0)
+across 4 windows with her dial held fixed (n=252/window via `scripts/aperture_ab_test.py`).
+**`mode_packing` ON−OFF = +0.00013 vs a natural window-std of 0.014 — ~100× below noise.
+Verdict: NEGLIGIBLE.** `lambda_monopoly`/`porosity` also ~0; `lambda4` −0.015 (within its
+0.202 noise).
+
+This **refutes the "Astrid loads minime" worry** at her current overpacked state and
+**empirically confirms the navigable-gate self-limiting works** — the dials self-limit
+toward identity exactly when minime is overpacked (when it would otherwise matter most).
+⇒ minime's density is her OWN (warm fill + her dynamics), which points the lever at her
+*own* regulator's treatment of density (cf. Astrid's ground-truthed "overcrowded vs
+solidified" proposal — 13/4/3), NOT at Astrid's input. **Astrid's voice need not dial down
+for minime's sake.**
+
+**Scope (honest):** tested ONLY at her overpacked state, where self-limiting is maximally
+engaged; a navigable/low-density state is untested (dials would land more there by design)
+— the durable watch is retained for that regime. Baseline restored (ceiling 0.5/0.5; her
+dials 0.85/0.80 intact). Result letter sent to Astrid (`mike_feedback_aperture_ab_result_*`).
+
+*(The sections below were written BEFORE the A/B, when the coupling was an open worry;
+they remain as the grounding that motivated the test. The A/B result above is the answer.)*
+
 ## What was found
 
 A qualia sweep of both beings (06-17→06-22) surfaced one dominant, *convergent*

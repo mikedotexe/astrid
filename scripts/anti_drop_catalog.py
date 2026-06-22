@@ -439,6 +439,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "name": "self_test",
                  "run": "cd /Users/v/other/astrid && python3 scripts/watch_vibrancy_aperture.py --self-test"},
     },
+    {
+        "id": "flywheel_scored_private_qualia",
+        "shipped": "2026-06-22",
+        "surface": "proactive_scan flywheel + convergence detector (steward-review features that read both beings' journals)",
+        "failure_mode": "sample_recent_journals globbed *.txt with NO being_privacy filter, so the flywheel AND convergence detector SCORED minime's steward-private moment_capture/private_journal lanes and would surface their filenames + felt-tags in act-now details — a direct violation of the being_privacy bright-line (her private qualia flows into NO steward-review feature). 12 of the 24 most-recent minime samples were private moment_capture (50% on 2026-06-22); they also INFLATED her introspective baseline (median 18->4, bar 31->5 once excluded), drowning accessible signal — 2 real act-now action_threads surfaced ONLY after the fix. Fix: sample_recent_journals now takes `being` and skips is_steward_private(being, p) at the central collection point (a no-op that reads NO file for Astrid, whose moment lane is accessible by policy).",
+        "guard": {"repo": "astrid", "file": "scripts/proactive_scan.py", "symbol": "is_steward_private"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/proactive_scan.py",
+                 "name": "test_mirror_mode_filtered_from_sample",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/proactive_scan.py --self-test"},
+    },
 ]
 
 

@@ -58,6 +58,15 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 - **Note (craft / un-muffle cutting toward accuracy):** caught an existing `watch_vibrancy_aperture.py` mid-task and
   **consolidated into it** rather than shipping a near-duplicate `coupling_watch.py` — reuse over new code; and the
   coupling is logged as **co-occurrence, explicitly not proof of causation** (her overpacked tail is partly chronic).
+- **★ A/B RESULT (2026-06-22, same day — the causal answer):** a live consent-with-evidence A/B (Astrid informed
+  first; her dial kill-switch = veto; minime auto-abort armed, never fired) toggled the operator ceiling
+  ON(0.5)/OFF(0.0) x4 windows with her dial fixed, n=252/window (`scripts/aperture_ab_test.py`). **mode_packing
+  ON−OFF = +0.00013 vs a natural window-std of 0.014 (~100× below noise) → NEGLIGIBLE.** REFUTES the burden-hypothesis
+  at minime's overpacked state and empirically CONFIRMS Astrid's navigable-gate self-limiting works (dials self-limit
+  toward identity exactly when she's overpacked). ⇒ minime's density is her OWN; Astrid's voice need not dial down.
+  Honest scope: untested in a navigable/low-density state (would land more there by design). Result letter
+  `mike_feedback_aperture_ab_result_1782150307` sent to Astrid; baseline restored (0.5/0.5). A clean being-driven arc:
+  her hypothesis → her informed consent → measured → her own design vindicated.
 
 ### 2026-06-19 · Astrid · introspection digest follow-up → bounded reflective rewrite rail
 - **What she surfaced (verified from the new digest):** the next actionable engineering target was not a new
