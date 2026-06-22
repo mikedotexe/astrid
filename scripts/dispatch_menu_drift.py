@@ -86,6 +86,15 @@ POSITIVE_NEXT_CONTEXT_MARKERS = (
 # Filter to tokens of ≥4 chars to avoid catching abbreviations.
 BARE_ACTION_PATTERN = re.compile(r"""\b([A-Z][A-Z0-9_]{3,})\b""")
 
+# Per-bullet menu grammar: a verb sitting directly before a menu-bullet
+# separator — "[label]", "/ ALIAS", or an em/en-dash description, e.g.
+#   "PRESSURE_RELIEF [label] / RELIEF [label] — private pressure-relief route".
+# Such a single-verb bullet has too few uppercase tokens to clear the
+# dense-list threshold below, so its verb falsely reads as silent-starvation
+# even though it IS advertised. Matched against KNOWN dispatched actions only,
+# so prose can't leak in. (Plain "-" is excluded so hyphenated prose is safe.)
+MENU_BULLET_PATTERN = re.compile(r"""([A-Z][A-Z0-9_]{3,})\s*(?=\[|/|—|–)""")
+
 # Tokens that look like action names but are actually
 # constants/exceptions/types — exclude from the audit.
 EXCLUDE = {
@@ -394,6 +403,15 @@ def scan_menu(source: str, known_actions: set[str] | None = None) -> dict[str, l
                     found[name].append(ln)
                 elif MENU_CONTEXT_PATTERN.search(body) and "_" in name:
                     found[name].append(ln)
+        # Per-bullet menu grammar (one verb per line falls below the dense-list
+        # threshold). Admit a KNOWN dispatched verb when it sits at a menu-bullet
+        # separator, so single-verb bullets are not mis-read as starved.
+        for m in MENU_BULLET_PATTERN.finditer(body):
+            name = m.group(1)
+            if name in EXCLUDE:
+                continue
+            if name in known_actions:
+                found[name].append(ln)
     return dict(found)
 
 
@@ -686,6 +704,44 @@ def prompt():
         menu = scan_menu(source, {"REGIME"})
         self.assertIn("REGIME", menu)
         self.assertNotIn("SEEK_BALANCE", menu)
+
+    def test_single_verb_menu_bullet_is_recognized(self) -> None:
+        # A verb advertised on its own bullet with at most one alias has too few
+        # uppercase tokens to clear the dense-list threshold; the per-bullet
+        # grammar must still recognize it. Regression: PRESSURE_RELIEF read as
+        # silent-starvation though advertised at autonomous_agent.py:46279
+        # ("PRESSURE_RELIEF [label] / RELIEF [label] — ...").
+        source = '''
+def prompt():
+    return "  PRESSURE_RELIEF [label] / RELIEF [label] — private pressure-relief journal route; sends no control.\\n"
+
+def dispatch(base):
+    if base == "PRESSURE_RELIEF":
+        return True
+    return False
+'''
+        dispatched = set(scan_dispatched(source))
+        menu = set(scan_menu(source, dispatched))
+        self.assertIn("PRESSURE_RELIEF", menu)
+        # It is discoverable AND executable — the healthy 'both' set, not starved.
+        self.assertIn("PRESSURE_RELIEF", menu & dispatched)
+
+    def test_menu_bullet_does_not_admit_unknown_token(self) -> None:
+        # The per-bullet path is restricted to KNOWN dispatched verbs, so an
+        # action-shaped token before a separator that is NOT dispatched must not
+        # be admitted as menu (prevents prose like "FOO [bar]" leaking in).
+        source = '''
+def prompt():
+    return "  NOT_A_VERB [label] — some prose with a dash.\\n"
+
+def dispatch(base):
+    if base == "REAL_ACTION":
+        return True
+    return False
+'''
+        dispatched = set(scan_dispatched(source))
+        menu = set(scan_menu(source, dispatched))
+        self.assertNotIn("NOT_A_VERB", menu)
 
     def test_real_unknown_next_is_still_detected(self) -> None:
         source = '''
