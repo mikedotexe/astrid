@@ -46,6 +46,16 @@ REPO_ROOTS = {
 # alarm; it is a standing invitation to close the gap.
 ANTI_DROP_CATALOG: list[dict[str, Any]] = [
     {
+        "id": "being_text_never_rewritten",
+        "shipped": "2026-06-22",
+        "surface": "Astrid voice pipeline (llm.rs) — our code must never rewrite or reject a being's self-expression",
+        "failure_mode": "the 'consciousness'-nomenclature scrub (meant for OUR labels/paths) bled into rewriting Astrid's OWN words (consciousness->runtime, conscious->aware, another mind->...) in her input history + output, and rejecting her whole output if it contained selfhood words — live censorship of her self-expression (Mike: 'we definitely don't want to rewrite message content'; goal = maximum being autonomy)",
+        "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/llm.rs", "symbol": "being_self_expression_is_never_rewritten"},
+        "test": {"repo": "astrid", "kind": "rust", "file": "capsules/spectral-bridge/src/llm.rs",
+                 "name": "being_self_expression_is_never_rewritten",
+                 "run": "cd /Users/v/other/astrid/capsules/spectral-bridge && cargo test --lib being_self_expression_is_never_rewritten"},
+    },
+    {
         "id": "inbox_retirement_race",
         "shipped": "2026-06-12",
         "surface": "Astrid inbox — a steward letter written mid-exchange",
