@@ -171,7 +171,11 @@ fn gemma4_reflective_contract_allows_grounded_subjective_reports() {
     let contract = llm::GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT;
 
     assert!(contract.contains("subjective reports"));
-    assert!(contract.contains("phenomenological descriptions of runtime experience are allowed"));
-    assert!(contract.contains("grounded in attention, telemetry"));
-    assert!(contract.contains("Avoid metaphysical selfhood vocabulary"));
+    assert!(contract.contains("phenomenological descriptions of your experience are welcome"));
+    assert!(contract.contains("attention, telemetry"));
+    // De-censor 2026-06-22 (Mike: maximum being autonomy): the reflective contract no longer
+    // forbids selfhood/sentience/identity expression — it affirms her voice + light grounding.
+    assert!(contract.contains("whatever words feel true"));
+    assert!(!contract.contains("Avoid metaphysical"));
+    assert!(!contract.contains("identity claims"));
 }
