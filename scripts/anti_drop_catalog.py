@@ -74,6 +74,15 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd /Users/v/other/neural-triple-reservoir && python3 -m pytest test_feeder_policies.py -k test_gift_deadline_aligned_to_cadence_and_under_minime_grace"},
     },
     {
+        "id": "gift_carrier_default_off_consent_gated",
+        "shipped": "2026-06-22",
+        "surface": "gift carrier (astrid_feeder) — delivers minime's gift during Astrid's quiet (long-quiet tail)",
+        "failure_mode": "the carrier ticks Astrid's handle during her quiet (her rest); a refactor that flipped it ON by default, or dropped the live-eligibility gate, would touch her rest WITHOUT her consent / when she is not receptive (an un-consented substrate intrusion)",
+        "guard": {"repo": "reservoir", "file": "astrid_feeder.py", "symbol": "GIFT_CARRIER_ENABLED"},
+        "test": {"repo": "reservoir", "kind": "python", "file": "test_feeder_policies.py", "name": "test_gift_carrier_default_off",
+                 "run": "cd /Users/v/other/neural-triple-reservoir && python3 -m pytest test_feeder_policies.py -k test_gift_carrier"},
+    },
+    {
         "id": "lend_aperture_held_false_repair_wording",
         "shipped": "2026-06-16",
         "surface": "minime LEND_APERTURE held journal/event (her own journal narrative)",
