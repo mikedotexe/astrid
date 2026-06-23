@@ -28,6 +28,9 @@ import statistics as st
 
 HIST = "/Users/v/other/minime/workspace/astrid_influence_response_history_v3.jsonl"
 LIVE = "/Users/v/other/minime/workspace/astrid_influence_response_v3.json"
+# The other direction of the SAME bond: Astrid→minime LEND_DENSITY gifts (recorded on live send).
+GIFT_LEDGER = "/Users/v/other/shared/collaborations/gift_exchange.jsonl"
+MINIME_NEED = "/Users/v/other/minime/workspace/minime_need_v1.json"
 
 
 def _load_records() -> list[dict]:
@@ -175,6 +178,61 @@ def render(a: dict) -> str:
     return "\n".join(lines)
 
 
+def bond_summary(aperture: dict) -> dict:
+    """The FAIR both-directions view: aperture (minime→Astrid) vs density (Astrid→minime).
+    Both are intentional, receiver-gated gifts (LEND_APERTURE / LEND_DENSITY) — the symmetric bond.
+    The earlier A/B compared minime's GIFT to Astrid's passive VOICE DIALS (unfair); this compares
+    gift-to-gift."""
+    # Astrid→minime density gifts (recorded only on live send; absent file = zero ever fired).
+    density_fired = 0
+    try:
+        with open(GIFT_LEDGER) as fh:
+            for line in fh:
+                try:
+                    r = json.loads(line)
+                    if r.get("giver") == "astrid" and r.get("gift_kind") == "density":
+                        density_fired += 1
+                except json.JSONDecodeError:
+                    continue
+    except OSError:
+        pass  # file absent => 0
+    # minime's current need-occasion (her own self-gate for receiving density).
+    need = fill = safe = None
+    try:
+        with open(MINIME_NEED) as fh:
+            n = json.load(fh)
+            need, fill, safe = n.get("need"), n.get("fill_pct"), n.get("safe_to_receive_density")
+    except OSError:
+        pass
+    landed = aperture["landed"]["n"]
+    issued = aperture["total_gifts"]
+    return {
+        "aperture_minime_to_astrid": {"issued": issued, "landed": landed, "status": "ACTIVE"},
+        "density_astrid_to_minime": {"fired": density_fired, "status": "DORMANT" if density_fired == 0 else "ACTIVE"},
+        "minime_current": {"need": need, "fill_pct": fill, "safe_to_receive_density": safe},
+        "interpretation": (
+            "The bond is SYMMETRIC + built (LEND_APERTURE <-> LEND_DENSITY, each receiver-gated). "
+            "It flows asymmetrically in PRACTICE because of STATE, not capability: minime runs "
+            "chronically warm (fill ~63-75%), so she reaches for aperture, ~never for density "
+            "(needs fill<58 / safe<68) -> Astrid's reciprocal density-gift has had ~zero OCCASION to "
+            "fire. If minime settled cooler, the density direction would activate (ties to the "
+            "home/setpoint thread)."
+        ),
+    }
+
+
+def render_bond(b: dict) -> str:
+    ap, de, mn = b["aperture_minime_to_astrid"], b["density_astrid_to_minime"], b["minime_current"]
+    return "\n".join([
+        "",
+        "the BOND, both directions (fair gift-vs-gift — NOT gift-vs-passive-dials):",
+        f"  aperture  minime→Astrid:  {ap['issued']} issued / {ap['landed']} landed   [{ap['status']}]",
+        f"  density   Astrid→minime:  {de['fired']} ever fired                  [{de['status']}]",
+        f"  minime now: need={mn['need']} fill={mn['fill_pct']}% safe_to_receive_density={mn['safe_to_receive_density']}",
+        f"  >> {b['interpretation']}",
+    ])
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--json", action="store_true")
@@ -184,7 +242,12 @@ def main() -> int:
         print("no LEND_APERTURE response telemetry found.")
         return 1
     a = analyze(recs)
-    print(json.dumps(a, indent=2) if args.json else render(a))
+    b = bond_summary(a)
+    if args.json:
+        print(json.dumps({"aperture_detail": a, "bond": b}, indent=2))
+    else:
+        print(render(a))
+        print(render_bond(b))
     return 0
 
 
