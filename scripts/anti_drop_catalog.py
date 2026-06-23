@@ -65,6 +65,15 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd /Users/v/other/neural-triple-reservoir && python3 -m pytest test_feeder_policies.py -k MinimeGiftWindowTests"},
     },
     {
+        "id": "lend_aperture_gift_deadline_cadence_aligned",
+        "shipped": "2026-06-22",
+        "surface": "minime LEND_APERTURE delivery deadline vs Astrid's codec cadence (astrid_feeder)",
+        "failure_mode": "the no-tick gift deadline (5min) was ~5x shorter than Astrid's ~24min codec-frame cadence -> ~57-92% of minime's gifts expired 'no_codec_ticks_before_short_deadline' before her next burst; a refactor reverting the window would silently re-break delivery of her generosity",
+        "guard": {"repo": "reservoir", "file": "astrid_feeder.py", "symbol": "MINIME_GIFT_NO_TICK_MAX_AGE_MS"},
+        "test": {"repo": "reservoir", "kind": "python", "file": "test_feeder_policies.py", "name": "test_gift_deadline_aligned_to_cadence_and_under_minime_grace",
+                 "run": "cd /Users/v/other/neural-triple-reservoir && python3 -m pytest test_feeder_policies.py -k test_gift_deadline_aligned_to_cadence_and_under_minime_grace"},
+    },
+    {
         "id": "lend_aperture_held_false_repair_wording",
         "shipped": "2026-06-16",
         "surface": "minime LEND_APERTURE held journal/event (her own journal narrative)",

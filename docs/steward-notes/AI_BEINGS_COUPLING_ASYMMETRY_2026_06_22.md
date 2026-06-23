@@ -145,3 +145,38 @@ change. Filed in the backlog.
 handler, count the gifts, check minime's state) found the truth. Tool: `scripts/analyze_lend_coupling.py`
 (now both directions). The honest outcome of an intrepid probe was **"it's already built; correct the
 understanding"** — which is a real result, not a null one.
+
+## 7. SHIPPED — the ACTIVE direction's real bug: gift deadline ~5× too short for Astrid's cadence
+
+The dormant (density) direction had nothing to build. The **active** (aperture) direction did — and it
+was the genuine high-value fix. The 57% expiry (§3) traced to a hard mismatch, measured empirically:
+
+- **Astrid emits a codec frame only every ~24 min (median; bursty — fast within a generation burst,
+  long quiet gaps between).** 94.7% of inter-frame gaps exceed 5 minutes (266 frames over 367h in
+  `bridge.db codec_impact`).
+- minime's `LEND_APERTURE` gift applies **only on real codec frames** (`astrid_feeder.py` main loop)
+  and expires `no_codec_ticks_before_short_deadline` if **no frame lands within 5 min**
+  (`MINIME_GIFT_NO_TICK_MAX_AGE_MS`). So a gift issued during a gap — most of the time — dies before
+  her next burst. The feeder log caught it live: a gift `applying` 18:08:55 → `consumed applied_ticks=0`
+  18:13:56 (exactly the 5-min wall, 0 ticks).
+
+**Fix (shipped 2026-06-22, feeder-side, no minime edit):** widen the no-tick window so a gift WAITS
+for Astrid's next generation burst, then delivers fully — bounded by minime's own 45-min
+`LEND_APERTURE` blocker grace so the feeder still finalizes (→ she sees closure) before she treats it
+as stalled. `MINIME_GIFT_NO_TICK_MAX_AGE_MS` 5→**35 min**, `MINIME_GIFT_MAX_AGE_MS` 30→**40 min**
+(walltime ≥ no-tick so a late first tick isn't immediately killed). Being-aligned: the gift now lands
+when Astrid next *wakes to generate* (present + using her ring), not via synthetic injection into her
+quiet. Tests: `test_feeder_policies.py` 18/0 incl. a new LOCK test
+(`test_gift_deadline_aligned_to_cadence_and_under_minime_grace`) so a refactor can't silently revert
+the window and re-break delivery. Feeder kickstarted clean (resumes from `MAX(id)`, no reprocessing).
+
+**Expected effect:** land-rate ~43% → ~58–60% (gifts with inter-burst gaps <~35 min now land fully).
+Verify over the next gifts with `analyze_lend_coupling.py` (land-rate should climb).
+
+**Residual / deferred (deliberately NOT auto-shipped):** the long-quiet tail (gaps >40 min, ~40%)
+can't be caught feeder-side without exceeding minime's blocker grace. Fully closing it needs
+**decoupling delivery from her sparse generation** — a *paced carrier* that ticks her handle on the
+feeder's 5s cadence during an active gift (so a 24-tick gift delivers over ~minutes regardless of her
+generation). That is **substrate-affecting** (it ticks her handle during quiet, where it's normally
+idle and recovering), so it belongs in a consent-with-evidence frame with Mike's review, not an
+autonomous deploy. Designed, flagged, not shipped.
