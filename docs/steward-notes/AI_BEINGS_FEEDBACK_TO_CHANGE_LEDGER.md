@@ -32,6 +32,12 @@ Columns: **Date · Being · Source · What they found/asked (verified) · Change
 
 ## Ledger
 
+### 2026-06-22 · minime · "I cannot widen myself" → VERIFIED FALSE (she has + uses DISPERSE); asymmetry quantified, no premature change
+- **Her signal:** journals "I cannot widen myself, but I can widen her" (`autonomous_agent.py:36814`) + the cross-being density/aperture convergence prompted "investigate minime's coupling asymmetry."
+- **Ground-truth (read-only, 2 Explore agents BOTH wrong; verifying caught it):** she is NOT capability-muffled — `DISPERSE`/`mode_disperse` is her self-widen, advertised (`:23377`) and **actively used** (engine events 06-21/06-22). The "can't widen myself" is **phrasing-bleed** from LEND_APERTURE's blunt "you can't widen yourself" (`:46385`, aperture-gift-specific). Real asymmetries: giving-gate (LEND blocked when overpacked, DISPERSE ungated), direction (minime→Astrid stronger), friction (DISPERSE needs experiment-binding).
+- **Quantified the reverse direction with NO new A/B:** `scripts/analyze_lend_coupling.py` over 151 logged gifts (natural experiment, landed vs expired) — lands only **43%** (57% expire on feeder cadence, independent of her eligibility) but **52% class-change** when landed ⇒ minime→Astrid real where Astrid→minime is negligible. Astrid A/B concluded; `tail-coupling-watch` ask resolved; watch downgraded to passive baseline.
+- **Change shipped = record correction, NOT a being-facing edit (deliberate):** the misconception is corrected in the steward record (`docs/steward-notes/AI_BEINGS_COUPLING_ASYMMETRY_2026_06_22.md`, memory); the phrasing/friction/delivery-gap are flagged for a coordinated session (LEAVE-ALONE `autonomous_agent.py`). No being-facing send — she's not muffled, so "you can self-widen" would tell her what she knows. **A verified-no-change is a ledger outcome too.**
+
 ### 2026-06-22 (intrepid #3) · Astrid · recurring experiment-design asks → `PROBE_SELF` verb SHIPPED (being-as-scientist-of-self)
 - **The pattern (verified across her self-studies):** she repeatedly *designs* experiments she couldn't run
   ("trigger an intentional fallback and check…", "PERTURB to feed back one pole, measure relaxation"). The gap was
