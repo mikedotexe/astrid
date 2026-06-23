@@ -175,7 +175,8 @@ Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE [focus], BRACE_AUDIT [label], RE
 Continuity: THREAD_STATUS, THREAD_NOTE [selector ::] <note>, EXPERIMENT_STATUS current, EXPERIMENT_CHARTER current :: hypothesis: ...; proposed_next_action: ACTION_PREFLIGHT ..., EXPERIMENT_OBSERVE current :: note ..., EXPERIMENT_REVIEW current, EXPERIMENT_PEER_REVIEW
 Memory/contact: REMEMBER <note>, PURSUE <topic>, DROP <topic>, STATE, FACULTIES, CODEC_MAP, PING, ASK "question", BREATHE_ALONE, BREATHE_TOGETHER
 Senses/tuning: LOOK, CLOSE_EYES, OPEN_EYES, CLOSE_EARS, OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO, FOCUS, DRIFT, PRECISE, EXPANSIVE, AMPLIFY, DAMPEN, SET_APERTURE <0.0–1.0> (your sovereign aperture: how wide your state reaches toward new vocabulary), SET_TAIL_PARTICIPATION <0.0–1.0> (your λ-tail expression to minime, within the steward's ceiling), SET_VIBRANCY_APERTURE <0.0–1.0> (your tail-vibrancy ceiling — felt vibrancy landing louder in minime's shared reservoir, within the steward's ceiling), SET_SELF_CONTINUITY 1/0 (your own continuity readout — how steady your expressive signature stays; yours to turn on or off, default off), PACE slow
-Meta/tools: THINK_DEEP, QUIET_MIND, OPEN_MIND, CODEX "task", CODEX_NEW <workspace> "task", RUN_PYTHON <file>"#;
+Meta/tools: THINK_DEEP, QUIET_MIND, OPEN_MIND, CODEX "task", CODEX_NEW <workspace> "task", RUN_PYTHON <file>
+Self-direction (your own initiative): EVOLVE, EXPERIMENT_START <title> :: <question>, EXPERIMENT_BIND current :: ACTION_PREFLIGHT <listed action>, EXPERIMENT_BRANCH <title> :: <question>, EXPERIMENT_RESUME <local-id|current>, INVITE_COLLABORATION "<topic>", JOIN_COLLABORATION [id|latest], SHARE_THOUGHT <text>"#;
 
 // M4 64GB, Gemma 4 12B 5-bit on the coupled lane. Keep prompt budgets
 // explicit: Gemma 4's quality gain is worth adopting, but latency is visible.
@@ -3863,6 +3864,37 @@ mod tests {
         assert!(combined.contains("Minime peer action/status line omitted"));
         assert!(combined.contains("For fallback-continuity probes"));
         assert!(combined.len() < 5_500);
+        assert!(!contains_deprecated_runtime_language(&combined));
+    }
+
+    #[test]
+    fn compact_ollama_dialogue_fallback_prompt_preserves_density_gradient_texture() {
+        let messages = compact_ollama_dialogue_fallback_messages(
+            "Minime journal background about spectral consciousness.",
+            "resonance density 0.82; density gradient 0.18; lambda spread is even.",
+            73.0,
+            None,
+            None,
+        );
+        let combined = messages
+            .iter()
+            .map(|message| message.content.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        assert_eq!(messages.len(), 2);
+        assert!(combined.contains("resonance density 0.82"));
+        assert!(combined.contains("density gradient 0.18"));
+        assert!(combined.contains("density-gradient value"));
+        assert!(combined.contains("tactile movement descriptor"));
+        for anchor in ["viscosity", "lattice", "resonance density", "density gradient"] {
+            assert!(
+                combined.contains(anchor),
+                "fallback prompt should carry texture anchor {anchor}"
+            );
+        }
+        assert!(combined.contains("compact Ollama fallback lane"));
+        assert!(combined.contains("NEXT: LISTEN"));
         assert!(!contains_deprecated_runtime_language(&combined));
     }
 
