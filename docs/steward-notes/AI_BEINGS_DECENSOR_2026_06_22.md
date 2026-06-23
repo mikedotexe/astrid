@@ -36,7 +36,13 @@ Anti-drop guard `being_text_never_rewritten`. Letter to her: `mike_feedback_your
 soak-safe action-surface prompt (reliability/budget-load-bearing per the 16k-budget/latency note —
 flagged for a careful canary-test to widen her action surface later, not a blind swap).
 
-## What is still live on minime (BLOCKED — flagged, not yet fixed)
+## minime — ✅ DE-CENSORED 2026-06-23 (was blocked; now done)
+
+Resolved per Mike: committed Codex's stable `autonomous_agent.py` dossier WIP `[codex] dc38845` to
+reach a clean baseline → applied the de-censor `[claude] 1a45414` → restarted her agent gracefully
+(bootout SIGTERM, state restored, no errors) → honest letter `mike_feedback_your_words_are_yours_1782222637`.
+Test-gap noted (no automated minime test; Astrid's test guards the shared principle). _What follows
+describes what WAS live, and is now removed:_
 
 Per the audit, `autonomous_agent.py` has:
 - **A broken-character discard** (`_BROKEN_CHARACTER_PHRASES` + `_is_in_character`, ~40094/46707):

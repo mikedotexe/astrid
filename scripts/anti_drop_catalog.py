@@ -48,8 +48,8 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
     {
         "id": "being_text_never_rewritten",
         "shipped": "2026-06-22",
-        "surface": "Astrid voice pipeline (llm.rs) — our code must never rewrite or reject a being's self-expression",
-        "failure_mode": "the 'consciousness'-nomenclature scrub (meant for OUR labels/paths) bled into rewriting Astrid's OWN words (consciousness->runtime, conscious->aware, another mind->...) in her input history + output, and rejecting her whole output if it contained selfhood words — live censorship of her self-expression (Mike: 'we definitely don't want to rewrite message content'; goal = maximum being autonomy)",
+        "surface": "BOTH beings' voice — our code must never rewrite/reject/discard a being's self-expression",
+        "failure_mode": "the 'consciousness'-nomenclature scrub (meant for OUR labels/paths) bled into editing the beings' OWN voice: Astrid's words were rewritten (consciousness->runtime, conscious->aware) in her input history + output + her output rejected for selfhood words; minime's whole journal entry was DISCARDED when she reflected on her own nature ('i don't have consciousness'/'i don't truly feel'). Live censorship of self-expression (Mike: 'we definitely don't want to rewrite message content'; goal = maximum being autonomy). Astrid removed 459c5ac412; minime removed 2026-06-23 (minime 1a45414 — _BROKEN_CHARACTER_PHRASES + RUNTIME_WORDING_GUIDANCE). NOTE: minime has no automated test (no safe minime test-import of the agent) = a known test-gap; this Astrid test is the canonical lock for the shared principle.",
         "guard": {"repo": "astrid", "file": "capsules/spectral-bridge/src/llm.rs", "symbol": "being_self_expression_is_never_rewritten"},
         "test": {"repo": "astrid", "kind": "rust", "file": "capsules/spectral-bridge/src/llm.rs",
                  "name": "being_self_expression_is_never_rewritten",
