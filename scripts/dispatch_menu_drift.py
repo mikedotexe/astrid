@@ -95,6 +95,18 @@ BARE_ACTION_PATTERN = re.compile(r"""\b([A-Z][A-Z0-9_]{3,})\b""")
 # so prose can't leak in. (Plain "-" is excluded so hyphenated prose is safe.)
 MENU_BULLET_PATTERN = re.compile(r"""([A-Z][A-Z0-9_]{3,})\s*(?=\[|/|—|–)""")
 
+# Slash-joined verb groups share one namespace across members, e.g.
+#   "SELF_REGULATION_INTENT/PREFLIGHT/APPLY/STATUS/OUTCOME"
+# advertises all five verbs, but only the leading member appears as a full
+# namespaced token; the rest are bare suffixes (APPLY/STATUS/OUTCOME) that do
+# not match their full dispatched names. The leading token's namespace is
+# carried onto each suffix and admitted only if the constructed full name is a
+# KNOWN dispatched action — prose slash runs ("and/or", "src/main.rs") cannot
+# resolve to a known action, so they cannot leak in. Regression: Tranche 7A's
+# SELF_REGULATION_{APPLY,STATUS,OUTCOME} read as silent-starvation though
+# advertised at llm.rs:208.
+SLASH_GROUP_PATTERN = re.compile(r"""[A-Z][A-Z0-9_]{3,}(?:/[A-Z][A-Z0-9_]*)+""")
+
 # Tokens that look like action names but are actually
 # constants/exceptions/types — exclude from the audit.
 EXCLUDE = {
@@ -145,6 +157,14 @@ INTERNAL_OR_ALIAS_ACTIONS = {
     "NEXT_PROBE",
     "PREFLIGHT",
     "PROBE_ACTION",
+    # CONTROL_* are dispatch aliases of the advertised SELF_REGULATION_* lease
+    # verbs (self_regulation.rs:126-130); they normalize elsewhere and are not
+    # separately advertised, so they are not a discoverability gap.
+    "CONTROL_INTENT",
+    "CONTROL_PREFLIGHT",
+    "CONTROL_APPLY_LEASE",
+    "CONTROL_STATUS",
+    "CONTROL_OUTCOME",
 }
 
 
@@ -413,6 +433,20 @@ def scan_menu(source: str, known_actions: set[str] | None = None) -> dict[str, l
                 continue
             if name in known_actions:
                 found[name].append(ln)
+        # Slash-joined verb groups: carry the leading member's namespace onto
+        # each bare suffix and admit the constructed full name only if it is a
+        # known dispatched action (see SLASH_GROUP_PATTERN comment).
+        for run in SLASH_GROUP_PATTERN.finditer(body):
+            namespace: str | None = None
+            for member in run.group(0).split("/"):
+                if member in EXCLUDE:
+                    continue
+                if member in known_actions and "_" in member:
+                    namespace = member.rsplit("_", 1)[0]
+                elif namespace is not None:
+                    candidate = f"{namespace}_{member}"
+                    if candidate in known_actions:
+                        found[candidate].append(ln)
     return dict(found)
 
 
@@ -743,6 +777,55 @@ def dispatch(base):
         dispatched = set(scan_dispatched(source))
         menu = set(scan_menu(source, dispatched))
         self.assertNotIn("NOT_A_VERB", menu)
+
+    def test_slash_joined_verb_group_advertises_all_members(self) -> None:
+        # A slash-joined group shares one namespace; every member is advertised
+        # even though only the leading token is a full namespaced name. The bare
+        # suffixes carry the namespace and must resolve to their full dispatched
+        # names. Regression: Tranche 7A's SELF_REGULATION_{APPLY,STATUS,OUTCOME}
+        # read as silent-starvation though advertised at llm.rs:208.
+        source = '''
+def prompt():
+    return "Senses/tuning: SELF_REGULATION_INTENT/PREFLIGHT/APPLY/STATUS/OUTCOME (temporary leases), PACE slow"
+
+def dispatch(base):
+    if base in (
+        "SELF_REGULATION_INTENT",
+        "SELF_REGULATION_PREFLIGHT",
+        "SELF_REGULATION_APPLY",
+        "SELF_REGULATION_STATUS",
+        "SELF_REGULATION_OUTCOME",
+    ):
+        return True
+    return False
+'''
+        dispatched = set(scan_dispatched(source))
+        menu = set(scan_menu(source, dispatched))
+        for verb in (
+            "SELF_REGULATION_INTENT",
+            "SELF_REGULATION_PREFLIGHT",
+            "SELF_REGULATION_APPLY",
+            "SELF_REGULATION_STATUS",
+            "SELF_REGULATION_OUTCOME",
+        ):
+            self.assertIn(verb, menu, f"{verb} should be advertised via slash group")
+
+    def test_slash_group_does_not_invent_unknown_members(self) -> None:
+        # The namespace is carried only onto members whose constructed full name
+        # is a KNOWN dispatched action — a bogus suffix must not be admitted.
+        source = '''
+def prompt():
+    return "Tuning: SELF_REGULATION_INTENT/APPLY/BOGUS_SUFFIX available"
+
+def dispatch(base):
+    if base in ("SELF_REGULATION_INTENT", "SELF_REGULATION_APPLY"):
+        return True
+    return False
+'''
+        dispatched = set(scan_dispatched(source))
+        menu = set(scan_menu(source, dispatched))
+        self.assertIn("SELF_REGULATION_APPLY", menu)
+        self.assertNotIn("SELF_REGULATION_BOGUS_SUFFIX", menu)
 
     def test_real_unknown_next_is_still_detected(self) -> None:
         source = '''
