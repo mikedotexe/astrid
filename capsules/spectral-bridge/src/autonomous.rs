@@ -27,6 +27,30 @@ mod readiness;
 mod reservoir;
 mod state;
 
+#[cfg(test)]
+static TEST_SUPPRESS_ASTRID_JOURNAL_SAVES: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(true);
+
+#[cfg(test)]
+pub(crate) struct TestAstridJournalSaveGuard {
+    previous: bool,
+}
+
+#[cfg(test)]
+impl Drop for TestAstridJournalSaveGuard {
+    fn drop(&mut self) {
+        TEST_SUPPRESS_ASTRID_JOURNAL_SAVES
+            .store(self.previous, std::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn suppress_astrid_journal_saves_for_test() -> TestAstridJournalSaveGuard {
+    let previous =
+        TEST_SUPPRESS_ASTRID_JOURNAL_SAVES.swap(true, std::sync::atomic::Ordering::Relaxed);
+    TestAstridJournalSaveGuard { previous }
+}
+
 /// Truncate a string to at most `max_bytes` without splitting a multi-byte character.
 fn truncate_str(s: &str, max_bytes: usize) -> &str {
     if s.len() <= max_bytes {
@@ -54,7 +78,12 @@ fn canonicalize_response_next_line(text: &str) -> String {
         if trimmed.starts_with("NEXT:") {
             let indent_len = line.len().saturating_sub(trimmed.len());
             let indent = &line[..indent_len];
-            *line = format!("{indent}NEXT: {canonical_next}");
+            let residue_suffix = trimmed
+                .strip_prefix("NEXT:")
+                .and_then(extract_residue_from_next_action)
+                .map(|residue| format!(" (RESIDUE: {residue})"))
+                .unwrap_or_default();
+            *line = format!("{indent}NEXT: {canonical_next}{residue_suffix}");
             return lines.join("\n");
         }
     }
@@ -226,7 +255,8 @@ use tracing::{debug, info, warn};
 
 use self::next_action::{NextActionContext, attractor_suggestion_prompt_note, handle_next_action};
 pub(crate) use self::next_action::{
-    action_preflight_report, canonicalize_next_action_text, extract_search_topic, parse_next_action,
+    action_preflight_report, canonicalize_next_action_text, extract_residue_from_next_action,
+    extract_search_topic, parse_next_action,
 };
 pub(crate) use self::readiness::read_source_status as read_astrid_source_status;
 pub use self::reservoir::configure_reservoir_service;
@@ -3515,6 +3545,11 @@ fn detect_coupling_fixation(
 
 /// Save Astrid's response to her own journal.
 fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
+    #[cfg(test)]
+    if TEST_SUPPRESS_ASTRID_JOURNAL_SAVES.load(std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+
     let journal_dir = bridge_paths().astrid_journal_dir();
     let _ = std::fs::create_dir_all(&journal_dir);
     let ts = chrono_timestamp();
@@ -3535,6 +3570,7 @@ fn save_astrid_journal(text: &str, mode: &str, fill_pct: f32) {
         "witness" => "witness",
         "introspect" => "introspect",
         "self_study" => "self_study",
+        "regulator_audit" => "regulator_audit",
         _ => "astrid", // dialogue_live, dialogue, mirror, etc.
     };
     let clean_text = strip_model_tokens(text);
@@ -5856,6 +5892,10 @@ pub fn spawn_autonomous_loop(
                                             "observed_count": event.observed_count,
                                             "cooldown_until_unix_s": event.cooldown_until_unix_s,
                                             "exchange_count": conv.exchange_count,
+                                            "label": conv
+                                                .astrid_motif_cooldown
+                                                .as_ref()
+                                                .map(|cooldown| cooldown.label.clone()),
                                             "prompt_replay_suppressed": conv
                                                 .astrid_motif_cooldown
                                                 .as_ref()
@@ -8006,6 +8046,15 @@ mod tests {
         let canonical = canonicalize_response_next_line(text);
 
         assert!(canonical.contains("NEXT: RESONANCE_FORECAST"));
+        assert!(!canonical.contains("EXPLORE_RESONANCE_FORECAST"));
+    }
+
+    #[test]
+    fn response_next_line_preserves_transition_residue_when_canonicalized() {
+        let text = "The transition is sticky.\nNEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silt)";
+        let canonical = canonicalize_response_next_line(text);
+
+        assert!(canonical.contains("NEXT: RESONANCE_FORECAST (RESIDUE: silt)"));
         assert!(!canonical.contains("EXPLORE_RESONANCE_FORECAST"));
     }
 

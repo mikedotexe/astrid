@@ -19,7 +19,29 @@ sys.modules[SPEC.name] = astrid_introspection_digest
 SPEC.loader.exec_module(astrid_introspection_digest)
 
 
-def write_entry(root: Path, stamp: int, *, pressure: str, rewrite: float) -> None:
+def write_entry(
+    root: Path,
+    stamp: int,
+    *,
+    pressure: str,
+    rewrite: float,
+    candidate: float = 40.0,
+    budget: float | None = 90.0,
+    cap_applied: bool = False,
+    cap_reason: str | None = None,
+    elapsed: float | None = None,
+) -> None:
+    rewrite_budget = None
+    if budget is not None:
+        rewrite_budget = {
+            "attempts_completed": 1,
+            "attempts_started": 1,
+            "budget_seconds": budget,
+            "cap_applied": cap_applied,
+            "cap_reason": cap_reason,
+            "elapsed_seconds": rewrite if elapsed is None else elapsed,
+            "max_attempts": 1,
+        }
     payload = {
         "controller_regime": "sustain",
         "observer_report": {
@@ -38,7 +60,7 @@ def write_entry(root: Path, stamp: int, *, pressure: str, rewrite: float) -> Non
         },
         "profiling": {
             "rewrite_seconds": rewrite,
-            "candidate_generation_seconds": 40.0,
+            "candidate_generation_seconds": candidate,
             "runtime_audit": {
                 "generation": {
                     "first_token_seconds": 3.0,
@@ -47,6 +69,11 @@ def write_entry(root: Path, stamp: int, *, pressure: str, rewrite: float) -> Non
             },
         },
     }
+    if rewrite_budget is not None:
+        payload["profiling"]["rewrite_budget"] = rewrite_budget
+        payload["profiling"]["runtime_audit"]["generation"][
+            "rewrite_budget"
+        ] = rewrite_budget
     (root / f"controller_astrid:autonomous_{stamp}.json").write_text(json.dumps(payload))
 
 
@@ -56,9 +83,31 @@ class AstridIntrospectionDigestTests(unittest.TestCase):
             workspace = Path(tmp)
             root = workspace / "introspections"
             root.mkdir()
-            write_entry(root, 100, pressure="continuity_deficit", rewrite=150.0)
-            write_entry(root, 101, pressure="continuity_deficit", rewrite=180.0)
-            write_entry(root, 102, pressure="structure_strain", rewrite=60.0)
+            write_entry(
+                root,
+                100,
+                pressure="continuity_deficit",
+                rewrite=150.0,
+                candidate=30.0,
+                cap_applied=True,
+                cap_reason="max_attempts_reached",
+            )
+            write_entry(
+                root,
+                101,
+                pressure="continuity_deficit",
+                rewrite=180.0,
+                candidate=90.0,
+                cap_applied=True,
+                cap_reason="max_attempts_reached",
+            )
+            write_entry(
+                root,
+                102,
+                pressure="structure_strain",
+                rewrite=60.0,
+                candidate=60.0,
+            )
 
             digest = astrid_introspection_digest.build_digest(workspace, limit=3)
 
@@ -66,8 +115,22 @@ class AstridIntrospectionDigestTests(unittest.TestCase):
             self.assertEqual(digest["summary"]["dominant_pressure"], "continuity_deficit")
             self.assertEqual(digest["summary"]["dominant_pressure_count"], 2)
             self.assertEqual(digest["summary"]["avg_rewrite_seconds"], 130.0)
+            self.assertEqual(digest["summary"]["slow_rewrite_count"], 2)
+            self.assertEqual(digest["summary"]["avg_candidate_generation_seconds"], 60.0)
+            self.assertEqual(digest["summary"]["max_candidate_generation_seconds"], 90.0)
+            self.assertEqual(digest["summary"]["rewrite_budget_cap_count"], 2)
+            self.assertEqual(digest["summary"]["rewrite_elapsed_over_budget_count"], 2)
+            self.assertTrue(
+                any(entry["rewrite_elapsed_over_budget"] for entry in digest["entries"])
+            )
             self.assertIn("continuity_deficit", " ".join(digest["suggested_next"]))
             self.assertIn("rewrite", " ".join(digest["suggested_next"]))
+            self.assertIn("rewrite-budget caps", " ".join(digest["suggested_next"]))
+
+            rendered = astrid_introspection_digest.render_markdown(digest)
+            self.assertIn("Slow rewrites", rendered)
+            self.assertIn("Avg candidate-generation seconds", rendered)
+            self.assertIn("Rewrite budget caps: 2", rendered)
 
     def test_write_digest_emits_json_and_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

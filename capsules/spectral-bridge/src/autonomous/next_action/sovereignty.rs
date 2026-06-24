@@ -51,12 +51,34 @@ fn compact_review_summary(
     authority_boundary: &str,
     suggested_comparison: &str,
 ) -> String {
+    compact_review_summary_with_field_limit(
+        title,
+        action,
+        label,
+        event_id,
+        key_fields,
+        authority_boundary,
+        suggested_comparison,
+        6,
+    )
+}
+
+fn compact_review_summary_with_field_limit(
+    title: &str,
+    action: &str,
+    label: &str,
+    event_id: Option<&str>,
+    key_fields: &[String],
+    authority_boundary: &str,
+    suggested_comparison: &str,
+    field_limit: usize,
+) -> String {
     let key_fields = if key_fields.is_empty() {
         "  - detail: unavailable; see attached report or receipt".to_string()
     } else {
         key_fields
             .iter()
-            .take(6)
+            .take(field_limit)
             .map(|field| format!("  - {}", truncate_str(field.trim(), 180)))
             .collect::<Vec<_>>()
             .join("\n")
@@ -163,18 +185,59 @@ fn resonance_review_fields(telemetry: &SpectralTelemetry) -> Vec<String> {
 
 fn compact_report_fields(report: &str, telemetry: &SpectralTelemetry) -> Vec<String> {
     let mut fields = base_spectral_review_fields(telemetry);
+    let report_lines = report
+        .lines()
+        .map(str::trim)
+        .filter(|line| {
+            !line.is_empty()
+                && !line.starts_with("===")
+                && !line.starts_with("This was")
+                && !line.starts_with("It did not")
+        })
+        .map(ToString::to_string)
+        .collect::<Vec<_>>();
+    let priority_fragments = [
+        "stable_core=",
+        "target_fill=",
+        "pi_errors",
+        "pi_integrators",
+        "transition kind=",
+        "Semantic energy",
+        "admission=",
+        "stable_core_structural_pi",
+        "stable-core is active",
+    ];
+    let mut selected: Vec<String> = Vec::new();
+    for line in &report_lines {
+        if priority_fragments
+            .iter()
+            .any(|fragment| line.contains(fragment))
+            && !selected.iter().any(|existing| existing == line)
+        {
+            if let Some((_, admission_tail)) = line.split_once("admission=") {
+                if let Some(admission) = admission_tail.split_whitespace().next() {
+                    let field = format!("semantic_admission={admission}");
+                    if !selected.iter().any(|existing| existing == &field) {
+                        selected.push(field);
+                    }
+                }
+            }
+            selected.push(line.clone());
+        }
+    }
+    for line in report_lines {
+        if selected.len() >= 9 {
+            break;
+        }
+        if !selected.iter().any(|existing| existing == &line) {
+            selected.push(line);
+        }
+    }
     fields.extend(
-        report
-            .lines()
-            .map(str::trim)
-            .filter(|line| {
-                !line.is_empty()
-                    && !line.starts_with("===")
-                    && !line.starts_with("This was")
-                    && !line.starts_with("It did not")
-            })
-            .take(3)
-            .map(|line| format!("report: {}", truncate_str(line, 160))),
+        selected
+            .into_iter()
+            .take(9)
+            .map(|line| format!("report: {}", truncate_str(&line, 200))),
     );
     fields
 }
@@ -321,7 +384,20 @@ pub(super) fn handle_action(
     original: &str,
     ctx: &mut NextActionContext<'_>,
 ) -> bool {
+    super::self_regulation::reconcile_active_lease(conv);
     match base_action {
+        "SELF_REGULATION_INTENT"
+        | "SELF_REGULATION_PREFLIGHT"
+        | "SELF_REGULATION_APPLY"
+        | "SELF_REGULATION_STATUS"
+        | "SELF_REGULATION_OUTCOME"
+        | "CONTROL_INTENT"
+        | "CONTROL_PREFLIGHT"
+        | "CONTROL_APPLY_LEASE"
+        | "CONTROL_STATUS"
+        | "CONTROL_OUTCOME" => {
+            super::self_regulation::handle_self_regulation_action(conv, base_action, original)
+        },
         "MARK_INTENSIFICATION" => handle_mark_intensification(conv, base_action, original, ctx),
         "SCA_REFLECT" => handle_sca_reflect(conv, base_action, original, ctx),
         "FISSURE_TRACE" | "NOTICE_AMBIGUITY" | "AMBIGUITY_TRACE" => {
@@ -2193,7 +2269,7 @@ fn handle_regulator_audit(
                 "You chose REGULATOR_AUDIT. A read-only fixed-point audit is attached: active controller source, stable-core hold band, legacy PI target visibility, λ error, geom error, scaffold mode, and semantic input/kernel/regulator-drive separation.".to_string(),
             );
     save_astrid_journal(
-        &compact_review_summary(
+        &compact_review_summary_with_field_limit(
             "REGULATOR AUDIT",
             "REGULATOR_AUDIT",
             &label,
@@ -2201,6 +2277,7 @@ fn handle_regulator_audit(
             &audit_fields,
             "read-only fixed-point inspection; No semantic input, control nudge, perturbation, native gesture, atlas/cartography write, or Minime parameter change was sent.",
             "compare regulator audits against later stable-core status, pressure-source audits, and transition markers",
+            18,
         ),
         "regulator_audit",
         ctx.fill_pct,
@@ -3330,6 +3407,60 @@ mod review_summary_tests {
         assert!(record.contains("dominant_source: mode_packing"));
         assert!(record.contains("No semantic input"));
         assert!(record.contains("Astrid control envelope"));
+    }
+
+    #[test]
+    fn regulator_audit_summary_preserves_fill_pressure_calibration_fields() {
+        let telemetry = telemetry_from(serde_json::json!({
+            "t_ms": 42,
+            "eigenvalues": [4.0, 1.2, 0.8],
+            "fill_ratio": 0.66,
+            "lambda1_rel": 0.156,
+            "active_mode_count": 5,
+            "active_mode_energy_ratio": 0.910,
+            "structural_entropy": 0.650
+        }));
+        let report = "\
+=== REGULATOR / FIXED-POINT AUDIT ===
+Label: fill-pressure
+
+stable_core=true stage=hold controller_mode=fixed_survival structural_mode=scaffold_hold_with_drain
+gate=0.020 filt=1.000 target_fill=68.0% target_baseline_lambda1_rel=1.000 target_geom_rel=1.000
+pi_errors raw_fill=+3.000 internal_fill=+0.500 (stable_core_scaffold) lambda=-0.100 geom=+0.020
+pi_integrators fill=+0.000 lambda=+0.000 geom=+0.000
+transition kind=breathing_phase basin_score=0.05 desc=contracting -> expanding baseline_lambda1_rel=-0.881 geom_rel=0.020 stable_core_stage=hold
+Semantic energy: input=0.020 input_active=true input_age_ms=120 active_window_ms=n/a kernel=0.000 delta=+0.000 kernel_active=false regulator_drive=0.000 admission=stable_core_kernel_zeroed
+stable_core_structural_pi active=true target_fill=68.0% drain_weight=0.000
+note: stable-core is active; visible legacy PI fields may be mirror/scaffold state.
+
+This was read-only inspection. It did not send semantic input, control nudges, perturbations, native gestures, or atlas/cartography writes.";
+
+        let fields = compact_report_fields(report, &telemetry);
+        let record = compact_review_summary_with_field_limit(
+            "REGULATOR AUDIT",
+            "REGULATOR_AUDIT",
+            "fill-pressure",
+            None,
+            &fields,
+            "read-only fixed-point inspection; No semantic input, control nudge, perturbation, native gesture, atlas/cartography write, or Minime parameter change was sent.",
+            "compare regulator audits against later stable-core status, pressure-source audits, and transition markers",
+            18,
+        );
+
+        assert!(record.contains("Action: REGULATOR_AUDIT"));
+        assert!(record.contains("Label: fill-pressure"));
+        assert!(record.contains("target_fill=68.0%"));
+        assert!(record.contains("pi_errors raw_fill=+3.000 internal_fill=+0.500"));
+        assert!(record.contains("stable_core_scaffold"));
+        assert!(record.contains("lambda=-0.100 geom=+0.020"));
+        assert!(record.contains("pi_integrators fill=+0.000"));
+        assert!(record.contains("transition kind=breathing_phase"));
+        assert!(record.contains("basin_score=0.05"));
+        assert!(record.contains("semantic_admission=stable_core_kernel_zeroed"));
+        assert!(record.contains("stable_core_structural_pi active=true"));
+        assert!(record.contains("stable-core is active"));
+        assert!(record.contains("No semantic input"));
+        assert!(record.contains("Minime parameter change was sent"));
     }
 
     #[test]

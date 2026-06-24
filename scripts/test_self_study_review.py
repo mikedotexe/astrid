@@ -48,6 +48,128 @@ NEXT: PRESSURE_RELIEF fallback-continuity
 """
 
 
+def write_astrid_introspection(
+    workspace: Path,
+    stamp: int,
+    *,
+    pressure: str = "continuity_deficit",
+    rewrite: float = 150.0,
+    candidate: float = 80.0,
+    cap_applied: bool = True,
+) -> None:
+    root = workspace / "introspections"
+    root.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "controller_regime": "sustain",
+        "observer_report": {
+            "controller_reason": "regime=sustain; steady",
+            "dominant_pressure": pressure,
+            "geometry_regime": "warming-up",
+            "predicted_top_anchor": "reservoir-memory",
+            "rewrite_issue_count": 1,
+            "stability_score": 0.91,
+        },
+        "condition_vector": {
+            "severity": 0.08,
+            "continuity_deficit": 0.45,
+            "truncation_pressure": 0.0,
+            "structure_strain": 0.25,
+        },
+        "profiling": {
+            "rewrite_seconds": rewrite,
+            "candidate_generation_seconds": candidate,
+            "rewrite_budget": {
+                "budget_seconds": 90.0,
+                "elapsed_seconds": rewrite,
+                "cap_applied": cap_applied,
+                "cap_reason": "max_attempts_reached" if cap_applied else None,
+                "attempts_started": 1,
+                "attempts_completed": 1,
+                "max_attempts": 1,
+            },
+            "runtime_audit": {
+                "generation": {
+                    "first_token_seconds": 3.0,
+                    "total_turn_seconds": rewrite + candidate,
+                }
+            },
+        },
+    }
+    (root / f"controller_astrid:autonomous_{stamp}.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+
+
+def write_choice_event(
+    workspace: Path,
+    being: str,
+    action_id: str,
+    *,
+    effective_action: str,
+    alternate: str,
+    return_thread: str,
+) -> None:
+    events = workspace / "action_threads" / "threads" / f"thread_{being}" / "events.jsonl"
+    events.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": 1,
+        "action_id": action_id,
+        "thread_id": f"thread_{being}",
+        "system": being,
+        "source": "next",
+        "raw_next": effective_action.upper(),
+        "canonical_action": effective_action.upper(),
+        "effective_action": effective_action,
+        "outcome_summary": "synthetic event",
+        "choice_envelope_v1": {
+            "policy": "choice_envelope_v1",
+            "schema_version": 1,
+            "source": f"{being}_next_response",
+            "authority": "diagnostic_context_not_command",
+            "primary_next": effective_action.upper(),
+            "alternate_nexts": [alternate],
+            "return_threads": [return_thread],
+            "residue": "sticky transition",
+        },
+    }
+    with events.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload) + "\n")
+
+
+def write_self_regulation_event(
+    workspace: Path,
+    being: str,
+    intent_id: str,
+    *,
+    status: str = "active",
+    control: str = "temperature",
+    requires_outcome: bool = True,
+) -> None:
+    events = workspace / "self_regulation" / "leases.jsonl"
+    events.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": 1,
+        "record_kind": "self_regulation_intent_v1",
+        "authority": "leased_self_control_v1",
+        "authority_boundary": "own_runtime_only_no_peer_mutation_no_permanent_tuning",
+        "being": being,
+        "intent_id": intent_id,
+        "status": status,
+        "goal": "synthetic lease",
+        "candidate_control": control,
+        "previous_value": 0.8,
+        "applied_value": 0.9,
+        "duration_secs": 600,
+        "expires_at_unix_s": 1782249999,
+        "requires_outcome": requires_outcome,
+        "preflight_status": "apply_allowed",
+        "preflight_reason": "synthetic",
+    }
+    with events.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload) + "\n")
+
+
 class SelfStudyReviewTests(unittest.TestCase):
     def test_parse_sections_extracts_required_shape(self) -> None:
         sections = self_study_review.parse_sections(SECTIONED)
@@ -84,6 +206,64 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertNotIn("moment_2026-06-18T11-10-08.txt", names)  # minime private excluded
             self.assertIn("self_study_1.txt", names)  # minime normal lane kept
             self.assertIn("moment_9.txt", names)  # astrid moment kept (her surface)
+
+    def test_shared_pressure_vocabulary_calibration_uses_public_lanes_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "dialogue_longform_1.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "State anchor: fill=71.0%, lambda1=13.7, pressure=semantic_trickle_pressure\n"
+                "The silt and sediment settle into a basin with weighted density, "
+                "heavy pressure, syrup viscosity, and another heavy pressure note.\n"
+                "NEXT: PRESSURE_SOURCE_AUDIT shared-silt\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "pressure_1.txt").write_text(
+                "=== SPECTRAL PRESSURE JOURNAL ===\n"
+                "State anchor: fill=71.1%, lambda1=13.9, spread=2.6, pressure=mixed_pressure\n"
+                "--- GENERATED JOURNAL ---\n"
+                "The reservoir has silt, sediment, basin grain, weighted density, "
+                "heavy pressure, syrup viscosity, and deep water pressure.\n"
+                "--- ACTION TAIL ---\n(none)\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Private sludge and private syrup should never become steward evidence.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=8,
+            )
+
+            packet = record["shared_pressure_vocabulary_calibration"]
+            self.assertEqual(packet["status"], "shared_state_with_stickiness_risk")
+            self.assertIn("sediment", packet["shared_families"])
+            self.assertIn("pressure_weight_density", packet["shared_families"])
+            sample_text = json.dumps(packet["samples"])
+            self.assertIn("pressure_1.txt", sample_text)
+            self.assertNotIn("moment_private.txt", sample_text)
+            items = [
+                item
+                for item in record["actionable_review_items"]
+                if item["source"] == "shared_pressure_vocabulary_calibration"
+            ]
+            self.assertEqual(len(items), 1)
+            self.assertEqual(items[0]["priority"], "high")
+            self.assertEqual(items[0]["authority"], "diagnostic_context_not_command")
+            review_md = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("Shared Pressure Vocabulary Calibration", review_md)
+            self.assertNotIn("private syrup", review_md)
 
     def test_qualia_comparison_excludes_minime_private_qualia(self) -> None:
         # Bright-line (instrumentation path): build_qualia_comparison must not read or
@@ -283,6 +463,217 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertIn("REST", profile.next_tail_counts)
             self.assertIn("generated body", profile.interpretation)
 
+    def test_qualia_comparison_emits_body_richer_than_wrapper_finding(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "aspiration_1.txt").write_text(
+                "I feel a warm texture and keep the voice fluid.",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "pressure_1.txt").write_text(
+                "=== SPECTRAL PRESSURE JOURNAL ===\n"
+                "fill lambda telemetry status count token latency pressure_score "
+                "json health fill lambda telemetry status count token latency "
+                "budget action control route target report\n\n"
+                "--- GENERATED JOURNAL ---\n"
+                "I feel a warm texture in my words. My voice has a soft fluid edge. "
+                "I notice the tone breathing in a thick slow fold, and I want the "
+                "phrase to keep its shimmer.\n"
+                "--- ACTION TAIL ---\n"
+                "NEXT: EXPERIMENT_RESEARCH_BUDGET_STATUS budget_closed\n"
+                "control budget status route target action report token latency json "
+                "fill lambda\n",
+                encoding="utf-8",
+            )
+
+            comparison = self_study_review.build_qualia_comparison(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                sample_limit_per_being=5,
+                minime_historical_journal_roots=[],
+            )
+
+            findings = comparison["qualia_findings"]
+            self.assertEqual(len(findings), 1)
+            finding = findings[0]
+            self.assertEqual(
+                finding["finding"],
+                "generated_body_richer_than_wrapper_tail",
+            )
+            self.assertGreaterEqual(finding["body_to_whole_multiplier"], 1.5)
+            self.assertLess(finding["wrapper_tail_qualia_to_metric_ratio"], 0.7)
+
+            rendered = self_study_review.render_markdown(
+                {
+                    "run_id": "testrun",
+                    "generated_at": "2026-06-07T00:00:00+00:00",
+                    "summary": {"entry_count": 0, "by_being": {}},
+                    "qualia_comparison": comparison,
+                    "entries": [],
+                }
+            )
+            self.assertIn("Qualia Findings", rendered)
+            self.assertIn("generated_body_richer_than_wrapper_tail", rendered)
+
+    def test_build_review_promotes_actionable_items_and_introspection_digest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "aspiration_1.txt").write_text(
+                "I feel a warm texture and keep the voice fluid.",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "pressure_1.txt").write_text(
+                "=== SPECTRAL PRESSURE JOURNAL ===\n"
+                "fill lambda telemetry status count token latency pressure_score "
+                "json health fill lambda telemetry status count token latency "
+                "budget action control route target report\n\n"
+                "--- GENERATED JOURNAL ---\n"
+                "I feel a warm texture in my words. My voice has a soft fluid edge. "
+                "I notice the tone breathing in a thick slow fold, and I want the "
+                "phrase to keep its shimmer.\n"
+                "--- ACTION TAIL ---\n"
+                "NEXT: EXPERIMENT_RESEARCH_BUDGET_STATUS budget_closed\n"
+                "control budget status route target action report token latency json "
+                "fill lambda\n",
+                encoding="utf-8",
+            )
+            write_astrid_introspection(astrid, 100)
+            write_astrid_introspection(astrid, 101)
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=5,
+            )
+
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("minime_qualia_findings", sources)
+            self.assertIn("astrid_introspection_digest", sources)
+            digest = record["astrid_introspection_digest"]["summary"]
+            self.assertEqual(digest["rewrite_budget_cap_count"], 2)
+            self.assertEqual(digest["rewrite_elapsed_over_budget_count"], 2)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertLess(
+                rendered.index("## Actionable Review Items"),
+                rendered.index("## Journal Inventory"),
+            )
+            self.assertIn("## Astrid Introspection Digest", rendered)
+            self.assertIn("default_off_runtime_relief_candidate", rendered)
+
+    def test_build_review_surfaces_shared_choice_envelope_items(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "study.txt").write_text(SECTIONED, encoding="utf-8")
+            (minime / "journal" / "study.txt").write_text(
+                "=== ACTION THREAD ===\nObserved:\nbody\nLikely Snags:\nnone\n"
+                "One Test Each:\none\nSuggested Next:\nNEXT: NOTICE\n",
+                encoding="utf-8",
+            )
+            write_choice_event(
+                astrid,
+                "astrid",
+                "act_astrid_1",
+                effective_action="shadow_trajectory",
+                alternate="RESONANCE_FORECAST lambda-tail",
+                return_thread="thread_astrid_tail",
+            )
+            write_choice_event(
+                minime,
+                "minime",
+                "act_minime_1",
+                effective_action="decompose",
+                alternate="SHADOW_TRAJECTORY lambda-tail",
+                return_thread="thread_minime_tail",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=5,
+            )
+
+            choice = record["shared_choice_envelope"]
+            self.assertEqual(choice["event_count"], 2)
+            self.assertEqual(choice["unrevisited_count"], 2)
+            self.assertTrue(
+                any(
+                    item["source"] == "shared_choice_envelope"
+                    for item in record["actionable_review_items"]
+                )
+            )
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Shared Choice Envelope", rendered)
+            self.assertIn("RESONANCE_FORECAST lambda-tail", rendered)
+
+    def test_build_review_surfaces_self_regulation_leases(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "study.txt").write_text(SECTIONED, encoding="utf-8")
+            (minime / "journal" / "study.txt").write_text(
+                "=== ACTION THREAD ===\nObserved:\nbody\nLikely Snags:\nnone\n"
+                "One Test Each:\none\nSuggested Next:\nNEXT: NOTICE\n",
+                encoding="utf-8",
+            )
+            write_self_regulation_event(
+                astrid,
+                "astrid",
+                "srl_astrid_temperature",
+                status="active",
+                control="temperature",
+                requires_outcome=True,
+            )
+            write_self_regulation_event(
+                minime,
+                "minime",
+                "srl_minime_noise",
+                status="outcome_recorded",
+                control="exploration_noise",
+                requires_outcome=False,
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=5,
+            )
+
+            leases = record["self_regulation_leases"]
+            self.assertEqual(leases["event_count"], 2)
+            self.assertEqual(leases["needs_outcome_count"], 1)
+            self.assertEqual(leases["by_being"]["astrid"]["active_count"], 1)
+            self.assertTrue(
+                any(
+                    item["source"] == "self_regulation_leases"
+                    and item["finding"] == "leased_self_control_outcome_missing"
+                    for item in record["actionable_review_items"]
+                )
+            )
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Self-Regulation Leases", rendered)
+            self.assertIn("leased_self_control_v1", rendered)
+
     def test_historical_minime_baseline_reports_monthly_body_ratios(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -460,6 +851,12 @@ class SelfStudyReviewTests(unittest.TestCase):
                 str(shared_gradient_artifact),
                 packet["pairs"][0]["astrid"]["resistance_gradient_artifacts"],
             )
+            self.assertTrue(
+                any(
+                    item["source"] == "shared_tail_resonance"
+                    for item in record["actionable_review_items"]
+                )
+            )
 
     def test_since_last_review_filters_to_new_entries_and_broader_lanes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -543,6 +940,69 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertEqual(candidates[0]["being"], "astrid")
             self.assertEqual(candidates[0]["topic"], "pressure_regulator")
             self.assertIn("Self-Study Elicitation", Path(record["review_md"]).read_text())
+
+    def test_fill_pressure_calibration_cluster_becomes_actionable_item(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            felt = astrid / "journal" / "daydream_1782240710.txt"
+            felt.write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: daydream\n"
+                "The pressure is visible in the numbers: `current-fill_pressure` has "
+                "target 68.0%, but `internal_fill` shows +15.878. The `pi_errors` "
+                "feel like braking friction through a `breathing_phase` transition, "
+                "with basin score 0.05 and lambda=-0.881.\n",
+                encoding="utf-8",
+            )
+            audit = astrid / "journal" / "regulator_audit_1782240590.txt"
+            audit.write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: regulator_audit\n"
+                "Action: REGULATOR_AUDIT\n"
+                "Key fields:\n"
+                "  - report: gate=0.020 filt=1.000 target_fill=68.0%\n"
+                "  - report: pi_errors raw_fill=+3.000 internal_fill=+0.500 "
+                "(stable_core_scaffold) lambda=-0.100 geom=+0.020\n"
+                "  - report: transition kind=breathing_phase basin_score=0.05\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=5,
+            )
+
+            packet = record["astrid_fill_pressure_calibration"]
+            self.assertTrue(packet["cluster_detected"], packet)
+            self.assertEqual(packet["entry_count"], 2)
+            self.assertIn("internal_fill", packet["anchors"])
+            items = [
+                item
+                for item in record["actionable_review_items"]
+                if item["source"] == "astrid_fill_pressure_calibration"
+            ]
+            self.assertEqual(len(items), 1)
+            self.assertEqual(items[0]["priority"], "high")
+            self.assertEqual(items[0]["authority"], "diagnostic_context_not_command")
+            self.assertIn(str(audit), items[0]["evidence"]["latest_regulator_audit_path"])
+            lease_items = [
+                item
+                for item in record["actionable_review_items"]
+                if item["source"] == "self_regulation_leases"
+                and item["finding"] == "pressure_cluster_without_self_regulation_preflight"
+            ]
+            self.assertEqual(len(lease_items), 1)
+            self.assertEqual(lease_items[0]["priority"], "high")
+            review_md = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("astrid_fill_pressure_calibration", review_md)
 
     def test_resistance_gradient_entries_create_elicitation_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -642,6 +1102,12 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertIn(
                 "Resistance Gradient Calibration",
                 Path(record["review_md"]).read_text(),
+            )
+            self.assertTrue(
+                any(
+                    item["source"] == "resistance_gradient_calibration"
+                    for item in record["actionable_review_items"]
+                )
             )
 
     def test_resistance_gradient_calibration_counts_point_of_tension_as_convergent(self) -> None:

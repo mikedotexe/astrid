@@ -331,6 +331,49 @@ fn records_next_event_and_observation() {
 }
 
 #[test]
+fn records_choice_envelope_without_changing_dispatch() {
+    let store = temp_store("choice_envelope");
+    let outcome = NextActionOutcome::handled("shadow", "shadow path inspected");
+    let event = store
+        .record_next_event(
+            None,
+            "SHADOW_TRAJECTORY lambda-tail",
+            "SHADOW_TRAJECTORY lambda-tail",
+            "shadow_trajectory",
+            &outcome,
+            68.0,
+            &telemetry(),
+            "Alternate NEXT: RESONANCE_FORECAST lambda-tail\n\
+             Return thread: thread_shadow_tail\n\
+             Why this path: the shadow lane is stickier than the forecast lane right now\n\
+             NEXT: SHADOW_TRAJECTORY lambda-tail (RESIDUE: prior mode still exerts pressure)",
+        )
+        .expect("record event");
+
+    assert_eq!(event.effective_action, "shadow_trajectory");
+    let envelope = event.choice_envelope_v1.as_ref().expect("choice envelope");
+    assert_eq!(envelope["policy"], "choice_envelope_v1");
+    assert_eq!(
+        envelope["alternate_nexts"][0].as_str(),
+        Some("RESONANCE_FORECAST lambda-tail"),
+    );
+    assert_eq!(
+        envelope["return_threads"][0].as_str(),
+        Some("thread_shadow_tail"),
+    );
+    assert_eq!(
+        envelope["residue"].as_str(),
+        Some("prior mode still exerts pressure"),
+    );
+    assert!(event.transition_residue_v1.is_some());
+    let summaries = store
+        .recent_event_summaries(&event.thread_id, 1)
+        .expect("summaries");
+    assert!(summaries[0].contains("choice alt=1 return=1 residue=yes"));
+    let _ = std::fs::remove_dir_all(store.root());
+}
+
+#[test]
 fn live_control_without_evidence_records_no_effect() {
     let store = temp_store("live_no_effect");
     let outcome = NextActionOutcome::handled("sovereignty", "perturb request dispatched");
@@ -3788,6 +3831,8 @@ fn recent_event_summaries_collapse_running_when_terminal_exists() {
         research_budget_v1: None,
         interpretation_risk_v1: None,
         constraint_release_trajectory_v1: None,
+        choice_envelope_v1: None,
+        transition_residue_v1: None,
     };
     let mut terminal = running.clone();
     terminal.status = "handled".to_string();
@@ -3841,6 +3886,8 @@ fn projection_counts_unreconciled_stale_running_rows() {
         research_budget_v1: None,
         interpretation_risk_v1: None,
         constraint_release_trajectory_v1: None,
+        choice_envelope_v1: None,
+        transition_residue_v1: None,
     };
     store.append_event(None, &running).expect("running append");
 

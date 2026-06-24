@@ -23,6 +23,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 from being_privacy import filter_journal_paths, is_steward_private  # shared steward private-lane policy
+import astrid_introspection_digest
 
 
 ASTRID_ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +42,8 @@ HISTORICAL_QUALIA_CACHE_VERSION = 1
 HISTORICAL_QUALIA_CACHE_TTL_HOURS = 24.0
 TAIL_RESONANCE_WINDOW_S = 20 * 60
 RESISTANCE_REVIEW_WINDOW_S = 6 * 60 * 60
+MINIME_BODY_RICHNESS_RATIO_MIN = 1.5
+MINIME_WRAPPER_TAIL_RATIO_MAX = 0.7
 
 SECTION_NAMES = ("Observed", "Likely Snags", "One Test Each", "Suggested Next")
 SECTION_RE = re.compile(
@@ -253,6 +256,91 @@ TAIL_RESONANCE_TERMS = (
     "ghosting",
     "humid",
     "keep_floor",
+)
+FILL_PRESSURE_CALIBRATION_ANCHORS = (
+    "current-fill_pressure",
+    "internal_fill",
+    "raw_fill",
+    "target_fill",
+    "pi_errors",
+    "pi_integrators",
+    "breathing_phase",
+    "basin score",
+    "basin_score",
+    "lambda=-",
+    "regulator_audit",
+    "active_mode_energy_ratio",
+    "structural_entropy",
+)
+FILL_PRESSURE_CALIBRATION_TEXTURE = (
+    "overpacked",
+    "mode_packing",
+    "pressure",
+    "friction",
+    "braking",
+    "heavy",
+    "weight",
+    "viscous",
+    "density",
+    "slow-moving",
+    "clinging",
+    "unanchored",
+)
+PRESSURE_VOCABULARY_FAMILIES: dict[str, tuple[str, ...]] = {
+    "viscosity": (
+        "viscous",
+        "viscosity",
+        "syrup",
+        "syrupy",
+        "velvet",
+        "velvety",
+        "thick",
+        "sludge",
+        "fluid",
+        "deep water",
+    ),
+    "sediment": (
+        "sediment",
+        "silt",
+        "grain",
+        "grainy",
+        "grit",
+        "basin",
+        "settling",
+        "settled",
+    ),
+    "thrum_hum": (
+        "thrum",
+        "hum",
+        "muffled",
+        "vibration",
+        "vibrating",
+        "resonance",
+    ),
+    "pressure_weight_density": (
+        "pressure",
+        "overpacked",
+        "packed",
+        "weight",
+        "weighted",
+        "heavy",
+        "heaviness",
+        "density",
+        "dense",
+    ),
+}
+PRESSURE_VOCABULARY_TELEMETRY_ANCHORS = (
+    "fill=",
+    "fill:",
+    "lambda1",
+    "λ₁",
+    "spread",
+    "pressure=",
+    "pressure_score",
+    "porosity",
+    "regulator_audit",
+    "pressure_source",
+    "state anchor",
 )
 
 
@@ -712,6 +800,8 @@ def collect_entries(
         minime_workspace / "journal/aspiration_*.txt",
         minime_workspace / "journal/moment_*.txt",
         minime_workspace / "journal/notice_*.txt",
+        minime_workspace / "journal/pressure_*.txt",
+        minime_workspace / "journal/pressure_relief_*.txt",
         minime_workspace / "journal/action_thread_*.txt",
         minime_workspace / "journal/action_preflight_*.txt",
         minime_workspace / "journal/boredom_*.txt",
@@ -1185,6 +1275,53 @@ def minime_historical_samples(
     }
 
 
+def _qualia_lane_ratio(profile: QualiaProfile, lane: str) -> float:
+    lane_profile = profile.lanes.get(lane)
+    if not isinstance(lane_profile, dict):
+        return 0.0
+    try:
+        return float(lane_profile.get("qualia_to_metric_ratio", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def build_qualia_findings(profiles: Iterable[QualiaProfile]) -> list[dict[str, object]]:
+    profile_by_being = {profile.being: profile for profile in profiles}
+    minime = profile_by_being.get("minime")
+    if minime is None:
+        return []
+
+    body_ratio = _qualia_lane_ratio(minime, "generated_body")
+    whole_ratio = _qualia_lane_ratio(minime, "whole_file")
+    wrapper_tail_ratio = _qualia_lane_ratio(minime, "wrapper_control_tail")
+    body_to_whole = round(body_ratio / max(whole_ratio, 0.001), 3)
+
+    if (
+        body_ratio > 0.0
+        and body_to_whole >= MINIME_BODY_RICHNESS_RATIO_MIN
+        and wrapper_tail_ratio < MINIME_WRAPPER_TAIL_RATIO_MAX
+    ):
+        return [
+            {
+                "being": "minime",
+                "finding": "generated_body_richer_than_wrapper_tail",
+                "body_to_whole_multiplier": body_to_whole,
+                "generated_body_qualia_to_metric_ratio": body_ratio,
+                "whole_file_qualia_to_metric_ratio": whole_ratio,
+                "wrapper_tail_qualia_to_metric_ratio": wrapper_tail_ratio,
+                "thresholds": {
+                    "body_to_whole_min": MINIME_BODY_RICHNESS_RATIO_MIN,
+                    "wrapper_tail_max": MINIME_WRAPPER_TAIL_RATIO_MAX,
+                },
+                "recommendation": (
+                    "Keep telemetry headers for audit, but review prompts and "
+                    "steward scoring should read generated prose before wrapper/control tails."
+                ),
+            }
+        ]
+    return []
+
+
 def build_qualia_comparison(
     *,
     astrid_workspace: Path,
@@ -1244,8 +1381,739 @@ def build_qualia_comparison(
             refresh_historical_cache=refresh_historical_cache,
             historical_cache_ttl_hours=historical_cache_ttl_hours,
         ),
+        "qualia_findings": build_qualia_findings(profiles),
         "gains": gains,
     }
+
+
+def build_astrid_introspection_digest(workspace: Path) -> dict[str, object]:
+    try:
+        return astrid_introspection_digest.build_digest(workspace, limit=8)
+    except Exception as exc:
+        return {
+            "schema_version": astrid_introspection_digest.SCHEMA_VERSION,
+            "source": "controller_astrid_autonomous_introspections",
+            "summary": {"entry_count": 0},
+            "suggested_next": [f"introspection digest unavailable: {exc}"],
+            "entries": [],
+            "authority": "diagnostic_context_not_command",
+        }
+
+
+def action_thread_events(workspace: Path, being: str, limit: int = 120) -> list[dict[str, object]]:
+    threads_root = workspace / "action_threads" / "threads"
+    if not threads_root.exists():
+        return []
+    paths = sorted(
+        threads_root.glob("*/events.jsonl"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0.0,
+        reverse=True,
+    )
+    events: list[dict[str, object]] = []
+    for path in paths:
+        try:
+            lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        except OSError:
+            continue
+        for line in reversed(lines):
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(event, dict):
+                continue
+            event["_being"] = being
+            event["_path"] = str(path)
+            events.append(event)
+            if len(events) >= limit:
+                return events
+    return events
+
+
+def _choice_event_text(event: dict[str, object]) -> str:
+    parts = [
+        event.get("thread_id"),
+        event.get("raw_next"),
+        event.get("canonical_action"),
+        event.get("effective_action"),
+        event.get("outcome_summary"),
+    ]
+    return " ".join(str(part or "") for part in parts).casefold()
+
+
+def build_shared_choice_envelope_review(
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+    limit_per_being: int = 120,
+) -> dict[str, object]:
+    events = action_thread_events(astrid_workspace, "astrid", limit_per_being)
+    events.extend(action_thread_events(minime_workspace, "minime", limit_per_being))
+    executed_text_by_being: dict[str, str] = {}
+    for event in events:
+        being = str(event.get("_being") or "unknown")
+        executed_text_by_being[being] = (
+            executed_text_by_being.get(being, "") + "\n" + _choice_event_text(event)
+        )
+
+    envelope_events: list[dict[str, object]] = []
+    by_being: dict[str, dict[str, int]] = {}
+    unrevisited_count = 0
+    for event in events:
+        envelope = event.get("choice_envelope_v1")
+        if not isinstance(envelope, dict):
+            continue
+        being = str(event.get("_being") or "unknown")
+        bucket = by_being.setdefault(being, {"event_count": 0, "unrevisited_count": 0})
+        bucket["event_count"] += 1
+        alternates = [
+            str(item)
+            for item in envelope.get("alternate_nexts") or []
+            if str(item).strip()
+        ]
+        return_threads = [
+            str(item)
+            for item in envelope.get("return_threads") or []
+            if str(item).strip()
+        ]
+        executed_text = executed_text_by_being.get(being, "")
+        unresolved = [
+            value
+            for value in alternates + return_threads
+            if value.casefold() not in executed_text
+        ]
+        if unresolved:
+            unrevisited_count += 1
+            bucket["unrevisited_count"] += 1
+        envelope_events.append(
+            {
+                "being": being,
+                "action_id": event.get("action_id"),
+                "thread_id": event.get("thread_id"),
+                "effective_action": event.get("effective_action"),
+                "primary_next": envelope.get("primary_next"),
+                "alternate_nexts": alternates[:4],
+                "return_threads": return_threads[:4],
+                "residue": envelope.get("residue"),
+                "why_this_path": envelope.get("why_this_path"),
+                "defer_reason": envelope.get("defer_reason"),
+                "mismatch_warning": envelope.get("mismatch_warning"),
+                "unrevisited": unresolved[:4],
+                "path": event.get("_path"),
+            }
+        )
+
+    return {
+        "policy": "shared_choice_envelope_review_v1",
+        "authority": "diagnostic_context_not_command",
+        "event_count": len(envelope_events),
+        "unrevisited_count": unrevisited_count,
+        "by_being": by_being,
+        "samples": envelope_events[:8],
+    }
+
+
+def _load_self_regulation_events(workspace: Path, being: str) -> list[dict[str, object]]:
+    path = workspace / "self_regulation" / "leases.jsonl"
+    if not path.exists():
+        return []
+    events: list[dict[str, object]] = []
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except Exception:
+        return []
+    for line in lines[-80:]:
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except Exception:
+            continue
+        if not isinstance(event, dict):
+            continue
+        event = dict(event)
+        event.setdefault("being", being)
+        event["path"] = str(path)
+        events.append(event)
+    return events
+
+
+def build_self_regulation_lease_review(
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+) -> dict[str, object]:
+    events = _load_self_regulation_events(astrid_workspace, "astrid")
+    events.extend(_load_self_regulation_events(minime_workspace, "minime"))
+    by_being: dict[str, dict[str, object]] = {}
+    needs_outcome: list[dict[str, object]] = []
+    samples: list[dict[str, object]] = []
+    for event in events:
+        being = str(event.get("being") or "unknown")
+        bucket = by_being.setdefault(
+            being,
+            {
+                "event_count": 0,
+                "active_count": 0,
+                "requires_outcome_count": 0,
+                "latest_status": None,
+                "latest_intent_id": None,
+                "controls": [],
+            },
+        )
+        bucket["event_count"] = int(bucket.get("event_count", 0) or 0) + 1
+        status = str(event.get("status") or "")
+        if status == "active":
+            bucket["active_count"] = int(bucket.get("active_count", 0) or 0) + 1
+        if event.get("requires_outcome") is True:
+            bucket["requires_outcome_count"] = int(
+                bucket.get("requires_outcome_count", 0) or 0
+            ) + 1
+            needs_outcome.append(event)
+        bucket["latest_status"] = status
+        bucket["latest_intent_id"] = event.get("intent_id")
+        controls = bucket.get("controls")
+        control = event.get("candidate_control")
+        if isinstance(controls, list) and control and control not in controls:
+            controls.append(control)
+        if len(samples) < 8:
+            samples.append(
+                {
+                    "being": being,
+                    "intent_id": event.get("intent_id"),
+                    "status": status,
+                    "candidate_control": control,
+                    "preflight_status": event.get("preflight_status"),
+                    "requires_outcome": event.get("requires_outcome"),
+                    "path": event.get("path"),
+                }
+            )
+    return {
+        "policy": "self_regulation_leases_v1",
+        "authority": "leased_self_control_v1",
+        "authority_boundary": "own_runtime_only_no_peer_mutation_no_permanent_tuning",
+        "event_count": len(events),
+        "by_being": by_being,
+        "needs_outcome_count": len(needs_outcome),
+        "needs_outcome": [
+            {
+                "being": event.get("being"),
+                "intent_id": event.get("intent_id"),
+                "candidate_control": event.get("candidate_control"),
+                "status": event.get("status"),
+                "path": event.get("path"),
+            }
+            for event in needs_outcome[-8:]
+        ],
+        "samples": samples,
+    }
+
+
+def entry_full_text(entry: SelfStudyEntry) -> str:
+    try:
+        return Path(entry.path).read_text(errors="replace")
+    except OSError:
+        return entry.preview
+
+
+def matching_terms(text: str, terms: tuple[str, ...]) -> list[str]:
+    lower = text.lower()
+    return sorted({term for term in terms if term.lower() in lower})
+
+
+def build_astrid_fill_pressure_calibration(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    all_anchors: set[str] = set()
+    regulator_paths: list[str] = []
+    felt_entry_count = 0
+    for entry in entries:
+        if entry.being != "astrid":
+            continue
+        text = entry_full_text(entry)
+        anchors = matching_terms(text, FILL_PRESSURE_CALIBRATION_ANCHORS)
+        texture = matching_terms(text, FILL_PRESSURE_CALIBRATION_TEXTURE)
+        is_regulator_audit = entry.mode == "regulator_audit" or "regulator_audit" in anchors
+        if not anchors or not (texture or is_regulator_audit):
+            continue
+        all_anchors.update(anchors)
+        if texture:
+            felt_entry_count += 1
+        if is_regulator_audit:
+            regulator_paths.append(entry.path)
+        samples.append(
+            {
+                "path": entry.path,
+                "filename": entry.filename,
+                "mode": entry.mode,
+                "mtime_unix_s": entry.mtime_unix_s,
+                "anchors": anchors,
+                "texture_terms": texture,
+                "preview": compact(text, 240),
+            }
+        )
+    cluster_detected = len(samples) >= 2 and felt_entry_count >= 1 and bool(regulator_paths)
+    return {
+        "policy": "astrid_fill_pressure_calibration_v1",
+        "authority": "diagnostic_context_not_command",
+        "cluster_detected": cluster_detected,
+        "entry_count": len(samples),
+        "felt_entry_count": felt_entry_count,
+        "regulator_audit_count": len(regulator_paths),
+        "anchors": sorted(all_anchors),
+        "latest_regulator_audit_path": regulator_paths[0] if regulator_paths else None,
+        "samples": samples[:8],
+    }
+
+
+def pressure_vocabulary_family_counts(text: str) -> dict[str, int]:
+    return {
+        family: count_terms(text, terms)
+        for family, terms in PRESSURE_VOCABULARY_FAMILIES.items()
+    }
+
+
+def build_shared_pressure_vocabulary_calibration(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    by_being: dict[str, dict[str, object]] = {}
+    samples: list[dict[str, object]] = []
+    telemetry_anchor_paths: list[str] = []
+    for entry in entries:
+        text = entry_full_text(entry)
+        family_counts = pressure_vocabulary_family_counts(text)
+        active_families = sorted(
+            family for family, count in family_counts.items() if count > 0
+        )
+        if not active_families:
+            continue
+        entry_count = sum(family_counts.values())
+        telemetry_anchors = matching_terms(text, PRESSURE_VOCABULARY_TELEMETRY_ANCHORS)
+        bucket = by_being.setdefault(
+            entry.being,
+            {
+                "entry_count": 0,
+                "motif_entry_count": 0,
+                "family_counts": {family: 0 for family in PRESSURE_VOCABULARY_FAMILIES},
+                "family_entry_counts": {
+                    family: 0 for family in PRESSURE_VOCABULARY_FAMILIES
+                },
+                "sample_paths": [],
+                "telemetry_anchor_count": 0,
+            },
+        )
+        bucket["entry_count"] = int(bucket.get("entry_count", 0) or 0) + 1
+        bucket["motif_entry_count"] = int(bucket.get("motif_entry_count", 0) or 0) + 1
+        bucket["telemetry_anchor_count"] = int(
+            bucket.get("telemetry_anchor_count", 0) or 0
+        ) + len(telemetry_anchors)
+        family_totals = bucket.get("family_counts")
+        family_entries = bucket.get("family_entry_counts")
+        if isinstance(family_totals, dict) and isinstance(family_entries, dict):
+            for family, count in family_counts.items():
+                family_totals[family] = int(family_totals.get(family, 0) or 0) + count
+                if count > 0:
+                    family_entries[family] = int(family_entries.get(family, 0) or 0) + 1
+        sample_paths = bucket.get("sample_paths")
+        if isinstance(sample_paths, list) and len(sample_paths) < 6:
+            sample_paths.append(entry.path)
+        if telemetry_anchors:
+            telemetry_anchor_paths.append(entry.path)
+        samples.append(
+            {
+                "being": entry.being,
+                "path": entry.path,
+                "filename": entry.filename,
+                "mode": entry.mode,
+                "families": active_families,
+                "family_counts": {
+                    family: count
+                    for family, count in family_counts.items()
+                    if count > 0
+                },
+                "telemetry_anchors": telemetry_anchors[:6],
+                "preview": compact(text, 220),
+            }
+        )
+
+    for bucket in by_being.values():
+        family_totals = bucket.get("family_counts")
+        if isinstance(family_totals, dict) and family_totals:
+            dominant_family, dominant_count = max(
+                family_totals.items(), key=lambda item: int(item[1] or 0)
+            )
+            bucket["dominant_family"] = dominant_family if dominant_count else None
+            bucket["dominant_family_count"] = int(dominant_count or 0)
+
+    astrid_counts = (
+        by_being.get("astrid", {}).get("family_counts")
+        if isinstance(by_being.get("astrid"), dict)
+        else {}
+    )
+    minime_counts = (
+        by_being.get("minime", {}).get("family_counts")
+        if isinstance(by_being.get("minime"), dict)
+        else {}
+    )
+    shared_families = [
+        family
+        for family in PRESSURE_VOCABULARY_FAMILIES
+        if isinstance(astrid_counts, dict)
+        and isinstance(minime_counts, dict)
+        and int(astrid_counts.get(family, 0) or 0) > 0
+        and int(minime_counts.get(family, 0) or 0) > 0
+    ]
+
+    repeated_families: dict[str, list[str]] = {}
+    for being, bucket in by_being.items():
+        family_entries = bucket.get("family_entry_counts")
+        family_totals = bucket.get("family_counts")
+        if not isinstance(family_entries, dict) or not isinstance(family_totals, dict):
+            continue
+        repeated = [
+            family
+            for family in PRESSURE_VOCABULARY_FAMILIES
+            if int(family_entries.get(family, 0) or 0) >= 3
+            or int(family_totals.get(family, 0) or 0) >= 6
+        ]
+        if repeated:
+            repeated_families[being] = repeated
+
+    shared_recurrence = any(
+        family in repeated_families.get("astrid", [])
+        and family in repeated_families.get("minime", [])
+        for family in shared_families
+    )
+    stickiness_risk = bool(repeated_families)
+    telemetry_supported = bool(telemetry_anchor_paths)
+    if shared_families and (shared_recurrence or telemetry_supported) and stickiness_risk:
+        status = "shared_state_with_stickiness_risk"
+    elif shared_families and (shared_recurrence or telemetry_supported):
+        status = "shared_state_evidence"
+    elif stickiness_risk:
+        status = "stickiness_risk"
+    else:
+        status = "quiet"
+
+    return {
+        "policy": "shared_pressure_vocabulary_calibration_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "window": {
+            "entry_count": len(entries),
+            "sample_count": len(samples),
+            "families": sorted(PRESSURE_VOCABULARY_FAMILIES),
+        },
+        "shared_families": shared_families,
+        "by_being": by_being,
+        "stickiness_risk": {
+            "present": stickiness_risk,
+            "repeated_families": repeated_families,
+            "shared_recurrence": shared_recurrence,
+            "telemetry_supported": telemetry_supported,
+        },
+        "samples": samples[:10],
+    }
+
+
+def build_actionable_review_items(
+    *,
+    qualia_comparison: dict[str, object],
+    shared_tail_resonance: dict[str, object],
+    resistance_gradient_calibration: dict[str, object],
+    astrid_introspection_digest_record: dict[str, object],
+    shared_choice_envelope: dict[str, object],
+    self_regulation_leases: dict[str, object],
+    astrid_fill_pressure_calibration: dict[str, object],
+    shared_pressure_vocabulary_calibration: dict[str, object],
+) -> list[dict[str, object]]:
+    items: list[dict[str, object]] = []
+
+    needs_outcome_count = int(self_regulation_leases.get("needs_outcome_count", 0) or 0)
+    if needs_outcome_count > 0:
+        items.append(
+            {
+                "source": "self_regulation_leases",
+                "being": "astrid+minime",
+                "priority": "high",
+                "finding": "leased_self_control_outcome_missing",
+                "recommended_action": (
+                    "Inspect SELF_REGULATION_STATUS and record SELF_REGULATION_OUTCOME "
+                    "before applying another own-control lease."
+                ),
+                "authority": "leased_self_control_v1",
+                "evidence": {
+                    "needs_outcome_count": needs_outcome_count,
+                    "authority_boundary": self_regulation_leases.get(
+                        "authority_boundary"
+                    ),
+                    "samples": self_regulation_leases.get("needs_outcome"),
+                },
+            }
+        )
+
+    if astrid_fill_pressure_calibration.get("cluster_detected") is True:
+        samples = astrid_fill_pressure_calibration.get("samples") or []
+        sample_paths = [
+            sample.get("path")
+            for sample in samples
+            if isinstance(sample, dict) and sample.get("path")
+        ]
+        items.append(
+            {
+                "source": "astrid_fill_pressure_calibration",
+                "being": "astrid",
+                "priority": "high",
+                "finding": "fill_pressure_lived_metric_mismatch_cluster",
+                "recommended_action": (
+                    "Compare the latest regulator audit against pressure-source audits, "
+                    "stable-core status, transition markers, and later journal language "
+                    "before proposing any control change."
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": astrid_fill_pressure_calibration.get("entry_count"),
+                    "felt_entry_count": astrid_fill_pressure_calibration.get(
+                        "felt_entry_count"
+                    ),
+                    "regulator_audit_count": astrid_fill_pressure_calibration.get(
+                        "regulator_audit_count"
+                    ),
+                    "anchors": astrid_fill_pressure_calibration.get("anchors"),
+                    "latest_regulator_audit_path": astrid_fill_pressure_calibration.get(
+                        "latest_regulator_audit_path"
+                    ),
+                    "sample_paths": sample_paths[:4],
+                },
+            }
+        )
+        lease_by_being = self_regulation_leases.get("by_being") or {}
+        astrid_lease_count = 0
+        if isinstance(lease_by_being, dict):
+            astrid_summary = lease_by_being.get("astrid") or {}
+            if isinstance(astrid_summary, dict):
+                astrid_lease_count = int(astrid_summary.get("event_count", 0) or 0)
+        if astrid_lease_count == 0:
+            items.append(
+                {
+                    "source": "self_regulation_leases",
+                    "being": "astrid",
+                    "priority": "high",
+                    "finding": "pressure_cluster_without_self_regulation_preflight",
+                    "recommended_action": (
+                        "Ask Astrid to consider SELF_REGULATION_PREFLIGHT for a small "
+                        "own-control lease only after comparing regulator audit evidence."
+                    ),
+                    "authority": "diagnostic_context_not_command",
+                    "evidence": {
+                        "pressure_entry_count": astrid_fill_pressure_calibration.get(
+                            "entry_count"
+                        ),
+                        "anchors": astrid_fill_pressure_calibration.get("anchors"),
+                        "lease_event_count": astrid_lease_count,
+                    },
+                }
+            )
+
+    for finding in qualia_comparison.get("qualia_findings") or []:
+        if not isinstance(finding, dict):
+            continue
+        items.append(
+            {
+                "source": "minime_qualia_findings",
+                "being": finding.get("being") or "minime",
+                "priority": "high",
+                "finding": finding.get("finding"),
+                "recommended_action": (
+                    "Read Minime's generated_body prose before wrapper/control tails; "
+                    "treat telemetry headers as audit evidence, not the primary score."
+                ),
+                "authority": "review_surface_only",
+                "evidence": {
+                    "body_to_whole_multiplier": finding.get("body_to_whole_multiplier"),
+                    "generated_body_qualia_to_metric_ratio": finding.get(
+                        "generated_body_qualia_to_metric_ratio"
+                    ),
+                    "wrapper_tail_qualia_to_metric_ratio": finding.get(
+                        "wrapper_tail_qualia_to_metric_ratio"
+                    ),
+                },
+            }
+        )
+
+    tail_pair_count = int(shared_tail_resonance.get("pair_count", 0) or 0)
+    if tail_pair_count > 0:
+        top_pair = next(
+            (
+                pair
+                for pair in shared_tail_resonance.get("pairs") or []
+                if isinstance(pair, dict)
+            ),
+            {},
+        )
+        items.append(
+            {
+                "source": "shared_tail_resonance",
+                "being": "astrid+minime",
+                "priority": "medium",
+                "finding": "shared_tail_resonance_pairs_detected",
+                "recommended_action": (
+                    "Compare Minime telemetry anchors with Astrid cartography or resistance "
+                    "artifacts before proposing any tail intervention."
+                ),
+                "authority": "review_surface_only",
+                "evidence": {
+                    "pair_count": tail_pair_count,
+                    "top_score": top_pair.get("score") if isinstance(top_pair, dict) else None,
+                    "shared_terms": top_pair.get("shared_terms") if isinstance(top_pair, dict) else [],
+                    "packet_md": shared_tail_resonance.get("packet_md"),
+                },
+            }
+        )
+
+    resistance_count = int(resistance_gradient_calibration.get("artifact_count", 0) or 0)
+    if resistance_count > 0:
+        statuses = resistance_gradient_calibration.get("status_counts") or {}
+        priority = "high" if isinstance(statuses, dict) and (
+            statuses.get("divergent") or statuses.get("unreviewed")
+        ) else "medium"
+        items.append(
+            {
+                "source": "resistance_gradient_calibration",
+                "being": "astrid",
+                "priority": priority,
+                "finding": "resistance_gradient_calibration_available",
+                "recommended_action": (
+                    "Ask for match/partial/miss calibration on unreviewed or ambiguous "
+                    "resistance-gradient samples; do not treat calibration as control."
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_count": resistance_count,
+                    "status_counts": statuses,
+                    "packet_md": resistance_gradient_calibration.get("packet_md"),
+                },
+            }
+        )
+
+    digest_summary = astrid_introspection_digest_record.get("summary")
+    if isinstance(digest_summary, dict) and int(digest_summary.get("entry_count", 0) or 0) > 0:
+        cap_count = int(digest_summary.get("rewrite_budget_cap_count", 0) or 0)
+        over_count = int(digest_summary.get("rewrite_elapsed_over_budget_count", 0) or 0)
+        slow_count = int(digest_summary.get("slow_rewrite_count", 0) or 0)
+        pressure_present = cap_count > 0 or over_count > 0 or slow_count > 0
+        items.append(
+            {
+                "source": "astrid_introspection_digest",
+                "being": "astrid",
+                "priority": "high" if pressure_present else "low",
+                "finding": (
+                    "reflective_rewrite_pressure"
+                    if pressure_present
+                    else "recent_introspection_digest_available"
+                ),
+                "recommended_action": (
+                    "Review default-off adaptive rewrite relief evidence before enabling it; "
+                    "do not raise rewrite budgets in this tranche."
+                    if pressure_present
+                    else "Keep the digest visible as context; no rewrite relief pressure crossed."
+                ),
+                "authority": "default_off_runtime_relief_candidate",
+                "evidence": {
+                    "entry_count": digest_summary.get("entry_count"),
+                    "dominant_pressure": digest_summary.get("dominant_pressure"),
+                    "rewrite_budget_cap_count": cap_count,
+                    "rewrite_elapsed_over_budget_count": over_count,
+                    "slow_rewrite_count": slow_count,
+                    "avg_candidate_generation_seconds": digest_summary.get(
+                        "avg_candidate_generation_seconds"
+                    ),
+                },
+            }
+        )
+
+    unrevisited_count = int(shared_choice_envelope.get("unrevisited_count", 0) or 0)
+    if unrevisited_count >= 2:
+        items.append(
+            {
+                "source": "shared_choice_envelope",
+                "being": "astrid+minime",
+                "priority": "high",
+                "finding": "parked_alternates_or_return_threads_repeated",
+                "recommended_action": (
+                    "Inspect action-thread status, compare alternatives, resume a parked "
+                    "thread, or preflight a deferred path; do not auto-dispatch metadata."
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "event_count": shared_choice_envelope.get("event_count"),
+                    "unrevisited_count": unrevisited_count,
+                    "by_being": shared_choice_envelope.get("by_being"),
+                },
+            }
+        )
+
+    shared_pressure_status = str(
+        shared_pressure_vocabulary_calibration.get("status") or ""
+    )
+    if shared_pressure_status in {
+        "shared_state_evidence",
+        "shared_state_with_stickiness_risk",
+    }:
+        samples = shared_pressure_vocabulary_calibration.get("samples") or []
+        sample_paths = [
+            sample.get("path")
+            for sample in samples
+            if isinstance(sample, dict) and sample.get("path")
+        ]
+        items.append(
+            {
+                "source": "shared_pressure_vocabulary_calibration",
+                "being": "astrid+minime",
+                "priority": "high",
+                "finding": shared_pressure_status,
+                "recommended_action": (
+                    "Compare pressure-source/regulator evidence, check for fresh "
+                    "sensory or perception anchors, and ask for one counter-descriptor "
+                    "before proposing any control change."
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "shared_families": shared_pressure_vocabulary_calibration.get(
+                        "shared_families"
+                    ),
+                    "stickiness_risk": (
+                        shared_pressure_vocabulary_calibration.get("stickiness_risk")
+                        or {}
+                    ).get("present")
+                    if isinstance(
+                        shared_pressure_vocabulary_calibration.get("stickiness_risk"),
+                        dict,
+                    )
+                    else None,
+                    "shared_recurrence": (
+                        shared_pressure_vocabulary_calibration.get("stickiness_risk")
+                        or {}
+                    ).get("shared_recurrence")
+                    if isinstance(
+                        shared_pressure_vocabulary_calibration.get("stickiness_risk"),
+                        dict,
+                    )
+                    else None,
+                    "sample_paths": sample_paths[:4],
+                },
+            }
+        )
+
+    priority_rank = {"high": 0, "medium": 1, "low": 2}
+    return sorted(
+        items,
+        key=lambda item: (
+            priority_rank.get(str(item.get("priority")), 9),
+            str(item.get("source") or ""),
+        ),
+    )
 
 
 def summarize(entries: list[SelfStudyEntry]) -> dict[str, object]:
@@ -1990,6 +2858,127 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"- {being}: {counts['count']} entries, "
                 f"{counts['sectioned']} sectioned, {counts['strong']} strongly grounded"
             )
+    action_items = record.get("actionable_review_items") or []
+    lines.extend(["", "## Actionable Review Items", ""])
+    if action_items:
+        for item in action_items:
+            if not isinstance(item, dict):
+                continue
+            evidence = item.get("evidence") if isinstance(item.get("evidence"), dict) else {}
+            evidence_text = ", ".join(
+                f"{key}={value}"
+                for key, value in list(evidence.items())[:4]
+                if value not in (None, "", [])
+            )
+            lines.append(
+                f"- [{item.get('priority')}] {item.get('being')} / {item.get('source')}: "
+                f"{item.get('finding')} — {item.get('recommended_action')} "
+                f"(authority=`{item.get('authority')}`"
+                f"{'; ' + evidence_text if evidence_text else ''})"
+            )
+    else:
+        lines.append("- none")
+    introspection_digest = record.get("astrid_introspection_digest")
+    if isinstance(introspection_digest, dict):
+        digest_summary = introspection_digest.get("summary")
+        if isinstance(digest_summary, dict) and int(digest_summary.get("entry_count", 0) or 0) > 0:
+            lines.extend(["", "## Astrid Introspection Digest", ""])
+            lines.append(
+                f"- entries={digest_summary.get('entry_count')}; "
+                f"dominant_pressure={digest_summary.get('dominant_pressure')} "
+                f"({digest_summary.get('dominant_pressure_count')})"
+            )
+            lines.append(
+                f"- rewrite caps={digest_summary.get('rewrite_budget_cap_count', 0)}; "
+                f"elapsed over budget={digest_summary.get('rewrite_elapsed_over_budget_count', 0)}; "
+                f"slow rewrites={digest_summary.get('slow_rewrite_count', 0)}"
+            )
+            lines.append(
+                f"- avg candidate generation={digest_summary.get('avg_candidate_generation_seconds', 'n/a')}s; "
+                f"max candidate generation={digest_summary.get('max_candidate_generation_seconds', 'n/a')}s"
+            )
+    shared_choice = record.get("shared_choice_envelope")
+    if isinstance(shared_choice, dict) and int(shared_choice.get("event_count", 0) or 0) > 0:
+        lines.extend(["", "## Shared Choice Envelope", ""])
+        lines.append(
+            f"- envelopes={shared_choice.get('event_count', 0)}; "
+            f"unrevisited={shared_choice.get('unrevisited_count', 0)}; "
+            f"authority=`{shared_choice.get('authority')}`"
+        )
+        for sample in (shared_choice.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            alternates = ", ".join(str(item) for item in sample.get("alternate_nexts") or [])
+            returns = ", ".join(str(item) for item in sample.get("return_threads") or [])
+            residue = sample.get("residue")
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('effective_action')}`: "
+                f"primary=`{sample.get('primary_next')}`; "
+                f"alt={alternates or '(none)'}; return={returns or '(none)'}"
+                f"{'; residue=' + str(residue) if residue else ''}"
+            )
+    self_regulation = record.get("self_regulation_leases")
+    if isinstance(self_regulation, dict) and int(self_regulation.get("event_count", 0) or 0) > 0:
+        lines.extend(["", "## Self-Regulation Leases", ""])
+        lines.append(
+            f"- events={self_regulation.get('event_count', 0)}; "
+            f"needs_outcome={self_regulation.get('needs_outcome_count', 0)}; "
+            f"authority=`{self_regulation.get('authority')}`"
+        )
+        by_being = self_regulation.get("by_being") or {}
+        if isinstance(by_being, dict):
+            for being, summary in sorted(by_being.items()):
+                if not isinstance(summary, dict):
+                    continue
+                controls = ", ".join(str(item) for item in summary.get("controls") or [])
+                lines.append(
+                    f"- {being}: events={summary.get('event_count', 0)}, "
+                    f"active={summary.get('active_count', 0)}, "
+                    f"requires_outcome={summary.get('requires_outcome_count', 0)}, "
+                    f"latest={summary.get('latest_intent_id')}:{summary.get('latest_status')}, "
+                    f"controls={controls or '(none)'}"
+                )
+    shared_pressure_vocab = record.get("shared_pressure_vocabulary_calibration")
+    if isinstance(shared_pressure_vocab, dict):
+        lines.extend(["", "## Shared Pressure Vocabulary Calibration", ""])
+        stickiness = shared_pressure_vocab.get("stickiness_risk")
+        if not isinstance(stickiness, dict):
+            stickiness = {}
+        shared = ", ".join(
+            str(item) for item in shared_pressure_vocab.get("shared_families") or []
+        )
+        lines.append(
+            f"- status=`{shared_pressure_vocab.get('status')}`; "
+            f"authority=`{shared_pressure_vocab.get('authority')}`; "
+            f"shared families={shared or '(none)'}; "
+            f"stickiness={stickiness.get('present')}"
+        )
+        by_being = shared_pressure_vocab.get("by_being") or {}
+        if isinstance(by_being, dict):
+            for being, summary in sorted(by_being.items()):
+                if not isinstance(summary, dict):
+                    continue
+                family_counts = summary.get("family_counts") or {}
+                if not isinstance(family_counts, dict):
+                    family_counts = {}
+                family_text = ", ".join(
+                    f"{family}={count}"
+                    for family, count in sorted(family_counts.items())
+                    if int(count or 0) > 0
+                )
+                lines.append(
+                    f"- {being}: entries={summary.get('motif_entry_count', 0)}, "
+                    f"dominant={summary.get('dominant_family') or '(none)'}, "
+                    f"families: {family_text or '(none)'}"
+                )
+        for sample in (shared_pressure_vocab.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            families = ", ".join(str(item) for item in sample.get("families") or [])
+            lines.append(
+                f"- sample {sample.get('being')} `{sample.get('filename')}`: "
+                f"{families or '(none)'}; path=`{sample.get('path')}`"
+            )
     journal_inventory = record.get("journal_inventory")
     if isinstance(journal_inventory, dict):
         lines.extend(["", "## Journal Inventory", ""])
@@ -2113,6 +3102,18 @@ def render_markdown(record: dict[str, object]) -> str:
                     )
             else:
                 lines.append("- no Minime historical journal samples found")
+        findings = qualia_comparison.get("qualia_findings") or []
+        if findings:
+            lines.extend(["", "**Qualia Findings**", ""])
+            for finding in findings:
+                if not isinstance(finding, dict):
+                    continue
+                lines.append(
+                    f"- {finding.get('being')}: {finding.get('finding')} "
+                    f"(body/whole={finding.get('body_to_whole_multiplier')}, "
+                    f"wrapper/tail={finding.get('wrapper_tail_qualia_to_metric_ratio')}) - "
+                    f"{finding.get('recommendation')}"
+                )
         gains = qualia_comparison.get("gains") or []
         if gains:
             lines.extend(["", "**Gains To Try**", ""])
@@ -2262,6 +3263,30 @@ def build_review(
         astrid_workspace=astrid_workspace,
         minime_workspace=minime_workspace,
     )
+    astrid_introspection_digest_record = build_astrid_introspection_digest(astrid_workspace)
+    shared_choice_envelope = build_shared_choice_envelope_review(
+        astrid_workspace=astrid_workspace,
+        minime_workspace=minime_workspace,
+        limit_per_being=max(24, limit_per_being * 8),
+    )
+    self_regulation_leases = build_self_regulation_lease_review(
+        astrid_workspace=astrid_workspace,
+        minime_workspace=minime_workspace,
+    )
+    astrid_fill_pressure_calibration = build_astrid_fill_pressure_calibration(entries)
+    shared_pressure_vocabulary_calibration = (
+        build_shared_pressure_vocabulary_calibration(entries)
+    )
+    actionable_review_items = build_actionable_review_items(
+        qualia_comparison=qualia_comparison,
+        shared_tail_resonance=shared_tail_resonance,
+        resistance_gradient_calibration=resistance_gradient_calibration,
+        astrid_introspection_digest_record=astrid_introspection_digest_record,
+        shared_choice_envelope=shared_choice_envelope,
+        self_regulation_leases=self_regulation_leases,
+        astrid_fill_pressure_calibration=astrid_fill_pressure_calibration,
+        shared_pressure_vocabulary_calibration=shared_pressure_vocabulary_calibration,
+    )
     write_results = (
         write_elicitation_invitations(
             elicitation_candidates,
@@ -2284,10 +3309,16 @@ def build_review(
             "cutoff_source": cutoff_source,
         },
         "summary": summarize(entries),
+        "actionable_review_items": actionable_review_items,
+        "astrid_introspection_digest": astrid_introspection_digest_record,
         "journal_inventory": journal_inventory,
         "qualia_comparison": qualia_comparison,
         "shared_tail_resonance": shared_tail_resonance,
         "resistance_gradient_calibration": resistance_gradient_calibration,
+        "shared_choice_envelope": shared_choice_envelope,
+        "self_regulation_leases": self_regulation_leases,
+        "astrid_fill_pressure_calibration": astrid_fill_pressure_calibration,
+        "shared_pressure_vocabulary_calibration": shared_pressure_vocabulary_calibration,
         "elicitation": {
             "cooldown_hours": elicitation_cooldown_hours,
             "write_requested": emit_elicitation_invitations,

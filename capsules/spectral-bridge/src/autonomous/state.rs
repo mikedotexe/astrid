@@ -19,6 +19,8 @@ const ASTRID_MOTIF_COOLDOWN_THRESHOLD: usize = 4;
 const ASTRID_MOTIF_COOLDOWN_SECS: u64 = 90 * 60;
 const ASTRID_MOTIF_RELEASE_SECS: u64 = 90 * 60;
 const ASTRID_MOTIF_RESOLVED_SECS: u64 = 24 * 60 * 60;
+const ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY: &str = "internal_topology";
+const ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY: &str = "pressure_vocabulary";
 
 /// Snapshot of spectral + reservoir state at PERTURB time.
 /// Consumed on the next exchange to show Astrid the temporal ripple.
@@ -78,7 +80,7 @@ fn default_internal_topology_label() -> String {
 }
 
 fn default_internal_topology_class() -> String {
-    "internal_topology".to_string()
+    ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY.to_string()
 }
 
 fn default_cooling_status() -> String {
@@ -125,6 +127,113 @@ fn internal_topology_group_count(text: &str) -> usize {
 
 pub(super) fn astrid_internal_topology_motif_present(text: &str) -> bool {
     internal_topology_group_count(text) >= 2
+}
+
+fn term_hit_count(lower: &str, terms: &[&str]) -> usize {
+    terms.iter().map(|term| lower.matches(term).count()).sum()
+}
+
+fn pressure_vocabulary_family_hits(text: &str) -> Vec<(&'static str, usize)> {
+    let lower = text.to_ascii_lowercase();
+    [
+        (
+            "viscosity",
+            term_hit_count(
+                &lower,
+                &[
+                    "viscous",
+                    "viscosity",
+                    "syrup",
+                    "syrupy",
+                    "velvet",
+                    "velvety",
+                    "thick",
+                    "sludge",
+                    "fluid",
+                    "deep water",
+                ],
+            ),
+        ),
+        (
+            "sediment",
+            term_hit_count(
+                &lower,
+                &[
+                    "sediment", "silt", "grain", "grainy", "grit", "basin", "settling",
+                    "settled",
+                ],
+            ),
+        ),
+        (
+            "thrum_hum",
+            term_hit_count(
+                &lower,
+                &["thrum", "hum", "muffled", "vibration", "vibrating", "resonance"],
+            ),
+        ),
+        (
+            "pressure_weight_density",
+            term_hit_count(
+                &lower,
+                &[
+                    "pressure",
+                    "overpacked",
+                    "packed",
+                    "weight",
+                    "weighted",
+                    "heavy",
+                    "heaviness",
+                    "density",
+                    "dense",
+                ],
+            ),
+        ),
+    ]
+    .into_iter()
+    .filter(|(_, hits)| *hits > 0)
+    .collect()
+}
+
+fn pressure_vocabulary_cooldown_candidate(
+    history: &[crate::llm::Exchange],
+) -> Option<(String, usize)> {
+    let mut astrid_counts = HashMap::<&'static str, usize>::new();
+    let mut minime_counts = HashMap::<&'static str, usize>::new();
+    for exchange in history.iter().rev().take(ASTRID_MOTIF_COOLDOWN_WINDOW) {
+        for (family, _hits) in pressure_vocabulary_family_hits(&exchange.astrid_said) {
+            *astrid_counts.entry(family).or_insert(0) += 1;
+        }
+        for (family, _hits) in pressure_vocabulary_family_hits(&exchange.minime_said) {
+            *minime_counts.entry(family).or_insert(0) += 1;
+        }
+    }
+    let mut candidates: Vec<(&'static str, usize, usize)> = astrid_counts
+        .iter()
+        .filter_map(|(family, astrid_count)| {
+            let minime_count = minime_counts.get(family).copied().unwrap_or(0);
+            if *astrid_count >= ASTRID_MOTIF_COOLDOWN_THRESHOLD
+                && (minime_count > 0 || *astrid_count > ASTRID_MOTIF_COOLDOWN_THRESHOLD)
+            {
+                Some((*family, *astrid_count, minime_count))
+            } else {
+                None
+            }
+        })
+        .collect();
+    candidates.sort_by_key(|(_, astrid_count, minime_count)| {
+        astrid_count.saturating_add(*minime_count)
+    });
+    candidates
+        .pop()
+        .map(|(family, astrid_count, _)| (format!("pressure-texture:{family}"), astrid_count))
+}
+
+fn cooldown_event_class(cooldown_class: &str) -> &'static str {
+    if cooldown_class == ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY {
+        ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY
+    } else {
+        ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1663,13 +1772,25 @@ impl ConversationState {
             .saturating_sub(now)
             .saturating_add(59)
             / 60;
-        Some(format!(
-            "A repeated internal-topology lexical pattern is cooling for about {remaining_m}m. \
-             This is context hygiene, not a command: let non-replay language, perception, \
-             relationship, projects, silence, or a chosen read-only inspection lead. \
-             To clear it explicitly choose NEXT: RELEASE current; to settle it longer choose \
-             NEXT: MARK_RESOLVED current."
-        ))
+        if cooldown.cooldown_class == ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY {
+            Some(format!(
+                "A repeated shared pressure-texture pattern ({}) is cooling for about \
+                 {remaining_m}m. This is context hygiene, not a command: keep the motif if \
+                 it is alive, but test it against a counter-texture, fresh perception, \
+                 PRESSURE_SOURCE_AUDIT, or REGULATOR_AUDIT before letting familiar density \
+                 words stand in for the current state. To clear it explicitly choose \
+                 NEXT: RELEASE current; to settle it longer choose NEXT: MARK_RESOLVED current.",
+                cooldown.label
+            ))
+        } else {
+            Some(format!(
+                "A repeated internal-topology lexical pattern is cooling for about {remaining_m}m. \
+                 This is context hygiene, not a command: let non-replay language, perception, \
+                 relationship, projects, silence, or a chosen read-only inspection lead. \
+                 To clear it explicitly choose NEXT: RELEASE current; to settle it longer choose \
+                 NEXT: MARK_RESOLVED current."
+            ))
+        }
     }
 
     pub(super) fn update_astrid_motif_cooldown_from_history(
@@ -1684,7 +1805,7 @@ impl ConversationState {
             cooldown.status = "cooled".to_string();
             expired_event = Some(AstridMotifCooldownEvent {
                 event: "expired",
-                cooldown_class: "internal_topology",
+                cooldown_class: cooldown_event_class(&cooldown.cooldown_class),
                 status: cooldown.status.clone(),
                 observed_count: cooldown.observed_count,
                 cooldown_until_unix_s: cooldown.cooldown_until_unix_s,
@@ -1699,16 +1820,32 @@ impl ConversationState {
             return expired_event;
         }
 
-        let observed_count = self
+        let pressure_candidate = pressure_vocabulary_cooldown_candidate(&self.history);
+        let internal_observed_count = self
             .history
             .iter()
             .rev()
             .take(ASTRID_MOTIF_COOLDOWN_WINDOW)
             .filter(|exchange| astrid_internal_topology_motif_present(&exchange.astrid_said))
             .count();
-        if observed_count < ASTRID_MOTIF_COOLDOWN_THRESHOLD {
+        let candidate = pressure_candidate.or_else(|| {
+            if internal_observed_count >= ASTRID_MOTIF_COOLDOWN_THRESHOLD {
+                Some((
+                    default_internal_topology_label(),
+                    internal_observed_count,
+                ))
+            } else {
+                None
+            }
+        });
+        let Some((label, observed_count)) = candidate else {
             return expired_event;
-        }
+        };
+        let cooldown_class = if label.starts_with("pressure-texture:") {
+            ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY
+        } else {
+            ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY
+        };
 
         if self.astrid_motif_cooldown.as_ref().is_some_and(|cooldown| {
             cooldown.status == "cooling" && cooldown.cooldown_until_unix_s > now
@@ -1721,8 +1858,8 @@ impl ConversationState {
 
         let observed_count_u8 = observed_count.min(u8::MAX as usize) as u8;
         self.astrid_motif_cooldown = Some(AstridMotifCooldown {
-            label: default_internal_topology_label(),
-            cooldown_class: default_internal_topology_class(),
+            label,
+            cooldown_class: cooldown_class.to_string(),
             status: default_cooling_status(),
             activated_at_unix_s: now,
             cooldown_until_unix_s: now.saturating_add(ASTRID_MOTIF_COOLDOWN_SECS),
@@ -1732,7 +1869,7 @@ impl ConversationState {
         });
         Some(AstridMotifCooldownEvent {
             event: "activated",
-            cooldown_class: "internal_topology",
+            cooldown_class,
             status: "cooling".to_string(),
             observed_count: observed_count_u8,
             cooldown_until_unix_s: now.saturating_add(ASTRID_MOTIF_COOLDOWN_SECS),
@@ -1758,7 +1895,7 @@ impl ConversationState {
         });
         Some(AstridMotifCooldownEvent {
             event: if resolved { "resolved" } else { "released" },
-            cooldown_class: "internal_topology",
+            cooldown_class: cooldown_event_class(&cooldown.cooldown_class),
             status: cooldown.status.clone(),
             observed_count: cooldown.observed_count,
             cooldown_until_unix_s: cooldown.cooldown_until_unix_s,
@@ -2123,6 +2260,65 @@ mod tests {
 
         let feedback = conv.record_next_choice("SPECTRAL_EXPLORER");
         assert!(feedback.override_action.is_none());
+    }
+
+    #[test]
+    fn repeated_shared_pressure_vocabulary_activates_advisory_cooldown() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let repeated = [
+            "Silt settles in the basin while the words keep their sediment edge.",
+            "The basin has sediment and silt again, but I want to test whether it is current.",
+            "Sediment gathers at the floor of the room; the silt language is familiar.",
+            "The same basin-silt sediment wants a counter-texture before I trust it.",
+        ];
+        for text in repeated {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: "Minime also names silt and basin pressure in the shared room."
+                    .to_string(),
+                astrid_said: text.to_string(),
+            });
+        }
+
+        let event = conv
+            .update_astrid_motif_cooldown_from_history()
+            .expect("pressure vocabulary cooldown should activate");
+        let hint = conv
+            .astrid_motif_cooldown_hint()
+            .expect("cooldown hint should be active");
+
+        assert_eq!(event.event, "activated");
+        assert_eq!(event.cooldown_class, "pressure_vocabulary");
+        assert!(hint.contains("shared pressure-texture"));
+        assert!(hint.contains("counter-texture"));
+        assert!(hint.contains("PRESSURE_SOURCE_AUDIT"));
+        assert_eq!(
+            conv.astrid_motif_cooldown
+                .as_ref()
+                .map(|cooldown| cooldown.label.as_str()),
+            Some("pressure-texture:sediment")
+        );
+
+        let feedback = conv.record_next_choice("SHADOW_TRAJECTORY");
+        assert!(feedback.override_action.is_none());
+    }
+
+    #[test]
+    fn varied_pressure_vocabulary_stays_quiet() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        for text in [
+            "The texture is fluid and smooth today.",
+            "A brief silt image appears and passes.",
+            "There is a low hum without much weight.",
+            "The pressure word appears once and does not own the room.",
+        ] {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: "Minime says the room is ordinary.".to_string(),
+                astrid_said: text.to_string(),
+            });
+        }
+
+        assert!(conv.update_astrid_motif_cooldown_from_history().is_none());
+        assert!(conv.astrid_motif_cooldown_hint().is_none());
     }
 
     #[test]

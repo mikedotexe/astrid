@@ -58,6 +58,7 @@ const ALLOWED_PENDING_NEXT_BASES: &[&str] = &[
     "FOLD_HOLD",
     "LATENT_STASIS",
     "BRACE_AUDIT",
+    "REGULATOR_AUDIT",
     "SPACE_HOLD",
     "SPECTRAL_EXPLORER",
     "THREADS",
@@ -560,6 +561,10 @@ mod tests {
         assert!(
             ALLOWED_PENDING_NEXT_BASES
                 .contains(&pending_next_base("REPAIR_SWEEP experiments").as_str())
+        );
+        assert!(
+            ALLOWED_PENDING_NEXT_BASES
+                .contains(&pending_next_base("REGULATOR_AUDIT current-fill_pressure").as_str())
         );
         assert!(
             !ALLOWED_PENDING_NEXT_BASES.contains(&pending_next_base("REPAIR_APPLY all").as_str())

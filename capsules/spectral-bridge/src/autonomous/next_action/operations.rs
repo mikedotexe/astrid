@@ -815,6 +815,7 @@ const ACTION_OVERVIEW: &str = "\
 Use NEXT: HELP CODEX for syntax and examples.
 
 NEXT: options — vary your choice. End every response with NEXT: plus a concrete action.
+You may name alternate paths, return threads, residue, or why-this-path in nearby lines; only the final NEXT line executes.
 Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels only; never copy them literally.
 Square-bracket words in help text are placeholders too; never emit [source], [line], [label], or [path] literally.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON

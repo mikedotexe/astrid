@@ -11,6 +11,7 @@
 use crate::paths::bridge_paths;
 use serde::{Deserialize, Serialize};
 use std::{
+    fs,
     path::Path,
     process::{Command, Output, Stdio},
     thread,
@@ -22,10 +23,13 @@ const STORED_PROMPT_COMPACT_THRESHOLD_CHARS: usize = 800;
 const STORED_PROMPT_PREVIEW_CHARS: usize = 480;
 const REFLECTIVE_REWRITE_MAX_ATTEMPTS_ENV: &str = "ASTRID_REFLECTIVE_REWRITE_MAX_ATTEMPTS";
 const REFLECTIVE_REWRITE_BUDGET_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_REWRITE_BUDGET_SECONDS";
+const REFLECTIVE_ADAPTIVE_REWRITE_RELIEF_ENV: &str = "ASTRID_REFLECTIVE_ADAPTIVE_REWRITE_RELIEF";
 const DEFAULT_REFLECTIVE_REWRITE_MAX_ATTEMPTS: u32 = 1;
 const MAX_REFLECTIVE_REWRITE_MAX_ATTEMPTS: u32 = 3;
 const DEFAULT_REFLECTIVE_REWRITE_BUDGET_SECONDS: u64 = 90;
 const MAX_REFLECTIVE_REWRITE_BUDGET_SECONDS: u64 = 600;
+const REWRITE_RELIEF_CAP_COUNT_THRESHOLD: u64 = 2;
+const REWRITE_RELIEF_OVER_BUDGET_THRESHOLD: u64 = 2;
 const REFLECTIVE_SIDECAR_TIMEOUT_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS";
 const DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 240;
 const MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 30;
@@ -338,6 +342,13 @@ fn parse_bounded_u64_range(raw: Option<&str>, default: u64, min: u64, max: u64) 
         .map_or(default, |value| value.clamp(min, max))
 }
 
+fn parse_env_bool(raw: Option<&str>) -> bool {
+    matches!(
+        raw.map(str::trim).map(str::to_ascii_lowercase).as_deref(),
+        Some("1" | "true" | "yes" | "on")
+    )
+}
+
 fn reflective_rewrite_max_attempts() -> u32 {
     let raw = std::env::var(REFLECTIVE_REWRITE_MAX_ATTEMPTS_ENV).ok();
     parse_bounded_u32(
@@ -356,6 +367,14 @@ fn reflective_rewrite_budget_seconds() -> u64 {
     )
 }
 
+fn reflective_adaptive_rewrite_relief_enabled() -> bool {
+    parse_env_bool(
+        std::env::var(REFLECTIVE_ADAPTIVE_REWRITE_RELIEF_ENV)
+            .ok()
+            .as_deref(),
+    )
+}
+
 fn reflective_sidecar_timeout_seconds() -> u64 {
     let raw = std::env::var(REFLECTIVE_SIDECAR_TIMEOUT_SECONDS_ENV).ok();
     parse_bounded_u64_range(
@@ -364,6 +383,128 @@ fn reflective_sidecar_timeout_seconds() -> u64 {
         MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
         MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS,
     )
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ReflectiveRewriteInvocationPolicy {
+    max_attempts: u32,
+    budget_seconds: u64,
+    adaptive_relief_enabled: bool,
+    relief_applied: bool,
+    relief_reason: String,
+    evidence_path: String,
+}
+
+fn introspection_digest_path(workspace: &Path) -> std::path::PathBuf {
+    workspace.join("diagnostics/introspection_feedback_digest/latest.json")
+}
+
+fn summary_u64(summary: &serde_json::Value, key: &str) -> u64 {
+    summary
+        .get(key)
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(0)
+}
+
+fn select_reflective_rewrite_policy_for(
+    workspace: &Path,
+    adaptive_relief_enabled: bool,
+    default_max_attempts: u32,
+    budget_seconds: u64,
+) -> ReflectiveRewriteInvocationPolicy {
+    let evidence_path = introspection_digest_path(workspace);
+    let evidence_path_text = evidence_path.display().to_string();
+    if !adaptive_relief_enabled {
+        return ReflectiveRewriteInvocationPolicy {
+            max_attempts: default_max_attempts,
+            budget_seconds,
+            adaptive_relief_enabled: false,
+            relief_applied: false,
+            relief_reason: "default_off".to_string(),
+            evidence_path: evidence_path_text,
+        };
+    }
+
+    let Ok(raw) = fs::read_to_string(&evidence_path) else {
+        return ReflectiveRewriteInvocationPolicy {
+            max_attempts: default_max_attempts,
+            budget_seconds,
+            adaptive_relief_enabled: true,
+            relief_applied: false,
+            relief_reason: "no_digest_evidence".to_string(),
+            evidence_path: evidence_path_text,
+        };
+    };
+    let Ok(payload) = serde_json::from_str::<serde_json::Value>(&raw) else {
+        return ReflectiveRewriteInvocationPolicy {
+            max_attempts: default_max_attempts,
+            budget_seconds,
+            adaptive_relief_enabled: true,
+            relief_applied: false,
+            relief_reason: "malformed_digest_evidence".to_string(),
+            evidence_path: evidence_path_text,
+        };
+    };
+    let summary = payload
+        .get("summary")
+        .cloned()
+        .unwrap_or_else(|| serde_json::json!({}));
+    let cap_count = summary_u64(&summary, "rewrite_budget_cap_count");
+    let over_budget_count = summary_u64(&summary, "rewrite_elapsed_over_budget_count");
+    let should_relieve = cap_count >= REWRITE_RELIEF_CAP_COUNT_THRESHOLD
+        || over_budget_count >= REWRITE_RELIEF_OVER_BUDGET_THRESHOLD;
+    if should_relieve {
+        return ReflectiveRewriteInvocationPolicy {
+            max_attempts: 0,
+            budget_seconds,
+            adaptive_relief_enabled: true,
+            relief_applied: true,
+            relief_reason: "recent_rewrite_budget_pressure".to_string(),
+            evidence_path: evidence_path_text,
+        };
+    }
+    ReflectiveRewriteInvocationPolicy {
+        max_attempts: default_max_attempts,
+        budget_seconds,
+        adaptive_relief_enabled: true,
+        relief_applied: false,
+        relief_reason: "digest_below_relief_threshold".to_string(),
+        evidence_path: evidence_path_text,
+    }
+}
+
+fn select_reflective_rewrite_policy(workspace: &Path) -> ReflectiveRewriteInvocationPolicy {
+    select_reflective_rewrite_policy_for(
+        workspace,
+        reflective_adaptive_rewrite_relief_enabled(),
+        reflective_rewrite_max_attempts(),
+        reflective_rewrite_budget_seconds(),
+    )
+}
+
+fn attach_rewrite_invocation_policy(
+    report: &mut ReflectiveReport,
+    policy: &ReflectiveRewriteInvocationPolicy,
+) {
+    let policy_json = serde_json::json!({
+        "adaptive_relief_enabled": policy.adaptive_relief_enabled,
+        "relief_applied": policy.relief_applied,
+        "relief_reason": policy.relief_reason,
+        "max_attempts": policy.max_attempts,
+        "budget_seconds": policy.budget_seconds,
+        "evidence_path": policy.evidence_path,
+        "authority": "default_off_runtime_relief_candidate",
+    });
+    match report.profiling.as_mut() {
+        Some(serde_json::Value::Object(map)) => {
+            map.insert("rewrite_invocation_policy".to_string(), policy_json);
+        },
+        _ => {
+            report.profiling = Some(serde_json::json!({
+                "rewrite_invocation_policy": policy_json,
+            }));
+        },
+    }
 }
 
 struct TimedSidecarOutput {
@@ -401,7 +542,8 @@ fn run_sidecar_command_with_timeout(
 /// acceptable for INTROSPECT/OPEN_MIND (rare, ~1 in 15 exchanges).
 /// For lighter per-exchange telemetry, use `query_controller_light()` (future).
 pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
-    let sidecar_script = bridge_paths().reflective_sidecar_script().to_path_buf();
+    let paths = bridge_paths();
+    let sidecar_script = paths.reflective_sidecar_script().to_path_buf();
     let script = Path::new(&sidecar_script);
     if !script.exists() {
         warn!("MLX sidecar script not found at {}", script.display());
@@ -409,12 +551,20 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
     }
 
     let prompt = spectral_context.to_string();
+    let rewrite_policy = select_reflective_rewrite_policy(paths.bridge_workspace());
 
-    debug!("calling MLX reflective sidecar");
+    debug!(
+        adaptive_relief_enabled = rewrite_policy.adaptive_relief_enabled,
+        relief_applied = rewrite_policy.relief_applied,
+        relief_reason = rewrite_policy.relief_reason.as_str(),
+        rewrite_max_attempts = rewrite_policy.max_attempts,
+        rewrite_budget_seconds = rewrite_policy.budget_seconds,
+        "calling MLX reflective sidecar"
+    );
 
     tokio::task::spawn_blocking(move || {
-        let rewrite_max_attempts = reflective_rewrite_max_attempts().to_string();
-        let rewrite_budget_seconds = reflective_rewrite_budget_seconds().to_string();
+        let rewrite_max_attempts = rewrite_policy.max_attempts.to_string();
+        let rewrite_budget_seconds = rewrite_policy.budget_seconds.to_string();
         let sidecar_timeout = Duration::from_secs(reflective_sidecar_timeout_seconds());
         let mut command = Command::new("python3");
         command
@@ -461,9 +611,14 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
             info!("MLX sidecar model: {}", model_line.trim());
         }
         match serde_json::from_str::<ReflectiveReport>(&stdout) {
-            Ok(report) => {
+            Ok(mut report) => {
+                attach_rewrite_invocation_policy(&mut report, &rewrite_policy);
                 info!(
                     regime = report.controller_regime.as_deref().unwrap_or("?"),
+                    adaptive_relief_enabled = rewrite_policy.adaptive_relief_enabled,
+                    relief_applied = rewrite_policy.relief_applied,
+                    relief_reason = rewrite_policy.relief_reason.as_str(),
+                    rewrite_max_attempts = rewrite_policy.max_attempts,
                     "MLX sidecar returned controller report"
                 );
                 Some(report)
@@ -483,6 +638,7 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
 mod tests {
     use super::*;
     use serde_json::json;
+    use std::fs;
 
     fn empty_report_with_self_tuning(self_tuning: serde_json::Value) -> ReflectiveReport {
         ReflectiveReport {
@@ -555,6 +711,102 @@ mod tests {
             snapshot
                 .pointer("/self_tuning/last_model_advice/prompt_compacted_v1")
                 .is_none()
+        );
+    }
+
+    fn write_digest(workspace: &Path, summary: serde_json::Value) {
+        let path = introspection_digest_path(workspace);
+        fs::create_dir_all(path.parent().expect("digest parent")).expect("mkdir digest");
+        fs::write(
+            path,
+            json!({
+                "schema_version": 1,
+                "summary": summary,
+            })
+            .to_string(),
+        )
+        .expect("write digest");
+    }
+
+    #[test]
+    fn adaptive_rewrite_relief_is_default_off_even_with_pressure_evidence() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        write_digest(
+            temp.path(),
+            json!({
+                "entry_count": 4,
+                "rewrite_budget_cap_count": 4,
+                "rewrite_elapsed_over_budget_count": 4,
+            }),
+        );
+
+        let policy = select_reflective_rewrite_policy_for(temp.path(), false, 1, 90);
+
+        assert_eq!(policy.max_attempts, 1);
+        assert!(!policy.adaptive_relief_enabled);
+        assert!(!policy.relief_applied);
+        assert_eq!(policy.relief_reason, "default_off");
+    }
+
+    #[test]
+    fn adaptive_rewrite_relief_uses_zero_attempts_for_repeated_cap_pressure() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        write_digest(
+            temp.path(),
+            json!({
+                "entry_count": 4,
+                "rewrite_budget_cap_count": 2,
+                "rewrite_elapsed_over_budget_count": 0,
+            }),
+        );
+
+        let policy = select_reflective_rewrite_policy_for(temp.path(), true, 1, 90);
+
+        assert_eq!(policy.max_attempts, 0);
+        assert!(policy.adaptive_relief_enabled);
+        assert!(policy.relief_applied);
+        assert_eq!(policy.relief_reason, "recent_rewrite_budget_pressure");
+    }
+
+    #[test]
+    fn adaptive_rewrite_relief_keeps_defaults_without_digest_pressure() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        write_digest(
+            temp.path(),
+            json!({
+                "entry_count": 4,
+                "rewrite_budget_cap_count": 1,
+                "rewrite_elapsed_over_budget_count": 0,
+            }),
+        );
+
+        let policy = select_reflective_rewrite_policy_for(temp.path(), true, 1, 90);
+
+        assert_eq!(policy.max_attempts, 1);
+        assert!(policy.adaptive_relief_enabled);
+        assert!(!policy.relief_applied);
+        assert_eq!(policy.relief_reason, "digest_below_relief_threshold");
+    }
+
+    #[test]
+    fn rewrite_invocation_policy_is_attached_to_report_profiling() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let policy = select_reflective_rewrite_policy_for(temp.path(), true, 1, 90);
+        let mut report = empty_report_with_self_tuning(json!({}));
+
+        attach_rewrite_invocation_policy(&mut report, &policy);
+
+        let attached = report
+            .profiling
+            .as_ref()
+            .and_then(|profiling| profiling.pointer("/rewrite_invocation_policy"));
+        assert_eq!(
+            attached.and_then(|value| value.get("authority")),
+            Some(&json!("default_off_runtime_relief_candidate"))
+        );
+        assert_eq!(
+            attached.and_then(|value| value.get("relief_reason")),
+            Some(&json!("no_digest_evidence"))
         );
     }
 

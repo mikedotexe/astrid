@@ -17,6 +17,13 @@ pub struct PromptBlock {
     pub content: String,
     /// Lower number = higher priority (trimmed last).
     pub priority: u8,
+    /// Minimum bytes to retain in prompt when this block is trimmed.
+    ///
+    /// A value of 0 preserves the historical behavior: the block may be moved
+    /// entirely to overflow. Non-zero values protect a prefix of the block so
+    /// direct, grounding context is never fully evicted by lower-level budget
+    /// pressure.
+    pub min_chars: usize,
 }
 
 /// Metadata about content that was spilled to disk.
@@ -103,7 +110,13 @@ pub fn assemble_within_budget(
 
         let label = blocks[idx].label;
 
-        if block_len <= remaining_excess {
+        let min_chars = floor_char_boundary(&contents[idx], blocks[idx].min_chars.min(block_len));
+        let removable_chars = block_len.saturating_sub(min_chars);
+        if removable_chars == 0 {
+            continue;
+        }
+
+        if block_len <= remaining_excess && min_chars == 0 {
             // Remove this block entirely.
             overflow_sections.push((label.to_string(), contents[idx].clone()));
             remaining_excess = remaining_excess.saturating_sub(block_len);
@@ -119,8 +132,16 @@ pub fn assemble_within_budget(
             });
         } else {
             // Partially trim this block.
-            let keep_chars = block_len.saturating_sub(remaining_excess);
-            let keep_at = find_paragraph_break(&contents[idx], keep_chars);
+            let keep_chars = if removable_chars <= remaining_excess {
+                min_chars
+            } else {
+                block_len.saturating_sub(remaining_excess)
+            };
+            let keep_at = find_paragraph_break(&contents[idx], keep_chars).max(min_chars);
+            let keep_at = floor_char_boundary(&contents[idx], keep_at.min(block_len));
+            if keep_at >= block_len {
+                continue;
+            }
             let trimmed_portion = contents[idx][keep_at..].to_string();
             let trimmed_len = trimmed_portion.len();
             overflow_sections.push((label.to_string(), trimmed_portion));
@@ -283,6 +304,14 @@ fn find_paragraph_break(text: &str, target_pos: usize) -> usize {
     i
 }
 
+fn floor_char_boundary(text: &str, pos: usize) -> usize {
+    let mut i = pos.min(text.len());
+    while i > 0 && !text.is_char_boundary(i) {
+        i = i.saturating_sub(1);
+    }
+    i
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -294,11 +323,13 @@ mod tests {
                 label: "a",
                 content: "hello".into(),
                 priority: 1,
+                min_chars: 0,
             },
             PromptBlock {
                 label: "b",
                 content: "world".into(),
                 priority: 2,
+                min_chars: 0,
             },
         ];
         let dir = std::env::temp_dir().join("prompt_budget_test_under");
@@ -321,16 +352,19 @@ mod tests {
                 label: "high",
                 content: "A".repeat(500),
                 priority: 1,
+                min_chars: 0,
             },
             PromptBlock {
                 label: "medium",
                 content: "B".repeat(500),
                 priority: 3,
+                min_chars: 0,
             },
             PromptBlock {
                 label: "low",
                 content: "C".repeat(500),
                 priority: 5,
+                min_chars: 0,
             },
         ];
         // Budget 800: total 1500, excess 700. "low" (priority 5) trimmed first.
@@ -350,6 +384,66 @@ mod tests {
                 .trimmed_blocks
                 .iter()
                 .any(|block| block.label == "low")
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn protected_block_retains_minimum_before_lower_priority_exhausts() {
+        let dir = std::env::temp_dir().join(format!(
+            "prompt_budget_test_protected_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+
+        let protected = format!(
+            "DIRECT MINIME REPLY: {}\n{}",
+            "felt anchor ".repeat(30),
+            "ambient perception ".repeat(100)
+        );
+        let blocks = vec![
+            PromptBlock {
+                label: "direct_perception",
+                content: protected.clone(),
+                priority: 2,
+                min_chars: 220,
+            },
+            PromptBlock {
+                label: "continuity",
+                content: "continuity chamber ".repeat(90),
+                priority: 7,
+                min_chars: 0,
+            },
+            PromptBlock {
+                label: "diversity",
+                content: "diversity hint ".repeat(80),
+                priority: 9,
+                min_chars: 0,
+            },
+        ];
+
+        let (assembled, overflow, report) = assemble_within_budget(blocks, 700, &dir);
+
+        assert!(assembled.contains("DIRECT MINIME REPLY"));
+        assert!(assembled.contains("felt anchor"));
+        assert!(!assembled.contains("direct_perception context"));
+        assert!(overflow.is_some());
+        let report = report.expect("budget report should exist");
+        assert!(
+            report.trimmed_blocks.iter().any(|block| {
+                block.label == "direct_perception"
+                    && !block.fully_removed
+                    && block.kept_chars >= 220
+            }),
+            "protected direct perception should trim only after retaining its floor: {report:?}"
+        );
+        assert!(
+            report
+                .trimmed_blocks
+                .iter()
+                .any(|block| block.label == "diversity" && block.fully_removed),
+            "lowest-priority diversity should be exhausted first: {report:?}"
         );
 
         let _ = std::fs::remove_dir_all(&dir);

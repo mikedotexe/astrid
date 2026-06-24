@@ -15,6 +15,7 @@ mod probe_self;
 pub(crate) mod protected_diagnostics;
 mod resource_governor;
 pub(crate) mod shadow;
+mod self_regulation;
 pub(crate) mod sovereignty;
 mod space_hold;
 mod spectral_drift;
@@ -139,10 +140,43 @@ pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
             // project_unwired_actions_catalog.md for the diagnostic.
             // Slice-based trim preserves &str return type — no allocation.
             clean = clean.trim_matches(|c| c == '`' || c == '*');
+            clean = strip_choice_metadata_from_next_action(clean);
             return Some(clean.trim());
         }
     }
     None
+}
+
+pub(crate) fn strip_choice_metadata_from_next_action(action: &str) -> &str {
+    let trimmed = action.trim();
+    let Some((clean, _residue)) = split_residue_suffix(trimmed) else {
+        return trimmed;
+    };
+    clean
+}
+
+pub(crate) fn extract_residue_from_next_action(action: &str) -> Option<&str> {
+    split_residue_suffix(action).map(|(_clean, residue)| residue)
+}
+
+fn split_residue_suffix(action: &str) -> Option<(&str, &str)> {
+    let trimmed = action.trim();
+    if !trimmed.ends_with(')') {
+        return None;
+    }
+    let upper = trimmed.to_ascii_uppercase();
+    let marker = "(RESIDUE:";
+    let marker_idx = upper.rfind(marker)?;
+    let residue_start = marker_idx.checked_add(marker.len())?;
+    let residue_end = trimmed.len().checked_sub(1)?;
+    if residue_start > residue_end || !trimmed.is_char_boundary(marker_idx) {
+        return None;
+    }
+    let residue = trimmed[residue_start..residue_end].trim();
+    if residue.is_empty() {
+        return None;
+    }
+    Some((trimmed[..marker_idx].trim_end(), residue))
 }
 
 pub(crate) fn attractor_suggestion_prompt_note() -> Option<String> {
@@ -1071,7 +1105,8 @@ fn normalize_feedback_shadow_model_alias(
 }
 
 fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
-    let original = unwrap_outer_action_wrappers(next_action);
+    let original =
+        unwrap_outer_action_wrappers(strip_choice_metadata_from_next_action(next_action));
     let base_action = leading_action_token(&original);
 
     if let Some((normalized_base, normalized_original)) =
@@ -2205,9 +2240,10 @@ fn is_parameter_decision_verb(token: &str) -> bool {
 mod tests {
     use super::{
         ConversationState, NextActionContext, action_preflight_report,
-        canonicalize_next_action_components, canonicalize_next_action_text, handle_next_action,
-        is_action_token_like, is_parameter_decision_verb, parse_next_action, split_multi_action,
-        strip_action, unresolved_angle_placeholder,
+        canonicalize_next_action_components, canonicalize_next_action_text,
+        extract_residue_from_next_action, handle_next_action, is_action_token_like,
+        is_parameter_decision_verb, parse_next_action, split_multi_action, strip_action,
+        unresolved_angle_placeholder,
     };
     use crate::db::BridgeDb;
     use crate::paths::bridge_paths;
@@ -2279,6 +2315,19 @@ mod tests {
                            I choose the real next action outside the diagnostic block.\n\
                            NEXT: NOTICE";
         assert_eq!(parse_next_action(real_choice), Some("NOTICE"));
+    }
+
+    #[test]
+    fn parse_next_action_strips_choice_metadata_residue_suffix() {
+        let text = "Alternate NEXT: SHADOW_TRAJECTORY lambda-tail\n\
+                    Return thread: thread_shadow_tail\n\
+                    NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: sticky silt)";
+
+        assert_eq!(parse_next_action(text), Some("EXPLORE_RESONANCE_FORECAST"));
+        assert_eq!(
+            extract_residue_from_next_action("EXPLORE_RESONANCE_FORECAST (RESIDUE: sticky silt)"),
+            Some("sticky silt"),
+        );
     }
 
     #[test]
@@ -2913,6 +2962,7 @@ mod tests {
 
     #[test]
     fn regulator_audit_attaches_read_only_controller_block() {
+        let _journal_guard = crate::autonomous::suppress_astrid_journal_saves_for_test();
         let mut conv = ConversationState::new(Vec::new(), None);
         let db = BridgeDb::open(":memory:").expect("open in-memory db");
         let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
@@ -2951,6 +3001,29 @@ mod tests {
                         "target_fill_pct": 68.0,
                         "drain_weight": 0.0
                     }
+                },
+                "transition_event_v1": {
+                    "policy": "transition_event_v1",
+                    "schema_version": 1,
+                    "kind": "breathing_phase",
+                    "description": "contracting -> expanding",
+                    "basin_shift_score": 0.05,
+                    "lambda1_rel": -0.881,
+                    "geom_rel": 0.02,
+                    "stable_core_stage": "hold"
+                },
+                "semantic_energy_v1": {
+                    "policy": "semantic_energy_v1",
+                    "schema_version": 1,
+                    "input_energy": 0.02,
+                    "input_active": true,
+                    "input_fresh_ms": 120,
+                    "input_stale_ms": null,
+                    "kernel_energy": 0.0,
+                    "kernel_delta": 0.0,
+                    "kernel_active": false,
+                    "regulator_drive_energy": 0.0,
+                    "admission": "stable_core_kernel_zeroed"
                 },
                 "semantic": {
                     "input_energy": 0.02,
@@ -3804,6 +3877,14 @@ mod tests {
         assert_eq!(
             canonicalize_next_action_text("EXPLORE, READ_MORE, ANALYZE_AUDIO"),
             "ACTION_PREFLIGHT READ_MORE",
+        );
+    }
+
+    #[test]
+    fn canonicalize_next_action_strips_choice_metadata_before_alias_repair() {
+        assert_eq!(
+            canonicalize_next_action_text("EXPLORE_RESONANCE_FORECAST (RESIDUE: sticky silt)"),
+            "RESONANCE_FORECAST",
         );
     }
 

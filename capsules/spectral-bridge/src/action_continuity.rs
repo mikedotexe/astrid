@@ -144,6 +144,10 @@ pub struct ActionEvent {
     pub interpretation_risk_v1: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub constraint_release_trajectory_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub choice_envelope_v1: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transition_residue_v1: Option<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -880,6 +884,8 @@ impl ActionContinuityStore {
                     note.to_string(),
                 )],
             )?,
+            choice_envelope_v1: None,
+            transition_residue_v1: None,
         };
         self.append_event(db, &event)?;
         Ok(event)
@@ -983,6 +989,14 @@ impl ActionContinuityStore {
             &outcome.route,
             &stage,
         )?;
+        let choice_envelope_v1 =
+            choice_envelope_value(response_text, raw_next, canonical_next, effective_next);
+        let transition_residue_v1 = transition_residue_value(
+            choice_envelope_v1.as_ref(),
+            canonical_next,
+            effective_next,
+            telemetry,
+        );
         let mut event = ActionEvent {
             schema_version: SCHEMA_VERSION,
             action_id: action_id.clone(),
@@ -1035,6 +1049,8 @@ impl ActionContinuityStore {
                     ),
                 )],
             )?,
+            choice_envelope_v1,
+            transition_residue_v1,
         };
         if event.research_budget_v1.is_none() {
             let guard_base = [
@@ -7919,9 +7935,12 @@ impl ActionContinuityStore {
             .recent_display_events(thread_id, limit)?
             .into_iter()
             .map(|event| {
+                let choice_summary = event_choice_summary(&event)
+                    .map(|summary| format!("; {summary}"))
+                    .unwrap_or_default();
                 format!(
-                    "{} [{}]: {}",
-                    event.effective_action, event.status, event.outcome_summary
+                    "{} [{}]: {}{}",
+                    event.effective_action, event.status, event.outcome_summary, choice_summary
                 )
             })
             .collect())
@@ -8576,9 +8595,12 @@ impl ActionContinuityStore {
             recent_event_summaries: recent_events
                 .iter()
                 .map(|event| {
+                    let choice_summary = event_choice_summary(event)
+                        .map(|summary| format!("; {summary}"))
+                        .unwrap_or_default();
                     format!(
-                        "{} [{}]: {}",
-                        event.effective_action, event.status, event.outcome_summary
+                        "{} [{}]: {}{}",
+                        event.effective_action, event.status, event.outcome_summary, choice_summary
                     )
                 })
                 .collect(),
@@ -14570,6 +14592,238 @@ fn compact_text(value: &str, limit: usize) -> String {
         let truncated = text.chars().take(limit).collect::<String>();
         format!("{truncated}...")
     }
+}
+
+fn event_choice_summary(event: &ActionEvent) -> Option<String> {
+    let envelope = event.choice_envelope_v1.as_ref()?;
+    let alternate_count = envelope
+        .get("alternate_nexts")
+        .and_then(Value::as_array)
+        .map_or(0, Vec::len);
+    let return_count = envelope
+        .get("return_threads")
+        .and_then(Value::as_array)
+        .map_or(0, Vec::len);
+    let residue_present = envelope
+        .get("residue")
+        .and_then(Value::as_str)
+        .is_some_and(|value| !value.trim().is_empty());
+    let mismatch_present = envelope.get("mismatch_warning").is_some();
+    if alternate_count == 0 && return_count == 0 && !residue_present && !mismatch_present {
+        return None;
+    }
+    let mut parts = vec![format!(
+        "choice alt={alternate_count} return={return_count}"
+    )];
+    if residue_present {
+        parts.push("residue=yes".to_string());
+    }
+    if mismatch_present {
+        parts.push("primary_mismatch=yes".to_string());
+    }
+    Some(parts.join(" "))
+}
+
+fn choice_envelope_value(
+    response_text: &str,
+    raw_next: &str,
+    canonical_next: &str,
+    effective_next: &str,
+) -> Option<Value> {
+    let mut primary_next: Option<String> = None;
+    let mut alternate_nexts = Vec::new();
+    let mut return_threads = Vec::new();
+    let mut residue: Option<String> = final_next_residue(response_text);
+    let mut why_this_path: Option<String> = None;
+    let mut defer_reason: Option<String> = None;
+
+    for line in choice_metadata_lines(response_text) {
+        if let Some(value) = label_value(
+            line,
+            &[
+                "Primary NEXT:",
+                "Primary path:",
+                "Chosen NEXT:",
+                "Chosen path:",
+            ],
+        ) {
+            primary_next = Some(compact_text(strip_next_prefix(value), 240));
+        } else if let Some(value) = label_value(
+            line,
+            &[
+                "Alternate NEXT:",
+                "Alternative NEXT:",
+                "Alternate path:",
+                "Alternative path:",
+            ],
+        ) {
+            alternate_nexts.push(compact_text(strip_next_prefix(value), 240));
+        } else if let Some(value) =
+            label_value(line, &["Return thread:", "Return threads:", "Return to:"])
+        {
+            return_threads.push(compact_text(value, 240));
+        } else if let Some(value) =
+            label_value(line, &["Residue:", "Transition residue:", "Stickiness:"])
+        {
+            residue = Some(compact_text(value, 240));
+        } else if let Some(value) =
+            label_value(line, &["Why this path:", "Why this NEXT:", "Why now:"])
+        {
+            why_this_path = Some(compact_text(value, 360));
+        } else if let Some(value) = label_value(
+            line,
+            &["Defer reason:", "Deferred because:", "Deferring because:"],
+        ) {
+            defer_reason = Some(compact_text(value, 360));
+        }
+    }
+
+    let has_metadata = primary_next.is_some()
+        || !alternate_nexts.is_empty()
+        || !return_threads.is_empty()
+        || residue.is_some()
+        || why_this_path.is_some()
+        || defer_reason.is_some();
+    if !has_metadata {
+        return None;
+    }
+
+    let executable_next = canonical_next.trim();
+    let declared_primary = primary_next.unwrap_or_else(|| executable_next.to_string());
+    let declared_canonical = crate::autonomous::canonicalize_next_action_text(&declared_primary);
+    let mismatch_warning = if declared_canonical.trim() != executable_next {
+        Some(format!(
+            "primary_next `{}` canonicalized to `{}` but executable NEXT was `{}`; dispatch followed executable NEXT",
+            compact_text(&declared_primary, 120),
+            compact_text(&declared_canonical, 120),
+            compact_text(executable_next, 120)
+        ))
+    } else {
+        None
+    };
+
+    let mut object = serde_json::Map::new();
+    object.insert("policy".to_string(), json!("choice_envelope_v1"));
+    object.insert("schema_version".to_string(), json!(1));
+    object.insert("source".to_string(), json!("astrid_next_response"));
+    object.insert(
+        "authority".to_string(),
+        json!("diagnostic_context_not_command"),
+    );
+    object.insert("primary_next".to_string(), json!(declared_primary));
+    object.insert("executable_next".to_string(), json!(executable_next));
+    object.insert("effective_next".to_string(), json!(effective_next));
+    object.insert("raw_next".to_string(), json!(raw_next));
+    object.insert("alternate_nexts".to_string(), json!(alternate_nexts));
+    object.insert("return_threads".to_string(), json!(return_threads));
+    if let Some(value) = residue {
+        object.insert("residue".to_string(), json!(value));
+    }
+    if let Some(value) = why_this_path {
+        object.insert("why_this_path".to_string(), json!(value));
+    }
+    if let Some(value) = defer_reason {
+        object.insert("defer_reason".to_string(), json!(value));
+    }
+    if let Some(value) = mismatch_warning {
+        object.insert("mismatch_warning".to_string(), json!(value));
+    }
+    Some(Value::Object(object))
+}
+
+fn transition_residue_value(
+    choice_envelope_v1: Option<&Value>,
+    canonical_next: &str,
+    effective_next: &str,
+    telemetry: &SpectralTelemetry,
+) -> Option<Value> {
+    let residue = choice_envelope_v1
+        .and_then(|value| value.get("residue"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())?;
+    let resonance = telemetry.resonance_density_v1.as_ref();
+    let pressure = telemetry.pressure_source_v1.as_ref();
+    Some(json!({
+        "policy": "transition_residue_v1",
+        "schema_version": 1,
+        "source": "choice_envelope_v1",
+        "authority": "diagnostic_context_not_command",
+        "residue_text": residue,
+        "canonical_action": canonical_next,
+        "effective_action": effective_next,
+        "telemetry": {
+            "fill_ratio": telemetry.fill_ratio,
+            "density_gradient": crate::codec::spectral_density_gradient(&telemetry.eigenvalues),
+            "pressure_risk": resonance.map(|metric| metric.pressure_risk),
+            "resonance_mode_packing": resonance.map(|metric| metric.components.mode_packing),
+            "pressure_score": pressure.map(|metric| metric.pressure_score),
+            "porosity_score": pressure.map(|metric| metric.porosity_score),
+            "pressure_mode_packing": pressure.map(|metric| metric.components.mode_packing),
+        },
+    }))
+}
+
+fn choice_metadata_lines(text: &str) -> Vec<&str> {
+    let mut in_fence = false;
+    let mut out = Vec::new();
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("```") {
+            in_fence = !in_fence;
+            continue;
+        }
+        if !in_fence {
+            out.push(line);
+        }
+    }
+    out
+}
+
+fn label_value<'a>(line: &'a str, labels: &[&str]) -> Option<&'a str> {
+    let trimmed = line
+        .trim()
+        .trim_start_matches(|c| matches!(c, '-' | '*' | '>' | '•'))
+        .trim_start();
+    let lowered = trimmed.to_ascii_lowercase();
+    for label in labels {
+        let label_lower = label.to_ascii_lowercase();
+        if lowered.starts_with(&label_lower) {
+            return Some(trimmed[label.len()..].trim());
+        }
+    }
+    None
+}
+
+fn strip_next_prefix(value: &str) -> &str {
+    let trimmed = value.trim();
+    if trimmed
+        .get(..5)
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("NEXT:"))
+    {
+        trimmed[5..].trim()
+    } else {
+        trimmed
+    }
+}
+
+fn final_next_residue(text: &str) -> Option<String> {
+    let mut in_fence = false;
+    for line in text.lines().rev() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("```") {
+            in_fence = !in_fence;
+            continue;
+        }
+        if in_fence {
+            continue;
+        }
+        if let Some(action) = trimmed.strip_prefix("NEXT:") {
+            return crate::autonomous::extract_residue_from_next_action(action)
+                .map(|value| compact_text(value, 240));
+        }
+    }
+    None
 }
 
 fn build_workbench_candidates(

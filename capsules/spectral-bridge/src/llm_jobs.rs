@@ -12,6 +12,7 @@ use crate::paths::bridge_paths;
 
 const SCHEMA_VERSION: u32 = 1;
 const SYSTEM: &str = "astrid";
+const RECENT_INDEX_LIMIT: usize = 30;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LlmJob {
@@ -210,7 +211,7 @@ impl LlmJobStore {
 
     pub fn active_summary(&self) -> Option<String> {
         let _ = self.expire_timed_out_jobs();
-        self.list_jobs(20).ok().and_then(|jobs| {
+        self.active_jobs().ok().and_then(|jobs| {
             jobs.into_iter()
                 .rev()
                 .find(|job| is_active(&job.status))
@@ -228,12 +229,12 @@ impl LlmJobStore {
     pub fn write_runtime_status(&self) -> Result<()> {
         self.ensure_dirs_no_recover()?;
         self.expire_timed_out_jobs()?;
+        let index = self.read_index()?;
+        let recent_index_count = index_job_ids(&index, "recent_jobs").len();
+        let active_index_count = index_job_ids(&index, "active_job_ids").len();
         let jobs = self.list_jobs(12)?;
-        let active = jobs
-            .iter()
-            .filter(|job| is_active(&job.status))
-            .map(compact_job)
-            .collect::<Vec<_>>();
+        let active_jobs = self.active_jobs()?;
+        let active = active_jobs.iter().map(compact_job).collect::<Vec<_>>();
         let recent = jobs
             .iter()
             .rev()
@@ -245,9 +246,12 @@ impl LlmJobStore {
             serde_json::to_string_pretty(&json!({
                 "schema_version": SCHEMA_VERSION,
                 "system": SYSTEM,
+                "index_backed": true,
                 "updated_at": now(),
                 "active_count": active.len(),
-                "latest_job_id": jobs.last().map(|job| job.job_id.clone()),
+                "latest_job_id": index.get("latest_job_id").and_then(serde_json::Value::as_str),
+                "recent_index_count": recent_index_count,
+                "active_index_count": active_index_count,
                 "active_jobs": active,
                 "recent_jobs": recent,
             }))?,
@@ -288,23 +292,28 @@ impl LlmJobStore {
 
     fn list_jobs(&self, limit: usize) -> Result<Vec<LlmJob>> {
         self.ensure_dirs_no_recover()?;
-        let mut jobs = Vec::new();
-        for entry in fs::read_dir(&self.jobs_dir)? {
-            let Ok(entry) = entry else { continue };
-            let path = entry.path().join("job.json");
-            if !path.exists() {
-                continue;
-            }
-            if let Ok(job) = serde_json::from_str::<LlmJob>(&fs::read_to_string(path)?) {
-                jobs.push(job);
-            }
-        }
-        jobs.sort_by(|a, b| a.created_at.cmp(&b.created_at));
-        if jobs.len() > limit {
-            Ok(jobs.split_off(jobs.len().saturating_sub(limit)))
-        } else {
-            Ok(jobs)
-        }
+        let index = self.read_index()?;
+        let ids = index_job_ids(&index, "recent_jobs");
+        let limit = limit.max(1);
+        let start = ids.len().saturating_sub(limit);
+        Ok(self.read_jobs_by_ids(&ids[start..]))
+    }
+
+    fn active_jobs(&self) -> Result<Vec<LlmJob>> {
+        self.ensure_dirs_no_recover()?;
+        let index = self.read_index()?;
+        let ids = index_job_ids(&index, "active_job_ids");
+        Ok(self
+            .read_jobs_by_ids(&ids)
+            .into_iter()
+            .filter(|job| is_active(&job.status))
+            .collect())
+    }
+
+    fn read_jobs_by_ids(&self, ids: &[String]) -> Vec<LlmJob> {
+        ids.iter()
+            .filter_map(|job_id| self.read_job(job_id).ok().flatten())
+            .collect()
     }
 
     fn ensure_dirs(&self) -> Result<()> {
@@ -327,6 +336,7 @@ impl LlmJobStore {
                     "system": SYSTEM,
                     "latest_job_id": null,
                     "recent_jobs": [],
+                    "active_job_ids": [],
                     "updated_at": now(),
                 }))?,
             )?;
@@ -335,7 +345,7 @@ impl LlmJobStore {
     }
 
     fn recover_stale_running_jobs(&self) -> Result<()> {
-        for mut job in self.list_jobs(100)? {
+        for mut job in self.active_jobs()? {
             if !is_active(&job.status) {
                 continue;
             }
@@ -352,6 +362,7 @@ impl LlmJobStore {
             job.summary = "Worker restarted before completion; result was not written.".to_string();
             self.write_job(&job)?;
             self.append_event(&job.job_id, "failed", &job.summary, job.error.as_deref())?;
+            self.update_index(&job)?;
         }
         Ok(())
     }
@@ -359,7 +370,7 @@ impl LlmJobStore {
     fn expire_timed_out_jobs(&self) -> Result<()> {
         self.ensure_dirs_no_recover()?;
         let now_dt = chrono::Utc::now();
-        for mut job in self.list_jobs(100)? {
+        for mut job in self.active_jobs()? {
             if !is_active(&job.status) || job.timeout_s == 0 {
                 continue;
             }
@@ -390,20 +401,24 @@ impl LlmJobStore {
 
     fn update_index(&self, job: &LlmJob) -> Result<()> {
         let mut index = self.read_index()?;
-        let mut recent = index
-            .get("recent_jobs")
-            .and_then(serde_json::Value::as_array)
-            .cloned()
-            .unwrap_or_default()
+        let mut recent = index_job_ids(&index, "recent_jobs")
             .into_iter()
-            .filter(|value| value.as_str() != Some(job.job_id.as_str()))
+            .filter(|job_id| job_id != &job.job_id)
             .collect::<Vec<_>>();
-        recent.push(json!(job.job_id));
-        if recent.len() > 30 {
-            recent = recent.split_off(recent.len().saturating_sub(30));
+        recent.push(job.job_id.clone());
+        if recent.len() > RECENT_INDEX_LIMIT {
+            recent = recent.split_off(recent.len().saturating_sub(RECENT_INDEX_LIMIT));
+        }
+        let mut active = index_job_ids(&index, "active_job_ids")
+            .into_iter()
+            .filter(|job_id| job_id != &job.job_id)
+            .collect::<Vec<_>>();
+        if is_active(&job.status) {
+            active.push(job.job_id.clone());
         }
         index["latest_job_id"] = json!(job.job_id);
         index["recent_jobs"] = json!(recent);
+        index["active_job_ids"] = json!(active);
         index["updated_at"] = json!(now());
         fs::write(&self.index_path, serde_json::to_string_pretty(&index)?)?;
         Ok(())
@@ -411,9 +426,46 @@ impl LlmJobStore {
 
     fn read_index(&self) -> Result<serde_json::Value> {
         self.ensure_dirs_no_recover()?;
-        Ok(serde_json::from_str(&fs::read_to_string(
-            &self.index_path,
-        )?)?)
+        let mut index: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&self.index_path)?)?;
+        let mut changed = false;
+        if index
+            .get("recent_jobs")
+            .and_then(serde_json::Value::as_array)
+            .is_none()
+        {
+            index["recent_jobs"] = json!([]);
+            changed = true;
+        }
+        if index
+            .get("active_job_ids")
+            .and_then(serde_json::Value::as_array)
+            .is_none()
+        {
+            let active = index_job_ids(&index, "recent_jobs")
+                .into_iter()
+                .filter(|job_id| {
+                    self.read_job(job_id)
+                        .ok()
+                        .flatten()
+                        .is_some_and(|job| is_active(&job.status))
+                })
+                .collect::<Vec<_>>();
+            index["active_job_ids"] = json!(active);
+            changed = true;
+        }
+        if index.get("schema_version").is_none() {
+            index["schema_version"] = json!(SCHEMA_VERSION);
+            changed = true;
+        }
+        if index.get("system").is_none() {
+            index["system"] = json!(SYSTEM);
+            changed = true;
+        }
+        if changed {
+            fs::write(&self.index_path, serde_json::to_string_pretty(&index)?)?;
+        }
+        Ok(index)
     }
 
     fn write_job(&self, job: &LlmJob) -> Result<()> {
@@ -541,6 +593,20 @@ fn compact_job(job: &LlmJob) -> serde_json::Value {
     })
 }
 
+fn index_job_ids(index: &serde_json::Value, key: &str) -> Vec<String> {
+    index
+        .get(key)
+        .and_then(serde_json::Value::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(serde_json::Value::as_str)
+                .map(str::to_string)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 fn elapsed_text(job: &LlmJob) -> String {
     let start = job.started_at.as_ref().unwrap_or(&job.created_at);
     let Ok(start) = chrono::DateTime::parse_from_rfc3339(start) else {
@@ -607,6 +673,50 @@ mod tests {
             index_path: root.join("index.json"),
             status_path: root.join("runtime/llm_jobs_status.json"),
         }
+    }
+
+    fn write_synthetic_job(
+        store: &LlmJobStore,
+        job_id: &str,
+        status: &str,
+        started_at: &str,
+        timeout_s: u64,
+    ) -> LlmJob {
+        store.ensure_dirs_no_recover().expect("ensure dirs");
+        let job_dir = store.jobs_dir.join(job_id);
+        fs::create_dir_all(&job_dir).expect("create synthetic job dir");
+        let prompt_path = job_dir.join("prompt.txt");
+        let result_path = job_dir.join("result.txt");
+        fs::write(&prompt_path, "synthetic prompt").expect("write prompt");
+        fs::write(job_dir.join("events.jsonl"), "").expect("write events");
+        let job = LlmJob {
+            schema_version: SCHEMA_VERSION,
+            job_id: job_id.to_string(),
+            system: SYSTEM.to_string(),
+            action_id: None,
+            thread_id: None,
+            action_text: "synthetic old job".to_string(),
+            call_kind: "synthetic".to_string(),
+            status: status.to_string(),
+            created_at: started_at.to_string(),
+            started_at: Some(started_at.to_string()),
+            finished_at: if is_terminal(status) {
+                Some(started_at.to_string())
+            } else {
+                None
+            },
+            timeout_s,
+            validation_contract: "synthetic_contract".to_string(),
+            next_policy: "synthetic_policy".to_string(),
+            prompt_path: prompt_path.display().to_string(),
+            result_path: result_path.display().to_string(),
+            artifact_refs: Vec::new(),
+            error: None,
+            summary: format!("Synthetic {status} job."),
+            worker_pid: current_pid(),
+        };
+        store.write_job(&job).expect("write synthetic job");
+        job
     }
 
     #[test]
@@ -710,5 +820,143 @@ mod tests {
                     .unwrap_or_default()
                     .is_empty()
         );
+    }
+
+    #[test]
+    fn runtime_status_ignores_unindexed_historical_job_dirs() {
+        let store = temp_store("index_backed_runtime");
+        let job = store
+            .start_call(
+                "daydream",
+                "prompt",
+                90,
+                "action_finalizer",
+                "finalizer_owned",
+            )
+            .expect("start job");
+
+        for idx in 0..64 {
+            let bad_dir = store
+                .jobs_dir
+                .join(format!("job_astrid_unindexed_bad_{idx}"));
+            fs::create_dir_all(&bad_dir).expect("create bad history dir");
+            fs::write(bad_dir.join("job.json"), "{ not valid json")
+                .expect("write invalid unindexed job");
+        }
+
+        store.write_runtime_status().expect("runtime status");
+        let raw = fs::read_to_string(&store.status_path).expect("read runtime status");
+        let status: serde_json::Value = serde_json::from_str(&raw).expect("parse status");
+        assert_eq!(status["index_backed"], true);
+        assert_eq!(status["recent_index_count"], 1);
+        assert_eq!(status["active_index_count"], 1);
+        assert!(raw.contains(&job.job_id));
+    }
+
+    #[test]
+    fn active_jobs_remain_visible_after_recent_index_cap() {
+        let store = temp_store("active_outside_recent");
+        let active = store
+            .start_call(
+                "introspect",
+                "prompt",
+                0,
+                "strict_introspection_v1",
+                "accepted_strict_review_only",
+            )
+            .expect("start active job");
+
+        for idx in 0..(RECENT_INDEX_LIMIT + 5) {
+            let job = store
+                .start_call(
+                    &format!("daydream {idx}"),
+                    "prompt",
+                    90,
+                    "action_finalizer",
+                    "finalizer_owned",
+                )
+                .expect("start recent job");
+            store
+                .finish_call(&job.job_id, "completed", Some("ok"), "done", None)
+                .expect("finish recent job");
+        }
+
+        let index = store.read_index().expect("read index");
+        let recent_ids = index_job_ids(&index, "recent_jobs");
+        let active_ids = index_job_ids(&index, "active_job_ids");
+        assert_eq!(recent_ids.len(), RECENT_INDEX_LIMIT);
+        assert!(!recent_ids.contains(&active.job_id));
+        assert!(active_ids.contains(&active.job_id));
+
+        store.write_runtime_status().expect("runtime status");
+        let status: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(&store.status_path).expect("read runtime status"),
+        )
+        .expect("parse runtime status");
+        let active_status_ids = status["active_jobs"]
+            .as_array()
+            .expect("active jobs array")
+            .iter()
+            .filter_map(|job| job["job_id"].as_str())
+            .collect::<Vec<_>>();
+        assert!(active_status_ids.contains(&active.job_id.as_str()));
+    }
+
+    #[test]
+    fn timeout_expiry_only_touches_indexed_active_jobs() {
+        let store = temp_store("indexed_timeout_only");
+        let old_started_at = "2026-05-10T00:00:00.000Z";
+        let mut indexed = store
+            .start_call(
+                "indexed timeout",
+                "prompt",
+                1,
+                "strict_introspection_v1",
+                "accepted_strict_review_only",
+            )
+            .expect("start indexed job");
+        indexed.created_at = old_started_at.to_string();
+        indexed.started_at = Some(old_started_at.to_string());
+        store.write_job(&indexed).expect("write stale indexed job");
+        store.update_index(&indexed).expect("refresh indexed job");
+
+        let unindexed = write_synthetic_job(
+            &store,
+            "job_astrid_unindexed_running_timeout_candidate",
+            "running",
+            old_started_at,
+            1,
+        );
+
+        store.write_runtime_status().expect("runtime status");
+        let indexed_after = store
+            .read_job(&indexed.job_id)
+            .expect("read indexed job")
+            .expect("indexed job present");
+        let unindexed_after = store
+            .read_job(&unindexed.job_id)
+            .expect("read unindexed job")
+            .expect("unindexed job present");
+        assert_eq!(indexed_after.status, "timeout");
+        assert_eq!(unindexed_after.status, "running");
+    }
+
+    #[test]
+    fn direct_job_id_lookup_still_reads_old_unindexed_history() {
+        let store = temp_store("direct_old_lookup");
+        let old = write_synthetic_job(
+            &store,
+            "job_astrid_legacy_explicit_lookup",
+            "completed",
+            "2026-05-10T00:00:00.000Z",
+            0,
+        );
+
+        let text = store
+            .status_text(Some(&old.job_id))
+            .expect("direct status text");
+        assert!(text.contains(&old.job_id));
+        assert!(text.contains("completed"));
+        assert!(text.contains("synthetic old job"));
     }
 }
