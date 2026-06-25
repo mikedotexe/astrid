@@ -58,6 +58,16 @@ struct SelfRegulationLease {
     stop_condition: String,
     success_condition: String,
     evidence: Vec<String>,
+    #[serde(default)]
+    baseline_evidence: Vec<String>,
+    #[serde(default)]
+    post_lease_evidence: Vec<String>,
+    #[serde(default)]
+    outcome_score: Option<f32>,
+    #[serde(default)]
+    repeatability_hint: Option<String>,
+    #[serde(default)]
+    promotion_candidate: bool,
     outcome: Option<String>,
     requires_outcome: bool,
     preflight_status: String,
@@ -167,6 +177,11 @@ fn handle_intent_at(
         stop_condition: fields.stop_condition,
         success_condition: fields.success_condition,
         evidence: fields.evidence,
+        baseline_evidence: Vec::new(),
+        post_lease_evidence: Vec::new(),
+        outcome_score: None,
+        repeatability_hint: None,
+        promotion_candidate: false,
         outcome: None,
         requires_outcome: false,
         preflight_status: "not_run".to_string(),
@@ -240,6 +255,12 @@ fn handle_apply_at(
         ));
     }
     let prepared = prepare_control(conv, &lease)?;
+    if lease.baseline_evidence.is_empty() {
+        lease.baseline_evidence.push(format!(
+            "before apply: {} previous={}",
+            prepared.normalized_control, prepared.previous_value
+        ));
+    }
     apply_prepared_control(conv, &prepared);
     lease.status = "active".to_string();
     lease.updated_at_unix_s = now;
@@ -302,6 +323,15 @@ fn handle_outcome_at(
     } else {
         outcome.to_string()
     });
+    if let Some(outcome_text) = lease.outcome.as_ref() {
+        lease
+            .post_lease_evidence
+            .push(format!("outcome: {outcome_text}"));
+        let (score, hint, promotion_candidate) = score_outcome(outcome_text);
+        lease.outcome_score = Some(score);
+        lease.repeatability_hint = Some(hint.to_string());
+        lease.promotion_candidate = promotion_candidate;
+    }
     lease.requires_outcome = false;
     append_event(root, &lease)?;
     write_active_lease(root, &lease)?;
@@ -483,6 +513,10 @@ fn reconcile_active_lease_at(
     active.updated_at_unix_s = now;
     active.requires_outcome = true;
     active.preflight_reason = "lease expired and previous value was restored".to_string();
+    active.post_lease_evidence.push(format!(
+        "expired revert: {} restored {}",
+        active.candidate_control, active.previous_value
+    ));
     append_event(root, &active)?;
     write_active_lease(root, &active)?;
     Ok(())
@@ -549,6 +583,45 @@ fn parse_intent_fields(original: &str, base_action: &str, now: u64) -> IntentFie
 
 fn split_key_value(text: &str) -> Option<(&str, &str)> {
     text.split_once(':').or_else(|| text.split_once('='))
+}
+
+fn score_outcome(outcome: &str) -> (f32, &'static str, bool) {
+    let lower = outcome.to_ascii_lowercase();
+    if contains_any(
+        &lower,
+        &[
+            "helped",
+            "clearer",
+            "eased",
+            "better",
+            "stabilized",
+            "settled",
+            "worked",
+            "successful",
+            "success",
+        ],
+    ) {
+        (0.82, "repeatable_playbook_candidate", true)
+    } else if contains_any(
+        &lower,
+        &[
+            "worse",
+            "failed",
+            "too much",
+            "overheated",
+            "destabilized",
+            "bad",
+            "regressed",
+        ],
+    ) {
+        (0.18, "caution_pattern", false)
+    } else {
+        (0.50, "needs_more_evidence", false)
+    }
+}
+
+fn contains_any(haystack: &str, needles: &[&str]) -> bool {
+    needles.iter().any(|needle| haystack.contains(needle))
 }
 
 fn parse_value(value: &str) -> Value {
@@ -860,6 +933,8 @@ mod tests {
         assert_eq!(active.applied_value, json!(0.9));
         assert_eq!(active.authority, AUTHORITY);
         assert_eq!(active.authority_boundary, AUTHORITY_BOUNDARY);
+        assert!(!active.baseline_evidence.is_empty());
+        assert!(active.baseline_evidence[0].contains("before apply"));
     }
 
     #[test]
@@ -890,6 +965,8 @@ mod tests {
             .expect("active");
         assert_eq!(active.status, "reverted");
         assert!(active.requires_outcome);
+        assert!(!active.post_lease_evidence.is_empty());
+        assert!(active.post_lease_evidence[0].contains("expired revert"));
     }
 
     #[test]
@@ -948,5 +1025,12 @@ mod tests {
         assert_eq!(active.status, "outcome_recorded");
         assert!(!active.requires_outcome);
         assert_eq!(active.outcome.as_deref(), Some("helped: felt clearer"));
+        assert_eq!(active.outcome_score, Some(0.82));
+        assert_eq!(
+            active.repeatability_hint.as_deref(),
+            Some("repeatable_playbook_candidate")
+        );
+        assert!(active.promotion_candidate);
+        assert!(!active.post_lease_evidence.is_empty());
     }
 }

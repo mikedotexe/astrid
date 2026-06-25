@@ -255,6 +255,7 @@ pub(crate) fn format_pressure_source_for_action(
             "controller_pressure",
             pressure.components.controller_pressure,
         ),
+        ("semantic_friction", pressure.components.semantic_friction),
         ("semantic_trickle", pressure.components.semantic_trickle),
         (
             "structural_plurality_loss",
@@ -297,12 +298,13 @@ pub(crate) fn format_pressure_source_for_action(
         ""
     };
     format!(
-        "=== PRESSURE SOURCE AUDIT V1 ===\nLabel: {}\n\nPressure source: {} ({})\nPressure score: {:.2}\nPorosity score: {:.2}\n\nSupporting contributors:\n{}{}\n\nPressure-vs-density distinction:\n  Resonance density can be rich containment; pressure source names what makes density feel inward, packed, scarce, or locked. Low porosity plus high pressure is the warning shape.\n\nControl contract:\n  applied_locally={}; {}\n\nSuggested read-only next steps:\n  NEXT: DECOMPOSE\n  NEXT: SPACE_HOLD eigenplane\n  NEXT: SPECTRAL_EXPLORER\n  NEXT: ATTRACTOR_REVIEW {}",
+        "=== PRESSURE SOURCE AUDIT V1 ===\nLabel: {}\n\nPressure source: {} ({})\nPressure score: {:.2}\nPorosity score: {:.2}\nSemantic friction: {:.2}\n\nSupporting contributors:\n{}{}\n\nPressure-vs-density distinction:\n  Resonance density can be rich containment; pressure source names what makes density feel inward, packed, scarce, or locked. Semantic friction names medium-mass/semantic cling separately from density-gradient slope drag. Low porosity plus high pressure is the warning shape.\n\nControl contract:\n  applied_locally={}; {}\n\nSuggested read-only next steps:\n  NEXT: DECOMPOSE\n  NEXT: SPACE_HOLD eigenplane\n  NEXT: SPECTRAL_EXPLORER\n  NEXT: ATTRACTOR_REVIEW {}",
         if label.is_empty() { "current" } else { label },
         pressure.dominant_source,
         pressure.quality,
         pressure.pressure_score,
         pressure.porosity_score,
+        pressure.components.semantic_friction,
         top,
         divergence_note,
         pressure.control.applied_locally,
@@ -803,6 +805,7 @@ mod tests {
                     target_bias_pct: 0.0,
                     wander_scale: 1.0,
                     applied_locally: true,
+                    damping_coefficient: 0.0,
                     note: "test".to_string(),
                 },
             }),
@@ -818,6 +821,7 @@ mod tests {
                     mode_packing: 0.20,
                     controller_pressure: 0.72,
                     semantic_trickle: 0.10,
+                    semantic_friction: 0.40,
                     structural_plurality_loss: 0.18,
                     distinguishability_loss: 0.40,
                     temporal_lock_in: 0.22,
@@ -987,6 +991,8 @@ mod tests {
         let output = format_pressure_source_for_action(&telemetry, "inwardness");
         assert!(output.contains("PRESSURE SOURCE AUDIT V1"));
         assert!(output.contains("controller_pressure"));
+        assert!(output.contains("Semantic friction"));
+        assert!(output.contains("medium-mass"));
         assert!(output.contains("advisory only"));
 
         if let Some(pressure) = telemetry.pressure_source_v1.as_mut() {
@@ -1003,6 +1009,64 @@ mod tests {
         let degraded = format_pressure_source_for_action(&unavailable, "inwardness");
         assert!(degraded.contains("Pressure source: unavailable"));
         assert!(degraded.contains("rebuild/restart Rust engine under monitoring"));
+    }
+
+    #[test]
+    fn telemetry_deserializes_without_new_semantic_friction_fields() {
+        let telemetry: SpectralTelemetry = serde_json::from_value(json!({
+            "t_ms": 42,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.68,
+            "resonance_density_v1": {
+                "policy": "resonance_density_v1",
+                "schema_version": 1,
+                "density": 0.64,
+                "containment_score": 0.58,
+                "pressure_risk": 0.20,
+                "quality": "forming_containment",
+                "components": {
+                    "active_energy": 0.91,
+                    "mode_packing": 0.50,
+                    "temporal_persistence": 0.70,
+                    "structural_plurality": 0.62,
+                    "comfort_gate": 0.95
+                },
+                "control": {
+                    "target_bias_pct": 0.0,
+                    "wander_scale": 1.0,
+                    "applied_locally": true,
+                    "note": "legacy"
+                }
+            },
+            "pressure_source_v1": {
+                "policy": "pressure_source_v1",
+                "schema_version": 1,
+                "pressure_score": 0.42,
+                "porosity_score": 0.67,
+                "dominant_source": "controller_pressure",
+                "quality": "controller_squeeze",
+                "components": {
+                    "lambda_monopoly": 0.30,
+                    "mode_packing": 0.20,
+                    "controller_pressure": 0.72,
+                    "semantic_trickle": 0.10,
+                    "structural_plurality_loss": 0.18,
+                    "distinguishability_loss": 0.40,
+                    "temporal_lock_in": 0.22,
+                    "sensory_scarcity": 0.05
+                },
+                "control": {
+                    "applied_locally": false,
+                    "note": "advisory only"
+                }
+            }
+        }))
+        .expect("legacy telemetry");
+
+        let density = telemetry.resonance_density_v1.expect("density");
+        assert_eq!(density.control.damping_coefficient, 0.0);
+        let pressure = telemetry.pressure_source_v1.expect("pressure");
+        assert_eq!(pressure.components.semantic_friction, 0.0);
     }
 
     #[test]

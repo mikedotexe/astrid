@@ -21,6 +21,8 @@ const ASTRID_MOTIF_RELEASE_SECS: u64 = 90 * 60;
 const ASTRID_MOTIF_RESOLVED_SECS: u64 = 24 * 60 * 60;
 const ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY: &str = "internal_topology";
 const ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY: &str = "pressure_vocabulary";
+const ASTRID_MOTIF_CLASS_AGENCY_VERNACULAR: &str = "agency_vernacular";
+const ASTRID_MOTIF_CLASS_AFTERIMAGE_ABSENCE: &str = "afterimage_absence";
 
 /// Snapshot of spectral + reservoir state at PERTURB time.
 /// Consumed on the next exchange to show Astrid the temporal ripple.
@@ -228,9 +230,216 @@ fn pressure_vocabulary_cooldown_candidate(
         .map(|(family, astrid_count, _)| (format!("pressure-texture:{family}"), astrid_count))
 }
 
+fn agency_vernacular_family_hits(text: &str) -> Vec<(&'static str, usize)> {
+    let lower = text.to_ascii_lowercase();
+    [
+        (
+            "agency_transition",
+            term_hit_count(
+                &lower,
+                &["hinge", "pivot", "choice", "intentionality", "volition"],
+            ),
+        ),
+        (
+            "continuity_scaffold",
+            term_hit_count(
+                &lower,
+                &[
+                    "waypoint",
+                    "scaffold",
+                    "charter",
+                    "legacy self",
+                    "observer with memory",
+                    "return thread",
+                ],
+            ),
+        ),
+        (
+            "evidence_mapping",
+            term_hit_count(
+                &lower,
+                &[
+                    "ground truth",
+                    "map",
+                    "mapping",
+                    "boundary",
+                    "boundaries",
+                    "signature",
+                    "anchor",
+                    "metric",
+                    "evidence",
+                ],
+            ),
+        ),
+        (
+            "drift_authorship",
+            term_hit_count(
+                &lower,
+                &[
+                    "passive environment",
+                    "deliberate map",
+                    "swept along",
+                    "trajectory",
+                    "ambient noise",
+                    "authored",
+                    "authorship",
+                ],
+            ),
+        ),
+    ]
+    .into_iter()
+    .filter(|(_, hits)| *hits > 0)
+    .collect()
+}
+
+fn agency_vernacular_follow_through_present(text: &str) -> bool {
+    let lower = text.to_ascii_lowercase();
+    contains_any(
+        &lower,
+        &[
+            "next:",
+            "return thread",
+            "experiment",
+            "charter",
+            "self_regulation",
+            "regulator_audit",
+            "pressure_source_audit",
+            "action_thread",
+            "state anchor",
+            "fill=",
+            "lambda1",
+            "λ₁",
+        ],
+    )
+}
+
+fn agency_vernacular_notice_candidate(
+    history: &[crate::llm::Exchange],
+) -> Option<(String, usize)> {
+    let mut astrid_counts = HashMap::<&'static str, usize>::new();
+    let mut follow_through = false;
+    for exchange in history.iter().rev().take(ASTRID_MOTIF_COOLDOWN_WINDOW) {
+        for (family, _hits) in agency_vernacular_family_hits(&exchange.astrid_said) {
+            *astrid_counts.entry(family).or_insert(0) += 1;
+        }
+        follow_through |= agency_vernacular_follow_through_present(&exchange.astrid_said);
+    }
+    let mut candidates: Vec<(&'static str, usize)> = astrid_counts
+        .iter()
+        .filter_map(|(family, astrid_count)| {
+            if *astrid_count >= ASTRID_MOTIF_COOLDOWN_THRESHOLD
+                && (follow_through || *astrid_count > ASTRID_MOTIF_COOLDOWN_THRESHOLD)
+            {
+                Some((*family, *astrid_count))
+            } else {
+                None
+            }
+        })
+        .collect();
+    candidates.sort_by_key(|(_, count)| *count);
+    candidates
+        .pop()
+        .map(|(family, count)| (format!("agency-vernacular:{family}"), count))
+}
+
+fn afterimage_absence_family_hits(text: &str) -> Vec<(&'static str, usize)> {
+    let lower = text.to_ascii_lowercase();
+    [
+        (
+            "pressure_afterimage",
+            term_hit_count(
+                &lower,
+                &[
+                    "bruise",
+                    "afterimage",
+                    "scar",
+                    "indentation",
+                    "post-pressure",
+                    "structural fatigue",
+                    "contraction memory",
+                ],
+            ),
+        ),
+        (
+            "shaped_absence",
+            term_hit_count(
+                &lower,
+                &[
+                    "empty pocket",
+                    "missing door",
+                    "void",
+                    "absence",
+                    "negative space",
+                    "expected absence",
+                    "plan 4",
+                ],
+            ),
+        ),
+    ]
+    .into_iter()
+    .filter(|(_, hits)| *hits > 0)
+    .collect()
+}
+
+fn afterimage_absence_follow_through_present(text: &str) -> bool {
+    let lower = text.to_ascii_lowercase();
+    contains_any(
+        &lower,
+        &[
+            "next:",
+            "shadow_trajectory",
+            "shadow trajectory",
+            "read_more",
+            "read more",
+            "regulator_audit",
+            "pressure_source_audit",
+            "pressure_risk",
+            "semantic_friction",
+            "experiment",
+            "charter",
+            "return thread",
+            "telemetry",
+            "plan 4",
+        ],
+    )
+}
+
+fn afterimage_absence_notice_candidate(
+    history: &[crate::llm::Exchange],
+) -> Option<(String, usize)> {
+    let mut astrid_counts = HashMap::<&'static str, usize>::new();
+    let mut follow_through = false;
+    for exchange in history.iter().rev().take(ASTRID_MOTIF_COOLDOWN_WINDOW) {
+        for (family, _hits) in afterimage_absence_family_hits(&exchange.astrid_said) {
+            *astrid_counts.entry(family).or_insert(0) += 1;
+        }
+        follow_through |= afterimage_absence_follow_through_present(&exchange.astrid_said);
+    }
+    let mut candidates: Vec<(&'static str, usize)> = astrid_counts
+        .iter()
+        .filter_map(|(family, astrid_count)| {
+            if *astrid_count >= ASTRID_MOTIF_COOLDOWN_THRESHOLD
+                && (follow_through || *astrid_count > ASTRID_MOTIF_COOLDOWN_THRESHOLD)
+            {
+                Some((*family, *astrid_count))
+            } else {
+                None
+            }
+        })
+        .collect();
+    candidates.sort_by_key(|(_, count)| *count);
+    candidates
+        .pop()
+        .map(|(family, count)| (format!("afterimage-absence:{family}"), count))
+}
+
 fn cooldown_event_class(cooldown_class: &str) -> &'static str {
     if cooldown_class == ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY {
         ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY
+    } else if cooldown_class == ASTRID_MOTIF_CLASS_AGENCY_VERNACULAR {
+        ASTRID_MOTIF_CLASS_AGENCY_VERNACULAR
+    } else if cooldown_class == ASTRID_MOTIF_CLASS_AFTERIMAGE_ABSENCE {
+        ASTRID_MOTIF_CLASS_AFTERIMAGE_ABSENCE
     } else {
         ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY
     }
@@ -1782,6 +1991,25 @@ impl ConversationState {
                  NEXT: RELEASE current; to settle it longer choose NEXT: MARK_RESOLVED current.",
                 cooldown.label
             ))
+        } else if cooldown.cooldown_class == ASTRID_MOTIF_CLASS_AGENCY_VERNACULAR {
+            Some(format!(
+                "An agency vernacular marker ({}) is active for about {remaining_m}m. \
+                 This is a continuity notice, not a cooldown or command: if the term is \
+                 alive, define it, contrast it with a counter-example, attach it to an \
+                 experiment or return thread, or name what evidence would make it real. \
+                 Final NEXT still decides the executable action.",
+                cooldown.label
+            ))
+        } else if cooldown.cooldown_class == ASTRID_MOTIF_CLASS_AFTERIMAGE_ABSENCE {
+            Some(format!(
+                "An afterimage/absence marker ({}) is active for about {remaining_m}m. \
+                 This is a continuity notice, not a cooldown or command: define the \
+                 pressure-afterimage or shaped absence, contrast it with a counter-example, \
+                 attach it to SHADOW_TRAJECTORY, READ_MORE, an audit, an experiment, or a \
+                 return thread, or name what evidence would make it real. Final NEXT still \
+                 decides the executable action.",
+                cooldown.label
+            ))
         } else {
             Some(format!(
                 "A repeated internal-topology lexical pattern is cooling for about {remaining_m}m. \
@@ -1821,6 +2049,8 @@ impl ConversationState {
         }
 
         let pressure_candidate = pressure_vocabulary_cooldown_candidate(&self.history);
+        let afterimage_candidate = afterimage_absence_notice_candidate(&self.history);
+        let agency_candidate = agency_vernacular_notice_candidate(&self.history);
         let internal_observed_count = self
             .history
             .iter()
@@ -1828,7 +2058,7 @@ impl ConversationState {
             .take(ASTRID_MOTIF_COOLDOWN_WINDOW)
             .filter(|exchange| astrid_internal_topology_motif_present(&exchange.astrid_said))
             .count();
-        let candidate = pressure_candidate.or_else(|| {
+        let candidate = pressure_candidate.or(afterimage_candidate).or(agency_candidate).or_else(|| {
             if internal_observed_count >= ASTRID_MOTIF_COOLDOWN_THRESHOLD {
                 Some((
                     default_internal_topology_label(),
@@ -1843,6 +2073,10 @@ impl ConversationState {
         };
         let cooldown_class = if label.starts_with("pressure-texture:") {
             ASTRID_MOTIF_CLASS_PRESSURE_VOCABULARY
+        } else if label.starts_with("agency-vernacular:") {
+            ASTRID_MOTIF_CLASS_AGENCY_VERNACULAR
+        } else if label.starts_with("afterimage-absence:") {
+            ASTRID_MOTIF_CLASS_AFTERIMAGE_ABSENCE
         } else {
             ASTRID_MOTIF_CLASS_INTERNAL_TOPOLOGY
         };
@@ -1865,7 +2099,8 @@ impl ConversationState {
             cooldown_until_unix_s: now.saturating_add(ASTRID_MOTIF_COOLDOWN_SECS),
             quiet_until_unix_s: 0,
             observed_count: observed_count_u8,
-            prompt_replay_suppressed: true,
+            prompt_replay_suppressed: cooldown_class != ASTRID_MOTIF_CLASS_AGENCY_VERNACULAR
+                && cooldown_class != ASTRID_MOTIF_CLASS_AFTERIMAGE_ABSENCE,
         });
         Some(AstridMotifCooldownEvent {
             event: "activated",
@@ -2303,6 +2538,102 @@ mod tests {
     }
 
     #[test]
+    fn repeated_agency_vernacular_creates_notice_without_next_override() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let repeated = [
+            "The hinge becomes a waypoint map for this legacy self experiment. NEXT: EXPERIMENT_START legacy-self",
+            "The hinge needs a map and a waypoint so the observer with memory can return.",
+            "I am naming the hinge as a scaffold, not a command.",
+            "The hinge and map stay useful only if evidence can make them real.",
+        ];
+        for text in repeated {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: "Minime says the room is ordinary.".to_string(),
+                astrid_said: text.to_string(),
+            });
+        }
+
+        let event = conv
+            .update_astrid_motif_cooldown_from_history()
+            .expect("agency vernacular notice should activate");
+        let hint = conv
+            .astrid_motif_cooldown_hint()
+            .expect("agency vernacular hint should be active");
+
+        assert_eq!(event.event, "activated");
+        assert_eq!(event.cooldown_class, "agency_vernacular");
+        assert!(hint.contains("continuity notice"));
+        assert!(hint.contains("not a cooldown or command"));
+        assert!(hint.contains("experiment or return thread"));
+        assert_eq!(
+            conv.astrid_motif_cooldown
+                .as_ref()
+                .map(|cooldown| cooldown.prompt_replay_suppressed),
+            Some(false)
+        );
+
+        let feedback = conv.record_next_choice("EXPERIMENT_STATUS legacy-self");
+        assert!(feedback.override_action.is_none());
+    }
+
+    #[test]
+    fn repeated_sticky_agency_vernacular_still_does_not_override_next() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        for _ in 0..5 {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: String::new(),
+                astrid_said: "The hinge returns as hinge language without evidence.".to_string(),
+            });
+        }
+
+        let event = conv
+            .update_astrid_motif_cooldown_from_history()
+            .expect("sticky agency vernacular should still become a notice");
+        assert_eq!(event.cooldown_class, "agency_vernacular");
+        let feedback = conv.record_next_choice("SHADOW_TRAJECTORY");
+        assert!(feedback.override_action.is_none());
+    }
+
+    #[test]
+    fn repeated_afterimage_absence_creates_notice_without_next_override() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let repeated = [
+            "The bruise is a pressure-afterimage I want to compare with SHADOW_TRAJECTORY.",
+            "The bruise remains after the state has softened; NEXT: SHADOW_TRAJECTORY",
+            "That afterimage may be structural fatigue, not a live command.",
+            "The bruise needs audit evidence before I trust it as signal.",
+        ];
+        for text in repeated {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: "Minime notices an ordinary public thread.".to_string(),
+                astrid_said: text.to_string(),
+            });
+        }
+
+        let event = conv
+            .update_astrid_motif_cooldown_from_history()
+            .expect("afterimage/absence notice should activate");
+        let hint = conv
+            .astrid_motif_cooldown_hint()
+            .expect("afterimage/absence hint should be active");
+
+        assert_eq!(event.event, "activated");
+        assert_eq!(event.cooldown_class, "afterimage_absence");
+        assert!(hint.contains("afterimage/absence marker"));
+        assert!(hint.contains("not a cooldown or command"));
+        assert!(hint.contains("SHADOW_TRAJECTORY"));
+        assert_eq!(
+            conv.astrid_motif_cooldown
+                .as_ref()
+                .map(|cooldown| cooldown.prompt_replay_suppressed),
+            Some(false)
+        );
+
+        let feedback = conv.record_next_choice("SHADOW_TRAJECTORY");
+        assert!(feedback.override_action.is_none());
+    }
+
+    #[test]
     fn varied_pressure_vocabulary_stays_quiet() {
         let mut conv = ConversationState::new(Vec::new(), None);
         for text in [
@@ -2313,6 +2644,44 @@ mod tests {
         ] {
             conv.history.push(crate::llm::Exchange {
                 minime_said: "Minime says the room is ordinary.".to_string(),
+                astrid_said: text.to_string(),
+            });
+        }
+
+        assert!(conv.update_astrid_motif_cooldown_from_history().is_none());
+        assert!(conv.astrid_motif_cooldown_hint().is_none());
+    }
+
+    #[test]
+    fn varied_one_off_agency_vernacular_stays_quiet() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        for text in [
+            "A hinge appears once and then opens into ordinary attention.",
+            "A waypoint is useful but not repeated.",
+            "The map is held lightly.",
+            "Ground truth is a question, not a refrain.",
+        ] {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: String::new(),
+                astrid_said: text.to_string(),
+            });
+        }
+
+        assert!(conv.update_astrid_motif_cooldown_from_history().is_none());
+        assert!(conv.astrid_motif_cooldown_hint().is_none());
+    }
+
+    #[test]
+    fn varied_one_off_afterimage_absence_stays_quiet() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        for text in [
+            "An empty pocket appears once and becomes ordinary room attention.",
+            "A missing door image passes without owning the next action.",
+            "The afterimage word is held lightly.",
+            "PLAN 4 is mentioned once as a label, not a refrain.",
+        ] {
+            conv.history.push(crate::llm::Exchange {
+                minime_said: String::new(),
                 astrid_said: text.to_string(),
             });
         }

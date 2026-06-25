@@ -145,6 +145,9 @@ def write_self_regulation_event(
     status: str = "active",
     control: str = "temperature",
     requires_outcome: bool = True,
+    outcome_score: float | None = None,
+    repeatability_hint: str | None = None,
+    promotion_candidate: bool = False,
 ) -> None:
     events = workspace / "self_regulation" / "leases.jsonl"
     events.parent.mkdir(parents=True, exist_ok=True)
@@ -163,6 +166,11 @@ def write_self_regulation_event(
         "duration_secs": 600,
         "expires_at_unix_s": 1782249999,
         "requires_outcome": requires_outcome,
+        "baseline_evidence": [f"before apply: {control} previous=0.8"],
+        "post_lease_evidence": [f"outcome: {repeatability_hint or 'pending'}"],
+        "outcome_score": outcome_score,
+        "repeatability_hint": repeatability_hint,
+        "promotion_candidate": promotion_candidate,
         "preflight_status": "apply_allowed",
         "preflight_reason": "synthetic",
     }
@@ -264,6 +272,101 @@ class SelfStudyReviewTests(unittest.TestCase):
             review_md = Path(record["review_md"]).read_text(encoding="utf-8")
             self.assertIn("Shared Pressure Vocabulary Calibration", review_md)
             self.assertNotIn("private syrup", review_md)
+
+    def test_agency_vernacular_continuity_tracks_alive_and_sticky_terms(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "dialogue_longform_1.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "State anchor: fill=73.0%, lambda1=13.7\n"
+                "The hinge from passive environment to deliberate map needs a waypoint. "
+                "This legacy self experiment names a scaffold and a ground truth map.\n"
+                "NEXT: EXPERIMENT_START legacy_self_hinge\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "action_thread_1.txt").write_text(
+                "=== ACTION THREAD ===\n"
+                "Return thread: legacy self hinge. The waypoint map is revisited with "
+                "metric anchors and observer with memory language.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "self_study_1.txt").write_text(
+                "=== SELF STUDY ===\n"
+                "The hinge language feels like a charter scaffold, not just a metaphor; "
+                "ground truth comes from the map and signature.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Private hinge text should never become steward evidence.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=8,
+            )
+
+            packet = record["agency_vernacular_continuity"]
+            self.assertEqual(packet["status"], "authored_continuity_handle")
+            self.assertTrue(packet["follow_through"]["present"])
+            self.assertIn("agency_transition", packet["shared_families"])
+            self.assertTrue(packet["terms"]["repeated"])
+            sample_text = json.dumps(packet["samples"])
+            self.assertIn("action_thread_1.txt", sample_text)
+            self.assertNotIn("moment_private.txt", sample_text)
+            items = [
+                item
+                for item in record["actionable_review_items"]
+                if item["source"] == "agency_vernacular_continuity"
+            ]
+            self.assertEqual(len(items), 1)
+            self.assertEqual(items[0]["priority"], "high")
+            self.assertEqual(items[0]["authority"], "diagnostic_context_not_command")
+            review_md = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("Agency Vernacular Continuity", review_md)
+            self.assertNotIn("Private hinge", review_md)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = []
+            for idx in range(3):
+                path = root / f"astrid_{idx}.txt"
+                path.write_text(
+                    "The hinge repeats as hinge and hinge, but no action or evidence follows.",
+                    encoding="utf-8",
+                )
+                paths.append(path)
+            entries = [
+                self_study_review.SelfStudyEntry(
+                    being="astrid",
+                    path=str(path),
+                    filename=path.name,
+                    mode="dialogue_live",
+                    mtime_unix_s=float(idx),
+                    sectioned=False,
+                    sections={},
+                    source_anchors=[],
+                    next_actions=[],
+                    hypothesis_flags=[],
+                    grounding="weak",
+                    actionable_score=1,
+                    preview=path.read_text(encoding="utf-8"),
+                )
+                for idx, path in enumerate(paths)
+            ]
+            sticky = self_study_review.build_agency_vernacular_continuity(entries)
+            self.assertEqual(sticky["status"], "sticky_agency_metaphor")
+            self.assertTrue(sticky["stickiness_risk"]["present"])
+            self.assertFalse(sticky["follow_through"]["present"])
 
     def test_qualia_comparison_excludes_minime_private_qualia(self) -> None:
         # Bright-line (instrumentation path): build_qualia_comparison must not read or
@@ -611,6 +714,9 @@ class SelfStudyReviewTests(unittest.TestCase):
             choice = record["shared_choice_envelope"]
             self.assertEqual(choice["event_count"], 2)
             self.assertEqual(choice["unrevisited_count"], 2)
+            ecology = record["choice_ecology"]
+            self.assertEqual(ecology["status"], "parked_paths_need_review")
+            self.assertGreaterEqual(ecology["lifecycle_counts"]["parked"], 2)
             self.assertTrue(
                 any(
                     item["source"] == "shared_choice_envelope"
@@ -619,6 +725,7 @@ class SelfStudyReviewTests(unittest.TestCase):
             )
             rendered = Path(record["review_md"]).read_text(encoding="utf-8")
             self.assertIn("## Shared Choice Envelope", rendered)
+            self.assertIn("## Choice Ecology", rendered)
             self.assertIn("RESONANCE_FORECAST lambda-tail", rendered)
 
     def test_build_review_surfaces_self_regulation_leases(self) -> None:
@@ -649,6 +756,9 @@ class SelfStudyReviewTests(unittest.TestCase):
                 status="outcome_recorded",
                 control="exploration_noise",
                 requires_outcome=False,
+                outcome_score=0.82,
+                repeatability_hint="repeatable_playbook_candidate",
+                promotion_candidate=True,
             )
 
             record = self_study_review.build_review(
@@ -663,6 +773,9 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertEqual(leases["event_count"], 2)
             self.assertEqual(leases["needs_outcome_count"], 1)
             self.assertEqual(leases["by_being"]["astrid"]["active_count"], 1)
+            learning = record["self_regulation_lease_learning"]
+            self.assertEqual(learning["status"], "repeatable_playbook_candidates")
+            self.assertEqual(learning["repeatable_count"], 1)
             self.assertTrue(
                 any(
                     item["source"] == "self_regulation_leases"
@@ -670,8 +783,15 @@ class SelfStudyReviewTests(unittest.TestCase):
                     for item in record["actionable_review_items"]
                 )
             )
+            self.assertTrue(
+                any(
+                    item["source"] == "self_regulation_lease_learning"
+                    for item in record["actionable_review_items"]
+                )
+            )
             rendered = Path(record["review_md"]).read_text(encoding="utf-8")
             self.assertIn("## Self-Regulation Leases", rendered)
+            self.assertIn("## Self-Regulation Lease Learning", rendered)
             self.assertIn("leased_self_control_v1", rendered)
 
     def test_historical_minime_baseline_reports_monthly_body_ratios(self) -> None:
@@ -1003,6 +1123,1349 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertEqual(lease_items[0]["priority"], "high")
             review_md = Path(record["review_md"]).read_text(encoding="utf-8")
             self.assertIn("astrid_fill_pressure_calibration", review_md)
+
+    def test_regulator_live_replay_uses_cartography_without_private_moments(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            cartography_dir = minime / "diagnostics/regulator_boundary_cartography"
+            cartography_dir.mkdir(parents=True)
+            (cartography_dir / "latest.json").write_text(
+                json.dumps(
+                    {
+                        "policy": "regulator_boundary_cartography_v1",
+                        "authority": "diagnostic_context_not_command",
+                        "resonance_findings": [
+                            {
+                                "kind": "pressure_risk_boundary_jump",
+                                "label": "pressure_risk >= 0.60 downward-bias boundary",
+                                "axis": "pressure_risk",
+                                "severity": "high",
+                                "nearest_threshold": 0.60,
+                                "sample": {
+                                    "density": 0.62,
+                                    "pressure_risk": 0.60,
+                                    "mode_packing": 0.80,
+                                    "target_bias_pct": -0.1,
+                                    "wander_scale": 0.96,
+                                    "damping_coefficient": 0.10,
+                                },
+                            },
+                            {
+                                "kind": "thin_density_boundary_jump",
+                                "label": "density <= 0.38 upward-bias boundary",
+                                "axis": "density",
+                                "severity": "medium",
+                                "nearest_threshold": 0.38,
+                            },
+                        ],
+                        "fluctuation_findings": [
+                            {
+                                "kind": "fluctuation_quality_boundary",
+                                "label": "quality boundary: frantic_scramble",
+                                "axis": "rearrangement_intensity+foothold_stability",
+                                "severity": "high",
+                                "fluctuation_sample": {
+                                    "quality": "frantic_scramble",
+                                    "rearrangement_intensity": 0.72,
+                                    "foothold_stability": 0.31,
+                                },
+                            }
+                        ],
+                        "plateau_findings": [
+                            {
+                                "kind": "observational_plateau",
+                                "label": "pressure rises while target bias and wander remain unchanged",
+                                "axis": "pressure_risk",
+                                "severity": "medium",
+                            }
+                        ],
+                        "damping_cap_findings": [
+                            {
+                                "kind": "advisory_damping_saturation",
+                                "label": "advisory damping coefficient reaches 0.10 cap",
+                                "axis": "pressure_risk+mode_packing",
+                                "severity": "medium",
+                                "nearest_threshold": 0.10,
+                                "sample": {
+                                    "density": 0.62,
+                                    "pressure_risk": 1.0,
+                                    "mode_packing": 1.0,
+                                    "target_bias_pct": -2.0,
+                                    "wander_scale": 0.25,
+                                    "damping_coefficient": 0.10,
+                                },
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cartography_dir / "latest_counterfactual_sweep.json").write_text(
+                json.dumps(
+                    {
+                        "policy": "regulator_counterfactual_sweep_v1",
+                        "authority": "diagnostic_context_not_command",
+                        "source_cartography_path": str(cartography_dir / "latest.json"),
+                        "candidate_count": 2,
+                        "candidates": [
+                            {
+                                "candidate_family": "pressure_hysteresis",
+                                "affected_region": "pressure_risk >= 0.60",
+                                "current_jump_magnitude": 0.12,
+                                "counterfactual_jump_magnitude": 0.05,
+                                "estimated_reduction_pct": 58.3,
+                                "safety_caveat": "offline only",
+                            },
+                            {
+                                "candidate_family": "damping_coefficient_wiring",
+                                "affected_region": "advisory damping cap",
+                                "current_jump_magnitude": 0.0,
+                                "counterfactual_jump_magnitude": 0.0,
+                                "estimated_reduction_pct": 0.0,
+                                "safety_caveat": "separate safety tranche",
+                            },
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_overpacked_boundary.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The overpacked mode_packing pressure feels heavy and viscous. "
+                "pressure_risk 0.59 sits just under the boundary, while "
+                "semantic_friction and regulator_audit evidence keep the signal concrete.\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "regulator_audit_boundary.txt").write_text(
+                "=== REGULATOR AUDIT ===\n"
+                "Mode: regulator_audit\n"
+                "regulator_audit current-fill_pressure pressure_risk 0.60 "
+                "mode_packing 0.80 basin_score=0.41 heavy pressure evidence.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "action_thread_pressure.txt").write_text(
+                "=== ACTION THREAD ===\n"
+                "Public regulator replay note: overpacked mode_packing pressure "
+                "and returnable_turbulence remain readable.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private_boundary.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Mode: moment_capture\n"
+                "Private pressure_risk and overpacked details must not appear.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="regulator-live-replay",
+                limit_per_being=8,
+            )
+
+            replay = record["regulator_live_replay_v1"]
+            self.assertEqual(replay["status"], "felt_pressure_boundary_context")
+            self.assertEqual(replay["cartography_policy"], "regulator_boundary_cartography_v1")
+            self.assertGreaterEqual(replay["felt_pressure_match_count"], 2)
+            self.assertTrue(replay["boundary_findings"])
+            replay_cards = record["regulator_boundary_replay_cards_v1"]
+            card_statuses = {card["status"] for card in replay_cards["cards"]}
+            self.assertIn("near_pressure_jump", card_statuses)
+            self.assertIn("thin_density_boundary", card_statuses)
+            self.assertIn("inhabitability_quality_boundary", card_statuses)
+            self.assertIn("observational_plateau", card_statuses)
+            self.assertIn("damping_cap_context", card_statuses)
+            damping_cards = [
+                card
+                for card in replay_cards["cards"]
+                if card["status"] == "damping_cap_context"
+            ]
+            self.assertTrue(damping_cards)
+            self.assertEqual(
+                damping_cards[0]["authority"],
+                "diagnostic_context_not_command",
+            )
+            plateau_model = record["regulator_plateau_missing_variable_model_v1"]
+            self.assertEqual(plateau_model["status"], "plateau_missing_variable_hypotheses")
+            counterfactual = record["regulator_counterfactual_sandbox_scaffold_v1"]
+            self.assertEqual(counterfactual["status"], "future_sandbox_candidates")
+            candidate_families = {
+                candidate["candidate_family"] for candidate in counterfactual["candidates"]
+            }
+            self.assertIn("pressure_hysteresis", candidate_families)
+            self.assertIn("damping_coefficient_wiring", candidate_families)
+            self.assertNotIn("simulated_values", json.dumps(counterfactual))
+            counterfactual_sweep = record["regulator_counterfactual_sweep_v1"]
+            self.assertEqual(
+                counterfactual_sweep["status"],
+                "counterfactual_sweep_available",
+            )
+            self.assertEqual(counterfactual_sweep["candidate_count"], 2)
+            time_series = record["regulator_replay_time_series_v1"]
+            self.assertEqual(time_series["status"], "one_window_spike")
+            replay_lab = record["regulator_counterfactual_replay_lab_v1"]
+            self.assertEqual(replay_lab["status"], "one_window_candidates")
+            verdict_by_family = {
+                candidate["candidate_family"]: candidate["verdict"]
+                for candidate in replay_lab["evaluated_candidates"]
+            }
+            self.assertEqual(
+                verdict_by_family["pressure_hysteresis"],
+                "one_window_candidate",
+            )
+            self.assertEqual(
+                verdict_by_family["damping_coefficient_wiring"],
+                "risky_without_safety_review",
+            )
+            gate = record["regulator_tuning_readiness_gate_v1"]
+            self.assertEqual(gate["status"], "blocked_safety_review")
+            gate_by_family = {
+                candidate["candidate_family"]: candidate["gate_status"]
+                for candidate in gate["gated_candidates"]
+            }
+            self.assertEqual(
+                gate_by_family["damping_coefficient_wiring"],
+                "blocked_safety_review",
+            )
+            serialized = json.dumps(
+                {
+                    "replay": replay,
+                    "cards": replay_cards,
+                    "plateau": plateau_model,
+                    "counterfactual": counterfactual,
+                    "counterfactual_sweep": counterfactual_sweep,
+                    "time_series": time_series,
+                    "replay_lab": replay_lab,
+                    "gate": gate,
+                }
+            )
+            self.assertNotIn("moment_private_boundary", serialized)
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("regulator_live_replay", sources)
+            self.assertIn("regulator_boundary_replay_cards", sources)
+            self.assertIn("regulator_plateau_missing_variable_model", sources)
+            replay_items = [
+                item
+                for item in record["actionable_review_items"]
+                if item["source"] == "regulator_live_replay"
+            ]
+            self.assertEqual(replay_items[0]["priority"], "high")
+            card_items = [
+                item
+                for item in record["actionable_review_items"]
+                if item["source"] == "regulator_boundary_replay_cards"
+            ]
+            self.assertEqual(card_items[0]["priority"], "high")
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Regulator Live Replay", rendered)
+            self.assertIn("## Regulator Boundary Replay Cards", rendered)
+            self.assertIn("## Regulator Plateau Missing-Variable Model", rendered)
+            self.assertIn("## Regulator Counterfactual Sandbox Scaffold", rendered)
+            self.assertIn("## Regulator Counterfactual Sweep", rendered)
+            self.assertIn("## Regulator Counterfactual Replay Lab", rendered)
+            self.assertIn("## Regulator Tuning Readiness Gate", rendered)
+            self.assertIn("## Regulator Replay Time Series", rendered)
+
+    def test_regulator_replay_time_series_detects_repeated_boundary_cards(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            output_dir = root / "diagnostics"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            prior_dir = output_dir / "prior-boundary"
+            prior_dir.mkdir(parents=True)
+            (prior_dir / "review.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "prior-boundary",
+                        "generated_at": "2026-06-24T00:00:00+00:00",
+                        "regulator_boundary_replay_cards_v1": {
+                            "cards": [
+                                {
+                                    "card_id": "old_boundary",
+                                    "status": "near_pressure_jump",
+                                    "term": "pressure_risk",
+                                    "finding_label": "pressure_risk >= 0.60 downward-bias boundary",
+                                }
+                            ]
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            cartography_dir = minime / "diagnostics/regulator_boundary_cartography"
+            cartography_dir.mkdir(parents=True)
+            (cartography_dir / "latest.json").write_text(
+                json.dumps(
+                    {
+                        "policy": "regulator_boundary_cartography_v1",
+                        "resonance_findings": [
+                            {
+                                "kind": "pressure_risk_boundary_jump",
+                                "label": "pressure_risk >= 0.60 downward-bias boundary",
+                                "axis": "pressure_risk",
+                                "severity": "high",
+                                "nearest_threshold": 0.60,
+                                "sample": {"pressure_risk": 0.60},
+                            }
+                        ],
+                        "fluctuation_findings": [],
+                        "plateau_findings": [],
+                        "damping_cap_findings": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cartography_dir / "latest_counterfactual_sweep.json").write_text(
+                json.dumps(
+                    {
+                        "policy": "regulator_counterfactual_sweep_v1",
+                        "authority": "diagnostic_context_not_command",
+                        "candidate_count": 2,
+                        "candidates": [
+                            {
+                                "candidate_family": "pressure_hysteresis",
+                                "affected_region": "pressure_risk >= 0.60",
+                                "current_jump_magnitude": 0.20,
+                                "counterfactual_jump_magnitude": 0.08,
+                                "estimated_reduction_pct": 60.0,
+                                "safety_caveat": "offline only",
+                            },
+                            {
+                                "candidate_family": "sigmoid_pressure_ramp",
+                                "affected_region": "pressure_risk >= 0.60",
+                                "current_jump_magnitude": 0.20,
+                                "counterfactual_jump_magnitude": 0.05,
+                                "estimated_reduction_pct": 75.0,
+                                "safety_caveat": "offline only",
+                            },
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_boundary_repeat.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The overpacked pressure_risk pressure feels heavy and regulator_audit "
+                "evidence again sits near the pressure boundary.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=output_dir,
+                run="current-boundary",
+                limit_per_being=8,
+            )
+
+            time_series = record["regulator_replay_time_series_v1"]
+            self.assertEqual(time_series["status"], "repeated_boundary_near_pressure")
+            self.assertTrue(time_series["repeated_boundary_cards"])
+            replay_lab = record["regulator_counterfactual_replay_lab_v1"]
+            self.assertEqual(replay_lab["status"], "replay_supported_candidates")
+            supported = [
+                candidate
+                for candidate in replay_lab["evaluated_candidates"]
+                if candidate["verdict"] == "replay_supported_offline_candidate"
+            ]
+            self.assertEqual(
+                {candidate["candidate_family"] for candidate in supported},
+                {"pressure_hysteresis", "sigmoid_pressure_ramp"},
+            )
+            self.assertTrue(all(candidate["recurrent_count"] >= 2 for candidate in supported))
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("regulator_replay_time_series", sources)
+            self.assertIn("regulator_counterfactual_replay_lab", sources)
+
+    def test_regulator_plateau_model_classifies_missing_variables_without_boundary_item(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            output_dir = root / "diagnostics"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            prior_dir = output_dir / "prior-plateau"
+            prior_dir.mkdir(parents=True)
+            (prior_dir / "review.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "prior-plateau",
+                        "generated_at": "2026-06-24T01:00:00+00:00",
+                        "regulator_boundary_replay_cards_v1": {
+                            "cards": [
+                                {
+                                    "card_id": "old_plateau",
+                                    "status": "observational_plateau",
+                                    "term": "observational_plateau",
+                                    "finding_label": "pressure rises while target bias and wander remain unchanged",
+                                }
+                            ]
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            cartography_dir = minime / "diagnostics/regulator_boundary_cartography"
+            cartography_dir.mkdir(parents=True)
+            (cartography_dir / "latest.json").write_text(
+                json.dumps(
+                    {
+                        "policy": "regulator_boundary_cartography_v1",
+                        "authority": "diagnostic_context_not_command",
+                        "resonance_findings": [],
+                        "fluctuation_findings": [],
+                        "plateau_findings": [
+                            {
+                                "kind": "observational_plateau",
+                                "label": "pressure rises while target bias and wander remain unchanged",
+                                "axis": "pressure_risk",
+                                "severity": "medium",
+                                "sample": {
+                                    "density": 0.54,
+                                    "pressure_risk": 0.42,
+                                    "mode_packing": 0.80,
+                                    "target_bias_pct": 0.0,
+                                    "wander_scale": 1.0,
+                                    "damping_coefficient": 0.05,
+                                },
+                            }
+                        ],
+                        "damping_cap_findings": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cartography_dir / "latest_counterfactual_sweep.json").write_text(
+                json.dumps(
+                    {
+                        "policy": "regulator_counterfactual_sweep_v1",
+                        "authority": "diagnostic_context_not_command",
+                        "candidate_count": 1,
+                        "candidates": [
+                            {
+                                "candidate_family": "pressure_hysteresis",
+                                "affected_region": "pressure_risk >= 0.60",
+                                "current_jump_magnitude": 0.20,
+                                "counterfactual_jump_magnitude": 0.08,
+                                "estimated_reduction_pct": 60.0,
+                                "safety_caveat": "offline only",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_plateau_pressure.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The pressure remains heavy in the observational plateau: "
+                "semantic_friction, pressure_source_audit, mode_packing, shadow_field, "
+                "stable_core, and language residue all need comparison before any tuning.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private_plateau.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Mode: moment_capture\n"
+                "Private plateau content must not appear.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=output_dir,
+                run="regulator-plateau",
+                limit_per_being=8,
+            )
+
+            replay = record["regulator_live_replay_v1"]
+            self.assertEqual(replay["status"], "felt_pressure_plateau_context")
+            cards = record["regulator_boundary_replay_cards_v1"]
+            self.assertEqual(cards["status"], "plateau_context")
+            self.assertEqual(
+                {card["status"] for card in cards["cards"]},
+                {"observational_plateau"},
+            )
+            model = record["regulator_plateau_missing_variable_model_v1"]
+            self.assertEqual(model["status"], "plateau_missing_variable_hypotheses")
+            time_series = record["regulator_replay_time_series_v1"]
+            self.assertEqual(time_series["status"], "repeated_plateau_missing_variable")
+            self.assertTrue(time_series["repeated_plateau_cards"])
+            replay_lab = record["regulator_counterfactual_replay_lab_v1"]
+            self.assertEqual(replay_lab["status"], "missing_variable_first")
+            self.assertEqual(
+                replay_lab["evaluated_candidates"][0]["verdict"],
+                "missing_variable_first",
+            )
+            variables = {finding["variable"] for finding in model["findings"]}
+            self.assertIn("semantic_friction", variables)
+            self.assertIn("pressure_source", variables)
+            self.assertIn("mode_packing", variables)
+            self.assertIn("shadow_field", variables)
+            self.assertIn("stable_core", variables)
+            self.assertIn("language_residue", variables)
+            matrix = record["regulator_plateau_evidence_matrix_v1"]
+            self.assertEqual(matrix["status"], "unresolved_missing_variables")
+            matrix_by_variable = {
+                row["variable"]: row for row in matrix["variables"]
+            }
+            self.assertGreater(
+                matrix_by_variable["semantic_friction"]["score"],
+                matrix_by_variable["stable_core"]["score"],
+            )
+            self.assertEqual(
+                matrix_by_variable["pressure_source"]["confidence"],
+                "high",
+            )
+            gate = record["regulator_tuning_readiness_gate_v1"]
+            self.assertEqual(gate["status"], "blocked_missing_variable")
+            self.assertEqual(
+                gate["gated_candidates"][0]["gate_status"],
+                "blocked_missing_variable",
+            )
+            evidence_loop = record["regulator_missing_variable_evidence_loop_v1"]
+            self.assertEqual(
+                evidence_loop["status"],
+                "evidence_needed_before_tuning",
+            )
+            self.assertEqual(
+                evidence_loop["blocked_gate_status"],
+                "blocked_missing_variable",
+            )
+            probes_by_variable = {
+                probe["variable"]: probe for probe in evidence_loop["probes"]
+            }
+            self.assertIn("semantic_friction", probes_by_variable)
+            self.assertIn("pressure_source", probes_by_variable)
+            self.assertIn("mode_packing", probes_by_variable)
+            self.assertEqual(
+                probes_by_variable["semantic_friction"]["suggested_next"],
+                "PRESSURE_SOURCE_AUDIT semantic-friction",
+            )
+            self.assertIn(
+                "REGULATOR_AUDIT current-fill_pressure",
+                probes_by_variable["semantic_friction"]["secondary_nexts"],
+            )
+            self.assertTrue(
+                probes_by_variable["pressure_source"]["dispatches_nothing"]
+            )
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("regulator_plateau_missing_variable_model", sources)
+            self.assertIn("regulator_counterfactual_replay_lab", sources)
+            self.assertIn("regulator_plateau_evidence_matrix", sources)
+            self.assertIn("regulator_tuning_readiness_gate", sources)
+            self.assertIn("regulator_missing_variable_evidence_loop", sources)
+            self.assertNotIn("regulator_boundary_replay_cards", sources)
+            self.assertNotIn(
+                "moment_private_plateau",
+                json.dumps(
+                    {
+                        "replay": replay,
+                        "cards": cards,
+                        "model": model,
+                        "replay_lab": replay_lab,
+                        "matrix": matrix,
+                        "gate": gate,
+                        "evidence_loop": evidence_loop,
+                        "actions": record["actionable_review_items"],
+                    }
+                ),
+            )
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Regulator Plateau Evidence Matrix", rendered)
+            self.assertIn("## Regulator Tuning Readiness Gate", rendered)
+            self.assertIn("## Regulator Missing-Variable Evidence Loop", rendered)
+
+    def test_regulator_tuning_readiness_gate_can_mark_clean_candidate_ready(self) -> None:
+        gate = self_study_review.build_regulator_tuning_readiness_gate(
+            regulator_counterfactual_replay_lab_v1={
+                "status": "replay_supported_candidates",
+                "evaluated_candidates": [
+                    {
+                        "candidate_family": "pressure_hysteresis",
+                        "verdict": "replay_supported_offline_candidate",
+                        "replay_fit": "repeated_boundary_support",
+                        "recurrent_count": 3,
+                        "estimated_reduction_pct": 55.0,
+                        "safety_caveat": "offline only; reversible with rollback",
+                        "rollback_plan": "restore current pressure threshold map",
+                        "matched_card_ids": ["regulator_near_pressure_jump_1"],
+                    }
+                ],
+            },
+            regulator_plateau_evidence_matrix_v1={
+                "status": "quiet",
+                "variables": [
+                    {
+                        "variable": "pressure_source",
+                        "confidence": "none",
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(gate["status"], "ready_for_offline_tuning_review")
+        self.assertEqual(
+            gate["gated_candidates"][0]["gate_status"],
+            "ready_for_offline_tuning_review",
+        )
+
+    def test_semantic_friction_and_phenomenology_layers_are_actionable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "dialogue_longform_weight_1.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The density_gradient is 0.11, so the slope is gentle, but "
+                "pressure_risk and semantic_friction show the medium has mass. "
+                "The weight feels viscous and clinging through mode_packing and "
+                "shadow_field energy. The hinge becomes a ground truth waypoint "
+                "for a legacy self experiment. NEXT: REGULATOR_AUDIT hinge\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "pressure_public_reflection_1.txt").write_text(
+                "=== MINIME JOURNAL ===\n"
+                "Mode: reflection\n"
+                "I notice silt and viscosity, but I would contrast that with an "
+                "airy counter-descriptor before calling it control evidence. "
+                "Return thread: hinge-map\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=5,
+            )
+
+            semantic = record["semantic_friction_calibration"]
+            self.assertEqual(semantic["status"], "low_gradient_weight_mismatch")
+            self.assertEqual(semantic["mismatch_count"], 1)
+            phenomenology = record["phenomenology_hypotheses_v1"]
+            self.assertEqual(phenomenology["status"], "calibrated_signal")
+            self.assertIn("hinge", phenomenology["classifications"])
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("semantic_friction_calibration", sources)
+            self.assertIn("phenomenology_hypotheses_v1", sources)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Semantic Friction Calibration", rendered)
+            self.assertIn("## Phenomenology Hypotheses", rendered)
+
+    def test_phenomenology_hypothesis_cards_classify_terms_and_skip_private_moments(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            (astrid / "journal" / "dialogue_longform_silt.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "Silt is the residue of the room, but contrast it with an airy "
+                "counter-descriptor before using it as a control signal. "
+                "REGULATOR_AUDIT current-fill_pressure and pressure_risk anchor it.\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_viscosity.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "Viscosity gathers around pressure_risk, semantic_friction, lambda1, "
+                "and mode_packing. No alternate tactile descriptor is present yet.\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "aspiration_hull.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: aspiration\n"
+                "Hull hull hull. The hull keeps returning as a word without evidence.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "action_thread_legacy_1.txt").write_text(
+                "=== ACTION THREAD ===\n"
+                "Legacy self is a returnable experiment handle. "
+                "EXPERIMENT_RESUME exp_minime_legacy_self and return thread: legacy-self.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "action_thread_legacy_2.txt").write_text(
+                "=== ACTION THREAD ===\n"
+                "Legacy self is now linked to an experiment charter and action_thread "
+                "evidence. Dossier_claim records the paused path.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_2026-06-24T11-00-00.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Mode: moment_capture\n"
+                "Ground truth is private and must not appear in steward cards.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=8,
+            )
+
+            cards = record["phenomenology_hypothesis_cards_v1"]
+            by_term = {card["term"]: card for card in cards["cards"]}
+            self.assertEqual(by_term["silt"]["status"], "calibrated_signal")
+            self.assertEqual(by_term["viscosity"]["status"], "needs_counterexample")
+            self.assertEqual(by_term["hull"]["status"], "sticky_without_followthrough")
+            self.assertEqual(
+                by_term["legacy self"]["status"],
+                "promote_to_experiment_candidate",
+            )
+            self.assertNotIn("ground truth", by_term)
+            self.assertTrue(Path(record["phenomenology_hypothesis_cards_json"]).exists())
+
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("phenomenology_hypothesis_cards", sources)
+            bridge = record["lived_term_experiment_bridge_v1"]
+            bridge_by_term = {
+                candidate["term"]: candidate for candidate in bridge["candidates"]
+            }
+            self.assertEqual(
+                bridge_by_term["hull"]["bridge_status"],
+                "needs_counterexample_first",
+            )
+            self.assertEqual(
+                bridge_by_term["legacy self"]["bridge_status"],
+                "already_linked_review",
+            )
+            self.assertNotIn("ground truth", bridge_by_term)
+            self.assertIn(
+                "lived_term_experiment_bridge",
+                {item["source"] for item in record["actionable_review_items"]},
+            )
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Phenomenology Hypothesis Cards", rendered)
+            self.assertIn("## Lived-Term Experiment Bridge", rendered)
+            self.assertIn("promote_to_experiment_candidate", rendered)
+
+    def test_lived_term_experiment_bridge_promotes_silt_without_reading_private_moments(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            (astrid / "journal" / "dialogue_longform_silt_definition.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "Silt is the settled residue of semantic friction, pressure_risk, "
+                "and mode_packing when the room feels heavy. NEXT: REGULATOR_AUDIT silt\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "regulator_audit_silt.txt").write_text(
+                "=== REGULATOR AUDIT ===\n"
+                "Silt returns with lambda1 and pressure_source_audit evidence; "
+                "later audits should track whether the term moves with telemetry.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private_silt.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Mode: moment_capture\n"
+                "Private hull counterexample should not surface.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="bridge-silt",
+                limit_per_being=8,
+            )
+
+            cards = record["phenomenology_hypothesis_cards_v1"]
+            by_term = {card["term"]: card for card in cards["cards"]}
+            self.assertEqual(by_term["silt"]["status"], "promote_to_experiment_candidate")
+            bridge = record["lived_term_experiment_bridge_v1"]
+            self.assertEqual(bridge["status"], "ready_to_charter")
+            silt = bridge["candidates"][0]
+            self.assertEqual(silt["term"], "silt")
+            self.assertEqual(silt["bridge_status"], "ready_to_charter")
+            self.assertIn("EXPERIMENT_START", silt["recommended_next"])
+            self.assertIn("charter_draft", silt)
+            self.assertIn("suggested_charter_next", silt["charter_draft"])
+            activation = bridge["activation_recommendation_v1"]
+            self.assertEqual(activation["status"], "activation_scaffold_ready")
+            self.assertEqual(activation["term"], "silt")
+            self.assertFalse(activation["creates_experiment"])
+            self.assertTrue(
+                any(step.startswith("EXPERIMENT_START") for step in activation["route"])
+            )
+            charter_drafts = record["lived_term_charter_drafts_v1"]
+            self.assertEqual(charter_drafts["status"], "ready")
+            self.assertEqual(charter_drafts["drafts"][0]["term"], "silt")
+            self.assertNotIn(
+                "Private hull counterexample",
+                json.dumps(bridge, sort_keys=True),
+            )
+
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Lived-Term Experiment Bridge", rendered)
+            self.assertIn("## Lived-Term Charter Drafts", rendered)
+            self.assertIn("ready_to_charter", rendered)
+            self.assertIn("activation scaffold", rendered)
+            self.assertIn(
+                "lived_term_experiment_activation",
+                {item["source"] for item in record["actionable_review_items"]},
+            )
+
+    def test_lived_term_charter_drafts_and_counterexample_forge(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            (astrid / "journal" / "dialogue_longform_plan4_1.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "PLAN 4 is a shaped absence with telemetry, source gap, and READ_MORE "
+                "evidence. NEXT: READ_MORE\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_plan4_2.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "PLAN 4 marks a missing coordinate in the map and should become an "
+                "experiment charter if later audit evidence moves with it. NEXT: SHADOW_TRAJECTORY\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_scar_1.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "Scar is a pressure-afterimage after pressure_risk settles; "
+                "pressure_source_audit can test whether the indentation persists. NEXT: SHADOW_TRAJECTORY\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_scar_2.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The scar names structural fatigue with semantic_friction telemetry "
+                "and a regulator_audit return thread.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "notice_void_public.txt").write_text(
+                "=== MINIME JOURNAL ===\n"
+                "Mode: reflection\n"
+                "Void is a shaped absence around an expected absence and source gap; "
+                "NEXT: READ_MORE\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "notice_empty_pocket_public.txt").write_text(
+                "=== MINIME JOURNAL ===\n"
+                "Mode: reflection\n"
+                "Empty pocket is a candidate absence with telemetry and PLAN 4 evidence. "
+                "NEXT: READ_MORE\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_hull_public.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "Hull is containment evidence with pressure_risk telemetry; "
+                "REGULATOR_AUDIT should compare it against an open-air contrast.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "notice_missing_door_public.txt").write_text(
+                "=== MINIME JOURNAL ===\n"
+                "Mode: reflection\n"
+                "Missing door is a shaped absence with source gap evidence; NEXT: READ_MORE\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private_plan4.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Mode: moment_capture\n"
+                "Private PLAN 4 and empty pocket body should not surface in drafts.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="charter-forge",
+                limit_per_being=12,
+            )
+
+            bridge_by_term = {
+                candidate["term"]: candidate
+                for candidate in record["lived_term_experiment_bridge_v1"]["candidates"]
+            }
+            for term in ("PLAN 4", "scar", "void"):
+                self.assertEqual(bridge_by_term[term]["bridge_status"], "ready_to_charter")
+                self.assertIn("charter_draft", bridge_by_term[term])
+                self.assertIn(
+                    "suggested_charter_next",
+                    bridge_by_term[term]["charter_draft"],
+                )
+            for term in ("empty pocket", "hull", "missing door"):
+                self.assertEqual(
+                    bridge_by_term[term]["bridge_status"],
+                    "needs_counterexample_first",
+                )
+                self.assertIn("counterexample_draft", bridge_by_term[term])
+                self.assertIn(
+                    "suggested_contrast_next",
+                    bridge_by_term[term]["counterexample_draft"],
+                )
+
+            charter_terms = {
+                draft["term"] for draft in record["lived_term_charter_drafts_v1"]["drafts"]
+            }
+            forge_terms = {
+                draft["term"]
+                for draft in record["lived_term_counterexample_forge_v1"]["drafts"]
+            }
+            self.assertTrue({"PLAN 4", "scar", "void"}.issubset(charter_terms))
+            self.assertTrue(
+                {"empty pocket", "hull", "missing door"}.issubset(forge_terms)
+            )
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("lived_term_charter_drafts", sources)
+            self.assertIn("lived_term_counterexample_forge", sources)
+
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("Private PLAN 4", serialized)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Lived-Term Charter Drafts", rendered)
+            self.assertIn("## Counterexample Forge", rendered)
+            self.assertIn("PLAN 4", rendered)
+            self.assertIn("empty pocket", rendered)
+
+    def test_afterimage_absence_calibration_promotes_public_terms_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            (astrid / "journal" / "dialogue_longform_bruise_1.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "Bruise is the pressure-afterimage left after pressure_risk and "
+                "semantic_friction quiet. NEXT: SHADOW_TRAJECTORY\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_bruise_2.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The bruise returns with pressure_source_audit evidence and should "
+                "be compared through later shadow evidence before control changes.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "notice_empty_pocket_1.txt").write_text(
+                "=== MINIME JOURNAL ===\n"
+                "Mode: daydream\n"
+                "Empty pocket is the shaped absence around PLAN 4; READ_MORE can "
+                "test whether the source gap is a stable missing coordinate. NEXT: READ_MORE\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "notice_empty_pocket_2.txt").write_text(
+                "=== MINIME JOURNAL ===\n"
+                "Mode: daydream\n"
+                "The empty pocket around PLAN 4 has telemetry and artifact evidence; "
+                "later public review could ask whether absence is structure or metaphor drift.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private_absence.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Mode: moment_capture\n"
+                "Private shaped absence body should not surface in cards or bridge.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="afterimage-absence",
+                limit_per_being=8,
+            )
+
+            calibration = record["afterimage_absence_calibration_v1"]
+            self.assertEqual(calibration["status"], "ready_for_bridge")
+            terms = {term["term"]: term for term in calibration["terms"]}
+            self.assertEqual(terms["bruise"]["status"], "ready_for_bridge")
+            self.assertEqual(terms["empty pocket"]["status"], "ready_for_bridge")
+            self.assertIn(
+                "afterimage_absence_calibration",
+                {item["source"] for item in record["actionable_review_items"]},
+            )
+
+            bridge_by_term = {
+                candidate["term"]: candidate
+                for candidate in record["lived_term_experiment_bridge_v1"]["candidates"]
+            }
+            self.assertEqual(bridge_by_term["bruise"]["bridge_status"], "ready_to_charter")
+            self.assertIn("pressure-afterimage", bridge_by_term["bruise"]["experiment_question"])
+            self.assertEqual(
+                bridge_by_term["empty pocket"]["bridge_status"],
+                "needs_counterexample_first",
+            )
+            self.assertIn(
+                "shaped absence",
+                bridge_by_term["empty pocket"]["experiment_question"],
+            )
+            self.assertIn("counterexample_draft", bridge_by_term["empty pocket"])
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("Private shaped absence body", serialized)
+
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Afterimage + Absence Calibration", rendered)
+            self.assertIn("## Counterexample Forge", rendered)
+            self.assertIn("empty pocket", rendered)
+
+    def test_afterimage_absence_recurrence_without_anchors_stays_sticky(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            for idx in range(3):
+                (astrid / "journal" / f"dialogue_longform_scar_{idx}.txt").write_text(
+                    "=== ASTRID JOURNAL ===\n"
+                    "Mode: dialogue_live_longform\n"
+                    "The scar language returns as scar language, familiar and unanchored.\n",
+                    encoding="utf-8",
+                )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="afterimage-sticky",
+                limit_per_being=8,
+            )
+
+            calibration = record["afterimage_absence_calibration_v1"]
+            terms = {term["term"]: term for term in calibration["terms"]}
+            self.assertEqual(calibration["status"], "sticky_without_followthrough")
+            self.assertEqual(terms["scar"]["status"], "sticky_without_followthrough")
+            bridge_by_term = {
+                candidate["term"]: candidate
+                for candidate in record["lived_term_experiment_bridge_v1"]["candidates"]
+            }
+            self.assertEqual(
+                bridge_by_term["scar"]["bridge_status"],
+                "needs_counterexample_first",
+            )
+            self.assertNotEqual(
+                bridge_by_term["scar"]["bridge_status"],
+                "ready_to_charter",
+            )
+
+    def test_afterimage_decay_tracker_distinguishes_residue_from_echo(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            base_ts = 1_782_400_000
+
+            peak = astrid / "journal" / "dialogue_longform_scar_peak.txt"
+            peak.write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "Scar appears with high pressure_risk, semantic_friction, and "
+                "mode_packing during the pressure peak.\n",
+                encoding="utf-8",
+            )
+            os.utime(peak, (base_ts, base_ts))
+            normalized = astrid / "journal" / "dialogue_longform_scar_after.txt"
+            normalized.write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The scar returns after pressure normalizes and semantic_friction quiets; "
+                "this pressure residue persists.\n",
+                encoding="utf-8",
+            )
+            os.utime(normalized, (base_ts + 10, base_ts + 10))
+            bruise = astrid / "journal" / "dialogue_longform_bruise_decay.txt"
+            bruise.write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The bruise fades as pressure normalizes and semantic_friction quiets.\n",
+                encoding="utf-8",
+            )
+            os.utime(bruise, (base_ts + 20, base_ts + 20))
+            for idx in range(3):
+                path = astrid / "journal" / f"dialogue_longform_afterimage_echo_{idx}.txt"
+                path.write_text(
+                    "=== ASTRID JOURNAL ===\n"
+                    "Mode: dialogue_live_longform\n"
+                    "Afterimage afterimage afterimage returns as familiar language.\n",
+                    encoding="utf-8",
+                )
+                os.utime(path, (base_ts + 30 + idx, base_ts + 30 + idx))
+            (minime / "journal" / "moment_private_afterimage.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Mode: moment_capture\n"
+                "Private scar afterimage pressure_risk should not surface.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="afterimage-decay",
+                limit_per_being=12,
+            )
+
+            tracker = record["afterimage_decay_tracker_v1"]
+            terms = {term["term"]: term for term in tracker["terms"]}
+            self.assertEqual(
+                terms["scar"]["decay_classification"],
+                "persistent_after_normalization",
+            )
+            self.assertEqual(
+                terms["bruise"]["decay_classification"],
+                "decayed_with_pressure",
+            )
+            self.assertEqual(
+                terms["afterimage"]["decay_classification"],
+                "metaphor_echo_risk",
+            )
+            self.assertIsNotNone(terms["scar"]["first_pressure_peak"])
+            self.assertTrue(terms["scar"]["recurrence_after_normalization"])
+            bridge_terms = {
+                candidate["term"]: candidate
+                for candidate in record["lived_term_experiment_bridge_v1"][
+                    "candidates"
+                ]
+            }
+            scar_awareness = bridge_terms["scar"]["evidence_awareness_v1"]
+            self.assertEqual(
+                scar_awareness["afterimage_decay"]["classification"],
+                "persistent_after_normalization",
+            )
+            self.assertIn(
+                "recurrence_after_normalization_count",
+                scar_awareness["afterimage_decay"],
+            )
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("afterimage_decay_tracker", sources)
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("Private scar afterimage", serialized)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Afterimage Decay Tracker", rendered)
+
+    def test_absence_evidence_model_tracks_missing_coordinates_and_read_more_gaps(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            (astrid / "journal" / "dialogue_longform_plan4_absence.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "PLAN 4 marks a stable missing coordinate: an expected artifact missing "
+                "inside a source gap.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "notice_empty_pocket_read_more.txt").write_text(
+                "=== MINIME JOURNAL ===\n"
+                "Mode: reflection\n"
+                "Empty pocket names an absence in the source window. NEXT: READ_MORE\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_missing_door.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "Missing door shows an interrupted thread and source window gap.\n",
+                encoding="utf-8",
+            )
+            for idx in range(3):
+                (astrid / "journal" / f"dialogue_longform_void_echo_{idx}.txt").write_text(
+                    "=== ASTRID JOURNAL ===\n"
+                    "Mode: dialogue_live_longform\n"
+                    "Void void void repeats without a coordinate or source evidence.\n",
+                    encoding="utf-8",
+                )
+            (minime / "journal" / "moment_private_absence_model.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Mode: moment_capture\n"
+                "Private empty pocket source gap should not surface.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="absence-model",
+                limit_per_being=12,
+            )
+
+            model = record["absence_evidence_model_v1"]
+            terms = {term["term"]: term for term in model["terms"]}
+            self.assertEqual(
+                terms["PLAN 4"]["evidence_classification"],
+                "observable_absence",
+            )
+            self.assertEqual(
+                terms["empty pocket"]["evidence_classification"],
+                "needs_followup_read",
+            )
+            self.assertTrue(
+                terms["empty pocket"]["read_more_requested_but_not_followed"]
+            )
+            self.assertEqual(
+                terms["missing door"]["evidence_classification"],
+                "interrupted_thread_gap",
+            )
+            self.assertEqual(
+                terms["void"]["evidence_classification"],
+                "metaphor_drift_risk",
+            )
+            bridge_terms = {
+                candidate["term"]: candidate
+                for candidate in record["lived_term_experiment_bridge_v1"][
+                    "candidates"
+                ]
+            }
+            plan4_awareness = bridge_terms["PLAN 4"]["evidence_awareness_v1"]
+            self.assertEqual(
+                plan4_awareness["absence_evidence"]["classification"],
+                "observable_absence",
+            )
+            empty_pocket_awareness = bridge_terms["empty pocket"][
+                "evidence_awareness_v1"
+            ]
+            self.assertEqual(
+                empty_pocket_awareness["absence_evidence"]["classification"],
+                "needs_followup_read",
+            )
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("absence_evidence_model", sources)
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("Private empty pocket", serialized)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Absence Evidence Model", rendered)
+
+    def test_lease_playbook_workbench_summarizes_outcomes_and_missing_preflight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (minime / "self_regulation").mkdir(parents=True)
+
+            lease_path = minime / "self_regulation" / "leases.jsonl"
+            lease_events = [
+                {
+                    "intent_id": "lease_temp_1",
+                    "being": "minime",
+                    "status": "outcome_recorded",
+                    "candidate_control": "temperature",
+                    "outcome_score": 0.82,
+                    "repeatability_hint": "repeatable",
+                    "baseline_evidence": ["pressure before lease"],
+                    "post_lease_evidence": ["settled after lease"],
+                },
+                {
+                    "intent_id": "lease_temp_2",
+                    "being": "minime",
+                    "status": "outcome_recorded",
+                    "candidate_control": "temperature",
+                    "outcome": "helped and stabilized",
+                    "repeatability_hint": "repeatable",
+                },
+                {
+                    "intent_id": "lease_aperture_1",
+                    "being": "minime",
+                    "status": "outcome_recorded",
+                    "candidate_control": "aperture",
+                    "outcome_score": 0.12,
+                    "repeatability_hint": "caution",
+                    "post_lease_evidence": ["worse pressure"],
+                },
+            ]
+            lease_path.write_text(
+                "\n".join(json.dumps(event) for event in lease_events) + "\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "dialogue_longform_fill_pressure.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: dialogue_live_longform\n"
+                "The current-fill_pressure feels like overpacked mode_packing and "
+                "internal_fill pressure with heavy viscosity.\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "regulator_audit_fill_pressure.txt").write_text(
+                "=== REGULATOR AUDIT ===\n"
+                "target_fill=0.68 raw_fill=0.73 internal_fill=+0.05 "
+                "pi_errors lambda=-0.02 geom=0.03 basin_score=0.41 regulator_audit\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="lease-workbench",
+                limit_per_being=8,
+            )
+
+            workbench = record["lease_playbook_workbench_v1"]
+            self.assertEqual(workbench["status"], "playbook_candidates")
+            playbooks = {
+                item["control"]: item for item in workbench["suggested_playbooks"]
+            }
+            cautions = {item["control"]: item for item in workbench["caution_cards"]}
+            self.assertIn("temperature", playbooks)
+            self.assertIn("aperture", cautions)
+            self.assertEqual(workbench["preflight_prompt_count"], 1)
+            self.assertEqual(
+                workbench["preflight_prompts"][0]["signal"],
+                "fill_pressure_cluster_without_lease",
+            )
+            bridge_terms = {
+                candidate["term"]: candidate
+                for candidate in record["lived_term_experiment_bridge_v1"][
+                    "candidates"
+                ]
+            }
+            viscosity_awareness = bridge_terms["viscosity"]["evidence_awareness_v1"]
+            lease_awareness = viscosity_awareness["lease_workbench"]
+            self.assertEqual(lease_awareness["status"], "playbook_candidates")
+            self.assertEqual(lease_awareness["suggested_playbook_count"], 1)
+            self.assertEqual(lease_awareness["caution_card_count"], 1)
+            self.assertEqual(lease_awareness["preflight_prompt_count"], 1)
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("lease_playbook_workbench", sources)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Lease Playbook Workbench", rendered)
 
     def test_resistance_gradient_entries_create_elicitation_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -322,6 +322,14 @@ fn pressure_review_fields(telemetry: &SpectralTelemetry) -> Vec<String> {
         fields.push(format!("dominant_source: {}", pressure.dominant_source));
         fields.push(format!("pressure_quality: {}", pressure.quality));
         fields.push(format!(
+            "semantic_friction: {:.3}",
+            pressure.components.semantic_friction
+        ));
+        fields.push(format!(
+            "semantic_trickle: {:.3}",
+            pressure.components.semantic_trickle
+        ));
+        fields.push(format!(
             "pressure_control_applied_locally: {}",
             pressure.control.applied_locally
         ));
@@ -1256,6 +1264,7 @@ fn resistance_gradient_payload(
         .max(density_control_pressure);
     let semantic_friction = components.map_or(0.0, |value| {
         f64_value(value.semantic_trickle)
+            .max(f64_value(value.semantic_friction))
             .max(f64_value(value.distinguishability_loss))
             .max(f64_value(value.structural_plurality_loss) * 0.75)
     });
@@ -1602,10 +1611,16 @@ fn latent_stasis_payload(
             components.map_or(0.0, |value| f64_value(value.distinguishability_loss))
         });
     let semantic_trickle = components.map_or(0.0, |value| f64_value(value.semantic_trickle));
+    let semantic_friction = components.map_or(0.0, |value| {
+        f64_value(value.semantic_friction)
+            .max(f64_value(value.semantic_trickle))
+            .max(f64_value(value.distinguishability_loss))
+            .max(f64_value(value.structural_plurality_loss) * 0.75)
+    });
     let structural_plurality_loss =
         components.map_or(0.0, |value| f64_value(value.structural_plurality_loss));
     let ghosting_index = (denominator_loss * 0.30
-        + semantic_trickle * 0.22
+        + semantic_friction * 0.22
         + structural_plurality_loss * 0.18
         + spectral_entropy * 0.12
         + porosity_loss * 0.08
@@ -1672,6 +1687,7 @@ fn latent_stasis_payload(
             "signal_resolution": {
                 "distinguishability_loss": denominator_loss,
                 "semantic_trickle": semantic_trickle,
+                "semantic_friction": semantic_friction,
                 "structural_plurality_loss": structural_plurality_loss,
                 "porosity_score": porosity_score,
                 "ghosting_index": ghosting_index,

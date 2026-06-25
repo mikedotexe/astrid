@@ -48,6 +48,8 @@ pub struct ResonanceDensityControl {
     pub target_bias_pct: f32,
     pub wander_scale: f32,
     pub applied_locally: bool,
+    #[serde(default)]
+    pub damping_coefficient: f32,
     pub note: String,
 }
 
@@ -71,6 +73,8 @@ pub struct PressureSourceComponents {
     pub mode_packing: f32,
     pub controller_pressure: f32,
     pub semantic_trickle: f32,
+    #[serde(default)]
+    pub semantic_friction: f32,
     pub structural_plurality_loss: f32,
     pub distinguishability_loss: f32,
     pub temporal_lock_in: f32,

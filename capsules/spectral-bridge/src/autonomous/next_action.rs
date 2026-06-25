@@ -6,12 +6,14 @@ mod autoresearch;
 mod codex;
 pub(crate) mod collaboration;
 mod identify_pattern;
+mod lived_term;
 mod mike;
 mod modes;
 mod native_gesture;
 mod operations;
 mod pdf;
 mod probe_self;
+mod regulator_map;
 pub(crate) mod protected_diagnostics;
 mod resource_governor;
 pub(crate) mod shadow;
@@ -1332,6 +1334,11 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "REPAIR_STATUS"
         | "REPAIR_SWEEP"
         | "REPAIR_RECORD"
+        | "LIVED_TERM_STATUS"
+        | "LIVED_TERM_EXPERIMENT"
+        | "REGULATOR_MAP_STATUS"
+        | "REGULATOR_REPLAY_STATUS"
+        | "REGULATOR_BOUNDARY_CARD"
         | "CLOSE_EYES"
         | "SHUT_EYES"
         | "OPEN_EYES"
@@ -1410,6 +1417,11 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "DOSSIER_EVIDENCE"
         | "DOSSIER_STATUS"
         | "DOSSIER_REVIEW"
+        | "LIVED_TERM_STATUS"
+        | "LIVED_TERM_EXPERIMENT"
+        | "REGULATOR_MAP_STATUS"
+        | "REGULATOR_REPLAY_STATUS"
+        | "REGULATOR_BOUNDARY_CARD"
         | "ACTION_PREFLIGHT"
         | "NEXT_PROBE"
         | "PREFLIGHT"
@@ -1503,6 +1515,10 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "DOSSIER_EVIDENCE"
         | "DOSSIER_STATUS"
         | "DOSSIER_REVIEW" => "experiment_continuity",
+        "LIVED_TERM_STATUS" | "LIVED_TERM_EXPERIMENT" => "lived_term_bridge",
+        "REGULATOR_MAP_STATUS" | "REGULATOR_REPLAY_STATUS" | "REGULATOR_BOUNDARY_CARD" => {
+            "regulator_map_bridge"
+        },
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
@@ -1970,6 +1986,16 @@ pub(super) fn handle_next_action(
                 .with_stage_visibility("blocked", visibility);
             },
         }
+    }
+
+    if lived_term::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("lived_term_bridge", format!("Handled `{original}`."))
+            .with_stage_visibility("read_only", visibility);
+    }
+
+    if regulator_map::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("regulator_map_bridge", format!("Handled `{original}`."))
+            .with_stage_visibility("read_only", visibility);
     }
 
     attractor::maybe_add_body_consent_receipt(

@@ -117,12 +117,20 @@ fn base_spectral_review_fields(telemetry: &SpectralTelemetry) -> Vec<String> {
 }
 
 fn pressure_review_fields(telemetry: &SpectralTelemetry) -> Vec<String> {
-    let mut fields = base_spectral_review_fields(telemetry);
+    let mut fields = Vec::new();
     if let Some(pressure) = telemetry.pressure_source_v1.as_ref() {
         fields.push(format!("pressure_score: {:.3}", pressure.pressure_score));
         fields.push(format!("porosity_score: {:.3}", pressure.porosity_score));
         fields.push(format!("dominant_source: {}", pressure.dominant_source));
         fields.push(format!("pressure_quality: {}", pressure.quality));
+        fields.push(format!(
+            "semantic_friction: {:.3}",
+            pressure.components.semantic_friction
+        ));
+        fields.push(format!(
+            "semantic_trickle: {:.3}",
+            pressure.components.semantic_trickle
+        ));
         fields.push(format!(
             "pressure_control_applied_locally: {}",
             pressure.control.applied_locally
@@ -130,6 +138,7 @@ fn pressure_review_fields(telemetry: &SpectralTelemetry) -> Vec<String> {
     } else {
         fields.push("pressure_source: unavailable".to_string());
     }
+    fields.extend(base_spectral_review_fields(telemetry));
     fields
 }
 
@@ -174,6 +183,14 @@ fn resonance_review_fields(telemetry: &SpectralTelemetry) -> Vec<String> {
         ));
         fields.push(format!("resonance_quality: {}", density.quality));
         fields.push(format!(
+            "resonance_mode_packing: {:.3}",
+            density.components.mode_packing
+        ));
+        fields.push(format!(
+            "density_control_damping_coefficient: {:.3}",
+            density.control.damping_coefficient
+        ));
+        fields.push(format!(
             "density_control_applied_locally: {}",
             density.control.applied_locally
         ));
@@ -185,6 +202,36 @@ fn resonance_review_fields(telemetry: &SpectralTelemetry) -> Vec<String> {
 
 fn compact_report_fields(report: &str, telemetry: &SpectralTelemetry) -> Vec<String> {
     let mut fields = base_spectral_review_fields(telemetry);
+    if let Some(density) = telemetry.resonance_density_v1.as_ref() {
+        fields.push(format!("resonance_density: {:.3}", density.density));
+        fields.push(format!("pressure_risk: {:.3}", density.pressure_risk));
+        fields.push(format!(
+            "containment_score: {:.3}",
+            density.containment_score
+        ));
+        fields.push(format!(
+            "resonance_mode_packing: {:.3}",
+            density.components.mode_packing
+        ));
+        fields.push(format!(
+            "density_control_damping_coefficient: {:.3}",
+            density.control.damping_coefficient
+        ));
+    }
+    if let Some(pressure) = telemetry.pressure_source_v1.as_ref() {
+        fields.push(format!(
+            "semantic_friction: {:.3}",
+            pressure.components.semantic_friction
+        ));
+        fields.push(format!(
+            "semantic_trickle: {:.3}",
+            pressure.components.semantic_trickle
+        ));
+        fields.push(format!(
+            "pressure_mode_packing: {:.3}",
+            pressure.components.mode_packing
+        ));
+    }
     let report_lines = report
         .lines()
         .map(str::trim)
@@ -2277,7 +2324,7 @@ fn handle_regulator_audit(
             &audit_fields,
             "read-only fixed-point inspection; No semantic input, control nudge, perturbation, native gesture, atlas/cartography write, or Minime parameter change was sent.",
             "compare regulator audits against later stable-core status, pressure-source audits, and transition markers",
-            18,
+            24,
         ),
         "regulator_audit",
         ctx.fill_pct,
@@ -3380,6 +3427,7 @@ mod review_summary_tests {
                     "mode_packing": 0.6,
                     "controller_pressure": 0.2,
                     "semantic_trickle": 0.3,
+                    "semantic_friction": 0.34,
                     "structural_plurality_loss": 0.4,
                     "distinguishability_loss": 0.34,
                     "temporal_lock_in": 0.2,
@@ -3405,6 +3453,7 @@ mod review_summary_tests {
         assert!(record.contains("pressure_score: 0.520"));
         assert!(record.contains("porosity_score: 0.280"));
         assert!(record.contains("dominant_source: mode_packing"));
+        assert!(record.contains("semantic_friction: 0.340"));
         assert!(record.contains("No semantic input"));
         assert!(record.contains("Astrid control envelope"));
     }
@@ -3418,7 +3467,52 @@ mod review_summary_tests {
             "lambda1_rel": 0.156,
             "active_mode_count": 5,
             "active_mode_energy_ratio": 0.910,
-            "structural_entropy": 0.650
+            "structural_entropy": 0.650,
+            "resonance_density_v1": {
+                "policy": "resonance_density_v1",
+                "schema_version": 1,
+                "density": 0.64,
+                "containment_score": 0.58,
+                "pressure_risk": 0.23,
+                "quality": "forming_containment",
+                "components": {
+                    "active_energy": 0.91,
+                    "mode_packing": 0.60,
+                    "temporal_persistence": 0.70,
+                    "structural_plurality": 0.62,
+                    "comfort_gate": 0.95
+                },
+                "control": {
+                    "target_bias_pct": 0.0,
+                    "wander_scale": 1.0,
+                    "applied_locally": true,
+                    "damping_coefficient": 0.021,
+                    "note": "advisory telemetry only"
+                }
+            },
+            "pressure_source_v1": {
+                "policy": "pressure_source_v1",
+                "schema_version": 1,
+                "pressure_score": 0.42,
+                "porosity_score": 0.67,
+                "dominant_source": "controller_pressure",
+                "quality": "controller_squeeze",
+                "components": {
+                    "lambda_monopoly": 0.30,
+                    "mode_packing": 0.20,
+                    "controller_pressure": 0.72,
+                    "semantic_trickle": 0.10,
+                    "semantic_friction": 0.40,
+                    "structural_plurality_loss": 0.18,
+                    "distinguishability_loss": 0.40,
+                    "temporal_lock_in": 0.22,
+                    "sensory_scarcity": 0.05
+                },
+                "control": {
+                    "applied_locally": false,
+                    "note": "advisory only"
+                }
+            }
         }));
         let report = "\
 === REGULATOR / FIXED-POINT AUDIT ===
@@ -3444,7 +3538,7 @@ This was read-only inspection. It did not send semantic input, control nudges, p
             &fields,
             "read-only fixed-point inspection; No semantic input, control nudge, perturbation, native gesture, atlas/cartography write, or Minime parameter change was sent.",
             "compare regulator audits against later stable-core status, pressure-source audits, and transition markers",
-            18,
+            24,
         );
 
         assert!(record.contains("Action: REGULATOR_AUDIT"));
@@ -3456,6 +3550,9 @@ This was read-only inspection. It did not send semantic input, control nudges, p
         assert!(record.contains("pi_integrators fill=+0.000"));
         assert!(record.contains("transition kind=breathing_phase"));
         assert!(record.contains("basin_score=0.05"));
+        assert!(record.contains("resonance_mode_packing: 0.600"));
+        assert!(record.contains("semantic_friction: 0.400"));
+        assert!(record.contains("density_control_damping_coefficient: 0.021"));
         assert!(record.contains("semantic_admission=stable_core_kernel_zeroed"));
         assert!(record.contains("stable_core_structural_pi active=true"));
         assert!(record.contains("stable-core is active"));
