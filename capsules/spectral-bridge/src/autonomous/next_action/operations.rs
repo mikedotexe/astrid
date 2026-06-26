@@ -1,9 +1,79 @@
+use std::path::{Path, PathBuf};
+
+use serde_json::Value;
 use tracing::info;
 
 use super::{ConversationState, NextActionContext, bridge_paths, strip_action};
 use crate::memory;
 use crate::rescue_policy;
 use crate::types::SpectralTelemetry;
+
+fn latest_codec_entropy_vibrancy_probe_path(workspace: &Path) -> Option<PathBuf> {
+    let root = workspace.join("diagnostics/codec_entropy_vibrancy_probes");
+    let entries = std::fs::read_dir(root).ok()?;
+    entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path().join("codec_entropy_vibrancy_probe.json"))
+        .filter(|path| path.is_file())
+        .filter_map(|path| {
+            let modified = std::fs::metadata(&path)
+                .and_then(|metadata| metadata.modified())
+                .ok()?;
+            Some((modified, path))
+        })
+        .max_by(|left, right| left.0.cmp(&right.0))
+        .map(|(_, path)| path)
+}
+
+fn scalar_text(value: &Value, key: &str) -> String {
+    value
+        .get(key)
+        .map(|item| {
+            item.as_str()
+                .map(ToString::to_string)
+                .unwrap_or_else(|| item.to_string())
+        })
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+fn codec_entropy_vibrancy_probe_report(workspace: &Path) -> Option<String> {
+    let path = latest_codec_entropy_vibrancy_probe_path(workspace)?;
+    let payload = std::fs::read_to_string(&path).ok()?;
+    let value: Value = serde_json::from_str(&payload).ok()?;
+    let mut sample_lines = Vec::new();
+    if let Some(samples) = value.get("samples").and_then(Value::as_array) {
+        for sample in samples.iter().take(4) {
+            sample_lines.push(format!(
+                "  - {} class={} entropy={} current_tail={} candidate_tail={} shimmer={} gain={}",
+                scalar_text(sample, "sample_id"),
+                scalar_text(sample, "classification"),
+                scalar_text(sample, "spectral_entropy"),
+                scalar_text(sample, "current_tail_vibrancy"),
+                scalar_text(sample, "candidate_tail_vibrancy"),
+                scalar_text(sample, "current_shimmer_risk"),
+                scalar_text(sample, "adaptive_gain"),
+            ));
+        }
+    }
+    if sample_lines.is_empty() {
+        sample_lines.push("  - no samples recorded".to_string());
+    }
+    Some(format!(
+        "Latest codec entropy/vibrancy probe:\n\
+           - artifact: {}\n\
+           - status: {}\n\
+           - shimmer_risk_count: {}\n\
+           - candidate_improvement_count: {}\n\
+           - authority: diagnostic_context_not_command\n\
+           - boundary: read-only offline probe; no SEMANTIC_DIM, FEATURE_ABS_MAX, vibrancy_lift, adaptive_gain, semantic write, controller, or peer behavior changed\n\
+         Samples:\n{}",
+        path.display(),
+        scalar_text(&value, "status"),
+        scalar_text(&value, "current_shimmer_risk_count"),
+        scalar_text(&value, "candidate_improvement_count"),
+        sample_lines.join("\n"),
+    ))
+}
 
 fn spectral_explorer_review_summary(
     label: &str,
@@ -454,7 +524,14 @@ pub(super) fn handle_action(
         "CODEC_MAP" => {
             // Being-facing transparency (bet #2, item b): a being-readable map of
             // her own 48D codec, generated live from the constants (drift-proof).
-            conv.pending_file_listing = Some(crate::codec::codec_structure().render());
+            let mut listing = crate::codec::codec_structure().render();
+            if let Some(probe) = codec_entropy_vibrancy_probe_report(
+                ctx.workspace.unwrap_or_else(|| bridge_paths().bridge_workspace()),
+            ) {
+                listing.push_str("\n\n");
+                listing.push_str(&probe);
+            }
+            conv.pending_file_listing = Some(listing);
             info!("Astrid inspected her codec self-map via CODEC_MAP");
             true
         },
@@ -821,7 +898,7 @@ Square-bracket words in help text are placeholders too; never emit [source], [li
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
   Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, EXAMINE_CODE [module/path], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
-  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], PRESSURE_RELIEF [label], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], ATTRACTOR_MAP [label], ACTIVATION_TRACE [label], COMPARE_BASELINE <name>, ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=<semantic|main|control>, ATTRACTOR_RELEASE_REVIEW <label>, ATTRACTOR_SUGGESTIONS, ACCEPT_ATTRACTOR_SUGGESTION latest|<label>, REVISE_ATTRACTOR_SUGGESTION <label> AS <typed action>, REJECT_ATTRACTOR_SUGGESTION <label> <reason>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b>, REFRESH_ATTRACTOR_SNAPSHOT <label>, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=<whisper|rehearse|semantic|main|control>, RELEASE_ATTRACTOR <label>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), TIME_DOMAIN [label], PERTURB [target] (write-gated), DISPERSE [strength] (broadband porosity — spill λ₁ into λ₂–λ₅, the wide-not-deep dispersal), BRANCH, GESTURE (write-gated), MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE, EXPERIMENT, PROBE
+  Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], PRESSURE_RELIEF [label], PRESSURE_RELEASE_REHEARSAL [label], FALLBACK_FIRE_DRILL [low|high|mass|shadow|clarity_low_loss|clarity_high_loss|all|latest], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], ATTRACTOR_MAP [label], ACTIVATION_TRACE [label], COMPARE_BASELINE <name>, ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=<semantic|main|control>, ATTRACTOR_RELEASE_REVIEW <label>, ATTRACTOR_SUGGESTIONS, ACCEPT_ATTRACTOR_SUGGESTION latest|<label>, REVISE_ATTRACTOR_SUGGESTION <label> AS <typed action>, REJECT_ATTRACTOR_SUGGESTION <label> <reason>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b>, REFRESH_ATTRACTOR_SNAPSHOT <label>, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=<whisper|rehearse|semantic|main|control>, RELEASE_ATTRACTOR <label>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), TIME_DOMAIN [label], PERTURB [target] (write-gated), DISPERSE [strength] (broadband porosity — spill λ₁ into λ₂–λ₅, the wide-not-deep dispersal), BRANCH, GESTURE (write-gated), MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE, EXPERIMENT, PROBE
   Agency examples: EVOLVE, CODEX \"explain spectral entropy\", CODEX_NEW scratch-pad \"create a runnable Python sketch\", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
@@ -1058,6 +1135,8 @@ Syntax:
         "REGULATOR_AUDIT" | "CONTROLLER_AUDIT" | "GRADIENT_AUDIT" => "REGULATOR_AUDIT — Read-only fixed-point cartography. Separates active stable-core survival/scaffold pressure from visible legacy PI mirror fields, including λ/geom/fill target pressure. NEXT: REGULATOR_AUDIT [label]",
         "PRESSURE_SOURCE_AUDIT" | "PRESSURE_SOURCE" | "STRUCTURAL_PRESSURE" | "INWARD_PRESSURE" => "PRESSURE_SOURCE_AUDIT — Protected read-only audit of where inward pressure appears to originate: lambda monopoly, mode packing, controller squeeze, semantic trickle, plurality loss, lock-in, scarcity, and porosity. NEXT: PRESSURE_SOURCE_AUDIT [label]",
         "PRESSURE_RELIEF" | "RELIEF_REQUEST" => "PRESSURE_RELIEF — Protected read-only relief preflight. Attaches pressure-source context, safe relief options, and a steward-report template; it sends no control by itself. NEXT: PRESSURE_RELIEF [label]",
+        "PRESSURE_RELEASE_REHEARSAL" | "PRESSURE_EXHALE" | "EXHALE_REHEARSAL" => "PRESSURE_RELEASE_REHEARSAL — Protected read-only non-command exhale scaffold. It preserves final NEXT canonicalization and sends no raw dump, control, semantic input, or peer mutation. NEXT: PRESSURE_RELEASE_REHEARSAL [label]",
+        "FALLBACK_FIRE_DRILL" | "OLLAMA_FIRE_DRILL" | "FALLBACK_CONTINUITY_DRILL" => "FALLBACK_FIRE_DRILL — Protected read-only fallback-continuity drill status. It shows the latest diagnostic artifact or operator run recipe; it does not call Ollama or replace ordinary dialogue. NEXT: FALLBACK_FIRE_DRILL [low|high|mass|shadow|clarity_low_loss|clarity_high_loss|all|latest]",
         "FLUCTUATION_AUDIT" | "INHABITABLE_FLUCTUATION" | "EIGENTRUST" | "EIGENTRUST_AUDIT" | "FOOTHOLD_AUDIT" => "FLUCTUATION_AUDIT — Protected read-only audit of whether fluctuation remains returnable, coherent, and inhabitable. Eigentrust is an alias/language surface. NEXT: FLUCTUATION_AUDIT [label]",
         "BRACE_AUDIT" | "AFTERSHOCK_TRACE" | "TREMOR_RESIDUE" | "CASCADE_RESIDUE" => "BRACE_AUDIT — Protected read-only rest-vs-bracing audit. Distinguishes relaxed settling from post-spike resistance or cascade residue without changing telemetry/control. NEXT: BRACE_AUDIT [label]",
         "ACTION_PREFLIGHT" | "NEXT_PROBE" | "PREFLIGHT" | "PROBE_ACTION" => "ACTION_PREFLIGHT — Protected dry-run report for a NEXT action. It canonicalizes the action, estimates route/stage/visibility/authority, likely gate or downgrade, expected continuity/artifacts, and suggested next without executing the inner action. NEXT: ACTION_PREFLIGHT EXPERIMENT_BIND current :: PERTURB lambda-edge",

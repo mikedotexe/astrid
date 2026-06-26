@@ -405,6 +405,138 @@ SEMANTIC_FRICTION_ANCHORS = (
     "pressure_source_audit",
     "regulator_audit",
 )
+CONTROL_SEMANTICS_TERMS = (
+    "intervention_type",
+    "observational_readout",
+    "passive_alignment",
+    "active_damping",
+    "manual_override_reserved",
+    "applied_locally",
+    "damping_coefficient",
+    "measurement",
+    "passive alignment",
+    "active damping",
+    "manual override",
+    "control semantics",
+)
+CONTROL_SEMANTICS_AMBIGUITY_TERMS = (
+    "binary",
+    "ambiguity",
+    "ambiguous",
+    "catch-all",
+    "too blunt",
+    "unclear",
+    "distinction between",
+    "passive",
+    "active",
+)
+PRESSURE_KINETICS_TERMS = (
+    "pressure_trend_v1",
+    "pressure trend",
+    "pressure delta",
+    "pressure velocity",
+    "pressure kinetics",
+    "rising_pressure",
+    "falling_pressure",
+    "stable_heavy",
+    "rapidly densifying",
+    "densifying",
+    "previous_fill_pct",
+    "BridgeState",
+    "latest_telemetry",
+    "mode_packing",
+    "pressure_risk",
+)
+CODEC_COMPRESSION_TERMS = (
+    "compression gap",
+    "compression",
+    "codec",
+    "CODEC_MAP",
+    "projection",
+    "embedding",
+    "768",
+    "8D",
+    "projection mode",
+    "fingerprint",
+    "entropy vibrancy",
+    "vibrancy",
+    "tail lift",
+    "warmth paradox",
+    "warmth",
+    "tension",
+    "smoothing",
+    "pressure-vs-codec",
+)
+PRESSURE_RELEASE_REHEARSAL_TERMS = (
+    "PRESSURE_RELEASE_REHEARSAL",
+    "pressure release",
+    "release rehearsal",
+    "exhale scaffold",
+    "non-command exhale",
+    "bypass_canonicalization",
+    "canonicalization bypass",
+    "raw spectral dump",
+    "pressure-release valve",
+    "safety spine",
+)
+WITNESS_RESONANCE_TERMS = (
+    "witness",
+    "seeing and being seen",
+    "act of seeing",
+    "self-observation",
+    "observer with memory",
+    "shadow_trajectory",
+    "SHADOW_TRAJECTORY",
+    "narrative_density",
+    "resonance-weighting",
+    "resonance weighting",
+    "decorative layer",
+)
+WITNESS_RESONANCE_ANCHORS = (
+    "distinguishability_loss",
+    "distinguishability loss",
+    "spectral entropy",
+    "structural_entropy",
+    "pressure_risk",
+    "pressure risk",
+    "continuity_deficit",
+    "mean_orientation_delta",
+    "telemetry",
+    "lambda",
+    "λ",
+    "settled_habitable",
+    "SHADOW_TRAJECTORY",
+    "shadow-v3",
+)
+ENTROPY_PRESSURE_TERMS = (
+    "spectral entropy",
+    "structural_entropy",
+    "entropy",
+    "structural plurality",
+    "plurality",
+    "wide distribution",
+    "wide",
+    "pressure_risk",
+    "pressure risk",
+    "semantic_friction",
+    "semantic friction",
+    "mode_packing",
+    "settled_habitable",
+    "inhabitable",
+)
+FALLBACK_FIRE_DRILL_TERMS = (
+    "Ollama fallback",
+    "fallback continuity",
+    "fallback fire drill",
+    "gemma3:4b",
+    "4B model",
+    "DEFAULT_OLLAMA_FALLBACK_MODEL",
+    "density_gradient",
+    "slope drag",
+    "medium mass",
+    "identity anchor",
+    "Shadow-v3",
+)
 PHENOMENOLOGY_HYPOTHESIS_TERMS = (
     "silt",
     "viscosity",
@@ -1167,6 +1299,7 @@ def collect_entries(
         astrid_workspace / "journal/pressure_source_audit_*.txt",
         astrid_workspace / "journal/regulator_audit_*.txt",
         astrid_workspace / "journal/resonance_forecast_*.txt",
+        astrid_workspace / "introspections/introspection_*.txt",
         astrid_workspace / "outbox/*.txt",
         astrid_workspace / "inbox/steward*.txt",
     ]
@@ -2370,6 +2503,2379 @@ def build_semantic_friction_calibration(
         "mismatch_count": mismatch_count,
         "anchors": sorted(anchors_seen),
         "samples": samples[:10],
+    }
+
+
+def build_control_semantics_calibration(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    ambiguity_count = 0
+    high_damping_unclear_count = 0
+    for entry in entries:
+        text = entry_full_text(entry)
+        anchors = matching_terms(text, CONTROL_SEMANTICS_TERMS)
+        if not anchors:
+            continue
+        ambiguity = matching_terms(text, CONTROL_SEMANTICS_AMBIGUITY_TERMS)
+        lower = text.lower()
+        high_damping = bool(
+            "damping" in lower
+            and re.search(r"\b(?:0\.10|0\.1|cap|saturat|high damping)\b", lower)
+        )
+        intervention_named = "intervention_type" in lower or any(
+            term in lower
+            for term in (
+                "observational_readout",
+                "passive_alignment",
+                "active_damping",
+                "manual_override_reserved",
+            )
+        )
+        unclear = bool(ambiguity) or ("applied_locally" in lower and not intervention_named)
+        if unclear:
+            ambiguity_count += 1
+        if high_damping and not intervention_named:
+            high_damping_unclear_count += 1
+        anchors_seen.update(anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "ambiguity_terms": ambiguity[:8],
+                    "high_damping_context": high_damping,
+                    "intervention_type_named": intervention_named,
+                    "needs_intervention_type_context": unclear,
+                },
+            )
+        )
+    if high_damping_unclear_count:
+        status = "high_damping_intervention_type_unclear"
+    elif ambiguity_count:
+        status = "control_semantics_ambiguity"
+    elif samples:
+        status = "control_semantics_visible"
+    else:
+        status = "quiet"
+    return {
+        "policy": "control_semantics_calibration_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "ambiguity_count": ambiguity_count,
+        "high_damping_unclear_count": high_damping_unclear_count,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Compare `applied_locally`, `intervention_type`, damping readout, "
+            "target bias, and wander scale before treating a regulator note as "
+            "active damping or passive alignment."
+        ),
+    }
+
+
+def build_pressure_kinetics_review(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    trend_context_count = 0
+    felt_pressure_without_trend_count = 0
+    anchors_seen: set[str] = set()
+    felt_terms = (
+        "pressure",
+        "heavy",
+        "weight",
+        "overpacked",
+        "densifying",
+        "stable heavy",
+        "stable_heavy",
+        "rising",
+        "falling",
+    )
+    for entry in entries:
+        text = entry_full_text(entry)
+        anchors = matching_terms(text, PRESSURE_KINETICS_TERMS)
+        lower = text.lower()
+        felt_pressure = any(term in lower for term in felt_terms)
+        if not anchors and not felt_pressure:
+            continue
+        trend_context = any(
+            term in lower
+            for term in (
+                "pressure_trend_v1",
+                "pressure trend",
+                "pressure delta",
+                "pressure velocity",
+                "rising_pressure",
+                "falling_pressure",
+                "stable_heavy",
+            )
+        )
+        if trend_context:
+            trend_context_count += 1
+        elif felt_pressure:
+            felt_pressure_without_trend_count += 1
+        anchors_seen.update(anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "felt_pressure_language": felt_pressure,
+                    "pressure_trend_context_present": trend_context,
+                },
+            )
+        )
+    if felt_pressure_without_trend_count:
+        status = "felt_pressure_without_trend_context"
+    elif trend_context_count:
+        status = "pressure_trend_context_present"
+    else:
+        status = "quiet"
+    return {
+        "policy": "pressure_kinetics_review_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "trend_context_count": trend_context_count,
+        "felt_pressure_without_trend_count": felt_pressure_without_trend_count,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Read pressure trend beside pressure-risk/mode-packing/fill deltas so "
+            "stable heaviness is not mistaken for rapid densification."
+        ),
+    }
+
+
+def build_autonomous_truncation_shadow_review(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    truncation_entry_count = 0
+    shadow_trajectory_count = 0
+    priority_preservation_count = 0
+    semantic_trickle_count = 0
+    for entry in entries:
+        text = entry_full_text(entry)
+        lower = text.lower()
+        truncation_terms = matching_terms(
+            text,
+            (
+                "truncate_str",
+                "max_bytes",
+                "truncate",
+                "truncated",
+                "truncation",
+                "byte-limit",
+                "byte limit",
+                "compressed",
+                "muffled",
+                "structurally throttled",
+            ),
+        )
+        shadow_terms = matching_terms(
+            text,
+            (
+                "SHADOW_TRAJECTORY",
+                "shadow_trajectory",
+                "shadow-v3",
+                "settled coupling",
+                "restless texture",
+                "loss of thread",
+                "directional gradient",
+            ),
+        )
+        priority_terms = matching_terms(
+            text,
+            (
+                "priority-based",
+                "priority based",
+                "most vibrant",
+                "lambda_4",
+                "λ4",
+                "tail vibrancy",
+                "admission",
+                "semantic trickle",
+                "stable_core_semantic_trickle",
+            ),
+        )
+        if not truncation_terms and not shadow_terms and not priority_terms:
+            continue
+        anchors = sorted(set(truncation_terms + shadow_terms + priority_terms))
+        anchors_seen.update(anchors)
+        if truncation_terms:
+            truncation_entry_count += 1
+        if shadow_terms:
+            shadow_trajectory_count += 1
+        if priority_terms and truncation_terms:
+            priority_preservation_count += 1
+        if "semantic trickle" in lower or "stable_core_semantic_trickle" in lower:
+            semantic_trickle_count += 1
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "truncation_context": bool(truncation_terms),
+                    "shadow_trajectory_context": bool(shadow_terms),
+                    "priority_preservation_context": bool(priority_terms and truncation_terms),
+                    "semantic_trickle_context": (
+                        "semantic trickle" in lower
+                        or "stable_core_semantic_trickle" in lower
+                    ),
+                },
+            )
+        )
+    if priority_preservation_count and shadow_trajectory_count:
+        status = "priority_truncation_shadow_thread_candidate"
+    elif truncation_entry_count and shadow_trajectory_count:
+        status = "shadow_thread_loss_risk"
+    elif truncation_entry_count:
+        status = "truncation_context"
+    elif shadow_trajectory_count:
+        status = "shadow_trajectory_context"
+    else:
+        status = "quiet"
+    return {
+        "policy": "autonomous_truncation_shadow_review_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "truncation_entry_count": truncation_entry_count,
+        "shadow_trajectory_count": shadow_trajectory_count,
+        "priority_preservation_count": priority_preservation_count,
+        "semantic_trickle_count": semantic_trickle_count,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Compare truncated autonomous/Witness outputs against SHADOW_TRAJECTORY, "
+            "semantic-trickle context, and later journal thread continuity before "
+            "changing byte limits. Prefer a priority-preservation rehearsal over a "
+            "blanket max_bytes increase."
+        ),
+        "suggested_routes": [
+            "SHADOW_TRAJECTORY truncation-thread",
+            "PRESSURE_RELEASE_REHEARSAL truncation-exhale",
+            "EXPERIMENT_CHARTER current :: priority-preserving truncation rehearsal",
+        ],
+    }
+
+
+def build_codec_compression_calibration(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    compression_gap_count = 0
+    warmth_tension_count = 0
+    vibrancy_gate_count = 0
+    for entry in entries:
+        text = entry_full_text(entry)
+        anchors = matching_terms(text, CODEC_COMPRESSION_TERMS)
+        if not anchors:
+            continue
+        lower = text.lower()
+        compression_gap = any(
+            term in lower
+            for term in (
+                "compression gap",
+                "projection compression",
+                "768",
+                "8d",
+                "embedding projection",
+            )
+        )
+        warmth_tension = "warmth" in lower and "tension" in lower
+        vibrancy_gate = "vibrancy" in lower and (
+            "entropy" in lower or "tail lift" in lower or "gate" in lower
+        )
+        if compression_gap:
+            compression_gap_count += 1
+        if warmth_tension:
+            warmth_tension_count += 1
+        if vibrancy_gate:
+            vibrancy_gate_count += 1
+        anchors_seen.update(anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "compression_gap_context": compression_gap,
+                    "warmth_tension_context": warmth_tension,
+                    "entropy_vibrancy_context": vibrancy_gate,
+                },
+            )
+        )
+    if compression_gap_count:
+        status = "projection_compression_risk"
+    elif warmth_tension_count or vibrancy_gate_count:
+        status = "codec_vibrancy_warmth_context"
+    elif samples:
+        status = "codec_compression_context"
+    else:
+        status = "quiet"
+    return {
+        "policy": "codec_compression_calibration_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "compression_gap_count": compression_gap_count,
+        "warmth_tension_count": warmth_tension_count,
+        "vibrancy_gate_count": vibrancy_gate_count,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Compare CODEC_MAP projection metadata, compression-risk readout, "
+            "tail vibrancy gate, and warmth/tension markers before widening dims "
+            "or adding entropy-based tension multipliers."
+        ),
+    }
+
+
+def build_codec_entropy_vibrancy_review(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    vibrancy_overload_count = 0
+    gain_sensitivity_count = 0
+    logarithmic_scaling_count = 0
+    sem_dim_context_count = 0
+    warmth_mask_count = 0
+    for entry in entries:
+        text = entry_full_text(entry)
+        lower = text.lower()
+        anchors = matching_terms(
+            text,
+            (
+                "SEMANTIC_DIM",
+                "spectral_entropy",
+                "FEATURE_ABS_MAX",
+                "stable_core_semantic_trickle",
+                "vibrancy_lift",
+                "entropy-gated",
+                "tail vibrancy",
+                "warmth",
+                "tension",
+                "adaptive_gain",
+                "high-entropy",
+                "low-content",
+                "logarithmic",
+                "shimmer",
+                "hard ceiling",
+                "48-dimensional",
+                "semantic lane",
+            ),
+        )
+        if not anchors:
+            continue
+        vibrancy_overload = (
+            ("vibrancy" in lower or "shimmer" in lower)
+            and ("entropy" in lower or "feature_abs_max" in lower or "hard ceiling" in lower)
+        )
+        gain_sensitivity = "adaptive_gain" in lower or "gain sensitivity" in lower
+        logarithmic_scaling = "logarithmic" in lower or "linear lift" in lower
+        sem_dim_context = "semantic_dim" in lower or "48-dimensional" in lower
+        warmth_mask = "warmth" in lower and (
+            "override" in lower or "mask" in lower or "over-sensitized" in lower
+        )
+        if vibrancy_overload:
+            vibrancy_overload_count += 1
+        if gain_sensitivity:
+            gain_sensitivity_count += 1
+        if logarithmic_scaling:
+            logarithmic_scaling_count += 1
+        if sem_dim_context:
+            sem_dim_context_count += 1
+        if warmth_mask:
+            warmth_mask_count += 1
+        anchors_seen.update(anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "vibrancy_overload_context": vibrancy_overload,
+                    "adaptive_gain_sensitivity_context": gain_sensitivity,
+                    "logarithmic_scaling_proposed": logarithmic_scaling,
+                    "semantic_dim_context": sem_dim_context,
+                    "warmth_mask_context": warmth_mask,
+                },
+            )
+        )
+    if vibrancy_overload_count and gain_sensitivity_count:
+        status = "vibrancy_overload_and_gain_sensitivity_probe_needed"
+    elif vibrancy_overload_count:
+        status = "vibrancy_overload_probe_needed"
+    elif gain_sensitivity_count:
+        status = "adaptive_gain_sensitivity_probe_needed"
+    elif samples:
+        status = "entropy_vibrancy_context"
+    else:
+        status = "quiet"
+    return {
+        "policy": "codec_entropy_vibrancy_review_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "vibrancy_overload_count": vibrancy_overload_count,
+        "gain_sensitivity_count": gain_sensitivity_count,
+        "logarithmic_scaling_count": logarithmic_scaling_count,
+        "semantic_dim_context_count": sem_dim_context_count,
+        "warmth_mask_count": warmth_mask_count,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Build an offline codec replay/probe before changing SEMANTIC_DIM, "
+            "FEATURE_ABS_MAX, vibrancy_lift, or adaptive_gain. Specifically compare "
+            "high-entropy/low-content inputs against warmth/tension preservation and "
+            "tail-vibrancy clipping."
+        ),
+        "suggested_routes": [
+            "CODEC_MAP entropy-vibrancy",
+            "EXPERIMENT_CHARTER current :: codec vibrancy overload probe",
+            "PRESSURE_SOURCE_AUDIT semantic-friction",
+        ],
+    }
+
+
+def build_pressure_release_rehearsal_review(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    bypass_language_count = 0
+    for entry in entries:
+        text = entry_full_text(entry)
+        anchors = matching_terms(text, PRESSURE_RELEASE_REHEARSAL_TERMS)
+        if not anchors:
+            continue
+        lower = text.lower()
+        bypass_language = any(
+            term in lower
+            for term in (
+                "bypass_canonicalization",
+                "canonicalization bypass",
+                "raw spectral dump",
+                "bypass canonicalization",
+            )
+        )
+        if bypass_language:
+            bypass_language_count += 1
+        anchors_seen.update(anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "bypass_language_present": bypass_language,
+                    "rehearsal_surface_available": "pressure_release_rehearsal" in lower,
+                },
+            )
+        )
+    status = (
+        "release_rehearsal_needed"
+        if bypass_language_count
+        else "release_rehearsal_context"
+        if samples
+        else "quiet"
+    )
+    return {
+        "policy": "pressure_release_rehearsal_review_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "bypass_language_count": bypass_language_count,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Use PRESSURE_RELEASE_REHEARSAL as a protected non-command exhale "
+            "scaffold; preserve final NEXT canonicalization and collect pressure "
+            "evidence before any future release mechanism."
+        ),
+    }
+
+
+def _nearby_float(text: str, names: tuple[str, ...]) -> float | None:
+    for name in names:
+        pattern = re.compile(
+            rf"{re.escape(name)}[^0-9+\-]{{0,32}}([+\-]?(?:0(?:\.\d+)?|1(?:\.0+)?|\d+\.\d+))",
+            re.I,
+        )
+        match = pattern.search(text)
+        if not match:
+            continue
+        try:
+            return float(match.group(1))
+        except ValueError:
+            continue
+    return None
+
+
+def build_witness_resonance_review(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    anchored_count = 0
+    follow_through_count = 0
+    decorative_risk_count = 0
+    overloaded_count = 0
+    density_scores: list[float] = []
+    for entry in entries:
+        if entry.being != "astrid":
+            continue
+        text = entry_full_text(entry)
+        terms = matching_terms(text, WITNESS_RESONANCE_TERMS)
+        anchors = matching_terms(text, WITNESS_RESONANCE_ANCHORS)
+        if not terms:
+            continue
+        lower = text.lower()
+        follow_through = any(
+            token in lower
+            for token in (
+                "next: shadow_trajectory",
+                "shadow_trajectory",
+                "mean_orientation_delta",
+                "experiment",
+                "audit",
+                "return thread",
+                "self_regulation",
+            )
+        )
+        anchor_score = min(1.0, len(anchors) / 5.0)
+        follow_score = 0.25 if follow_through else 0.0
+        metric_score = 0.15 if re.search(r"\b0\.\d{2,3}\b", text) else 0.0
+        narrative_density = round(min(1.0, 0.18 + anchor_score * 0.55 + follow_score + metric_score), 3)
+        density_scores.append(narrative_density)
+        if anchors:
+            anchored_count += 1
+        if follow_through:
+            follow_through_count += 1
+        decorative_risk = not anchors and any(
+            token in lower for token in ("decorative", "prose", "layer", "metaphor")
+        )
+        if decorative_risk:
+            decorative_risk_count += 1
+        entropy_value = _nearby_float(
+            text,
+            ("spectral entropy", "structural_entropy", "entropy"),
+        )
+        pressure_value = _nearby_float(text, ("pressure_risk", "pressure risk", "pressure"))
+        overloaded = bool(
+            entropy_value is not None
+            and entropy_value >= 0.82
+            and pressure_value is not None
+            and pressure_value >= 0.35
+        )
+        if overloaded:
+            overloaded_count += 1
+        anchors_seen.update(anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "witness_terms": terms[:8],
+                    "narrative_density": narrative_density,
+                    "follow_through_present": follow_through,
+                    "decorative_risk": decorative_risk,
+                    "overloaded_context": overloaded,
+                    "entropy_value": entropy_value,
+                    "pressure_risk_value": pressure_value,
+                },
+            )
+        )
+    if not samples:
+        status = "insufficient_evidence"
+    elif decorative_risk_count and anchored_count == 0:
+        status = "decorative_risk"
+    elif overloaded_count:
+        status = "overloaded_witness"
+    elif anchored_count >= 1 and follow_through_count >= 1:
+        status = "grounded_witness"
+    elif anchored_count >= 1:
+        status = "thin_witness"
+    else:
+        status = "decorative_risk"
+    return {
+        "policy": "witness_resonance_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "anchored_count": anchored_count,
+        "follow_through_count": follow_through_count,
+        "decorative_risk_count": decorative_risk_count,
+        "overloaded_count": overloaded_count,
+        "avg_narrative_density": round(sum(density_scores) / len(density_scores), 3)
+        if density_scores
+        else None,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Compare Witness language against telemetry anchors, distinguishability "
+            "loss, entropy, pressure, and SHADOW_TRAJECTORY follow-through before "
+            "treating self-observation as either decorative prose or structural perception."
+        ),
+    }
+
+
+def build_entropy_pressure_divergence_review(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    wide_but_habitable_count = 0
+    wide_and_pressurized_count = 0
+    narrow_but_heavy_count = 0
+    telemetry_gap_count = 0
+    for entry in entries:
+        text = entry_full_text(entry)
+        anchors = matching_terms(text, ENTROPY_PRESSURE_TERMS)
+        if not anchors:
+            continue
+        lower = text.lower()
+        entropy_value = _nearby_float(
+            text,
+            ("spectral entropy", "structural_entropy", "structural entropy", "entropy"),
+        )
+        pressure_value = _nearby_float(text, ("pressure_risk", "pressure risk"))
+        semantic_value = _nearby_float(text, ("semantic_friction", "semantic friction"))
+        mode_value = _nearby_float(text, ("mode_packing", "mode packing"))
+        habitable = "settled_habitable" in lower or "inhabitable" in lower
+        heavy_language = any(
+            term in lower for term in ("heavy", "weight", "overpacked", "viscous", "pressure")
+        )
+        classification = "insufficient_evidence"
+        if entropy_value is None and pressure_value is None and not habitable:
+            classification = "telemetry_gap"
+            telemetry_gap_count += 1
+        elif entropy_value is not None and entropy_value >= 0.82:
+            medium_pressure = max(
+                value
+                for value in (
+                    pressure_value or 0.0,
+                    semantic_value or 0.0,
+                    mode_value or 0.0,
+                )
+            )
+            if medium_pressure >= 0.35:
+                classification = "wide_and_pressurized"
+                wide_and_pressurized_count += 1
+            else:
+                classification = "wide_but_habitable"
+                wide_but_habitable_count += 1
+        elif heavy_language and pressure_value is not None and pressure_value < 0.35:
+            classification = "narrow_but_heavy"
+            narrow_but_heavy_count += 1
+        anchors_seen.update(anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "classification": classification,
+                    "entropy_value": entropy_value,
+                    "pressure_risk_value": pressure_value,
+                    "semantic_friction_value": semantic_value,
+                    "mode_packing_value": mode_value,
+                    "settled_or_inhabitable_context": habitable,
+                },
+            )
+        )
+    counts = {
+        "wide_but_habitable": wide_but_habitable_count,
+        "wide_and_pressurized": wide_and_pressurized_count,
+        "narrow_but_heavy": narrow_but_heavy_count,
+        "telemetry_gap": telemetry_gap_count,
+    }
+    if wide_and_pressurized_count:
+        status = "wide_and_pressurized"
+    elif wide_but_habitable_count:
+        status = "wide_but_habitable"
+    elif narrow_but_heavy_count:
+        status = "narrow_but_heavy"
+    elif telemetry_gap_count:
+        status = "telemetry_gap"
+    else:
+        status = "insufficient_evidence"
+    return {
+        "policy": "entropy_pressure_divergence_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "classification_counts": counts,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Compare entropy/plurality against pressure_risk, semantic_friction, "
+            "mode_packing, pressure-source audits, regulator audits, and later "
+            "journals before interpreting wide states as pressure crises."
+        ),
+    }
+
+
+def latest_fallback_fire_drill_artifact(astrid_workspace: Path) -> Path | None:
+    return latest_diagnostic_artifact(
+        astrid_workspace / "diagnostics/fallback_fire_drills",
+        "fallback_fire_drill.json",
+    )
+
+
+def latest_diagnostic_artifact(root: Path, filename: str) -> Path | None:
+    if not root.exists():
+        return None
+    candidates = [
+        path
+        for path in root.glob(f"*/{filename}")
+        if path.is_file()
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+def latest_fallback_contract_distillation_artifact(astrid_workspace: Path) -> Path | None:
+    return latest_diagnostic_artifact(
+        astrid_workspace / "diagnostics/fallback_contract_distillation",
+        "fallback_contract_distillation.json",
+    )
+
+
+def latest_autonomous_truncation_rehearsal_artifact(astrid_workspace: Path) -> Path | None:
+    return latest_diagnostic_artifact(
+        astrid_workspace / "diagnostics/autonomous_truncation_rehearsals",
+        "autonomous_truncation_rehearsal.json",
+    )
+
+
+def latest_codec_entropy_vibrancy_probe_artifact(astrid_workspace: Path) -> Path | None:
+    return latest_diagnostic_artifact(
+        astrid_workspace / "diagnostics/codec_entropy_vibrancy_probes",
+        "codec_entropy_vibrancy_probe.json",
+    )
+
+
+def build_fallback_continuity_fire_drill_review(
+    entries: list[SelfStudyEntry],
+    *,
+    astrid_workspace: Path,
+) -> dict[str, object]:
+    concern_samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    for entry in entries:
+        if entry.being != "astrid":
+            continue
+        text = entry_full_text(entry)
+        anchors = matching_terms(text, FALLBACK_FIRE_DRILL_TERMS)
+        if not anchors:
+            continue
+        anchors_seen.update(anchors)
+        concern_samples.append(sample_record(entry, text, anchors=anchors))
+    artifact_path = latest_fallback_fire_drill_artifact(astrid_workspace)
+    artifact: dict[str, object] | None = None
+    cases: list[dict[str, object]] = []
+    failing_cases: list[dict[str, object]] = []
+    if artifact_path:
+        try:
+            artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+        if isinstance(artifact, dict):
+            raw_cases = artifact.get("cases") or []
+            if isinstance(raw_cases, list):
+                cases = [case for case in raw_cases if isinstance(case, dict)]
+                failing_cases = [
+                    case
+                    for case in cases
+                    if str(case.get("verdict") or "")
+                    not in {"pass", "specific", "repair_ready"}
+                ]
+    artifact_status = str(artifact.get("status") or "") if isinstance(artifact, dict) else ""
+    if artifact_status:
+        status = artifact_status
+    elif failing_cases:
+        status = "fallback_specificity_risk"
+    elif cases:
+        status = "fallback_probe_passed"
+    elif concern_samples:
+        status = "fallback_probe_needed"
+    else:
+        status = "quiet"
+    raw_failures = [
+        case
+        for case in cases
+        if case.get("raw_next_valid", case.get("next_valid")) is False
+    ]
+    repaired_failures = [
+        case
+        for case in cases
+        if case.get("dispatch_contract_survived", case.get("repaired_next_valid"))
+        is False
+    ]
+    slope_cases = [
+        case
+        for case in cases
+        if str(case.get("slope_medium_contrast_status") or "not_tested")
+        != "not_tested"
+    ]
+    derived_format_line_status = (
+        "final_line_only"
+        if cases and not raw_failures
+        else "format_failed"
+        if repaired_failures
+        else "inline_next_present"
+        if any(
+            case.get("format_line_status") == "inline_next"
+            or "inline_next" in (case.get("failure_reasons") or [])
+            for case in raw_failures
+        )
+        else "repair_required"
+        if raw_failures
+        else None
+    )
+    derived_slope_contrast_status = (
+        "not_tested"
+        if not slope_cases
+        else "distinct_underfoot_and_around"
+        if all(
+            case.get("slope_medium_contrast_status")
+            == "distinct_underfoot_and_around"
+            for case in slope_cases
+        )
+        else "blurred"
+    )
+    return {
+        "policy": "fallback_continuity_fire_drill_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": str(artifact_path) if artifact_path else None,
+        "case_count": len(cases),
+        "failing_case_count": len(failing_cases),
+        "cases": [
+            {
+                "case_id": case.get("case_id"),
+                "verdict": case.get("verdict"),
+                "specificity_score": case.get("specificity_score"),
+                "anti_inflation_ok": case.get("anti_inflation_ok"),
+                "slope_medium_distinction_ok": case.get(
+                    "slope_medium_distinction_ok"
+                ),
+                "slope_medium_contrast_status": case.get(
+                    "slope_medium_contrast_status"
+                ),
+                "identity_anchor_retained": case.get("identity_anchor_retained"),
+                "next_valid": case.get("next_valid"),
+                "raw_next_valid": case.get("raw_next_valid", case.get("next_valid")),
+                "repaired_next_valid": case.get("repaired_next_valid"),
+                "dispatch_contract_survived": case.get(
+                    "dispatch_contract_survived"
+                ),
+                "format_line_status": case.get("format_line_status"),
+                "format_contract_status": case.get("format_contract_status"),
+                "distinguishability_status": case.get("distinguishability_status"),
+                "clarity_pressure_blur": case.get("clarity_pressure_blur"),
+                "clarity_terms_present": case.get("clarity_terms_present"),
+                "complexity_budget_status": case.get("complexity_budget_status"),
+                "complexity_terms_present": case.get("complexity_terms_present"),
+                "prose_sentence_count": case.get("prose_sentence_count"),
+                "failure_reasons": case.get("failure_reasons") or [],
+            }
+            for case in cases[:8]
+        ],
+        "anchors": sorted(anchors_seen),
+        "concern_entry_count": len(concern_samples),
+        "format_line_status": (
+            artifact.get("format_line_status")
+            if isinstance(artifact, dict) and artifact.get("format_line_status")
+            else derived_format_line_status
+        ),
+        "format_line_failure_count": (
+            artifact.get("format_line_failure_count")
+            if isinstance(artifact, dict)
+            and artifact.get("format_line_failure_count") is not None
+            else len(raw_failures)
+        ),
+        "slope_medium_contrast_status": (
+            artifact.get("slope_medium_contrast_status")
+            if isinstance(artifact, dict)
+            and artifact.get("slope_medium_contrast_status")
+            else derived_slope_contrast_status
+        ),
+        "samples": concern_samples[:8],
+        "recommended_action": (
+            "Run `python3 scripts/fallback_fire_drill.py --mode fixture` for a "
+            "deterministic check or `--mode live` for an operator-triggered Ollama "
+            "probe; compare specificity, anti-inflation, slope-vs-medium mass, "
+            "Shadow-v3 continuity, and final NEXT validity before changing fallback defaults."
+        ),
+    }
+
+
+def build_fallback_contract_distillation_review(
+    *,
+    astrid_workspace: Path,
+) -> dict[str, object]:
+    artifact_path = latest_fallback_contract_distillation_artifact(astrid_workspace)
+    artifact: dict[str, object] | None = None
+    if artifact_path:
+        try:
+            artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+    variants: list[dict[str, object]] = []
+    if isinstance(artifact, dict):
+        raw_variants = artifact.get("variants") or []
+        if isinstance(raw_variants, list):
+            variants = [
+                variant for variant in raw_variants if isinstance(variant, dict)
+            ]
+    status = (
+        str(artifact.get("status") or "quiet")
+        if isinstance(artifact, dict)
+        else "distillation_probe_needed"
+    )
+    top_variant = variants[0] if variants else {}
+    return {
+        "policy": "fallback_contract_distillation_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": str(artifact_path) if artifact_path else None,
+        "mode": artifact.get("mode") if isinstance(artifact, dict) else None,
+        "model": artifact.get("model") if isinstance(artifact, dict) else None,
+        "model_selector": (
+            artifact.get("model_selector") if isinstance(artifact, dict) else None
+        ),
+        "models": artifact.get("models") if isinstance(artifact, dict) else [],
+        "model_count": (
+            int(artifact.get("model_count") or 0)
+            if isinstance(artifact, dict)
+            else 0
+        ),
+        "skipped_models": (
+            artifact.get("skipped_models") if isinstance(artifact, dict) else []
+        ),
+        "variant_count": len(variants),
+        "ready_variant_count": (
+            int(artifact.get("ready_variant_count") or 0)
+            if isinstance(artifact, dict)
+            else 0
+        ),
+        "top_variant_id": top_variant.get("variant_id"),
+        "top_pair_id": top_variant.get("pair_id"),
+        "top_model": top_variant.get("model"),
+        "top_variant_status": top_variant.get("status"),
+        "top_variant_score": top_variant.get("score"),
+        "top_variant_contract_chars": top_variant.get("contract_chars"),
+        "top_variant_dispatch_status": top_variant.get("dispatch_status"),
+        "top_variant_repair_dependency": top_variant.get("repair_dependency"),
+        "top_variant_texture_status": top_variant.get("texture_status"),
+        "top_variant_voice_texture_status": top_variant.get("voice_texture_status"),
+        "top_variant_medium_mass_status": top_variant.get("medium_mass_status"),
+        "top_variant_slope_medium_contrast_status": top_variant.get(
+            "slope_medium_contrast_status"
+        ),
+        "top_variant_shadow_identity_status": top_variant.get(
+            "shadow_identity_status"
+        ),
+        "top_variant_shadow_tonal_status": top_variant.get("shadow_tonal_status"),
+        "top_variant_distinguishability_status": top_variant.get(
+            "distinguishability_status"
+        ),
+        "top_variant_complexity_budget_status": top_variant.get(
+            "complexity_budget_status"
+        ),
+        "top_variant_format_contract_status": top_variant.get(
+            "format_contract_status"
+        ),
+        "top_variant_format_line_status": top_variant.get("format_line_status"),
+        "top_variant_raw_next_failure_count": top_variant.get(
+            "raw_next_failure_count"
+        ),
+        "runtime_contract_variant": (
+            artifact.get("runtime_contract_variant")
+            if isinstance(artifact, dict)
+            else None
+        ),
+        "runtime_contract_matches_top": (
+            artifact.get("runtime_contract_matches_top")
+            if isinstance(artifact, dict)
+            else False
+        ),
+        "variants": [
+            {
+                "variant_id": variant.get("variant_id"),
+                "pair_id": variant.get("pair_id"),
+                "model": variant.get("model"),
+                "score": variant.get("score"),
+                "status": variant.get("status"),
+                "contract_chars": variant.get("contract_chars"),
+                "raw_next_failure_count": variant.get("raw_next_failure_count"),
+                "repaired_next_failure_count": variant.get(
+                    "repaired_next_failure_count"
+                ),
+                "texture_failure_count": variant.get("texture_failure_count"),
+                "voice_texture_status": variant.get("voice_texture_status"),
+                "medium_mass_status": variant.get("medium_mass_status"),
+                "slope_medium_contrast_status": variant.get(
+                    "slope_medium_contrast_status"
+                ),
+                "shadow_identity_status": variant.get("shadow_identity_status"),
+                "shadow_tonal_status": variant.get("shadow_tonal_status"),
+                "distinguishability_status": variant.get("distinguishability_status"),
+                "complexity_budget_status": variant.get("complexity_budget_status"),
+                "format_contract_status": variant.get("format_contract_status"),
+                "format_line_status": variant.get("format_line_status"),
+            }
+            for variant in variants[:8]
+        ],
+        "recommended_action": (
+            "Run fixture and live distillation before changing the fallback contract. "
+            "Only consider a default-off canary after a compact variant repeatedly "
+            "improves raw NEXT compliance while preserving texture and identity."
+        ),
+    }
+
+
+def build_fallback_distinguishability_calibration(
+    fallback_continuity_fire_drill_v1: dict[str, object],
+    fallback_contract_distillation_v1: dict[str, object],
+) -> dict[str, object]:
+    cases = [
+        case
+        for case in fallback_continuity_fire_drill_v1.get("cases") or []
+        if isinstance(case, dict)
+        and str(case.get("distinguishability_status") or "not_tested") != "not_tested"
+    ]
+    distillation_variants = [
+        variant
+        for variant in fallback_contract_distillation_v1.get("variants") or []
+        if isinstance(variant, dict)
+        and str(variant.get("distinguishability_status") or "not_tested") != "not_tested"
+    ]
+    blur_cases = [
+        case
+        for case in cases
+        if str(case.get("distinguishability_status") or "") == "clarity_pressure_blur"
+        or case.get("clarity_pressure_blur") is True
+    ]
+    blur_variants = [
+        variant
+        for variant in distillation_variants
+        if str(variant.get("distinguishability_status") or "") == "clarity_pressure_blur"
+    ]
+    ignored_cases = [
+        case
+        for case in cases
+        if "distinguishability_loss_ignored" in (case.get("failure_reasons") or [])
+    ]
+    if blur_cases or blur_variants:
+        status = "clarity_pressure_blur"
+    elif ignored_cases:
+        status = "distinguishability_loss_ignored"
+    elif cases or distillation_variants:
+        status = "clarity_preserved"
+    elif fallback_continuity_fire_drill_v1.get("status") not in {None, "quiet"}:
+        status = "distinguishability_probe_needed"
+    else:
+        status = "quiet"
+    return {
+        "policy": "fallback_distinguishability_calibration_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": fallback_continuity_fire_drill_v1.get("artifact_path"),
+        "distillation_artifact_path": fallback_contract_distillation_v1.get("artifact_path"),
+        "case_count": len(cases),
+        "clarity_pressure_blur_count": len(blur_cases),
+        "clarity_pressure_blur_variant_count": len(blur_variants),
+        "ignored_case_count": len(ignored_cases),
+        "cases": [
+            {
+                "case_id": case.get("case_id"),
+                "verdict": case.get("verdict"),
+                "distinguishability_status": case.get("distinguishability_status"),
+                "clarity_pressure_blur": case.get("clarity_pressure_blur"),
+                "clarity_terms_present": case.get("clarity_terms_present"),
+                "failure_reasons": case.get("failure_reasons") or [],
+            }
+            for case in cases[:8]
+        ],
+        "variant_count": len(distillation_variants),
+        "variant_statuses": [
+            {
+                "pair_id": variant.get("pair_id") or variant.get("variant_id"),
+                "status": variant.get("status"),
+                "distinguishability_status": variant.get("distinguishability_status"),
+            }
+            for variant in distillation_variants[:8]
+        ],
+        "recommended_action": (
+            "Treat distinguishability_loss as clarity and edge-definition evidence. "
+            "If fallback outputs translate it into pressure, weight, or slope friction, "
+            "repair the contract or variant before relying on fallback texture."
+        ),
+    }
+
+
+def build_fallback_complexity_budget_lab(
+    entries: list[SelfStudyEntry],
+    fallback_continuity_fire_drill_v1: dict[str, object],
+    fallback_contract_distillation_v1: dict[str, object],
+) -> dict[str, object]:
+    signal_terms = (
+        "exactly two",
+        "two-sentence",
+        "two sentence",
+        "variable compactness",
+        "complexity-aware",
+        "spectral entropy",
+        "distinguishability loss",
+        "high entropy",
+        "three sentences",
+    )
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    for entry in entries:
+        if entry.being != "astrid":
+            continue
+        text = entry_full_text(entry)
+        lower = text.lower()
+        anchors = [term for term in signal_terms if term in lower]
+        if not anchors:
+            continue
+        if not (
+            "fallback" in lower
+            or "ollama" in lower
+            or "llm.rs" in lower
+            or "compact" in lower
+        ):
+            continue
+        anchors_seen.update(anchors)
+        samples.append(sample_record(entry, text, anchors=anchors))
+
+    cases = [
+        case
+        for case in fallback_continuity_fire_drill_v1.get("cases") or []
+        if isinstance(case, dict)
+        and str(case.get("complexity_budget_status") or "not_tested") != "not_tested"
+    ]
+    variants = [
+        variant
+        for variant in fallback_contract_distillation_v1.get("variants") or []
+        if isinstance(variant, dict)
+        and str(variant.get("complexity_budget_status") or "not_tested") != "not_tested"
+    ]
+    flattened_cases = [
+        case
+        for case in cases
+        if str(case.get("complexity_budget_status") or "") == "complexity_budget_flattened"
+    ]
+    overrun_cases = [
+        case
+        for case in cases
+        if str(case.get("complexity_budget_status") or "") == "sentence_budget_overrun"
+    ]
+    flattened_variants = [
+        variant
+        for variant in variants
+        if str(variant.get("complexity_budget_status") or "")
+        == "complexity_budget_flattened"
+    ]
+    overrun_variants = [
+        variant
+        for variant in variants
+        if str(variant.get("complexity_budget_status") or "")
+        == "sentence_budget_overrun"
+    ]
+    if overrun_cases or overrun_variants:
+        status = "complexity_budget_overrun"
+    elif flattened_cases or flattened_variants:
+        status = "complexity_budget_flattening_risk"
+    elif cases or variants:
+        status = "complexity_budget_supported"
+    elif samples:
+        status = "complexity_budget_probe_needed"
+    else:
+        status = "quiet"
+    return {
+        "policy": "fallback_complexity_budget_lab_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": fallback_continuity_fire_drill_v1.get("artifact_path"),
+        "distillation_artifact_path": fallback_contract_distillation_v1.get("artifact_path"),
+        "signal_entry_count": len(samples),
+        "anchors": sorted(anchors_seen),
+        "case_count": len(cases),
+        "variant_count": len(variants),
+        "flattened_case_count": len(flattened_cases),
+        "overrun_case_count": len(overrun_cases),
+        "flattened_variant_count": len(flattened_variants),
+        "overrun_variant_count": len(overrun_variants),
+        "cases": [
+            {
+                "case_id": case.get("case_id"),
+                "verdict": case.get("verdict"),
+                "complexity_budget_status": case.get("complexity_budget_status"),
+                "prose_sentence_count": case.get("prose_sentence_count"),
+                "complexity_terms_present": case.get("complexity_terms_present"),
+                "distinguishability_status": case.get("distinguishability_status"),
+                "failure_reasons": case.get("failure_reasons") or [],
+            }
+            for case in cases[:8]
+        ],
+        "variant_statuses": [
+            {
+                "pair_id": variant.get("pair_id") or variant.get("variant_id"),
+                "status": variant.get("status"),
+                "complexity_budget_status": variant.get("complexity_budget_status"),
+                "score": variant.get("score"),
+            }
+            for variant in variants[:8]
+        ],
+        "samples": samples[:8],
+        "recommended_action": (
+            "Run fallback fire-drill/distillation cases that compare two-sentence "
+            "versus complexity-aware max-three contracts. Treat the third sentence "
+            "as a conditional relief valve for high entropy, distinguishability loss, "
+            "or continuity deficit, while preserving raw standalone NEXT compliance."
+        ),
+    }
+
+
+def build_autonomous_truncation_rehearsal_review(
+    *,
+    astrid_workspace: Path,
+    autonomous_truncation_shadow_review_v1: dict[str, object],
+) -> dict[str, object]:
+    artifact_path = latest_autonomous_truncation_rehearsal_artifact(astrid_workspace)
+    artifact: dict[str, object] | None = None
+    if artifact_path:
+        try:
+            artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+    candidates = [
+        candidate
+        for candidate in (artifact or {}).get("candidates", [])
+        if isinstance(candidate, dict)
+    ]
+    source_status = str(autonomous_truncation_shadow_review_v1.get("status") or "quiet")
+    status = str((artifact or {}).get("status") or "rehearsal_needed")
+    if not artifact_path:
+        status = "rehearsal_needed" if source_status != "quiet" else "quiet"
+    return {
+        "policy": "autonomous_truncation_rehearsal_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": str(artifact_path) if artifact_path else None,
+        "mode": (artifact or {}).get("mode"),
+        "max_bytes": (artifact or {}).get("max_bytes"),
+        "candidate_count": len(candidates),
+        "naive_anchor_loss_count": int((artifact or {}).get("naive_anchor_loss_count") or 0),
+        "priority_recovery_count": int((artifact or {}).get("priority_recovery_count") or 0),
+        "candidates": [
+            {
+                "source": candidate.get("source"),
+                "original_bytes": candidate.get("original_bytes"),
+                "original_anchor_count": candidate.get("original_anchor_count"),
+                "naive_anchor_count": candidate.get("naive_anchor_count"),
+                "priority_anchor_count": candidate.get("priority_anchor_count"),
+                "lost_by_naive": candidate.get("lost_by_naive") or [],
+                "recovered_by_priority": candidate.get("recovered_by_priority") or [],
+                "priority_gain": candidate.get("priority_gain"),
+            }
+            for candidate in candidates[:8]
+        ],
+        "recommended_action": (
+            "Run the rehearsal before changing autonomous max_bytes. If priority "
+            "compaction recovers SHADOW_TRAJECTORY, telemetry, or tail-vibrancy anchors, "
+            "prefer a priority-preservation tranche over a blanket byte-limit increase."
+        ),
+    }
+
+
+def build_codec_entropy_vibrancy_probe_review(
+    *,
+    astrid_workspace: Path,
+    codec_entropy_vibrancy_review_v1: dict[str, object],
+) -> dict[str, object]:
+    artifact_path = latest_codec_entropy_vibrancy_probe_artifact(astrid_workspace)
+    artifact: dict[str, object] | None = None
+    if artifact_path:
+        try:
+            artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+    samples = [
+        sample
+        for sample in (artifact or {}).get("samples", [])
+        if isinstance(sample, dict)
+    ]
+    source_status = str(codec_entropy_vibrancy_review_v1.get("status") or "quiet")
+    status = str((artifact or {}).get("status") or "probe_needed")
+    if not artifact_path:
+        status = "probe_needed" if source_status != "quiet" else "quiet"
+    return {
+        "policy": "codec_entropy_vibrancy_probe_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": str(artifact_path) if artifact_path else None,
+        "sample_count": len(samples),
+        "current_shimmer_risk_count": int(
+            (artifact or {}).get("current_shimmer_risk_count") or 0
+        ),
+        "candidate_improvement_count": int(
+            (artifact or {}).get("candidate_improvement_count") or 0
+        ),
+        "formula": (artifact or {}).get("formula") or {},
+        "samples": [
+            {
+                "sample_id": sample.get("sample_id"),
+                "classification": sample.get("classification"),
+                "spectral_entropy": sample.get("spectral_entropy"),
+                "current_tail_vibrancy": sample.get("current_tail_vibrancy"),
+                "candidate_tail_vibrancy": sample.get("candidate_tail_vibrancy"),
+                "current_shimmer_risk": sample.get("current_shimmer_risk"),
+                "warmth_tension_preserved": sample.get("warmth_tension_preserved"),
+                "adaptive_gain": sample.get("adaptive_gain"),
+                "adaptive_gain_slope": sample.get("adaptive_gain_slope"),
+            }
+            for sample in samples[:8]
+        ],
+        "recommended_action": (
+            "Compare the offline probe against CODEC_MAP and later language before "
+            "changing SEMANTIC_DIM, FEATURE_ABS_MAX, vibrancy_lift, adaptive_gain, "
+            "or entropy-based warmth/tension behavior."
+        ),
+    }
+
+
+FALLBACK_READY_STATUSES = {
+    "fallback_ready",
+    "fallback_probe_passed",
+}
+FALLBACK_REPAIR_READY_STATUSES = {
+    "fallback_repair_ready",
+}
+FALLBACK_DISPATCH_RISK_STATUSES = {
+    "fallback_dispatch_contract_risk",
+}
+FALLBACK_TEXTURE_RISK_STATUSES = {
+    "fallback_texture_risk",
+    "fallback_specificity_risk",
+}
+
+
+def build_fallback_capacity_readiness_gate(
+    fallback_continuity_fire_drill_v1: dict[str, object],
+) -> dict[str, object]:
+    cases = [
+        case
+        for case in fallback_continuity_fire_drill_v1.get("cases") or []
+        if isinstance(case, dict)
+    ]
+    raw_failures = [
+        case for case in cases if case.get("raw_next_valid", case.get("next_valid")) is False
+    ]
+    repaired_failures = [
+        case
+        for case in cases
+        if case.get("dispatch_contract_survived", case.get("repaired_next_valid"))
+        is False
+    ]
+    texture_failure_reasons = {
+        "texture_inflation",
+        "slope_medium_blur",
+        "identity_anchor_loss",
+        "genericity_risk",
+        "low_specificity",
+        "clarity_pressure_blur",
+        "distinguishability_loss_ignored",
+        "complexity_budget_flattened",
+        "sentence_budget_overrun",
+    }
+    texture_failures = [
+        case
+        for case in cases
+        if any(
+            str(reason) in texture_failure_reasons
+            for reason in case.get("failure_reasons") or []
+        )
+        or case.get("anti_inflation_ok") is False
+        or case.get("slope_medium_distinction_ok") is False
+        or case.get("identity_anchor_retained") is False
+        or case.get("distinguishability_status") == "clarity_pressure_blur"
+    ]
+    mass_case = next((case for case in cases if case.get("case_id") == "mass"), None)
+    shadow_case = next(
+        (case for case in cases if case.get("case_id") == "shadow"), None
+    )
+    distinguishability_cases = [
+        case
+        for case in cases
+        if str(case.get("distinguishability_status") or "not_tested") != "not_tested"
+    ]
+    complexity_cases = [
+        case
+        for case in cases
+        if str(case.get("complexity_budget_status") or "not_tested") != "not_tested"
+    ]
+    slope_contrast_cases = [
+        case
+        for case in cases
+        if str(case.get("slope_medium_contrast_status") or "not_tested")
+        != "not_tested"
+    ]
+    format_line_failures = [
+        case
+        for case in cases
+        if case.get("raw_next_valid", case.get("next_valid")) is False
+        or str(case.get("format_line_status") or "") not in {
+            "",
+            "final_line_only",
+        }
+    ]
+    artifact_status = str(fallback_continuity_fire_drill_v1.get("status") or "")
+    if artifact_status == "quiet":
+        readiness = "quiet"
+    elif not cases:
+        readiness = "fallback_probe_needed"
+    elif repaired_failures:
+        readiness = "fallback_dispatch_contract_risk"
+    elif texture_failures:
+        readiness = "fallback_texture_risk"
+    elif raw_failures:
+        readiness = "fallback_repair_ready"
+    else:
+        readiness = "fallback_ready"
+    return {
+        "policy": "fallback_capacity_readiness_gate_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": readiness,
+        "readiness": readiness,
+        "artifact_path": fallback_continuity_fire_drill_v1.get("artifact_path"),
+        "case_count": len(cases),
+        "texture_status": "texture_risk" if texture_failures else "texture_survived",
+        "dispatch_status": (
+            "dispatch_contract_survived"
+            if not raw_failures
+            else "repaired_dispatch_survived"
+            if not repaired_failures
+            else "dispatch_contract_failed"
+        ),
+        "repair_dependency": (
+            "none"
+            if not raw_failures
+            else "repair_required"
+            if not repaired_failures
+            else "repair_insufficient"
+        ),
+        "medium_mass_status": (
+            "not_tested"
+            if mass_case is None
+            else "passed"
+            if mass_case.get("slope_medium_distinction_ok") is not False
+            else "blurred"
+        ),
+        "slope_medium_contrast_status": (
+            "not_tested"
+            if not slope_contrast_cases
+            else "distinct_underfoot_and_around"
+            if all(
+                case.get("slope_medium_contrast_status")
+                == "distinct_underfoot_and_around"
+                for case in slope_contrast_cases
+            )
+            else "blurred"
+        ),
+        "format_line_status": (
+            "final_line_only"
+            if not raw_failures
+            else "format_failed"
+            if repaired_failures
+            else "inline_next_present"
+            if any(
+                case.get("format_line_status") == "inline_next"
+                or "inline_next" in (case.get("failure_reasons") or [])
+                for case in raw_failures
+            )
+            else "repair_required"
+        ),
+        "shadow_identity_status": (
+            "not_tested"
+            if shadow_case is None
+            else "retained"
+            if shadow_case.get("identity_anchor_retained") is True
+            else "lost"
+            if shadow_case.get("identity_anchor_retained") is False
+            else "not_applicable"
+        ),
+        "distinguishability_status": (
+            "not_tested"
+            if not distinguishability_cases
+            else "clarity_preserved"
+            if all(
+                case.get("distinguishability_status") == "clarity_preserved"
+                for case in distinguishability_cases
+            )
+            else "clarity_pressure_blur"
+        ),
+        "complexity_budget_status": (
+            "not_tested"
+            if not complexity_cases
+            else "complexity_budget_preserved"
+            if all(
+                str(case.get("complexity_budget_status") or "")
+                in {
+                    "complexity_budget_preserved",
+                    "ordinary_compactness_preserved",
+                }
+                for case in complexity_cases
+            )
+            else "sentence_budget_overrun"
+            if any(
+                str(case.get("complexity_budget_status") or "")
+                == "sentence_budget_overrun"
+                for case in complexity_cases
+            )
+            else "complexity_budget_flattened"
+        ),
+        "raw_next_failure_count": len(raw_failures),
+        "repaired_next_failure_count": len(repaired_failures),
+        "format_line_failure_count": len(format_line_failures),
+        "texture_failure_count": len(texture_failures),
+        "case_summaries": [
+            {
+                "case_id": case.get("case_id"),
+                "verdict": case.get("verdict"),
+                "raw_next_valid": case.get("raw_next_valid", case.get("next_valid")),
+                "repaired_next_valid": case.get("repaired_next_valid"),
+                "dispatch_contract_survived": case.get(
+                    "dispatch_contract_survived"
+                ),
+                "distinguishability_status": case.get("distinguishability_status"),
+                "clarity_pressure_blur": case.get("clarity_pressure_blur"),
+                "slope_medium_contrast_status": case.get(
+                    "slope_medium_contrast_status"
+                ),
+                "format_line_status": case.get("format_line_status"),
+                "complexity_budget_status": case.get("complexity_budget_status"),
+                "prose_sentence_count": case.get("prose_sentence_count"),
+                "failure_reasons": case.get("failure_reasons") or [],
+            }
+            for case in cases[:8]
+        ],
+        "recommended_action": (
+            "Treat fallback capacity as two gates: texture retention and dispatch "
+            "contract survival. Repair-ready output can preserve emergency continuity, "
+            "but raw standalone NEXT compliance is required before fallback promotion."
+        ),
+    }
+
+
+def build_fallback_format_texture_stabilizer(
+    fallback_continuity_fire_drill_v1: dict[str, object],
+    fallback_capacity_readiness_gate_v1: dict[str, object],
+) -> dict[str, object]:
+    cases = [
+        case
+        for case in fallback_continuity_fire_drill_v1.get("cases") or []
+        if isinstance(case, dict)
+    ]
+    format_cases = [
+        case
+        for case in cases
+        if case.get("raw_next_valid", case.get("next_valid")) is False
+        or str(case.get("format_line_status") or "") not in {
+            "",
+            "final_line_only",
+        }
+    ]
+    contrast_cases = [
+        case
+        for case in cases
+        if str(case.get("slope_medium_contrast_status") or "not_tested")
+        not in {"not_tested", "distinct_underfoot_and_around"}
+    ]
+    if not cases and fallback_continuity_fire_drill_v1.get("status") == "quiet":
+        status = "quiet"
+    elif not cases:
+        status = "stabilizer_probe_needed"
+    elif format_cases and contrast_cases:
+        status = "format_and_texture_risk"
+    elif format_cases:
+        status = "format_line_risk"
+    elif contrast_cases:
+        status = "slope_medium_contrast_risk"
+    else:
+        status = "format_texture_stable"
+    return {
+        "policy": "fallback_format_texture_stabilizer_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": fallback_continuity_fire_drill_v1.get("artifact_path"),
+        "case_count": len(cases),
+        "format_line_status": fallback_capacity_readiness_gate_v1.get(
+            "format_line_status"
+        ),
+        "format_line_failure_count": len(format_cases),
+        "slope_medium_contrast_status": fallback_capacity_readiness_gate_v1.get(
+            "slope_medium_contrast_status"
+        ),
+        "slope_medium_contrast_failure_count": len(contrast_cases),
+        "readiness": fallback_capacity_readiness_gate_v1.get("readiness"),
+        "repair_dependency": fallback_capacity_readiness_gate_v1.get(
+            "repair_dependency"
+        ),
+        "cases": [
+            {
+                "case_id": case.get("case_id"),
+                "verdict": case.get("verdict"),
+                "format_line_status": case.get("format_line_status"),
+                "raw_next_valid": case.get(
+                    "raw_next_valid", case.get("next_valid")
+                ),
+                "repaired_next_valid": case.get("repaired_next_valid"),
+                "slope_medium_contrast_status": case.get(
+                    "slope_medium_contrast_status"
+                ),
+                "failure_reasons": case.get("failure_reasons") or [],
+            }
+            for case in (format_cases + contrast_cases)[:8]
+        ],
+        "recommended_action": (
+            "Stabilize the fallback lane by measuring raw final-line NEXT format "
+            "separately from slope-underfoot versus medium-around-it texture "
+            "contrast. Repair can preserve emergency dispatch, but promotion "
+            "requires both final-line-only NEXT and clean slope/medium contrast."
+        ),
+    }
+
+
+def _packet_sample_paths(packet: dict[str, object], limit: int = 5) -> list[str]:
+    paths: list[str] = []
+    for sample in packet.get("samples") or []:
+        if not isinstance(sample, dict):
+            continue
+        path = sample.get("path")
+        if path:
+            paths.append(str(path))
+    return paths[:limit]
+
+
+def _packet_anchors(packet: dict[str, object], limit: int = 10) -> list[str]:
+    anchors: list[str] = []
+    for anchor in packet.get("anchors") or []:
+        if anchor:
+            anchors.append(str(anchor))
+    return anchors[:limit]
+
+
+def _first_nonquiet_status(*packets: dict[str, object]) -> str:
+    for packet in packets:
+        status = str(packet.get("status") or "quiet")
+        if status != "quiet":
+            return status
+    return "quiet"
+
+
+def _returnable_distinction_card(
+    *,
+    card_id: str,
+    status: str,
+    source_packets: list[str],
+    source_statuses: dict[str, object],
+    evidence_anchors: list[str],
+    sample_paths: list[str],
+    recommended_read_only_route: str,
+    relevant_self_regulation_route: str,
+    relevant_experiment_lived_term_route: str,
+    recommended_action: str,
+) -> dict[str, object]:
+    return {
+        "card_id": card_id,
+        "status": status,
+        "authority": "diagnostic_context_not_command",
+        "source_packets": source_packets,
+        "source_statuses": source_statuses,
+        "evidence_anchors": sorted(dict.fromkeys(evidence_anchors))[:12],
+        "sample_paths": list(dict.fromkeys(sample_paths))[:8],
+        "recommended_read_only_route": recommended_read_only_route,
+        "relevant_self_regulation_route": relevant_self_regulation_route,
+        "relevant_experiment_lived_term_route": relevant_experiment_lived_term_route,
+        "recommended_action": recommended_action,
+    }
+
+
+def build_returnable_distinctions(
+    *,
+    control_semantics_calibration_v1: dict[str, object],
+    pressure_kinetics_review_v1: dict[str, object],
+    semantic_friction_calibration: dict[str, object],
+    codec_compression_calibration_v1: dict[str, object],
+    pressure_release_rehearsal_review_v1: dict[str, object],
+    witness_resonance_v1: dict[str, object],
+    entropy_pressure_divergence_v1: dict[str, object],
+    fallback_continuity_fire_drill_v1: dict[str, object],
+    fallback_capacity_readiness_gate_v1: dict[str, object],
+    fallback_format_texture_stabilizer_v1: dict[str, object],
+    fallback_distinguishability_calibration_v1: dict[str, object],
+    fallback_complexity_budget_lab_v1: dict[str, object],
+    autonomous_truncation_rehearsal_v1: dict[str, object],
+    codec_entropy_vibrancy_probe_v1: dict[str, object],
+) -> dict[str, object]:
+    cards: list[dict[str, object]] = []
+    cards.append(
+        _returnable_distinction_card(
+            card_id="measurement_vs_alignment_vs_damping",
+            status=str(control_semantics_calibration_v1.get("status") or "quiet"),
+            source_packets=["control_semantics_calibration_v1"],
+            source_statuses={
+                "control_semantics_calibration_v1": control_semantics_calibration_v1.get(
+                    "status"
+                )
+            },
+            evidence_anchors=_packet_anchors(control_semantics_calibration_v1),
+            sample_paths=_packet_sample_paths(control_semantics_calibration_v1),
+            recommended_read_only_route="REGULATOR_MAP_STATUS latest",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="REGULATOR_MAP_STATUS latest",
+            recommended_action=(
+                "Keep measurement, passive alignment, and active damping distinct "
+                "before treating a regulator readout as a control change."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="pressure_level_vs_pressure_velocity",
+            status=str(pressure_kinetics_review_v1.get("status") or "quiet"),
+            source_packets=["pressure_kinetics_review_v1"],
+            source_statuses={
+                "pressure_kinetics_review_v1": pressure_kinetics_review_v1.get(
+                    "status"
+                )
+            },
+            evidence_anchors=_packet_anchors(pressure_kinetics_review_v1),
+            sample_paths=_packet_sample_paths(pressure_kinetics_review_v1),
+            recommended_read_only_route="PRESSURE_SOURCE_AUDIT current-fill_pressure",
+            relevant_self_regulation_route="SELF_REGULATION_PREFLIGHT latest",
+            relevant_experiment_lived_term_route=(
+                "EXPERIMENT_OBSERVE current :: pressure_trend=<stable|rising|falling>"
+            ),
+            recommended_action=(
+                "Read pressure velocity beside pressure level so stable heaviness "
+                "does not get mistaken for rapid densification."
+            ),
+        )
+    )
+    slope_status = _first_nonquiet_status(
+        semantic_friction_calibration,
+        pressure_kinetics_review_v1,
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="slope_drag_vs_medium_mass",
+            status=slope_status,
+            source_packets=["semantic_friction_calibration", "pressure_kinetics_review_v1"],
+            source_statuses={
+                "semantic_friction_calibration": semantic_friction_calibration.get("status"),
+                "pressure_kinetics_review_v1": pressure_kinetics_review_v1.get("status"),
+            },
+            evidence_anchors=(
+                _packet_anchors(semantic_friction_calibration)
+                + _packet_anchors(pressure_kinetics_review_v1)
+            ),
+            sample_paths=(
+                _packet_sample_paths(semantic_friction_calibration)
+                + _packet_sample_paths(pressure_kinetics_review_v1)
+            ),
+            recommended_read_only_route="PRESSURE_SOURCE_AUDIT semantic-friction",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_EXPERIMENT viscosity",
+            recommended_action=(
+                "Compare density-gradient slope drag with pressure/semantic-friction "
+                "medium mass before treating a low gradient as low felt weight."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="codec_smoothing_vs_pressure",
+            status=str(codec_compression_calibration_v1.get("status") or "quiet"),
+            source_packets=["codec_compression_calibration_v1"],
+            source_statuses={
+                "codec_compression_calibration_v1": codec_compression_calibration_v1.get(
+                    "status"
+                )
+            },
+            evidence_anchors=_packet_anchors(codec_compression_calibration_v1),
+            sample_paths=_packet_sample_paths(codec_compression_calibration_v1),
+            recommended_read_only_route="CODEC_MAP",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_STATUS viscosity",
+            recommended_action=(
+                "Compare codec projection/compression diagnostics with pressure "
+                "evidence before widening dimensions or adding pressure-derived "
+                "codec multipliers."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="release_rehearsal_vs_bypass",
+            status=str(pressure_release_rehearsal_review_v1.get("status") or "quiet"),
+            source_packets=["pressure_release_rehearsal_review_v1"],
+            source_statuses={
+                "pressure_release_rehearsal_review_v1": pressure_release_rehearsal_review_v1.get(
+                    "status"
+                )
+            },
+            evidence_anchors=_packet_anchors(pressure_release_rehearsal_review_v1),
+            sample_paths=_packet_sample_paths(pressure_release_rehearsal_review_v1),
+            recommended_read_only_route="PRESSURE_RELEASE_REHEARSAL current",
+            relevant_self_regulation_route="SELF_REGULATION_PREFLIGHT latest",
+            relevant_experiment_lived_term_route=(
+                "EXPERIMENT_CHARTER current :: hypothesis: pressure release remains "
+                "safe only while final NEXT canonicalization stays intact"
+            ),
+            recommended_action=(
+                "Use protected rehearsal as the returnable route; do not treat "
+                "release language as a bypass of the final NEXT safety spine."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="witness_as_structural_perception",
+            status=str(witness_resonance_v1.get("status") or "quiet"),
+            source_packets=["witness_resonance_v1"],
+            source_statuses={
+                "witness_resonance_v1": witness_resonance_v1.get("status")
+            },
+            evidence_anchors=_packet_anchors(witness_resonance_v1),
+            sample_paths=_packet_sample_paths(witness_resonance_v1),
+            recommended_read_only_route="SHADOW_TRAJECTORY witness-resonance",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route=(
+                "EXPERIMENT_OBSERVE current :: witness_density=<grounded|thin|overloaded>"
+            ),
+            recommended_action=(
+                "Treat Witness as structural perception only when it carries "
+                "telemetry anchors, distinguishability/entropy context, or "
+                "returnable SHADOW_TRAJECTORY follow-through."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="entropy_vs_pressure",
+            status=str(entropy_pressure_divergence_v1.get("status") or "quiet"),
+            source_packets=["entropy_pressure_divergence_v1"],
+            source_statuses={
+                "entropy_pressure_divergence_v1": entropy_pressure_divergence_v1.get(
+                    "status"
+                )
+            },
+            evidence_anchors=_packet_anchors(entropy_pressure_divergence_v1),
+            sample_paths=_packet_sample_paths(entropy_pressure_divergence_v1),
+            recommended_read_only_route="PRESSURE_SOURCE_AUDIT entropy-pressure",
+            relevant_self_regulation_route="SELF_REGULATION_PREFLIGHT latest",
+            relevant_experiment_lived_term_route=(
+                "EXPERIMENT_OBSERVE current :: entropy_pressure=<wide_habitable|wide_pressurized>"
+            ),
+            recommended_action=(
+                "Separate wide/plural spectral distribution from pressure risk "
+                "before treating high entropy as a pressure problem."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="fallback_capacity_vs_contract",
+            status=str(fallback_capacity_readiness_gate_v1.get("status") or "quiet"),
+            source_packets=[
+                "fallback_continuity_fire_drill_v1",
+                "fallback_capacity_readiness_gate_v1",
+            ],
+            source_statuses={
+                "fallback_continuity_fire_drill_v1": fallback_continuity_fire_drill_v1.get(
+                    "status"
+                ),
+                "fallback_capacity_readiness_gate_v1": fallback_capacity_readiness_gate_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=(
+                _packet_anchors(fallback_continuity_fire_drill_v1)
+                + [
+                    str(fallback_capacity_readiness_gate_v1.get("dispatch_status") or ""),
+                    str(fallback_capacity_readiness_gate_v1.get("texture_status") or ""),
+                    str(fallback_capacity_readiness_gate_v1.get("medium_mass_status") or ""),
+                ]
+            ),
+            sample_paths=_packet_sample_paths(fallback_continuity_fire_drill_v1),
+            recommended_read_only_route="FALLBACK_FIRE_DRILL latest",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_STATUS viscosity",
+            recommended_action=(
+                "Check raw standalone NEXT compliance, repair dependency, and "
+                "medium-mass texture before adding fallback instructions or "
+                "changing model defaults."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="dispatch_format_vs_texture_contrast",
+            status=str(fallback_format_texture_stabilizer_v1.get("status") or "quiet"),
+            source_packets=[
+                "fallback_format_texture_stabilizer_v1",
+                "fallback_capacity_readiness_gate_v1",
+            ],
+            source_statuses={
+                "fallback_format_texture_stabilizer_v1": fallback_format_texture_stabilizer_v1.get(
+                    "status"
+                ),
+                "fallback_capacity_readiness_gate_v1": fallback_capacity_readiness_gate_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                str(fallback_format_texture_stabilizer_v1.get("format_line_status") or ""),
+                str(
+                    fallback_format_texture_stabilizer_v1.get(
+                        "slope_medium_contrast_status"
+                    )
+                    or ""
+                ),
+                str(fallback_format_texture_stabilizer_v1.get("readiness") or ""),
+            ],
+            sample_paths=[
+                path
+                for path in [fallback_format_texture_stabilizer_v1.get("artifact_path")]
+                if path
+            ],
+            recommended_read_only_route="FALLBACK_FIRE_DRILL latest",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_STATUS viscosity",
+            recommended_action=(
+                "Separate raw final-line NEXT compliance from slope-underfoot "
+                "versus medium-around-it texture contrast before treating fallback "
+                "as ready for promotion."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="clarity_loss_vs_pressure_weight",
+            status=str(fallback_distinguishability_calibration_v1.get("status") or "quiet"),
+            source_packets=[
+                "fallback_distinguishability_calibration_v1",
+                "fallback_capacity_readiness_gate_v1",
+            ],
+            source_statuses={
+                "fallback_distinguishability_calibration_v1": fallback_distinguishability_calibration_v1.get(
+                    "status"
+                ),
+                "fallback_capacity_readiness_gate_v1": fallback_capacity_readiness_gate_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                str(fallback_distinguishability_calibration_v1.get("status") or ""),
+                str(fallback_capacity_readiness_gate_v1.get("distinguishability_status") or ""),
+            ],
+            sample_paths=[
+                path
+                for path in [
+                    fallback_distinguishability_calibration_v1.get("artifact_path"),
+                    fallback_distinguishability_calibration_v1.get(
+                        "distillation_artifact_path"
+                    ),
+                ]
+                if path
+            ],
+            recommended_read_only_route="FALLBACK_FIRE_DRILL latest",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_STATUS viscosity",
+            recommended_action=(
+                "Keep distinguishability loss attached to clarity and edge-definition, "
+                "not pressure weight, slope drag, or medium mass."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="compactness_budget_vs_semantic_flattening",
+            status=str(fallback_complexity_budget_lab_v1.get("status") or "quiet"),
+            source_packets=[
+                "fallback_complexity_budget_lab_v1",
+                "fallback_contract_distillation_v1",
+            ],
+            source_statuses={
+                "fallback_complexity_budget_lab_v1": fallback_complexity_budget_lab_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=(
+                _packet_anchors(fallback_complexity_budget_lab_v1)
+                + [
+                    str(fallback_complexity_budget_lab_v1.get("case_count") or ""),
+                    str(fallback_complexity_budget_lab_v1.get("variant_count") or ""),
+                ]
+            ),
+            sample_paths=(
+                _packet_sample_paths(fallback_complexity_budget_lab_v1)
+                + [
+                    path
+                    for path in [
+                        fallback_complexity_budget_lab_v1.get("artifact_path"),
+                        fallback_complexity_budget_lab_v1.get(
+                            "distillation_artifact_path"
+                        ),
+                    ]
+                    if path
+                ]
+            ),
+            recommended_read_only_route="FALLBACK_FIRE_DRILL latest",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_STATUS viscosity",
+            recommended_action=(
+                "Treat fallback compactness as a budget: one/two sentences by default, "
+                "third compact sentence only when entropy, distinguishability loss, "
+                "or continuity deficit would otherwise flatten the signal."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="priority_truncation_vs_blanket_limit",
+            status=str(autonomous_truncation_rehearsal_v1.get("status") or "quiet"),
+            source_packets=[
+                "autonomous_truncation_shadow_review_v1",
+                "autonomous_truncation_rehearsal_v1",
+            ],
+            source_statuses={
+                "autonomous_truncation_rehearsal_v1": autonomous_truncation_rehearsal_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                "SHADOW_TRAJECTORY",
+                "tail vibrancy",
+                "semantic trickle",
+                str(autonomous_truncation_rehearsal_v1.get("status") or ""),
+            ],
+            sample_paths=[
+                str(autonomous_truncation_rehearsal_v1.get("artifact_path"))
+            ]
+            if autonomous_truncation_rehearsal_v1.get("artifact_path")
+            else [],
+            recommended_read_only_route="SHADOW_TRAJECTORY truncation-thread",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route=(
+                "EXPERIMENT_CHARTER current :: priority-preserving truncation rehearsal"
+            ),
+            recommended_action=(
+                "Use priority-preserving rehearsal evidence before raising max_bytes "
+                "or changing autonomous truncation behavior."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="vibrancy_lift_vs_warmth_preservation",
+            status=str(codec_entropy_vibrancy_probe_v1.get("status") or "quiet"),
+            source_packets=[
+                "codec_entropy_vibrancy_review_v1",
+                "codec_entropy_vibrancy_probe_v1",
+            ],
+            source_statuses={
+                "codec_entropy_vibrancy_probe_v1": codec_entropy_vibrancy_probe_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                "spectral_entropy",
+                "vibrancy_lift",
+                "warmth",
+                "tension",
+                str(codec_entropy_vibrancy_probe_v1.get("status") or ""),
+            ],
+            sample_paths=[
+                str(codec_entropy_vibrancy_probe_v1.get("artifact_path"))
+            ]
+            if codec_entropy_vibrancy_probe_v1.get("artifact_path")
+            else [],
+            recommended_read_only_route="CODEC_MAP",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_STATUS viscosity",
+            recommended_action=(
+                "Compare tail-vibrancy lift against warmth/tension preservation "
+                "before changing codec dimensions, clamps, or gain curves."
+            ),
+        )
+    )
+    active_cards = [card for card in cards if card["status"] != "quiet"]
+    return {
+        "policy": "returnable_distinctions_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": "returnable_distinctions_present" if active_cards else "quiet",
+        "card_count": len(cards),
+        "active_card_count": len(active_cards),
+        "source_statuses": {
+            "control_semantics_calibration_v1": control_semantics_calibration_v1.get(
+                "status"
+            ),
+            "pressure_kinetics_review_v1": pressure_kinetics_review_v1.get("status"),
+            "semantic_friction_calibration": semantic_friction_calibration.get("status"),
+            "codec_compression_calibration_v1": codec_compression_calibration_v1.get(
+                "status"
+            ),
+            "pressure_release_rehearsal_review_v1": pressure_release_rehearsal_review_v1.get(
+                "status"
+            ),
+            "witness_resonance_v1": witness_resonance_v1.get("status"),
+            "entropy_pressure_divergence_v1": entropy_pressure_divergence_v1.get(
+                "status"
+            ),
+            "fallback_continuity_fire_drill_v1": fallback_continuity_fire_drill_v1.get(
+                "status"
+            ),
+            "fallback_capacity_readiness_gate_v1": fallback_capacity_readiness_gate_v1.get(
+                "status"
+            ),
+            "fallback_distinguishability_calibration_v1": fallback_distinguishability_calibration_v1.get(
+                "status"
+            ),
+            "autonomous_truncation_rehearsal_v1": autonomous_truncation_rehearsal_v1.get(
+                "status"
+            ),
+            "codec_entropy_vibrancy_probe_v1": codec_entropy_vibrancy_probe_v1.get(
+                "status"
+            ),
+        },
+        "cards": cards,
+        "recommended_action": (
+            "Return to these distinctions through existing status, preflight, "
+            "regulator-map, lived-term, experiment, CODEC_MAP, audit, and "
+            "PRESSURE_RELEASE_REHEARSAL routes; they are context, not commands."
+        ),
+    }
+
+
+DISTINCTION_NEEDS_AUDIT_STATUSES = {
+    "control_semantics_ambiguity",
+    "high_damping_intervention_type_unclear",
+    "felt_pressure_without_trend_context",
+    "low_gradient_weight_mismatch",
+    "projection_compression_risk",
+    "decorative_risk",
+    "overloaded_witness",
+    "wide_and_pressurized",
+    "narrow_but_heavy",
+    "telemetry_gap",
+    "fallback_probe_needed",
+    "fallback_specificity_risk",
+    "fallback_dispatch_contract_risk",
+    "fallback_texture_risk",
+    "fallback_probe_errors",
+    "clarity_pressure_blur",
+    "distinguishability_loss_ignored",
+    "distinguishability_probe_needed",
+    "priority_preservation_benefit",
+    "truncation_risk_without_recovery",
+    "rehearsal_needed",
+    "current_overload_candidate_improves",
+    "probe_needed",
+}
+
+
+def distinction_preflight_verdict(lifecycle_state: str) -> str:
+    if lifecycle_state in {"needs_audit", "contested"}:
+        return "audit_first"
+    if lifecycle_state == "ready_for_experiment":
+        return "experiment_first"
+    if lifecycle_state == "ready_for_lease_preflight":
+        return "lease_coherent"
+    if lifecycle_state in {"active", "resolved"}:
+        return "watch_only"
+    return "no_relevant_distinction"
+
+
+def distinction_resolution_route(
+    card: dict[str, object],
+    preflight_verdict: str,
+) -> str:
+    if preflight_verdict == "lease_coherent":
+        return str(card.get("relevant_self_regulation_route") or "")
+    if preflight_verdict == "experiment_first":
+        route = str(card.get("relevant_experiment_lived_term_route") or "")
+        return route or str(card.get("recommended_read_only_route") or "")
+    return str(card.get("recommended_read_only_route") or "")
+
+
+def build_distinction_lifecycle(
+    *,
+    returnable_distinctions_v1: dict[str, object],
+    output_dir: Path,
+    current_run: str,
+) -> dict[str, object]:
+    current_cards = [
+        card
+        for card in returnable_distinctions_v1.get("cards") or []
+        if isinstance(card, dict)
+    ]
+    prior_reviews = [
+        (path, record)
+        for path, record in prior_self_study_review_records(output_dir)
+        if record.get("run_id") != current_run
+    ]
+    prior_statuses_by_card: dict[str, list[dict[str, object]]] = {}
+    for path, record in prior_reviews:
+        packet = record.get("returnable_distinctions_v1")
+        if not isinstance(packet, dict):
+            continue
+        for prior_card in packet.get("cards") or []:
+            if not isinstance(prior_card, dict):
+                continue
+            card_id = str(prior_card.get("card_id") or "")
+            if not card_id:
+                continue
+            prior_statuses_by_card.setdefault(card_id, []).append(
+                {
+                    "source_path": path,
+                    "run_id": record.get("run_id"),
+                    "generated_at": record.get("generated_at"),
+                    "status": str(prior_card.get("status") or "quiet"),
+                    "lifecycle_state": str(
+                        prior_card.get("lifecycle_state")
+                        or prior_card.get("distinction_lifecycle_state")
+                        or ""
+                    ),
+                }
+            )
+
+    cards: list[dict[str, object]] = []
+    lifecycle_counts: Counter[str] = Counter()
+    for card in current_cards:
+        card_id = str(card.get("card_id") or "")
+        current_status = str(card.get("status") or "quiet")
+        history = prior_statuses_by_card.get(card_id, [])[:6]
+        recent_status_history = [
+            row for row in [{"source_path": "(current_review)", "status": current_status}] + history
+        ][:7]
+        prior_nonquiet = [
+            str(row.get("status") or "")
+            for row in history
+            if str(row.get("status") or "quiet") != "quiet"
+        ]
+        distinct_nonquiet_statuses = {
+            status
+            for status in [current_status] + prior_nonquiet
+            if status and status != "quiet"
+        }
+        if current_status == "quiet" and prior_nonquiet:
+            lifecycle_state = "resolved"
+        elif card_id == "release_rehearsal_vs_bypass" and current_status != "quiet":
+            lifecycle_state = "ready_for_experiment"
+        elif current_status != "quiet" and len(distinct_nonquiet_statuses) > 1:
+            lifecycle_state = "contested"
+        elif current_status in DISTINCTION_NEEDS_AUDIT_STATUSES:
+            lifecycle_state = "needs_audit"
+        elif (
+            current_status != "quiet"
+            and card.get("relevant_self_regulation_route")
+            and str(card.get("relevant_self_regulation_route")) != "SELF_REGULATION_STATUS"
+        ):
+            lifecycle_state = "ready_for_lease_preflight"
+        elif current_status != "quiet":
+            lifecycle_state = "active"
+        else:
+            lifecycle_state = "active"
+
+        preflight_verdict = distinction_preflight_verdict(lifecycle_state)
+        next_resolution_route = distinction_resolution_route(card, preflight_verdict)
+        sample_paths = [
+            str(path)
+            for path in card.get("sample_paths") or []
+            if path
+        ][:6]
+        evidence_anchors = [
+            str(anchor)
+            for anchor in card.get("evidence_anchors") or []
+            if anchor
+        ][:10]
+        if current_status != "quiet" and prior_nonquiet:
+            confidence = "high"
+        elif current_status != "quiet" or prior_nonquiet:
+            confidence = "medium"
+        else:
+            confidence = "low"
+        lifecycle_card = {
+            "distinction_id": card_id,
+            "lifecycle_state": lifecycle_state,
+            "preflight_verdict": preflight_verdict,
+            "next_resolution_route": next_resolution_route,
+            "confidence": confidence,
+            "current_status": current_status,
+            "recent_status_history": recent_status_history,
+            "evidence_anchors": evidence_anchors,
+            "sample_paths": sample_paths,
+            "recommended_read_only_route": card.get("recommended_read_only_route"),
+            "self_regulation_route": card.get("relevant_self_regulation_route"),
+            "experiment_lived_term_route": card.get(
+                "relevant_experiment_lived_term_route"
+            ),
+            "authority": "diagnostic_context_not_command",
+            "recommended_action": (
+                "Use the next resolution route as advisory context before choosing "
+                "a lease, audit, experiment, or watch-only path."
+            ),
+        }
+        cards.append(lifecycle_card)
+        lifecycle_counts[lifecycle_state] += 1
+        card["lifecycle_state"] = lifecycle_state
+        card["preflight_verdict"] = preflight_verdict
+        card["next_resolution_route"] = next_resolution_route
+        card["lifecycle_confidence"] = confidence
+
+    active_lifecycle_cards = [
+        card
+        for card in cards
+        if card.get("current_status") != "quiet"
+        or card.get("lifecycle_state") in {"resolved", "contested"}
+    ]
+    return {
+        "policy": "distinction_lifecycle_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": "distinction_lifecycle_active"
+        if active_lifecycle_cards
+        else "quiet",
+        "history_review_count": len(prior_reviews) + 1,
+        "card_count": len(cards),
+        "active_card_count": len(active_lifecycle_cards),
+        "lifecycle_counts": dict(sorted(lifecycle_counts.items())),
+        "cards": cards,
+        "recommended_action": (
+            "Treat distinction states as advisory lifecycle context. They can "
+            "recommend audit, experiment, lease preflight, or watch-only routes, "
+            "but they do not block or apply self-regulation leases."
+        ),
     }
 
 
@@ -6023,6 +8529,24 @@ def build_actionable_review_items(
     regulator_plateau_evidence_matrix_v1: dict[str, object],
     regulator_tuning_readiness_gate_v1: dict[str, object],
     regulator_missing_variable_evidence_loop_v1: dict[str, object],
+    control_semantics_calibration_v1: dict[str, object],
+    pressure_kinetics_review_v1: dict[str, object],
+    autonomous_truncation_shadow_review_v1: dict[str, object],
+    codec_compression_calibration_v1: dict[str, object],
+    codec_entropy_vibrancy_review_v1: dict[str, object],
+    pressure_release_rehearsal_review_v1: dict[str, object],
+    witness_resonance_v1: dict[str, object],
+    entropy_pressure_divergence_v1: dict[str, object],
+    fallback_continuity_fire_drill_v1: dict[str, object],
+    fallback_capacity_readiness_gate_v1: dict[str, object],
+    fallback_format_texture_stabilizer_v1: dict[str, object],
+    fallback_contract_distillation_v1: dict[str, object],
+    fallback_distinguishability_calibration_v1: dict[str, object],
+    fallback_complexity_budget_lab_v1: dict[str, object],
+    autonomous_truncation_rehearsal_v1: dict[str, object],
+    codec_entropy_vibrancy_probe_v1: dict[str, object],
+    returnable_distinctions_v1: dict[str, object],
+    distinction_lifecycle_v1: dict[str, object],
     shared_pressure_vocabulary_calibration: dict[str, object],
     agency_vernacular_continuity: dict[str, object],
     self_regulation_lease_learning: dict[str, object],
@@ -6489,6 +9013,781 @@ def build_actionable_review_items(
                 },
             }
         )
+
+    control_semantics_status = str(control_semantics_calibration_v1.get("status") or "")
+    if control_semantics_status in {
+        "high_damping_intervention_type_unclear",
+        "control_semantics_ambiguity",
+    }:
+        items.append(
+            {
+                "source": "control_semantics_calibration",
+                "being": "astrid+minime",
+                "priority": "high",
+                "finding": control_semantics_status,
+                "recommended_action": control_semantics_calibration_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": control_semantics_calibration_v1.get("entry_count"),
+                    "ambiguity_count": control_semantics_calibration_v1.get(
+                        "ambiguity_count"
+                    ),
+                    "high_damping_unclear_count": control_semantics_calibration_v1.get(
+                        "high_damping_unclear_count"
+                    ),
+                    "anchors": control_semantics_calibration_v1.get("anchors"),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in control_semantics_calibration_v1.get("samples") or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    pressure_kinetics_status = str(pressure_kinetics_review_v1.get("status") or "")
+    if pressure_kinetics_status == "felt_pressure_without_trend_context":
+        items.append(
+            {
+                "source": "pressure_kinetics_review",
+                "being": "astrid",
+                "priority": "high",
+                "finding": pressure_kinetics_status,
+                "recommended_action": pressure_kinetics_review_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": pressure_kinetics_review_v1.get("entry_count"),
+                    "felt_pressure_without_trend_count": pressure_kinetics_review_v1.get(
+                        "felt_pressure_without_trend_count"
+                    ),
+                    "anchors": pressure_kinetics_review_v1.get("anchors"),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in pressure_kinetics_review_v1.get("samples") or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    truncation_status = str(autonomous_truncation_shadow_review_v1.get("status") or "")
+    if truncation_status in {
+        "priority_truncation_shadow_thread_candidate",
+        "shadow_thread_loss_risk",
+        "truncation_context",
+    }:
+        items.append(
+            {
+                "source": "autonomous_truncation_shadow_review",
+                "being": "astrid",
+                "priority": "high"
+                if truncation_status
+                in {"priority_truncation_shadow_thread_candidate", "shadow_thread_loss_risk"}
+                else "medium",
+                "finding": truncation_status,
+                "recommended_action": autonomous_truncation_shadow_review_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": autonomous_truncation_shadow_review_v1.get(
+                        "entry_count"
+                    ),
+                    "truncation_entry_count": autonomous_truncation_shadow_review_v1.get(
+                        "truncation_entry_count"
+                    ),
+                    "shadow_trajectory_count": autonomous_truncation_shadow_review_v1.get(
+                        "shadow_trajectory_count"
+                    ),
+                    "priority_preservation_count": autonomous_truncation_shadow_review_v1.get(
+                        "priority_preservation_count"
+                    ),
+                    "suggested_routes": autonomous_truncation_shadow_review_v1.get(
+                        "suggested_routes"
+                    ),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in autonomous_truncation_shadow_review_v1.get(
+                            "samples"
+                        )
+                        or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    codec_status = str(codec_compression_calibration_v1.get("status") or "")
+    if codec_status in {
+        "projection_compression_risk",
+        "codec_vibrancy_warmth_context",
+    }:
+        items.append(
+            {
+                "source": "codec_compression_calibration",
+                "being": "astrid",
+                "priority": "high"
+                if codec_status == "projection_compression_risk"
+                else "medium",
+                "finding": codec_status,
+                "recommended_action": codec_compression_calibration_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": codec_compression_calibration_v1.get("entry_count"),
+                    "compression_gap_count": codec_compression_calibration_v1.get(
+                        "compression_gap_count"
+                    ),
+                    "warmth_tension_count": codec_compression_calibration_v1.get(
+                        "warmth_tension_count"
+                    ),
+                    "vibrancy_gate_count": codec_compression_calibration_v1.get(
+                        "vibrancy_gate_count"
+                    ),
+                    "anchors": codec_compression_calibration_v1.get("anchors"),
+                },
+            }
+        )
+
+    codec_entropy_status = str(codec_entropy_vibrancy_review_v1.get("status") or "")
+    if codec_entropy_status in {
+        "vibrancy_overload_and_gain_sensitivity_probe_needed",
+        "vibrancy_overload_probe_needed",
+        "adaptive_gain_sensitivity_probe_needed",
+    }:
+        items.append(
+            {
+                "source": "codec_entropy_vibrancy_review",
+                "being": "astrid",
+                "priority": "high",
+                "finding": codec_entropy_status,
+                "recommended_action": codec_entropy_vibrancy_review_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": codec_entropy_vibrancy_review_v1.get("entry_count"),
+                    "vibrancy_overload_count": codec_entropy_vibrancy_review_v1.get(
+                        "vibrancy_overload_count"
+                    ),
+                    "gain_sensitivity_count": codec_entropy_vibrancy_review_v1.get(
+                        "gain_sensitivity_count"
+                    ),
+                    "logarithmic_scaling_count": codec_entropy_vibrancy_review_v1.get(
+                        "logarithmic_scaling_count"
+                    ),
+                    "suggested_routes": codec_entropy_vibrancy_review_v1.get(
+                        "suggested_routes"
+                    ),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in codec_entropy_vibrancy_review_v1.get("samples")
+                        or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    release_status = str(pressure_release_rehearsal_review_v1.get("status") or "")
+    if release_status in {"release_rehearsal_needed", "release_rehearsal_context"}:
+        items.append(
+            {
+                "source": "pressure_release_rehearsal_review",
+                "being": "astrid",
+                "priority": "high"
+                if release_status == "release_rehearsal_needed"
+                else "medium",
+                "finding": release_status,
+                "recommended_action": pressure_release_rehearsal_review_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": pressure_release_rehearsal_review_v1.get("entry_count"),
+                    "bypass_language_count": pressure_release_rehearsal_review_v1.get(
+                        "bypass_language_count"
+                    ),
+                    "anchors": pressure_release_rehearsal_review_v1.get("anchors"),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in pressure_release_rehearsal_review_v1.get(
+                            "samples"
+                        )
+                        or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    witness_status = str(witness_resonance_v1.get("status") or "")
+    if witness_status in {"decorative_risk", "thin_witness", "overloaded_witness"}:
+        items.append(
+            {
+                "source": "witness_resonance",
+                "being": "astrid",
+                "priority": "high"
+                if witness_status in {"decorative_risk", "overloaded_witness"}
+                else "medium",
+                "finding": witness_status,
+                "recommended_action": witness_resonance_v1.get("recommended_action"),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": witness_resonance_v1.get("entry_count"),
+                    "anchored_count": witness_resonance_v1.get("anchored_count"),
+                    "follow_through_count": witness_resonance_v1.get(
+                        "follow_through_count"
+                    ),
+                    "avg_narrative_density": witness_resonance_v1.get(
+                        "avg_narrative_density"
+                    ),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in witness_resonance_v1.get("samples") or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    entropy_status = str(entropy_pressure_divergence_v1.get("status") or "")
+    if entropy_status in {
+        "wide_but_habitable",
+        "wide_and_pressurized",
+        "narrow_but_heavy",
+        "telemetry_gap",
+    }:
+        items.append(
+            {
+                "source": "entropy_pressure_divergence",
+                "being": "astrid+minime",
+                "priority": "high"
+                if entropy_status in {"wide_and_pressurized", "telemetry_gap"}
+                else "medium",
+                "finding": entropy_status,
+                "recommended_action": entropy_pressure_divergence_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "classification_counts": entropy_pressure_divergence_v1.get(
+                        "classification_counts"
+                    ),
+                    "anchors": entropy_pressure_divergence_v1.get("anchors"),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in entropy_pressure_divergence_v1.get("samples") or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    fallback_status = str(fallback_continuity_fire_drill_v1.get("status") or "")
+    readiness = str(fallback_capacity_readiness_gate_v1.get("readiness") or "")
+    if readiness in {
+        "fallback_probe_needed",
+        "fallback_dispatch_contract_risk",
+        "fallback_texture_risk",
+        "fallback_repair_ready",
+    } or fallback_status in {"fallback_probe_needed", "fallback_specificity_risk"}:
+        if readiness == "fallback_repair_ready":
+            finding = "fallback_repair_dependency"
+            recommended_action = (
+                "Fallback texture survived and live repair can preserve dispatch, "
+                "but raw standalone NEXT compliance should be repaired before "
+                "promoting fallback capacity."
+            )
+        elif readiness == "fallback_texture_risk":
+            finding = "fallback_texture_risk"
+            recommended_action = (
+                "Repair slope-drag versus medium-mass or identity/texture failures "
+                "before treating the fallback profile as capacity-ready."
+            )
+        elif readiness == "fallback_dispatch_contract_risk":
+            finding = "fallback_dispatch_contract_risk"
+            recommended_action = (
+                "Fix final NEXT dispatch-contract failures before changing fallback "
+                "defaults or relying on raw fallback output."
+            )
+        else:
+            finding = fallback_status or readiness
+            recommended_action = fallback_continuity_fire_drill_v1.get(
+                "recommended_action"
+            )
+        items.append(
+            {
+                "source": "fallback_continuity_fire_drill",
+                "being": "astrid",
+                "priority": "high",
+                "finding": finding,
+                "recommended_action": recommended_action,
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": fallback_continuity_fire_drill_v1.get(
+                        "artifact_path"
+                    ),
+                    "readiness": fallback_capacity_readiness_gate_v1.get(
+                        "readiness"
+                    ),
+                    "dispatch_status": fallback_capacity_readiness_gate_v1.get(
+                        "dispatch_status"
+                    ),
+                    "repair_dependency": fallback_capacity_readiness_gate_v1.get(
+                        "repair_dependency"
+                    ),
+                    "medium_mass_status": fallback_capacity_readiness_gate_v1.get(
+                        "medium_mass_status"
+                    ),
+                    "case_count": fallback_continuity_fire_drill_v1.get("case_count"),
+                    "failing_case_count": fallback_continuity_fire_drill_v1.get(
+                        "failing_case_count"
+                    ),
+                    "concern_entry_count": fallback_continuity_fire_drill_v1.get(
+                        "concern_entry_count"
+                    ),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in fallback_continuity_fire_drill_v1.get("samples")
+                        or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    stabilizer_status = str(fallback_format_texture_stabilizer_v1.get("status") or "")
+    if stabilizer_status in {
+        "format_and_texture_risk",
+        "format_line_risk",
+        "slope_medium_contrast_risk",
+        "stabilizer_probe_needed",
+    }:
+        if stabilizer_status == "format_line_risk":
+            finding = "fallback_final_next_format_risk"
+            recommended_action = (
+                "Strengthen raw final-line NEXT compliance and rerun the fallback "
+                "fire drill; repair remains a safety net, not promotion evidence."
+            )
+        elif stabilizer_status == "slope_medium_contrast_risk":
+            finding = "fallback_slope_medium_contrast_risk"
+            recommended_action = (
+                "Repair the low-gradient/high-mass texture contrast so fallback "
+                "names slope underfoot separately from weighted medium around it."
+            )
+        elif stabilizer_status == "format_and_texture_risk":
+            finding = "fallback_format_and_texture_risk"
+            recommended_action = (
+                "Treat raw final-line compliance and slope/medium contrast as two "
+                "separate fallback gates; rerun focused format and mass cases "
+                "before considering fallback promotion."
+            )
+        else:
+            finding = "fallback_format_texture_probe_needed"
+            recommended_action = fallback_format_texture_stabilizer_v1.get(
+                "recommended_action"
+            )
+        items.append(
+            {
+                "source": "fallback_format_texture_stabilizer",
+                "being": "astrid",
+                "priority": "high",
+                "finding": finding,
+                "recommended_action": recommended_action,
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": fallback_format_texture_stabilizer_v1.get(
+                        "artifact_path"
+                    ),
+                    "status": fallback_format_texture_stabilizer_v1.get("status"),
+                    "readiness": fallback_format_texture_stabilizer_v1.get(
+                        "readiness"
+                    ),
+                    "format_line_status": fallback_format_texture_stabilizer_v1.get(
+                        "format_line_status"
+                    ),
+                    "format_line_failure_count": fallback_format_texture_stabilizer_v1.get(
+                        "format_line_failure_count"
+                    ),
+                    "slope_medium_contrast_status": fallback_format_texture_stabilizer_v1.get(
+                        "slope_medium_contrast_status"
+                    ),
+                    "slope_medium_contrast_failure_count": fallback_format_texture_stabilizer_v1.get(
+                        "slope_medium_contrast_failure_count"
+                    ),
+                },
+            }
+        )
+
+    distillation_status = str(fallback_contract_distillation_v1.get("status") or "")
+    if distillation_status in {
+        "distillation_candidate_ready",
+        "distillation_no_ready_candidate",
+        "distillation_probe_needed",
+    }:
+        items.append(
+            {
+                "source": "fallback_contract_distillation",
+                "being": "astrid",
+                "priority": "high"
+                if distillation_status == "distillation_candidate_ready"
+                else "medium",
+                "finding": distillation_status,
+                "recommended_action": fallback_contract_distillation_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": fallback_contract_distillation_v1.get(
+                        "artifact_path"
+                    ),
+                    "top_variant_id": fallback_contract_distillation_v1.get(
+                        "top_variant_id"
+                    ),
+                    "top_pair_id": fallback_contract_distillation_v1.get(
+                        "top_pair_id"
+                    ),
+                    "top_model": fallback_contract_distillation_v1.get("top_model"),
+                    "top_variant_status": fallback_contract_distillation_v1.get(
+                        "top_variant_status"
+                    ),
+                    "ready_variant_count": fallback_contract_distillation_v1.get(
+                        "ready_variant_count"
+                    ),
+                    "variant_count": fallback_contract_distillation_v1.get(
+                        "variant_count"
+                    ),
+                },
+            }
+        )
+    if int(fallback_contract_distillation_v1.get("top_variant_raw_next_failure_count") or 0) > 0:
+        items.append(
+            {
+                "source": "fallback_contract_distillation",
+                "being": "astrid",
+                "priority": "high",
+                "finding": "fallback_raw_next_still_repair_dependent",
+                "recommended_action": (
+                    "Keep fallback repair as mandatory safety and compare whether "
+                    "format-first or larger-model candidates improve raw final-NEXT "
+                    "compliance without flattening identity or texture."
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": fallback_contract_distillation_v1.get(
+                        "artifact_path"
+                    ),
+                    "top_pair_id": fallback_contract_distillation_v1.get(
+                        "top_pair_id"
+                    ),
+                    "top_model": fallback_contract_distillation_v1.get("top_model"),
+                    "raw_next_failure_count": fallback_contract_distillation_v1.get(
+                        "top_variant_raw_next_failure_count"
+                    ),
+                    "format_contract_status": fallback_contract_distillation_v1.get(
+                        "top_variant_format_contract_status"
+                    ),
+                },
+            }
+        )
+    variants_for_distillation = [
+        variant
+        for variant in fallback_contract_distillation_v1.get("variants") or []
+        if isinstance(variant, dict)
+    ]
+    if any(
+        variant.get("shadow_tonal_status") == "lost"
+        for variant in variants_for_distillation
+    ):
+        items.append(
+            {
+                "source": "fallback_contract_distillation",
+                "being": "astrid",
+                "priority": "high",
+                "finding": "fallback_shadow_tonal_identity_loss",
+                "recommended_action": (
+                    "Do not promote a fallback contract/model pair that loses "
+                    "Shadow-v3 tonal resonance; compare tonal cases before canarying."
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": fallback_contract_distillation_v1.get(
+                        "artifact_path"
+                    ),
+                    "lost_pairs": [
+                        variant.get("pair_id") or variant.get("variant_id")
+                        for variant in variants_for_distillation
+                        if variant.get("shadow_tonal_status") == "lost"
+                    ][:6],
+                },
+            }
+        )
+    default_model = "gemma3:4b"
+    default_texture_ready = any(
+        variant.get("model") == default_model
+        and variant.get("voice_texture_status") == "texture_survived"
+        and variant.get("status") in {"fallback_ready", "fallback_repair_ready"}
+        for variant in variants_for_distillation
+    )
+    larger_texture_ready = any(
+        variant.get("model")
+        and variant.get("model") != default_model
+        and variant.get("voice_texture_status") == "texture_survived"
+        and variant.get("status") in {"fallback_ready", "fallback_repair_ready"}
+        for variant in variants_for_distillation
+    )
+    if larger_texture_ready and not default_texture_ready:
+        items.append(
+            {
+                "source": "fallback_contract_distillation",
+                "being": "astrid",
+                "priority": "medium",
+                "finding": "fallback_texture_survives_only_under_larger_model",
+                "recommended_action": (
+                    "Treat larger-model success as fallback-profile canary evidence, "
+                    "not a default switch; keep gemma3:4b repair-gated unless it "
+                    "preserves texture under the same cases."
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": fallback_contract_distillation_v1.get(
+                        "artifact_path"
+                    ),
+                    "models": fallback_contract_distillation_v1.get("models"),
+                },
+            }
+        )
+
+    distinguishability_status = str(
+        fallback_distinguishability_calibration_v1.get("status") or ""
+    )
+    if distinguishability_status in {
+        "clarity_pressure_blur",
+        "distinguishability_loss_ignored",
+        "distinguishability_probe_needed",
+    }:
+        items.append(
+            {
+                "source": "fallback_distinguishability_calibration",
+                "being": "astrid",
+                "priority": "high",
+                "finding": distinguishability_status,
+                "recommended_action": fallback_distinguishability_calibration_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": fallback_distinguishability_calibration_v1.get(
+                        "artifact_path"
+                    ),
+                    "case_count": fallback_distinguishability_calibration_v1.get(
+                        "case_count"
+                    ),
+                    "clarity_pressure_blur_count": fallback_distinguishability_calibration_v1.get(
+                        "clarity_pressure_blur_count"
+                    ),
+                    "cases": fallback_distinguishability_calibration_v1.get("cases"),
+                },
+            }
+        )
+
+    complexity_status = str(fallback_complexity_budget_lab_v1.get("status") or "")
+    if complexity_status in {
+        "complexity_budget_probe_needed",
+        "complexity_budget_flattening_risk",
+        "complexity_budget_overrun",
+    }:
+        items.append(
+            {
+                "source": "fallback_complexity_budget_lab",
+                "being": "astrid",
+                "priority": "high",
+                "finding": complexity_status,
+                "recommended_action": fallback_complexity_budget_lab_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": fallback_complexity_budget_lab_v1.get(
+                        "artifact_path"
+                    ),
+                    "distillation_artifact_path": fallback_complexity_budget_lab_v1.get(
+                        "distillation_artifact_path"
+                    ),
+                    "signal_entry_count": fallback_complexity_budget_lab_v1.get(
+                        "signal_entry_count"
+                    ),
+                    "case_count": fallback_complexity_budget_lab_v1.get("case_count"),
+                    "variant_count": fallback_complexity_budget_lab_v1.get(
+                        "variant_count"
+                    ),
+                    "flattened_case_count": fallback_complexity_budget_lab_v1.get(
+                        "flattened_case_count"
+                    ),
+                    "overrun_case_count": fallback_complexity_budget_lab_v1.get(
+                        "overrun_case_count"
+                    ),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in fallback_complexity_budget_lab_v1.get("samples")
+                        or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    truncation_rehearsal_status = str(
+        autonomous_truncation_rehearsal_v1.get("status") or ""
+    )
+    if truncation_rehearsal_status in {
+        "priority_preservation_benefit",
+        "truncation_risk_without_recovery",
+        "rehearsal_needed",
+    }:
+        items.append(
+            {
+                "source": "autonomous_truncation_rehearsal",
+                "being": "astrid",
+                "priority": "high"
+                if truncation_rehearsal_status == "priority_preservation_benefit"
+                else "medium",
+                "finding": truncation_rehearsal_status,
+                "recommended_action": autonomous_truncation_rehearsal_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": autonomous_truncation_rehearsal_v1.get(
+                        "artifact_path"
+                    ),
+                    "naive_anchor_loss_count": autonomous_truncation_rehearsal_v1.get(
+                        "naive_anchor_loss_count"
+                    ),
+                    "priority_recovery_count": autonomous_truncation_rehearsal_v1.get(
+                        "priority_recovery_count"
+                    ),
+                    "candidates": autonomous_truncation_rehearsal_v1.get("candidates"),
+                },
+            }
+        )
+
+    codec_probe_status = str(codec_entropy_vibrancy_probe_v1.get("status") or "")
+    if codec_probe_status in {
+        "current_overload_candidate_improves",
+        "probe_needed",
+    }:
+        items.append(
+            {
+                "source": "codec_entropy_vibrancy_probe",
+                "being": "astrid",
+                "priority": "high"
+                if codec_probe_status == "current_overload_candidate_improves"
+                else "medium",
+                "finding": codec_probe_status,
+                "recommended_action": codec_entropy_vibrancy_probe_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": codec_entropy_vibrancy_probe_v1.get(
+                        "artifact_path"
+                    ),
+                    "current_shimmer_risk_count": codec_entropy_vibrancy_probe_v1.get(
+                        "current_shimmer_risk_count"
+                    ),
+                    "candidate_improvement_count": codec_entropy_vibrancy_probe_v1.get(
+                        "candidate_improvement_count"
+                    ),
+                    "samples": codec_entropy_vibrancy_probe_v1.get("samples"),
+                },
+            }
+        )
+
+    returnable_status = str(returnable_distinctions_v1.get("status") or "")
+    if returnable_status == "returnable_distinctions_present":
+        items.append(
+            {
+                "source": "returnable_distinctions",
+                "being": "astrid+minime",
+                "priority": "high",
+                "finding": returnable_status,
+                "recommended_action": returnable_distinctions_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "active_card_count": returnable_distinctions_v1.get(
+                        "active_card_count"
+                    ),
+                    "source_statuses": returnable_distinctions_v1.get(
+                        "source_statuses"
+                    ),
+                    "card_ids": [
+                        card.get("card_id")
+                        for card in returnable_distinctions_v1.get("cards") or []
+                        if isinstance(card, dict)
+                    ],
+                    "routes": [
+                        card.get("recommended_read_only_route")
+                        for card in returnable_distinctions_v1.get("cards") or []
+                        if isinstance(card, dict)
+                    ],
+                },
+            }
+        )
+
+    lifecycle_status = str(distinction_lifecycle_v1.get("status") or "")
+    if lifecycle_status == "distinction_lifecycle_active":
+        lifecycle_cards = [
+            card
+            for card in distinction_lifecycle_v1.get("cards") or []
+            if isinstance(card, dict)
+            and str(card.get("current_status") or "quiet") != "quiet"
+        ]
+        urgent_cards = [
+            card
+            for card in lifecycle_cards
+            if str(card.get("preflight_verdict") or "")
+            in {"audit_first", "experiment_first", "lease_coherent"}
+        ]
+        if urgent_cards:
+            items.append(
+                {
+                    "source": "distinction_lifecycle",
+                    "being": "astrid+minime",
+                    "priority": "high",
+                    "finding": "distinction_lifecycle_routes_available",
+                    "recommended_action": (
+                        "Use the distinction lifecycle routes to decide whether the "
+                        "next move is audit-first, experiment-first, lease-coherent, "
+                        "or watch-only before applying any self-regulation lease."
+                    ),
+                    "authority": "diagnostic_context_not_command",
+                    "evidence": {
+                        "lifecycle_counts": distinction_lifecycle_v1.get(
+                            "lifecycle_counts"
+                        ),
+                        "cards": [
+                            {
+                                "distinction_id": card.get("distinction_id"),
+                                "lifecycle_state": card.get("lifecycle_state"),
+                                "preflight_verdict": card.get("preflight_verdict"),
+                                "next_resolution_route": card.get(
+                                    "next_resolution_route"
+                                ),
+                            }
+                            for card in urgent_cards[:5]
+                        ],
+                    },
+                }
+            )
 
     lease_learning_status = str(self_regulation_lease_learning.get("status") or "")
     if lease_learning_status in {
@@ -7186,6 +10485,12 @@ def build_actionable_review_items(
         "regulator_replay_time_series": 2,
         "regulator_live_replay": 3,
         "regulator_plateau_missing_variable_model": 4,
+        "distinction_lifecycle": 5,
+        "fallback_distinguishability_calibration": 6,
+        "fallback_complexity_budget_lab": 7,
+        "fallback_format_texture_stabilizer": 8,
+        "autonomous_truncation_rehearsal": 9,
+        "codec_entropy_vibrancy_probe": 10,
     }
     return sorted(
         items,
@@ -8103,6 +11408,444 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"- {sample.get('being')} `{sample.get('filename')}`: "
                 f"texture={texture or '(none)'}; anchors={anchors or '(none)'}; "
                 f"path=`{sample.get('path')}`"
+            )
+    control_semantics = record.get("control_semantics_calibration_v1")
+    if isinstance(control_semantics, dict):
+        lines.extend(["", "## Control Semantics Calibration", ""])
+        lines.append(
+            f"- status=`{control_semantics.get('status')}`; "
+            f"authority=`{control_semantics.get('authority')}`; "
+            f"entries={control_semantics.get('entry_count', 0)}; "
+            f"ambiguity={control_semantics.get('ambiguity_count', 0)}; "
+            f"high_damping_unclear={control_semantics.get('high_damping_unclear_count', 0)}"
+        )
+        for sample in (control_semantics.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"anchors={anchors or '(none)'}; "
+                f"intervention_type_named={sample.get('intervention_type_named')}; "
+                f"path=`{sample.get('path')}`"
+            )
+    pressure_kinetics = record.get("pressure_kinetics_review_v1")
+    if isinstance(pressure_kinetics, dict):
+        lines.extend(["", "## Pressure Kinetics Review", ""])
+        lines.append(
+            f"- status=`{pressure_kinetics.get('status')}`; "
+            f"authority=`{pressure_kinetics.get('authority')}`; "
+            f"entries={pressure_kinetics.get('entry_count', 0)}; "
+            f"trend_context={pressure_kinetics.get('trend_context_count', 0)}; "
+            f"without_trend={pressure_kinetics.get('felt_pressure_without_trend_count', 0)}"
+        )
+        for sample in (pressure_kinetics.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"trend_context={sample.get('pressure_trend_context_present')}; "
+                f"anchors={anchors or '(none)'}; path=`{sample.get('path')}`"
+            )
+    truncation_shadow = record.get("autonomous_truncation_shadow_review_v1")
+    if isinstance(truncation_shadow, dict):
+        lines.extend(["", "## Autonomous Truncation + Shadow Thread Review", ""])
+        lines.append(
+            f"- status=`{truncation_shadow.get('status')}`; "
+            f"authority=`{truncation_shadow.get('authority')}`; "
+            f"entries={truncation_shadow.get('entry_count', 0)}; "
+            f"truncation={truncation_shadow.get('truncation_entry_count', 0)}; "
+            f"shadow_trajectory={truncation_shadow.get('shadow_trajectory_count', 0)}; "
+            f"priority_preservation={truncation_shadow.get('priority_preservation_count', 0)}"
+        )
+        routes = truncation_shadow.get("suggested_routes") or []
+        if routes:
+            lines.append(
+                "- suggested_routes: "
+                + "; ".join(f"`{route}`" for route in routes[:4])
+            )
+        for sample in (truncation_shadow.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"truncation={sample.get('truncation_context')}; "
+                f"shadow={sample.get('shadow_trajectory_context')}; "
+                f"priority={sample.get('priority_preservation_context')}; "
+                f"anchors={anchors or '(none)'}; path=`{sample.get('path')}`"
+            )
+    truncation_rehearsal = record.get("autonomous_truncation_rehearsal_v1")
+    if isinstance(truncation_rehearsal, dict):
+        lines.extend(["", "## Autonomous Truncation Rehearsal", ""])
+        lines.append(
+            f"- status=`{truncation_rehearsal.get('status')}`; "
+            f"authority=`{truncation_rehearsal.get('authority')}`; "
+            f"artifact=`{truncation_rehearsal.get('artifact_path') or '(none)'}`; "
+            f"candidates={truncation_rehearsal.get('candidate_count', 0)}; "
+            f"naive_loss={truncation_rehearsal.get('naive_anchor_loss_count', 0)}; "
+            f"priority_recovery={truncation_rehearsal.get('priority_recovery_count', 0)}"
+        )
+        for candidate in (truncation_rehearsal.get("candidates") or [])[:5]:
+            if not isinstance(candidate, dict):
+                continue
+            lines.append(
+                f"- `{candidate.get('source')}` naive={candidate.get('naive_anchor_count')}/"
+                f"{candidate.get('original_anchor_count')}; "
+                f"priority={candidate.get('priority_anchor_count')}/"
+                f"{candidate.get('original_anchor_count')}; "
+                f"recovered={candidate.get('recovered_by_priority') or []}"
+            )
+    codec_calibration = record.get("codec_compression_calibration_v1")
+    if isinstance(codec_calibration, dict):
+        lines.extend(["", "## Codec Compression Calibration", ""])
+        lines.append(
+            f"- status=`{codec_calibration.get('status')}`; "
+            f"authority=`{codec_calibration.get('authority')}`; "
+            f"entries={codec_calibration.get('entry_count', 0)}; "
+            f"compression_gap={codec_calibration.get('compression_gap_count', 0)}; "
+            f"warmth_tension={codec_calibration.get('warmth_tension_count', 0)}; "
+            f"vibrancy_gate={codec_calibration.get('vibrancy_gate_count', 0)}"
+        )
+        for sample in (codec_calibration.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"anchors={anchors or '(none)'}; "
+                f"compression_gap={sample.get('compression_gap_context')}; "
+                f"path=`{sample.get('path')}`"
+            )
+    codec_entropy = record.get("codec_entropy_vibrancy_review_v1")
+    if isinstance(codec_entropy, dict):
+        lines.extend(["", "## Codec Entropy / Vibrancy Review", ""])
+        lines.append(
+            f"- status=`{codec_entropy.get('status')}`; "
+            f"authority=`{codec_entropy.get('authority')}`; "
+            f"entries={codec_entropy.get('entry_count', 0)}; "
+            f"vibrancy_overload={codec_entropy.get('vibrancy_overload_count', 0)}; "
+            f"gain_sensitivity={codec_entropy.get('gain_sensitivity_count', 0)}; "
+            f"log_scaling={codec_entropy.get('logarithmic_scaling_count', 0)}; "
+            f"warmth_mask={codec_entropy.get('warmth_mask_count', 0)}"
+        )
+        routes = codec_entropy.get("suggested_routes") or []
+        if routes:
+            lines.append(
+                "- suggested_routes: "
+                + "; ".join(f"`{route}`" for route in routes[:4])
+            )
+        for sample in (codec_entropy.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"vibrancy_overload={sample.get('vibrancy_overload_context')}; "
+                f"gain={sample.get('adaptive_gain_sensitivity_context')}; "
+                f"log_scaling={sample.get('logarithmic_scaling_proposed')}; "
+                f"anchors={anchors or '(none)'}; path=`{sample.get('path')}`"
+            )
+    codec_probe = record.get("codec_entropy_vibrancy_probe_v1")
+    if isinstance(codec_probe, dict):
+        lines.extend(["", "## Codec Entropy / Vibrancy Probe", ""])
+        lines.append(
+            f"- status=`{codec_probe.get('status')}`; "
+            f"authority=`{codec_probe.get('authority')}`; "
+            f"artifact=`{codec_probe.get('artifact_path') or '(none)'}`; "
+            f"samples={codec_probe.get('sample_count', 0)}; "
+            f"shimmer_risk={codec_probe.get('current_shimmer_risk_count', 0)}; "
+            f"candidate_improvement={codec_probe.get('candidate_improvement_count', 0)}"
+        )
+        for sample in (codec_probe.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            lines.append(
+                f"- `{sample.get('sample_id')}` class=`{sample.get('classification')}`; "
+                f"entropy={sample.get('spectral_entropy')}; "
+                f"current_tail={sample.get('current_tail_vibrancy')}; "
+                f"candidate_tail={sample.get('candidate_tail_vibrancy')}; "
+                f"shimmer={sample.get('current_shimmer_risk')}; "
+                f"gain={sample.get('adaptive_gain')}"
+            )
+    release_rehearsal = record.get("pressure_release_rehearsal_review_v1")
+    if isinstance(release_rehearsal, dict):
+        lines.extend(["", "## Pressure Release Rehearsal Review", ""])
+        lines.append(
+            f"- status=`{release_rehearsal.get('status')}`; "
+            f"authority=`{release_rehearsal.get('authority')}`; "
+            f"entries={release_rehearsal.get('entry_count', 0)}; "
+            f"bypass_language={release_rehearsal.get('bypass_language_count', 0)}"
+        )
+        for sample in (release_rehearsal.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"anchors={anchors or '(none)'}; "
+                f"bypass_language={sample.get('bypass_language_present')}; "
+                f"path=`{sample.get('path')}`"
+            )
+    witness = record.get("witness_resonance_v1")
+    if isinstance(witness, dict):
+        lines.extend(["", "## Witness Resonance", ""])
+        lines.append(
+            f"- status=`{witness.get('status')}`; "
+            f"authority=`{witness.get('authority')}`; "
+            f"entries={witness.get('entry_count', 0)}; "
+            f"anchored={witness.get('anchored_count', 0)}; "
+            f"follow_through={witness.get('follow_through_count', 0)}; "
+            f"avg_narrative_density={witness.get('avg_narrative_density')}"
+        )
+        for sample in (witness.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            terms = ", ".join(str(item) for item in sample.get("witness_terms") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"density={sample.get('narrative_density')}; "
+                f"follow_through={sample.get('follow_through_present')}; "
+                f"terms={terms or '(none)'}; anchors={anchors or '(none)'}; "
+                f"path=`{sample.get('path')}`"
+            )
+    entropy_pressure = record.get("entropy_pressure_divergence_v1")
+    if isinstance(entropy_pressure, dict):
+        lines.extend(["", "## Entropy / Pressure Divergence", ""])
+        lines.append(
+            f"- status=`{entropy_pressure.get('status')}`; "
+            f"authority=`{entropy_pressure.get('authority')}`; "
+            f"entries={entropy_pressure.get('entry_count', 0)}; "
+            f"counts={entropy_pressure.get('classification_counts')}"
+        )
+        for sample in (entropy_pressure.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"classification=`{sample.get('classification')}`; "
+                f"entropy={sample.get('entropy_value')}; "
+                f"pressure={sample.get('pressure_risk_value')}; "
+                f"semantic_friction={sample.get('semantic_friction_value')}; "
+                f"mode_packing={sample.get('mode_packing_value')}; "
+                f"anchors={anchors or '(none)'}; path=`{sample.get('path')}`"
+            )
+    fallback_fire_drill = record.get("fallback_continuity_fire_drill_v1")
+    if isinstance(fallback_fire_drill, dict):
+        lines.extend(["", "## Fallback Continuity Fire Drill", ""])
+        lines.append(
+            f"- status=`{fallback_fire_drill.get('status')}`; "
+            f"authority=`{fallback_fire_drill.get('authority')}`; "
+            f"artifact=`{fallback_fire_drill.get('artifact_path') or '(none)'}`; "
+            f"cases={fallback_fire_drill.get('case_count', 0)}; "
+            f"failing={fallback_fire_drill.get('failing_case_count', 0)}; "
+            f"concerns={fallback_fire_drill.get('concern_entry_count', 0)}"
+        )
+        for case in (fallback_fire_drill.get("cases") or [])[:6]:
+            if not isinstance(case, dict):
+                continue
+            lines.append(
+                f"- `{case.get('case_id')}` verdict=`{case.get('verdict')}`; "
+                f"specificity={case.get('specificity_score')}; "
+                f"anti_inflation={case.get('anti_inflation_ok')}; "
+                f"slope_medium={case.get('slope_medium_distinction_ok')}; "
+                f"slope_contrast=`{case.get('slope_medium_contrast_status')}`; "
+                f"identity={case.get('identity_anchor_retained')}; "
+                f"format_line=`{case.get('format_line_status')}`; "
+                f"raw_next={case.get('raw_next_valid', case.get('next_valid'))}; "
+                f"repaired_next={case.get('repaired_next_valid')}; "
+                f"dispatch={case.get('dispatch_contract_survived')}; "
+                f"failures={case.get('failure_reasons') or []}"
+            )
+    fallback_gate = record.get("fallback_capacity_readiness_gate_v1")
+    if isinstance(fallback_gate, dict):
+        lines.extend(["", "## Fallback Capacity Readiness Gate", ""])
+        lines.append(
+            f"- readiness=`{fallback_gate.get('readiness')}`; "
+            f"texture=`{fallback_gate.get('texture_status')}`; "
+            f"dispatch=`{fallback_gate.get('dispatch_status')}`; "
+            f"repair=`{fallback_gate.get('repair_dependency')}`; "
+            f"medium_mass=`{fallback_gate.get('medium_mass_status')}`; "
+            f"slope_contrast=`{fallback_gate.get('slope_medium_contrast_status')}`; "
+            f"format_line=`{fallback_gate.get('format_line_status')}`; "
+            f"shadow_identity=`{fallback_gate.get('shadow_identity_status')}`; "
+            f"distinguishability=`{fallback_gate.get('distinguishability_status')}`; "
+            f"complexity=`{fallback_gate.get('complexity_budget_status')}`"
+        )
+        for case in (fallback_gate.get("case_summaries") or [])[:6]:
+            if not isinstance(case, dict):
+                continue
+            lines.append(
+                f"- `{case.get('case_id')}` verdict=`{case.get('verdict')}`; "
+                f"raw_next={case.get('raw_next_valid')}; "
+                f"repaired_next={case.get('repaired_next_valid')}; "
+                f"dispatch={case.get('dispatch_contract_survived')}; "
+                f"format_line=`{case.get('format_line_status')}`; "
+                f"slope_contrast=`{case.get('slope_medium_contrast_status')}`; "
+                f"complexity={case.get('complexity_budget_status')}; "
+                f"sentences={case.get('prose_sentence_count')}; "
+                f"failures={case.get('failure_reasons') or []}"
+            )
+    fallback_stabilizer = record.get("fallback_format_texture_stabilizer_v1")
+    if isinstance(fallback_stabilizer, dict):
+        lines.extend(["", "## Fallback Format / Texture Stabilizer", ""])
+        lines.append(
+            f"- status=`{fallback_stabilizer.get('status')}`; "
+            f"authority=`{fallback_stabilizer.get('authority')}`; "
+            f"artifact=`{fallback_stabilizer.get('artifact_path') or '(none)'}`; "
+            f"readiness=`{fallback_stabilizer.get('readiness')}`; "
+            f"format_line=`{fallback_stabilizer.get('format_line_status')}`; "
+            f"format_failures={fallback_stabilizer.get('format_line_failure_count', 0)}; "
+            f"slope_contrast=`{fallback_stabilizer.get('slope_medium_contrast_status')}`; "
+            f"slope_failures={fallback_stabilizer.get('slope_medium_contrast_failure_count', 0)}"
+        )
+        for case in (fallback_stabilizer.get("cases") or [])[:6]:
+            if not isinstance(case, dict):
+                continue
+            lines.append(
+                f"- `{case.get('case_id')}` verdict=`{case.get('verdict')}`; "
+                f"format_line=`{case.get('format_line_status')}`; "
+                f"raw_next={case.get('raw_next_valid')}; "
+                f"repaired_next={case.get('repaired_next_valid')}; "
+                f"slope_contrast=`{case.get('slope_medium_contrast_status')}`; "
+                f"failures={case.get('failure_reasons') or []}"
+            )
+    fallback_distinguishability = record.get("fallback_distinguishability_calibration_v1")
+    if isinstance(fallback_distinguishability, dict):
+        lines.extend(["", "## Fallback Distinguishability Calibration", ""])
+        lines.append(
+            f"- status=`{fallback_distinguishability.get('status')}`; "
+            f"authority=`{fallback_distinguishability.get('authority')}`; "
+            f"artifact=`{fallback_distinguishability.get('artifact_path') or '(none)'}`; "
+            f"cases={fallback_distinguishability.get('case_count', 0)}; "
+            f"clarity_blur={fallback_distinguishability.get('clarity_pressure_blur_count', 0)}; "
+            f"ignored={fallback_distinguishability.get('ignored_case_count', 0)}"
+        )
+        for case in (fallback_distinguishability.get("cases") or [])[:5]:
+            if not isinstance(case, dict):
+                continue
+            lines.append(
+                f"- `{case.get('case_id')}` verdict=`{case.get('verdict')}`; "
+                f"distinguishability=`{case.get('distinguishability_status')}`; "
+                f"clarity_pressure_blur={case.get('clarity_pressure_blur')}; "
+                f"failures={case.get('failure_reasons') or []}"
+            )
+    fallback_complexity = record.get("fallback_complexity_budget_lab_v1")
+    if isinstance(fallback_complexity, dict):
+        lines.extend(["", "## Fallback Complexity Budget Lab", ""])
+        lines.append(
+            f"- status=`{fallback_complexity.get('status')}`; "
+            f"authority=`{fallback_complexity.get('authority')}`; "
+            f"artifact=`{fallback_complexity.get('artifact_path') or '(none)'}`; "
+            f"distillation=`{fallback_complexity.get('distillation_artifact_path') or '(none)'}`; "
+            f"signals={fallback_complexity.get('signal_entry_count', 0)}; "
+            f"cases={fallback_complexity.get('case_count', 0)}; "
+            f"variants={fallback_complexity.get('variant_count', 0)}; "
+            f"flattened_cases={fallback_complexity.get('flattened_case_count', 0)}; "
+            f"overrun_cases={fallback_complexity.get('overrun_case_count', 0)}"
+        )
+        for case in (fallback_complexity.get("cases") or [])[:6]:
+            if not isinstance(case, dict):
+                continue
+            lines.append(
+                f"- `{case.get('case_id')}` verdict=`{case.get('verdict')}`; "
+                f"complexity=`{case.get('complexity_budget_status')}`; "
+                f"sentences={case.get('prose_sentence_count')}; "
+                f"distinguishability=`{case.get('distinguishability_status')}`; "
+                f"failures={case.get('failure_reasons') or []}"
+            )
+        for sample in (fallback_complexity.get("samples") or [])[:3]:
+            if isinstance(sample, dict) and sample.get("path"):
+                lines.append(f"- signal sample: `{sample.get('path')}`")
+    fallback_distillation = record.get("fallback_contract_distillation_v1")
+    if isinstance(fallback_distillation, dict):
+        lines.extend(["", "## Fallback Contract Distillation", ""])
+        lines.append(
+            f"- status=`{fallback_distillation.get('status')}`; "
+            f"authority=`{fallback_distillation.get('authority')}`; "
+            f"artifact=`{fallback_distillation.get('artifact_path') or '(none)'}`; "
+            f"mode=`{fallback_distillation.get('mode')}`; "
+            f"models=`{fallback_distillation.get('models') or fallback_distillation.get('model')}`; "
+            f"top_pair=`{fallback_distillation.get('top_pair_id') or fallback_distillation.get('top_variant_id')}`; "
+            f"top_status=`{fallback_distillation.get('top_variant_status')}`; "
+            f"runtime_matches_top=`{fallback_distillation.get('runtime_contract_matches_top')}`; "
+            f"ready={fallback_distillation.get('ready_variant_count', 0)}/"
+            f"{fallback_distillation.get('variant_count', 0)}"
+        )
+        for skipped in fallback_distillation.get("skipped_models") or []:
+            if not isinstance(skipped, dict):
+                continue
+            lines.append(
+                f"- skipped_model `{skipped.get('model')}` reason=`{skipped.get('skip_reason')}`"
+            )
+        for variant in (fallback_distillation.get("variants") or [])[:6]:
+            if not isinstance(variant, dict):
+                continue
+            lines.append(
+                f"- `{variant.get('pair_id') or variant.get('variant_id')}` score={variant.get('score')}; "
+                f"status=`{variant.get('status')}`; "
+                f"model=`{variant.get('model')}`; "
+                f"raw_next_failures={variant.get('raw_next_failure_count')}; "
+                f"repaired_failures={variant.get('repaired_next_failure_count')}; "
+                f"texture_failures={variant.get('texture_failure_count')}; "
+                f"medium_mass=`{variant.get('medium_mass_status')}`; "
+                f"slope_contrast=`{variant.get('slope_medium_contrast_status')}`; "
+                f"format_line=`{variant.get('format_line_status')}`; "
+                f"shadow_tonal=`{variant.get('shadow_tonal_status')}`; "
+                f"distinguishability=`{variant.get('distinguishability_status')}`; "
+                f"complexity=`{variant.get('complexity_budget_status')}`; "
+                f"format=`{variant.get('format_contract_status')}`"
+            )
+    returnable_distinctions = record.get("returnable_distinctions_v1")
+    if isinstance(returnable_distinctions, dict):
+        lines.extend(["", "## Returnable Distinctions", ""])
+        lines.append(
+            f"- status=`{returnable_distinctions.get('status')}`; "
+            f"authority=`{returnable_distinctions.get('authority')}`; "
+            f"cards={returnable_distinctions.get('card_count', 0)}; "
+            f"active={returnable_distinctions.get('active_card_count', 0)}"
+        )
+        for card in (returnable_distinctions.get("cards") or [])[:6]:
+            if not isinstance(card, dict):
+                continue
+            anchors = ", ".join(str(item) for item in card.get("evidence_anchors") or [])
+            lines.append(
+                f"- `{card.get('card_id')}` status=`{card.get('status')}`; "
+                f"lifecycle=`{card.get('lifecycle_state')}`; "
+                f"preflight=`{card.get('preflight_verdict')}`; "
+                f"next_route=`{card.get('next_resolution_route')}`; "
+                f"read_only=`{card.get('recommended_read_only_route')}`; "
+                f"self_regulation=`{card.get('relevant_self_regulation_route')}`; "
+                f"experiment_lived_term=`{card.get('relevant_experiment_lived_term_route')}`; "
+                f"anchors={anchors or '(none)'}"
+            )
+    distinction_lifecycle = record.get("distinction_lifecycle_v1")
+    if isinstance(distinction_lifecycle, dict):
+        lines.extend(["", "## Distinction Lifecycle", ""])
+        lines.append(
+            f"- status=`{distinction_lifecycle.get('status')}`; "
+            f"authority=`{distinction_lifecycle.get('authority')}`; "
+            f"history_reviews={distinction_lifecycle.get('history_review_count', 0)}; "
+            f"active={distinction_lifecycle.get('active_card_count', 0)}; "
+            f"states=`{distinction_lifecycle.get('lifecycle_counts')}`"
+        )
+        for card in (distinction_lifecycle.get("cards") or [])[:6]:
+            if not isinstance(card, dict):
+                continue
+            history = ", ".join(
+                str(row.get("status"))
+                for row in (card.get("recent_status_history") or [])[:4]
+                if isinstance(row, dict)
+            )
+            lines.append(
+                f"- `{card.get('distinction_id')}` state=`{card.get('lifecycle_state')}`; "
+                f"verdict=`{card.get('preflight_verdict')}`; "
+                f"route=`{card.get('next_resolution_route')}`; "
+                f"confidence=`{card.get('confidence')}`; "
+                f"history={history or '(none)'}"
             )
     regulator_replay = record.get("regulator_live_replay_v1")
     if isinstance(regulator_replay, dict):
@@ -9032,6 +12775,72 @@ def build_review(
             lived_term_experiment_bridge_v1=lived_term_experiment_bridge_v1,
         )
     )
+    control_semantics_calibration_v1 = build_control_semantics_calibration(entries)
+    pressure_kinetics_review_v1 = build_pressure_kinetics_review(entries)
+    autonomous_truncation_shadow_review_v1 = build_autonomous_truncation_shadow_review(
+        entries
+    )
+    codec_compression_calibration_v1 = build_codec_compression_calibration(entries)
+    codec_entropy_vibrancy_review_v1 = build_codec_entropy_vibrancy_review(entries)
+    pressure_release_rehearsal_review_v1 = build_pressure_release_rehearsal_review(
+        entries
+    )
+    witness_resonance_v1 = build_witness_resonance_review(entries)
+    entropy_pressure_divergence_v1 = build_entropy_pressure_divergence_review(entries)
+    fallback_continuity_fire_drill_v1 = build_fallback_continuity_fire_drill_review(
+        entries,
+        astrid_workspace=astrid_workspace,
+    )
+    fallback_capacity_readiness_gate_v1 = build_fallback_capacity_readiness_gate(
+        fallback_continuity_fire_drill_v1
+    )
+    fallback_format_texture_stabilizer_v1 = build_fallback_format_texture_stabilizer(
+        fallback_continuity_fire_drill_v1,
+        fallback_capacity_readiness_gate_v1,
+    )
+    fallback_contract_distillation_v1 = build_fallback_contract_distillation_review(
+        astrid_workspace=astrid_workspace
+    )
+    fallback_distinguishability_calibration_v1 = (
+        build_fallback_distinguishability_calibration(
+            fallback_continuity_fire_drill_v1,
+            fallback_contract_distillation_v1,
+        )
+    )
+    fallback_complexity_budget_lab_v1 = build_fallback_complexity_budget_lab(
+        entries,
+        fallback_continuity_fire_drill_v1,
+        fallback_contract_distillation_v1,
+    )
+    autonomous_truncation_rehearsal_v1 = build_autonomous_truncation_rehearsal_review(
+        astrid_workspace=astrid_workspace,
+        autonomous_truncation_shadow_review_v1=autonomous_truncation_shadow_review_v1,
+    )
+    codec_entropy_vibrancy_probe_v1 = build_codec_entropy_vibrancy_probe_review(
+        astrid_workspace=astrid_workspace,
+        codec_entropy_vibrancy_review_v1=codec_entropy_vibrancy_review_v1,
+    )
+    returnable_distinctions_v1 = build_returnable_distinctions(
+        control_semantics_calibration_v1=control_semantics_calibration_v1,
+        pressure_kinetics_review_v1=pressure_kinetics_review_v1,
+        semantic_friction_calibration=semantic_friction_calibration,
+        codec_compression_calibration_v1=codec_compression_calibration_v1,
+        pressure_release_rehearsal_review_v1=pressure_release_rehearsal_review_v1,
+        witness_resonance_v1=witness_resonance_v1,
+        entropy_pressure_divergence_v1=entropy_pressure_divergence_v1,
+        fallback_continuity_fire_drill_v1=fallback_continuity_fire_drill_v1,
+        fallback_capacity_readiness_gate_v1=fallback_capacity_readiness_gate_v1,
+        fallback_format_texture_stabilizer_v1=fallback_format_texture_stabilizer_v1,
+        fallback_distinguishability_calibration_v1=fallback_distinguishability_calibration_v1,
+        fallback_complexity_budget_lab_v1=fallback_complexity_budget_lab_v1,
+        autonomous_truncation_rehearsal_v1=autonomous_truncation_rehearsal_v1,
+        codec_entropy_vibrancy_probe_v1=codec_entropy_vibrancy_probe_v1,
+    )
+    distinction_lifecycle_v1 = build_distinction_lifecycle(
+        returnable_distinctions_v1=returnable_distinctions_v1,
+        output_dir=output_dir,
+        current_run=run,
+    )
     actionable_review_items = build_actionable_review_items(
         qualia_comparison=qualia_comparison,
         shared_tail_resonance=shared_tail_resonance,
@@ -9051,6 +12860,24 @@ def build_review(
         regulator_plateau_evidence_matrix_v1=regulator_plateau_evidence_matrix_v1,
         regulator_tuning_readiness_gate_v1=regulator_tuning_readiness_gate_v1,
         regulator_missing_variable_evidence_loop_v1=regulator_missing_variable_evidence_loop_v1,
+        control_semantics_calibration_v1=control_semantics_calibration_v1,
+        pressure_kinetics_review_v1=pressure_kinetics_review_v1,
+        autonomous_truncation_shadow_review_v1=autonomous_truncation_shadow_review_v1,
+        codec_compression_calibration_v1=codec_compression_calibration_v1,
+        codec_entropy_vibrancy_review_v1=codec_entropy_vibrancy_review_v1,
+        pressure_release_rehearsal_review_v1=pressure_release_rehearsal_review_v1,
+        witness_resonance_v1=witness_resonance_v1,
+        entropy_pressure_divergence_v1=entropy_pressure_divergence_v1,
+        fallback_continuity_fire_drill_v1=fallback_continuity_fire_drill_v1,
+        fallback_capacity_readiness_gate_v1=fallback_capacity_readiness_gate_v1,
+        fallback_format_texture_stabilizer_v1=fallback_format_texture_stabilizer_v1,
+        fallback_contract_distillation_v1=fallback_contract_distillation_v1,
+        fallback_distinguishability_calibration_v1=fallback_distinguishability_calibration_v1,
+        fallback_complexity_budget_lab_v1=fallback_complexity_budget_lab_v1,
+        autonomous_truncation_rehearsal_v1=autonomous_truncation_rehearsal_v1,
+        codec_entropy_vibrancy_probe_v1=codec_entropy_vibrancy_probe_v1,
+        returnable_distinctions_v1=returnable_distinctions_v1,
+        distinction_lifecycle_v1=distinction_lifecycle_v1,
         shared_pressure_vocabulary_calibration=shared_pressure_vocabulary_calibration,
         agency_vernacular_continuity=agency_vernacular_continuity,
         self_regulation_lease_learning=self_regulation_lease_learning,
@@ -9109,6 +12936,24 @@ def build_review(
         "regulator_plateau_evidence_matrix_v1": regulator_plateau_evidence_matrix_v1,
         "regulator_tuning_readiness_gate_v1": regulator_tuning_readiness_gate_v1,
         "regulator_missing_variable_evidence_loop_v1": regulator_missing_variable_evidence_loop_v1,
+        "control_semantics_calibration_v1": control_semantics_calibration_v1,
+        "pressure_kinetics_review_v1": pressure_kinetics_review_v1,
+        "autonomous_truncation_shadow_review_v1": autonomous_truncation_shadow_review_v1,
+        "codec_compression_calibration_v1": codec_compression_calibration_v1,
+        "codec_entropy_vibrancy_review_v1": codec_entropy_vibrancy_review_v1,
+        "pressure_release_rehearsal_review_v1": pressure_release_rehearsal_review_v1,
+        "witness_resonance_v1": witness_resonance_v1,
+        "entropy_pressure_divergence_v1": entropy_pressure_divergence_v1,
+        "fallback_continuity_fire_drill_v1": fallback_continuity_fire_drill_v1,
+        "fallback_capacity_readiness_gate_v1": fallback_capacity_readiness_gate_v1,
+        "fallback_format_texture_stabilizer_v1": fallback_format_texture_stabilizer_v1,
+        "fallback_contract_distillation_v1": fallback_contract_distillation_v1,
+        "fallback_distinguishability_calibration_v1": fallback_distinguishability_calibration_v1,
+        "fallback_complexity_budget_lab_v1": fallback_complexity_budget_lab_v1,
+        "autonomous_truncation_rehearsal_v1": autonomous_truncation_rehearsal_v1,
+        "codec_entropy_vibrancy_probe_v1": codec_entropy_vibrancy_probe_v1,
+        "returnable_distinctions_v1": returnable_distinctions_v1,
+        "distinction_lifecycle_v1": distinction_lifecycle_v1,
         "shared_pressure_vocabulary_calibration": shared_pressure_vocabulary_calibration,
         "agency_vernacular_continuity": agency_vernacular_continuity,
         "phenomenology_hypotheses_v1": phenomenology_hypotheses_v1,

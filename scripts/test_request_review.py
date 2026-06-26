@@ -52,9 +52,25 @@ class TargetGuardTests(unittest.TestCase):
         self.assertIsNotNone(err)
         self.assertIn("punctuation", err)
 
+    def test_validate_target_blocks_known_non_introspectable_script_path(self):
+        err = request_review.validate_target(
+            "scripts/fallback_fire_drill.py",
+            allow_unresolved=False,
+        )
+        self.assertIsNotNone(err)
+        self.assertIn("outside the bridge's approved", err)
+        self.assertIn("stuck thin-output loop", err)
+
     def test_validate_target_override_bypasses_guard(self):
         # allow_unresolved=True: bypasses both the label block and the resolve probe.
         err = request_review.validate_target("your stuff (a / b)", allow_unresolved=True)
+        self.assertIsNone(err)
+
+    def test_validate_target_override_bypasses_non_introspectable_guard(self):
+        err = request_review.validate_target(
+            "scripts/fallback_fire_drill.py",
+            allow_unresolved=True,
+        )
         self.assertIsNone(err)
 
 
@@ -292,6 +308,93 @@ class SlotDisplacementGuardTests(unittest.TestCase):
         with contextlib.redirect_stderr(buf):
             request_review._warn_if_slot_occupied("astrid", "mike_query_review_same_2.txt")
         self.assertEqual(buf.getvalue(), "")
+
+
+class SlotClearOnCloseTests(unittest.TestCase):
+    """Closing a review must clear the being-facing steward-query slot if it still
+    points at THIS review — else a closed/withdrawn invitation keeps re-presenting to
+    the being, who loops on it. The bridge clears the slot only on a SUCCESSFUL
+    INTROSPECT, which never fires for a non-introspectable target (anything outside
+    the bridge's approved roots — e.g. scripts/). 2026-06-25: Astrid re-INTROSPECTed
+    scripts/fallback_fire_drill.py 8× off a stuck slot."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        base = Path(self._tmp.name)
+        self._orig_review = dict(request_review.REVIEW_DIR)
+        self._orig_inbox = dict(request_review.INBOX)
+        self._orig_slot = dict(request_review.STEWARD_QUERY_SLOT)
+        self._review = base / "review_requests"
+        self._inbox = base / "inbox"
+        self._review.mkdir(parents=True)
+        self._inbox.mkdir(parents=True)
+        self._slot = base / "open_steward_query.json"
+        request_review.REVIEW_DIR["astrid"] = self._review
+        request_review.INBOX["astrid"] = self._inbox
+        request_review.STEWARD_QUERY_SLOT["astrid"] = self._slot
+
+    def tearDown(self):
+        for live, orig in (
+            (request_review.REVIEW_DIR, self._orig_review),
+            (request_review.INBOX, self._orig_inbox),
+            (request_review.STEWARD_QUERY_SLOT, self._orig_slot),
+        ):
+            live.clear()
+            live.update(orig)
+        self._tmp.cleanup()
+
+    def _seed(self, topic, letter_name):
+        rec = {
+            "being": "astrid", "target": "scripts/fallback_fire_drill.py", "question": "q",
+            "topic": topic, "kind": "standard", "status": "open", "issued_ts": 1,
+            "letter": f"/some/inbox/{letter_name}",
+        }
+        (self._review / f"astrid_{topic}_1.json").write_text(json.dumps(rec))
+
+    def _close_args(self, topic, dry_run=False):
+        return argparse.Namespace(
+            being="astrid", topic=topic, outcome="deferred",
+            note="n", card=None, no_letter=False, dry_run=dry_run,
+        )
+
+    def test_close_clears_slot_pointing_at_this_review(self):
+        letter = "mike_query_review_fb_1.txt"
+        self._seed("fb", letter)
+        self._slot.write_text(json.dumps({
+            "subject": "review", "ts": 1, "file": letter,
+            "review_target": "scripts/fallback_fire_drill.py",
+        }))
+        rc = request_review.cmd_close(self._close_args("fb"), now=2)
+        self.assertEqual(rc, 0)
+        self.assertFalse(self._slot.exists())  # stuck slot cleared on close
+
+    def test_close_leaves_slot_for_a_different_newer_invitation(self):
+        # A slot pointing at a DIFFERENT (newer) invitation must survive — precise
+        # letter-basename match prevents collateral clearing.
+        self._seed("fb", "mike_query_review_fb_1.txt")
+        self._slot.write_text(json.dumps({
+            "subject": "other", "ts": 9, "file": "mike_query_review_other_9.txt",
+            "review_target": "src/codec.rs",
+        }))
+        rc = request_review.cmd_close(self._close_args("fb"), now=2)
+        self.assertEqual(rc, 0)
+        self.assertTrue(self._slot.exists())  # untouched
+
+    def test_close_with_no_slot_file_is_a_noop(self):
+        self._seed("fb", "mike_query_review_fb_1.txt")
+        rc = request_review.cmd_close(self._close_args("fb"), now=2)
+        self.assertEqual(rc, 0)  # no slot file → close still succeeds
+
+    def test_dry_run_does_not_clear_slot(self):
+        letter = "mike_query_review_fb_1.txt"
+        self._seed("fb", letter)
+        self._slot.write_text(json.dumps({
+            "subject": "review", "ts": 1, "file": letter,
+            "review_target": "scripts/fallback_fire_drill.py",
+        }))
+        rc = request_review.cmd_close(self._close_args("fb", dry_run=True), now=2)
+        self.assertEqual(rc, 0)
+        self.assertTrue(self._slot.exists())  # dry-run is non-mutating
 
 
 if __name__ == "__main__":

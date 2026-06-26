@@ -2288,6 +2288,52 @@ pub struct CodecStructure {
     pub levers: Vec<CodecLever>,
 }
 
+fn projection_metadata_readout() -> String {
+    let mode = std::env::var("ASTRID_CODEC_EMBEDDING_PROJECTION_MODE")
+        .unwrap_or_else(|_| "dynamic_epoch_v1".to_string());
+    if mode == "fixed_legacy" {
+        return format!(
+            "mode=fixed_legacy; kernel_checksum={}...; projection_dims={} of {}",
+            &fixed_legacy_projection_kernel_checksum()[..12],
+            EMBEDDING_PROJECT_DIM,
+            EMBEDDING_INPUT_DIM
+        );
+    }
+    if let Ok(epoch) = std::env::var("ASTRID_CODEC_PROJECTION_EPOCH_ID")
+        && !epoch.trim().is_empty()
+    {
+        return format!(
+            "mode=dynamic_epoch_v1; epoch_source=env; epoch={}; kernel_checksum={}...; projection_dims={} of {}",
+            epoch,
+            &dynamic_epoch_projection_kernel_checksum(&epoch)[..12],
+            EMBEDDING_PROJECT_DIM,
+            EMBEDDING_INPUT_DIM
+        );
+    }
+    let path = projection_runtime_dir().join("codec_projection_epoch.json");
+    if let Ok(text) = fs::read_to_string(&path)
+        && let Ok(value) = serde_json::from_str::<serde_json::Value>(&text)
+        && let Some(epoch) = value
+            .get("projection_epoch_id")
+            .and_then(serde_json::Value::as_str)
+    {
+        let checksum = value
+            .get("projection_kernel_checksum")
+            .and_then(serde_json::Value::as_str)
+            .map_or_else(|| dynamic_epoch_projection_kernel_checksum(epoch), str::to_string);
+        return format!(
+            "mode=dynamic_epoch_v1; epoch_source=file; epoch={epoch}; kernel_checksum={}...; projection_dims={} of {}",
+            &checksum[..12.min(checksum.len())],
+            EMBEDDING_PROJECT_DIM,
+            EMBEDDING_INPUT_DIM
+        );
+    }
+    format!(
+        "mode=dynamic_epoch_v1; epoch_source=not_materialized; projection_dims={} of {}; no file was created by CODEC_MAP",
+        EMBEDDING_PROJECT_DIM, EMBEDDING_INPUT_DIM
+    )
+}
+
 /// Build the codec self-map FROM the live constants, so it can never drift away
 /// from the real code (a stale map would be a NEW muffle). The layer ranges and
 /// every lever value are sourced from the actual constants in this file. The only
@@ -2384,6 +2430,28 @@ pub fn codec_structure() -> CodecStructure {
             CodecLever {
                 name: "EMBEDDING_PROJECT_DIM",
                 value: format!("{EMBEDDING_PROJECT_DIM}"),
+            },
+            CodecLever {
+                name: "PROJECTION_COMPRESSION_RISK",
+                value: format!(
+                    "{}D -> {}D is intentionally lossy; use MATRIX_DECOMPOSE or codec review before treating a mushy lived term as a controller signal",
+                    EMBEDDING_INPUT_DIM, EMBEDDING_PROJECT_DIM
+                ),
+            },
+            CodecLever {
+                name: "PROJECTION_METADATA",
+                value: projection_metadata_readout(),
+            },
+            CodecLever {
+                name: "TAIL_VIBRANCY_READOUT",
+                value: format!(
+                    "entropy gate {:.2}; max tail ceiling {:.1}; lift affects tail participation dims, not the embedding projection width",
+                    TAIL_VIBRANCY_ENTROPY_GATE, TAIL_VIBRANCY_MAX
+                ),
+            },
+            CodecLever {
+                name: "WARMTH_TENSION_READOUT",
+                value: "warmth dim 24 and tension dim 25 remain marker-derived; no entropy-based tension multiplier is active in this tranche".to_string(),
             },
             CodecLever {
                 name: "NARRATIVE_ARC_DIM",
@@ -3918,6 +3986,10 @@ mod tests {
             "FEATURE_ABS_MAX",
             "TAIL_VIBRANCY_ENTROPY_GATE",
             "TAIL_VIBRANCY_MAX",
+            "PROJECTION_COMPRESSION_RISK",
+            "PROJECTION_METADATA",
+            "TAIL_VIBRANCY_READOUT",
+            "WARMTH_TENSION_READOUT",
         ] {
             assert!(
                 names.contains(&required),
@@ -3957,6 +4029,10 @@ mod tests {
         assert!(
             r.contains("INTROSPECT astrid:codec"),
             "points her at the full per-dim computation: {r}"
+        );
+        assert!(
+            r.contains("intentionally lossy") && r.contains("no entropy-based tension multiplier"),
+            "codec diagnostics should name compression and warmth/tension boundaries: {r}"
         );
     }
 
@@ -4501,6 +4577,7 @@ mod tests {
                 wander_scale: 1.0,
                 applied_locally: true,
                 damping_coefficient: 0.0,
+                intervention_type: crate::types::ResonanceInterventionType::ObservationalReadout,
                 note: "test".to_string(),
             },
         });

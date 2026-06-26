@@ -213,9 +213,10 @@ fn handle_preflight_at(
     run_preflight(root, &mut lease, now)?;
     append_event(root, &lease)?;
     write_latest_pointer(root, &lease.intent_id)?;
+    let distinction_block = returnable_distinctions_block(root, true, Some(&lease.candidate_control));
     Ok(format!(
-        "{} preflight: {} ({})",
-        lease.intent_id, lease.preflight_status, lease.preflight_reason
+        "{} preflight: {} ({}){}",
+        lease.intent_id, lease.preflight_status, lease.preflight_reason, distinction_block
     ))
 }
 
@@ -284,23 +285,28 @@ fn handle_status_at(
     conv: &mut ConversationState,
 ) -> Result<String, String> {
     reconcile_active_lease_at(root, conv, now)?;
+    let distinction_block = returnable_distinctions_block(root, false, None);
     if let Some(active) = load_active_lease(root)? {
         let expiry = active
             .expires_at_unix_s
             .map(|ts| ts.saturating_sub(now).to_string())
             .unwrap_or_else(|| "none".to_string());
         return Ok(format!(
-            "{} status={} control={} applied={} previous={} expires_in_s={} requires_outcome={}",
+            "{} status={} control={} applied={} previous={} expires_in_s={} requires_outcome={}{}",
             active.intent_id,
             active.status,
             display_control(&active),
             active.applied_value,
             active.previous_value,
             expiry,
-            active.requires_outcome
+            active.requires_outcome,
+            distinction_block
         ));
     }
-    Ok("no self-regulation lease state found".to_string())
+    Ok(format!(
+        "no self-regulation lease state found{}",
+        distinction_block
+    ))
 }
 
 fn handle_outcome_at(
@@ -887,6 +893,147 @@ fn load_selected_lease(
     })
 }
 
+fn returnable_distinctions_block(
+    root: &Path,
+    preflight: bool,
+    candidate_control: Option<&str>,
+) -> String {
+    let workspace = root.parent().unwrap_or(root);
+    let Some(review_path) = latest_review_json_path(workspace) else {
+        return String::new();
+    };
+    let Some(review) = fs::read_to_string(review_path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<Value>(&text).ok())
+    else {
+        return String::new();
+    };
+    let Some(packet) = review.get("returnable_distinctions_v1") else {
+        return String::new();
+    };
+    let Some(cards) = packet.get("cards").and_then(Value::as_array) else {
+        return String::new();
+    };
+    let relevant_ids = if preflight {
+        preflight_relevant_distinction_ids(candidate_control.unwrap_or_default())
+    } else {
+        Vec::new()
+    };
+    let mut rows = Vec::new();
+    for card in cards.iter().filter(|card| {
+        let status = scalar_text(card, "status");
+        let lifecycle = scalar_text(card, "lifecycle_state");
+        let card_id = scalar_text(card, "card_id");
+        let has_lifecycle_signal = matches!(
+            lifecycle.as_str(),
+            "contested"
+                | "needs_audit"
+                | "resolved"
+                | "ready_for_experiment"
+                | "ready_for_lease_preflight"
+        );
+        (status != "quiet" || has_lifecycle_signal)
+            && (!preflight || relevant_ids.iter().any(|wanted| *wanted == card_id))
+    }).take(5) {
+        rows.push(format!(
+            "{}:{} lifecycle={} verdict={} via {}",
+            scalar_text(card, "card_id"),
+            scalar_text(card, "status"),
+            scalar_text(card, "lifecycle_state"),
+            scalar_text(card, "preflight_verdict"),
+            distinction_route(card, preflight)
+        ));
+    }
+    if rows.is_empty() {
+        if preflight {
+            return format!(
+                "\nDistinction-aware preflight: verdict=no_relevant_distinction; candidate_control={}; no current lifecycle card matched. Authority=diagnostic_context_not_command; advisory only, preflight_status unchanged.",
+                candidate_control.unwrap_or("(none)")
+            );
+        }
+        return String::new();
+    }
+    if preflight {
+        format!(
+            "\nDistinction-aware preflight: {}. Authority=diagnostic_context_not_command; advisory only, preflight_status unchanged and no lease applied by this block.",
+            rows.join("; ")
+        )
+    } else {
+        format!(
+            "\nReturnable distinctions: {}. Authority=diagnostic_context_not_command; cues only, no lease applied by this block.",
+            rows.join("; ")
+        )
+    }
+}
+
+fn preflight_relevant_distinction_ids(control: &str) -> Vec<&'static str> {
+    let normalized = control.to_ascii_lowercase();
+    if matches!(
+        normalized.as_str(),
+        "temperature" | "response_length" | "aperture"
+    ) {
+        return vec![
+            "pressure_level_vs_pressure_velocity",
+            "slope_drag_vs_medium_mass",
+            "release_rehearsal_vs_bypass",
+            "entropy_vs_pressure",
+        ];
+    }
+    if normalized == "self_continuity_readout" {
+        return vec![
+            "measurement_vs_alignment_vs_damping",
+            "codec_smoothing_vs_pressure",
+            "pressure_level_vs_pressure_velocity",
+            "witness_as_structural_perception",
+            "fallback_capacity_vs_contract",
+        ];
+    }
+    Vec::new()
+}
+
+fn distinction_route(card: &Value, preflight: bool) -> String {
+    let next = scalar_text(card, "next_resolution_route");
+    if next != "(none)" {
+        return next;
+    }
+    if preflight {
+        return scalar_text(card, "relevant_self_regulation_route");
+    }
+    scalar_text(card, "recommended_read_only_route")
+}
+
+fn latest_review_json_path(workspace: &Path) -> Option<PathBuf> {
+    let root = workspace.join("diagnostics/self_study_reviews");
+    let mut latest: Option<(SystemTime, PathBuf)> = None;
+    for entry in fs::read_dir(root).ok()?.flatten() {
+        let candidate = if entry.file_type().ok()?.is_dir() {
+            entry.path().join("review.json")
+        } else {
+            entry.path()
+        };
+        if candidate.file_name().and_then(|name| name.to_str()) != Some("review.json") {
+            continue;
+        }
+        let modified = candidate.metadata().and_then(|meta| meta.modified()).ok()?;
+        if latest
+            .as_ref()
+            .is_none_or(|(latest_modified, _)| modified > *latest_modified)
+        {
+            latest = Some((modified, candidate));
+        }
+    }
+    latest.map(|(_, path)| path)
+}
+
+fn scalar_text(value: &Value, key: &str) -> String {
+    match value.get(key) {
+        Some(Value::String(text)) if !text.is_empty() => text.clone(),
+        Some(Value::Number(number)) => number.to_string(),
+        Some(Value::Bool(flag)) => flag.to_string(),
+        _ => "(none)".to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -990,6 +1137,68 @@ mod tests {
         let lease = load_selected_lease(tmp.path(), None).expect("lease");
         assert_eq!(lease.preflight_status, "preflight_only");
         assert!(lease.preflight_reason.contains("not lease-applicable"));
+    }
+
+    #[test]
+    fn self_regulation_status_and_preflight_render_returnable_distinctions() {
+        let tmp = tempfile::tempdir().expect("tmp");
+        let workspace = tmp.path().join("workspace");
+        let root = workspace.join("self_regulation");
+        let review_dir = workspace.join("diagnostics/self_study_reviews/run");
+        fs::create_dir_all(&review_dir).expect("review dir");
+        fs::write(
+            review_dir.join("review.json"),
+            json!({
+                "returnable_distinctions_v1": {
+                    "status": "returnable_distinctions_present",
+                    "cards": [
+                        {
+                            "card_id": "pressure_level_vs_pressure_velocity",
+                            "status": "felt_pressure_without_trend_context",
+                            "lifecycle_state": "needs_audit",
+                            "preflight_verdict": "audit_first",
+                            "next_resolution_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                            "recommended_read_only_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                            "relevant_self_regulation_route": "SELF_REGULATION_PREFLIGHT latest"
+                        },
+                        {
+                            "card_id": "measurement_vs_alignment_vs_damping",
+                            "status": "control_semantics_ambiguity",
+                            "lifecycle_state": "needs_audit",
+                            "preflight_verdict": "audit_first",
+                            "next_resolution_route": "REGULATOR_MAP_STATUS latest",
+                            "recommended_read_only_route": "REGULATOR_MAP_STATUS latest",
+                            "relevant_self_regulation_route": "SELF_REGULATION_STATUS"
+                        }
+                    ]
+                }
+            })
+            .to_string(),
+        )
+        .expect("write review");
+        handle_intent_at(
+            &root,
+            "SELF_REGULATION_INTENT pressure :: target: temperature; direction: down",
+            "SELF_REGULATION_INTENT",
+            350,
+        )
+        .expect("intent");
+        let preflight = handle_preflight_at(
+            &root,
+            "SELF_REGULATION_PREFLIGHT latest",
+            "SELF_REGULATION_PREFLIGHT",
+            351,
+        )
+        .expect("preflight");
+        assert!(preflight.contains("apply_allowed"));
+        assert!(preflight.contains("Distinction-aware preflight"));
+        assert!(preflight.contains("audit_first"));
+        assert!(preflight.contains("preflight_status unchanged"));
+        let status = handle_status_at(&root, 352, &mut conv()).expect("status");
+        assert!(status.contains("Returnable distinctions"));
+        assert!(status.contains("lifecycle=needs_audit"));
+        assert!(status.contains("REGULATOR_MAP_STATUS latest"));
+        assert!(status.contains("no lease applied by this block"));
     }
 
     #[test]

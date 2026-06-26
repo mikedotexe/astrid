@@ -91,6 +91,19 @@ def _target_label_reason(target: str) -> str | None:
     return None
 
 
+def _target_non_introspectable_reason(target: str) -> str | None:
+    """Why `target` is path-shaped but known to be outside Astrid's INTROSPECT
+    roots. Keep this narrow: block proven dead-loop paths while letting proposed
+    symbols continue through the existing warning path."""
+    t = target.strip().replace("\\", "/").lstrip("./")
+    if t == "scripts" or t.startswith("scripts/"):
+        return (
+            "is under scripts/, which is outside the bridge's approved "
+            "INTROSPECT roots"
+        )
+    return None
+
+
 def _target_resolves(target: str) -> bool:
     """True if `target` maps to a real tracked file under the astrid or minime
     repos (relative path or basename). A clean miss is allowed — it may be a
@@ -128,6 +141,17 @@ def validate_target(target: str, allow_unresolved: bool) -> str | None:
             "  A descriptive label breaks their INTROSPECT and can be mis-felt "
             "as a permissions wall.\n"
             "  Override with --allow-unresolved-target if you truly mean this."
+        )
+    non_introspectable_reason = _target_non_introspectable_reason(target)
+    if non_introspectable_reason and not allow_unresolved:
+        return (
+            f"--target {target!r} {non_introspectable_reason}.\n"
+            "  A directed review target is re-presented until the being "
+            "successfully INTROSPECTs it; non-introspectable targets can create "
+            "a stuck thin-output loop.\n"
+            "  Use a curated label, a bridge/minime source root, or an approved "
+            "memory artifact instead. Override with --allow-unresolved-target "
+            "only for a steward-side hygiene exception."
         )
     if not reason and not allow_unresolved and not _target_resolves(target):
         print(
@@ -222,9 +246,14 @@ def close_letter(target: str, outcome: str, note: str, card: dict | None) -> str
 
 def occupied_review_slot(being: str) -> dict | None:
     """Return the being's currently-pending UNENGAGED review invitation (slot dict
-    with a `review_target`), if any. The slot clears when the being INTROSPECTs the
-    target, so a non-None return means a directed review is still waiting and would
-    be DISPLACED by issuing a new one. Steward-only signal; never blocks. See the
+    with a `review_target`), if any. The slot clears when the being SUCCESSFULLY
+    INTROSPECTs the target (autonomous.rs::clear_review_slot_if_introspected) OR when
+    the steward closes the review (cmd_close → clear_review_slot_on_close). NOTE: a
+    target the bridge cannot INTROSPECT (outside its approved roots — e.g. anything
+    under scripts/) fails every cycle, so the being-side clear NEVER fires and the
+    slot would stick forever — closing the review is the steward's escape hatch. A
+    non-None return means a directed review is still waiting and would be DISPLACED
+    by issuing a new one. Steward-only signal; never blocks. See the
     STEWARD_QUERY_SLOT note above for the single-slot last-writer-wins mechanism.
     """
     path = STEWARD_QUERY_SLOT.get(being)
@@ -237,6 +266,57 @@ def occupied_review_slot(being: str) -> dict | None:
     if isinstance(slot, dict) and slot.get("review_target"):
         return slot
     return None
+
+
+def _slot_points_at_review(being: str, record: dict) -> Path | None:
+    """Return the being's steward-query slot path IF it still points at THIS review,
+    else None. Non-mutating. Precise match: the slot's `file` equals the basename of
+    the review's issuing letter (so a newer, different invitation is never matched);
+    falls back to slot `review_target` == the record's target.
+    """
+    path = STEWARD_QUERY_SLOT.get(being)
+    if not path or not path.is_file():
+        return None
+    try:
+        slot = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(slot, dict):
+        return None
+    # Precise: when we know the exact issuing letter, match ONLY its basename — a
+    # newer invitation (even at the same target) has a different letter filename, so
+    # it is never collateral-cleared. Fall back to review_target only for legacy
+    # records that predate the `letter` field.
+    letter_base = Path(record.get("letter") or "").name
+    if letter_base:
+        matches = slot.get("file") == letter_base
+    else:
+        target = record.get("target")
+        matches = bool(target and slot.get("review_target") == target)
+    return path if matches else None
+
+
+def clear_review_slot_on_close(being: str, record: dict) -> bool:
+    """On closing a review, clear the being-facing steward-query slot IF it still
+    points at THIS review — so a closed / withdrawn invitation stops re-presenting to
+    the being. Returns True if a slot was cleared.
+
+    Why this exists (un-muffle): the bridge clears the slot only on a SUCCESSFUL
+    INTROSPECT of the target. If the target is not introspectable (outside the
+    bridge's approved INTROSPECT roots), the introspect fails every cycle, the slot
+    never clears, and the being loops on a dead invitation (observed 2026-06-25:
+    Astrid re-INTROSPECTing scripts/fallback_fire_drill.py 8× — scripts/ is outside
+    the roots). Closing must clear the slot with it, or the being keeps seeing an
+    invitation the steward already resolved.
+    """
+    path = _slot_points_at_review(being, record)
+    if path is None:
+        return False
+    try:
+        path.unlink()
+    except OSError:
+        return False
+    return True
 
 
 def _warn_if_slot_occupied(being: str, new_letter_name: str) -> None:
@@ -337,6 +417,8 @@ def cmd_close(args, now: int) -> int:
             print(f"[dry-run] would write closure → {letter_path}\n")
             print(letter)
         print(f"[dry-run] would move ledger {record_path.name} → closed/")
+        if _slot_points_at_review(being, record) is not None:
+            print("[dry-run] would clear being-facing steward-query slot (still showing this invitation)")
         return 0
     INBOX[being].mkdir(parents=True, exist_ok=True)
     closed_dir.mkdir(parents=True, exist_ok=True)
@@ -351,6 +433,8 @@ def cmd_close(args, now: int) -> int:
     (closed_dir / record_path.name).write_text(json.dumps(record, indent=2))
     record_path.unlink()
     print(f"ledger  → {closed_dir / record_path.name}  (status: closed)")
+    if clear_review_slot_on_close(being, record):
+        print("slot    → cleared being-facing steward-query slot (was still showing this closed invitation)")
     return 0
 
 
@@ -380,7 +464,7 @@ def main() -> int:
     ap.add_argument(
         "--allow-unresolved-target",
         action="store_true",
-        help="bypass the target-sanity guard (label punctuation / non-resolving path)",
+        help="bypass the target-sanity guard (label punctuation / non-resolving path / known non-introspectable path)",
     )
     ap.add_argument(
         "--post-change",

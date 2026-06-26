@@ -806,6 +806,8 @@ mod tests {
                     wander_scale: 1.0,
                     applied_locally: true,
                     damping_coefficient: 0.0,
+                    intervention_type:
+                        crate::types::ResonanceInterventionType::ObservationalReadout,
                     note: "test".to_string(),
                 },
             }),

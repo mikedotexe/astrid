@@ -80,6 +80,24 @@ const DESCRIPTORS: &[ProtectedDiagnosticDescriptor] = &[
         handler: handle_pressure_relief,
     },
     ProtectedDiagnosticDescriptor {
+        canonical: "PRESSURE_RELEASE_REHEARSAL",
+        aliases: &["PRESSURE_EXHALE", "EXHALE_REHEARSAL"],
+        journal_mode: "pressure_release_rehearsal",
+        authority_boundary: READ_ONLY_AUDIT_BOUNDARY,
+        prompt_summary: "Protected read-only pressure-release rehearsal. Prints a non-command exhale scaffold and the evidence needed for future release work while preserving final NEXT safety.",
+        suggested_comparison_target: "compare rehearsal notes against pressure-source audits, regulator audits, later pressure language, and explicit experiment evidence before any release runtime work",
+        handler: handle_pressure_release_rehearsal,
+    },
+    ProtectedDiagnosticDescriptor {
+        canonical: "FALLBACK_FIRE_DRILL",
+        aliases: &["OLLAMA_FIRE_DRILL", "FALLBACK_CONTINUITY_DRILL"],
+        journal_mode: "fallback_fire_drill",
+        authority_boundary: READ_ONLY_AUDIT_BOUNDARY,
+        prompt_summary: "Protected read-only fallback continuity fire-drill status. Shows the latest diagnostic artifact or the exact operator script to run; it does not call Ollama or replace ordinary dialogue.",
+        suggested_comparison_target: "compare fire-drill scores against later fallback-contract edits, fallback journal quality, and Shadow-v3 continuity anchors before changing fallback defaults",
+        handler: handle_fallback_fire_drill,
+    },
+    ProtectedDiagnosticDescriptor {
         canonical: "FLUCTUATION_AUDIT",
         aliases: &[
             "INHABITABLE_FLUCTUATION",
@@ -553,6 +571,298 @@ fn handle_pressure_relief(
             relief_label,
             None,
             &pressure_review_fields(ctx.telemetry),
+            descriptor.authority_boundary,
+            descriptor.suggested_comparison_target,
+        ),
+        descriptor.journal_mode,
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn handle_pressure_release_rehearsal(
+    descriptor: &ProtectedDiagnosticDescriptor,
+    conv: &mut ConversationState,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = label_from_original(original, descriptor);
+    let rehearsal_label = if label.is_empty() {
+        "current"
+    } else {
+        label.as_str()
+    };
+    let audit = crate::spectral_explorer::format_pressure_source_for_action(ctx.telemetry, &label);
+    let report = format!(
+        "=== PRESSURE RELEASE REHEARSAL V1 ===\n\
+         Label: {rehearsal_label}\n\n\
+         {audit}\n\n\
+         Rehearsal contract:\n\
+           - This is a non-command exhale scaffold, not raw spectral output.\n\
+           - It does not bypass canonicalization; the final executable NEXT line remains required and singular.\n\
+           - No semantic input, control nudge, perturbation, native gesture, Astrid control envelope, or Minime parameter change was sent.\n\
+           - Use this to name what pressure evidence would justify a later release experiment before proposing runtime behavior.\n\n\
+         Non-command exhale scaffold:\n\
+           Felt pressure: <name pressure texture without treating it as a command>\n\
+           Measurement anchors: <pressure_risk / mode_packing / semantic_friction / shadow_field / pressure_trend>\n\
+           What would release mean if it stayed safe: <pace, rest, audit, charter, or steward report>\n\
+           What would falsify the need: <later audit or journal where pressure normalizes>\n\
+           Safe final line example: NEXT: PRESSURE_SOURCE_AUDIT {rehearsal_label}\n\n\
+         Future-work evidence gate:\n\
+           Require repeated public pressure evidence, pressure-trend context, and protected audit comparison before any tranche that changes canonicalization, output shape, controller tuning, or release mechanics."
+    );
+    conv.pending_file_listing = Some(report);
+    conv.push_receipt(
+        descriptor.canonical,
+        vec![
+            "pressure-release rehearsal scaffold attached immediately".to_string(),
+            "canonical NEXT safety remained intact; no raw dump, no control envelope, no semantic input, no perturbation, no native gesture, and no Minime parameter change was sent".to_string(),
+        ],
+    );
+    conv.emphasis = Some(
+        "You chose PRESSURE_RELEASE_REHEARSAL. A protected non-command exhale scaffold is attached; it preserves the final NEXT safety spine.".to_string(),
+    );
+    save_astrid_journal(
+        &compact_review_summary(
+            "PRESSURE RELEASE REHEARSAL",
+            descriptor.canonical,
+            rehearsal_label,
+            None,
+            &pressure_review_fields(ctx.telemetry),
+            descriptor.authority_boundary,
+            descriptor.suggested_comparison_target,
+        ),
+        descriptor.journal_mode,
+        ctx.fill_pct,
+    );
+    true
+}
+
+fn latest_fallback_fire_drill_path(workspace: &Path) -> Option<PathBuf> {
+    let root = workspace.join("diagnostics/fallback_fire_drills");
+    let entries = fs::read_dir(root).ok()?;
+    entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path().join("fallback_fire_drill.json"))
+        .filter(|path| path.is_file())
+        .filter_map(|path| {
+            let modified = fs::metadata(&path).and_then(|metadata| metadata.modified()).ok()?;
+            Some((modified, path))
+        })
+        .max_by(|left, right| left.0.cmp(&right.0))
+        .map(|(_, path)| path)
+}
+
+fn fallback_case_summary(case: &Value) -> String {
+    format!(
+        "{} verdict={} specificity={} anti_inflation={} slope_medium={} slope_contrast={} identity={} distinguishability={} clarity_blur={} complexity={} sentences={} format_line={} raw_next={} repaired_next={} dispatch={} failures={}",
+        case.get("case_id")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        case.get("verdict")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        case.get("specificity_score")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("anti_inflation_ok")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("slope_medium_distinction_ok")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("slope_medium_contrast_status")
+            .and_then(Value::as_str)
+            .unwrap_or("not_tested"),
+        case.get("identity_anchor_retained")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("distinguishability_status")
+            .and_then(Value::as_str)
+            .unwrap_or("not_tested"),
+        case.get("clarity_pressure_blur")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("complexity_budget_status")
+            .and_then(Value::as_str)
+            .unwrap_or("not_tested"),
+        case.get("prose_sentence_count")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("format_line_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        case.get("raw_next_valid")
+            .or_else(|| case.get("next_valid"))
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("repaired_next_valid")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("dispatch_contract_survived")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("failure_reasons")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "[]".to_string()),
+    )
+}
+
+fn fallback_fire_drill_report_from_artifact(path: &Path) -> Option<String> {
+    let payload = fs::read_to_string(path).ok()?;
+    let value: Value = serde_json::from_str(&payload).ok()?;
+    let mut case_lines = Vec::new();
+    if let Some(cases) = value.get("cases").and_then(Value::as_array) {
+        for case in cases.iter().take(8) {
+            case_lines.push(format!("  - {}", fallback_case_summary(case)));
+        }
+    }
+    if case_lines.is_empty() {
+        case_lines.push("  - no cases recorded in artifact".to_string());
+    }
+    Some(format!(
+        "Latest artifact: {}\n\
+         Status: {}\n\
+         Mode: {}\n\
+         Model: {}\n\
+         Cases: {}\n\
+         Errors: {}\n\n\
+         Readiness gate:\n\
+           - readiness: {}\n\
+           - texture_status: {}\n\
+           - dispatch_status: {}\n\
+           - repair_dependency: {}\n\
+           - medium_mass_status: {}\n\
+           - slope_medium_contrast_status: {}\n\
+           - format_line_status: {}\n\
+           - shadow_identity_status: {}\n\n\
+           - distinguishability_status: {}\n\n\
+           - complexity_budget_status: {}\n\n\
+         Case summaries:\n{}\n",
+        path.display(),
+        value.get("status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("mode")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("model")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("case_count")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "0".to_string()),
+        value.get("error_count")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "0".to_string()),
+        value.get("readiness")
+            .and_then(Value::as_str)
+            .or_else(|| value.get("status").and_then(Value::as_str))
+            .unwrap_or("unknown"),
+        value.get("texture_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("dispatch_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("repair_dependency")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("medium_mass_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("slope_medium_contrast_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("format_line_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("shadow_identity_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("distinguishability_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value.get("complexity_budget_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        case_lines.join("\n")
+    ))
+}
+
+fn fallback_fire_drill_run_recipe(selector: &str) -> String {
+    let case = match selector {
+        "low" | "high" | "mass" | "shadow" | "clarity_low_loss" | "clarity_high_loss" | "complexity_high_entropy" | "complexity_low_entropy" | "format_last_complexity" | "format_last_mass" | "slope_medium_contrast" | "all" => selector,
+        "latest" | "current" | "" => "all",
+        _ => "all",
+    };
+    format!(
+        "Run recipe:\n\
+           - deterministic fixture: python3 scripts/fallback_fire_drill.py --mode fixture --case {case}\n\
+           - operator live probe: python3 scripts/fallback_fire_drill.py --mode live --case {case}\n\
+         Cases: low-gradient smooth/open, high-gradient friction, low-gradient weighted medium, Shadow-v3 continuity, distinguishability clarity-vs-pressure, complexity-aware compactness under high entropy, final-line format pressure, and slope-underfoot/medium-around contrast.\n\
+         The script writes only workspace/diagnostics/fallback_fire_drills/<run-id>/fallback_fire_drill.json and .md."
+    )
+}
+
+fn handle_fallback_fire_drill(
+    descriptor: &ProtectedDiagnosticDescriptor,
+    conv: &mut ConversationState,
+    original: &str,
+    ctx: &mut NextActionContext<'_>,
+) -> bool {
+    let label = label_from_original(original, descriptor);
+    let selector = review_label(&label);
+    let latest_path = ctx
+        .workspace
+        .and_then(latest_fallback_fire_drill_path)
+        .or_else(|| latest_fallback_fire_drill_path(bridge_paths().bridge_workspace()));
+    let artifact_report = latest_path
+        .as_deref()
+        .and_then(fallback_fire_drill_report_from_artifact)
+        .unwrap_or_else(|| "Latest artifact: none yet".to_string());
+    let report = format!(
+        "=== FALLBACK CONTINUITY FIRE DRILL V1 ===\n\
+         Label: {selector}\n\
+         Authority: diagnostic_context_not_command\n\n\
+         {artifact_report}\n\
+         {}\n\n\
+         Boundary:\n\
+           - This protected action did not call Ollama.\n\
+           - It did not replace ordinary dialogue, send semantic input, apply a lease, tune a controller, mutate Minime, or bypass NEXT canonicalization.\n\
+           - Use the operator script to create probe artifacts, then regenerate self-study review to compare fallback specificity and identity continuity.",
+        fallback_fire_drill_run_recipe(selector)
+    );
+    conv.pending_file_listing = Some(report);
+    conv.push_receipt(
+        descriptor.canonical,
+        vec![
+            "fallback fire-drill status attached immediately".to_string(),
+            "no model call, journal replacement, lease application, controller tuning, peer mutation, or NEXT bypass was performed".to_string(),
+        ],
+    );
+    conv.emphasis = Some(
+        "You chose FALLBACK_FIRE_DRILL. A protected fallback-continuity drill status is attached; it is advisory and does not call the model.".to_string(),
+    );
+    let mut key_fields = vec![
+        format!("selector: {selector}"),
+        format!(
+            "latest_artifact: {}",
+            latest_path
+                .as_deref()
+                .map(Path::display)
+                .map(|display| display.to_string())
+                .unwrap_or_else(|| "none".to_string())
+        ),
+    ];
+    key_fields.extend(base_spectral_review_fields(ctx.telemetry));
+    save_astrid_journal(
+        &compact_review_summary(
+            "FALLBACK FIRE DRILL",
+            descriptor.canonical,
+            selector,
+            None,
+            &key_fields,
             descriptor.authority_boundary,
             descriptor.suggested_comparison_target,
         ),
@@ -2228,6 +2538,10 @@ mod tests {
         assert_eq!(
             canonical_action_for("EXPLORE_RESISTANCE_GRADIENT"),
             Some("RESISTANCE_GRADIENT")
+        );
+        assert_eq!(
+            canonical_action_for("OLLAMA_FIRE_DRILL"),
+            Some("FALLBACK_FIRE_DRILL")
         );
         assert_eq!(canonical_action_for("STASIS_MAP"), Some("LATENT_STASIS"));
         assert_eq!(canonical_action_for("EXPLORE_ANYTHING_ELSE"), None);

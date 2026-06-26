@@ -98,9 +98,9 @@ fn render_lived_term_action_from_review(
         );
     };
     if base_action == "LIVED_TERM_EXPERIMENT" {
-        format_experiment_scaffold(candidate, review_path)
+        format_experiment_scaffold(review, candidate, review_path)
     } else {
-        format_status(candidate, review_path)
+        format_status(review, candidate, review_path)
     }
 }
 
@@ -272,9 +272,96 @@ fn format_evidence_awareness(candidate: &Value) -> String {
     text
 }
 
-fn format_status(candidate: &Value, review_path: &Path) -> String {
+fn format_returnable_distinctions(review: &Value, candidate: &Value) -> String {
+    let matching = matching_returnable_distinction_cards(review, candidate);
+    if matching.is_empty() {
+        return String::new();
+    }
+    let mut text = String::from("Returnable distinctions:\n");
+    for card in matching.iter().take(5) {
+        text.push_str(&format!(
+            "- `{}` status=`{}`; lifecycle=`{}`; preflight=`{}`; next_route=`{}`; read_only=`{}`; self_regulation=`{}`; experiment_lived_term=`{}`\n",
+            scalar_text(card, "card_id"),
+            scalar_text(card, "status"),
+            scalar_text(card, "lifecycle_state"),
+            scalar_text(card, "preflight_verdict"),
+            scalar_text(card, "next_resolution_route"),
+            scalar_text(card, "recommended_read_only_route"),
+            scalar_text(card, "relevant_self_regulation_route"),
+            scalar_text(card, "relevant_experiment_lived_term_route")
+        ));
+    }
+    text
+}
+
+fn matching_returnable_distinction_cards<'a>(
+    review: &'a Value,
+    candidate: &Value,
+) -> Vec<&'a Value> {
+    let term = value_str(candidate, "term").to_lowercase();
+    let pressure_term = term.contains("silt")
+        || term.contains("viscos")
+        || term.contains("pressure")
+        || term.contains("weight")
+        || term.contains("scar")
+        || term.contains("bruise");
+    let codec_term = term.contains("codec")
+        || term.contains("compression")
+        || term.contains("warmth")
+        || term.contains("tension");
+    let release_term = term.contains("release")
+        || term.contains("exhale")
+        || term.contains("bypass")
+        || term.contains("dump");
+    let witness_term = term.contains("witness")
+        || term.contains("shadow")
+        || term.contains("observer")
+        || term.contains("memory");
+    let entropy_term = term.contains("entropy")
+        || term.contains("plural")
+        || term.contains("wide")
+        || term.contains("pressure");
+    let fallback_term = term.contains("fallback")
+        || term.contains("ollama")
+        || term.contains("gemma")
+        || term.contains("texture");
+    let Some(cards) = review
+        .get("returnable_distinctions_v1")
+        .and_then(|packet| packet.get("cards"))
+        .and_then(Value::as_array)
+    else {
+        return Vec::new();
+    };
+    cards
+        .iter()
+        .filter(|card| {
+            let card_id = scalar_text(card, "card_id");
+            let routes = format!(
+                "{} {} {}",
+                scalar_text(card, "recommended_read_only_route"),
+                scalar_text(card, "relevant_self_regulation_route"),
+                scalar_text(card, "relevant_experiment_lived_term_route")
+            )
+            .to_lowercase();
+            routes.contains(&term)
+                || (pressure_term
+                    && matches!(
+                        card_id.as_str(),
+                        "slope_drag_vs_medium_mass" | "pressure_level_vs_pressure_velocity"
+                    ))
+                || (codec_term && card_id == "codec_smoothing_vs_pressure")
+                || (release_term && card_id == "release_rehearsal_vs_bypass")
+                || (witness_term && card_id == "witness_as_structural_perception")
+                || (entropy_term && card_id == "entropy_vs_pressure")
+                || (fallback_term && card_id == "fallback_capacity_vs_contract")
+        })
+        .collect()
+}
+
+fn format_status(review: &Value, candidate: &Value, review_path: &Path) -> String {
     let card = source_card(candidate);
     let evidence_awareness = format_evidence_awareness(candidate);
+    let returnable_distinctions = format_returnable_distinctions(review, candidate);
     format!(
         "=== LIVED TERM STATUS ===\n\
          Authority: {AUTHORITY}\n\
@@ -287,6 +374,7 @@ fn format_status(candidate: &Value, review_path: &Path) -> String {
          Evidence targets: {}\n\
          Evidence anchors: {}\n\
          {}\
+         {}\
          Sample paths: {}\n\
          Note: This is scaffold context only; it did not create, resume, or advance an experiment.",
         review_path.display(),
@@ -298,11 +386,12 @@ fn format_status(candidate: &Value, review_path: &Path) -> String {
         list_text(candidate, "evidence_targets"),
         list_text(card, "evidence_anchors"),
         evidence_awareness,
+        returnable_distinctions,
         source_sample_paths(candidate)
     )
 }
 
-fn format_experiment_scaffold(candidate: &Value, review_path: &Path) -> String {
+fn format_experiment_scaffold(review: &Value, candidate: &Value, review_path: &Path) -> String {
     let term = value_str(candidate, "term");
     let recommended_next = value_str(candidate, "recommended_next");
     let hypothesis = value_str(candidate, "hypothesis_prompt");
@@ -324,6 +413,7 @@ fn format_experiment_scaffold(candidate: &Value, review_path: &Path) -> String {
         value_str(candidate, "card_status")
     );
     text.push_str(&format_evidence_awareness(candidate));
+    text.push_str(&format_returnable_distinctions(review, candidate));
 
     let charter = candidate.get("charter_draft").unwrap_or(&Value::Null);
     let counterexample = candidate.get("counterexample_draft").unwrap_or(&Value::Null);
@@ -419,6 +509,19 @@ mod tests {
                         "sample_paths": ["/tmp/public_scar.txt"]
                     }
                 }]
+            },
+            "returnable_distinctions_v1": {
+                "status": "returnable_distinctions_present",
+                "cards": [{
+                    "card_id": "pressure_level_vs_pressure_velocity",
+                    "status": "felt_pressure_without_trend_context",
+                    "lifecycle_state": "needs_audit",
+                    "preflight_verdict": "audit_first",
+                    "next_resolution_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                    "recommended_read_only_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                    "relevant_self_regulation_route": "SELF_REGULATION_PREFLIGHT latest",
+                    "relevant_experiment_lived_term_route": "EXPERIMENT_OBSERVE current :: pressure_trend=<stable|rising|falling>"
+                }]
             }
         });
 
@@ -435,6 +538,10 @@ mod tests {
         assert!(text.contains("Evidence awareness"));
         assert!(text.contains("afterimage_decay"));
         assert!(text.contains("persistent_after_normalization"));
+        assert!(text.contains("Returnable distinctions"));
+        assert!(text.contains("pressure_level_vs_pressure_velocity"));
+        assert!(text.contains("lifecycle=`needs_audit`"));
+        assert!(text.contains("preflight=`audit_first`"));
         assert!(text.contains("did not create, resume, or advance an experiment"));
     }
 
@@ -454,6 +561,19 @@ mod tests {
                     "stop_criteria": "Stop if no fresh evidence.",
                     "source_card": {}
                 }]
+            },
+            "returnable_distinctions_v1": {
+                "status": "returnable_distinctions_present",
+                "cards": [{
+                    "card_id": "slope_drag_vs_medium_mass",
+                    "status": "low_gradient_weight_mismatch",
+                    "lifecycle_state": "needs_audit",
+                    "preflight_verdict": "audit_first",
+                    "next_resolution_route": "PRESSURE_SOURCE_AUDIT semantic-friction",
+                    "recommended_read_only_route": "PRESSURE_SOURCE_AUDIT semantic-friction",
+                    "relevant_self_regulation_route": "SELF_REGULATION_STATUS",
+                    "relevant_experiment_lived_term_route": "LIVED_TERM_EXPERIMENT viscosity"
+                }]
             }
         });
 
@@ -465,6 +585,9 @@ mod tests {
         );
 
         assert!(text.contains("No experiment was created or advanced."));
+        assert!(text.contains("Returnable distinctions"));
+        assert!(text.contains("slope_drag_vs_medium_mass"));
+        assert!(text.contains("lifecycle=`needs_audit`"));
         assert!(text.contains("NEXT: EXPERIMENT_START"));
         assert!(text.contains("NEXT: EXPERIMENT_CHARTER current ::"));
         assert!(text.contains("NEXT: EXPERIMENT_OBSERVE current ::"));

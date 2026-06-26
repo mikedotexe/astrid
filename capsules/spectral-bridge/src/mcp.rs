@@ -1115,6 +1115,7 @@ async fn tool_get_latest_telemetry(
                 "lambda_edge_perception": s.lambda_edge_perception.clone(),
                 "sticky_mode_audit": s.sticky_mode_audit.clone(),
                 "artifact_scan": s.artifact_scan.clone(),
+                "pressure_trend_v1": s.pressure_trend_v1.clone(),
                 "safety_decision": s.safety_decision.clone()
             }
         })
@@ -1157,6 +1158,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
             .latest_telemetry
             .as_ref()
             .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
+        pressure_trend_v1: s.pressure_trend_v1.clone(),
         pressure_source_v1: s
             .latest_telemetry
             .as_ref()
@@ -3151,6 +3153,7 @@ async fn handle_resource_read(
                     .latest_telemetry
                     .as_ref()
                     .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
+                pressure_trend_v1: s.pressure_trend_v1.clone(),
                 pressure_source_v1: s
                     .latest_telemetry
                     .as_ref()

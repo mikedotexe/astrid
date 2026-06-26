@@ -50,7 +50,20 @@ pub struct ResonanceDensityControl {
     pub applied_locally: bool,
     #[serde(default)]
     pub damping_coefficient: f32,
+    #[serde(default)]
+    pub intervention_type: ResonanceInterventionType,
     pub note: String,
+}
+
+/// Explains whether resonance-density control is observation, alignment, or damping.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ResonanceInterventionType {
+    #[default]
+    ObservationalReadout,
+    PassiveAlignment,
+    ActiveDamping,
+    ManualOverrideReserved,
 }
 
 /// Typed density of mutually reinforcing resonance in the live eigenspace.
@@ -165,6 +178,32 @@ pub struct InhabitableFluctuationV1 {
     #[serde(default)]
     pub context: InhabitableFluctuationContext,
     pub control: InhabitableFluctuationControl,
+}
+
+/// Derived pressure velocity readout from consecutive telemetry packets.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PressureTrendV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub classification: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_pressure_risk: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previous_pressure_risk: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_mode_packing: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previous_mode_packing: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_fill_pct: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previous_fill_pct: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill_delta_pct: Option<f32>,
 }
 
 /// Raw telemetry broadcast by minime's ESN engine on port 7878.
@@ -810,6 +849,9 @@ pub struct BridgeStatus {
     /// Latest resonance-density metric, if Minime exports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resonance_density_v1: Option<ResonanceDensityV1>,
+    /// Derived pressure velocity / stability readout from consecutive telemetry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_trend_v1: Option<PressureTrendV1>,
     /// Latest pressure-source metric, if Minime exports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_source_v1: Option<PressureSourceV1>,
@@ -1968,6 +2010,10 @@ mod tests {
         assert_eq!(resonance.policy, "resonance_density_v1");
         assert_eq!(resonance.quality, "forming_containment");
         assert!((resonance.density - 0.64).abs() < 0.01);
+        assert_eq!(
+            resonance.control.intervention_type,
+            ResonanceInterventionType::ObservationalReadout
+        );
         let pressure = telemetry.pressure_source_v1.as_ref().unwrap();
         assert_eq!(pressure.policy, "pressure_source_v1");
         assert_eq!(pressure.dominant_source, "controller_pressure");
@@ -1988,6 +2034,24 @@ mod tests {
             Some("held_within_expected_live_intake_window")
         );
         assert!(telemetry.alert.is_none());
+    }
+
+    #[test]
+    fn resonance_control_accepts_explicit_intervention_type() {
+        let control: ResonanceDensityControl = serde_json::from_value(serde_json::json!({
+            "target_bias_pct": -0.4,
+            "wander_scale": 0.8,
+            "applied_locally": true,
+            "damping_coefficient": 0.06,
+            "intervention_type": "active_damping",
+            "note": "pressure branch"
+        }))
+        .unwrap();
+
+        assert_eq!(
+            control.intervention_type,
+            ResonanceInterventionType::ActiveDamping
+        );
     }
 
     #[test]

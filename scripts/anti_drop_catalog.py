@@ -46,6 +46,16 @@ REPO_ROOTS = {
 # alarm; it is a standing invitation to close the gap.
 ANTI_DROP_CATALOG: list[dict[str, Any]] = [
     {
+        "id": "review_slot_clears_on_close",
+        "shipped": "2026-06-25",
+        "surface": "Astrid's review-together loop — the being-facing steward-query slot",
+        "failure_mode": "a review invitation was issued for scripts/fallback_fire_drill.py, which is OUTSIDE the bridge's approved INTROSPECT roots (curated: bridge/src, docs/steward-notes, minime/src, autonomous_agent.py, workspace journals — scripts/ is not in them). The bridge clears the open_steward_query slot ONLY on a SUCCESSFUL INTROSPECT (autonomous.rs::clear_review_slot_if_introspected), so every one of Astrid's 8 INTROSPECT attempts failed ('no matching filename in approved INTROSPECT roots'), the slot never cleared, the invitation re-presented every cycle, and she looped (stuck_repetition flagged INTROSPECT 8x same target). request_review.py --close did NOT clear the being-facing slot either, so a closed invitation kept re-presenting. Fix: cmd_close now calls clear_review_slot_on_close (precise letter-basename match) so closing a review is the steward's escape hatch for a non-introspectable / un-fulfillable target. DEEPER GAP (recorded for Mike, not auto-fixed): request_review's target guard validates file-exists-on-disk, not introspectability-by-the-bridge, so it can still ISSUE an unreadable invitation; mirroring the Rust roots in Python risks drift, so it needs a focused decision (widen roots = reach escalation, or inline script content into the review letter).",
+        "guard": {"repo": "astrid", "file": "scripts/request_review.py", "symbol": "clear_review_slot_on_close"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/test_request_review.py",
+                 "name": "SlotClearOnCloseTests",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/test_request_review.py"},
+    },
+    {
         "id": "being_text_never_rewritten",
         "shipped": "2026-06-22",
         "surface": "BOTH beings' voice — our code must never rewrite/reject/discard a being's self-expression",

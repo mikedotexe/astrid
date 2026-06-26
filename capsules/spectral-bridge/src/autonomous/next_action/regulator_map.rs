@@ -100,6 +100,9 @@ fn format_map_status(review: &Value, review_path: &Path) -> String {
     let evidence_loop = review
         .get("regulator_missing_variable_evidence_loop_v1")
         .unwrap_or(&Value::Null);
+    let returnable = review
+        .get("returnable_distinctions_v1")
+        .unwrap_or(&Value::Null);
     format!(
         "=== REGULATOR MAP STATUS ===\n\
          Authority: {AUTHORITY}\n\
@@ -115,6 +118,7 @@ fn format_map_status(review: &Value, review_path: &Path) -> String {
          Tuning readiness gate: status=`{}`; counts={}; unresolved={}\n\
          Why not tuning yet: {}\n\
          Missing-variable evidence loop: status=`{}`; probes={}; top={}\n\
+         Returnable distinctions: status=`{}`; active={}; cards={}\n\
          Note: This is advisory map context only; it created no experiment, applied no lease, tuned no controller, and mutated no peer.",
         review_path.display(),
         value_text(replay, "cartography_source"),
@@ -144,7 +148,10 @@ fn format_map_status(review: &Value, review_path: &Path) -> String {
         tuning_gate_summary(tuning_gate),
         value_text(evidence_loop, "status"),
         value_text(evidence_loop, "probe_count"),
-        evidence_loop_top_probes_text(evidence_loop)
+        evidence_loop_top_probes_text(evidence_loop),
+        value_text(returnable, "status"),
+        value_text(returnable, "active_card_count"),
+        returnable_distinction_labels(returnable)
     )
 }
 
@@ -176,6 +183,7 @@ fn format_replay_status(review: &Value, review_path: &Path, selector: &str) -> S
         text.push_str(&format_lab_matches_for_card(review, card));
         text.push_str(&format_gate_matches_for_card(review, card));
         text.push_str(&format_evidence_loop_probes(review));
+        text.push_str(&format_returnable_distinctions(review));
     }
     text
 }
@@ -216,6 +224,7 @@ fn format_boundary_card(review: &Value, review_path: &Path, selector: &str) -> S
          Counterfactual matches: {}\n\
          Tuning gate matches: {}\n\
          Evidence loop probes: {}\n\
+         Returnable distinctions: {}\n\
          Note: This is advisory card context only; it created no experiment, applied no lease, tuned no controller, and mutated no peer.",
         review_path.display(),
         value_text(&card, "card_id"),
@@ -231,7 +240,12 @@ fn format_boundary_card(review: &Value, review_path: &Path, selector: &str) -> S
         value_text(&card, "recommended_action"),
         compact_lab_matches_for_card(review, &card),
         compact_gate_matches_for_card(review, &card),
-        compact_evidence_loop_probes(review)
+        compact_evidence_loop_probes(review),
+        returnable_distinction_labels(
+            review
+                .get("returnable_distinctions_v1")
+                .unwrap_or(&Value::Null)
+        )
     )
 }
 
@@ -343,6 +357,58 @@ fn format_evidence_loop_probes(review: &Value) -> String {
         ));
     }
     text
+}
+
+fn format_returnable_distinctions(review: &Value) -> String {
+    let Some(packet) = review.get("returnable_distinctions_v1") else {
+        return String::new();
+    };
+    let status = value_text(packet, "status");
+    if status == "quiet" || status == "(none)" {
+        return String::new();
+    }
+    let mut text = String::from("  Returnable distinctions:\n");
+    let Some(cards) = packet.get("cards").and_then(Value::as_array) else {
+        return text;
+    };
+    for card in cards.iter().filter(|card| value_text(card, "status") != "quiet").take(5) {
+        text.push_str(&format!(
+            "  - `{}` status=`{}` lifecycle=`{}` verdict=`{}` route=`{}` self=`{}` experiment=`{}`\n",
+            value_text(card, "card_id"),
+            value_text(card, "status"),
+            value_text(card, "lifecycle_state"),
+            value_text(card, "preflight_verdict"),
+            value_text(card, "recommended_read_only_route"),
+            value_text(card, "relevant_self_regulation_route"),
+            value_text(card, "relevant_experiment_lived_term_route")
+        ));
+    }
+    text
+}
+
+fn returnable_distinction_labels(packet: &Value) -> String {
+    let Some(cards) = packet.get("cards").and_then(Value::as_array) else {
+        return "(none)".to_string();
+    };
+    let labels = cards
+        .iter()
+        .filter(|card| value_text(card, "status") != "quiet")
+        .take(5)
+        .map(|card| {
+            format!(
+                "{}:{} lifecycle={} verdict={}",
+                value_text(card, "card_id"),
+                value_text(card, "status"),
+                value_text(card, "lifecycle_state"),
+                value_text(card, "preflight_verdict")
+            )
+        })
+        .collect::<Vec<_>>();
+    if labels.is_empty() {
+        "(none)".to_string()
+    } else {
+        labels.join(", ")
+    }
 }
 
 fn compact_evidence_loop_probes(review: &Value) -> String {
@@ -753,6 +819,32 @@ mod tests {
                         "source_confidence": "medium"
                     }
                 ]
+            },
+            "returnable_distinctions_v1": {
+                "status": "returnable_distinctions_present",
+                "active_card_count": 2,
+                "cards": [
+                    {
+                        "card_id": "measurement_vs_alignment_vs_damping",
+                        "status": "control_semantics_ambiguity",
+                        "lifecycle_state": "needs_audit",
+                        "preflight_verdict": "audit_first",
+                        "next_resolution_route": "REGULATOR_MAP_STATUS latest",
+                        "recommended_read_only_route": "REGULATOR_MAP_STATUS latest",
+                        "relevant_self_regulation_route": "SELF_REGULATION_STATUS",
+                        "relevant_experiment_lived_term_route": "REGULATOR_MAP_STATUS latest"
+                    },
+                    {
+                        "card_id": "pressure_level_vs_pressure_velocity",
+                        "status": "felt_pressure_without_trend_context",
+                        "lifecycle_state": "needs_audit",
+                        "preflight_verdict": "audit_first",
+                        "next_resolution_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                        "recommended_read_only_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                        "relevant_self_regulation_route": "SELF_REGULATION_PREFLIGHT latest",
+                        "relevant_experiment_lived_term_route": "EXPERIMENT_OBSERVE current :: pressure_trend=<stable|rising|falling>"
+                    }
+                ]
             }
         })
     }
@@ -775,6 +867,10 @@ mod tests {
         assert!(text.contains("Tuning readiness gate: status=`blocked_missing_variable`"));
         assert!(text.contains("Why not tuning yet"));
         assert!(text.contains("Missing-variable evidence loop"));
+        assert!(text.contains("Returnable distinctions"));
+        assert!(text.contains("measurement_vs_alignment_vs_damping"));
+        assert!(text.contains("lifecycle=needs_audit"));
+        assert!(text.contains("verdict=audit_first"));
         assert!(text.contains("semantic_friction->PRESSURE_SOURCE_AUDIT semantic-friction"));
         assert!(text.contains("pressure_hysteresis"));
         assert!(text.contains("created no experiment"));
@@ -798,6 +894,8 @@ mod tests {
         assert!(text.contains("Tuning readiness gate"));
         assert!(text.contains("blocked_missing_variable"));
         assert!(text.contains("Missing-variable evidence loop"));
+        assert!(text.contains("Returnable distinctions"));
+        assert!(text.contains("SELF_REGULATION_PREFLIGHT latest"));
         assert!(text.contains("PRESSURE_SOURCE_AUDIT semantic-friction"));
         assert!(text.contains("no controller was tuned"));
     }
@@ -819,6 +917,8 @@ mod tests {
         assert!(text.contains("pressure_hysteresis:blocked_missing_variable"));
         assert!(text.contains("Evidence loop probes"));
         assert!(text.contains("pressure_source->PRESSURE_SOURCE_AUDIT current-fill_pressure"));
+        assert!(text.contains("Returnable distinctions"));
+        assert!(text.contains("pressure_level_vs_pressure_velocity"));
         assert!(text.contains("mutated no peer"));
     }
 }

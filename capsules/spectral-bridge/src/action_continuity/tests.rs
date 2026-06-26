@@ -71,6 +71,7 @@ fn telemetry() -> SpectralTelemetry {
                 wander_scale: 1.0,
                 applied_locally: true,
                 damping_coefficient: 0.0,
+                intervention_type: crate::types::ResonanceInterventionType::ObservationalReadout,
                 note: "test".to_string(),
             },
         }),
@@ -787,6 +788,61 @@ fn creates_experiment_records_runs_and_status() {
     assert!(status.contains("Foothold study"));
     assert!(status.contains("THREAD_STATUS current"));
     let _ = std::fs::remove_dir_all(store.root());
+}
+
+#[test]
+fn experiment_status_shows_returnable_distinctions_only_for_matching_experiments() {
+    let tmp = tempfile::tempdir().expect("tmp");
+    let workspace = tmp.path().join("workspace");
+    let store = ActionContinuityStore::new(workspace.join("action_threads"));
+    let review_dir = workspace.join("diagnostics/self_study_reviews/run");
+    std::fs::create_dir_all(&review_dir).expect("review dir");
+    std::fs::write(
+        review_dir.join("review.json"),
+        json!({
+            "returnable_distinctions_v1": {
+                "status": "returnable_distinctions_present",
+                "cards": [
+                    {
+                        "card_id": "pressure_level_vs_pressure_velocity",
+                        "status": "felt_pressure_without_trend_context",
+                        "recommended_read_only_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                        "relevant_self_regulation_route": "SELF_REGULATION_PREFLIGHT latest",
+                        "relevant_experiment_lived_term_route": "EXPERIMENT_OBSERVE current :: pressure_trend=<stable|rising|falling>"
+                    },
+                    {
+                        "card_id": "codec_smoothing_vs_pressure",
+                        "status": "projection_compression_risk",
+                        "recommended_read_only_route": "CODEC_MAP",
+                        "relevant_self_regulation_route": "SELF_REGULATION_STATUS",
+                        "relevant_experiment_lived_term_route": "LIVED_TERM_STATUS viscosity"
+                    }
+                ]
+            }
+        })
+        .to_string(),
+    )
+    .expect("write review");
+    store
+        .create_thread(None, "Distinction thread", None)
+        .expect("thread");
+    let pressure = store
+        .start_experiment(None, "Silt pressure study", "Does heavy silt track pressure?")
+        .expect("pressure experiment");
+    let pressure_status = store
+        .experiment_status(Some(&pressure.experiment_id))
+        .expect("pressure status");
+    assert!(pressure_status.contains("Returnable distinctions"));
+    assert!(pressure_status.contains("pressure_level_vs_pressure_velocity"));
+    assert!(pressure_status.contains("SELF_REGULATION_PREFLIGHT latest"));
+
+    let ordinary = store
+        .start_experiment(None, "Plain color study", "Does the green marker stay visible?")
+        .expect("ordinary experiment");
+    let ordinary_status = store
+        .experiment_status(Some(&ordinary.experiment_id))
+        .expect("ordinary status");
+    assert!(!ordinary_status.contains("Returnable distinctions"));
 }
 
 #[test]

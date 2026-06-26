@@ -22,8 +22,8 @@ use crate::paths::bridge_paths;
 use crate::sticky_mode::{self, StickyModeAuditV1};
 use crate::types::{
     ConnectivityStatus, LambdaContribution, LambdaProfile, MessageDirection, PullModeRate,
-    PullTopologyProfile, SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry,
-    WebSocketLaneTrace,
+    PressureTrendV1, PullTopologyProfile, SafetyDecisionTrace, SafetyLevel, SensoryMsg,
+    SpectralTelemetry, WebSocketLaneTrace,
 };
 
 /// Shared mutable bridge state updated by `WebSocket` tasks.
@@ -34,6 +34,8 @@ pub struct BridgeState {
     pub fill_pct: f32,
     /// Previous derived fill percentage from the last telemetry packet.
     pub previous_fill_pct: Option<f32>,
+    /// Derived pressure velocity / stability readout from consecutive telemetry packets.
+    pub pressure_trend_v1: Option<PressureTrendV1>,
     /// Current safety level.
     pub safety_level: SafetyLevel,
     /// Previous safety level (for transition detection).
@@ -101,6 +103,7 @@ impl BridgeState {
             latest_telemetry: None,
             fill_pct: 0.0,
             previous_fill_pct: None,
+            pressure_trend_v1: None,
             safety_level: SafetyLevel::Green,
             prev_safety_level: SafetyLevel::Green,
             telemetry_connected: false,
@@ -164,6 +167,63 @@ fn unix_now_s() -> f64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0.0, |duration| duration.as_secs_f64())
+}
+
+fn build_pressure_trend_v1(
+    previous: Option<&SpectralTelemetry>,
+    previous_fill_pct: Option<f32>,
+    latest: &SpectralTelemetry,
+    latest_fill_pct: f32,
+) -> PressureTrendV1 {
+    const PRESSURE_DELTA_EPS: f32 = 0.04;
+    const FILL_DELTA_EPS: f32 = 2.0;
+
+    let latest_resonance = latest.resonance_density_v1.as_ref();
+    let previous_resonance = previous.and_then(|telemetry| telemetry.resonance_density_v1.as_ref());
+    let latest_pressure = latest_resonance.map(|resonance| resonance.pressure_risk);
+    let previous_pressure = previous_resonance.map(|resonance| resonance.pressure_risk);
+    let latest_mode_packing = latest_resonance.map(|resonance| resonance.components.mode_packing);
+    let previous_mode_packing =
+        previous_resonance.map(|resonance| resonance.components.mode_packing);
+    let pressure_delta = latest_pressure.zip(previous_pressure).map(|(latest, previous)| {
+        (latest - previous).clamp(-1.0, 1.0)
+    });
+    let mode_packing_delta = latest_mode_packing
+        .zip(previous_mode_packing)
+        .map(|(latest, previous)| (latest - previous).clamp(-1.0, 1.0));
+    let fill_delta_pct =
+        previous_fill_pct.map(|previous_fill| (latest_fill_pct - previous_fill).clamp(-100.0, 100.0));
+
+    let classification = if latest_resonance.is_none() {
+        "telemetry_gap"
+    } else if previous_resonance.is_none() || previous_fill_pct.is_none() {
+        "insufficient_history"
+    } else if pressure_delta.is_some_and(|delta| delta >= PRESSURE_DELTA_EPS)
+        || fill_delta_pct.is_some_and(|delta| delta >= FILL_DELTA_EPS)
+    {
+        "rising_pressure"
+    } else if pressure_delta.is_some_and(|delta| delta <= -PRESSURE_DELTA_EPS)
+        || fill_delta_pct.is_some_and(|delta| delta <= -FILL_DELTA_EPS)
+    {
+        "falling_pressure"
+    } else {
+        "stable_heavy"
+    };
+
+    PressureTrendV1 {
+        policy: "pressure_trend_v1".to_string(),
+        schema_version: 1,
+        classification: classification.to_string(),
+        latest_pressure_risk: latest_pressure,
+        previous_pressure_risk: previous_pressure,
+        pressure_delta,
+        latest_mode_packing,
+        previous_mode_packing,
+        mode_packing_delta,
+        latest_fill_pct: latest_fill_pct.is_finite().then_some(latest_fill_pct),
+        previous_fill_pct,
+        fill_delta_pct,
+    }
 }
 
 fn lane_trace_mut(state: &mut BridgeState, lane: WsLane) -> &mut WebSocketLaneTrace {
@@ -668,7 +728,14 @@ async fn handle_telemetry_message(
     // Update shared state.
     {
         let mut s = state.write().await;
-        s.previous_fill_pct = s.latest_telemetry.as_ref().map(|_| s.fill_pct);
+        let previous_fill_pct = s.latest_telemetry.as_ref().map(|_| s.fill_pct);
+        s.pressure_trend_v1 = Some(build_pressure_trend_v1(
+            s.latest_telemetry.as_ref(),
+            previous_fill_pct,
+            &telemetry,
+            fill_pct,
+        ));
+        s.previous_fill_pct = previous_fill_pct;
         s.latest_telemetry = Some(telemetry.clone());
         s.fill_pct = fill_pct;
         s.spectral_fingerprint
@@ -1691,6 +1758,45 @@ mod tests {
         .unwrap()
     }
 
+    fn make_pressure_eigenpacket(fill_ratio: f32, pressure_risk: f32, mode_packing: f32) -> Vec<u8> {
+        serde_json::to_vec(&serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [768.0, 300.0],
+            "fill_ratio": fill_ratio,
+            "modalities": {
+                "audio_fired": false,
+                "video_fired": false,
+                "history_fired": true,
+                "audio_rms": 0.0,
+                "video_var": 0.0
+            },
+            "resonance_density_v1": {
+                "policy": "resonance_density_v1",
+                "schema_version": 1,
+                "density": 0.58,
+                "containment_score": 0.62,
+                "pressure_risk": pressure_risk,
+                "quality": "mixed",
+                "components": {
+                    "active_energy": 0.72,
+                    "mode_packing": mode_packing,
+                    "temporal_persistence": 0.62,
+                    "structural_plurality": 0.50,
+                    "comfort_gate": 0.70
+                },
+                "control": {
+                    "target_bias_pct": 0.0,
+                    "wander_scale": 1.0,
+                    "applied_locally": true,
+                    "damping_coefficient": 0.04,
+                    "intervention_type": "observational_readout",
+                    "note": "observational"
+                }
+            }
+        }))
+        .unwrap()
+    }
+
     #[tokio::test]
     async fn telemetry_updates_state_green() {
         let state = Arc::new(RwLock::new(BridgeState::new()));
@@ -1711,6 +1817,51 @@ mod tests {
             "primary_fill_ratio"
         );
         assert_eq!(s.messages_relayed, 1);
+    }
+
+    #[tokio::test]
+    async fn pressure_trend_tracks_insufficient_rising_falling_and_gap() {
+        let state = Arc::new(RwLock::new(BridgeState::new()));
+        let db = Arc::new(BridgeDb::open(":memory:").unwrap());
+
+        handle_telemetry_message(&make_pressure_eigenpacket(0.70, 0.20, 0.40), &state, &db).await;
+        {
+            let s = state.read().await;
+            let trend = s.pressure_trend_v1.as_ref().unwrap();
+            assert_eq!(trend.classification, "insufficient_history");
+            assert_eq!(trend.latest_pressure_risk, Some(0.20));
+        }
+
+        handle_telemetry_message(&make_pressure_eigenpacket(0.705, 0.21, 0.42), &state, &db).await;
+        {
+            let s = state.read().await;
+            let trend = s.pressure_trend_v1.as_ref().unwrap();
+            assert_eq!(trend.classification, "stable_heavy");
+            assert!(trend.pressure_delta.is_some_and(|delta| delta > 0.0));
+        }
+
+        handle_telemetry_message(&make_pressure_eigenpacket(0.735, 0.30, 0.46), &state, &db).await;
+        {
+            let s = state.read().await;
+            let trend = s.pressure_trend_v1.as_ref().unwrap();
+            assert_eq!(trend.classification, "rising_pressure");
+            assert!(trend.fill_delta_pct.is_some_and(|delta| delta >= 2.0));
+        }
+
+        handle_telemetry_message(&make_pressure_eigenpacket(0.70, 0.20, 0.41), &state, &db).await;
+        {
+            let s = state.read().await;
+            let trend = s.pressure_trend_v1.as_ref().unwrap();
+            assert_eq!(trend.classification, "falling_pressure");
+            assert!(trend.pressure_delta.is_some_and(|delta| delta < 0.0));
+        }
+
+        handle_telemetry_message(&make_eigenpacket(0.70, 768.0), &state, &db).await;
+        {
+            let s = state.read().await;
+            let trend = s.pressure_trend_v1.as_ref().unwrap();
+            assert_eq!(trend.classification, "telemetry_gap");
+        }
     }
 
     #[tokio::test]

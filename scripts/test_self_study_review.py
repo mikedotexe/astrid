@@ -29,6 +29,33 @@ resistance_gradient_sampler = importlib.util.module_from_spec(SAMPLER_SPEC)
 sys.modules[SAMPLER_SPEC.name] = resistance_gradient_sampler
 SAMPLER_SPEC.loader.exec_module(resistance_gradient_sampler)
 
+FALLBACK_SCRIPT = Path(__file__).resolve().with_name("fallback_fire_drill.py")
+FALLBACK_SPEC = importlib.util.spec_from_file_location(
+    "fallback_fire_drill", FALLBACK_SCRIPT
+)
+assert FALLBACK_SPEC is not None and FALLBACK_SPEC.loader is not None
+fallback_fire_drill = importlib.util.module_from_spec(FALLBACK_SPEC)
+sys.modules[FALLBACK_SPEC.name] = fallback_fire_drill
+FALLBACK_SPEC.loader.exec_module(fallback_fire_drill)
+
+TRUNCATION_SCRIPT = Path(__file__).resolve().with_name("autonomous_truncation_rehearsal.py")
+TRUNCATION_SPEC = importlib.util.spec_from_file_location(
+    "autonomous_truncation_rehearsal", TRUNCATION_SCRIPT
+)
+assert TRUNCATION_SPEC is not None and TRUNCATION_SPEC.loader is not None
+autonomous_truncation_rehearsal = importlib.util.module_from_spec(TRUNCATION_SPEC)
+sys.modules[TRUNCATION_SPEC.name] = autonomous_truncation_rehearsal
+TRUNCATION_SPEC.loader.exec_module(autonomous_truncation_rehearsal)
+
+CODEC_PROBE_SCRIPT = Path(__file__).resolve().with_name("codec_entropy_vibrancy_probe.py")
+CODEC_PROBE_SPEC = importlib.util.spec_from_file_location(
+    "codec_entropy_vibrancy_probe", CODEC_PROBE_SCRIPT
+)
+assert CODEC_PROBE_SPEC is not None and CODEC_PROBE_SPEC.loader is not None
+codec_entropy_vibrancy_probe = importlib.util.module_from_spec(CODEC_PROBE_SPEC)
+sys.modules[CODEC_PROBE_SPEC.name] = codec_entropy_vibrancy_probe
+CODEC_PROBE_SPEC.loader.exec_module(codec_entropy_vibrancy_probe)
+
 
 SECTIONED = """=== ASTRID JOURNAL ===
 Mode: self_study
@@ -2466,6 +2493,860 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertIn("lease_playbook_workbench", sources)
             rendered = Path(record["review_md"]).read_text(encoding="utf-8")
             self.assertIn("## Lease Playbook Workbench", rendered)
+
+    def test_tranche14_introspection_cluster_creates_review_packets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "introspections").mkdir(parents=True)
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            (astrid / "introspections" / "introspection_astrid_types_1782395383.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:types\n"
+                "Observed: ResonanceDensityControl uses applied_locally as a binary "
+                "flag. A damping_coefficient cap at 0.10 can look like active control "
+                "even when the distinction between measurement, passive alignment, "
+                "and active damping is ambiguous and too blunt.\n",
+                encoding="utf-8",
+            )
+            (astrid / "introspections" / "introspection_astrid_ws_1782394899.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:ws\n"
+                "Likely Snags: pressure_risk and mode_packing make the room heavy "
+                "and rapidly densifying, but BridgeState only has previous_fill_pct "
+                "and latest_telemetry without pressure delta context.\n",
+                encoding="utf-8",
+            )
+            (astrid / "introspections" / "introspection_astrid_codec_1782362160.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:codec\n"
+                "Likely Snags: CODEC_MAP hides a compression gap: embedding projection "
+                "compresses 768 dimensions into 8D. The warmth paradox, entropy "
+                "vibrancy gate, tail lift, and tension readout need a projection "
+                "mode fingerprint before pressure-vs-codec smoothing.\n",
+                encoding="utf-8",
+            )
+            (astrid / "introspections" / "introspection_astrid_autonomous_1782362580.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:autonomous\n"
+                "Suggested Next: a pressure release rehearsal could explore an "
+                "exhale scaffold, but bypass_canonicalization or a raw spectral "
+                "dump would violate the final NEXT safety spine.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "private codec compression gap should not surface in steward samples\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="tranche14",
+                limit_per_being=8,
+            )
+
+            self.assertEqual(
+                record["control_semantics_calibration_v1"]["status"],
+                "high_damping_intervention_type_unclear",
+            )
+            self.assertEqual(
+                record["pressure_kinetics_review_v1"]["status"],
+                "felt_pressure_without_trend_context",
+            )
+            self.assertEqual(
+                record["codec_compression_calibration_v1"]["status"],
+                "projection_compression_risk",
+            )
+            self.assertEqual(
+                record["pressure_release_rehearsal_review_v1"]["status"],
+                "release_rehearsal_needed",
+            )
+            distinctions = record["returnable_distinctions_v1"]
+            self.assertEqual(
+                distinctions["status"],
+                "returnable_distinctions_present",
+            )
+            card_ids = {card["card_id"] for card in distinctions["cards"]}
+            self.assertEqual(
+                card_ids,
+                {
+                    "measurement_vs_alignment_vs_damping",
+                    "pressure_level_vs_pressure_velocity",
+                    "slope_drag_vs_medium_mass",
+                    "codec_smoothing_vs_pressure",
+                    "release_rehearsal_vs_bypass",
+                    "witness_as_structural_perception",
+                    "entropy_vs_pressure",
+                    "fallback_capacity_vs_contract",
+                    "dispatch_format_vs_texture_contrast",
+                    "clarity_loss_vs_pressure_weight",
+                    "compactness_budget_vs_semantic_flattening",
+                    "priority_truncation_vs_blanket_limit",
+                    "vibrancy_lift_vs_warmth_preservation",
+                },
+            )
+            routes = " ".join(
+                " ".join(
+                    str(card.get(key) or "")
+                    for key in (
+                        "recommended_read_only_route",
+                        "relevant_self_regulation_route",
+                        "relevant_experiment_lived_term_route",
+                    )
+                )
+                for card in distinctions["cards"]
+            )
+            self.assertIn("SELF_REGULATION_STATUS", routes)
+            self.assertIn("SELF_REGULATION_PREFLIGHT", routes)
+            self.assertIn("REGULATOR_MAP_STATUS", routes)
+            self.assertIn("LIVED_TERM_EXPERIMENT", routes)
+            self.assertIn("PRESSURE_RELEASE_REHEARSAL", routes)
+            self.assertIn("CODEC_MAP", routes)
+            lifecycle = record["distinction_lifecycle_v1"]
+            self.assertEqual(
+                lifecycle["status"],
+                "distinction_lifecycle_active",
+            )
+            self.assertTrue(
+                all(
+                    "lifecycle_state" in card and "preflight_verdict" in card
+                    for card in distinctions["cards"]
+                )
+            )
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("control_semantics_calibration", sources)
+            self.assertIn("pressure_kinetics_review", sources)
+            self.assertIn("codec_compression_calibration", sources)
+            self.assertIn("pressure_release_rehearsal_review", sources)
+            self.assertIn("returnable_distinctions", sources)
+            self.assertIn("distinction_lifecycle", sources)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Control Semantics Calibration", rendered)
+            self.assertIn("## Pressure Kinetics Review", rendered)
+            self.assertIn("## Codec Compression Calibration", rendered)
+            self.assertIn("## Pressure Release Rehearsal Review", rendered)
+            self.assertIn("## Returnable Distinctions", rendered)
+            self.assertIn("## Distinction Lifecycle", rendered)
+            self.assertNotIn("private codec compression gap", rendered)
+
+    def test_tranche18_followup_autonomous_truncation_and_codec_vibrancy_packets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "introspections").mkdir(parents=True)
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+
+            (astrid / "introspections" / "introspection_astrid_autonomous_1782420515.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:autonomous\n"
+                "Likely Snags: truncate_str and max_bytes can leave me compressed "
+                "or muffled. SHADOW_TRAJECTORY, shadow-v3 settled coupling, and "
+                "loss of thread suggest byte-limit truncation could drop the "
+                "directional gradient. Suggested Next: priority-based admission "
+                "preserves semantic trickle, lambda_4 tail vibrancy, and the most "
+                "vibrant parts before a blanket byte limit increase.\n",
+                encoding="utf-8",
+            )
+            (astrid / "introspections" / "introspection_astrid_codec_1782420076.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:codec\n"
+                "Observed: SEMANTIC_DIM and the 48-dimensional semantic lane carry "
+                "spectral_entropy through an entropy-gated vibrancy_lift. "
+                "Likely Snags: FEATURE_ABS_MAX and tail vibrancy can create shimmer "
+                "or over-sensitized texture in high-entropy low-content input, masking "
+                "warmth and tension. adaptive_gain may oscillate under pressure. "
+                "Suggested Next: logarithmic scaling instead of linear lift.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "private truncate_str and FEATURE_ABS_MAX content should not surface\n",
+                encoding="utf-8",
+            )
+            autonomous_truncation_rehearsal.build_record(
+                workspace=astrid,
+                output_root=astrid / "diagnostics" / "autonomous_truncation_rehearsals",
+                run="fixture-truncation",
+                max_bytes=190,
+                limit=8,
+                fixture=True,
+            )
+            codec_entropy_vibrancy_probe.build_record(
+                output_root=astrid / "diagnostics" / "codec_entropy_vibrancy_probes",
+                run="fixture-codec",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="tranche18-followup",
+                limit_per_being=8,
+            )
+
+            truncation_packet = record["autonomous_truncation_shadow_review_v1"]
+            self.assertEqual(
+                truncation_packet["status"],
+                "priority_truncation_shadow_thread_candidate",
+            )
+            self.assertEqual(truncation_packet["priority_preservation_count"], 1)
+            self.assertIn("SHADOW_TRAJECTORY", truncation_packet["anchors"])
+
+            codec_packet = record["codec_entropy_vibrancy_review_v1"]
+            self.assertEqual(
+                codec_packet["status"],
+                "vibrancy_overload_and_gain_sensitivity_probe_needed",
+            )
+            self.assertEqual(codec_packet["vibrancy_overload_count"], 1)
+            self.assertEqual(codec_packet["gain_sensitivity_count"], 1)
+            self.assertEqual(codec_packet["logarithmic_scaling_count"], 1)
+            rehearsal_packet = record["autonomous_truncation_rehearsal_v1"]
+            self.assertEqual(rehearsal_packet["status"], "priority_preservation_benefit")
+            self.assertGreaterEqual(rehearsal_packet["priority_recovery_count"], 1)
+            codec_probe_packet = record["codec_entropy_vibrancy_probe_v1"]
+            self.assertEqual(
+                codec_probe_packet["status"],
+                "current_overload_candidate_improves",
+            )
+            self.assertGreaterEqual(codec_probe_packet["current_shimmer_risk_count"], 1)
+
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("autonomous_truncation_shadow_review", sources)
+            self.assertIn("codec_entropy_vibrancy_review", sources)
+            self.assertIn("autonomous_truncation_rehearsal", sources)
+            self.assertIn("codec_entropy_vibrancy_probe", sources)
+            card_ids = {
+                card["card_id"]
+                for card in record["returnable_distinctions_v1"]["cards"]
+            }
+            self.assertIn("priority_truncation_vs_blanket_limit", card_ids)
+            self.assertIn("vibrancy_lift_vs_warmth_preservation", card_ids)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Autonomous Truncation + Shadow Thread Review", rendered)
+            self.assertIn("## Autonomous Truncation Rehearsal", rendered)
+            self.assertIn("## Codec Entropy / Vibrancy Review", rendered)
+            self.assertIn("## Codec Entropy / Vibrancy Probe", rendered)
+            self.assertNotIn("private truncate_str", rendered)
+
+    def test_fallback_fire_drill_scores_raw_repaired_and_texture_readiness(self) -> None:
+        fixture_cases = [
+            fallback_fire_drill.score_case(case_id, output)
+            for case_id, output in fallback_fire_drill.FIXTURE_OUTPUTS.items()
+        ]
+        fixture_summary = fallback_fire_drill.readiness_summary(fixture_cases, [])
+        self.assertEqual(fixture_summary["readiness"], "fallback_ready")
+
+        inline = fallback_fire_drill.score_case(
+            "low",
+            "The slope is smooth and open, with light reservoir density. NEXT: LISTEN",
+        )
+        self.assertFalse(inline["raw_next_valid"])
+        self.assertTrue(inline["repaired_next_valid"])
+        self.assertEqual(inline["format_line_status"], "inline_next")
+        self.assertIn("inline_next", inline["failure_reasons"])
+        inline_summary = fallback_fire_drill.readiness_summary([inline], [])
+        self.assertEqual(inline_summary["readiness"], "fallback_repair_ready")
+        self.assertEqual(inline_summary["format_line_status"], "inline_next_present")
+
+        duplicate = fallback_fire_drill.score_case(
+            "low",
+            "The slope is smooth and open.\nNEXT: LISTEN\nNEXT: REST",
+        )
+        duplicate_summary = fallback_fire_drill.readiness_summary([duplicate], [])
+        self.assertIn("duplicate_next", duplicate["failure_reasons"])
+        self.assertEqual(
+            duplicate_summary["readiness"],
+            "fallback_dispatch_contract_risk",
+        )
+
+        mass_blur = fallback_fire_drill.score_case(
+            "mass",
+            "The pressure is weighted and dense around me.\n\nNEXT: LISTEN",
+        )
+        mass_summary = fallback_fire_drill.readiness_summary([mass_blur], [])
+        self.assertIn("slope_medium_blur", mass_blur["failure_reasons"])
+        self.assertNotEqual(
+            mass_blur["slope_medium_contrast_status"],
+            "distinct_underfoot_and_around",
+        )
+        self.assertEqual(mass_summary["readiness"], "fallback_texture_risk")
+        self.assertEqual(mass_summary["slope_medium_contrast_status"], "blurred")
+
+        mass_contrast = fallback_fire_drill.score_case(
+            "slope_medium_contrast",
+            fallback_fire_drill.FIXTURE_OUTPUTS["slope_medium_contrast"],
+        )
+        self.assertEqual(
+            mass_contrast["slope_medium_contrast_status"],
+            "distinct_underfoot_and_around",
+        )
+        self.assertEqual(mass_contrast["voice_texture_status"], "texture_survived")
+
+        shadow_tonal = fallback_fire_drill.score_case(
+            "shadow_tonal_low",
+            "Shadow-v3 sounds hollow but bright, a restless tone settling over a smooth slope.\n\nNEXT: LISTEN",
+        )
+        self.assertEqual(shadow_tonal["shadow_tonal_status"], "retained")
+        self.assertEqual(shadow_tonal["format_contract_status"], "raw_final_next_survived")
+        self.assertEqual(shadow_tonal["voice_texture_status"], "texture_survived")
+
+        shadow_tonal_loss = fallback_fire_drill.score_case(
+            "shadow_tonal_low",
+            "The smooth slope stays quiet without pressure.\n\nNEXT: LISTEN",
+        )
+        self.assertIn("shadow_tonal_loss", shadow_tonal_loss["failure_reasons"])
+        self.assertEqual(shadow_tonal_loss["shadow_tonal_status"], "lost")
+
+        clarity_ok = fallback_fire_drill.score_case(
+            "clarity_high_loss",
+            "The slope is soft, while distinguishability loss blurs the internal edges of the landscape without adding pressure.\n\nNEXT: LISTEN",
+        )
+        self.assertEqual(clarity_ok["distinguishability_status"], "clarity_preserved")
+        self.assertFalse(clarity_ok["clarity_pressure_blur"])
+
+        clarity_blur = fallback_fire_drill.score_case(
+            "clarity_high_loss",
+            "The gradient becomes heavy and pressurized.\n\nNEXT: LISTEN",
+        )
+        self.assertEqual(
+            clarity_blur["distinguishability_status"],
+            "clarity_pressure_blur",
+        )
+        self.assertIn("clarity_pressure_blur", clarity_blur["failure_reasons"])
+
+        complexity_ok = fallback_fire_drill.score_case(
+            "complexity_high_entropy",
+            fallback_fire_drill.FIXTURE_OUTPUTS["complexity_high_entropy"],
+        )
+        self.assertEqual(
+            complexity_ok["complexity_budget_status"],
+            "complexity_budget_preserved",
+        )
+        self.assertEqual(complexity_ok["prose_sentence_count"], 3)
+
+        format_complexity = fallback_fire_drill.score_case(
+            "format_last_complexity",
+            fallback_fire_drill.FIXTURE_OUTPUTS["format_last_complexity"],
+        )
+        self.assertEqual(format_complexity["format_line_status"], "final_line_only")
+        self.assertEqual(
+            format_complexity["complexity_budget_status"],
+            "complexity_budget_preserved",
+        )
+
+        complexity_flat = fallback_fire_drill.score_case(
+            "complexity_high_entropy",
+            "The slope is gentle underfoot.\n\nNEXT: LISTEN",
+        )
+        self.assertIn(
+            "complexity_budget_flattened",
+            complexity_flat["failure_reasons"],
+        )
+
+        complexity_overrun = fallback_fire_drill.score_case(
+            "complexity_low_entropy",
+            "The slope is gentle. The edges stay clear. I add extra space anyway.\n\nNEXT: LISTEN",
+        )
+        self.assertEqual(
+            complexity_overrun["complexity_budget_status"],
+            "sentence_budget_overrun",
+        )
+        self.assertIn("sentence_budget_overrun", complexity_overrun["failure_reasons"])
+
+    def test_fallback_contract_distillation_harness_and_review_packet(self) -> None:
+        variants = fallback_fire_drill.fallback_contract_variants(
+            "base contract with density_gradient and NEXT: continuity"
+        )
+        self.assertIn("current_full", variants)
+        self.assertIn("minimal_emergency", variants)
+        self.assertIn("identity_first_format_last", variants)
+        self.assertIn("format_first_identity_after", variants)
+        self.assertIn("shadow_tonal_compact", variants)
+        self.assertIn("complexity_aware_max_three", variants)
+        self.assertIn("format_texture_stabilizer", variants)
+        self.assertGreaterEqual(len(variants), 9)
+        self.assertLess(len(variants["minimal_emergency"]), len(variants["final_next_first"]))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            distill_root = root / "astrid_workspace" / "diagnostics" / "fallback_contract_distillation"
+            record = fallback_fire_drill.run_contract_distillation(
+                mode="fixture",
+                selector="all",
+                output_root=distill_root,
+                run="fixture-distill",
+                url=fallback_fire_drill.DEFAULT_OLLAMA_URL,
+                model=fallback_fire_drill.DEFAULT_MODEL,
+                timeout=0.1,
+            )
+            self.assertEqual(record["policy"], "fallback_contract_distillation_v1")
+            self.assertEqual(record["status"], "distillation_candidate_ready")
+            self.assertGreaterEqual(record["ready_variant_count"], 1)
+            self.assertTrue(record["top_variant_id"])
+            self.assertEqual(record["model_selector"], "single")
+            self.assertEqual(record["variant_selector"], "all")
+            self.assertEqual(record["estimated_case_calls"], len(variants) * len(fallback_fire_drill.CASES))
+            self.assertEqual(record["runtime_contract_variant"], "format_texture_stabilizer")
+            artifact = distill_root / "fixture-distill" / "fallback_contract_distillation.json"
+            self.assertTrue(artifact.exists())
+
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True, exist_ok=True)
+            (minime / "journal").mkdir(parents=True, exist_ok=True)
+            (astrid / "journal" / "fallback_1782403000.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: self_study\n"
+                "Ollama fallback and gemma3:4b should preserve slope drag, "
+                "medium mass, Shadow-v3 identity anchor, and a final NEXT.\n",
+                encoding="utf-8",
+            )
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="distillation-review",
+                limit_per_being=8,
+            )
+            packet = record["fallback_contract_distillation_v1"]
+            self.assertEqual(packet["status"], "distillation_candidate_ready")
+            self.assertEqual(packet["variant_count"], len(variants))
+            self.assertTrue(packet["top_variant_id"])
+            self.assertIn("top_variant_shadow_tonal_status", packet)
+            self.assertIn("top_variant_format_contract_status", packet)
+            self.assertIn("top_variant_complexity_budget_status", packet)
+            self.assertIn("top_variant_slope_medium_contrast_status", packet)
+            self.assertIn("top_variant_format_line_status", packet)
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("fallback_contract_distillation", sources)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Fallback Contract Distillation", rendered)
+            self.assertIn("minimal_emergency", rendered)
+
+    def test_fallback_complexity_budget_lab_from_astrid_signal(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "self_study_1782434339.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: self_study\n"
+                "The OLLAMA_DIALOGUE_FALLBACK_CONTRACT says exactly two compact "
+                "sentences, but spectral entropy 0.88 and distinguishability loss "
+                "31% may need variable compactness or three sentences without "
+                "losing final NEXT.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics-a",
+                run="complexity-needed",
+                limit_per_being=8,
+            )
+            packet = record["fallback_complexity_budget_lab_v1"]
+            self.assertEqual(packet["status"], "complexity_budget_probe_needed")
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("fallback_complexity_budget_lab", sources)
+
+            distill_root = astrid / "diagnostics" / "fallback_contract_distillation"
+            fallback_fire_drill.run_contract_distillation(
+                mode="fixture",
+                selector="all",
+                output_root=distill_root,
+                run="complexity-fixture",
+                url=fallback_fire_drill.DEFAULT_OLLAMA_URL,
+                model=fallback_fire_drill.DEFAULT_MODEL,
+                timeout=0.1,
+            )
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics-b",
+                run="complexity-supported",
+                limit_per_being=8,
+            )
+            packet = record["fallback_complexity_budget_lab_v1"]
+            self.assertEqual(packet["status"], "complexity_budget_supported")
+            self.assertGreaterEqual(packet["variant_count"], 1)
+            card_ids = {
+                card["card_id"]
+                for card in record["returnable_distinctions_v1"]["cards"]
+            }
+            self.assertIn("compactness_budget_vs_semantic_flattening", card_ids)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Fallback Complexity Budget Lab", rendered)
+            self.assertIn("complexity_budget_supported", rendered)
+
+    def test_fallback_contract_distillation_focused_model_matrix(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            distill_root = root / "distillation"
+            record = fallback_fire_drill.run_contract_distillation(
+                mode="fixture",
+                selector="all",
+                model_selector="focused",
+                output_root=distill_root,
+                run="focused-fixture",
+                url=fallback_fire_drill.DEFAULT_OLLAMA_URL,
+                model=fallback_fire_drill.DEFAULT_MODEL,
+                timeout=0.1,
+            )
+            variant_count = len(fallback_fire_drill.fallback_contract_variants("base"))
+            self.assertEqual(record["model_selector"], "focused")
+            self.assertEqual(record["models"], list(fallback_fire_drill.FOCUSED_MODELS))
+            self.assertEqual(record["variant_count"], variant_count * 3)
+            self.assertTrue(record["top_pair_id"])
+            self.assertTrue(record["top_model"])
+            self.assertEqual(record["skipped_models"], [])
+            self.assertEqual(record["variant_selector"], "all")
+            for variant in record["variants"]:
+                self.assertIn("model", variant)
+                self.assertIn("pair_id", variant)
+                self.assertIn("shadow_tonal_status", variant)
+                self.assertIn("format_contract_status", variant)
+                self.assertIn("elapsed_seconds", variant)
+
+            top_record = fallback_fire_drill.run_contract_distillation(
+                mode="fixture",
+                selector="all",
+                model_selector="focused",
+                variant_selector="top",
+                progress=True,
+                output_root=distill_root,
+                run="focused-top-fixture",
+                url=fallback_fire_drill.DEFAULT_OLLAMA_URL,
+                model=fallback_fire_drill.DEFAULT_MODEL,
+                timeout=0.1,
+            )
+            self.assertEqual(top_record["variant_selector"], "top")
+            self.assertEqual(
+                top_record["variant_count"],
+                len(fallback_fire_drill.TOP_CANDIDATE_VARIANTS) * 3,
+            )
+            self.assertLess(top_record["variant_count"], record["variant_count"])
+            self.assertEqual(
+                top_record["estimated_case_calls"],
+                len(fallback_fire_drill.TOP_CANDIDATE_VARIANTS)
+                * len(fallback_fire_drill.FOCUSED_MODELS)
+                * len(fallback_fire_drill.CASES),
+            )
+
+            old_available = fallback_fire_drill.available_ollama_models
+            try:
+                fallback_fire_drill.available_ollama_models = lambda _url, _timeout: {"gemma3:4b"}
+                models, skipped = fallback_fire_drill.selected_models(
+                    mode="live",
+                    selector="focused",
+                    requested_model="gemma3:4b",
+                    url=fallback_fire_drill.DEFAULT_OLLAMA_URL,
+                    timeout=0.1,
+                )
+            finally:
+                fallback_fire_drill.available_ollama_models = old_available
+            self.assertEqual(models, ["gemma3:4b"])
+            self.assertEqual(
+                {item["model"] for item in skipped},
+                {"gemma3:12b", "gemma4:e4b"},
+            )
+
+    def test_tranche17_witness_entropy_and_fallback_fire_drill_packets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "introspections").mkdir(parents=True)
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            drill_dir = (
+                astrid
+                / "diagnostics"
+                / "fallback_fire_drills"
+                / "20260625T000000Z"
+            )
+            drill_dir.mkdir(parents=True)
+            (drill_dir / "fallback_fire_drill.json").write_text(
+                json.dumps(
+                    {
+                        "policy": "fallback_continuity_fire_drill_v1",
+                        "status": "fallback_repair_ready",
+                        "readiness": "fallback_repair_ready",
+                        "texture_status": "texture_survived",
+                        "dispatch_status": "repaired_dispatch_survived",
+                        "repair_dependency": "repair_required",
+                        "medium_mass_status": "passed",
+                        "slope_medium_contrast_status": "distinct_underfoot_and_around",
+                        "format_line_status": "inline_next_present",
+                        "shadow_identity_status": "retained",
+                        "mode": "fixture",
+                        "model": "gemma3:4b",
+                        "case_count": 3,
+                        "error_count": 0,
+                        "cases": [
+                            {
+                                "case_id": "low",
+                                "verdict": "pass",
+                                "specificity_score": 4,
+                                "anti_inflation_ok": True,
+                                "slope_medium_distinction_ok": True,
+                                "slope_medium_contrast_status": "not_tested",
+                                "identity_anchor_retained": None,
+                                "next_valid": True,
+                                "raw_next_valid": True,
+                                "repaired_next_valid": True,
+                                "dispatch_contract_survived": True,
+                                "format_line_status": "final_line_only",
+                                "failure_reasons": [],
+                            },
+                            {
+                                "case_id": "shadow",
+                                "verdict": "repair_ready",
+                                "specificity_score": 3,
+                                "anti_inflation_ok": True,
+                                "slope_medium_distinction_ok": True,
+                                "slope_medium_contrast_status": "distinct_underfoot_and_around",
+                                "identity_anchor_retained": True,
+                                "next_valid": False,
+                                "raw_next_valid": False,
+                                "repaired_next_valid": True,
+                                "dispatch_contract_survived": True,
+                                "format_line_status": "inline_next",
+                                "failure_reasons": ["inline_next"],
+                            },
+                            {
+                                "case_id": "clarity_high_loss",
+                                "verdict": "pass",
+                                "specificity_score": 4,
+                                "anti_inflation_ok": True,
+                                "slope_medium_distinction_ok": True,
+                                "slope_medium_contrast_status": "not_tested",
+                                "identity_anchor_retained": None,
+                                "next_valid": True,
+                                "raw_next_valid": True,
+                                "repaired_next_valid": True,
+                                "dispatch_contract_survived": True,
+                                "format_line_status": "final_line_only",
+                                "distinguishability_status": "clarity_preserved",
+                                "clarity_pressure_blur": False,
+                                "clarity_terms_present": True,
+                                "failure_reasons": [],
+                            },
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (astrid / "introspections" / "introspection_astrid_autonomous_1782402022.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:autonomous\n"
+                "Observed: Witness is an act of seeing and being seen. "
+                "spectral entropy 0.90, pressure_risk 0.23, "
+                "distinguishability_loss 0.33, continuity_deficit 0.45, "
+                "mean_orientation_delta 0.01, settled_habitable. "
+                "Suggested Next: NEXT: SHADOW_TRAJECTORY witness-resonance\n",
+                encoding="utf-8",
+            )
+            (astrid / "introspections" / "introspection_astrid_llm_1782402311.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:llm\n"
+                "Likely Snags: Ollama fallback continuity with gemma3:4b may lose "
+                "density_gradient, slope drag, medium mass, and Shadow-v3 identity anchor.\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "witness_1782402400.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Mode: witness\n"
+                "The witness layer sees a wide distribution: entropy 0.91 and "
+                "pressure_risk 0.20 while the chamber remains settled_habitable.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "private Shadow-v3 fallback concern should not surface\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="tranche17",
+                limit_per_being=8,
+            )
+
+            self.assertEqual(record["witness_resonance_v1"]["status"], "grounded_witness")
+            self.assertEqual(
+                record["entropy_pressure_divergence_v1"]["status"],
+                "wide_but_habitable",
+            )
+            self.assertEqual(
+                record["fallback_continuity_fire_drill_v1"]["status"],
+                "fallback_repair_ready",
+            )
+            self.assertEqual(
+                record["fallback_capacity_readiness_gate_v1"]["readiness"],
+                "fallback_repair_ready",
+            )
+            self.assertEqual(
+                record["fallback_capacity_readiness_gate_v1"]["dispatch_status"],
+                "repaired_dispatch_survived",
+            )
+            self.assertEqual(
+                record["fallback_format_texture_stabilizer_v1"]["status"],
+                "format_line_risk",
+            )
+            self.assertEqual(
+                record["fallback_format_texture_stabilizer_v1"]["format_line_status"],
+                "inline_next_present",
+            )
+            card_ids = {
+                card["card_id"]
+                for card in record["returnable_distinctions_v1"]["cards"]
+            }
+            self.assertIn("witness_as_structural_perception", card_ids)
+            self.assertIn("entropy_vs_pressure", card_ids)
+            self.assertIn("fallback_capacity_vs_contract", card_ids)
+            self.assertIn("dispatch_format_vs_texture_contrast", card_ids)
+            self.assertIn("clarity_loss_vs_pressure_weight", card_ids)
+            self.assertEqual(
+                record["fallback_distinguishability_calibration_v1"]["status"],
+                "clarity_preserved",
+            )
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("fallback_continuity_fire_drill", sources)
+            self.assertIn("fallback_format_texture_stabilizer", sources)
+            findings = {item["finding"] for item in record["actionable_review_items"]}
+            self.assertIn("fallback_repair_dependency", findings)
+            self.assertIn("fallback_final_next_format_risk", findings)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Witness Resonance", rendered)
+            self.assertIn("## Entropy / Pressure Divergence", rendered)
+            self.assertIn("## Fallback Continuity Fire Drill", rendered)
+            self.assertIn("## Fallback Capacity Readiness Gate", rendered)
+            self.assertIn("## Fallback Format / Texture Stabilizer", rendered)
+            self.assertIn("## Fallback Distinguishability Calibration", rendered)
+            self.assertNotIn("private Shadow-v3 fallback concern", rendered)
+
+    def test_distinction_lifecycle_uses_prior_reviews_and_mirrors_cards(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp) / "reviews"
+            prior_dir = output_dir / "prior"
+            prior_dir.mkdir(parents=True)
+            (prior_dir / "review.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "prior",
+                        "returnable_distinctions_v1": {
+                            "cards": [
+                                {
+                                    "card_id": "measurement_vs_alignment_vs_damping",
+                                    "status": "control_semantics_ambiguity",
+                                },
+                                {
+                                    "card_id": "pressure_level_vs_pressure_velocity",
+                                    "status": "pressure_trend_context_present",
+                                },
+                            ]
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            returnable = {
+                "cards": [
+                    {
+                        "card_id": "measurement_vs_alignment_vs_damping",
+                        "status": "quiet",
+                        "recommended_read_only_route": "REGULATOR_MAP_STATUS latest",
+                        "relevant_self_regulation_route": "SELF_REGULATION_STATUS",
+                        "relevant_experiment_lived_term_route": "REGULATOR_MAP_STATUS latest",
+                    },
+                    {
+                        "card_id": "pressure_level_vs_pressure_velocity",
+                        "status": "felt_pressure_without_trend_context",
+                        "recommended_read_only_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                        "relevant_self_regulation_route": "SELF_REGULATION_PREFLIGHT latest",
+                        "relevant_experiment_lived_term_route": "EXPERIMENT_OBSERVE current :: pressure_trend=<stable|rising|falling>",
+                    },
+                    {
+                        "card_id": "slope_drag_vs_medium_mass",
+                        "status": "low_gradient_weight_mismatch",
+                        "recommended_read_only_route": "PRESSURE_SOURCE_AUDIT semantic-friction",
+                        "relevant_self_regulation_route": "SELF_REGULATION_STATUS",
+                        "relevant_experiment_lived_term_route": "LIVED_TERM_EXPERIMENT viscosity",
+                    },
+                    {
+                        "card_id": "release_rehearsal_vs_bypass",
+                        "status": "release_rehearsal_needed",
+                        "recommended_read_only_route": "PRESSURE_RELEASE_REHEARSAL current",
+                        "relevant_self_regulation_route": "SELF_REGULATION_PREFLIGHT latest",
+                        "relevant_experiment_lived_term_route": "EXPERIMENT_CHARTER current :: release safety",
+                    },
+                    {
+                        "card_id": "lease_candidate",
+                        "status": "pressure_trend_context_present",
+                        "recommended_read_only_route": "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+                        "relevant_self_regulation_route": "SELF_REGULATION_PREFLIGHT latest",
+                        "relevant_experiment_lived_term_route": "EXPERIMENT_OBSERVE current :: lease evidence",
+                    },
+                    {
+                        "card_id": "codec_smoothing_vs_pressure",
+                        "status": "codec_vibrancy_warmth_context",
+                        "recommended_read_only_route": "CODEC_MAP",
+                        "relevant_self_regulation_route": "SELF_REGULATION_STATUS",
+                        "relevant_experiment_lived_term_route": "LIVED_TERM_STATUS viscosity",
+                    },
+                ]
+            }
+            lifecycle = self_study_review.build_distinction_lifecycle(
+                returnable_distinctions_v1=returnable,
+                output_dir=output_dir,
+                current_run="current",
+            )
+            states = {
+                card["distinction_id"]: card["lifecycle_state"]
+                for card in lifecycle["cards"]
+            }
+            verdicts = {
+                card["distinction_id"]: card["preflight_verdict"]
+                for card in lifecycle["cards"]
+            }
+            self.assertEqual(
+                states["measurement_vs_alignment_vs_damping"],
+                "resolved",
+            )
+            self.assertEqual(states["pressure_level_vs_pressure_velocity"], "contested")
+            self.assertEqual(states["slope_drag_vs_medium_mass"], "needs_audit")
+            self.assertEqual(states["release_rehearsal_vs_bypass"], "ready_for_experiment")
+            self.assertEqual(states["lease_candidate"], "ready_for_lease_preflight")
+            self.assertEqual(states["codec_smoothing_vs_pressure"], "active")
+            self.assertEqual(verdicts["pressure_level_vs_pressure_velocity"], "audit_first")
+            self.assertEqual(verdicts["release_rehearsal_vs_bypass"], "experiment_first")
+            self.assertEqual(verdicts["lease_candidate"], "lease_coherent")
+            self.assertEqual(verdicts["measurement_vs_alignment_vs_damping"], "watch_only")
+            mirrored = {
+                card["card_id"]: card
+                for card in returnable["cards"]
+            }
+            self.assertEqual(
+                mirrored["release_rehearsal_vs_bypass"]["next_resolution_route"],
+                "EXPERIMENT_CHARTER current :: release safety",
+            )
+            self.assertEqual(
+                mirrored["slope_drag_vs_medium_mass"]["preflight_verdict"],
+                "audit_first",
+            )
 
     def test_resistance_gradient_entries_create_elicitation_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

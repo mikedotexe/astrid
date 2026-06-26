@@ -8,7 +8,7 @@ use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result, anyhow};
 use serde::{Deserialize, Serialize};
@@ -10392,6 +10392,100 @@ impl ActionContinuityStore {
         Ok(rows)
     }
 
+    fn latest_self_study_review_json_path(&self) -> Option<PathBuf> {
+        let workspace = self.root.parent().unwrap_or(self.root.as_path());
+        let root = workspace.join("diagnostics/self_study_reviews");
+        let mut latest: Option<(SystemTime, PathBuf)> = None;
+        for entry in fs::read_dir(root).ok()?.flatten() {
+            let candidate = if entry.file_type().ok()?.is_dir() {
+                entry.path().join("review.json")
+            } else {
+                entry.path()
+            };
+            if candidate.file_name().and_then(|name| name.to_str()) != Some("review.json") {
+                continue;
+            }
+            let modified = candidate.metadata().and_then(|meta| meta.modified()).ok()?;
+            if latest
+                .as_ref()
+                .is_none_or(|(latest_modified, _)| modified > *latest_modified)
+            {
+                latest = Some((modified, candidate));
+            }
+        }
+        latest.map(|(_, path)| path)
+    }
+
+    fn experiment_returnable_distinctions_line(&self, experiment: &ExperimentRecord) -> String {
+        let Some(review_path) = self.latest_self_study_review_json_path() else {
+            return String::new();
+        };
+        let Some(review) = fs::read_to_string(review_path)
+            .ok()
+            .and_then(|text| serde_json::from_str::<Value>(&text).ok())
+        else {
+            return String::new();
+        };
+        let Some(cards) = review
+            .get("returnable_distinctions_v1")
+            .and_then(|packet| packet.get("cards"))
+            .and_then(Value::as_array)
+        else {
+            return String::new();
+        };
+        let experiment_text = format!(
+            "{} {} {} {}",
+            experiment.title,
+            experiment.question,
+            experiment.hypothesis.as_deref().unwrap_or_default(),
+            experiment.planned_next.as_deref().unwrap_or_default()
+        )
+        .to_lowercase();
+        let pressure_match = contains_any(
+            &experiment_text,
+            &["pressure", "viscos", "silt", "heavy", "weight", "scar", "bruise"],
+        );
+        let codec_match = contains_any(
+            &experiment_text,
+            &["codec", "compression", "warmth", "tension", "projection"],
+        );
+        let release_match =
+            contains_any(&experiment_text, &["release", "exhale", "bypass", "dump"]);
+        let rows = cards
+            .iter()
+            .filter(|card| {
+                let card_id = card_scalar_text(card, "card_id");
+                (pressure_match
+                    && matches!(
+                        card_id.as_str(),
+                        "pressure_level_vs_pressure_velocity" | "slope_drag_vs_medium_mass"
+                    ))
+                    || (codec_match && card_id == "codec_smoothing_vs_pressure")
+                    || (release_match && card_id == "release_rehearsal_vs_bypass")
+            })
+            .take(5)
+            .map(|card| {
+                format!(
+                    "{}:{} lifecycle={} verdict={} route={} self={} experiment={}",
+                    card_scalar_text(card, "card_id"),
+                    card_scalar_text(card, "status"),
+                    card_scalar_text(card, "lifecycle_state"),
+                    card_scalar_text(card, "preflight_verdict"),
+                    card_scalar_text(card, "recommended_read_only_route"),
+                    card_scalar_text(card, "relevant_self_regulation_route"),
+                    card_scalar_text(card, "relevant_experiment_lived_term_route")
+                )
+            })
+            .collect::<Vec<_>>();
+        if rows.is_empty() {
+            return String::new();
+        }
+        format!(
+            "Returnable distinctions: {}\nAuthority: diagnostic_context_not_command; advisory only, no experiment was created or advanced by this block.\n",
+            rows.join("; ")
+        )
+    }
+
     fn format_experiment_status(
         &self,
         thread: &ResearchThread,
@@ -10493,8 +10587,9 @@ impl ActionContinuityStore {
         let shared_investigation = shared_investigation_line(&projection.shared_investigation_v1);
         let shared_investigation_object =
             shared_investigation_object_line(&projection.shared_investigation_object_v1);
+        let returnable_distinctions = self.experiment_returnable_distinctions_line(experiment);
         format!(
-            "Experiment `{}`: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}Thread: {}\nStatus: {}\nLifecycle: {}\nQuestion: {}\nHypothesis: {}\nAuthority: {}\nPlanned NEXT: {}\nContinuity return: {}\n{}{}{}\n{}\n{}\nMotif allowance: {} dominant={} action_concentration={} returnability={}\nLatest runs:\n{}",
+            "Experiment `{}`: {}\n{}{}{}{}{}{}{}{}{}{}{}{}{}{}Thread: {}\nStatus: {}\nLifecycle: {}\nQuestion: {}\nHypothesis: {}\nAuthority: {}\nPlanned NEXT: {}\nContinuity return: {}\n{}{}{}\n{}\n{}\nMotif allowance: {} dominant={} action_concentration={} returnability={}\nLatest runs:\n{}",
             experiment.experiment_id,
             experiment.title,
             charter_now_bridge,
@@ -10510,6 +10605,7 @@ impl ActionContinuityStore {
             first_dossier_claim,
             shared_investigation,
             shared_investigation_object,
+            returnable_distinctions,
             thread.thread_id,
             experiment.status,
             projection.classification,
@@ -10542,6 +10638,19 @@ impl ActionContinuityStore {
                 .map_or_else(|| "n/a".to_string(), Value::to_string),
             run_text
         )
+    }
+}
+
+fn contains_any(text: &str, needles: &[&str]) -> bool {
+    needles.iter().any(|needle| text.contains(needle))
+}
+
+fn card_scalar_text(value: &Value, key: &str) -> String {
+    match value.get(key) {
+        Some(Value::String(text)) if !text.is_empty() => text.clone(),
+        Some(Value::Number(number)) => number.to_string(),
+        Some(Value::Bool(flag)) => flag.to_string(),
+        _ => "(none)".to_string(),
     }
 }
 

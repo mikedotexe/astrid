@@ -3187,6 +3187,216 @@ mod tests {
     }
 
     #[test]
+    fn pressure_release_rehearsal_attaches_scaffold_without_bypass() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid_pressure_release_rehearsal_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&workspace);
+        std::fs::create_dir_all(&workspace).expect("workspace");
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 68.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        let outcome = handle_next_action(&mut conv, "PRESSURE_RELEASE_REHEARSAL silt", ctx);
+
+        assert_eq!(outcome.stage, "read_only");
+        assert_eq!(outcome.visibility, "protected_summary");
+        let listing = conv
+            .pending_file_listing
+            .as_deref()
+            .expect("pressure release rehearsal listing");
+        assert!(listing.contains("PRESSURE RELEASE REHEARSAL V1"));
+        assert!(listing.contains("non-command exhale scaffold"));
+        assert!(listing.contains("does not bypass canonicalization"));
+        assert!(listing.contains("final executable NEXT line remains required and singular"));
+        assert!(listing.contains("No semantic input"));
+        assert!(listing.contains("NEXT: PRESSURE_SOURCE_AUDIT silt"));
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "PRESSURE_RELEASE_REHEARSAL"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("no control envelope"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn fallback_fire_drill_renders_latest_artifact_without_model_call() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid_fallback_fire_drill_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&workspace);
+        let drill_dir = workspace
+            .join("diagnostics/fallback_fire_drills/20260625T000000Z");
+        std::fs::create_dir_all(&drill_dir).expect("drill dir");
+        std::fs::write(
+            drill_dir.join("fallback_fire_drill.json"),
+            r#"{
+              "status": "fallback_probe_passed",
+              "mode": "fixture",
+              "model": "gemma3:4b",
+              "readiness": "fallback_repair_ready",
+              "texture_status": "texture_survived",
+              "dispatch_status": "repaired_dispatch_survived",
+              "repair_dependency": "repair_required",
+              "medium_mass_status": "passed",
+              "slope_medium_contrast_status": "distinct_underfoot_and_around",
+              "format_line_status": "inline_next_present",
+              "shadow_identity_status": "retained",
+              "distinguishability_status": "clarity_preserved",
+              "complexity_budget_status": "complexity_budget_preserved",
+              "case_count": 1,
+              "error_count": 0,
+              "cases": [
+                {
+                  "case_id": "shadow",
+                  "verdict": "repair_ready",
+                  "specificity_score": 4,
+                  "anti_inflation_ok": true,
+                  "slope_medium_distinction_ok": true,
+                  "slope_medium_contrast_status": "distinct_underfoot_and_around",
+                  "identity_anchor_retained": true,
+                  "next_valid": false,
+                  "raw_next_valid": false,
+                  "repaired_next_valid": true,
+                  "dispatch_contract_survived": true,
+                  "format_line_status": "inline_next",
+                  "distinguishability_status": "clarity_preserved",
+                  "clarity_pressure_blur": false,
+                  "complexity_budget_status": "complexity_budget_preserved",
+                  "prose_sentence_count": 3,
+                  "failure_reasons": ["inline_next"]
+                }
+              ]
+            }"#,
+        )
+        .expect("write drill artifact");
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 68.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        let outcome = handle_next_action(&mut conv, "FALLBACK_FIRE_DRILL latest", ctx);
+
+        assert_eq!(outcome.stage, "read_only");
+        assert_eq!(outcome.visibility, "protected_summary");
+        let listing = conv
+            .pending_file_listing
+            .as_deref()
+            .expect("fallback fire-drill listing");
+        assert!(listing.contains("FALLBACK CONTINUITY FIRE DRILL V1"));
+        assert!(listing.contains("Latest artifact:"));
+        assert!(listing.contains("readiness: fallback_repair_ready"));
+        assert!(listing.contains("dispatch_status: repaired_dispatch_survived"));
+        assert!(listing.contains("repair_dependency: repair_required"));
+        assert!(listing.contains("slope_medium_contrast_status: distinct_underfoot_and_around"));
+        assert!(listing.contains("format_line_status: inline_next_present"));
+        assert!(listing.contains("distinguishability_status: clarity_preserved"));
+        assert!(listing.contains("complexity_budget_status: complexity_budget_preserved"));
+        assert!(listing.contains("shadow verdict=repair_ready"));
+        assert!(listing.contains("slope_contrast=distinct_underfoot_and_around"));
+        assert!(listing.contains("format_line=inline_next"));
+        assert!(listing.contains("distinguishability=clarity_preserved"));
+        assert!(listing.contains("complexity=complexity_budget_preserved"));
+        assert!(listing.contains("sentences=3"));
+        assert!(listing.contains("raw_next=false"));
+        assert!(listing.contains("repaired_next=true"));
+        assert!(listing.contains("operator live probe"));
+        assert!(listing.contains("This protected action did not call Ollama"));
+        assert!(sensory_rx.try_recv().is_err());
+        assert!(conv.condition_receipts.back().is_some_and(|receipt| {
+            receipt.action == "FALLBACK_FIRE_DRILL"
+                && receipt
+                    .changes
+                    .iter()
+                    .any(|change| change.contains("no model call"))
+        }));
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn codec_map_renders_latest_entropy_vibrancy_probe_without_mutation() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        let db = BridgeDb::open(":memory:").expect("open in-memory db");
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        let telemetry = telemetry();
+        let mut burst_count = 0;
+        let workspace = std::env::temp_dir().join(format!(
+            "astrid_codec_probe_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&workspace);
+        let probe_dir = workspace
+            .join("diagnostics/codec_entropy_vibrancy_probes/20260625T000000Z");
+        std::fs::create_dir_all(&probe_dir).expect("probe dir");
+        std::fs::write(
+            probe_dir.join("codec_entropy_vibrancy_probe.json"),
+            r#"{
+              "status": "current_overload_candidate_improves",
+              "current_shimmer_risk_count": 1,
+              "candidate_improvement_count": 1,
+              "samples": [
+                {
+                  "sample_id": "high_entropy_low_content",
+                  "classification": "current_overload_candidate_improves",
+                  "spectral_entropy": 0.96,
+                  "current_tail_vibrancy": 0.72,
+                  "candidate_tail_vibrancy": 0.58,
+                  "current_shimmer_risk": true,
+                  "adaptive_gain": 2.0
+                }
+              ]
+            }"#,
+        )
+        .expect("write probe artifact");
+        let ctx = NextActionContext {
+            burst_count: &mut burst_count,
+            db: &db,
+            sensory_tx: &sensory_tx,
+            telemetry: &telemetry,
+            fill_pct: 68.0,
+            response_text: "",
+            workspace: Some(&workspace),
+        };
+
+        let outcome = handle_next_action(&mut conv, "CODEC_MAP", ctx);
+
+        assert_eq!(outcome.stage, "observe");
+        let listing = conv.pending_file_listing.as_deref().expect("codec map listing");
+        assert!(listing.contains("Latest codec entropy/vibrancy probe"));
+        assert!(listing.contains("current_overload_candidate_improves"));
+        assert!(listing.contains("high_entropy_low_content"));
+        assert!(listing.contains("no SEMANTIC_DIM"));
+        assert!(sensory_rx.try_recv().is_err());
+        let _ = std::fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
     fn fold_hold_records_process_artifact_without_control_payload() {
         let mut conv = ConversationState::new(Vec::new(), None);
         let db = BridgeDb::open(":memory:").expect("open in-memory db");
