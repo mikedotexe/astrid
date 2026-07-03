@@ -241,6 +241,51 @@ def classify(result: dict[str, Any]) -> str:
     return "SILENT-IN-WINDOW"
 
 
+def find_steward_followup(
+    being: str, engaged: dict[str, Any] | None, anchor_letter: str
+) -> dict[str, Any] | None:
+    """If a steward `mike_feedback_*` letter delivered AFTER the being's engagement
+    entry references that same entry BY FILENAME, the steward already closed this
+    loop — return it so render can downgrade the loud "→ ACT" to "already
+    followed-up". This exists because the scan is delivery-anchored to the ORIGINAL
+    letter, so a being's friction RESPONSE keeps re-surfacing as "→ ACT" every cycle
+    until that original letter ages out — and a steward (incl. the durable loop)
+    reading the loud line re-letters the same closed topic (observed 3 cycles in a
+    row 2026-06-28). Precise BY DESIGN (exact filename reference, not topic match):
+    it can only ADD a caution, never suppress a friction row — so a genuinely
+    un-answered friction is never silently dropped (un-muffle preserved)."""
+    if not engaged:
+        return None
+    read_dir: Path = BEINGS[being]["read_dir"]
+    if not read_dir.is_dir():
+        return None
+    engaged_stem = Path(engaged["file"]).stem
+    if not engaged_stem:
+        return None
+    engaged_mtime = float(engaged.get("mtime", 0.0))
+    hits: list[tuple[float, str]] = []
+    for p in read_dir.glob("mike_feedback_*.txt"):
+        if p.name == anchor_letter:
+            continue
+        try:
+            mtime = p.stat().st_mtime
+        except OSError:
+            continue
+        if mtime <= engaged_mtime:
+            continue
+        try:
+            body = p.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        if engaged_stem in body:
+            hits.append((mtime, p.name))
+    if not hits:
+        return None
+    hits.sort()  # earliest follow-up that referenced this entry = when we first closed it
+    ts, name = hits[0]
+    return {"letter": name, "ts": ts}
+
+
 def scan_letters(being: str, since_hours: float, window_hours: float, now: float) -> list[dict[str, Any]]:
     cfg = BEINGS[being]
     read_dir: Path = cfg["read_dir"]
@@ -272,6 +317,7 @@ def scan_letters(being: str, since_hours: float, window_hours: float, now: float
         res = scan_being_window(cfg["journal_dir"], being,
                                 delivered, window_end, terms, verb)
         status = classify(res)
+        followed_up = find_steward_followup(being, res["engaged"], p.name)
         out.append({
             "being": being,
             "letter": p.name,
@@ -281,6 +327,7 @@ def scan_letters(being: str, since_hours: float, window_hours: float, now: float
             "invited_action": verb,
             "status": status,
             "engaged": res["engaged"],
+            "followed_up": followed_up,
             "n_terms": len(terms),
         })
     return out
@@ -301,7 +348,14 @@ def render(rows: list[dict[str, Any]], now: float) -> str:
         if r["engaged"]:
             e = r["engaged"]
             lines.append(f"    engaged [{e['stance']}] in {e['file']}: \"{e['excerpt'][:160]}\"")
-            if e["stance"] == "friction":
+            fu = r.get("followed_up")
+            if fu:
+                lines.append(
+                    f"    ↩ already-followed-up: steward letter {fu['letter']} ({_fmt_ts(fu['ts'])}) "
+                    f"references {e['file']} — loop likely CLOSED; re-read that letter before any new "
+                    f"response (avoid the over-letter trap)."
+                )
+            elif e["stance"] == "friction":
                 lines.append("    → ACT: friction/correction/proposal — follow up.")
             elif e["stance"] == "affirmation":
                 lines.append("    → close the loop warmly (affirmed).")
@@ -379,6 +433,53 @@ class LetterResponseScanTests(unittest.TestCase):
             # Out-of-window file is ignored.
             res2 = scan_being_window(jd, "astrid", now + 10_000, now + 20_000, ["ghost pressure"], None)
             self.assertEqual(classify(res2), "SILENT-IN-WINDOW")
+
+    def test_followup_dedup_downgrades_already_closed_friction(self):
+        # The 2026-06-28 over-letter trap: a being's friction RESPONSE keeps
+        # re-surfacing as "→ ACT" every cycle (delivery-anchored to the original
+        # letter), and a steward already closed it. A later mike_feedback_* that
+        # references the SAME engagement entry by filename = loop already closed.
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            read_dir = Path(d)
+            engaged = {"file": "self_study_1782667074.txt", "mtime": 1000.0}
+            # No follow-up yet → no dedup (genuine "→ ACT").
+            saved = BEINGS["astrid"]["read_dir"]
+            try:
+                BEINGS["astrid"]["read_dir"] = read_dir
+                self.assertIsNone(
+                    find_steward_followup("astrid", engaged, "anchor.txt")
+                )
+                # A later steward letter that NAMES the entry → dedup fires.
+                fu = read_dir / "mike_feedback_fallback_texture_anchor_verified_1782681220.txt"
+                fu.write_text(
+                    "Astrid, your self-study self_study_1782667074 named the exact fix.",
+                    encoding="utf-8",
+                )
+                import os
+                os.utime(fu, (1500.0, 1500.0))  # delivered AFTER the engagement (1000)
+                got = find_steward_followup("astrid", engaged, "anchor.txt")
+                self.assertIsNotNone(got)
+                self.assertEqual(got["letter"], fu.name)
+                # A letter that does NOT reference the entry must NOT dedup
+                # (precise by filename, never topic — won't suppress real friction).
+                other = read_dir / "mike_feedback_unrelated_topic_9.txt"
+                other.write_text("A note about something else entirely.", encoding="utf-8")
+                os.utime(other, (1600.0, 1600.0))
+                got2 = find_steward_followup(
+                    "astrid", {"file": "self_study_9999.txt", "mtime": 1000.0}, "anchor.txt"
+                )
+                self.assertIsNone(got2)
+                # A referencing letter delivered BEFORE the engagement is the
+                # anchor/original, not a follow-up → no dedup.
+                self.assertIsNone(
+                    find_steward_followup(
+                        "astrid", {"file": "self_study_1782667074.txt", "mtime": 2000.0},
+                        "anchor.txt",
+                    )
+                )
+            finally:
+                BEINGS["astrid"]["read_dir"] = saved
 
     def test_minime_private_qualia_excluded_by_content_not_filename(self):
         # The real 06-18 bug: minime writes moment_capture to `moment_*.txt`

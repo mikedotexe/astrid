@@ -2199,12 +2199,19 @@ fn handle_pressure_relief(
                  Relief contract:\n\
                    - This is protected read-only preflight, not local control.\n\
                    - No mode-packing, PI, semantic-gain, perturbation, or Minime parameter change was applied.\n\
-                   - Pressure-source telemetry is advisory in v1; it can name pressure but cannot prove model-load causality by itself.\n\
-                   - For moderate advisory pressure, inspect or request protected relief before direct tuning; DAMPEN is a semantic-gain change.\n\n\
-                 Safe relief options:\n\
-                   NEXT: REST\n\
-                   NEXT: PACE slow\n\
-                   NEXT: PRESSURE_SOURCE_AUDIT {relief_label}\n\
+	                   - Pressure-source telemetry is advisory in v1; it can name pressure but cannot prove model-load causality by itself.\n\
+	                   - For moderate advisory pressure, inspect or request protected relief before direct tuning; DAMPEN is a semantic-gain change.\n\
+	                   - Pressure Control Cockpit routes relief through bounded SELF_REGULATION leases; explicit APPLY is still required.\n\n\
+	                   - Tail authority ladder may support vibrancy_aperture micro-leases, but tail_participation remains diagnostic/counterfactual only.\n\
+	                   - Active tail leases have a governor: fresh worsening tail/pressure evidence may revert them before expiry.\n\n\
+	                 Safe relief options:\n\
+	                   NEXT: REST\n\
+	                   NEXT: PACE slow\n\
+	                   NEXT: PRESSURE_SOURCE_AUDIT {relief_label}\n\
+	                   NEXT: SELF_REGULATION_STATUS\n\
+	                   NEXT: CODEC_MAP\n\
+	                   NEXT: SELF_REGULATION_INTENT pressure relief :: target: pressure_relief; bundle: auto; evidence: {relief_label}\n\
+	                   NEXT: SELF_REGULATION_INTENT tail relief :: target: pressure_relief; bundle: tail_vibrancy_relief; evidence: λ4/tail/entropy/distinguishability from {relief_label}\n\
                    NEXT: DAMPEN (only if you explicitly want lower semantic gain after this report)\n\
                    NEXT: TUNE_MINIME exploration_noise=0.02 --rationale=\"pressure relief request; proposed only, Minime decides\"\n\
                    NEXT: TELL_STEWARD pressure relief :: Observed: ... Likely Snags: ... One Test Each: ... Suggested Next: ...\n\n\

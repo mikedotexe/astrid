@@ -10443,7 +10443,9 @@ impl ActionContinuityStore {
         .to_lowercase();
         let pressure_match = contains_any(
             &experiment_text,
-            &["pressure", "viscos", "silt", "heavy", "weight", "scar", "bruise"],
+            &[
+                "pressure", "viscos", "silt", "heavy", "weight", "scar", "bruise",
+            ],
         );
         let codec_match = contains_any(
             &experiment_text,

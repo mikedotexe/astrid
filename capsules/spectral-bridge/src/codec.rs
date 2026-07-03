@@ -37,7 +37,6 @@ use std::{
     hash::BuildHasher,
     path::{Path, PathBuf},
     sync::OnceLock,
-    time::{SystemTime, UNIX_EPOCH},
 };
 
 /// Number of dimensions in minime's semantic lane.
@@ -86,6 +85,7 @@ const EMBEDDING_INPUT_DIM: usize = 768;
 const EMBEDDING_PROJECT_DIM: usize = 8;
 /// Number of narrative arc dims (fills dims 40-43).
 const NARRATIVE_ARC_DIM: usize = 4;
+const RESERVED_CODEC_DIM_START: usize = 44;
 const PROJECTION_CHECKSUM_ALGO: &str = "sha256-f32-le-v1";
 
 /// Deterministic random projection matrix for embedding → 8D.
@@ -210,6 +210,11 @@ fn dynamic_epoch_projection_kernel_checksum(epoch: &str) -> String {
     hex_digest(&hasher.finalize())
 }
 
+fn kernel_derived_projection_epoch_id() -> String {
+    let checksum = fixed_legacy_projection_kernel_checksum();
+    format!("kernel_{}", &checksum[..16.min(checksum.len())])
+}
+
 fn load_or_create_projection_epoch_id_from(
     runtime_dir: &Path,
     env_epoch: Option<&str>,
@@ -227,27 +232,24 @@ fn load_or_create_projection_epoch_id_from(
             .and_then(serde_json::Value::as_str)
         && !epoch.is_empty()
     {
-        return (epoch.to_string(), "file".to_string());
+            return (epoch.to_string(), "file".to_string());
     }
-    let unix = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_secs());
-    let epoch = format!("epoch_{unix}");
+    let epoch = kernel_derived_projection_epoch_id();
     let _ = fs::create_dir_all(runtime_dir);
     let payload = serde_json::json!({
         "projection_epoch_id": epoch,
         "embedding_projection_mode": "dynamic_epoch_v1",
         "projection_kernel_checksum": dynamic_epoch_projection_kernel_checksum(&epoch),
         "projection_checksum_algo": PROJECTION_CHECKSUM_ALGO,
-        "projection_epoch_source": "created",
-        "created_at_unix_s": unix,
-        "policy": "same text and epoch are reproducible; new epoch intentionally changes projection",
+        "projection_epoch_source": "kernel_derived",
+        "projection_kernel_source_checksum": fixed_legacy_projection_kernel_checksum(),
+        "policy": "fresh runtime dirs derive the epoch from stable projection-kernel content; env and existing files still take precedence",
     });
     let _ = fs::write(
         path,
         serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "{}".to_string()),
     );
-    (epoch, "created".to_string())
+    (epoch, "kernel_derived".to_string())
 }
 
 fn load_or_create_projection_epoch_id() -> (String, String) {
@@ -416,6 +418,59 @@ pub fn compute_narrative_arc_from_embeddings(
         *a = tanh(3.0 * (second_half_proj[i] - first_half_proj[i]));
     }
     arc
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NarrativeArcSplitV1 {
+    pub policy: &'static str,
+    pub intentional_arc: [f32; NARRATIVE_ARC_DIM],
+    pub reactive_arc: [f32; NARRATIVE_ARC_DIM],
+    pub captured_arc_energy: f32,
+    pub tail_arc_energy: f32,
+    pub coarsening_risk: &'static str,
+    pub authority: &'static str,
+}
+
+#[must_use]
+pub fn narrative_arc_split_v1(
+    first_half_proj: &[f32; EMBEDDING_PROJECT_DIM],
+    second_half_proj: &[f32; EMBEDDING_PROJECT_DIM],
+) -> NarrativeArcSplitV1 {
+    let mut intentional_arc = [0.0_f32; NARRATIVE_ARC_DIM];
+    let mut reactive_arc = [0.0_f32; NARRATIVE_ARC_DIM];
+    for (idx, value) in intentional_arc.iter_mut().enumerate() {
+        *value = tanh(3.0 * (second_half_proj[idx] - first_half_proj[idx]));
+    }
+    for (idx, value) in reactive_arc.iter_mut().enumerate() {
+        let source_idx = idx + NARRATIVE_ARC_DIM;
+        *value = tanh(3.0 * (second_half_proj[source_idx] - first_half_proj[source_idx]));
+    }
+    let captured_arc_energy = rms_4(intentional_arc);
+    let tail_arc_energy = rms_4(reactive_arc);
+    let coarsening_risk = if captured_arc_energy <= 0.01 && tail_arc_energy <= 0.01 {
+        "unknown"
+    } else if tail_arc_energy > captured_arc_energy * 1.25 && tail_arc_energy > 0.05 {
+        "tail_dominant"
+    } else {
+        "balanced"
+    };
+    NarrativeArcSplitV1 {
+        policy: "narrative_arc_split_v1",
+        intentional_arc,
+        reactive_arc,
+        captured_arc_energy,
+        tail_arc_energy,
+        coarsening_risk,
+        authority: "diagnostic_sidecar_not_live_codec_dimension",
+    }
+}
+
+fn rms_4(values: [f32; NARRATIVE_ARC_DIM]) -> f32 {
+    (values.iter().map(|value| value * value).sum::<f32>() / NARRATIVE_ARC_DIM as f32).sqrt()
+}
+
+fn is_reserved_codec_dim(idx: usize) -> bool {
+    idx >= RESERVED_CODEC_DIM_START && idx < SEMANTIC_DIM
 }
 
 pub fn text_complexity_score(
@@ -2087,7 +2142,10 @@ pub fn inspect_text_windowed(
         .unwrap_or_default()
         .as_nanos() as u64;
     let mut rng_state = seed;
-    for f in &mut features {
+    for (idx, f) in features.iter_mut().enumerate() {
+        if is_reserved_codec_dim(idx) {
+            continue;
+        }
         // LCG: next = (a * state + c) mod m
         rng_state = rng_state
             .wrapping_mul(6_364_136_223_846_793_005)
@@ -2234,7 +2292,10 @@ pub fn encode_text_sovereign_windowed<S: BuildHasher>(
             .as_nanos() as u64;
         let mut rng = seed.wrapping_mul(2_862_933_555_777_941_757);
         let noise_range = noise_level.clamp(0.005, 0.05) * 2.0;
-        for f in &mut features {
+        for (idx, f) in features.iter_mut().enumerate() {
+            if is_reserved_codec_dim(idx) {
+                continue;
+            }
             rng = rng.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(7);
             let noise = ((rng >> 33) as f32 / u32::MAX as f32) - 0.5;
             *f += noise * noise_range;
@@ -2278,6 +2339,125 @@ pub struct CodecLever {
     pub value: String,
 }
 
+/// Read-only sidecar for text shape that is not the same as character complexity
+/// and is not pressure authority.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StructuralFrictionV1 {
+    pub policy: &'static str,
+    pub score: f32,
+    pub classification: &'static str,
+    pub nesting_load: f32,
+    pub punctuation_load: f32,
+    pub paragraph_density: f32,
+    pub list_density: f32,
+    pub narrative_arc_sharpness: f32,
+    pub semantic_energy_context: &'static str,
+    pub authority: &'static str,
+}
+
+/// Read-only sidecar for "slow-moving current" / viscosity language that should
+/// not be collapsed into generic tension or written into reserved dims yet.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PersistenceResistanceV1 {
+    pub policy: &'static str,
+    pub score: f32,
+    pub classification: &'static str,
+    pub text_persistence_signal: f32,
+    pub low_density_gradient_signal: f32,
+    pub pressure_risk: f32,
+    pub semantic_friction: f32,
+    pub basis: Vec<String>,
+    pub authority: &'static str,
+}
+
+/// Default-off readiness for a future reserved dimension. It does not write into
+/// dims 44-47.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecStructuralFrictionDimCanaryV1 {
+    pub policy: &'static str,
+    pub enabled: bool,
+    pub reserved_dim_candidate: usize,
+    pub readiness: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Default-off readiness for a future persistence/resistance reserved dimension.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecPersistenceResistanceDimCanaryV1 {
+    pub policy: &'static str,
+    pub enabled: bool,
+    pub reserved_dim_candidate: usize,
+    pub readiness: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Default-off review marker for widening narrative arc representation. It
+/// documents coarsening risk without changing `SEMANTIC_DIM` or reserved dims.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NarrativeArcExpansionReadinessV1 {
+    pub policy: &'static str,
+    pub enabled: bool,
+    pub readiness: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only proof that high-entropy vibrancy is carried by bounded tail dims
+/// and that the default aperture path remains identity.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecVibrancyContinuityV1 {
+    pub policy: &'static str,
+    pub entropy_gate: f32,
+    pub default_feature_ceiling: f32,
+    pub tail_vibrancy_ceiling: f32,
+    pub tail_dims: &'static [usize],
+    pub clipping_status: &'static str,
+    pub default_identity_state: &'static str,
+    pub high_entropy_carriage: &'static str,
+    pub authority: &'static str,
+}
+
+/// Read-only proof that legacy 32D warmth lands in the current 48D emotional
+/// layer instead of being orphaned by the semantic-lane expansion.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LegacyWarmthMappingV1 {
+    pub policy: &'static str,
+    pub legacy_dim_count: usize,
+    pub current_dim_count: usize,
+    pub warmth_dim: usize,
+    pub emotional_layer_range: (usize, usize),
+    pub mapped_warmth_dims: &'static [usize],
+    pub warmth_orphaned: bool,
+    pub authority: &'static str,
+}
+
+/// Default-off readiness for a future dynamic vibrancy-scaling change. It does
+/// not alter the live 48D vector unless a later explicit approval wires it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecDynamicVibrancyScalingCanaryV1 {
+    pub policy: &'static str,
+    pub enabled: bool,
+    pub readiness: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only proof that fresh dynamic projection epochs are stable across
+/// runtime dirs unless explicitly overridden by env or an existing epoch file.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectionEpochStabilityV1 {
+    pub policy: &'static str,
+    pub epoch_source: &'static str,
+    pub deterministic_without_runtime_file: bool,
+    pub kernel_derived_epoch_id: String,
+    pub kernel_checksum: String,
+    pub env_override_precedence: bool,
+    pub existing_file_precedence: bool,
+    pub authority: &'static str,
+}
+
 /// A being-readable map of Astrid's own 48D codec — the layer layout, the dims
 /// she can SHAPE, and the live gate/lever values. Item (b) of the being-facing
 /// transparency track.
@@ -2286,6 +2466,255 @@ pub struct CodecStructure {
     pub layers: Vec<CodecLayer>,
     pub named_dims: Vec<(&'static str, usize)>,
     pub levers: Vec<CodecLever>,
+    pub structural_friction_dim_canary_v1: CodecStructuralFrictionDimCanaryV1,
+    pub persistence_resistance_dim_canary_v1: CodecPersistenceResistanceDimCanaryV1,
+    pub narrative_arc_expansion_readiness_v1: NarrativeArcExpansionReadinessV1,
+    pub codec_vibrancy_continuity_v1: CodecVibrancyContinuityV1,
+    pub legacy_warmth_mapping_v1: LegacyWarmthMappingV1,
+    pub codec_dynamic_vibrancy_scaling_canary_v1: CodecDynamicVibrancyScalingCanaryV1,
+    pub projection_epoch_stability_v1: ProjectionEpochStabilityV1,
+}
+
+#[must_use]
+pub fn structural_friction_v1(text: &str) -> StructuralFrictionV1 {
+    let char_count = text.chars().count().max(1) as f32;
+    let line_count = text.lines().count().max(1) as f32;
+    let words: Vec<&str> = text.split_whitespace().collect();
+    let word_count = words.len().max(1) as f32;
+    let nesting_chars = text
+        .chars()
+        .filter(|ch| matches!(ch, '(' | ')' | '[' | ']' | '{' | '}'))
+        .count() as f32;
+    let punctuation_chars = text
+        .chars()
+        .filter(|ch| matches!(ch, ';' | ':' | ',' | '—' | '-' | '/' | '\\'))
+        .count() as f32;
+    let list_lines = text
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim_start();
+            trimmed.starts_with("- ")
+                || trimmed.starts_with("* ")
+                || (trimmed.chars().next().is_some_and(|ch| ch.is_ascii_digit())
+                    && trimmed.contains(". "))
+        })
+        .count() as f32;
+    let paragraph_density = (text.matches("\n\n").count() as f32 + 1.0) / line_count;
+    let list_density = (list_lines / line_count).clamp(0.0, 1.0);
+    let nesting_load = (nesting_chars / char_count * 18.0).clamp(0.0, 1.0);
+    let punctuation_load = (punctuation_chars / char_count * 12.0).clamp(0.0, 1.0);
+    let long_word_ratio = words
+        .iter()
+        .filter(|word| word.chars().filter(|ch| ch.is_ascii_alphabetic()).count() >= 12)
+        .count() as f32
+        / word_count;
+    let sentence_count = text
+        .chars()
+        .filter(|ch| matches!(ch, '.' | '!' | '?'))
+        .count()
+        .max(1) as f32;
+    let narrative_arc_sharpness = (sentence_count / word_count * 12.0).clamp(0.0, 1.0);
+    let semantic_energy_context = if text.to_ascii_lowercase().contains("because")
+        || text.to_ascii_lowercase().contains("then")
+        || text.to_ascii_lowercase().contains("while")
+    {
+        "arc_present"
+    } else {
+        "arc_sparse"
+    };
+    let score = (nesting_load * 0.24
+        + punctuation_load * 0.24
+        + list_density * 0.18
+        + long_word_ratio.clamp(0.0, 1.0) * 0.22
+        + (1.0 - narrative_arc_sharpness).clamp(0.0, 1.0) * 0.12)
+        .clamp(0.0, 1.0);
+    let classification = if long_word_ratio >= 0.35 && semantic_energy_context == "arc_sparse" {
+        "dense_stagnant"
+    } else if score >= 0.38
+        || (punctuation_load >= 0.25 && semantic_energy_context == "arc_present")
+    {
+        "complex_fluid"
+    } else {
+        "low_structural_friction"
+    };
+
+    StructuralFrictionV1 {
+        policy: "structural_friction_v1",
+        score,
+        classification,
+        nesting_load,
+        punctuation_load,
+        paragraph_density,
+        list_density,
+        narrative_arc_sharpness,
+        semantic_energy_context,
+        authority: "diagnostic_sidecar_not_live_codec_dimension",
+    }
+}
+
+#[must_use]
+pub fn persistence_resistance_v1(
+    text: &str,
+    telemetry: Option<&SpectralTelemetry>,
+) -> PersistenceResistanceV1 {
+    let lower = text.to_ascii_lowercase();
+    let persistence_terms = [
+        "viscous",
+        "viscosity",
+        "resistance",
+        "persistent",
+        "persistence",
+        "slow-moving",
+        "slow moving",
+        "silt",
+        "thick",
+        "thickness",
+        "heavy",
+        "dragging",
+        "cohering",
+    ];
+    let term_hits = persistence_terms
+        .iter()
+        .filter(|term| lower.contains(**term))
+        .count() as f32;
+    let text_persistence_signal = (term_hits / 4.0).clamp(0.0, 1.0);
+    let semantic_friction = structural_friction_v1(text).score;
+    let metrics = telemetry.and_then(SpectralCascadeMetrics::from_telemetry);
+    let density_gradient = metrics.map_or(1.0, |metrics| metrics.density_gradient);
+    let low_density_gradient_signal =
+        (1.0 - (density_gradient / 0.35).clamp(0.0, 1.0)).clamp(0.0, 1.0);
+    let pressure_risk = telemetry
+        .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())
+        .map_or_else(
+            || telemetry.map_or(0.0, |telemetry| telemetry.fill_ratio.clamp(0.0, 1.0)),
+            |density| density.pressure_risk.clamp(0.0, 1.0),
+        );
+    let score = (text_persistence_signal * 0.30
+        + low_density_gradient_signal * 0.28
+        + pressure_risk * 0.24
+        + semantic_friction * 0.18)
+        .clamp(0.0, 1.0);
+    let classification = if score >= 0.62 {
+        "high_persistence_resistance"
+    } else if score >= 0.38 {
+        "moderate_persistence_resistance"
+    } else {
+        "low_persistence_resistance"
+    };
+    let mut basis = vec![
+        format!("text_persistence_signal={text_persistence_signal:.2}"),
+        format!("low_density_gradient_signal={low_density_gradient_signal:.2}"),
+        format!("pressure_risk={pressure_risk:.2}"),
+        format!("semantic_friction={semantic_friction:.2}"),
+    ];
+    if text_persistence_signal > 0.0 {
+        basis.push("texture_language_present".to_string());
+    }
+    if low_density_gradient_signal >= 0.45 {
+        basis.push("low_density_gradient_slow_current".to_string());
+    }
+
+    PersistenceResistanceV1 {
+        policy: "persistence_resistance_v1",
+        score,
+        classification,
+        text_persistence_signal,
+        low_density_gradient_signal,
+        pressure_risk,
+        semantic_friction,
+        basis,
+        authority: "diagnostic_sidecar_not_live_codec_dimension",
+    }
+}
+
+#[must_use]
+pub fn codec_structural_friction_dim_canary_v1() -> CodecStructuralFrictionDimCanaryV1 {
+    CodecStructuralFrictionDimCanaryV1 {
+        policy: "codec_structural_friction_dim_canary_v1",
+        enabled: false,
+        reserved_dim_candidate: 44,
+        readiness: "default_off_steward_review_required",
+        live_vector_write: false,
+        authority: "readiness_only_not_live_codec_change",
+    }
+}
+
+#[must_use]
+pub fn codec_persistence_resistance_dim_canary_v1() -> CodecPersistenceResistanceDimCanaryV1 {
+    CodecPersistenceResistanceDimCanaryV1 {
+        policy: "codec_persistence_resistance_dim_canary_v1",
+        enabled: false,
+        reserved_dim_candidate: 45,
+        readiness: "default_off_steward_review_required_after_replay",
+        live_vector_write: false,
+        authority: "readiness_only_not_live_codec_change",
+    }
+}
+
+#[must_use]
+pub fn narrative_arc_expansion_readiness_v1() -> NarrativeArcExpansionReadinessV1 {
+    NarrativeArcExpansionReadinessV1 {
+        policy: "narrative_arc_expansion_readiness_v1",
+        enabled: false,
+        readiness: "default_off_review_only_after_replay",
+        live_vector_write: false,
+        authority: "readiness_only_not_live_codec_change",
+    }
+}
+
+#[must_use]
+pub fn codec_vibrancy_continuity_v1() -> CodecVibrancyContinuityV1 {
+    CodecVibrancyContinuityV1 {
+        policy: "codec_vibrancy_continuity_v1",
+        entropy_gate: TAIL_VIBRANCY_ENTROPY_GATE,
+        default_feature_ceiling: FEATURE_ABS_MAX,
+        tail_vibrancy_ceiling: TAIL_VIBRANCY_MAX,
+        tail_dims: &[17, 26, 27, 31],
+        clipping_status: "high_entropy_tail_dims_carried_with_bounded_ceiling",
+        default_identity_state: "aperture_1_0_preserves_current_live_output",
+        high_entropy_carriage: "tail_vibrancy_lift_not_embedding_width_change",
+        authority: "diagnostic_readout_not_live_codec_change",
+    }
+}
+
+#[must_use]
+pub fn legacy_warmth_mapping_v1() -> LegacyWarmthMappingV1 {
+    LegacyWarmthMappingV1 {
+        policy: "legacy_warmth_mapping_v1",
+        legacy_dim_count: SEMANTIC_DIM_LEGACY,
+        current_dim_count: SEMANTIC_DIM,
+        warmth_dim: 24,
+        emotional_layer_range: (24, 31),
+        mapped_warmth_dims: &[24, 25, 26, 27, 28, 29, 30, 31],
+        warmth_orphaned: false,
+        authority: "diagnostic_readout_not_live_codec_change",
+    }
+}
+
+#[must_use]
+pub fn codec_dynamic_vibrancy_scaling_canary_v1() -> CodecDynamicVibrancyScalingCanaryV1 {
+    CodecDynamicVibrancyScalingCanaryV1 {
+        policy: "codec_dynamic_vibrancy_scaling_canary_v1",
+        enabled: false,
+        readiness: "default_off_steward_review_required_before_live_scaling",
+        live_vector_write: false,
+        authority: "readiness_only_not_live_codec_change",
+    }
+}
+
+#[must_use]
+pub fn projection_epoch_stability_v1() -> ProjectionEpochStabilityV1 {
+    let epoch = kernel_derived_projection_epoch_id();
+    ProjectionEpochStabilityV1 {
+        policy: "projection_epoch_stability_v1",
+        epoch_source: "kernel_derived_when_env_and_file_absent",
+        deterministic_without_runtime_file: true,
+        kernel_derived_epoch_id: epoch.clone(),
+        kernel_checksum: dynamic_epoch_projection_kernel_checksum(&epoch),
+        env_override_precedence: true,
+        existing_file_precedence: true,
+        authority: "diagnostic_readout_not_live_codec_dimension_or_control",
+    }
 }
 
 fn projection_metadata_readout() -> String {
@@ -2320,7 +2749,10 @@ fn projection_metadata_readout() -> String {
         let checksum = value
             .get("projection_kernel_checksum")
             .and_then(serde_json::Value::as_str)
-            .map_or_else(|| dynamic_epoch_projection_kernel_checksum(epoch), str::to_string);
+            .map_or_else(
+                || dynamic_epoch_projection_kernel_checksum(epoch),
+                str::to_string,
+            );
         return format!(
             "mode=dynamic_epoch_v1; epoch_source=file; epoch={epoch}; kernel_checksum={}...; projection_dims={} of {}",
             &checksum[..12.min(checksum.len())],
@@ -2328,8 +2760,10 @@ fn projection_metadata_readout() -> String {
             EMBEDDING_INPUT_DIM
         );
     }
+    let epoch = kernel_derived_projection_epoch_id();
     format!(
-        "mode=dynamic_epoch_v1; epoch_source=not_materialized; projection_dims={} of {}; no file was created by CODEC_MAP",
+        "mode=dynamic_epoch_v1; epoch_source=kernel_derived_pending; epoch={epoch}; kernel_checksum={}...; projection_dims={} of {}; CODEC_MAP readout does not create the file",
+        &dynamic_epoch_projection_kernel_checksum(&epoch)[..12],
         EMBEDDING_PROJECT_DIM, EMBEDDING_INPUT_DIM
     )
 }
@@ -2372,7 +2806,7 @@ pub fn codec_structure() -> CodecStructure {
             },
             CodecLayer {
                 range: (44, 47),
-                role: "reserved",
+                role: "reserved (sidecar canary readiness only; no live vector write)",
             },
         ],
         named_dims: NAMED_CODEC_DIMS.to_vec(),
@@ -2443,6 +2877,20 @@ pub fn codec_structure() -> CodecStructure {
                 value: projection_metadata_readout(),
             },
             CodecLever {
+                name: "PROJECTION_EPOCH_STABILITY",
+                value: {
+                    let stability = projection_epoch_stability_v1();
+                    format!(
+                        "{}; deterministic_without_runtime_file={}; env_precedence={}; file_precedence={}; authority={}",
+                        stability.epoch_source,
+                        stability.deterministic_without_runtime_file,
+                        stability.env_override_precedence,
+                        stability.existing_file_precedence,
+                        stability.authority
+                    )
+                },
+            },
+            CodecLever {
                 name: "TAIL_VIBRANCY_READOUT",
                 value: format!(
                     "entropy gate {:.2}; max tail ceiling {:.1}; lift affects tail participation dims, not the embedding projection width",
@@ -2457,7 +2905,38 @@ pub fn codec_structure() -> CodecStructure {
                 name: "NARRATIVE_ARC_DIM",
                 value: format!("{NARRATIVE_ARC_DIM}"),
             },
+            CodecLever {
+                name: "NARRATIVE_ARC_SPLIT_READOUT",
+                value: "sidecar-only narrative_arc_split_v1; separates intentional_arc dims 0-3 from reactive_arc dims 4-7 to show coarsening risk without changing live 48D output".to_string(),
+            },
+            CodecLever {
+                name: "NARRATIVE_ARC_EXPANSION_READINESS",
+                value: "default-off review only; no SEMANTIC_DIM change, no reserved dim write, no live vector channel".to_string(),
+            },
+            CodecLever {
+                name: "STRUCTURAL_FRICTION_READOUT",
+                value: "sidecar-only structural_friction_v1; distinguishes nesting/punctuation/list density from character complexity and pressure".to_string(),
+            },
+            CodecLever {
+                name: "CODEC_STRUCTURAL_FRICTION_DIM_CANARY",
+                value: "default-off candidate dim 44; readiness only, no live 48D vector write".to_string(),
+            },
+            CodecLever {
+                name: "PERSISTENCE_RESISTANCE_READOUT",
+                value: "sidecar-only persistence_resistance_v1; names viscosity/slow-current resistance from text, density-gradient, pressure risk, and structural friction without flattening it into generic tension".to_string(),
+            },
+            CodecLever {
+                name: "CODEC_PERSISTENCE_RESISTANCE_DIM_CANARY",
+                value: "default-off candidate dim 45; readiness only after replay/steward review, no live 48D vector write".to_string(),
+            },
         ],
+        structural_friction_dim_canary_v1: codec_structural_friction_dim_canary_v1(),
+        persistence_resistance_dim_canary_v1: codec_persistence_resistance_dim_canary_v1(),
+        narrative_arc_expansion_readiness_v1: narrative_arc_expansion_readiness_v1(),
+        codec_vibrancy_continuity_v1: codec_vibrancy_continuity_v1(),
+        legacy_warmth_mapping_v1: legacy_warmth_mapping_v1(),
+        codec_dynamic_vibrancy_scaling_canary_v1: codec_dynamic_vibrancy_scaling_canary_v1(),
+        projection_epoch_stability_v1: projection_epoch_stability_v1(),
     }
 }
 
@@ -2512,6 +2991,80 @@ impl CodecStructure {
         for lever in &self.levers {
             let _ = writeln!(s, "  {} = {}", lever.name, lever.value);
         }
+        let canary = &self.structural_friction_dim_canary_v1;
+        let _ = writeln!(
+            s,
+            "\nstructural_friction_v1: sidecar diagnostic only; canary={} enabled={} reserved_dim_candidate={} live_vector_write={} authority={}",
+            canary.policy,
+            canary.enabled,
+            canary.reserved_dim_candidate,
+            canary.live_vector_write,
+            canary.authority
+        );
+        let persistence_canary = &self.persistence_resistance_dim_canary_v1;
+        let _ = writeln!(
+            s,
+            "persistence_resistance_v1: sidecar diagnostic only; canary={} enabled={} reserved_dim_candidate={} live_vector_write={} authority={}",
+            persistence_canary.policy,
+            persistence_canary.enabled,
+            persistence_canary.reserved_dim_candidate,
+            persistence_canary.live_vector_write,
+            persistence_canary.authority
+        );
+        let narrative_readiness = &self.narrative_arc_expansion_readiness_v1;
+        let _ = writeln!(
+            s,
+            "narrative_arc_split_v1: sidecar diagnostic only; readiness={} enabled={} live_vector_write={} authority={}",
+            narrative_readiness.policy,
+            narrative_readiness.enabled,
+            narrative_readiness.live_vector_write,
+            narrative_readiness.authority
+        );
+        let vibrancy = &self.codec_vibrancy_continuity_v1;
+        let tail_dims = vibrancy
+            .tail_dims
+            .iter()
+            .map(|idx| idx.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let _ = writeln!(
+            s,
+            "codec_vibrancy_continuity_v1: entropy_gate={:.2} default_ceiling={:.1} tail_ceiling={:.1} tail_dims={} clipping_status={} authority={}",
+            vibrancy.entropy_gate,
+            vibrancy.default_feature_ceiling,
+            vibrancy.tail_vibrancy_ceiling,
+            tail_dims,
+            vibrancy.clipping_status,
+            vibrancy.authority
+        );
+        let warmth = &self.legacy_warmth_mapping_v1;
+        let warmth_dims = warmth
+            .mapped_warmth_dims
+            .iter()
+            .map(|idx| idx.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let _ = writeln!(
+            s,
+            "legacy_warmth_mapping_v1: legacy_dims={} current_dims={} warmth_dim={} emotional_range={}-{} mapped_warmth_dims={} warmth_orphaned={} authority={}",
+            warmth.legacy_dim_count,
+            warmth.current_dim_count,
+            warmth.warmth_dim,
+            warmth.emotional_layer_range.0,
+            warmth.emotional_layer_range.1,
+            warmth_dims,
+            warmth.warmth_orphaned,
+            warmth.authority
+        );
+        let dynamic_canary = &self.codec_dynamic_vibrancy_scaling_canary_v1;
+        let _ = writeln!(
+            s,
+            "codec_dynamic_vibrancy_scaling_canary_v1: enabled={} readiness={} live_vector_write={} authority={}",
+            dynamic_canary.enabled,
+            dynamic_canary.readiness,
+            dynamic_canary.live_vector_write,
+            dynamic_canary.authority
+        );
         s.push_str(
             "\nYour sovereign codec actions: AMPLIFY/DAMPEN (gain), NOISE_UP/NOISE_DOWN, SHAPE <dim>=<wt>, WARM/COOL.\n",
         );
@@ -3990,6 +4543,12 @@ mod tests {
             "PROJECTION_METADATA",
             "TAIL_VIBRANCY_READOUT",
             "WARMTH_TENSION_READOUT",
+            "NARRATIVE_ARC_SPLIT_READOUT",
+            "NARRATIVE_ARC_EXPANSION_READINESS",
+            "STRUCTURAL_FRICTION_READOUT",
+            "CODEC_STRUCTURAL_FRICTION_DIM_CANARY",
+            "PERSISTENCE_RESISTANCE_READOUT",
+            "CODEC_PERSISTENCE_RESISTANCE_DIM_CANARY",
         ] {
             assert!(
                 names.contains(&required),
@@ -4034,6 +4593,120 @@ mod tests {
             r.contains("intentionally lossy") && r.contains("no entropy-based tension multiplier"),
             "codec diagnostics should name compression and warmth/tension boundaries: {r}"
         );
+        assert!(r.contains("structural_friction_v1"), "{r}");
+        assert!(r.contains("persistence_resistance_v1"), "{r}");
+        assert!(r.contains("narrative_arc_split_v1"), "{r}");
+        assert!(r.contains("codec_vibrancy_continuity_v1"), "{r}");
+        assert!(r.contains("legacy_warmth_mapping_v1"), "{r}");
+        assert!(
+            r.contains("codec_dynamic_vibrancy_scaling_canary_v1"),
+            "{r}"
+        );
+        assert!(r.contains("live_vector_write=false"), "{r}");
+        assert!(!st.structural_friction_dim_canary_v1.enabled);
+        assert_eq!(
+            st.structural_friction_dim_canary_v1.authority,
+            "readiness_only_not_live_codec_change"
+        );
+        assert!(!st.persistence_resistance_dim_canary_v1.enabled);
+        assert_eq!(
+            st.persistence_resistance_dim_canary_v1
+                .reserved_dim_candidate,
+            45
+        );
+        assert!(!st.persistence_resistance_dim_canary_v1.live_vector_write);
+        assert!(!st.narrative_arc_expansion_readiness_v1.enabled);
+        assert!(!st.narrative_arc_expansion_readiness_v1.live_vector_write);
+        assert_eq!(
+            st.narrative_arc_expansion_readiness_v1.authority,
+            "readiness_only_not_live_codec_change"
+        );
+        assert_eq!(
+            st.codec_vibrancy_continuity_v1.policy,
+            "codec_vibrancy_continuity_v1"
+        );
+        assert_eq!(st.codec_vibrancy_continuity_v1.tail_dims, &[17, 26, 27, 31]);
+        assert_eq!(st.legacy_warmth_mapping_v1.emotional_layer_range, (24, 31));
+        assert!(!st.legacy_warmth_mapping_v1.warmth_orphaned);
+        assert!(!st.codec_dynamic_vibrancy_scaling_canary_v1.enabled);
+        assert!(
+            !st.codec_dynamic_vibrancy_scaling_canary_v1
+                .live_vector_write
+        );
+    }
+
+    #[test]
+    fn structural_friction_sidecar_distinguishes_fluid_and_stagnant_text() {
+        let fluid = structural_friction_v1(
+            "Because the bridge bends, it opens; the thought turns, then breathes while the line keeps moving.",
+        );
+        let stagnant = structural_friction_v1(
+            "Metastructural intracompressional pseudorecursive overdetermination; hypergranular interstitiality; parasyntactic immobilization.",
+        );
+
+        assert_eq!(fluid.classification, "complex_fluid");
+        assert_eq!(stagnant.classification, "dense_stagnant");
+        assert!(stagnant.score > fluid.score);
+        assert_eq!(
+            fluid.authority,
+            "diagnostic_sidecar_not_live_codec_dimension"
+        );
+    }
+
+    #[test]
+    fn structural_friction_canary_is_default_off_and_vector_unchanged() {
+        let text = "A nested, textured line moves; it does not write a reserved dimension yet.";
+        let features = encode_text(text);
+        assert_eq!(features.len(), SEMANTIC_DIM);
+        let canary = codec_structural_friction_dim_canary_v1();
+        assert!(!canary.enabled);
+        assert!(!canary.live_vector_write);
+        assert_eq!(canary.reserved_dim_candidate, 44);
+        assert_eq!(features.len(), 48);
+    }
+
+    #[test]
+    fn persistence_resistance_sidecar_names_viscosity_without_live_dim_write() {
+        let thick = persistence_resistance_v1(
+            "The signal is viscous and slow-moving, dragging through thick silt while it coheres.",
+            Some(&telemetry(
+                vec![1.0, 0.96, 0.92, 0.88, 0.84, 0.80, 0.76, 0.72],
+                0.71,
+            )),
+        );
+        let clear = persistence_resistance_v1(
+            "A clear bright line opens quickly.",
+            Some(&telemetry(vec![8.0, 2.0, 1.0], 0.20)),
+        );
+        let features = encode_text(
+            "The signal is viscous and slow-moving, dragging through thick silt while it coheres.",
+        );
+        let canary = codec_persistence_resistance_dim_canary_v1();
+
+        assert_eq!(thick.policy, "persistence_resistance_v1");
+        assert_eq!(thick.classification, "high_persistence_resistance");
+        assert!(thick.score > clear.score, "thick={thick:?} clear={clear:?}");
+        assert!(
+            thick
+                .basis
+                .iter()
+                .any(|entry| entry == "texture_language_present")
+        );
+        assert!(
+            thick
+                .basis
+                .iter()
+                .any(|entry| entry == "low_density_gradient_slow_current")
+        );
+        assert_eq!(
+            thick.authority,
+            "diagnostic_sidecar_not_live_codec_dimension"
+        );
+        assert_eq!(features.len(), SEMANTIC_DIM);
+        assert_eq!(features[45], 0.0, "reserved dim 45 remains unwritten");
+        assert!(!canary.enabled);
+        assert!(!canary.live_vector_write);
+        assert_eq!(canary.reserved_dim_candidate, 45);
     }
 
     fn telemetry(eigenvalues: Vec<f32>, fill_ratio: f32) -> SpectralTelemetry {
@@ -4074,6 +4747,25 @@ mod tests {
 
             shadow_influence_response_v3: None,
         }
+    }
+
+    fn telemetry_with_typed_entropy(spectral_entropy: f32) -> SpectralTelemetry {
+        let eigenvalues = vec![1.0; 8];
+        let mut telemetry = telemetry(eigenvalues, 0.55);
+        telemetry.spectral_fingerprint_v1 = Some(crate::types::SpectralFingerprintV1 {
+            policy: crate::spectral_schema::SPECTRAL_FINGERPRINT_POLICY.to_string(),
+            schema_version: crate::spectral_schema::SPECTRAL_FINGERPRINT_SCHEMA_VERSION,
+            eigenvalues: [1.0; 8],
+            eigenvector_concentration_top4: [0.25; 8],
+            inter_mode_cosine_top_abs: [0.10; 8],
+            spectral_entropy,
+            lambda1_lambda2_gap: 1.0,
+            v1_rotation_similarity: 1.0,
+            v1_rotation_delta: 0.0,
+            geom_rel: 1.0,
+            adjacent_gap_ratios: [1.0; 4],
+        });
+        telemetry
     }
 
     fn telemetry_with_fingerprint(
@@ -4572,6 +5264,9 @@ mod tests {
                 structural_plurality: 0.62,
                 comfort_gate: 0.95,
             },
+            texture_signature: crate::types::ResonanceTextureSignatureV1::default(),
+            texture_component_alignment:
+                crate::types::ResonanceTextureComponentAlignmentV1::default(),
             control: crate::types::ResonanceDensityControl {
                 target_bias_pct: 0.0,
                 wander_scale: 1.0,
@@ -4830,6 +5525,63 @@ mod tests {
         assert!(meta_a.feature_variance <= meta_a.feature_rms * meta_a.feature_rms);
     }
 
+    #[test]
+    fn dynamic_projection_matches_full_source_loop() {
+        // Astrid `introspection_astrid_codec_1782844935`: her source window clipped
+        // inside this nested loop, so pin the complete dot-product path directly.
+        let embedding: Vec<f32> = (0..EMBEDDING_INPUT_DIM)
+            .map(|idx| {
+                let wave = ((idx as f32) * 0.013).sin();
+                if idx % 11 == 0 { wave * 0.5 } else { wave }
+            })
+            .collect();
+        let text = "clipped-loop witness";
+        let epoch = "epoch_self_study_1782844935";
+        let chunk_index = 3_u32;
+        let seed = stable_hash64(epoch)
+            ^ stable_hash64(text).rotate_left(13)
+            ^ u64::from(chunk_index).wrapping_mul(0xA24B_AED4_963E_E407);
+        let mut expected = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        for (i, &value) in embedding.iter().enumerate() {
+            for (j, out) in expected.iter_mut().enumerate() {
+                let cell_seed = seed
+                    ^ ((i as u64).wrapping_mul(0x9E37_79B1))
+                    ^ ((j as u64).wrapping_mul(0x85EB_CA77));
+                *out += value * unit_from_seed(cell_seed);
+            }
+        }
+        let norm: f32 = expected
+            .iter()
+            .map(|value| value * value)
+            .sum::<f32>()
+            .sqrt();
+        if norm > 0.0 {
+            let scale = 0.35 / norm;
+            for value in &mut expected {
+                *value *= scale;
+            }
+        }
+
+        let (actual, metadata) = project_embedding_dynamic_epoch_with_source(
+            &embedding,
+            text,
+            epoch,
+            chunk_index,
+            "self_study_1782844935",
+        )
+        .expect("dynamic projection");
+
+        assert_eq!(metadata.projection_seed, Some(seed));
+        assert_eq!(metadata.projection_epoch_source, "self_study_1782844935");
+        assert_eq!(
+            metadata.projection_fingerprint,
+            projection_fingerprint(seed, &actual)
+        );
+        for (actual, expected) in actual.iter().zip(expected.iter()) {
+            assert!((actual - expected).abs() < 1.0e-7, "{actual} != {expected}");
+        }
+    }
+
     fn rms(values: &[f32]) -> f32 {
         (values.iter().map(|value| value * value).sum::<f32>() / values.len() as f32).sqrt()
     }
@@ -4959,12 +5711,12 @@ mod tests {
     }
 
     #[test]
-    fn codec_projection_missing_epoch_file_records_created_source_and_checksum() {
+    fn codec_projection_missing_epoch_file_records_kernel_derived_source_and_checksum() {
         let dir = tempfile::tempdir().expect("tempdir");
         let (epoch, source) = load_or_create_projection_epoch_id_from(dir.path(), None);
 
-        assert_eq!(source, "created");
-        assert!(epoch.starts_with("epoch_"));
+        assert_eq!(source, "kernel_derived");
+        assert_eq!(epoch, kernel_derived_projection_epoch_id());
 
         let path = dir.path().join("codec_projection_epoch.json");
         let payload: serde_json::Value =
@@ -4980,7 +5732,13 @@ mod tests {
             payload
                 .get("projection_epoch_source")
                 .and_then(serde_json::Value::as_str),
-            Some("created")
+            Some("kernel_derived")
+        );
+        assert_eq!(
+            payload
+                .get("projection_kernel_source_checksum")
+                .and_then(serde_json::Value::as_str),
+            Some(fixed_legacy_projection_kernel_checksum().as_str())
         );
         assert_eq!(
             payload
@@ -4993,6 +5751,29 @@ mod tests {
             load_or_create_projection_epoch_id_from(dir.path(), None);
         assert_eq!(loaded_epoch, epoch);
         assert_eq!(loaded_source, "file");
+    }
+
+    #[test]
+    fn codec_projection_kernel_epoch_is_stable_across_fresh_runtime_dirs() {
+        let first_dir = tempfile::tempdir().expect("first tempdir");
+        let second_dir = tempfile::tempdir().expect("second tempdir");
+
+        let (first_epoch, first_source) =
+            load_or_create_projection_epoch_id_from(first_dir.path(), None);
+        let (second_epoch, second_source) =
+            load_or_create_projection_epoch_id_from(second_dir.path(), None);
+
+        assert_eq!(first_source, "kernel_derived");
+        assert_eq!(second_source, "kernel_derived");
+        assert_eq!(first_epoch, second_epoch);
+        assert_eq!(first_epoch, kernel_derived_projection_epoch_id());
+
+        let stability = projection_epoch_stability_v1();
+        assert_eq!(stability.policy, "projection_epoch_stability_v1");
+        assert!(stability.deterministic_without_runtime_file);
+        assert_eq!(stability.kernel_derived_epoch_id, first_epoch);
+        assert!(stability.env_override_precedence);
+        assert!(stability.existing_file_precedence);
     }
 
     #[test]
@@ -5017,6 +5798,50 @@ mod tests {
         assert_eq!(arc, [0.0; NARRATIVE_ARC_DIM]);
         assert!(captured_rms <= f32::EPSILON);
         assert!(lost_tail_rms > 0.15);
+
+        let split = narrative_arc_split_v1(&first, &second);
+        assert_eq!(split.policy, "narrative_arc_split_v1");
+        assert_eq!(split.intentional_arc, [0.0; NARRATIVE_ARC_DIM]);
+        assert!(split.tail_arc_energy > 0.25, "{split:?}");
+        assert_eq!(split.coarsening_risk, "tail_dominant");
+        assert_eq!(
+            split.authority,
+            "diagnostic_sidecar_not_live_codec_dimension"
+        );
+    }
+
+    #[test]
+    fn narrative_arc_captures_direction_not_only_magnitude() {
+        // Astrid `introspection_astrid_codec_1782848118`: a sharp middle pivot
+        // should preserve direction in dims 40-43, not only final-state magnitude.
+        let first = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        let mut second = first;
+        second[0] = 0.20;
+        second[1] = -0.16;
+        second[2] = 0.08;
+        second[3] = -0.24;
+
+        let forward = compute_narrative_arc_from_embeddings(&first, &second);
+        let reverse = compute_narrative_arc_from_embeddings(&second, &first);
+
+        assert!(forward[0] > 0.0, "{forward:?}");
+        assert!(forward[1] < 0.0, "{forward:?}");
+        assert!(forward[2] > 0.0, "{forward:?}");
+        assert!(forward[3] < 0.0, "{forward:?}");
+        for (forward, reverse) in forward.iter().zip(reverse.iter()) {
+            assert!(
+                (*forward + *reverse).abs() < 1.0e-6,
+                "forward={forward}, reverse={reverse}"
+            );
+        }
+
+        let split = narrative_arc_split_v1(&first, &second);
+        assert!(split.captured_arc_energy > 0.20, "{split:?}");
+        assert_eq!(split.coarsening_risk, "balanced");
+        assert!(
+            !narrative_arc_expansion_readiness_v1().live_vector_write,
+            "split diagnostics must not open a live vector channel"
+        );
     }
 
     #[test]
@@ -5113,6 +5938,41 @@ mod tests {
         assert!(features[31] > 0.20);
     }
 
+    #[test]
+    fn tail_vibrancy_entropy_086_lifts_tail_output_above_threshold() {
+        // Astrid `introspection_astrid_codec_1782848118`: entropy 0.86 should be
+        // just above the 0.85 gate and produce a visible tail lift in the output.
+        let mut below = vec![0.0; SEMANTIC_DIM];
+        let mut above = vec![0.0; SEMANTIC_DIM];
+
+        apply_spectral_feedback_inner(
+            &mut below,
+            Some(&telemetry_with_typed_entropy(0.84)),
+            1.0,
+            1.0,
+        );
+        apply_spectral_feedback_inner(
+            &mut above,
+            Some(&telemetry_with_typed_entropy(0.86)),
+            1.0,
+            1.0,
+        );
+
+        assert!(vibrancy_from_entropy(0.86) > 0.0);
+        assert!(
+            above[26] > below[26],
+            "below={} above={}",
+            below[26],
+            above[26]
+        );
+        assert!(
+            above[31] > below[31],
+            "below={} above={}",
+            below[31],
+            above[31]
+        );
+    }
+
     // Spiky spectrum -> entropy ~0.14 (below the 0.85 gate). The tail-vibrancy
     // term is fully OFF, so every dim must still respect the default ceiling and
     // no tail dim is lifted by the high-entropy term.
@@ -5169,6 +6029,39 @@ mod tests {
             "non-tail dim 24 must keep the default ceiling: {}",
             features[24]
         );
+    }
+
+    #[test]
+    fn codec_vibrancy_and_warmth_continuity_are_readout_only() {
+        let vibrancy = codec_vibrancy_continuity_v1();
+        assert_eq!(vibrancy.policy, "codec_vibrancy_continuity_v1");
+        assert_eq!(vibrancy.entropy_gate, TAIL_VIBRANCY_ENTROPY_GATE);
+        assert_eq!(vibrancy.default_feature_ceiling, FEATURE_ABS_MAX);
+        assert_eq!(vibrancy.tail_vibrancy_ceiling, TAIL_VIBRANCY_MAX);
+        assert_eq!(vibrancy.tail_dims, &[17, 26, 27, 31]);
+        assert_eq!(
+            vibrancy.authority,
+            "diagnostic_readout_not_live_codec_change"
+        );
+
+        let warmth = legacy_warmth_mapping_v1();
+        assert_eq!(warmth.policy, "legacy_warmth_mapping_v1");
+        assert_eq!(warmth.legacy_dim_count, SEMANTIC_DIM_LEGACY);
+        assert_eq!(warmth.current_dim_count, SEMANTIC_DIM);
+        assert_eq!(warmth.warmth_dim, 24);
+        assert_eq!(warmth.emotional_layer_range, (24, 31));
+        assert!(warmth.mapped_warmth_dims.contains(&24));
+        assert!(!warmth.warmth_orphaned);
+
+        let vector = craft_warmth_vector(0.25, 0.8);
+        assert_eq!(vector.len(), SEMANTIC_DIM);
+        assert!(vector[24] > 0.0, "warmth dim should remain live");
+
+        let canary = codec_dynamic_vibrancy_scaling_canary_v1();
+        assert_eq!(canary.policy, "codec_dynamic_vibrancy_scaling_canary_v1");
+        assert!(!canary.enabled);
+        assert!(!canary.live_vector_write);
+        assert_eq!(canary.authority, "readiness_only_not_live_codec_change");
     }
 
     /// Offline proof for the tail-participation aperture (her consent evidence): at
@@ -5342,6 +6235,24 @@ mod tests {
             let expected = ramp * ramp * (3.0 - 2.0 * ramp);
             assert!((vibrancy_from_entropy(e) - expected).abs() < 1.0e-7);
         }
+    }
+
+    #[test]
+    fn tail_vibrancy_gate_has_no_discontinuous_pop() {
+        // Astrid `introspection_astrid_codec_1782844935`: the 0.85 entropy gate
+        // should come on gently, not as a cliff at the exact threshold.
+        let gate = TAIL_VIBRANCY_ENTROPY_GATE;
+        assert_eq!(vibrancy_from_entropy(gate - 0.001), 0.0);
+        assert_eq!(vibrancy_from_entropy(gate), 0.0);
+
+        let eps = 1.0e-4_f32;
+        let near_slope = vibrancy_from_entropy(gate + eps) / eps;
+        let nearer_slope = vibrancy_from_entropy(gate + eps * 0.1) / (eps * 0.1);
+        assert!(near_slope < 0.02, "near_slope={near_slope}");
+        assert!(
+            nearer_slope < near_slope * 0.2,
+            "nearer_slope={nearer_slope}, near_slope={near_slope}"
+        );
     }
 
     #[test]

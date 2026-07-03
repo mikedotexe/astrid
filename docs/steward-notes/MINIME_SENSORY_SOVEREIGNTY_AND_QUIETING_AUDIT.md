@@ -446,3 +446,31 @@ Key observations:
 ## Verification Note
 
 This audit was re-grounded on March 27, 2026 against the current checkout and live workspace artifacts. It does not rely on older roadmap claims as authoritative. It also explicitly re-checks one point that changed since the earlier homeostasis audit: the grounding anchor is additive in the current code, not multiplicative.
+
+## 2026-07-02 Addendum: Pressure-Aware Habitability Calibration
+
+Minime's regulator introspections `1782988151` and `1782999536` named a specific false-settling risk: pressure interference can make a low-motion state look calmer or more inhabitable than it feels. The V1 calibration changes only the local quality metric, not authority.
+
+`InhabitableFluctuationV1::from_parts` now records:
+
+- `raw_motion_score`
+- `pressure_contribution = 0.10 * pressure_interference`
+- `adjusted_fluctuation_score`
+- `quality_before_pressure_calibration`
+- `quality_after_pressure_calibration`
+- `rigid_safety_basis`
+
+The adjusted score is clamped to `0.0..1.0`. Rigid-contraction safety still uses raw low-motion evidence, so pressure contribution cannot hide stuckness or convert a genuinely rigid state into settled habitability.
+
+`resonance_texture_component_alignment_v1` now compares raw density/pressure/porosity/packing components to the emitted `primary_texture`, `movement_quality`, confidence, and damping-candidate observability. A damping candidate such as one produced around pressure `0.26` remains advisory observability only; it does not enable dynamic damping, pressure relief, PI tuning, controller changes, or any external authority.
+
+Sensory-bus stability coverage now includes:
+
+- semantic stale handover around fill `0.20..0.35`
+- monotonic sampled stale windows
+- bounded adjacent deltas to prevent micro-stutter
+- stronger ShadowInfluence closure accounting through `shadow_influence_response_closure_v1`
+
+Boundary:
+
+- `[Boundary]` This is Minime-local scoring and diagnostic/status calibration only. It adds no new control knob, no lease, no pressure canary, no pressure relief, no fill target, no PI/controller mutation, no peer mutation, and no automatic correspondence/Witness action.

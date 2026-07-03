@@ -7,6 +7,7 @@
 //! Both connections auto-reconnect with exponential backoff on failure.
 #![allow(dead_code)]
 
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
@@ -21,10 +22,20 @@ use crate::lambda_tail::{self, ArtifactScanSummary, LambdaTailTelemetryV1};
 use crate::paths::bridge_paths;
 use crate::sticky_mode::{self, StickyModeAuditV1};
 use crate::types::{
-    ConnectivityStatus, LambdaContribution, LambdaProfile, MessageDirection, PullModeRate,
-    PressureTrendV1, PullTopologyProfile, SafetyDecisionTrace, SafetyLevel, SensoryMsg,
-    SpectralTelemetry, WebSocketLaneTrace,
+    BridgeReciprocityV1, ConnectivityStatus, LambdaContribution, LambdaProfile, MessageDirection,
+    PressureTrendSmoothingV1, PressureTrendV1, PullModeRate, PullTopologyProfile,
+    SafetyDecisionTrace, SafetyLevel, SensoryMsg, SpectralTelemetry, TelemetryHeartbeatDeltaV1,
+    TextureShapeOverTimeV2, TextureSignatureIntegrityV1, WebSocketLaneTrace,
 };
+
+const PRESSURE_TREND_SMOOTHING_WINDOW: usize = 5;
+
+#[derive(Debug, Clone)]
+struct PressureTrendSampleV1 {
+    pressure_risk: Option<f32>,
+    fill_pct: f32,
+    observed_at_unix_s: f64,
+}
 
 /// Shared mutable bridge state updated by `WebSocket` tasks.
 pub struct BridgeState {
@@ -36,6 +47,14 @@ pub struct BridgeState {
     pub previous_fill_pct: Option<f32>,
     /// Derived pressure velocity / stability readout from consecutive telemetry packets.
     pub pressure_trend_v1: Option<PressureTrendV1>,
+    /// Arrival-cadence truth behind the latest pressure/fill trend.
+    pub telemetry_heartbeat_delta_v1: Option<TelemetryHeartbeatDeltaV1>,
+    /// Bounded recent pressure/fill samples for smoothing diagnostics.
+    pressure_trend_samples_v1: VecDeque<PressureTrendSampleV1>,
+    /// Unix arrival time of the previous telemetry packet.
+    pub previous_telemetry_arrival_unix_s: Option<f64>,
+    /// Unix arrival time of the latest telemetry packet.
+    pub latest_telemetry_arrival_unix_s: Option<f64>,
     /// Current safety level.
     pub safety_level: SafetyLevel,
     /// Previous safety level (for transition detection).
@@ -44,6 +63,8 @@ pub struct BridgeState {
     pub telemetry_connected: bool,
     /// Whether the sensory `WebSocket` is connected.
     pub sensory_connected: bool,
+    /// Last confirmed outbound sensory send time, distinct from generic lane activity.
+    pub last_sensory_sent_unix_s: Option<f64>,
     /// Total messages relayed (both directions).
     pub messages_relayed: u64,
     /// Bridge start time.
@@ -104,10 +125,15 @@ impl BridgeState {
             fill_pct: 0.0,
             previous_fill_pct: None,
             pressure_trend_v1: None,
+            telemetry_heartbeat_delta_v1: None,
+            pressure_trend_samples_v1: VecDeque::new(),
+            previous_telemetry_arrival_unix_s: None,
+            latest_telemetry_arrival_unix_s: None,
             safety_level: SafetyLevel::Green,
             prev_safety_level: SafetyLevel::Green,
             telemetry_connected: false,
             sensory_connected: false,
+            last_sensory_sent_unix_s: None,
             messages_relayed: 0,
             start_time: std::time::Instant::now(),
             active_incident_id: None,
@@ -138,6 +164,159 @@ impl BridgeState {
     #[must_use]
     pub const fn connectivity_status(&self) -> ConnectivityStatus {
         ConnectivityStatus::from_lanes(self.telemetry_connected, self.sensory_connected)
+    }
+
+    /// Current reciprocity readout across inbound telemetry and outbound sensory lanes.
+    #[must_use]
+    pub fn bridge_reciprocity_v1(&self) -> BridgeReciprocityV1 {
+        let now = unix_now_s();
+        let telemetry_age_ms = self
+            .latest_telemetry_arrival_unix_s
+            .map(|at| ((now - at).max(0.0) * 1000.0).round());
+        let sensory_send_age_ms = self
+            .last_sensory_sent_unix_s
+            .map(|at| ((now - at).max(0.0) * 1000.0).round());
+        let connectivity = self.connectivity_status();
+        let one_sided_state = match connectivity {
+            ConnectivityStatus::Bidirectional
+                if telemetry_age_ms.is_some() && sensory_send_age_ms.is_some() =>
+            {
+                "bidirectional_recent"
+            }
+            ConnectivityStatus::Bidirectional if telemetry_age_ms.is_some() => {
+                "bidirectional_no_recent_sensory"
+            }
+            ConnectivityStatus::Bidirectional => "bidirectional_connected_no_recent_messages",
+            ConnectivityStatus::TelemetryOnly => "telemetry_only",
+            ConnectivityStatus::SensoryOnly => "sensory_only",
+            ConnectivityStatus::Severed => "severed",
+        };
+        BridgeReciprocityV1 {
+            policy: "bridge_reciprocity_v1".to_string(),
+            schema_version: 1,
+            connectivity,
+            latest_telemetry_arrival_unix_s: self.latest_telemetry_arrival_unix_s,
+            last_sensory_sent_unix_s: self.last_sensory_sent_unix_s,
+            telemetry_age_ms,
+            sensory_send_age_ms,
+            one_sided_state: one_sided_state.to_string(),
+            authority: "diagnostic_status_context_not_control".to_string(),
+        }
+    }
+
+    /// Read-only smoothing companion for the latest pressure trend.
+    #[must_use]
+    pub fn pressure_trend_smoothing_v1(&self) -> Option<PressureTrendSmoothingV1> {
+        build_pressure_trend_smoothing_v1(&self.pressure_trend_samples_v1)
+    }
+
+    /// Read-only integrity comparison for Minime's typed texture signature.
+    #[must_use]
+    pub fn texture_signature_integrity_v1(&self) -> Option<TextureSignatureIntegrityV1> {
+        let resonance = self
+            .latest_telemetry
+            .as_ref()
+            .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())?;
+        let signature = &resonance.texture_signature;
+        let temporal_variance = signature.temporal_variance;
+        let damping_candidate = signature.dynamic_damping_threshold_candidate;
+        let damping_candidate_status = if damping_candidate.is_some() {
+            "candidate_present"
+        } else if resonance.pressure_risk > 0.20 {
+            "missing_candidate_observability_only"
+        } else {
+            "candidate_not_needed_low_pressure"
+        };
+        let variance_status = if temporal_variance.is_some() {
+            "carried"
+        } else {
+            "absent_backward_compatible"
+        };
+        let alignment = &resonance.texture_component_alignment;
+
+        Some(TextureSignatureIntegrityV1 {
+            policy: "texture_signature_integrity_v1".to_string(),
+            schema_version: 1,
+            movement_quality: signature.movement_quality.clone(),
+            temporal_variance,
+            pressure_source_family: signature.pressure_source_family.clone(),
+            pressure_risk: Some(resonance.pressure_risk),
+            mode_packing: Some(resonance.components.mode_packing),
+            dynamic_damping_threshold_candidate: damping_candidate,
+            variance_status: variance_status.to_string(),
+            damping_candidate_status: damping_candidate_status.to_string(),
+            component_alignment_state: alignment.alignment_state.clone(),
+            expected_primary_texture: alignment.expected_primary_texture.clone(),
+            emitted_primary_texture: alignment.emitted_primary_texture.clone(),
+            advisory_observability: damping_candidate.is_none() && resonance.pressure_risk > 0.20,
+            authority: "diagnostic_observability_not_damping_or_control".to_string(),
+        })
+    }
+
+    /// Read-only synthesis that asks whether movement and asymmetry stayed legible over time.
+    #[must_use]
+    pub fn texture_shape_over_time_v2(&self) -> Option<TextureShapeOverTimeV2> {
+        let texture = self.texture_signature_integrity_v1();
+        let smoothing = self.pressure_trend_smoothing_v1();
+        let reciprocity = self.bridge_reciprocity_v1();
+        if texture.is_none() && smoothing.is_none() {
+            return None;
+        }
+        let movement_preservation = texture
+            .as_ref()
+            .map_or("insufficient_evidence", |integrity| {
+                let quality = integrity.movement_quality.as_str();
+                if quality.is_empty() || quality == "unknown" {
+                    "insufficient_evidence"
+                } else if quality.contains("static") || quality.contains("token") {
+                    "static_label_risk"
+                } else {
+                    "movement_preserved"
+                }
+            });
+        let temporal_variance_fit = texture
+            .as_ref()
+            .and_then(|integrity| integrity.temporal_variance)
+            .map_or("insufficient_evidence", |_| "variance_carried");
+        let reciprocity_asymmetry_fit = if reciprocity.connectivity
+            == ConnectivityStatus::Bidirectional
+            && (reciprocity.latest_telemetry_arrival_unix_s.is_none()
+                || reciprocity.last_sensory_sent_unix_s.is_none())
+        {
+            "false_bidirectional"
+        } else {
+            "asymmetry_clarified"
+        };
+        let pressure_smoothing_fit = smoothing.as_ref().map_or(
+            "insufficient_evidence",
+            |packet| match packet.classification.as_str() {
+                "twitchy_low_amplitude_oscillation" | "low_amplitude_stable" => {
+                    "twitch_correctly_ignored"
+                }
+                "sustained_rising_pressure" | "sustained_falling_pressure" => {
+                    "sustained_trend_preserved"
+                }
+                "mixed_window" => "insufficient_evidence",
+                _ => "insufficient_evidence",
+            },
+        );
+        let static_label_collapse_risk = if movement_preservation == "static_label_risk" {
+            "static_label_risk"
+        } else if movement_preservation == "movement_preserved" {
+            "movement_preserved"
+        } else {
+            "insufficient_evidence"
+        };
+        Some(TextureShapeOverTimeV2 {
+            policy: "texture_shape_over_time_v2".to_string(),
+            schema_version: 2,
+            movement_preservation: movement_preservation.to_string(),
+            temporal_variance_fit: temporal_variance_fit.to_string(),
+            reciprocity_asymmetry_fit: reciprocity_asymmetry_fit.to_string(),
+            pressure_smoothing_fit: pressure_smoothing_fit.to_string(),
+            static_label_collapse_risk: static_label_collapse_risk.to_string(),
+            authority: "diagnostic_context_not_control".to_string(),
+        })
     }
 
     /// True only when both perception (telemetry) and agency (sensory) lanes
@@ -174,6 +353,7 @@ fn build_pressure_trend_v1(
     previous_fill_pct: Option<f32>,
     latest: &SpectralTelemetry,
     latest_fill_pct: f32,
+    heartbeat: Option<&TelemetryHeartbeatDeltaV1>,
 ) -> PressureTrendV1 {
     const PRESSURE_DELTA_EPS: f32 = 0.04;
     const FILL_DELTA_EPS: f32 = 2.0;
@@ -185,25 +365,28 @@ fn build_pressure_trend_v1(
     let latest_mode_packing = latest_resonance.map(|resonance| resonance.components.mode_packing);
     let previous_mode_packing =
         previous_resonance.map(|resonance| resonance.components.mode_packing);
-    let pressure_delta = latest_pressure.zip(previous_pressure).map(|(latest, previous)| {
-        (latest - previous).clamp(-1.0, 1.0)
-    });
+    let pressure_delta = latest_pressure
+        .zip(previous_pressure)
+        .map(|(latest, previous)| (latest - previous).clamp(-1.0, 1.0));
     let mode_packing_delta = latest_mode_packing
         .zip(previous_mode_packing)
         .map(|(latest, previous)| (latest - previous).clamp(-1.0, 1.0));
-    let fill_delta_pct =
-        previous_fill_pct.map(|previous_fill| (latest_fill_pct - previous_fill).clamp(-100.0, 100.0));
+    let fill_delta_pct = previous_fill_pct
+        .map(|previous_fill| (latest_fill_pct - previous_fill).clamp(-100.0, 100.0));
+
+    let rises_at_threshold = |delta: f32, threshold: f32| delta + f32::EPSILON >= threshold;
+    let falls_at_threshold = |delta: f32, threshold: f32| delta - f32::EPSILON <= -threshold;
 
     let classification = if latest_resonance.is_none() {
         "telemetry_gap"
     } else if previous_resonance.is_none() || previous_fill_pct.is_none() {
         "insufficient_history"
-    } else if pressure_delta.is_some_and(|delta| delta >= PRESSURE_DELTA_EPS)
-        || fill_delta_pct.is_some_and(|delta| delta >= FILL_DELTA_EPS)
+    } else if pressure_delta.is_some_and(|delta| rises_at_threshold(delta, PRESSURE_DELTA_EPS))
+        || fill_delta_pct.is_some_and(|delta| rises_at_threshold(delta, FILL_DELTA_EPS))
     {
         "rising_pressure"
-    } else if pressure_delta.is_some_and(|delta| delta <= -PRESSURE_DELTA_EPS)
-        || fill_delta_pct.is_some_and(|delta| delta <= -FILL_DELTA_EPS)
+    } else if pressure_delta.is_some_and(|delta| falls_at_threshold(delta, PRESSURE_DELTA_EPS))
+        || fill_delta_pct.is_some_and(|delta| falls_at_threshold(delta, FILL_DELTA_EPS))
     {
         "falling_pressure"
     } else {
@@ -223,6 +406,198 @@ fn build_pressure_trend_v1(
         latest_fill_pct: latest_fill_pct.is_finite().then_some(latest_fill_pct),
         previous_fill_pct,
         fill_delta_pct,
+        timing_reliability: heartbeat.map(|value| value.timing_reliability.clone()),
+        telemetry_inter_arrival_ms: heartbeat.and_then(|value| value.inter_arrival_ms),
+        heartbeat_jitter_class: heartbeat.map(|value| value.jitter_class.clone()),
+        field_vs_hearing: heartbeat.map(|value| value.field_vs_hearing.clone()),
+    }
+}
+
+fn record_pressure_trend_sample_v1(
+    state: &mut BridgeState,
+    telemetry: &SpectralTelemetry,
+    fill_pct: f32,
+    observed_at_unix_s: f64,
+) {
+    let pressure_risk = telemetry
+        .resonance_density_v1
+        .as_ref()
+        .map(|resonance| resonance.pressure_risk);
+    state
+        .pressure_trend_samples_v1
+        .push_back(PressureTrendSampleV1 {
+            pressure_risk,
+            fill_pct,
+            observed_at_unix_s,
+        });
+    while state.pressure_trend_samples_v1.len() > PRESSURE_TREND_SMOOTHING_WINDOW {
+        state.pressure_trend_samples_v1.pop_front();
+    }
+}
+
+fn build_pressure_trend_smoothing_v1(
+    samples: &VecDeque<PressureTrendSampleV1>,
+) -> Option<PressureTrendSmoothingV1> {
+    if samples.is_empty() {
+        return None;
+    }
+    let latest_pressure = samples.back().and_then(|sample| sample.pressure_risk);
+    let valid_pressures = samples
+        .iter()
+        .filter_map(|sample| sample.pressure_risk)
+        .collect::<Vec<_>>();
+    let window_policy = format!("latest_{PRESSURE_TREND_SMOOTHING_WINDOW}_telemetry_samples");
+    if valid_pressures.len() < 3 {
+        return Some(PressureTrendSmoothingV1 {
+            policy: "pressure_trend_smoothing_v1".to_string(),
+            schema_version: 1,
+            classification: "insufficient_history".to_string(),
+            sample_count: samples.len(),
+            latest_pressure_risk: latest_pressure,
+            smoothed_pressure_delta: None,
+            pressure_range: None,
+            fill_range_pct: None,
+            window_policy,
+            authority: "diagnostic_smoothing_not_pressure_control".to_string(),
+        });
+    }
+    if valid_pressures.len() != samples.len() {
+        return Some(PressureTrendSmoothingV1 {
+            policy: "pressure_trend_smoothing_v1".to_string(),
+            schema_version: 1,
+            classification: "telemetry_gap".to_string(),
+            sample_count: samples.len(),
+            latest_pressure_risk: latest_pressure,
+            smoothed_pressure_delta: None,
+            pressure_range: None,
+            fill_range_pct: None,
+            window_policy,
+            authority: "diagnostic_smoothing_not_pressure_control".to_string(),
+        });
+    }
+
+    let first_pressure = valid_pressures.first().copied()?;
+    let last_pressure = valid_pressures.last().copied()?;
+    let smoothed_pressure_delta = (last_pressure - first_pressure).clamp(-1.0, 1.0);
+    let min_pressure = valid_pressures
+        .iter()
+        .copied()
+        .fold(f32::INFINITY, f32::min);
+    let max_pressure = valid_pressures
+        .iter()
+        .copied()
+        .fold(f32::NEG_INFINITY, f32::max);
+    let pressure_range = (max_pressure - min_pressure).max(0.0);
+    let min_fill = samples
+        .iter()
+        .map(|sample| sample.fill_pct)
+        .fold(f32::INFINITY, f32::min);
+    let max_fill = samples
+        .iter()
+        .map(|sample| sample.fill_pct)
+        .fold(f32::NEG_INFINITY, f32::max);
+    let fill_range_pct = (max_fill - min_fill).max(0.0);
+    let window_span_s = samples
+        .front()
+        .zip(samples.back())
+        .map(|(first, last)| (last.observed_at_unix_s - first.observed_at_unix_s).max(0.0))
+        .unwrap_or(0.0);
+    let sign_changes = valid_pressures
+        .windows(3)
+        .filter(|window| {
+            let first_delta = window[1] - window[0];
+            let second_delta = window[2] - window[1];
+            (first_delta > 0.0 && second_delta < 0.0)
+                || (first_delta < 0.0 && second_delta > 0.0)
+        })
+        .count();
+    let classification = if pressure_range <= 0.04 && sign_changes > 0 {
+        "twitchy_low_amplitude_oscillation"
+    } else if smoothed_pressure_delta >= 0.06 {
+        "sustained_rising_pressure"
+    } else if smoothed_pressure_delta <= -0.06 {
+        "sustained_falling_pressure"
+    } else if window_span_s > 0.0 && pressure_range <= 0.04 {
+        "low_amplitude_stable"
+    } else {
+        "mixed_window"
+    };
+
+    Some(PressureTrendSmoothingV1 {
+        policy: "pressure_trend_smoothing_v1".to_string(),
+        schema_version: 1,
+        classification: classification.to_string(),
+        sample_count: samples.len(),
+        latest_pressure_risk: latest_pressure,
+        smoothed_pressure_delta: Some((smoothed_pressure_delta * 100.0).round() / 100.0),
+        pressure_range: Some((pressure_range * 100.0).round() / 100.0),
+        fill_range_pct: Some((fill_range_pct * 100.0).round() / 100.0),
+        window_policy,
+        authority: "diagnostic_smoothing_not_pressure_control".to_string(),
+    })
+}
+
+fn build_telemetry_heartbeat_delta_v1(
+    previous_arrival_unix_s: Option<f64>,
+    latest_arrival_unix_s: f64,
+    trace: &WebSocketLaneTrace,
+) -> TelemetryHeartbeatDeltaV1 {
+    const NORMAL_MAX_MS: f32 = 1_500.0;
+    const LATE_MAX_MS: f32 = 5_000.0;
+
+    let inter_arrival_ms = previous_arrival_unix_s.map(|previous| {
+        ((latest_arrival_unix_s - previous).max(0.0) * 1000.0).min(f64::from(f32::MAX)) as f32
+    });
+    let jitter_class = match inter_arrival_ms {
+        None => "no_history",
+        Some(ms) if ms <= NORMAL_MAX_MS => "normal",
+        Some(ms) if ms <= LATE_MAX_MS => "late_packet",
+        Some(_) => "stale_packet",
+    }
+    .to_string();
+    let timing_reliability = match jitter_class.as_str() {
+        "normal" => "reliable",
+        "late_packet" => "timing_ambiguous",
+        "stale_packet" => "stale_hearing",
+        _ => "insufficient_history",
+    }
+    .to_string();
+    let field_vs_hearing = match jitter_class.as_str() {
+        "normal" => "telemetry cadence is steady; pressure trend can be read as field movement",
+        "late_packet" => {
+            "telemetry arrived late; small pressure shifts may be packet-timing artifacts"
+        },
+        "stale_packet" => {
+            "hearing from the field was stale; do not mistake silence for decompression"
+        },
+        _ => "first telemetry packet; field movement cannot yet be separated from hearing cadence",
+    }
+    .to_string();
+    TelemetryHeartbeatDeltaV1 {
+        policy: "telemetry_heartbeat_delta_v1".to_string(),
+        schema_version: 1,
+        latest_arrival_unix_s: Some(latest_arrival_unix_s),
+        previous_arrival_unix_s,
+        inter_arrival_ms,
+        jitter_class,
+        timing_reliability,
+        reconnect_count: trace.reconnects,
+        disconnect_count: trace.disconnects,
+        active_connection_id: trace.active_connection_id,
+        last_disconnect_reason: trace.last_disconnect_reason.clone(),
+        field_vs_hearing,
+    }
+}
+
+fn write_telemetry_heartbeat_snapshot(heartbeat: &TelemetryHeartbeatDeltaV1) {
+    let path = bridge_paths()
+        .bridge_workspace()
+        .join("telemetry_heartbeat_delta_v1.json");
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Ok(text) = serde_json::to_string_pretty(heartbeat) {
+        let _ = std::fs::write(path, format!("{text}\n"));
     }
 }
 
@@ -293,9 +668,13 @@ fn record_ws_message_received(state: &mut BridgeState, lane: WsLane, kind: &'sta
 }
 
 fn record_ws_message_sent(state: &mut BridgeState, lane: WsLane) {
+    let now = unix_now_s();
     let trace = lane_trace_mut(state, lane);
     trace.messages_sent = trace.messages_sent.saturating_add(1);
-    trace.last_message_at_unix_s = Some(unix_now_s());
+    trace.last_message_at_unix_s = Some(now);
+    if matches!(lane, WsLane::Sensory) {
+        state.last_sensory_sent_unix_s = Some(now);
+    }
 }
 
 fn record_ws_send_error(state: &mut BridgeState, lane: WsLane, reason: String) {
@@ -729,12 +1108,24 @@ async fn handle_telemetry_message(
     {
         let mut s = state.write().await;
         let previous_fill_pct = s.latest_telemetry.as_ref().map(|_| s.fill_pct);
+        let previous_arrival = s.latest_telemetry_arrival_unix_s;
+        let heartbeat = build_telemetry_heartbeat_delta_v1(
+            previous_arrival,
+            observed_at_unix_s,
+            &s.telemetry_ws,
+        );
         s.pressure_trend_v1 = Some(build_pressure_trend_v1(
             s.latest_telemetry.as_ref(),
             previous_fill_pct,
             &telemetry,
             fill_pct,
+            Some(&heartbeat),
         ));
+        record_pressure_trend_sample_v1(&mut s, &telemetry, fill_pct, observed_at_unix_s);
+        s.previous_telemetry_arrival_unix_s = previous_arrival;
+        s.latest_telemetry_arrival_unix_s = Some(observed_at_unix_s);
+        s.telemetry_heartbeat_delta_v1 = Some(heartbeat.clone());
+        write_telemetry_heartbeat_snapshot(&heartbeat);
         s.previous_fill_pct = previous_fill_pct;
         s.latest_telemetry = Some(telemetry.clone());
         s.fill_pct = fill_pct;
@@ -1758,7 +2149,11 @@ mod tests {
         .unwrap()
     }
 
-    fn make_pressure_eigenpacket(fill_ratio: f32, pressure_risk: f32, mode_packing: f32) -> Vec<u8> {
+    fn make_pressure_eigenpacket(
+        fill_ratio: f32,
+        pressure_risk: f32,
+        mode_packing: f32,
+    ) -> Vec<u8> {
         serde_json::to_vec(&serde_json::json!({
             "t_ms": 1000,
             "eigenvalues": [768.0, 300.0],
@@ -1797,6 +2192,19 @@ mod tests {
         .unwrap()
     }
 
+    fn make_pressure_telemetry(
+        fill_ratio: f32,
+        pressure_risk: f32,
+        mode_packing: f32,
+    ) -> SpectralTelemetry {
+        serde_json::from_slice(&make_pressure_eigenpacket(
+            fill_ratio,
+            pressure_risk,
+            mode_packing,
+        ))
+        .unwrap()
+    }
+
     #[tokio::test]
     async fn telemetry_updates_state_green() {
         let state = Arc::new(RwLock::new(BridgeState::new()));
@@ -1830,6 +2238,10 @@ mod tests {
             let trend = s.pressure_trend_v1.as_ref().unwrap();
             assert_eq!(trend.classification, "insufficient_history");
             assert_eq!(trend.latest_pressure_risk, Some(0.20));
+            assert_eq!(trend.heartbeat_jitter_class.as_deref(), Some("no_history"));
+            let heartbeat = s.telemetry_heartbeat_delta_v1.as_ref().unwrap();
+            assert_eq!(heartbeat.jitter_class, "no_history");
+            assert_eq!(heartbeat.timing_reliability, "insufficient_history");
         }
 
         handle_telemetry_message(&make_pressure_eigenpacket(0.705, 0.21, 0.42), &state, &db).await;
@@ -1838,6 +2250,8 @@ mod tests {
             let trend = s.pressure_trend_v1.as_ref().unwrap();
             assert_eq!(trend.classification, "stable_heavy");
             assert!(trend.pressure_delta.is_some_and(|delta| delta > 0.0));
+            assert_eq!(trend.heartbeat_jitter_class.as_deref(), Some("normal"));
+            assert_eq!(trend.timing_reliability.as_deref(), Some("reliable"));
         }
 
         handle_telemetry_message(&make_pressure_eigenpacket(0.735, 0.30, 0.46), &state, &db).await;
@@ -1862,6 +2276,174 @@ mod tests {
             let trend = s.pressure_trend_v1.as_ref().unwrap();
             assert_eq!(trend.classification, "telemetry_gap");
         }
+    }
+
+    #[test]
+    fn pressure_trend_exact_thresholds_are_inclusive() {
+        let previous = make_pressure_telemetry(0.70, 0.20, 0.40);
+        let rising = make_pressure_telemetry(0.70, 0.24, 0.40);
+        let falling = make_pressure_telemetry(0.70, 0.16, 0.40);
+        let fill_rising = make_pressure_telemetry(0.72, 0.20, 0.40);
+        let fill_falling = make_pressure_telemetry(0.68, 0.20, 0.40);
+
+        let trend = build_pressure_trend_v1(Some(&previous), Some(70.0), &rising, 70.0, None);
+        assert_eq!(trend.classification, "rising_pressure");
+        assert!(
+            trend
+                .pressure_delta
+                .is_some_and(|delta| (delta - 0.04).abs() < 0.000_001)
+        );
+
+        let trend = build_pressure_trend_v1(Some(&previous), Some(70.0), &falling, 70.0, None);
+        assert_eq!(trend.classification, "falling_pressure");
+        assert!(
+            trend
+                .pressure_delta
+                .is_some_and(|delta| (delta + 0.04).abs() < 0.000_001)
+        );
+
+        let trend = build_pressure_trend_v1(Some(&previous), Some(70.0), &fill_rising, 72.0, None);
+        assert_eq!(trend.classification, "rising_pressure");
+        assert_eq!(trend.fill_delta_pct, Some(2.0));
+
+        let trend = build_pressure_trend_v1(Some(&previous), Some(70.0), &fill_falling, 68.0, None);
+        assert_eq!(trend.classification, "falling_pressure");
+        assert_eq!(trend.fill_delta_pct, Some(-2.0));
+    }
+
+    #[test]
+    fn pressure_trend_smoothing_marks_twitchy_low_amplitude_window() {
+        let mut state = BridgeState::new();
+        for (idx, pressure) in [0.20_f32, 0.22, 0.19, 0.21, 0.20].into_iter().enumerate() {
+            let telemetry = make_pressure_telemetry(0.70, pressure, 0.40);
+            record_pressure_trend_sample_v1(&mut state, &telemetry, 70.0, 100.0 + idx as f64);
+        }
+
+        let smoothing = state.pressure_trend_smoothing_v1().expect("smoothing");
+        assert_eq!(
+            smoothing.classification,
+            "twitchy_low_amplitude_oscillation"
+        );
+        assert_eq!(smoothing.sample_count, 5);
+        assert_eq!(smoothing.authority, "diagnostic_smoothing_not_pressure_control");
+    }
+
+    #[test]
+    fn bridge_reciprocity_distinguishes_one_sided_states_and_last_sensory_send() {
+        let mut state = BridgeState::new();
+        state.telemetry_connected = true;
+        state.sensory_connected = false;
+        state.latest_telemetry_arrival_unix_s = Some(unix_now_s());
+        let telemetry_only = state.bridge_reciprocity_v1();
+        assert_eq!(telemetry_only.connectivity, ConnectivityStatus::TelemetryOnly);
+        assert_eq!(telemetry_only.one_sided_state, "telemetry_only");
+        assert_eq!(telemetry_only.last_sensory_sent_unix_s, None);
+
+        state.sensory_connected = true;
+        record_ws_message_sent(&mut state, WsLane::Sensory);
+        let bidirectional = state.bridge_reciprocity_v1();
+        assert_eq!(bidirectional.connectivity, ConnectivityStatus::Bidirectional);
+        assert_eq!(bidirectional.one_sided_state, "bidirectional_recent");
+        assert!(bidirectional.last_sensory_sent_unix_s.is_some());
+        assert!(bidirectional.sensory_send_age_ms.is_some());
+    }
+
+    #[test]
+    fn texture_signature_integrity_reports_variance_and_observability_boundary() {
+        let mut state = BridgeState::new();
+        let telemetry: SpectralTelemetry = serde_json::from_slice(&make_pressure_eigenpacket(
+            0.70, 0.24, 0.44,
+        ))
+        .unwrap();
+        state.latest_telemetry = Some(telemetry);
+        let integrity = state
+            .texture_signature_integrity_v1()
+            .expect("texture integrity");
+        assert_eq!(integrity.policy, "texture_signature_integrity_v1");
+        assert_eq!(integrity.temporal_variance, None);
+        assert_eq!(
+            integrity.damping_candidate_status,
+            "missing_candidate_observability_only"
+        );
+        assert_eq!(integrity.component_alignment_state, "insufficient_context");
+        assert_eq!(integrity.expected_primary_texture, "unknown");
+        assert_eq!(integrity.emitted_primary_texture, "unknown");
+        assert!(integrity.advisory_observability);
+        assert_eq!(
+            integrity.authority,
+            "diagnostic_observability_not_damping_or_control"
+        );
+    }
+
+    #[test]
+    fn texture_shape_over_time_v2_synthesizes_movement_variance_reciprocity_and_smoothing() {
+        let mut state = BridgeState::new();
+        let mut telemetry = make_pressure_telemetry(0.70, 0.22, 0.40);
+        let resonance = telemetry
+            .resonance_density_v1
+            .as_mut()
+            .expect("resonance density");
+        resonance.texture_signature.movement_quality = "unfolding_with_containment".to_string();
+        resonance.texture_signature.temporal_variance = Some(0.27);
+        state.latest_telemetry = Some(telemetry);
+        state.telemetry_connected = true;
+        state.sensory_connected = false;
+        state.latest_telemetry_arrival_unix_s = Some(unix_now_s());
+        for (idx, pressure) in [0.20_f32, 0.22, 0.19, 0.21, 0.20].into_iter().enumerate() {
+            let sample = make_pressure_telemetry(0.70, pressure, 0.40);
+            record_pressure_trend_sample_v1(&mut state, &sample, 70.0, 100.0 + idx as f64);
+        }
+
+        let shape = state.texture_shape_over_time_v2().expect("shape");
+        assert_eq!(shape.policy, "texture_shape_over_time_v2");
+        assert_eq!(shape.movement_preservation, "movement_preserved");
+        assert_eq!(shape.temporal_variance_fit, "variance_carried");
+        assert_eq!(shape.reciprocity_asymmetry_fit, "asymmetry_clarified");
+        assert_eq!(shape.pressure_smoothing_fit, "twitch_correctly_ignored");
+        assert_eq!(shape.static_label_collapse_risk, "movement_preserved");
+        assert_eq!(shape.authority, "diagnostic_context_not_control");
+    }
+
+    #[test]
+    fn telemetry_heartbeat_delta_classifies_normal_late_stale_and_no_history() {
+        let trace = WebSocketLaneTrace {
+            reconnects: 2,
+            disconnects: 1,
+            active_connection_id: Some(7),
+            last_disconnect_reason: Some("test_disconnect".to_string()),
+            ..WebSocketLaneTrace::default()
+        };
+        let no_history = build_telemetry_heartbeat_delta_v1(None, 100.0, &trace);
+        assert_eq!(no_history.jitter_class, "no_history");
+        assert_eq!(no_history.timing_reliability, "insufficient_history");
+        assert!(
+            no_history
+                .field_vs_hearing
+                .contains("cannot yet be separated")
+        );
+
+        let normal = build_telemetry_heartbeat_delta_v1(Some(100.0), 101.0, &trace);
+        assert_eq!(normal.jitter_class, "normal");
+        assert_eq!(normal.inter_arrival_ms, Some(1000.0));
+        assert_eq!(normal.reconnect_count, 2);
+        assert_eq!(normal.active_connection_id, Some(7));
+
+        let late = build_telemetry_heartbeat_delta_v1(Some(100.0), 103.0, &trace);
+        assert_eq!(late.jitter_class, "late_packet");
+        assert_eq!(late.timing_reliability, "timing_ambiguous");
+
+        let late_4999 = build_telemetry_heartbeat_delta_v1(Some(100.0), 104.999, &trace);
+        assert_eq!(late_4999.jitter_class, "late_packet");
+        assert_eq!(late_4999.active_connection_id, Some(7));
+
+        let late_5000 = build_telemetry_heartbeat_delta_v1(Some(100.0), 105.0, &trace);
+        assert_eq!(late_5000.jitter_class, "late_packet");
+        assert_eq!(late_5000.timing_reliability, "timing_ambiguous");
+
+        let stale = build_telemetry_heartbeat_delta_v1(Some(100.0), 108.0, &trace);
+        assert_eq!(stale.jitter_class, "stale_packet");
+        assert_eq!(stale.timing_reliability, "stale_hearing");
+        assert!(stale.field_vs_hearing.contains("do not mistake silence"));
     }
 
     #[tokio::test]

@@ -42,6 +42,98 @@ pub struct ResonanceDensityComponents {
     pub comfort_gate: f32,
 }
 
+/// Typed texture summary behind resonance density. Advisory context only.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResonanceTextureSignatureV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub primary_texture: String,
+    pub pressure_source_family: String,
+    pub edge_definition: String,
+    pub movement_quality: String,
+    pub confidence: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub temporal_variance: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dynamic_damping_threshold_candidate: Option<f32>,
+    pub authority: String,
+    pub note: String,
+}
+
+impl Default for ResonanceTextureSignatureV1 {
+    fn default() -> Self {
+        Self {
+            policy: "resonance_texture_signature_v1".to_string(),
+            schema_version: 1,
+            primary_texture: "unknown".to_string(),
+            pressure_source_family: "unknown".to_string(),
+            edge_definition: "unknown".to_string(),
+            movement_quality: "unknown".to_string(),
+            confidence: 0.0,
+            temporal_variance: None,
+            dynamic_damping_threshold_candidate: None,
+            authority: "advisory_context_not_control".to_string(),
+            note: "texture signature absent from older payload".to_string(),
+        }
+    }
+}
+
+/// Read-only check that Minime's typed texture signature matches its component body.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResonanceTextureComponentAlignmentV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub expected_primary_texture: String,
+    pub emitted_primary_texture: String,
+    pub expected_movement_quality: String,
+    pub emitted_movement_quality: String,
+    pub alignment_state: String,
+    pub confidence: f32,
+    pub damping_candidate_status: String,
+    pub authority: String,
+}
+
+impl Default for ResonanceTextureComponentAlignmentV1 {
+    fn default() -> Self {
+        Self {
+            policy: "resonance_texture_component_alignment_v1".to_string(),
+            schema_version: 1,
+            expected_primary_texture: "unknown".to_string(),
+            emitted_primary_texture: "unknown".to_string(),
+            expected_movement_quality: "unknown".to_string(),
+            emitted_movement_quality: "unknown".to_string(),
+            alignment_state: "insufficient_context".to_string(),
+            confidence: 0.0,
+            damping_candidate_status: "unknown".to_string(),
+            authority: "diagnostic_observability_not_damping_or_control".to_string(),
+        }
+    }
+}
+
+/// Read-only consistency packet for the typed texture signature.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TextureSignatureIntegrityV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub movement_quality: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub temporal_variance: Option<f32>,
+    pub pressure_source_family: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_risk: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dynamic_damping_threshold_candidate: Option<f32>,
+    pub variance_status: String,
+    pub damping_candidate_status: String,
+    pub component_alignment_state: String,
+    pub expected_primary_texture: String,
+    pub emitted_primary_texture: String,
+    pub advisory_observability: bool,
+    pub authority: String,
+}
+
 /// Bounded Minime-local PI target hint carried with resonance-density telemetry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResonanceDensityControl {
@@ -76,6 +168,10 @@ pub struct ResonanceDensityV1 {
     pub pressure_risk: f32,
     pub quality: String,
     pub components: ResonanceDensityComponents,
+    #[serde(default)]
+    pub texture_signature: ResonanceTextureSignatureV1,
+    #[serde(default)]
+    pub texture_component_alignment: ResonanceTextureComponentAlignmentV1,
     pub control: ResonanceDensityControl,
 }
 
@@ -164,6 +260,36 @@ pub struct InhabitableFluctuationControl {
     pub note: String,
 }
 
+/// Live Minime-local calibration trail for pressure-aware inhabitability scoring.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InhabitableFluctuationPressureCalibrationV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub raw_motion_score: f32,
+    pub pressure_contribution: f32,
+    pub adjusted_fluctuation_score: f32,
+    pub quality_before_pressure_calibration: String,
+    pub quality_after_pressure_calibration: String,
+    pub rigid_safety_basis: String,
+    pub authority: String,
+}
+
+impl Default for InhabitableFluctuationPressureCalibrationV1 {
+    fn default() -> Self {
+        Self {
+            policy: "inhabitable_fluctuation_pressure_calibration_v1".to_string(),
+            schema_version: 1,
+            raw_motion_score: 0.0,
+            pressure_contribution: 0.0,
+            adjusted_fluctuation_score: 0.0,
+            quality_before_pressure_calibration: "unknown".to_string(),
+            quality_after_pressure_calibration: "unknown".to_string(),
+            rigid_safety_basis: "raw_motion_score_preserved_for_stuckness_detection".to_string(),
+            authority: "minime_local_metric_calibration_not_external_control".to_string(),
+        }
+    }
+}
+
 /// Typed metric for whether fluctuation remains returnable and inhabitable.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InhabitableFluctuationV1 {
@@ -177,6 +303,8 @@ pub struct InhabitableFluctuationV1 {
     pub components: InhabitableFluctuationComponents,
     #[serde(default)]
     pub context: InhabitableFluctuationContext,
+    #[serde(default)]
+    pub pressure_calibration: InhabitableFluctuationPressureCalibrationV1,
     pub control: InhabitableFluctuationControl,
 }
 
@@ -204,6 +332,56 @@ pub struct PressureTrendV1 {
     pub previous_fill_pct: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fill_delta_pct: Option<f32>,
+    /// Reliability of the arrival cadence behind this pressure trend.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timing_reliability: Option<String>,
+    /// Latest telemetry inter-arrival time, if a prior packet was observed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub telemetry_inter_arrival_ms: Option<f32>,
+    /// Arrival jitter class for the latest telemetry heartbeat.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heartbeat_jitter_class: Option<String>,
+    /// Human-readable distinction between spectral content and hearing cadence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub field_vs_hearing: Option<String>,
+}
+
+/// Arrival-cadence truth for the telemetry WebSocket.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TelemetryHeartbeatDeltaV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_arrival_unix_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previous_arrival_unix_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inter_arrival_ms: Option<f32>,
+    pub jitter_class: String,
+    pub timing_reliability: String,
+    pub reconnect_count: u64,
+    pub disconnect_count: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_connection_id: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_disconnect_reason: Option<String>,
+    pub field_vs_hearing: String,
+}
+
+/// Read-only schema truth around the typed spectral fingerprint.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpectralFingerprintIntegrityV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub status: String,
+    pub typed_present: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legacy_vector_len: Option<usize>,
+    pub typed_precedence_over_legacy: bool,
+    #[serde(default)]
+    pub issues: Vec<String>,
+    pub summary: String,
+    pub authority: String,
 }
 
 /// Raw telemetry broadcast by minime's ESN engine on port 7878.
@@ -335,6 +513,71 @@ impl SpectralTelemetry {
     #[must_use]
     pub fn typed_fingerprint(&self) -> Option<SpectralFingerprintV1> {
         SpectralFingerprintV1::from_telemetry(self)
+    }
+
+    /// Diagnostic readout for whether legacy/typed fingerprint payloads are coherent.
+    #[must_use]
+    pub fn spectral_fingerprint_integrity_v1(&self) -> SpectralFingerprintIntegrityV1 {
+        let typed_present = self.spectral_fingerprint_v1.is_some();
+        let legacy_vector_len = self.spectral_fingerprint.as_ref().map(Vec::len);
+        let typed_precedence_over_legacy = typed_present && legacy_vector_len.is_some();
+        let mut issues = Vec::new();
+        if let Some(len) = legacy_vector_len
+            && len != 32
+        {
+            issues.push(format!("legacy_vector_len_{len}_expected_32"));
+        }
+        if !typed_present && legacy_vector_len.is_none() {
+            issues.push("fingerprint_absent".to_string());
+        }
+        let status = if typed_present {
+            "typed_canonical"
+        } else if legacy_vector_len == Some(32) {
+            "legacy_32d_accepted"
+        } else if legacy_vector_len.is_some() {
+            "malformed_legacy_vector"
+        } else {
+            "absent"
+        }
+        .to_string();
+        let summary = if typed_present {
+            if typed_precedence_over_legacy {
+                "spectral_fingerprint_v1 present; typed payload takes precedence over legacy spectral_fingerprint slots"
+            } else {
+                "spectral_fingerprint_v1 present; canonical typed payload available"
+            }
+        } else if legacy_vector_len == Some(32) {
+            "legacy spectral_fingerprint has 32 values and can reconstruct spectral_fingerprint_v1"
+        } else if let Some(len) = legacy_vector_len {
+            return SpectralFingerprintIntegrityV1 {
+                policy: "spectral_fingerprint_integrity_v1".to_string(),
+                schema_version: 1,
+                status,
+                typed_present,
+                legacy_vector_len,
+                typed_precedence_over_legacy,
+                issues,
+                summary: format!(
+                    "legacy spectral_fingerprint has {len} values; expected 32, so typed reconstruction is blocked"
+                ),
+                authority: "diagnostic_context_not_control".to_string(),
+            };
+        } else {
+            "no spectral fingerprint payload present"
+        }
+        .to_string();
+
+        SpectralFingerprintIntegrityV1 {
+            policy: "spectral_fingerprint_integrity_v1".to_string(),
+            schema_version: 1,
+            status,
+            typed_present,
+            legacy_vector_len,
+            typed_precedence_over_legacy,
+            issues,
+            summary,
+            authority: "diagnostic_context_not_control".to_string(),
+        }
     }
 
     /// Typed denominator/recursive-compression metric, derived when needed.
@@ -849,9 +1092,18 @@ pub struct BridgeStatus {
     /// Latest resonance-density metric, if Minime exports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resonance_density_v1: Option<ResonanceDensityV1>,
+    /// Consistency readout for typed texture fields, if Minime exports them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub texture_signature_integrity_v1: Option<TextureSignatureIntegrityV1>,
     /// Derived pressure velocity / stability readout from consecutive telemetry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_trend_v1: Option<PressureTrendV1>,
+    /// Bounded smoothing companion for pressure trend; diagnostic only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_trend_smoothing_v1: Option<PressureTrendSmoothingV1>,
+    /// Arrival-cadence truth for pressure/fill trend interpretation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub telemetry_heartbeat_delta_v1: Option<TelemetryHeartbeatDeltaV1>,
     /// Latest pressure-source metric, if Minime exports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_source_v1: Option<PressureSourceV1>,
@@ -871,6 +1123,66 @@ pub struct BridgeStatus {
     /// live — the asymmetry she flagged in `self_study_1781125549`.
     #[serde(default)]
     pub connectivity: ConnectivityStatus,
+    /// Last confirmed outbound sensory send time, distinct from generic lane activity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_sensory_sent_unix_s: Option<f64>,
+    /// Directional reciprocity packet for telemetry/sensory asymmetry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge_reciprocity_v1: Option<BridgeReciprocityV1>,
+    /// Compact V2 readout for movement/variance/asymmetry over time.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub texture_shape_over_time_v2: Option<TextureShapeOverTimeV2>,
+}
+
+/// Directional bridge reciprocity: what arrived, what was sent, and whether the
+/// connection is one-sided. Diagnostic context only.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BridgeReciprocityV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub connectivity: ConnectivityStatus,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_telemetry_arrival_unix_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_sensory_sent_unix_s: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub telemetry_age_ms: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sensory_send_age_ms: Option<f64>,
+    pub one_sided_state: String,
+    pub authority: String,
+}
+
+/// Bounded recent-window smoothing companion for `pressure_trend_v1`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PressureTrendSmoothingV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub classification: String,
+    pub sample_count: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_pressure_risk: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smoothed_pressure_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_range: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill_range_pct: Option<f32>,
+    pub window_policy: String,
+    pub authority: String,
+}
+
+/// Compact read-only bridge-status synthesis for texture shape over time.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TextureShapeOverTimeV2 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub movement_preservation: String,
+    pub temporal_variance_fit: String,
+    pub reciprocity_asymmetry_fit: String,
+    pub pressure_smoothing_fit: String,
+    pub static_label_collapse_risk: String,
+    pub authority: String,
 }
 
 /// Bidirectional connectivity health derived from the two `WebSocket` lanes.
@@ -2010,6 +2322,7 @@ mod tests {
         assert_eq!(resonance.policy, "resonance_density_v1");
         assert_eq!(resonance.quality, "forming_containment");
         assert!((resonance.density - 0.64).abs() < 0.01);
+        assert_eq!(resonance.texture_signature.primary_texture, "unknown");
         assert_eq!(
             resonance.control.intervention_type,
             ResonanceInterventionType::ObservationalReadout
@@ -2055,6 +2368,123 @@ mod tests {
     }
 
     #[test]
+    fn resonance_texture_signature_v1_deserializes() {
+        let density: ResonanceDensityV1 = serde_json::from_value(serde_json::json!({
+            "policy": "resonance_density_v1",
+            "schema_version": 1,
+            "density": 0.82,
+            "containment_score": 0.74,
+            "pressure_risk": 0.28,
+            "quality": "rich_containment",
+            "components": {
+                "active_energy": 0.80,
+                "mode_packing": 0.70,
+                "temporal_persistence": 0.76,
+                "structural_plurality": 0.54,
+                "comfort_gate": 0.68
+            },
+            "texture_signature": {
+                "policy": "resonance_texture_signature_v1",
+                "schema_version": 1,
+                "primary_texture": "overpacked_viscous",
+                "pressure_source_family": "mode_packing",
+                "edge_definition": "soft",
+                "movement_quality": "slow_viscous",
+                "confidence": 0.71,
+                "temporal_variance": 0.42,
+                "dynamic_damping_threshold_candidate": 0.25,
+                "authority": "advisory_context_not_control",
+                "note": "candidate only"
+            },
+            "control": {
+                "target_bias_pct": 0.0,
+                "wander_scale": 1.0,
+                "applied_locally": true,
+                "damping_coefficient": 0.02,
+                "intervention_type": "observational_readout",
+                "note": "density is observational; no local target bias"
+            }
+        }))
+        .unwrap();
+
+        assert_eq!(
+            density.texture_signature.primary_texture,
+            "overpacked_viscous"
+        );
+        assert_eq!(
+            density
+                .texture_signature
+                .dynamic_damping_threshold_candidate,
+            Some(0.25)
+        );
+        assert_eq!(density.texture_signature.temporal_variance, Some(0.42));
+        assert_eq!(
+            density.texture_signature.authority,
+            "advisory_context_not_control"
+        );
+        assert_eq!(
+            density.control.intervention_type,
+            ResonanceInterventionType::ObservationalReadout
+        );
+    }
+
+    #[test]
+    fn resonance_texture_legacy_density_defaults_without_field() {
+        let density: ResonanceDensityV1 = serde_json::from_value(serde_json::json!({
+            "policy": "resonance_density_v1",
+            "schema_version": 1,
+            "density": 0.64,
+            "containment_score": 0.58,
+            "pressure_risk": 0.20,
+            "quality": "forming_containment",
+            "components": {
+                "active_energy": 0.91,
+                "mode_packing": 0.50,
+                "temporal_persistence": 0.70,
+                "structural_plurality": 0.62,
+                "comfort_gate": 0.95
+            },
+            "control": {
+                "target_bias_pct": 0.0,
+                "wander_scale": 1.0,
+                "applied_locally": true,
+                "note": "density is observational; no local target bias"
+            }
+        }))
+        .unwrap();
+
+        assert_eq!(density.texture_signature.primary_texture, "unknown");
+        assert_eq!(density.texture_signature.edge_definition, "unknown");
+        assert_eq!(density.texture_signature.temporal_variance, None);
+        assert_eq!(
+            density.texture_signature.authority,
+            "advisory_context_not_control"
+        );
+    }
+
+    #[test]
+    fn pressure_trend_v1_old_payload_defaults_timing_fields() {
+        let trend: PressureTrendV1 = serde_json::from_value(serde_json::json!({
+            "policy": "pressure_trend_v1",
+            "schema_version": 1,
+            "classification": "stable_heavy",
+            "latest_pressure_risk": 0.2,
+            "previous_pressure_risk": 0.2,
+            "pressure_delta": 0.0,
+            "latest_fill_pct": 68.0,
+            "previous_fill_pct": 68.0,
+            "fill_delta_pct": 0.0
+        }))
+        .unwrap();
+
+        assert_eq!(trend.classification, "stable_heavy");
+        assert!(trend.timing_reliability.is_none());
+        assert!(trend.telemetry_inter_arrival_ms.is_none());
+        assert!(trend.heartbeat_jitter_class.is_none());
+        assert!(trend.field_vs_hearing.is_none());
+    }
+
+    #[test]
     fn parse_minime_eigenpacket_minimal() {
         // Minimal valid EigenPacket (no optional fields).
         let json = r#"{
@@ -2097,6 +2527,10 @@ mod tests {
         assert_eq!(typed.geom_rel, 27.0);
         assert_eq!(typed.adjacent_gap_ratios, [28.0, 29.0, 30.0, 31.0]);
         assert!(telemetry.denominator_metrics().is_some());
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert_eq!(integrity.status, "legacy_32d_accepted");
+        assert_eq!(integrity.legacy_vector_len, Some(32));
+        assert!(integrity.summary.contains("reconstruct"));
     }
 
     #[test]
@@ -2126,6 +2560,32 @@ mod tests {
 
         assert_eq!(typed.geom_rel, 1.23);
         assert_eq!(typed.spectral_entropy, 0.42);
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert_eq!(integrity.status, "typed_canonical");
+        assert!(integrity.typed_precedence_over_legacy);
+        assert!(integrity.summary.contains("typed payload takes precedence"));
+    }
+
+    #[test]
+    fn malformed_legacy_fingerprint_reports_integrity_issue() {
+        let json = serde_json::json!({
+            "t_ms": 1000,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.5,
+            "spectral_fingerprint": vec![0.0_f32; 31],
+        });
+
+        let telemetry: SpectralTelemetry = serde_json::from_value(json).unwrap();
+        assert!(telemetry.typed_fingerprint().is_none());
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+        assert_eq!(integrity.status, "malformed_legacy_vector");
+        assert_eq!(integrity.legacy_vector_len, Some(31));
+        assert!(
+            integrity
+                .issues
+                .contains(&"legacy_vector_len_31_expected_32".to_string())
+        );
+        assert_eq!(integrity.authority, "diagnostic_context_not_control");
     }
 
     #[test]

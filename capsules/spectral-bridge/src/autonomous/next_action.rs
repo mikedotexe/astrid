@@ -12,12 +12,15 @@ mod modes;
 mod native_gesture;
 mod operations;
 mod pdf;
+mod peer_correspondence;
+mod phase_transition;
+mod pressure_agency;
 mod probe_self;
-mod regulator_map;
 pub(crate) mod protected_diagnostics;
+mod regulator_map;
 mod resource_governor;
-pub(crate) mod shadow;
 mod self_regulation;
+pub(crate) mod shadow;
 pub(crate) mod sovereignty;
 mod space_hold;
 mod spectral_drift;
@@ -1339,6 +1342,19 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
         | "REGULATOR_MAP_STATUS"
         | "REGULATOR_REPLAY_STATUS"
         | "REGULATOR_BOUNDARY_CARD"
+        | "PI_PRESSURE_REPLAY_STATUS"
+        | "PRESSURE_AGENCY_STATUS"
+        | "PRESSURE_CONTROL_STATUS"
+        | "PRESSURE_AGENCY"
+        | "PRESSURE_AGENCY_REQUEST"
+        | "PRESSURE_CONTROL_REQUEST"
+        | "PRESSURE_REQUEST"
+        | "TEXTURE_AGENCY_STATUS"
+        | "TEXTURE_STATUS"
+        | "RESONANCE_TEXTURE_STATUS"
+        | "TEXTURE_AGENCY_REQUEST"
+        | "TEXTURE_REQUEST"
+        | "RESONANCE_TEXTURE_REQUEST"
         | "CLOSE_EYES"
         | "SHUT_EYES"
         | "OPEN_EYES"
@@ -1422,6 +1438,16 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "REGULATOR_MAP_STATUS"
         | "REGULATOR_REPLAY_STATUS"
         | "REGULATOR_BOUNDARY_CARD"
+        | "PI_PRESSURE_REPLAY_STATUS"
+        | "PRESSURE_AGENCY_STATUS"
+        | "PRESSURE_CONTROL_STATUS"
+        | "PRESSURE_AGENCY"
+        | "TEXTURE_AGENCY_STATUS"
+        | "TEXTURE_STATUS"
+        | "RESONANCE_TEXTURE_STATUS"
+        | "TEXTURE_AGENCY_REQUEST"
+        | "TEXTURE_REQUEST"
+        | "RESONANCE_TEXTURE_REQUEST"
         | "ACTION_PREFLIGHT"
         | "NEXT_PROBE"
         | "PREFLIGHT"
@@ -1458,6 +1484,23 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "AFTERSHOCK_TRACE"
         | "TREMOR_RESIDUE"
         | "CASCADE_RESIDUE"
+        | "MESSAGE_MINIME"
+        | "REPLY_MINIME"
+        | "TRACE_MINIME"
+        | "CORRESPONDENCE_TRACE"
+        | "ACK_MINIME"
+        | "CORRESPONDENCE_ACK"
+        | "I_RECEIVED_THIS"
+        | "CORRESPONDENCE_HEARTBEAT"
+        | "CLAIM_MINIME_LEGACY"
+        | "CORRESPONDENCE_CLAIM"
+        | "CORRESPONDENCE_CLAIM_OUTCOME"
+        | "CORRESPONDENCE_STATUS"
+        | "LEGACY_CORRESPONDENCE_STATUS"
+        | "DECLARE_TRANSITION"
+        | "WITNESS_TRANSITION"
+        | "TRANSITION_STATUS"
+        | "PHASE_TRANSITION_STATUS"
         | "VISUALIZE_CASCADE"
         | "RECONVERGENCE_MAP"
         | "SPACE_HOLD"
@@ -1467,8 +1510,16 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "HUM_DECAY"
         | "HUM_DECAY_STUDY"
         | "M6_BRIDGE" => "read_only",
-        "WRITE_FILE" | "EXPERIMENT" | "EXPERIMENT_RUN" | "RUN_PYTHON" | "CODEX" | "CODEX_NEW"
-        | "REPAIR_APPLY" => "live_write",
+        "WRITE_FILE"
+        | "EXPERIMENT"
+        | "EXPERIMENT_RUN"
+        | "RUN_PYTHON"
+        | "CODEX"
+        | "CODEX_NEW"
+        | "REPAIR_APPLY"
+        | "PRESSURE_AGENCY_REQUEST"
+        | "PRESSURE_CONTROL_REQUEST"
+        | "PRESSURE_REQUEST" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
         _ => "observe",
     }
@@ -1516,9 +1567,43 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "DOSSIER_STATUS"
         | "DOSSIER_REVIEW" => "experiment_continuity",
         "LIVED_TERM_STATUS" | "LIVED_TERM_EXPERIMENT" => "lived_term_bridge",
-        "REGULATOR_MAP_STATUS" | "REGULATOR_REPLAY_STATUS" | "REGULATOR_BOUNDARY_CARD" => {
-            "regulator_map_bridge"
-        },
+        "REGULATOR_MAP_STATUS"
+        | "REGULATOR_REPLAY_STATUS"
+        | "REGULATOR_BOUNDARY_CARD"
+        | "PI_PRESSURE_REPLAY_STATUS" => "regulator_map_bridge",
+        "PRESSURE_AGENCY_STATUS"
+        | "PRESSURE_CONTROL_STATUS"
+        | "PRESSURE_AGENCY"
+        | "PRESSURE_AGENCY_REQUEST"
+        | "PRESSURE_CONTROL_REQUEST"
+        | "PRESSURE_REQUEST"
+        | "TEXTURE_AGENCY_STATUS"
+        | "TEXTURE_STATUS"
+        | "RESONANCE_TEXTURE_STATUS"
+        | "TEXTURE_AGENCY_REQUEST"
+        | "TEXTURE_REQUEST"
+        | "RESONANCE_TEXTURE_REQUEST" => "pressure_agency_bridge",
+        "MESSAGE_MINIME"
+        | "REPLY_MINIME"
+        | "TRACE_MINIME"
+        | "CORRESPONDENCE_TRACE"
+        | "ACK_MINIME"
+        | "CORRESPONDENCE_ACK"
+        | "I_RECEIVED_THIS"
+        | "CORRESPONDENCE_HEARTBEAT"
+        | "CLAIM_MINIME_LEGACY"
+        | "CORRESPONDENCE_CLAIM"
+        | "CORRESPONDENCE_CLAIM_OUTCOME"
+        | "CORRESPONDENCE_STATUS"
+        | "LEGACY_CORRESPONDENCE_STATUS"
+        | "CORRESPONDENCE_ATTENTION_REQUEST"
+        | "CORRESPONDENCE_ATTENTION_OUTCOME"
+        | "CORRESPONDENCE_MICRODOSE_REQUEST"
+        | "CORRESPONDENCE_WEIGHT_REQUEST" => "peer_correspondence",
+        "DECLARE_TRANSITION"
+        | "WITNESS_TRANSITION"
+        | "TRANSITION_STATUS"
+        | "PHASE_TRANSITION_STATUS" => "phase_transition_cards",
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
         "CODEX" | "CODEX_NEW" | "WRITE_FILE" | "RUN_PYTHON" | "EXPERIMENT_RUN" => "live_write",
         "PERTURB" | "NATIVE_GESTURE" | "RESIST" | "FISSURE" | "GOAL" => "live_control",
@@ -1583,6 +1668,23 @@ fn active_experiment_auto_linkable_base(base_action: &str) -> bool {
             | "UNSHAPED_BASELINE"
             | "PRESSURE_SOURCE_AUDIT"
             | "PRESSURE_RELIEF"
+            | "PRESSURE_AGENCY_STATUS"
+            | "PRESSURE_AGENCY_REQUEST"
+            | "TEXTURE_AGENCY_STATUS"
+            | "TEXTURE_AGENCY_REQUEST"
+            | "CORRESPONDENCE_STATUS"
+            | "LEGACY_CORRESPONDENCE_STATUS"
+            | "CLAIM_MINIME_LEGACY"
+            | "CORRESPONDENCE_CLAIM"
+            | "CORRESPONDENCE_CLAIM_OUTCOME"
+            | "I_RECEIVED_THIS"
+            | "ACK_MINIME"
+            | "REPLY_MINIME"
+            | "TRACE_MINIME"
+            | "CORRESPONDENCE_TRACE"
+            | "DECLARE_TRANSITION"
+            | "WITNESS_TRANSITION"
+            | "TRANSITION_STATUS"
             | "FLUCTUATION_AUDIT"
             | "BRACE_AUDIT"
             | "THREAD_STATUS"
@@ -1771,6 +1873,7 @@ pub(super) fn handle_next_action(
     if segments.len() > 1 {
         return dispatch_multi_action(conv, segments, ctx);
     }
+    self_regulation::reconcile_active_lease(conv);
     let (base_action, original) = canonicalize_next_action_components(next_action);
     let stage = action_continuity_stage_for_base(base_action.as_str());
     let visibility = action_continuity_visibility_for_base(base_action.as_str());
@@ -1994,8 +2097,32 @@ pub(super) fn handle_next_action(
     }
 
     if regulator_map::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
-        return NextActionOutcome::handled("regulator_map_bridge", format!("Handled `{original}`."))
-            .with_stage_visibility("read_only", visibility);
+        return NextActionOutcome::handled(
+            "regulator_map_bridge",
+            format!("Handled `{original}`."),
+        )
+        .with_stage_visibility("read_only", visibility);
+    }
+
+    if pressure_agency::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled(
+            "pressure_agency_bridge",
+            format!("Handled `{original}`."),
+        )
+        .with_stage_visibility(stage, visibility);
+    }
+
+    if peer_correspondence::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled("peer_correspondence", format!("Handled `{original}`."))
+            .with_stage_visibility("language_only", "public_correspondence");
+    }
+
+    if phase_transition::handle_action(conv, base_action.as_str(), &original, &mut ctx) {
+        return NextActionOutcome::handled(
+            "phase_transition_cards",
+            format!("Handled `{original}`."),
+        )
+        .with_stage_visibility("language_only", "public_transition_cards");
     }
 
     attractor::maybe_add_body_consent_receipt(
@@ -2268,8 +2395,8 @@ mod tests {
         ConversationState, NextActionContext, action_preflight_report,
         canonicalize_next_action_components, canonicalize_next_action_text,
         extract_residue_from_next_action, handle_next_action, is_action_token_like,
-        is_parameter_decision_verb, parse_next_action, split_multi_action, strip_action,
-        unresolved_angle_placeholder,
+        is_parameter_decision_verb, parse_next_action, route_for_preflight_base,
+        split_multi_action, strip_action, unresolved_angle_placeholder,
     };
     use crate::db::BridgeDb;
     use crate::paths::bridge_paths;
@@ -2592,6 +2719,25 @@ mod tests {
         // The real compound verb SELF_STUDY must be left untouched.
         let (base, _original) = canonicalize_next_action_components("SELF_STUDY");
         assert_eq!(base, "SELF_STUDY");
+    }
+
+    #[test]
+    fn correspondence_claim_verbs_route_to_peer_correspondence() {
+        for base in [
+            "CORRESPONDENCE_CLAIM",
+            "CLAIM_MINIME_LEGACY",
+            "CORRESPONDENCE_CLAIM_OUTCOME",
+            "ACK_MINIME",
+            "REPLY_MINIME",
+            "CORRESPONDENCE_TRACE",
+            "CORRESPONDENCE_STATUS",
+        ] {
+            assert_eq!(
+                route_for_preflight_base(base),
+                "peer_correspondence",
+                "{base} must not fall through as unwired"
+            );
+        }
     }
 
     #[test]
@@ -3241,13 +3387,10 @@ mod tests {
         let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
         let telemetry = telemetry();
         let mut burst_count = 0;
-        let workspace = std::env::temp_dir().join(format!(
-            "astrid_fallback_fire_drill_{}",
-            std::process::id()
-        ));
+        let workspace =
+            std::env::temp_dir().join(format!("astrid_fallback_fire_drill_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&workspace);
-        let drill_dir = workspace
-            .join("diagnostics/fallback_fire_drills/20260625T000000Z");
+        let drill_dir = workspace.join("diagnostics/fallback_fire_drills/20260625T000000Z");
         std::fs::create_dir_all(&drill_dir).expect("drill dir");
         std::fs::write(
             drill_dir.join("fallback_fire_drill.json"),
@@ -3265,6 +3408,10 @@ mod tests {
               "shadow_identity_status": "retained",
               "distinguishability_status": "clarity_preserved",
               "complexity_budget_status": "complexity_budget_preserved",
+              "fallback_capacity_policy": "fallback_continuity_budget_v1",
+              "fallback_capacity_max_prose_sentences": 5,
+              "fallback_capacity_status": "within_formula",
+              "high_entropy_texture_status": "preserved",
               "case_count": 1,
               "error_count": 0,
               "cases": [
@@ -3284,6 +3431,7 @@ mod tests {
                   "distinguishability_status": "clarity_preserved",
                   "clarity_pressure_blur": false,
                   "complexity_budget_status": "complexity_budget_preserved",
+                  "fallback_max_prose_sentences": 5,
                   "prose_sentence_count": 3,
                   "failure_reasons": ["inline_next"]
                 }
@@ -3318,12 +3466,15 @@ mod tests {
         assert!(listing.contains("format_line_status: inline_next_present"));
         assert!(listing.contains("distinguishability_status: clarity_preserved"));
         assert!(listing.contains("complexity_budget_status: complexity_budget_preserved"));
+        assert!(listing.contains("fallback_capacity_status: within_formula"));
+        assert!(listing.contains("fallback_capacity_max_prose_sentences: 5"));
+        assert!(listing.contains("high_entropy_texture_status: preserved"));
         assert!(listing.contains("shadow verdict=repair_ready"));
         assert!(listing.contains("slope_contrast=distinct_underfoot_and_around"));
         assert!(listing.contains("format_line=inline_next"));
         assert!(listing.contains("distinguishability=clarity_preserved"));
         assert!(listing.contains("complexity=complexity_budget_preserved"));
-        assert!(listing.contains("sentences=3"));
+        assert!(listing.contains("sentences=3/5"));
         assert!(listing.contains("raw_next=false"));
         assert!(listing.contains("repaired_next=true"));
         assert!(listing.contains("operator live probe"));
@@ -3346,13 +3497,11 @@ mod tests {
         let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
         let telemetry = telemetry();
         let mut burst_count = 0;
-        let workspace = std::env::temp_dir().join(format!(
-            "astrid_codec_probe_{}",
-            std::process::id()
-        ));
+        let workspace =
+            std::env::temp_dir().join(format!("astrid_codec_probe_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&workspace);
-        let probe_dir = workspace
-            .join("diagnostics/codec_entropy_vibrancy_probes/20260625T000000Z");
+        let probe_dir =
+            workspace.join("diagnostics/codec_entropy_vibrancy_probes/20260625T000000Z");
         std::fs::create_dir_all(&probe_dir).expect("probe dir");
         std::fs::write(
             probe_dir.join("codec_entropy_vibrancy_probe.json"),
@@ -3374,6 +3523,50 @@ mod tests {
             }"#,
         )
         .expect("write probe artifact");
+        let review_dir = workspace.join("diagnostics/self_study_reviews/20260626T000000Z");
+        std::fs::create_dir_all(&review_dir).expect("review dir");
+        std::fs::write(
+            review_dir.join("review.json"),
+            r#"{
+              "codec_real_replay_v1": {
+                "status": "content_gate_and_temporal_decay_candidates",
+                "artifact_path": "/tmp/codec_replay_lab.json",
+                "corpus_source": "astrid-journal",
+                "corpus_status": "journal_corpus_selected",
+                "embedding_mode": "fixture",
+                "embedding_status": "fixture_mode",
+                "embedding_backed_arc_status": "fixture_mode",
+                "entries": [
+                  {
+                    "sample_id": "high_entropy_high_semantic_density",
+                    "classification": "semantic_density_preserved",
+                    "actual_entropy_dim": 0.73,
+                    "semantic_density_score": 0.44,
+                    "warmth_dim": 0.52,
+                    "tension_dim": 0.21,
+                    "source_path": "/tmp/public_astrid.txt"
+                  }
+                ]
+              },
+              "narrative_arc_temporal_decay_lab_v1": {
+                "status": "temporal_decay_candidate",
+                "temporal_decay_candidate_count": 1,
+                "pivot_detector_candidate_count": 0
+              },
+              "content_aware_vibrancy_gate_candidate_v1": {
+                "status": "content_gate_supported",
+                "semantic_density_score_delta": 0.36,
+                "candidate_lift_delta": 0.18
+              },
+              "codec_afterimage_time_series_v1": {
+                "status": "codec_residue_supported",
+                "entry_count": 1,
+                "codec_anchor_count": 1,
+                "pressure_anchor_count": 1
+              }
+            }"#,
+        )
+        .expect("write review artifact");
         let ctx = NextActionContext {
             burst_count: &mut burst_count,
             db: &db,
@@ -3387,11 +3580,20 @@ mod tests {
         let outcome = handle_next_action(&mut conv, "CODEC_MAP", ctx);
 
         assert_eq!(outcome.stage, "observe");
-        let listing = conv.pending_file_listing.as_deref().expect("codec map listing");
+        let listing = conv
+            .pending_file_listing
+            .as_deref()
+            .expect("codec map listing");
         assert!(listing.contains("Latest codec entropy/vibrancy probe"));
         assert!(listing.contains("current_overload_candidate_improves"));
         assert!(listing.contains("high_entropy_low_content"));
         assert!(listing.contains("no SEMANTIC_DIM"));
+        assert!(listing.contains("Latest codec replay review packet"));
+        assert!(listing.contains("astrid-journal"));
+        assert!(listing.contains("fixture_mode"));
+        assert!(listing.contains("content_gate_supported"));
+        assert!(listing.contains("codec_residue_supported"));
+        assert!(listing.contains("public_astrid.txt"));
         assert!(sensory_rx.try_recv().is_err());
         let _ = std::fs::remove_dir_all(&workspace);
     }

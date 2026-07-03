@@ -2067,6 +2067,15 @@ fn budget_execution_block_record(
     record
 }
 
+fn correspondence_microdose_context(location: &GateLocation) -> Option<Value> {
+    let context = location.request.get("correspondence_microdose_v1")?;
+    if context.is_null() {
+        None
+    } else {
+        Some(context.clone())
+    }
+}
+
 fn execution_record(
     location: &GateLocation,
     approval: &Value,
@@ -2094,6 +2103,11 @@ fn execution_record(
         "created_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         "updated_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     });
+    if let Some(context) = correspondence_microdose_context(location)
+        && let Some(target) = record.as_object_mut()
+    {
+        target.insert("correspondence_microdose_v1".to_string(), context);
+    }
     if let Some(extra) = extra
         && let (Some(target), Some(source)) = (record.as_object_mut(), extra.as_object())
     {
@@ -2123,7 +2137,7 @@ fn consequence_record(
         .get("reason")
         .and_then(Value::as_str)
         .unwrap_or(status);
-    json!({
+    let mut record = json!({
         "schema_version": 1,
         "record_schema": "authority_consequence_v1",
         "record_type": "consequence",
@@ -2163,7 +2177,13 @@ fn consequence_record(
         "authority_boundary": authority_boundary(),
         "created_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         "updated_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
-    })
+    });
+    if let Some(context) = correspondence_microdose_context(location)
+        && let Some(target) = record.as_object_mut()
+    {
+        target.insert("correspondence_microdose_v1".to_string(), context);
+    }
+    record
 }
 
 fn mode_release_consequence_record(
@@ -2438,6 +2458,48 @@ mod tests {
         gate
     }
 
+    fn write_correspondence_microdose_request(workspace: &Path, request_id: &str) -> PathBuf {
+        let thread_dir = workspace.join("action_threads/threads/th_correspondence_microdose");
+        fs::create_dir_all(&thread_dir).unwrap();
+        let gate = thread_dir.join("authority_gate.jsonl");
+        append_jsonl(
+            &gate,
+            &json!({
+                "schema_version": 1,
+                "record_schema": POLICY,
+                "record_type": "request",
+                "request_kind": "correspondence_microdose_v1",
+                "record_id": format!("{request_id}_request"),
+                "request_id": request_id,
+                "being": "astrid",
+                "thread_id": "th_correspondence_microdose",
+                "experiment_id": "correspondence_microdose_v1",
+                "scope": EXECUTABLE_SCOPE,
+                "payload": "blue lantern as direct address",
+                "artifact_refs": ["/tmp/correspondence_v1.jsonl"],
+                "source_refs": ["/tmp/correspondence_v1.jsonl"],
+                "eligibility_v1": {
+                    "eligible": true,
+                    "missing_requirements": [],
+                    "disabled_scope": false,
+                    "scope": EXECUTABLE_SCOPE
+                },
+                "correspondence_microdose_v1": {
+                    "schema_version": 1,
+                    "message_id": "corr_astrid_minime_test",
+                    "correspondence_thread_id": "thread_trace",
+                    "standing_weight": false,
+                    "authority": "one_shot_semantic_microdose_request_only"
+                },
+                "peer_mutation": false,
+                "authority_change": false,
+                "authority_boundary": authority_boundary()
+            }),
+        )
+        .unwrap();
+        gate
+    }
+
     fn write_budget_request(workspace: &Path, budget_id: &str, eligible: bool) -> PathBuf {
         let thread_dir = workspace.join("action_threads/threads/th_test");
         fs::create_dir_all(&thread_dir).unwrap();
@@ -2662,6 +2724,91 @@ mod tests {
         assert!(
             rows.iter()
                 .any(|row| row["record_type"] == "steward_approval")
+        );
+    }
+
+    #[test]
+    fn correspondence_microdose_requires_approval_before_semantic_send() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_correspondence_microdose_request(
+            &astrid,
+            "authreq_correspondence_microdose_test",
+        );
+
+        let (tx, mut rx) = mpsc::channel(1);
+        let err = execute_semantic_microdose_from_paths(
+            "authreq_correspondence_microdose_test",
+            Some(67.0),
+            Some(66.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("no active steward token"));
+        assert!(rx.try_recv().is_err());
+        let rows = read_jsonl(&gate);
+        assert!(!rows.iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("execution_result")
+        }));
+    }
+
+    #[test]
+    fn correspondence_microdose_execution_carries_reply_context_to_consequence() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_correspondence_microdose_request(
+            &astrid,
+            "authreq_correspondence_microdose_execute",
+        );
+        let approval = approve_from_paths(
+            ApproveAuthorityRequest {
+                request_id: "authreq_correspondence_microdose_execute".to_string(),
+                steward: Some("test".to_string()),
+                note: Some("one-shot direct address".to_string()),
+                ttl_secs: Some(60),
+            },
+            SafetyLevel::Green,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        assert_eq!(approval["record_type"], "steward_approval");
+
+        let (tx, mut rx) = mpsc::channel(1);
+        let result = execute_semantic_microdose_from_paths(
+            "authreq_correspondence_microdose_execute",
+            Some(67.0),
+            Some(66.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+        assert_eq!(result["record_type"], "execution_result");
+        assert_eq!(result["reason"], "semantic_microdose_sent");
+        assert_eq!(
+            result["correspondence_microdose_v1"]["message_id"],
+            "corr_astrid_minime_test"
+        );
+        assert!(matches!(
+            rx.try_recv().unwrap(),
+            SensoryMsg::Semantic { .. }
+        ));
+        let rows = read_jsonl(&gate);
+        let consequence = rows
+            .iter()
+            .rev()
+            .find(|row| {
+                row.get("record_schema").and_then(Value::as_str) == Some("authority_consequence_v1")
+            })
+            .expect("consequence row");
+        assert_eq!(
+            consequence["correspondence_microdose_v1"]["correspondence_thread_id"],
+            "thread_trace"
         );
     }
 

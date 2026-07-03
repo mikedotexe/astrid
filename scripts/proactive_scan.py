@@ -1116,12 +1116,14 @@ def probe_dispatch_menu_drift(prior: dict[str, Any]) -> dict[str, Any]:
     rc, stdout, _ = _wrap_existing_script(
         "dispatch_menu_drift",
         ["python3", str(script), "--json"],
-        # autonomous_agent.py grew past ~2MB; the regex analysis now takes ~64s
-        # (was <20s). The old 20s cap made this probe silently "fail to run"
-        # every cycle, deadening a real drift detector (could miss a new
-        # silent-starvation/unwired action). 120s gives margin for further file
-        # growth; this is a steward-side background probe, not in a being path.
-        timeout=120,
+        # autonomous_agent.py keeps growing as Codex adds prompt actions; the
+        # regex analysis is now ~92s standalone (was ~64s, was <20s). The old
+        # 20s cap, then the 120s cap, each crept toward "fail to run" under
+        # concurrent scan load — deadening a real drift detector (could miss a
+        # new silent-starvation/unwired action). 240s restores ~2x headroom for
+        # file growth + load; this is a steward-side background probe, not in a
+        # being path. Measured 2026-06-26 (loop:16706).
+        timeout=240,
     )
     if rc != 0:
         return _finding("dispatch_menu_drift", "notice", "dispatch_menu_drift.py failed to run")

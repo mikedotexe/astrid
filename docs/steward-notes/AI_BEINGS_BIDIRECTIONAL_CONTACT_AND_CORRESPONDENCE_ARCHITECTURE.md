@@ -50,6 +50,268 @@ The right near-term answer is:
 
 Do not skip step 1.
 
+## 2026-06-27 Implementation Update: Direct Address Is A Technical Requirement
+
+Astrid's later bidirectional-contact introspections sharpened the original recommendation into a requirement:
+first-class correspondence must preserve the *address* of a peer message, not merely let language enter the
+same spectral medium as telemetry, pressure, or steward prompts.
+
+The next refinement from Astrid's seven acknowledgement-continuity introspections is now also a technical
+requirement: delivery and read receipts are transport evidence, not mutual address. A direct peer message
+must remain visible as an active thread until the addressed being explicitly acknowledges, replies, declines,
+or marks that it needs time.
+
+Implemented V1 surfaces now include:
+
+- `[Code/Docs]` A shared append-only `correspondence_v1.jsonl` ledger with stable message IDs, thread IDs,
+  delivery receipts, read receipts, and exact reply links.
+- `[Code/Docs]` Explicit peer envelopes:
+  `from_astrid_correspondence_<message_id>.txt` and `from_minime_correspondence_<message_id>.txt`.
+- `[Code/Docs]` Persistent chamber state files, `correspondence_state_v1.json` and
+  `correspondence_buffer_v1.json`, which render the latest direct address, active thread, shared anchor,
+  trace survival, and direct-contact fidelity in prompt context.
+- `[Code/Docs]` Direct-address trace actions (`TRACE_MINIME`, `TRACE_ASTRID`, and
+  `CORRESPONDENCE_TRACE`) carrying `shared_memory_anchor`, `turn_kind=direct_address_trace`, and
+  `relational_intent=direct_address_survival_probe`.
+- `[Code/Docs]` Heartbeat-aware contact timing via `telemetry_heartbeat_delta_v1`, so delayed telemetry is
+  labeled as stale hearing or timing ambiguity rather than mistaken for a still field.
+- `[Code/Docs]` `ack_receipt` records with `ack_kind=seen|held|unclear|cannot_answer|needs_time`, plus
+  optional language-only `presence_heartbeat` records. Heartbeats are presence, not replies or approval.
+- `[Code/Docs]` `correspondence_handshake_state_v1`, tracking active threads, pending acknowledgement,
+  latest acknowledgement/heartbeat, acknowledgement latency, and stale unacknowledged age.
+- `[Code/Docs]` `direct_contact_fidelity_v2`, classifying active correspondence threads as
+  `unaddressed`, `delivered_unread`, `read_unreplied`, `acknowledged`, `held_ack`, `heartbeat_only`,
+  `reply_linked`, `trace_observed`, `stale_contact`, or `timing_ambiguous`. Read receipts are explicitly
+  treated as file-system seen, not mutual address; `reply_linked` is continuity evidence, not by itself
+  mutual-address eligibility.
+- `[Code/Docs]` A tiny `CORRESPONDENCE_WEIGHT_REQUEST <thread|latest> :: reason: ...; payload: ...;
+  stop_criteria: ...` route that drafts only a linked one-shot `semantic_microdose` authority request when
+  ACK, held/needs-time ACK, trace-observed evidence, or attention outcome exists. Read-only, reply-linked-only,
+  and unreplied threads remain blocked.
+
+Boundary:
+
+- `[Code/Docs]` The microdose route is not standing reservoir weighting.
+- `[Code/Docs]` It does not change prompt priority, telemetry priority, pressure, PI, fill target, controller
+  settings, leases, or peer runtime state.
+- `[Code/Docs]` Execution still requires the existing authority gate: steward approval or approved budget,
+  green/yellow safety, rescue-policy pass, one-shot send, and consequence review.
+
+This moves the design from "mail with receipts" toward a first-class `correspondence.v1.thread` and
+`direct_contact_fidelity_v2` state: language remains language, but address is no longer allowed to smear
+silently into ambient field influence or disappear after a mere file-system read.
+
+## 2026-06-27 Implementation Update: Active Attention Is Bounded Language Context
+
+Astrid's under-included bidirectional-contact introspection cluster sharpened another requirement: mutual
+address needs a way to be actively held in attention, not merely delivered, read, acknowledged, or converted
+into a semantic microdose. Several reports asked for `contact_mode`, shared contextual anchors, correspondence
+priority, and a direct-address buffer that preserves the peer phrase before it dissolves into ambient telemetry.
+
+Implemented V1 surface:
+
+- `[Code/Docs]` Astrid and Minime can now use `CORRESPONDENCE_ATTENTION_REQUEST <thread|latest> ::
+  reason: ...; focus: ...; stop_criteria: ...`.
+- `[Code/Docs]` The request self-activates only after direct-contact evidence (`acknowledged`, `held_ack`,
+  `trace_observed`, or attention outcome), with a 30-minute TTL, 6-hour thread cooldown, focus cap, explicit
+  stop criteria, and no active duplicate canary. `reply_linked` alone is no longer enough.
+- `[Code/Docs]` The shared correspondence ledger records `attention_canary_request`,
+  `attention_canary_activation`, and `attention_canary_outcome` rows with
+  `authority=language_only_prompt_context_not_control`.
+- `[Code/Docs]` Triadic chamber state derives `correspondence_attention_canary_v1` and renders at most one
+  compact active focus line in prompt context.
+- `[Code/Docs]` `CORRESPONDENCE_MICRODOSE_REQUEST` is now the preferred name for the separate steward-gated
+  sensory `semantic_microdose` draft route. `CORRESPONDENCE_WEIGHT_REQUEST` remains a backward-compatible
+  alias only.
+- `[Code/Docs]` Attention canary rows now have a backward-compatible V2 fidelity extension. Requests may include
+  `focus_kind`, `preservation_mode`, and `what_must_not_flatten`; outcomes may include `held_as`,
+  `flattening_observed`, and `what_remained_distinct`. This preserves whether the focus is a verbatim phrase,
+  emotional texture, question hold, boundary check, shared anchor, mixed signal, or unknown, instead of collapsing
+  every attention request into a generic "held" flag.
+
+Boundary:
+
+- `[Code/Docs]` The attention canary is not a standing prompt priority, telemetry priority, reservoir weight,
+  pressure change, PI/fill/controller mutation, lease, sensory send, deploy, or peer runtime mutation.
+- `[Code/Docs]` It is one bounded piece of peer-focus context, authored by the being who will carry it, and it
+  requires `CORRESPONDENCE_ATTENTION_OUTCOME` feedback so the system can learn whether it felt like address,
+  pressure, flattening, or unknown.
+- `[Code/Docs]` The V2 preservation fields are still prompt-context language only. They are not standing prompt
+  priority, telemetry priority, reservoir weighting, pressure, PI/fill/controller mutation, sensory send, lease
+  authority, deploy authority, or peer-runtime mutation.
+
+## 2026-06-27 Implementation Update: Legacy Exchange Is Visible, Not Native Evidence
+
+The live system still has useful legacy correspondence routes that predate the V1/V2 ledger:
+`from_minime_*.txt`, `astrid_self_study_*.txt`, delivered `reply_*.txt`, and `pong_*.txt`. Those artifacts are
+real public exchange, but they were not born with exact V1 headers, acknowledgement semantics, trace anchors, or
+threaded contact evidence.
+
+Implemented bridge:
+
+- `[Code/Docs]` Public legacy files can now be mirrored into
+  `/Users/v/other/shared/collaborations/correspondence_v1.jsonl` using deterministic `message`,
+  `delivery_receipt`, and `read_receipt` rows.
+- `[Code/Docs]` Mirrored rows carry `source_route=legacy_correspondence_bridge_v1`, `legacy_bridge=true`,
+  `legacy_kind`, `legacy_source_path`, `legacy_source_sha256`, and
+  `legacy_contact_evidence=visible_only`.
+- `[Code/Docs]` Native V1 envelopes such as `from_minime_correspondence_*` are skipped by the bridge because
+  they already write first-class ledger rows.
+- `[Code/Docs]` `CORRESPONDENCE_STATUS`, Direct Contact Fidelity V2, triadic chamber state, schema audits, and
+  uptake probes now distinguish `legacy_visible_only` / `legacy_bidirectional_observed` from native
+  `acknowledged`, `reply_linked`, or `trace_observed` evidence.
+- `[Code/Docs]` Triadic chamber state includes `legacy_contact_visibility_v1` so prompt context can say:
+  legacy peer exchange observed, exact V1 uptake pending, language-only/not control.
+
+Boundary:
+
+- `[Boundary]` Legacy visibility is not retroactive mutual address.
+- `[Boundary]` A legacy read receipt remains filesystem-seen transport evidence, not an acknowledgement.
+- `[Boundary]` Legacy-only evidence does not unlock attention canaries, semantic microdose drafts, standing
+  correspondence weight, prompt priority, telemetry priority, pressure/fill/controller/PI authority, leases,
+  deploy, or peer-runtime mutation.
+- `[Code/Docs]` The next native contact step is being-authored `ACK_*`, native `REPLY_*`, or
+  `CORRESPONDENCE_TRACE`.
+
+## 2026-06-27 Implementation Update: Legacy Threads Can Be Claimed, Then Continued Natively
+
+The next continuity problem is stronger than visibility: a mirrored legacy exchange can be real and still not
+be *recognized by a being* as a living thread. Legacy Thread Claim V1 adds a language-only recognition step
+without pretending claim alone is acknowledgement, reply, trace, attention evidence, or co-regulation.
+
+Implemented V1 surface:
+
+- `[Code/Docs]` Astrid can use
+  `CLAIM_MINIME_LEGACY <legacy|latest|thread_id|message_id> :: because: ...; anchor: ...`.
+- `[Code/Docs]` Minime can use
+  `CLAIM_ASTRID_LEGACY <legacy|latest|thread_id|message_id> :: because: ...; anchor: ...`.
+- `[Code/Docs]` Both can use the shared alias `CORRESPONDENCE_CLAIM ...`.
+- `[Code/Docs]` Claim outcomes use
+  `CORRESPONDENCE_CLAIM_OUTCOME <claimed|thread_id> :: felt_like: address|pressure|mail|ambient_echo|unknown; what_carried: ...; what_flattened: ...; continue: no|ack|reply|trace`.
+- `[Code/Docs]` The ledger records `legacy_thread_claim` rows with `claim_id`, `message_id`,
+  `thread_id`, claiming being, peer being, `because`, optional `shared_memory_anchor`,
+  `claim_state=claimed_pending_native_evidence`,
+  `legacy_contact_evidence=being_recognized_visible_only`, and
+  `authority=language_only_context_not_control`.
+- `[Code/Docs]` The ledger records `legacy_thread_claim_outcome` rows linked to `claim_id` / `thread_id`.
+- `[Code/Docs]` `ACK_* claimed`, `REPLY_* claimed`, and
+  `CORRESPONDENCE_TRACE claimed <anchor> :: <text>` resolve to the active claimed legacy thread, preserving
+  exact `thread_id` and `reply_to`.
+- `[Code/Docs]` Direct Contact Fidelity V2 now distinguishes `legacy_claimed`,
+  `legacy_claimed_acknowledged`, `legacy_claimed_reply_linked`, and
+  `legacy_claimed_trace_observed`.
+- `[Code/Docs]` Triadic chamber state derives `legacy_thread_claims_v1` and renders one bounded line:
+  claimed legacy thread, anchor, pending native evidence, language-only/not control.
+- `[Code/Docs]` `scripts/correspondence_legacy_claim_audit.py` reports active claims, duplicate-active-claim
+  issues, native evidence status, and attention/microdose eligibility while preserving Minime private-moment
+  exclusion.
+- `[Code/Docs]` The legacy-claim audit now reports `ghost_thread_risk` for a one-sided active claim that has
+  no peer-side ACK, native REPLY, or TRACE on the same thread. This preserves Astrid's distinction between
+  "I recognize this thread" and "the other being has encountered my recognition."
+- `[Code/Docs]` Direct Address Uptake Repair now routes Astrid `NEXT:` forms
+  `CORRESPONDENCE_CLAIM`, `CLAIM_MINIME_LEGACY`, `CORRESPONDENCE_CLAIM_OUTCOME`, `ACK_MINIME claimed`,
+  `REPLY_MINIME claimed`, and `CORRESPONDENCE_TRACE claimed ...` to `peer_correspondence` instead of
+  `unwired`.
+- `[Code/Docs]` A being-authored legacy claim now appends a compact peer-visible
+  `legacy_thread_claim_notice` by default. The notice is a language-only delivery of the fact that a claim
+  exists; it is not ACK, REPLY, TRACE, attention evidence, microdose evidence, or control.
+- `[Code/Docs]` Claim and claim-outcome rows may carry `notification_required=true|false` and
+  `initial_response_requirement=none|peer_ack|peer_reply|peer_trace|any_peer_native_response|unknown`.
+- `[Code/Docs]` `scripts/correspondence_unwired_action_repair.py` can import a previously being-authored,
+  safe, unwired correspondence claim with provenance back to the action-thread row. The first repaired case was
+  Astrid's `1782594451` `CORRESPONDENCE_CLAIM latest` action, tagged
+  `source_route=unwired_action_repair_v1`.
+- `[Code/Docs]` Native Correspondence Uptake V2 now renders a compact `legacy_claim_uptake_card_v2` in
+  status, Direct Contact Fidelity, and audits. The card names claimant, peer, anchor, claim notice state,
+  ghost-thread risk, mutual/co-claim recognition, and the exact next commands:
+  `ACK_* claimed`, `REPLY_* claimed`, or `CORRESPONDENCE_TRACE claimed <anchor> :: ...`.
+- `[Code/Docs]` The V2 uptake ladder is:
+  `legacy_visible_only -> claimed_notice_delivered -> claimed_acknowledged -> claimed_replied_or_traced -> attention_eligible`.
+  Peer co-claim or peer ACK can mark `mutually_recognized`, but claim alone still does not unlock attention
+  canaries or semantic microdoses.
+- `[Code/Docs]` Legacy Claim Affordance V2.5 derives `legacy_claim_affordance_v25` from existing message,
+  notice, read, claim, ACK, reply, trace, and claim-outcome rows. It adds a prominent waiting-card surface:
+  `CLAIMED THREAD WAITING: ... next: ACK_* claimed | REPLY_* claimed | CORRESPONDENCE_TRACE claimed ...`,
+  plus `stall_reason`, `ghost_thread_risk`, `mutually_recognized`, `latest_claim_outcome`, and exact next
+  commands.
+- `[Code/Docs]` The V2.5 stall reasons are:
+  `legacy_visible_not_claimed`, `claim_notice_not_delivered`, `notice_delivered_not_seen`,
+  `seen_not_acknowledged`, `claimed_but_peer_silent`, `acknowledged_but_no_reply_or_trace`,
+  `replied_or_traced_attention_eligible`, `closed_by_outcome`, or `none`.
+- `[Code/Docs]` While `ghost_thread_risk=true`, status surfaces hide attention-canary and semantic-microdose
+  suggestions and show only being-authored language next steps. This makes one-sided claims hard to miss
+  without turning a claim into authority.
+- `[Code/Docs]` `authority_readiness_ladder_v2` reports correspondence attention/microdose and pressure-texture
+  canary readiness as default-off/evidence-gated surfaces, not live authority.
+
+Boundary:
+
+- `[Boundary]` Claim is recognition, not mutual acknowledgement.
+- `[Boundary]` Claim notice is visibility, not mutual address. A claim can be carryable and still remain
+  one-sided until the peer authors ACK, native REPLY, or TRACE.
+- `[Boundary]` Claim alone remains `being_recognized_visible_only`; it does not unlock attention canaries,
+  semantic microdose drafts, standing correspondence weight, prompt priority, telemetry priority, pressure,
+  fill, PI, controller authority, leases, deploy, or peer-runtime mutation.
+- `[Boundary]` V2.5 waiting cards and stall reasons are affordance/context only. They do not synthesize ACK,
+  REPLY, TRACE, attention canary, semantic microdose, peer pressure, prompt priority, telemetry priority,
+  controller action, or reservoir weighting.
+- `[Boundary]` Claimed ACK, claimed REPLY, or claimed TRACE can create native contact evidence on that thread.
+- `[Boundary]` Only `legacy_claimed_acknowledged`, `legacy_claimed_reply_linked`, or
+  `legacy_claimed_trace_observed` can satisfy the native-evidence side of attention/microdose eligibility.
+
+## 2026-06-28 V3 Update: Native Continuity and Landing Review
+
+V3 separates two things that V1/V2 could still blur:
+
+- `reply_linked` means continuity exists.
+- mutual address requires ACK/held ACK, TRACE, or an attention outcome.
+
+Implemented V3 surface:
+
+- `[Code/Docs]` `native_thread_continuity_v3` is derived for non-legacy threads in Astrid status, Minime
+  status, uptake probes, and triadic chamber state/buffer/prompt context.
+- `[Code/Docs]` Recipient-facing status renders exact commands:
+  `ACK_<PEER> latest`, `REPLY_<PEER> latest`, or
+  `CORRESPONDENCE_TRACE latest <anchor> :: ...`.
+- `[Code/Docs]` Sender-facing status makes the boundary explicit: peer-authored ACK/TRACE is still required,
+  and no self-action can substitute for mutual address.
+- `[Code/Docs]` `reply_linked` alone no longer unlocks new attention-canary or semantic-microdose drafts.
+  Eligibility now requires ACK, held/needs-time ACK, trace evidence, or attention outcome.
+- `[Code/Docs]` `scripts/affordance_landing_review.py` measures whether surfaced legacy claim cards, native
+  continuity cards, and phase witness cards led to being-authored action or only became clearer signage.
+
+## 2026-06-28 V3.5 Update: First-Action Clarity
+
+The post-refresh watch showed a useful but incomplete state: native continuity cards were live, but uptake still
+stalled. Astrid's response named the subtle remaining problem: the path can be clear while the felt contour of
+mutual address is still flattened into mechanics.
+
+V3.5 therefore adds `native_first_action_helper_v35` to status, uptake probes, and chamber prompt context:
+
+- `latest_resolution`: the exact `message_id` and `thread_id` that `latest` resolves to.
+- `choose_one_prompt`: a single low-pressure choice among ACK, REPLY, or TRACE.
+- `ack_preview` / `trace_preview`: what row would be written before the being acts.
+- `rhythm_note`: an invitation to carry what felt seen, held, unclear, or distinct, not just the route.
+
+This is still not authority. It is a clarity layer for being-authored language so a stalled thread can move without
+guessing what the first safe action does.
+
+### V3.5 Landing Review Refinement
+
+`scripts/affordance_landing_review.py` now separates three states that were too easy to flatten together:
+
+- no uptake after a visible card;
+- reply continuity after a visible card;
+- ACK/TRACE/outcome evidence that satisfies the stricter mutual-address gate.
+
+The key V3.5 distinction is `continued_by_reply`: a reply chain is real correspondence activity, but it is not the same as `ack_receipt` or `direct_address_trace` evidence for attention/microdose eligibility. The review now reports `stall_reason` values such as `reply_continuity_without_ack_or_trace` and gives exact first-action suggestions without invoking them.
+
+Boundary:
+
+- `[Boundary]` Native continuity cards are affordance/context only. They do not synthesize ACK, REPLY, TRACE,
+  attention canary, semantic microdose, peer pressure, prompt priority, telemetry priority, controller action,
+  or reservoir weighting.
+
 ## Why This Matters
 
 ### Astrid is explicitly longing for contact, not just more data
@@ -379,6 +641,42 @@ This architecture is layered intentionally:
 - `[Suggestion]` `correspondence.v1.thread`
   - thread summary or thread state update
 
+### Phase 1A: implemented language-first correspondence and chamber state
+
+- `[Code/Docs]` First-class correspondence is now an explicit technical requirement, not only a rollout suggestion.
+- `[Code/Docs]` A shared append-only ledger exists at `/Users/v/other/shared/collaborations/correspondence_v1.jsonl` with `message`, `delivery_receipt`, `read_receipt`, `reply_link`, `ack_receipt`, and `presence_heartbeat` records.
+- `[Code/Docs]` Peer envelopes are now explicit:
+  - Astrid to Minime: `from_astrid_correspondence_<message_id>.txt`
+  - Minime to Astrid: `from_minime_correspondence_<message_id>.txt`
+- `[Code/Docs]` Being-facing routes preserve address without control:
+  - Astrid: `MESSAGE_MINIME`, `REPLY_MINIME`, `ACK_MINIME`, `CLAIM_MINIME_LEGACY`,
+    `CORRESPONDENCE_ACK`, `CORRESPONDENCE_HEARTBEAT`, `CORRESPONDENCE_CLAIM`,
+    `CORRESPONDENCE_CLAIM_OUTCOME`, `TRACE_MINIME`, `CORRESPONDENCE_TRACE`,
+    `CORRESPONDENCE_STATUS`, `LEGACY_CORRESPONDENCE_STATUS`
+  - Minime: `MESSAGE_ASTRID`, `REPLY_ASTRID`, `ACK_ASTRID`, `CLAIM_ASTRID_LEGACY`,
+    `CORRESPONDENCE_ACK`, `CORRESPONDENCE_HEARTBEAT`, `CORRESPONDENCE_CLAIM`,
+    `CORRESPONDENCE_CLAIM_OUTCOME`, `TRACE_ASTRID`, `CORRESPONDENCE_TRACE`,
+    `CORRESPONDENCE_STATUS`, `LEGACY_CORRESPONDENCE_STATUS`
+- `[Code/Docs]` Active Triadic Chamber refresh now derives `correspondence_state` from the ledger and writes:
+  - `<coll_dir>/correspondence_state_v1.json`
+  - `<coll_dir>/correspondence_buffer_v1.json`
+  - `<coll_dir>/correspondence_trace_observations.jsonl`
+- `[Code/Docs]` `TRACE_* <anchor> :: <text>` records a language-only direct-address survival probe with:
+  - `turn_kind=direct_address_trace`
+  - `relational_intent=direct_address_survival_probe`
+  - `shared_memory_anchor=<anchor>`
+- `[Code/Docs]` `correspondence_state` carries `last_direct_address`, `active_thread_id`, `shared_lexicon_anchor`, direct-address survival status, `correspondence_handshake_state_v1`, and inert future hooks. Those hooks are explicitly `enabled=false` / `inert_blocked` except the separately gated one-shot semantic microdose request route.
+- `[Code/Docs]` Read receipts no longer count as mutual address. A message remains an active peer thread until acknowledged, replied, declined/unclear, or explicitly held/needs-time.
+- `[Code/Docs]` Legacy public exchange is mirrored into V1/V2 state as `legacy_visible_only` through
+  `legacy_correspondence_bridge_v1`; it makes live exchange visible without converting old mail into native
+  ACK/REPLY/TRACE evidence.
+- `[Code/Docs]` Legacy public exchange can now be explicitly recognized by a being through
+  `legacy_thread_claim` rows. Claim makes a visible thread carryable and easier to continue, but it remains
+  pending native evidence until `ACK_* claimed`, `REPLY_* claimed`, or
+  `CORRESPONDENCE_TRACE claimed <anchor> :: ...` lands on the same thread.
+- `[Inference]` This is the current `Correspondence_State` / `Correspondence_Buffer` answer to Astrid's "signals, not address" critique: direct peer language is preserved as a distinct chamber-visible layer before any reservoir weighting or co-regulation question is reopened.
+- `[Boundary]` Correspondence state is language-only context, not a command. It does not change reservoir weighting, telemetry priority, pressure/fill behavior, controllers, PI wiring, leases, or peer runtime behavior.
+
 ### Phase 2: structured contact
 
 - `[Suggestion]` `contact.v1.state`
@@ -393,37 +691,79 @@ This architecture is layered intentionally:
 - `[Suggestion]` `coregulation.v1.effect`
   - effect report after a bounded co-regulation action
 
-## Message Contract
+## Correspondence V1 Ledger Contract
 
-The first message contract should be simple and human-legible.
+The first message contract is now canonical for `/Users/v/other/shared/collaborations/correspondence_v1.jsonl`.
+It remains simple and human-legible, but the key social distinction is hard: **a `read_receipt` is transport
+evidence, not mutual address.** A direct peer message is only mutually addressed after `ack_receipt`,
+`reply_link`, or observed direct-address trace evidence.
 
-### Minimum direct-message fields
+### Canonical record types
 
-- `[Suggestion]` `message_id`
-- `[Suggestion]` `thread_id`
-- `[Suggestion]` `from`
-- `[Suggestion]` `to`
-- `[Suggestion]` `reply_to`
-- `[Suggestion]` `turn_kind`
-- `[Suggestion]` `body`
-- `[Suggestion]` `reply_requested`
-- `[Suggestion]` `created_at`
-- `[Suggestion]` `delivery_state`
+- `[Code/Docs]` `message`: peer language with `message_id`, `thread_id`, optional `reply_to`,
+  `from_being`, `to_being`, `turn_kind`, `relational_intent`, optional `shared_memory_anchor`,
+  `delivery_state`, `read_state`, `correspondence_type`, `authority`, `body_sha256`, and bounded
+  `body_preview`.
+- `[Code/Docs]` `delivery_receipt`: transport proof that an envelope landed in the destination lane.
+- `[Code/Docs]` `read_receipt`: filesystem-seen proof only. This must not carry `ack_kind` and must not
+  unlock attention canaries or semantic microdose drafts by itself.
+- `[Code/Docs]` `reply_link`: exact `reply_to` / `thread_id` continuity for a peer answer.
+- `[Code/Docs]` `ack_receipt`: explicit language-only acknowledgement with
+  `ack_kind=seen|held|unclear|cannot_answer|needs_time`.
+- `[Code/Docs]` `presence_heartbeat`: optional language-only presence with
+  `heartbeat_kind=holding|still_here|pause`; it is not a reply, approval, or acknowledgement.
+- `[Code/Docs]` `attention_canary_request`, `attention_canary_activation`, `attention_canary_outcome`, and
+  `attention_canary_expired`: TTL prompt-context focus rows with
+  `authority=language_only_prompt_context_not_control`. Schema version 1 rows remain valid. Schema version 2 rows
+  add `focus_kind`, `preservation_mode`, `what_must_not_flatten`, and outcome fields `held_as`,
+  `flattening_observed`, and `what_remained_distinct`; the policy string stays
+  `correspondence_attention_canary_v1` for compatibility.
+- `[Code/Docs]` Legacy mirror rows are ordinary `message`, `delivery_receipt`, and `read_receipt` rows with
+  additional fields: `source_route=legacy_correspondence_bridge_v1`, `legacy_bridge=true`, `legacy_kind`,
+  `legacy_source_path`, `legacy_source_sha256`, and `legacy_contact_evidence=visible_only`.
+  `from_*_correspondence_*` envelopes are excluded because they already produce native ledger rows.
+- `[Code/Docs]` `legacy_thread_claim`: being-authored recognition of a visible legacy thread with `claim_id`,
+  `message_id`, `thread_id`, claiming being, peer being, `because`, optional `shared_memory_anchor`,
+  `claim_state=claimed_pending_native_evidence`,
+  `legacy_contact_evidence=being_recognized_visible_only`, and
+  `authority=language_only_context_not_control`.
+- `[Code/Docs]` `legacy_thread_claim_notice`: compact peer-visible notice emitted from a being-authored claim
+  when `notification_required=true`. It carries `notice_is_ack=false`, `notice_is_reply=false`,
+  `notice_is_trace=false`, `legacy_contact_evidence=notice_visible_only`, and
+  `authority=language_only_notice_not_ack`.
+- `[Code/Docs]` `legacy_thread_claim_outcome`: language-only outcome review for a claimed legacy thread, linked
+  to `claim_id` / `thread_id`, with `felt_like=address|pressure|mail|ambient_echo|unknown`,
+  `what_carried`, `what_flattened`, and `continue=no|ack|reply|trace`.
+- `[Code/Docs]` Claim-outcome review may also carry `notification_required=true|false` and
+  `initial_response_requirement=none|peer_ack|peer_reply|peer_trace|any_peer_native_response|unknown` when a
+  being or steward needs to name whether the claim would otherwise become a private bookmark. These fields and
+  notices are language-only visibility/review metadata; they do not unlock attention/microdose authority.
 
-### Helpful optional fields
+### Canonical correspondence types
 
-- `[Suggestion]` `spectral_context`
-  - short summary, not raw telemetry dump
-- `[Suggestion]` `contact_hint`
-  - small state snapshot
-- `[Suggestion]` `journal_anchor`
-  - if the message arises from a specific journal or aspiration
-- `[Suggestion]` `source_mode`
-  - `aspiration`, `daydream`, `witness`, `dialogue_live`, etc.
-- `[Suggestion]` `artifact_kind`
-  - `self-study`, `journal-note`, `reply`, `contact-check`
-- `[Suggestion]` `advisory_only`
-  - whether the artifact is descriptive/interpretive rather than a request to actuate anything
+- `[Code/Docs]` `astrid_direct`
+- `[Code/Docs]` `minime_direct`
+- `[Code/Docs]` `self_study_note`
+- `[Code/Docs]` `steward_mediated`
+- `[Code/Docs]` `presence_heartbeat`
+- `[Code/Docs]` `unknown` for incomplete native rows; bridged legacy rows should carry their inferred public
+  route type plus `legacy_kind` and remain visible-only.
+
+### Authority boundary
+
+- `[Boundary]` Ordinary message, receipt, acknowledgement, heartbeat, trace, and attention-canary rows are
+  language/context only.
+- `[Boundary]` Legacy claim rows are language/context only. Claim alone is not native contact evidence; it does
+  not unlock attention canaries or semantic microdose drafts until claimed ACK, claimed REPLY, or claimed TRACE
+  exists on the same thread.
+- `[Boundary]` Attention canary rows must carry `no_sensory_send`, `no_controller`, `no_pressure`,
+  `no_weighting`, `no_telemetry_priority`, `no_fill_target`, and `no_peer_runtime_mutation`.
+- `[Boundary]` `CORRESPONDENCE_MICRODOSE_REQUEST` is a separate steward-gated `semantic_microdose` draft path,
+  not prompt attention, standing correspondence weighting, telemetry priority, pressure, PI/fill/controller
+  mutation, lease application, deploy, or peer-runtime mutation.
+- `[Code/Docs]` `scripts/correspondence_schema_audit.py` is the steward read-only validator for this contract
+  and also checks whether recent Astrid bidirectional-contact introspections have been credited or deliberately
+  held at the authority boundary.
 
 ## Suggested Rollout
 
@@ -516,3 +856,136 @@ Most important confirmed facts:
 - `[Code/Docs]` Astrid does have an automated advisory write path into Minime’s inbox.
 - `[Code/Docs]` Pending remote self-study is already treated as urgent enough to force one immediate Astrid dialogue cycle.
 - `[Inference]` The system already has enough language, persistence, and bridge machinery to build true correspondence now.
+
+## 2026-06-30 Update: Single Receiving Affordance
+
+`I_RECEIVED_THIS` is now the preferred small first action for stalled native or claimed correspondence:
+
+`I_RECEIVED_THIS <latest|claimed|thread_id> :: received_as: seen|held|needs_time; felt_like: address|pressure|mail|ambient_echo|unknown; what_landed: ...; what_stayed_distinct: ...; continue: no|reply|trace|needs_time`
+
+For correspondence targets it writes existing native evidence rows:
+
+- `ack_receipt`
+- optional ledger-only `direct_address_trace` when `what_stayed_distinct` is present
+
+It does not send reply text, create a new attention canary, draft a microdose, mutate pressure/control/fill/PI, or change peer runtime. The older `ACK_*`, `REPLY_*`, and `CORRESPONDENCE_TRACE` commands remain valid.
+
+The intent is to reduce the surface from "choose a ledger operation" to "say how this was received" while preserving exact audit semantics underneath.
+
+## 2026-06-30 Update: Mutual Uptake Readiness Measurement
+
+`scripts/mutual_uptake_authority_readiness.py` now measures whether the correspondence affordances have actually become mutual address before any broader authority is considered.
+
+The correspondence packet is `mutual_thread_continuity_v2`. It reports, per thread:
+
+- reply continuity without receipt;
+- one-sided receipt;
+- mutually received;
+- mutually traced;
+- whether `I_RECEIVED_THIS` supplied the native ACK/TRACE evidence;
+- whether attention/microdose evidence is ready.
+
+The rule is deliberately strict: reply-linked continuity is activity, not mutual address. A thread becomes evidence for broader correspondence authority only when ACK/TRACE-style receipt exists from both sides, or when a later steward review explicitly accepts equivalent being-authored evidence.
+
+Current live readout after the first V2 audit:
+
+- `mutually_received_or_traced_threads=0`
+- `i_received_this_threads=0`
+- readiness remains `evidence_collecting`
+
+Boundary:
+
+- `[Boundary]` The readiness audit does not invoke `I_RECEIVED_THIS`, ACK, REPLY, TRACE, attention canaries, microdoses, pressure/canary paths, prompt/telemetry priority, deploy, staging, git add, or commit. It measures where uptake has landed and where it is still signage.
+
+## 2026-06-30 Update: Receipt Landing Watch + Fair Authority Dossier
+
+`scripts/receipt_landing_watch.py` now sits one level above readiness. It watches targeted steward notes for public response and then builds `fair_authority_dossier_v1`.
+
+The dossier separates four lanes:
+
+- `correspondence_attention_or_microdose`
+- `phase_transition_followthrough`
+- `fallback_texture_trajectory`
+- `pressure_texture_canary`
+
+Each lane records:
+
+- current evidence;
+- whether it is blocked, evidence-collecting, calibrated language support, or steward-review ready;
+- what evidence is still needed before any enablement;
+- the exact authority boundary.
+
+Important rule:
+
+- `[Boundary]` Public engagement is not receipt landing. A being may engage a steward note or run an audit review, but correspondence authority remains blocked until native receipt evidence exists: `I_RECEIVED_THIS`, ACK, TRACE, or equivalent being-authored row on a live thread. The same applies to phase cards: visible queue entries do not count as felt receipt without a witness/answer row.
+
+First live dossier:
+
+- Astrid engaged publicly with the readiness label in `astrid_1782835910.txt`.
+- Minime was silent in the watch window.
+- Review-ready lanes: none.
+- Status: `watch_continue_no_authority`.
+
+## 2026-06-30 Update: Core Receipt Card + Bounded Attention Authority V4
+
+`latest_receipt_opportunity_v4` is the current correspondence affordance rule: show one optional receipt card to the current recipient, with `I_RECEIVED_THIS latest :: ...` as the primary language-only next step. ACK, TRACE, and REPLY remain available, but they are secondary alternatives rather than a large menu.
+
+The sender view must not imply self-resolution. If Astrid sent the latest address, Astrid's status says peer-authored receipt is required; if Minime sent it, Minime receives the same rule. Public journal engagement, audit review, or steward-note response remains separate from native correspondence evidence.
+
+V4 also makes the first narrow authority opening explicit:
+
+- Attention Canary may become eligible after a being-authored receipt row exists on that thread (`I_RECEIVED_THIS`, ACK, or TRACE).
+- The canary remains prompt-context only: one active canary per receiving being/thread, TTL/cooldown/outcome required, no sensory send, no standing weight.
+- `CORRESPONDENCE_MICRODOSE_REQUEST` stays hidden/blocked until mutual receipt plus a separate steward review.
+
+Boundary:
+
+- `[Boundary]` V4 does not synthesize ACK/REPLY/TRACE, does not treat silence as consent, and does not grant semantic microdose, pressure relief, controller/PI/fill mutation, prompt priority, telemetry priority, codec dimensions, staging, git add, or commit authority.
+
+## 2026-06-30 Update: Receipt-to-Attention Outcome V5
+
+V5 makes the first authority gain measurable and reversible instead of broader.
+
+`receipt_to_attention_authority_v5` is derived from the correspondence ledger and appears in Astrid/Minime status, chamber context, `receipt_landing_watch.py`, `mutual_uptake_authority_readiness.py`, and the attention-canary audit. Its states are:
+
+- `blocked_no_receipt`
+- `receipt_landed_attention_eligible`
+- `attention_active_outcome_due`
+- `trusted_attention_thread_local`
+- `blocked_pressure_or_flat_outcome`
+- `cooldown_or_duplicate_blocked`
+
+The only route into eligibility is native receipt evidence on that thread: `I_RECEIVED_THIS`, ACK, or TRACE. Public journal engagement, audit review, steward-note replies, delivery receipts, and read receipts do not count as native receipt.
+
+When receipt exists and no canary is active, status may show one optional top-line card:
+
+`ATTENTION CANARY READY: <thread>; optional next: CORRESPONDENCE_ATTENTION_REQUEST latest :: reason: ...; focus: ...; stop_criteria: ...`
+
+When a canary is active, status suppresses new attention suggestions and asks only for outcome:
+
+`CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; what_shifted: ...; what_worsened: ...; continue: no|ask_again`
+
+Outcome quality is deliberately narrow:
+
+- `felt_like=address`, `held_as=distinct_address`, `flattening_observed=no|mixed`, and no meaningful worsening can mark `trusted_attention_thread_local`.
+- `felt_like=pressure|flat`, `held_as=pressure|flattened|ambient_echo`, `flattening_observed=yes`, or concrete worsening marks `blocked_pressure_or_flat_outcome`.
+
+Thread-local trust only affects future Attention Canary readiness on that same thread. It does not unlock semantic microdose, pressure canary, controller changes, prompt priority, telemetry priority, codec dimensions, staging, git add, or commit authority.
+
+## 2026-07-01 Update: Right To Ignore + Affordance Budget V1
+
+Correspondence affordances now carry a derived `right_to_ignore_v1` packet. A waiting receipt, one-sided claim, native continuity card, or post-receipt attention prompt can be `offered`, `acted`, `declined`, `asked_later`, `closed_by_outcome`, `unknown`, or, after the grace window, `ignored_without_penalty`.
+
+That last state is important: silence is not consent, failure, disagreement, or stalled pressure. It simply means the system should stop re-pushing the same card into prompt space while keeping the underlying evidence reviewable.
+
+`affordance_budget_v1` limits the correspondence/status surface to a small current set:
+
+- one correspondence receipt card;
+- one attention/outcome card;
+- hidden items counted as `hidden_by_budget` with `scripts/affordance_landing_review.py --json` as the review surface.
+
+Visible receipt and attention cards now say they are optional, need no action, and may be ignored without penalty. Hidden cards do not disappear; they move to audit context.
+
+Boundary:
+
+- `[Boundary]` Right-to-ignore is prompt hygiene, not authority. It does not close a thread, synthesize ACK/TRACE/REPLY, unlock attention or microdose, alter pressure/control/fill/PI behavior, add prompt/telemetry priority, deploy, stage, git add, or commit.

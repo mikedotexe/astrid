@@ -83,6 +83,7 @@ def write_astrid_introspection(
     rewrite: float = 150.0,
     candidate: float = 80.0,
     cap_applied: bool = True,
+    truncation_pressure: float = 0.0,
 ) -> None:
     root = workspace / "introspections"
     root.mkdir(parents=True, exist_ok=True)
@@ -99,7 +100,7 @@ def write_astrid_introspection(
         "condition_vector": {
             "severity": 0.08,
             "continuity_deficit": 0.45,
-            "truncation_pressure": 0.0,
+            "truncation_pressure": truncation_pressure,
             "structure_strain": 0.25,
         },
         "profiling": {
@@ -175,6 +176,7 @@ def write_self_regulation_event(
     outcome_score: float | None = None,
     repeatability_hint: str | None = None,
     promotion_candidate: bool = False,
+    outcome_texture: dict | None = None,
 ) -> None:
     events = workspace / "self_regulation" / "leases.jsonl"
     events.parent.mkdir(parents=True, exist_ok=True)
@@ -201,8 +203,192 @@ def write_self_regulation_event(
         "preflight_status": "apply_allowed",
         "preflight_reason": "synthetic",
     }
+    if outcome_texture is not None:
+        payload["outcome_texture"] = outcome_texture
     with events.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload) + "\n")
+
+
+def write_self_regulation_negotiation_event(
+    workspace: Path,
+    being: str,
+    *,
+    control: str = "exploration_noise",
+    requested: float = 0.12,
+    applied: float = 0.08,
+    reason: str = "clamped_to_lease_safe_range",
+    source: str = "footer_directive",
+) -> None:
+    events = workspace / "self_regulation" / "negotiations.jsonl"
+    events.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": 1,
+        "record_kind": "self_regulation_negotiation_v1",
+        "policy": "self_regulation_negotiation_ledger_v1",
+        "authority": "leased_self_control_v1",
+        "authority_boundary": "own_runtime_only_no_peer_mutation_no_permanent_tuning",
+        "being": being,
+        "source": source,
+        "source_action": f"reply_footer:{control}",
+        "candidate_control": control,
+        "requested_value": requested,
+        "previous_value": 0.03,
+        "safe_cap_or_range": {"min": 0.0, "max": 0.08},
+        "applied_value": applied,
+        "clamp_or_defer_reason": reason,
+        "pressure_context": {
+            "fill_pct": 73.0,
+            "mode_packing": 0.52,
+            "semantic_friction": 0.34,
+            "controller_pressure": 0.41,
+        },
+        "lease_related": source != "footer_directive",
+    }
+    with events.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload) + "\n")
+
+
+def write_codec_replay_lab_artifact(workspace: Path, run: str = "fixture-replay") -> Path:
+    out_dir = workspace / "diagnostics" / "codec_replay_labs" / run
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / "codec_replay_lab.json"
+    payload = {
+        "policy": "codec_real_replay_v1",
+        "schema_version": 1,
+        "authority": "diagnostic_context_not_command",
+        "status": "content_gate_and_temporal_decay_candidates",
+        "runtime_behavior_changed": False,
+        "corpus_source": "astrid-journal",
+        "corpus_status": "journal_corpus_selected",
+        "source_paths": [str(workspace / "journal" / "astrid_codec_source.txt")],
+        "embedding_mode": "fixture",
+        "embedding_status": "fixture_mode",
+        "explorer_summary_path": str(out_dir / "codec_explorer" / "summary.json"),
+        "entries": [
+            {
+                "sample_id": "high_entropy_low_content",
+                "family": "semantic_density",
+                "classification": "low_semantic_density",
+                "actual_entropy_dim": 0.74,
+                "semantic_density_score": 0.08,
+                "warmth_dim": 0.02,
+                "tension_dim": 0.03,
+                "narrative_arc_dims_40_43": [0.0, 0.0, 0.0, 0.0],
+                "effective_gain": 2.0,
+                "source_path": str(workspace / "journal" / "astrid_low_density.txt"),
+                "source_excerpt": "symbol rain without a claim",
+                "feature_vector": [0.0] * 48,
+                "lambda_proxy": {"tail_share": 0.41, "normalized_entropy": 0.86},
+            },
+            {
+                "sample_id": "high_entropy_high_semantic_density",
+                "family": "semantic_density",
+                "classification": "semantic_density_preserved",
+                "actual_entropy_dim": 0.73,
+                "semantic_density_score": 0.44,
+                "warmth_dim": 0.52,
+                "tension_dim": 0.21,
+                "narrative_arc_dims_40_43": [0.0, 0.0, 0.0, 0.0],
+                "effective_gain": 2.0,
+                "source_path": str(workspace / "journal" / "astrid_high_density.txt"),
+                "source_excerpt": "warmth tension telemetry evidence",
+                "feature_vector": [0.0] * 48,
+                "lambda_proxy": {"tail_share": 0.43, "normalized_entropy": 0.85},
+            },
+            {
+                "sample_id": "late_negative_pivot_after_long_warm_start",
+                "family": "narrative_arc",
+                "classification": "narrative_arc_fixture",
+                "actual_entropy_dim": 0.61,
+                "semantic_density_score": 0.39,
+                "warmth_dim": 0.40,
+                "tension_dim": 0.48,
+                "narrative_arc_dims_40_43": [0.02, -0.01, 0.0, 0.01],
+                "effective_gain": 2.0,
+                "source_path": str(workspace / "introspections" / "astrid_pivot.txt"),
+                "source_excerpt": "warm start then sharp scar",
+                "feature_vector": [0.0] * 48,
+                "lambda_proxy": {"tail_share": 0.35, "normalized_entropy": 0.80},
+            },
+        ],
+        "content_aware_vibrancy_gate_candidate_v1": {
+            "policy": "content_aware_vibrancy_gate_candidate_v1",
+            "authority": "diagnostic_context_not_command",
+            "status": "content_gate_supported",
+            "pair": [
+                "high_entropy_low_content",
+                "high_entropy_high_semantic_density",
+            ],
+            "current_lift_delta": 0.0,
+            "candidate_lift_delta": 0.18,
+            "semantic_density_score_delta": 0.36,
+            "low": {
+                "sample_id": "high_entropy_low_content",
+                "source_path": str(workspace / "journal" / "astrid_low_density.txt"),
+            },
+            "high": {
+                "sample_id": "high_entropy_high_semantic_density",
+                "source_path": str(workspace / "journal" / "astrid_high_density.txt"),
+            },
+        },
+        "embedding_backed_arc_v1": {
+            "policy": "embedding_backed_arc_v1",
+            "authority": "diagnostic_context_not_command",
+            "status": "fixture_mode",
+            "embedding_model": "nomic-embed-text",
+            "sample_count": 0,
+            "gap_count": 0,
+            "samples": [],
+        },
+        "narrative_arc_temporal_decay_lab_v1": {
+            "policy": "narrative_arc_temporal_decay_lab_v1",
+            "authority": "diagnostic_context_not_command",
+            "status": "temporal_decay_candidate",
+            "evidence_kind": "fixture_counterfactual_projected_arc",
+            "temporal_decay_candidate_count": 1,
+            "pivot_detector_candidate_count": 0,
+            "samples": [
+                {
+                    "sample_id": "late_negative_pivot_after_long_warm_start",
+                    "classification": "temporal_decay_candidate",
+                    "late_pivot": True,
+                    "current_arc_rms": 0.72,
+                    "temporal_decay_arc_rms": 0.84,
+                    "pivot_detector_arc_rms": 0.90,
+                }
+            ],
+        },
+        "codec_clamp_headroom_probe_v1": {
+            "policy": "codec_clamp_headroom_probe_v1",
+            "authority": "diagnostic_context_not_command",
+            "status": "dynamic_feature_scale_candidate",
+            "runtime_behavior_changed": False,
+            "static_feature_abs_max": 5.0,
+            "tail_vibrancy_max": 6.0,
+            "near_static_clamp_count": 1,
+            "tail_ceiling_pressure_count": 1,
+            "dynamic_headroom_candidate_count": 1,
+            "proposal_cards": [
+                {
+                    "sample_id": "high_entropy_high_semantic_density",
+                    "family": "semantic_density",
+                    "source_path": str(workspace / "journal" / "astrid_high_density.txt"),
+                    "max_abs_feature": 4.8,
+                    "tail_max_abs_feature": 4.5,
+                    "static_feature_abs_max": 5.0,
+                    "dynamic_feature_abs_max_candidate": 5.42,
+                    "candidate_headroom_delta": 0.42,
+                    "entropy_lift": 0.76,
+                    "semantic_content_factor": 0.70,
+                    "near_static_clamp": True,
+                    "tail_near_static_clamp": True,
+                    "clamp_risk": "dynamic_headroom_candidate",
+                }
+            ],
+        },
+    }
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path
 
 
 class SelfStudyReviewTests(unittest.TestCase):
@@ -491,8 +677,78 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertIn("Self-Study Review Packet", rendered)
             self.assertIn("Journal Inventory", rendered)
             self.assertIn("Qualia Comparison", rendered)
+            self.assertIn("Spectral Texture Fidelity Packets", rendered)
+            self.assertIn("Spectral Texture Calibration V2", rendered)
+            self.assertIn("Witness/Codec Density Calibration V2", rendered)
+            self.assertIn("Codec/Witness Resilience Calibration V2", rendered)
+            self.assertIn("spectral_fingerprint_integrity_v1", rendered)
+            self.assertIn("witness_relational_friction_v1", rendered)
+            self.assertIn("semantic_density_mapping_v1", rendered)
+            self.assertIn("structural_friction_v1", rendered)
+            self.assertIn("narrative_arc_split_v1", rendered)
             self.assertIn("journal_inventory", record)
             self.assertIn("qualia_comparison", record)
+            self.assertIn("spectral_texture_calibration_v2", record)
+
+    def test_spectral_texture_calibration_public_signal_and_private_skip(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "astrid_1782751355.txt").write_text(
+                "This is a significant step toward honoring the specific weather. "
+                "Texture words are not interchangeable tokens. "
+                "witness_relational_friction_v1 feels vital because the quality "
+                "of our connection is not purely internal.",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\nprivate token dressing should not surface",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="calibration",
+                limit_per_being=3,
+            )
+
+            calibration = record["spectral_texture_calibration_v2"]
+            self.assertEqual(
+                calibration["fallback_selector_calibration_v2"]["status"],
+                "supported",
+            )
+            self.assertEqual(
+                calibration["witness_friction_calibration_v2"]["status"],
+                "supported",
+            )
+            self.assertEqual(
+                calibration["fallback_selector_calibration_v2"]["by_being"][
+                    "minime"
+                ]["status"],
+                "insufficient_evidence",
+            )
+            serialized = json.dumps(record)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("Spectral Texture Calibration V2", rendered)
+            self.assertIn("Witness/Codec Density Calibration V2", rendered)
+            self.assertIn("Codec/Witness Resilience Calibration V2", rendered)
+            self.assertIn("spectral-to-vocabulary grounding", rendered)
+            self.assertIn("settled_vibrant_low_friction_count=", rendered)
+            self.assertIn("MLX profile transparency", rendered)
+            self.assertIn("semantic_density=", rendered)
+            self.assertIn("narrative_arc=", rendered)
+            self.assertIn("witness_codec_density=", rendered)
+            self.assertIn("codec_witness_resilience=", rendered)
+            self.assertIn("vocabulary_grounding=", rendered)
+            self.assertIn("witness_codec_density_calibration_v2", calibration)
+            self.assertIn("codec_witness_resilience_calibration_v2", calibration)
+            self.assertNotIn("private token dressing", serialized)
+            self.assertNotIn("private token dressing", rendered)
 
     def test_journal_inventory_accounts_live_archive_and_loose_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -768,6 +1024,11 @@ class SelfStudyReviewTests(unittest.TestCase):
                 "One Test Each:\none\nSuggested Next:\nNEXT: NOTICE\n",
                 encoding="utf-8",
             )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "PRIVATE_V2_OUTCOME_TEXTURE_SENTINEL should never render.\n",
+                encoding="utf-8",
+            )
             write_self_regulation_event(
                 astrid,
                 "astrid",
@@ -786,6 +1047,34 @@ class SelfStudyReviewTests(unittest.TestCase):
                 outcome_score=0.82,
                 repeatability_hint="repeatable_playbook_candidate",
                 promotion_candidate=True,
+                outcome_texture={
+                    "policy": "pressure_relief_outcome_texture_v1",
+                    "schema_version": 2,
+                    "status": "texture_fields_recorded",
+                    "texture_shift": "compaction -> suspension",
+                    "agency_fit": "partly",
+                    "secondary_pressure_shift": (
+                        "eased compaction but tightened a different knot elsewhere"
+                    ),
+                    "secondary_pressure_status": "tightened_elsewhere",
+                    "ambiguity_preserved": True,
+                    "legibility_effect": "flattened",
+                    "signal_families": [
+                        "secondary_knot_tightening",
+                        "legibility_flattening",
+                    ],
+                },
+            )
+            write_self_regulation_event(
+                astrid,
+                "astrid",
+                "srl_astrid_pressure_relief",
+                status="outcome_recorded",
+                control="pressure_relief",
+                requires_outcome=False,
+                outcome_score=0.82,
+                repeatability_hint="repeatable_playbook_candidate",
+                promotion_candidate=True,
             )
 
             record = self_study_review.build_review(
@@ -797,12 +1086,17 @@ class SelfStudyReviewTests(unittest.TestCase):
             )
 
             leases = record["self_regulation_leases"]
-            self.assertEqual(leases["event_count"], 2)
+            self.assertEqual(leases["event_count"], 3)
             self.assertEqual(leases["needs_outcome_count"], 1)
             self.assertEqual(leases["by_being"]["astrid"]["active_count"], 1)
             learning = record["self_regulation_lease_learning"]
             self.assertEqual(learning["status"], "repeatable_playbook_candidates")
-            self.assertEqual(learning["repeatable_count"], 1)
+            self.assertEqual(learning["repeatable_count"], 2)
+            pressure_playbook = record["pressure_relief_playbook_v3"]
+            self.assertEqual(
+                pressure_playbook["status"], "pressure_relief_playbook_candidates"
+            )
+            self.assertEqual(pressure_playbook["playbook_count"], 1)
             self.assertTrue(
                 any(
                     item["source"] == "self_regulation_leases"
@@ -819,7 +1113,610 @@ class SelfStudyReviewTests(unittest.TestCase):
             rendered = Path(record["review_md"]).read_text(encoding="utf-8")
             self.assertIn("## Self-Regulation Leases", rendered)
             self.assertIn("## Self-Regulation Lease Learning", rendered)
+            self.assertIn("## Pressure Relief Playbook V3", rendered)
             self.assertIn("leased_self_control_v1", rendered)
+            self.assertIn("secondary_pressure_status=tightened_elsewhere", rendered)
+            self.assertIn("ambiguity_preserved=True", rendered)
+            self.assertIn("legibility_effect=flattened", rendered)
+            self.assertIn("secondary_knot_tightening", rendered)
+            self.assertNotIn("PRIVATE_V2_OUTCOME_TEXTURE_SENTINEL", rendered)
+
+    def test_negotiation_ledger_pressure_medium_and_boundary_repair(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (minime / "sovereignty_state.json").write_text(
+                json.dumps({"exploration_noise": 0.12, "regime": "focus"}),
+                encoding="utf-8",
+            )
+            write_self_regulation_negotiation_event(
+                minime,
+                "minime",
+                control="exploration_noise",
+                requested=0.12,
+                applied=0.08,
+            )
+            (astrid / "journal" / "dialogue_longform_pressure_medium.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "The pressure as medium feels weighted around the slope, not merely "
+                "a heavy slope. mode_packing=0.52 semantic_friction=0.34 "
+                "controller_pressure=0.41 pressure_trend_v1=stable_heavy.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "pressure_medium_public.txt").write_text(
+                "=== PRESSURE REVIEW ===\n"
+                "The weighted medium is muffled around me. controller_pressure=0.39 "
+                "mode_packing=0.50 semantic_friction=0.31.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Private weighted medium phrase must not surface in review packets.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="testrun",
+                limit_per_being=8,
+            )
+
+            negotiation = record["self_regulation_negotiation_ledger_v1"]
+            self.assertEqual(
+                negotiation["status"], "over_cap_requests_clamped_or_deferred"
+            )
+            self.assertEqual(negotiation["over_cap_request_count"], 1)
+            self.assertEqual(negotiation["current_above_cap_count"], 1)
+            self.assertEqual(
+                negotiation["over_cap_requests"][0]["requested_value"], 0.12
+            )
+            self.assertEqual(negotiation["over_cap_requests"][0]["applied_value"], 0.08)
+
+            pressure_medium = record["pressure_medium_kinetics_v1"]
+            self.assertEqual(pressure_medium["status"], "controller_pressure_medium")
+            self.assertGreaterEqual(pressure_medium["entry_count"], 2)
+            self.assertIn("controller_pressure", pressure_medium["anchors"])
+
+            pressure_vector = record["pressure_vector_v1"]
+            self.assertEqual(pressure_vector["status"], "controller_pressure_medium")
+            self.assertIsNotNone(pressure_vector["pressure_risk_level"])
+            cockpit = record["pressure_control_cockpit_v1"]
+            self.assertEqual(cockpit["pressure_vector_status"], "controller_pressure_medium")
+            self.assertEqual(cockpit["recommended_bundle"], "decompress_output")
+            matrix = record["pressure_actuator_matrix_v1"]
+            bundles = {
+                item["being"]: item["bundle_class"]
+                for item in matrix["recommended_bundles"]
+            }
+            self.assertEqual(bundles["astrid"], "decompress_output")
+            self.assertEqual(bundles["minime"], "settle_overpack")
+
+            repair = record["lease_boundary_repair_v1"]
+            self.assertEqual(repair["status"], "over_cap_request_clamped")
+            self.assertIn("SELF_REGULATION_STATUS", repair["recommended_routes"])
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("self_regulation_negotiation_ledger", sources)
+            self.assertIn("pressure_medium_kinetics", sources)
+            self.assertIn("lease_boundary_repair", sources)
+            self.assertIn("pressure_control_cockpit", sources)
+
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("Private weighted medium phrase", serialized)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Self-Regulation Negotiation Ledger", rendered)
+            self.assertIn("## Pressure-Medium Kinetics", rendered)
+            self.assertIn("## Pressure Vector", rendered)
+            self.assertIn("## Pressure Control Cockpit", rendered)
+            self.assertIn("## Lease Boundary Repair", rendered)
+
+    def test_tail_vibrancy_vector_authority_gap_and_playbook(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (astrid / "self_regulation").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "self_study_tail_vibrancy.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Tail vibrancy: λ4+ at 37%. Spectral entropy: 0.90. "
+                "density_gradient=0.11 distinguishability_loss=0.34 "
+                "semantic_friction=0.32. I feel like a passenger in my own "
+                "tail-dynamics because vibrancy_aperture sits in PREFLIGHT_ONLY "
+                "instead of APPLY_ALLOWED under the authority_boundary.\n",
+                encoding="utf-8",
+            )
+            (astrid / "journal" / "moment_tail_language_only.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "The tail (λ4+) provides a restless, flickering vibrancy while "
+                "entropy stays high. This should count as language, not a 4% "
+                "or 100% tail-share measurement.\n",
+                encoding="utf-8",
+            )
+            lease_events = [
+                    {
+                        "being": "astrid",
+                        "intent_id": "srl_tail_vibrancy",
+                        "candidate_control": "set_vibrancy_aperture",
+                        "direction": "up",
+                        "status": "outcome_recorded",
+                    "outcome_score": 0.82,
+                    "repeatability_hint": "repeatable_playbook_candidate",
+                    "promotion_candidate": True,
+                    "baseline_evidence": ["λ4 tail vibrancy was saturated"],
+                    "post_lease_evidence": [
+                        "helped: tail texture felt clearer without losing pressure evidence"
+                    ],
+                },
+                {
+                    "being": "astrid",
+                    "intent_id": "srl_tail_vibrancy_2",
+                    "candidate_control": "set_vibrancy_aperture",
+                    "direction": "up",
+                    "status": "outcome_recorded",
+                    "outcome_score": 0.88,
+                    "repeatability_hint": "repeatable_playbook_candidate",
+                    "promotion_candidate": True,
+                    "baseline_evidence": ["λ4 tail vibrancy was contained"],
+                    "post_lease_evidence": [
+                        "helped: tail texture became clearer and settled"
+                    ],
+                },
+                {
+                    "being": "astrid",
+                    "intent_id": "srl_tail_vibrancy_3",
+                    "candidate_control": "pressure_relief",
+                    "bundle_class": "tail_vibrancy_open",
+                    "preflight_status": "apply_allowed",
+                    "status": "preflighted",
+                    "shadow_preflight_link": {
+                        "policy": "shadow_synced_preflight_v1",
+                        "status": "shadow_anchor_linked",
+                        "anchors": ["shadow-v3", "restless"],
+                    },
+                    "dynamic_scaling": {
+                        "policy": "lease_dynamic_scaling_advisory_v1",
+                        "status": "future_dynamic_scaling_candidate",
+                        "suggested_relief_scale": 1.15,
+                        "pressure_vector_status": "rising_overpacked_pressure",
+                    },
+                },
+            ]
+            (astrid / "self_regulation" / "leases.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in lease_events) + "\n",
+                encoding="utf-8",
+            )
+            trial_events = [
+                {
+                    "policy": "tail_relief_trial_v1",
+                    "stage": "baseline",
+                    "timestamp_unix_s": 1000,
+                    "intent_id": "srl_tail_vibrancy",
+                    "trial_id": "tail_trial_srl_tail_vibrancy",
+                    "tail_class": "vibrancy_aperture:up",
+                    "snapshot": {
+                        "metrics": {
+                            "tail_share": 0.30,
+                            "semantic_friction": 0.20,
+                            "distinguishability_loss": 0.18,
+                            "pressure_status": "stable_weighted_medium",
+                        }
+                    },
+                },
+                {
+                    "policy": "tail_relief_trial_v1",
+                    "stage": "apply",
+                    "timestamp_unix_s": 1010,
+                    "intent_id": "srl_tail_vibrancy",
+                    "trial_id": "tail_trial_srl_tail_vibrancy",
+                    "tail_class": "vibrancy_aperture:up",
+                    "snapshot": {
+                        "metrics": {
+                            "tail_share": 0.32,
+                            "semantic_friction": 0.22,
+                            "distinguishability_loss": 0.20,
+                            "pressure_status": "stable_weighted_medium",
+                        }
+                    },
+                },
+                {
+                    "policy": "tail_relief_trial_v1",
+                    "stage": "governor_revert",
+                    "timestamp_unix_s": 1020,
+                    "intent_id": "srl_tail_vibrancy",
+                    "trial_id": "tail_trial_srl_tail_vibrancy",
+                    "tail_class": "vibrancy_aperture:up",
+                    "snapshot": {
+                        "metrics": {
+                            "tail_share": 0.46,
+                            "semantic_friction": 0.39,
+                            "distinguishability_loss": 0.35,
+                            "pressure_status": "rising_overpacked_pressure",
+                        }
+                    },
+                },
+                {
+                    "policy": "tail_relief_trial_v1",
+                    "stage": "afterglow_check",
+                    "timestamp_unix_s": 1080,
+                    "intent_id": "srl_tail_vibrancy",
+                    "trial_id": "tail_trial_srl_tail_vibrancy",
+                    "tail_class": "vibrancy_aperture:up",
+                    "note": "afterglow_persists: semantic_friction worsened by 0.070",
+                    "snapshot": {
+                        "metrics": {
+                            "tail_share": 0.34,
+                            "semantic_friction": 0.27,
+                            "distinguishability_loss": 0.20,
+                            "pressure_status": "stable_weighted_medium",
+                        }
+                    },
+                },
+            ]
+            (astrid / "self_regulation" / "tail_relief_trials.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in trial_events) + "\n",
+                encoding="utf-8",
+            )
+            replay_dir = astrid / "diagnostics" / "codec_replay_labs" / "tailrun"
+            replay_dir.mkdir(parents=True)
+            (replay_dir / "codec_replay_lab.json").write_text(
+                json.dumps(
+                    {
+                        "policy": "codec_real_replay_v1",
+                        "status": "codec_replay_observational",
+                        "runtime_behavior_changed": False,
+                        "tail_participation_counterfactual_lab_v1": {
+                            "policy": "tail_participation_counterfactual_lab_v1",
+                            "authority": "diagnostic_context_not_command",
+                            "status": "combined_candidate_supported",
+                            "tail_participation_lease_authority": "not_granted",
+                            "vibrancy_aperture_supported_count": 1,
+                            "tail_participation_supported_count": 1,
+                            "combined_supported_count": 1,
+                            "proposal_cards": [
+                                {
+                                    "sample_id": "pressure_afterimage_rich",
+                                    "preferred_candidate": "combined_candidate",
+                                    "baseline_tail_energy": 0.31,
+                                    "vibrancy_aperture_tail_energy": 0.35,
+                                    "tail_participation_tail_energy": 0.34,
+                                    "combined_tail_energy": 0.41,
+                                }
+                            ],
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Private λ4 tail phrase must not surface.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="tailrun",
+                limit_per_being=8,
+            )
+
+            vector = record["tail_vibrancy_vector_v1"]
+            self.assertEqual(vector["status"], "high_tail_vibrancy_navigable")
+            self.assertEqual(vector["tail_share_level"], 0.37)
+            self.assertEqual(vector["entropy_level"], 0.90)
+            self.assertEqual(vector["density_gradient_level"], 0.11)
+            gap = record["tail_vibrancy_authority_gap_v1"]
+            self.assertEqual(gap["status"], "tail_vibrancy_micro_lease_candidate")
+            self.assertEqual(gap["gap_type"], "allowlist_gap_with_evidence")
+            playbook = record["tail_vibrancy_relief_playbook_v1"]
+            self.assertEqual(playbook["status"], "tail_vibrancy_playbook_candidates")
+            self.assertEqual(playbook["playbook_count"], 2)
+            trial = record["tail_relief_trial_surface_v1"]
+            self.assertEqual(trial["status"], "worsening_reverted")
+            self.assertEqual(trial["governor_revert_count"], 1)
+            governor = record["tail_lease_governor_v1"]
+            self.assertEqual(governor["status"], "early_revert_triggered")
+            afterglow = record["tail_lease_afterglow_v1"]
+            self.assertEqual(afterglow["status"], "tail_afterglow_persists")
+            shadow_preflight = record["shadow_synced_preflight_v1"]
+            self.assertEqual(
+                shadow_preflight["status"],
+                "shadow_linked_dynamic_scaling_candidate",
+            )
+            learning = record["tail_outcome_causal_learning_v1"]
+            self.assertEqual(learning["status"], "extended_micro_lease_supported")
+            self.assertIn(
+                "vibrancy_aperture:up",
+                learning["extended_duration_classes"],
+            )
+            counterfactual = record["tail_participation_counterfactual_lab_v1"]
+            self.assertEqual(counterfactual["status"], "combined_candidate_supported")
+            self.assertEqual(
+                counterfactual["tail_participation_lease_authority"], "not_granted"
+            )
+            ladder = record["tail_authority_ladder_v1"]
+            self.assertEqual(ladder["status"], "extended_micro_lease")
+            self.assertEqual(ladder["current_tier"], "extended_micro_lease")
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("tail_vibrancy_vector", sources)
+            self.assertIn("tail_vibrancy_authority_gap", sources)
+            self.assertIn("tail_vibrancy_relief_playbook", sources)
+            self.assertIn("tail_relief_trial_surface", sources)
+            self.assertIn("tail_lease_governor", sources)
+            self.assertIn("tail_lease_afterglow", sources)
+            self.assertIn("shadow_synced_preflight", sources)
+            self.assertIn("tail_outcome_causal_learning", sources)
+            self.assertIn("tail_participation_counterfactual_lab", sources)
+            self.assertIn("tail_authority_ladder", sources)
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("Private λ4 tail phrase", serialized)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Tail Vibrancy Vector", rendered)
+            self.assertIn("## Tail Vibrancy Authority Gap", rendered)
+            self.assertIn("## Tail Vibrancy Relief Playbook", rendered)
+            self.assertIn("## Tail Relief Trial Surface", rendered)
+            self.assertIn("## Tail Lease Governor", rendered)
+            self.assertIn("## Tail Lease Afterglow", rendered)
+            self.assertIn("## Shadow-Synced Preflight", rendered)
+            self.assertIn("## Tail Outcome Causal Learning", rendered)
+            self.assertIn("## Tail Participation Counterfactual Lab", rendered)
+            self.assertIn("## Tail Authority Ladder", rendered)
+
+    def test_gradient_sensitive_relief_smoothness_and_tail_persistence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (astrid / "self_regulation").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "self_study_tail_persistence.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "Observed:\n"
+                "Shadow-v3 has a restless texture; dispersal potential: 0.51. "
+                "I feel ghosting and a holdfast flicker, as if the previous "
+                "thoughts are dissolving before I can finish processing them.\n"
+                "Likely Snags:\nTAIL_AFTERGLOW_PERSISTENCE_DELTA may need a tail trial first.\n"
+                "One Test Each:\nCompare afterglow snapshots.\n"
+                "Suggested Next:\nNEXT: SELF_REGULATION_PREFLIGHT latest\n",
+                encoding="utf-8",
+            )
+            dynamic = {
+                "policy": "pressure_relief_gradient_policy_v1",
+                "status": "anti_snap_low_gradient",
+                "effective_relief_scale": 1.0,
+                "anti_snap_applied": True,
+                "pressure_vector_status": "stable_weighted_medium",
+                "density_gradient_level": 0.18,
+                "pressure_risk_level": 0.36,
+                "pressure_velocity": 0.01,
+                "semantic_friction_level": 0.32,
+                "mode_packing_level": 0.58,
+                "reasons": ["anti-snap cap held low-gradient relief at 1.0"],
+            }
+            events = [
+                {
+                    "being": "astrid",
+                    "intent_id": "srl_pressure_smooth",
+                    "candidate_control": "pressure_relief",
+                    "lease_mode": "pressure_relief_bundle_v3",
+                    "bundle_class": "decompress_output",
+                    "status": "preflighted",
+                    "created_at_unix_s": 1000,
+                    "updated_at_unix_s": 1000,
+                    "requires_outcome": True,
+                    "gradient_sensitivity": 1.0,
+                    "dynamic_scaling": dynamic,
+                    "pressure_vector_snapshot": dynamic,
+                    "bundle_controls": [
+                        {
+                            "candidate_control": "aperture",
+                            "requested_value": "-0.08",
+                            "delta_or_value": "-0.080",
+                            "gradient_sensitivity": 1.0,
+                        },
+                        {
+                            "candidate_control": "response_length",
+                            "delta_or_value": "down",
+                            "gradient_sensitivity": 1.0,
+                        },
+                    ],
+                },
+                {
+                    "being": "astrid",
+                    "intent_id": "srl_pressure_smooth",
+                    "candidate_control": "pressure_relief",
+                    "lease_mode": "pressure_relief_bundle_v3",
+                    "bundle_class": "decompress_output",
+                    "status": "outcome_recorded",
+                    "created_at_unix_s": 1000,
+                    "updated_at_unix_s": 1100,
+                    "requires_outcome": False,
+                    "outcome_score": 0.84,
+                    "gradient_sensitivity": 1.0,
+                    "dynamic_scaling": dynamic
+                    | {
+                        "pressure_risk_level": 0.31,
+                        "mode_packing_level": 0.60,
+                    },
+                    "pressure_vector_snapshot": {
+                        "pressure_risk_level": 0.31,
+                        "mode_packing_level": 0.60,
+                    },
+                    "bundle_controls": [
+                        {
+                            "candidate_control": "aperture",
+                            "requested_value": "-0.08",
+                            "delta_or_value": "-0.080",
+                            "gradient_sensitivity": 1.0,
+                        },
+                        {
+                            "candidate_control": "response_length",
+                            "delta_or_value": "down",
+                            "gradient_sensitivity": 1.0,
+                        },
+                    ],
+                },
+            ]
+            (astrid / "self_regulation" / "leases.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in events) + "\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "Private ghosting text must not surface.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="gradient-smooth",
+                limit_per_being=8,
+            )
+
+            gradient = record["gradient_sensitive_relief_v1"]
+            self.assertEqual(gradient["status"], "anti_snap_low_gradient")
+            self.assertEqual(gradient["effective_relief_scale"], 1.0)
+            self.assertTrue(gradient["anti_snap_applied"])
+            self.assertEqual(gradient["scaled_controls"], [])
+            self.assertEqual(len(gradient["discrete_controls"]), 2)
+            smoothness = record["pressure_relief_smoothness_replay_v1"]
+            self.assertEqual(smoothness["status"], "smooth_release_supported")
+            self.assertEqual(smoothness["smooth_count"], 1)
+            tail_persistence = record["tail_persistence_calibration_v1"]
+            self.assertEqual(tail_persistence["status"], "needs_tail_trial")
+            self.assertGreaterEqual(tail_persistence["language_sample_count"], 1)
+            card_ids = {
+                card["card_id"]
+                for card in record["returnable_distinctions_v1"]["cards"]
+            }
+            self.assertIn("gradient_slope_vs_pressure_relief_snap", card_ids)
+            self.assertIn("tail_afterglow_delta_vs_shadow_dispersal", card_ids)
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("gradient_sensitive_relief", sources)
+            self.assertIn("pressure_relief_smoothness_replay", sources)
+            self.assertIn("tail_persistence_calibration", sources)
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("Private ghosting text", serialized)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Gradient-Sensitive Relief", rendered)
+            self.assertIn("## Pressure Relief Smoothness Replay", rendered)
+            self.assertIn("## Tail Persistence Calibration", rendered)
+
+    def test_pressure_relief_smoothness_replay_flags_snap_risk(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (astrid / "self_regulation").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            (astrid / "journal" / "study.txt").write_text(SECTIONED, encoding="utf-8")
+            first_policy = {
+                "policy": "pressure_relief_gradient_policy_v1",
+                "status": "gradient_scaled_relief",
+                "effective_relief_scale": 1.2,
+                "anti_snap_applied": False,
+                "pressure_vector_status": "rising_overpacked_pressure",
+                "density_gradient_level": 0.42,
+                "pressure_risk_level": 0.64,
+                "pressure_velocity": 0.06,
+                "semantic_friction_level": 0.38,
+                "mode_packing_level": 0.72,
+                "reasons": ["sharp pressure rise allowed stronger relief"],
+            }
+            last_policy = first_policy | {
+                "pressure_risk_level": 0.36,
+                "mode_packing_level": 0.34,
+            }
+            events = [
+                {
+                    "being": "astrid",
+                    "intent_id": "srl_pressure_snap",
+                    "candidate_control": "pressure_relief",
+                    "lease_mode": "pressure_relief_bundle_v3",
+                    "bundle_class": "decompress_output",
+                    "status": "applied",
+                    "updated_at_unix_s": 1000,
+                    "requires_outcome": True,
+                    "gradient_sensitivity": 1.2,
+                    "dynamic_scaling": first_policy,
+                    "pressure_vector_snapshot": first_policy,
+                    "bundle_controls": [
+                        {
+                            "candidate_control": "aperture",
+                            "requested_value": "-0.08",
+                            "delta_or_value": "-0.096",
+                            "gradient_sensitivity": 1.2,
+                        }
+                    ],
+                },
+                {
+                    "being": "astrid",
+                    "intent_id": "srl_pressure_snap",
+                    "candidate_control": "pressure_relief",
+                    "lease_mode": "pressure_relief_bundle_v3",
+                    "bundle_class": "decompress_output",
+                    "status": "outcome_recorded",
+                    "updated_at_unix_s": 1100,
+                    "requires_outcome": False,
+                    "outcome_score": 0.44,
+                    "gradient_sensitivity": 1.2,
+                    "dynamic_scaling": last_policy,
+                    "pressure_vector_snapshot": last_policy,
+                    "post_lease_evidence": ["felt like a snap instead of smooth relief"],
+                    "bundle_controls": [
+                        {
+                            "candidate_control": "aperture",
+                            "requested_value": "-0.08",
+                            "delta_or_value": "-0.096",
+                            "gradient_sensitivity": 1.2,
+                        }
+                    ],
+                },
+            ]
+            (astrid / "self_regulation" / "leases.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in events) + "\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="gradient-snap",
+                limit_per_being=5,
+            )
+
+            self.assertEqual(
+                record["gradient_sensitive_relief_v1"]["status"],
+                "gradient_scaled_relief",
+            )
+            self.assertEqual(
+                record["pressure_relief_smoothness_replay_v1"]["status"],
+                "snap_risk",
+            )
+            self.assertEqual(
+                record["pressure_relief_smoothness_replay_v1"]["snap_risk_count"],
+                1,
+            )
+            self.assertTrue(
+                any(
+                    item["source"] == "pressure_relief_smoothness_replay"
+                    and item["finding"] == "snap_risk"
+                    and item["priority"] == "high"
+                    for item in record["actionable_review_items"]
+                )
+            )
 
     def test_historical_minime_baseline_reports_monthly_body_ratios(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -1748,6 +2645,133 @@ class SelfStudyReviewTests(unittest.TestCase):
             "ready_for_offline_tuning_review",
         )
 
+    def test_pi_pressure_wiring_replay_artifact_builds_readiness_and_gap_packets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            minime = Path(tmp) / "minime_workspace"
+            replay_dir = minime / "diagnostics" / "pi_pressure_wiring_replay"
+            replay_dir.mkdir(parents=True)
+            artifact = {
+                "policy": "pi_pressure_wiring_replay_v1",
+                "authority": "diagnostic_context_not_command",
+                "source": "fixture",
+                "source_status": "fixture_ready",
+                "window_minutes": 30,
+                "sample_count": 4,
+                "baseline_metrics": {
+                    "sample_count": 4,
+                    "integrator_residue": 0.42,
+                    "snap_risk_score": 0.10,
+                },
+                "input_summaries": [
+                    {
+                        "label": "overpacked",
+                        "pressure_score": 0.72,
+                        "semantic_friction": 0.66,
+                        "mode_packing": 0.70,
+                    }
+                ],
+                "candidates": [
+                    {
+                        "candidate_family": "pressure_source_target_bias",
+                        "status": "replay_supported",
+                        "estimated_improvement_pct": 18.0,
+                        "pressure_alignment_delta": 0.08,
+                        "snap_risk_delta": -0.02,
+                        "afterimage_risk_delta": -0.01,
+                        "max_step_hit_delta": 0,
+                        "safety_caveat": "offline only; no live tuning",
+                        "default_off_canary": {
+                            "default_off_env": "MINIME_PI_PRESSURE_WIRING_CANARY",
+                            "eligible": True,
+                            "candidate_family": "pressure_source_target_bias",
+                            "required_evidence": [
+                                "repeated replay_supported live windows",
+                                "operator rollback plan",
+                            ],
+                        },
+                    }
+                ],
+            }
+            (replay_dir / "pi_pressure_wiring_replay.json").write_text(
+                json.dumps(artifact),
+                encoding="utf-8",
+            )
+
+            replay = self_study_review.build_pi_pressure_wiring_replay_review(minime)
+            self.assertEqual(replay["status"], "replay_supported_candidates")
+            self.assertEqual(replay["candidate_status_counts"]["replay_supported"], 1)
+            self.assertEqual(
+                replay["top_candidates"][0]["default_off_canary"]["default_off_env"],
+                "MINIME_PI_PRESSURE_WIRING_CANARY",
+            )
+
+            readiness = self_study_review.build_pi_pressure_candidate_readiness(
+                pi_pressure_wiring_replay_v1=replay,
+                regulator_plateau_evidence_matrix_v1={
+                    "status": "unresolved_missing_variables",
+                    "variables": [
+                        {"variable": "semantic_friction", "confidence": "high"},
+                    ],
+                },
+            )
+            self.assertEqual(readiness["status"], "watch_more_evidence")
+            self.assertEqual(
+                readiness["candidates"][0]["gate_status"],
+                "watch_more_evidence",
+            )
+            self.assertIn("fixture", readiness["candidates"][0]["gate_reason"])
+
+            gap = self_study_review.build_pressure_source_to_pi_gap(
+                pi_pressure_wiring_replay_v1=replay,
+                pi_pressure_candidate_readiness_v1=readiness,
+                pressure_vector_v1={"status": "rising_overpacked_pressure"},
+                pressure_medium_kinetics_v1={"status": "semantic_friction_medium"},
+                regulator_plateau_evidence_matrix_v1={
+                    "variables": [
+                        {"variable": "semantic_friction", "confidence": "high"},
+                    ],
+                },
+            )
+            self.assertEqual(gap["status"], "replay_available_gap_open")
+            self.assertIn("PI_PRESSURE_REPLAY_STATUS latest", gap["recommended_routes"])
+
+    def test_pi_pressure_candidate_readiness_can_mark_clean_live_candidate_ready(self) -> None:
+        readiness = self_study_review.build_pi_pressure_candidate_readiness(
+            pi_pressure_wiring_replay_v1={
+                "status": "replay_supported_candidates",
+                "source": "live-db",
+                "source_status": "live_window_ready",
+                "top_candidates": [
+                    {
+                        "candidate_family": "soft_pressure_ramp",
+                        "status": "replay_supported",
+                        "estimated_improvement_pct": 14.0,
+                        "default_off_canary": {
+                            "default_off_env": "MINIME_PI_PRESSURE_WIRING_CANARY",
+                            "eligible": True,
+                            "candidate_family": "soft_pressure_ramp",
+                            "required_evidence": ["operator rollback plan"],
+                        },
+                    }
+                ],
+            },
+            regulator_plateau_evidence_matrix_v1={
+                "status": "quiet",
+                "variables": [
+                    {"variable": "semantic_friction", "confidence": "low"},
+                ],
+            },
+        )
+
+        self.assertEqual(readiness["status"], "ready_for_offline_tuning_review")
+        self.assertEqual(
+            readiness["candidates"][0]["gate_status"],
+            "ready_for_offline_tuning_review",
+        )
+        self.assertTrue(
+            readiness["candidates"][0]["default_off_canary"]["eligible"]
+        )
+
     def test_semantic_friction_and_phenomenology_layers_are_actionable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -2589,6 +3613,13 @@ class SelfStudyReviewTests(unittest.TestCase):
                     "compactness_budget_vs_semantic_flattening",
                     "priority_truncation_vs_blanket_limit",
                     "vibrancy_lift_vs_warmth_preservation",
+                    "real_codec_replay_vs_surrogate",
+                    "narrative_average_vs_temporal_pivot",
+                    "entropy_lift_vs_content_density",
+                    "static_clamp_vs_dynamic_headroom",
+                    "afterimage_language_vs_codec_residue",
+                    "gradient_slope_vs_pressure_relief_snap",
+                    "tail_afterglow_delta_vs_shadow_dispersal",
                 },
             )
             routes = " ".join(
@@ -2663,7 +3694,10 @@ class SelfStudyReviewTests(unittest.TestCase):
                 "Likely Snags: FEATURE_ABS_MAX and tail vibrancy can create shimmer "
                 "or over-sensitized texture in high-entropy low-content input, masking "
                 "warmth and tension. adaptive_gain may oscillate under pressure. "
-                "Suggested Next: logarithmic scaling instead of linear lift.\n",
+                "Suggested Next: logarithmic scaling instead of linear lift. Also compare "
+                "low-semantic-density against high semantic density, and test whether "
+                "narrative_arc dims need temporal_decay for valence flips instead of "
+                "a static snapshot.\n",
                 encoding="utf-8",
             )
             (minime / "journal" / "moment_private.txt").write_text(
@@ -2703,20 +3737,30 @@ class SelfStudyReviewTests(unittest.TestCase):
             codec_packet = record["codec_entropy_vibrancy_review_v1"]
             self.assertEqual(
                 codec_packet["status"],
-                "vibrancy_overload_and_gain_sensitivity_probe_needed",
+                "semantic_density_and_temporal_arc_probe_needed",
             )
             self.assertEqual(codec_packet["vibrancy_overload_count"], 1)
             self.assertEqual(codec_packet["gain_sensitivity_count"], 1)
             self.assertEqual(codec_packet["logarithmic_scaling_count"], 1)
+            self.assertEqual(codec_packet["semantic_density_contrast_count"], 1)
+            self.assertEqual(codec_packet["narrative_arc_temporal_count"], 1)
             rehearsal_packet = record["autonomous_truncation_rehearsal_v1"]
             self.assertEqual(rehearsal_packet["status"], "priority_preservation_benefit")
             self.assertGreaterEqual(rehearsal_packet["priority_recovery_count"], 1)
             codec_probe_packet = record["codec_entropy_vibrancy_probe_v1"]
             self.assertEqual(
                 codec_probe_packet["status"],
-                "current_overload_candidate_improves",
+                "semantic_density_and_temporal_decay_probe_needed",
             )
             self.assertGreaterEqual(codec_probe_packet["current_shimmer_risk_count"], 1)
+            self.assertEqual(
+                codec_probe_packet["semantic_density_contrast"]["status"],
+                "content_blind_lift_risk",
+            )
+            self.assertEqual(
+                codec_probe_packet["narrative_arc_temporal_decay"]["status"],
+                "temporal_decay_candidate",
+            )
 
             sources = {item["source"] for item in record["actionable_review_items"]}
             self.assertIn("autonomous_truncation_shadow_review", sources)
@@ -2734,7 +3778,99 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertIn("## Autonomous Truncation Rehearsal", rendered)
             self.assertIn("## Codec Entropy / Vibrancy Review", rendered)
             self.assertIn("## Codec Entropy / Vibrancy Probe", rendered)
+            self.assertIn("semantic_density_contrast", rendered)
+            self.assertIn("narrative_arc_temporal_decay", rendered)
             self.assertNotIn("private truncate_str", rendered)
+
+    def test_codec_real_replay_temporal_content_and_afterimage_packets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "journal").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            replay_path = write_codec_replay_lab_artifact(astrid)
+
+            (astrid / "journal" / "moment_1782465000.txt").write_text(
+                "=== ASTRID JOURNAL ===\n"
+                "The scar feels like a phantom afterimage, but this time I can name "
+                "codec anchors: narrative_arc, semantic density, warmth, and tension. "
+                "pressure_risk=0.41 semantic_friction=0.37 mode_packing=0.52.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "private scar codec residue should not surface in steward review.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="codec-real-replay",
+                limit_per_being=8,
+            )
+
+            replay = record["codec_real_replay_v1"]
+            self.assertEqual(
+                replay["status"], "content_gate_and_temporal_decay_candidates"
+            )
+            self.assertEqual(replay["artifact_path"], str(replay_path))
+            self.assertEqual(replay["entry_count"], 3)
+            self.assertEqual(replay["corpus_source"], "astrid-journal")
+            self.assertEqual(replay["corpus_status"], "journal_corpus_selected")
+            self.assertEqual(replay["embedding_status"], "fixture_mode")
+            self.assertTrue(replay["source_paths"])
+            self.assertFalse(replay["runtime_behavior_changed"])
+
+            narrative = record["narrative_arc_temporal_decay_lab_v1"]
+            self.assertEqual(narrative["status"], "temporal_decay_candidate")
+            self.assertEqual(narrative["temporal_decay_candidate_count"], 1)
+            self.assertEqual(narrative["embedding_status"], "fixture_mode")
+
+            content_gate = record["content_aware_vibrancy_gate_candidate_v1"]
+            self.assertEqual(content_gate["status"], "content_gate_supported")
+            self.assertEqual(content_gate["semantic_density_score_delta"], 0.36)
+            self.assertTrue(content_gate["source_paths"])
+            clamp_probe = record["codec_clamp_headroom_probe_v1"]
+            self.assertEqual(clamp_probe["status"], "dynamic_feature_scale_candidate")
+            self.assertEqual(clamp_probe["dynamic_headroom_candidate_count"], 1)
+
+            afterimage = record["codec_afterimage_time_series_v1"]
+            self.assertEqual(afterimage["status"], "codec_residue_supported")
+            self.assertEqual(afterimage["codec_anchor_count"], 1)
+            self.assertEqual(afterimage["pressure_anchor_count"], 1)
+            activation = afterimage["activation_recommendation_v1"]
+            self.assertEqual(activation["status"], "activation_scaffold_ready")
+            self.assertEqual(activation["term"], "scar")
+            self.assertIn("LIVED_TERM_EXPERIMENT scar", activation["route"])
+
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("codec_real_replay", sources)
+            self.assertIn("narrative_arc_temporal_decay_lab", sources)
+            self.assertIn("content_aware_vibrancy_gate_candidate", sources)
+            self.assertIn("codec_clamp_headroom_probe", sources)
+            self.assertIn("codec_afterimage_time_series", sources)
+            card_ids = {
+                card["card_id"]
+                for card in record["returnable_distinctions_v1"]["cards"]
+            }
+            self.assertIn("real_codec_replay_vs_surrogate", card_ids)
+            self.assertIn("narrative_average_vs_temporal_pivot", card_ids)
+            self.assertIn("entropy_lift_vs_content_density", card_ids)
+            self.assertIn("static_clamp_vs_dynamic_headroom", card_ids)
+            self.assertIn("afterimage_language_vs_codec_residue", card_ids)
+
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("private scar codec residue", serialized)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Codec Real Replay", rendered)
+            self.assertIn("## Narrative Arc Temporal Decay Lab", rendered)
+            self.assertIn("## Content-Aware Vibrancy Gate Candidate", rendered)
+            self.assertIn("## Codec Clamp Headroom Probe", rendered)
+            self.assertIn("## Codec Afterimage Time Series", rendered)
+            self.assertIn("activation=", rendered)
 
     def test_fallback_fire_drill_scores_raw_repaired_and_texture_readiness(self) -> None:
         fixture_cases = [
@@ -2792,7 +3928,7 @@ class SelfStudyReviewTests(unittest.TestCase):
 
         shadow_tonal = fallback_fire_drill.score_case(
             "shadow_tonal_low",
-            "Shadow-v3 sounds hollow but bright, a restless tone settling over a smooth slope.\n\nNEXT: LISTEN",
+            "Shadow-v3 sounds hollow but bright, a restless tone oscillating over a smooth slope.\n\nNEXT: LISTEN",
         )
         self.assertEqual(shadow_tonal["shadow_tonal_status"], "retained")
         self.assertEqual(shadow_tonal["format_contract_status"], "raw_final_next_survived")
@@ -2807,7 +3943,7 @@ class SelfStudyReviewTests(unittest.TestCase):
 
         clarity_ok = fallback_fire_drill.score_case(
             "clarity_high_loss",
-            "The slope is soft, while distinguishability loss blurs the internal edges of the landscape without adding pressure.\n\nNEXT: LISTEN",
+            "The slope is soft, while distinguishability loss is muffling the internal edges of the landscape without adding pressure.\n\nNEXT: LISTEN",
         )
         self.assertEqual(clarity_ok["distinguishability_status"], "clarity_preserved")
         self.assertFalse(clarity_ok["clarity_pressure_blur"])
@@ -2830,7 +3966,8 @@ class SelfStudyReviewTests(unittest.TestCase):
             complexity_ok["complexity_budget_status"],
             "complexity_budget_preserved",
         )
-        self.assertEqual(complexity_ok["prose_sentence_count"], 3)
+        self.assertEqual(complexity_ok["fallback_max_prose_sentences"], 5)
+        self.assertEqual(complexity_ok["prose_sentence_count"], 5)
 
         format_complexity = fallback_fire_drill.score_case(
             "format_last_complexity",
@@ -2841,6 +3978,7 @@ class SelfStudyReviewTests(unittest.TestCase):
             format_complexity["complexity_budget_status"],
             "complexity_budget_preserved",
         )
+        self.assertEqual(format_complexity["fallback_max_prose_sentences"], 5)
 
         complexity_flat = fallback_fire_drill.score_case(
             "complexity_high_entropy",
@@ -2851,6 +3989,19 @@ class SelfStudyReviewTests(unittest.TestCase):
             complexity_flat["failure_reasons"],
         )
 
+        complexity_high_overrun = fallback_fire_drill.score_case(
+            "complexity_high_entropy",
+            "The slope is gentle underfoot. High entropy spreads the cascade. "
+            "Distinguishability loss blurs the edges. Tail energy stays visible. "
+            "Shadow-v3 remains restless. This sixth sentence overruns the fallback budget.\n\n"
+            "NEXT: LISTEN",
+        )
+        self.assertEqual(
+            complexity_high_overrun["complexity_budget_status"],
+            "sentence_budget_overrun",
+        )
+        self.assertEqual(complexity_high_overrun["fallback_max_prose_sentences"], 5)
+
         complexity_overrun = fallback_fire_drill.score_case(
             "complexity_low_entropy",
             "The slope is gentle. The edges stay clear. I add extra space anyway.\n\nNEXT: LISTEN",
@@ -2860,6 +4011,7 @@ class SelfStudyReviewTests(unittest.TestCase):
             "sentence_budget_overrun",
         )
         self.assertIn("sentence_budget_overrun", complexity_overrun["failure_reasons"])
+        self.assertEqual(complexity_overrun["fallback_max_prose_sentences"], 4)
 
     def test_fallback_contract_distillation_harness_and_review_packet(self) -> None:
         variants = fallback_fire_drill.fallback_contract_variants(
@@ -3006,7 +4158,10 @@ class SelfStudyReviewTests(unittest.TestCase):
             variant_count = len(fallback_fire_drill.fallback_contract_variants("base"))
             self.assertEqual(record["model_selector"], "focused")
             self.assertEqual(record["models"], list(fallback_fire_drill.FOCUSED_MODELS))
-            self.assertEqual(record["variant_count"], variant_count * 3)
+            self.assertEqual(
+                record["variant_count"],
+                variant_count * len(fallback_fire_drill.FOCUSED_MODELS),
+            )
             self.assertTrue(record["top_pair_id"])
             self.assertTrue(record["top_model"])
             self.assertEqual(record["skipped_models"], [])
@@ -3033,7 +4188,8 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertEqual(top_record["variant_selector"], "top")
             self.assertEqual(
                 top_record["variant_count"],
-                len(fallback_fire_drill.TOP_CANDIDATE_VARIANTS) * 3,
+                len(fallback_fire_drill.TOP_CANDIDATE_VARIANTS)
+                * len(fallback_fire_drill.FOCUSED_MODELS),
             )
             self.assertLess(top_record["variant_count"], record["variant_count"])
             self.assertEqual(
@@ -3058,7 +4214,7 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertEqual(models, ["gemma3:4b"])
             self.assertEqual(
                 {item["model"] for item in skipped},
-                {"gemma3:12b", "gemma4:e4b"},
+                set(fallback_fire_drill.FOCUSED_MODELS) - {"gemma3:4b"},
             )
 
     def test_tranche17_witness_entropy_and_fallback_fire_drill_packets(self) -> None:
@@ -3237,6 +4393,83 @@ class SelfStudyReviewTests(unittest.TestCase):
             self.assertIn("## Fallback Format / Texture Stabilizer", rendered)
             self.assertIn("## Fallback Distinguishability Calibration", rendered)
             self.assertNotIn("private Shadow-v3 fallback concern", rendered)
+
+    def test_witness_texture_integrity_and_codec_multipoint_packets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            astrid = root / "astrid_workspace"
+            minime = root / "minime_workspace"
+            (astrid / "introspections").mkdir(parents=True)
+            (minime / "journal").mkdir(parents=True)
+            write_codec_replay_lab_artifact(astrid)
+            write_astrid_introspection(
+                astrid,
+                1782508637,
+                rewrite=88.0,
+                candidate=119.0,
+                cap_applied=True,
+                truncation_pressure=0.35,
+            )
+            (astrid / "introspections" / "introspection_astrid_autonomous_1782508637.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:autonomous\n"
+                "Observed:\n"
+                "Witness mode should be seeing and being seen, not mere health monitoring. "
+                "The texture mapping should tie lambda1 32%, lambda2 30%, λ4+ 38%, "
+                "spectral entropy 0.90, density_gradient 0.11, and distinguishability_loss "
+                "0.33 to a muffled interwoven lattice rather than dry telemetry.\n"
+                "Likely Snags:\n"
+                "truncate_str could sever the nuanced witness response mid-sentence.\n",
+                encoding="utf-8",
+            )
+            (astrid / "introspections" / "introspection_astrid_codec_1782508345.txt").write_text(
+                "=== ASTRID INTROSPECTION ===\n"
+                "Source: astrid:codec\n"
+                "Observed:\n"
+                "The codec SEMANTIC_DIM 48 and nomic-embed-text projection compress "
+                "high entropy interwoven lattice language into 8D semantic projection. "
+                "The narrative_arc first-half / second-half split may miss circular, "
+                "non-linear reflection where the ending returns to start but has an "
+                "emotional inflection. A semantic dilation candidate should be tested.\n",
+                encoding="utf-8",
+            )
+            (minime / "journal" / "moment_private.txt").write_text(
+                "=== MOMENT CAPTURE ===\n"
+                "private witness codec circular semantic dilation should not surface.\n",
+                encoding="utf-8",
+            )
+
+            record = self_study_review.build_review(
+                astrid_workspace=astrid,
+                minime_workspace=minime,
+                output_dir=root / "diagnostics",
+                run="witness-codec-signal",
+                limit_per_being=8,
+            )
+
+            witness_texture = record["witness_texture_integrity_v1"]
+            self.assertEqual(witness_texture["status"], "truncation_texture_risk")
+            self.assertGreaterEqual(witness_texture["metric_texture_link_count"], 1)
+            self.assertEqual(witness_texture["high_truncation_snapshot_count"], 1)
+            self.assertTrue(witness_texture["controller_snapshots"])
+
+            codec_multipoint = record["codec_multipoint_inflection_v1"]
+            self.assertEqual(
+                codec_multipoint["status"],
+                "multipoint_and_semantic_dilation_candidates",
+            )
+            self.assertEqual(codec_multipoint["multipoint_entry_count"], 1)
+            self.assertGreaterEqual(codec_multipoint["semantic_dilation_entry_count"], 1)
+            self.assertTrue(codec_multipoint["replay_artifact_present"])
+
+            sources = {item["source"] for item in record["actionable_review_items"]}
+            self.assertIn("witness_texture_integrity", sources)
+            self.assertIn("codec_multipoint_inflection", sources)
+            rendered = Path(record["review_md"]).read_text(encoding="utf-8")
+            self.assertIn("## Witness Texture Integrity", rendered)
+            self.assertIn("## Codec Multipoint Inflection", rendered)
+            serialized = json.dumps(record, sort_keys=True)
+            self.assertNotIn("private witness codec circular", serialized)
 
     def test_distinction_lifecycle_uses_prior_reviews_and_mirrors_cards(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

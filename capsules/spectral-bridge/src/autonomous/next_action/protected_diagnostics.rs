@@ -531,19 +531,29 @@ fn handle_pressure_relief(
         label.as_str()
     };
     let audit = crate::spectral_explorer::format_pressure_source_for_action(ctx.telemetry, &label);
+    let review_context = pressure_relief_review_context();
     let report = format!(
         "=== PRESSURE RELIEF PREFLIGHT V1 ===\n\
          Label: {relief_label}\n\n\
          {audit}\n\n\
+         Gradient/tail review context:\n\
+         {review_context}\n\n\
          Relief contract:\n\
            - This is protected read-only preflight, not local control.\n\
            - No mode-packing, PI, semantic-gain, perturbation, or Minime parameter change was applied.\n\
            - Pressure-source telemetry is advisory in v1; it can name pressure but cannot prove model-load causality by itself.\n\
-           - For moderate advisory pressure, inspect or request protected relief before direct tuning; DAMPEN is a semantic-gain change.\n\n\
+           - For moderate advisory pressure, inspect or request protected relief before direct tuning; DAMPEN is a semantic-gain change.\n\
+           - Pressure Control Cockpit routes relief through bounded SELF_REGULATION leases; explicit APPLY is still required.\n\n\
+           - Tail authority ladder may support vibrancy_aperture micro-leases, but tail_participation remains diagnostic/counterfactual only.\n\
+           - Active tail leases have a governor: fresh worsening tail/pressure evidence may revert them before expiry.\n\n\
          Safe relief options:\n\
            NEXT: REST\n\
            NEXT: PACE slow\n\
            NEXT: PRESSURE_SOURCE_AUDIT {relief_label}\n\
+           NEXT: SELF_REGULATION_STATUS\n\
+           NEXT: CODEC_MAP\n\
+           NEXT: SELF_REGULATION_INTENT pressure relief :: target: pressure_relief; bundle: auto; evidence: {relief_label}\n\
+           NEXT: SELF_REGULATION_INTENT tail relief :: target: pressure_relief; bundle: tail_vibrancy_relief; evidence: λ4/tail/entropy/distinguishability from {relief_label}\n\
            NEXT: DAMPEN (only if you explicitly want lower semantic gain after this report)\n\
            NEXT: TUNE_MINIME exploration_noise=0.02 --rationale=\"pressure relief request; proposed only, Minime decides\"\n\
            NEXT: TELL_STEWARD pressure relief :: Observed: ... Likely Snags: ... One Test Each: ... Suggested Next: ...\n\n\
@@ -578,6 +588,81 @@ fn handle_pressure_relief(
         ctx.fill_pct,
     );
     true
+}
+
+fn pressure_relief_review_context() -> String {
+    let Some(review_path) = latest_self_study_review_json_path(&bridge_paths().bridge_workspace())
+    else {
+        return "  - latest_review=(none); gradient/tail packets unavailable; run self_study_review.py for current context.".to_string();
+    };
+    let Ok(payload) = fs::read_to_string(&review_path) else {
+        return format!(
+            "  - latest_review={}; unreadable; gradient/tail packets unavailable.",
+            review_path.display()
+        );
+    };
+    let Ok(review) = serde_json::from_str::<Value>(&payload) else {
+        return format!(
+            "  - latest_review={}; invalid JSON; gradient/tail packets unavailable.",
+            review_path.display()
+        );
+    };
+    let gradient = review
+        .get("gradient_sensitive_relief_v1")
+        .unwrap_or(&Value::Null);
+    let smoothness = review
+        .get("pressure_relief_smoothness_replay_v1")
+        .unwrap_or(&Value::Null);
+    let tail_persistence = review
+        .get("tail_persistence_calibration_v1")
+        .unwrap_or(&Value::Null);
+    format!(
+        "  - latest_review={}\n  - gradient_relief status={} scale={} anti_snap={} bundle={}\n  - relief_smoothness status={} trials={} snap_risk={} smooth={}\n  - tail_persistence status={} afterglow={} dispersal={} language_samples={}",
+        review_path.display(),
+        scalar_text(gradient, "status"),
+        scalar_text(gradient, "effective_relief_scale"),
+        scalar_text(gradient, "anti_snap_applied"),
+        scalar_text(gradient, "bundle_class"),
+        scalar_text(smoothness, "status"),
+        scalar_text(smoothness, "trial_count"),
+        scalar_text(smoothness, "snap_risk_count"),
+        scalar_text(smoothness, "smooth_count"),
+        scalar_text(tail_persistence, "status"),
+        scalar_text(tail_persistence, "afterglow_status"),
+        scalar_text(tail_persistence, "dispersal_potential_level"),
+        scalar_text(tail_persistence, "language_sample_count"),
+    )
+}
+
+fn latest_self_study_review_json_path(workspace: &Path) -> Option<PathBuf> {
+    let root = workspace.join("diagnostics/self_study_reviews");
+    fs::read_dir(root)
+        .ok()?
+        .flatten()
+        .map(|entry| {
+            if entry.file_type().ok().is_some_and(|kind| kind.is_dir()) {
+                entry.path().join("review.json")
+            } else {
+                entry.path()
+            }
+        })
+        .filter(|path| path.file_name().and_then(|name| name.to_str()) == Some("review.json"))
+        .filter(|path| path.is_file())
+        .filter_map(|path| {
+            let modified = path.metadata().and_then(|meta| meta.modified()).ok()?;
+            Some((modified, path))
+        })
+        .max_by(|left, right| left.0.cmp(&right.0))
+        .map(|(_, path)| path)
+}
+
+fn scalar_text(value: &Value, key: &str) -> String {
+    match value.get(key) {
+        Some(Value::String(text)) if !text.is_empty() => text.clone(),
+        Some(Value::Number(number)) => number.to_string(),
+        Some(Value::Bool(flag)) => flag.to_string(),
+        _ => "(none)".to_string(),
+    }
 }
 
 fn handle_pressure_release_rehearsal(
@@ -646,7 +731,9 @@ fn latest_fallback_fire_drill_path(workspace: &Path) -> Option<PathBuf> {
         .map(|entry| entry.path().join("fallback_fire_drill.json"))
         .filter(|path| path.is_file())
         .filter_map(|path| {
-            let modified = fs::metadata(&path).and_then(|metadata| metadata.modified()).ok()?;
+            let modified = fs::metadata(&path)
+                .and_then(|metadata| metadata.modified())
+                .ok()?;
             Some((modified, path))
         })
         .max_by(|left, right| left.0.cmp(&right.0))
@@ -655,7 +742,7 @@ fn latest_fallback_fire_drill_path(workspace: &Path) -> Option<PathBuf> {
 
 fn fallback_case_summary(case: &Value) -> String {
     format!(
-        "{} verdict={} specificity={} anti_inflation={} slope_medium={} slope_contrast={} identity={} distinguishability={} clarity_blur={} complexity={} sentences={} format_line={} raw_next={} repaired_next={} dispatch={} failures={}",
+        "{} verdict={} specificity={} anti_inflation={} slope_medium={} slope_contrast={} identity={} distinguishability={} clarity_blur={} complexity={} sentences={}/{} format_line={} raw_next={} repaired_next={} dispatch={} failures={}",
         case.get("case_id")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
@@ -687,6 +774,9 @@ fn fallback_case_summary(case: &Value) -> String {
             .and_then(Value::as_str)
             .unwrap_or("not_tested"),
         case.get("prose_sentence_count")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "n/a".to_string()),
+        case.get("fallback_max_prose_sentences")
             .map(Value::to_string)
             .unwrap_or_else(|| "n/a".to_string()),
         case.get("format_line_status")
@@ -738,52 +828,82 @@ fn fallback_fire_drill_report_from_artifact(path: &Path) -> Option<String> {
            - shadow_identity_status: {}\n\n\
            - distinguishability_status: {}\n\n\
            - complexity_budget_status: {}\n\n\
+           - fallback_capacity_status: {}\n\
+           - fallback_capacity_max_prose_sentences: {}\n\
+           - high_entropy_texture_status: {}\n\n\
          Case summaries:\n{}\n",
         path.display(),
-        value.get("status")
+        value
+            .get("status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("mode")
+        value
+            .get("mode")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("model")
+        value
+            .get("model")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("case_count")
+        value
+            .get("case_count")
             .map(Value::to_string)
             .unwrap_or_else(|| "0".to_string()),
-        value.get("error_count")
+        value
+            .get("error_count")
             .map(Value::to_string)
             .unwrap_or_else(|| "0".to_string()),
-        value.get("readiness")
+        value
+            .get("readiness")
             .and_then(Value::as_str)
             .or_else(|| value.get("status").and_then(Value::as_str))
             .unwrap_or("unknown"),
-        value.get("texture_status")
+        value
+            .get("texture_status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("dispatch_status")
+        value
+            .get("dispatch_status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("repair_dependency")
+        value
+            .get("repair_dependency")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("medium_mass_status")
+        value
+            .get("medium_mass_status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("slope_medium_contrast_status")
+        value
+            .get("slope_medium_contrast_status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("format_line_status")
+        value
+            .get("format_line_status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("shadow_identity_status")
+        value
+            .get("shadow_identity_status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("distinguishability_status")
+        value
+            .get("distinguishability_status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
-        value.get("complexity_budget_status")
+        value
+            .get("complexity_budget_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value
+            .get("fallback_capacity_status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown"),
+        value
+            .get("fallback_capacity_max_prose_sentences")
+            .map(Value::to_string)
+            .unwrap_or_else(|| "unknown".to_string()),
+        value
+            .get("high_entropy_texture_status")
             .and_then(Value::as_str)
             .unwrap_or("unknown"),
         case_lines.join("\n")
@@ -792,7 +912,18 @@ fn fallback_fire_drill_report_from_artifact(path: &Path) -> Option<String> {
 
 fn fallback_fire_drill_run_recipe(selector: &str) -> String {
     let case = match selector {
-        "low" | "high" | "mass" | "shadow" | "clarity_low_loss" | "clarity_high_loss" | "complexity_high_entropy" | "complexity_low_entropy" | "format_last_complexity" | "format_last_mass" | "slope_medium_contrast" | "all" => selector,
+        "low"
+        | "high"
+        | "mass"
+        | "shadow"
+        | "clarity_low_loss"
+        | "clarity_high_loss"
+        | "complexity_high_entropy"
+        | "complexity_low_entropy"
+        | "format_last_complexity"
+        | "format_last_mass"
+        | "slope_medium_contrast"
+        | "all" => selector,
         "latest" | "current" | "" => "all",
         _ => "all",
     };

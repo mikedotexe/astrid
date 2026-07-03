@@ -328,6 +328,16 @@ ANTI_DROP_CATALOG: list[dict[str, Any]] = [
                  "run": "cd /Users/v/other/astrid && python3 scripts/letter_response_scan.py --self-test"},
     },
     {
+        "id": "letter_response_followup_dedup",
+        "shipped": "2026-06-28",
+        "surface": "Steward review of letter_response_scan friction items (steward->being RECEPTION, over-letter side)",
+        "failure_mode": "letter_response_scan is delivery-anchored to the ORIGINAL letter, so a being's friction RESPONSE keeps re-surfacing as the loud '-> ACT: friction follow up' EVERY cycle until that original letter ages out, even after the steward already CLOSED the loop with a mike_feedback_* reply. A steward (incl. the durable loop) who reads '-> ACT' re-letters the same closed topic; this recurred 3 cycles in a row 2026-06-28 (14:13 closed Astrid's texture-anchor + carriage friction with two letters; 14:46 caught+removed a started duplicate; ~15:08 a 3rd letter was actually delivered before the backlog was read). find_steward_followup() greps the being's read_dir for a later mike_feedback_* that references the engagement entry BY FILENAME and, when found, downgrades '-> ACT' to 'already-followed-up', naming the closing letter so the steward re-reads it instead of re-writing. Precise by design (exact filename reference, never topic match): it can only ADD a caution, never suppress a friction row, so a genuinely un-answered friction is never silently dropped (un-muffle preserved). The test pins: no follow-up => no dedup; a later referencing letter => dedup fires; an unrelated later letter => no dedup; a referencing letter delivered BEFORE the engagement (i.e. the anchor/original) => no dedup.",
+        "guard": {"repo": "astrid", "file": "scripts/letter_response_scan.py", "symbol": "find_steward_followup"},
+        "test": {"repo": "astrid", "kind": "python", "file": "scripts/letter_response_scan.py",
+                 "name": "test_followup_dedup_downgrades_already_closed_friction",
+                 "run": "cd /Users/v/other/astrid && python3 scripts/letter_response_scan.py --self-test"},
+    },
+    {
         "id": "steward_concurrency_mutex",
         "shipped": "2026-06-18",
         "surface": "Durable steward loop + interactive sessions mutating the same tree + restarting the same bridge",

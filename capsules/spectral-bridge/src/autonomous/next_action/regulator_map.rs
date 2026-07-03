@@ -17,7 +17,10 @@ pub(super) fn handle_action(
 ) -> bool {
     if !matches!(
         base_action,
-        "REGULATOR_MAP_STATUS" | "REGULATOR_REPLAY_STATUS" | "REGULATOR_BOUNDARY_CARD"
+        "REGULATOR_MAP_STATUS"
+            | "REGULATOR_REPLAY_STATUS"
+            | "REGULATOR_BOUNDARY_CARD"
+            | "PI_PRESSURE_REPLAY_STATUS"
     ) {
         return false;
     }
@@ -39,7 +42,8 @@ fn render_regulator_action(workspace: &Path, base_action: &str, original: &str) 
              Status: no_review_packet\n\
              Watched review root: {}\n\
              Regenerate `python3 scripts/self_study_review.py --limit 8 --print-summary` \
-             before using REGULATOR_MAP_STATUS, REGULATOR_REPLAY_STATUS, or REGULATOR_BOUNDARY_CARD.",
+             before using REGULATOR_MAP_STATUS, REGULATOR_REPLAY_STATUS, \
+             REGULATOR_BOUNDARY_CARD, or PI_PRESSURE_REPLAY_STATUS.",
             workspace.join("diagnostics/self_study_reviews").display()
         );
     };
@@ -70,12 +74,17 @@ fn render_regulator_action_from_review(
     match base_action {
         "REGULATOR_BOUNDARY_CARD" => format_boundary_card(review, review_path, selector),
         "REGULATOR_REPLAY_STATUS" => format_replay_status(review, review_path, selector),
+        "PI_PRESSURE_REPLAY_STATUS" => {
+            format_pi_pressure_replay_status(review, review_path, selector)
+        },
         _ => format_map_status(review, review_path),
     }
 }
 
 fn format_map_status(review: &Value, review_path: &Path) -> String {
-    let replay = review.get("regulator_live_replay_v1").unwrap_or(&Value::Null);
+    let replay = review
+        .get("regulator_live_replay_v1")
+        .unwrap_or(&Value::Null);
     let cards = review
         .get("regulator_boundary_replay_cards_v1")
         .unwrap_or(&Value::Null);
@@ -100,6 +109,15 @@ fn format_map_status(review: &Value, review_path: &Path) -> String {
     let evidence_loop = review
         .get("regulator_missing_variable_evidence_loop_v1")
         .unwrap_or(&Value::Null);
+    let pi_replay = review
+        .get("pi_pressure_wiring_replay_v1")
+        .unwrap_or(&Value::Null);
+    let pi_readiness = review
+        .get("pi_pressure_candidate_readiness_v1")
+        .unwrap_or(&Value::Null);
+    let pi_gap = review
+        .get("pressure_source_to_pi_gap_v1")
+        .unwrap_or(&Value::Null);
     let returnable = review
         .get("returnable_distinctions_v1")
         .unwrap_or(&Value::Null);
@@ -117,6 +135,9 @@ fn format_map_status(review: &Value, review_path: &Path) -> String {
          Plateau evidence matrix: status=`{}`; top_unresolved={}\n\
          Tuning readiness gate: status=`{}`; counts={}; unresolved={}\n\
          Why not tuning yet: {}\n\
+         PI pressure wiring replay: status=`{}`; source=`{}`/`{}`; samples={}; candidates={}; statuses={}; top={}\n\
+         PI pressure readiness: status=`{}`; counts={}; unresolved={}\n\
+         Pressure-source-to-PI gap: status=`{}`; routes={}\n\
          Missing-variable evidence loop: status=`{}`; probes={}; top={}\n\
          Returnable distinctions: status=`{}`; active={}; cards={}\n\
          Note: This is advisory map context only; it created no experiment, applied no lease, tuned no controller, and mutated no peer.",
@@ -135,17 +156,25 @@ fn format_map_status(review: &Value, review_path: &Path) -> String {
         value_text(sweep, "candidate_count"),
         value_text(replay_lab, "status"),
         object_text(replay_lab, "verdict_counts"),
-        object_list_text(
-            replay_lab,
-            "evaluated_candidates",
-            "candidate_family"
-        ),
+        object_list_text(replay_lab, "evaluated_candidates", "candidate_family"),
         value_text(evidence_matrix, "status"),
         matrix_top_unresolved_text(evidence_matrix),
         value_text(tuning_gate, "status"),
         object_text(tuning_gate, "gate_counts"),
         list_text(tuning_gate, "unresolved_missing_variables"),
         tuning_gate_summary(tuning_gate),
+        value_text(pi_replay, "status"),
+        value_text(pi_replay, "source"),
+        value_text(pi_replay, "source_status"),
+        value_text(pi_replay, "sample_count"),
+        value_text(pi_replay, "candidate_count"),
+        object_text(pi_replay, "candidate_status_counts"),
+        pi_candidate_labels(pi_readiness, pi_replay),
+        value_text(pi_readiness, "status"),
+        object_text(pi_readiness, "readiness_counts"),
+        list_text(pi_readiness, "unresolved_missing_variables"),
+        value_text(pi_gap, "status"),
+        list_text(pi_gap, "recommended_routes"),
         value_text(evidence_loop, "status"),
         value_text(evidence_loop, "probe_count"),
         evidence_loop_top_probes_text(evidence_loop),
@@ -155,6 +184,69 @@ fn format_map_status(review: &Value, review_path: &Path) -> String {
     )
 }
 
+fn format_pi_pressure_replay_status(review: &Value, review_path: &Path, selector: &str) -> String {
+    let pi_replay = review
+        .get("pi_pressure_wiring_replay_v1")
+        .unwrap_or(&Value::Null);
+    let readiness = review
+        .get("pi_pressure_candidate_readiness_v1")
+        .unwrap_or(&Value::Null);
+    let gap = review
+        .get("pressure_source_to_pi_gap_v1")
+        .unwrap_or(&Value::Null);
+    let selector = if selector.is_empty() {
+        "latest"
+    } else {
+        selector
+    };
+    let selected = select_pi_candidates(readiness, pi_replay, selector);
+    let mut text = format!(
+        "=== PI PRESSURE REPLAY STATUS ===\n\
+         Authority: {AUTHORITY}\n\
+         Review path: {}\n\
+         Selector: `{selector}`\n\
+         Replay: status=`{}`; source=`{}`/`{}`; samples={}; candidates={}; artifact={}\n\
+         Readiness: status=`{}`; counts={}; unresolved={}\n\
+         Pressure-source-to-PI gap: status=`{}`; anchors={}; routes={}\n\
+         Canary scaffold: default_off_env=`MINIME_PI_PRESSURE_WIRING_CANARY`; runtime_ignored_in_this_tranche=true\n\
+         No experiment was created, no lease was applied, no controller was tuned, and no peer was mutated.\n",
+        review_path.display(),
+        value_text(pi_replay, "status"),
+        value_text(pi_replay, "source"),
+        value_text(pi_replay, "source_status"),
+        value_text(pi_replay, "sample_count"),
+        value_text(pi_replay, "candidate_count"),
+        value_text(pi_replay, "artifact_path"),
+        value_text(readiness, "status"),
+        object_text(readiness, "readiness_counts"),
+        list_text(readiness, "unresolved_missing_variables"),
+        value_text(gap, "status"),
+        list_text(gap, "source_anchors"),
+        list_text(gap, "recommended_routes")
+    );
+    if selected.is_empty() {
+        text.push_str(&format!(
+            "Available candidates: {}\n",
+            pi_candidate_labels(readiness, pi_replay)
+        ));
+        return text;
+    }
+    for candidate in selected.iter().take(8) {
+        text.push_str(&format!(
+            "- `{}` gate=`{}` replay=`{}` improvement={}% snap_delta={} afterimage_delta={} canary_eligible={} reason={}\n",
+            value_text(candidate, "candidate_family"),
+            value_text(candidate, "gate_status"),
+            value_text(candidate, "replay_status"),
+            value_text(candidate, "estimated_improvement_pct"),
+            value_text(candidate, "snap_risk_delta"),
+            value_text(candidate, "afterimage_risk_delta"),
+            nested_value_text(candidate, "default_off_canary", "eligible"),
+            value_text(candidate, "gate_reason")
+        ));
+    }
+    text
+}
+
 fn format_replay_status(review: &Value, review_path: &Path, selector: &str) -> String {
     let cards = review
         .get("regulator_boundary_replay_cards_v1")
@@ -162,7 +254,11 @@ fn format_replay_status(review: &Value, review_path: &Path, selector: &str) -> S
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
-    let selector = if selector.is_empty() { "latest" } else { selector };
+    let selector = if selector.is_empty() {
+        "latest"
+    } else {
+        selector
+    };
     let selected = select_cards(&cards, selector);
     let mut text = format!(
         "=== REGULATOR REPLAY STATUS ===\n\
@@ -195,7 +291,11 @@ fn format_boundary_card(review: &Value, review_path: &Path, selector: &str) -> S
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
-    let selector = if selector.is_empty() { "latest" } else { selector };
+    let selector = if selector.is_empty() {
+        "latest"
+    } else {
+        selector
+    };
     let Some(card) = select_cards(&cards, selector).into_iter().next() else {
         return format!(
             "=== REGULATOR BOUNDARY CARD ===\n\
@@ -340,7 +440,10 @@ fn format_evidence_loop_probes(review: &Value) -> String {
         return String::new();
     };
     let status = value_text(packet, "status");
-    if !matches!(status.as_str(), "evidence_needed_before_tuning" | "watch_evidence_loop") {
+    if !matches!(
+        status.as_str(),
+        "evidence_needed_before_tuning" | "watch_evidence_loop"
+    ) {
         return String::new();
     }
     let Some(probes) = packet.get("probes").and_then(Value::as_array) else {
@@ -371,7 +474,11 @@ fn format_returnable_distinctions(review: &Value) -> String {
     let Some(cards) = packet.get("cards").and_then(Value::as_array) else {
         return text;
     };
-    for card in cards.iter().filter(|card| value_text(card, "status") != "quiet").take(5) {
+    for card in cards
+        .iter()
+        .filter(|card| value_text(card, "status") != "quiet")
+        .take(5)
+    {
         text.push_str(&format!(
             "  - `{}` status=`{}` lifecycle=`{}` verdict=`{}` route=`{}` self=`{}` experiment=`{}`\n",
             value_text(card, "card_id"),
@@ -483,6 +590,61 @@ fn gate_matches_for_card<'a>(review: &'a Value, card: &Value) -> Vec<&'a Value> 
         .collect()
 }
 
+fn select_pi_candidates<'a>(
+    readiness: &'a Value,
+    replay: &'a Value,
+    selector: &str,
+) -> Vec<&'a Value> {
+    let candidates = readiness
+        .get("candidates")
+        .and_then(Value::as_array)
+        .or_else(|| replay.get("top_candidates").and_then(Value::as_array));
+    let Some(candidates) = candidates else {
+        return Vec::new();
+    };
+    let selector = selector.trim();
+    if selector.is_empty() || selector == "latest" || selector == "summary" {
+        return candidates.iter().take(4).collect();
+    }
+    candidates
+        .iter()
+        .filter(|candidate| {
+            value_text(candidate, "candidate_family") == selector
+                || value_text(candidate, "gate_status") == selector
+                || value_text(candidate, "replay_status") == selector
+                || value_text(candidate, "status") == selector
+        })
+        .collect()
+}
+
+fn pi_candidate_labels(readiness: &Value, replay: &Value) -> String {
+    let candidates = readiness
+        .get("candidates")
+        .and_then(Value::as_array)
+        .or_else(|| replay.get("top_candidates").and_then(Value::as_array));
+    let Some(candidates) = candidates else {
+        return "(none)".to_string();
+    };
+    let labels = candidates
+        .iter()
+        .take(8)
+        .map(|candidate| {
+            let family = value_text(candidate, "candidate_family");
+            let status = if candidate.get("gate_status").is_some() {
+                value_text(candidate, "gate_status")
+            } else {
+                value_text(candidate, "status")
+            };
+            format!("{family}:{status}")
+        })
+        .collect::<Vec<_>>();
+    if labels.is_empty() {
+        "(none)".to_string()
+    } else {
+        labels.join(", ")
+    }
+}
+
 fn list_has(value: &Value, key: &str, needle: &str) -> bool {
     if needle.is_empty() {
         return false;
@@ -498,16 +660,25 @@ fn list_has(value: &Value, key: &str, needle: &str) -> bool {
         })
 }
 
+fn nested_value_text(value: &Value, parent: &str, key: &str) -> String {
+    value
+        .get(parent)
+        .and_then(|item| item.get(key))
+        .map_or_else(|| "(none)".to_string(), scalar_value_text)
+}
+
 fn tuning_gate_summary(gate: &Value) -> String {
     let status = value_text(gate, "status");
     if status == "blocked_missing_variable" {
-        return "missing-variable evidence must be resolved before smoothing or threshold tuning".to_string();
+        return "missing-variable evidence must be resolved before smoothing or threshold tuning"
+            .to_string();
     }
     if status == "blocked_safety_review" {
         return "candidate requires a separate safety review before any tuning tranche".to_string();
     }
     if status == "ready_for_offline_tuning_review" {
-        return "one or more candidates are ready only for offline tuning review, not live tuning".to_string();
+        return "one or more candidates are ready only for offline tuning review, not live tuning"
+            .to_string();
     }
     "watch more evidence before any tuning tranche".to_string()
 }
@@ -528,10 +699,9 @@ fn matrix_top_unresolved_text(matrix: &Value) -> String {
                 .get("confidence")
                 .and_then(Value::as_str)
                 .unwrap_or("unknown");
-            let score = item.get("score").map_or_else(
-                || "(none)".to_string(),
-                scalar_value_text,
-            );
+            let score = item
+                .get("score")
+                .map_or_else(|| "(none)".to_string(), scalar_value_text);
             Some(format!("{variable}:{confidence}:{score}"))
         })
         .collect::<Vec<_>>();
@@ -596,7 +766,10 @@ fn available_cards(cards: &[Value]) -> String {
         .iter()
         .filter_map(|card| {
             let id = card.get("card_id").and_then(Value::as_str)?;
-            let status = card.get("status").and_then(Value::as_str).unwrap_or("unknown");
+            let status = card
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("unknown");
             Some(format!("{id}:{status}"))
         })
         .collect::<Vec<_>>();
@@ -670,7 +843,7 @@ fn scalar_value_text(value: &Value) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{render_regulator_action_from_review, AUTHORITY};
+    use super::{AUTHORITY, render_regulator_action_from_review};
     use serde_json::json;
     use std::path::Path;
 
@@ -787,6 +960,61 @@ mod tests {
                     }
                 ]
             },
+            "pi_pressure_wiring_replay_v1": {
+                "status": "replay_supported_candidates",
+                "source": "live-db",
+                "source_status": "live_window_ready",
+                "sample_count": 12,
+                "candidate_count": 2,
+                "artifact_path": "/tmp/pi_pressure_wiring_replay.json",
+                "candidate_status_counts": {"replay_supported": 1, "snap_risk": 1},
+                "top_candidates": [
+                    {
+                        "candidate_family": "pressure_source_target_bias",
+                        "status": "replay_supported",
+                        "estimated_improvement_pct": 18.0,
+                        "pressure_alignment_delta": 0.08,
+                        "snap_risk_delta": -0.02,
+                        "afterimage_risk_delta": -0.01,
+                        "default_off_canary": {
+                            "default_off_env": "MINIME_PI_PRESSURE_WIRING_CANARY",
+                            "eligible": true
+                        }
+                    }
+                ]
+            },
+            "pi_pressure_candidate_readiness_v1": {
+                "status": "blocked_missing_variable",
+                "readiness_counts": {"blocked_missing_variable": 1, "blocked_safety_review": 1},
+                "unresolved_missing_variables": ["semantic_friction", "pressure_source"],
+                "candidates": [
+                    {
+                        "candidate_family": "pressure_source_target_bias",
+                        "gate_status": "blocked_missing_variable",
+                        "gate_reason": "plateau evidence still has unresolved high/medium missing variables",
+                        "replay_status": "replay_supported",
+                        "estimated_improvement_pct": 18.0,
+                        "snap_risk_delta": -0.02,
+                        "afterimage_risk_delta": -0.01,
+                        "default_off_canary": {
+                            "default_off_env": "MINIME_PI_PRESSURE_WIRING_CANARY",
+                            "eligible": false
+                        }
+                    }
+                ]
+            },
+            "pressure_source_to_pi_gap_v1": {
+                "status": "replay_available_gap_open",
+                "pressure_vector_status": "rising_overpacked_pressure",
+                "pressure_medium_status": "semantic_friction_medium",
+                "pi_replay_status": "replay_supported_candidates",
+                "pi_readiness_status": "blocked_missing_variable",
+                "source_anchors": ["pressure_vector:rising_overpacked_pressure"],
+                "recommended_routes": [
+                    "PI_PRESSURE_REPLAY_STATUS latest",
+                    "PRESSURE_SOURCE_AUDIT current-fill_pressure"
+                ]
+            },
             "regulator_missing_variable_evidence_loop_v1": {
                 "status": "evidence_needed_before_tuning",
                 "blocked_gate_status": "blocked_missing_variable",
@@ -862,10 +1090,17 @@ mod tests {
         assert!(text.contains(AUTHORITY));
         assert!(text.contains("Replay status: `felt_pressure_boundary_context`"));
         assert!(text.contains("Counterfactual sweep: status=`counterfactual_sweep_available`"));
-        assert!(text.contains("Counterfactual replay lab: status=`replay_supported_with_plateau_caution`"));
+        assert!(
+            text.contains(
+                "Counterfactual replay lab: status=`replay_supported_with_plateau_caution`"
+            )
+        );
         assert!(text.contains("Plateau evidence matrix: status=`unresolved_missing_variables`"));
         assert!(text.contains("Tuning readiness gate: status=`blocked_missing_variable`"));
         assert!(text.contains("Why not tuning yet"));
+        assert!(text.contains("PI pressure wiring replay"));
+        assert!(text.contains("pressure_source_target_bias"));
+        assert!(text.contains("Pressure-source-to-PI gap"));
         assert!(text.contains("Missing-variable evidence loop"));
         assert!(text.contains("Returnable distinctions"));
         assert!(text.contains("measurement_vs_alignment_vs_damping"));
@@ -875,6 +1110,25 @@ mod tests {
         assert!(text.contains("pressure_hysteresis"));
         assert!(text.contains("created no experiment"));
         assert!(text.contains("tuned no controller"));
+    }
+
+    #[test]
+    fn pi_pressure_replay_status_renders_candidate_gate_without_dispatch() {
+        let text = render_regulator_action_from_review(
+            &review_packet(),
+            Path::new("/tmp/review.json"),
+            "PI_PRESSURE_REPLAY_STATUS",
+            "latest",
+        );
+
+        assert!(text.contains("=== PI PRESSURE REPLAY STATUS ==="));
+        assert!(text.contains("replay_supported_candidates"));
+        assert!(text.contains("blocked_missing_variable"));
+        assert!(text.contains("pressure_source_target_bias"));
+        assert!(text.contains("MINIME_PI_PRESSURE_WIRING_CANARY"));
+        assert!(text.contains("runtime_ignored_in_this_tranche=true"));
+        assert!(text.contains("No experiment was created"));
+        assert!(text.contains("no controller was tuned"));
     }
 
     #[test]

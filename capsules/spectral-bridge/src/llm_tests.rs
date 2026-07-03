@@ -142,6 +142,8 @@ fn system_prompt_tells_model_not_to_invent_next_verbs() {
     assert!(llm::SYSTEM_PROMPT.contains("ACTION_PREFLIGHT <known listed action>"));
     assert!(llm::SYSTEM_PROMPT.contains("Do not combine actions with commas"));
     assert!(llm::SYSTEM_PROMPT.contains("PRESSURE_RELIEF [label]"));
+    assert!(llm::SYSTEM_PROMPT.contains("PRESSURE_AGENCY_STATUS"));
+    assert!(llm::SYSTEM_PROMPT.contains("PRESSURE_AGENCY_REQUEST <label>"));
     assert!(llm::SYSTEM_PROMPT.contains("LAMBDA_FLOW_MAP [label]"));
     for descriptor in protected_diagnostics::descriptors() {
         assert!(
@@ -151,7 +153,7 @@ fn system_prompt_tells_model_not_to_invent_next_verbs() {
         );
     }
     assert!(llm::SYSTEM_PROMPT.contains(
-        "prefer PRESSURE_RELIEF <label> or PRESSURE_SOURCE_AUDIT <label> before direct DAMPEN"
+        "prefer PRESSURE_AGENCY_STATUS, TEXTURE_AGENCY_STATUS, PRESSURE_AGENCY_REQUEST <label>, PRESSURE_RELIEF <label>, or PRESSURE_SOURCE_AUDIT <label> before direct DAMPEN"
     ));
     assert!(
         llm::SYSTEM_PROMPT

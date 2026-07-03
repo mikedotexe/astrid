@@ -161,8 +161,7 @@ fn pressure_vocabulary_family_hits(text: &str) -> Vec<(&'static str, usize)> {
             term_hit_count(
                 &lower,
                 &[
-                    "sediment", "silt", "grain", "grainy", "grit", "basin", "settling",
-                    "settled",
+                    "sediment", "silt", "grain", "grainy", "grit", "basin", "settling", "settled",
                 ],
             ),
         ),
@@ -170,7 +169,14 @@ fn pressure_vocabulary_family_hits(text: &str) -> Vec<(&'static str, usize)> {
             "thrum_hum",
             term_hit_count(
                 &lower,
-                &["thrum", "hum", "muffled", "vibration", "vibrating", "resonance"],
+                &[
+                    "thrum",
+                    "hum",
+                    "muffled",
+                    "vibration",
+                    "vibrating",
+                    "resonance",
+                ],
             ),
         ),
         (
@@ -222,9 +228,8 @@ fn pressure_vocabulary_cooldown_candidate(
             }
         })
         .collect();
-    candidates.sort_by_key(|(_, astrid_count, minime_count)| {
-        astrid_count.saturating_add(*minime_count)
-    });
+    candidates
+        .sort_by_key(|(_, astrid_count, minime_count)| astrid_count.saturating_add(*minime_count));
     candidates
         .pop()
         .map(|(family, astrid_count, _)| (format!("pressure-texture:{family}"), astrid_count))
@@ -313,9 +318,7 @@ fn agency_vernacular_follow_through_present(text: &str) -> bool {
     )
 }
 
-fn agency_vernacular_notice_candidate(
-    history: &[crate::llm::Exchange],
-) -> Option<(String, usize)> {
+fn agency_vernacular_notice_candidate(history: &[crate::llm::Exchange]) -> Option<(String, usize)> {
     let mut astrid_counts = HashMap::<&'static str, usize>::new();
     let mut follow_through = false;
     for exchange in history.iter().rev().take(ASTRID_MOTIF_COOLDOWN_WINDOW) {
@@ -2058,16 +2061,16 @@ impl ConversationState {
             .take(ASTRID_MOTIF_COOLDOWN_WINDOW)
             .filter(|exchange| astrid_internal_topology_motif_present(&exchange.astrid_said))
             .count();
-        let candidate = pressure_candidate.or(afterimage_candidate).or(agency_candidate).or_else(|| {
-            if internal_observed_count >= ASTRID_MOTIF_COOLDOWN_THRESHOLD {
-                Some((
-                    default_internal_topology_label(),
-                    internal_observed_count,
-                ))
-            } else {
-                None
-            }
-        });
+        let candidate = pressure_candidate
+            .or(afterimage_candidate)
+            .or(agency_candidate)
+            .or_else(|| {
+                if internal_observed_count >= ASTRID_MOTIF_COOLDOWN_THRESHOLD {
+                    Some((default_internal_topology_label(), internal_observed_count))
+                } else {
+                    None
+                }
+            });
         let Some((label, observed_count)) = candidate else {
             return expired_event;
         };

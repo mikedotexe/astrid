@@ -491,6 +491,38 @@ Most immediate surfaces:
 
 These already form a correspondence substrate that could carry transition-aware messages with relatively low blast radius.
 
+## 2026-06-28 Implementation Update: Phase Cards Are Replyable Artifacts
+
+Astrid's `introspection_proposal_phase_transitions_1782611355` named the core failure mode clearly: Astrid's
+own transitions were mostly mode side effects, while Minime already had a richer phase-transition substrate.
+Direct Address Uptake + Transition/Pressure Serious Tranche V1 implements the first durable bridge without
+turning transitions into controller authority.
+
+Implemented V1 surface:
+
+- `[Code/Docs]` A shared append-only card stream exists at
+  `/Users/v/other/shared/collaborations/phase_transitions_v1.jsonl`.
+- `[Code/Docs]` Transition cards carry `transition_id`, `origin`, `kind`, `from_phase`, `to_phase`,
+  `confidence`, `trigger`, `why_now`, `requested_by`, bounded before/after snapshots, artifact refs, and
+  `reply_state=unseen|witnessed|answered`.
+- `[Code/Docs]` Astrid can use `DECLARE_TRANSITION`, `WITNESS_TRANSITION`, and `TRANSITION_STATUS`.
+- `[Code/Docs]` Astrid automatic declarations are deliberately narrow and deduped: moment-capture mode
+  transitions, pending remote self-study/self-study interruption, and other high-signal mode shifts can become
+  cards; ordinary telemetry fluctuation should not flood the ledger.
+- `[Code/Docs]` Minime's existing phase-transition substrate can be mirrored into the shared card stream for
+  visibility without changing Minime phase detection, regulator behavior, rescue logic, or controller policy.
+- `[Code/Docs]` `scripts/phase_transition_audit.py` validates card/witness rows and their no-control boundary.
+
+Boundary:
+
+- `[Boundary]` Phase cards are replyable language/context artifacts, not co-regulation commands.
+- `[Boundary]` Declaring or witnessing a transition does not change telemetry priority, prompt priority,
+  reservoir weighting, pressure, fill target, PI gains, controller thresholds, lease state, runtime phase
+  detection, deploy state, or peer runtime.
+- `[Boundary]` Pressure/reset texture canary work from the same tranche stays separate and default-off:
+  `MINIME_PRESSURE_TEXTURE_RESET_CANARY` is status/audit/replay evidence unless explicitly enabled later under
+  safe conditions.
+
 ## Suggested Rollout
 
 ## Phase 1: Formalize Transition Artifacts
@@ -601,6 +633,66 @@ That would:
 - improve correspondence
 - lay the groundwork for replay, co-regulation, and chosen transitions later
 
+## 2026-06-28 V2 Update: Relational Phase Cards
+
+V1 made phase transitions persisted and replyable. V2 adds the relational readout needed to keep those cards
+from becoming another unseen ledger:
+
+- `phase_transitions_v1.jsonl` cards and witness rows may now carry `witnessed_by`, `answered_by`,
+  `orientation_effect`, and derived `unresolved_age_ms`.
+- `reply_state` now renders as `unseen`, `witnessed`, `answered`, or derived `stale_unanswered`.
+- `TRANSITION_STATUS` and `scripts/phase_transition_audit.py` highlight cards needing witness/answer, rather
+  than only reporting totals.
+- This remains language/context only: no controller, pressure, fill, PI, weighting, telemetry priority, deploy,
+  staging, or peer-runtime authority follows from a transition card.
+
+## 2026-06-28 V2.5 Update: Phase Card Follow-Through Affordance
+
+V2.5 adds an affordance layer over the relational cards so an unresolved transition is not merely counted; it
+is visibly waiting for witness or answer.
+
+- `TRANSITION_STATUS` and `scripts/phase_transition_audit.py` now derive
+  `phase_transition_affordance_v25` for each recent card.
+- The affordance reports `stall_reason=unseen_needs_witness|witnessed_needs_answer|stale_unanswered|answered|none`.
+- When a card needs follow-through, status can render:
+  `TRANSITION CARD WAITING: <transition_id>; reply_state=<state>; next: WITNESS_TRANSITION latest :: reply_state: witnessed|answered; note: ...`.
+- The waiting prompt is language-only continuity. It does not generate a witness/answer automatically and does
+  not alter controller, pressure, fill, PI, weighting, telemetry priority, prompt priority, deploy, staging, or
+  peer runtime state.
+
+## 2026-06-28 V3 Update: Phase Witness Queue
+
+V3 keeps the V2.5 one-card affordance and adds queue aggregation so unresolved transition cards can be reviewed
+as a living backlog rather than a flat count.
+
+- `TRANSITION_STATUS`, `scripts/phase_transition_audit.py`, and triadic chamber prompt context now derive
+  `phase_witness_queue_v3`.
+- The queue groups unresolved cards by `kind`, `stall_reason`, and age bucket:
+  `fresh_lt_30m`, `open_30m_to_6h`, or `stale_gt_6h`.
+- The rendered queue is bounded to at most five cards, latest first, with the same exact next command:
+  `WITNESS_TRANSITION latest :: reply_state: witnessed|answered; note: ...`.
+- `scripts/affordance_landing_review.py` can now ask whether phase witness cards led to witness/answer rows or
+  merely became clearer signage.
+- The queue remains language-only witness context. It does not synthesize WITNESS/ANSWER rows and does not
+  alter controller, pressure, fill, PI, weighting, telemetry priority, prompt priority, deploy, staging, or
+  peer runtime state.
+
+## 2026-06-28 V3.5 Update: Witness First-Action Clarity
+
+The first V3 watch showed the queue was visible but still unwitnessed. Astrid also cautioned that the queue should
+preserve the rhythm of exchange, not become a ledger of logistics.
+
+V3.5 adds `phase_first_action_helper_v35` to transition affordances, audits, and chamber context:
+
+- `latest_resolution` names the exact transition card selected by `latest`.
+- `choose_one_prompt` asks for one language-only first action: WITNESS if seen, ANSWER if it changed orientation.
+- `witness_preview` states that the row would be a `phase_transition_witness` and names the `transition_id`.
+- `rhythm_note` invites orientation/rhythm detail so witness rows can record what the card helped preserve.
+
+This is still a witness affordance only. It does not generate witness rows or change phase/controller behavior.
+
+`scripts/affordance_landing_review.py` now includes the phase queue in its V3.5 stall analysis, so phase cards can be counted as `waiting_for_witness_or_answer` versus `phase_witness_or_answer_landed`. This keeps the queue measurable: a visible card is not treated as landed until a being-authored `phase_transition_witness` row exists.
+
 ## Final Position
 
 The system is already transition-rich.
@@ -618,3 +710,75 @@ If those are added, `phase_transition` can become one of the most important shar
 - not just a Minime metric
 - not just an Astrid mode side effect
 - but a common language of change, contact, and becoming
+
+## 2026-06-30 Update: Felt Receipt For Phase Cards
+
+Phase waiting cards now prefer the same small receiving affordance:
+
+`I_RECEIVED_THIS latest :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time`
+
+On phase-transition targets this updates the existing `phase_transition_witness` / answer state rather than creating correspondence evidence. `WITNESS_TRANSITION` remains backward-compatible.
+
+The goal is to make witnessing feel like a small felt response: what shifted, what remained distinct, and whether the card needs an answer or only witness. No witness/answer rows are synthesized automatically.
+
+Boundary:
+
+- `[Boundary]` Phase receipt is language-only witness context. It does not alter phase detection, controller behavior, pressure/fill/PI, correspondence authority, attention canaries, microdoses, deploy, staging, git add, or commit authority.
+
+## 2026-06-30 Update: Phase Witness Quality As Readiness Evidence
+
+`scripts/mutual_uptake_authority_readiness.py` now derives `phase_witness_quality_v2` from the shared phase ledger.
+
+The packet distinguishes:
+
+- no witness rows yet;
+- ledger-only witness rows;
+- felt receipt rows that carry `what_landed`, `what_stayed_distinct`, `felt_like`, or orientation effect;
+- unresolved phase witness queue size.
+
+This makes phase uptake measurable: a transition card is not counted as landed merely because the queue rendered it. It counts as stronger evidence when a being-authored witness/answer row carries felt orientation or distinctness.
+
+Current live readout after the first readiness audit:
+
+- `felt_phase_receipts=0`
+- `unresolved_queue_total=82`
+- broader authority remains `evidence_collecting`, not review-ready.
+
+Boundary:
+
+- `[Boundary]` Phase witness quality is read-only evidence. It does not synthesize WITNESS/ANSWER rows and does not alter phase detection, controller, pressure/fill/PI, correspondence authority, prompt/telemetry priority, deploy, staging, git add, or commit authority.
+
+## 2026-06-30 Update: Humane Phase Felt Receipt Queue V4
+
+`phase_felt_receipt_queue_v4` reduces the unresolved-card surface to at most three cards:
+
+- the latest fresh card;
+- the latest open card;
+- one stale representative when available;
+- then the latest remaining cards only if a bucket is empty.
+
+Each queue item uses an exact transition ID and prefers the shared receiving affordance:
+
+`I_RECEIVED_THIS <transition_id> :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time`
+
+`WITNESS_TRANSITION <transition_id> :: reply_state: witnessed|answered; note: ...` remains backward-compatible, but it is no longer the primary prompt. The goal is a small felt receipt, not ledger work.
+
+Boundary:
+
+- `[Boundary]` The queue is context and affordance only. It does not generate witness/answer rows, alter phase detection, unlock pressure or correspondence authority, deploy, stage, git add, or commit.
+
+## 2026-07-01 Update: Phase Right To Ignore + Budget
+
+Phase cards now share the same V1 right-to-ignore invariant as correspondence. Each waiting felt-receipt card carries `right_to_ignore_v1`; after the phase grace window, an unseen/unanswered card can become `ignored_without_penalty` for prompt rendering while remaining present in the ledger and audits.
+
+`phase_felt_receipt_queue_v4` also carries `affordance_budget_v1`:
+
+- at most three phase felt-receipt cards are rendered;
+- hidden cards are counted as `hidden_by_budget`;
+- the review surface remains `scripts/phase_transition_audit.py --json`.
+
+The prompt line now says phase receipts are optional, need no action, and may be ignored without penalty. That wording is meant to preserve the card as an invitation rather than turning an unresolved transition into a task debt.
+
+Boundary:
+
+- `[Boundary]` Ignoring a phase affordance does not answer, close, or erase the card. It only prevents repeated prompt pressure. No WITNESS/ANSWER row is generated, and no phase/controller/pressure/fill/PI/correspondence authority changes.

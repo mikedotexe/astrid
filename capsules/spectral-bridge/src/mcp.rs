@@ -1116,6 +1116,7 @@ async fn tool_get_latest_telemetry(
                 "sticky_mode_audit": s.sticky_mode_audit.clone(),
                 "artifact_scan": s.artifact_scan.clone(),
                 "pressure_trend_v1": s.pressure_trend_v1.clone(),
+                "telemetry_heartbeat_delta_v1": s.telemetry_heartbeat_delta_v1.clone(),
                 "safety_decision": s.safety_decision.clone()
             }
         })
@@ -1158,7 +1159,10 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
             .latest_telemetry
             .as_ref()
             .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
+        texture_signature_integrity_v1: s.texture_signature_integrity_v1(),
         pressure_trend_v1: s.pressure_trend_v1.clone(),
+        pressure_trend_smoothing_v1: s.pressure_trend_smoothing_v1(),
+        telemetry_heartbeat_delta_v1: s.telemetry_heartbeat_delta_v1.clone(),
         pressure_source_v1: s
             .latest_telemetry
             .as_ref()
@@ -1170,6 +1174,9 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         source_status: crate::autonomous::read_astrid_source_status(),
         db_maintenance_status: crate::message_archive::read_runtime_status(),
         connectivity: s.connectivity_status(),
+        last_sensory_sent_unix_s: s.last_sensory_sent_unix_s,
+        bridge_reciprocity_v1: Some(s.bridge_reciprocity_v1()),
+        texture_shape_over_time_v2: s.texture_shape_over_time_v2(),
     };
     Ok(json!({
         "content": [{
@@ -3153,7 +3160,10 @@ async fn handle_resource_read(
                     .latest_telemetry
                     .as_ref()
                     .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
+                texture_signature_integrity_v1: s.texture_signature_integrity_v1(),
                 pressure_trend_v1: s.pressure_trend_v1.clone(),
+                pressure_trend_smoothing_v1: s.pressure_trend_smoothing_v1(),
+                telemetry_heartbeat_delta_v1: s.telemetry_heartbeat_delta_v1.clone(),
                 pressure_source_v1: s
                     .latest_telemetry
                     .as_ref()
@@ -3165,6 +3175,9 @@ async fn handle_resource_read(
                 source_status: crate::autonomous::read_astrid_source_status(),
                 db_maintenance_status: crate::message_archive::read_runtime_status(),
                 connectivity: s.connectivity_status(),
+                last_sensory_sent_unix_s: s.last_sensory_sent_unix_s,
+                bridge_reciprocity_v1: Some(s.bridge_reciprocity_v1()),
+                texture_shape_over_time_v2: s.texture_shape_over_time_v2(),
             };
             Ok(json!({
                 "contents": [{

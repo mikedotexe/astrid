@@ -801,6 +801,9 @@ mod tests {
                     structural_plurality: 0.62,
                     comfort_gate: 0.95,
                 },
+                texture_signature: crate::types::ResonanceTextureSignatureV1::default(),
+                texture_component_alignment:
+                    crate::types::ResonanceTextureComponentAlignmentV1::default(),
                 control: crate::types::ResonanceDensityControl {
                     target_bias_pct: 0.0,
                     wander_scale: 1.0,
@@ -854,6 +857,8 @@ mod tests {
                     pressure_interference: 0.42,
                 },
                 context: crate::types::InhabitableFluctuationContext::default(),
+                pressure_calibration:
+                    crate::types::InhabitableFluctuationPressureCalibrationV1::default(),
                 control: crate::types::InhabitableFluctuationControl {
                     target_bias_pct: 0.0,
                     wander_scale: 1.0,

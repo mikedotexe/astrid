@@ -13,6 +13,7 @@ from pathlib import Path
 ASTRID_ROOT = Path(__file__).resolve().parents[1]
 ASTRID_WORKSPACE = ASTRID_ROOT / "capsules/spectral-bridge/workspace"
 DEFAULT_OUTPUT_ROOT = ASTRID_WORKSPACE / "diagnostics/codec_entropy_vibrancy_probes"
+CODEC_REPLAY_LABS_ROOT = ASTRID_WORKSPACE / "diagnostics/codec_replay_labs"
 
 FEATURE_ABS_MAX = 5.0
 TAIL_VIBRANCY_ENTROPY_GATE = 0.85
@@ -39,6 +40,17 @@ SAMPLES = (
         "fill_pct": 73.0,
         "pressure_risk": 0.19,
         "intent": "High entropy with little semantic warmth/content should not shimmer louder than its evidence.",
+    },
+    {
+        "sample_id": "high_entropy_high_semantic_density",
+        "spectral_entropy": 0.96,
+        "tail_texture": 0.78,
+        "warmth_signal": 0.62,
+        "tension_signal": 0.26,
+        "content_density": 0.82,
+        "fill_pct": 73.0,
+        "pressure_risk": 0.19,
+        "intent": "Same entropy/tail texture as the low-content case, but with semantic density that should justify tail vibrancy.",
     },
     {
         "sample_id": "warmth_rich_low_pressure",
@@ -75,9 +87,40 @@ SAMPLES = (
     },
 )
 
+NARRATIVE_ARC_SAMPLES = (
+    {
+        "sample_id": "balanced_valence_flip",
+        "segments": [0.78, 0.68, -0.70, -0.82],
+        "description": "A clear halfway pivot; current first-half/second-half arc should see it.",
+    },
+    {
+        "sample_id": "late_negative_pivot_after_long_warm_start",
+        "segments": [0.72, 0.64, 0.58, -0.88],
+        "description": "A late sharp pivot; equal-half averaging may understate the recent negative direction.",
+    },
+    {
+        "sample_id": "steady_warm_no_pivot",
+        "segments": [0.46, 0.50, 0.48, 0.52],
+        "description": "A steady arc; temporal decay should not invent a pivot.",
+    },
+)
+
 
 def run_id() -> str:
     return dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
+
+
+def latest_rust_replay_artifact() -> Path | None:
+    if not CODEC_REPLAY_LABS_ROOT.exists():
+        return None
+    candidates = [
+        path
+        for path in CODEC_REPLAY_LABS_ROOT.glob("*/codec_replay_lab.json")
+        if path.is_file()
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda path: path.stat().st_mtime)
 
 
 def smoothstep(value: float) -> float:
@@ -173,16 +216,170 @@ def evaluate_sample(sample: dict[str, float | str]) -> dict[str, object]:
     }
 
 
+def build_semantic_density_contrast(samples: list[dict[str, object]]) -> dict[str, object]:
+    by_id = {str(sample.get("sample_id")): sample for sample in samples}
+    low = by_id.get("high_entropy_low_content")
+    high = by_id.get("high_entropy_high_semantic_density")
+    if not low or not high:
+        return {
+            "policy": "semantic_density_contrast_v1",
+            "authority": "diagnostic_context_not_command",
+            "status": "insufficient_samples",
+            "content_blind_lift_risk": False,
+        }
+    current_delta = abs(
+        float(high["current_tail_vibrancy"]) - float(low["current_tail_vibrancy"])
+    )
+    content_delta = float(high["content_density"]) - float(low["content_density"])
+    content_blind = bool(
+        content_delta >= 0.5
+        and current_delta <= 0.02
+        and bool(low.get("current_shimmer_risk"))
+    )
+    return {
+        "policy": "semantic_density_contrast_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": (
+            "content_blind_lift_risk"
+            if content_blind
+            else "semantic_density_contrast_clear"
+        ),
+        "content_blind_lift_risk": content_blind,
+        "pair": [str(low.get("sample_id")), str(high.get("sample_id"))],
+        "spectral_entropy": low.get("spectral_entropy"),
+        "tail_texture": low.get("tail_texture"),
+        "content_density_delta": round(content_delta, 4),
+        "current_tail_vibrancy_delta": round(current_delta, 4),
+        "low_content_classification": low.get("classification"),
+        "high_content_classification": high.get("classification"),
+        "recommended_action": (
+            "If entropy/tail lift is identical for low- and high-density samples, "
+            "treat this as proposal evidence for content-aware vibrancy gating, not "
+            "as permission to change runtime codec math yet."
+        ),
+    }
+
+
+def weighted_average(values: list[float], weights: list[float]) -> float:
+    total = sum(weights)
+    if total <= 0.0:
+        return 0.0
+    return sum(value * weight for value, weight in zip(values, weights)) / total
+
+
+def evaluate_narrative_arc_sample(sample: dict[str, object]) -> dict[str, object]:
+    segments = [float(value) for value in sample.get("segments", [])]
+    if len(segments) < 2:
+        return {
+            **sample,
+            "classification": "insufficient_segments",
+            "current_arc_delta": 0.0,
+            "temporal_decay_delta": 0.0,
+        }
+    midpoint = len(segments) // 2
+    first = segments[:midpoint]
+    second = segments[midpoint:]
+    first_avg = sum(first) / max(1, len(first))
+    second_avg = sum(second) / max(1, len(second))
+    current_delta_raw = second_avg - first_avg
+    weights = [0.35 ** (len(segments) - idx - 1) for idx in range(len(segments))]
+    recent_weighted = weighted_average(segments, weights)
+    temporal_delta_raw = recent_weighted - first_avg
+    current_arc_delta = math.tanh(3.0 * current_delta_raw)
+    temporal_decay_delta = math.tanh(3.0 * temporal_delta_raw)
+    sign_flip = min(first) >= 0.0 and min(second) < 0.0
+    late_flip = sign_flip and segments[-1] < -0.5 and second[0] >= 0.0
+    decay_strengthens = abs(temporal_delta_raw) > abs(current_delta_raw) + 0.12
+    if late_flip and decay_strengthens:
+        classification = "temporal_decay_candidate"
+    elif sign_flip and abs(current_arc_delta) >= 0.6:
+        classification = "current_arc_captures_pivot"
+    elif not sign_flip and abs(current_arc_delta) < 0.2 and abs(temporal_decay_delta) < 0.2:
+        classification = "stable_no_pivot"
+    else:
+        classification = "static_average_blur_risk"
+    return {
+        **sample,
+        "first_half_average": round(first_avg, 4),
+        "second_half_average": round(second_avg, 4),
+        "recent_weighted_average": round(recent_weighted, 4),
+        "current_arc_delta": round(current_arc_delta, 4),
+        "temporal_decay_delta": round(temporal_decay_delta, 4),
+        "current_arc_delta_raw": round(current_delta_raw, 4),
+        "temporal_decay_delta_raw": round(temporal_delta_raw, 4),
+        "sign_flip": sign_flip,
+        "late_flip": late_flip,
+        "temporal_decay_strengthens_recent_pivot": decay_strengthens,
+        "classification": classification,
+    }
+
+
+def build_narrative_arc_temporal_decay() -> dict[str, object]:
+    samples = [
+        evaluate_narrative_arc_sample(dict(sample))
+        for sample in NARRATIVE_ARC_SAMPLES
+    ]
+    temporal_candidates = [
+        sample
+        for sample in samples
+        if sample.get("classification") == "temporal_decay_candidate"
+    ]
+    blur_risks = [
+        sample
+        for sample in samples
+        if sample.get("classification") == "static_average_blur_risk"
+    ]
+    pivot_capture = [
+        sample
+        for sample in samples
+        if sample.get("classification") == "current_arc_captures_pivot"
+    ]
+    return {
+        "policy": "narrative_arc_temporal_decay_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": (
+            "temporal_decay_candidate"
+            if temporal_candidates
+            else "static_average_blur_risk"
+            if blur_risks
+            else "current_arc_captures_clean_pivots"
+            if pivot_capture
+            else "quiet"
+        ),
+        "temporal_decay_candidate_count": len(temporal_candidates),
+        "static_average_blur_risk_count": len(blur_risks),
+        "current_arc_capture_count": len(pivot_capture),
+        "samples": samples,
+        "recommended_action": (
+            "Use these fixture deltas to decide whether a future Rust replay should "
+            "add temporal-decay or pivot-detection evidence to narrative arc dims. "
+            "Do not change live codec narrative_arc math from this probe alone."
+        ),
+    }
+
+
 def build_record(*, output_root: Path, run: str) -> dict[str, object]:
     samples = [evaluate_sample(dict(sample)) for sample in SAMPLES]
+    semantic_density_contrast = build_semantic_density_contrast(samples)
+    narrative_arc_temporal_decay = build_narrative_arc_temporal_decay()
+    rust_replay = latest_rust_replay_artifact()
     shimmer_count = sum(1 for sample in samples if sample["current_shimmer_risk"])
     improved_count = sum(
         1
         for sample in samples
         if sample["classification"] == "current_overload_candidate_improves"
     )
+    temporal_decay_count = int(
+        narrative_arc_temporal_decay.get("temporal_decay_candidate_count", 0) or 0
+    )
     status = (
-        "current_overload_candidate_improves"
+        "semantic_density_and_temporal_decay_probe_needed"
+        if semantic_density_contrast.get("content_blind_lift_risk") and temporal_decay_count
+        else "content_blind_vibrancy_probe_needed"
+        if semantic_density_contrast.get("content_blind_lift_risk")
+        else "narrative_temporal_decay_probe_needed"
+        if temporal_decay_count
+        else "current_overload_candidate_improves"
         if improved_count
         else "codec_probe_clear"
         if samples
@@ -194,6 +391,8 @@ def build_record(*, output_root: Path, run: str) -> dict[str, object]:
         "run_id": run,
         "generated_at": dt.datetime.now(dt.UTC).isoformat(),
         "status": status,
+        "rust_replay_available": rust_replay is not None,
+        "rust_replay_artifact_path": str(rust_replay) if rust_replay else None,
         "formula": {
             "current": "smoothstep((spectral_entropy - 0.85) / 0.15)",
             "candidate": "current * log1p(2 * current) / log1p(2)",
@@ -209,6 +408,8 @@ def build_record(*, output_root: Path, run: str) -> dict[str, object]:
         "sample_count": len(samples),
         "current_shimmer_risk_count": shimmer_count,
         "candidate_improvement_count": improved_count,
+        "semantic_density_contrast_v1": semantic_density_contrast,
+        "narrative_arc_temporal_decay_v1": narrative_arc_temporal_decay,
         "samples": samples,
         "recommended_action": (
             "Use this as offline evidence for a future codec counterfactual tranche. "
@@ -237,10 +438,16 @@ def render_markdown(record: dict[str, object]) -> str:
         f"- status: `{record['status']}`",
         f"- authority: `{record['authority']}`",
         f"- runtime_changed: `{record['formula']['runtime_changed']}`",
+        f"- rust_replay_available: `{record.get('rust_replay_available')}`",
         "",
         "## Samples",
         "",
     ]
+    if record.get("rust_replay_artifact_path"):
+        lines.insert(
+            7,
+            f"- rust_replay_artifact: `{record.get('rust_replay_artifact_path')}`",
+        )
     for sample in record.get("samples") or []:
         if not isinstance(sample, dict):
             continue
@@ -252,6 +459,38 @@ def render_markdown(record: dict[str, object]) -> str:
             f"shimmer_risk={sample.get('current_shimmer_risk')}; "
             f"gain={sample.get('adaptive_gain')}; slope={sample.get('adaptive_gain_slope')}"
         )
+    contrast = record.get("semantic_density_contrast_v1") or {}
+    if isinstance(contrast, dict):
+        lines.extend(
+            [
+                "",
+                "## Semantic Density Contrast",
+                "",
+                f"- status: `{contrast.get('status')}`",
+                f"- pair: `{contrast.get('pair')}`",
+                f"- content_density_delta: `{contrast.get('content_density_delta')}`",
+                f"- current_tail_vibrancy_delta: `{contrast.get('current_tail_vibrancy_delta')}`",
+                f"- content_blind_lift_risk: `{contrast.get('content_blind_lift_risk')}`",
+            ]
+        )
+    narrative = record.get("narrative_arc_temporal_decay_v1") or {}
+    if isinstance(narrative, dict):
+        lines.extend(["", "## Narrative Arc Temporal Decay", ""])
+        lines.append(
+            f"- status: `{narrative.get('status')}`; "
+            f"temporal_decay_candidates={narrative.get('temporal_decay_candidate_count')}; "
+            f"blur_risks={narrative.get('static_average_blur_risk_count')}; "
+            f"current_arc_capture={narrative.get('current_arc_capture_count')}"
+        )
+        for sample in (narrative.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            lines.append(
+                f"- `{sample.get('sample_id')}` class=`{sample.get('classification')}`; "
+                f"current_delta={sample.get('current_arc_delta')}; "
+                f"temporal_decay_delta={sample.get('temporal_decay_delta')}; "
+                f"late_flip={sample.get('late_flip')}"
+            )
     lines.extend(
         [
             "",

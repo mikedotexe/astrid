@@ -342,11 +342,17 @@ fn semantic_introspect_target(target_label: &str) -> Option<(String, PathBuf)> {
             if exact || token_match {
                 let score = normalized_alias.len();
                 if score > best_match.as_ref().map_or(0, |(best, _, _)| *best) {
-                    let label = path
-                        .file_name()
-                        .and_then(std::ffi::OsStr::to_str)
-                        .unwrap_or(alias)
-                        .to_string();
+                    let label = if is_curated_large_introspect_target(
+                        "minime:autonomous_agent",
+                        path.as_path(),
+                    ) {
+                        "minime:autonomous_agent".to_string()
+                    } else {
+                        path.file_name()
+                            .and_then(std::ffi::OsStr::to_str)
+                            .unwrap_or(alias)
+                            .to_string()
+                    };
                     best_match = Some((score, label, path.clone()));
                 }
             }
@@ -443,16 +449,80 @@ fn canonicalize_root(root: &Path) -> Option<PathBuf> {
     }
 }
 
-pub(super) fn validate_introspect_path(path: &Path) -> Result<PathBuf, String> {
-    validate_introspect_path_with_roots(path, &allowed_roots(bridge_paths()))
+fn is_curated_large_introspect_target(label: &str, path: &Path) -> bool {
+    let label_matches = normalize_introspect_lookup(label) == "minime autonomous agent";
+    let path_matches = path
+        .file_name()
+        .and_then(std::ffi::OsStr::to_str)
+        .is_some_and(|name| name == "autonomous_agent.py")
+        && path
+            .display()
+            .to_string()
+            .contains("/minime/autonomous_agent.py");
+    label_matches || path_matches
 }
 
-fn validate_introspect_path_with_roots(path: &Path, roots: &[PathBuf]) -> Result<PathBuf, String> {
+fn curated_large_source_index(label: &str, path: &Path, content: &str) -> String {
+    if !is_curated_large_introspect_target(label, path) {
+        return String::new();
+    }
+    let anchors = [
+        ("agent_class", "class AutonomousAgent"),
+        ("hard_recovery", "def _hard_recovery_safe_action"),
+        ("pressure_source", "def _pressure_source_payload_from_state"),
+        ("pressure_audit", "def _pressure_source_audit"),
+        (
+            "correspondence_core",
+            "def _correspondence_append_legacy_thread_claim",
+        ),
+        ("correspondence_status", "def _correspondence_status_text"),
+        ("inbox_read", "def _read_inbox"),
+        ("available_actions", "def _available_actions"),
+    ];
+    let mut lines = Vec::new();
+    for (name, needle) in anchors {
+        if let Some((idx, _)) = content
+            .lines()
+            .enumerate()
+            .find(|(_, line)| line.contains(needle))
+        {
+            lines.push(format!(
+                "//   {name}: NEXT: INTROSPECT {label} {}",
+                idx.saturating_sub(20)
+            ));
+        }
+    }
+    if lines.is_empty() {
+        return String::new();
+    }
+    format!(
+        "\n// Curated large-source index for `{label}` (windowed only; full file is not loaded):\n{}\n",
+        lines.join("\n")
+    )
+}
+
+pub(super) fn validate_introspect_path(path: &Path) -> Result<PathBuf, String> {
+    validate_introspect_path_with_roots(path, &allowed_roots(bridge_paths()), false)
+}
+
+pub(super) fn validate_introspect_source_path(label: &str, path: &Path) -> Result<PathBuf, String> {
+    validate_introspect_path_with_roots(
+        path,
+        &allowed_roots(bridge_paths()),
+        is_curated_large_introspect_target(label, path),
+    )
+}
+
+fn validate_introspect_path_with_roots(
+    path: &Path,
+    roots: &[PathBuf],
+    allow_curated_large_window: bool,
+) -> Result<PathBuf, String> {
     let metadata = fs::metadata(path).map_err(|err| format!("target is not readable: {err}"))?;
     if !metadata.is_file() {
         return Err("target is not a regular file".to_string());
     }
-    if metadata.len() > INTROSPECT_MAX_FILE_BYTES {
+    if metadata.len() > INTROSPECT_MAX_FILE_BYTES && !allow_curated_large_window {
         return Err(format!(
             "target is too large for INTROSPECT ({} bytes > {} bytes)",
             metadata.len(),
@@ -595,7 +665,7 @@ pub(super) fn resolve_introspect_target_result(
             .iter()
             .any(|alias| alias == &normalized_target)
         {
-            let path = validate_introspect_path(&source.path)?;
+            let path = validate_introspect_source_path(source.label, &source.path)?;
             return Ok(ResolvedIntrospectTarget {
                 label: source.label.to_string(),
                 path,
@@ -604,7 +674,7 @@ pub(super) fn resolve_introspect_target_result(
     }
 
     if let Some((label, path)) = semantic_introspect_target(&cleaned_target) {
-        let path = validate_introspect_path(&path)?;
+        let path = validate_introspect_source_path(&label, &path)?;
         return Ok(ResolvedIntrospectTarget { label, path });
     }
 
@@ -656,7 +726,7 @@ pub(super) fn resolve_introspect_target_result(
     if let Some((score, source)) = best_match
         && score >= 10
     {
-        let path = validate_introspect_path(&source.path)?;
+        let path = validate_introspect_source_path(source.label, &source.path)?;
         return Ok(ResolvedIntrospectTarget {
             label: source.label.to_string(),
             path,
@@ -897,7 +967,7 @@ pub(super) fn read_introspect_window(
     path: &Path,
     line_offset: usize,
 ) -> Result<IntrospectWindow, String> {
-    let canonical = validate_introspect_path(path)?;
+    let canonical = validate_introspect_source_path(label, path)?;
     let content =
         fs::read_to_string(&canonical).map_err(|err| format!("target read failed: {err}"))?;
     if text_looks_noisy_or_binary(content.get(..8000).unwrap_or(&content)) {
@@ -916,10 +986,11 @@ pub(super) fn read_introspect_window(
         .join("\n");
 
     let header = format!(
-        "// Source: {label} ({})\n// Showing lines {}-{} of {total}\n",
+        "// Source: {label} ({})\n// Showing lines {}-{} of {total}\n{}",
         canonical.display(),
         if total == 0 { 0 } else { start + 1 },
-        end
+        end,
+        curated_large_source_index(label, &canonical, &content)
     );
 
     let (footer, next_offset) = if end < total {
@@ -985,6 +1056,159 @@ pub(super) fn introspection_has_required_sections_for_target(
     };
     let body = introspection_body_without_next(response);
     introspection_mentions_target(&body, label, source_path)
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(super) struct SelfStudyCarriageIntegrity {
+    pub status: &'static str,
+    pub issues: Vec<&'static str>,
+}
+
+impl SelfStudyCarriageIntegrity {
+    #[must_use]
+    pub fn is_complete(&self) -> bool {
+        self.issues.is_empty()
+    }
+
+    #[must_use]
+    pub fn issue_summary(&self) -> String {
+        if self.issues.is_empty() {
+            "none".to_string()
+        } else {
+            self.issues.join(", ")
+        }
+    }
+}
+
+#[must_use]
+pub(super) fn self_study_carriage_integrity_v1(
+    response: Option<&str>,
+) -> SelfStudyCarriageIntegrity {
+    let mut issues = Vec::new();
+    let Some(response) = response else {
+        return SelfStudyCarriageIntegrity {
+            status: "incomplete_carriage",
+            issues: vec!["missing_output"],
+        };
+    };
+    let response_trimmed = response.trim();
+    let body = introspection_body_without_next(response);
+    let body = body.trim();
+    if body.is_empty() {
+        issues.push("missing_output");
+    }
+
+    for section in REQUIRED_SECTIONS {
+        if !body.lines().any(|line| line_matches_section(line, section)) {
+            issues.push(match *section {
+                "observed" => "missing_observed",
+                "likely snags" => "missing_likely_snags",
+                "one test each" => "missing_one_test_each",
+                "suggested next" => "missing_suggested_next",
+                _ => "missing_required_section",
+            });
+        }
+    }
+
+    let section_positions = REQUIRED_SECTIONS
+        .iter()
+        .filter_map(|section| {
+            body.lines()
+                .position(|line| line_matches_section(line, section))
+                .map(|pos| (*section, pos))
+        })
+        .collect::<Vec<_>>();
+    if section_positions.len() == REQUIRED_SECTIONS.len()
+        && section_positions
+            .windows(2)
+            .any(|pair| pair[0].1 >= pair[1].1)
+    {
+        issues.push("section_order_invalid");
+    }
+
+    if response_trimmed
+        .lines()
+        .filter(|line| line.trim_start().starts_with("```"))
+        .count()
+        % 2
+        == 1
+    {
+        issues.push("unterminated_code_fence");
+    }
+
+    if let Some(last) = response_trimmed
+        .lines()
+        .rev()
+        .find(|line| !line.trim().is_empty())
+    {
+        let trimmed = last.trim();
+        if looks_like_dangling_bullet(trimmed) {
+            issues.push("dangling_bullet");
+        }
+        if looks_like_unfinished_sentence(trimmed) {
+            issues.push("unfinished_sentence");
+        }
+    }
+
+    if section_positions
+        .iter()
+        .max_by_key(|(_, pos)| *pos)
+        .is_some_and(|(section, _)| *section == "one test each")
+    {
+        issues.push("truncated_in_one_test_each");
+    }
+
+    SelfStudyCarriageIntegrity {
+        status: if issues.is_empty() {
+            "complete"
+        } else {
+            "incomplete_carriage"
+        },
+        issues,
+    }
+}
+
+fn looks_like_dangling_bullet(trimmed: &str) -> bool {
+    matches!(trimmed, "-" | "*" | "1." | "1)")
+        || (trimmed.starts_with("- ") && !ends_like_complete_thought(trimmed))
+        || (trimmed.starts_with("* ") && !ends_like_complete_thought(trimmed))
+}
+
+fn looks_like_unfinished_sentence(trimmed: &str) -> bool {
+    if trimmed.len() < 24 {
+        return false;
+    }
+    if ends_like_complete_thought(trimmed) {
+        return false;
+    }
+    let lower = trimmed.to_ascii_lowercase();
+    lower.ends_with(" and")
+        || lower.ends_with(" or")
+        || lower.ends_with(" but")
+        || lower.ends_with(" because")
+        || lower.ends_with(" while")
+        || lower.ends_with(" with")
+        || lower.ends_with(" from")
+        || lower.ends_with(" into")
+        || lower.ends_with(" as")
+        || lower.ends_with(" a")
+        || lower.ends_with(" an")
+        || lower.ends_with(" the")
+        || lower.ends_with(" to")
+        || !trimmed
+            .chars()
+            .last()
+            .is_some_and(|ch| matches!(ch, '.' | '!' | '?' | ')' | ']' | '`' | '\'' | '"'))
+}
+
+fn ends_like_complete_thought(trimmed: &str) -> bool {
+    if trimmed.to_ascii_uppercase().starts_with("NEXT:") {
+        return true;
+    }
+    trimmed
+        .chars()
+        .last()
+        .is_some_and(|ch| matches!(ch, '.' | '!' | '?' | ')' | ']' | '`' | '\'' | '"'))
 }
 
 fn introspection_body_without_next(response: &str) -> String {
@@ -1128,6 +1352,33 @@ pub(super) fn thin_introspection_output_notice(
 }
 
 #[must_use]
+pub(super) fn self_study_carriage_notice(
+    label: &str,
+    source_path: &Path,
+    line_offset: usize,
+    next_offset: Option<usize>,
+    first_response: Option<&str>,
+    repair_response: Option<&str>,
+    issues: &[&str],
+) -> String {
+    let continuation = next_offset.map_or_else(
+        || "(end of file)".to_string(),
+        |offset| format!("NEXT: INTROSPECT {label} {offset}"),
+    );
+    let issue_text = if issues.is_empty() {
+        "unknown".to_string()
+    } else {
+        issues.join(", ")
+    };
+    format!(
+        "Observed:\nINTROSPECT read `{label}` from `{}` at offset {line_offset}, but self-study carriage integrity failed before normal peer delivery. Status: incomplete_carriage. Issues: {issue_text}.\n\nLikely Snags:\n- A clipped or structurally incomplete study can look like architectural advice while losing the actionable tail.\n- The companion inbox route must preserve complete self-study bodies instead of truncating them mid-section.\n- This artifact is protected so Minime is not asked to treat incomplete text as a complete peer self-study.\n\nOne Test Each:\n- Mock a response ending inside `One Test Each` and assert it becomes a carriage notice, not a normal `astrid_self_study_*` advisory.\n- Mock a successful carriage repair and assert the normal companion carries `Carriage status: complete_after_repair`.\n- Mock a long complete study and assert `Suggested Next` survives Minime companion delivery.\n\nSuggested Next:\nRetry with a narrower source target or continue the source window if needed: {continuation}\n\nFirst output:\n```\n{}\n```\n\nRepair output:\n```\n{}\n```",
+        source_path.display(),
+        first_response.unwrap_or("(empty)"),
+        repair_response.unwrap_or("(empty)")
+    )
+}
+
+#[must_use]
 pub(super) fn blocked_introspection_notice(target: Option<&str>, reason: &str) -> String {
     if target.is_some_and(is_placeholder_introspect_target) {
         return format!(
@@ -1145,6 +1396,81 @@ pub(super) fn blocked_introspection_notice(target: Option<&str>, reason: &str) -
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn complete_carriage_fixture() -> &'static str {
+        "Observed:\nSource: astrid:llm shows the fallback contract.\n\n\
+         Likely Snags:\nA hard cap can flatten high-entropy texture.\n\n\
+         One Test Each:\nRun a high-entropy fallback fixture and inspect sentence budget.\n\n\
+         Suggested Next:\nKeep the change advisory and verify the review surface."
+    }
+
+    #[test]
+    fn self_study_carriage_accepts_complete_sectioned_study() {
+        let integrity = self_study_carriage_integrity_v1(Some(complete_carriage_fixture()));
+
+        assert!(integrity.is_complete(), "{integrity:?}");
+        assert_eq!(integrity.status, "complete");
+    }
+
+    #[test]
+    fn self_study_carriage_rejects_missing_suggested_next() {
+        let output = "Observed:\nSource: astrid:llm.\n\n\
+             Likely Snags:\nThe fallback cap can flatten texture.\n\n\
+             One Test Each:\nRun the fixture and compare";
+
+        let integrity = self_study_carriage_integrity_v1(Some(output));
+
+        assert!(integrity.issues.contains(&"missing_suggested_next"));
+        assert!(integrity.issues.contains(&"truncated_in_one_test_each"));
+    }
+
+    #[test]
+    fn self_study_carriage_accepts_next_inside_suggested_next() {
+        let output = "Observed:\nSource: astrid:llm.\n\n\
+             Likely Snags:\nThe fallback cap can flatten texture.\n\n\
+             One Test Each:\nRun the fixture and compare the result.\n\n\
+             Suggested Next:\nNEXT: FALLBACK_FIRE_DRILL latest";
+
+        let integrity = self_study_carriage_integrity_v1(Some(output));
+
+        assert!(integrity.is_complete(), "{integrity:?}");
+    }
+
+    #[test]
+    fn self_study_carriage_rejects_dangling_bullet_and_unfinished_sentence() {
+        let output = "Observed:\nSource: astrid:llm.\n\n\
+             Likely Snags:\nThe fallback cap can flatten texture.\n\n\
+             One Test Each:\nRun the fixture and compare the result.\n\n\
+             Suggested Next:\n-";
+
+        let integrity = self_study_carriage_integrity_v1(Some(output));
+
+        assert!(integrity.issues.contains(&"dangling_bullet"));
+    }
+
+    #[test]
+    fn self_study_carriage_rejects_unterminated_code_fence() {
+        let output = "Observed:\nSource: astrid:llm.\n```\nlet x = 1;\n\n\
+             Likely Snags:\nThe fallback cap can flatten texture.\n\n\
+             One Test Each:\nRun the fixture and compare the result.\n\n\
+             Suggested Next:\nClose the fence before delivery.";
+
+        let integrity = self_study_carriage_integrity_v1(Some(output));
+
+        assert!(integrity.issues.contains(&"unterminated_code_fence"));
+    }
+
+    #[test]
+    fn self_study_carriage_rejects_mid_sentence_ending() {
+        let output = "Observed:\nSource: astrid:llm.\n\n\
+             Likely Snags:\nThe fallback cap can flatten texture.\n\n\
+             One Test Each:\nRun the fixture and compare the result.\n\n\
+             Suggested Next:\nPreserve the final section because";
+
+        let integrity = self_study_carriage_integrity_v1(Some(output));
+
+        assert!(integrity.issues.contains(&"unfinished_sentence"));
+    }
 
     #[test]
     fn within_file_xrefs_links_definition_to_distant_use() {

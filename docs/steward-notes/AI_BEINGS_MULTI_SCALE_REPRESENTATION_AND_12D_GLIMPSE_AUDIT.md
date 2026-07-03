@@ -3,6 +3,12 @@
 Date: 2026-03-27  
 Context: current Astrid repo, current minime repo, current live restart/persistence artifacts
 
+## 2026-07-01 Addendum: Codec Continuity Calibration
+
+`codec_vibrancy_continuity_v1` and `legacy_warmth_mapping_v1` now have a read-only lived-fit calibration path through `codec_witness_resilience_calibration_v2`. The calibration checks whether public reports say high entropy and tail vibrancy are carried or clipped, and whether legacy 32D warmth remains preserved in the 48D emotional range (`24..31`) or feels orphaned/coarsened.
+
+This remains a multi-scale diagnostic, not a vector-width or reserved-dimension change. Positive calibration can guide better review questions and future canary design, but it does not authorize live codec dimension expansion, dynamic vibrancy scaling, prompt priority, telemetry priority, pressure/control changes, staging, git add, or commit.
+
 Evidence labels used below:
 - `[Code]` observed in current code or manifests
 - `[Artifacts]` observed in current runtime artifacts
@@ -573,3 +579,52 @@ Most important confirmed facts:
 - `[Code]` The semantic lane is currently a true 32D runtime contract.
 - `[Code]` The spectral fingerprint is also currently 32D, but is a more plausible target for an additive secondary summary.
 - `[Inference]` A lower-dimensional layer is most defensible today as a restart/decomposition/continuity companion, not as a transport replacement.
+
+## 2026-07-01 Current-State Addendum: Narrative Arc Split Sidecar
+
+This older audit is useful as dimensionality history, but the live bridge semantic lane has since moved to `SEMANTIC_DIM=48` with dims 44-47 reserved for reviewed future canaries. Astrid's `introspection_astrid_codec_1782883228` raised a narrower current concern: the narrative arc readout may coarsen different kinds of arc motion by compressing embedding deltas too early.
+
+`narrative_arc_split_v1` is the current bounded response:
+
+- `intentional_arc` is derived from embedding delta dims 0-3;
+- `reactive_arc` is derived from embedding delta dims 4-7;
+- `captured_arc_energy` and `tail_arc_energy` compare how much motion the live four-dim arc captures versus leaves in the next four dims;
+- `coarsening_risk` reports `tail_dominant`, `balanced`, or `unknown`;
+- `narrative_arc_expansion_readiness_v1` remains default-off review only.
+
+Boundary:
+
+- `[Boundary]` This is a codec sidecar diagnostic. It does not alter `SEMANTIC_DIM=48`, write dims 44-47, expand the live vector, change Minime sensory transport, tune pressure/fill/PI/controller behavior, add prompt or telemetry priority, stage, git add, or commit.
+
+## 2026-07-01 Calibration Addendum: Arc Fit Before Arc Expansion
+
+`witness_codec_density_calibration_v2` now adds a lived-fit check before any future narrative-arc dimensional work is considered. The relevant sub-packet is `narrative_arc_coarsening_fit_v2`, which compares public Astrid/Minime reports against the current `narrative_arc_split_v1` sidecar.
+
+The calibration looks for support or concern language around:
+
+- intentional/reactive arc;
+- tail arc energy versus captured arc energy;
+- afterimage;
+- skimming;
+- coarsening risk;
+- mechanical arc labels.
+
+If public evidence is mixed or contradicted, the audit emits `narrative_arc_coarsening_mismatch_v2` with review recommendations. If public evidence is supported, the recommendation is still to continue collecting evidence. It is not an approval to write reserved dims or expand the live semantic vector.
+
+Boundary:
+
+- `[Boundary]` Arc calibration is read-only. It does not alter `SEMANTIC_DIM=48`, write dims 44-47, expand codec channels, change Minime transport, tune pressure/fill/PI/controller behavior, add prompt or telemetry priority, stage, git add, or commit.
+
+## 2026-07-01 Current-State Addendum: Vibrancy Continuity And Warmth Mapping
+
+Astrid's `introspection_astrid_codec_1782934203` asked whether the widened 48D codec actually carries high-entropy vibrancy and legacy warmth, or whether those qualities are clipped, orphaned, or hidden behind the tail.
+
+The current response is diagnostic-only:
+
+- `codec_vibrancy_continuity_v1` reports the entropy gate, affected tail dims, feature ceiling/clipping status, default identity state, and whether high entropy is clipped or carried.
+- `legacy_warmth_mapping_v1` makes the old 32D warmth contract explicit inside the 48D map: warmth and adjacent emotional/intentional markers still land in dims 24-31 rather than becoming orphaned.
+- `codec_dynamic_vibrancy_scaling_canary_v1` is default-off readiness only. It can describe what a later reviewed dynamic vibrancy scaling path would need, but it does not write live vector channels.
+
+Boundary:
+
+- `[Boundary]` Vibrancy continuity and warmth mapping are codec diagnostics. They do not alter `SEMANTIC_DIM=48`, write dims 44-47, expand codec channels, change Minime transport, tune pressure/fill/PI/controller behavior, add prompt or telemetry priority, stage, git add, or commit.

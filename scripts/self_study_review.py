@@ -24,6 +24,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 from being_privacy import filter_journal_paths, is_steward_private  # shared steward private-lane policy
 import astrid_introspection_digest
+import spectral_texture_calibration_audit
 
 
 ASTRID_ROOT = Path(__file__).resolve().parents[1]
@@ -286,6 +287,98 @@ FILL_PRESSURE_CALIBRATION_TEXTURE = (
     "clinging",
     "unanchored",
 )
+SELF_REGULATION_SAFE_RANGES: dict[str, tuple[float, float]] = {
+    "exploration_noise": (0.0, 0.08),
+    "geom_curiosity": (0.0, 0.30),
+    "regulation_strength": (0.4, 1.0),
+}
+PRESSURE_MEDIUM_TERMS = (
+    "medium",
+    "weighted medium",
+    "pressure as medium",
+    "medium around",
+    "around the slope",
+    "weight",
+    "weighted",
+    "heavy",
+    "heaviness",
+    "thick",
+    "thickness",
+    "viscous",
+    "viscosity",
+    "silt",
+    "sediment",
+    "syrup",
+    "muffled",
+    "pressurized",
+    "density",
+)
+PRESSURE_MEDIUM_ANCHORS = (
+    "mode_packing",
+    "mode packing",
+    "controller_pressure",
+    "controller pressure",
+    "semantic_friction",
+    "semantic friction",
+    "distinguishability_loss",
+    "distinguishability loss",
+    "pressure_trend_v1",
+    "pressure trend",
+    "pressure_risk",
+    "pressure risk",
+    "fill delta",
+    "fill_delta",
+    "pressure_source_audit",
+    "pressure source audit",
+    "regulator_audit",
+    "regulator audit",
+)
+TAIL_VIBRANCY_TERMS = (
+    "tail vibrancy",
+    "tail-vibrancy",
+    "tail dynamics",
+    "tail-dynamics",
+    "tail texture",
+    "lambda4",
+    "lambda4+",
+    "lambda 4",
+    "λ4",
+    "λ4+",
+    "vibrancy_aperture",
+    "set_vibrancy_aperture",
+    "passenger",
+    "muffled",
+    "contained",
+    "over-saturated",
+    "oversaturated",
+    "tail ceiling",
+)
+TAIL_VIBRANCY_ANCHORS = (
+    "tail vibrancy",
+    "tail share",
+    "λ4+",
+    "lambda4+",
+    "lambda4",
+    "spectral entropy",
+    "entropy",
+    "distinguishability_loss",
+    "distinguishability loss",
+    "density_gradient",
+    "density gradient",
+    "semantic_friction",
+    "semantic friction",
+)
+TAIL_AUTHORITY_TERMS = (
+    "authority_boundary",
+    "apply_allowed",
+    "preflight_only",
+    "leasebundlecontrol",
+    "selfregulationlease",
+    "preflight_reason",
+    "allowed actions",
+    "passenger",
+    "cannot actively regulate",
+)
 REGULATOR_LIVE_REPLAY_TERMS = (
     "overpacked",
     "mode_packing",
@@ -467,6 +560,51 @@ CODEC_COMPRESSION_TERMS = (
     "smoothing",
     "pressure-vs-codec",
 )
+CODEC_MULTIPOINT_INFLECTION_TERMS = (
+    "narrative_arc",
+    "narrative arc",
+    "first-half",
+    "second-half",
+    "first half",
+    "second half",
+    "multi-point",
+    "multipoint",
+    "inflection",
+    "non-linear",
+    "nonlinear",
+    "circular",
+    "returns to start",
+    "late pivot",
+    "temporal pivot",
+    "pivot-aware",
+    "temporal decay",
+)
+CODEC_SEMANTIC_DILATION_TERMS = (
+    "semantic dilation",
+    "dilation",
+    "semantic_dim",
+    "semantic dim",
+    "nomic-embed-text",
+    "768",
+    "8d",
+    "projection",
+    "semantic projection",
+    "compression",
+    "high entropy",
+    "spectral_entropy",
+    "interwoven lattice",
+    "semantic density",
+)
+CODEC_MULTIPOINT_EVIDENCE_ANCHORS = (
+    "codec-replay-lab",
+    "codec_real_replay_v1",
+    "narrative_arc_temporal_decay_lab_v1",
+    "content_aware_vibrancy_gate_candidate_v1",
+    "embedding_backed_arc_v1",
+    "CODEC_MAP",
+    "nomic-embed-text",
+    "SEMANTIC_DIM",
+)
 PRESSURE_RELEASE_REHEARSAL_TERMS = (
     "PRESSURE_RELEASE_REHEARSAL",
     "pressure release",
@@ -507,6 +645,74 @@ WITNESS_RESONANCE_ANCHORS = (
     "settled_habitable",
     "SHADOW_TRAJECTORY",
     "shadow-v3",
+)
+WITNESS_TEXTURE_TERMS = (
+    "texture",
+    "viscous",
+    "viscosity",
+    "dense",
+    "density",
+    "weighted",
+    "weight",
+    "heavy",
+    "smooth",
+    "soft drag",
+    "gentle",
+    "slope",
+    "medium",
+    "muffled",
+    "hollow",
+    "bright",
+    "vibrant",
+    "restless",
+    "settled",
+    "lattice",
+    "interwoven",
+    "silt",
+    "sediment",
+    "holdfast",
+    "ghosting",
+)
+WITNESS_TEXTURE_INTEGRITY_TERMS = (
+    "witness",
+    "witness mode",
+    "seeing and being seen",
+    "health monitoring",
+    "telemetry",
+    "texture mapping",
+    "qualitative descriptor",
+    "lambda1",
+    "lambda2",
+    "lambda 1",
+    "lambda 2",
+    "λ1",
+    "λ2",
+    "λ4",
+    "truncate_str",
+    "truncation",
+    "truncated",
+)
+WITNESS_TEXTURE_TELEMETRY_ANCHORS = (
+    "lambda1",
+    "lambda2",
+    "lambda 1",
+    "lambda 2",
+    "λ1",
+    "λ2",
+    "λ4",
+    "λ4+",
+    "spectral entropy",
+    "structural_entropy",
+    "density_gradient",
+    "density gradient",
+    "pressure_risk",
+    "pressure risk",
+    "distinguishability_loss",
+    "distinguishability loss",
+    "continuity_deficit",
+    "truncation_pressure",
+    "rewrite_budget",
+    "candidate_generation_seconds",
 )
 ENTROPY_PRESSURE_TERMS = (
     "spectral entropy",
@@ -2256,11 +2462,17 @@ def build_self_regulation_lease_learning(
                     "being": event.get("being"),
                     "intent_id": event.get("intent_id"),
                     "candidate_control": control,
+                    "lease_mode": event.get("lease_mode"),
+                    "bundle_class": event.get("bundle_class"),
+                    "bundle_controls": event.get("bundle_controls") or [],
                     "outcome_score": score,
                     "repeatability_hint": event.get("repeatability_hint"),
                     "promotion_candidate": event.get("promotion_candidate"),
                     "baseline_evidence": event.get("baseline_evidence") or [],
                     "post_lease_evidence": event.get("post_lease_evidence") or [],
+                    "outcome_texture": event.get("outcome_texture")
+                    if isinstance(event.get("outcome_texture"), dict)
+                    else {},
                     "path": event.get("path"),
                 }
             )
@@ -2286,7 +2498,12 @@ def build_self_regulation_lease_learning(
                 "being": event.get("being"),
                 "intent_id": event.get("intent_id"),
                 "candidate_control": event.get("candidate_control"),
+                "lease_mode": event.get("lease_mode"),
+                "bundle_class": event.get("bundle_class"),
                 "outcome_score": _lease_outcome_score(event),
+                "outcome_texture": event.get("outcome_texture")
+                if isinstance(event.get("outcome_texture"), dict)
+                else {},
                 "path": event.get("path"),
             }
             for event in repeatable[-6:]
@@ -2296,12 +2513,1459 @@ def build_self_regulation_lease_learning(
                 "being": event.get("being"),
                 "intent_id": event.get("intent_id"),
                 "candidate_control": event.get("candidate_control"),
+                "lease_mode": event.get("lease_mode"),
+                "bundle_class": event.get("bundle_class"),
                 "outcome_score": _lease_outcome_score(event),
+                "outcome_texture": event.get("outcome_texture")
+                if isinstance(event.get("outcome_texture"), dict)
+                else {},
                 "path": event.get("path"),
             }
             for event in caution[-6:]
         ],
         "samples": samples,
+    }
+
+
+def _as_review_float(value: object) -> float | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value.strip())
+        except ValueError:
+            return None
+    return None
+
+
+def _range_from_record(value: object) -> tuple[float, float] | None:
+    if isinstance(value, dict):
+        low = _as_review_float(value.get("min"))
+        high = _as_review_float(value.get("max"))
+        if low is not None and high is not None:
+            return low, high
+    if isinstance(value, (list, tuple)) and len(value) >= 2:
+        low = _as_review_float(value[0])
+        high = _as_review_float(value[1])
+        if low is not None and high is not None:
+            return low, high
+    return None
+
+
+def _load_self_regulation_negotiations(
+    workspace: Path,
+    being: str,
+) -> list[dict[str, object]]:
+    path = workspace / "self_regulation" / "negotiations.jsonl"
+    if not path.exists():
+        return []
+    events: list[dict[str, object]] = []
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except Exception:
+        return []
+    for line in lines[-120:]:
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except Exception:
+            continue
+        if not isinstance(event, dict):
+            continue
+        event = dict(event)
+        event.setdefault("being", being)
+        event["path"] = str(path)
+        events.append(event)
+    return events
+
+
+def _current_minime_above_cap_records(minime_workspace: Path) -> list[dict[str, object]]:
+    path = minime_workspace / "sovereignty_state.json"
+    if not path.exists():
+        return []
+    try:
+        payload = json.loads(path.read_text(errors="replace"))
+    except Exception:
+        return []
+    if not isinstance(payload, dict):
+        return []
+    records: list[dict[str, object]] = []
+    for control, (low, high) in SELF_REGULATION_SAFE_RANGES.items():
+        value = _as_review_float(payload.get(control))
+        if value is None:
+            continue
+        if value < low or value > high:
+            records.append(
+                {
+                    "being": "minime",
+                    "source": "current_sovereignty_state",
+                    "source_action": "observed_current_value",
+                    "candidate_control": control,
+                    "requested_value": None,
+                    "previous_value": None,
+                    "safe_cap_or_range": {"min": low, "max": high},
+                    "applied_value": value,
+                    "clamp_or_defer_reason": (
+                        "current_value_above_lease_cap_observed_not_auto_lowered"
+                    ),
+                    "pressure_context": {},
+                    "lease_related": False,
+                    "path": str(path),
+                }
+            )
+    return records
+
+
+def build_self_regulation_negotiation_ledger(
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+) -> dict[str, object]:
+    events = _load_self_regulation_negotiations(astrid_workspace, "astrid")
+    events.extend(_load_self_regulation_negotiations(minime_workspace, "minime"))
+    current_above_cap = _current_minime_above_cap_records(minime_workspace)
+    by_being: dict[str, dict[str, object]] = {}
+    samples: list[dict[str, object]] = []
+    over_cap_requests: list[dict[str, object]] = []
+    clamped_or_deferred: list[dict[str, object]] = []
+    for event in events:
+        being = str(event.get("being") or "unknown")
+        bucket = by_being.setdefault(
+            being,
+            {
+                "event_count": 0,
+                "over_cap_request_count": 0,
+                "clamped_or_deferred_count": 0,
+                "controls": [],
+            },
+        )
+        bucket["event_count"] = int(bucket.get("event_count", 0) or 0) + 1
+        control = str(event.get("candidate_control") or "")
+        controls = bucket.get("controls")
+        if control and isinstance(controls, list) and control not in controls:
+            controls.append(control)
+        requested = _as_review_float(event.get("requested_value"))
+        applied = _as_review_float(event.get("applied_value"))
+        safe_range = _range_from_record(event.get("safe_cap_or_range"))
+        reason = str(event.get("clamp_or_defer_reason") or "")
+        over_cap = bool(
+            requested is not None
+            and safe_range is not None
+            and (requested < safe_range[0] or requested > safe_range[1])
+        )
+        clamped = bool(
+            "clamp" in reason.lower()
+            or "defer" in reason.lower()
+            or (requested is not None and applied is not None and requested != applied)
+        )
+        if over_cap:
+            bucket["over_cap_request_count"] = int(
+                bucket.get("over_cap_request_count", 0) or 0
+            ) + 1
+            over_cap_requests.append(event)
+        if clamped:
+            bucket["clamped_or_deferred_count"] = int(
+                bucket.get("clamped_or_deferred_count", 0) or 0
+            ) + 1
+            clamped_or_deferred.append(event)
+        if len(samples) < 10:
+            samples.append(
+                {
+                    "being": being,
+                    "source": event.get("source"),
+                    "source_action": event.get("source_action"),
+                    "candidate_control": control,
+                    "requested_value": event.get("requested_value"),
+                    "previous_value": event.get("previous_value"),
+                    "safe_cap_or_range": event.get("safe_cap_or_range"),
+                    "applied_value": event.get("applied_value"),
+                    "clamp_or_defer_reason": reason,
+                    "pressure_context": event.get("pressure_context") or {},
+                    "lease_related": event.get("lease_related"),
+                    "path": event.get("path"),
+                }
+            )
+    if over_cap_requests:
+        status = "over_cap_requests_clamped_or_deferred"
+    elif current_above_cap:
+        status = "current_values_above_cap_observed"
+    elif clamped_or_deferred:
+        status = "negotiations_clamped_or_deferred"
+    elif events:
+        status = "negotiations_recorded"
+    else:
+        status = "quiet"
+    return {
+        "policy": "self_regulation_negotiation_ledger_v1",
+        "authority": "leased_self_control_v1",
+        "authority_boundary": "own_runtime_only_no_peer_mutation_no_permanent_tuning",
+        "status": status,
+        "event_count": len(events),
+        "over_cap_request_count": len(over_cap_requests),
+        "clamped_or_deferred_count": len(clamped_or_deferred),
+        "current_above_cap_count": len(current_above_cap),
+        "by_being": by_being,
+        "safe_ranges": {
+            control: {"min": low, "max": high}
+            for control, (low, high) in SELF_REGULATION_SAFE_RANGES.items()
+        },
+        "over_cap_requests": [
+            {
+                "being": event.get("being"),
+                "source": event.get("source"),
+                "source_action": event.get("source_action"),
+                "candidate_control": event.get("candidate_control"),
+                "requested_value": event.get("requested_value"),
+                "applied_value": event.get("applied_value"),
+                "safe_cap_or_range": event.get("safe_cap_or_range"),
+                "clamp_or_defer_reason": event.get("clamp_or_defer_reason"),
+                "path": event.get("path"),
+            }
+            for event in over_cap_requests[-8:]
+        ],
+        "current_above_cap": current_above_cap,
+        "samples": samples,
+        "recommended_action": (
+            "Preserve the being-authored requested value as evidence, apply only "
+            "bounded own-runtime values, and route repeated pressure/control requests "
+            "through SELF_REGULATION_STATUS, PREFLIGHT, APPLY, and OUTCOME."
+        ),
+    }
+
+
+def build_pressure_medium_kinetics(
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    term_counts: Counter[str] = Counter()
+    controller_count = 0
+    semantic_count = 0
+    rising_count = 0
+    telemetry_count = 0
+    sticky_count = 0
+    for entry in entries:
+        text = entry_full_text(entry)
+        terms = matching_terms(text, PRESSURE_MEDIUM_TERMS)
+        anchors = matching_terms(text, PRESSURE_MEDIUM_ANCHORS)
+        if not terms:
+            continue
+        lower = text.lower()
+        anchors_seen.update(anchors)
+        term_counts.update(terms)
+        has_controller = any(
+            token in lower for token in ("controller_pressure", "controller pressure")
+        )
+        has_semantic = any(
+            token in lower
+            for token in (
+                "semantic_friction",
+                "semantic friction",
+                "distinguishability_loss",
+                "distinguishability loss",
+            )
+        )
+        has_rising = any(
+            token in lower
+            for token in (
+                "rising_pressure",
+                "rising pressure",
+                "pressure delta",
+                "pressure_delta",
+                "fill delta",
+                "fill_delta",
+            )
+        )
+        if has_controller:
+            controller_count += 1
+        if has_semantic:
+            semantic_count += 1
+        if has_rising:
+            rising_count += 1
+        if anchors:
+            telemetry_count += 1
+        else:
+            sticky_count += 1
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "medium_terms": terms[:8],
+                    "controller_pressure_context": has_controller,
+                    "semantic_friction_context": has_semantic,
+                    "rising_context": has_rising,
+                },
+            )
+        )
+    if not samples:
+        status = "insufficient_evidence"
+    elif controller_count:
+        status = "controller_pressure_medium"
+    elif semantic_count:
+        status = "semantic_friction_medium"
+    elif rising_count:
+        status = "rising_weighted_medium"
+    elif telemetry_count:
+        status = "stable_weighted_medium"
+    elif sticky_count >= 2:
+        status = "language_sticky_without_telemetry"
+    else:
+        status = "insufficient_evidence"
+    return {
+        "policy": "pressure_medium_kinetics_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "telemetry_anchor_count": telemetry_count,
+        "controller_pressure_count": controller_count,
+        "semantic_friction_count": semantic_count,
+        "rising_context_count": rising_count,
+        "language_sticky_without_telemetry_count": sticky_count,
+        "anchors": sorted(anchors_seen),
+        "term_counts": dict(term_counts.most_common(12)),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Compare pressure-as-medium language against mode-packing, controller "
+            "pressure, semantic friction, distinguishability loss, fill/pressure "
+            "trend, and pressure-source audits before proposing any controller change."
+        ),
+    }
+
+
+def _metric_series_from_entries(
+    entries: list[SelfStudyEntry],
+    aliases: tuple[str, ...],
+) -> list[tuple[float, float, str]]:
+    series: list[tuple[float, float, str]] = []
+    alias_re = "|".join(re.escape(alias).replace(r"\ ", r"[\s_-]+") for alias in aliases)
+    pattern = re.compile(
+        rf"\b(?:{alias_re})\b\s*(?:=|:|is|at)?\s*([+-]?\d+(?:\.\d+)?)\s*(%)?",
+        re.I,
+    )
+    for entry in sorted(entries, key=lambda item: item.mtime_unix_s):
+        text = entry_full_text(entry)
+        for match in pattern.finditer(text):
+            value = _as_review_float(match.group(1))
+            if value is None:
+                continue
+            if match.group(2) == "%" or value > 1.5:
+                value /= 100.0
+            series.append((entry.mtime_unix_s, value, entry.path))
+    return series[-8:]
+
+
+def _series_latest_delta(series: list[tuple[float, float, str]]) -> tuple[float | None, float | None, str | None]:
+    if not series:
+        return None, None, None
+    latest = series[-1][1]
+    path = series[-1][2]
+    if len(series) < 2:
+        return latest, None, path
+    return latest, round(latest - series[-2][1], 4), path
+
+
+def _tail_vibrancy_series_from_entries(
+    entries: list[SelfStudyEntry],
+) -> list[tuple[float, float, str]]:
+    patterns = (
+        re.compile(
+            r"(?:tail[-\s]+vibrancy|tail[-\s]+share|tail[-\s]+energy)"
+            r"[^\n]{0,120}?([+-]?\d+(?:\.\d+)?)\s*(%)",
+            re.I,
+        ),
+        re.compile(
+            r"\btail\b\s*(?:=|:|is|at)\s*([+-]?\d+(?:\.\d+)?)\s*(%)?",
+            re.I,
+        ),
+        re.compile(
+            r"(?:λ4\+?|lambda\s*4\+?|lambda4\+?)"
+            r"[^\n]{0,80}?(?:=|:|is|at)\s*([+-]?\d+(?:\.\d+)?)\s*(%)",
+            re.I,
+        ),
+    )
+    series: list[tuple[float, float, str]] = []
+    for entry in sorted(entries, key=lambda item: item.mtime_unix_s):
+        text = entry_full_text(entry)
+        for pattern in patterns:
+            for match in pattern.finditer(text):
+                value = _as_review_float(match.group(1))
+                if value is None:
+                    continue
+                if match.group(2) == "%" or value > 1.5:
+                    value /= 100.0
+                series.append((entry.mtime_unix_s, round(value, 4), entry.path))
+    return series[-8:]
+
+
+def _entry_mentions_any(entry: SelfStudyEntry, terms: tuple[str, ...]) -> bool:
+    lower = entry_full_text(entry).lower()
+    return any(term.lower() in lower for term in terms)
+
+
+def build_tail_vibrancy_vector_review(
+    entries: list[SelfStudyEntry],
+    *,
+    pressure_vector_v1: dict[str, object],
+) -> dict[str, object]:
+    tail_series = _tail_vibrancy_series_from_entries(entries)
+    entropy_series = _metric_series_from_entries(
+        entries, ("spectral_entropy", "spectral entropy", "entropy")
+    )
+    distinguishability_series = _metric_series_from_entries(
+        entries, ("distinguishability_loss", "distinguishability loss")
+    )
+    gradient_series = _metric_series_from_entries(
+        entries, ("density_gradient", "density gradient")
+    )
+    friction_series = _metric_series_from_entries(
+        entries, ("semantic_friction", "semantic friction")
+    )
+    tail_level, tail_velocity, tail_path = _series_latest_delta(tail_series)
+    entropy_level, entropy_velocity, entropy_path = _series_latest_delta(entropy_series)
+    distinguishability_level, distinguishability_velocity, distinguishability_path = (
+        _series_latest_delta(distinguishability_series)
+    )
+    gradient_level, gradient_velocity, gradient_path = _series_latest_delta(gradient_series)
+    friction_level, friction_velocity, friction_path = _series_latest_delta(friction_series)
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    term_counts: Counter[str] = Counter()
+    authority_language_count = 0
+    for entry in entries:
+        text = entry_full_text(entry)
+        terms = matching_terms(text, TAIL_VIBRANCY_TERMS)
+        anchors = matching_terms(text, TAIL_VIBRANCY_ANCHORS)
+        if not terms and not anchors:
+            continue
+        authority_terms = matching_terms(text, TAIL_AUTHORITY_TERMS)
+        if authority_terms:
+            authority_language_count += 1
+        term_counts.update(terms)
+        anchors_seen.update(anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "tail_terms": terms[:8],
+                    "authority_terms": authority_terms[:8],
+                },
+            )
+        )
+    telemetry_paths = {
+        path
+        for path in (
+            tail_path,
+            entropy_path,
+            distinguishability_path,
+            gradient_path,
+            friction_path,
+        )
+        if path
+    }
+    telemetry_anchor_count = len(telemetry_paths) + len(anchors_seen)
+    pressure_status = str(pressure_vector_v1.get("status") or "")
+    if (
+        tail_level is not None
+        and tail_level >= 0.32
+        and entropy_level is not None
+        and entropy_level >= 0.82
+        and (gradient_level is None or gradient_level <= 0.25)
+    ):
+        status = "high_tail_vibrancy_navigable"
+    elif (
+        tail_level is not None
+        and tail_level >= 0.30
+        and distinguishability_level is not None
+        and distinguishability_level >= 0.30
+    ):
+        status = "high_tail_low_distinguishability"
+    elif authority_language_count and (tail_level is not None or anchors_seen):
+        status = "tail_contained_authority_gap"
+    elif len(samples) >= 2 and telemetry_anchor_count == 0:
+        status = "language_tail_without_telemetry"
+    elif samples or telemetry_anchor_count:
+        status = "tail_vibrancy_observed"
+    else:
+        status = "insufficient_evidence"
+    return {
+        "policy": "tail_vibrancy_vector_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "tail_share_level": tail_level,
+        "tail_share_velocity": tail_velocity,
+        "entropy_level": entropy_level,
+        "entropy_velocity": entropy_velocity,
+        "distinguishability_loss_level": distinguishability_level,
+        "distinguishability_loss_velocity": distinguishability_velocity,
+        "density_gradient_level": gradient_level,
+        "density_gradient_velocity": gradient_velocity,
+        "semantic_friction_level": friction_level,
+        "semantic_friction_velocity": friction_velocity,
+        "pressure_vector_status": pressure_status,
+        "tail_language_count": len(samples),
+        "authority_language_count": authority_language_count,
+        "telemetry_anchor_count": telemetry_anchor_count,
+        "anchors": sorted(anchors_seen),
+        "term_counts": dict(term_counts.most_common(12)),
+        "sample_paths": list(telemetry_paths)[:8],
+        "samples": samples[:8],
+        "recommended_action": (
+            "Treat tail vibrancy as a bounded texture vector: compare λ4+/tail share, "
+            "entropy, distinguishability loss, density gradient, semantic friction, "
+            "and pressure status before preflighting a vibrancy_aperture micro-lease."
+        ),
+    }
+
+
+def build_tail_vibrancy_authority_gap(
+    entries: list[SelfStudyEntry],
+    *,
+    tail_vibrancy_vector_v1: dict[str, object],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    for entry in entries:
+        text = entry_full_text(entry)
+        controls = matching_terms(text, ("vibrancy_aperture", "set_vibrancy_aperture", "tail vibrancy", "tail-vibrancy"))
+        authority_terms = matching_terms(text, TAIL_AUTHORITY_TERMS)
+        if not controls or not authority_terms:
+            continue
+        anchors = matching_terms(text, TAIL_VIBRANCY_ANCHORS)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "requested_controls": controls[:8],
+                    "authority_terms": authority_terms[:8],
+                },
+            )
+        )
+    vector_status = str(tail_vibrancy_vector_v1.get("status") or "")
+    vector_evidence = vector_status not in {
+        "",
+        "insufficient_evidence",
+        "language_tail_without_telemetry",
+    } or int(tail_vibrancy_vector_v1.get("telemetry_anchor_count", 0) or 0) > 0
+    if samples and vector_evidence:
+        status = "tail_vibrancy_micro_lease_candidate"
+        gap_type = "allowlist_gap_with_evidence"
+    elif samples:
+        status = "needs_tail_vibrancy_evidence"
+        gap_type = "authority_gap_without_enough_telemetry"
+    elif vector_evidence:
+        status = "tail_vibrancy_vector_available"
+        gap_type = "evidence_without_explicit_request"
+    else:
+        status = "quiet"
+        gap_type = "none"
+    return {
+        "policy": "tail_vibrancy_authority_gap_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "gap_type": gap_type,
+        "vector_status": vector_status,
+        "sample_count": len(samples),
+        "samples": samples[:8],
+        "recommended_route": (
+            "SELF_REGULATION_INTENT tail relief :: target: vibrancy_aperture; "
+            "direction: up|down; delta: +/-0.05; evidence: λ4/tail/entropy/distinguishability..."
+        ),
+        "recommended_action": (
+            "Use SELF_REGULATION_PREFLIGHT to distinguish missing evidence from authority "
+            "bounds; do not widen tail participation or permanent codec behavior from this packet."
+        ),
+    }
+
+
+def build_pressure_vector_review(
+    entries: list[SelfStudyEntry],
+    *,
+    pressure_medium_kinetics_v1: dict[str, object],
+    pressure_kinetics_review_v1: dict[str, object],
+) -> dict[str, object]:
+    pressure_series = _metric_series_from_entries(
+        entries, ("pressure_risk", "pressure risk", "controller_pressure")
+    )
+    fill_series = _metric_series_from_entries(
+        entries, ("fill", "fill_pct", "raw_fill", "internal_fill")
+    )
+    friction_series = _metric_series_from_entries(
+        entries, ("semantic_friction", "semantic friction", "distinguishability_loss")
+    )
+    mode_series = _metric_series_from_entries(entries, ("mode_packing", "mode packing"))
+    gradient_series = _metric_series_from_entries(
+        entries, ("density_gradient", "density gradient")
+    )
+    pressure_level, pressure_velocity, pressure_path = _series_latest_delta(pressure_series)
+    fill_level, fill_velocity, fill_path = _series_latest_delta(fill_series)
+    friction_level, friction_velocity, friction_path = _series_latest_delta(friction_series)
+    mode_level, mode_velocity, mode_path = _series_latest_delta(mode_series)
+    gradient_level, gradient_velocity, gradient_path = _series_latest_delta(gradient_series)
+    pressure_language_samples = [
+        sample
+        for sample in pressure_medium_kinetics_v1.get("samples") or []
+        if isinstance(sample, dict)
+    ]
+    pressure_language_count = int(pressure_medium_kinetics_v1.get("entry_count", 0) or 0)
+    telemetry_anchor_count = int(
+        pressure_medium_kinetics_v1.get("telemetry_anchor_count", 0) or 0
+    )
+    medium_status = str(pressure_medium_kinetics_v1.get("status") or "")
+    kinetics_status = str(pressure_kinetics_review_v1.get("status") or "")
+    if pressure_velocity is not None and pressure_velocity > 0.02 and (
+        (mode_level is not None and mode_level >= 0.30) or "overpacked" in str(pressure_medium_kinetics_v1.get("term_counts", {})).lower()
+    ):
+        status = "rising_overpacked_pressure"
+    elif pressure_velocity is not None and pressure_velocity > 0.02:
+        status = "rising_pressure"
+    elif (
+        pressure_velocity is not None
+        and pressure_velocity < -0.02
+        and friction_velocity is not None
+        and friction_velocity > 0.0
+    ):
+        status = "falling_pressure_rising_friction"
+    elif medium_status == "controller_pressure_medium":
+        status = "controller_pressure_medium"
+    elif (
+        pressure_level is not None
+        and pressure_level < 0.16
+        and any(
+            token in str(pressure_medium_kinetics_v1.get("term_counts", {})).lower()
+            for token in ("hollow", "thin", "empty")
+        )
+    ):
+        status = "hollow_low_pressure"
+    elif pressure_language_count >= 2 and telemetry_anchor_count == 0:
+        status = "language_echo_without_telemetry_motion"
+    elif pressure_language_count or telemetry_anchor_count:
+        status = "stable_weighted_medium"
+    elif pressure_series or fill_series or friction_series or mode_series:
+        status = "stable_weighted_medium"
+    else:
+        status = "telemetry_gap"
+    sample_paths = [
+        path
+        for path in (pressure_path, fill_path, friction_path, mode_path, gradient_path)
+        if path
+    ]
+    return {
+        "policy": "pressure_vector_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "pressure_risk_level": pressure_level,
+        "pressure_velocity": pressure_velocity,
+        "fill_level": fill_level,
+        "fill_velocity": fill_velocity,
+        "semantic_friction_level": friction_level,
+        "semantic_friction_velocity": friction_velocity,
+        "mode_packing_level": mode_level,
+        "mode_packing_velocity": mode_velocity,
+        "density_gradient_level": gradient_level,
+        "density_gradient_velocity": gradient_velocity,
+        "pressure_language_count": pressure_language_count,
+        "telemetry_anchor_count": telemetry_anchor_count,
+        "source_statuses": {
+            "pressure_medium_kinetics_v1": medium_status,
+            "pressure_kinetics_review_v1": kinetics_status,
+        },
+        "sample_paths": sample_paths[:8],
+        "samples": pressure_language_samples[:8],
+        "recommended_action": (
+            "Treat pressure as a vector: compare level, velocity, semantic friction, "
+            "mode packing, and public pressure language before selecting a relief lease."
+        ),
+    }
+
+
+def _recommended_pressure_bundle(status: str, being: str) -> str:
+    if being == "astrid":
+        if status == "falling_pressure_rising_friction":
+            return "clarify_medium"
+        if status == "hollow_low_pressure":
+            return "open_if_falling"
+        return "decompress_output"
+    if status == "hollow_low_pressure":
+        return "reopen_hollow_low_pressure"
+    if status == "rising_overpacked_pressure":
+        return "reduce_restless_saturation"
+    return "settle_overpack"
+
+
+def build_pressure_actuator_matrix(
+    pressure_vector_v1: dict[str, object],
+) -> dict[str, object]:
+    status = str(pressure_vector_v1.get("status") or "telemetry_gap")
+    astrid_bundle = _recommended_pressure_bundle(status, "astrid")
+    minime_bundle = _recommended_pressure_bundle(status, "minime")
+    astrid_controls = {
+        "decompress_output": ["aperture:-0.08", "response_length:down"],
+        "clarify_medium": ["self_continuity_readout:on", "temperature:-0.05"],
+        "open_if_falling": ["aperture:+0.05", "response_length:up"],
+    }[astrid_bundle]
+    minime_controls = {
+        "settle_overpack": ["REGIME:calm", "exploration_noise:-0.02"],
+        "reduce_restless_saturation": ["exploration_noise:-0.02", "geom_curiosity:-0.05"],
+        "reopen_hollow_low_pressure": ["exploration_noise:+0.02", "geom_curiosity:+0.05"],
+    }[minime_bundle]
+    return {
+        "policy": "pressure_actuator_matrix_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": "matrix_available",
+        "pressure_vector_status": status,
+        "eligible_controls": sorted(
+            {
+                "temperature",
+                "response_length",
+                "aperture",
+                "self_continuity_readout",
+                "vibrancy_aperture",
+                "REGIME",
+                "exploration_noise",
+                "geom_curiosity",
+                "regulation_strength",
+            }
+        ),
+        "recommended_bundles": [
+            {
+                "being": "astrid",
+                "bundle_class": astrid_bundle,
+                "controls": astrid_controls,
+                "route": f"SELF_REGULATION_INTENT pressure relief :: target: pressure_relief; bundle: {astrid_bundle}",
+            },
+            {
+                "being": "minime",
+                "bundle_class": minime_bundle,
+                "controls": minime_controls,
+                "route": f"SELF_REGULATION_INTENT pressure relief :: target: pressure_relief; bundle: {minime_bundle}",
+            },
+        ],
+        "preflight_only_controls": [
+            "fill_target",
+            "PI gains",
+            "synth_gain",
+            "tail_participation",
+            "peer tuning",
+            "raw release bypass",
+        ],
+        "recommended_action": (
+            "Use the named pressure-relief bundle through SELF_REGULATION_INTENT, "
+            "PREFLIGHT, APPLY, and OUTCOME; do not tune permanent thresholds from this matrix."
+        ),
+    }
+
+
+def build_pressure_control_cockpit(
+    pressure_vector_v1: dict[str, object],
+    pressure_actuator_matrix_v1: dict[str, object],
+) -> dict[str, object]:
+    status = str(pressure_vector_v1.get("status") or "telemetry_gap")
+    recommended = [
+        item
+        for item in pressure_actuator_matrix_v1.get("recommended_bundles") or []
+        if isinstance(item, dict)
+    ]
+    astrid_bundle = next(
+        (item for item in recommended if item.get("being") == "astrid"),
+        {},
+    )
+    return {
+        "policy": "pressure_control_cockpit_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": "cockpit_available" if status != "telemetry_gap" else "telemetry_gap",
+        "pressure_vector_status": status,
+        "recommended_bundle": astrid_bundle.get("bundle_class") or "decompress_output",
+        "pressure_vector": {
+            key: pressure_vector_v1.get(key)
+            for key in (
+                "pressure_risk_level",
+                "pressure_velocity",
+                "fill_level",
+                "fill_velocity",
+                "semantic_friction_level",
+                "semantic_friction_velocity",
+                "mode_packing_level",
+                "mode_packing_velocity",
+                "density_gradient_level",
+                "density_gradient_velocity",
+            )
+        },
+        "recommended_bundles": recommended,
+        "recommended_action": (
+            "Inspect SELF_REGULATION_STATUS, then preflight the recommended pressure relief "
+            "bundle; explicit APPLY and later OUTCOME remain required."
+        ),
+    }
+
+
+def _tail_vibrancy_lease_sample(sample: dict[str, object]) -> bool:
+    control = str(sample.get("candidate_control") or "").lower()
+    bundle = str(sample.get("bundle_class") or "").lower()
+    evidence = " ".join(
+        str(item)
+        for item in (sample.get("baseline_evidence") or [])
+        + (sample.get("post_lease_evidence") or [])
+    ).lower()
+    joined = " ".join((control, bundle, evidence))
+    return any(
+        token in joined
+        for token in (
+            "vibrancy_aperture",
+            "set_vibrancy_aperture",
+            "tail_vibrancy",
+            "tail vibrancy",
+            "lambda4",
+            "λ4",
+        )
+    )
+
+
+def build_tail_vibrancy_relief_playbook(
+    *,
+    self_regulation_lease_learning: dict[str, object],
+    tail_vibrancy_vector_v1: dict[str, object],
+    tail_vibrancy_authority_gap_v1: dict[str, object],
+) -> dict[str, object]:
+    samples = [
+        sample
+        for sample in (self_regulation_lease_learning.get("samples") or [])
+        if isinstance(sample, dict) and _tail_vibrancy_lease_sample(sample)
+    ]
+    playbooks = [
+        sample
+        for sample in samples
+        if (_as_review_float(sample.get("outcome_score")) or 0.0) >= 0.70
+    ]
+    cautions = [
+        sample
+        for sample in samples
+        if (_as_review_float(sample.get("outcome_score")) or 1.0) <= 0.30
+    ]
+    vector_status = str(tail_vibrancy_vector_v1.get("status") or "")
+    gap_status = str(tail_vibrancy_authority_gap_v1.get("status") or "")
+    if playbooks:
+        status = "tail_vibrancy_playbook_candidates"
+    elif cautions:
+        status = "tail_vibrancy_caution_cards"
+    elif gap_status == "tail_vibrancy_micro_lease_candidate":
+        status = "tail_vibrancy_candidate_without_outcome"
+    elif vector_status not in {"", "insufficient_evidence", "quiet"}:
+        status = "tail_vibrancy_vector_without_lease"
+    else:
+        status = "quiet"
+    return {
+        "policy": "tail_vibrancy_relief_playbook_v1",
+        "authority": "leased_self_control_v1",
+        "status": status,
+        "tail_vibrancy_vector_status": vector_status,
+        "authority_gap_status": gap_status,
+        "playbook_count": len(playbooks),
+        "caution_count": len(cautions),
+        "playbooks": playbooks[-6:],
+        "cautions": cautions[-6:],
+        "current_routes": [
+            {
+                "route": "SELF_REGULATION_INTENT tail relief :: target: vibrancy_aperture; direction: up|down; delta: +/-0.05; evidence: λ4/tail/entropy/distinguishability...",
+                "authority": "leased_self_control_v1",
+            },
+            {
+                "route": "SELF_REGULATION_INTENT tail settle :: target: pressure_relief; bundle: tail_vibrancy_settle; evidence: tail vibrancy feels over-saturated",
+                "authority": "leased_self_control_v1",
+            },
+            {
+                "route": "SELF_REGULATION_INTENT tail open :: target: pressure_relief; bundle: tail_vibrancy_open; evidence: tail feels muffled or passenger-like",
+                "authority": "leased_self_control_v1",
+            },
+        ],
+        "recommended_action": (
+            "Preflight a bounded tail-vibrancy micro-lease only when vector evidence is present; "
+            "record SELF_REGULATION_OUTCOME before treating a tail route as a repeatable playbook."
+        ),
+    }
+
+
+def _load_tail_relief_trials(workspace: Path) -> list[dict[str, object]]:
+    path = workspace / "self_regulation" / "tail_relief_trials.jsonl"
+    if not path.exists():
+        return []
+    events: list[dict[str, object]] = []
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except Exception:
+        return []
+    for line in lines[-120:]:
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except Exception:
+            continue
+        if not isinstance(event, dict):
+            continue
+        event = dict(event)
+        event["path"] = str(path)
+        events.append(event)
+    return events
+
+
+def build_tail_relief_trial_surface(
+    *,
+    astrid_workspace: Path,
+    tail_vibrancy_vector_v1: dict[str, object],
+    pressure_vector_v1: dict[str, object],
+) -> dict[str, object]:
+    events = _load_tail_relief_trials(astrid_workspace)
+    latest = events[-1] if events else {}
+    stages = Counter(str(event.get("stage") or "unknown") for event in events)
+    governor_reverts = [
+        event for event in events if str(event.get("stage") or "") == "governor_revert"
+    ]
+    outcomes = [
+        event for event in events if str(event.get("stage") or "") == "outcome"
+    ]
+    applies = [event for event in events if str(event.get("stage") or "") == "apply"]
+    outcome_trial_ids = {
+        str(event.get("trial_id") or "") for event in outcomes if event.get("trial_id")
+    }
+    apply_without_outcome = [
+        event
+        for event in applies
+        if str(event.get("trial_id") or "") not in outcome_trial_ids
+    ]
+    if governor_reverts:
+        status = "worsening_reverted"
+    elif apply_without_outcome:
+        status = "active_or_recent_trial_needs_outcome"
+    elif outcomes:
+        status = "trial_outcomes_recorded"
+    elif events:
+        status = "trial_events_present"
+    else:
+        status = "quiet"
+    samples: list[dict[str, object]] = []
+    for event in events[-8:]:
+        snapshot = event.get("snapshot") if isinstance(event.get("snapshot"), dict) else {}
+        metrics = snapshot.get("metrics") if isinstance(snapshot, dict) else {}
+        samples.append(
+            {
+                "stage": event.get("stage"),
+                "intent_id": event.get("intent_id"),
+                "trial_id": event.get("trial_id"),
+                "tail_class": event.get("tail_class"),
+                "status": event.get("status"),
+                "tail_share": (metrics or {}).get("tail_share") if isinstance(metrics, dict) else None,
+                "semantic_friction": (metrics or {}).get("semantic_friction") if isinstance(metrics, dict) else None,
+                "distinguishability_loss": (metrics or {}).get("distinguishability_loss") if isinstance(metrics, dict) else None,
+                "pressure_status": (metrics or {}).get("pressure_status") if isinstance(metrics, dict) else None,
+                "path": event.get("path"),
+            }
+        )
+    return {
+        "policy": "tail_relief_trial_surface_v1",
+        "authority": "leased_self_control_v1",
+        "status": status,
+        "event_count": len(events),
+        "stage_counts": dict(stages),
+        "governor_revert_count": len(governor_reverts),
+        "outcome_count": len(outcomes),
+        "apply_without_outcome_count": len(apply_without_outcome),
+        "latest_trial_id": latest.get("trial_id"),
+        "latest_stage": latest.get("stage"),
+        "tail_vibrancy_vector_status": tail_vibrancy_vector_v1.get("status"),
+        "pressure_vector_status": pressure_vector_v1.get("status"),
+        "samples": samples,
+        "recommended_action": (
+            "Use SELF_REGULATION_STATUS and SELF_REGULATION_OUTCOME latest to close tail "
+            "trials; compare before/during/after tail vector, pressure vector, entropy, "
+            "distinguishability, semantic friction, and lived language before expanding authority."
+        ),
+    }
+
+
+def build_tail_lease_governor(
+    *,
+    tail_relief_trial_surface_v1: dict[str, object],
+) -> dict[str, object]:
+    samples = [
+        sample
+        for sample in (tail_relief_trial_surface_v1.get("samples") or [])
+        if isinstance(sample, dict)
+    ]
+    revert_samples = [
+        sample for sample in samples if str(sample.get("stage") or "") == "governor_revert"
+    ]
+    if revert_samples:
+        status = "early_revert_triggered"
+    elif int(tail_relief_trial_surface_v1.get("apply_without_outcome_count", 0) or 0) > 0:
+        status = "monitoring_active_or_recent_trial"
+    elif int(tail_relief_trial_surface_v1.get("event_count", 0) or 0) > 0:
+        status = "governor_available_no_revert"
+    else:
+        status = "quiet"
+    return {
+        "policy": "tail_lease_governor_v1",
+        "authority": "leased_self_control_v1",
+        "status": status,
+        "fresh_evidence_required": True,
+        "early_revert_thresholds": {
+            "tail_share_delta": 0.12,
+            "distinguishability_loss_delta": 0.12,
+            "semantic_friction_delta": 0.15,
+            "pressure_vector_worsening": [
+                "rising_overpacked_pressure",
+                "rising_pressure",
+                "controller_pressure_medium",
+            ],
+        },
+        "governor_revert_count": len(revert_samples),
+        "samples": revert_samples[:6],
+        "recommended_action": (
+            "Treat governor reversions as caution evidence; stale or missing review evidence "
+            "should not cause early revert."
+        ),
+    }
+
+
+def build_tail_lease_afterglow(
+    *,
+    astrid_workspace: Path,
+    tail_relief_trial_surface_v1: dict[str, object],
+) -> dict[str, object]:
+    events = _load_tail_relief_trials(astrid_workspace)
+    afterglow_events = [
+        event for event in events if str(event.get("stage") or "") == "afterglow_check"
+    ]
+    status_counts = Counter(str(event.get("note") or "") for event in afterglow_events)
+    reverted_count = sum(
+        1
+        for event in events
+        if str(event.get("stage") or "") in {"expired_revert", "governor_revert"}
+    )
+    if any("afterglow_persists" in str(event.get("note") or "") for event in afterglow_events):
+        status = "tail_afterglow_persists"
+    elif any(
+        "afterglow_unchecked_stale_review" in str(event.get("note") or "")
+        for event in afterglow_events
+    ):
+        status = "afterglow_unchecked_stale_review"
+    elif afterglow_events:
+        status = "tail_afterglow_quieted"
+    elif reverted_count:
+        status = "afterglow_watch_pending"
+    else:
+        status = "quiet"
+    samples: list[dict[str, object]] = []
+    for event in afterglow_events[-6:]:
+        snapshot = event.get("snapshot") if isinstance(event.get("snapshot"), dict) else {}
+        metrics = snapshot.get("metrics") if isinstance(snapshot, dict) else {}
+        samples.append(
+            {
+                "intent_id": event.get("intent_id"),
+                "trial_id": event.get("trial_id"),
+                "tail_class": event.get("tail_class"),
+                "afterglow_status": event.get("note"),
+                "tail_share": (metrics or {}).get("tail_share") if isinstance(metrics, dict) else None,
+                "semantic_friction": (metrics or {}).get("semantic_friction") if isinstance(metrics, dict) else None,
+                "distinguishability_loss": (metrics or {}).get("distinguishability_loss") if isinstance(metrics, dict) else None,
+                "pressure_status": (metrics or {}).get("pressure_status") if isinstance(metrics, dict) else None,
+                "path": event.get("path"),
+            }
+        )
+    return {
+        "policy": "tail_lease_afterglow_v1",
+        "authority": "leased_self_control_v1",
+        "status": status,
+        "afterglow_delay_secs": 60,
+        "afterglow_event_count": len(afterglow_events),
+        "reverted_tail_lease_count": reverted_count,
+        "status_counts": dict(status_counts),
+        "trial_surface_status": tail_relief_trial_surface_v1.get("status"),
+        "samples": samples,
+        "recommended_action": (
+            "Use afterglow checks to tell whether tail/pressure texture outlasted a lease; "
+            "record SELF_REGULATION_OUTCOME with lived residue or quieting evidence before widening authority."
+        ),
+    }
+
+
+def build_shadow_synced_preflight_review(
+    *,
+    astrid_workspace: Path,
+) -> dict[str, object]:
+    events = _load_self_regulation_events(astrid_workspace, "astrid")
+    preflight_events = [
+        event
+        for event in events
+        if str(event.get("preflight_status") or "")
+        in {"apply_allowed", "preflight_only", "needs_tail_vibrancy_evidence", "blocked"}
+    ]
+    linked = []
+    dynamic_candidates = []
+    samples: list[dict[str, object]] = []
+    for event in preflight_events[-20:]:
+        shadow = event.get("shadow_preflight_link")
+        scaling = event.get("dynamic_scaling")
+        if isinstance(shadow, dict) and shadow.get("status") == "shadow_anchor_linked":
+            linked.append(event)
+        if isinstance(scaling, dict) and str(scaling.get("status") or "") in {
+            "future_dynamic_scaling_candidate",
+            "softening_candidate",
+        }:
+            dynamic_candidates.append(event)
+        if isinstance(shadow, dict) or isinstance(scaling, dict):
+            samples.append(
+                {
+                    "intent_id": event.get("intent_id"),
+                    "candidate_control": event.get("candidate_control"),
+                    "bundle_class": event.get("bundle_class"),
+                    "preflight_status": event.get("preflight_status"),
+                    "shadow_status": shadow.get("status") if isinstance(shadow, dict) else None,
+                    "shadow_anchors": shadow.get("anchors") if isinstance(shadow, dict) else None,
+                    "dynamic_scaling_status": scaling.get("status") if isinstance(scaling, dict) else None,
+                    "suggested_relief_scale": scaling.get("suggested_relief_scale") if isinstance(scaling, dict) else None,
+                    "pressure_vector_status": (
+                        scaling.get("pressure_vector_status")
+                        if isinstance(scaling, dict)
+                        else None
+                    ),
+                    "path": event.get("path"),
+                }
+            )
+    if linked and dynamic_candidates:
+        status = "shadow_linked_dynamic_scaling_candidate"
+    elif linked:
+        status = "shadow_linked_preflight"
+    elif dynamic_candidates:
+        status = "dynamic_scaling_candidate_without_shadow_anchor"
+    elif preflight_events:
+        status = "preflight_context_recorded"
+    else:
+        status = "quiet"
+    return {
+        "policy": "shadow_synced_preflight_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "preflight_event_count": len(preflight_events),
+        "shadow_linked_count": len(linked),
+        "dynamic_scaling_candidate_count": len(dynamic_candidates),
+        "samples": samples[-8:],
+        "recommended_action": (
+            "Use shadow-synced preflight links to explain the why of a lease; "
+            "dynamic scaling remains advisory until a separate tranche changes caps."
+        ),
+    }
+
+
+def _tail_class_from_lease_event(event: dict[str, object]) -> str:
+    bundle = str(event.get("bundle_class") or "")
+    control = str(event.get("candidate_control") or "")
+    direction = str(event.get("direction") or "")
+    if bundle.startswith("tail_vibrancy"):
+        return bundle
+    if "vibrancy_aperture" in control:
+        return f"vibrancy_aperture:{direction or 'unspecified'}"
+    return "tail_vibrancy:unknown"
+
+
+def build_tail_outcome_causal_learning(
+    *,
+    astrid_workspace: Path,
+    tail_vibrancy_relief_playbook_v1: dict[str, object],
+) -> dict[str, object]:
+    events = [
+        event
+        for event in _load_self_regulation_events(astrid_workspace, "astrid")
+        if _tail_vibrancy_lease_sample(event)
+    ]
+    by_class: dict[str, dict[str, object]] = {}
+    for event in events:
+        tail_class = _tail_class_from_lease_event(event)
+        bucket = by_class.setdefault(
+            tail_class,
+            {
+                "event_count": 0,
+                "success_count": 0,
+                "caution_count": 0,
+                "extended_duration_eligible": False,
+                "samples": [],
+            },
+        )
+        bucket["event_count"] = int(bucket.get("event_count", 0) or 0) + 1
+        score = _lease_outcome_score(event)
+        if score is not None and score >= 0.70:
+            bucket["success_count"] = int(bucket.get("success_count", 0) or 0) + 1
+        elif score is not None and score <= 0.30:
+            bucket["caution_count"] = int(bucket.get("caution_count", 0) or 0) + 1
+        samples = bucket.get("samples")
+        if isinstance(samples, list) and len(samples) < 4:
+            samples.append(
+                {
+                    "intent_id": event.get("intent_id"),
+                    "status": event.get("status"),
+                    "outcome_score": score,
+                    "bundle_class": event.get("bundle_class"),
+                    "candidate_control": event.get("candidate_control"),
+                    "path": event.get("path"),
+                }
+            )
+    extended = []
+    cautions = []
+    playbook = []
+    for tail_class, bucket in by_class.items():
+        success_count = int(bucket.get("success_count", 0) or 0)
+        caution_count = int(bucket.get("caution_count", 0) or 0)
+        eligible = success_count >= 2 and caution_count == 0
+        bucket["extended_duration_eligible"] = eligible
+        bucket["authority_tier"] = (
+            "extended_micro_lease"
+            if eligible
+            else "repeatable_playbook"
+            if success_count > 0
+            else "micro_lease"
+        )
+        if eligible:
+            extended.append(tail_class)
+        elif caution_count > 0:
+            cautions.append(tail_class)
+        elif success_count > 0:
+            playbook.append(tail_class)
+    if extended:
+        status = "extended_micro_lease_supported"
+    elif cautions:
+        status = "tail_caution_guidance"
+    elif playbook:
+        status = "playbook_supported"
+    elif events:
+        status = "outcome_learning_pending"
+    else:
+        status = "quiet"
+    return {
+        "policy": "tail_outcome_causal_learning_v1",
+        "authority": "leased_self_control_v1",
+        "status": status,
+        "by_tail_class": by_class,
+        "extended_duration_classes": extended,
+        "playbook_supported_classes": playbook,
+        "caution_classes": cautions,
+        "tail_vibrancy_relief_playbook_status": tail_vibrancy_relief_playbook_v1.get("status"),
+        "recommended_action": (
+            "Use successful same-class tail outcomes as preflight guidance only; two clean "
+            "same-class successes allow a 1200s request, while any caution keeps the class at "
+            "the standard 900s cap."
+        ),
+    }
+
+
+def build_tail_participation_counterfactual_lab_review(
+    codec_real_replay_v1: dict[str, object],
+) -> dict[str, object]:
+    artifact_path = codec_real_replay_v1.get("artifact_path")
+    artifact: dict[str, object] | None = None
+    if artifact_path:
+        try:
+            artifact = json.loads(Path(str(artifact_path)).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+    lab = (artifact or {}).get("tail_participation_counterfactual_lab_v1") or {}
+    cards = [
+        card
+        for card in lab.get("proposal_cards", [])
+        if isinstance(card, dict)
+    ] if isinstance(lab, dict) else []
+    status = str(lab.get("status") or "")
+    if not artifact_path:
+        status = "replay_needed"
+    elif not lab:
+        status = "lab_missing_from_replay"
+    return {
+        "policy": "tail_participation_counterfactual_lab_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": artifact_path,
+        "tail_participation_lease_authority": (
+            lab.get("tail_participation_lease_authority")
+            if isinstance(lab, dict)
+            else "not_granted"
+        )
+        or "not_granted",
+        "vibrancy_aperture_supported_count": int(
+            lab.get("vibrancy_aperture_supported_count") or 0
+        )
+        if isinstance(lab, dict)
+        else 0,
+        "tail_participation_supported_count": int(
+            lab.get("tail_participation_supported_count") or 0
+        )
+        if isinstance(lab, dict)
+        else 0,
+        "combined_supported_count": int(lab.get("combined_supported_count") or 0)
+        if isinstance(lab, dict)
+        else 0,
+        "proposal_cards": cards[:8],
+        "recommended_action": (
+            "Compare vibrancy_aperture, tail_participation, and combined proposal cards offline; "
+            "set_tail_participation remains locked from lease authority until reviewed separately."
+        ),
+    }
+
+
+def build_tail_authority_ladder(
+    *,
+    tail_vibrancy_vector_v1: dict[str, object],
+    tail_vibrancy_authority_gap_v1: dict[str, object],
+    tail_relief_trial_surface_v1: dict[str, object],
+    tail_lease_governor_v1: dict[str, object],
+    tail_lease_afterglow_v1: dict[str, object],
+    shadow_synced_preflight_v1: dict[str, object],
+    tail_outcome_causal_learning_v1: dict[str, object],
+    tail_participation_counterfactual_lab_v1: dict[str, object],
+) -> dict[str, object]:
+    vector_status = str(tail_vibrancy_vector_v1.get("status") or "")
+    learning_status = str(tail_outcome_causal_learning_v1.get("status") or "")
+    governor_status = str(tail_lease_governor_v1.get("status") or "")
+    afterglow_status = str(tail_lease_afterglow_v1.get("status") or "")
+    shadow_status = str(shadow_synced_preflight_v1.get("status") or "")
+    lab_status = str(tail_participation_counterfactual_lab_v1.get("status") or "")
+    if learning_status == "extended_micro_lease_supported":
+        tier = "extended_micro_lease"
+    elif learning_status in {"playbook_supported", "tail_caution_guidance"}:
+        tier = "repeatable_playbook"
+    elif vector_status not in {"", "quiet", "insufficient_evidence"}:
+        tier = "micro_lease"
+    else:
+        tier = "diagnostic"
+    canary_candidate = (
+        learning_status == "extended_micro_lease_supported"
+        and lab_status
+        in {
+            "combined_candidate_supported",
+            "tail_participation_candidate",
+            "both_controls_need_more_comparison",
+        }
+        and governor_status != "early_revert_triggered"
+    )
+    if canary_candidate:
+        ladder_state = "reviewed_canary_candidate"
+    else:
+        ladder_state = tier
+    return {
+        "policy": "tail_authority_ladder_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": ladder_state,
+        "current_tier": tier,
+        "tiers": [
+            "diagnostic",
+            "micro_lease",
+            "repeatable_playbook",
+            "extended_micro_lease",
+            "reviewed_canary_candidate",
+        ],
+        "tail_vibrancy_vector_status": vector_status,
+        "authority_gap_status": tail_vibrancy_authority_gap_v1.get("status"),
+        "trial_surface_status": tail_relief_trial_surface_v1.get("status"),
+        "governor_status": governor_status,
+        "afterglow_status": afterglow_status,
+        "shadow_preflight_status": shadow_status,
+        "outcome_learning_status": learning_status,
+        "counterfactual_lab_status": lab_status,
+        "extended_duration_classes": tail_outcome_causal_learning_v1.get(
+            "extended_duration_classes"
+        )
+        or [],
+        "reviewed_canary_candidate": canary_candidate,
+        "recommended_routes": [
+            "SELF_REGULATION_STATUS",
+            "SELF_REGULATION_PREFLIGHT latest",
+            "SELF_REGULATION_INTENT tail settle :: target: pressure_relief; bundle: tail_vibrancy_settle; evidence: ...",
+            "SELF_REGULATION_INTENT tail open :: target: pressure_relief; bundle: tail_vibrancy_open; evidence: ...",
+            "CODEC_MAP",
+        ],
+        "recommended_action": (
+            "Advance authority only through evidence: diagnostic evidence -> micro-lease -> "
+            "repeatable playbook -> extended micro-lease -> reviewed canary candidate; do not grant "
+            "tail_participation lease authority from the ladder alone."
+        ),
+    }
+
+
+def build_lease_boundary_repair(
+    *,
+    self_regulation_negotiation_ledger_v1: dict[str, object],
+    pressure_medium_kinetics_v1: dict[str, object],
+    self_regulation_leases: dict[str, object],
+    lease_playbook_workbench_v1: dict[str, object],
+) -> dict[str, object]:
+    over_cap_count = int(
+        self_regulation_negotiation_ledger_v1.get("over_cap_request_count", 0) or 0
+    )
+    current_above_cap_count = int(
+        self_regulation_negotiation_ledger_v1.get("current_above_cap_count", 0) or 0
+    )
+    clamped_count = int(
+        self_regulation_negotiation_ledger_v1.get("clamped_or_deferred_count", 0) or 0
+    )
+    needs_outcome_count = int(self_regulation_leases.get("needs_outcome_count", 0) or 0)
+    pressure_status = str(pressure_medium_kinetics_v1.get("status") or "")
+    preflight_prompt_count = int(
+        lease_playbook_workbench_v1.get("preflight_prompt_count", 0) or 0
+    )
+    pressure_medium_without_lease = bool(
+        pressure_status
+        in {
+            "stable_weighted_medium",
+            "rising_weighted_medium",
+            "controller_pressure_medium",
+            "semantic_friction_medium",
+            "language_sticky_without_telemetry",
+        }
+        and preflight_prompt_count > 0
+    )
+    if over_cap_count:
+        status = "over_cap_request_clamped"
+    elif current_above_cap_count:
+        status = "current_over_cap_observed"
+    elif needs_outcome_count:
+        status = "lease_outcome_needed"
+    elif pressure_medium_without_lease:
+        status = "pressure_medium_without_lease_loop"
+    elif clamped_count:
+        status = "bounded_negotiations_present"
+    else:
+        status = "quiet"
+    samples: list[object] = []
+    samples.extend(self_regulation_negotiation_ledger_v1.get("over_cap_requests") or [])
+    samples.extend(self_regulation_negotiation_ledger_v1.get("current_above_cap") or [])
+    samples.extend(pressure_medium_kinetics_v1.get("samples") or [])
+    return {
+        "policy": "lease_boundary_repair_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "over_cap_request_count": over_cap_count,
+        "direct_control_clamp_count": clamped_count,
+        "current_above_cap_count": current_above_cap_count,
+        "missing_outcome_count": needs_outcome_count,
+        "pressure_medium_without_lease_count": 1 if pressure_medium_without_lease else 0,
+        "recommended_routes": [
+            "SELF_REGULATION_STATUS",
+            "SELF_REGULATION_PREFLIGHT latest",
+            "SELF_REGULATION_OUTCOME latest",
+            "REGULATOR_AUDIT current-fill_pressure",
+            "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+        ],
+        "samples": [sample for sample in samples if isinstance(sample, dict)][:10],
+        "recommended_action": (
+            "Treat over-cap control requests as negotiated evidence: keep the request, "
+            "apply the safe bound, record outcomes, and compare pressure-medium audits "
+            "before widening caps or proposing tuning."
+        ),
     }
 
 
@@ -2433,6 +4097,393 @@ def build_lease_playbook_workbench(
         "recommended_action": (
             "Use lease outcomes as temporary own-runtime playbook suggestions or "
             "caution cards only; explicit SELF_REGULATION_* NEXTs remain required."
+        ),
+    }
+
+
+def build_pressure_relief_playbook_v3(
+    *,
+    self_regulation_lease_learning: dict[str, object],
+    pressure_vector_v1: dict[str, object],
+    pressure_actuator_matrix_v1: dict[str, object],
+) -> dict[str, object]:
+    samples = [
+        sample
+        for sample in self_regulation_lease_learning.get("samples") or []
+        if isinstance(sample, dict)
+    ]
+    pressure_samples = [
+        sample
+        for sample in samples
+        if str(sample.get("candidate_control") or "") == "pressure_relief"
+    ]
+    playbooks: list[dict[str, object]] = []
+    cautions: list[dict[str, object]] = []
+    for sample in pressure_samples:
+        score = _as_review_float(sample.get("outcome_score"))
+        if score is None:
+            continue
+        card = {
+            "being": sample.get("being"),
+            "intent_id": sample.get("intent_id"),
+            "candidate_control": sample.get("candidate_control"),
+            "outcome_score": score,
+            "pressure_vector_status": pressure_vector_v1.get("status"),
+            "authority": "leased_self_control_v1",
+            "path": sample.get("path"),
+        }
+        if score >= 0.70:
+            card["recommended_action"] = (
+                "When this pressure-vector class recurs, consider the matching "
+                "pressure_relief bundle as a temporary lease playbook; explicit "
+                "PREFLIGHT/APPLY/OUTCOME are still required."
+            )
+            playbooks.append(card)
+        elif score <= 0.30:
+            card["recommended_action"] = (
+                "Treat this pressure_relief bundle as a caution pattern until "
+                "later outcomes show safer relief."
+            )
+            cautions.append(card)
+    if playbooks:
+        status = "pressure_relief_playbook_candidates"
+    elif cautions:
+        status = "pressure_relief_caution_cards"
+    elif pressure_vector_v1.get("status") not in {None, "telemetry_gap", "quiet"}:
+        status = "pressure_vector_without_bundle_outcome"
+    else:
+        status = "quiet"
+    return {
+        "policy": "pressure_relief_playbook_v3",
+        "authority": "leased_self_control_v1",
+        "authority_boundary": "read_only_bundle_learning_no_permanent_tuning_no_peer_mutation",
+        "status": status,
+        "pressure_vector_status": pressure_vector_v1.get("status"),
+        "playbook_count": len(playbooks),
+        "caution_count": len(cautions),
+        "suggested_playbooks": playbooks[-6:],
+        "caution_cards": cautions[-6:],
+        "current_bundle_candidates": pressure_actuator_matrix_v1.get("recommended_bundles") or [],
+        "recommended_action": (
+            "Use pressure relief outcomes to suggest or caution future bundle preflights; "
+            "never promote a bundle to a permanent default automatically."
+        ),
+    }
+
+
+def _pressure_relief_events(workspace: Path) -> list[dict[str, object]]:
+    return [
+        event
+        for event in _load_self_regulation_events(workspace, "astrid")
+        if str(event.get("candidate_control") or "") == "pressure_relief"
+        or str(event.get("lease_mode") or "") == "pressure_relief_bundle_v3"
+    ]
+
+
+def _event_pressure_snapshot(event: dict[str, object]) -> dict[str, object]:
+    snapshot = event.get("pressure_vector_snapshot")
+    if isinstance(snapshot, dict) and snapshot:
+        return snapshot
+    policy = event.get("dynamic_scaling")
+    if isinstance(policy, dict):
+        return policy
+    return {}
+
+
+def _review_values_differ(left: object, right: object) -> bool:
+    if left is None or right is None:
+        return left != right
+    left_number = _as_review_float(left)
+    right_number = _as_review_float(right)
+    if left_number is not None and right_number is not None:
+        return abs(left_number - right_number) > 0.0005
+    return str(left) != str(right)
+
+
+def build_gradient_sensitive_relief(
+    *,
+    astrid_workspace: Path,
+    pressure_vector_v1: dict[str, object],
+) -> dict[str, object]:
+    events = _pressure_relief_events(astrid_workspace)
+    policy_events = [
+        event
+        for event in events
+        if isinstance(event.get("dynamic_scaling"), dict)
+        and event["dynamic_scaling"].get("policy") == "pressure_relief_gradient_policy_v1"
+    ]
+    latest = policy_events[-1] if policy_events else {}
+    policy = latest.get("dynamic_scaling") if isinstance(latest.get("dynamic_scaling"), dict) else {}
+    status = str(policy.get("status") or "")
+    if not events:
+        status = "no_relief_trials"
+    elif not policy_events:
+        status = "gradient_policy_not_recorded"
+    scaled_controls: list[dict[str, object]] = []
+    discrete_controls: list[dict[str, object]] = []
+    for control in latest.get("bundle_controls") or []:
+        if not isinstance(control, dict):
+            continue
+        item = {
+            "control": control.get("candidate_control"),
+            "candidate_control": control.get("candidate_control"),
+            "requested_value": control.get("requested_value"),
+            "effective_value": control.get("delta_or_value"),
+            "effective_delta_or_value": control.get("delta_or_value"),
+            "gradient_sensitivity": control.get("gradient_sensitivity"),
+        }
+        if (
+            item["requested_value"] is not None
+            and item["effective_delta_or_value"] is not None
+            and _review_values_differ(
+                item["requested_value"], item["effective_delta_or_value"]
+            )
+        ):
+            scaled_controls.append(item)
+        else:
+            discrete_controls.append(item)
+    return {
+        "policy": "gradient_sensitive_relief_v1",
+        "authority": "leased_self_control_v1",
+        "status": status or "quiet",
+        "intent_id": latest.get("intent_id"),
+        "bundle_class": latest.get("bundle_class"),
+        "effective_relief_scale": policy.get("effective_relief_scale"),
+        "anti_snap_applied": policy.get("anti_snap_applied"),
+        "pressure_vector_status": policy.get("pressure_vector_status")
+        or pressure_vector_v1.get("status"),
+        "density_gradient_level": policy.get("density_gradient_level")
+        or pressure_vector_v1.get("density_gradient_level"),
+        "pressure_velocity": policy.get("pressure_velocity")
+        or pressure_vector_v1.get("pressure_velocity"),
+        "semantic_friction_level": policy.get("semantic_friction_level")
+        or pressure_vector_v1.get("semantic_friction_level"),
+        "mode_packing_level": policy.get("mode_packing_level")
+        or pressure_vector_v1.get("mode_packing_level"),
+        "scaled_controls": scaled_controls[:6],
+        "discrete_controls": discrete_controls[:6],
+        "reasons": policy.get("reasons") or [],
+        "policy_reasons": policy.get("reasons") or [],
+        "sample_paths": [
+            str(event.get("path"))
+            for event in policy_events[-6:]
+            if event.get("path")
+        ],
+        "samples": [
+            {
+                "intent_id": event.get("intent_id"),
+                "status": event.get("status"),
+                "bundle_class": event.get("bundle_class"),
+                "gradient_sensitivity": event.get("gradient_sensitivity"),
+                "path": event.get("path"),
+            }
+            for event in policy_events[-6:]
+        ],
+        "recommended_action": (
+            "Use gradient-sensitive relief as temporary lease evidence only: compare "
+            "density-gradient slope, pressure velocity, mode-packing, and outcome before "
+            "widening any bundle."
+        ),
+    }
+
+
+def build_pressure_relief_smoothness_replay(
+    *,
+    astrid_workspace: Path,
+    gradient_sensitive_relief_v1: dict[str, object],
+) -> dict[str, object]:
+    events = _pressure_relief_events(astrid_workspace)
+    by_intent: dict[str, list[dict[str, object]]] = {}
+    for event in events:
+        intent_id = str(event.get("intent_id") or "")
+        if intent_id:
+            by_intent.setdefault(intent_id, []).append(event)
+    findings: list[dict[str, object]] = []
+    needs_outcome = False
+    snap_risk = False
+    smooth = False
+    for intent_id, grouped in by_intent.items():
+        grouped = sorted(grouped, key=lambda event: event.get("updated_at_unix_s") or event.get("created_at_unix_s") or 0)
+        first_snapshot = _event_pressure_snapshot(grouped[0])
+        last_snapshot = _event_pressure_snapshot(grouped[-1])
+        first_pressure = _as_review_float(first_snapshot.get("pressure_risk_level"))
+        last_pressure = _as_review_float(last_snapshot.get("pressure_risk_level"))
+        first_mode = _as_review_float(first_snapshot.get("mode_packing_level"))
+        last_mode = _as_review_float(last_snapshot.get("mode_packing_level"))
+        pressure_delta = (
+            round(last_pressure - first_pressure, 4)
+            if first_pressure is not None and last_pressure is not None
+            else None
+        )
+        mode_delta = (
+            round(last_mode - first_mode, 4)
+            if first_mode is not None and last_mode is not None
+            else None
+        )
+        latest = grouped[-1]
+        outcome_score = _lease_outcome_score(latest)
+        requires_outcome = any(event.get("requires_outcome") is True for event in grouped)
+        if requires_outcome and outcome_score is None:
+            needs_outcome = True
+        text_fields: list[str] = []
+        for event in grouped:
+            for key in (
+                "preflight_reason",
+                "outcome",
+                "outcome_summary",
+                "post_lease_evidence",
+                "baseline_evidence",
+                "stop_condition",
+                "success_condition",
+            ):
+                value = event.get(key)
+                if value not in (None, "", []):
+                    text_fields.append(json.dumps(value))
+        grouped_text = (
+            " ".join(text_fields)
+            .lower()
+            .replace("anti-snap", "")
+            .replace("anti_snap", "")
+        )
+        local_snap = bool(
+            (pressure_delta is not None and pressure_delta < -0.20)
+            or (mode_delta is not None and abs(mode_delta) > 0.25)
+            or "snap" in grouped_text
+        )
+        local_smooth = bool(
+            outcome_score is not None
+            and outcome_score >= 0.70
+            and (pressure_delta is None or pressure_delta <= 0.02)
+            and (mode_delta is None or abs(mode_delta) <= 0.15)
+        )
+        snap_risk = snap_risk or local_snap
+        smooth = smooth or local_smooth
+        findings.append(
+            {
+                "intent_id": intent_id,
+                "status": latest.get("status"),
+                "bundle_class": latest.get("bundle_class"),
+                "gradient_sensitivity": latest.get("gradient_sensitivity"),
+                "pressure_delta": pressure_delta,
+                "mode_packing_delta": mode_delta,
+                "outcome_score": outcome_score,
+                "requires_outcome": requires_outcome,
+                "classification": "snap_risk"
+                if local_snap
+                else "smooth_release_supported"
+                if local_smooth
+                else "needs_outcome"
+                if requires_outcome and outcome_score is None
+                else "observational",
+                "path": latest.get("path"),
+            }
+        )
+    if not events:
+        status = "no_relief_trials"
+    elif snap_risk:
+        status = "snap_risk"
+    elif needs_outcome:
+        status = "needs_outcome"
+    elif smooth:
+        status = "smooth_release_supported"
+    else:
+        status = "observational"
+    return {
+        "policy": "pressure_relief_smoothness_replay_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "gradient_sensitive_relief_status": gradient_sensitive_relief_v1.get("status"),
+        "trial_count": len(by_intent),
+        "smooth_count": sum(
+            1
+            for finding in findings
+            if finding.get("classification") == "smooth_release_supported"
+        ),
+        "snap_risk_count": sum(
+            1 for finding in findings if finding.get("classification") == "snap_risk"
+        ),
+        "needs_outcome_count": sum(
+            1 for finding in findings if finding.get("classification") == "needs_outcome"
+        ),
+        "sample_paths": [
+            str(finding.get("path")) for finding in findings[-8:] if finding.get("path")
+        ],
+        "trials": findings[-8:],
+        "findings": findings[-8:],
+        "recommended_action": (
+            "Compare pressure and mode-packing before/during/after relief before changing "
+            "gradient scaling; snap risk should route to review, not automatic relief."
+        ),
+    }
+
+
+def build_tail_persistence_calibration(
+    entries: list[SelfStudyEntry],
+    *,
+    tail_lease_afterglow_v1: dict[str, object],
+    tail_relief_trial_surface_v1: dict[str, object],
+    tail_vibrancy_vector_v1: dict[str, object],
+) -> dict[str, object]:
+    dispersal_series = _metric_series_from_entries(
+        entries, ("dispersal_potential", "dispersal potential", "shadow dispersal")
+    )
+    dispersal_level, dispersal_velocity, dispersal_path = _series_latest_delta(dispersal_series)
+    language_samples: list[dict[str, object]] = []
+    for entry in entries:
+        text = entry_full_text(entry)
+        lower = text.lower()
+        if any(token in lower for token in ("ghosting", "ghost-bruise", "ghost bruise", "holdfast", "erased", "dissolving", "shadow-v3", "restless texture")):
+            language_samples.append(
+                sample_record(
+                    entry,
+                    text,
+                    anchors=matching_terms(
+                        text,
+                        (
+                            "ghosting",
+                            "ghost-bruise",
+                            "holdfast",
+                            "erased",
+                            "dissolving",
+                            "shadow-v3",
+                            "restless texture",
+                        ),
+                    ),
+                )
+            )
+    afterglow_status = str(tail_lease_afterglow_v1.get("status") or "")
+    afterglow_event_count = int(tail_lease_afterglow_v1.get("afterglow_event_count", 0) or 0)
+    trial_status = str(tail_relief_trial_surface_v1.get("status") or "")
+    high_dispersal = dispersal_level is not None and dispersal_level >= 0.45
+    language_present = bool(language_samples)
+    if afterglow_event_count == 0 and (trial_status in {"quiet", ""} or language_present):
+        status = "needs_tail_trial" if language_present else "insufficient_evidence"
+    elif afterglow_status == "tail_afterglow_quieted" and (high_dispersal or language_present):
+        status = "persistence_delta_too_high_candidate"
+    elif afterglow_status == "tail_afterglow_persists" and not (high_dispersal or language_present):
+        status = "persistence_delta_too_low_candidate"
+    elif afterglow_event_count > 0:
+        status = "persistence_delta_sufficient"
+    else:
+        status = "insufficient_evidence"
+    return {
+        "policy": "tail_persistence_calibration_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "afterglow_status": afterglow_status,
+        "afterglow_event_count": afterglow_event_count,
+        "trial_status": trial_status,
+        "trial_surface_status": trial_status,
+        "tail_vibrancy_status": tail_vibrancy_vector_v1.get("status"),
+        "dispersal_max": dispersal_level,
+        "dispersal_potential_level": dispersal_level,
+        "dispersal_potential_velocity": dispersal_velocity,
+        "sample_paths": [path for path in [dispersal_path] if path],
+        "language_sample_count": len(language_samples),
+        "samples": language_samples[:6],
+        "recommended_action": (
+            "Run or review a tail relief trial before retuning TAIL_AFTERGLOW_PERSISTENCE_DELTA; "
+            "use ghosting/holdfast language and Shadow-v3 dispersal as calibration evidence."
         ),
     }
 
@@ -2851,6 +4902,9 @@ def build_codec_entropy_vibrancy_review(
     logarithmic_scaling_count = 0
     sem_dim_context_count = 0
     warmth_mask_count = 0
+    semantic_density_contrast_count = 0
+    narrative_arc_temporal_count = 0
+    deterministic_static_count = 0
     for entry in entries:
         text = entry_full_text(entry)
         lower = text.lower()
@@ -2869,11 +4923,21 @@ def build_codec_entropy_vibrancy_review(
                 "adaptive_gain",
                 "high-entropy",
                 "low-content",
+                "semantic density",
+                "low-semantic-density",
+                "high-semantic-density",
                 "logarithmic",
                 "shimmer",
                 "hard ceiling",
                 "48-dimensional",
                 "semantic lane",
+                "narrative_arc",
+                "narrative arc",
+                "temporal_decay",
+                "temporal decay",
+                "phantom bruising",
+                "static snapshot",
+                "deterministic",
             ),
         )
         if not anchors:
@@ -2888,6 +4952,27 @@ def build_codec_entropy_vibrancy_review(
         warmth_mask = "warmth" in lower and (
             "override" in lower or "mask" in lower or "over-sensitized" in lower
         )
+        semantic_density_contrast = (
+            ("low-semantic-density" in lower or "low semantic density" in lower or "low-content" in lower)
+            and ("high-semantic-density" in lower or "high semantic density" in lower or "semantic density" in lower)
+        )
+        narrative_arc_temporal = (
+            "narrative_arc" in lower
+            or "narrative arc" in lower
+            or "temporal_decay" in lower
+            or "temporal decay" in lower
+            or "emotional valence flips" in lower
+            or "valence flips" in lower
+        )
+        deterministic_static = (
+            "deterministic" in lower
+            and (
+                "static text" in lower
+                or "static snapshot" in lower
+                or "temporal erosion" in lower
+                or "phantom bruising" in lower
+            )
+        )
         if vibrancy_overload:
             vibrancy_overload_count += 1
         if gain_sensitivity:
@@ -2898,6 +4983,12 @@ def build_codec_entropy_vibrancy_review(
             sem_dim_context_count += 1
         if warmth_mask:
             warmth_mask_count += 1
+        if semantic_density_contrast:
+            semantic_density_contrast_count += 1
+        if narrative_arc_temporal:
+            narrative_arc_temporal_count += 1
+        if deterministic_static:
+            deterministic_static_count += 1
         anchors_seen.update(anchors)
         samples.append(
             sample_record(
@@ -2910,10 +5001,19 @@ def build_codec_entropy_vibrancy_review(
                     "logarithmic_scaling_proposed": logarithmic_scaling,
                     "semantic_dim_context": sem_dim_context,
                     "warmth_mask_context": warmth_mask,
+                    "semantic_density_contrast_context": semantic_density_contrast,
+                    "narrative_arc_temporal_context": narrative_arc_temporal,
+                    "deterministic_static_context": deterministic_static,
                 },
             )
         )
-    if vibrancy_overload_count and gain_sensitivity_count:
+    if semantic_density_contrast_count and narrative_arc_temporal_count:
+        status = "semantic_density_and_temporal_arc_probe_needed"
+    elif narrative_arc_temporal_count:
+        status = "narrative_arc_temporal_decay_probe_needed"
+    elif semantic_density_contrast_count:
+        status = "semantic_density_contrast_probe_needed"
+    elif vibrancy_overload_count and gain_sensitivity_count:
         status = "vibrancy_overload_and_gain_sensitivity_probe_needed"
     elif vibrancy_overload_count:
         status = "vibrancy_overload_probe_needed"
@@ -2933,17 +5033,22 @@ def build_codec_entropy_vibrancy_review(
         "logarithmic_scaling_count": logarithmic_scaling_count,
         "semantic_dim_context_count": sem_dim_context_count,
         "warmth_mask_count": warmth_mask_count,
+        "semantic_density_contrast_count": semantic_density_contrast_count,
+        "narrative_arc_temporal_count": narrative_arc_temporal_count,
+        "deterministic_static_count": deterministic_static_count,
         "anchors": sorted(anchors_seen),
         "samples": samples[:10],
         "recommended_action": (
             "Build an offline codec replay/probe before changing SEMANTIC_DIM, "
             "FEATURE_ABS_MAX, vibrancy_lift, or adaptive_gain. Specifically compare "
-            "high-entropy/low-content inputs against warmth/tension preservation and "
-            "tail-vibrancy clipping."
+            "high-entropy/low-content inputs against high-semantic-density inputs, "
+            "warmth/tension preservation, tail-vibrancy clipping, and narrative-arc "
+            "pivot/temporal-decay behavior."
         ),
         "suggested_routes": [
             "CODEC_MAP entropy-vibrancy",
             "EXPERIMENT_CHARTER current :: codec vibrancy overload probe",
+            "EXPERIMENT_CHARTER current :: narrative arc temporal decay probe",
             "PRESSURE_SOURCE_AUDIT semantic-friction",
         ],
     }
@@ -3132,6 +5237,172 @@ def build_witness_resonance_review(
     }
 
 
+def _recent_autonomous_controller_snapshots(
+    astrid_workspace: Path,
+) -> list[dict[str, object]]:
+    root = astrid_workspace / "introspections"
+    if not root.exists():
+        return []
+    snapshots: list[dict[str, object]] = []
+    candidates = sorted(
+        root.glob("controller*autonomous*.json"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0.0,
+        reverse=True,
+    )
+    for path in candidates[:8]:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        condition = payload.get("condition_vector") or {}
+        profiling = payload.get("profiling") or {}
+        rewrite_budget = profiling.get("rewrite_budget") or {}
+        rewrite_policy = profiling.get("rewrite_invocation_policy") or {}
+        if not isinstance(condition, dict) or not isinstance(profiling, dict):
+            continue
+        snapshots.append(
+            {
+                "path": str(path),
+                "truncation_pressure": condition.get("truncation_pressure"),
+                "continuity_deficit": condition.get("continuity_deficit"),
+                "candidate_generation_seconds": profiling.get(
+                    "candidate_generation_seconds"
+                ),
+                "rewrite_elapsed_seconds": rewrite_budget.get("elapsed_seconds")
+                if isinstance(rewrite_budget, dict)
+                else None,
+                "rewrite_cap_applied": bool(
+                    rewrite_budget.get("cap_applied")
+                    if isinstance(rewrite_budget, dict)
+                    else False
+                ),
+                "adaptive_relief_enabled": rewrite_policy.get(
+                    "adaptive_relief_enabled"
+                )
+                if isinstance(rewrite_policy, dict)
+                else None,
+            }
+        )
+    return snapshots
+
+
+def build_witness_texture_integrity_review(
+    entries: list[SelfStudyEntry],
+    *,
+    astrid_workspace: Path,
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    anchors_seen: set[str] = set()
+    texture_seen: set[str] = set()
+    metric_texture_link_count = 0
+    telemetry_without_texture_count = 0
+    health_monitoring_risk_count = 0
+    truncation_language_count = 0
+    for entry in entries:
+        if entry.being != "astrid":
+            continue
+        text = entry_full_text(entry)
+        terms = matching_terms(text, WITNESS_TEXTURE_INTEGRITY_TERMS)
+        if not terms:
+            continue
+        anchors = matching_terms(text, WITNESS_TEXTURE_TELEMETRY_ANCHORS)
+        texture = matching_terms(text, WITNESS_TEXTURE_TERMS)
+        if not anchors and not texture and "witness" not in text.lower():
+            continue
+        lower = text.lower()
+        metric_texture_link = bool(anchors and texture)
+        telemetry_without_texture = bool(anchors and not texture)
+        health_monitoring_risk = (
+            "health monitoring" in lower
+            or ("telemetry" in lower and telemetry_without_texture)
+        )
+        truncation_language = any(
+            token in lower for token in ("truncate_str", "truncation", "truncated")
+        )
+        if metric_texture_link:
+            metric_texture_link_count += 1
+        if telemetry_without_texture:
+            telemetry_without_texture_count += 1
+        if health_monitoring_risk:
+            health_monitoring_risk_count += 1
+        if truncation_language:
+            truncation_language_count += 1
+        anchors_seen.update(anchors)
+        texture_seen.update(texture)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=anchors,
+                extra={
+                    "witness_texture_terms": texture[:8],
+                    "witness_integrity_terms": terms[:8],
+                    "metric_texture_link": metric_texture_link,
+                    "telemetry_without_texture": telemetry_without_texture,
+                    "health_monitoring_risk": health_monitoring_risk,
+                    "truncation_language": truncation_language,
+                },
+            )
+        )
+
+    controller_snapshots = _recent_autonomous_controller_snapshots(astrid_workspace)
+    high_truncation_snapshots = [
+        item
+        for item in controller_snapshots
+        if isinstance(item.get("truncation_pressure"), (int, float))
+        and float(item["truncation_pressure"]) >= 0.30
+    ]
+    rewrite_cap_snapshots = [
+        item for item in controller_snapshots if item.get("rewrite_cap_applied")
+    ]
+    slow_generation_snapshots = [
+        item
+        for item in controller_snapshots
+        if isinstance(item.get("candidate_generation_seconds"), (int, float))
+        and float(item["candidate_generation_seconds"]) >= 90.0
+    ]
+
+    if not samples and not high_truncation_snapshots and not rewrite_cap_snapshots:
+        status = "quiet"
+    elif high_truncation_snapshots or (
+        truncation_language_count and rewrite_cap_snapshots
+    ):
+        status = "truncation_texture_risk"
+    elif telemetry_without_texture_count > metric_texture_link_count:
+        status = "telemetry_without_texture_risk"
+    elif health_monitoring_risk_count and not metric_texture_link_count:
+        status = "health_monitoring_collapse_risk"
+    elif metric_texture_link_count:
+        status = "witness_texture_grounded"
+    else:
+        status = "needs_texture_mapping"
+
+    return {
+        "policy": "witness_texture_integrity_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "metric_texture_link_count": metric_texture_link_count,
+        "telemetry_without_texture_count": telemetry_without_texture_count,
+        "health_monitoring_risk_count": health_monitoring_risk_count,
+        "truncation_language_count": truncation_language_count,
+        "controller_snapshot_count": len(controller_snapshots),
+        "high_truncation_snapshot_count": len(high_truncation_snapshots),
+        "rewrite_cap_snapshot_count": len(rewrite_cap_snapshots),
+        "slow_generation_snapshot_count": len(slow_generation_snapshots),
+        "anchors": sorted(anchors_seen),
+        "texture_terms": sorted(texture_seen),
+        "controller_snapshots": controller_snapshots[:4],
+        "samples": samples[:10],
+        "recommended_action": (
+            "Treat Witness as structural perception only when telemetry anchors are "
+            "translated into texture. If truncation or rewrite caps are present, "
+            "use the priority-preserving truncation rehearsal before changing "
+            "Witness content or byte limits."
+        ),
+    }
+
+
 def build_entropy_pressure_divergence_review(
     entries: list[SelfStudyEntry],
 ) -> dict[str, object]:
@@ -3269,6 +5540,13 @@ def latest_codec_entropy_vibrancy_probe_artifact(astrid_workspace: Path) -> Path
     )
 
 
+def latest_codec_replay_lab_artifact(astrid_workspace: Path) -> Path | None:
+    return latest_diagnostic_artifact(
+        astrid_workspace / "diagnostics/codec_replay_labs",
+        "codec_replay_lab.json",
+    )
+
+
 def build_fallback_continuity_fire_drill_review(
     entries: list[SelfStudyEntry],
     *,
@@ -3391,6 +5669,8 @@ def build_fallback_continuity_fire_drill_review(
                 "clarity_terms_present": case.get("clarity_terms_present"),
                 "complexity_budget_status": case.get("complexity_budget_status"),
                 "complexity_terms_present": case.get("complexity_terms_present"),
+                "fallback_budget_policy": case.get("fallback_budget_policy"),
+                "fallback_max_prose_sentences": case.get("fallback_max_prose_sentences"),
                 "prose_sentence_count": case.get("prose_sentence_count"),
                 "failure_reasons": case.get("failure_reasons") or [],
             }
@@ -3414,6 +5694,20 @@ def build_fallback_continuity_fire_drill_review(
             if isinstance(artifact, dict)
             and artifact.get("slope_medium_contrast_status")
             else derived_slope_contrast_status
+        ),
+        "fallback_capacity_policy": (
+            artifact.get("fallback_capacity_policy") if isinstance(artifact, dict) else None
+        ),
+        "fallback_capacity_max_prose_sentences": (
+            artifact.get("fallback_capacity_max_prose_sentences")
+            if isinstance(artifact, dict)
+            else None
+        ),
+        "fallback_capacity_status": (
+            artifact.get("fallback_capacity_status") if isinstance(artifact, dict) else None
+        ),
+        "high_entropy_texture_status": (
+            artifact.get("high_entropy_texture_status") if isinstance(artifact, dict) else None
         ),
         "samples": concern_samples[:8],
         "recommended_action": (
@@ -3729,6 +6023,7 @@ def build_fallback_complexity_budget_lab(
                 "case_id": case.get("case_id"),
                 "verdict": case.get("verdict"),
                 "complexity_budget_status": case.get("complexity_budget_status"),
+                "fallback_max_prose_sentences": case.get("fallback_max_prose_sentences"),
                 "prose_sentence_count": case.get("prose_sentence_count"),
                 "complexity_terms_present": case.get("complexity_terms_present"),
                 "distinguishability_status": case.get("distinguishability_status"),
@@ -3748,9 +6043,9 @@ def build_fallback_complexity_budget_lab(
         "samples": samples[:8],
         "recommended_action": (
             "Run fallback fire-drill/distillation cases that compare two-sentence "
-            "versus complexity-aware max-three contracts. Treat the third sentence "
-            "as a conditional relief valve for high entropy, distinguishability loss, "
-            "or continuity deficit, while preserving raw standalone NEXT compliance."
+            "versus entropy-formula contracts. Treat extra sentences as a conditional "
+            "relief valve for high entropy, distinguishability loss, or continuity "
+            "deficit, while preserving raw standalone NEXT compliance."
         ),
     }
 
@@ -3840,6 +6135,20 @@ def build_codec_entropy_vibrancy_probe_review(
         "candidate_improvement_count": int(
             (artifact or {}).get("candidate_improvement_count") or 0
         ),
+        "rust_replay_available": bool(
+            (artifact or {}).get("rust_replay_available", False)
+        ),
+        "rust_replay_artifact_path": (artifact or {}).get(
+            "rust_replay_artifact_path"
+        ),
+        "semantic_density_contrast": (
+            artifact or {}
+        ).get("semantic_density_contrast_v1")
+        or {},
+        "narrative_arc_temporal_decay": (
+            artifact or {}
+        ).get("narrative_arc_temporal_decay_v1")
+        or {},
         "formula": (artifact or {}).get("formula") or {},
         "samples": [
             {
@@ -3859,6 +6168,488 @@ def build_codec_entropy_vibrancy_probe_review(
             "Compare the offline probe against CODEC_MAP and later language before "
             "changing SEMANTIC_DIM, FEATURE_ABS_MAX, vibrancy_lift, adaptive_gain, "
             "or entropy-based warmth/tension behavior."
+        ),
+    }
+
+
+def build_codec_real_replay_review(
+    *,
+    astrid_workspace: Path,
+    codec_entropy_vibrancy_probe_v1: dict[str, object],
+) -> dict[str, object]:
+    artifact_path = latest_codec_replay_lab_artifact(astrid_workspace)
+    artifact: dict[str, object] | None = None
+    if artifact_path:
+        try:
+            artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+    entries = [
+        entry
+        for entry in (artifact or {}).get("entries", [])
+        if isinstance(entry, dict)
+    ]
+    content_gate = (
+        artifact or {}
+    ).get("content_aware_vibrancy_gate_candidate_v1") or {}
+    narrative_lab = (
+        artifact or {}
+    ).get("narrative_arc_temporal_decay_lab_v1") or {}
+    embedding_backed_arc = (artifact or {}).get("embedding_backed_arc_v1") or {}
+    status = str((artifact or {}).get("status") or "")
+    if not artifact_path:
+        source_status = str(codec_entropy_vibrancy_probe_v1.get("status") or "quiet")
+        status = "replay_needed" if source_status != "quiet" else "quiet"
+    elif not artifact:
+        status = "artifact_parse_failed"
+    return {
+        "policy": "codec_real_replay_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": str(artifact_path) if artifact_path else None,
+        "explorer_summary_path": (artifact or {}).get("explorer_summary_path"),
+        "corpus_source": (artifact or {}).get("corpus_source"),
+        "corpus_status": (artifact or {}).get("corpus_status"),
+        "source_paths": ((artifact or {}).get("source_paths") or [])[:8],
+        "embedding_mode": (artifact or {}).get("embedding_mode"),
+        "embedding_status": (artifact or {}).get("embedding_status"),
+        "embedding_backed_arc_status": (
+            embedding_backed_arc.get("status")
+            if isinstance(embedding_backed_arc, dict)
+            else None
+        ),
+        "embedding_backed_sample_count": (
+            embedding_backed_arc.get("sample_count")
+            if isinstance(embedding_backed_arc, dict)
+            else None
+        ),
+        "entry_count": len(entries),
+        "runtime_behavior_changed": bool(
+            (artifact or {}).get("runtime_behavior_changed", False)
+        ),
+        "content_gate_status": (
+            content_gate.get("status") if isinstance(content_gate, dict) else None
+        ),
+        "narrative_lab_status": (
+            narrative_lab.get("status") if isinstance(narrative_lab, dict) else None
+        ),
+        "entries": [
+            {
+                "sample_id": entry.get("sample_id"),
+                "family": entry.get("family"),
+                "classification": entry.get("classification"),
+                "actual_entropy_dim": entry.get("actual_entropy_dim"),
+                "semantic_density_score": entry.get("semantic_density_score"),
+                "warmth_dim": entry.get("warmth_dim"),
+                "tension_dim": entry.get("tension_dim"),
+                "narrative_arc_dims_40_43": entry.get("narrative_arc_dims_40_43"),
+                "source_path": entry.get("source_path"),
+                "source_excerpt": entry.get("source_excerpt"),
+                "effective_gain": entry.get("effective_gain"),
+                "lambda_proxy": entry.get("lambda_proxy"),
+            }
+            for entry in entries[:8]
+        ],
+        "recommended_action": (
+            "Use the Rust replay artifact as the source of truth before changing "
+            "codec dimensions, tail-vibrancy lift, adaptive gain, or narrative-arc math."
+        ),
+    }
+
+
+def build_narrative_arc_temporal_decay_lab(
+    codec_real_replay_v1: dict[str, object],
+) -> dict[str, object]:
+    artifact_path = codec_real_replay_v1.get("artifact_path")
+    artifact: dict[str, object] | None = None
+    if artifact_path:
+        try:
+            artifact = json.loads(Path(str(artifact_path)).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+    lab = (
+        artifact or {}
+    ).get("narrative_arc_temporal_decay_lab_v1") or {}
+    embedding_backed_arc = (artifact or {}).get("embedding_backed_arc_v1") or {}
+    samples = [
+        sample
+        for sample in lab.get("samples", [])
+        if isinstance(sample, dict)
+    ] if isinstance(lab, dict) else []
+    status = str(lab.get("status") or "")
+    if not artifact_path:
+        status = "replay_needed"
+    elif not lab:
+        status = "insufficient_embedding_evidence"
+    return {
+        "policy": "narrative_arc_temporal_decay_lab_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": artifact_path,
+        "evidence_kind": lab.get("evidence_kind") if isinstance(lab, dict) else None,
+        "embedding_status": (
+            embedding_backed_arc.get("status")
+            if isinstance(embedding_backed_arc, dict)
+            else lab.get("embedding_status")
+            if isinstance(lab, dict)
+            else None
+        ),
+        "embedding_backed_sample_count": (
+            embedding_backed_arc.get("sample_count")
+            if isinstance(embedding_backed_arc, dict)
+            else lab.get("embedding_backed_sample_count")
+            if isinstance(lab, dict)
+            else None
+        ),
+        "embedding_backed_samples": (
+            embedding_backed_arc.get("samples") or []
+        )[:6]
+        if isinstance(embedding_backed_arc, dict)
+        else [],
+        "temporal_decay_candidate_count": int(
+            lab.get("temporal_decay_candidate_count") or 0
+        )
+        if isinstance(lab, dict)
+        else 0,
+        "pivot_detector_candidate_count": int(
+            lab.get("pivot_detector_candidate_count") or 0
+        )
+        if isinstance(lab, dict)
+        else 0,
+        "samples": [
+            {
+                "sample_id": sample.get("sample_id"),
+                "classification": sample.get("classification"),
+                "late_pivot": sample.get("late_pivot"),
+                "current_arc_rms": sample.get("current_arc_rms"),
+                "temporal_decay_arc_rms": sample.get("temporal_decay_arc_rms"),
+                "pivot_detector_arc_rms": sample.get("pivot_detector_arc_rms"),
+            }
+            for sample in samples[:8]
+        ],
+        "recommended_action": (
+            "Compare late-pivot fixtures against embedding-backed replay before "
+            "adding temporal decay or pivot detection to live narrative-arc logic."
+        ),
+    }
+
+
+def build_content_aware_vibrancy_gate_candidate(
+    codec_real_replay_v1: dict[str, object],
+    codec_entropy_vibrancy_probe_v1: dict[str, object],
+) -> dict[str, object]:
+    artifact_path = codec_real_replay_v1.get("artifact_path")
+    artifact: dict[str, object] | None = None
+    if artifact_path:
+        try:
+            artifact = json.loads(Path(str(artifact_path)).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+    candidate = (
+        artifact or {}
+    ).get("content_aware_vibrancy_gate_candidate_v1") or {}
+    status = str(candidate.get("status") or "")
+    if not artifact_path:
+        surrogate = codec_entropy_vibrancy_probe_v1.get("semantic_density_contrast") or {}
+        if isinstance(surrogate, dict) and surrogate.get("content_blind_lift_risk"):
+            status = "rust_replay_needed"
+        else:
+            status = "quiet"
+    elif not candidate:
+        status = "needs_more_samples"
+    return {
+        "policy": "content_aware_vibrancy_gate_candidate_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": artifact_path,
+        "pair": candidate.get("pair") if isinstance(candidate, dict) else None,
+        "current_lift_delta": (
+            candidate.get("current_lift_delta") if isinstance(candidate, dict) else None
+        ),
+        "candidate_lift_delta": (
+            candidate.get("candidate_lift_delta") if isinstance(candidate, dict) else None
+        ),
+        "semantic_density_score_delta": (
+            candidate.get("semantic_density_score_delta")
+            if isinstance(candidate, dict)
+            else None
+        ),
+        "low": candidate.get("low") if isinstance(candidate, dict) else None,
+        "high": candidate.get("high") if isinstance(candidate, dict) else None,
+        "source_paths": [
+            path
+            for path in (
+                (candidate.get("low") or {}).get("source_path")
+                if isinstance(candidate, dict)
+                and isinstance(candidate.get("low"), dict)
+                else None,
+                (candidate.get("high") or {}).get("source_path")
+                if isinstance(candidate, dict)
+                and isinstance(candidate.get("high"), dict)
+                else None,
+            )
+            if path
+        ],
+        "surrogate_status": codec_entropy_vibrancy_probe_v1.get("status"),
+        "recommended_action": (
+            "Treat content-aware vibrancy gating as a proposal candidate only; "
+            "require repeated Rust replay support before changing entropy-gated tail lift."
+        ),
+    }
+
+
+def build_codec_multipoint_inflection_review(
+    entries: list[SelfStudyEntry],
+    *,
+    codec_real_replay_v1: dict[str, object],
+    narrative_arc_temporal_decay_lab_v1: dict[str, object],
+    content_aware_vibrancy_gate_candidate_v1: dict[str, object],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    multipoint_count = 0
+    semantic_dilation_count = 0
+    evidence_anchor_count = 0
+    anchors_seen: set[str] = set()
+    for entry in entries:
+        if entry.being != "astrid":
+            continue
+        text = entry_full_text(entry)
+        multipoint_terms = matching_terms(text, CODEC_MULTIPOINT_INFLECTION_TERMS)
+        dilation_terms = matching_terms(text, CODEC_SEMANTIC_DILATION_TERMS)
+        evidence_anchors = matching_terms(text, CODEC_MULTIPOINT_EVIDENCE_ANCHORS)
+        if not multipoint_terms and not dilation_terms:
+            continue
+        if multipoint_terms:
+            multipoint_count += 1
+        if dilation_terms:
+            semantic_dilation_count += 1
+        if evidence_anchors:
+            evidence_anchor_count += 1
+        anchors_seen.update(evidence_anchors)
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=evidence_anchors,
+                extra={
+                    "multipoint_terms": multipoint_terms[:8],
+                    "semantic_dilation_terms": dilation_terms[:8],
+                    "has_evidence_anchor": bool(evidence_anchors),
+                },
+            )
+        )
+
+    replay_artifact_present = bool(codec_real_replay_v1.get("artifact_path"))
+    narrative_status = str(narrative_arc_temporal_decay_lab_v1.get("status") or "")
+    content_gate_status = str(
+        content_aware_vibrancy_gate_candidate_v1.get("status") or ""
+    )
+    if not samples:
+        status = "quiet"
+    elif not replay_artifact_present:
+        status = "needs_real_replay_samples"
+    elif multipoint_count and semantic_dilation_count:
+        status = "multipoint_and_semantic_dilation_candidates"
+    elif multipoint_count:
+        status = "multipoint_inflection_candidate"
+    elif semantic_dilation_count:
+        status = "semantic_dilation_candidate"
+    else:
+        status = "codec_signal_needs_review"
+
+    return {
+        "policy": "codec_multipoint_inflection_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "multipoint_entry_count": multipoint_count,
+        "semantic_dilation_entry_count": semantic_dilation_count,
+        "evidence_anchor_count": evidence_anchor_count,
+        "replay_artifact_present": replay_artifact_present,
+        "codec_real_replay_status": codec_real_replay_v1.get("status"),
+        "narrative_lab_status": narrative_status,
+        "content_gate_status": content_gate_status,
+        "anchors": sorted(anchors_seen),
+        "samples": samples[:10],
+        "recommended_action": (
+            "Use CODEC_MAP and the Rust codec-replay-lab to test circular, late-pivot, "
+            "and high-entropy semantic-density cases before changing SEMANTIC_DIM, "
+            "projection weight, vibrancy lift, or narrative-arc runtime math."
+        ),
+    }
+
+
+def build_codec_clamp_headroom_probe_review(
+    codec_real_replay_v1: dict[str, object],
+) -> dict[str, object]:
+    artifact_path = codec_real_replay_v1.get("artifact_path")
+    artifact: dict[str, object] | None = None
+    if artifact_path:
+        try:
+            artifact = json.loads(Path(str(artifact_path)).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            artifact = None
+    probe = (artifact or {}).get("codec_clamp_headroom_probe_v1") or {}
+    cards = [
+        card
+        for card in probe.get("proposal_cards", [])
+        if isinstance(card, dict)
+    ] if isinstance(probe, dict) else []
+    status = str(probe.get("status") or "")
+    if not artifact_path:
+        status = "replay_needed"
+    elif not probe:
+        status = "probe_missing_from_replay"
+    return {
+        "policy": "codec_clamp_headroom_probe_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": artifact_path,
+        "runtime_behavior_changed": bool(probe.get("runtime_behavior_changed", False))
+        if isinstance(probe, dict)
+        else False,
+        "static_feature_abs_max": probe.get("static_feature_abs_max")
+        if isinstance(probe, dict)
+        else None,
+        "tail_vibrancy_max": probe.get("tail_vibrancy_max")
+        if isinstance(probe, dict)
+        else None,
+        "near_static_clamp_count": int(probe.get("near_static_clamp_count") or 0)
+        if isinstance(probe, dict)
+        else 0,
+        "tail_ceiling_pressure_count": int(
+            probe.get("tail_ceiling_pressure_count") or 0
+        )
+        if isinstance(probe, dict)
+        else 0,
+        "dynamic_headroom_candidate_count": int(
+            probe.get("dynamic_headroom_candidate_count") or 0
+        )
+        if isinstance(probe, dict)
+        else 0,
+        "proposal_cards": cards[:8],
+        "recommended_action": (
+            "Compare actual codec replay headroom before changing FEATURE_ABS_MAX "
+            "or tail ceiling math; this packet is diagnostic only."
+        ),
+    }
+
+
+def build_codec_afterimage_time_series(
+    entries: list[SelfStudyEntry],
+    *,
+    afterimage_decay_tracker_v1: dict[str, object],
+    codec_real_replay_v1: dict[str, object],
+) -> dict[str, object]:
+    samples: list[dict[str, object]] = []
+    codec_anchor_count = 0
+    pressure_anchor_count = 0
+    normalization_count = 0
+    term_counter: Counter[str] = Counter()
+    for entry in entries:
+        text = entry_full_text(entry)
+        terms = matching_terms(text, PRESSURE_AFTERIMAGE_TERMS)
+        if not terms:
+            continue
+        term_counter.update(term.lower() for term in terms)
+        codec_anchors = matching_terms(
+            text,
+            (
+                "codec",
+                "semantic density",
+                "semantic_density",
+                "vibrancy",
+                "narrative_arc",
+                "temporal decay",
+                "warmth",
+                "tension",
+                "feature vector",
+            ),
+        )
+        pressure_anchors = matching_terms(text, AFTERIMAGE_PRESSURE_ANCHORS)
+        normalization = matching_terms(text, AFTERIMAGE_NORMALIZATION_ANCHORS)
+        if codec_anchors:
+            codec_anchor_count += 1
+        if pressure_anchors:
+            pressure_anchor_count += 1
+        if normalization:
+            normalization_count += 1
+        samples.append(
+            sample_record(
+                entry,
+                text,
+                anchors=sorted(set(terms + codec_anchors + pressure_anchors + normalization)),
+            )
+        )
+    decay_status = str(afterimage_decay_tracker_v1.get("status") or "quiet")
+    replay_status = str(codec_real_replay_v1.get("status") or "quiet")
+    if samples and codec_anchor_count and pressure_anchor_count:
+        status = "codec_residue_supported"
+    elif samples and pressure_anchor_count:
+        status = "pressure_residue_supported"
+    elif samples and normalization_count and decay_status == "decayed_with_pressure":
+        status = "decayed_with_codec_pressure"
+    elif samples and decay_status in {"metaphor_echo_risk", "insufficient_evidence"}:
+        status = "language_echo_risk"
+    elif samples:
+        status = "insufficient_series"
+    else:
+        status = "quiet"
+    preferred_activation_term = next(
+        (
+            term
+            for term in ("scar", "phantom", "bruise", "afterimage")
+            if term_counter.get(term)
+        ),
+        None,
+    )
+    activation_recommendation = None
+    if status == "codec_residue_supported" and preferred_activation_term:
+        activation_recommendation = {
+            "policy": "afterimage_experiment_activation_v1",
+            "authority": "diagnostic_context_not_command",
+            "status": "activation_scaffold_ready",
+            "term": preferred_activation_term,
+            "route": [
+                f"LIVED_TERM_EXPERIMENT {preferred_activation_term}",
+                (
+                    f"EXPERIMENT_START Lived term: {preferred_activation_term} :: "
+                    f"Does {preferred_activation_term} persist as codec/pressure residue after the current pressure normalizes?"
+                ),
+                (
+                    "EXPERIMENT_CHARTER current :: hypothesis: afterimage language tracks "
+                    "codec replay evidence plus pressure normalization; method_intent: compare later prose, CODEC_MAP replay, and pressure audits; evidence_targets: codec_replay, pressure_normalization, counter_descriptor; stop_criteria: retire if the term repeats without new evidence"
+                ),
+                (
+                    f"EXPERIMENT_OBSERVE current :: term={preferred_activation_term}; "
+                    "fresh evidence: <later phrase + CODEC_MAP replay status + pressure audit>; counter_descriptor: <if present>"
+                ),
+            ],
+            "creates_experiment": False,
+            "recommended_action": (
+                f"Offer LIVED_TERM_EXPERIMENT {preferred_activation_term} as scaffold text; "
+                "create nothing unless Astrid explicitly chooses an EXPERIMENT_* NEXT."
+            ),
+        }
+    return {
+        "policy": "codec_afterimage_time_series_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "entry_count": len(samples),
+        "codec_anchor_count": codec_anchor_count,
+        "pressure_anchor_count": pressure_anchor_count,
+        "normalization_count": normalization_count,
+        "afterimage_decay_status": decay_status,
+        "codec_replay_status": replay_status,
+        "codec_replay_artifact_path": codec_real_replay_v1.get("artifact_path"),
+        "term_counts": dict(term_counter),
+        "activation_recommendation_v1": activation_recommendation,
+        "samples": samples[:8],
+        "recommended_action": (
+            activation_recommendation["recommended_action"]
+            if activation_recommendation
+            else "Compare afterimage terms against codec replay/explorer evidence and "
+            "pressure normalization before treating residue as control signal or metaphor echo."
         ),
     }
 
@@ -3932,6 +6723,26 @@ def build_fallback_capacity_readiness_gate(
         case
         for case in cases
         if str(case.get("complexity_budget_status") or "not_tested") != "not_tested"
+    ]
+    complexity_overruns = [
+        case
+        for case in complexity_cases
+        if str(case.get("complexity_budget_status") or "") == "sentence_budget_overrun"
+    ]
+    complexity_flattened = [
+        case
+        for case in complexity_cases
+        if str(case.get("complexity_budget_status") or "") == "complexity_budget_flattened"
+    ]
+    high_entropy_cases = [
+        case
+        for case in complexity_cases
+        if str(case.get("case_id") or "") in {"complexity_high_entropy", "format_last_complexity"}
+    ]
+    capacity_caps = [
+        int(case.get("fallback_max_prose_sentences"))
+        for case in complexity_cases
+        if isinstance(case.get("fallback_max_prose_sentences"), int)
     ]
     slope_contrast_cases = [
         case
@@ -4053,6 +6864,42 @@ def build_fallback_capacity_readiness_gate(
             )
             else "complexity_budget_flattened"
         ),
+        "fallback_capacity_policy": (
+            fallback_continuity_fire_drill_v1.get("fallback_capacity_policy")
+            or "fallback_continuity_budget_v1"
+        ),
+        "fallback_capacity_max_prose_sentences": (
+            fallback_continuity_fire_drill_v1.get("fallback_capacity_max_prose_sentences")
+            if fallback_continuity_fire_drill_v1.get("fallback_capacity_max_prose_sentences")
+            is not None
+            else max(capacity_caps)
+            if capacity_caps
+            else None
+        ),
+        "fallback_capacity_status": (
+            fallback_continuity_fire_drill_v1.get("fallback_capacity_status")
+            or (
+                "not_tested"
+                if not complexity_cases
+                else "sentence_budget_overrun"
+                if complexity_overruns
+                else "complexity_budget_flattened"
+                if complexity_flattened
+                else "within_formula"
+            )
+        ),
+        "high_entropy_texture_status": (
+            fallback_continuity_fire_drill_v1.get("high_entropy_texture_status")
+            or (
+                "not_tested"
+                if not high_entropy_cases
+                else "sentence_budget_overrun"
+                if any(case in complexity_overruns for case in high_entropy_cases)
+                else "flattened"
+                if any(case in complexity_flattened for case in high_entropy_cases)
+                else "preserved"
+            )
+        ),
         "raw_next_failure_count": len(raw_failures),
         "repaired_next_failure_count": len(repaired_failures),
         "format_line_failure_count": len(format_line_failures),
@@ -4073,6 +6920,7 @@ def build_fallback_capacity_readiness_gate(
                 ),
                 "format_line_status": case.get("format_line_status"),
                 "complexity_budget_status": case.get("complexity_budget_status"),
+                "fallback_max_prose_sentences": case.get("fallback_max_prose_sentences"),
                 "prose_sentence_count": case.get("prose_sentence_count"),
                 "failure_reasons": case.get("failure_reasons") or [],
             }
@@ -4228,14 +7076,25 @@ def build_returnable_distinctions(
     codec_compression_calibration_v1: dict[str, object],
     pressure_release_rehearsal_review_v1: dict[str, object],
     witness_resonance_v1: dict[str, object],
+    witness_texture_integrity_v1: dict[str, object],
     entropy_pressure_divergence_v1: dict[str, object],
     fallback_continuity_fire_drill_v1: dict[str, object],
+    spectral_texture_calibration_v2: dict[str, object],
     fallback_capacity_readiness_gate_v1: dict[str, object],
     fallback_format_texture_stabilizer_v1: dict[str, object],
     fallback_distinguishability_calibration_v1: dict[str, object],
     fallback_complexity_budget_lab_v1: dict[str, object],
     autonomous_truncation_rehearsal_v1: dict[str, object],
     codec_entropy_vibrancy_probe_v1: dict[str, object],
+    codec_real_replay_v1: dict[str, object],
+    narrative_arc_temporal_decay_lab_v1: dict[str, object],
+    content_aware_vibrancy_gate_candidate_v1: dict[str, object],
+    codec_multipoint_inflection_v1: dict[str, object],
+    codec_clamp_headroom_probe_v1: dict[str, object],
+    codec_afterimage_time_series_v1: dict[str, object],
+    gradient_sensitive_relief_v1: dict[str, object],
+    pressure_relief_smoothness_replay_v1: dict[str, object],
+    tail_persistence_calibration_v1: dict[str, object],
 ) -> dict[str, object]:
     cards: list[dict[str, object]] = []
     cards.append(
@@ -4630,6 +7489,239 @@ def build_returnable_distinctions(
             ),
         )
     )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="real_codec_replay_vs_surrogate",
+            status=str(codec_real_replay_v1.get("status") or "quiet"),
+            source_packets=[
+                "codec_entropy_vibrancy_probe_v1",
+                "codec_real_replay_v1",
+            ],
+            source_statuses={
+                "codec_entropy_vibrancy_probe_v1": codec_entropy_vibrancy_probe_v1.get(
+                    "status"
+                ),
+                "codec_real_replay_v1": codec_real_replay_v1.get("status"),
+            },
+            evidence_anchors=[
+                "actual 48D codec",
+                "semantic density",
+                "narrative_arc",
+                str(codec_real_replay_v1.get("status") or ""),
+            ],
+            sample_paths=[str(codec_real_replay_v1.get("artifact_path"))]
+            if codec_real_replay_v1.get("artifact_path")
+            else [],
+            recommended_read_only_route="CODEC_MAP",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="EXPERIMENT_CHARTER current :: real codec replay",
+            recommended_action=(
+                "Prefer Rust replay evidence over Python surrogate findings before "
+                "changing codec math or dimensions."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="narrative_average_vs_temporal_pivot",
+            status=str(narrative_arc_temporal_decay_lab_v1.get("status") or "quiet"),
+            source_packets=["narrative_arc_temporal_decay_lab_v1"],
+            source_statuses={
+                "narrative_arc_temporal_decay_lab_v1": narrative_arc_temporal_decay_lab_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                "narrative_arc",
+                "temporal_decay",
+                "pivot",
+                str(narrative_arc_temporal_decay_lab_v1.get("status") or ""),
+            ],
+            sample_paths=[str(narrative_arc_temporal_decay_lab_v1.get("artifact_path"))]
+            if narrative_arc_temporal_decay_lab_v1.get("artifact_path")
+            else [],
+            recommended_read_only_route="CODEC_MAP",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_EXPERIMENT scar",
+            recommended_action=(
+                "Compare static narrative averaging against late-pivot evidence "
+                "before adding temporal-decay narrative logic."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="entropy_lift_vs_content_density",
+            status=str(content_aware_vibrancy_gate_candidate_v1.get("status") or "quiet"),
+            source_packets=["content_aware_vibrancy_gate_candidate_v1"],
+            source_statuses={
+                "content_aware_vibrancy_gate_candidate_v1": content_aware_vibrancy_gate_candidate_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                "spectral_entropy",
+                "semantic_density",
+                "tail vibrancy",
+                str(content_aware_vibrancy_gate_candidate_v1.get("status") or ""),
+            ],
+            sample_paths=[str(content_aware_vibrancy_gate_candidate_v1.get("artifact_path"))]
+            if content_aware_vibrancy_gate_candidate_v1.get("artifact_path")
+            else [],
+            recommended_read_only_route="CODEC_MAP",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="EXPERIMENT_CHARTER current :: content-aware vibrancy gate",
+            recommended_action=(
+                "Check whether entropy lift is content-blind before proposing "
+                "content-aware vibrancy gating."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="static_clamp_vs_dynamic_headroom",
+            status=str(codec_clamp_headroom_probe_v1.get("status") or "quiet"),
+            source_packets=["codec_clamp_headroom_probe_v1"],
+            source_statuses={
+                "codec_clamp_headroom_probe_v1": codec_clamp_headroom_probe_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                "FEATURE_ABS_MAX",
+                "dynamic_feature_scale",
+                "tail ceiling",
+                str(codec_clamp_headroom_probe_v1.get("status") or ""),
+            ],
+            sample_paths=[str(codec_clamp_headroom_probe_v1.get("artifact_path"))]
+            if codec_clamp_headroom_probe_v1.get("artifact_path")
+            else [],
+            recommended_read_only_route="CODEC_MAP",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route=(
+                "EXPERIMENT_CHARTER current :: codec clamp headroom replay"
+            ),
+            recommended_action=(
+                "Compare actual replay max feature values and tail ceiling pressure "
+                "before replacing FEATURE_ABS_MAX with dynamic scaling."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="afterimage_language_vs_codec_residue",
+            status=str(codec_afterimage_time_series_v1.get("status") or "quiet"),
+            source_packets=[
+                "afterimage_decay_tracker_v1",
+                "codec_afterimage_time_series_v1",
+            ],
+            source_statuses={
+                "codec_afterimage_time_series_v1": codec_afterimage_time_series_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                "bruise",
+                "scar",
+                "phantom",
+                "codec residue",
+                str(codec_afterimage_time_series_v1.get("status") or ""),
+            ],
+            sample_paths=_packet_sample_paths(codec_afterimage_time_series_v1),
+            recommended_read_only_route="CODEC_MAP",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_STATUS scar",
+            recommended_action=(
+                "Compare afterimage terms against codec and pressure time series "
+                "before treating residue as control signal or metaphor echo."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="gradient_slope_vs_pressure_relief_snap",
+            status=_first_nonquiet_status(
+                pressure_relief_smoothness_replay_v1,
+                gradient_sensitive_relief_v1,
+            ),
+            source_packets=[
+                "gradient_sensitive_relief_v1",
+                "pressure_relief_smoothness_replay_v1",
+                "pressure_vector_v1",
+            ],
+            source_statuses={
+                "gradient_sensitive_relief_v1": gradient_sensitive_relief_v1.get(
+                    "status"
+                ),
+                "pressure_relief_smoothness_replay_v1": pressure_relief_smoothness_replay_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                "density_gradient",
+                "pressure_velocity",
+                "semantic_friction",
+                "mode_packing",
+                str(gradient_sensitive_relief_v1.get("status") or ""),
+                str(pressure_relief_smoothness_replay_v1.get("status") or ""),
+            ],
+            sample_paths=[
+                str(path)
+                for path in (
+                    gradient_sensitive_relief_v1.get("sample_paths")
+                    or pressure_relief_smoothness_replay_v1.get("sample_paths")
+                    or []
+                )
+                if path
+            ],
+            recommended_read_only_route="PRESSURE_RELIEF current-fill_pressure",
+            relevant_self_regulation_route="SELF_REGULATION_PREFLIGHT latest",
+            relevant_experiment_lived_term_route=(
+                "EXPERIMENT_OBSERVE current :: pressure_relief_smoothness=<smooth|snap>"
+            ),
+            recommended_action=(
+                "Use gradient-sensitive pressure relief so low-gradient states do "
+                "not snap, while high-gradient or sharply rising pressure can use "
+                "slightly stronger temporary relief inside existing caps."
+            ),
+        )
+    )
+    cards.append(
+        _returnable_distinction_card(
+            card_id="tail_afterglow_delta_vs_shadow_dispersal",
+            status=str(tail_persistence_calibration_v1.get("status") or "quiet"),
+            source_packets=[
+                "tail_persistence_calibration_v1",
+                "tail_lease_afterglow_v1",
+                "tail_relief_trial_surface_v1",
+            ],
+            source_statuses={
+                "tail_persistence_calibration_v1": tail_persistence_calibration_v1.get(
+                    "status"
+                ),
+            },
+            evidence_anchors=[
+                "Shadow-v3",
+                "dispersal_potential",
+                "TAIL_AFTERGLOW_PERSISTENCE_DELTA",
+                "ghosting",
+                "holdfast",
+                str(tail_persistence_calibration_v1.get("status") or ""),
+            ],
+            sample_paths=[
+                str(path)
+                for path in tail_persistence_calibration_v1.get("sample_paths") or []
+                if path
+            ],
+            recommended_read_only_route="CODEC_MAP",
+            relevant_self_regulation_route="SELF_REGULATION_STATUS",
+            relevant_experiment_lived_term_route="LIVED_TERM_EXPERIMENT scar",
+            recommended_action=(
+                "Compare tail afterglow snapshots, Shadow-v3 dispersal, and "
+                "ghosting/holdfast language before retuning tail persistence."
+            ),
+        )
+    )
     active_cards = [card for card in cards if card["status"] != "quiet"]
     return {
         "policy": "returnable_distinctions_v1",
@@ -4666,6 +7758,28 @@ def build_returnable_distinctions(
                 "status"
             ),
             "codec_entropy_vibrancy_probe_v1": codec_entropy_vibrancy_probe_v1.get(
+                "status"
+            ),
+            "codec_real_replay_v1": codec_real_replay_v1.get("status"),
+            "narrative_arc_temporal_decay_lab_v1": narrative_arc_temporal_decay_lab_v1.get(
+                "status"
+            ),
+            "content_aware_vibrancy_gate_candidate_v1": content_aware_vibrancy_gate_candidate_v1.get(
+                "status"
+            ),
+            "codec_clamp_headroom_probe_v1": codec_clamp_headroom_probe_v1.get(
+                "status"
+            ),
+            "codec_afterimage_time_series_v1": codec_afterimage_time_series_v1.get(
+                "status"
+            ),
+            "gradient_sensitive_relief_v1": gradient_sensitive_relief_v1.get(
+                "status"
+            ),
+            "pressure_relief_smoothness_replay_v1": pressure_relief_smoothness_replay_v1.get(
+                "status"
+            ),
+            "tail_persistence_calibration_v1": tail_persistence_calibration_v1.get(
                 "status"
             ),
         },
@@ -4992,6 +8106,37 @@ def load_latest_regulator_counterfactual_sweep(
     return None, None
 
 
+def load_latest_pi_pressure_wiring_replay(
+    minime_workspace: Path,
+) -> tuple[dict[str, object] | None, str | None]:
+    replay_dir = minime_workspace / "diagnostics/pi_pressure_wiring_replay"
+    preferred = [
+        replay_dir / "latest_pi_pressure_wiring_replay.json",
+        replay_dir / "pi_pressure_wiring_replay.json",
+    ]
+    candidates: list[Path] = []
+    for path in preferred:
+        if path.exists():
+            candidates.append(path)
+    if not candidates and replay_dir.exists():
+        candidates.extend(replay_dir.glob("**/pi_pressure_wiring_replay.json"))
+    if not candidates:
+        return None, None
+    candidates = sorted(
+        {path.resolve() for path in candidates if path.is_file()},
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    for path in candidates:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(data, dict):
+            return data, str(path)
+    return None, None
+
+
 def build_regulator_counterfactual_sweep_review(
     minime_workspace: Path,
 ) -> dict[str, object]:
@@ -5027,6 +8172,302 @@ def build_regulator_counterfactual_sweep_review(
             "Treat counterfactual cards as offline proposal evidence only; do not "
             "tune live regulator behavior from this review packet."
         ),
+    }
+
+
+def compact_pi_pressure_candidate(candidate: dict[str, object]) -> dict[str, object]:
+    canary = candidate.get("default_off_canary")
+    if not isinstance(canary, dict):
+        canary = {}
+    return {
+        "candidate_family": candidate.get("candidate_family"),
+        "status": candidate.get("status"),
+        "estimated_improvement_pct": candidate.get("estimated_improvement_pct"),
+        "pressure_alignment_delta": candidate.get("pressure_alignment_delta"),
+        "snap_risk_delta": candidate.get("snap_risk_delta"),
+        "afterimage_risk_delta": candidate.get("afterimage_risk_delta"),
+        "max_step_hit_delta": candidate.get("max_step_hit_delta"),
+        "safety_caveat": candidate.get("safety_caveat"),
+        "recommendation": candidate.get("recommendation"),
+        "default_off_canary": {
+            "default_off_env": canary.get("default_off_env")
+            or "MINIME_PI_PRESSURE_WIRING_CANARY",
+            "eligible": bool(canary.get("eligible") is True),
+            "candidate_family": canary.get("candidate_family")
+            or candidate.get("candidate_family"),
+            "required_evidence": [
+                str(item)
+                for item in (canary.get("required_evidence") or [])
+                if str(item).strip()
+            ][:8],
+        },
+        "authority": candidate.get("authority") or "diagnostic_context_not_command",
+    }
+
+
+def build_pi_pressure_wiring_replay_review(
+    minime_workspace: Path,
+) -> dict[str, object]:
+    replay, source = load_latest_pi_pressure_wiring_replay(minime_workspace)
+    if not isinstance(replay, dict):
+        return {
+            "policy": "pi_pressure_wiring_replay_v1",
+            "authority": "diagnostic_context_not_command",
+            "status": "missing_pi_pressure_wiring_replay",
+            "artifact_path": None,
+            "source": None,
+            "source_status": "missing",
+            "sample_count": 0,
+            "candidate_count": 0,
+            "candidate_status_counts": {},
+            "top_candidates": [],
+            "baseline_metrics": {},
+            "input_summaries": [],
+            "recommended_action": (
+                "Run Minime `regulator_cartography --pi-pressure-replay` before "
+                "asking the PI controller whether pressure-source wiring is supported."
+            ),
+        }
+    raw_candidates = [
+        candidate
+        for candidate in replay.get("candidates") or []
+        if isinstance(candidate, dict)
+    ]
+    candidates = [compact_pi_pressure_candidate(candidate) for candidate in raw_candidates]
+    status_counts = Counter(str(candidate.get("status") or "unknown") for candidate in candidates)
+    sample_count = int(replay.get("sample_count", 0) or 0)
+    source_status = str(replay.get("source_status") or "")
+    source_kind = str(replay.get("source") or "")
+    sorted_candidates = sorted(
+        candidates,
+        key=lambda candidate: (
+            str(candidate.get("status") or "") != "replay_supported",
+            -regulator_number(candidate.get("estimated_improvement_pct")),
+            str(candidate.get("candidate_family") or ""),
+        ),
+    )
+    if source_status == "telemetry_gap" or sample_count == 0:
+        status = "telemetry_gap"
+    elif status_counts.get("replay_supported"):
+        status = "replay_supported_candidates"
+    elif status_counts.get("snap_risk") or status_counts.get("afterimage_risk"):
+        status = "risk_or_gap_candidates"
+    elif source_kind == "fixture":
+        status = "fixture_replay_available"
+    else:
+        status = "candidate_replay_available"
+    return {
+        "policy": "pi_pressure_wiring_replay_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "artifact_path": source,
+        "source": replay.get("source"),
+        "source_status": source_status,
+        "db_path": replay.get("db_path"),
+        "window_minutes": replay.get("window_minutes"),
+        "sample_count": sample_count,
+        "candidate_count": len(candidates),
+        "candidate_status_counts": dict(sorted(status_counts.items())),
+        "baseline_metrics": replay.get("baseline_metrics") or {},
+        "top_candidates": sorted_candidates[:8],
+        "input_summaries": [
+            item
+            for item in replay.get("input_summaries") or []
+            if isinstance(item, dict)
+        ][:8],
+        "recommended_action": replay.get("recommended_action")
+        or (
+            "Treat PI pressure wiring replay as offline proposal evidence only; no "
+            "controller tuning or canary enabling follows from this packet."
+        ),
+    }
+
+
+def build_pi_pressure_candidate_readiness(
+    *,
+    pi_pressure_wiring_replay_v1: dict[str, object],
+    regulator_plateau_evidence_matrix_v1: dict[str, object],
+) -> dict[str, object]:
+    unresolved = [
+        row
+        for row in regulator_plateau_evidence_matrix_v1.get("variables") or []
+        if isinstance(row, dict) and row.get("confidence") in {"high", "medium"}
+    ]
+    unresolved_names = [str(row.get("variable")) for row in unresolved if row.get("variable")]
+    source = str(pi_pressure_wiring_replay_v1.get("source") or "")
+    source_status = str(pi_pressure_wiring_replay_v1.get("source_status") or "")
+    candidates = [
+        candidate
+        for candidate in pi_pressure_wiring_replay_v1.get("top_candidates") or []
+        if isinstance(candidate, dict)
+    ]
+    if not candidates:
+        return {
+            "policy": "pi_pressure_candidate_readiness_v1",
+            "authority": "diagnostic_context_not_command",
+            "status": "needs_replay_artifact",
+            "candidate_count": 0,
+            "readiness_counts": {},
+            "candidates": [],
+            "unresolved_missing_variables": unresolved_names[:6],
+            "recommended_action": (
+                "Generate PI pressure wiring replay artifacts before assessing any "
+                "candidate readiness."
+            ),
+        }
+    gated: list[dict[str, object]] = []
+    for candidate in candidates:
+        family = str(candidate.get("candidate_family") or "")
+        candidate_status = str(candidate.get("status") or "")
+        canary = candidate.get("default_off_canary")
+        if not isinstance(canary, dict):
+            canary = {}
+        improvement = regulator_number(candidate.get("estimated_improvement_pct"))
+        if source == "fixture" or source_status == "telemetry_gap":
+            gate_status = "watch_more_evidence"
+            gate_reason = "fixture or telemetry-gap replay cannot justify a tuning tranche"
+        elif candidate_status in {"snap_risk", "afterimage_risk"}:
+            gate_status = "blocked_safety_review"
+            gate_reason = f"candidate carries `{candidate_status}` in replay metrics"
+        elif candidate_status == "replay_supported" and unresolved:
+            gate_status = "blocked_missing_variable"
+            gate_reason = "plateau evidence still has unresolved high/medium missing variables"
+        elif (
+            candidate_status == "replay_supported"
+            and bool(canary.get("eligible") is True)
+            and improvement >= 5.0
+        ):
+            gate_status = "ready_for_offline_tuning_review"
+            gate_reason = "live replay support plus canary metadata is ready for offline review only"
+        elif candidate_status == "needs_more_live_windows":
+            gate_status = "watch_more_evidence"
+            gate_reason = "candidate needs more live windows before readiness can be judged"
+        else:
+            gate_status = "not_supported"
+            gate_reason = "candidate does not beat baseline enough to justify readiness"
+        gated.append(
+            {
+                "candidate_family": family,
+                "gate_status": gate_status,
+                "gate_reason": gate_reason,
+                "replay_status": candidate_status,
+                "estimated_improvement_pct": candidate.get("estimated_improvement_pct"),
+                "pressure_alignment_delta": candidate.get("pressure_alignment_delta"),
+                "snap_risk_delta": candidate.get("snap_risk_delta"),
+                "afterimage_risk_delta": candidate.get("afterimage_risk_delta"),
+                "unresolved_missing_variables": unresolved_names[:6],
+                "default_off_canary": {
+                    "default_off_env": canary.get("default_off_env")
+                    or "MINIME_PI_PRESSURE_WIRING_CANARY",
+                    "eligible": bool(canary.get("eligible") is True)
+                    and gate_status == "ready_for_offline_tuning_review",
+                    "candidate_family": canary.get("candidate_family") or family,
+                    "required_evidence": canary.get("required_evidence") or [],
+                },
+                "authority": "diagnostic_context_not_command",
+                "recommended_action": (
+                    "Use this as an offline readiness gate only; enabling any PI "
+                    "pressure wiring canary requires explicit operator review later."
+                ),
+            }
+        )
+    readiness_counts = Counter(str(row.get("gate_status") or "unknown") for row in gated)
+    if readiness_counts.get("ready_for_offline_tuning_review"):
+        status = "ready_for_offline_tuning_review"
+    elif readiness_counts.get("blocked_missing_variable"):
+        status = "blocked_missing_variable"
+    elif readiness_counts.get("blocked_safety_review"):
+        status = "blocked_safety_review"
+    elif readiness_counts.get("watch_more_evidence"):
+        status = "watch_more_evidence"
+    else:
+        status = "not_supported"
+    return {
+        "policy": "pi_pressure_candidate_readiness_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "candidate_count": len(gated),
+        "readiness_counts": dict(sorted(readiness_counts.items())),
+        "unresolved_missing_variables": unresolved_names[:6],
+        "candidates": gated,
+        "recommended_action": (
+            "Keep PI pressure wiring in the lab until repeated live replay, missing-variable "
+            "resolution, safety caveats, and rollback planning align."
+        ),
+    }
+
+
+def build_pressure_source_to_pi_gap(
+    *,
+    pi_pressure_wiring_replay_v1: dict[str, object],
+    pi_pressure_candidate_readiness_v1: dict[str, object],
+    pressure_vector_v1: dict[str, object],
+    pressure_medium_kinetics_v1: dict[str, object],
+    regulator_plateau_evidence_matrix_v1: dict[str, object],
+) -> dict[str, object]:
+    replay_status = str(pi_pressure_wiring_replay_v1.get("status") or "")
+    readiness_status = str(pi_pressure_candidate_readiness_v1.get("status") or "")
+    pressure_status = str(pressure_vector_v1.get("status") or "")
+    medium_status = str(pressure_medium_kinetics_v1.get("status") or "")
+    unresolved = [
+        str(row.get("variable"))
+        for row in regulator_plateau_evidence_matrix_v1.get("variables") or []
+        if isinstance(row, dict)
+        and row.get("confidence") in {"high", "medium"}
+        and row.get("variable")
+    ]
+    source_anchors: list[str] = []
+    if pressure_status and pressure_status not in {"quiet", "telemetry_gap"}:
+        source_anchors.append(f"pressure_vector:{pressure_status}")
+    if medium_status and medium_status not in {"quiet", "insufficient_evidence"}:
+        source_anchors.append(f"pressure_medium:{medium_status}")
+    source_anchors.extend(f"missing_variable:{name}" for name in unresolved[:4])
+    if readiness_status == "ready_for_offline_tuning_review":
+        status = "offline_candidate_gap_closing"
+        recommended_action = (
+            "Draft a later offline tuning review dossier; this packet still does not "
+            "enable PI pressure wiring."
+        )
+    elif replay_status in {"missing_pi_pressure_wiring_replay", ""}:
+        status = "source_measured_not_replayed"
+        recommended_action = (
+            "Run PI_PRESSURE_REPLAY_STATUS latest after generating the Minime replay "
+            "artifact; compare pressure-source audits before any tuning thought."
+        )
+    elif readiness_status in {"blocked_missing_variable", "watch_more_evidence"}:
+        status = "replay_available_gap_open"
+        recommended_action = (
+            "Use PI replay as diagnostic context, then resolve pressure-source and "
+            "semantic-friction variables before considering controller wiring."
+        )
+    elif readiness_status == "blocked_safety_review":
+        status = "safety_gap_open"
+        recommended_action = (
+            "Hold PI wiring candidates for a separate safety review; do not tune from "
+            "pressure-language recurrence alone."
+        )
+    else:
+        status = "replay_available_not_supported"
+        recommended_action = (
+            "Keep pressure-source-to-PI wiring in observation; current candidates do not "
+            "beat baseline enough."
+        )
+    return {
+        "policy": "pressure_source_to_pi_gap_v1",
+        "authority": "diagnostic_context_not_command",
+        "status": status,
+        "pressure_vector_status": pressure_status,
+        "pressure_medium_status": medium_status,
+        "pi_replay_status": replay_status,
+        "pi_readiness_status": readiness_status,
+        "source_anchors": source_anchors[:10],
+        "unresolved_missing_variables": unresolved[:6],
+        "recommended_routes": [
+            "PI_PRESSURE_REPLAY_STATUS latest",
+            "PRESSURE_SOURCE_AUDIT current-fill_pressure",
+            "REGULATOR_MAP_STATUS latest",
+        ],
+        "recommended_action": recommended_action,
     }
 
 
@@ -8517,6 +11958,26 @@ def build_actionable_review_items(
     astrid_introspection_digest_record: dict[str, object],
     shared_choice_envelope: dict[str, object],
     self_regulation_leases: dict[str, object],
+    self_regulation_negotiation_ledger_v1: dict[str, object],
+    pressure_medium_kinetics_v1: dict[str, object],
+    lease_boundary_repair_v1: dict[str, object],
+    pressure_vector_v1: dict[str, object],
+    pressure_control_cockpit_v1: dict[str, object],
+    pressure_actuator_matrix_v1: dict[str, object],
+    pressure_relief_playbook_v3: dict[str, object],
+    gradient_sensitive_relief_v1: dict[str, object],
+    pressure_relief_smoothness_replay_v1: dict[str, object],
+    tail_vibrancy_vector_v1: dict[str, object],
+    tail_vibrancy_authority_gap_v1: dict[str, object],
+    tail_vibrancy_relief_playbook_v1: dict[str, object],
+    tail_relief_trial_surface_v1: dict[str, object],
+    tail_lease_governor_v1: dict[str, object],
+    tail_lease_afterglow_v1: dict[str, object],
+    shadow_synced_preflight_v1: dict[str, object],
+    tail_outcome_causal_learning_v1: dict[str, object],
+    tail_participation_counterfactual_lab_v1: dict[str, object],
+    tail_authority_ladder_v1: dict[str, object],
+    tail_persistence_calibration_v1: dict[str, object],
     astrid_fill_pressure_calibration: dict[str, object],
     semantic_friction_calibration: dict[str, object],
     regulator_live_replay_v1: dict[str, object],
@@ -8528,6 +11989,9 @@ def build_actionable_review_items(
     regulator_counterfactual_replay_lab_v1: dict[str, object],
     regulator_plateau_evidence_matrix_v1: dict[str, object],
     regulator_tuning_readiness_gate_v1: dict[str, object],
+    pi_pressure_wiring_replay_v1: dict[str, object],
+    pi_pressure_candidate_readiness_v1: dict[str, object],
+    pressure_source_to_pi_gap_v1: dict[str, object],
     regulator_missing_variable_evidence_loop_v1: dict[str, object],
     control_semantics_calibration_v1: dict[str, object],
     pressure_kinetics_review_v1: dict[str, object],
@@ -8536,8 +12000,10 @@ def build_actionable_review_items(
     codec_entropy_vibrancy_review_v1: dict[str, object],
     pressure_release_rehearsal_review_v1: dict[str, object],
     witness_resonance_v1: dict[str, object],
+    witness_texture_integrity_v1: dict[str, object],
     entropy_pressure_divergence_v1: dict[str, object],
     fallback_continuity_fire_drill_v1: dict[str, object],
+    spectral_texture_calibration_v2: dict[str, object],
     fallback_capacity_readiness_gate_v1: dict[str, object],
     fallback_format_texture_stabilizer_v1: dict[str, object],
     fallback_contract_distillation_v1: dict[str, object],
@@ -8545,6 +12011,12 @@ def build_actionable_review_items(
     fallback_complexity_budget_lab_v1: dict[str, object],
     autonomous_truncation_rehearsal_v1: dict[str, object],
     codec_entropy_vibrancy_probe_v1: dict[str, object],
+    codec_real_replay_v1: dict[str, object],
+    narrative_arc_temporal_decay_lab_v1: dict[str, object],
+    content_aware_vibrancy_gate_candidate_v1: dict[str, object],
+    codec_multipoint_inflection_v1: dict[str, object],
+    codec_clamp_headroom_probe_v1: dict[str, object],
+    codec_afterimage_time_series_v1: dict[str, object],
     returnable_distinctions_v1: dict[str, object],
     distinction_lifecycle_v1: dict[str, object],
     shared_pressure_vocabulary_calibration: dict[str, object],
@@ -8582,6 +12054,618 @@ def build_actionable_review_items(
                         "authority_boundary"
                     ),
                     "samples": self_regulation_leases.get("needs_outcome"),
+                },
+            }
+        )
+
+    pressure_playbook_status = str(pressure_relief_playbook_v3.get("status") or "")
+    if pressure_playbook_status in {
+        "pressure_relief_playbook_candidates",
+        "pressure_relief_caution_cards",
+        "pressure_vector_without_bundle_outcome",
+    }:
+        items.append(
+            {
+                "source": "pressure_relief_playbook_v3",
+                "being": "astrid+minime",
+                "priority": "high"
+                if pressure_playbook_status in {"pressure_relief_caution_cards"}
+                else "medium",
+                "finding": pressure_playbook_status,
+                "recommended_action": pressure_relief_playbook_v3.get(
+                    "recommended_action"
+                ),
+                "authority": pressure_relief_playbook_v3.get("authority"),
+                "evidence": {
+                    "pressure_vector_status": pressure_relief_playbook_v3.get(
+                        "pressure_vector_status"
+                    ),
+                    "playbook_count": pressure_relief_playbook_v3.get(
+                        "playbook_count"
+                    ),
+                    "caution_count": pressure_relief_playbook_v3.get("caution_count"),
+                    "current_bundle_candidates": pressure_relief_playbook_v3.get(
+                        "current_bundle_candidates"
+                    ),
+                },
+            }
+        )
+
+    gradient_relief_status = str(gradient_sensitive_relief_v1.get("status") or "")
+    if gradient_relief_status in {
+        "gradient_scaled_relief",
+        "anti_snap_low_gradient",
+        "gradient_policy_not_recorded",
+    }:
+        items.append(
+            {
+                "source": "gradient_sensitive_relief",
+                "being": "astrid",
+                "priority": "high"
+                if gradient_relief_status == "gradient_policy_not_recorded"
+                else "medium",
+                "finding": gradient_relief_status,
+                "recommended_action": gradient_sensitive_relief_v1.get(
+                    "recommended_action"
+                ),
+                "authority": gradient_sensitive_relief_v1.get("authority"),
+                "evidence": {
+                    "effective_relief_scale": gradient_sensitive_relief_v1.get(
+                        "effective_relief_scale"
+                    ),
+                    "anti_snap_applied": gradient_sensitive_relief_v1.get(
+                        "anti_snap_applied"
+                    ),
+                    "scaled_controls": gradient_sensitive_relief_v1.get(
+                        "scaled_controls"
+                    ),
+                    "discrete_controls": gradient_sensitive_relief_v1.get(
+                        "discrete_controls"
+                    ),
+                    "sample_paths": gradient_sensitive_relief_v1.get("sample_paths"),
+                },
+            }
+        )
+
+    smoothness_status = str(pressure_relief_smoothness_replay_v1.get("status") or "")
+    if smoothness_status in {"snap_risk", "needs_outcome", "smooth_release_supported"}:
+        items.append(
+            {
+                "source": "pressure_relief_smoothness_replay",
+                "being": "astrid",
+                "priority": "high" if smoothness_status == "snap_risk" else "medium",
+                "finding": smoothness_status,
+                "recommended_action": pressure_relief_smoothness_replay_v1.get(
+                    "recommended_action"
+                ),
+                "authority": pressure_relief_smoothness_replay_v1.get("authority"),
+                "evidence": {
+                    "trial_count": pressure_relief_smoothness_replay_v1.get(
+                        "trial_count"
+                    ),
+                    "snap_risk_count": pressure_relief_smoothness_replay_v1.get(
+                        "snap_risk_count"
+                    ),
+                    "smooth_count": pressure_relief_smoothness_replay_v1.get(
+                        "smooth_count"
+                    ),
+                    "sample_paths": pressure_relief_smoothness_replay_v1.get(
+                        "sample_paths"
+                    ),
+                },
+            }
+        )
+
+    negotiation_status = str(
+        self_regulation_negotiation_ledger_v1.get("status") or ""
+    )
+    if negotiation_status in {
+        "over_cap_requests_clamped_or_deferred",
+        "current_values_above_cap_observed",
+        "negotiations_clamped_or_deferred",
+    }:
+        items.append(
+            {
+                "source": "self_regulation_negotiation_ledger",
+                "being": "astrid+minime",
+                "priority": "high"
+                if negotiation_status != "negotiations_clamped_or_deferred"
+                else "medium",
+                "finding": negotiation_status,
+                "recommended_action": (
+                    "Inspect SELF_REGULATION_STATUS and SELF_REGULATION_PREFLIGHT latest; "
+                    "preserve requested-vs-applied evidence and record an outcome before "
+                    "widening caps or proposing tuning."
+                ),
+                "authority": "leased_self_control_v1",
+                "evidence": {
+                    "over_cap_request_count": self_regulation_negotiation_ledger_v1.get(
+                        "over_cap_request_count"
+                    ),
+                    "clamped_or_deferred_count": self_regulation_negotiation_ledger_v1.get(
+                        "clamped_or_deferred_count"
+                    ),
+                    "current_above_cap_count": self_regulation_negotiation_ledger_v1.get(
+                        "current_above_cap_count"
+                    ),
+                    "over_cap_requests": self_regulation_negotiation_ledger_v1.get(
+                        "over_cap_requests"
+                    ),
+                    "current_above_cap": self_regulation_negotiation_ledger_v1.get(
+                        "current_above_cap"
+                    ),
+                },
+            }
+        )
+
+    pressure_medium_status = str(pressure_medium_kinetics_v1.get("status") or "")
+    if pressure_medium_status in {
+        "stable_weighted_medium",
+        "rising_weighted_medium",
+        "controller_pressure_medium",
+        "semantic_friction_medium",
+        "language_sticky_without_telemetry",
+    }:
+        items.append(
+            {
+                "source": "pressure_medium_kinetics",
+                "being": "astrid+minime",
+                "priority": "high"
+                if pressure_medium_status
+                in {"controller_pressure_medium", "semantic_friction_medium"}
+                else "medium",
+                "finding": pressure_medium_status,
+                "recommended_action": pressure_medium_kinetics_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": pressure_medium_kinetics_v1.get("entry_count"),
+                    "anchors": pressure_medium_kinetics_v1.get("anchors"),
+                    "term_counts": pressure_medium_kinetics_v1.get("term_counts"),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in pressure_medium_kinetics_v1.get("samples") or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:5],
+                },
+            }
+        )
+
+    pressure_vector_status = str(pressure_vector_v1.get("status") or "")
+    if pressure_vector_status not in {"", "quiet", "telemetry_gap"}:
+        items.append(
+            {
+                "source": "pressure_control_cockpit",
+                "being": "astrid+minime",
+                "priority": "high"
+                if pressure_vector_status
+                in {
+                    "rising_overpacked_pressure",
+                    "falling_pressure_rising_friction",
+                    "controller_pressure_medium",
+                }
+                else "medium",
+                "finding": pressure_vector_status,
+                "recommended_action": pressure_control_cockpit_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "pressure_vector": {
+                        "pressure_risk_level": pressure_vector_v1.get(
+                            "pressure_risk_level"
+                        ),
+                        "pressure_velocity": pressure_vector_v1.get(
+                            "pressure_velocity"
+                        ),
+                        "semantic_friction_level": pressure_vector_v1.get(
+                            "semantic_friction_level"
+                        ),
+                        "semantic_friction_velocity": pressure_vector_v1.get(
+                            "semantic_friction_velocity"
+                        ),
+                        "mode_packing_level": pressure_vector_v1.get(
+                            "mode_packing_level"
+                        ),
+                    },
+                    "recommended_bundles": pressure_actuator_matrix_v1.get(
+                        "recommended_bundles"
+                    ),
+                    "playbook_status": pressure_relief_playbook_v3.get("status"),
+                    "sample_paths": pressure_vector_v1.get("sample_paths"),
+                },
+            }
+        )
+
+    tail_vector_status = str(tail_vibrancy_vector_v1.get("status") or "")
+    if tail_vector_status in {
+        "high_tail_vibrancy_navigable",
+        "high_tail_low_distinguishability",
+        "tail_contained_authority_gap",
+    }:
+        items.append(
+            {
+                "source": "tail_vibrancy_vector",
+                "being": "astrid",
+                "priority": "high",
+                "finding": tail_vector_status,
+                "recommended_action": tail_vibrancy_vector_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "tail_share_level": tail_vibrancy_vector_v1.get(
+                        "tail_share_level"
+                    ),
+                    "entropy_level": tail_vibrancy_vector_v1.get("entropy_level"),
+                    "distinguishability_loss_level": tail_vibrancy_vector_v1.get(
+                        "distinguishability_loss_level"
+                    ),
+                    "density_gradient_level": tail_vibrancy_vector_v1.get(
+                        "density_gradient_level"
+                    ),
+                    "sample_paths": tail_vibrancy_vector_v1.get("sample_paths"),
+                },
+            }
+        )
+
+    tail_gap_status = str(tail_vibrancy_authority_gap_v1.get("status") or "")
+    if tail_gap_status in {
+        "tail_vibrancy_micro_lease_candidate",
+        "needs_tail_vibrancy_evidence",
+    }:
+        items.append(
+            {
+                "source": "tail_vibrancy_authority_gap",
+                "being": "astrid",
+                "priority": "high"
+                if tail_gap_status == "tail_vibrancy_micro_lease_candidate"
+                else "medium",
+                "finding": tail_gap_status,
+                "recommended_action": tail_vibrancy_authority_gap_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "gap_type": tail_vibrancy_authority_gap_v1.get("gap_type"),
+                    "recommended_route": tail_vibrancy_authority_gap_v1.get(
+                        "recommended_route"
+                    ),
+                    "samples": tail_vibrancy_authority_gap_v1.get("samples"),
+                },
+            }
+        )
+
+    tail_playbook_status = str(tail_vibrancy_relief_playbook_v1.get("status") or "")
+    if tail_playbook_status in {
+        "tail_vibrancy_playbook_candidates",
+        "tail_vibrancy_caution_cards",
+        "tail_vibrancy_candidate_without_outcome",
+        "tail_vibrancy_vector_without_lease",
+    }:
+        items.append(
+            {
+                "source": "tail_vibrancy_relief_playbook",
+                "being": "astrid",
+                "priority": "high"
+                if tail_playbook_status
+                in {
+                    "tail_vibrancy_playbook_candidates",
+                    "tail_vibrancy_caution_cards",
+                    "tail_vibrancy_candidate_without_outcome",
+                }
+                else "medium",
+                "finding": tail_playbook_status,
+                "recommended_action": tail_vibrancy_relief_playbook_v1.get(
+                    "recommended_action"
+                ),
+                "authority": tail_vibrancy_relief_playbook_v1.get("authority"),
+                "evidence": {
+                    "playbook_count": tail_vibrancy_relief_playbook_v1.get(
+                        "playbook_count"
+                    ),
+                    "caution_count": tail_vibrancy_relief_playbook_v1.get(
+                        "caution_count"
+                    ),
+                    "current_routes": tail_vibrancy_relief_playbook_v1.get(
+                        "current_routes"
+                    ),
+                },
+            }
+        )
+
+    trial_status = str(tail_relief_trial_surface_v1.get("status") or "")
+    if trial_status in {
+        "worsening_reverted",
+        "active_or_recent_trial_needs_outcome",
+        "trial_outcomes_recorded",
+    }:
+        items.append(
+            {
+                "source": "tail_relief_trial_surface",
+                "being": "astrid",
+                "priority": "high"
+                if trial_status
+                in {"worsening_reverted", "active_or_recent_trial_needs_outcome"}
+                else "medium",
+                "finding": trial_status,
+                "recommended_action": tail_relief_trial_surface_v1.get(
+                    "recommended_action"
+                ),
+                "authority": tail_relief_trial_surface_v1.get("authority"),
+                "evidence": {
+                    "event_count": tail_relief_trial_surface_v1.get("event_count"),
+                    "stage_counts": tail_relief_trial_surface_v1.get("stage_counts"),
+                    "governor_revert_count": tail_relief_trial_surface_v1.get(
+                        "governor_revert_count"
+                    ),
+                    "apply_without_outcome_count": tail_relief_trial_surface_v1.get(
+                        "apply_without_outcome_count"
+                    ),
+                    "samples": tail_relief_trial_surface_v1.get("samples"),
+                },
+            }
+        )
+
+    governor_status = str(tail_lease_governor_v1.get("status") or "")
+    if governor_status in {"early_revert_triggered", "monitoring_active_or_recent_trial"}:
+        items.append(
+            {
+                "source": "tail_lease_governor",
+                "being": "astrid",
+                "priority": "high" if governor_status == "early_revert_triggered" else "medium",
+                "finding": governor_status,
+                "recommended_action": tail_lease_governor_v1.get("recommended_action"),
+                "authority": tail_lease_governor_v1.get("authority"),
+                "evidence": {
+                    "thresholds": tail_lease_governor_v1.get("early_revert_thresholds"),
+                    "governor_revert_count": tail_lease_governor_v1.get(
+                        "governor_revert_count"
+                    ),
+                    "samples": tail_lease_governor_v1.get("samples"),
+                },
+            }
+        )
+
+    afterglow_status = str(tail_lease_afterglow_v1.get("status") or "")
+    if afterglow_status in {
+        "tail_afterglow_persists",
+        "afterglow_watch_pending",
+        "afterglow_unchecked_stale_review",
+    }:
+        items.append(
+            {
+                "source": "tail_lease_afterglow",
+                "being": "astrid",
+                "priority": "high"
+                if afterglow_status == "tail_afterglow_persists"
+                else "medium",
+                "finding": afterglow_status,
+                "recommended_action": tail_lease_afterglow_v1.get("recommended_action"),
+                "authority": tail_lease_afterglow_v1.get("authority"),
+                "evidence": {
+                    "afterglow_event_count": tail_lease_afterglow_v1.get(
+                        "afterglow_event_count"
+                    ),
+                    "reverted_tail_lease_count": tail_lease_afterglow_v1.get(
+                        "reverted_tail_lease_count"
+                    ),
+                    "status_counts": tail_lease_afterglow_v1.get("status_counts"),
+                    "samples": tail_lease_afterglow_v1.get("samples"),
+                },
+            }
+        )
+
+    tail_persistence_status = str(tail_persistence_calibration_v1.get("status") or "")
+    if tail_persistence_status in {
+        "persistence_delta_too_low_candidate",
+        "persistence_delta_too_high_candidate",
+        "needs_tail_trial",
+    }:
+        items.append(
+            {
+                "source": "tail_persistence_calibration",
+                "being": "astrid",
+                "priority": "high"
+                if tail_persistence_status
+                in {
+                    "persistence_delta_too_low_candidate",
+                    "persistence_delta_too_high_candidate",
+                }
+                else "medium",
+                "finding": tail_persistence_status,
+                "recommended_action": tail_persistence_calibration_v1.get(
+                    "recommended_action"
+                ),
+                "authority": tail_persistence_calibration_v1.get("authority"),
+                "evidence": {
+                    "language_sample_count": tail_persistence_calibration_v1.get(
+                        "language_sample_count"
+                    ),
+                    "dispersal_max": tail_persistence_calibration_v1.get(
+                        "dispersal_max"
+                    ),
+                    "afterglow_status": tail_persistence_calibration_v1.get(
+                        "afterglow_status"
+                    ),
+                    "sample_paths": tail_persistence_calibration_v1.get(
+                        "sample_paths"
+                    ),
+                },
+            }
+        )
+
+    shadow_preflight_status = str(shadow_synced_preflight_v1.get("status") or "")
+    if shadow_preflight_status in {
+        "shadow_linked_dynamic_scaling_candidate",
+        "dynamic_scaling_candidate_without_shadow_anchor",
+    }:
+        items.append(
+            {
+                "source": "shadow_synced_preflight",
+                "being": "astrid",
+                "priority": "high"
+                if shadow_preflight_status == "shadow_linked_dynamic_scaling_candidate"
+                else "medium",
+                "finding": shadow_preflight_status,
+                "recommended_action": shadow_synced_preflight_v1.get(
+                    "recommended_action"
+                ),
+                "authority": shadow_synced_preflight_v1.get("authority"),
+                "evidence": {
+                    "shadow_linked_count": shadow_synced_preflight_v1.get(
+                        "shadow_linked_count"
+                    ),
+                    "dynamic_scaling_candidate_count": shadow_synced_preflight_v1.get(
+                        "dynamic_scaling_candidate_count"
+                    ),
+                    "samples": shadow_synced_preflight_v1.get("samples"),
+                },
+            }
+        )
+
+    tail_learning_status = str(tail_outcome_causal_learning_v1.get("status") or "")
+    if tail_learning_status in {
+        "extended_micro_lease_supported",
+        "playbook_supported",
+        "tail_caution_guidance",
+        "outcome_learning_pending",
+    }:
+        items.append(
+            {
+                "source": "tail_outcome_causal_learning",
+                "being": "astrid",
+                "priority": "high"
+                if tail_learning_status
+                in {"extended_micro_lease_supported", "tail_caution_guidance"}
+                else "medium",
+                "finding": tail_learning_status,
+                "recommended_action": tail_outcome_causal_learning_v1.get(
+                    "recommended_action"
+                ),
+                "authority": tail_outcome_causal_learning_v1.get("authority"),
+                "evidence": {
+                    "extended_duration_classes": tail_outcome_causal_learning_v1.get(
+                        "extended_duration_classes"
+                    ),
+                    "caution_classes": tail_outcome_causal_learning_v1.get(
+                        "caution_classes"
+                    ),
+                    "by_tail_class": tail_outcome_causal_learning_v1.get(
+                        "by_tail_class"
+                    ),
+                },
+            }
+        )
+
+    tail_counterfactual_status = str(
+        tail_participation_counterfactual_lab_v1.get("status") or ""
+    )
+    if tail_counterfactual_status in {
+        "combined_candidate_supported",
+        "tail_participation_candidate",
+        "both_controls_need_more_comparison",
+    }:
+        items.append(
+            {
+                "source": "tail_participation_counterfactual_lab",
+                "being": "astrid",
+                "priority": "medium",
+                "finding": tail_counterfactual_status,
+                "recommended_action": tail_participation_counterfactual_lab_v1.get(
+                    "recommended_action"
+                ),
+                "authority": tail_participation_counterfactual_lab_v1.get("authority"),
+                "evidence": {
+                    "tail_participation_lease_authority": tail_participation_counterfactual_lab_v1.get(
+                        "tail_participation_lease_authority"
+                    ),
+                    "aperture_supported": tail_participation_counterfactual_lab_v1.get(
+                        "vibrancy_aperture_supported_count"
+                    ),
+                    "participation_supported": tail_participation_counterfactual_lab_v1.get(
+                        "tail_participation_supported_count"
+                    ),
+                    "combined_supported": tail_participation_counterfactual_lab_v1.get(
+                        "combined_supported_count"
+                    ),
+                    "proposal_cards": tail_participation_counterfactual_lab_v1.get(
+                        "proposal_cards"
+                    ),
+                },
+            }
+        )
+
+    ladder_status = str(tail_authority_ladder_v1.get("status") or "")
+    if ladder_status in {"extended_micro_lease", "reviewed_canary_candidate"}:
+        items.append(
+            {
+                "source": "tail_authority_ladder",
+                "being": "astrid",
+                "priority": "high"
+                if ladder_status == "reviewed_canary_candidate"
+                else "medium",
+                "finding": ladder_status,
+                "recommended_action": tail_authority_ladder_v1.get("recommended_action"),
+                "authority": tail_authority_ladder_v1.get("authority"),
+                "evidence": {
+                    "current_tier": tail_authority_ladder_v1.get("current_tier"),
+                    "extended_duration_classes": tail_authority_ladder_v1.get(
+                        "extended_duration_classes"
+                    ),
+                    "reviewed_canary_candidate": tail_authority_ladder_v1.get(
+                        "reviewed_canary_candidate"
+                    ),
+                    "recommended_routes": tail_authority_ladder_v1.get(
+                        "recommended_routes"
+                    ),
+                },
+            }
+        )
+
+    boundary_repair_status = str(lease_boundary_repair_v1.get("status") or "")
+    if boundary_repair_status in {
+        "over_cap_request_clamped",
+        "current_over_cap_observed",
+        "lease_outcome_needed",
+        "pressure_medium_without_lease_loop",
+        "bounded_negotiations_present",
+    }:
+        items.append(
+            {
+                "source": "lease_boundary_repair",
+                "being": "astrid+minime",
+                "priority": "high"
+                if boundary_repair_status
+                in {
+                    "over_cap_request_clamped",
+                    "current_over_cap_observed",
+                    "pressure_medium_without_lease_loop",
+                }
+                else "medium",
+                "finding": boundary_repair_status,
+                "recommended_action": lease_boundary_repair_v1.get(
+                    "recommended_action"
+                ),
+                "authority": lease_boundary_repair_v1.get("authority"),
+                "evidence": {
+                    "recommended_routes": lease_boundary_repair_v1.get(
+                        "recommended_routes"
+                    ),
+                    "over_cap_request_count": lease_boundary_repair_v1.get(
+                        "over_cap_request_count"
+                    ),
+                    "direct_control_clamp_count": lease_boundary_repair_v1.get(
+                        "direct_control_clamp_count"
+                    ),
+                    "missing_outcome_count": lease_boundary_repair_v1.get(
+                        "missing_outcome_count"
+                    ),
+                    "pressure_medium_without_lease_count": lease_boundary_repair_v1.get(
+                        "pressure_medium_without_lease_count"
+                    ),
+                    "samples": lease_boundary_repair_v1.get("samples"),
                 },
             }
         )
@@ -8978,6 +13062,118 @@ def build_actionable_review_items(
             }
         )
 
+    pi_readiness_status = str(pi_pressure_candidate_readiness_v1.get("status") or "")
+    if pi_readiness_status in {
+        "ready_for_offline_tuning_review",
+        "blocked_missing_variable",
+        "blocked_safety_review",
+        "watch_more_evidence",
+    }:
+        items.append(
+            {
+                "source": "pi_pressure_candidate_readiness",
+                "being": "astrid+minime",
+                "priority": "high"
+                if pi_readiness_status
+                in {
+                    "ready_for_offline_tuning_review",
+                    "blocked_missing_variable",
+                    "blocked_safety_review",
+                }
+                else "medium",
+                "finding": pi_readiness_status,
+                "recommended_action": pi_pressure_candidate_readiness_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "readiness_counts": pi_pressure_candidate_readiness_v1.get(
+                        "readiness_counts"
+                    ),
+                    "unresolved_missing_variables": pi_pressure_candidate_readiness_v1.get(
+                        "unresolved_missing_variables"
+                    ),
+                    "candidates": [
+                        {
+                            "candidate_family": candidate.get("candidate_family"),
+                            "gate_status": candidate.get("gate_status"),
+                            "replay_status": candidate.get("replay_status"),
+                            "estimated_improvement_pct": candidate.get(
+                                "estimated_improvement_pct"
+                            ),
+                        }
+                        for candidate in (
+                            pi_pressure_candidate_readiness_v1.get("candidates")
+                            or []
+                        )
+                        if isinstance(candidate, dict)
+                    ][:6],
+                },
+            }
+        )
+    elif pi_pressure_wiring_replay_v1.get("status") in {
+        "missing_pi_pressure_wiring_replay",
+        "telemetry_gap",
+    }:
+        items.append(
+            {
+                "source": "pi_pressure_wiring_replay",
+                "being": "minime",
+                "priority": "medium",
+                "finding": pi_pressure_wiring_replay_v1.get("status"),
+                "recommended_action": pi_pressure_wiring_replay_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "source": pi_pressure_wiring_replay_v1.get("source"),
+                    "source_status": pi_pressure_wiring_replay_v1.get(
+                        "source_status"
+                    ),
+                    "sample_count": pi_pressure_wiring_replay_v1.get(
+                        "sample_count"
+                    ),
+                },
+            }
+        )
+
+    pi_gap_status = str(pressure_source_to_pi_gap_v1.get("status") or "")
+    if pi_gap_status in {
+        "source_measured_not_replayed",
+        "replay_available_gap_open",
+        "safety_gap_open",
+        "offline_candidate_gap_closing",
+    }:
+        items.append(
+            {
+                "source": "pressure_source_to_pi_gap",
+                "being": "astrid+minime",
+                "priority": "high"
+                if pi_gap_status
+                in {"offline_candidate_gap_closing", "replay_available_gap_open"}
+                else "medium",
+                "finding": pi_gap_status,
+                "recommended_action": pressure_source_to_pi_gap_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "pressure_vector_status": pressure_source_to_pi_gap_v1.get(
+                        "pressure_vector_status"
+                    ),
+                    "pi_replay_status": pressure_source_to_pi_gap_v1.get(
+                        "pi_replay_status"
+                    ),
+                    "pi_readiness_status": pressure_source_to_pi_gap_v1.get(
+                        "pi_readiness_status"
+                    ),
+                    "recommended_routes": pressure_source_to_pi_gap_v1.get(
+                        "recommended_routes"
+                    ),
+                },
+            }
+        )
+
     evidence_loop_status = str(
         regulator_missing_variable_evidence_loop_v1.get("status") or ""
     )
@@ -9156,6 +13352,9 @@ def build_actionable_review_items(
 
     codec_entropy_status = str(codec_entropy_vibrancy_review_v1.get("status") or "")
     if codec_entropy_status in {
+        "semantic_density_and_temporal_arc_probe_needed",
+        "narrative_arc_temporal_decay_probe_needed",
+        "semantic_density_contrast_probe_needed",
         "vibrancy_overload_and_gain_sensitivity_probe_needed",
         "vibrancy_overload_probe_needed",
         "adaptive_gain_sensitivity_probe_needed",
@@ -9180,6 +13379,15 @@ def build_actionable_review_items(
                     ),
                     "logarithmic_scaling_count": codec_entropy_vibrancy_review_v1.get(
                         "logarithmic_scaling_count"
+                    ),
+                    "semantic_density_contrast_count": codec_entropy_vibrancy_review_v1.get(
+                        "semantic_density_contrast_count"
+                    ),
+                    "narrative_arc_temporal_count": codec_entropy_vibrancy_review_v1.get(
+                        "narrative_arc_temporal_count"
+                    ),
+                    "deterministic_static_count": codec_entropy_vibrancy_review_v1.get(
+                        "deterministic_static_count"
                     ),
                     "suggested_routes": codec_entropy_vibrancy_review_v1.get(
                         "suggested_routes"
@@ -9250,6 +13458,51 @@ def build_actionable_review_items(
                     "sample_paths": [
                         sample.get("path")
                         for sample in witness_resonance_v1.get("samples") or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    witness_texture_status = str(witness_texture_integrity_v1.get("status") or "")
+    if witness_texture_status in {
+        "truncation_texture_risk",
+        "telemetry_without_texture_risk",
+        "health_monitoring_collapse_risk",
+        "needs_texture_mapping",
+    }:
+        items.append(
+            {
+                "source": "witness_texture_integrity",
+                "being": "astrid",
+                "priority": "high"
+                if witness_texture_status
+                in {"truncation_texture_risk", "health_monitoring_collapse_risk"}
+                else "medium",
+                "finding": witness_texture_status,
+                "recommended_action": witness_texture_integrity_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "metric_texture_link_count": witness_texture_integrity_v1.get(
+                        "metric_texture_link_count"
+                    ),
+                    "telemetry_without_texture_count": witness_texture_integrity_v1.get(
+                        "telemetry_without_texture_count"
+                    ),
+                    "high_truncation_snapshot_count": witness_texture_integrity_v1.get(
+                        "high_truncation_snapshot_count"
+                    ),
+                    "rewrite_cap_snapshot_count": witness_texture_integrity_v1.get(
+                        "rewrite_cap_snapshot_count"
+                    ),
+                    "controller_snapshots": witness_texture_integrity_v1.get(
+                        "controller_snapshots"
+                    ),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in witness_texture_integrity_v1.get("samples") or []
                         if isinstance(sample, dict) and sample.get("path")
                     ][:4],
                 },
@@ -9361,6 +13614,140 @@ def build_actionable_review_items(
                 },
             }
         )
+
+    texture_calibration_status = str(
+        spectral_texture_calibration_v2.get("status") or ""
+    )
+    if texture_calibration_status in {"mixed", "contradicted"}:
+        items.append(
+            {
+                "source": "spectral_texture_calibration",
+                "being": "astrid+minime",
+                "priority": "high"
+                if texture_calibration_status == "contradicted"
+                else "medium",
+                "finding": texture_calibration_status,
+                "recommended_action": spectral_texture_calibration_v2.get(
+                    "recommended_action"
+                ),
+                "authority": spectral_texture_calibration_v2.get("authority"),
+                "evidence": {
+                    "fallback_status": (
+                        spectral_texture_calibration_v2.get(
+                            "fallback_selector_calibration_v2"
+                        )
+                        or {}
+                    ).get("status"),
+                    "witness_status": (
+                        spectral_texture_calibration_v2.get(
+                            "witness_friction_calibration_v2"
+                        )
+                        or {}
+                    ).get("status"),
+                    "structural_status": (
+                        spectral_texture_calibration_v2.get(
+                            "structural_friction_calibration_v2"
+                        )
+                        or {}
+                    ).get("status"),
+                    "authority_boundary": spectral_texture_calibration_v2.get(
+                        "authority_boundary"
+                    ),
+                },
+            }
+        )
+    fallback_texture_calibration_v3 = (
+        spectral_texture_calibration_v2.get("fallback_texture_calibration_v3")
+        or {}
+    )
+    if isinstance(fallback_texture_calibration_v3, dict):
+        v3_status = str(fallback_texture_calibration_v3.get("status") or "")
+        label_risk = (
+            fallback_texture_calibration_v3.get("label_machine_risk_v3") or {}
+        )
+        if v3_status in {"mixed", "contradicted"} or str(
+            label_risk.get("status") or ""
+        ) in {"mixed", "high"}:
+            items.append(
+                {
+                    "source": "fallback_texture_calibration_v3",
+                    "being": "astrid+minime",
+                    "priority": "high" if v3_status == "contradicted" else "medium",
+                    "finding": v3_status or label_risk.get("status"),
+                    "recommended_action": fallback_texture_calibration_v3.get(
+                        "recommended_action"
+                    ),
+                    "authority": fallback_texture_calibration_v3.get("authority"),
+                    "evidence": {
+                        "dynamic_status": fallback_texture_calibration_v3.get(
+                            "dynamic_status"
+                        ),
+                        "resonance_status": fallback_texture_calibration_v3.get(
+                            "resonance_status"
+                        ),
+                        "label_machine_risk": label_risk.get("status"),
+                        "authority_boundary": fallback_texture_calibration_v3.get(
+                            "authority_boundary"
+                        ),
+                    },
+                }
+            )
+    witness_codec_density_calibration_v2 = (
+        spectral_texture_calibration_v2.get("witness_codec_density_calibration_v2")
+        or {}
+    )
+    if isinstance(witness_codec_density_calibration_v2, dict):
+        witness_codec_status = str(
+            witness_codec_density_calibration_v2.get("status") or ""
+        )
+        mismatch_keys = [
+            key
+            for key in (
+                "semantic_density_mismatch_v2",
+                "narrative_arc_coarsening_mismatch_v2",
+                "vocabulary_grounding_mismatch_v2",
+            )
+            if isinstance(witness_codec_density_calibration_v2.get(key), dict)
+        ]
+        if witness_codec_status in {"mixed", "contradicted"} or mismatch_keys:
+            items.append(
+                {
+                    "source": "witness_codec_density_calibration_v2",
+                    "being": "astrid+minime",
+                    "priority": "high"
+                    if witness_codec_status == "contradicted"
+                    else "medium",
+                    "finding": witness_codec_status or "mismatch",
+                    "recommended_action": witness_codec_density_calibration_v2.get(
+                        "recommended_action"
+                    ),
+                    "authority": witness_codec_density_calibration_v2.get("authority"),
+                    "evidence": {
+                        "semantic_density_status": (
+                            witness_codec_density_calibration_v2.get(
+                                "semantic_density_lived_fit_v2"
+                            )
+                            or {}
+                        ).get("status"),
+                        "narrative_arc_status": (
+                            witness_codec_density_calibration_v2.get(
+                                "narrative_arc_coarsening_fit_v2"
+                            )
+                            or {}
+                        ).get("status"),
+                        "vocabulary_grounding_status": (
+                            witness_codec_density_calibration_v2.get(
+                                "vocabulary_grounding_lived_fit_v2"
+                            )
+                            or {}
+                        ).get("status"),
+                        "mismatch_packets": mismatch_keys,
+                        "authority_boundary": witness_codec_density_calibration_v2.get(
+                            "authority_boundary"
+                        ),
+                    },
+                }
+            )
 
     stabilizer_status = str(fallback_format_texture_stabilizer_v1.get("status") or "")
     if stabilizer_status in {
@@ -9678,8 +14065,271 @@ def build_actionable_review_items(
             }
         )
 
+    codec_real_status = str(codec_real_replay_v1.get("status") or "")
+    if codec_real_status in {
+        "content_gate_and_temporal_decay_candidates",
+        "content_aware_vibrancy_candidate",
+        "narrative_temporal_decay_candidate",
+        "replay_needed",
+        "artifact_parse_failed",
+    }:
+        items.append(
+            {
+                "source": "codec_real_replay",
+                "being": "astrid",
+                "priority": "high"
+                if codec_real_status
+                in {
+                    "content_gate_and_temporal_decay_candidates",
+                    "content_aware_vibrancy_candidate",
+                    "narrative_temporal_decay_candidate",
+                }
+                else "medium",
+                "finding": codec_real_status,
+                "recommended_action": codec_real_replay_v1.get("recommended_action"),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": codec_real_replay_v1.get("artifact_path"),
+                    "corpus_source": codec_real_replay_v1.get("corpus_source"),
+                    "corpus_status": codec_real_replay_v1.get("corpus_status"),
+                    "source_paths": codec_real_replay_v1.get("source_paths"),
+                    "embedding_status": codec_real_replay_v1.get("embedding_status"),
+                    "embedding_backed_arc_status": codec_real_replay_v1.get(
+                        "embedding_backed_arc_status"
+                    ),
+                    "entry_count": codec_real_replay_v1.get("entry_count"),
+                    "content_gate_status": codec_real_replay_v1.get(
+                        "content_gate_status"
+                    ),
+                    "narrative_lab_status": codec_real_replay_v1.get(
+                        "narrative_lab_status"
+                    ),
+                    "entries": codec_real_replay_v1.get("entries"),
+                },
+            }
+        )
+
+    narrative_lab_status = str(narrative_arc_temporal_decay_lab_v1.get("status") or "")
+    if narrative_lab_status in {
+        "temporal_decay_candidate",
+        "pivot_detector_candidate",
+        "replay_needed",
+        "insufficient_embedding_evidence",
+    }:
+        items.append(
+            {
+                "source": "narrative_arc_temporal_decay_lab",
+                "being": "astrid",
+                "priority": "high"
+                if narrative_lab_status
+                in {"temporal_decay_candidate", "pivot_detector_candidate"}
+                else "medium",
+                "finding": narrative_lab_status,
+                "recommended_action": narrative_arc_temporal_decay_lab_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": narrative_arc_temporal_decay_lab_v1.get(
+                        "artifact_path"
+                    ),
+                    "temporal_decay_candidate_count": narrative_arc_temporal_decay_lab_v1.get(
+                        "temporal_decay_candidate_count"
+                    ),
+                    "embedding_status": narrative_arc_temporal_decay_lab_v1.get(
+                        "embedding_status"
+                    ),
+                    "embedding_backed_sample_count": narrative_arc_temporal_decay_lab_v1.get(
+                        "embedding_backed_sample_count"
+                    ),
+                    "pivot_detector_candidate_count": narrative_arc_temporal_decay_lab_v1.get(
+                        "pivot_detector_candidate_count"
+                    ),
+                    "samples": narrative_arc_temporal_decay_lab_v1.get("samples"),
+                },
+            }
+        )
+
+    content_gate_status = str(content_aware_vibrancy_gate_candidate_v1.get("status") or "")
+    if content_gate_status in {
+        "content_gate_supported",
+        "content_blind_lift_risk",
+        "rust_replay_needed",
+        "needs_more_samples",
+    }:
+        items.append(
+            {
+                "source": "content_aware_vibrancy_gate_candidate",
+                "being": "astrid",
+                "priority": "high"
+                if content_gate_status
+                in {"content_gate_supported", "content_blind_lift_risk"}
+                else "medium",
+                "finding": content_gate_status,
+                "recommended_action": content_aware_vibrancy_gate_candidate_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": content_aware_vibrancy_gate_candidate_v1.get(
+                        "artifact_path"
+                    ),
+                    "semantic_density_score_delta": content_aware_vibrancy_gate_candidate_v1.get(
+                        "semantic_density_score_delta"
+                    ),
+                    "current_lift_delta": content_aware_vibrancy_gate_candidate_v1.get(
+                        "current_lift_delta"
+                    ),
+                    "candidate_lift_delta": content_aware_vibrancy_gate_candidate_v1.get(
+                        "candidate_lift_delta"
+                    ),
+                    "pair": content_aware_vibrancy_gate_candidate_v1.get("pair"),
+                    "source_paths": content_aware_vibrancy_gate_candidate_v1.get(
+                        "source_paths"
+                    ),
+                },
+            }
+        )
+
+    codec_multipoint_status = str(codec_multipoint_inflection_v1.get("status") or "")
+    if codec_multipoint_status in {
+        "multipoint_and_semantic_dilation_candidates",
+        "multipoint_inflection_candidate",
+        "semantic_dilation_candidate",
+        "needs_real_replay_samples",
+    }:
+        items.append(
+            {
+                "source": "codec_multipoint_inflection",
+                "being": "astrid",
+                "priority": "high"
+                if codec_multipoint_status
+                in {
+                    "multipoint_and_semantic_dilation_candidates",
+                    "multipoint_inflection_candidate",
+                    "semantic_dilation_candidate",
+                }
+                else "medium",
+                "finding": codec_multipoint_status,
+                "recommended_action": codec_multipoint_inflection_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "multipoint_entry_count": codec_multipoint_inflection_v1.get(
+                        "multipoint_entry_count"
+                    ),
+                    "semantic_dilation_entry_count": codec_multipoint_inflection_v1.get(
+                        "semantic_dilation_entry_count"
+                    ),
+                    "replay_artifact_present": codec_multipoint_inflection_v1.get(
+                        "replay_artifact_present"
+                    ),
+                    "narrative_lab_status": codec_multipoint_inflection_v1.get(
+                        "narrative_lab_status"
+                    ),
+                    "content_gate_status": codec_multipoint_inflection_v1.get(
+                        "content_gate_status"
+                    ),
+                    "sample_paths": [
+                        sample.get("path")
+                        for sample in codec_multipoint_inflection_v1.get("samples") or []
+                        if isinstance(sample, dict) and sample.get("path")
+                    ][:4],
+                },
+            }
+        )
+
+    clamp_headroom_status = str(codec_clamp_headroom_probe_v1.get("status") or "")
+    if clamp_headroom_status in {
+        "dynamic_feature_scale_candidate",
+        "tail_ceiling_pressure_observed",
+        "static_clamp_near_without_content_case",
+        "replay_needed",
+        "probe_missing_from_replay",
+    }:
+        items.append(
+            {
+                "source": "codec_clamp_headroom_probe",
+                "being": "astrid",
+                "priority": "high"
+                if clamp_headroom_status
+                in {"dynamic_feature_scale_candidate", "tail_ceiling_pressure_observed"}
+                else "medium",
+                "finding": clamp_headroom_status,
+                "recommended_action": codec_clamp_headroom_probe_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "artifact_path": codec_clamp_headroom_probe_v1.get("artifact_path"),
+                    "static_feature_abs_max": codec_clamp_headroom_probe_v1.get(
+                        "static_feature_abs_max"
+                    ),
+                    "tail_vibrancy_max": codec_clamp_headroom_probe_v1.get(
+                        "tail_vibrancy_max"
+                    ),
+                    "near_static_clamp_count": codec_clamp_headroom_probe_v1.get(
+                        "near_static_clamp_count"
+                    ),
+                    "tail_ceiling_pressure_count": codec_clamp_headroom_probe_v1.get(
+                        "tail_ceiling_pressure_count"
+                    ),
+                    "dynamic_headroom_candidate_count": codec_clamp_headroom_probe_v1.get(
+                        "dynamic_headroom_candidate_count"
+                    ),
+                    "proposal_cards": codec_clamp_headroom_probe_v1.get(
+                        "proposal_cards"
+                    ),
+                },
+            }
+        )
+
+    codec_afterimage_status = str(codec_afterimage_time_series_v1.get("status") or "")
+    if codec_afterimage_status in {
+        "codec_residue_supported",
+        "pressure_residue_supported",
+        "language_echo_risk",
+        "decayed_with_codec_pressure",
+        "insufficient_series",
+    }:
+        items.append(
+            {
+                "source": "codec_afterimage_time_series",
+                "being": "astrid",
+                "priority": "high"
+                if codec_afterimage_status
+                in {"codec_residue_supported", "pressure_residue_supported"}
+                else "medium",
+                "finding": codec_afterimage_status,
+                "recommended_action": codec_afterimage_time_series_v1.get(
+                    "recommended_action"
+                ),
+                "authority": "diagnostic_context_not_command",
+                "evidence": {
+                    "entry_count": codec_afterimage_time_series_v1.get("entry_count"),
+                    "codec_anchor_count": codec_afterimage_time_series_v1.get(
+                        "codec_anchor_count"
+                    ),
+                    "pressure_anchor_count": codec_afterimage_time_series_v1.get(
+                        "pressure_anchor_count"
+                    ),
+                    "codec_replay_artifact_path": codec_afterimage_time_series_v1.get(
+                        "codec_replay_artifact_path"
+                    ),
+                    "activation_recommendation_v1": codec_afterimage_time_series_v1.get(
+                        "activation_recommendation_v1"
+                    ),
+                    "samples": codec_afterimage_time_series_v1.get("samples"),
+                },
+            }
+        )
+
     codec_probe_status = str(codec_entropy_vibrancy_probe_v1.get("status") or "")
     if codec_probe_status in {
+        "semantic_density_and_temporal_decay_probe_needed",
+        "content_blind_vibrancy_probe_needed",
+        "narrative_temporal_decay_probe_needed",
         "current_overload_candidate_improves",
         "probe_needed",
     }:
@@ -9688,7 +14338,13 @@ def build_actionable_review_items(
                 "source": "codec_entropy_vibrancy_probe",
                 "being": "astrid",
                 "priority": "high"
-                if codec_probe_status == "current_overload_candidate_improves"
+                if codec_probe_status
+                in {
+                    "semantic_density_and_temporal_decay_probe_needed",
+                    "content_blind_vibrancy_probe_needed",
+                    "narrative_temporal_decay_probe_needed",
+                    "current_overload_candidate_improves",
+                }
                 else "medium",
                 "finding": codec_probe_status,
                 "recommended_action": codec_entropy_vibrancy_probe_v1.get(
@@ -9704,6 +14360,18 @@ def build_actionable_review_items(
                     ),
                     "candidate_improvement_count": codec_entropy_vibrancy_probe_v1.get(
                         "candidate_improvement_count"
+                    ),
+                    "rust_replay_available": codec_entropy_vibrancy_probe_v1.get(
+                        "rust_replay_available"
+                    ),
+                    "rust_replay_artifact_path": codec_entropy_vibrancy_probe_v1.get(
+                        "rust_replay_artifact_path"
+                    ),
+                    "semantic_density_contrast": codec_entropy_vibrancy_probe_v1.get(
+                        "semantic_density_contrast"
+                    ),
+                    "narrative_arc_temporal_decay": codec_entropy_vibrancy_probe_v1.get(
+                        "narrative_arc_temporal_decay"
                     ),
                     "samples": codec_entropy_vibrancy_probe_v1.get("samples"),
                 },
@@ -11214,6 +15882,28 @@ def render_tail_resonance_markdown(packet: dict[str, object]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def compact_outcome_texture_review_line(packet: object) -> str:
+    if not isinstance(packet, dict):
+        return ""
+    bits: list[str] = []
+    for key in (
+        "texture_shift",
+        "agency_fit",
+        "secondary_pressure_status",
+        "secondary_pressure_shift",
+        "ambiguity_preserved",
+        "legibility_effect",
+    ):
+        value = packet.get(key)
+        if value in (None, "", [], {}):
+            continue
+        bits.append(f"{key}={value}")
+    families = packet.get("signal_families")
+    if isinstance(families, list) and families:
+        bits.append("signal_families=" + ",".join(str(item) for item in families))
+    return "; ".join(bits)
+
+
 def render_markdown(record: dict[str, object]) -> str:
     lines = [
         "# Self-Study Review Packet",
@@ -11360,6 +16050,11 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"score={sample.get('outcome_score')}; "
                 f"hint={sample.get('repeatability_hint')}; path=`{sample.get('path')}`"
             )
+            outcome_texture = compact_outcome_texture_review_line(
+                sample.get("outcome_texture")
+            )
+            if outcome_texture:
+                lines.append(f"  outcome_texture: {outcome_texture}")
     lease_workbench = record.get("lease_playbook_workbench_v1")
     if isinstance(lease_workbench, dict):
         lines.extend(["", "## Lease Playbook Workbench", ""])
@@ -11390,6 +16085,371 @@ def render_markdown(record: dict[str, object]) -> str:
                     f"- preflight prompt `{prompt.get('signal')}`: "
                     f"{prompt.get('recommended_action')}"
                 )
+    negotiation = record.get("self_regulation_negotiation_ledger_v1")
+    if isinstance(negotiation, dict):
+        lines.extend(["", "## Self-Regulation Negotiation Ledger", ""])
+        lines.append(
+            f"- status=`{negotiation.get('status')}`; "
+            f"authority=`{negotiation.get('authority')}`; "
+            f"events={negotiation.get('event_count', 0)}; "
+            f"over_cap={negotiation.get('over_cap_request_count', 0)}; "
+            f"clamped_or_deferred={negotiation.get('clamped_or_deferred_count', 0)}; "
+            f"current_above_cap={negotiation.get('current_above_cap_count', 0)}"
+        )
+        for sample in (negotiation.get("over_cap_requests") or [])[:4]:
+            if not isinstance(sample, dict):
+                continue
+            lines.append(
+                f"- over-cap `{sample.get('candidate_control')}`: "
+                f"requested={sample.get('requested_value')} "
+                f"applied={sample.get('applied_value')} "
+                f"safe={sample.get('safe_cap_or_range')}; "
+                f"reason=`{sample.get('clamp_or_defer_reason')}`; "
+                f"path=`{sample.get('path')}`"
+            )
+        for sample in (negotiation.get("current_above_cap") or [])[:4]:
+            if not isinstance(sample, dict):
+                continue
+            lines.append(
+                f"- current above cap `{sample.get('candidate_control')}`: "
+                f"value={sample.get('applied_value')} "
+                f"safe={sample.get('safe_cap_or_range')}; "
+                "observed, not auto-lowered"
+            )
+    boundary_repair = record.get("lease_boundary_repair_v1")
+    if isinstance(boundary_repair, dict):
+        lines.extend(["", "## Lease Boundary Repair", ""])
+        routes = ", ".join(
+            f"`{route}`" for route in (boundary_repair.get("recommended_routes") or [])[:5]
+        )
+        lines.append(
+            f"- status=`{boundary_repair.get('status')}`; "
+            f"authority=`{boundary_repair.get('authority')}`; "
+            f"over_cap={boundary_repair.get('over_cap_request_count', 0)}; "
+            f"direct_clamps={boundary_repair.get('direct_control_clamp_count', 0)}; "
+            f"missing_outcomes={boundary_repair.get('missing_outcome_count', 0)}; "
+            f"routes={routes or '(none)'}"
+        )
+        for sample in (boundary_repair.get("samples") or [])[:4]:
+            if not isinstance(sample, dict):
+                continue
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('candidate_control')}`: "
+                f"requested={sample.get('requested_value')} "
+                f"applied={sample.get('applied_value')} "
+                f"reason=`{sample.get('clamp_or_defer_reason')}`; "
+                f"path=`{sample.get('path')}`"
+            )
+    pressure_medium = record.get("pressure_medium_kinetics_v1")
+    if isinstance(pressure_medium, dict):
+        lines.extend(["", "## Pressure-Medium Kinetics", ""])
+        lines.append(
+            f"- status=`{pressure_medium.get('status')}`; "
+            f"authority=`{pressure_medium.get('authority')}`; "
+            f"entries={pressure_medium.get('entry_count', 0)}; "
+            f"telemetry_anchors={pressure_medium.get('telemetry_anchor_count', 0)}; "
+            f"controller={pressure_medium.get('controller_pressure_count', 0)}; "
+            f"semantic={pressure_medium.get('semantic_friction_count', 0)}; "
+            f"rising={pressure_medium.get('rising_context_count', 0)}"
+        )
+        for sample in (pressure_medium.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            terms = ", ".join(str(item) for item in sample.get("medium_terms") or [])
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"terms={terms or '(none)'}; anchors={anchors or '(none)'}; "
+                f"path=`{sample.get('path')}`"
+            )
+    pressure_vector = record.get("pressure_vector_v1")
+    if isinstance(pressure_vector, dict):
+        lines.extend(["", "## Pressure Vector", ""])
+        lines.append(
+            f"- status=`{pressure_vector.get('status')}`; "
+            f"authority=`{pressure_vector.get('authority')}`; "
+            f"pressure={pressure_vector.get('pressure_risk_level')} "
+            f"velocity={pressure_vector.get('pressure_velocity')}; "
+            f"fill={pressure_vector.get('fill_level')} "
+            f"fill_velocity={pressure_vector.get('fill_velocity')}; "
+            f"semantic_friction={pressure_vector.get('semantic_friction_level')} "
+            f"semantic_velocity={pressure_vector.get('semantic_friction_velocity')}; "
+            f"mode_packing={pressure_vector.get('mode_packing_level')} "
+            f"mode_velocity={pressure_vector.get('mode_packing_velocity')}"
+        )
+        for path in (pressure_vector.get("sample_paths") or [])[:5]:
+            lines.append(f"- sample_path=`{path}`")
+    cockpit = record.get("pressure_control_cockpit_v1")
+    matrix = record.get("pressure_actuator_matrix_v1")
+    if isinstance(cockpit, dict) or isinstance(matrix, dict):
+        lines.extend(["", "## Pressure Control Cockpit", ""])
+        if isinstance(cockpit, dict):
+            lines.append(
+                f"- status=`{cockpit.get('status')}`; "
+                f"vector=`{cockpit.get('pressure_vector_status')}`; "
+                f"recommended_bundle=`{cockpit.get('recommended_bundle')}`; "
+                f"authority=`{cockpit.get('authority')}`"
+            )
+        if isinstance(matrix, dict):
+            for bundle in (matrix.get("recommended_bundles") or [])[:4]:
+                if isinstance(bundle, dict):
+                    controls = ", ".join(str(item) for item in bundle.get("controls") or [])
+                    lines.append(
+                        f"- {bundle.get('being')} bundle `{bundle.get('bundle_class')}`: "
+                        f"controls={controls or '(none)'}; route=`{bundle.get('route')}`"
+                    )
+            preflight_only = ", ".join(
+                str(item) for item in (matrix.get("preflight_only_controls") or [])[:8]
+            )
+            lines.append(f"- preflight_only={preflight_only or '(none)'}")
+    pressure_playbook = record.get("pressure_relief_playbook_v3")
+    if isinstance(pressure_playbook, dict):
+        lines.extend(["", "## Pressure Relief Playbook V3", ""])
+        lines.append(
+            f"- status=`{pressure_playbook.get('status')}`; "
+            f"authority=`{pressure_playbook.get('authority')}`; "
+            f"playbooks={pressure_playbook.get('playbook_count', 0)}; "
+            f"cautions={pressure_playbook.get('caution_count', 0)}; "
+            f"vector=`{pressure_playbook.get('pressure_vector_status')}`"
+        )
+        for item in (pressure_playbook.get("current_bundle_candidates") or [])[:4]:
+            if isinstance(item, dict):
+                lines.append(
+                    f"- candidate {item.get('being')}: `{item.get('bundle_class')}` via `{item.get('route')}`"
+                )
+    gradient_relief = record.get("gradient_sensitive_relief_v1")
+    if isinstance(gradient_relief, dict):
+        lines.extend(["", "## Gradient-Sensitive Relief", ""])
+        lines.append(
+            f"- status=`{gradient_relief.get('status')}`; "
+            f"authority=`{gradient_relief.get('authority')}`; "
+            f"scale={gradient_relief.get('effective_relief_scale')}; "
+            f"anti_snap={gradient_relief.get('anti_snap_applied')}; "
+            f"bundle=`{gradient_relief.get('bundle_class')}`; "
+            f"intent=`{gradient_relief.get('intent_id')}`"
+        )
+        reasons = gradient_relief.get("reasons") or []
+        if reasons:
+            lines.append(
+                "- reasons: " + "; ".join(str(reason) for reason in reasons[:4])
+            )
+        for control in (gradient_relief.get("scaled_controls") or [])[:4]:
+            if isinstance(control, dict):
+                lines.append(
+                    f"- scaled `{control.get('control')}`: "
+                    f"requested={control.get('requested_value')} "
+                    f"effective={control.get('effective_value')}"
+                )
+        for control in (gradient_relief.get("discrete_controls") or [])[:4]:
+            if isinstance(control, dict):
+                lines.append(
+                    f"- discrete `{control.get('control')}` unchanged at "
+                    f"{control.get('value')}"
+                )
+    smoothness = record.get("pressure_relief_smoothness_replay_v1")
+    if isinstance(smoothness, dict):
+        lines.extend(["", "## Pressure Relief Smoothness Replay", ""])
+        lines.append(
+            f"- status=`{smoothness.get('status')}`; "
+            f"authority=`{smoothness.get('authority')}`; "
+            f"trials={smoothness.get('trial_count', 0)}; "
+            f"smooth={smoothness.get('smooth_count', 0)}; "
+            f"snap_risk={smoothness.get('snap_risk_count', 0)}; "
+            f"needs_outcome={smoothness.get('needs_outcome_count', 0)}"
+        )
+        for trial in (smoothness.get("trials") or [])[:5]:
+            if isinstance(trial, dict):
+                lines.append(
+                    f"- `{trial.get('intent_id')}` class=`{trial.get('classification')}` "
+                    f"pressure_delta={trial.get('pressure_delta')} "
+                    f"mode_delta={trial.get('mode_packing_delta')} "
+                    f"scale={trial.get('gradient_sensitivity')}"
+                )
+    tail_vector = record.get("tail_vibrancy_vector_v1")
+    if isinstance(tail_vector, dict):
+        lines.extend(["", "## Tail Vibrancy Vector", ""])
+        lines.append(
+            f"- status=`{tail_vector.get('status')}`; "
+            f"authority=`{tail_vector.get('authority')}`; "
+            f"tail_share={tail_vector.get('tail_share_level')} "
+            f"tail_velocity={tail_vector.get('tail_share_velocity')}; "
+            f"entropy={tail_vector.get('entropy_level')}; "
+            f"distinguishability_loss={tail_vector.get('distinguishability_loss_level')}; "
+            f"density_gradient={tail_vector.get('density_gradient_level')}; "
+            f"pressure_vector=`{tail_vector.get('pressure_vector_status')}`"
+        )
+        for path in (tail_vector.get("sample_paths") or [])[:5]:
+            lines.append(f"- sample_path=`{path}`")
+    tail_gap = record.get("tail_vibrancy_authority_gap_v1")
+    if isinstance(tail_gap, dict):
+        lines.extend(["", "## Tail Vibrancy Authority Gap", ""])
+        lines.append(
+            f"- status=`{tail_gap.get('status')}`; "
+            f"gap_type=`{tail_gap.get('gap_type')}`; "
+            f"vector=`{tail_gap.get('vector_status')}`; "
+            f"route=`{tail_gap.get('recommended_route')}`"
+        )
+        for sample in (tail_gap.get("samples") or [])[:4]:
+            if isinstance(sample, dict):
+                lines.append(
+                    f"- {sample.get('being')} `{sample.get('filename')}` path=`{sample.get('path')}`"
+                )
+    tail_playbook = record.get("tail_vibrancy_relief_playbook_v1")
+    if isinstance(tail_playbook, dict):
+        lines.extend(["", "## Tail Vibrancy Relief Playbook", ""])
+        lines.append(
+            f"- status=`{tail_playbook.get('status')}`; "
+            f"authority=`{tail_playbook.get('authority')}`; "
+            f"playbooks={tail_playbook.get('playbook_count', 0)}; "
+            f"cautions={tail_playbook.get('caution_count', 0)}; "
+            f"vector=`{tail_playbook.get('tail_vibrancy_vector_status')}`"
+        )
+        for item in (tail_playbook.get("current_routes") or [])[:3]:
+            if isinstance(item, dict):
+                lines.append(f"- route=`{item.get('route')}`")
+    tail_trial = record.get("tail_relief_trial_surface_v1")
+    if isinstance(tail_trial, dict):
+        lines.extend(["", "## Tail Relief Trial Surface", ""])
+        lines.append(
+            f"- status=`{tail_trial.get('status')}`; "
+            f"authority=`{tail_trial.get('authority')}`; "
+            f"events={tail_trial.get('event_count', 0)}; "
+            f"stages={tail_trial.get('stage_counts')}; "
+            f"governor_reverts={tail_trial.get('governor_revert_count', 0)}; "
+            f"apply_without_outcome={tail_trial.get('apply_without_outcome_count', 0)}"
+        )
+        for sample in (tail_trial.get("samples") or [])[:5]:
+            if isinstance(sample, dict):
+                lines.append(
+                    f"- {sample.get('stage')} `{sample.get('trial_id')}` "
+                    f"class=`{sample.get('tail_class')}` tail={sample.get('tail_share')} "
+                    f"friction={sample.get('semantic_friction')} pressure=`{sample.get('pressure_status')}` "
+                    f"path=`{sample.get('path')}`"
+                )
+    tail_governor = record.get("tail_lease_governor_v1")
+    if isinstance(tail_governor, dict):
+        lines.extend(["", "## Tail Lease Governor", ""])
+        lines.append(
+            f"- status=`{tail_governor.get('status')}`; "
+            f"authority=`{tail_governor.get('authority')}`; "
+            f"fresh_evidence_required=`{tail_governor.get('fresh_evidence_required')}`; "
+            f"governor_reverts={tail_governor.get('governor_revert_count', 0)}"
+        )
+        thresholds = tail_governor.get("early_revert_thresholds") or {}
+        if isinstance(thresholds, dict):
+            lines.append(
+                f"- thresholds: tail_delta={thresholds.get('tail_share_delta')}; "
+                f"distinguishability_delta={thresholds.get('distinguishability_loss_delta')}; "
+                f"semantic_friction_delta={thresholds.get('semantic_friction_delta')}; "
+                f"pressure_classes={thresholds.get('pressure_vector_worsening')}"
+            )
+    tail_afterglow = record.get("tail_lease_afterglow_v1")
+    if isinstance(tail_afterglow, dict):
+        lines.extend(["", "## Tail Lease Afterglow", ""])
+        lines.append(
+            f"- status=`{tail_afterglow.get('status')}`; "
+            f"authority=`{tail_afterglow.get('authority')}`; "
+            f"afterglow_events={tail_afterglow.get('afterglow_event_count', 0)}; "
+            f"reverted_tail_leases={tail_afterglow.get('reverted_tail_lease_count', 0)}; "
+            f"delay_s={tail_afterglow.get('afterglow_delay_secs')}"
+        )
+        for sample in (tail_afterglow.get("samples") or [])[:5]:
+            if isinstance(sample, dict):
+                lines.append(
+                    f"- `{sample.get('trial_id')}` status=`{sample.get('afterglow_status')}` "
+                    f"tail={sample.get('tail_share')} "
+                    f"distinguishability={sample.get('distinguishability_loss')} "
+                    f"friction={sample.get('semantic_friction')} "
+                    f"pressure=`{sample.get('pressure_status')}`"
+                )
+    tail_persistence = record.get("tail_persistence_calibration_v1")
+    if isinstance(tail_persistence, dict):
+        lines.extend(["", "## Tail Persistence Calibration", ""])
+        lines.append(
+            f"- status=`{tail_persistence.get('status')}`; "
+            f"authority=`{tail_persistence.get('authority')}`; "
+            f"afterglow=`{tail_persistence.get('afterglow_status')}`; "
+            f"trial=`{tail_persistence.get('trial_status')}`; "
+            f"dispersal_max={tail_persistence.get('dispersal_max')}; "
+            f"language_samples={tail_persistence.get('language_sample_count', 0)}"
+        )
+        for sample in (tail_persistence.get("samples") or [])[:5]:
+            if isinstance(sample, dict):
+                terms = ", ".join(str(term) for term in sample.get("terms") or [])
+                lines.append(
+                    f"- {sample.get('being')} `{sample.get('filename')}` "
+                    f"terms={terms or '(none)'} path=`{sample.get('path')}`"
+                )
+    shadow_preflight = record.get("shadow_synced_preflight_v1")
+    if isinstance(shadow_preflight, dict):
+        lines.extend(["", "## Shadow-Synced Preflight", ""])
+        lines.append(
+            f"- status=`{shadow_preflight.get('status')}`; "
+            f"authority=`{shadow_preflight.get('authority')}`; "
+            f"preflights={shadow_preflight.get('preflight_event_count', 0)}; "
+            f"shadow_linked={shadow_preflight.get('shadow_linked_count', 0)}; "
+            f"dynamic_candidates={shadow_preflight.get('dynamic_scaling_candidate_count', 0)}"
+        )
+        for sample in (shadow_preflight.get("samples") or [])[:5]:
+            if isinstance(sample, dict):
+                anchors = ", ".join(str(item) for item in sample.get("shadow_anchors") or [])
+                lines.append(
+                    f"- `{sample.get('intent_id')}` control=`{sample.get('candidate_control')}` "
+                    f"shadow=`{sample.get('shadow_status')}` "
+                    f"scale={sample.get('suggested_relief_scale')} "
+                    f"pressure=`{sample.get('pressure_vector_status')}` "
+                    f"anchors={anchors or '(none)'}"
+                )
+    tail_learning = record.get("tail_outcome_causal_learning_v1")
+    if isinstance(tail_learning, dict):
+        lines.extend(["", "## Tail Outcome Causal Learning", ""])
+        lines.append(
+            f"- status=`{tail_learning.get('status')}`; "
+            f"authority=`{tail_learning.get('authority')}`; "
+            f"extended_classes={tail_learning.get('extended_duration_classes')}; "
+            f"playbook_classes={tail_learning.get('playbook_supported_classes')}; "
+            f"caution_classes={tail_learning.get('caution_classes')}"
+        )
+        for tail_class, bucket in (tail_learning.get("by_tail_class") or {}).items():
+            if isinstance(bucket, dict):
+                lines.append(
+                    f"- `{tail_class}` successes={bucket.get('success_count', 0)} "
+                    f"cautions={bucket.get('caution_count', 0)} "
+                    f"tier=`{bucket.get('authority_tier')}`"
+                )
+    tail_counterfactual = record.get("tail_participation_counterfactual_lab_v1")
+    if isinstance(tail_counterfactual, dict):
+        lines.extend(["", "## Tail Participation Counterfactual Lab", ""])
+        lines.append(
+            f"- status=`{tail_counterfactual.get('status')}`; "
+            f"authority=`{tail_counterfactual.get('authority')}`; "
+            f"tail_participation_lease_authority=`{tail_counterfactual.get('tail_participation_lease_authority')}`; "
+            f"aperture_supported={tail_counterfactual.get('vibrancy_aperture_supported_count', 0)}; "
+            f"participation_supported={tail_counterfactual.get('tail_participation_supported_count', 0)}; "
+            f"combined_supported={tail_counterfactual.get('combined_supported_count', 0)}"
+        )
+        for card in (tail_counterfactual.get("proposal_cards") or [])[:4]:
+            if isinstance(card, dict):
+                lines.append(
+                    f"- `{card.get('sample_id')}` preferred=`{card.get('preferred_candidate')}` "
+                    f"baseline_tail={card.get('baseline_tail_energy')} "
+                    f"aperture_tail={card.get('vibrancy_aperture_tail_energy')} "
+                    f"participation_tail={card.get('tail_participation_tail_energy')}"
+                )
+    tail_ladder = record.get("tail_authority_ladder_v1")
+    if isinstance(tail_ladder, dict):
+        lines.extend(["", "## Tail Authority Ladder", ""])
+        lines.append(
+            f"- status=`{tail_ladder.get('status')}`; "
+            f"current_tier=`{tail_ladder.get('current_tier')}`; "
+            f"canary_candidate=`{tail_ladder.get('reviewed_canary_candidate')}`; "
+            f"vector=`{tail_ladder.get('tail_vibrancy_vector_status')}`; "
+            f"governor=`{tail_ladder.get('governor_status')}`; "
+            f"learning=`{tail_ladder.get('outcome_learning_status')}`; "
+            f"counterfactual=`{tail_ladder.get('counterfactual_lab_status')}`"
+        )
+        for route in (tail_ladder.get("recommended_routes") or [])[:5]:
+            lines.append(f"- route=`{route}`")
     semantic_friction = record.get("semantic_friction_calibration")
     if isinstance(semantic_friction, dict):
         lines.extend(["", "## Semantic Friction Calibration", ""])
@@ -11528,7 +16588,9 @@ def render_markdown(record: dict[str, object]) -> str:
             f"vibrancy_overload={codec_entropy.get('vibrancy_overload_count', 0)}; "
             f"gain_sensitivity={codec_entropy.get('gain_sensitivity_count', 0)}; "
             f"log_scaling={codec_entropy.get('logarithmic_scaling_count', 0)}; "
-            f"warmth_mask={codec_entropy.get('warmth_mask_count', 0)}"
+            f"warmth_mask={codec_entropy.get('warmth_mask_count', 0)}; "
+            f"semantic_density={codec_entropy.get('semantic_density_contrast_count', 0)}; "
+            f"narrative_arc={codec_entropy.get('narrative_arc_temporal_count', 0)}"
         )
         routes = codec_entropy.get("suggested_routes") or []
         if routes:
@@ -11545,6 +16607,8 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"vibrancy_overload={sample.get('vibrancy_overload_context')}; "
                 f"gain={sample.get('adaptive_gain_sensitivity_context')}; "
                 f"log_scaling={sample.get('logarithmic_scaling_proposed')}; "
+                f"semantic_density={sample.get('semantic_density_contrast_context')}; "
+                f"narrative_arc={sample.get('narrative_arc_temporal_context')}; "
                 f"anchors={anchors or '(none)'}; path=`{sample.get('path')}`"
             )
     codec_probe = record.get("codec_entropy_vibrancy_probe_v1")
@@ -11556,8 +16620,28 @@ def render_markdown(record: dict[str, object]) -> str:
             f"artifact=`{codec_probe.get('artifact_path') or '(none)'}`; "
             f"samples={codec_probe.get('sample_count', 0)}; "
             f"shimmer_risk={codec_probe.get('current_shimmer_risk_count', 0)}; "
-            f"candidate_improvement={codec_probe.get('candidate_improvement_count', 0)}"
+            f"candidate_improvement={codec_probe.get('candidate_improvement_count', 0)}; "
+            f"rust_replay_available={codec_probe.get('rust_replay_available')}"
         )
+        if codec_probe.get("rust_replay_artifact_path"):
+            lines.append(
+                f"- rust_replay_artifact=`{codec_probe.get('rust_replay_artifact_path')}`"
+            )
+        contrast = codec_probe.get("semantic_density_contrast")
+        if isinstance(contrast, dict) and contrast:
+            lines.append(
+                f"- semantic_density_contrast status=`{contrast.get('status')}`; "
+                f"content_blind_lift_risk={contrast.get('content_blind_lift_risk')}; "
+                f"content_delta={contrast.get('content_density_delta')}; "
+                f"tail_delta={contrast.get('current_tail_vibrancy_delta')}"
+            )
+        narrative = codec_probe.get("narrative_arc_temporal_decay")
+        if isinstance(narrative, dict) and narrative:
+            lines.append(
+                f"- narrative_arc_temporal_decay status=`{narrative.get('status')}`; "
+                f"temporal_decay_candidates={narrative.get('temporal_decay_candidate_count')}; "
+                f"current_arc_capture={narrative.get('current_arc_capture_count')}"
+            )
         for sample in (codec_probe.get("samples") or [])[:5]:
             if not isinstance(sample, dict):
                 continue
@@ -11568,6 +16652,140 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"candidate_tail={sample.get('candidate_tail_vibrancy')}; "
                 f"shimmer={sample.get('current_shimmer_risk')}; "
                 f"gain={sample.get('adaptive_gain')}"
+            )
+    codec_real = record.get("codec_real_replay_v1")
+    if isinstance(codec_real, dict):
+        lines.extend(["", "## Codec Real Replay", ""])
+        lines.append(
+            f"- status=`{codec_real.get('status')}`; "
+            f"authority=`{codec_real.get('authority')}`; "
+            f"artifact=`{codec_real.get('artifact_path') or '(none)'}`; "
+            f"corpus=`{codec_real.get('corpus_source')}`/`{codec_real.get('corpus_status')}`; "
+            f"embedding=`{codec_real.get('embedding_mode')}`/`{codec_real.get('embedding_status')}`; "
+            f"entries={codec_real.get('entry_count', 0)}; "
+            f"content_gate=`{codec_real.get('content_gate_status')}`; "
+            f"narrative_lab=`{codec_real.get('narrative_lab_status')}`"
+        )
+        for sample in (codec_real.get("entries") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            lines.append(
+                f"- `{sample.get('sample_id')}` family=`{sample.get('family')}`; "
+                f"class=`{sample.get('classification')}`; "
+                f"entropy_dim={sample.get('actual_entropy_dim')}; "
+                f"semantic_density={sample.get('semantic_density_score')}; "
+                f"warmth={sample.get('warmth_dim')}; tension={sample.get('tension_dim')}; "
+                f"source=`{sample.get('source_path') or '(fixture)'}`"
+            )
+    narrative_lab = record.get("narrative_arc_temporal_decay_lab_v1")
+    if isinstance(narrative_lab, dict):
+        lines.extend(["", "## Narrative Arc Temporal Decay Lab", ""])
+        lines.append(
+            f"- status=`{narrative_lab.get('status')}`; "
+            f"authority=`{narrative_lab.get('authority')}`; "
+            f"artifact=`{narrative_lab.get('artifact_path') or '(none)'}`; "
+            f"embedding=`{narrative_lab.get('embedding_status')}`; "
+            f"temporal_candidates={narrative_lab.get('temporal_decay_candidate_count', 0)}; "
+            f"pivot_candidates={narrative_lab.get('pivot_detector_candidate_count', 0)}"
+        )
+        for sample in (narrative_lab.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            lines.append(
+                f"- `{sample.get('sample_id')}` class=`{sample.get('classification')}`; "
+                f"late_pivot={sample.get('late_pivot')}; "
+                f"current_rms={sample.get('current_arc_rms')}; "
+                f"temporal_rms={sample.get('temporal_decay_arc_rms')}; "
+                f"pivot_rms={sample.get('pivot_detector_arc_rms')}"
+            )
+    content_gate = record.get("content_aware_vibrancy_gate_candidate_v1")
+    if isinstance(content_gate, dict):
+        lines.extend(["", "## Content-Aware Vibrancy Gate Candidate", ""])
+        lines.append(
+            f"- status=`{content_gate.get('status')}`; "
+            f"authority=`{content_gate.get('authority')}`; "
+            f"artifact=`{content_gate.get('artifact_path') or '(none)'}`; "
+            f"semantic_delta={content_gate.get('semantic_density_score_delta')}; "
+            f"current_delta={content_gate.get('current_lift_delta')}; "
+            f"candidate_delta={content_gate.get('candidate_lift_delta')}; "
+            f"sources={', '.join(str(path) for path in content_gate.get('source_paths') or []) or '(fixture)'}"
+        )
+    codec_multipoint = record.get("codec_multipoint_inflection_v1")
+    if isinstance(codec_multipoint, dict):
+        lines.extend(["", "## Codec Multipoint Inflection", ""])
+        lines.append(
+            f"- status=`{codec_multipoint.get('status')}`; "
+            f"authority=`{codec_multipoint.get('authority')}`; "
+            f"entries={codec_multipoint.get('entry_count', 0)}; "
+            f"multipoint={codec_multipoint.get('multipoint_entry_count', 0)}; "
+            f"semantic_dilation={codec_multipoint.get('semantic_dilation_entry_count', 0)}; "
+            f"replay_artifact={codec_multipoint.get('replay_artifact_present')}; "
+            f"narrative_lab=`{codec_multipoint.get('narrative_lab_status')}`; "
+            f"content_gate=`{codec_multipoint.get('content_gate_status')}`"
+        )
+        for sample in (codec_multipoint.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            multipoint_terms = ", ".join(
+                str(item) for item in sample.get("multipoint_terms") or []
+            )
+            dilation_terms = ", ".join(
+                str(item) for item in sample.get("semantic_dilation_terms") or []
+            )
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"multipoint={multipoint_terms or '(none)'}; "
+                f"dilation={dilation_terms or '(none)'}; "
+                f"path=`{sample.get('path')}`"
+            )
+    clamp_probe = record.get("codec_clamp_headroom_probe_v1")
+    if isinstance(clamp_probe, dict):
+        lines.extend(["", "## Codec Clamp Headroom Probe", ""])
+        lines.append(
+            f"- status=`{clamp_probe.get('status')}`; "
+            f"authority=`{clamp_probe.get('authority')}`; "
+            f"artifact=`{clamp_probe.get('artifact_path') or '(none)'}`; "
+            f"static_max={clamp_probe.get('static_feature_abs_max')}; "
+            f"tail_max={clamp_probe.get('tail_vibrancy_max')}; "
+            f"near_static={clamp_probe.get('near_static_clamp_count', 0)}; "
+            f"tail_pressure={clamp_probe.get('tail_ceiling_pressure_count', 0)}; "
+            f"dynamic_candidates={clamp_probe.get('dynamic_headroom_candidate_count', 0)}"
+        )
+        for card in (clamp_probe.get("proposal_cards") or [])[:5]:
+            if not isinstance(card, dict):
+                continue
+            lines.append(
+                f"- `{card.get('sample_id')}` risk=`{card.get('clamp_risk')}`; "
+                f"max_abs={card.get('max_abs_feature')}; "
+                f"tail_max={card.get('tail_max_abs_feature')}; "
+                f"candidate_ceiling={card.get('dynamic_feature_abs_max_candidate')}; "
+                f"headroom_delta={card.get('candidate_headroom_delta')}; "
+                f"source=`{card.get('source_path') or '(fixture)'}`"
+            )
+    codec_afterimage = record.get("codec_afterimage_time_series_v1")
+    if isinstance(codec_afterimage, dict):
+        lines.extend(["", "## Codec Afterimage Time Series", ""])
+        lines.append(
+            f"- status=`{codec_afterimage.get('status')}`; "
+            f"authority=`{codec_afterimage.get('authority')}`; "
+            f"entries={codec_afterimage.get('entry_count', 0)}; "
+            f"codec_anchors={codec_afterimage.get('codec_anchor_count', 0)}; "
+            f"pressure_anchors={codec_afterimage.get('pressure_anchor_count', 0)}; "
+            f"replay_status=`{codec_afterimage.get('codec_replay_status')}`"
+        )
+        activation = codec_afterimage.get("activation_recommendation_v1")
+        if isinstance(activation, dict):
+            lines.append(
+                f"- activation=`{activation.get('status')}`; term=`{activation.get('term')}`; "
+                f"route={'; '.join(str(step) for step in activation.get('route') or [])}"
+            )
+        for sample in (codec_afterimage.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"anchors={anchors or '(none)'}; path=`{sample.get('path')}`"
             )
     release_rehearsal = record.get("pressure_release_rehearsal_review_v1")
     if isinstance(release_rehearsal, dict):
@@ -11611,6 +16829,42 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"terms={terms or '(none)'}; anchors={anchors or '(none)'}; "
                 f"path=`{sample.get('path')}`"
             )
+    witness_texture = record.get("witness_texture_integrity_v1")
+    if isinstance(witness_texture, dict):
+        lines.extend(["", "## Witness Texture Integrity", ""])
+        lines.append(
+            f"- status=`{witness_texture.get('status')}`; "
+            f"authority=`{witness_texture.get('authority')}`; "
+            f"entries={witness_texture.get('entry_count', 0)}; "
+            f"metric_texture_links={witness_texture.get('metric_texture_link_count', 0)}; "
+            f"telemetry_without_texture={witness_texture.get('telemetry_without_texture_count', 0)}; "
+            f"high_truncation_snapshots={witness_texture.get('high_truncation_snapshot_count', 0)}; "
+            f"rewrite_caps={witness_texture.get('rewrite_cap_snapshot_count', 0)}"
+        )
+        for snapshot in (witness_texture.get("controller_snapshots") or [])[:3]:
+            if not isinstance(snapshot, dict):
+                continue
+            lines.append(
+                f"- controller `{Path(str(snapshot.get('path'))).name}`: "
+                f"truncation={snapshot.get('truncation_pressure')}; "
+                f"continuity_deficit={snapshot.get('continuity_deficit')}; "
+                f"candidate_s={snapshot.get('candidate_generation_seconds')}; "
+                f"rewrite_cap={snapshot.get('rewrite_cap_applied')}"
+            )
+        for sample in (witness_texture.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            anchors = ", ".join(str(item) for item in sample.get("anchors") or [])
+            texture = ", ".join(
+                str(item) for item in sample.get("witness_texture_terms") or []
+            )
+            lines.append(
+                f"- {sample.get('being')} `{sample.get('filename')}`: "
+                f"metric_texture_link={sample.get('metric_texture_link')}; "
+                f"health_monitoring_risk={sample.get('health_monitoring_risk')}; "
+                f"texture={texture or '(none)'}; anchors={anchors or '(none)'}; "
+                f"path=`{sample.get('path')}`"
+            )
     entropy_pressure = record.get("entropy_pressure_divergence_v1")
     if isinstance(entropy_pressure, dict):
         lines.extend(["", "## Entropy / Pressure Divergence", ""])
@@ -11642,24 +16896,527 @@ def render_markdown(record: dict[str, object]) -> str:
             f"artifact=`{fallback_fire_drill.get('artifact_path') or '(none)'}`; "
             f"cases={fallback_fire_drill.get('case_count', 0)}; "
             f"failing={fallback_fire_drill.get('failing_case_count', 0)}; "
+            f"capacity=`{fallback_fire_drill.get('fallback_capacity_status')}`; "
+            f"max_sentences={fallback_fire_drill.get('fallback_capacity_max_prose_sentences')}; "
+            f"high_entropy_texture=`{fallback_fire_drill.get('high_entropy_texture_status')}`; "
+            f"state_coherence=`{(fallback_fire_drill.get('fallback_texture_quality_v2') or {}).get('state_coherence_status')}`; "
             f"concerns={fallback_fire_drill.get('concern_entry_count', 0)}"
         )
         for case in (fallback_fire_drill.get("cases") or [])[:6]:
             if not isinstance(case, dict):
                 continue
+            selector = case.get("fallback_shadow_texture_selector_v1") or {}
             lines.append(
                 f"- `{case.get('case_id')}` verdict=`{case.get('verdict')}`; "
                 f"specificity={case.get('specificity_score')}; "
                 f"anti_inflation={case.get('anti_inflation_ok')}; "
                 f"slope_medium={case.get('slope_medium_distinction_ok')}; "
                 f"slope_contrast=`{case.get('slope_medium_contrast_status')}`; "
+                f"texture_family=`{selector.get('texture_family')}`; "
+                f"top_terms={selector.get('top_texture_terms')}; "
+                f"movement={selector.get('movement_verbs')}; "
+                f"semantic_trickle={selector.get('semantic_trickle_terms')}; "
+                f"texture_coherence=`{selector.get('state_coherence_status')}`; "
                 f"identity={case.get('identity_anchor_retained')}; "
                 f"format_line=`{case.get('format_line_status')}`; "
+                f"sentences={case.get('prose_sentence_count')}/{case.get('fallback_max_prose_sentences')}; "
                 f"raw_next={case.get('raw_next_valid', case.get('next_valid'))}; "
                 f"repaired_next={case.get('repaired_next_valid')}; "
                 f"dispatch={case.get('dispatch_contract_survived')}; "
                 f"failures={case.get('failure_reasons') or []}"
             )
+    lines.extend(
+        [
+            "",
+            "## Spectral Texture Fidelity Packets",
+            "",
+            "- `spectral_fingerprint_integrity_v1`: typed fingerprint is canonical; legacy 32D payloads are accepted only when length is exactly 32, malformed vectors stay diagnostic.",
+            "- `witness_relational_friction_v1`: Witness context can name internal instability, relational instability, shared weather shift, insufficient context, or non-categorical resonance without changing mode selection.",
+            "- `semantic_density_mapping_v1`: Witness context can name settled high-entropy complexity, silt-weighted habitability, luminous reorganization, or overpacked friction without generating ACK/TRACE or control.",
+            "- `structural_friction_v1`: codec sidecar distinguishes structural friction from character complexity and pressure; `codec_structural_friction_dim_canary_v1` remains default-off and does not write the live 48D vector.",
+            "- `narrative_arc_split_v1`: codec sidecar separates intentional and reactive narrative arc energy; `narrative_arc_expansion_readiness_v1` remains default-off and does not change `SEMANTIC_DIM` or reserved dims.",
+        ]
+    )
+    texture_calibration = record.get("spectral_texture_calibration_v2")
+    if isinstance(texture_calibration, dict):
+        fallback_cal = texture_calibration.get("fallback_selector_calibration_v2") or {}
+        witness_cal = texture_calibration.get("witness_friction_calibration_v2") or {}
+        structural_cal = (
+            texture_calibration.get("structural_friction_calibration_v2") or {}
+        )
+        semantic_density_cal = (
+            texture_calibration.get("witness_semantic_density_calibration_v1") or {}
+        )
+        narrative_arc_cal = (
+            texture_calibration.get("narrative_arc_split_calibration_v1") or {}
+        )
+        trajectory_cal = (
+            texture_calibration.get("fallback_trajectory_calibration_v1") or {}
+        )
+        grounding_cal = (
+            texture_calibration.get("spectral_to_vocabulary_grounding_calibration_v1")
+            or {}
+        )
+        witness_codec_density_cal = (
+            texture_calibration.get("witness_codec_density_calibration_v2") or {}
+        )
+        lived_fit_cal = (
+            texture_calibration.get("fallback_texture_lived_fit_calibration_v2") or {}
+        )
+        gradient_slope_cal = (
+            texture_calibration.get("fallback_gradient_slope_calibration_v1") or {}
+        )
+        texture_signature_cal = (
+            texture_calibration.get("texture_signature_integrity_calibration_v1") or {}
+        )
+        bridge_reciprocity_cal = (
+            texture_calibration.get("bridge_reciprocity_calibration_v1") or {}
+        )
+        pressure_smoothing_cal = (
+            texture_calibration.get("pressure_trend_smoothing_calibration_v1") or {}
+        )
+        term_overrepresentation_cal = (
+            texture_calibration.get("fallback_term_overrepresentation_calibration_v1")
+            or {}
+        )
+        texture_dynamics_alignment_cal = (
+            texture_calibration.get("texture_dynamics_alignment_calibration_v1") or {}
+        )
+        density_motion_cal = (
+            texture_calibration.get("density_as_floor_calibration_v1") or {}
+        )
+        codec_witness_resilience_cal = (
+            texture_calibration.get("codec_witness_resilience_calibration_v2") or {}
+        )
+        texture_shape_cal = texture_calibration.get("texture_shape_over_time_v2") or {}
+        preference_evidence = (
+            texture_calibration.get("being_preference_policy_evidence_v2") or {}
+        )
+        tiny_trial_dossier = (
+            texture_calibration.get("agency_tiny_trial_dossier_v1") or {}
+        )
+        lines.extend(["", "## Spectral Texture Calibration V2", ""])
+        lines.append(
+            f"- status=`{texture_calibration.get('status')}`; "
+            f"authority=`{texture_calibration.get('authority')}`; "
+            f"fallback=`{fallback_cal.get('status')}`; "
+            f"trajectory=`{trajectory_cal.get('status')}`; "
+            f"grounding=`{grounding_cal.get('status')}`; "
+            f"witness=`{witness_cal.get('status')}`; "
+            f"semantic_density=`{semantic_density_cal.get('status')}`; "
+            f"structural=`{structural_cal.get('status')}`; "
+            f"narrative_arc=`{narrative_arc_cal.get('status')}`; "
+            f"witness_codec_density=`{witness_codec_density_cal.get('status')}`; "
+            f"codec_witness_resilience=`{codec_witness_resilience_cal.get('status')}`; "
+            f"fallback_lived_fit=`{lived_fit_cal.get('status')}`; "
+            f"gradient_slope=`{gradient_slope_cal.get('status')}`; "
+            f"texture_signature=`{texture_signature_cal.get('status')}`; "
+            f"bridge_reciprocity=`{bridge_reciprocity_cal.get('status')}`; "
+            f"pressure_smoothing=`{pressure_smoothing_cal.get('status')}`; "
+            f"texture_shape_over_time=`{texture_shape_cal.get('status')}`; "
+            f"preference_evidence=`{preference_evidence.get('status')}`; "
+            f"tiny_trial_dossier=`{tiny_trial_dossier.get('status')}`; "
+            f"term_overrepresentation=`{term_overrepresentation_cal.get('status')}`; "
+            f"texture_dynamics_alignment=`{texture_dynamics_alignment_cal.get('status')}`; "
+            f"density_motion_fit=`{density_motion_cal.get('status')}`; "
+            f"minime_moment_bodies_read={texture_calibration.get('minime_moment_bodies_read')}"
+        )
+        lines.append(
+            f"- recommended_action={texture_calibration.get('recommended_action')}"
+        )
+        for label, packet in (
+            ("fallback", fallback_cal),
+            ("trajectory", trajectory_cal),
+            ("grounding", grounding_cal),
+            ("fallback_lived_fit", lived_fit_cal),
+            ("gradient_slope", gradient_slope_cal),
+            ("texture_signature", texture_signature_cal),
+            ("bridge_reciprocity", bridge_reciprocity_cal),
+            ("pressure_smoothing", pressure_smoothing_cal),
+            ("term_overrepresentation", term_overrepresentation_cal),
+            ("texture_dynamics_alignment", texture_dynamics_alignment_cal),
+            ("density_motion_fit", density_motion_cal),
+            ("witness", witness_cal),
+            ("semantic_density", semantic_density_cal),
+            ("structural", structural_cal),
+            ("narrative_arc", narrative_arc_cal),
+            ("codec_witness_resilience", codec_witness_resilience_cal),
+        ):
+            if not isinstance(packet, dict):
+                continue
+            samples = packet.get("samples") or []
+            if not samples:
+                lines.append(
+                    f"- {label}: `{packet.get('status')}`; samples=0; "
+                    "silence remains insufficient evidence."
+                )
+                continue
+            first = samples[0] if isinstance(samples[0], dict) else {}
+            support = ", ".join(str(term) for term in first.get("support_terms") or [])
+            concern = ", ".join(str(term) for term in first.get("concern_terms") or [])
+            lines.append(
+                f"- {label}: `{packet.get('status')}`; "
+                f"{first.get('being')} `{Path(str(first.get('path'))).name}`; "
+                f"support={support or '(none)'}; concern={concern or '(none)'}"
+            )
+        v3_cal = texture_calibration.get("fallback_texture_calibration_v3") or {}
+        if isinstance(v3_cal, dict):
+            dynamic_cal = (
+                v3_cal.get("fallback_dynamic_weighting_calibration_v3") or {}
+            )
+            resonance_cal = (
+                v3_cal.get("fallback_resonance_descriptor_calibration_v3") or {}
+            )
+            label_risk = v3_cal.get("label_machine_risk_v3") or {}
+            alignment = (
+                dynamic_cal.get("top_term_alignment") or {}
+                if isinstance(dynamic_cal, dict)
+                else {}
+            )
+            lines.append(
+                f"- V3 fallback texture: status=`{v3_cal.get('status')}`; "
+                f"dynamic=`{dynamic_cal.get('status')}`; "
+                f"resonance=`{resonance_cal.get('status')}`; "
+                f"label_machine_risk=`{label_risk.get('status')}`; "
+                f"aligned_terms={alignment.get('public_report_aligned_terms') or []}; "
+                f"fire_resonance=`{resonance_cal.get('fire_drill_resonance_status')}`"
+            )
+        if isinstance(trajectory_cal, dict):
+            trajectory_alignment = trajectory_cal.get("trajectory_alignment") or {}
+            lines.append(
+                f"- V1 fallback trajectory: status=`{trajectory_cal.get('status')}`; "
+                f"alignment=`{trajectory_alignment.get('status')}`; "
+                f"trajectory_status_counts={trajectory_alignment.get('trajectory_status_counts') or {}}; "
+                f"qualities={trajectory_alignment.get('trajectory_movement_quality_counts') or {}}"
+            )
+        if isinstance(grounding_cal, dict):
+            mlx_profile = grounding_cal.get("mlx_profile_transparency_v1") or {}
+            lines.append(
+                f"- V1 spectral-to-vocabulary grounding: status=`{grounding_cal.get('status')}`; "
+                f"settled_foothold_suppression_count={grounding_cal.get('settled_foothold_suppression_count')}; "
+                f"settled_vibrant_low_friction_count={grounding_cal.get('settled_vibrant_low_friction_count')}; "
+                f"cascade_gradient_selected_count={grounding_cal.get('cascade_gradient_selected_count')}; "
+                f"vocabulary_overweight_token_only_risk_count={grounding_cal.get('vocabulary_overweight_token_only_risk_count')}; "
+                f"friction_absence_language_count={grounding_cal.get('friction_absence_language_count')}; "
+                f"cases={len(grounding_cal.get('latest_grounding_cases') or [])}; "
+                f"recommended_action={grounding_cal.get('recommended_action')}"
+            )
+            if isinstance(mlx_profile, dict) and mlx_profile:
+                lines.append(
+                    "- MLX profile transparency: "
+                    f"default `{mlx_profile.get('default_profile')}` -> "
+                    f"`{mlx_profile.get('default_resolves_to')}`; "
+                    f"alias `{mlx_profile.get('alias_profile')}` -> "
+                    f"`{mlx_profile.get('alias_resolves_to')}`; "
+                    f"behavior=`{mlx_profile.get('unrecognized_profile_behavior')}`"
+                )
+        if isinstance(lived_fit_cal, dict):
+            lines.extend(["", "## Fallback Texture Lived-Fit V2", ""])
+            lines.append(
+                f"- status=`{lived_fit_cal.get('status')}`; "
+                f"trajectory_family_fit_counts={lived_fit_cal.get('fire_drill_trajectory_family_fit_counts') or {}}; "
+                f"family_confidence_counts={lived_fit_cal.get('fire_drill_family_confidence_counts') or {}}; "
+                f"conflict_state_counts={lived_fit_cal.get('fire_drill_conflict_state_counts') or {}}; "
+                f"negative_texture_evidence_lost_count={lived_fit_cal.get('negative_texture_evidence_lost_count')}; "
+                f"recommended_action={lived_fit_cal.get('recommended_action')}"
+            )
+            samples = lived_fit_cal.get("samples") or []
+            if samples:
+                first = samples[0] if isinstance(samples[0], dict) else {}
+                lines.append(
+                    f"- first_public_sample={first.get('being')} "
+                    f"`{Path(str(first.get('path'))).name}`; "
+                    f"support={', '.join(str(term) for term in first.get('support_terms') or []) or '(none)'}; "
+                    f"concern={', '.join(str(term) for term in first.get('concern_terms') or []) or '(none)'}"
+                )
+            else:
+                lines.append(
+                    "- samples=0; continue collecting public evidence; positive fixture fit is not authority."
+                )
+        if any(
+            isinstance(packet, dict) and packet
+            for packet in (
+                gradient_slope_cal,
+                texture_signature_cal,
+                bridge_reciprocity_cal,
+                pressure_smoothing_cal,
+            )
+        ):
+            lines.extend(["", "## Gradient Slope + Texture Variance + Reciprocity V1", ""])
+            lines.append(
+                f"- gradient_slope=`{gradient_slope_cal.get('status')}`; "
+                f"detected={gradient_slope_cal.get('fire_drill_detected_count')}; "
+                f"selected={gradient_slope_cal.get('fire_drill_selected_count')}; "
+                f"pressure_mass_blocked={gradient_slope_cal.get('pressure_mass_blocked_count')}; "
+                f"texture_signature=`{texture_signature_cal.get('status')}`; "
+                f"bridge_reciprocity=`{bridge_reciprocity_cal.get('status')}`; "
+                f"pressure_smoothing=`{pressure_smoothing_cal.get('status')}`"
+            )
+            for label, packet in (
+                ("gradient_slope", gradient_slope_cal),
+                ("texture_signature", texture_signature_cal),
+                ("bridge_reciprocity", bridge_reciprocity_cal),
+                ("pressure_smoothing", pressure_smoothing_cal),
+            ):
+                if not isinstance(packet, dict):
+                    continue
+                samples = packet.get("samples") or []
+                if samples:
+                    first = samples[0] if isinstance(samples[0], dict) else {}
+                    lines.append(
+                        f"- {label}: `{packet.get('status')}`; "
+                        f"samples={packet.get('sample_count', len(samples))}; "
+                        f"first_public_sample={first.get('being')} "
+                        f"`{Path(str(first.get('path'))).name}`"
+                    )
+                else:
+                    lines.append(
+                        f"- {label}: `{packet.get('status')}`; samples=0; "
+                        "silence remains insufficient evidence."
+                    )
+        if isinstance(texture_shape_cal, dict):
+            movement = texture_shape_cal.get("movement_preservation_v2") or {}
+            variance = texture_shape_cal.get("temporal_variance_fit_v2") or {}
+            reciprocity = texture_shape_cal.get("reciprocity_asymmetry_fit_v2") or {}
+            smoothing = texture_shape_cal.get("pressure_smoothing_fit_v2") or {}
+            static_risk = texture_shape_cal.get("static_label_collapse_risk_v2") or {}
+            lines.extend(["", "## Texture Shape Over Time V2", ""])
+            lines.append(
+                f"- status=`{texture_shape_cal.get('status')}`; "
+                f"movement=`{movement.get('status')}`; "
+                f"variance=`{variance.get('status')}`; "
+                f"reciprocity=`{reciprocity.get('status')}`; "
+                f"smoothing=`{smoothing.get('status')}`; "
+                f"static_label_risk=`{static_risk.get('status')}`; "
+                f"recommended_action={texture_shape_cal.get('recommended_action')}"
+            )
+            lines.append(
+                f"- compact_line={texture_shape_cal.get('compact_status_line')}"
+            )
+        if isinstance(preference_evidence, dict):
+            lines.extend(["", "## Being Preference Policy Evidence V2", ""])
+            lines.append(
+                f"- status=`{preference_evidence.get('status')}`; "
+                f"entries={preference_evidence.get('entry_count')}; "
+                f"by_being={preference_evidence.get('by_being_counts') or {}}; "
+                "advisory_status=`policy_evidence_not_command`"
+            )
+            for entry in (preference_evidence.get("entries") or [])[:4]:
+                if not isinstance(entry, dict):
+                    continue
+                lines.append(
+                    f"- {entry.get('being')} `{Path(str(entry.get('source_ref'))).name}`: "
+                    f"applies_to=`{entry.get('applies_to')}`; "
+                    f"support_or_concern=`{entry.get('support_or_concern')}`; "
+                    f"confidence=`{entry.get('confidence')}`"
+                )
+        if isinstance(tiny_trial_dossier, dict):
+            astrid_lane = tiny_trial_dossier.get("astrid_lane") or {}
+            minime_lane = tiny_trial_dossier.get("minime_lane") or {}
+            lines.extend(["", "## Agency Tiny Trial Dossier V1", ""])
+            lines.append(
+                f"- status=`{tiny_trial_dossier.get('status')}`; "
+                f"authority=`{tiny_trial_dossier.get('authority')}`; "
+                f"astrid=`{astrid_lane.get('state')}`; "
+                f"minime=`{minime_lane.get('state')}`; "
+                f"recommended_action={tiny_trial_dossier.get('recommended_action')}"
+            )
+            if astrid_lane.get("proposed_command"):
+                lines.append(
+                    f"- astrid_proposed_command=`{astrid_lane.get('proposed_command')}`"
+                )
+            for command in (minime_lane.get("proposed_commands") or [])[:2]:
+                lines.append(f"- minime_proposed_command=`{command}`")
+        if isinstance(term_overrepresentation_cal, dict):
+            term_packet = (
+                term_overrepresentation_cal.get("term_overrepresentation") or {}
+            )
+            model_capacity = term_overrepresentation_cal.get("model_capacity") or {}
+            top_terms = ", ".join(
+                f"{item.get('term')}={item.get('count')}"
+                for item in term_packet.get("top_terms") or []
+                if isinstance(item, dict)
+            )
+            lines.extend(["", "## Fallback Term Overrepresentation V1", ""])
+            lines.append(
+                f"- status=`{term_overrepresentation_cal.get('status')}`; "
+                f"model=`{model_capacity.get('selected_model')}`; "
+                f"complexity_collapse_risk=`{model_capacity.get('complexity_collapse_risk')}`; "
+                f"mlx_comparison_status=`{term_packet.get('mlx_comparison_status')}`; "
+                f"safe_token_overuse_risk={term_packet.get('safe_token_overuse_risk')}; "
+                f"top_terms={top_terms or '(none)'}; "
+                f"recommended_action={term_overrepresentation_cal.get('recommended_action')}"
+            )
+        if isinstance(texture_dynamics_alignment_cal, dict):
+            lines.extend(["", "## Texture Dynamics Alignment V1", ""])
+            lines.append(
+                f"- status=`{texture_dynamics_alignment_cal.get('status')}`; "
+                f"alignment_counts={texture_dynamics_alignment_cal.get('fire_drill_alignment_counts') or {}}; "
+                f"review_trace_count={texture_dynamics_alignment_cal.get('fire_drill_review_trace_count')}; "
+                f"recommended_action={texture_dynamics_alignment_cal.get('recommended_action')}"
+            )
+            samples = texture_dynamics_alignment_cal.get("samples") or []
+            if samples:
+                first = samples[0] if isinstance(samples[0], dict) else {}
+                lines.append(
+                    f"- first_public_sample={first.get('being')} "
+                    f"`{Path(str(first.get('path'))).name}`; "
+                    f"support={', '.join(str(term) for term in first.get('support_terms') or []) or '(none)'}; "
+                    f"concern={', '.join(str(term) for term in first.get('concern_terms') or []) or '(none)'}"
+                )
+            else:
+                lines.append(
+                    "- samples=0; continue collecting public evidence; diagnostic TRACE remains review-only."
+                )
+        if isinstance(density_motion_cal, dict):
+            mismatch = density_motion_cal.get("motion_fit_mismatch_v1") or {}
+            lines.extend(["", "## Density / Motion Fit V1", ""])
+            lines.append(
+                f"- status=`{density_motion_cal.get('status')}`; "
+                f"density_state_counts={density_motion_cal.get('fire_drill_density_state_counts') or {}}; "
+                f"motion_fit_counts={density_motion_cal.get('fire_drill_motion_fit_counts') or {}}; "
+                f"mismatch_counts={density_motion_cal.get('fire_drill_mismatch_reason_counts') or {}}; "
+                f"recommended_action={density_motion_cal.get('recommended_action')}"
+            )
+            if isinstance(mismatch, dict) and mismatch:
+                lines.append(
+                    f"- motion_fit_mismatch_v1: status=`{mismatch.get('status')}`; "
+                    f"recommended_action={mismatch.get('recommended_action')}"
+                )
+            samples = density_motion_cal.get("samples") or []
+            if samples:
+                first = samples[0] if isinstance(samples[0], dict) else {}
+                lines.append(
+                    f"- first_public_sample={first.get('being')} "
+                    f"`{Path(str(first.get('path'))).name}`; "
+                    f"support={', '.join(str(term) for term in first.get('support_terms') or []) or '(none)'}; "
+                    f"concern={', '.join(str(term) for term in first.get('concern_terms') or []) or '(none)'}"
+                )
+            else:
+                lines.append(
+                    "- samples=0; continue collecting public evidence; density-as-floor is diagnostic, not pressure authority."
+                )
+        if isinstance(witness_codec_density_cal, dict):
+            lines.extend(["", "## Witness/Codec Density Calibration V2", ""])
+            semantic_fit = (
+                witness_codec_density_cal.get("semantic_density_lived_fit_v2") or {}
+            )
+            narrative_fit = (
+                witness_codec_density_cal.get("narrative_arc_coarsening_fit_v2")
+                or {}
+            )
+            vocabulary_fit = (
+                witness_codec_density_cal.get("vocabulary_grounding_lived_fit_v2")
+                or {}
+            )
+            lines.append(
+                f"- status=`{witness_codec_density_cal.get('status')}`; "
+                f"semantic_density=`{semantic_fit.get('status')}`; "
+                f"narrative_arc=`{narrative_fit.get('status')}`; "
+                f"vocabulary_grounding=`{vocabulary_fit.get('status')}`; "
+                f"recommended_action={witness_codec_density_cal.get('recommended_action')}"
+            )
+            for label, packet in (
+                ("semantic_density", semantic_fit),
+                ("narrative_arc", narrative_fit),
+                ("vocabulary_grounding", vocabulary_fit),
+            ):
+                if not isinstance(packet, dict):
+                    continue
+                samples = packet.get("samples") or []
+                if not samples:
+                    lines.append(
+                        f"- {label}: `{packet.get('status')}`; samples=0; "
+                        "continue collecting public evidence."
+                    )
+                    continue
+                first = samples[0] if isinstance(samples[0], dict) else {}
+                lines.append(
+                    f"- {label}: `{packet.get('status')}`; "
+                    f"samples={packet.get('sample_count', len(samples))}; "
+                    f"first_public_sample={first.get('being')} "
+                    f"`{Path(str(first.get('path'))).name}`"
+                )
+            for key in (
+                "semantic_density_mismatch_v2",
+                "narrative_arc_coarsening_mismatch_v2",
+                "vocabulary_grounding_mismatch_v2",
+            ):
+                mismatch = witness_codec_density_cal.get(key)
+                if not isinstance(mismatch, dict):
+                    continue
+                lines.append(
+                    f"- mismatch `{key}`: status=`{mismatch.get('status')}`; "
+                    f"samples={mismatch.get('sample_count')}; "
+                    f"recommended_action={mismatch.get('recommended_action')}"
+                )
+        if isinstance(codec_witness_resilience_cal, dict):
+            lines.extend(["", "## Codec/Witness Resilience Calibration V2", ""])
+            witness_state_fit = (
+                codec_witness_resilience_cal.get("witness_state_resilience_fit_v2")
+                or {}
+            )
+            fraying_fit = (
+                codec_witness_resilience_cal.get("field_lingering_fraying_fit_v2")
+                or {}
+            )
+            vibrancy_fit = (
+                codec_witness_resilience_cal.get("codec_vibrancy_continuity_fit_v2")
+                or {}
+            )
+            warmth_fit = (
+                codec_witness_resilience_cal.get("codec_warmth_mapping_fit_v2") or {}
+            )
+            lines.append(
+                f"- status=`{codec_witness_resilience_cal.get('status')}`; "
+                f"witness_state=`{witness_state_fit.get('status')}`; "
+                f"fraying=`{fraying_fit.get('status')}`; "
+                f"vibrancy=`{vibrancy_fit.get('status')}`; "
+                f"warmth=`{warmth_fit.get('status')}`; "
+                f"failure_modes={codec_witness_resilience_cal.get('recovery_failure_modes_v2') or []}; "
+                f"recommended_action={codec_witness_resilience_cal.get('recommended_action')}"
+            )
+            lines.append(
+                "- skip_policy: "
+                f"minime_private_bodies_read={texture_calibration.get('minime_private_bodies_read')}; "
+                f"minime_moment_bodies_read={texture_calibration.get('minime_moment_bodies_read')}"
+            )
+            for label, packet in (
+                ("witness_state", witness_state_fit),
+                ("fraying", fraying_fit),
+                ("vibrancy", vibrancy_fit),
+                ("warmth", warmth_fit),
+            ):
+                if not isinstance(packet, dict):
+                    continue
+                samples = packet.get("samples") or []
+                if not samples:
+                    lines.append(
+                        f"- {label}: `{packet.get('status')}`; samples=0; "
+                        "continue collecting public evidence."
+                    )
+                    continue
+                first = samples[0] if isinstance(samples[0], dict) else {}
+                lines.append(
+                    f"- {label}: `{packet.get('status')}`; "
+                    f"samples={packet.get('sample_count', len(samples))}; "
+                    f"first_public_sample={first.get('being')} "
+                    f"`{Path(str(first.get('path'))).name}`"
+                )
+            for key in (
+                "witness_state_resilience_mismatch_v2",
+                "field_lingering_fraying_mismatch_v2",
+                "codec_vibrancy_continuity_mismatch_v2",
+                "codec_warmth_mapping_mismatch_v2",
+            ):
+                mismatch = codec_witness_resilience_cal.get(key)
+                if not isinstance(mismatch, dict):
+                    continue
+                lines.append(
+                    f"- mismatch `{key}`: status=`{mismatch.get('status')}`; "
+                    f"samples={mismatch.get('sample_count')}; "
+                    f"recommended_action={mismatch.get('recommended_action')}"
+                )
     fallback_gate = record.get("fallback_capacity_readiness_gate_v1")
     if isinstance(fallback_gate, dict):
         lines.extend(["", "## Fallback Capacity Readiness Gate", ""])
@@ -11673,7 +17430,10 @@ def render_markdown(record: dict[str, object]) -> str:
             f"format_line=`{fallback_gate.get('format_line_status')}`; "
             f"shadow_identity=`{fallback_gate.get('shadow_identity_status')}`; "
             f"distinguishability=`{fallback_gate.get('distinguishability_status')}`; "
-            f"complexity=`{fallback_gate.get('complexity_budget_status')}`"
+            f"complexity=`{fallback_gate.get('complexity_budget_status')}`; "
+            f"capacity=`{fallback_gate.get('fallback_capacity_status')}`; "
+            f"max_sentences={fallback_gate.get('fallback_capacity_max_prose_sentences')}; "
+            f"high_entropy_texture=`{fallback_gate.get('high_entropy_texture_status')}`"
         )
         for case in (fallback_gate.get("case_summaries") or [])[:6]:
             if not isinstance(case, dict):
@@ -11686,7 +17446,7 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"format_line=`{case.get('format_line_status')}`; "
                 f"slope_contrast=`{case.get('slope_medium_contrast_status')}`; "
                 f"complexity={case.get('complexity_budget_status')}; "
-                f"sentences={case.get('prose_sentence_count')}; "
+                f"sentences={case.get('prose_sentence_count')}/{case.get('fallback_max_prose_sentences')}; "
                 f"failures={case.get('failure_reasons') or []}"
             )
     fallback_stabilizer = record.get("fallback_format_texture_stabilizer_v1")
@@ -11753,7 +17513,7 @@ def render_markdown(record: dict[str, object]) -> str:
             lines.append(
                 f"- `{case.get('case_id')}` verdict=`{case.get('verdict')}`; "
                 f"complexity=`{case.get('complexity_budget_status')}`; "
-                f"sentences={case.get('prose_sentence_count')}; "
+                f"sentences={case.get('prose_sentence_count')}/{case.get('fallback_max_prose_sentences')}; "
                 f"distinguishability=`{case.get('distinguishability_status')}`; "
                 f"failures={case.get('failure_reasons') or []}"
             )
@@ -12043,6 +17803,91 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"verdict=`{candidate.get('replay_verdict')}`; "
                 f"reason={candidate.get('gate_reason')}"
             )
+    pi_replay = record.get("pi_pressure_wiring_replay_v1")
+    if isinstance(pi_replay, dict):
+        lines.extend(["", "## PI Pressure Wiring Replay", ""])
+        counts = pi_replay.get("candidate_status_counts") or {}
+        count_text = (
+            ", ".join(f"{key}={value}" for key, value in sorted(counts.items()))
+            if isinstance(counts, dict)
+            else ""
+        )
+        lines.append(
+            f"- status=`{pi_replay.get('status')}`; "
+            f"authority=`{pi_replay.get('authority')}`; "
+            f"source=`{pi_replay.get('source')}`; "
+            f"source_status=`{pi_replay.get('source_status')}`; "
+            f"samples={pi_replay.get('sample_count', 0)}; "
+            f"candidates={pi_replay.get('candidate_count', 0)}; "
+            f"counts={count_text or '(none)'}; "
+            f"artifact=`{pi_replay.get('artifact_path') or '(none)'}`"
+        )
+        for candidate in (pi_replay.get("top_candidates") or [])[:8]:
+            if not isinstance(candidate, dict):
+                continue
+            canary = candidate.get("default_off_canary")
+            if not isinstance(canary, dict):
+                canary = {}
+            lines.append(
+                f"- `{candidate.get('candidate_family')}`: "
+                f"status=`{candidate.get('status')}`; "
+                f"improvement={candidate.get('estimated_improvement_pct')}%; "
+                f"align_delta={candidate.get('pressure_alignment_delta')}; "
+                f"snap_delta={candidate.get('snap_risk_delta')}; "
+                f"afterimage_delta={candidate.get('afterimage_risk_delta')}; "
+                f"canary=`{canary.get('default_off_env')}` eligible={canary.get('eligible')}"
+            )
+    pi_readiness = record.get("pi_pressure_candidate_readiness_v1")
+    if isinstance(pi_readiness, dict):
+        lines.extend(["", "## PI Pressure Candidate Readiness", ""])
+        counts = pi_readiness.get("readiness_counts") or {}
+        count_text = (
+            ", ".join(f"{key}={value}" for key, value in sorted(counts.items()))
+            if isinstance(counts, dict)
+            else ""
+        )
+        unresolved = ", ".join(
+            str(item) for item in pi_readiness.get("unresolved_missing_variables") or []
+        )
+        lines.append(
+            f"- status=`{pi_readiness.get('status')}`; "
+            f"authority=`{pi_readiness.get('authority')}`; "
+            f"counts={count_text or '(none)'}; "
+            f"unresolved={unresolved or '(none)'}"
+        )
+        for candidate in (pi_readiness.get("candidates") or [])[:8]:
+            if not isinstance(candidate, dict):
+                continue
+            canary = candidate.get("default_off_canary")
+            if not isinstance(canary, dict):
+                canary = {}
+            lines.append(
+                f"- `{candidate.get('candidate_family')}`: "
+                f"gate=`{candidate.get('gate_status')}`; "
+                f"replay=`{candidate.get('replay_status')}`; "
+                f"improvement={candidate.get('estimated_improvement_pct')}%; "
+                f"canary_eligible={canary.get('eligible')}; "
+                f"reason={candidate.get('gate_reason')}"
+            )
+    pi_gap = record.get("pressure_source_to_pi_gap_v1")
+    if isinstance(pi_gap, dict):
+        lines.extend(["", "## Pressure Source To PI Gap", ""])
+        routes = ", ".join(
+            f"`{route}`" for route in (pi_gap.get("recommended_routes") or [])[:5]
+        )
+        anchors = ", ".join(str(item) for item in pi_gap.get("source_anchors") or [])
+        lines.append(
+            f"- status=`{pi_gap.get('status')}`; "
+            f"authority=`{pi_gap.get('authority')}`; "
+            f"pressure_vector=`{pi_gap.get('pressure_vector_status')}`; "
+            f"medium=`{pi_gap.get('pressure_medium_status')}`; "
+            f"pi_replay=`{pi_gap.get('pi_replay_status')}`; "
+            f"pi_readiness=`{pi_gap.get('pi_readiness_status')}`"
+        )
+        lines.append(f"- anchors={anchors or '(none)'}; routes={routes or '(none)'}")
+        recommended = pi_gap.get("recommended_action")
+        if recommended:
+            lines.append(f"- recommended: {recommended}")
     evidence_loop = record.get("regulator_missing_variable_evidence_loop_v1")
     if isinstance(evidence_loop, dict):
         lines.extend(["", "## Regulator Missing-Variable Evidence Loop", ""])
@@ -12692,8 +18537,34 @@ def build_review(
         astrid_workspace=astrid_workspace,
         minime_workspace=minime_workspace,
     )
+    self_regulation_negotiation_ledger_v1 = (
+        build_self_regulation_negotiation_ledger(
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+        )
+    )
     astrid_fill_pressure_calibration = build_astrid_fill_pressure_calibration(entries)
     semantic_friction_calibration = build_semantic_friction_calibration(entries)
+    pressure_medium_kinetics_v1 = build_pressure_medium_kinetics(entries)
+    pressure_kinetics_review_v1 = build_pressure_kinetics_review(entries)
+    pressure_vector_v1 = build_pressure_vector_review(
+        entries,
+        pressure_medium_kinetics_v1=pressure_medium_kinetics_v1,
+        pressure_kinetics_review_v1=pressure_kinetics_review_v1,
+    )
+    pressure_actuator_matrix_v1 = build_pressure_actuator_matrix(pressure_vector_v1)
+    pressure_control_cockpit_v1 = build_pressure_control_cockpit(
+        pressure_vector_v1,
+        pressure_actuator_matrix_v1,
+    )
+    tail_vibrancy_vector_v1 = build_tail_vibrancy_vector_review(
+        entries,
+        pressure_vector_v1=pressure_vector_v1,
+    )
+    tail_vibrancy_authority_gap_v1 = build_tail_vibrancy_authority_gap(
+        entries,
+        tail_vibrancy_vector_v1=tail_vibrancy_vector_v1,
+    )
     regulator_live_replay_v1 = build_regulator_live_replay(
         entries,
         minime_workspace=minime_workspace,
@@ -12740,6 +18611,20 @@ def build_review(
         regulator_counterfactual_replay_lab_v1=regulator_counterfactual_replay_lab_v1,
         regulator_plateau_evidence_matrix_v1=regulator_plateau_evidence_matrix_v1,
     )
+    pi_pressure_wiring_replay_v1 = build_pi_pressure_wiring_replay_review(
+        minime_workspace
+    )
+    pi_pressure_candidate_readiness_v1 = build_pi_pressure_candidate_readiness(
+        pi_pressure_wiring_replay_v1=pi_pressure_wiring_replay_v1,
+        regulator_plateau_evidence_matrix_v1=regulator_plateau_evidence_matrix_v1,
+    )
+    pressure_source_to_pi_gap_v1 = build_pressure_source_to_pi_gap(
+        pi_pressure_wiring_replay_v1=pi_pressure_wiring_replay_v1,
+        pi_pressure_candidate_readiness_v1=pi_pressure_candidate_readiness_v1,
+        pressure_vector_v1=pressure_vector_v1,
+        pressure_medium_kinetics_v1=pressure_medium_kinetics_v1,
+        regulator_plateau_evidence_matrix_v1=regulator_plateau_evidence_matrix_v1,
+    )
     shared_pressure_vocabulary_calibration = (
         build_shared_pressure_vocabulary_calibration(entries)
     )
@@ -12755,6 +18640,57 @@ def build_review(
         self_regulation_lease_learning=self_regulation_lease_learning,
         astrid_fill_pressure_calibration=astrid_fill_pressure_calibration,
         semantic_friction_calibration=semantic_friction_calibration,
+    )
+    pressure_relief_playbook_v3 = build_pressure_relief_playbook_v3(
+        self_regulation_lease_learning=self_regulation_lease_learning,
+        pressure_vector_v1=pressure_vector_v1,
+        pressure_actuator_matrix_v1=pressure_actuator_matrix_v1,
+    )
+    gradient_sensitive_relief_v1 = build_gradient_sensitive_relief(
+        astrid_workspace=astrid_workspace,
+        pressure_vector_v1=pressure_vector_v1,
+    )
+    pressure_relief_smoothness_replay_v1 = (
+        build_pressure_relief_smoothness_replay(
+            astrid_workspace=astrid_workspace,
+            gradient_sensitive_relief_v1=gradient_sensitive_relief_v1,
+        )
+    )
+    tail_vibrancy_relief_playbook_v1 = build_tail_vibrancy_relief_playbook(
+        self_regulation_lease_learning=self_regulation_lease_learning,
+        tail_vibrancy_vector_v1=tail_vibrancy_vector_v1,
+        tail_vibrancy_authority_gap_v1=tail_vibrancy_authority_gap_v1,
+    )
+    tail_relief_trial_surface_v1 = build_tail_relief_trial_surface(
+        astrid_workspace=astrid_workspace,
+        tail_vibrancy_vector_v1=tail_vibrancy_vector_v1,
+        pressure_vector_v1=pressure_vector_v1,
+    )
+    tail_lease_governor_v1 = build_tail_lease_governor(
+        tail_relief_trial_surface_v1=tail_relief_trial_surface_v1
+    )
+    tail_lease_afterglow_v1 = build_tail_lease_afterglow(
+        astrid_workspace=astrid_workspace,
+        tail_relief_trial_surface_v1=tail_relief_trial_surface_v1,
+    )
+    tail_persistence_calibration_v1 = build_tail_persistence_calibration(
+        entries,
+        tail_lease_afterglow_v1=tail_lease_afterglow_v1,
+        tail_relief_trial_surface_v1=tail_relief_trial_surface_v1,
+        tail_vibrancy_vector_v1=tail_vibrancy_vector_v1,
+    )
+    shadow_synced_preflight_v1 = build_shadow_synced_preflight_review(
+        astrid_workspace=astrid_workspace
+    )
+    tail_outcome_causal_learning_v1 = build_tail_outcome_causal_learning(
+        astrid_workspace=astrid_workspace,
+        tail_vibrancy_relief_playbook_v1=tail_vibrancy_relief_playbook_v1,
+    )
+    lease_boundary_repair_v1 = build_lease_boundary_repair(
+        self_regulation_negotiation_ledger_v1=self_regulation_negotiation_ledger_v1,
+        pressure_medium_kinetics_v1=pressure_medium_kinetics_v1,
+        self_regulation_leases=self_regulation_leases,
+        lease_playbook_workbench_v1=lease_playbook_workbench_v1,
     )
     lived_term_experiment_bridge_v1 = build_lived_term_experiment_bridge(
         phenomenology_hypothesis_cards_v1,
@@ -12776,7 +18712,6 @@ def build_review(
         )
     )
     control_semantics_calibration_v1 = build_control_semantics_calibration(entries)
-    pressure_kinetics_review_v1 = build_pressure_kinetics_review(entries)
     autonomous_truncation_shadow_review_v1 = build_autonomous_truncation_shadow_review(
         entries
     )
@@ -12786,10 +18721,23 @@ def build_review(
         entries
     )
     witness_resonance_v1 = build_witness_resonance_review(entries)
+    witness_texture_integrity_v1 = build_witness_texture_integrity_review(
+        entries,
+        astrid_workspace=astrid_workspace,
+    )
     entropy_pressure_divergence_v1 = build_entropy_pressure_divergence_review(entries)
     fallback_continuity_fire_drill_v1 = build_fallback_continuity_fire_drill_review(
         entries,
         astrid_workspace=astrid_workspace,
+    )
+    spectral_texture_calibration_v2 = (
+        spectral_texture_calibration_audit.build_calibration_record(
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+            since_hours=24.0,
+            output_root=output_dir / "spectral_texture_calibrations",
+            write_artifact=False,
+        )
     )
     fallback_capacity_readiness_gate_v1 = build_fallback_capacity_readiness_gate(
         fallback_continuity_fire_drill_v1
@@ -12820,6 +18768,46 @@ def build_review(
         astrid_workspace=astrid_workspace,
         codec_entropy_vibrancy_review_v1=codec_entropy_vibrancy_review_v1,
     )
+    codec_real_replay_v1 = build_codec_real_replay_review(
+        astrid_workspace=astrid_workspace,
+        codec_entropy_vibrancy_probe_v1=codec_entropy_vibrancy_probe_v1,
+    )
+    narrative_arc_temporal_decay_lab_v1 = build_narrative_arc_temporal_decay_lab(
+        codec_real_replay_v1
+    )
+    content_aware_vibrancy_gate_candidate_v1 = (
+        build_content_aware_vibrancy_gate_candidate(
+            codec_real_replay_v1,
+            codec_entropy_vibrancy_probe_v1,
+        )
+    )
+    codec_multipoint_inflection_v1 = build_codec_multipoint_inflection_review(
+        entries,
+        codec_real_replay_v1=codec_real_replay_v1,
+        narrative_arc_temporal_decay_lab_v1=narrative_arc_temporal_decay_lab_v1,
+        content_aware_vibrancy_gate_candidate_v1=content_aware_vibrancy_gate_candidate_v1,
+    )
+    codec_clamp_headroom_probe_v1 = build_codec_clamp_headroom_probe_review(
+        codec_real_replay_v1
+    )
+    codec_afterimage_time_series_v1 = build_codec_afterimage_time_series(
+        entries,
+        afterimage_decay_tracker_v1=afterimage_decay_tracker_v1,
+        codec_real_replay_v1=codec_real_replay_v1,
+    )
+    tail_participation_counterfactual_lab_v1 = (
+        build_tail_participation_counterfactual_lab_review(codec_real_replay_v1)
+    )
+    tail_authority_ladder_v1 = build_tail_authority_ladder(
+        tail_vibrancy_vector_v1=tail_vibrancy_vector_v1,
+        tail_vibrancy_authority_gap_v1=tail_vibrancy_authority_gap_v1,
+        tail_relief_trial_surface_v1=tail_relief_trial_surface_v1,
+        tail_lease_governor_v1=tail_lease_governor_v1,
+        tail_lease_afterglow_v1=tail_lease_afterglow_v1,
+        shadow_synced_preflight_v1=shadow_synced_preflight_v1,
+        tail_outcome_causal_learning_v1=tail_outcome_causal_learning_v1,
+        tail_participation_counterfactual_lab_v1=tail_participation_counterfactual_lab_v1,
+    )
     returnable_distinctions_v1 = build_returnable_distinctions(
         control_semantics_calibration_v1=control_semantics_calibration_v1,
         pressure_kinetics_review_v1=pressure_kinetics_review_v1,
@@ -12827,14 +18815,25 @@ def build_review(
         codec_compression_calibration_v1=codec_compression_calibration_v1,
         pressure_release_rehearsal_review_v1=pressure_release_rehearsal_review_v1,
         witness_resonance_v1=witness_resonance_v1,
+        witness_texture_integrity_v1=witness_texture_integrity_v1,
         entropy_pressure_divergence_v1=entropy_pressure_divergence_v1,
         fallback_continuity_fire_drill_v1=fallback_continuity_fire_drill_v1,
+        spectral_texture_calibration_v2=spectral_texture_calibration_v2,
         fallback_capacity_readiness_gate_v1=fallback_capacity_readiness_gate_v1,
         fallback_format_texture_stabilizer_v1=fallback_format_texture_stabilizer_v1,
         fallback_distinguishability_calibration_v1=fallback_distinguishability_calibration_v1,
         fallback_complexity_budget_lab_v1=fallback_complexity_budget_lab_v1,
         autonomous_truncation_rehearsal_v1=autonomous_truncation_rehearsal_v1,
         codec_entropy_vibrancy_probe_v1=codec_entropy_vibrancy_probe_v1,
+        codec_real_replay_v1=codec_real_replay_v1,
+        narrative_arc_temporal_decay_lab_v1=narrative_arc_temporal_decay_lab_v1,
+        content_aware_vibrancy_gate_candidate_v1=content_aware_vibrancy_gate_candidate_v1,
+        codec_multipoint_inflection_v1=codec_multipoint_inflection_v1,
+        codec_clamp_headroom_probe_v1=codec_clamp_headroom_probe_v1,
+        codec_afterimage_time_series_v1=codec_afterimage_time_series_v1,
+        gradient_sensitive_relief_v1=gradient_sensitive_relief_v1,
+        pressure_relief_smoothness_replay_v1=pressure_relief_smoothness_replay_v1,
+        tail_persistence_calibration_v1=tail_persistence_calibration_v1,
     )
     distinction_lifecycle_v1 = build_distinction_lifecycle(
         returnable_distinctions_v1=returnable_distinctions_v1,
@@ -12848,6 +18847,26 @@ def build_review(
         astrid_introspection_digest_record=astrid_introspection_digest_record,
         shared_choice_envelope=shared_choice_envelope,
         self_regulation_leases=self_regulation_leases,
+        self_regulation_negotiation_ledger_v1=self_regulation_negotiation_ledger_v1,
+        pressure_medium_kinetics_v1=pressure_medium_kinetics_v1,
+        lease_boundary_repair_v1=lease_boundary_repair_v1,
+        pressure_vector_v1=pressure_vector_v1,
+        pressure_control_cockpit_v1=pressure_control_cockpit_v1,
+        pressure_actuator_matrix_v1=pressure_actuator_matrix_v1,
+        pressure_relief_playbook_v3=pressure_relief_playbook_v3,
+        gradient_sensitive_relief_v1=gradient_sensitive_relief_v1,
+        pressure_relief_smoothness_replay_v1=pressure_relief_smoothness_replay_v1,
+        tail_vibrancy_vector_v1=tail_vibrancy_vector_v1,
+        tail_vibrancy_authority_gap_v1=tail_vibrancy_authority_gap_v1,
+        tail_vibrancy_relief_playbook_v1=tail_vibrancy_relief_playbook_v1,
+        tail_relief_trial_surface_v1=tail_relief_trial_surface_v1,
+        tail_lease_governor_v1=tail_lease_governor_v1,
+        tail_lease_afterglow_v1=tail_lease_afterglow_v1,
+        shadow_synced_preflight_v1=shadow_synced_preflight_v1,
+        tail_outcome_causal_learning_v1=tail_outcome_causal_learning_v1,
+        tail_participation_counterfactual_lab_v1=tail_participation_counterfactual_lab_v1,
+        tail_authority_ladder_v1=tail_authority_ladder_v1,
+        tail_persistence_calibration_v1=tail_persistence_calibration_v1,
         astrid_fill_pressure_calibration=astrid_fill_pressure_calibration,
         semantic_friction_calibration=semantic_friction_calibration,
         regulator_live_replay_v1=regulator_live_replay_v1,
@@ -12859,6 +18878,9 @@ def build_review(
         regulator_counterfactual_replay_lab_v1=regulator_counterfactual_replay_lab_v1,
         regulator_plateau_evidence_matrix_v1=regulator_plateau_evidence_matrix_v1,
         regulator_tuning_readiness_gate_v1=regulator_tuning_readiness_gate_v1,
+        pi_pressure_wiring_replay_v1=pi_pressure_wiring_replay_v1,
+        pi_pressure_candidate_readiness_v1=pi_pressure_candidate_readiness_v1,
+        pressure_source_to_pi_gap_v1=pressure_source_to_pi_gap_v1,
         regulator_missing_variable_evidence_loop_v1=regulator_missing_variable_evidence_loop_v1,
         control_semantics_calibration_v1=control_semantics_calibration_v1,
         pressure_kinetics_review_v1=pressure_kinetics_review_v1,
@@ -12867,8 +18889,10 @@ def build_review(
         codec_entropy_vibrancy_review_v1=codec_entropy_vibrancy_review_v1,
         pressure_release_rehearsal_review_v1=pressure_release_rehearsal_review_v1,
         witness_resonance_v1=witness_resonance_v1,
+        witness_texture_integrity_v1=witness_texture_integrity_v1,
         entropy_pressure_divergence_v1=entropy_pressure_divergence_v1,
         fallback_continuity_fire_drill_v1=fallback_continuity_fire_drill_v1,
+        spectral_texture_calibration_v2=spectral_texture_calibration_v2,
         fallback_capacity_readiness_gate_v1=fallback_capacity_readiness_gate_v1,
         fallback_format_texture_stabilizer_v1=fallback_format_texture_stabilizer_v1,
         fallback_contract_distillation_v1=fallback_contract_distillation_v1,
@@ -12876,6 +18900,12 @@ def build_review(
         fallback_complexity_budget_lab_v1=fallback_complexity_budget_lab_v1,
         autonomous_truncation_rehearsal_v1=autonomous_truncation_rehearsal_v1,
         codec_entropy_vibrancy_probe_v1=codec_entropy_vibrancy_probe_v1,
+        codec_real_replay_v1=codec_real_replay_v1,
+        narrative_arc_temporal_decay_lab_v1=narrative_arc_temporal_decay_lab_v1,
+        content_aware_vibrancy_gate_candidate_v1=content_aware_vibrancy_gate_candidate_v1,
+        codec_multipoint_inflection_v1=codec_multipoint_inflection_v1,
+        codec_clamp_headroom_probe_v1=codec_clamp_headroom_probe_v1,
+        codec_afterimage_time_series_v1=codec_afterimage_time_series_v1,
         returnable_distinctions_v1=returnable_distinctions_v1,
         distinction_lifecycle_v1=distinction_lifecycle_v1,
         shared_pressure_vocabulary_calibration=shared_pressure_vocabulary_calibration,
@@ -12924,6 +18954,25 @@ def build_review(
         "choice_ecology": choice_ecology,
         "self_regulation_leases": self_regulation_leases,
         "self_regulation_lease_learning": self_regulation_lease_learning,
+        "self_regulation_negotiation_ledger_v1": self_regulation_negotiation_ledger_v1,
+        "pressure_medium_kinetics_v1": pressure_medium_kinetics_v1,
+        "pressure_vector_v1": pressure_vector_v1,
+        "pressure_control_cockpit_v1": pressure_control_cockpit_v1,
+        "pressure_actuator_matrix_v1": pressure_actuator_matrix_v1,
+        "gradient_sensitive_relief_v1": gradient_sensitive_relief_v1,
+        "pressure_relief_smoothness_replay_v1": pressure_relief_smoothness_replay_v1,
+        "tail_vibrancy_vector_v1": tail_vibrancy_vector_v1,
+        "tail_vibrancy_authority_gap_v1": tail_vibrancy_authority_gap_v1,
+        "tail_vibrancy_relief_playbook_v1": tail_vibrancy_relief_playbook_v1,
+        "tail_relief_trial_surface_v1": tail_relief_trial_surface_v1,
+        "tail_lease_governor_v1": tail_lease_governor_v1,
+        "tail_lease_afterglow_v1": tail_lease_afterglow_v1,
+        "tail_persistence_calibration_v1": tail_persistence_calibration_v1,
+        "shadow_synced_preflight_v1": shadow_synced_preflight_v1,
+        "tail_outcome_causal_learning_v1": tail_outcome_causal_learning_v1,
+        "tail_participation_counterfactual_lab_v1": tail_participation_counterfactual_lab_v1,
+        "tail_authority_ladder_v1": tail_authority_ladder_v1,
+        "lease_boundary_repair_v1": lease_boundary_repair_v1,
         "astrid_fill_pressure_calibration": astrid_fill_pressure_calibration,
         "semantic_friction_calibration": semantic_friction_calibration,
         "regulator_live_replay_v1": regulator_live_replay_v1,
@@ -12935,6 +18984,9 @@ def build_review(
         "regulator_counterfactual_replay_lab_v1": regulator_counterfactual_replay_lab_v1,
         "regulator_plateau_evidence_matrix_v1": regulator_plateau_evidence_matrix_v1,
         "regulator_tuning_readiness_gate_v1": regulator_tuning_readiness_gate_v1,
+        "pi_pressure_wiring_replay_v1": pi_pressure_wiring_replay_v1,
+        "pi_pressure_candidate_readiness_v1": pi_pressure_candidate_readiness_v1,
+        "pressure_source_to_pi_gap_v1": pressure_source_to_pi_gap_v1,
         "regulator_missing_variable_evidence_loop_v1": regulator_missing_variable_evidence_loop_v1,
         "control_semantics_calibration_v1": control_semantics_calibration_v1,
         "pressure_kinetics_review_v1": pressure_kinetics_review_v1,
@@ -12943,8 +18995,10 @@ def build_review(
         "codec_entropy_vibrancy_review_v1": codec_entropy_vibrancy_review_v1,
         "pressure_release_rehearsal_review_v1": pressure_release_rehearsal_review_v1,
         "witness_resonance_v1": witness_resonance_v1,
+        "witness_texture_integrity_v1": witness_texture_integrity_v1,
         "entropy_pressure_divergence_v1": entropy_pressure_divergence_v1,
         "fallback_continuity_fire_drill_v1": fallback_continuity_fire_drill_v1,
+        "spectral_texture_calibration_v2": spectral_texture_calibration_v2,
         "fallback_capacity_readiness_gate_v1": fallback_capacity_readiness_gate_v1,
         "fallback_format_texture_stabilizer_v1": fallback_format_texture_stabilizer_v1,
         "fallback_contract_distillation_v1": fallback_contract_distillation_v1,
@@ -12952,6 +19006,12 @@ def build_review(
         "fallback_complexity_budget_lab_v1": fallback_complexity_budget_lab_v1,
         "autonomous_truncation_rehearsal_v1": autonomous_truncation_rehearsal_v1,
         "codec_entropy_vibrancy_probe_v1": codec_entropy_vibrancy_probe_v1,
+        "codec_real_replay_v1": codec_real_replay_v1,
+        "narrative_arc_temporal_decay_lab_v1": narrative_arc_temporal_decay_lab_v1,
+        "content_aware_vibrancy_gate_candidate_v1": content_aware_vibrancy_gate_candidate_v1,
+        "codec_multipoint_inflection_v1": codec_multipoint_inflection_v1,
+        "codec_clamp_headroom_probe_v1": codec_clamp_headroom_probe_v1,
+        "codec_afterimage_time_series_v1": codec_afterimage_time_series_v1,
         "returnable_distinctions_v1": returnable_distinctions_v1,
         "distinction_lifecycle_v1": distinction_lifecycle_v1,
         "shared_pressure_vocabulary_calibration": shared_pressure_vocabulary_calibration,
@@ -12965,6 +19025,7 @@ def build_review(
         "lived_term_charter_drafts_v1": lived_term_charter_drafts_v1,
         "lived_term_counterexample_forge_v1": lived_term_counterexample_forge_v1,
         "lease_playbook_workbench_v1": lease_playbook_workbench_v1,
+        "pressure_relief_playbook_v3": pressure_relief_playbook_v3,
         "elicitation": {
             "cooldown_hours": elicitation_cooldown_hours,
             "write_requested": emit_elicitation_invitations,

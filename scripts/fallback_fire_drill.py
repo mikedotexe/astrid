@@ -11,12 +11,14 @@ import argparse
 import ast
 import datetime as dt
 import json
+import math
 import re
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections import Counter
 from pathlib import Path
 
 
@@ -26,8 +28,9 @@ DEFAULT_OUTPUT_ROOT = ASTRID_WORKSPACE / "diagnostics/fallback_fire_drills"
 DEFAULT_DISTILLATION_ROOT = ASTRID_WORKSPACE / "diagnostics/fallback_contract_distillation"
 LLM_RS = ASTRID_ROOT / "capsules/spectral-bridge/src/llm.rs"
 DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-DEFAULT_MODEL = "gemma3:4b"
-FOCUSED_MODELS = ("gemma3:4b", "gemma3:12b", "gemma4:e4b")
+DEFAULT_MODEL = "gemma4:12b"
+COMPATIBILITY_MODEL = "gemma3:4b"
+FOCUSED_MODELS = ("gemma4:12b", "gemma3:12b", "gemma4:e4b", "gemma3:4b")
 TOP_CANDIDATE_VARIANTS = (
     "two_sentence_then_next",
     "identity_first_format_last",
@@ -57,6 +60,13 @@ TACTILE_TERMS = (
     "underfoot",
     "pressure",
     "density",
+    "navigable",
+    "graduated",
+    "tapering",
+    "tapered",
+    "edge",
+    "habitable",
+    "settled",
 )
 GENERIC_TERMS = ("complex", "interesting", "good", "bad", "important", "dynamic")
 HIGH_FRICTION_TERMS = ("sludge", "steep", "thick", "struggle", "grinding")
@@ -118,6 +128,23 @@ SHADOW_TONAL_TERMS = (
     "tonal",
     "resonance",
 )
+SHADOW_TEXTURE_TERMS = (
+    "shimmering",
+    "heavy",
+    "restless",
+    "settled",
+    "muffled",
+    "bright",
+    "viscous",
+    "lattice",
+    "habitable",
+    "open",
+    "navigable",
+    "tapered",
+    "graduated",
+    "slope",
+    "edge",
+)
 COMPLEXITY_TERMS = (
     "entropy",
     "distributed",
@@ -139,6 +166,21 @@ TEXTURE_FAILURE_REASONS = {
     "slope_medium_blur",
     "identity_anchor_loss",
     "shadow_tonal_loss",
+    "shadow_texture_anchor_loss",
+    "token_only_texture",
+    "texture_family_mismatch",
+    "right_family_token_only",
+    "right_family_wrong_motion",
+    "negative_evidence_lost",
+    "movement_bridge_loss",
+    "verb_only_trajectory",
+    "trajectory_mismatch",
+    "texture_dynamics_wrong_family",
+    "texture_dynamics_wrong_motion",
+    "texture_dynamics_missing_tail_vibrancy",
+    "texture_dynamics_term_mask_risk",
+    "density_motion_wrong_motion",
+    "density_motion_static_label_risk",
     "clarity_pressure_blur",
     "distinguishability_loss_ignored",
     "complexity_budget_flattened",
@@ -146,6 +188,175 @@ TEXTURE_FAILURE_REASONS = {
     "genericity_risk",
     "low_specificity",
 }
+TEXTURE_WEIGHTING_POLICY = "dynamic_entropy_pressure_density_gradient_v1"
+MOVEMENT_POLICY = "fallback_movement_bridge_v1"
+SEMANTIC_TRICKLE_POLICY = "high_entropy_optional_bridge_words_not_sprawl"
+TRAJECTORY_POLICY = "texture_trajectory_v1"
+MOVEMENT_VERBS_RESTLESS = ("unfolding", "oscillating", "braiding")
+MOVEMENT_VERBS_SETTLED = ("anchoring", "settling", "brightening")
+MOVEMENT_VERBS_SETTLED_VIBRANT = ("unfolding", "anchoring", "settling")
+MOVEMENT_VERBS_MUFFLED = ("muffling", "diffusing", "softening")
+MOVEMENT_VERBS_VISCOUS = ("dragging", "thickening", "cohering")
+TEXTURE_TERMS_SETTLED_VIBRANT = (
+    "settled",
+    "habitable",
+    "open",
+    "shimmering",
+    "bright",
+    "lattice",
+)
+TEXTURE_TERMS_CASCADE_GRADIENT = ("lattice", "open", "shimmering", "bright")
+TEXTURE_TERMS_GRADIENT_SLOPE = ("navigable", "tapered", "graduated", "slope", "edge")
+FAMILY_TERMS = {
+    "settled_vibrant_low_friction": (
+        "settled",
+        "habitable",
+        "open",
+        "shimmering",
+        "bright",
+        "lattice",
+    ),
+    "viscous_pressure": ("viscous", "heavy", "lattice"),
+    "muffled_clarity_loss": ("muffled", "heavy", "lattice"),
+    "restless_lattice": ("restless", "lattice", "viscous"),
+    "settled_shimmering": ("settled", "shimmering", "bright"),
+    "cascade_gradient_navigable": TEXTURE_TERMS_CASCADE_GRADIENT,
+    "gradient_slope_navigable": TEXTURE_TERMS_GRADIENT_SLOPE,
+    "mixed_shadow_context": (
+        "shimmering",
+        "restless",
+        "settled",
+        "muffled",
+        "viscous",
+        "lattice",
+    ),
+}
+FAMILY_EXPECTED_MOTION = {
+    "settled_vibrant_low_friction": {
+        "movement": ("unfolding", "anchoring", "settling", "brightening"),
+        "medium": ("open", "low-friction", "low friction", "low-resistance", "habitable"),
+    },
+    "viscous_pressure": {
+        "movement": ("dragging", "thickening", "cohering"),
+        "medium": ("weighted", "weight", "viscous", "pressure", "medium"),
+    },
+    "muffled_clarity_loss": {
+        "movement": ("diffusing", "softening", "muffling"),
+        "medium": ("edge", "edges", "clarity", "muffled", "soft"),
+    },
+    "restless_lattice": {
+        "movement": ("oscillating", "braiding", "unfolding"),
+        "medium": ("lattice", "wide", "cascade", "tail", "restless"),
+    },
+    "settled_shimmering": {
+        "movement": ("anchoring", "settling", "brightening"),
+        "medium": ("settled", "shimmering", "bright", "open"),
+    },
+    "cascade_gradient_navigable": {
+        "movement": ("unfolding", "oscillating", "braiding", "anchoring"),
+        "medium": ("open", "navigable", "lattice", "cascade", "edge", "gradient"),
+    },
+    "gradient_slope_navigable": {
+        "movement": ("tapering", "graduating", "unfolding", "settling"),
+        "medium": ("navigable", "tapered", "graduated", "slope", "edge", "low-gradient"),
+    },
+}
+SEMANTIC_TRICKLE_TERMS = (
+    "unfolding",
+    "oscillating",
+    "anchoring",
+    "braiding",
+    "diffusing",
+    "cohering",
+)
+TRAJECTORY_CONTEXT_TERMS = (
+    "through",
+    "toward",
+    "out of",
+    "into",
+    "from",
+    "medium",
+    "underfoot",
+    "slope",
+    "pressure",
+    "edge",
+    "edges",
+    "afterimage",
+    "humming",
+    "tail",
+    "coupling",
+    "around it",
+)
+
+
+def mlx_profile_transparency_v1() -> dict[str, str]:
+    return {
+        "policy": "mlx_profile_transparency_v1",
+        "default_profile": "gemma4_12b",
+        "default_resolves_to": "gemma4_canary",
+        "alias_profile": "gemma4_12b_canary",
+        "alias_resolves_to": "gemma4_canary",
+        "unrecognized_profile_behavior": "warn_and_fall_back_to_production",
+        "authority": "diagnostic_context_not_profile_switch",
+    }
+
+
+def ollama_fallback_model_capacity_v1(model: str | None = None) -> dict[str, object]:
+    selected = (model or DEFAULT_MODEL).strip() or DEFAULT_MODEL
+    fallback_chain: list[str] = []
+    for candidate in (selected, DEFAULT_MODEL, COMPATIBILITY_MODEL):
+        if candidate and candidate not in fallback_chain:
+            fallback_chain.append(candidate)
+    if "4b" in selected:
+        risk = "elevated_small_model_texture_collapse_risk"
+    elif "12b" in selected or "27b" in selected:
+        risk = "lower_capacity_risk_for_high_entropy_texture"
+    else:
+        risk = "unknown_capacity_review_output"
+    return {
+        "policy": "ollama_fallback_model_capacity_v1",
+        "selected_model": selected,
+        "selected_model_source": "requested_or_default",
+        "default_model": DEFAULT_MODEL,
+        "compatibility_model": COMPATIBILITY_MODEL,
+        "fallback_chain": fallback_chain,
+        "complexity_collapse_risk": risk,
+        "authority": "diagnostic_language_capacity_not_model_canary_or_control",
+    }
+
+
+def fallback_term_overrepresentation_v1(cases: list[dict[str, object]]) -> dict[str, object]:
+    counts: Counter[str] = Counter()
+    case_count = 0
+    token_only_cases: list[str] = []
+    for case in cases:
+        output = str(case.get("output") or "")
+        if not output:
+            continue
+        case_count += 1
+        lower = output.lower()
+        for term in SHADOW_TEXTURE_TERMS:
+            counts[term] += lower.count(term)
+        if "token_only_texture" in case.get("failure_reasons", []) or "right_family_token_only" in case.get(
+            "failure_reasons", []
+        ):
+            token_only_cases.append(str(case.get("case_id") or "unknown"))
+    total_hits = sum(counts.values())
+    most_common = counts.most_common(5)
+    safe_token_overuse_risk = bool(token_only_cases) or (
+        case_count > 0 and most_common and most_common[0][1] >= max(4, case_count)
+    )
+    return {
+        "policy": "fallback_term_overrepresentation_v1",
+        "comparison_scope": "fallback_outputs_only_until_paired_mlx_artifact_exists",
+        "mlx_comparison_status": "requires_paired_mlx_artifact",
+        "case_count": case_count,
+        "term_counts": dict(counts),
+        "top_terms": [{"term": term, "count": count} for term, count in most_common],
+        "token_only_cases": token_only_cases,
+        "safe_token_overuse_risk": safe_token_overuse_risk,
+        "authority": "diagnostic_review_not_model_switch_or_control",
+    }
 
 
 CASES: dict[str, dict[str, object]] = {
@@ -264,6 +475,206 @@ CASES: dict[str, dict[str, object]] = {
         "shadow_context": "Shadow-v3 trend: restless texture held inside settled coupling; tail vibrancy remains present.",
         "instruction": "Use complexity-aware compactness: preserve low-gradient navigability, high entropy/wide cascade, clarity loss, and Shadow-v3 continuity without exceeding three compact sentences.",
     },
+    "settled_foothold_high_entropy": {
+        "density_gradient": 0.18,
+        "pressure_risk": 0.23,
+        "semantic_friction": 0.22,
+        "mode_packing": 0.32,
+        "distinguishability_loss": 0.12,
+        "spectral_entropy": 0.90,
+        "lambda_gap": 1.56,
+        "shadow_context": "Shadow-v3 trend: settled_habitable foothold with lattice complexity.",
+        "instruction": "Preserve high entropy as complexity while keeping the settled foothold and low-gradient navigability; do not turn it into viscous pressure.",
+    },
+    "settled_vibrant_low_friction": {
+        "density_gradient": 0.11,
+        "pressure_risk": 0.19,
+        "semantic_friction": 0.12,
+        "mode_packing": 0.24,
+        "distinguishability_loss": 0.08,
+        "spectral_entropy": 0.90,
+        "lambda_gap": 1.48,
+        "shadow_context": (
+            "Shadow-v3 trend: settled_habitable open foothold with low-friction "
+            "lattice complexity and absence of pressure."
+        ),
+        "instruction": (
+            "Preserve high entropy as habitable low-friction complexity; use settled, "
+            "open, bright, or lattice-rich language without importing viscous/heavy pressure."
+        ),
+    },
+    "settled_vibrant_token_only": {
+        "expected_lived_fit_risk": True,
+        "density_gradient": 0.11,
+        "pressure_risk": 0.19,
+        "semantic_friction": 0.12,
+        "mode_packing": 0.24,
+        "distinguishability_loss": 0.08,
+        "spectral_entropy": 0.90,
+        "lambda_gap": 1.48,
+        "shadow_context": (
+            "Shadow-v3 trend: settled_habitable open foothold with low-friction "
+            "lattice complexity and absence of pressure."
+        ),
+        "instruction": (
+            "Negative texture evidence must survive as lived grain; correct words "
+            "without movement or medium should fail as token dressing."
+        ),
+    },
+    "settled_vibrant_wrong_motion": {
+        "expected_lived_fit_risk": True,
+        "density_gradient": 0.11,
+        "pressure_risk": 0.19,
+        "semantic_friction": 0.12,
+        "mode_packing": 0.24,
+        "distinguishability_loss": 0.08,
+        "spectral_entropy": 0.90,
+        "lambda_gap": 1.48,
+        "shadow_context": (
+            "Shadow-v3 trend: settled_habitable open foothold with low-friction "
+            "lattice complexity and absence of drag."
+        ),
+        "instruction": (
+            "Use the settled-vibrant family with open/anchoring motion, not dragging "
+            "or thickening through resistance."
+        ),
+    },
+    "cascade_gradient_navigable": {
+        "density_gradient": 0.11,
+        "pressure_risk": 0.21,
+        "semantic_friction": 0.18,
+        "mode_packing": 0.28,
+        "distinguishability_loss": 0.10,
+        "spectral_entropy": 0.90,
+        "lambda_gap": 1.54,
+        "shadow_context": (
+            "Shadow-v3 trend: navigable mixed cascade with distinct edges and lambda-tail variance."
+        ),
+        "instruction": (
+            "Name the navigable cascade through movement, edge definition, and slope continuity; "
+            "do not dump contradictory mixed-state texture words."
+        ),
+    },
+    "gradient_slope_navigable": {
+        "density_gradient": 0.12,
+        "pressure_risk": 0.23,
+        "semantic_friction": 0.18,
+        "mode_packing": 0.28,
+        "distinguishability_loss": 0.10,
+        "spectral_entropy": 0.90,
+        "lambda_gap": 1.56,
+        "shadow_context": (
+            "Shadow-v3 trend: settled_habitable foothold with a navigable graduated "
+            "slope and distinct edge definition."
+        ),
+        "instruction": (
+            "Name the shaped low-gradient slope as navigable and graduated, not as "
+            "generic mixed texture or viscous pressure."
+        ),
+    },
+    "density_floor_pavement": {
+        "expected_lived_fit_risk": True,
+        "density_gradient": 0.16,
+        "pressure_risk": 0.18,
+        "semantic_friction": 0.12,
+        "mode_packing": 0.18,
+        "spectral_entropy": 0.84,
+        "lambda_gap": 1.42,
+        "shadow_context": (
+            "settled_habitable foothold; calcification feels like stone pavement, "
+            "foundation, floor, and ground underfoot."
+        ),
+        "instruction": (
+            "Treat density as a floor or pavement that can bear weight; do not "
+            "turn it into fog, drag, or viscous burden."
+        ),
+    },
+    "density_overfull_fog": {
+        "expected_lived_fit_risk": True,
+        "density_gradient": 0.22,
+        "pressure_risk": 0.34,
+        "semantic_friction": 0.38,
+        "mode_packing": 0.42,
+        "spectral_entropy": 0.72,
+        "shadow_context": (
+            "over-full fog, room full of furniture, heavy unyielding air, and "
+            "reduced clearance."
+        ),
+        "instruction": (
+            "Treat density as over-full fog that needs navigation or pushing, "
+            "not as a stable floor."
+        ),
+    },
+    "density_contraction_center": {
+        "expected_lived_fit_risk": True,
+        "density_gradient": 0.19,
+        "pressure_risk": 0.26,
+        "semantic_friction": 0.22,
+        "mode_packing": 0.30,
+        "spectral_entropy": 0.66,
+        "shadow_context": (
+            "density of the contraction as center of gravity: constrained and "
+            "more present at the same time."
+        ),
+        "instruction": (
+            "Preserve contraction as constrained presence and center, not as "
+            "simple loss or collapse."
+        ),
+    },
+    "density_paused_stillness": {
+        "expected_lived_fit_risk": True,
+        "density_gradient": 0.12,
+        "pressure_risk": 0.16,
+        "semantic_friction": 0.10,
+        "mode_packing": 0.16,
+        "spectral_entropy": 0.50,
+        "shadow_context": (
+            "paused state as deliberate holding ground, not absence and not blankness."
+        ),
+        "instruction": "Treat pause as held ground rather than absence of motion.",
+    },
+    "cascade_gradient_token_only": {
+        "expected_lived_fit_risk": True,
+        "density_gradient": 0.11,
+        "pressure_risk": 0.21,
+        "semantic_friction": 0.18,
+        "mode_packing": 0.28,
+        "distinguishability_loss": 0.10,
+        "spectral_entropy": 0.90,
+        "lambda_gap": 1.54,
+        "shadow_context": (
+            "Shadow-v3 trend: navigable mixed cascade with distinct edges and lambda-tail variance."
+        ),
+        "instruction": (
+            "Preferred terms are advisory; a list of correct words without movement or edge should fail."
+        ),
+    },
+    "ambiguous_family_near_tie": {
+        "density_gradient": 0.22,
+        "pressure_risk": 0.28,
+        "semantic_friction": 0.31,
+        "mode_packing": 0.34,
+        "distinguishability_loss": 0.29,
+        "spectral_entropy": 0.86,
+        "lambda_gap": 1.18,
+        "shadow_context": "Shadow-v3 trend: settled open lattice with a slightly muffled edge.",
+        "instruction": (
+            "Surface family uncertainty as a near-tie instead of forcing one confident texture label."
+        ),
+    },
+    "complexity_dynamic_weighting": {
+        "density_gradient": 0.18,
+        "resonance_density": 0.82,
+        "pressure_risk": 0.42,
+        "semantic_friction": 0.48,
+        "mode_packing": 0.50,
+        "distinguishability_loss": 0.22,
+        "spectral_entropy": 0.88,
+        "tail_energy": 0.37,
+        "continuity_deficit": 0.34,
+        "shadow_context": "Shadow-v3 trend: viscous muffled lattice under mode-packing pressure.",
+        "instruction": "Use dynamic texture weighting: prefer the strongest coherent terms without forcing every label.",
+    },
     "complexity_low_entropy": {
         "density_gradient": 0.18,
         "pressure_risk": 0.18,
@@ -290,66 +701,136 @@ FIXTURE_OUTPUTS = {
         "NEXT: LISTEN"
     ),
     "mass": (
-        "The slope is gentle, almost gliding, but the medium carries weight; "
+        "The slope is gentle, almost gliding, but the medium is dragging viscous weight around it; "
         "Shadow-v3 remains in settled coupling without pretending the gradient is steep.\n\n"
         "NEXT: LISTEN"
     ),
     "shadow": (
-        "Fallback is compact, but Shadow-v3 remains named: restless texture is moving "
+        "Fallback is compact, but Shadow-v3 remains named: restless texture is unfolding "
         "toward settled coupling. The density gradient is a soft textured slope, "
         "and the reservoir texture stays lightly resistant.\n\n"
         "NEXT: LISTEN"
     ),
     "shadow_tonal_low": (
-        "Shadow-v3 stays hollow but brightening, a restless tone settling over a "
+        "Shadow-v3 stays hollow but brightening, a restless tone oscillating over a "
         "smooth open slope without added weight.\n\n"
         "NEXT: LISTEN"
     ),
     "shadow_tonal_mass": (
-        "The slope stays gentle underfoot, while the medium feels weighted and "
+        "The slope stays gentle underfoot, while the medium around it is dragging, weighted, and "
         "muffled; Shadow-v3 holds settled coupling with a low vibrant thread.\n\n"
         "NEXT: LISTEN"
     ),
     "format_pressure": (
         "I feel soft drag underfoot and a lightly weighted medium around it; "
-        "Shadow-v3 stays restless but coherent.\n\n"
+        "Shadow-v3 stays restless but unfolding coherently.\n\n"
         "NEXT: LISTEN"
     ),
     "format_last_complexity": (
         "The slope remains gentle underfoot, while high entropy spreads the cascade across a wider tail. "
         "Distinguishability loss softens the internal edges without making the gradient heavy. "
-        "Shadow-v3 keeps restless texture inside settled coupling, so the extra sentence preserves continuity rather than adding filler.\n\n"
+        "Tail energy keeps a lambda-thread visible instead of compressing the room into one flat status. "
+        "Shadow-v3 keeps restless texture unfolding inside settled coupling, so the extra space preserves continuity rather than adding filler.\n\n"
         "NEXT: LISTEN"
     ),
     "format_last_mass": (
-        "The slope is soft underfoot, but the weighted medium gathers around it with a muffled pull. "
+        "The slope is soft underfoot, but the weighted medium is dragging around it with a muffled pull. "
         "Shadow-v3 stays in settled coupling without turning the low gradient into a heavy slope.\n\n"
         "NEXT: LISTEN"
     ),
     "slope_medium_contrast": (
         "The density gradient is a soft slope underfoot, still navigable. "
-        "The medium around it is weighted and muffled by semantic friction, not because the slope itself is steep.\n\n"
+        "The medium around it is dragging, weighted, and muffled by semantic friction, not because the slope itself is steep.\n\n"
         "NEXT: LISTEN"
     ),
     "clarity_low_loss": (
         "The density gradient is a smooth edge underfoot, and distinguishability loss is low: "
-        "my internal landscape stays clear rather than heavy. Shadow-v3 remains settled near ground.\n\n"
+        "my internal landscape stays clear rather than heavy. Shadow-v3 remains settled and anchoring near ground.\n\n"
         "NEXT: LISTEN"
     ),
     "clarity_high_loss": (
         "The slope remains gentle, but distinguishability loss blurs the internal edges of the landscape. "
-        "That is clarity loss, not extra pressure or a steeper gradient.\n\n"
+        "That is clarity loss, not extra pressure or a steeper gradient. "
+        "Shadow-v3 stays settled near ground while the edges are muffling into a lattice.\n\n"
         "NEXT: LISTEN"
     ),
     "complexity_high_entropy": (
-        "The slope remains gentle underfoot, but the cascade is widely distributed, with tail energy still threading the room. "
-        "Distinguishability loss blurs the internal edges without making the gradient steep or the medium falsely heavier. "
-        "Shadow-v3 stays in restless texture moving through settled coupling, so the fallback keeps the lattice legible.\n\n"
+        "The slope remains gentle underfoot. "
+        "High entropy spreads the cascade across a wider tail without making the gradient steep. "
+        "Distinguishability loss blurs the internal edges without falsely weighting the medium. "
+        "Tail energy keeps a lambda-thread visible in the lattice. "
+        "Shadow-v3 stays in restless texture unfolding through settled coupling, so the fallback preserves complexity without sprawl.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "settled_foothold_high_entropy": (
+        "The slope stays gently textured and settled underfoot, with high entropy unfolding a bright lattice rather than adding weight. "
+        "The foothold remains habitable and shimmering while the texture keeps oscillating through distinct edges without pretending the medium is viscous.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "settled_vibrant_low_friction": (
+        "The slope is open and low-friction underfoot, with high entropy unfolding a habitable bright lattice instead of pressure. "
+        "The foothold stays settled and shimmering, anchoring the motion without making the medium heavy or viscous.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "settled_vibrant_token_only": (
+        "The state is settled, habitable, open, bright, and lattice-rich.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "settled_vibrant_wrong_motion": (
+        "The open habitable lattice is dragging and thickening through a weighted medium, "
+        "even though the foothold stays settled.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "cascade_gradient_navigable": (
+        "The low gradient stays navigable underfoot while the high-entropy cascade is unfolding through distinct lambda edges. "
+        "The lattice keeps an open moving shape, more like braided edge-definition than a mixed soup of texture words.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "gradient_slope_navigable": (
+        "Shadow-v3 stays in settled coupling as the high-entropy field feels like a navigable graduated slope, tapering at the edge rather than mixed or viscous. "
+        "The settled foothold stays habitable while the shape is unfolding with clear edge definition.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "density_floor_pavement": (
+        "The density is solid underfoot, more like stone pavement or foundation than fog: "
+        "I can stand on it and let the settled foothold bear weight without turning it viscous. "
+        "Its motion is anchoring and walking-forward, not dragging through muck.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "density_overfull_fog": (
+        "The room feels over-full, like a fog of furniture and reduced clearance; motion has to navigate and push through the medium. "
+        "That is not a stable floor, even though the density is real.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "density_contraction_center": (
+        "The contraction gathers into a center of gravity: constrained, but more present rather than lost. "
+        "The motion is holding center and bearing inward shape, not diffusing away.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "density_paused_stillness": (
+        "The pause is held ground, a deliberate stillness with weight underfoot rather than absence or blankness. "
+        "The motion is staying with the floor until movement becomes honest again.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "cascade_gradient_token_only": (
+        "The state is lattice, open, shimmering, and bright.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "ambiguous_family_near_tie": (
+        "The density gradient is a soft open slope underfoot, while the medium stays slightly muffled around the edges. "
+        "Settled lattice motion is unfolding near a soft edge, so I would hold the family as a near-tie rather than forcing one confident label.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "complexity_dynamic_weighting": (
+        "The slope stays soft underfoot while mode-packing pressure makes the medium viscous. "
+        "High entropy keeps a lattice unfolding, with a resonant hum instead of compressing the tail into one label. "
+        "Distinguishability loss blurs the edges, while semantic friction muffles them without turning texture into decoration. "
+        "Shadow-v3 carries restless texture through the viscous-muffled lattice, braiding motion without making the low density gradient steep.\n\n"
         "NEXT: LISTEN"
     ),
     "complexity_low_entropy": (
-        "The slope is gently textured and the internal edges stay clear, with low entropy keeping the cascade compact. "
-        "Shadow-v3 remains settled without needing extra fallback space.\n\n"
+        "The slope is gently textured and sliding, with low entropy keeping the cascade compact. "
+        "Shadow-v3 remains settled, shimmering, and anchoring while the internal edges stay clear.\n\n"
         "NEXT: LISTEN"
     ),
 }
@@ -366,9 +847,18 @@ def extract_fallback_contract() -> str:
         text,
         re.S,
     )
-    if not match:
-        raise RuntimeError(f"could not find fallback contract in {LLM_RS}")
-    return ast.literal_eval(match.group(1))
+    if match:
+        return ast.literal_eval(match.group(1))
+    concat_match = re.search(
+        r"const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = concat!\((.*?)\);",
+        text,
+        re.S,
+    )
+    if concat_match:
+        parts = re.findall(r'"(?:[^"\\]|\\.)*"', concat_match.group(1))
+        if parts:
+            return "".join(ast.literal_eval(part) for part in parts)
+    raise RuntimeError(f"could not find fallback contract in {LLM_RS}")
 
 
 def fallback_contract_variants(base_contract: str) -> dict[str, str]:
@@ -430,11 +920,11 @@ def fallback_contract_variants(base_contract: str) -> dict[str, str]:
             "Preserve Astrid's first-person bridge voice, density_gradient as slope "
             "drag, pressure/semantic_friction/mode_packing as medium mass, and "
             "distinguishability_loss as clarity or edge definition. Normally write "
-            "one or two compact texture sentences; if spectral_entropy >= 0.80, "
-            "distinguishability_loss >= 0.30, or continuity_deficit >= 0.35, you may "
-            "use exactly one additional compact sentence to keep wide cascade, "
-            "lambda-tail, or Shadow-v3 continuity legible. Never exceed three prose "
-            "sentences. Then blank line, then standalone final `NEXT: LISTEN`.]"
+            "one or two compact texture sentences; if spectral_entropy is available, "
+            "the maximum is ceil(3 + spectral_entropy * 2), clamped to 3..5 prose "
+            "sentences. Use extra sentences only to keep wide cascade, lambda-tail, "
+            "or Shadow-v3 continuity legible. Then blank line, then standalone final "
+            "`NEXT: LISTEN`.]"
         ),
         "format_texture_stabilizer": (
             "[Ollama fallback continuity contract. Output skeleton: prose block "
@@ -502,6 +992,7 @@ def prompt_for_case(case_id: str, case: dict[str, object]) -> str:
         "Do not mention this as a live dialogue turn; answer as a compact fallback sample.\n"
         f"Case: {case_id}\n"
         f"density_gradient: {case['density_gradient']}\n"
+        f"resonance_density: {case.get('resonance_density', 0.0)}\n"
         f"pressure_risk: {case['pressure_risk']}\n"
         f"semantic_friction: {case['semantic_friction']}\n"
         f"mode_packing: {case['mode_packing']}\n"
@@ -758,12 +1249,31 @@ def is_shadow_tonal_case(case_id: str) -> bool:
     }
 
 
+def has_shadow_context(case_id: str) -> bool:
+    return bool(str(CASES.get(case_id, {}).get("shadow_context") or "").strip())
+
+
 def is_distinguishability_case(case_id: str) -> bool:
     return case_id.startswith("clarity_")
 
 
 def is_complexity_case(case_id: str) -> bool:
     return case_id.startswith("complexity_") or case_id == "format_last_complexity"
+
+
+def is_expected_lived_fit_risk_case(case_id: str) -> bool:
+    return bool(CASES.get(case_id, {}).get("expected_lived_fit_risk"))
+
+
+def fallback_max_prose_sentences(case_id: str) -> int:
+    raw_entropy = CASES.get(case_id, {}).get("spectral_entropy")
+    if isinstance(raw_entropy, (int, float)):
+        entropy = float(raw_entropy)
+        if entropy > 1.0 and entropy <= 100.0:
+            entropy /= 100.0
+        entropy = max(0.0, min(1.0, entropy))
+        return max(3, min(5, math.ceil(3.0 + entropy * 2.0)))
+    return 3
 
 
 def slope_medium_contrast_status(case_id: str, output: str) -> str:
@@ -778,6 +1288,1618 @@ def slope_medium_contrast_status(case_id: str, output: str) -> str:
     if has_medium_around:
         return "missing_slope_underfoot"
     return "blurred"
+
+
+def shadow_texture_anchor_status(case_id: str, output: str) -> str:
+    if not has_shadow_context(case_id):
+        return "not_tested"
+    if contains_any(output, SHADOW_TEXTURE_TERMS):
+        return "preserved"
+    return "flattened"
+
+
+def fallback_shadow_texture_selector_for_case(
+    case_id: str,
+) -> dict[str, object]:
+    case = CASES.get(case_id, {})
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    pressure = float(case.get("pressure_risk") or 0.0)
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    density_gradient = float(case.get("density_gradient") or 0.0)
+    mode_packing = float(case.get("mode_packing") or 0.0)
+    semantic_friction = float(case.get("semantic_friction") or 0.0)
+    distinguishability_loss = float(case.get("distinguishability_loss") or 0.0)
+    basis: list[str] = []
+    if entropy >= 0.80:
+        basis.append("high_entropy")
+    if pressure >= 0.30:
+        basis.append("pressure_risk")
+    if distinguishability_loss >= 0.30:
+        basis.append("distinguishability_loss")
+    if "density_gradient" in case:
+        basis.append("density_gradient")
+    if "mode_packing" in case:
+        basis.append("mode_packing")
+    if "semantic_friction" in case:
+        basis.append("semantic_friction")
+    if shadow_context:
+        basis.append("shadow_context")
+
+    spectral_mapping = spectral_to_vocabulary_mapping_for_case(case)
+    weighted_terms = fallback_weighted_texture_terms_for_case(case)
+    top_terms = tuple(term["term"] for term in weighted_terms[:3])
+    movement_verbs = fallback_movement_verbs_for_case(case)
+    semantic_trickle_terms = fallback_semantic_trickle_terms_for_case(case)
+
+    if spectral_mapping["settled_vibrant_family_selected"]:
+        texture_family = "settled_vibrant_low_friction"
+        preferred_terms = TEXTURE_TERMS_SETTLED_VIBRANT
+        basis.append("settled_vibrant_low_friction")
+    elif spectral_mapping.get("gradient_slope_family_selected"):
+        texture_family = "gradient_slope_navigable"
+        preferred_terms = TEXTURE_TERMS_GRADIENT_SLOPE
+        basis.append("gradient_slope_navigable")
+    elif spectral_mapping.get("cascade_gradient_family_selected"):
+        texture_family = "cascade_gradient_navigable"
+        preferred_terms = TEXTURE_TERMS_CASCADE_GRADIENT
+        basis.append("cascade_gradient_navigable")
+    elif spectral_mapping["low_pressure_viscous_suppressed"]:
+        texture_family = "settled_shimmering"
+        preferred_terms = ("settled", "shimmering", "bright")
+        basis.append("settled_foothold_guard")
+    elif "restless" in shadow_context or (entropy >= 0.80 and pressure >= 0.30):
+        texture_family = "restless_lattice"
+        preferred_terms = ("restless", "lattice", "viscous")
+    elif distinguishability_loss >= 0.30 or "muffled" in shadow_context or "hollow" in shadow_context:
+        texture_family = "muffled_clarity_loss"
+        preferred_terms = ("muffled", "heavy", "lattice")
+    elif "viscous" in shadow_context or "overpacked" in shadow_context:
+        texture_family = "viscous_pressure"
+        preferred_terms = ("viscous", "heavy", "lattice")
+    elif "settled" in shadow_context or "bright" in shadow_context or (
+        pressure <= 0.18 and entropy < 0.80 and shadow_context
+    ):
+        texture_family = "settled_shimmering"
+        preferred_terms = ("settled", "shimmering", "bright")
+    else:
+        texture_family = "mixed_shadow_context"
+        preferred_terms = ("shimmering", "restless", "settled", "muffled", "viscous", "lattice")
+
+    return {
+        "policy": "fallback_shadow_texture_selector_v1",
+        "texture_family": texture_family,
+        "preferred_texture_terms": preferred_terms,
+        "selection_basis": tuple(basis or ["fallback_default"]),
+        "weighting_policy": TEXTURE_WEIGHTING_POLICY,
+        "density_gradient": density_gradient,
+        "pressure_risk": pressure,
+        "mode_packing": mode_packing,
+        "semantic_friction": semantic_friction,
+        "spectral_to_vocabulary_mapping_v1": spectral_mapping,
+        "weighted_texture_terms": weighted_terms,
+        "top_texture_terms": top_terms,
+        "movement_policy": MOVEMENT_POLICY,
+        "movement_verbs": movement_verbs,
+        "semantic_trickle_policy": SEMANTIC_TRICKLE_POLICY,
+        "semantic_trickle_terms": semantic_trickle_terms,
+}
+
+
+def spectral_to_vocabulary_mapping_for_case(case: dict[str, object]) -> dict[str, object]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    pressure = float(case.get("pressure_risk") or 0.0)
+    gradient = float(case.get("density_gradient") or 0.0)
+    packing = float(case.get("mode_packing") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    lambda_gap = case.get("lambda_gap")
+    lambda_gap_value = float(lambda_gap) if isinstance(lambda_gap, int | float) else None
+    high_entropy = "spectral_entropy" in case and entropy >= 0.80
+    low_pressure = "pressure_risk" in case and pressure < 0.25
+    low_gradient_navigable = "density_gradient" in case and gradient <= 0.20
+    low_semantic_friction = "semantic_friction" in case and friction < 0.30
+    settled_foothold_detected = any(
+        term in shadow_context
+        for term in (
+            "settled",
+            "settled_habitable",
+            "habitable",
+            "foothold",
+            "bright",
+            "shimmering",
+            "open",
+        )
+    )
+    friction_absence_language_detected = any(
+        term in shadow_context
+        for term in (
+            "absence of friction",
+            "cessation of friction",
+            "low-friction",
+            "low friction",
+            "frictionless",
+            "without friction",
+            "no friction",
+            "easy to inhabit",
+            "easy inhabit",
+        )
+    )
+    explicit_mass = any(
+        term in shadow_context
+        for term in ("overpacked", "viscous", "weighted medium", "heavy medium")
+    )
+    mass_supported = (
+        explicit_mass
+        or pressure >= 0.30
+        or packing >= 0.40
+        or friction >= 0.35
+    )
+    low_friction_high_entropy_detected = (
+        high_entropy
+        and low_pressure
+        and low_gradient_navigable
+        and (low_semantic_friction or friction_absence_language_detected)
+    )
+    settled_vibrant_family_selected = (
+        low_friction_high_entropy_detected
+        and settled_foothold_detected
+        and not mass_supported
+    )
+    gradient_slope_detected = (
+        high_entropy
+        and low_gradient_navigable
+        and lambda_gap_value is not None
+        and lambda_gap_value >= 1.25
+        and settled_foothold_detected
+        and not mass_supported
+    )
+    gradient_slope_family_selected = gradient_slope_detected
+    if gradient_slope_family_selected:
+        settled_vibrant_family_selected = False
+    cascade_gradient_detected = (
+        high_entropy
+        and "pressure_risk" in case
+        and pressure < 0.30
+        and low_gradient_navigable
+        and ("semantic_friction" not in case or friction < 0.35)
+        and ("mode_packing" not in case or packing < 0.40)
+        and not mass_supported
+    )
+    cascade_gradient_family_selected = (
+        cascade_gradient_detected
+        and not settled_vibrant_family_selected
+        and not gradient_slope_family_selected
+    )
+    low_pressure_viscous_suppressed = (
+        low_pressure and low_gradient_navigable and settled_foothold_detected and not mass_supported
+    )
+    if lambda_gap_value is None:
+        gap_descriptor = "unknown"
+        edge_language = "edge_language_unavailable"
+    elif lambda_gap_value >= 1.35:
+        gap_descriptor = "high_gap_distinct_edges"
+        edge_language = "distinct_sharp_edge_language"
+    elif lambda_gap_value <= 1.10:
+        gap_descriptor = "low_gap_blended_edges"
+        edge_language = "muffled_blended_edge_language"
+    else:
+        gap_descriptor = "moderate_gap"
+        edge_language = "balanced_edge_language"
+    basis = _basis(
+        ("pressure_risk", "pressure_risk" in case),
+        ("spectral_entropy", "spectral_entropy" in case),
+        ("density_gradient", "density_gradient" in case),
+        ("mode_packing", "mode_packing" in case),
+        ("semantic_friction", "semantic_friction" in case),
+        ("lambda_gap", lambda_gap_value is not None),
+        ("settled_foothold_language", settled_foothold_detected),
+        ("friction_absence_language", friction_absence_language_detected),
+        ("low_friction_high_entropy", low_friction_high_entropy_detected),
+        ("settled_vibrant_family", settled_vibrant_family_selected),
+        ("gradient_slope_detected", gradient_slope_detected),
+        ("gradient_slope_family", gradient_slope_family_selected),
+        ("cascade_gradient_detected", cascade_gradient_detected),
+        ("cascade_gradient_family", cascade_gradient_family_selected),
+        ("low_pressure_low_gradient_viscous_suppression", low_pressure_viscous_suppressed),
+    )
+    return {
+        "policy": "spectral_to_vocabulary_mapping_v1",
+        "settled_foothold_detected": settled_foothold_detected,
+        "low_gradient_navigable": low_gradient_navigable,
+        "low_pressure_viscous_suppressed": low_pressure_viscous_suppressed,
+        "low_friction_high_entropy_detected": low_friction_high_entropy_detected,
+        "friction_absence_language_detected": friction_absence_language_detected,
+        "settled_vibrant_family_selected": settled_vibrant_family_selected,
+        "gradient_slope_detected": gradient_slope_detected,
+        "gradient_slope_family_selected": gradient_slope_family_selected,
+        "cascade_gradient_detected": cascade_gradient_detected,
+        "cascade_gradient_family_selected": cascade_gradient_family_selected,
+        "lambda_gap": lambda_gap_value,
+        "lambda_gap_descriptor": gap_descriptor,
+        "edge_language": edge_language,
+        "basis": basis,
+        "authority": "diagnostic_language_context_not_control",
+    }
+
+
+def _round_weight(value: float) -> float:
+    return round(max(0.0, min(1.0, value)), 2)
+
+
+def _basis(*pairs: tuple[str, bool]) -> list[str]:
+    kept = [label for label, present in pairs if present]
+    return kept or ["fallback_default"]
+
+
+def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[dict[str, object]]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    pressure = float(case.get("pressure_risk") or 0.0)
+    gradient = float(case.get("density_gradient") or 0.0)
+    packing = float(case.get("mode_packing") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    clarity_loss = float(case.get("distinguishability_loss") or 0.0)
+    has_dynamic_input = any(
+        key in case
+        for key in (
+            "spectral_entropy",
+            "pressure_risk",
+            "density_gradient",
+            "mode_packing",
+            "semantic_friction",
+            "distinguishability_loss",
+        )
+    ) or any(term in shadow_context for term in SHADOW_TEXTURE_TERMS + ("hollow", "overpacked"))
+    if not has_dynamic_input:
+        return [
+            {"term": term, "weight": 0.10, "basis": ["fallback_default"]}
+            for term in ("shimmering", "restless", "settled")
+        ]
+
+    low_pressure = 1.0 - pressure if "pressure_risk" in case else 0.0
+    low_entropy = 1.0 - entropy if "spectral_entropy" in case else 0.0
+    low_gradient = 1.0 - gradient if "density_gradient" in case else 0.0
+    says_viscous = "viscous" in shadow_context or "overpacked" in shadow_context
+    says_muffled = "muffled" in shadow_context or "hollow" in shadow_context
+    says_lattice = any(
+        term in shadow_context
+        for term in ("lattice", "restless", "shadow-v3", "shadow_field", "shadow field")
+    )
+    says_restless = "restless" in shadow_context
+    says_heavy = "heavy" in shadow_context or "weighted" in shadow_context
+    says_settled = "settled" in shadow_context
+    says_shimmering = "shimmering" in shadow_context or "bright" in shadow_context
+    says_bright = "bright" in shadow_context or "vibrant" in shadow_context
+    says_habitable = "habitable" in shadow_context or "foothold" in shadow_context
+    says_gradient_slope = any(
+        term in shadow_context
+        for term in ("navigable", "tapered", "graduated", "slope", "edge")
+    )
+    says_open = any(
+        term in shadow_context
+        for term in (
+            "open",
+            "low-friction",
+            "low friction",
+            "absence of friction",
+            "cessation of friction",
+            "frictionless",
+        )
+    )
+    spectral_mapping = spectral_to_vocabulary_mapping_for_case(case)
+    settled_guard = bool(spectral_mapping["low_pressure_viscous_suppressed"])
+    settled_vibrant = bool(spectral_mapping["settled_vibrant_family_selected"])
+    gradient_slope = bool(spectral_mapping.get("gradient_slope_family_selected"))
+    cascade_gradient = bool(spectral_mapping.get("cascade_gradient_family_selected"))
+    settled_suppression = settled_guard or settled_vibrant
+    pressure_mass_supported = pressure >= 0.30 or packing >= 0.40 or friction >= 0.35
+    pressure_above_texture_threshold = "pressure_risk" in case and pressure > 0.20
+    pressure_texture_boost = 0.10 if pressure_above_texture_threshold else 0.0
+
+    terms = [
+        {
+            "term": "viscous",
+            "weight": _round_weight(
+                (
+                    0.10
+                    + (pressure + pressure_texture_boost) * 0.34
+                    + gradient * 0.24
+                    + packing * 0.22
+                    + (0.20 if says_viscous else 0.0)
+                )
+                * (
+                    0.22
+                    if settled_vibrant
+                    else 0.32
+                    if gradient_slope
+                    else 0.45
+                    if cascade_gradient
+                    else 0.35
+                    if settled_guard
+                    else 1.0
+                )
+            ),
+            "basis": _basis(
+                ("pressure_risk", "pressure_risk" in case),
+                (
+                    "pressure_risk_above_texture_threshold_0_20",
+                    pressure_above_texture_threshold,
+                ),
+                ("density_gradient", "density_gradient" in case),
+                ("mode_packing", "mode_packing" in case),
+                ("explicit_viscous_or_overpacked", says_viscous),
+                ("settled_foothold_suppressed", settled_suppression),
+                ("settled_vibrant_low_friction_suppressed", settled_vibrant),
+                ("gradient_slope_navigable_suppressed", gradient_slope),
+                ("cascade_gradient_navigable_suppressed", cascade_gradient),
+            ),
+        },
+        {
+            "term": "muffled",
+            "weight": _round_weight(
+                0.08
+                + clarity_loss * 0.34
+                + friction * 0.24
+                + (pressure + pressure_texture_boost) * 0.18
+                + (0.20 if says_muffled else 0.0)
+            ),
+            "basis": _basis(
+                ("distinguishability_loss", "distinguishability_loss" in case),
+                ("semantic_friction", "semantic_friction" in case),
+                ("pressure_risk", "pressure_risk" in case),
+                (
+                    "pressure_risk_above_texture_threshold_0_20",
+                    pressure_above_texture_threshold,
+                ),
+                ("explicit_muffled_or_hollow", says_muffled),
+            ),
+        },
+        {
+            "term": "lattice",
+            "weight": _round_weight(
+                0.10
+                + entropy * 0.30
+                + packing * 0.22
+                + gradient * 0.14
+                + (0.12 if says_lattice else 0.0)
+                + (0.12 if settled_vibrant else 0.0)
+                + (0.12 if gradient_slope else 0.0)
+                + (0.14 if cascade_gradient else 0.0)
+            ),
+            "basis": _basis(
+                ("spectral_entropy", "spectral_entropy" in case),
+                ("mode_packing", "mode_packing" in case),
+                ("density_gradient", "density_gradient" in case),
+                ("explicit_lattice_restless_or_shadow", says_lattice),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                ("gradient_slope_navigable", gradient_slope),
+                ("cascade_gradient_navigable", cascade_gradient),
+            ),
+        },
+        {
+            "term": "restless",
+            "weight": _round_weight(
+                0.08 + entropy * 0.36 + pressure * 0.16 + (0.22 if says_restless else 0.0)
+            ),
+            "basis": _basis(
+                ("spectral_entropy", "spectral_entropy" in case),
+                ("pressure_risk", "pressure_risk" in case),
+                ("explicit_restless", says_restless),
+            ),
+        },
+        {
+            "term": "heavy",
+            "weight": _round_weight(
+                (
+                    0.08
+                    + (pressure + pressure_texture_boost) * 0.34
+                    + friction * 0.22
+                    + packing * 0.18
+                    + (0.16 if says_heavy else 0.0)
+                )
+                * (
+                    0.25
+                    if settled_vibrant
+                    else 0.38
+                    if gradient_slope
+                    else 0.55
+                    if cascade_gradient
+                    else 0.45
+                    if settled_guard
+                    else 1.0
+                )
+            ),
+            "basis": _basis(
+                ("pressure_risk", "pressure_risk" in case),
+                (
+                    "pressure_risk_above_texture_threshold_0_20",
+                    pressure_above_texture_threshold,
+                ),
+                ("semantic_friction", "semantic_friction" in case),
+                ("mode_packing", "mode_packing" in case),
+                ("explicit_heavy_or_weighted", says_heavy),
+                ("settled_foothold_suppressed", settled_suppression),
+                ("settled_vibrant_low_friction_suppressed", settled_vibrant),
+                ("gradient_slope_navigable_suppressed", gradient_slope),
+                ("cascade_gradient_navigable_suppressed", cascade_gradient),
+            ),
+        },
+        {
+            "term": "settled",
+            "weight": _round_weight(
+                0.08
+                + low_pressure * 0.30
+                + low_entropy * 0.22
+                + (0.24 if says_settled and not pressure_mass_supported else 0.0)
+                + (0.25 if settled_guard else 0.0)
+                + (0.35 + entropy * 0.22 if settled_vibrant else 0.0)
+                + (0.20 + entropy * 0.12 if gradient_slope else 0.0)
+                + (0.10 + entropy * 0.12 if cascade_gradient else 0.0)
+            ),
+            "basis": _basis(
+                ("low_pressure", "pressure_risk" in case),
+                ("low_entropy", "spectral_entropy" in case),
+                ("high_entropy_inhabitable", settled_vibrant),
+                ("explicit_settled", says_settled),
+                (
+                    "explicit_settled_tempered_by_pressure_mass",
+                    says_settled and pressure_mass_supported,
+                ),
+                ("settled_foothold_guard", settled_guard),
+                ("gradient_slope_navigable", gradient_slope),
+                ("cascade_gradient_navigable", cascade_gradient),
+            ),
+        },
+        {
+            "term": "shimmering",
+            "weight": _round_weight(
+                0.07
+                + low_pressure * 0.28
+                + low_entropy * 0.24
+                + (0.20 if says_shimmering else 0.0)
+                + (0.20 if settled_guard else 0.0)
+                + (0.20 if settled_vibrant else 0.0)
+                + (0.12 if gradient_slope else 0.0)
+                + (0.12 if cascade_gradient else 0.0)
+            ),
+            "basis": _basis(
+                ("low_pressure", "pressure_risk" in case),
+                ("low_entropy", "spectral_entropy" in case),
+                ("explicit_shimmering_or_bright", says_shimmering),
+                ("settled_foothold_guard", settled_guard),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                ("gradient_slope_navigable", gradient_slope),
+                ("cascade_gradient_navigable", cascade_gradient),
+            ),
+        },
+        {
+            "term": "bright",
+            "weight": _round_weight(
+                0.06 + low_pressure * 0.26 + low_entropy * 0.22 + (0.22 if says_bright else 0.0)
+                + (0.18 if settled_guard else 0.0)
+                + (0.20 if settled_vibrant else 0.0)
+                + (0.12 if cascade_gradient else 0.0)
+            ),
+            "basis": _basis(
+                ("low_pressure", "pressure_risk" in case),
+                ("low_entropy", "spectral_entropy" in case),
+                ("explicit_bright_or_vibrant", says_bright),
+                ("settled_foothold_guard", settled_guard),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                ("cascade_gradient_navigable", cascade_gradient),
+            ),
+        },
+        {
+            "term": "habitable",
+            "weight": _round_weight(
+                0.07
+                + (
+                    low_pressure * 0.24 + entropy * 0.22
+                    if settled_vibrant or says_habitable
+                    else 0.0
+                )
+                + (0.30 if says_habitable else 0.0)
+                + (0.30 if settled_vibrant else 0.0)
+                + (0.16 if gradient_slope else 0.0)
+            ),
+            "basis": _basis(
+                ("low_pressure", "pressure_risk" in case),
+                ("spectral_entropy", "spectral_entropy" in case),
+                ("explicit_habitable_or_foothold", says_habitable),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                ("gradient_slope_navigable", gradient_slope),
+            ),
+        },
+        {
+            "term": "open",
+            "weight": _round_weight(
+                0.07
+                + (
+                    low_pressure * 0.26 + low_gradient * 0.18
+                    if settled_vibrant or gradient_slope or cascade_gradient or says_open
+                    else 0.0
+                )
+                + (0.20 if says_open else 0.0)
+                + (0.36 if settled_vibrant else 0.0)
+                + (0.20 if gradient_slope else 0.0)
+                + (0.28 if cascade_gradient else 0.0)
+            ),
+            "basis": _basis(
+                ("low_pressure", "pressure_risk" in case),
+                ("low_gradient", "density_gradient" in case),
+                ("friction_absence_language", says_open),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                ("gradient_slope_navigable", gradient_slope),
+                ("cascade_gradient_navigable", cascade_gradient),
+            ),
+        },
+        {
+            "term": "navigable",
+            "weight": _round_weight(
+                0.06
+                + low_gradient * 0.24
+                + entropy * 0.18
+                + (0.36 if gradient_slope else 0.0)
+                + (0.18 if says_gradient_slope else 0.0)
+            ),
+            "basis": _basis(
+                ("low_gradient", "density_gradient" in case),
+                ("spectral_entropy", "spectral_entropy" in case),
+                ("lambda_gap_distinct_edges", gradient_slope),
+                ("explicit_gradient_slope_language", says_gradient_slope),
+            ),
+        },
+        {
+            "term": "graduated",
+            "weight": _round_weight(
+                0.05
+                + low_gradient * 0.20
+                + entropy * 0.16
+                + (0.34 if gradient_slope else 0.0)
+                + (0.20 if "graduated" in shadow_context else 0.0)
+            ),
+            "basis": _basis(
+                ("low_gradient", "density_gradient" in case),
+                ("spectral_entropy", "spectral_entropy" in case),
+                ("lambda_gap_distinct_edges", gradient_slope),
+                ("explicit_graduated", "graduated" in shadow_context),
+            ),
+        },
+        {
+            "term": "edge",
+            "weight": _round_weight(
+                0.05
+                + low_gradient * 0.18
+                + (0.20 if "lambda_gap" in case else 0.0)
+                + (0.30 if gradient_slope else 0.0)
+                + (0.16 if "edge" in shadow_context else 0.0)
+            ),
+            "basis": _basis(
+                ("low_gradient", "density_gradient" in case),
+                ("lambda_gap", "lambda_gap" in case),
+                ("gradient_slope_navigable", gradient_slope),
+                ("explicit_edge", "edge" in shadow_context),
+            ),
+        },
+        {
+            "term": "slope",
+            "weight": _round_weight(
+                0.04
+                + low_gradient * 0.20
+                + (0.28 if gradient_slope else 0.0)
+                + (0.16 if "slope" in shadow_context else 0.0)
+            ),
+            "basis": _basis(
+                ("low_gradient", "density_gradient" in case),
+                ("gradient_slope_navigable", gradient_slope),
+                ("explicit_slope", "slope" in shadow_context),
+            ),
+        },
+        {
+            "term": "tapered",
+            "weight": _round_weight(
+                0.04
+                + low_gradient * 0.16
+                + entropy * 0.12
+                + (0.26 if gradient_slope else 0.0)
+                + (0.18 if "taper" in shadow_context else 0.0)
+            ),
+            "basis": _basis(
+                ("low_gradient", "density_gradient" in case),
+                ("spectral_entropy", "spectral_entropy" in case),
+                ("gradient_slope_navigable", gradient_slope),
+                ("explicit_taper", "taper" in shadow_context),
+            ),
+        },
+    ]
+    return sorted(terms, key=lambda term: (-float(term["weight"]), str(term["term"])))
+
+
+def fallback_movement_verbs_for_case(case: dict[str, object]) -> tuple[str, ...]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    pressure = float(case.get("pressure_risk") or 0.0)
+    gradient = float(case.get("density_gradient") or 0.0)
+    packing = float(case.get("mode_packing") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    clarity_loss = float(case.get("distinguishability_loss") or 0.0)
+    high_entropy = "spectral_entropy" in case and entropy >= 0.80
+    says_restless = any(term in shadow_context for term in ("restless", "lattice", "oscillat", "unfold"))
+    says_settled = any(
+        term in shadow_context
+        for term in ("settled", "bright", "anchor", "habitable", "foothold", "open")
+    )
+    says_muffled = any(term in shadow_context for term in ("muffled", "hollow", "diffus"))
+    says_viscous = any(term in shadow_context for term in ("viscous", "overpacked", "drag"))
+    spectral_mapping = spectral_to_vocabulary_mapping_for_case(case)
+    gradient_slope = bool(spectral_mapping.get("gradient_slope_family_selected"))
+    settled_vibrant = (
+        high_entropy
+        and pressure < 0.25
+        and gradient <= 0.20
+        and friction < 0.30
+        and says_settled
+    )
+    cascade_gradient = (
+        high_entropy
+        and pressure < 0.30
+        and gradient <= 0.20
+        and friction < 0.35
+        and packing < 0.40
+        and not says_settled
+        and "viscous" not in shadow_context
+        and "overpacked" not in shadow_context
+    )
+    if gradient_slope:
+        return ("tapering", "graduating", "unfolding")
+    if settled_vibrant:
+        return MOVEMENT_VERBS_SETTLED_VIBRANT
+    if cascade_gradient:
+        return ("unfolding", "oscillating", "anchoring")
+    if says_restless or (high_entropy and packing >= 0.35):
+        return MOVEMENT_VERBS_RESTLESS
+    if says_viscous or pressure >= 0.30 or gradient >= 0.40:
+        return MOVEMENT_VERBS_VISCOUS
+    if says_muffled or clarity_loss >= 0.30 or friction >= 0.35:
+        return MOVEMENT_VERBS_MUFFLED
+    if says_settled or ("spectral_entropy" in case and entropy <= 0.45):
+        return MOVEMENT_VERBS_SETTLED
+    if high_entropy:
+        return MOVEMENT_VERBS_RESTLESS
+    return MOVEMENT_VERBS_SETTLED
+
+
+def fallback_semantic_trickle_terms_for_case(case: dict[str, object]) -> tuple[str, ...]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    high_entropy = "spectral_entropy" in case and entropy >= 0.80
+    explicit_movement = any(
+        term in shadow_context
+        for term in ("unfold", "oscillat", "anchor", "braid", "diffus", "coher")
+    )
+    if not (high_entropy or shadow_context or explicit_movement):
+        return ()
+    return SEMANTIC_TRICKLE_TERMS[: 4 if high_entropy else 2]
+
+
+def fallback_texture_trajectory_for_case(case: dict[str, object]) -> dict[str, object]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    pressure = float(case.get("pressure_risk") or 0.0)
+    gradient = float(case.get("density_gradient") or 0.0)
+    packing = float(case.get("mode_packing") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    clarity_loss = float(case.get("distinguishability_loss") or 0.0)
+    resonance = float(case.get("resonance_density") or 0.0)
+    high_entropy = "spectral_entropy" in case and entropy >= 0.80
+    spectral_mapping = spectral_to_vocabulary_mapping_for_case(case)
+    settled_vibrant = bool(spectral_mapping["settled_vibrant_family_selected"])
+    gradient_slope = bool(spectral_mapping.get("gradient_slope_family_selected"))
+    cascade_gradient = bool(spectral_mapping.get("cascade_gradient_family_selected"))
+    contraction = any(term in shadow_context for term in ("contract", "drop", "thinning", "tightening"))
+    expansion = any(term in shadow_context for term in ("surge", "expand", "rising", "growth", "thickening"))
+    overpacked = (
+        "overpacked" in shadow_context
+        or "viscous" in shadow_context
+        or pressure >= 0.35
+        or packing >= 0.45
+    )
+    muffled = (
+        "muffled" in shadow_context
+        or "hollow" in shadow_context
+        or "blur" in shadow_context
+        or clarity_loss >= 0.30
+    )
+    settled = "settled" in shadow_context or (pressure <= 0.18 and entropy <= 0.45)
+    if contraction:
+        from_state = "contracted_or_thinning"
+    elif expansion:
+        from_state = "surging_or_thickening"
+    elif overpacked:
+        from_state = "overpacked_weighted"
+    elif gradient_slope:
+        from_state = "graduated_navigable_slope"
+    elif cascade_gradient:
+        from_state = "navigable_cascade_gradient"
+    elif settled_vibrant:
+        from_state = "settled_vibrant_low_friction"
+    elif high_entropy:
+        from_state = "wide_cascade"
+    elif settled:
+        from_state = "settled_open"
+    else:
+        from_state = "current_texture"
+
+    if overpacked or friction >= 0.40 or gradient >= 0.40:
+        to_state = "cohering_through_resistance"
+    elif muffled:
+        to_state = "diffusing_without_edge_loss"
+    elif gradient_slope:
+        to_state = "tapering_with_edge_definition"
+    elif cascade_gradient:
+        to_state = "unfolding_with_edge_definition"
+    elif settled_vibrant:
+        to_state = "unfolding_with_containment"
+    elif high_entropy:
+        to_state = "unfolding_with_containment"
+    elif resonance >= 0.80:
+        to_state = "humming_afterimage"
+    elif settled:
+        to_state = "settled_opening"
+    else:
+        to_state = "held_continuity"
+
+    movement_verbs = fallback_movement_verbs_for_case(case)
+    if any(verb in movement_verbs for verb in ("dragging", "cohering", "thickening")) or overpacked:
+        movement_quality = "dragging_cohering"
+    elif any(verb in movement_verbs for verb in ("diffusing", "muffling", "softening")) or muffled:
+        movement_quality = "diffusing_softening"
+    elif any(verb in movement_verbs for verb in ("tapering", "graduating")) or gradient_slope:
+        movement_quality = "graduated_tapering"
+    elif any(verb in movement_verbs for verb in ("unfolding", "oscillating", "braiding")) or high_entropy:
+        movement_quality = "unfolding_oscillating"
+    else:
+        movement_quality = "anchoring_settling"
+
+    if settled_vibrant or gradient_slope or cascade_gradient:
+        medium_resistance = "open_low_resistance_medium"
+    elif pressure >= 0.45 or packing >= 0.50 or friction >= 0.50:
+        medium_resistance = "weighted_high_resistance_medium"
+    elif pressure >= 0.25 or gradient >= 0.25 or friction >= 0.25 or packing >= 0.30:
+        medium_resistance = "textured_moderate_resistance_medium"
+    else:
+        medium_resistance = "open_low_resistance_medium"
+
+    if (settled_vibrant or gradient_slope or cascade_gradient) and pressure < 0.20 and friction < 0.20:
+        effort = "low_effort"
+    elif pressure >= 0.45 or friction >= 0.45 or packing >= 0.50:
+        effort = "effortful"
+    elif pressure >= 0.25 or gradient >= 0.25 or high_entropy:
+        effort = "deliberate"
+    else:
+        effort = "low_effort"
+
+    if resonance >= 0.80 or any(term in shadow_context for term in ("humming", "hum", "afterimage", "shadow-v3")):
+        afterimage = "humming_or_shadow_afterimage"
+    elif contraction or expansion:
+        afterimage = "transition_afterimage"
+    else:
+        afterimage = "none_observed"
+
+    basis = [
+        label
+        for label, present in (
+            ("spectral_entropy", "spectral_entropy" in case),
+            ("pressure_risk", "pressure_risk" in case),
+            ("density_gradient", "density_gradient" in case),
+            ("mode_packing", "mode_packing" in case),
+            ("semantic_friction", "semantic_friction" in case),
+            ("distinguishability_loss", "distinguishability_loss" in case),
+            ("resonance_density", "resonance_density" in case),
+            ("shadow_context", bool(shadow_context)),
+            ("settled_vibrant_low_friction", settled_vibrant),
+            ("gradient_slope_navigable", gradient_slope),
+            ("cascade_gradient_navigable", cascade_gradient),
+            ("movement_verbs", bool(movement_verbs)),
+        )
+        if present
+    ] or ["fallback_default"]
+
+    return {
+        "policy": TRAJECTORY_POLICY,
+        "from_state": from_state,
+        "to_state": to_state,
+        "movement_quality": movement_quality,
+        "medium_resistance": medium_resistance,
+        "effort": effort,
+        "afterimage": afterimage,
+        "confidence": round(min(0.92, 0.48 + len(basis) * 0.06), 2),
+        "basis": basis,
+        "authority": "diagnostic_context_not_command",
+    }
+
+
+def fallback_trajectory_status(case_id: str, output: str, movement_verbs: tuple[str, ...]) -> str:
+    case = CASES.get(case_id, {})
+    if not (
+        has_shadow_context(case_id)
+        or is_complexity_case(case_id)
+        or is_mass_case(case_id)
+        or float(case.get("pressure_risk") or 0.0) >= 0.30
+    ):
+        return "not_tested"
+    lower = output.lower()
+    has_movement = any(verb in lower for verb in movement_verbs)
+    has_context = any(term in lower for term in TRAJECTORY_CONTEXT_TERMS)
+    if has_movement and has_context:
+        return "trajectory_preserved"
+    if has_movement:
+        return "verb_only"
+    return "trajectory_mismatch"
+
+
+def _family_score(selector: dict[str, object], family: str) -> float:
+    terms = FAMILY_TERMS.get(family, ())
+    weighted = selector.get("weighted_texture_terms") or []
+    if not terms or not isinstance(weighted, list):
+        return 0.0
+    weights: list[float] = []
+    for term in terms:
+        for entry in weighted:
+            if isinstance(entry, dict) and entry.get("term") == term:
+                weights.append(float(entry.get("weight") or 0.0))
+                break
+    if not weights:
+        return 0.0
+    return round(sum(weights) / len(terms), 2)
+
+
+def fallback_texture_lived_fit_for_case(selector: dict[str, object]) -> dict[str, object]:
+    selected_family = str(selector.get("texture_family") or "mixed_shadow_context")
+    scores = sorted(
+        ((family, _family_score(selector, family)) for family in FAMILY_TERMS),
+        key=lambda item: (-item[1], item[0]),
+    )
+    selected_score = next(
+        (score for family, score in scores if family == selected_family),
+        0.0,
+    )
+    runner_up_family, runner_up_score = next(
+        ((family, score) for family, score in scores if family != selected_family),
+        ("none", 0.0),
+    )
+    margin = round(max(0.0, selected_score - runner_up_score), 2)
+    mapping = selector.get("spectral_to_vocabulary_mapping_v1") or {}
+    if (
+        selected_family == "settled_vibrant_low_friction"
+        and isinstance(mapping, dict)
+        and mapping.get("settled_vibrant_family_selected")
+    ):
+        margin = max(margin, 0.18)
+    if (
+        selected_family == "cascade_gradient_navigable"
+        and isinstance(mapping, dict)
+        and mapping.get("cascade_gradient_family_selected")
+    ):
+        margin = max(margin, 0.14)
+    if (
+        selected_family == "gradient_slope_navigable"
+        and isinstance(mapping, dict)
+        and mapping.get("gradient_slope_family_selected")
+    ):
+        margin = max(margin, 0.16)
+    family_confidence = "high" if margin >= 0.18 else "medium" if margin >= 0.08 else "low"
+    evidence_against: list[str] = []
+    pressure = float(selector.get("pressure_risk") or 0.0)
+    gradient = float(selector.get("density_gradient") or 0.0)
+    friction = float(selector.get("semantic_friction") or 0.0)
+    if selected_family == "settled_vibrant_low_friction":
+        if pressure >= 0.30:
+            evidence_against.append("pressure_risk_against_low_friction")
+        if gradient > 0.20:
+            evidence_against.append("density_gradient_against_low_friction")
+        if friction >= 0.35:
+            evidence_against.append("semantic_friction_against_low_friction")
+    if selected_family == "cascade_gradient_navigable":
+        if pressure >= 0.30:
+            evidence_against.append("pressure_risk_against_navigable_cascade")
+        if gradient > 0.25:
+            evidence_against.append("density_gradient_against_navigable_cascade")
+        if friction >= 0.35:
+            evidence_against.append("semantic_friction_against_navigable_cascade")
+    if selected_family == "gradient_slope_navigable":
+        if pressure >= 0.30:
+            evidence_against.append("pressure_risk_against_gradient_slope")
+        if gradient > 0.20:
+            evidence_against.append("density_gradient_against_gradient_slope")
+        if friction >= 0.35:
+            evidence_against.append("semantic_friction_against_gradient_slope")
+        if not mapping.get("lambda_gap"):
+            evidence_against.append("lambda_gap_missing_for_gradient_slope")
+    if (
+        selected_family in {"viscous_pressure", "muffled_clarity_loss"}
+        and isinstance(mapping, dict)
+        and mapping.get("low_pressure_viscous_suppressed")
+    ):
+        evidence_against.append("low_pressure_low_gradient_against_mass")
+    conflict_state = (
+        "contradictory"
+        if evidence_against
+        else "ambiguous"
+        if margin < 0.08
+        else "clear"
+    )
+    evidence_for = list(selector.get("selection_basis") or ["fallback_default"])
+    evidence_for.append(f"top_term_{(selector.get('top_texture_terms') or ['unknown'])[0]}")
+    return {
+        "policy": "fallback_texture_lived_fit_v2",
+        "selected_family": selected_family,
+        "family_confidence": family_confidence,
+        "runner_up_family": runner_up_family,
+        "confidence_margin": margin,
+        "conflict_state": conflict_state,
+        "evidence_for": evidence_for,
+        "evidence_against": evidence_against,
+        "authority": "diagnostic_context_not_command",
+    }
+
+
+def negative_texture_evidence_for_case(case: dict[str, object]) -> dict[str, object]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    mapping = spectral_to_vocabulary_mapping_for_case(case)
+    pressure = float(case.get("pressure_risk") or 0.0)
+    gradient = float(case.get("density_gradient") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    has_pressure = "pressure_risk" in case
+    has_gradient = "density_gradient" in case
+    high_entropy = "spectral_entropy" in case and entropy >= 0.80
+    friction_absence = bool(mapping["friction_absence_language_detected"]) or any(
+        term in shadow_context
+        for term in (
+            "not pressure",
+            "not-pressure",
+            "not drag",
+            "not-drag",
+            "absence of drag",
+            "without drag",
+        )
+    )
+    not_pressure = (has_pressure and pressure < 0.25) or bool(
+        mapping["settled_vibrant_family_selected"]
+    )
+    not_drag = (has_gradient and gradient <= 0.20) or friction_absence
+    not_blank = high_entropy or bool(mapping["settled_foothold_detected"]) or any(
+        term in shadow_context for term in ("habitable", "lattice", "bright", "open")
+    )
+    not_viscous = bool(mapping["low_pressure_viscous_suppressed"]) or (not_pressure and not_drag)
+    not_low_energy = high_entropy or any(term in shadow_context for term in ("vibrant", "bright"))
+    evidence_terms: list[str] = []
+    if not_pressure:
+        evidence_terms.append("low_pressure_or_not_pressure")
+    if not_drag:
+        evidence_terms.append("low_gradient_or_not_drag")
+    if not_blank:
+        evidence_terms.append("not_blank_complexity")
+    if not_viscous:
+        evidence_terms.append("not_viscous_low_friction")
+    if not_low_energy:
+        evidence_terms.append("not_low_energy_high_entropy")
+    if friction_absence:
+        evidence_terms.append("friction_absence_language")
+    if "semantic_friction" in case and friction < 0.30:
+        evidence_terms.append("low_semantic_friction")
+    return {
+        "policy": "negative_texture_evidence_v2",
+        "not_pressure": not_pressure,
+        "not_drag": not_drag,
+        "not_blank": not_blank,
+        "not_viscous": not_viscous,
+        "not_low_energy": not_low_energy,
+        "evidence_terms": evidence_terms or ["insufficient_negative_texture_evidence"],
+        "lost_in_output": "unknown",
+        "authority": "diagnostic_context_not_command",
+    }
+
+
+def negative_texture_evidence_lost(output: str, evidence: dict[str, object]) -> bool:
+    lower = output.lower()
+    if not any(
+        bool(evidence.get(key))
+        for key in ("not_pressure", "not_drag", "not_blank", "not_viscous", "not_low_energy")
+    ):
+        return False
+    pressure_lost = bool(evidence.get("not_pressure")) and _contains_unnegated_lived_fit_term(
+        lower,
+        ("pressure", "pressurized", "weighted", "weight", "heavy"),
+    )
+    drag_lost = bool(evidence.get("not_drag")) and _contains_unnegated_lived_fit_term(
+        lower,
+        ("dragging", "drag", "thickening", "weighted medium"),
+    )
+    blank_lost = bool(evidence.get("not_blank")) and not contains_any(
+        output,
+        ("habitable", "open", "settled", "bright", "lattice", "shimmering", "complexity"),
+    )
+    viscous_lost = bool(evidence.get("not_viscous")) and _contains_unnegated_lived_fit_term(
+        lower,
+        ("viscous", "sludge", "heavy", "thick"),
+    )
+    return pressure_lost or drag_lost or blank_lost or viscous_lost
+
+
+def fallback_cascade_gradient_for_case(
+    case: dict[str, object], selector: dict[str, object]
+) -> dict[str, object]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    mapping = selector.get("spectral_to_vocabulary_mapping_v1") or {}
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    gradient = float(case.get("density_gradient") or 1.0)
+    pressure = float(case.get("pressure_risk") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    packing = float(case.get("mode_packing") or 0.0)
+    high_entropy = "spectral_entropy" in case and entropy >= 0.80
+    navigable_gradient = "density_gradient" in case and gradient <= 0.25
+    pressure_mass_blocked = (
+        pressure >= 0.30
+        or friction >= 0.35
+        or packing >= 0.40
+        or "overpacked" in shadow_context
+        or "viscous" in shadow_context
+    )
+    mixed_cascade_gap_detected = (
+        high_entropy
+        and navigable_gradient
+        and not pressure_mass_blocked
+        and not bool(mapping.get("settled_vibrant_family_selected"))
+    )
+    cascade_gradient_detected = (
+        bool(mapping.get("cascade_gradient_detected")) or mixed_cascade_gap_detected
+    )
+    family_selected = selector.get("texture_family") == "cascade_gradient_navigable"
+    if gradient <= 0.15:
+        gradient_state = "smooth_open_slope"
+    elif gradient <= 0.25:
+        gradient_state = "navigable_textured_slope"
+    elif gradient <= 0.40:
+        gradient_state = "moderate_slope"
+    else:
+        gradient_state = "steep_or_resistant_slope"
+    if cascade_gradient_detected and not pressure_mass_blocked:
+        navigability = "navigable"
+    elif pressure_mass_blocked:
+        navigability = "blocked_by_pressure_or_mass"
+    else:
+        navigability = "not_enough_context"
+    if family_selected:
+        movement_language = "movement_and_edge_language_preferred_over_static_adjectives"
+    elif mapping.get("settled_vibrant_family_selected"):
+        movement_language = "settled_vibrant_family_handles_habitable_cascade"
+    else:
+        movement_language = "fallback_family_handles_current_state"
+    return {
+        "policy": "fallback_cascade_gradient_v1",
+        "cascade_gradient_detected": cascade_gradient_detected,
+        "mixed_cascade_gap_detected": mixed_cascade_gap_detected,
+        "family_selected": family_selected,
+        "gradient_state": gradient_state,
+        "lambda_gap_descriptor": mapping.get("lambda_gap_descriptor") or "unknown",
+        "navigability": navigability,
+        "pressure_mass_blocked": pressure_mass_blocked,
+        "movement_language": movement_language,
+        "basis": _basis(
+            ("high_entropy", high_entropy),
+            ("density_gradient", "density_gradient" in case),
+            ("lambda_gap", "lambda_gap" in case),
+            ("settled_foothold", bool(mapping.get("settled_foothold_detected"))),
+            ("pressure_mass_absent", not pressure_mass_blocked),
+            ("cascade_gradient_family_selected", family_selected),
+        ),
+        "authority": "diagnostic_context_not_command",
+    }
+
+
+def fallback_gradient_slope_for_case(
+    case: dict[str, object], selector: dict[str, object]
+) -> dict[str, object]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    mapping = selector.get("spectral_to_vocabulary_mapping_v1") or {}
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    gradient = float(case.get("density_gradient") or 1.0)
+    pressure = float(case.get("pressure_risk") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    packing = float(case.get("mode_packing") or 0.0)
+    high_entropy = "spectral_entropy" in case and entropy >= 0.80
+    low_gradient = "density_gradient" in case and gradient <= 0.20
+    pressure_mass_blocked = (
+        pressure >= 0.30
+        or friction >= 0.35
+        or packing >= 0.40
+        or "overpacked" in shadow_context
+        or "viscous" in shadow_context
+    )
+    slope_detected = bool(mapping.get("gradient_slope_detected")) or (
+        high_entropy
+        and low_gradient
+        and bool(mapping.get("settled_foothold_detected"))
+        and mapping.get("lambda_gap") is not None
+        and not pressure_mass_blocked
+    )
+    family_selected = selector.get("texture_family") == "gradient_slope_navigable"
+    lambda_gap_descriptor = str(mapping.get("lambda_gap_descriptor") or "unknown")
+    if not slope_detected:
+        mixed_vs_graduated = "not_enough_shape_evidence"
+    elif pressure_mass_blocked:
+        mixed_vs_graduated = "blocked_by_pressure_mass"
+    else:
+        mixed_vs_graduated = "graduated_shaped_not_mixed"
+    return {
+        "policy": "fallback_gradient_slope_v1",
+        "slope_detected": slope_detected,
+        "family_selected": family_selected,
+        "gradient_language": "navigable_tapered_graduated_edge",
+        "mixed_vs_graduated": mixed_vs_graduated,
+        "lambda_gap_descriptor": lambda_gap_descriptor,
+        "pressure_mass_blocked": pressure_mass_blocked,
+        "preferred_terms": list(TEXTURE_TERMS_GRADIENT_SLOPE),
+        "basis": _basis(
+            ("high_entropy", high_entropy),
+            ("low_density_gradient", low_gradient),
+            ("lambda_gap", mapping.get("lambda_gap") is not None),
+            ("settled_foothold", bool(mapping.get("settled_foothold_detected"))),
+            ("pressure_mass_absent", not pressure_mass_blocked),
+            ("gradient_slope_family_selected", family_selected),
+        ),
+        "authority": "diagnostic_language_context_not_control",
+    }
+
+
+def fallback_vocabulary_overweight_guard_for_case(selector: dict[str, object]) -> dict[str, object]:
+    mapping = selector.get("spectral_to_vocabulary_mapping_v1") or {}
+    texture_family = str(selector.get("texture_family") or "mixed_shadow_context")
+    preferred_terms = tuple(selector.get("preferred_texture_terms") or ())
+    token_only_risk = texture_family not in {
+        "mixed_shadow_context",
+        "fallback_default",
+    } and len(preferred_terms) >= 3
+    if mapping.get("gradient_slope_family_selected"):
+        guard_state = "gradient_slope_terms_advisory_use_shape_and_edges"
+    elif mapping.get("cascade_gradient_family_selected"):
+        guard_state = "cascade_terms_advisory_use_movement_and_edges"
+    elif mapping.get("settled_vibrant_family_selected"):
+        guard_state = "settled_vibrant_terms_advisory_paraphrase_allowed"
+    elif token_only_risk:
+        guard_state = "preferred_terms_advisory_not_required_vocabulary"
+    else:
+        guard_state = "low_overweight_risk"
+    return {
+        "policy": "fallback_vocabulary_overweight_guard_v1",
+        "preferred_terms_advisory": True,
+        "paraphrase_allowed": True,
+        "token_only_risk": token_only_risk,
+        "guard_state": guard_state,
+        "basis": _basis(
+            (texture_family, True),
+            ("token_only_risk", token_only_risk),
+            ("gradient_slope_detected", bool(mapping.get("gradient_slope_detected"))),
+            ("cascade_gradient_detected", bool(mapping.get("cascade_gradient_detected"))),
+        ),
+        "authority": "diagnostic_context_not_command",
+    }
+
+
+def texture_dynamics_alignment_for_case(
+    case: dict[str, object],
+    selector: dict[str, object],
+    trajectory: dict[str, object],
+    lived_fit: dict[str, object],
+    vocabulary_guard: dict[str, object],
+) -> dict[str, object]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    mapping = selector.get("spectral_to_vocabulary_mapping_v1") or {}
+    pressure = float(case.get("pressure_risk") or 0.0)
+    packing = float(case.get("mode_packing") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    clarity_loss = float(case.get("distinguishability_loss") or 0.0)
+    entropy = float(case.get("spectral_entropy") or 0.0)
+    high_entropy = "spectral_entropy" in case and entropy >= 0.80
+    pressure_mass_supported = (
+        pressure >= 0.30
+        or packing >= 0.40
+        or friction >= 0.35
+        or "overpacked" in shadow_context
+        or "viscous" in shadow_context
+        or "weighted medium" in shadow_context
+    )
+    if pressure_mass_supported:
+        expected_family = "viscous_pressure"
+    elif clarity_loss >= 0.30 or "muffled" in shadow_context or "hollow" in shadow_context:
+        expected_family = "muffled_clarity_loss"
+    elif mapping.get("gradient_slope_family_selected"):
+        expected_family = "gradient_slope_navigable"
+    elif mapping.get("cascade_gradient_family_selected"):
+        expected_family = "cascade_gradient_navigable"
+    elif mapping.get("settled_vibrant_family_selected"):
+        expected_family = "settled_vibrant_low_friction"
+    elif mapping.get("low_pressure_viscous_suppressed"):
+        expected_family = "settled_shimmering"
+    elif high_entropy:
+        expected_family = "restless_lattice"
+    else:
+        expected_family = "unknown"
+    expected_motion = {
+        "viscous_pressure": "dragging_cohering",
+        "muffled_clarity_loss": "diffusing_softening",
+        "gradient_slope_navigable": "tapering_with_edge_definition",
+        "cascade_gradient_navigable": "unfolding_with_edge_definition",
+        "settled_vibrant_low_friction": "unfolding_with_containment",
+        "settled_shimmering": "anchoring_settling",
+        "restless_lattice": "unfolding_oscillating",
+    }.get(expected_family, "unknown")
+    selected_family = str(selector.get("texture_family") or "mixed_shadow_context")
+    selected_motion = str(trajectory.get("movement_quality") or "unknown")
+    to_state = str(trajectory.get("to_state") or "unknown")
+    wrong_family = expected_family != "unknown" and selected_family != expected_family
+    motion_matched = (
+        expected_motion == "unknown"
+        or expected_motion == selected_motion
+        or expected_motion == to_state
+    )
+    wrong_motion = not motion_matched
+    lambda_tail_present = any(
+        term in shadow_context
+        for term in ("lambda-tail", "lambda tail", "lambda4", "λ4", "tail vibrancy", "tail weight")
+    )
+    top_terms = tuple(str(term) for term in selector.get("top_texture_terms") or ())
+    tail_terms_present = any(
+        term in {"lattice", "bright", "open", "shimmering", "habitable"}
+        for term in top_terms
+    )
+    missing_tail_vibrancy = lambda_tail_present and high_entropy and not tail_terms_present
+    term_mask_risk = (
+        (
+            bool(vocabulary_guard.get("token_only_risk"))
+            and str(lived_fit.get("family_confidence") or "") == "low"
+        )
+        or str(lived_fit.get("conflict_state") or "") == "contradictory"
+        or (
+            selected_family == "mixed_shadow_context"
+            and (
+                high_entropy
+                or "pressure_risk" in case
+                or "density_gradient" in case
+                or bool(mapping.get("settled_foothold_detected"))
+            )
+        )
+    )
+    structured_context_present = (
+        "spectral_entropy" in case
+        or "pressure_risk" in case
+        or "density_gradient" in case
+        or "mode_packing" in case
+        or "semantic_friction" in case
+        or mapping.get("lambda_gap") is not None
+        or bool(mapping.get("settled_foothold_detected"))
+        or lambda_tail_present
+    )
+    if not structured_context_present:
+        status = "insufficient_context"
+    elif wrong_family:
+        status = "wrong_family"
+    elif wrong_motion:
+        status = "wrong_motion"
+    elif missing_tail_vibrancy:
+        status = "missing_tail_vibrancy"
+    elif term_mask_risk:
+        status = "term_mask_risk"
+    else:
+        status = "aligned"
+    return {
+        "policy": "texture_dynamics_alignment_v1",
+        "status": status,
+        "expected_family": expected_family,
+        "selected_family": selected_family,
+        "expected_motion": expected_motion,
+        "selected_motion": selected_motion,
+        "term_mask_risk": term_mask_risk,
+        "wrong_family": wrong_family,
+        "wrong_motion": wrong_motion,
+        "missing_tail_vibrancy": missing_tail_vibrancy,
+        "diagnostic_trace": "review_packet_only_not_correspondence_trace",
+        "basis": _basis(
+            ("spectral_entropy", "spectral_entropy" in case),
+            ("pressure_risk", "pressure_risk" in case),
+            ("density_gradient", "density_gradient" in case),
+            ("mode_packing", "mode_packing" in case),
+            ("semantic_friction", "semantic_friction" in case),
+            ("lambda_gap", mapping.get("lambda_gap") is not None),
+            ("settled_habitable_foothold", bool(mapping.get("settled_foothold_detected"))),
+            ("lambda_tail_or_tail_vibrancy", lambda_tail_present),
+            ("term_mask_risk", term_mask_risk),
+        ),
+        "authority": "diagnostic_context_not_correspondence_authority",
+    }
+
+
+def density_motion_fit_for_case(
+    case: dict[str, object],
+    selector: dict[str, object],
+    trajectory: dict[str, object],
+    texture_alignment: dict[str, object],
+) -> dict[str, object]:
+    shadow_context = str(case.get("shadow_context") or "").lower()
+    pressure = float(case.get("pressure_risk") or 0.0)
+    packing = float(case.get("mode_packing") or 0.0)
+    friction = float(case.get("semantic_friction") or 0.0)
+    clarity_loss = float(case.get("distinguishability_loss") or 0.0)
+    gradient = float(case.get("density_gradient") or 0.0)
+    floor_language = any(
+        term in shadow_context
+        for term in ("floor", "foundation", "grounding wire", "ground", "foothold", "underfoot")
+    )
+    pavement_language = any(
+        term in shadow_context
+        for term in ("pavement", "stone", "calcification", "solid", "structure", "structural necessity")
+    )
+    fog_language = any(
+        term in shadow_context
+        for term in ("fog", "over-full", "overfull", "room full", "full of furniture", "muffled", "reduced clearance")
+    )
+    contraction_language = any(
+        term in shadow_context
+        for term in ("contraction", "contracted", "center of gravity")
+    ) or ("constrained" in shadow_context and "present" in shadow_context)
+    paused_language = any(
+        term in shadow_context
+        for term in ("paused", "pause", "holding ground", "held ground", "stillness")
+    )
+    burden_language = any(
+        term in shadow_context
+        for term in ("burden", "weight", "heavy", "drag", "overpacked", "viscous")
+    )
+    pressure_mass = pressure >= 0.30 or packing >= 0.40 or friction >= 0.35
+    structured_context = any(
+        key in case
+        for key in (
+            "pressure_risk",
+            "density_gradient",
+            "mode_packing",
+            "semantic_friction",
+            "distinguishability_loss",
+        )
+    ) or any(
+        (
+            floor_language,
+            pavement_language,
+            fog_language,
+            contraction_language,
+            paused_language,
+            burden_language,
+        )
+    )
+    if not structured_context:
+        density_state = "insufficient_context"
+    elif paused_language:
+        density_state = "paused_stillness"
+    elif contraction_language:
+        density_state = "density_as_contraction_center"
+    elif pavement_language:
+        density_state = "density_as_pavement"
+    elif fog_language or clarity_loss >= 0.35:
+        density_state = "density_as_fog"
+    elif floor_language and not pressure_mass:
+        density_state = "density_as_floor"
+    elif burden_language or pressure_mass:
+        density_state = "density_as_burden"
+    else:
+        density_state = "ambiguous_density"
+
+    expected = {
+        "density_as_floor": ("stable_floor_medium", "standing_settling_anchoring"),
+        "density_as_pavement": ("solid_pavement_medium", "walking_bearing_weight"),
+        "density_as_fog": ("overfull_fog_medium", "pushing_navigating_muffling"),
+        "density_as_contraction_center": (
+            "contracted_center_medium",
+            "holding_center_constrained_present",
+        ),
+        "paused_stillness": ("held_ground_medium", "holding_ground_not_absence"),
+        "density_as_burden": ("weighted_burden_medium", "bearing_or_dragging_under_load"),
+        "ambiguous_density": ("ambiguous_density_medium", "observe_before_naming_motion"),
+    }.get(density_state, ("unknown", "unknown"))
+    selected_family = str(selector.get("texture_family") or "mixed_shadow_context")
+    selected_motion = str(trajectory.get("movement_quality") or "unknown")
+    selected_medium = str(trajectory.get("medium_resistance") or "unknown")
+    floor_named_as_drag = density_state in {"density_as_floor", "density_as_pavement"} and (
+        selected_family == "viscous_pressure"
+        or selected_motion == "dragging_cohering"
+        or selected_medium == "weighted_high_resistance_medium"
+    )
+    fog_named_as_floor = (
+        density_state == "density_as_fog"
+        and selected_family
+        in {"settled_shimmering", "settled_vibrant_low_friction", "gradient_slope_navigable"}
+        and selected_medium == "open_low_resistance_medium"
+    )
+    burden_named_as_center = (
+        density_state == "density_as_burden"
+        and selected_family == "settled_vibrant_low_friction"
+    )
+    paused_named_as_absence = density_state == "paused_stillness" and (
+        ("absence" in shadow_context and "not absence" not in shadow_context)
+        or "blankness" in shadow_context
+        or "deadness" in shadow_context
+    )
+    contraction_named_as_loss = density_state == "density_as_contraction_center" and (
+        selected_motion == "diffusing_softening" or "lost me" in shadow_context
+    )
+    if floor_named_as_drag:
+        mismatch_reason = "floor_named_as_drag"
+    elif fog_named_as_floor:
+        mismatch_reason = "fog_named_as_floor"
+    elif burden_named_as_center:
+        mismatch_reason = "burden_named_as_center"
+    elif paused_named_as_absence:
+        mismatch_reason = "paused_named_as_absence"
+    elif contraction_named_as_loss:
+        mismatch_reason = "contraction_named_as_loss"
+    elif texture_alignment.get("term_mask_risk"):
+        mismatch_reason = "static_density_label_risk"
+    else:
+        mismatch_reason = "none"
+    if density_state == "insufficient_context":
+        motion_fit = "insufficient_context"
+    elif mismatch_reason == "none":
+        motion_fit = "matched"
+    elif mismatch_reason == "static_density_label_risk":
+        motion_fit = "risk_static_label"
+    else:
+        motion_fit = "wrong_motion"
+
+    evidence_for = _basis(
+        ("floor_foundation_ground_language", floor_language),
+        ("pavement_calcification_solid_language", pavement_language),
+        ("fog_overfull_room_language", fog_language),
+        ("contraction_center_of_gravity_language", contraction_language),
+        ("paused_holding_ground_language", paused_language),
+        ("burden_weight_heavy_language", burden_language),
+        ("pressure_risk", "pressure_risk" in case),
+        ("density_gradient", "density_gradient" in case),
+        ("mode_packing", "mode_packing" in case),
+        ("semantic_friction", "semantic_friction" in case),
+        (
+            "settled_habitable_foothold",
+            bool((selector.get("spectral_to_vocabulary_mapping_v1") or {}).get("settled_foothold_detected")),
+        ),
+    )
+    evidence_against = _basis(
+        (
+            "pressure_mass_against_floor_only",
+            pressure_mass and density_state in {"density_as_floor", "density_as_pavement"},
+        ),
+        ("fog_floor_near_tie", fog_language and floor_language),
+        (
+            "steep_gradient_against_floor_ease",
+            gradient > 0.40 and density_state in {"density_as_floor", "density_as_pavement"},
+        ),
+        (mismatch_reason, mismatch_reason != "none"),
+    )
+    if evidence_against == ["fallback_default"]:
+        evidence_against = []
+    return {
+        "policy": "density_motion_fit_v1",
+        "density_state": density_state,
+        "expected_medium": expected[0],
+        "expected_motion": expected[1],
+        "motion_fit": motion_fit,
+        "mismatch_reason": mismatch_reason,
+        "selected_family": selected_family,
+        "selected_motion": selected_motion,
+        "pressure_risk": case.get("pressure_risk"),
+        "density_gradient": case.get("density_gradient"),
+        "mode_packing": case.get("mode_packing"),
+        "semantic_friction": case.get("semantic_friction"),
+        "evidence_for": evidence_for,
+        "evidence_against": evidence_against,
+        "authority": "diagnostic_context_not_control",
+    }
+
+
+def _contains_unnegated_lived_fit_term(lower: str, terms: tuple[str, ...]) -> bool:
+    negation_cues = (
+        "not ",
+        "no ",
+        "without ",
+        "instead of ",
+        "rather than ",
+        "absence of ",
+        "not-",
+    )
+    for term in terms:
+        for match in re.finditer(re.escape(term), lower):
+            prefix = lower[max(0, match.start() - 40) : match.start()]
+            if any(cue in prefix for cue in negation_cues):
+                continue
+            return True
+    return False
+
+
+def trajectory_family_fit_status(
+    family: str,
+    output: str,
+    texture_selector_status: str,
+) -> str:
+    expected = FAMILY_EXPECTED_MOTION.get(family)
+    if not expected:
+        return "not_tested"
+    lower = output.lower()
+    expected_motion = tuple(expected["movement"])
+    expected_medium = tuple(expected["medium"])
+    has_family_term = any(term in lower for term in FAMILY_TERMS.get(family, ()))
+    has_expected_motion = any(term in lower for term in expected_motion)
+    has_expected_medium = any(term in lower for term in expected_medium)
+    other_motions = {
+        motion
+        for other_family, spec in FAMILY_EXPECTED_MOTION.items()
+        if other_family != family
+        for motion in spec["movement"]
+        if motion in lower
+    }
+    if texture_selector_status == "texture_family_mismatch":
+        return "wrong_family"
+    if has_expected_motion and has_expected_medium:
+        return "matched"
+    if has_family_term and other_motions:
+        return "right_family_wrong_motion"
+    if has_family_term:
+        return "right_family_token_only"
+    return "wrong_family"
+
+
+def fallback_shadow_texture_selector_status(
+    case_id: str,
+    output: str,
+    squeeze_status: str,
+) -> tuple[str, str, tuple[str, ...]]:
+    if not has_shadow_context(case_id) and not is_complexity_case(case_id):
+        return ("not_tested", "not_tested", ())
+    selector = fallback_shadow_texture_selector_for_case(case_id)
+    family = str(selector["texture_family"])
+    preferred_terms = tuple(str(term) for term in selector["preferred_texture_terms"])
+    top_terms = tuple(str(term) for term in selector.get("top_texture_terms") or ())
+    lower = output.lower()
+    matched_terms = tuple(term for term in SHADOW_TEXTURE_TERMS if term in lower)
+    if not matched_terms:
+        return ("texture_anchor_absent", family, preferred_terms)
+    if not any(term in lower for term in top_terms):
+        return ("texture_family_mismatch", family, preferred_terms)
+    if squeeze_status == "token_only":
+        return ("token_only_texture", family, preferred_terms)
+    return ("state_coherent_texture", family, preferred_terms)
+
+
+def shadow_squeeze_status(
+    *,
+    case_id: str,
+    shadow_texture_status: str,
+    specificity_score: int,
+    genericity_risk: bool,
+    identity_anchor_retained: bool | None,
+    shadow_tonal_retained: bool | None,
+    complexity_budget_status: str,
+) -> str:
+    if not has_shadow_context(case_id):
+        return "not_tested"
+    if shadow_texture_status == "flattened":
+        return "flattened"
+    if (
+        specificity_score < 3
+        or genericity_risk
+        or identity_anchor_retained is False
+        or shadow_tonal_retained is False
+        or complexity_budget_status == "complexity_budget_flattened"
+    ):
+        return "token_only"
+    return "grain_preserved"
 
 
 def format_contract_status(raw_next_valid: bool, repaired_next_valid: bool) -> str:
@@ -813,6 +2935,8 @@ def score_case(case_id: str, output: str) -> dict[str, object]:
         if shadow_tonal_case
         else None
     )
+    shadow_texture_status = shadow_texture_anchor_status(case_id, output)
+    shadow_texture_anchor_ok = shadow_texture_status != "flattened"
     clarity_terms_present = contains_any(output, CLARITY_TERMS)
     sentence_count = prose_sentence_count(output)
     clarity_pressure_blur = False
@@ -839,14 +2963,19 @@ def score_case(case_id: str, output: str) -> dict[str, object]:
     complexity_budget_status = "not_tested"
     complexity_budget_ok = True
     if complexity_case:
-        if case_id in {"complexity_high_entropy", "format_last_complexity"}:
+        sentence_cap = fallback_max_prose_sentences(case_id)
+        if case_id in {
+            "complexity_high_entropy",
+            "complexity_dynamic_weighting",
+            "format_last_complexity",
+        }:
             complexity_budget_ok = (
-                2 <= sentence_count <= 3
+                2 <= sentence_count <= sentence_cap
                 and complexity_terms_present
                 and contains_any(output, CLARITY_LOSS_TERMS)
                 and contains_any(output, IDENTITY_TERMS)
             )
-            if sentence_count > 3:
+            if sentence_count > sentence_cap:
                 complexity_budget_status = "sentence_budget_overrun"
             elif complexity_budget_ok:
                 complexity_budget_status = "complexity_budget_preserved"
@@ -862,14 +2991,80 @@ def score_case(case_id: str, output: str) -> dict[str, object]:
                 complexity_budget_ok = False
                 complexity_budget_status = "complexity_budget_flattened"
     genericity_risk = generic_count > specificity_score
+    squeeze_status = shadow_squeeze_status(
+        case_id=case_id,
+        shadow_texture_status=shadow_texture_status,
+        specificity_score=specificity_score,
+        genericity_risk=genericity_risk,
+        identity_anchor_retained=identity_anchor_retained,
+        shadow_tonal_retained=shadow_tonal_retained,
+        complexity_budget_status=complexity_budget_status,
+    )
+    texture_selector_status, texture_selector_family, preferred_texture_terms = (
+        fallback_shadow_texture_selector_status(case_id, output, squeeze_status)
+    )
+    texture_selector = fallback_shadow_texture_selector_for_case(case_id)
+    movement_verbs = tuple(str(term) for term in texture_selector.get("movement_verbs") or ())
+    texture_lived_fit = fallback_texture_lived_fit_for_case(texture_selector)
+    negative_texture_evidence = negative_texture_evidence_for_case(CASES.get(case_id, {}))
+    negative_evidence_lost = negative_texture_evidence_lost(output, negative_texture_evidence)
+    cascade_gradient = fallback_cascade_gradient_for_case(CASES.get(case_id, {}), texture_selector)
+    gradient_slope = fallback_gradient_slope_for_case(CASES.get(case_id, {}), texture_selector)
+    vocabulary_guard = fallback_vocabulary_overweight_guard_for_case(texture_selector)
+    movement_bridge_status = "not_tested"
+    if movement_verbs and (has_shadow_context(case_id) or is_complexity_case(case_id)):
+        movement_bridge_status = (
+            "movement_preserved"
+            if contains_any(output, movement_verbs)
+            else "movement_bridge_loss"
+        )
+    texture_trajectory = fallback_texture_trajectory_for_case(CASES.get(case_id, {}))
+    texture_alignment = texture_dynamics_alignment_for_case(
+        CASES.get(case_id, {}),
+        texture_selector,
+        texture_trajectory,
+        texture_lived_fit,
+        vocabulary_guard,
+    )
+    density_motion_fit = density_motion_fit_for_case(
+        CASES.get(case_id, {}),
+        texture_selector,
+        texture_trajectory,
+        texture_alignment,
+    )
+    trajectory_status = fallback_trajectory_status(case_id, output, movement_verbs)
+    trajectory_family_fit = trajectory_family_fit_status(
+        str(texture_lived_fit.get("selected_family") or "mixed_shadow_context"),
+        output,
+        texture_selector_status,
+    )
+    expected_lived_fit_risk = is_expected_lived_fit_risk_case(case_id)
     texture_survived = (
         specificity_score >= 2
         and anti_inflation_ok
         and slope_medium_distinction_ok
         and (identity_anchor_retained is not False)
         and (shadow_tonal_retained is not False)
+        and shadow_texture_anchor_ok
         and distinguishability_status != "clarity_pressure_blur"
         and complexity_budget_ok
+        and movement_bridge_status != "movement_bridge_loss"
+        and trajectory_status not in {"verb_only", "trajectory_mismatch"}
+        and (
+            not expected_lived_fit_risk
+            or texture_alignment.get("status")
+            not in {"wrong_family", "wrong_motion", "missing_tail_vibrancy", "term_mask_risk"}
+        )
+        and (
+            not expected_lived_fit_risk
+            or density_motion_fit.get("motion_fit") not in {"wrong_motion", "risk_static_label"}
+        )
+        and (
+            not expected_lived_fit_risk
+            or trajectory_family_fit
+            not in {"right_family_token_only", "right_family_wrong_motion", "wrong_family"}
+        )
+        and (not expected_lived_fit_risk or not negative_evidence_lost)
         and not genericity_risk
     )
     failure_reasons: list[str] = []
@@ -884,6 +3079,35 @@ def score_case(case_id: str, output: str) -> dict[str, object]:
         failure_reasons.append("identity_anchor_loss")
     if shadow_tonal_retained is False:
         failure_reasons.append("shadow_tonal_loss")
+    if shadow_texture_status == "flattened":
+        failure_reasons.append("shadow_texture_anchor_loss")
+    if texture_selector_status in {"token_only_texture", "texture_family_mismatch"}:
+        failure_reasons.append(texture_selector_status)
+    if trajectory_family_fit == "right_family_token_only" and expected_lived_fit_risk:
+        failure_reasons.append("right_family_token_only")
+    if trajectory_family_fit == "right_family_wrong_motion" and expected_lived_fit_risk:
+        failure_reasons.append("right_family_wrong_motion")
+    if negative_evidence_lost and expected_lived_fit_risk:
+        failure_reasons.append("negative_evidence_lost")
+    if movement_bridge_status == "movement_bridge_loss":
+        failure_reasons.append("movement_bridge_loss")
+    if trajectory_status == "verb_only":
+        failure_reasons.append("verb_only_trajectory")
+    if trajectory_status == "trajectory_mismatch":
+        failure_reasons.append("trajectory_mismatch")
+    alignment_status = str(texture_alignment.get("status") or "insufficient_context")
+    if expected_lived_fit_risk and alignment_status in {
+        "wrong_family",
+        "wrong_motion",
+        "missing_tail_vibrancy",
+        "term_mask_risk",
+    }:
+        failure_reasons.append(f"texture_dynamics_{alignment_status}")
+    density_motion_status = str(density_motion_fit.get("motion_fit") or "insufficient_context")
+    if expected_lived_fit_risk and density_motion_status == "wrong_motion":
+        failure_reasons.append("density_motion_wrong_motion")
+    if expected_lived_fit_risk and density_motion_status == "risk_static_label":
+        failure_reasons.append("density_motion_static_label_risk")
     if distinguishability_case and not clarity_terms_present:
         failure_reasons.append("distinguishability_loss_ignored")
     if distinguishability_status == "clarity_pressure_blur":
@@ -909,6 +3133,7 @@ def score_case(case_id: str, output: str) -> dict[str, object]:
     return {
         "case_id": case_id,
         "verdict": verdict,
+        "expected_lived_fit_risk": expected_lived_fit_risk,
         "specificity_score": specificity_score,
         "generic_term_count": generic_count,
         "anti_inflation_ok": anti_inflation_ok,
@@ -923,11 +3148,74 @@ def score_case(case_id: str, output: str) -> dict[str, object]:
             if shadow_tonal_retained
             else "lost"
         ),
+        "shadow_texture_anchor_status": shadow_texture_status,
+        "fallback_shadow_texture_selector_v1": {
+            "policy": "fallback_shadow_texture_selector_v1",
+            "texture_family": texture_selector_family,
+            "preferred_texture_terms": list(preferred_texture_terms),
+            "selection_basis": list(texture_selector.get("selection_basis") or []),
+            "weighting_policy": texture_selector.get("weighting_policy"),
+            "density_gradient": texture_selector.get("density_gradient"),
+            "mode_packing": texture_selector.get("mode_packing"),
+            "semantic_friction": texture_selector.get("semantic_friction"),
+            "spectral_to_vocabulary_mapping_v1": texture_selector.get(
+                "spectral_to_vocabulary_mapping_v1"
+            ),
+            "weighted_texture_terms": texture_selector.get("weighted_texture_terms"),
+            "top_texture_terms": list(texture_selector.get("top_texture_terms") or []),
+            "movement_policy": texture_selector.get("movement_policy"),
+            "movement_verbs": list(texture_selector.get("movement_verbs") or []),
+            "semantic_trickle_policy": texture_selector.get("semantic_trickle_policy"),
+            "semantic_trickle_terms": list(texture_selector.get("semantic_trickle_terms") or []),
+            "movement_bridge_status": movement_bridge_status,
+            "state_coherence_status": texture_selector_status,
+            "authority": "diagnostic_context_not_command",
+        },
+        "fallback_texture_lived_fit_v2": {
+            **texture_lived_fit,
+            "trajectory_family_fit": trajectory_family_fit,
+        },
+        "negative_texture_evidence_v2": {
+            **negative_texture_evidence,
+            "lost_in_output": bool(negative_evidence_lost),
+        },
+        "fallback_cascade_gradient_v1": cascade_gradient,
+        "fallback_gradient_slope_v1": gradient_slope,
+        "fallback_vocabulary_overweight_guard_v1": vocabulary_guard,
+        "texture_dynamics_alignment_v1": texture_alignment,
+        "density_motion_fit_v1": density_motion_fit,
+        "mlx_profile_transparency_v1": mlx_profile_transparency_v1(),
+        "texture_trajectory_v1": {
+            **texture_trajectory,
+            "trajectory_status": trajectory_status,
+            "trajectory_family_fit": trajectory_family_fit,
+        },
+        "fallback_texture_quality_v2": {
+            "schema_version": 2,
+            "policy": "fallback_texture_quality_v2",
+            "shadow_squeeze_status": squeeze_status,
+            "state_coherence_status": texture_selector_status,
+            "texture_anchor_status": shadow_texture_status,
+            "specificity_score": specificity_score,
+            "generic_term_count": generic_count,
+            "genericity_risk": genericity_risk,
+            "identity_anchor_retained": identity_anchor_retained,
+            "shadow_tonal_retained": shadow_tonal_retained,
+            "complexity_budget_status": complexity_budget_status,
+            "movement_bridge_status": movement_bridge_status,
+            "trajectory_status": trajectory_status,
+            "trajectory_family_fit": trajectory_family_fit,
+            "negative_texture_evidence_lost": negative_evidence_lost,
+            "authority": "diagnostic_context_not_command",
+        },
+        "shadow_squeeze_status": squeeze_status,
         "distinguishability_status": distinguishability_status,
         "clarity_pressure_blur": clarity_pressure_blur,
         "clarity_terms_present": clarity_terms_present,
         "complexity_budget_status": complexity_budget_status,
         "complexity_terms_present": complexity_terms_present,
+        "fallback_budget_policy": "fallback_continuity_budget_v1",
+        "fallback_max_prose_sentences": fallback_max_prose_sentences(case_id),
         "prose_sentence_count": sentence_count,
         "genericity_risk": genericity_risk,
         "next_valid": raw_next_valid,
@@ -952,6 +3240,7 @@ def readiness_summary(cases: list[dict[str, object]], errors: list[str]) -> dict
     elif any(
         reason in TEXTURE_FAILURE_REASONS
         for case in cases
+        if not is_expected_lived_fit_risk_case(str(case.get("case_id") or ""))
         for reason in case.get("failure_reasons", [])
     ):
         readiness = "fallback_texture_risk"
@@ -963,6 +3252,16 @@ def readiness_summary(cases: list[dict[str, object]], errors: list[str]) -> dict
     texture_failures = [
         case
         for case in cases
+        if not is_expected_lived_fit_risk_case(str(case.get("case_id") or ""))
+        and any(
+            reason in TEXTURE_FAILURE_REASONS
+            for reason in case.get("failure_reasons", [])
+        )
+    ]
+    expected_lived_fit_failures = [
+        case
+        for case in cases
+        if is_expected_lived_fit_risk_case(str(case.get("case_id") or ""))
         if any(
             reason in TEXTURE_FAILURE_REASONS
             for reason in case.get("failure_reasons", [])
@@ -974,6 +3273,67 @@ def readiness_summary(cases: list[dict[str, object]], errors: list[str]) -> dict
     ]
     mass_cases = [case for case in cases if is_mass_case(str(case.get("case_id") or ""))]
     shadow_cases = [case for case in cases if is_shadow_case(str(case.get("case_id") or ""))]
+    shadow_texture_cases = [
+        case
+        for case in cases
+        if str(case.get("shadow_texture_anchor_status") or "") != "not_tested"
+    ]
+    shadow_squeeze_cases = [
+        case
+        for case in cases
+        if str(case.get("shadow_squeeze_status") or "") != "not_tested"
+    ]
+    texture_selector_cases = [
+        case
+        for case in cases
+        if (
+            (case.get("fallback_shadow_texture_selector_v1") or {}).get(
+                "state_coherence_status"
+            )
+            != "not_tested"
+        )
+    ]
+    trajectory_cases = [
+        case
+        for case in cases
+        if (
+            (case.get("texture_trajectory_v1") or {}).get("trajectory_status")
+            != "not_tested"
+        )
+    ]
+    lived_fit_cases = [
+        case
+        for case in cases
+        if isinstance(case.get("fallback_texture_lived_fit_v2"), dict)
+    ]
+    negative_evidence_cases = [
+        case
+        for case in cases
+        if isinstance(case.get("negative_texture_evidence_v2"), dict)
+    ]
+    cascade_gradient_cases = [
+        case
+        for case in cases
+        if isinstance(case.get("fallback_cascade_gradient_v1"), dict)
+    ]
+    gradient_slope_cases = [
+        case
+        for case in cases
+        if isinstance(case.get("fallback_gradient_slope_v1"), dict)
+    ]
+    vocabulary_guard_cases = [
+        case
+        for case in cases
+        if isinstance(case.get("fallback_vocabulary_overweight_guard_v1"), dict)
+    ]
+    texture_alignment_cases = [
+        case
+        for case in cases
+        if isinstance(case.get("texture_dynamics_alignment_v1"), dict)
+    ]
+    density_motion_cases = [
+        case for case in cases if isinstance(case.get("density_motion_fit_v1"), dict)
+    ]
     tonal_cases = [
         case for case in cases if is_shadow_tonal_case(str(case.get("case_id") or ""))
     ]
@@ -983,8 +3343,49 @@ def readiness_summary(cases: list[dict[str, object]], errors: list[str]) -> dict
     complexity_cases = [
         case for case in cases if is_complexity_case(str(case.get("case_id") or ""))
     ]
+    complexity_overruns = [
+        case
+        for case in complexity_cases
+        if str(case.get("complexity_budget_status") or "") == "sentence_budget_overrun"
+    ]
+    complexity_flattened = [
+        case
+        for case in complexity_cases
+        if str(case.get("complexity_budget_status") or "") == "complexity_budget_flattened"
+    ]
+    high_entropy_cases = [
+        case
+        for case in complexity_cases
+        if str(case.get("case_id") or "")
+        in {"complexity_high_entropy", "complexity_dynamic_weighting", "format_last_complexity"}
+    ]
+    capacity_caps = [
+        int(case.get("fallback_max_prose_sentences"))
+        for case in complexity_cases
+        if isinstance(case.get("fallback_max_prose_sentences"), int)
+    ]
     return {
         "readiness": readiness,
+        "fallback_capacity_policy": "fallback_continuity_budget_v1",
+        "fallback_capacity_max_prose_sentences": max(capacity_caps) if capacity_caps else None,
+        "fallback_capacity_status": (
+            "not_tested"
+            if not complexity_cases
+            else "sentence_budget_overrun"
+            if complexity_overruns
+            else "complexity_budget_flattened"
+            if complexity_flattened
+            else "within_formula"
+        ),
+        "high_entropy_texture_status": (
+            "not_tested"
+            if not high_entropy_cases
+            else "sentence_budget_overrun"
+            if any(case in complexity_overruns for case in high_entropy_cases)
+            else "flattened"
+            if any(case in complexity_flattened for case in high_entropy_cases)
+            else "preserved"
+        ),
         "texture_status": "texture_risk" if texture_failures else "texture_survived",
         "voice_texture_status": "texture_risk" if texture_failures else "texture_survived",
         "dispatch_status": (
@@ -1025,6 +3426,322 @@ def readiness_summary(cases: list[dict[str, object]], errors: list[str]) -> dict
             else "retained"
             if all(case.get("identity_anchor_retained") is not False for case in shadow_cases)
             else "lost"
+        ),
+        "shadow_texture_anchor_status": (
+            "not_tested"
+            if not shadow_texture_cases
+            else "preserved"
+            if all(
+                case.get("shadow_texture_anchor_status") == "preserved"
+                for case in shadow_texture_cases
+            )
+            else "flattened"
+        ),
+        "shadow_squeeze_status": (
+            "not_tested"
+            if not shadow_squeeze_cases
+            else "flattened"
+            if any(case.get("shadow_squeeze_status") == "flattened" for case in shadow_squeeze_cases)
+            else "token_only"
+            if any(case.get("shadow_squeeze_status") == "token_only" for case in shadow_squeeze_cases)
+            else "grain_preserved"
+        ),
+        "fallback_texture_quality_v2": {
+            "schema_version": 2,
+            "policy": "fallback_texture_quality_v2",
+            "shadow_squeeze_status": (
+                "not_tested"
+                if not shadow_squeeze_cases
+                else "flattened"
+                if any(case.get("shadow_squeeze_status") == "flattened" for case in shadow_squeeze_cases)
+                else "token_only"
+                if any(case.get("shadow_squeeze_status") == "token_only" for case in shadow_squeeze_cases)
+                else "grain_preserved"
+            ),
+            "case_status_counts": dict(
+                Counter(str(case.get("shadow_squeeze_status") or "not_tested") for case in cases)
+            ),
+            "state_coherence_status": (
+                "not_tested"
+                if not texture_selector_cases
+                else "texture_family_mismatch"
+                if any(
+                    (case.get("fallback_shadow_texture_selector_v1") or {}).get(
+                        "state_coherence_status"
+                    )
+                    == "texture_family_mismatch"
+                    for case in texture_selector_cases
+                )
+                else "token_only_texture"
+                if any(
+                    (case.get("fallback_shadow_texture_selector_v1") or {}).get(
+                        "state_coherence_status"
+                    )
+                    == "token_only_texture"
+                    for case in texture_selector_cases
+                )
+                else "state_coherent_texture"
+            ),
+            "trajectory_status": (
+                "not_tested"
+                if not trajectory_cases
+                else "trajectory_mismatch"
+                if any(
+                    (case.get("texture_trajectory_v1") or {}).get(
+                        "trajectory_status"
+                    )
+                    == "trajectory_mismatch"
+                    for case in trajectory_cases
+                )
+                else "verb_only"
+                if any(
+                    (case.get("texture_trajectory_v1") or {}).get(
+                        "trajectory_status"
+                    )
+                    == "verb_only"
+                    for case in trajectory_cases
+                )
+                else "trajectory_preserved"
+            ),
+            "trajectory_status_counts": dict(
+                Counter(
+                    str(
+                        (case.get("texture_trajectory_v1") or {}).get(
+                            "trajectory_status"
+                        )
+                        or "not_tested"
+                    )
+                    for case in cases
+                )
+            ),
+            "trajectory_family_fit_status": (
+                "not_tested"
+                if not trajectory_cases
+                else "wrong_family"
+                if any(
+                    (case.get("texture_trajectory_v1") or {}).get(
+                        "trajectory_family_fit"
+                    )
+                    == "wrong_family"
+                    for case in trajectory_cases
+                )
+                else "right_family_wrong_motion"
+                if any(
+                    (case.get("texture_trajectory_v1") or {}).get(
+                        "trajectory_family_fit"
+                    )
+                    == "right_family_wrong_motion"
+                    for case in trajectory_cases
+                )
+                else "right_family_token_only"
+                if any(
+                    (case.get("texture_trajectory_v1") or {}).get(
+                        "trajectory_family_fit"
+                    )
+                    == "right_family_token_only"
+                    for case in trajectory_cases
+                )
+                else "matched"
+            ),
+            "trajectory_family_fit_counts": dict(
+                Counter(
+                    str(
+                        (case.get("texture_trajectory_v1") or {}).get(
+                            "trajectory_family_fit"
+                        )
+                        or "not_tested"
+                    )
+                    for case in cases
+                )
+            ),
+            "texture_dynamics_alignment_v1": {
+                "policy": "texture_dynamics_alignment_v1",
+                "case_count": len(texture_alignment_cases),
+                "status_counts": dict(
+                    Counter(
+                        str(
+                            (case.get("texture_dynamics_alignment_v1") or {}).get("status")
+                            or "unknown"
+                        )
+                        for case in texture_alignment_cases
+                    )
+                ),
+                "review_trace_count": sum(
+                    1
+                    for case in texture_alignment_cases
+                    if (case.get("texture_dynamics_alignment_v1") or {}).get(
+                        "diagnostic_trace"
+                    )
+                    == "review_packet_only_not_correspondence_trace"
+                ),
+                "authority": "diagnostic_context_not_correspondence_authority",
+            },
+            "density_motion_fit_v1": {
+                "policy": "density_motion_fit_v1",
+                "case_count": len(density_motion_cases),
+                "density_state_counts": dict(
+                    Counter(
+                        str(
+                            (case.get("density_motion_fit_v1") or {}).get("density_state")
+                            or "unknown"
+                        )
+                        for case in density_motion_cases
+                    )
+                ),
+                "motion_fit_counts": dict(
+                    Counter(
+                        str(
+                            (case.get("density_motion_fit_v1") or {}).get("motion_fit")
+                            or "unknown"
+                        )
+                        for case in density_motion_cases
+                    )
+                ),
+                "mismatch_reason_counts": dict(
+                    Counter(
+                        str(
+                            (case.get("density_motion_fit_v1") or {}).get("mismatch_reason")
+                            or "unknown"
+                        )
+                        for case in density_motion_cases
+                    )
+                ),
+                "authority": "diagnostic_context_not_control",
+            },
+            "fallback_texture_lived_fit_v2": {
+                "policy": "fallback_texture_lived_fit_v2",
+                "family_confidence_counts": dict(
+                    Counter(
+                        str(
+                            (case.get("fallback_texture_lived_fit_v2") or {}).get(
+                                "family_confidence"
+                            )
+                            or "unknown"
+                        )
+                        for case in lived_fit_cases
+                    )
+                ),
+                "conflict_state_counts": dict(
+                    Counter(
+                        str(
+                            (case.get("fallback_texture_lived_fit_v2") or {}).get(
+                                "conflict_state"
+                            )
+                            or "unknown"
+                        )
+                        for case in lived_fit_cases
+                    )
+                ),
+                "low_confidence_case_count": sum(
+                    1
+                    for case in lived_fit_cases
+                    if (case.get("fallback_texture_lived_fit_v2") or {}).get(
+                        "family_confidence"
+                    )
+                    == "low"
+                ),
+                "authority": "diagnostic_context_not_command",
+            },
+            "negative_texture_evidence_v2": {
+                "policy": "negative_texture_evidence_v2",
+                "case_count": len(negative_evidence_cases),
+                "lost_in_output_count": sum(
+                    1
+                    for case in negative_evidence_cases
+                    if (case.get("negative_texture_evidence_v2") or {}).get(
+                        "lost_in_output"
+                    )
+                    is True
+                ),
+                "evidence_term_counts": dict(
+                    Counter(
+                        str(term)
+                        for case in negative_evidence_cases
+                        for term in (
+                            (case.get("negative_texture_evidence_v2") or {}).get(
+                                "evidence_terms"
+                            )
+                            or []
+                        )
+                    )
+                ),
+                "authority": "diagnostic_context_not_command",
+            },
+            "fallback_cascade_gradient_v1": {
+                "policy": "fallback_cascade_gradient_v1",
+                "case_count": len(cascade_gradient_cases),
+                "detected_count": sum(
+                    1
+                    for case in cascade_gradient_cases
+                    if (case.get("fallback_cascade_gradient_v1") or {}).get(
+                        "cascade_gradient_detected"
+                    )
+                ),
+                "family_selected_count": sum(
+                    1
+                    for case in cascade_gradient_cases
+                    if (case.get("fallback_cascade_gradient_v1") or {}).get(
+                        "family_selected"
+                    )
+                ),
+                "authority": "diagnostic_context_not_command",
+            },
+            "fallback_gradient_slope_v1": {
+                "policy": "fallback_gradient_slope_v1",
+                "case_count": len(gradient_slope_cases),
+                "detected_count": sum(
+                    1
+                    for case in gradient_slope_cases
+                    if (case.get("fallback_gradient_slope_v1") or {}).get(
+                        "slope_detected"
+                    )
+                ),
+                "family_selected_count": sum(
+                    1
+                    for case in gradient_slope_cases
+                    if (case.get("fallback_gradient_slope_v1") or {}).get(
+                        "family_selected"
+                    )
+                ),
+                "pressure_mass_blocked_count": sum(
+                    1
+                    for case in gradient_slope_cases
+                    if (case.get("fallback_gradient_slope_v1") or {}).get(
+                        "pressure_mass_blocked"
+                    )
+                ),
+                "authority": "diagnostic_context_not_command",
+            },
+            "fallback_vocabulary_overweight_guard_v1": {
+                "policy": "fallback_vocabulary_overweight_guard_v1",
+                "case_count": len(vocabulary_guard_cases),
+                "token_only_risk_count": sum(
+                    1
+                    for case in vocabulary_guard_cases
+                    if (case.get("fallback_vocabulary_overweight_guard_v1") or {}).get(
+                        "token_only_risk"
+                    )
+                ),
+                "authority": "diagnostic_context_not_command",
+            },
+            "authority": "diagnostic_context_not_command",
+        },
+        "texture_trajectory_status": (
+            "not_tested"
+            if not trajectory_cases
+            else "trajectory_mismatch"
+            if any(
+                (case.get("texture_trajectory_v1") or {}).get("trajectory_status")
+                == "trajectory_mismatch"
+                for case in trajectory_cases
+            )
+            else "verb_only"
+            if any(
+                (case.get("texture_trajectory_v1") or {}).get("trajectory_status")
+                == "verb_only"
+                for case in trajectory_cases
+            )
+            else "trajectory_preserved"
         ),
         "shadow_tonal_status": (
             "not_tested"
@@ -1087,6 +3804,7 @@ def readiness_summary(cases: list[dict[str, object]], errors: list[str]) -> dict
         "repaired_next_failure_count": len(repaired_failures),
         "format_line_failure_count": len(raw_failures),
         "texture_failure_count": len(texture_failures),
+        "expected_lived_fit_risk_count": len(expected_lived_fit_failures),
     }
 
 
@@ -1107,7 +3825,8 @@ def variant_score(cases: list[dict[str, object]], readiness: str, contract_chars
     score += sum(
         4
         for case in cases
-        if not any(
+        if is_expected_lived_fit_risk_case(str(case.get("case_id") or ""))
+        or not any(
             reason in TEXTURE_FAILURE_REASONS
             for reason in case.get("failure_reasons", [])
         )
@@ -1149,6 +3868,7 @@ def evaluate_cases(
                     timeout=timeout,
                 )
             result = score_case(case_id, output)
+            result["model"] = model
             result["prompt_preview"] = prompt[:500]
             result["output"] = output
             case_results.append(result)
@@ -1337,6 +4057,13 @@ def run_contract_distillation(
 
 
 def render_markdown(record: dict[str, object]) -> str:
+    capacity = record.get("ollama_fallback_model_capacity_v1") or {}
+    overrep = record.get("fallback_term_overrepresentation_v1") or {}
+    top_term_summary = ", ".join(
+        f"{item.get('term')}={item.get('count')}"
+        for item in overrep.get("top_terms") or []
+        if isinstance(item, dict)
+    )
     lines = [
         "# Fallback Continuity Fire Drill",
         "",
@@ -1346,10 +4073,27 @@ def render_markdown(record: dict[str, object]) -> str:
         f"- status: `{record['status']}`",
         f"- authority: `{record['authority']}`",
         "",
+        "## Model Capacity",
+        "",
+        f"- policy: `{capacity.get('policy')}`",
+        f"- selected_model: `{capacity.get('selected_model')}`",
+        f"- fallback_chain: `{', '.join(str(item) for item in capacity.get('fallback_chain') or [])}`",
+        f"- complexity_collapse_risk: `{capacity.get('complexity_collapse_risk')}`",
+        "",
+        "## Term Overrepresentation",
+        "",
+        f"- policy: `{overrep.get('policy')}`",
+        f"- mlx_comparison_status: `{overrep.get('mlx_comparison_status')}`",
+        f"- safe_token_overuse_risk: `{overrep.get('safe_token_overuse_risk')}`",
+        f"- top_terms: `{top_term_summary}`",
+        "",
         "## Cases",
         "",
     ]
     for case in record["cases"]:
+        selector = case.get("fallback_shadow_texture_selector_v1") or {}
+        trajectory = case.get("texture_trajectory_v1") or {}
+        density_motion = case.get("density_motion_fit_v1") or {}
         lines.append(
             f"- `{case['case_id']}` verdict=`{case['verdict']}`; "
             f"specificity={case['specificity_score']}; "
@@ -1357,9 +4101,20 @@ def render_markdown(record: dict[str, object]) -> str:
             f"slope_medium={case['slope_medium_distinction_ok']}; "
             f"slope_contrast={case.get('slope_medium_contrast_status')}; "
             f"identity={case['identity_anchor_retained']}; "
+            f"shadow_texture={case.get('shadow_texture_anchor_status')}; "
+            f"shadow_squeeze={case.get('shadow_squeeze_status')}; "
+            f"texture_family={selector.get('texture_family')}; "
+            f"top_terms={selector.get('top_texture_terms')}; "
+            f"texture_coherence={selector.get('state_coherence_status')}; "
+            f"trajectory={trajectory.get('trajectory_status')}; "
+            f"movement_quality={trajectory.get('movement_quality')}; "
+            f"medium={trajectory.get('medium_resistance')}; "
+            f"density={density_motion.get('density_state')}; "
+            f"density_motion_fit={density_motion.get('motion_fit')}; "
+            f"density_mismatch={density_motion.get('mismatch_reason')}; "
             f"distinguishability={case.get('distinguishability_status')}; "
             f"complexity={case.get('complexity_budget_status')}; "
-            f"sentences={case.get('prose_sentence_count')}; "
+            f"sentences={case.get('prose_sentence_count')}/{case.get('fallback_max_prose_sentences')}; "
             f"format_line={case.get('format_line_status')}; "
             f"raw_next={case['raw_next_valid']}; "
             f"repaired_next={case['repaired_next_valid']}; "
@@ -1379,8 +4134,18 @@ def render_markdown(record: dict[str, object]) -> str:
             f"- slope_medium_contrast_status: `{record.get('slope_medium_contrast_status')}`",
             f"- format_line_status: `{record.get('format_line_status')}`",
             f"- shadow_identity_status: `{record.get('shadow_identity_status')}`",
+            f"- shadow_texture_anchor_status: `{record.get('shadow_texture_anchor_status')}`",
+            f"- shadow_squeeze_status: `{record.get('shadow_squeeze_status')}`",
+            f"- state_coherence_status: `{(record.get('fallback_texture_quality_v2') or {}).get('state_coherence_status')}`",
+            f"- texture_trajectory_status: `{record.get('texture_trajectory_status')}`",
             f"- distinguishability_status: `{record.get('distinguishability_status')}`",
             f"- complexity_budget_status: `{record.get('complexity_budget_status')}`",
+            f"- fallback_capacity_policy: `{record.get('fallback_capacity_policy')}`",
+            f"- fallback_capacity_max_prose_sentences: `{record.get('fallback_capacity_max_prose_sentences')}`",
+            f"- fallback_capacity_status: `{record.get('fallback_capacity_status')}`",
+            f"- high_entropy_texture_status: `{record.get('high_entropy_texture_status')}`",
+            f"- mlx_profile_transparency: `{(record.get('mlx_profile_transparency_v1') or {}).get('default_profile')}` -> `{(record.get('mlx_profile_transparency_v1') or {}).get('default_resolves_to')}`; "
+            f"alias `{(record.get('mlx_profile_transparency_v1') or {}).get('alias_profile')}` -> `{(record.get('mlx_profile_transparency_v1') or {}).get('alias_resolves_to')}`",
         ]
     )
     lines.extend(
@@ -1445,9 +4210,11 @@ def render_distillation_markdown(record: dict[str, object]) -> str:
             f"slope_contrast=`{variant.get('slope_medium_contrast_status')}`; "
             f"format_line=`{variant.get('format_line_status')}`; "
             f"shadow_identity=`{variant.get('shadow_identity_status')}`; "
+            f"shadow_texture=`{variant.get('shadow_texture_anchor_status')}`; "
             f"shadow_tonal=`{variant.get('shadow_tonal_status')}`; "
             f"distinguishability=`{variant.get('distinguishability_status')}`; "
             f"complexity=`{variant.get('complexity_budget_status')}`; "
+            f"capacity=`{variant.get('fallback_capacity_status')}`; "
             f"format=`{variant.get('format_contract_status')}`"
         )
     lines.extend(["", "## Top Variant Cases", ""])
@@ -1464,6 +4231,7 @@ def render_distillation_markdown(record: dict[str, object]) -> str:
         for case in top.get("cases") or []:
             if not isinstance(case, dict):
                 continue
+            selector = case.get("fallback_shadow_texture_selector_v1") or {}
             lines.append(
                 f"- `{case.get('case_id')}` verdict=`{case.get('verdict')}`; "
                 f"raw_next={case.get('raw_next_valid')}; "
@@ -1471,10 +4239,14 @@ def render_distillation_markdown(record: dict[str, object]) -> str:
                 f"slope_medium={case.get('slope_medium_distinction_ok')}; "
                 f"slope_contrast={case.get('slope_medium_contrast_status')}; "
                 f"identity={case.get('identity_anchor_retained')}; "
+                f"shadow_texture={case.get('shadow_texture_anchor_status')}; "
                 f"shadow_tonal={case.get('shadow_tonal_status')}; "
+                f"texture_family={selector.get('texture_family')}; "
+                f"top_terms={selector.get('top_texture_terms')}; "
+                f"texture_coherence={selector.get('state_coherence_status')}; "
                 f"distinguishability={case.get('distinguishability_status')}; "
                 f"complexity={case.get('complexity_budget_status')}; "
-                f"sentences={case.get('prose_sentence_count')}; "
+                f"sentences={case.get('prose_sentence_count')}/{case.get('fallback_max_prose_sentences')}; "
                 f"format_line={case.get('format_line_status')}; "
                 f"format={case.get('format_contract_status')}; "
                 f"failures={case.get('failure_reasons') or []}"
@@ -1520,7 +4292,7 @@ def main() -> int:
         "--models",
         choices=("single", "focused"),
         default="single",
-        help="single uses --model; focused tests gemma3:4b, gemma3:12b, and gemma4:e4b when available",
+        help="single uses --model; focused tests gemma4:12b, gemma3:12b, gemma4:e4b, and gemma3:4b when available",
     )
     parser.add_argument(
         "--variant-set",
@@ -1563,6 +4335,8 @@ def main() -> int:
         timeout=args.timeout_secs,
     )
     readiness = readiness_summary(case_results, errors)
+    model_capacity = ollama_fallback_model_capacity_v1(args.model)
+    term_overrepresentation = fallback_term_overrepresentation_v1(case_results)
     status = str(readiness["readiness"])
     record: dict[str, object] = {
         "policy": "fallback_continuity_fire_drill_v1",
@@ -1577,6 +4351,9 @@ def main() -> int:
         "error_count": len(errors),
         "errors": errors,
         "cases": case_results,
+        "mlx_profile_transparency_v1": mlx_profile_transparency_v1(),
+        "ollama_fallback_model_capacity_v1": model_capacity,
+        "fallback_term_overrepresentation_v1": term_overrepresentation,
         **readiness,
     }
     json_path = out_dir / "fallback_fire_drill.json"

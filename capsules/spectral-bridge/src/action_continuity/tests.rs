@@ -66,6 +66,9 @@ fn telemetry() -> SpectralTelemetry {
                 structural_plurality: 0.7,
                 comfort_gate: 1.0,
             },
+            texture_signature: crate::types::ResonanceTextureSignatureV1::default(),
+            texture_component_alignment:
+                crate::types::ResonanceTextureComponentAlignmentV1::default(),
             control: crate::types::ResonanceDensityControl {
                 target_bias_pct: 0.0,
                 wander_scale: 1.0,
@@ -118,6 +121,8 @@ fn telemetry() -> SpectralTelemetry {
                 pressure_interference: 0.24,
             },
             context: crate::types::InhabitableFluctuationContext::default(),
+            pressure_calibration:
+                crate::types::InhabitableFluctuationPressureCalibrationV1::default(),
             control: crate::types::InhabitableFluctuationControl {
                 target_bias_pct: 0.0,
                 wander_scale: 1.0,
@@ -827,7 +832,11 @@ fn experiment_status_shows_returnable_distinctions_only_for_matching_experiments
         .create_thread(None, "Distinction thread", None)
         .expect("thread");
     let pressure = store
-        .start_experiment(None, "Silt pressure study", "Does heavy silt track pressure?")
+        .start_experiment(
+            None,
+            "Silt pressure study",
+            "Does heavy silt track pressure?",
+        )
         .expect("pressure experiment");
     let pressure_status = store
         .experiment_status(Some(&pressure.experiment_id))
@@ -837,7 +846,11 @@ fn experiment_status_shows_returnable_distinctions_only_for_matching_experiments
     assert!(pressure_status.contains("SELF_REGULATION_PREFLIGHT latest"));
 
     let ordinary = store
-        .start_experiment(None, "Plain color study", "Does the green marker stay visible?")
+        .start_experiment(
+            None,
+            "Plain color study",
+            "Does the green marker stay visible?",
+        )
         .expect("ordinary experiment");
     let ordinary_status = store
         .experiment_status(Some(&ordinary.experiment_id))

@@ -416,7 +416,9 @@ fn format_experiment_scaffold(review: &Value, candidate: &Value, review_path: &P
     text.push_str(&format_returnable_distinctions(review, candidate));
 
     let charter = candidate.get("charter_draft").unwrap_or(&Value::Null);
-    let counterexample = candidate.get("counterexample_draft").unwrap_or(&Value::Null);
+    let counterexample = candidate
+        .get("counterexample_draft")
+        .unwrap_or(&Value::Null);
     if charter.is_object() {
         text.push_str(&format!(
             "Charter draft (scaffold only; create nothing until an explicit EXPERIMENT_* NEXT):\n\
@@ -473,7 +475,7 @@ fn format_experiment_scaffold(review: &Value, candidate: &Value, review_path: &P
 
 #[cfg(test)]
 mod tests {
-    use super::{render_lived_term_action_from_review, AUTHORITY};
+    use super::{AUTHORITY, render_lived_term_action_from_review};
     use serde_json::json;
     use std::path::Path;
 
