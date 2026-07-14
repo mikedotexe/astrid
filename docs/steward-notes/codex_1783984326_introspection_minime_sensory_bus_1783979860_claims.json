@@ -1,0 +1,35 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "High fill shortens Minime semantic retention, but high entropy should preserve dense thought enough to avoid collapsing straight back to the bare 10s high-fill floor.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:143",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:222",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale -- --nocapture"
+    ],
+    "authority": "read-only source/test verification; no semantic stale-window or sensory-cadence change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The recovery handoff around 0.35-0.45 fill should fade rather than snap when leaving the 45s low-fill hold.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:174",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:744",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale -- --nocapture"
+    ],
+    "authority": "read-only source/test verification; no release-fill threshold or live decay behavior changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A density-gradient-adjusted high-fill retention floor is a coherent substrate proposal but would retune semantic persistence and therefore needs V2 lifecycle approval before live wiring.",
+    "disposition": "needs_operator_approval",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:41",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:630",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:807"
+    ],
+    "authority": "Tier 5 Minime semantic stale-window/sensory-cadence candidate; generate V2 boundary packet and sandbox replay before any live change"
+  }
+]

@@ -1,0 +1,1 @@
+Full read. Astrid described the websocket bridge as dual-lane telemetry/sensory synchronization and asked whether reciprocity state, dynamic stale windows, and pressure-trend smoothing remain consistent under high entropy. This pass verified the existing dynamic stale/smoothing tests and left cadence/control changes untouched.

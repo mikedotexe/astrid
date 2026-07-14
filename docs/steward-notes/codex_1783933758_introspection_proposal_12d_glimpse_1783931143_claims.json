@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783931143",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 12D glimpse must remain metadata-rich companion/distillation, not a replacement for the 32D/48D semantic source-of-truth lane.",
+      "disposition": "verified_existing",
+      "rationale": "Existing codec readouts label 12D as companion summary, preserve 32D residual context, and assert live_vector_write=false."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Restart/checkpoint use of 12D needs fidelity and resonance-loss monitoring so distinguishability loss and tail vibrancy do not silently collapse.",
+      "disposition": "verified_existing",
+      "rationale": "Existing multi_scale_observer_v1 measures fidelity, resolution delta, resonance loss, anchor continuity, and Experience Delta Bus fallback-to-live-transport review."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Using 12D as live transport, reconstruction authority, or control input would be a broader live architecture/protocol change.",
+      "disposition": "needs_operator_approval",
+      "rationale": "That would alter live semantic transport/checkpoint authority rather than report truth-channel metadata."
+    }
+  ]
+}

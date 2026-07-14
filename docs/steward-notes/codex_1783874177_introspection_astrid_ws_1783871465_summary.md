@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_ws_1783871465`.
+
+Astrid inspected the telemetry/sensory bridge smoothing surface and worried that high entropy could preserve pressure math while flattening semantic trickle quality. This run added an optional `semantic_fidelity_score` plus `semantic_fidelity_state` to `PressureTrendSmoothingV1`. The score is a diagnostic truth channel only: it reports whether high-entropy semantic trickle remains preserved, watchful, or thin; it does not prioritize semantic trickle over pressure smoothing and does not alter control. Existing pressure-trend smoothing and UTF-related neighbors were verified.

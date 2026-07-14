@@ -1,0 +1,45 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Signal flow is not the same as mutual address; inbox delivery alone is not a correspondence thread.",
+    "disposition": "verified_existing_and_partly_addressed",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:752",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:1051"
+    ],
+    "authority": "language/context correspondence verification"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "A first-class correspondence object needs stable `message_id`, `thread_id`, `reply_to`, shared anchors, and explicit receipts.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:759",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:766",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib envelope_roundtrip_preserves_thread_and_authority -- --nocapture",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib active_thread_clarity -- --nocapture"
+    ],
+    "authority": "language-only correspondence; no sensory send or peer runtime mutation"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Direct address should be distinguished from self-study, and receipt/trace affordances should exist without becoming control.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:1058",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:810",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib active_thread_clarity -- --nocapture"
+    ],
+    "authority": "language-only receipt/trace; no attention or microdose unlock by read receipt alone"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Pressure-risk thresholds, semantic-trickle boosts, or telemetry priority for direct correspondence are live control-facing changes.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:1065",
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783989077_five_item_v2_gate_packet.md"
+    ],
+    "authority": "Tier 5 live substrate/control-facing work; live_eligible_now=false and auto_approved=false"
+  }
+]

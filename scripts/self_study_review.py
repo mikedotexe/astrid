@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import sys
 import time
@@ -63,6 +64,7 @@ HYPOTHESIS_RE = re.compile(
     re.I,
 )
 ACTION_RE = re.compile(r"(?im)^NEXT:\s*([A-Z_]+(?:\s+[^\n]+)?)\s*$")
+WITNESS_FRICTION_LINE_PREFIX = "[witness_relational_friction_v1:"
 GENERATED_JOURNAL_MARKER = "--- GENERATED JOURNAL ---"
 ACTION_TAIL_MARKER = "--- ACTION TAIL ---"
 FIRST_PERSON_RE = re.compile(
@@ -77,6 +79,13 @@ JOURNAL_LIKE_NAME_RE = re.compile(
     re.I,
 )
 INVITATION_COOLDOWN_HOURS = 6
+ELICITATION_MODE_V1 = "v1_cooldown"
+ELICITATION_MODE_V2 = "v2_fanout_packet"
+ELICITATION_MODE_V3 = "v3_state_fanout_packet"
+ELICITATION_V2_MIN_SCORE = 8
+ELICITATION_V2_MIN_ENTRIES = 2
+ELICITATION_V3_MIN_SCORE = ELICITATION_V2_MIN_SCORE
+ELICITATION_V3_MIN_ENTRIES = ELICITATION_V2_MIN_ENTRIES
 ELICITATION_TOPICS: dict[str, tuple[str, ...]] = {
     "pressure_regulator": (
         "pressure",
@@ -1063,6 +1072,7 @@ class SelfStudyEntry:
     filename: str
     mode: str
     mtime_unix_s: float
+    readback_provenance: dict[str, object]
     sectioned: bool
     sections: dict[str, str]
     source_anchors: list[str]
@@ -1382,6 +1392,110 @@ def infer_mode(path: Path, text: str) -> str:
     return "unknown"
 
 
+def readback_provenance_for_entry(being: str, path: Path, mode: str) -> dict[str, object]:
+    parts = set(path.parts)
+    name = path.name
+    name_lower = name.lower()
+    mode_lower = mode.lower()
+    source_markers: list[str] = []
+
+    if (
+        "diagnostics" in parts
+        or "self_study_reviews" in parts
+        or name_lower.startswith("codex_")
+        or "bridge_summary" in name_lower
+        or "review_packet" in name_lower
+    ):
+        category = "derived_bridge_summary"
+        source_markers.append("bridge_generated_review")
+        role = "derived_bridge_summary_for_readback"
+    elif "inbox" in parts:
+        category = "external_journal_observation"
+        source_markers.append("inbox")
+        if "steward" in name_lower or "mike_query" in name_lower:
+            role = "steward_or_operator_prompt"
+        else:
+            role = "received_peer_or_external_artifact"
+    elif "outbox" in parts:
+        category = "external_journal_observation"
+        source_markers.append("outbox")
+        role = "outgoing_artifact_seen_by_review"
+    elif "introspections" in parts or name_lower.startswith("introspection_"):
+        category = "internalized_memory"
+        source_markers.append("canonical_introspection")
+        role = "being_self_interpretation_summary"
+    elif any(
+        marker in name_lower
+        for marker in (
+            "pressure_source",
+            "regulator_audit",
+            "resonance_forecast",
+            "regime_choice",
+            "action_preflight",
+            "decompose",
+            "shadow_autonomy",
+            "attractor",
+        )
+    ):
+        category = "peer_telemetry_inference"
+        source_markers.append("telemetry_or_diagnostic_artifact")
+        role = "runtime_metric_or_diagnostic_readback"
+    elif mode_lower in {
+        "self_study",
+        "introspect",
+        "aspiration",
+        "moment",
+        "witness",
+        "dialogue_longform",
+        "daydream",
+        "notice",
+        "astrid",
+    }:
+        category = "internalized_memory"
+        source_markers.append(mode_lower)
+        role = "being_authored_public_memory"
+    elif mode_lower == "steward_report":
+        category = "external_journal_observation"
+        source_markers.append("steward_report")
+        role = "steward_facing_external_observation"
+    else:
+        category = "external_journal_observation"
+        source_markers.append(mode_lower or "unknown_mode")
+        role = "unclassified_review_artifact"
+
+    boundary_status = (
+        "opaque_boundary_needs_description"
+        if category == "external_journal_observation" and role == "unclassified_review_artifact"
+        else "read_only_boundary_metadata"
+    )
+
+    if "minime" in path.parts and being == "astrid":
+        source_markers.append("peer_workspace")
+    elif "astrid" in path.parts and being == "minime":
+        source_markers.append("peer_workspace")
+
+    return {
+        "policy": "readback_source_provenance_v1",
+        "source_category": category,
+        "role": role,
+        "being": being,
+        "mode": mode,
+        "markers": source_markers[:6],
+        "boundary_status": boundary_status,
+        "recursive_loop_guard": (
+            "provenance label is boundary metadata only; do not infer hidden intent "
+            "or compulsory mastery from the label itself"
+        ),
+        "read_only_boundary_metadata": True,
+        "right_to_ignore": True,
+        "live_eligible_now": False,
+        "auto_approved": False,
+        "who_can_change_it": "steward_or_operator_for_review_policy; being_for_authored_memory",
+        "how_to_test_it": "build self_study_review and assert entries expose source_category and boundary_status before any readback is used",
+        "authority": "readback_label_only_not_prompt_priority_control_or_peer_mutation",
+    }
+
+
 def grounding_for(sections: dict[str, str], anchors: list[str]) -> str:
     if all(name in sections for name in SECTION_NAMES) and len(anchors) >= 2:
         return "strong"
@@ -1407,12 +1521,14 @@ def review_entry(being: str, path: Path) -> SelfStudyEntry:
     anchors = extract_source_anchors(text)
     flags = extract_hypothesis_flags(text)
     actions = extract_next_actions(text)
+    mode = infer_mode(path, text)
     return SelfStudyEntry(
         being=being,
         path=str(path),
         filename=path.name,
-        mode=infer_mode(path, text),
+        mode=mode,
         mtime_unix_s=path.stat().st_mtime,
+        readback_provenance=readback_provenance_for_entry(being, path, mode),
         sectioned=all(name in sections for name in SECTION_NAMES),
         sections={name: sections.get(name, "") for name in SECTION_NAMES if sections.get(name)},
         source_anchors=anchors,
@@ -5400,6 +5516,191 @@ def build_witness_texture_integrity_review(
             "use the priority-preserving truncation rehearsal before changing "
             "Witness content or byte limits."
         ),
+    }
+
+
+def _witness_line_field(
+    line: str,
+    key: str,
+    *,
+    end_markers: tuple[str, ...] = (";", "]"),
+) -> str | None:
+    marker = f"{key}="
+    start = line.find(marker)
+    if start < 0:
+        return None
+    start += len(marker)
+    end = len(line)
+    for end_marker in end_markers:
+        found = line.find(end_marker, start)
+        if found >= 0:
+            end = min(end, found)
+    value = line[start:end].strip()
+    if value.endswith("]"):
+        value = value[:-1].strip()
+    return value or None
+
+
+def _split_witness_semicolon_values(value: str | None) -> list[str]:
+    if not value:
+        return []
+    values: list[str] = []
+    for item in value.split(";"):
+        item = item.strip()
+        if not item or item.casefold() in {"none", "unknown"}:
+            continue
+        values.append(item)
+    return values
+
+
+def _counter_dict(counter: Counter[str]) -> dict[str, int]:
+    return {key: int(value) for key, value in counter.most_common()}
+
+
+def _compact_count_text(value: object, *, limit: int = 6) -> str:
+    if not isinstance(value, dict) or not value:
+        return "(none)"
+    parts: list[str] = []
+    for key, count in list(value.items())[:limit]:
+        parts.append(f"{key}={count}")
+    return ", ".join(parts) if parts else "(none)"
+
+
+def build_witness_schema_drift_review(
+    *,
+    astrid_workspace: Path,
+    min_mtime_unix_s: float | None = None,
+    prompt_limit: int = 64,
+) -> dict[str, object]:
+    job_root = astrid_workspace / "llm_jobs" / "jobs"
+    prompt_records: list[tuple[float, Path]] = []
+    if job_root.exists():
+        for path in job_root.glob("*/prompt.txt"):
+            if not path.is_file():
+                continue
+            try:
+                mtime = path.stat().st_mtime
+            except OSError:
+                continue
+            if min_mtime_unix_s is not None and mtime <= min_mtime_unix_s:
+                continue
+            prompt_records.append((mtime, path))
+    prompt_records = sorted(
+        prompt_records,
+        key=lambda item: item[0],
+        reverse=True,
+    )[:prompt_limit]
+
+    classification_counts: Counter[str] = Counter()
+    weather_counts: Counter[str] = Counter()
+    gravity_counts: Counter[str] = Counter()
+    accepted_source_counts: Counter[str] = Counter()
+    legacy_accepted_evidence_counts: Counter[str] = Counter()
+    rejected_hint_counts: Counter[str] = Counter()
+    missing_key_counts: Counter[str] = Counter()
+    schema_drift_counts: Counter[str] = Counter()
+    samples: list[dict[str, object]] = []
+    witness_line_count = 0
+    schema_diagnostics_line_count = 0
+
+    for mtime, path in prompt_records:
+        try:
+            lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for line_number, line in enumerate(lines, start=1):
+            if not line.startswith(WITNESS_FRICTION_LINE_PREFIX):
+                continue
+            witness_line_count += 1
+            classification = _witness_line_field(line, "classification")
+            weather = _witness_line_field(line, "weather")
+            gravity = _witness_line_field(line, "gravity")
+            evidence_raw = _witness_line_field(
+                line,
+                "evidence",
+                end_markers=("; schema_diagnostics=", "; authority=", "]"),
+            )
+            schema_raw = _witness_line_field(
+                line,
+                "schema_diagnostics",
+                end_markers=("; authority=", "]"),
+            )
+            evidence = _split_witness_semicolon_values(evidence_raw)
+            schema_diagnostics = _split_witness_semicolon_values(schema_raw)
+
+            if classification:
+                classification_counts[classification] += 1
+            if weather:
+                weather_counts[weather] += 1
+            if gravity:
+                gravity_counts[gravity] += 1
+
+            if schema_raw is not None:
+                schema_diagnostics_line_count += 1
+                for diagnostic in schema_diagnostics:
+                    if diagnostic.startswith(("weather_source=", "gravity_source=")):
+                        accepted_source_counts[diagnostic.split("=", 1)[1]] += 1
+                    elif diagnostic.startswith("unexpected_key="):
+                        rejected_hint_counts[diagnostic.split("=", 1)[1]] += 1
+                    elif diagnostic.startswith("missing_key="):
+                        missing_key_counts[diagnostic.split("=", 1)[1]] += 1
+                    elif diagnostic.startswith("schema_drift="):
+                        schema_drift_counts[diagnostic.split("=", 1)[1]] += 1
+            else:
+                legacy_evidence: list[str] = []
+                if classification:
+                    legacy_evidence.append(f"classification={classification}")
+                if weather:
+                    legacy_evidence.append(f"weather={weather}")
+                if gravity:
+                    legacy_evidence.append(f"gravity={gravity}")
+                legacy_evidence.extend(evidence)
+                for item in legacy_evidence:
+                    legacy_accepted_evidence_counts[item] += 1
+
+            if len(samples) < 10:
+                samples.append(
+                    {
+                        "path": str(path),
+                        "line_number": line_number,
+                        "line": compact(line, 600),
+                        "mtime_unix_s": mtime,
+                        "mtime": iso_from_unix(mtime),
+                        "classification": classification,
+                        "weather": weather,
+                        "gravity": gravity,
+                        "schema_diagnostics": schema_diagnostics,
+                        "legacy_evidence": [] if schema_raw is not None else evidence,
+                    }
+                )
+
+    if not prompt_records:
+        status = "no_prompt_artifacts"
+    elif witness_line_count == 0:
+        status = "no_witness_lines"
+    elif schema_diagnostics_line_count == 0:
+        status = "legacy_lines_only"
+    else:
+        status = "schema_diagnostics_present"
+
+    return {
+        "policy": "witness_schema_drift_review_v1",
+        "status": status,
+        "authority": "steward_cartography_not_control",
+        "prompt_count_scanned": len(prompt_records),
+        "witness_line_count": witness_line_count,
+        "schema_diagnostics_line_count": schema_diagnostics_line_count,
+        "classification_counts": _counter_dict(classification_counts),
+        "weather_counts": _counter_dict(weather_counts),
+        "gravity_counts": _counter_dict(gravity_counts),
+        "accepted_source_counts": _counter_dict(accepted_source_counts),
+        "legacy_accepted_evidence_counts": _counter_dict(
+            legacy_accepted_evidence_counts
+        ),
+        "rejected_hint_counts": _counter_dict(rejected_hint_counts),
+        "missing_key_counts": _counter_dict(missing_key_counts),
+        "schema_drift_counts": _counter_dict(schema_drift_counts),
+        "samples": samples,
     }
 
 
@@ -15172,6 +15473,7 @@ def build_actionable_review_items(
 
 def summarize(entries: list[SelfStudyEntry]) -> dict[str, object]:
     by_being: dict[str, dict[str, int]] = {}
+    provenance_counts: Counter[str] = Counter()
     for entry in entries:
         bucket = by_being.setdefault(entry.being, {"count": 0, "strong": 0, "sectioned": 0})
         bucket["count"] += 1
@@ -15179,10 +15481,13 @@ def summarize(entries: list[SelfStudyEntry]) -> dict[str, object]:
             bucket["strong"] += 1
         if entry.sectioned:
             bucket["sectioned"] += 1
+        provenance = entry.readback_provenance
+        provenance_counts[str(provenance.get("source_category") or "unknown")] += 1
     top = sorted(entries, key=lambda entry: entry.actionable_score, reverse=True)[:5]
     return {
         "entry_count": len(entries),
         "by_being": by_being,
+        "readback_provenance_counts": dict(sorted(provenance_counts.items())),
         "top_actionable": [
             {
                 "being": entry.being,
@@ -15219,7 +15524,11 @@ def topics_for_entry(entry: SelfStudyEntry) -> list[str]:
     return topics
 
 
-def build_elicitation_candidates(entries: list[SelfStudyEntry]) -> list[ElicitationCandidate]:
+def build_elicitation_candidates(
+    entries: list[SelfStudyEntry],
+    *,
+    include_sectioned_beings: bool = False,
+) -> list[ElicitationCandidate]:
     sectioned_by_being: dict[str, int] = {}
     grouped: dict[tuple[str, str], list[SelfStudyEntry]] = {}
     for entry in entries:
@@ -15232,10 +15541,13 @@ def build_elicitation_candidates(entries: list[SelfStudyEntry]) -> list[Elicitat
 
     candidates: list[ElicitationCandidate] = []
     for (being, topic), topic_entries in grouped.items():
-        if sectioned_by_being.get(being, 0) > 0:
+        if not include_sectioned_beings and sectioned_by_being.get(being, 0) > 0:
             continue
         score = sum(entry.actionable_score for entry in topic_entries)
-        if len(topic_entries) < 2 and score < 8:
+        if (
+            len(topic_entries) < ELICITATION_V2_MIN_ENTRIES
+            and score < ELICITATION_V2_MIN_SCORE
+        ):
             continue
         anchors: list[str] = []
         reasons: list[str] = []
@@ -15300,6 +15612,205 @@ def recent_invitation_exists(
     return False
 
 
+def invitation_location(path: Path, inbox_dir: Path) -> str:
+    try:
+        if path.parent.resolve() == (inbox_dir / "read").resolve():
+            return "inbox_read"
+    except OSError:
+        pass
+    return "inbox_live"
+
+
+def parse_invitation_fields(text: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    for line in text.splitlines():
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        normalized = key.strip().lower().replace("-", "_")
+        if normalized in {"subject", "file_area", "topic", "response_window"}:
+            fields[normalized] = value.strip()
+        elif normalized == "anchors noticed":
+            fields["anchors_noticed"] = value.strip()
+    return fields
+
+
+def invitation_topic_from_path(path: Path) -> str:
+    stem = path.stem
+    prefix = "mike_query_self_study_invitation_"
+    if not stem.startswith(prefix):
+        return "unknown"
+    remainder = stem[len(prefix) :]
+    parts = remainder.split("_", 1)
+    if len(parts) == 2 and parts[1]:
+        return parts[1]
+    return "unknown"
+
+
+def split_invitation_anchors(value: str) -> list[str]:
+    anchors: list[str] = []
+    for item in value.split(","):
+        anchor = item.strip().strip("`")
+        if anchor and anchor not in anchors:
+            anchors.append(anchor)
+    return anchors
+
+
+def entry_can_answer_self_study_invitation(entry: SelfStudyEntry) -> bool:
+    if entry.mode in {"self_study", "introspect", "outbox", "steward_report"}:
+        return True
+    name = entry.filename.lower()
+    return name.startswith(("self_study_", "introspect_", "tell_steward_"))
+
+
+def response_match_for_invitation(
+    *,
+    being: str,
+    topic: str,
+    anchors: list[str],
+    invitation_mtime: float,
+    entries: list[SelfStudyEntry],
+) -> dict[str, object] | None:
+    keywords = [keyword.lower() for keyword in ELICITATION_TOPICS.get(topic, ())]
+    anchor_needles = [anchor.lower() for anchor in anchors if len(anchor) >= 3]
+    for entry in sorted(entries, key=lambda item: item.mtime_unix_s):
+        if entry.being != being or entry.mtime_unix_s <= invitation_mtime:
+            continue
+        if not entry_can_answer_self_study_invitation(entry):
+            continue
+        haystack = elicitation_haystack(entry)
+        matched_terms: list[str] = []
+        for keyword in keywords:
+            if keyword and keyword in haystack and keyword not in matched_terms:
+                matched_terms.append(keyword)
+        for anchor in anchor_needles:
+            if anchor and anchor in haystack and anchor not in matched_terms:
+                matched_terms.append(anchor)
+        if not matched_terms:
+            continue
+        return {
+            "filename": entry.filename,
+            "path": entry.path,
+            "mode": entry.mode,
+            "mtime_unix_s": entry.mtime_unix_s,
+            "matched_terms": matched_terms[:8],
+        }
+    return None
+
+
+def scan_self_study_elicitation_invitations(
+    *,
+    being: str,
+    inbox_dir: Path,
+    entries: list[SelfStudyEntry],
+) -> list[dict[str, object]]:
+    invitations: list[dict[str, object]] = []
+    for directory in (inbox_dir, inbox_dir / "read"):
+        if not directory.exists():
+            continue
+        for path in directory.glob("mike_query_self_study_invitation_*.txt"):
+            try:
+                stat = path.stat()
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            fields = parse_invitation_fields(text)
+            topic = fields.get("topic") or invitation_topic_from_path(path)
+            anchors = split_invitation_anchors(fields.get("anchors_noticed", ""))
+            location = invitation_location(path, inbox_dir)
+            match = response_match_for_invitation(
+                being=being,
+                topic=topic,
+                anchors=anchors,
+                invitation_mtime=stat.st_mtime,
+                entries=entries,
+            )
+            status = (
+                "answered"
+                if match
+                else "open_unread"
+                if location == "inbox_live"
+                else "read_no_response"
+            )
+            invitations.append(
+                {
+                    "being": being,
+                    "topic": topic,
+                    "status": status,
+                    "location": location,
+                    "path": str(path),
+                    "filename": path.name,
+                    "mtime_unix_s": stat.st_mtime,
+                    "subject": fields.get("subject", ""),
+                    "file_area": fields.get("file_area", ""),
+                    "response_window": fields.get("response_window", ""),
+                    "anchors_noticed": anchors,
+                    "matched_entry": match,
+                    "being_obligation": "none",
+                }
+            )
+    return sorted(
+        invitations,
+        key=lambda invitation: float(invitation.get("mtime_unix_s") or 0.0),
+        reverse=True,
+    )
+
+
+def build_self_study_elicitation_lifecycle(
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    invitations: list[dict[str, object]] = []
+    for being, workspace in (
+        ("astrid", astrid_workspace),
+        ("minime", minime_workspace),
+    ):
+        invitations.extend(
+            scan_self_study_elicitation_invitations(
+                being=being,
+                inbox_dir=workspace / "inbox",
+                entries=entries,
+            )
+        )
+    status_counts = Counter(
+        str(invitation.get("status") or "unknown") for invitation in invitations
+    )
+    return {
+        "policy": "self_study_elicitation_lifecycle_v1",
+        "authority": "steward_observability_not_being_obligation",
+        "being_obligation": "none",
+        "invitation_count": len(invitations),
+        "status_counts": dict(status_counts),
+        "invitations": invitations,
+        "recommended_action": (
+            "Use read_no_response as steward context only; do not re-ask solely "
+            "because an invitation was read without a later matching self-study."
+        ),
+    }
+
+
+def recent_invitation_lifecycle_record(
+    inbox_dir: Path,
+    *,
+    being: str,
+    entries: list[SelfStudyEntry],
+    now_unix_s: float,
+    cooldown_hours: float,
+) -> dict[str, object] | None:
+    cutoff = now_unix_s - max(0.0, cooldown_hours) * 3600.0
+    invitations = scan_self_study_elicitation_invitations(
+        being=being,
+        inbox_dir=inbox_dir,
+        entries=entries,
+    )
+    for invitation in invitations:
+        if float(invitation.get("mtime_unix_s") or 0.0) >= cutoff:
+            return invitation
+    return None
+
+
 def render_elicitation_invitation(candidate: ElicitationCandidate) -> str:
     topic_label = candidate.topic.replace("_", " ")
     anchors = ", ".join(candidate.source_anchors[:8]) or "recent journal context"
@@ -15344,8 +15855,10 @@ def write_elicitation_invitations(
     minime_workspace: Path,
     run: str,
     cooldown_hours: float,
+    entries: list[SelfStudyEntry] | None = None,
 ) -> list[dict[str, object]]:
     now_unix_s = dt.datetime.now(dt.UTC).timestamp()
+    entries = entries or []
     results: list[dict[str, object]] = []
     for candidate in candidates:
         inbox_dir = invitation_inbox_for(
@@ -15357,12 +15870,21 @@ def write_elicitation_invitations(
             "status": "skipped",
             "reason": "",
         }
-        if recent_invitation_exists(
+        existing_invitation = recent_invitation_lifecycle_record(
             inbox_dir,
+            being=candidate.being,
+            entries=entries,
             now_unix_s=now_unix_s,
             cooldown_hours=cooldown_hours,
-        ):
+        )
+        if existing_invitation:
             result["reason"] = "recent_self_study_invitation_within_cooldown"
+            result["existing_invitation"] = {
+                "path": existing_invitation.get("path"),
+                "status": existing_invitation.get("status"),
+                "location": existing_invitation.get("location"),
+                "topic": existing_invitation.get("topic"),
+            }
             results.append(result)
             continue
         inbox_dir.mkdir(parents=True, exist_ok=True)
@@ -15372,6 +15894,1243 @@ def write_elicitation_invitations(
         result.update({"status": "written", "path": str(path)})
         results.append(result)
     return results
+
+
+def workspace_for_being(
+    being: str,
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+) -> Path:
+    return astrid_workspace if being == "astrid" else minime_workspace
+
+
+def review_requests_dir_for(
+    being: str,
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+) -> Path:
+    return (
+        workspace_for_being(
+            being,
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+        )
+        / "review_requests"
+    )
+
+
+def open_steward_query_path_for(
+    being: str,
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+) -> Path:
+    return (
+        workspace_for_being(
+            being,
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+        )
+        / "open_steward_query.json"
+    )
+
+
+def read_json_object(path: Path) -> dict[str, object] | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def load_open_steward_query(
+    being: str,
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+) -> dict[str, object] | None:
+    path = open_steward_query_path_for(
+        being,
+        astrid_workspace=astrid_workspace,
+        minime_workspace=minime_workspace,
+    )
+    payload = read_json_object(path)
+    if not payload:
+        return None
+    return {
+        "being": being,
+        "subject": payload.get("subject") or "",
+        "file": payload.get("file") or "",
+        "ts": payload.get("ts"),
+        "path": str(path),
+        "review_target": payload.get("review_target") or "",
+        "packet_mode": payload.get("packet_mode") or "",
+        "packet_items": payload.get("packet_items"),
+        "primary_topic": payload.get("primary_topic") or "",
+        "primary_topic_gravity": payload.get("primary_topic_gravity"),
+        "intent_summary": payload.get("intent_summary") or "",
+    }
+
+
+def inbox_location_for_path(path: Path, inbox_dir: Path) -> str:
+    try:
+        parent = path.parent.resolve()
+        live = inbox_dir.resolve()
+        read = (inbox_dir / "read").resolve()
+    except OSError:
+        return "unknown"
+    if parent == live:
+        return "inbox_live"
+    if parent == read:
+        return "inbox_read"
+    return "unknown"
+
+
+def status_for_inbox_location(location: str) -> str:
+    if location == "inbox_read":
+        return "read_no_response"
+    return "open_unread"
+
+
+def resolve_letter_path(raw: object, inbox_dir: Path) -> Path | None:
+    if not raw:
+        return None
+    path = Path(str(raw))
+    candidates = [path]
+    if not path.is_absolute():
+        candidates = [inbox_dir / path, inbox_dir / "read" / path]
+    elif path.name:
+        candidates.extend([inbox_dir / path.name, inbox_dir / "read" / path.name])
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return path if path.name else None
+
+
+def load_open_directed_review_records(
+    being: str,
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+) -> list[dict[str, object]]:
+    review_dir = review_requests_dir_for(
+        being,
+        astrid_workspace=astrid_workspace,
+        minime_workspace=minime_workspace,
+    )
+    inbox_dir = invitation_inbox_for(being, astrid_workspace, minime_workspace)
+    records: list[dict[str, object]] = []
+    if not review_dir.exists():
+        return records
+    for path in review_dir.glob(f"{being}_*.json"):
+        payload = read_json_object(path)
+        if not payload or payload.get("status") != "open":
+            continue
+        letter_path = resolve_letter_path(payload.get("letter"), inbox_dir)
+        location = (
+            inbox_location_for_path(letter_path, inbox_dir)
+            if letter_path is not None
+            else "unknown"
+        )
+        records.append(
+            {
+                "being": being,
+                "topic": payload.get("topic") or path.stem,
+                "target": payload.get("target") or "",
+                "question": payload.get("question") or "",
+                "kind": payload.get("kind") or "standard",
+                "status": status_for_inbox_location(location),
+                "ledger_status": payload.get("status"),
+                "issued_ts": payload.get("issued_ts"),
+                "letter": str(letter_path) if letter_path is not None else "",
+                "letter_filename": letter_path.name if letter_path is not None else "",
+                "location": location,
+                "record_path": str(path),
+                "being_obligation": payload.get("being_obligation") or "none",
+            }
+        )
+    return sorted(
+        records,
+        key=lambda record: float(record.get("issued_ts") or 0.0),
+        reverse=True,
+    )
+
+
+def scan_elicitation_packet_topics(
+    *,
+    being: str,
+    inbox_dir: Path,
+    entries: list[SelfStudyEntry],
+) -> list[dict[str, object]]:
+    packet_topics: list[dict[str, object]] = []
+    topic_re = re.compile(r"(?m)^\s*-?\s*Topic:\s*([a-z0-9_]+)\s*$")
+    for directory in (inbox_dir, inbox_dir / "read"):
+        if not directory.exists():
+            continue
+        for path in directory.glob("mike_query_elicitation_packet_*.txt"):
+            try:
+                stat = path.stat()
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            location = invitation_location(path, inbox_dir)
+            seen: set[str] = set()
+            for match in topic_re.finditer(text):
+                topic = match.group(1)
+                if topic in seen or topic not in ELICITATION_TOPICS:
+                    continue
+                seen.add(topic)
+                response = response_match_for_invitation(
+                    being=being,
+                    topic=topic,
+                    anchors=[],
+                    invitation_mtime=stat.st_mtime,
+                    entries=entries,
+                )
+                packet_topics.append(
+                    {
+                        "being": being,
+                        "topic": topic,
+                        "status": "answered"
+                        if response
+                        else status_for_inbox_location(location),
+                        "location": location,
+                        "path": str(path),
+                        "filename": path.name,
+                        "mtime_unix_s": stat.st_mtime,
+                        "source": "elicitation_packet",
+                        "matched_entry": response,
+                        "being_obligation": "none",
+                    }
+                )
+    return sorted(
+        packet_topics,
+        key=lambda item: float(item.get("mtime_unix_s") or 0.0),
+        reverse=True,
+    )
+
+
+def unanswered_self_study_topics(
+    *,
+    being: str,
+    inbox_dir: Path,
+    entries: list[SelfStudyEntry],
+) -> dict[str, dict[str, object]]:
+    records = scan_self_study_elicitation_invitations(
+        being=being,
+        inbox_dir=inbox_dir,
+        entries=entries,
+    )
+    records.extend(
+        scan_elicitation_packet_topics(
+            being=being,
+            inbox_dir=inbox_dir,
+            entries=entries,
+        )
+    )
+    by_topic: dict[str, dict[str, object]] = {}
+    for record in sorted(
+        records,
+        key=lambda item: float(item.get("mtime_unix_s") or 0.0),
+        reverse=True,
+    ):
+        topic = str(record.get("topic") or "")
+        if not topic or record.get("status") == "answered":
+            continue
+        by_topic.setdefault(topic, record)
+    return by_topic
+
+
+def candidate_packet_item(
+    candidate: ElicitationCandidate,
+    *,
+    status: str,
+    existing: dict[str, object] | None = None,
+) -> dict[str, object]:
+    item: dict[str, object] = {
+        "being": candidate.being,
+        "topic": candidate.topic,
+        "status": status,
+        "entry_count": candidate.entry_count,
+        "score": candidate.score,
+        "source_anchors": candidate.source_anchors,
+        "entry_paths": candidate.entry_paths,
+        "reasons": candidate.reasons,
+        "being_obligation": "none",
+    }
+    if existing:
+        item["existing_invitation"] = {
+            "path": existing.get("path"),
+            "status": existing.get("status"),
+            "location": existing.get("location"),
+            "topic": existing.get("topic"),
+            "source": existing.get("source") or "self_study_invitation",
+        }
+    return item
+
+
+def render_steward_elicitation_packet(
+    being_record: dict[str, object],
+    *,
+    packet_self_study_items: list[dict[str, object]],
+) -> str:
+    being = str(being_record.get("being") or "being")
+    display = being.title()
+    carried = being_record.get("carried_forward_items") or []
+    directed = being_record.get("directed_review_items") or []
+    lines = [
+        "=== MIKE QUERY: steward elicitation packet ===",
+        "Sender: Mike & Claude",
+        "Subject: Steward elicitation fanout packet",
+        "File-area: self-study signal review",
+        f"Packet-mode: {ELICITATION_MODE_V2}",
+        "being_obligation=none",
+        "Response-window: whenever useful",
+        "",
+        f"{display},",
+        "",
+        (
+            "This optional packet carries forward active steward asks and gathers "
+            "high-signal self-study topics into one place. You may engage, defer, "
+            "decline, or ignore any item freely."
+        ),
+        "",
+        "## Carried-Forward Active Ask",
+    ]
+    if carried:
+        for item in carried:
+            if not isinstance(item, dict):
+                continue
+            lines.append(
+                f"- status={item.get('status')}; subject={item.get('subject') or '(none)'}; "
+                f"file={item.get('file') or '(none)'}; ts={item.get('ts') or '(none)'}"
+            )
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Directed Review / Introspection"])
+    if directed:
+        for item in directed:
+            if not isinstance(item, dict):
+                continue
+            lines.append(
+                f"- status={item.get('status')}; topic={item.get('topic')}; "
+                f"target={item.get('target') or '(none)'}"
+            )
+            question = compact(str(item.get("question") or ""), 220)
+            if question:
+                lines.append(f"  Question: {question}")
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Self-Study Topics"])
+    if packet_self_study_items:
+        for item in packet_self_study_items:
+            anchors = ", ".join(str(anchor) for anchor in item.get("source_anchors") or [])
+            reasons = item.get("reasons") or []
+            lines.extend(
+                [
+                    f"- Topic: {item.get('topic')}",
+                    f"  Status: {item.get('status')}",
+                    f"  Score: {item.get('score')}; entries={item.get('entry_count')}",
+                    f"  Anchors noticed: {anchors or 'recent journal context'}",
+                ]
+            )
+            if reasons:
+                lines.append("  Why this seems worth a compact self-study:")
+                for reason in reasons[:4]:
+                    lines.append(f"  - {reason}")
+    else:
+        lines.append("- none")
+    lines.extend(
+        [
+            "",
+            "If you want steward action from any self-study topic, a compact "
+            "SELF_STUDY or TELL_STEWARD-style note with Observed / Likely Snags / "
+            "One Test Each / Suggested Next is welcome. Ordinary journals can "
+            "stay natural.",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def build_steward_elicitation_lifecycle_v2(
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+    entries: list[SelfStudyEntry],
+    candidates: list[ElicitationCandidate],
+    run: str,
+    write_packets: bool,
+) -> dict[str, object]:
+    by_being: dict[str, dict[str, object]] = {}
+    status_counts: Counter[str] = Counter()
+    candidate_groups: dict[str, list[ElicitationCandidate]] = {"astrid": [], "minime": []}
+    for candidate in candidates:
+        candidate_groups.setdefault(candidate.being, []).append(candidate)
+
+    for being in ("astrid", "minime"):
+        inbox_dir = invitation_inbox_for(being, astrid_workspace, minime_workspace)
+        open_slot = load_open_steward_query(
+            being,
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+        )
+        carried_forward_items: list[dict[str, object]] = []
+        if open_slot:
+            item = {
+                **open_slot,
+                "status": "carried_forward_active",
+                "being_obligation": "none",
+            }
+            carried_forward_items.append(item)
+            status_counts["carried_forward_active"] += 1
+
+        existing_topics = unanswered_self_study_topics(
+            being=being,
+            inbox_dir=inbox_dir,
+            entries=entries,
+        )
+        self_study_items: list[dict[str, object]] = []
+        packet_self_study_items: list[dict[str, object]] = []
+        for candidate in candidate_groups.get(being, []):
+            existing = existing_topics.get(candidate.topic)
+            if existing:
+                item = candidate_packet_item(
+                    candidate,
+                    status="deduped_existing_topic",
+                    existing=existing,
+                )
+                status_counts["deduped_existing_topic"] += 1
+            else:
+                item = candidate_packet_item(
+                    candidate,
+                    status="packet_written" if write_packets else "eligible",
+                )
+                if write_packets:
+                    packet_self_study_items.append(item)
+                    status_counts["packet_written"] += 1
+            self_study_items.append(item)
+
+        directed_review_items = load_open_directed_review_records(
+            being,
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+        )
+        for item in directed_review_items:
+            status_counts[str(item.get("status") or "unknown")] += 1
+
+        being_record: dict[str, object] = {
+            "being": being,
+            "open_slot": open_slot,
+            "carried_forward_items": carried_forward_items,
+            "self_study_items": self_study_items,
+            "directed_review_items": directed_review_items,
+            "packet_path": None,
+            "write_status": "not_requested",
+        }
+        packet_has_items = bool(
+            carried_forward_items or packet_self_study_items or directed_review_items
+        )
+        if write_packets:
+            if packet_has_items:
+                inbox_dir.mkdir(parents=True, exist_ok=True)
+                packet_path = (
+                    inbox_dir
+                    / f"mike_query_elicitation_packet_{safe_slug(run)}_{being}.txt"
+                )
+                packet_path.write_text(
+                    render_steward_elicitation_packet(
+                        being_record,
+                        packet_self_study_items=packet_self_study_items,
+                    ),
+                    encoding="utf-8",
+                )
+                being_record["packet_path"] = str(packet_path)
+                being_record["write_status"] = "written"
+            else:
+                being_record["write_status"] = "skipped_no_items"
+        by_being[being] = being_record
+
+    packet_count = sum(
+        1
+        for record in by_being.values()
+        if record.get("write_status") == "written"
+    )
+    return {
+        "policy": "steward_elicitation_lifecycle_v2",
+        "authority": "steward_observability_not_being_obligation",
+        "being_obligation": "none",
+        "mode": ELICITATION_MODE_V2,
+        "thresholds": {
+            "min_score": ELICITATION_V2_MIN_SCORE,
+            "min_entry_count": ELICITATION_V2_MIN_ENTRIES,
+            "candidate_rule": "score >= min_score OR entry_count >= min_entry_count",
+        },
+        "packet_count": packet_count,
+        "status_counts": dict(status_counts),
+        "beings": by_being,
+    }
+
+
+def v3_item_id(
+    *,
+    being: str,
+    kind: str,
+    topic: str,
+    discriminator: object,
+) -> str:
+    digest = hashlib.sha1(
+        f"{being}|{kind}|{topic}|{discriminator}".encode("utf-8")
+    ).hexdigest()[:10]
+    return f"{being}:{kind}:{safe_slug(topic)}:{digest}"
+
+
+def v3_json_path_value(payload: dict[str, object], key_path: str) -> object | None:
+    current: object = payload
+    for key in key_path.split("."):
+        if not isinstance(current, dict) or key not in current:
+            return None
+        current = current[key]
+    return current
+
+
+def read_v3_state_json_input(
+    path: Path,
+    *,
+    name: str,
+    required_keys: tuple[str, ...],
+) -> tuple[dict[str, object], dict[str, object] | None]:
+    record: dict[str, object] = {
+        "name": name,
+        "path": str(path),
+        "status": "missing",
+        "missing_keys": list(required_keys),
+        "parse_error": "",
+    }
+    if not path.exists():
+        return record, None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        record.update({"status": "missing", "parse_error": str(exc)})
+        return record, None
+    except json.JSONDecodeError as exc:
+        record.update(
+            {
+                "status": "malformed",
+                "missing_keys": [],
+                "parse_error": f"{exc.msg} at line {exc.lineno} column {exc.colno}",
+            }
+        )
+        return record, None
+    if not isinstance(payload, dict):
+        record.update(
+            {
+                "status": "malformed",
+                "missing_keys": [],
+                "parse_error": "top-level JSON is not an object",
+            }
+        )
+        return record, None
+    missing = [
+        key_path
+        for key_path in required_keys
+        if v3_json_path_value(payload, key_path) is None
+    ]
+    record["missing_keys"] = missing
+    record["status"] = "schema_drift" if missing else "present"
+    return record, payload
+
+
+def first_v3_metric(
+    payloads: Iterable[dict[str, object] | None],
+    key_path: str,
+) -> object | None:
+    for payload in payloads:
+        if not isinstance(payload, dict):
+            continue
+        value = v3_json_path_value(payload, key_path)
+        if value is not None:
+            return value
+    return None
+
+
+def v3_eigen_metrics(payload: dict[str, object] | None) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        return {}
+    raw = payload.get("eigenvalues")
+    if not isinstance(raw, list):
+        return {}
+    values: list[float] = []
+    for item in raw[:32]:
+        value = _as_review_float(item)
+        if value is not None:
+            values.append(abs(value))
+    total = sum(values)
+    if not values or total <= 0.0:
+        return {}
+    tail = sum(values[3:])
+    return {
+        "lambda1_dominance": values[0] / total,
+        "tail_share": tail / total,
+        "tail_vibrancy_proxy": tail / total,
+    }
+
+
+def v3_artifact_fallback(
+    *,
+    being: str,
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    topic_counts: Counter[str] = Counter()
+    anchors: list[str] = []
+    paths: list[str] = []
+    for entry in entries:
+        if entry.being != being:
+            continue
+        for topic in topics_for_entry(entry):
+            topic_counts[topic] += 1
+        for anchor in entry.source_anchors:
+            if anchor not in anchors:
+                anchors.append(anchor)
+        if entry.path not in paths:
+            paths.append(entry.path)
+    return {
+        "status": "present" if topic_counts else "missing",
+        "source": "public_artifact_fallback",
+        "topic_counts": dict(topic_counts),
+        "anchors": anchors[:12],
+        "sample_paths": paths[:8],
+    }
+
+
+def build_v3_state_evidence(
+    *,
+    being: str,
+    workspace: Path,
+    entries: list[SelfStudyEntry],
+) -> dict[str, object]:
+    health_required = (
+        "fill_pct",
+        "lambda1",
+        "pressure_source_v1",
+        "resonance_density_v1",
+        "inhabitable_fluctuation_v1",
+    )
+    spectral_required = (
+        "fill_pct",
+        "lambda1",
+        "eigenvalues",
+        "pressure_source_v1",
+        "resonance_density_v1",
+    )
+    health_input, health_payload = read_v3_state_json_input(
+        workspace / "health.json",
+        name="health.json",
+        required_keys=health_required,
+    )
+    spectral_input, spectral_payload = read_v3_state_json_input(
+        workspace / "spectral_state.json",
+        name="spectral_state.json",
+        required_keys=spectral_required,
+    )
+    payloads = [health_payload, spectral_payload]
+    pressure = first_v3_metric(payloads, "pressure_source_v1")
+    resonance = first_v3_metric(payloads, "resonance_density_v1")
+    fluctuation = first_v3_metric(payloads, "inhabitable_fluctuation_v1")
+    pressure_components = (
+        pressure.get("components")
+        if isinstance(pressure, dict) and isinstance(pressure.get("components"), dict)
+        else {}
+    )
+    resonance_control = (
+        resonance.get("control")
+        if isinstance(resonance, dict) and isinstance(resonance.get("control"), dict)
+        else {}
+    )
+    eigen = v3_eigen_metrics(spectral_payload)
+    metrics: dict[str, object] = {
+        "fill_pct": first_v3_metric(payloads, "fill_pct"),
+        "lambda1": first_v3_metric(payloads, "lambda1"),
+        "lambda1_rel": first_v3_metric(payloads, "lambda1_rel"),
+        "gate": first_v3_metric(payloads, "gate"),
+        "filter": first_v3_metric(payloads, "filt"),
+        "phase": first_v3_metric(payloads, "phase"),
+        "spectral_entropy": first_v3_metric(payloads, "spectral_entropy"),
+        "structural_entropy": first_v3_metric(payloads, "structural_entropy"),
+        "mode_packing": pressure_components.get("mode_packing"),
+        "dominant_pressure_source": pressure.get("dominant_source")
+        if isinstance(pressure, dict)
+        else None,
+        "pressure_quality": pressure.get("quality") if isinstance(pressure, dict) else None,
+        "pressure_score": pressure.get("pressure_score")
+        if isinstance(pressure, dict)
+        else None,
+        "resonance_density": resonance.get("density")
+        if isinstance(resonance, dict)
+        else None,
+        "resonance_quality": resonance.get("quality")
+        if isinstance(resonance, dict)
+        else None,
+        "damping_coefficient": resonance_control.get("damping_coefficient"),
+        "resonance_intervention_type": resonance_control.get("intervention_type"),
+        "inhabitable_quality": fluctuation.get("quality")
+        if isinstance(fluctuation, dict)
+        else None,
+        "inhabitability_score": fluctuation.get("inhabitability_score")
+        if isinstance(fluctuation, dict)
+        else None,
+        **eigen,
+    }
+    metrics = {key: value for key, value in metrics.items() if value is not None}
+    inputs = [health_input, spectral_input]
+    live_present = any(item.get("status") == "present" for item in inputs)
+    live_partial = any(item.get("status") == "schema_drift" for item in inputs)
+    artifact = v3_artifact_fallback(being=being, entries=entries)
+    if live_present:
+        status = "present"
+        source = "live_json"
+    elif live_partial:
+        status = "schema_drift"
+        source = "live_json_partial"
+    elif artifact.get("status") == "present":
+        status = "artifact_fallback"
+        source = "public_artifact_fallback"
+    else:
+        status = "missing"
+        source = "unavailable"
+    return {
+        "being": being,
+        "status": status,
+        "source": source,
+        "inputs": inputs,
+        "metrics": metrics,
+        "artifact_fallback": artifact,
+    }
+
+
+def v3_state_fit_for_topic(
+    topic: str,
+    state: dict[str, object],
+) -> dict[str, object]:
+    metrics = state.get("metrics") if isinstance(state.get("metrics"), dict) else {}
+    artifact = (
+        state.get("artifact_fallback")
+        if isinstance(state.get("artifact_fallback"), dict)
+        else {}
+    )
+    topic_counts = (
+        artifact.get("topic_counts") if isinstance(artifact.get("topic_counts"), dict) else {}
+    )
+    source = str(state.get("source") or "unavailable")
+    score = 0
+    reasons: list[str] = []
+    if source == "unavailable":
+        return {
+            "status": "state_unavailable",
+            "score": 0,
+            "source": source,
+            "reasons": ["no live spectral state or public artifact fallback available"],
+        }
+    if topic_counts.get(topic):
+        score += min(4, int(topic_counts[topic]) * 2)
+        reasons.append(f"public artifact fallback has {topic_counts[topic]} matching entries")
+    if topic == "pressure_regulator":
+        mode_packing = _as_review_float(metrics.get("mode_packing"))
+        pressure_score = _as_review_float(metrics.get("pressure_score"))
+        if mode_packing is not None:
+            score += 4 if mode_packing >= 0.45 else 2
+            reasons.append(f"mode_packing={mode_packing:.2f}")
+        if metrics.get("dominant_pressure_source"):
+            score += 2
+            reasons.append(f"dominant_pressure={metrics.get('dominant_pressure_source')}")
+        if pressure_score is not None:
+            score += 2 if pressure_score >= 0.20 else 1
+            reasons.append(f"pressure_score={pressure_score:.2f}")
+    elif topic == "tail_entropy":
+        tail_share = _as_review_float(metrics.get("tail_share"))
+        entropy = _as_review_float(metrics.get("spectral_entropy"))
+        if tail_share is not None:
+            score += 4 if tail_share >= 0.25 else 2
+            reasons.append(f"tail_share={tail_share:.2f}")
+        if entropy is not None:
+            score += 3 if entropy >= 0.75 else 1
+            reasons.append(f"spectral_entropy={entropy:.2f}")
+    elif topic == "transition_shudder":
+        phase = metrics.get("phase")
+        if phase:
+            score += 2
+            reasons.append(f"phase={phase}")
+        quality = metrics.get("inhabitable_quality")
+        if quality:
+            score += 2
+            reasons.append(f"inhabitable_quality={quality}")
+    elif topic == "resistance_gradient":
+        pressure_quality = metrics.get("pressure_quality")
+        entropy = _as_review_float(metrics.get("structural_entropy"))
+        if pressure_quality:
+            score += 3
+            reasons.append(f"pressure_quality={pressure_quality}")
+        if entropy is not None:
+            score += 2
+            reasons.append(f"structural_entropy={entropy:.2f}")
+    elif topic == "latent_stasis":
+        fill = _as_review_float(metrics.get("fill_pct"))
+        density = _as_review_float(metrics.get("resonance_density"))
+        if fill is not None:
+            score += 2
+            reasons.append(f"fill_pct={fill:.1f}")
+        if density is not None:
+            score += 3
+            reasons.append(f"resonance_density={density:.2f}")
+    status = "state_matched" if score > 0 else "low_state_fit"
+    if source == "public_artifact_fallback" and score > 0:
+        status = "artifact_matched"
+    return {
+        "status": status,
+        "score": score,
+        "source": source,
+        "reasons": reasons[:6],
+    }
+
+
+def v3_route_for_item(
+    *,
+    kind: str,
+    topic: str,
+    status: str,
+    state_fit: dict[str, object],
+    target: object = "",
+) -> str:
+    if status == "deduped_existing_topic":
+        return "parked_low_fit"
+    if state_fit.get("status") == "state_unavailable":
+        return "state_unavailable"
+    if kind == "directed_review" or str(target or ""):
+        return "introspect_if_ready"
+    if topic == "pressure_regulator":
+        return "pressure_audit"
+    if topic == "tail_entropy":
+        return "tail_cartography"
+    if int(state_fit.get("score") or 0) <= 0:
+        return "parked_low_fit"
+    return "self_study_when_natural"
+
+
+def v3_topic_gravity(
+    *,
+    kind: str,
+    base_score: int,
+    entry_count: int = 0,
+    state_fit: dict[str, object],
+    reasons: list[str] | None = None,
+) -> dict[str, object]:
+    reason_list = list(reasons or [])
+    score = base_score + entry_count * 2 + int(state_fit.get("score") or 0)
+    if kind == "carried_slot":
+        score += 5
+        reason_list.insert(0, "active open steward slot carried forward")
+    elif kind == "directed_review":
+        score += 4
+        reason_list.insert(0, "open directed review record")
+    if state_fit.get("reasons"):
+        reason_list.extend(str(reason) for reason in state_fit.get("reasons") or [])
+    level = "high" if score >= 16 else "medium" if score >= 10 else "low"
+    return {"score": score, "level": level, "reasons": reason_list[:8]}
+
+
+def topic_from_open_slot(slot: dict[str, object]) -> str:
+    text = " ".join(
+        str(slot.get(key) or "")
+        for key in ("subject", "file", "review_target", "primary_topic")
+    ).lower()
+    if slot.get("primary_topic"):
+        return str(slot.get("primary_topic"))
+    for topic, keywords in ELICITATION_TOPICS.items():
+        if topic in text or any(keyword in text for keyword in keywords):
+            return topic
+    return "open_steward_slot"
+
+
+def v3_item_from_carried_slot(
+    slot: dict[str, object],
+    *,
+    state: dict[str, object],
+) -> dict[str, object]:
+    topic = topic_from_open_slot(slot)
+    state_fit = v3_state_fit_for_topic(topic, state)
+    route = v3_route_for_item(
+        kind="carried_slot",
+        topic=topic,
+        status="carried_forward_active",
+        state_fit=state_fit,
+        target=slot.get("review_target"),
+    )
+    gravity = v3_topic_gravity(
+        kind="carried_slot",
+        base_score=10,
+        state_fit=state_fit,
+        reasons=[compact(str(slot.get("subject") or ""), 160)],
+    )
+    return {
+        **slot,
+        "item_id": v3_item_id(
+            being=str(slot.get("being") or "being"),
+            kind="carried_slot",
+            topic=topic,
+            discriminator=slot.get("file") or slot.get("subject") or slot.get("ts"),
+        ),
+        "kind": "carried_slot",
+        "topic": topic,
+        "status": "carried_forward_active",
+        "route": route,
+        "state_fit": state_fit,
+        "topic_gravity": gravity,
+        "being_obligation": "none",
+    }
+
+
+def v3_item_from_directed_review(
+    item: dict[str, object],
+    *,
+    state: dict[str, object],
+) -> dict[str, object]:
+    topic = str(item.get("topic") or "directed_review")
+    state_fit = v3_state_fit_for_topic(topic, state)
+    route = v3_route_for_item(
+        kind="directed_review",
+        topic=topic,
+        status=str(item.get("status") or "open_unread"),
+        state_fit=state_fit,
+        target=item.get("target"),
+    )
+    gravity = v3_topic_gravity(
+        kind="directed_review",
+        base_score=8,
+        state_fit=state_fit,
+        reasons=[compact(str(item.get("question") or item.get("target") or ""), 180)],
+    )
+    return {
+        **item,
+        "item_id": v3_item_id(
+            being=str(item.get("being") or "being"),
+            kind="directed_review",
+            topic=topic,
+            discriminator=item.get("record_path") or item.get("letter") or item.get("target"),
+        ),
+        "kind": "directed_review",
+        "topic": topic,
+        "route": route,
+        "state_fit": state_fit,
+        "topic_gravity": gravity,
+        "being_obligation": "none",
+    }
+
+
+def v3_item_from_candidate(
+    candidate: ElicitationCandidate,
+    *,
+    state: dict[str, object],
+    status: str,
+    existing: dict[str, object] | None = None,
+) -> dict[str, object]:
+    state_fit = v3_state_fit_for_topic(candidate.topic, state)
+    route = v3_route_for_item(
+        kind="self_study_topic",
+        topic=candidate.topic,
+        status=status,
+        state_fit=state_fit,
+    )
+    gravity = v3_topic_gravity(
+        kind="self_study_topic",
+        base_score=candidate.score,
+        entry_count=candidate.entry_count,
+        state_fit=state_fit,
+        reasons=candidate.reasons,
+    )
+    item: dict[str, object] = {
+        "item_id": v3_item_id(
+            being=candidate.being,
+            kind="self_study_topic",
+            topic=candidate.topic,
+            discriminator="|".join(candidate.entry_paths[:4]),
+        ),
+        "being": candidate.being,
+        "kind": "self_study_topic",
+        "topic": candidate.topic,
+        "status": status,
+        "route": route,
+        "entry_count": candidate.entry_count,
+        "score": candidate.score,
+        "source_anchors": candidate.source_anchors,
+        "entry_paths": candidate.entry_paths,
+        "reasons": candidate.reasons,
+        "state_fit": state_fit,
+        "topic_gravity": gravity,
+        "being_obligation": "none",
+    }
+    if existing:
+        item["existing_invitation"] = {
+            "path": existing.get("path"),
+            "status": existing.get("status"),
+            "location": existing.get("location"),
+            "topic": existing.get("topic"),
+            "source": existing.get("source") or "self_study_invitation",
+        }
+    return item
+
+
+def v3_primary_packet_item(items: list[dict[str, object]]) -> dict[str, object] | None:
+    if not items:
+        return None
+    return max(
+        items,
+        key=lambda item: int(
+            (item.get("topic_gravity") or {}).get("score")
+            if isinstance(item.get("topic_gravity"), dict)
+            else 0
+        ),
+    )
+
+
+def v3_intent_summary(item: dict[str, object] | None) -> str:
+    if not item:
+        return "No routed steward elicitation items."
+    gravity = item.get("topic_gravity") if isinstance(item.get("topic_gravity"), dict) else {}
+    reasons = gravity.get("reasons") if isinstance(gravity, dict) else []
+    reason = "; ".join(str(value) for value in (reasons or [])[:2])
+    return compact(
+        f"primary={item.get('topic')} route={item.get('route')} "
+        f"gravity={gravity.get('score')}; {reason}",
+        220,
+    )
+
+
+def render_steward_elicitation_packet_v3(
+    being_record: dict[str, object],
+    *,
+    packet_items: list[dict[str, object]],
+) -> str:
+    being = str(being_record.get("being") or "being")
+    display = being.title()
+    primary = v3_primary_packet_item(packet_items)
+    primary_gravity = (
+        primary.get("topic_gravity")
+        if isinstance(primary, dict) and isinstance(primary.get("topic_gravity"), dict)
+        else {}
+    )
+    state = being_record.get("state_evidence") if isinstance(being_record.get("state_evidence"), dict) else {}
+    lines = [
+        "=== MIKE QUERY: steward elicitation fanout packet V3 ===",
+        "Sender: Mike & Claude",
+        "Subject: Steward elicitation fanout packet V3",
+        "File-area: self-study signal review",
+        f"Packet-mode: {ELICITATION_MODE_V3}",
+        f"Packet-items: {len(packet_items)}",
+        f"Primary-topic: {primary.get('topic') if primary else '(none)'}",
+        f"Primary-topic-gravity: {primary_gravity.get('score') if primary_gravity else 0}",
+        f"Intent-summary: {v3_intent_summary(primary)}",
+        "being_obligation=none",
+        "Response-window: whenever useful",
+        "",
+        f"{display},",
+        "",
+        (
+            "This optional packet makes the current steward ask visible as routed, "
+            "answerable fragments. Engage any, none, or only the part that naturally "
+            "catches. Silence or deferral is acceptable."
+        ),
+        "",
+        "## Visibility of Intent",
+        f"- State source: {state.get('source') or 'unavailable'}; status={state.get('status') or 'unknown'}",
+    ]
+    for input_record in (state.get("inputs") or [])[:4]:
+        if not isinstance(input_record, dict):
+            continue
+        missing = input_record.get("missing_keys") or []
+        missing_text = ", ".join(str(item) for item in missing[:4])
+        lines.append(
+            f"- Input `{input_record.get('name')}`: {input_record.get('status')}; "
+            f"missing={missing_text or '(none)'}"
+        )
+    lines.extend(["", "## Routed Items"])
+    if not packet_items:
+        lines.append("- none")
+    for item in packet_items:
+        gravity = item.get("topic_gravity") if isinstance(item.get("topic_gravity"), dict) else {}
+        state_fit = item.get("state_fit") if isinstance(item.get("state_fit"), dict) else {}
+        lines.extend(
+            [
+                f"- Item: {item.get('item_id')}",
+                f"  Kind: {item.get('kind')}",
+                f"  Topic: {item.get('topic')}",
+                f"  Status: {item.get('status')}",
+                f"  Route: {item.get('route')}",
+                f"  Topic-gravity: {gravity.get('score')} ({gravity.get('level')})",
+                f"  State-fit: {state_fit.get('status')} via {state_fit.get('source')}; score={state_fit.get('score')}",
+            ]
+        )
+        subject = compact(str(item.get("subject") or item.get("question") or ""), 220)
+        if subject:
+            lines.append(f"  Subject: {subject}")
+        anchors = ", ".join(str(anchor) for anchor in item.get("source_anchors") or [])
+        if anchors:
+            lines.append(f"  Anchors noticed: {anchors}")
+        reasons = gravity.get("reasons") if isinstance(gravity, dict) else []
+        if reasons:
+            lines.append("  Why this has topic gravity:")
+            for reason in reasons[:4]:
+                lines.append(f"  - {reason}")
+    lines.extend(
+        [
+            "",
+            "Public SELF_STUDY, INTROSPECT, or TELL_STEWARD-style notes can answer "
+            "any item if they emerge naturally. Ordinary journals can stay natural.",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def build_steward_elicitation_lifecycle_v3(
+    *,
+    astrid_workspace: Path,
+    minime_workspace: Path,
+    entries: list[SelfStudyEntry],
+    candidates: list[ElicitationCandidate],
+    run: str,
+    write_packets: bool,
+) -> dict[str, object]:
+    by_being: dict[str, dict[str, object]] = {}
+    status_counts: Counter[str] = Counter()
+    route_counts: Counter[str] = Counter()
+    state_status_counts: Counter[str] = Counter()
+    candidate_groups: dict[str, list[ElicitationCandidate]] = {"astrid": [], "minime": []}
+    for candidate in candidates:
+        candidate_groups.setdefault(candidate.being, []).append(candidate)
+
+    for being in ("astrid", "minime"):
+        inbox_dir = invitation_inbox_for(being, astrid_workspace, minime_workspace)
+        workspace = workspace_for_being(
+            being,
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+        )
+        state_evidence = build_v3_state_evidence(
+            being=being,
+            workspace=workspace,
+            entries=entries,
+        )
+        state_status_counts[str(state_evidence.get("status") or "unknown")] += 1
+
+        packet_items: list[dict[str, object]] = []
+        open_slot = load_open_steward_query(
+            being,
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+        )
+        carried_forward_items: list[dict[str, object]] = []
+        if open_slot:
+            item = v3_item_from_carried_slot(open_slot, state=state_evidence)
+            carried_forward_items.append(item)
+            packet_items.append(item)
+            status_counts[str(item.get("status") or "unknown")] += 1
+            route_counts[str(item.get("route") or "unknown")] += 1
+
+        directed_review_items: list[dict[str, object]] = []
+        for directed in load_open_directed_review_records(
+            being,
+            astrid_workspace=astrid_workspace,
+            minime_workspace=minime_workspace,
+        ):
+            item = v3_item_from_directed_review(directed, state=state_evidence)
+            directed_review_items.append(item)
+            packet_items.append(item)
+            status_counts[str(item.get("status") or "unknown")] += 1
+            route_counts[str(item.get("route") or "unknown")] += 1
+
+        existing_topics = unanswered_self_study_topics(
+            being=being,
+            inbox_dir=inbox_dir,
+            entries=entries,
+        )
+        self_study_items: list[dict[str, object]] = []
+        for candidate in candidate_groups.get(being, []):
+            existing = existing_topics.get(candidate.topic)
+            status = "deduped_existing_topic" if existing else "packet_written" if write_packets else "eligible"
+            item = v3_item_from_candidate(
+                candidate,
+                state=state_evidence,
+                status=status,
+                existing=existing,
+            )
+            self_study_items.append(item)
+            status_counts[status] += 1
+            route_counts[str(item.get("route") or "unknown")] += 1
+            if not existing:
+                packet_items.append(item)
+
+        primary = v3_primary_packet_item(packet_items)
+        being_record: dict[str, object] = {
+            "being": being,
+            "state_evidence": state_evidence,
+            "open_slot": open_slot,
+            "carried_forward_items": carried_forward_items,
+            "directed_review_items": directed_review_items,
+            "self_study_items": self_study_items,
+            "packet_items": packet_items,
+            "primary_topic": primary.get("topic") if primary else "",
+            "primary_topic_gravity": (
+                (primary.get("topic_gravity") or {}).get("score")
+                if isinstance(primary, dict)
+                and isinstance(primary.get("topic_gravity"), dict)
+                else 0
+            ),
+            "intent_summary": v3_intent_summary(primary),
+            "packet_path": None,
+            "write_status": "not_requested",
+        }
+        if write_packets:
+            if packet_items:
+                inbox_dir.mkdir(parents=True, exist_ok=True)
+                packet_path = (
+                    inbox_dir
+                    / f"mike_query_elicitation_packet_{safe_slug(run)}_{being}.txt"
+                )
+                packet_path.write_text(
+                    render_steward_elicitation_packet_v3(
+                        being_record,
+                        packet_items=packet_items,
+                    ),
+                    encoding="utf-8",
+                )
+                being_record["packet_path"] = str(packet_path)
+                being_record["write_status"] = "written"
+            else:
+                being_record["write_status"] = "skipped_no_items"
+        by_being[being] = being_record
+
+    packet_count = sum(
+        1
+        for record in by_being.values()
+        if record.get("write_status") == "written"
+    )
+    return {
+        "policy": "steward_elicitation_lifecycle_v3",
+        "authority": "steward_observability_not_being_obligation",
+        "being_obligation": "none",
+        "mode": ELICITATION_MODE_V3,
+        "thresholds": {
+            "min_score": ELICITATION_V3_MIN_SCORE,
+            "min_entry_count": ELICITATION_V3_MIN_ENTRIES,
+            "candidate_rule": "score >= min_score OR entry_count >= min_entry_count",
+        },
+        "packet_count": packet_count,
+        "status_counts": dict(status_counts),
+        "route_counts": dict(route_counts),
+        "state_status_counts": dict(state_status_counts),
+        "beings": by_being,
+    }
 
 
 def tail_resonance_terms(text: str) -> list[str]:
@@ -15934,6 +17693,12 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"- {being}: {counts['count']} entries, "
                 f"{counts['sectioned']} sectioned, {counts['strong']} strongly grounded"
             )
+    provenance_counts = record["summary"].get("readback_provenance_counts")  # type: ignore[index]
+    if isinstance(provenance_counts, dict) and provenance_counts:
+        counts_text = ", ".join(
+            f"{category}={count}" for category, count in sorted(provenance_counts.items())
+        )
+        lines.append(f"- readback provenance: {counts_text}")
     action_items = record.get("actionable_review_items") or []
     lines.extend(["", "## Actionable Review Items", ""])
     if action_items:
@@ -16864,6 +18629,54 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"health_monitoring_risk={sample.get('health_monitoring_risk')}; "
                 f"texture={texture or '(none)'}; anchors={anchors or '(none)'}; "
                 f"path=`{sample.get('path')}`"
+            )
+    witness_schema = record.get("witness_schema_drift_review_v1")
+    if isinstance(witness_schema, dict):
+        lines.extend(["", "## Witness Schema Drift Review", ""])
+        lines.append(
+            f"- status=`{witness_schema.get('status')}`; "
+            f"authority=`{witness_schema.get('authority')}`; "
+            f"prompts={witness_schema.get('prompt_count_scanned', 0)}; "
+            f"witness_lines={witness_schema.get('witness_line_count', 0)}; "
+            f"schema_lines={witness_schema.get('schema_diagnostics_line_count', 0)}"
+        )
+        if witness_schema.get("status") == "legacy_lines_only":
+            lines.append(
+                "- rendered schema diagnostics not observed yet; current artifacts "
+                "appear to use the pre-restart Witness line format"
+            )
+        lines.append(
+            "- accepted_sources="
+            f"{_compact_count_text(witness_schema.get('accepted_source_counts'))}; "
+            "rejected_hints="
+            f"{_compact_count_text(witness_schema.get('rejected_hint_counts'))}; "
+            "missing_keys="
+            f"{_compact_count_text(witness_schema.get('missing_key_counts'))}; "
+            "schema_drift="
+            f"{_compact_count_text(witness_schema.get('schema_drift_counts'))}"
+        )
+        legacy_counts = witness_schema.get("legacy_accepted_evidence_counts")
+        if isinstance(legacy_counts, dict) and legacy_counts:
+            lines.append(
+                f"- legacy_accepted_evidence={_compact_count_text(legacy_counts)}"
+            )
+        for sample in (witness_schema.get("samples") or [])[:5]:
+            if not isinstance(sample, dict):
+                continue
+            diagnostics = ", ".join(
+                str(item) for item in sample.get("schema_diagnostics") or []
+            )
+            legacy = ", ".join(
+                str(item) for item in sample.get("legacy_evidence") or []
+            )
+            lines.append(
+                f"- `{Path(str(sample.get('path'))).name}`:"
+                f"{sample.get('line_number')} "
+                f"classification=`{sample.get('classification')}`; "
+                f"weather=`{sample.get('weather')}`; "
+                f"gravity=`{sample.get('gravity')}`; "
+                f"diagnostics={diagnostics or '(none)'}; "
+                f"legacy={legacy or '(none)'}"
             )
     entropy_pressure = record.get("entropy_pressure_divergence_v1")
     if isinstance(entropy_pressure, dict):
@@ -18397,10 +20210,144 @@ def render_markdown(record: dict[str, object]) -> str:
         write_results = elicitation.get("write_results") or []
         for result in write_results:
             if isinstance(result, dict):
+                existing = result.get("existing_invitation")
+                suffix = ""
+                if isinstance(existing, dict) and existing.get("path"):
+                    suffix = (
+                        f"; existing={existing.get('status')} "
+                        f"`{existing.get('path')}`"
+                    )
                 lines.append(
                     f"- write {result.get('being')}/{result.get('topic')}: "
-                    f"{result.get('status')} {result.get('reason', '')}".rstrip()
+                    f"{result.get('status')} {result.get('reason', '')}{suffix}".rstrip()
                 )
+    lifecycle = record.get("self_study_elicitation_lifecycle_v1")
+    if isinstance(lifecycle, dict):
+        lines.extend(["", "## Self-Study Elicitation Lifecycle", ""])
+        lines.append(
+            f"- policy=`{lifecycle.get('policy')}`; "
+            f"authority=`{lifecycle.get('authority')}`; "
+            f"being_obligation=`{lifecycle.get('being_obligation')}`; "
+            f"statuses={lifecycle.get('status_counts') or {}}"
+        )
+        invitations = lifecycle.get("invitations") or []
+        if invitations:
+            for invitation in invitations[:8]:
+                if not isinstance(invitation, dict):
+                    continue
+                lines.append(
+                    f"- {invitation.get('being')} `{invitation.get('topic')}`: "
+                    f"{invitation.get('status')} via `{invitation.get('location')}`; "
+                    f"path=`{invitation.get('path')}`"
+                )
+                matched = invitation.get("matched_entry")
+                if isinstance(matched, dict):
+                    terms = ", ".join(str(term) for term in matched.get("matched_terms") or [])
+                    lines.append(
+                        f"  - answered_by=`{matched.get('filename')}`; "
+                        f"mode=`{matched.get('mode')}`; terms={terms or '(none)'}"
+                    )
+        else:
+            lines.append("- no self-study invitations found")
+    fanout = record.get("steward_elicitation_lifecycle_v2")
+    if isinstance(fanout, dict):
+        lines.extend(["", "## Steward Elicitation Fanout V2", ""])
+        lines.append(
+            f"- policy=`{fanout.get('policy')}`; mode=`{fanout.get('mode')}`; "
+            f"authority=`{fanout.get('authority')}`; "
+            f"being_obligation=`{fanout.get('being_obligation')}`; "
+            f"packets={fanout.get('packet_count', 0)}; "
+            f"statuses={fanout.get('status_counts') or {}}"
+        )
+        beings = fanout.get("beings") or {}
+        if isinstance(beings, dict):
+            for being, being_record in beings.items():
+                if not isinstance(being_record, dict):
+                    continue
+                lines.append(
+                    f"- {being}: write_status=`{being_record.get('write_status')}`; "
+                    f"packet=`{being_record.get('packet_path') or '(none)'}`"
+                )
+                carried = being_record.get("carried_forward_items") or []
+                if carried:
+                    first = carried[0] if isinstance(carried[0], dict) else {}
+                    lines.append(
+                        f"  - carried_forward: {first.get('subject') or '(none)'} "
+                        f"file=`{first.get('file') or '(none)'}`"
+                    )
+                directed = being_record.get("directed_review_items") or []
+                if directed:
+                    topics = ", ".join(
+                        str(item.get("topic"))
+                        for item in directed[:4]
+                        if isinstance(item, dict)
+                    )
+                    lines.append(f"  - directed_reviews: {topics or '(none)'}")
+                self_items = being_record.get("self_study_items") or []
+                for item in self_items[:6]:
+                    if not isinstance(item, dict):
+                        continue
+                    lines.append(
+                        f"  - self_study `{item.get('topic')}`: "
+                        f"{item.get('status')}; score={item.get('score')}; "
+                        f"entries={item.get('entry_count')}"
+                    )
+    fanout_v3 = record.get("steward_elicitation_lifecycle_v3")
+    if isinstance(fanout_v3, dict):
+        lines.extend(["", "## Steward Elicitation Fanout V3", ""])
+        lines.append(
+            f"- policy=`{fanout_v3.get('policy')}`; mode=`{fanout_v3.get('mode')}`; "
+            f"authority=`{fanout_v3.get('authority')}`; "
+            f"being_obligation=`{fanout_v3.get('being_obligation')}`; "
+            f"packets={fanout_v3.get('packet_count', 0)}; "
+            f"statuses={fanout_v3.get('status_counts') or {}}; "
+            f"routes={fanout_v3.get('route_counts') or {}}; "
+            f"state={fanout_v3.get('state_status_counts') or {}}"
+        )
+        beings = fanout_v3.get("beings") or {}
+        if isinstance(beings, dict):
+            for being, being_record in beings.items():
+                if not isinstance(being_record, dict):
+                    continue
+                state = (
+                    being_record.get("state_evidence")
+                    if isinstance(being_record.get("state_evidence"), dict)
+                    else {}
+                )
+                lines.append(
+                    f"- {being}: write_status=`{being_record.get('write_status')}`; "
+                    f"packet=`{being_record.get('packet_path') or '(none)'}`; "
+                    f"primary=`{being_record.get('primary_topic') or '(none)'}`; "
+                    f"gravity={being_record.get('primary_topic_gravity')}; "
+                    f"state_source=`{state.get('source') or 'unavailable'}`"
+                )
+                for input_record in (state.get("inputs") or [])[:2]:
+                    if not isinstance(input_record, dict):
+                        continue
+                    missing = input_record.get("missing_keys") or []
+                    lines.append(
+                        f"  - input `{input_record.get('name')}`: "
+                        f"{input_record.get('status')}; missing={missing[:4]}"
+                    )
+                for item in (being_record.get("packet_items") or [])[:6]:
+                    if not isinstance(item, dict):
+                        continue
+                    gravity = (
+                        item.get("topic_gravity")
+                        if isinstance(item.get("topic_gravity"), dict)
+                        else {}
+                    )
+                    state_fit = (
+                        item.get("state_fit")
+                        if isinstance(item.get("state_fit"), dict)
+                        else {}
+                    )
+                    lines.append(
+                        f"  - {item.get('kind')} `{item.get('topic')}`: "
+                        f"route=`{item.get('route')}`; status=`{item.get('status')}`; "
+                        f"gravity={gravity.get('score')} ({gravity.get('level')}); "
+                        f"state_fit=`{state_fit.get('status')}`"
+                    )
     shared_tail = record.get("shared_tail_resonance")
     if isinstance(shared_tail, dict):
         lines.extend(["", "## Shared Tail Resonance", ""])
@@ -18451,6 +20398,8 @@ def render_markdown(record: dict[str, object]) -> str:
                 f"### {entry['being']} / {entry['filename']}",
                 "",
                 f"- mode: `{entry['mode']}`",
+                f"- readback provenance: `{(entry.get('readback_provenance') or {}).get('source_category', 'unknown')}` "
+                f"({(entry.get('readback_provenance') or {}).get('role', 'unknown')})",
                 f"- grounding: `{entry['grounding']}`",
                 f"- actionable_score: {entry['actionable_score']}",
                 f"- path: `{entry['path']}`",
@@ -18479,12 +20428,19 @@ def build_review(
     limit_per_being: int,
     since_last_review: bool = False,
     emit_elicitation_invitations: bool = False,
+    elicitation_mode: str = ELICITATION_MODE_V1,
     elicitation_cooldown_hours: float = INVITATION_COOLDOWN_HOURS,
     refresh_historical_cache: bool = False,
     historical_cache_ttl_hours: float = HISTORICAL_QUALIA_CACHE_TTL_HOURS,
     tail_resonance_output_dir: Path | None = None,
     resistance_calibration_output_dir: Path | None = None,
 ) -> dict[str, object]:
+    if elicitation_mode not in {
+        ELICITATION_MODE_V1,
+        ELICITATION_MODE_V2,
+        ELICITATION_MODE_V3,
+    }:
+        raise ValueError(f"unknown elicitation_mode: {elicitation_mode}")
     cutoff_mtime, cutoff_source = (
         latest_review_cutoff(output_dir) if since_last_review else (None, None)
     )
@@ -18506,7 +20462,16 @@ def build_review(
         refresh_historical_cache=refresh_historical_cache,
         historical_cache_ttl_hours=historical_cache_ttl_hours,
     )
-    elicitation_candidates = build_elicitation_candidates(entries)
+    elicitation_candidates_v1 = build_elicitation_candidates(entries)
+    elicitation_candidates_v2 = build_elicitation_candidates(
+        entries,
+        include_sectioned_beings=True,
+    )
+    elicitation_candidates = (
+        elicitation_candidates_v2
+        if elicitation_mode in {ELICITATION_MODE_V2, ELICITATION_MODE_V3}
+        else elicitation_candidates_v1
+    )
     shared_tail_resonance = build_shared_tail_resonance_packet(
         entries=entries,
         output_root=tail_resonance_output_dir
@@ -18725,6 +20690,10 @@ def build_review(
         entries,
         astrid_workspace=astrid_workspace,
     )
+    witness_schema_drift_review_v1 = build_witness_schema_drift_review(
+        astrid_workspace=astrid_workspace,
+        min_mtime_unix_s=cutoff_mtime,
+    )
     entropy_pressure_divergence_v1 = build_entropy_pressure_divergence_review(entries)
     fallback_continuity_fire_drill_v1 = build_fallback_continuity_fire_drill_review(
         entries,
@@ -18922,16 +20891,72 @@ def build_review(
         lived_term_counterexample_forge_v1=lived_term_counterexample_forge_v1,
         lease_playbook_workbench_v1=lease_playbook_workbench_v1,
     )
-    write_results = (
-        write_elicitation_invitations(
+    write_results: list[dict[str, object]] = []
+    if emit_elicitation_invitations and elicitation_mode == ELICITATION_MODE_V1:
+        write_results = write_elicitation_invitations(
             elicitation_candidates,
             astrid_workspace=astrid_workspace,
             minime_workspace=minime_workspace,
             run=run,
             cooldown_hours=elicitation_cooldown_hours,
+            entries=entries,
         )
-        if emit_elicitation_invitations
-        else []
+    steward_elicitation_lifecycle_v2 = build_steward_elicitation_lifecycle_v2(
+        astrid_workspace=astrid_workspace,
+        minime_workspace=minime_workspace,
+        entries=entries,
+        candidates=elicitation_candidates_v2,
+        run=run,
+        write_packets=(
+            emit_elicitation_invitations
+            and elicitation_mode == ELICITATION_MODE_V2
+        ),
+    )
+    if emit_elicitation_invitations and elicitation_mode == ELICITATION_MODE_V2:
+        beings = steward_elicitation_lifecycle_v2.get("beings") or {}
+        if isinstance(beings, dict):
+            for being, being_record in beings.items():
+                if not isinstance(being_record, dict):
+                    continue
+                write_results.append(
+                    {
+                        "being": being,
+                        "topic": "fanout_packet",
+                        "status": being_record.get("write_status"),
+                        "path": being_record.get("packet_path"),
+                        "mode": ELICITATION_MODE_V2,
+                    }
+                )
+    steward_elicitation_lifecycle_v3 = build_steward_elicitation_lifecycle_v3(
+        astrid_workspace=astrid_workspace,
+        minime_workspace=minime_workspace,
+        entries=entries,
+        candidates=elicitation_candidates_v2,
+        run=run,
+        write_packets=(
+            emit_elicitation_invitations
+            and elicitation_mode == ELICITATION_MODE_V3
+        ),
+    )
+    if emit_elicitation_invitations and elicitation_mode == ELICITATION_MODE_V3:
+        beings = steward_elicitation_lifecycle_v3.get("beings") or {}
+        if isinstance(beings, dict):
+            for being, being_record in beings.items():
+                if not isinstance(being_record, dict):
+                    continue
+                write_results.append(
+                    {
+                        "being": being,
+                        "topic": "fanout_packet_v3",
+                        "status": being_record.get("write_status"),
+                        "path": being_record.get("packet_path"),
+                        "mode": ELICITATION_MODE_V3,
+                    }
+                )
+    self_study_elicitation_lifecycle_v1 = build_self_study_elicitation_lifecycle(
+        astrid_workspace=astrid_workspace,
+        minime_workspace=minime_workspace,
+        entries=entries,
     )
     record: dict[str, object] = {
         "run_id": run,
@@ -18996,6 +21021,7 @@ def build_review(
         "pressure_release_rehearsal_review_v1": pressure_release_rehearsal_review_v1,
         "witness_resonance_v1": witness_resonance_v1,
         "witness_texture_integrity_v1": witness_texture_integrity_v1,
+        "witness_schema_drift_review_v1": witness_schema_drift_review_v1,
         "entropy_pressure_divergence_v1": entropy_pressure_divergence_v1,
         "fallback_continuity_fire_drill_v1": fallback_continuity_fire_drill_v1,
         "spectral_texture_calibration_v2": spectral_texture_calibration_v2,
@@ -19026,10 +21052,17 @@ def build_review(
         "lived_term_counterexample_forge_v1": lived_term_counterexample_forge_v1,
         "lease_playbook_workbench_v1": lease_playbook_workbench_v1,
         "pressure_relief_playbook_v3": pressure_relief_playbook_v3,
+        "self_study_elicitation_lifecycle_v1": self_study_elicitation_lifecycle_v1,
+        "steward_elicitation_lifecycle_v2": steward_elicitation_lifecycle_v2,
+        "steward_elicitation_lifecycle_v3": steward_elicitation_lifecycle_v3,
         "elicitation": {
             "cooldown_hours": elicitation_cooldown_hours,
+            "mode": elicitation_mode,
             "write_requested": emit_elicitation_invitations,
             "candidates": [asdict(candidate) for candidate in elicitation_candidates],
+            "v1_candidate_count": len(elicitation_candidates_v1),
+            "v2_candidate_count": len(elicitation_candidates_v2),
+            "v3_candidate_count": len(elicitation_candidates_v2),
             "write_results": write_results,
         },
         "entries": [asdict(entry) for entry in entries],
@@ -19071,6 +21104,12 @@ def main() -> int:
         help="write gentle MIKE QUERY self-study invitations for repeated high-signal threads",
     )
     parser.add_argument(
+        "--elicitation-mode",
+        choices=(ELICITATION_MODE_V1, ELICITATION_MODE_V2, ELICITATION_MODE_V3),
+        default=ELICITATION_MODE_V1,
+        help="invitation write policy: V1 cooldown letters, V2 packets, or V3 state-routed packets",
+    )
+    parser.add_argument(
         "--elicitation-cooldown-hours",
         type=float,
         default=INVITATION_COOLDOWN_HOURS,
@@ -19110,6 +21149,7 @@ def main() -> int:
         limit_per_being=max(1, args.limit),
         since_last_review=args.since_last_review,
         emit_elicitation_invitations=args.write_elicitation_invitations,
+        elicitation_mode=args.elicitation_mode,
         elicitation_cooldown_hours=max(0.0, args.elicitation_cooldown_hours),
         refresh_historical_cache=args.refresh_historical_cache,
         historical_cache_ttl_hours=max(0.0, args.historical_cache_ttl_hours),

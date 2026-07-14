@@ -1,0 +1,20 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783955655",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The bridge's telemetry and sensory lanes form Astrid's bidirectional peripheral awareness, with current reciprocity status derived from both lanes.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High entropy and pressure/porosity states need broader smoothing or reflective-silence handling so slow spectral drift is not misread as disconnection.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Changing live heartbeat/recent windows, sensory cadence, or pressure-porosity thresholds would alter bridge runtime behavior and requires Mike/operator approval with a V2 authority boundary.",
+      "disposition": "authority_gate"
+    }
+  ]
+}

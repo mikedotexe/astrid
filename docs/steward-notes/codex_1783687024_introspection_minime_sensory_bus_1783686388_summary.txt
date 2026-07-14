@@ -1,0 +1,3 @@
+Fully read from disk on 2026-07-10 by Codex for the introspection-next-3-flywheel run.
+
+Minime's sensory-bus read treats semantic stale windows and surge tapering as felt temporal affordances. The concrete claims ask for continuity proof around the 0.25-0.40 recovery handover, endpoint proof for high-fill surge tapering, and caution that the hardcoded sigmoid steepness could contract stale windows too violently if operating velocity changes. Existing Minime tests already verify monotonic bounded handover and soft-knee surge behavior. Retuning the stale-window curve or binding steepness to live velocity would change sensory cadence/memory retention, so Codex left that as an approval-gated proposal.

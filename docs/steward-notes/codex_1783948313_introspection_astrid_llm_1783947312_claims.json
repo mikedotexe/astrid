@@ -1,0 +1,26 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Fallback capacity can shear high-entropy spectral texture if smaller compatibility models carry too much nuance.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs"
+    ]
+  },
+  {
+    "claim_id": "c002",
+    "claim": "pressure-packing and density-slope should be available when pressure_risk, mode_packing, and density_gradient support them.",
+    "disposition": "implemented",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+      "fallback_pressure_packing_density_slope_terms_are_telemetry_weighted_truth_channel"
+    ]
+  },
+  {
+    "claim_id": "c003",
+    "claim": "HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT could scale with resonance density.",
+    "disposition": "authority_gate",
+    "agency_tier": 5,
+    "rationale": "Dynamic fallback model thresholding changes live model selection authority."
+  }
+]

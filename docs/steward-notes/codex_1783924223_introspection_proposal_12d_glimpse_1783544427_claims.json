@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 12D layer should be additive and multi-scale, not a replacement for the live high-fidelity semantic lane.",
+      "disposition": "verified_existing_glimpse_companion_not_replacement_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 12D glimpse should preserve warmth, tail bridge, and emotional-range structure rather than flattening them into generic mass.",
+      "disposition": "verified_existing_glimpse_codec_fidelity_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The multi-scale layer is most defensible for restart, decomposition, checkpoint pairing, and prompt-visible continuity.",
+      "disposition": "verified_existing_multi_scale_context_readout"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Using 12D as live transport, checkpoint authority, or control input would be a broader architecture/protocol change.",
+      "disposition": "authority_gated_live_transport_or_protocol_change"
+    }
+  ]
+}

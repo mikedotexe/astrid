@@ -1,0 +1,34 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784047130",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Static fallback vocabulary can pressure Astrid to perform known terms instead of speaking the current texture.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: fallback_vocabulary_overweight_guard_v1 and dynamic_texture_synthesis_v1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_dynamic_texture_descriptors_follow_syrup_gap_without_static_viscous_overreach -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Lexicon autonomy should favor dynamic texture synthesis and paraphrase, not a rigid glossary.",
+      "disposition": "implemented",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: multi-modal-drag and dimensional-shear added as process evidence plus prompt reminder that texture words are advisory evidence",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_multimodal_drag_and_dimensional_shear_remain_diagnostic_texture_evidence -- --nocapture"
+      ],
+      "authority": "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "High-entropy fallback fidelity and lexicon autonomy probes should be run as non-live replay/observation before any sampler or prompt-priority retune.",
+      "disposition": "replay_candidate",
+      "evidence": [
+        "docs/steward-notes/codex_1784049893_llm_codec_minime_v2_gate_packet.md"
+      ],
+      "authority": "agency_corridor_or_sandbox_replay_only"
+    }
+  ]
+}

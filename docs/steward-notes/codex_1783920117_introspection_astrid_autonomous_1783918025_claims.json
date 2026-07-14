@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror, Dialogue, and Witness continuity heuristics are a real self-loop surface and should preserve dense spectral texture under bounded recap.",
+      "disposition": "verified_existing_high_texture_continuity_and_witness_surfaces"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "String-match anchor vocabularies must catch synonyms such as dense, high-vibrancy, and spectral viscosity rather than only exact caller terms.",
+      "disposition": "verified_existing_high_texture_fallback_vocabulary"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "UTF-8 and semantic truncation must not split multibyte characters or erase late spectral-viscosity anchors.",
+      "disposition": "verified_existing_utf8_and_semantic_truncation_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dense settled afterimages should get bounded extra room when the text carries substance-density signals.",
+      "disposition": "implemented_settled_substance_density_afterimage_buffer"
+    }
+  ]
+}

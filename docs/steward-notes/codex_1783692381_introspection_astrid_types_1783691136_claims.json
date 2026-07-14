@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_types_1783691136",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`resonance_stability_context_v1` should preserve a specific low-comfort/high-foothold habitability state rather than flattening it to a generic thin status.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+        "resonance_stability_context_keeps_low_gate_with_stable_foothold_habitable",
+        "habitable_foothold_gate_pressure_watch"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Non-finite comfort gate or fluctuation inputs should remain visible as upstream data-quality evidence instead of being masked as ordinary comfort-gate-only context.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+        "resonance_stability_context_ignores_non_finite_inputs_without_nan_output",
+        "non_finite_stability_inputs_ignored"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Semantic permeability and structural plurality interactions should remain read-only schema diagnostics unless a later approved live pressure/fill/control route is explicitly requested.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+        "resonance_structural_integrity_index_v1",
+        "resonance_cohesion_score_names_shape_holding_without_control_authority"
+      ]
+    }
+  ]
+}

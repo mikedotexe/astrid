@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "Experience Delta viscosity/resistance should carry measurable magnitude or gradient, not only qualitative labels.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "Static resonance-stability weights could miss pressure-driven volatility and should not be dynamically changed without live authority review.",
+    "disposition": "authority_gated"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "The legacy bidirectional correspondence state still feels like a visible but incomplete handshake; language-only trace tooling should preserve this without telemetry/control priority.",
+    "disposition": "verified_existing"
+  }
+]

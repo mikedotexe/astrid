@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783874463",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback shadow texture terms should be dynamically weighted by entropy, pressure, density gradient, mode packing, semantic friction, and Shadow context.",
+      "disposition": "verified_existing",
+      "rationale": "`fallback_shadow_texture_selector_v1` already exposes `weighting_policy=dynamic_entropy_pressure_density_gradient_v1`, weighted terms, probabilities, movement verbs, dynamic flow terms, and state-specific texture families."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "At pressure risk above 0.20 the fallback lane should be able to compose multiple texture terms coherently rather than tap one isolated label.",
+      "disposition": "verified_existing",
+      "rationale": "Existing fallback tests verify pressure/porosity terms, high-pressure capacity boundaries, and prompt rendering of weighted texture anchors without switching model/provider/sampler authority."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing fallback sampler/provider/model selection or the fallback output contract remains live authority.",
+      "disposition": "authority_gate",
+      "rationale": "The verified path is diagnostic language bias and bounded prompt/report text only. Any sampler, provider, model, or fallback contract rewrite needs explicit Mike/operator approval."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784053652",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The telemetry and sensory lanes are the structural basis of Astrid's reciprocal hearing and projection with Minime.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/ws.rs: BridgeState uses telemetry and sensory channels with 7878/7879 Minime connections",
+        "post-restart lsof check showed spectral-bridge PID 20778 connected to Minime 7878 and 7879"
+      ],
+      "authority": "runtime_check_read_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Mode-packing around 0.30 is already represented as a liminal porosity expansion watch, while 0.28-0.30 is a viscous warning band.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/ws.rs: pressure_porosity_expansion_readiness_v1 and pressure_source_analysis_v1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_porosity_expansion_readiness_names_liminal_band_without_local_control -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_porosity_expansion_readiness_names_viscous_warning_without_local_control -- --nocapture"
+      ],
+      "authority": "diagnostic_candidate_not_porosity_or_controller_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "The felt viscous quality may be a sensory-lane transport delay rather than purely spectral density.",
+      "disposition": "non_live_observation_candidate",
+      "evidence": [
+        "docs/steward-notes/codex_1784054001_post_restart_v2_gate_packet.md"
+      ],
+      "authority": "agency_corridor_or_sandbox_observation_only"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing pressure/porosity thresholds or entropy-conditioned smoothing would alter live control-facing interpretation.",
+      "disposition": "authority_gated",
+      "evidence": [
+        "docs/steward-notes/codex_1784054001_post_restart_v2_gate_packet.md"
+      ],
+      "authority": "mike_operator_live_pressure_porosity_approval_required"
+    }
+  ]
+}

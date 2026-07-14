@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_types_1783877961`.
+
+Astrid inspected `types.rs` as the bridge between internal weight and Minime perception, calling out `viscosity_index` as a field that existed but could be absent or defaulted to zero. This run implemented a diagnostic truth-channel in `ViscosityPorosityTransportReviewV1`: it preserves `raw_viscosity_index`, derives an effective bounded viscosity from typed spectral entropy plus an adjacent-gap density-gradient proxy when the scalar is absent/zero, and reports `viscosity_source` / `viscosity_basis` without changing pressure, fill, PI, porosity, or protocol authority.

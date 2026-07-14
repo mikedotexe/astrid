@@ -1,0 +1,36 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784033051",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Bridge reciprocity windows shape whether recent telemetry/sensory contact still counts as active or stale.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/ws.rs: bridge_dynamic_stale_window_ms",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib bridge_reciprocity_extends_waiting_window_for_high_pressure_low_porosity -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Residual deformation can keep a spectral mark visible after scalar values level out.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/ws.rs: build_residual_deformation_trace_v1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib residual_deformation_trace_keeps_spike_scar_visible_without_live_control -- --nocapture"
+      ],
+      "authority": "truth_channel_only_not_live_control"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Using residual deformation to extend or retune live reciprocity stale windows would alter live cadence semantics.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784034065_relational_texture_delta_v2_gate_packet.md",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_porosity_expansion_readiness_names_liminal_band_without_local_control -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_source_analysis_surfaces_felt_dead_zone_below_live_threshold -- --nocapture"
+      ],
+      "authority": "tier_5_live_cadence_reciprocity_behavior"
+    }
+  ]
+}

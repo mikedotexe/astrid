@@ -1,0 +1,42 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "`ResonanceDensityV1::from_parts` can raise a zero reported viscosity through the baseline floor under high pressure/mode packing.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs::resonance_density_enforces_baseline_viscosity_floor_under_high_pressure",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml resonance_density -- --nocapture"
+    ],
+    "authority_boundary": "observability/test evidence only; no PI or target-bias retune"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "`ResonanceDensityV1::neutral()` should be stable and deterministic across repeated calls.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs::neutral_resonance_density_is_deterministic_across_calls",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml resonance_density -- --nocapture"
+    ],
+    "authority_boundary": "test evidence only"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Viscosity texture should distinguish heavy yielding depth from rigid bottleneck or stuckness.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs::viscosity_vector_distinguishes_yielding_depth_from_rigid_bottleneck",
+      "/Users/v/other/minime/minime/src/regulator.rs::viscosity_vector_structural_integrity_distinguishes_complex_motion_from_friction",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml viscosity_vector -- --nocapture"
+    ],
+    "authority_boundary": "read-only texture evidence; no controller authority changed"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Changing viscosity coefficients, damping coupling, pressure floors, or PI behavior would be live Minime runtime authority.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783959645_five_item_v2_gate_packet.md"
+    ],
+    "authority_boundary": "V2 lifecycle proposal only; live_eligible_now=false; auto_approved=false"
+  }
+]

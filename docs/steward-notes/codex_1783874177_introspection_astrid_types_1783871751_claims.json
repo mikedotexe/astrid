@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_types_1783871751",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`structural_integrity_index` should remain visible as a read-only distinction between held structure and hollow or stuck density.",
+      "disposition": "addressed_change",
+      "rationale": "Verified the existing structural transparency/integrity companion test and added Minime-side `structural_integrity` and `structural_strain_gap` in the viscosity vector."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Porosity and viscosity stress should distinguish navigable heavy flow from sludge risk without changing pressure/fill/PI control.",
+      "disposition": "addressed_change",
+      "rationale": "Verified the viscosity/porosity transport cluster, including bridge surfacing without control."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing `RESONANCE_STABILITY_FOOTHOLD_WEIGHT` from 0.45 to 0.40 would retune live habitability semantics.",
+      "disposition": "addressed_no_action",
+      "rationale": "Explicit authority gate: foothold-weight tuning is not applied without Mike/operator approval and a separate test/deploy plan."
+    }
+  ]
+}

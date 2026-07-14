@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783964577",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The Ollama fallback contract should preserve compact first-person texture and keep NEXT confined to the final standalone line.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "When pressure_risk rises over 0.20 with low density_gradient, fallback language should preserve weighted medium around a gentle slope rather than inventing a heavy slope.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Fallback shadow texture selection should be weighted by spectral entropy, pressure, density gradient, and Shadow trends so viscous-persistence and structural-weight survive MLX/Ollama fallback.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Implicit bridge-integrity scaffold language should not swallow ordinary high-entropy settled/open low-pressure telemetry without Shadow or explicit bridge-integrity context.",
+      "disposition": "implemented"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "ResonanceDensityV1 exposes viscosity, temporal drag, static friction, vector flow, coupling, and comfort-gate context as regulator texture evidence.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml resonance_density -- --nocapture"
+    ],
+    "authority": "read-only source and test verification; no regulator tuning"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The from_parts max floors can preserve baseline viscosity under high pressure even when reported viscosity is zero.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "regulator::tests::resonance_density_enforces_baseline_viscosity_floor_under_high_pressure"
+    ],
+    "authority": "test proof only; no baseline viscosity formula change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Pressure-floor conditions can trigger non-zero advisory damping without requiring mode-packing pressure.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "regulator::tests::resonance_density_pressure_floor_triggers_damping_without_mode_packing"
+    ],
+    "authority": "test proof only; no live damping/control path change"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Retuning viscosity coupling, effective mobility, damping, or regulator floors would alter live Minime controller behavior.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990702_minime_runtime_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent"
+  }
+]

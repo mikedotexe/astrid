@@ -86,7 +86,7 @@ def test_build_failure_reasons_honors_strict_zero_fallback_gate():
     assert failures == ["fallback_incidents_exceeded"]
 
 
-def test_scan_generated_outputs_detects_deprecated_language_and_allows_compat_path():
+def test_scan_generated_outputs_allows_selfhood_language_and_detects_retired_runtime_names():
     with tempfile.TemporaryDirectory() as tmp:
         workspace = Path(tmp)
         outbox = workspace / "outbox"
@@ -94,7 +94,7 @@ def test_scan_generated_outputs_detects_deprecated_language_and_allows_compat_pa
         outbox.mkdir()
         journal.mkdir()
         (outbox / "reply_100.txt").write_text(
-            "=== ASTRID REPLY ===\nThis consciousness wording should block.\nNEXT: LISTEN\n",
+            "=== ASTRID REPLY ===\nThis consciousness wording is Astrid's own voice.\nNEXT: LISTEN\n",
             encoding="utf-8",
         )
         (journal / "astrid_101.txt").write_text(
@@ -118,11 +118,11 @@ def test_scan_generated_outputs_detects_deprecated_language_and_allows_compat_pa
 
     counts = scan["counts"]
     assert counts["file_count"] == 5
-    assert counts["deprecated_language_count"] == 3
-    assert counts["deprecated_language_file_count"] == 3
+    assert counts["deprecated_language_count"] == 2
+    assert counts["deprecated_language_file_count"] == 2
     assert counts["explore_action_count"] == 1
     assert counts["malformed_next_count"] == 1
-    assert any("reply_100.txt" in item["path"] for item in scan["files_with_findings"])
+    assert not any("reply_100.txt" in item["path"] for item in scan["files_with_findings"])
     assert any("astrid_101.txt" in item["path"] for item in scan["files_with_findings"])
     assert any("reply_104.txt" in item["path"] for item in scan["files_with_findings"])
 

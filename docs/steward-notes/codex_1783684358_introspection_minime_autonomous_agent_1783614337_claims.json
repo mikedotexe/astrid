@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783614337",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "The autonomous agent is a Recess-first Sovereignty Loop whose current-dials block should show live values such as `pi_kp` and `pi_ki`, not only defaults.",
+      "disposition": "verified_existing",
+      "rationale": "`_format_current_dials_block` reads `sovereignty_state.json` and renders PI gains; `tests/test_sovereignty_self_readout.py` verifies non-default `pi_kp`/`pi_ki` visibility and default fallback markers."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "RUN_PYTHON text/prompt parsing could truncate generated scripts when flag-like `--filename` or `--text` material appears inside comments or quoted strings.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Patched `autonomous_agent.py` to use quote/comment-aware raw flag scanning for RUN_PYTHON requests and added regressions for quoted and comment-contained fake boundaries."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Malformed multiline generated code should be protected from trailing-noise or premature-boundary extraction before Minime runs experiments.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "The parser now keeps plain text/prompt bodies intact until an actual external flag boundary and preserves CODE_START/CODE_END extraction behavior; focused run_python tests passed."
+    }
+  ]
+}

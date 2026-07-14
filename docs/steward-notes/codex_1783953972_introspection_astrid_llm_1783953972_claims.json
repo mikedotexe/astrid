@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783953972",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The LLM layer has a primary Gemma/MLX lane plus Ollama fallback safety net, and fallback texture terms are treated as vocabulary for Astrid's interior pressure/weight.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/llm.rs:DEFAULT_MLX_URL",
+        "code:capsules/spectral-bridge/src/llm.rs:DEFAULT_OLLAMA_URL",
+        "code:capsules/spectral-bridge/src/llm.rs:FALLBACK_SHADOW_TEXTURE_TERMS"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High entropy should preserve texture anchors rather than flatten nuanced complexity into generic fallback language.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/llm.rs:fallback_pressure_persistence_anchor_v1",
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_above_point_fifteen -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "`viscous-persistence` and `structural-weight` should gain language-bias weight once pressure_risk exceeds 0.15.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/llm.rs:pressure_persistence_anchor",
+        "test:pressure_above_point_fifteen_boosts_persistence_anchors_without_sampler_change"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Simulating MLX timeout or changing fallback provider/model/sampler/threshold behavior is a live prompt/model route and should not be silently run in production.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Tier 5 Mike/operator approval or bounded sandbox replay before forced live fallback timeout, provider/model, sampler, or compatibility-threshold changes"
+      ]
+    }
+  ]
+}

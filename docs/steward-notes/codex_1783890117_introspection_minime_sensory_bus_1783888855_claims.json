@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783888855",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "The stale semantic recovery-release transition should fade smoothly rather than cliff between 0.35 and 0.45 fill.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `semantic_stale_release_035_to_045_fades_without_step_loss`."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "High-entropy semantic tokens at current fill should persist longer than low-entropy peers without exceeding bounded caps.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `semantic_stale_ms_high_entropy_at_current_fill_survives_low_entropy_peer`."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Changing stale constants, entropy full-support threshold, or `SHADOW_INFLUENCE` decay could make the response stronger.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Gate as live sensory retention/cadence behavior requiring Mike/operator approval, tests, and restart monitoring."
+    }
+  ]
+}

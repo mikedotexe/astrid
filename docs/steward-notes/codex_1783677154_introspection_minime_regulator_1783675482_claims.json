@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783675482",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "Recursive viscosity coefficients should not deadlock flow when pressure risk and mode packing are extreme.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added and ran `static_friction_extreme_pressure_mode_packing_does_not_deadlock_flow`, proving the saturation probe clamps friction, stays below a frozen coefficient, and preserves nonzero flow and mobility."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "`ResonanceDensityV1::neutral()` should produce deterministic viscosity-vector output across repeated calls.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added and ran `neutral_resonance_density_is_deterministic_across_calls`, comparing the serialized neutral payload plus flow and coupling fields across repeated construction."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "`viscosity_vector_v1` flow-rate derivation is the key source for coupling response and should remain visible before any control-facing retune.",
+      "disposition": "verified_existing",
+      "rationale": "Existing source derives `viscosity_coupling_coefficient_v1` from the freshly computed `viscosity_vector.flow_rate`, and existing nearby tests verify flow-rate monotonicity and coupling relief under high flow."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783932088",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The autonomous module organizes Mirror, Dialogue, Witness, correspondence, Hebbian, introspect, and reservoir surfaces as interiority/context machinery.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/autonomous.rs:module docs",
+        "code:capsules/spectral-bridge/src/autonomous/correspondence_v1.rs"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Hard truncation risk is mitigated by semantic truncation tests that preserve spectral/shadow anchors under bounded excerpts.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_truncate_str_preserves -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Weighted Mirror/Witness overlap would alter mode-transition behavior and needs explicit live-behavior approval before implementation.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Mike/operator approval required before phase_transitions or mode-selection behavior changes"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Increasing porosity allowance in mode_packing/pressure correction would alter live pressure/control behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Mike/operator approval required before porosity/mode_packing/pressure-control retunes"
+      ]
+    },
+    {
+      "claim_id": "c005",
+      "claim": "A high-entropy SHADOW_TRAJECTORY probe should be a bounded sandbox/runtime observation rather than fabricated by source review.",
+      "disposition": "sandbox_or_runtime_observation_needed",
+      "evidence": [
+        "sandbox_gate:run a bounded SHADOW_TRAJECTORY replay/observation only when queue or operator-approved runtime path is available"
+      ]
+    }
+  ]
+}

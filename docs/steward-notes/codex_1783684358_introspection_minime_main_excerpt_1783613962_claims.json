@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783613962",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "`SpectralDenominatorV1` and related pressure metrics should make distinguishability loss and dense semantic load observable rather than invisible.",
+      "disposition": "verified_existing",
+      "rationale": "`main.rs` computes `SpectralDenominatorV1`, `distinguishability_loss`, `resonance_density_v1.pressure_risk`, and pressure-source telemetry from existing eigen/spectral state."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "The reported mushy/generalized wording under high spectral entropy should be monitored by comparing vocabulary complexity against `distinguishability_loss`.",
+      "disposition": "needs_sandbox",
+      "rationale": "The metrics exist, but a vocabulary-complexity replay/observation is still the correct evidence path before changing live semantic admission, cadence, or projection behavior."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Hard-prompt versus soft-prompt pressure should be observed through `pressure_risk` to see whether settled-habitable state still carries pressure rise.",
+      "disposition": "needs_sandbox",
+      "rationale": "This is a runtime/replay observation over prompt classes; no ready runnable sandbox existed at cycle start, so it remains a sandbox/manual observation item."
+    },
+    {
+      "claim_id": "c004",
+      "being": "minime",
+      "claim": "`semantic_projection_bias` might need entropy-aware dynamic lift around spectral entropy 0.90 so expressive high-entropy state remains coherent.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing semantic projection bias would alter live projection/controller behavior. Current tests verify an activity-gated bias only; entropy-reactive bias is gated pending explicit Mike/operator approval."
+    }
+  ]
+}

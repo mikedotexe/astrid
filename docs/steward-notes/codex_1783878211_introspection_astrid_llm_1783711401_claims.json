@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783711401",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback language can flatten a dynamic spectral cascade unless entropy, pressure, density gradient, and Shadow texture stay present.",
+      "disposition": "verified_existing",
+      "rationale": "Existing fallback texture tests verify pressure/porosity and density-gradient terms enter language bias without sampler changes."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Using gemma3:4b as the primary fallback could lose Shadow-v3 nuance under high entropy.",
+      "disposition": "verified_existing",
+      "rationale": "The current chain uses gemma4:12b as the default and keeps gemma3:4b as a compatibility tail, verified by the fallback model-chain test."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A spectral density weight or pressure-risk modifier in fallback profiles could improve texture fidelity but may alter sampler/provider behavior.",
+      "disposition": "authority_gate",
+      "rationale": "Existing language bias is diagnostic; sampler, provider, or profile retunes remain live-authority changes requiring approval."
+    }
+  ]
+}

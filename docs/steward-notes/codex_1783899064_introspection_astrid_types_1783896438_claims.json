@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Experience Delta Bus needs synthesis/emergence categories, not only clip/compress/gate/translate/delay.",
+      "disposition": "implemented_awaiting_felt_response"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Experience deltas need fluid spectral dimension context in addition to discrete integer dimension.",
+      "disposition": "implemented_awaiting_felt_response"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Raising `RESONANCE_STABILITY_FOOTHOLD_WEIGHT` from 0.45 to 0.55 would alter live stability weighting.",
+      "disposition": "needs_operator_approval"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783939767",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`ResonanceDensityV1::from_parts` should clamp pressure risk and comfort gate to 0.0..1.0 for out-of-range inputs.",
+      "disposition": "verified_existing",
+      "rationale": "Existing regulator tests cover invalid component clamping, including out-of-range mode packing, viscosity, friction, pressure, and comfort inputs."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A single mode-packing change should trace through viscosity and persistence without being hidden by baseline max logic.",
+      "disposition": "verified_existing",
+      "rationale": "Existing regulator tests distinguish crowded versus porous viscosity and check persistence/static-friction derivations from mode packing and comfort evidence."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Helper functions behind viscosity persistence, temporal drag, and static friction should remain inspectable for the final regulator state.",
+      "disposition": "verified_existing",
+      "rationale": "Source inspection verified helper functions and tests for `resonance_viscosity_index`, `viscosity_persistence_coefficient`, and `static_friction_coefficient`."
+    }
+  ]
+}

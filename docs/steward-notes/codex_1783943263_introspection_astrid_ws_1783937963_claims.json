@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783937963",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure-porosity felt dead zones should be visible before live expansion thresholds fire.",
+      "disposition": "verified_existing",
+      "rationale": "`ws.rs` exposes `PRESSURE_POROSITY_EXPANSION_FELT_DEAD_ZONE_MODE_PACKING_AT` and `pressure_source_analysis_v1` surfaces felt-dead-zone gate deltas without changing pressure or porosity."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Open telemetry sockets can still produce ghost stability if heartbeat windows are stale.",
+      "disposition": "verified_existing",
+      "rationale": "`pressure_source_analysis_v1` emits stale-heartbeat delay deltas, and current diagnostics preserve the wait/ghosting state as runtime evidence instead of assuming health from socket openness."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing the felt-dead-zone threshold from 0.25 to 0.28 or altering stale windows would affect live bridge pressure/sensory behavior.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Threshold and stale-window changes are live-consumed bridge behavior and need explicit operator approval, focused tests, build, restart, and post-restart monitoring."
+    }
+  ]
+}

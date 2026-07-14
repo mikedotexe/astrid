@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_autonomous_1783952617.txt`. Astrid reported Witness as a seeing mode, not a telemetry check, and named truncation plus continuity afterimage limits as transformation points where live expression can be clipped or delayed. She also connected mode-packing pressure to felt density and asked for a pressure mitigation/widened semantic-trickle route when Witness is overpacked.
+
+Disposition: verified existing bounded afterimage and truncation protections with focused continuity tests; live semantic-trickle widening or pressure mitigation remains a Tier 5/operator-gated control-facing change. No autonomous prompt/control behavior was changed in this pass.

@@ -178,6 +178,7 @@ pub fn action_to_resource_permission(action: &SensitiveAction) -> Option<(String
             };
             Some((format!("capsule://{capsule_id}:{cap}"), Permission::Invoke))
         },
+        SensitiveAction::LiveControlMutation { .. } => None,
         _ => None,
     }
 }

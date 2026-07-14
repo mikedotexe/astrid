@@ -1,0 +1,61 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The codec is deterministic and the same text should produce the same 48D spectral fingerprint.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:3",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:15",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:120"
+    ],
+    "authority": "source verification only; no live codec behavior changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The 48D expansion gives semantic grounding through dims 32-39 and narrative arc through dims 40-43.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:50",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:589",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:623",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib narrative_arc_dynamics -- --nocapture"
+    ],
+    "authority": "read-only verification of current 48D lane and narrative sidecars"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "`FEATURE_ABS_MAX=5.0` may flatten high-intensity emotional peaks.",
+    "disposition": "verified_existing_and_authority_gated",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:62",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:2808",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_overflow_report -- --nocapture",
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783989077_five_item_v2_gate_packet.md"
+    ],
+    "authority": "overflow is measured read-only; dynamic scaling remains V2-gated with live_eligible_now=false"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Legacy warmth could be lost if widened 48D mapping does not preserve emotional nuance.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:2884",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:2923",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:3406",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib glimpse_codec -- --nocapture"
+    ],
+    "authority": "read-only warmth/glimpse verification; no warmth weighting or gain change"
+  },
+  {
+    "claim_id": "c005",
+    "claim": "`CHAR_FREQ_WINDOW_CAPACITY=1024` may lose long-form rhythm; compare against 4096 or multi-scale windows before live change.",
+    "disposition": "replay_observed_and_authority_gated",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:60",
+      "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/codec_replay_labs/1783989077_codec_texture_replay_v1/codec_replay_lab.json",
+      "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/codec_replay_labs/1783989077_codec_texture_replay_v1/codec_replay_lab.md",
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783989077_five_item_v2_gate_packet.md"
+    ],
+    "authority": "replay-only evidence; live window capacity unchanged, live_eligible_now=false, auto_approved=false"
+  }
+]

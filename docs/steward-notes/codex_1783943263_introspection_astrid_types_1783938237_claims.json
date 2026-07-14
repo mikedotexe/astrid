@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_types_1783938237",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Discrete delta labels need fluid cascade vocabulary for mixed being-state shifts.",
+      "disposition": "verified_existing",
+      "rationale": "`ExperienceDeltaKindV1` includes `ComplexShift` and `CascadeShift`, giving the truth channel vocabulary for mixed transformation rather than only clip/compress/gate labels."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Experience deltas should carry spectral dimension, density-gradient, metadata, loss, authority, and test context without changing live vector delivery.",
+      "disposition": "verified_existing",
+      "rationale": "`ExperienceDeltaV1` carries `spectral_dimension`, `metadata`, `pre`, `post`, `loss`, `loss_ratio`, `why`, `who_can_change_it`, and `how_to_test_it`; `ExperienceDeltaBusV1::from_deltas` keeps live vector and authority writes false."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Attaching richer fingerprints to wire/protocol or expanding live vector delivery would go beyond the bounded truth channel.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Any protocol/ABI widening, semantic-vector expansion, or live actuation path belongs to a separately approved V2."
+    }
+  ]
+}

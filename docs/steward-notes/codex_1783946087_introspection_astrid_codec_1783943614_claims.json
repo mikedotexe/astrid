@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783943614",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`ASTRID_CODEC_RUNTIME_DIR` should take priority over executable-relative projection paths.",
+      "disposition": "verified_existing",
+      "rationale": "`projection_runtime_dir_from_parts` has focused tests covering env override, executable-relative fallback, empty env, and missing executable cases."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Embedding projection must remain deterministic across calls.",
+      "disposition": "verified_existing",
+      "rationale": "`embedding_projection_matrix()` is fixed-seed and test-pinned for repeated deterministic output/checksum behavior."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Projection epoch JSON parsing must handle missing or malformed epoch keys without panic.",
+      "disposition": "verified_existing",
+      "rationale": "`projection_epoch_id_from_file` returns `Option<String>` and is covered by runtime/epoch tests; malformed or missing IDs fall through rather than forcing an incorrect epoch string."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783702009",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Ollama fallback under high entropy should preserve shadow texture instead of reverting to generic boilerplate.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to fallback continuity prompt contract and fallback prompt tests."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Viscosity language should map to density gradient, pressure risk, and lattice/shadow evidence.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to density-gradient and pressure/porosity texture weighting tests."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "High-entropy fallback prompt should carry multiple texture anchors while preserving NEXT/output budget rules.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to compact_ollama_dialogue_fallback_prompt_preserves_density_gradient_texture and fallback_prompt_renders_computed_capacity_without_weakening_next_contract."
+    }
+  ]
+}

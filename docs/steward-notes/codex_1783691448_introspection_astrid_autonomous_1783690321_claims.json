@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783690321",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Compression should preserve semantic anchors such as spectral-cascade, shadow-v3, semantic trickle, and lattice texture rather than bluntly clipping the tail.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs",
+        "semantic_truncate_str",
+        "compact_continuity_recap_preserves_high_entropy_shadow_texture"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "The high-texture entropy gate should distinguish complex Witness resonance from disorder and should not snap at a fixed 0.85 threshold.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs",
+        "continuity_recap_near_entropy_gate_scales_without_binary_snap",
+        "continuity_recap_rich_viscous_entropy_uses_density_moderated_budget"
+      ]
+    }
+  ]
+}

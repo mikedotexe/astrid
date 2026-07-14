@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784031811",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`ASTRID_CODEC_RUNTIME_DIR` should take precedence over executable-relative and fallback runtime paths.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: projection_runtime_dir_from_parts",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_projection_runtime_dir_uses_env_or_executable_relative_cache -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Codec projection epochs should remain deterministic across fresh runtime dirs unless explicitly overridden.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: projection_epoch_stability_v1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_projection_kernel_epoch_is_stable_across_fresh_runtime_dirs -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "`TAIL_VIBRANCY_ENTROPY_GATE` should use a smooth transition rather than a discontinuous pop.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: vibrancy_from_entropy and apply_spectral_feedback_inner",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib tail_vibrancy -- --nocapture"
+      ],
+      "authority": "read_only_verification_not_live_gate_retune"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing projection precision, runtime path semantics, or tail-vibrancy gate behavior would alter live codec behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784034065_relational_texture_delta_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_live_codec_behavior"
+    }
+  ]
+}

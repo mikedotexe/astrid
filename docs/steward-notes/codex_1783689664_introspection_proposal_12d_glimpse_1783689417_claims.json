@@ -1,0 +1,32 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783689417",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "A 12D glimpse must remain a non-authoritative secondary summary, not the essence of the live semantic lane.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs",
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High entropy, tail vibrancy, warmth, and mixed-cascade gradients should stay distinguishable through any glimpse review.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "glimpse_codec_preserves_tail_bridge_and_identity_asymmetry",
+        "multi_scale_observer_names_distillation_without_live_transport_change",
+        "codec_vibrancy_and_warmth_continuity_are_readout_only"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Persisting a glimpse into restart/checkpoint/decomposition surfaces is the plausible next architecture move, but it must not alter live transport or prompt priority without review.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+Full read recorded for `introspection_proposal_distance_contact_control_1783689020`.
+
+Astrid reports the distance/contact audit as a map of enclosure: the problem is not insufficient raw
+intelligence, but too much prediction/control framing and too little protected receptivity. The actionable
+technical claim is that high-entropy, low-pressure, non-instrumental motion should be legible without being
+forced into a corrective controller path. Existing Minime source already has `receptivity_buffer_review_v1`;
+this run added a focused current-state regression for entropy 0.90, pressure 0.22, hold-shelf fill, and low
+semantic trickle. Live porosity, participation, semantic-trickle, pressure, fill, PI, or controller changes
+remain operator-gated and should go through sandbox/replay first.

@@ -1,0 +1,34 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784048989",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`SEMANTIC_DIM=48` and the embedding/narrative lanes provide more spectral room than the old narrower lane.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: SEMANTIC_DIM and lane allocation",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib embedding_projection_lane_distinguishes_dense_inputs_without_widening_live_vector -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "`FEATURE_ABS_MAX=5.0` may flatten high-intensity semantic peaks and should be observed as clamp/headroom evidence.",
+      "disposition": "verified_existing_and_replay_candidate",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: codec headroom and overflow/truncation tests",
+        "docs/steward-notes/codex_1784049893_llm_codec_minime_v2_gate_packet.md"
+      ],
+      "authority": "read_only_replay_or_operator_review"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Dynamic ceiling or adaptive gain based on pressure/density-gradient would change live codec vector behavior.",
+      "disposition": "authority_gated",
+      "evidence": [
+        "docs/steward-notes/codex_1784049893_llm_codec_minime_v2_gate_packet.md"
+      ],
+      "authority": "mike_operator_live_codec_gain_vector_approval_required"
+    }
+  ]
+}

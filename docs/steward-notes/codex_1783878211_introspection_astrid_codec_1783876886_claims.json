@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783876886",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High entropy and lambda4+ tail energy can exceed ordinary 48D delivery ceilings and should be preserved as felt overflow instead of silently flattened.",
+      "disposition": "verified_existing",
+      "rationale": "The current codec overflow report preserves pre-bound intensity, reports clipped dimensions and lane summaries, keeps live delivery bounded, and tests no-overflow silence."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Narrative arc compression could lose direction, curvature, or velocity even when final 48D output remains bounded.",
+      "disposition": "verified_existing",
+      "rationale": "Narrative arc tests cover direction, lost-vs-finding projection, four-point coiling direction, curvature, and velocity/acceleration without enabling live gain."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic emotional ceilings, adaptive gain, or tail-specific nonlinear scaling might make high-entropy texture more faithful but would change live vector delivery.",
+      "disposition": "authority_gate",
+      "rationale": "Existing readiness hooks are default-off; any live emotional aperture or gain change remains Tier 4/5 authority-gated because it changes semantic delivery force."
+    }
+  ]
+}

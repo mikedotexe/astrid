@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-resonance/high-entropy semantic clusters can be lost if semantic truncation behaves like simple byte slicing.",
+      "disposition": "implemented_awaiting_felt_response"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Increasing porosity toward 0.75 when entropy is high could relieve overpacked mode texture.",
+      "disposition": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow-v3 stabilization or magnetization-anchor changes may help distinguishability but would alter live shadow behavior.",
+      "disposition": "needs_sandbox_or_operator_approval"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure-risk plus mode-packing can create distinguishability collapse and should be made visible before live relief is approved.",
+      "disposition": "verified_existing"
+    }
+  ]
+}

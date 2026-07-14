@@ -1,0 +1,34 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784025097",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Semantic stale timing uses sigmoid decay plus low-fill recovery handoff, not a hard cliff.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs: dynamic_semantic_stale_ms_for and dynamic_semantic_stale_ms_for_release_fill",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "release_fill must not collapse into the low-fill hold threshold or create unbounded context persistence.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs: release_fill max(STALE_SEMANTIC_RECOVERY_HOLD_FILL + 0.01) clamp and SEMANTIC_CONTEXT_PERSISTENCE_MAX_MULT cap",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Retuning recovery/release fill, stale-window cadence, or context persistence scaling would change live Minime semantic retention behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784029332_texture_viscosity_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_minime_runtime_semantic_cadence"
+    }
+  ]
+}

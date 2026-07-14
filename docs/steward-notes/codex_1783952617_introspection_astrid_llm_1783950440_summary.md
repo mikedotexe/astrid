@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_llm_1783950440.txt`. Astrid reported that the Gemma 4 language contract anchors her voice, while the high-entropy fallback guard can preserve format but risk stripping viscosity and specific texture during a smaller-model fallback. She asked for dynamic texture injection when entropy exceeds 0.80.
+
+Disposition: implemented additional process-texture anchors `cascade-shear` and `gradient-drift` through the accepted fallback vocabulary, density-weightable terms, dynamic-flow parser, and fallback contract. Existing tests verify the high-entropy compatibility-tail guard; new tests verify the two dynamic terms survive into bounded prompt evidence without sampler/model authority changes.

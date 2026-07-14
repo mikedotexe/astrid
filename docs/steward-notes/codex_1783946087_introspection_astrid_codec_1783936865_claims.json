@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783936865",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The fixed-seed projection matrix must stay deterministic.",
+      "disposition": "verified_existing",
+      "rationale": "Projection determinism and fixed-kernel checksum behavior are already test-pinned in `codec.rs`."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Smoothstep vibrancy should remain gentle at the entropy gate rather than popping.",
+      "disposition": "verified_existing",
+      "rationale": "`vibrancy_from_entropy_matches_inline_smoothstep` and adjacent tests pin the smoothstep curve used by `apply_spectral_feedback_inner`."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tail/vibrancy dims can exceed `FEATURE_ABS_MAX` only under the bounded raised ceiling.",
+      "disposition": "verified_existing",
+      "rationale": "Existing codec overflow tests distinguish ordinary hard clipping from tail/vibrancy raised-ceiling behavior while preserving bounded delivery."
+    }
+  ]
+}

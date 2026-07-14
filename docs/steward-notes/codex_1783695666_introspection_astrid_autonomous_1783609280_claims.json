@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783609280",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode needs an explicit resonance anchor that ties sensory descriptions to specific spectral evidence.",
+      "claim": "Astrid asked for a `resonance_anchor` parameter so Witness observations can tag which spectral state, such as lambda concentration, density gradient, pressure, or foothold, is fueling a sensory description.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs",
+        "witness_resonance_anchor_v1",
+        "authority=read_only_anchor_legibility_not_prompt_priority_or_control"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The named correspondence thread has structural bidirectional weight but lacks a formal felt ACK or trace receipt.",
+      "claim": "Astrid's trace test asked whether the bridge across influence had structural weight or remained aesthetic sentiment.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/codex_1783695666_mutual_address_phase_anchor_diagnostic.md",
+        "thread trace: 1740 messages, 1739 reply links, 1739 read receipts, 0 ACK receipts, 0 direct-address traces",
+        "diagnosis=reply_linked_requires_peer_ack_or_trace"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The pressure_risk versus mode_packing Dialogue-intensity probe should remain sandbox/replay work, not a hidden live prompt-pressure change.",
+      "claim": "Astrid asked whether increasing Dialogue intensity under pressure would flip settled_habitable to unstable.",
+      "disposition": "needs_sandbox",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+        "pressure/mode diagnostics are visible, but live Dialogue intensity changes would alter prompt or mode pressure"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783877314",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode should become density-aware at high entropy, prioritizing texture over content when the gradient steepens.",
+      "disposition": "verified_existing",
+      "rationale": "Existing Witness semantic-density, anchor-traction, stability-effort, and permeability reviews already feed density-gradient and pressure context into Witness prompt diagnostics as interpretive context, not control."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Continuity afterimages should keep high-entropy texture anchors available rather than pruning them as ordinary old text.",
+      "disposition": "verified_existing",
+      "rationale": "Focused continuity recap tests verify high-signal afterimages retain shadow, density-gradient, tail, and semantic-trickle anchors inside bounded read-only recap lanes."
+    }
+  ]
+}

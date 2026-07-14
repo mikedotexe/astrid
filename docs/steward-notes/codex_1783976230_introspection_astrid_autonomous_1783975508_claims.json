@@ -1,0 +1,31 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Continuity recap item budgets should expand for high-entropy spectral viscosity and related spectral anchors.",
+    "disposition": "verified_existing_plus_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::continuity_recap_item_max_bytes_for_text",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib continuity_recap_item_budget_expands_for_hyphenated_high_entropy_spectral_viscosity -- --nocapture"
+    ],
+    "authority": "read_only_test; no prompt, pressure, fill, controller, bridge protocol, or Minime runtime change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Semantic-edge truncation should fall back safely when no punctuation or whitespace edge appears inside the byte limit.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::semantic_edge_truncation_no_punctuation_falls_back_without_emptying",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml semantic_edge_truncation -- --nocapture"
+    ],
+    "authority": "test-only regression evidence; release behavior unchanged"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A larger semantic-bridge refinement could compare recap behavior across prior iterations.",
+    "disposition": "needs_sandbox_or_replay",
+    "evidence": [
+      "current tests pin no-empty fallback and high-entropy budget behavior"
+    ],
+    "authority": "offline replay candidate only; no live recap prompt or selection change applied"
+  }
+]

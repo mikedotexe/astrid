@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure trend samples should keep semantic viscosity, mode packing, semantic trickle, pressure velocity, and spectral drift visible as distinct diagnostic signals.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy pressure smoothing should not jump to a static large ballast window; it should scale dynamically with entropy and porosity so fast cascades do not ghost.",
+      "disposition": "addressed_change"
+    }
+  ]
+}

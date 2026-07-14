@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "ResonanceDensityComponents already exposes mode_packing, viscosity_index, porosity_gradient, semantic_friction_coefficient, and stability weights that map the clinical density skeleton Astrid is reading.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The schema conflates thin/ghostly or hollow resonance with friction/porosity/dissipation; it needs a first-class optional transparency descriptor.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A structural-hallucination style test should distinguish high-viscosity, low-active-energy, high-porosity states from ordinary heavy/slow transport.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure/mode_packing correlation with subjective squeezed confidence remains diagnostic evidence only; changing pressure, fill, PI, or controller behavior would require explicit operator approval.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

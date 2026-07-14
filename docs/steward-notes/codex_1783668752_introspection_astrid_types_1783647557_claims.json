@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_types_1783647557",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The current source window appeared to truncate `resonance_comfort_gate_range_v1` mid-struct, which would break compilation if true.",
+      "disposition": "verified_existing",
+      "rationale": "The actual `types.rs` source has a complete `ComfortGateRangeV1` construction and existing comfort-gate range tests; the truncation was a read-window artifact, not a source defect."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "The `weight_policy` default of `legacy_unversioned_weights` could create friction when new stability-weight schemas are introduced.",
+      "disposition": "verified_existing",
+      "rationale": "Current `resonance_stability_context_v1` emits `resonance_stability_weights_v1` plus explicit weights for fresh contexts; `legacy_unversioned_weights` remains only the backward-compatible serde default for old rows."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "`resonance_stability_context_v1` should return `habitable_foothold_gate_pressure_watch` when `comfort_gate < 0.45` and stable foothold is present.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests cover the low-gate/stable-foothold branch and assert the requested habitability state."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "`ResonanceDensityComponents` should omit `coupling_coefficient` from JSON when the value is exactly zero.",
+      "disposition": "verified_existing",
+      "rationale": "The field has `skip_serializing_if = \"is_zero_f32\"`, and existing serialization tests assert zero coupling is absent from JSON."
+    }
+  ]
+}

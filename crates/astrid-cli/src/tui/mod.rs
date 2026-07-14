@@ -331,17 +331,54 @@ pub(crate) fn handle_daemon_event(app: &mut App, message: &IpcMessage) {
             action,
             resource,
             reason,
+            authority_boundary,
+            authority_boundary_v2,
         } = &message.payload
         {
+            let boundary_id = authority_boundary_v2
+                .as_ref()
+                .map(|packet| packet.boundary_id)
+                .or_else(|| authority_boundary.as_ref().map(|packet| packet.boundary_id));
+            let mut details = vec![
+                ("Action".into(), action.clone()),
+                ("Resource".into(), resource.clone()),
+                ("Reason".into(), reason.clone()),
+            ];
+            if let Some(packet) = authority_boundary_v2 {
+                details.push(("Boundary ID".into(), packet.boundary_id.to_string()));
+                details.push(("Lifecycle".into(), format!("{:?}", packet.lifecycle_state)));
+                details.push(("Authority".into(), format!("{:?}", packet.authority_class)));
+                details.push((
+                    "Redaction".into(),
+                    packet.redaction_profile.retention_policy.clone(),
+                ));
+                details.push((
+                    "Rollout".into(),
+                    packet.rollout_abort_contract.canary_plan.clone(),
+                ));
+                details.push((
+                    "Health Checks".into(),
+                    packet.rollout_abort_contract.health_checks.join(", "),
+                ));
+                details.push((
+                    "Post-Change Response".into(),
+                    if packet.rollout_abort_contract.post_change_response_required {
+                        "required before closure".to_string()
+                    } else {
+                        "waived by packet".to_string()
+                    },
+                ));
+            } else if let Some(packet) = authority_boundary {
+                details.push(("Boundary ID".into(), packet.boundary_id.to_string()));
+                details.push(("Gate".into(), format!("{:?}", packet.gate_state)));
+                details.push(("Authority".into(), format!("{:?}", packet.authority_class)));
+            }
             let approval = state::ApprovalRequest {
                 id: request_id.clone(),
                 tool_name: action.clone(),
                 description: resource.clone(),
-                details: vec![
-                    ("Action".into(), action.clone()),
-                    ("Resource".into(), resource.clone()),
-                    ("Reason".into(), reason.clone()),
-                ],
+                details,
+                boundary_id,
             };
             app.push_notice(&format!("Approval required: {action} on {resource}"));
             app.pending_approvals.push(approval);
@@ -495,6 +532,7 @@ async fn handle_pending_actions(
             PendingAction::Approve {
                 request_id,
                 decision,
+                boundary_id,
             } => {
                 let decision_str = match decision {
                     state::ApprovalDecisionKind::Once => "approve",
@@ -506,6 +544,7 @@ async fn handle_pending_actions(
                     request_id,
                     decision: decision_str.into(),
                     reason: None,
+                    boundary_id,
                 };
                 let msg =
                     astrid_types::ipc::IpcMessage::new(response_topic, response, session_id.0);
@@ -516,12 +555,17 @@ async fn handle_pending_actions(
                     app.push_notice(&format!("Action approved ({decision_str})."));
                 }
             },
-            PendingAction::Deny { request_id, reason } => {
+            PendingAction::Deny {
+                request_id,
+                reason,
+                boundary_id,
+            } => {
                 let response_topic = format!("astrid.v1.approval.response.{request_id}");
                 let response = astrid_types::ipc::IpcPayload::ApprovalResponse {
                     request_id,
                     decision: "deny".into(),
                     reason,
+                    boundary_id,
                 };
                 let msg =
                     astrid_types::ipc::IpcMessage::new(response_topic, response, session_id.0);

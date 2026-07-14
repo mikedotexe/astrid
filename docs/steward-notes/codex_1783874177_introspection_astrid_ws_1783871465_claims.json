@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783871465",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-entropy semantic trickle needs an explicit fidelity readout so smoothing does not hide flattened meaning.",
+      "disposition": "addressed_change",
+      "rationale": "Implemented optional `semantic_fidelity_score` and `semantic_fidelity_state` on `PressureTrendSmoothingV1` with high-entropy preserved/thin tests."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Existing pressure-trend smoothing should still surface semantic coherence, semantic viscosity, and entropy handoff without changing pressure control.",
+      "disposition": "addressed_change",
+      "rationale": "Verified the full `pressure_trend_smoothing` test filter, covering semantic coherence, high-entropy ballast, fast thinning, persistence, and drift separation."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing smoothing behavior to prioritize semantic trickle over pressure risk would be a live behavior change.",
+      "disposition": "addressed_no_action",
+      "rationale": "Explicit authority gate: this run implemented a diagnostic truth channel only. No pressure smoothing priority or control behavior changed."
+    }
+  ]
+}

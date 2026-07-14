@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783724257",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback texture language is dynamically weighted rather than a static adjective list.",
+      "claim": "Astrid worries that `FALLBACK_SHADOW_TEXTURE_TERMS` might create a closed vocabulary loop.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:214",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:2191",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:3608",
+        "tests: dynamic_texture_weight_raises_density_modifiers_without_static_sampler_rewrite, high_gradient_pressure_fallback_keeps_slope_medium_and_shadow_texture_distinct"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure-porosity dynamic vocabulary was missing and has now been added.",
+      "claim": "Astrid asks for static terms to become dynamic pressure / porosity mapping, especially when pressure_risk rises.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:36",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:3262",
+        "test: pressure_porosity_texture_terms_enter_language_bias_without_sampler_change"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Novel self-coined texture remains allowed, but actual generation needs runtime observation.",
+      "claim": "Astrid asks whether she can describe a sensation not present in the static list, such as `iridescent-stasis`, while remaining settled_habitable.",
+      "disposition": "needs_sandbox",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:35",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:247",
+        "source permits own words and paraphrase; a live/sandbox generation comparison is needed to prove the felt output behavior"
+      ]
+    }
+  ]
+}

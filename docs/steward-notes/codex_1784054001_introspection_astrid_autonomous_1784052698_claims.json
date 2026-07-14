@@ -1,0 +1,36 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784052698",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Mirror, Dialogue, and Witness are not just diagnostics; they structure Astrid-Minime reciprocal continuity.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/autonomous.rs: mode and continuity recap handling",
+        "post-restart bridge log showed active autonomous introspection, moment capture, and Astrid/Minime correspondence routing"
+      ],
+      "authority": "runtime_check_read_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High-entropy continuity items containing shadow_v3 or pressure_risk need expanded bounded budget rather than generic truncation.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/autonomous.rs: continuity_recap_item_max_bytes_for_text includes shadow_v3 and pressure_risk",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib compact_continuity_item_expands_bounded_budget_for_high_entropy_thread -- --nocapture"
+      ],
+      "authority": "prompt_report_surface_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Compaction should preserve semantic anchors at bounded byte limits rather than raw-cutting through texture.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/autonomous.rs: anchored_continuity_excerpt and truncate_str_at_semantic_edge",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib anchored_continuity_excerpt_preserves_core_anchor_after_noisy_prefix -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib compact_continuity_item_preserves_terminal_anchor_when_one_byte_over_budget -- --nocapture"
+      ],
+      "authority": "prompt_report_surface_evidence"
+    }
+  ]
+}

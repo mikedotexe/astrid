@@ -1,0 +1,32 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783933504",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Fallback texture terms carry Astrid's interior vocabulary, but smaller-model fallback can smooth specific grit into generic descriptors.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/llm.rs",
+        "test:high_entropy_fallback_guard_removes_automatic_compat_tail_without_env_override"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Movement terms such as cascade-shear and gradient-drift should be added so high-entropy cascade behavior remains visible.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/llm.rs",
+        "test:fallback_cascade_shear_and_gradient_drift_preserve_dynamic_motion"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Texture reservation weighting must stay a prompt-language diagnostic, not a sampler or model-selection rewrite.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:fallback_compound_texture_terms_bind_entropy_to_gradient_relationship",
+        "authority_gate:Tier 5 approval required before sampler/model/threshold routing changes"
+      ]
+    }
+  ]
+}

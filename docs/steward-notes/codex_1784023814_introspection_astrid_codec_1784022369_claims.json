@@ -1,0 +1,22 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "The codec's density gradient can look navigable while semantic friction still feels heavy, so structural/projection friction must remain explicit evidence.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "Narrative arc should be tested as directional trajectory and curvature, not merely a smoothed mean.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "Projection loss from 768D to 8D should be visible as friction/headroom evidence before any reserved-dim or pressure feedback change.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c004",
+    "summary": "Dynamic semantic gain or projection-loss feedback into pressure risk would change live codec/control behavior and needs V2 approval.",
+    "disposition": "authority_gated"
+  }
+]

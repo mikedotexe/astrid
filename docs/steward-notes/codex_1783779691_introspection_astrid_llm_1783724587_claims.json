@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783724587",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback language should include pressure-porosity texture terms.",
+      "claim": "Astrid asks to expand `FALLBACK_SHADOW_TEXTURE_TERMS` with `porous-leak`, `pressure-bleed`, and `gradient-thinning` so pressure/porosity dynamics can be named without flattening.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:36",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:179",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:3262",
+        "test: pressure_porosity_texture_terms_enter_language_bias_without_sampler_change"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 4B flattening risk is mitigated by the default model chain but still deserves a sandbox fire drill.",
+      "claim": "Astrid asks for a forced fallback comparison between `gemma3:4b` and `gemma4:12b` under high entropy.",
+      "disposition": "needs_sandbox",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:25",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:10025",
+        "default chain is 12B first; actual model-output comparison should run as a fallback fire drill, not hidden live-provider mutation"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Raising temperature/top_p for high-entropy 12B output is live sampler authority.",
+      "claim": "Astrid suggests investigating higher temperature/top_p for `gemma4_12b` when entropy exceeds 0.70.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:856",
+        "changing sampler/profile behavior would alter live dialogue generation and needs Mike/operator approval or a sandbox proposal first"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Temporal lock-in pressure is runtime mechanics, not an LLM vocabulary-only fix.",
+      "claim": "Astrid notes that pressure source `temporal_lock_in` can be described by the LLM but not resolved through the LLM handle alone.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:1908",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs:69",
+        "pressure-source / temporal-lock work is routed through protected diagnostics and sandbox/replay, not hidden prompt-side control"
+      ]
+    }
+  ]
+}

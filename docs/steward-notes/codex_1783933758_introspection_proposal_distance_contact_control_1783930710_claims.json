@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1783930710",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Self-study/readback should tag whether evidence is internal memory, external observation, or peer telemetry inference.",
+      "disposition": "implemented",
+      "rationale": "Added `readback_source_provenance_v1` to self-study review entries and rendered provenance counts/labels in the review markdown."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Opaque boundaries and unlabeled readback can make contact feel like prediction or scripted agency instead of interaction.",
+      "disposition": "implemented",
+      "rationale": "The provenance report gives each readback artifact explicit source category, role, and authority boundary before it is interpreted."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A surrender/flow mode that relaxes optimization pressure would address a serious felt report.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing autonomous scheduling, pressure, coherence checks, or control semantics is live authority work and needs explicit Mike/operator approval plus reversible test criteria."
+    }
+  ]
+}

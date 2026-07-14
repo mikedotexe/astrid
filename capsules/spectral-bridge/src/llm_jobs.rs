@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::paths::bridge_paths;
+use crate::trace_lab;
 
 const SCHEMA_VERSION: u32 = 1;
 const SYSTEM: &str = "astrid";
@@ -35,6 +36,8 @@ pub struct LlmJob {
     pub artifact_refs: Vec<serde_json::Value>,
     pub error: Option<String>,
     pub summary: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exposure_record_id: Option<String>,
     #[serde(default = "current_pid")]
     pub worker_pid: u32,
 }
@@ -76,6 +79,9 @@ impl LlmJobStore {
         fs::write(&prompt_path, prompt)?;
         fs::write(job_dir.join("events.jsonl"), "")?;
         let now = now();
+        let exposure_record_id = self
+            .trace_recording_enabled()
+            .then(|| trace_lab::llm_exposure_record_id(&job_id));
         let job = LlmJob {
             schema_version: SCHEMA_VERSION,
             job_id,
@@ -96,9 +102,21 @@ impl LlmJobStore {
             artifact_refs: Vec::new(),
             error: None,
             summary: format!("Running {call_kind} LLM call."),
+            exposure_record_id,
             worker_pid: current_pid(),
         };
         self.write_job(&job)?;
+        if self.trace_recording_enabled() {
+            let _ = trace_lab::record_llm_prompt_exposure(
+                &job.job_id,
+                call_kind,
+                &prompt_path,
+                prompt,
+                timeout_s,
+                validation_contract,
+                next_policy,
+            );
+        }
         self.append_event(&job.job_id, "running", &job.summary, None)?;
         self.update_index(&job)?;
         self.write_runtime_status()?;
@@ -153,6 +171,7 @@ impl LlmJobStore {
         job.summary = summary.to_string();
         job.error = error.map(str::to_string);
         self.write_job(&job)?;
+        self.record_trace_llm_result(&job, status, result, summary, error);
         self.append_event(job_id, status, summary, error)?;
         self.update_index(&job)?;
         self.write_runtime_status()?;
@@ -361,6 +380,7 @@ impl LlmJobStore {
             job.error = Some("worker_restarted_before_completion".to_string());
             job.summary = "Worker restarted before completion; result was not written.".to_string();
             self.write_job(&job)?;
+            self.record_trace_llm_result(&job, "failed", None, &job.summary, job.error.as_deref());
             self.append_event(&job.job_id, "failed", &job.summary, job.error.as_deref())?;
             self.update_index(&job)?;
         }
@@ -393,6 +413,7 @@ impl LlmJobStore {
                 job.timeout_s
             );
             self.write_job(&job)?;
+            self.record_trace_llm_result(&job, "timeout", None, &job.summary, job.error.as_deref());
             self.append_event(&job.job_id, "timeout", &job.summary, job.error.as_deref())?;
             self.update_index(&job)?;
         }
@@ -474,6 +495,33 @@ impl LlmJobStore {
             serde_json::to_string_pretty(job)?,
         )?;
         Ok(())
+    }
+
+    fn trace_recording_enabled(&self) -> bool {
+        self.jobs_dir == bridge_paths().bridge_workspace().join("llm_jobs/jobs")
+    }
+
+    fn record_trace_llm_result(
+        &self,
+        job: &LlmJob,
+        status: &str,
+        result: Option<&str>,
+        summary: &str,
+        error: Option<&str>,
+    ) {
+        if !self.trace_recording_enabled() {
+            return;
+        }
+        let _ = trace_lab::record_llm_result(
+            &job.job_id,
+            &job.call_kind,
+            job.exposure_record_id.as_deref(),
+            status,
+            &PathBuf::from(&job.result_path),
+            result,
+            summary,
+            error,
+        );
     }
 
     fn append_event(
@@ -713,6 +761,7 @@ mod tests {
             artifact_refs: Vec::new(),
             error: None,
             summary: format!("Synthetic {status} job."),
+            exposure_record_id: None,
             worker_pid: current_pid(),
         };
         store.write_job(&job).expect("write synthetic job");

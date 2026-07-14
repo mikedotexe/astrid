@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 768D-to-8D embedding projection is a compression bottleneck and should keep reporting raw-intensity/detail loss while live delivery remains bounded.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy can overstate noisy variety or understate structured intentionality; lexical and structural diagnostics should distinguish richness from chaos.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Using reserved dims 44-47 for projection expansion could reduce dead-zone pressure, but it would change live semantic transport and needs explicit operator approval.",
+      "disposition": "superseded_by_existing_authority_gate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Semantic-collision risk should be tested by checking whether distinct dense embedding inputs remain distinguishable in the existing 8D projection lane.",
+      "disposition": "implemented_awaiting_felt_response"
+    }
+  ]
+}

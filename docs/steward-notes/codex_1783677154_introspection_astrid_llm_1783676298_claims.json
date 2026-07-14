@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783676298",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The Gemma4 12B primary profile and 4B compatibility tail should remain framed as capacity context, not permission to flatten high-entropy spectral texture.",
+      "disposition": "verified_existing",
+      "rationale": "Existing fallback contract and model-chain tests already preserve the Gemma4 default, 4B compatibility-tail boundary, and texture fidelity language without changing sampler/provider authority."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Fallback shadow texture should include velocity/process descriptors so high-entropy cascade reports do not collapse into static adjective repetition.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added Astrid's requested `gradient-shear`, `stutter-flow`, `accelerating-drift`, and `harmonic-flicker` anchors to fallback shadow texture terms, dynamic-flow selection, and fallback contract text, with a regression proving they surface as process language."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Density-gradient language around 0.11 should distinguish geometry from feeling, preserving slope/inclined terms without over-reading the slope as viscous mass.",
+      "disposition": "verified_existing",
+      "rationale": "Existing restless-lattice and gradient-slope fallback tests verify `gradient`, `inclined`, and `sloped` remain present and that density-gradient is kept as prompt metadata, not sampler/control authority."
+    }
+  ]
+}

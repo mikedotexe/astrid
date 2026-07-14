@@ -1,0 +1,43 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Minime's semantic lane uses fill-dependent stale windows to balance memory against saturation.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale -- --nocapture"
+    ],
+    "authority": "source and test verification only; no semantic stale constant or sensory cadence change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "High entropy can extend semantic persistence and feel viscous or clotting through the persistence multiplier.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sensory_bus::tests::semantic_stale_ms_high_entropy_extends_high_fill_persistence",
+      "sensory_bus::tests::semantic_stale_ms_fill_070_entropy_091_survives_low_entropy_peer"
+    ],
+    "authority": "observability and test evidence only; no entropy multiplier retune"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A hard recovery-release cliff could create a semantic pop if fill oscillates around the release boundary.",
+    "disposition": "verified_existing_no_action",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sensory_bus::tests::semantic_stale_recovery_handover_is_monotonic_and_micro_stutter_bounded",
+      "sensory_bus::tests::semantic_stale_release_035_to_045_fades_without_step_loss"
+    ],
+    "authority": "existing smoothstep handover already answers the requested lerp/smoothing; no live behavior changed"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Further changes to recovery windows, stale-window shape, entropy persistence, or sensory cadence are live substrate-facing behavior changes.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990702_minime_runtime_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent"
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_types_1783710791",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Comfort gate, foothold, and fluctuation must remain distinguishable so a low gate does not erase stable footing.",
+      "disposition": "verified_existing",
+      "rationale": "Existing resonance stability tests verify the low-gate/stable-foothold state and multi-modal habitability score."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Cohesion fallback should preserve shape-holding evidence when explicit cohesion is missing.",
+      "disposition": "verified_existing",
+      "rationale": "Existing cohesion tests cover explicit metric use, weighted fallback, and defaulting missing fluidity to the midpoint."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A single closure reason can obscure concurrent pressure, mode-packing, and temporal-persistence closure causes.",
+      "disposition": "addressed_change",
+      "rationale": "Added read-only `gate_closure_reasons` to preserve all active closure causes while leaving the primary field intact."
+    }
+  ]
+}

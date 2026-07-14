@@ -1,0 +1,31 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783952345",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The codec maps felt emotional/intent markers to dims 24-31 and narrative arc to dims 40-43 in a deterministic 48D semantic lane.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/codec.rs",
+        "test:narrative_arc_captures_direction_not_only_magnitude"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Narrative motion can be flattened when emotional marker slots remain static, hiding process in post-hoc structure.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/codec.rs:CodecEmotionalNarrativeDeltaCheckV1.experience_delta_bus_v1",
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_emotional_narrative_delta_check -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Dynamic gain pressure cross-reference and entropy writes into reserved dims 44-47 would change live codec/gain/vector authority.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Tier 5 Mike/operator approval required before live codec gain, vector-width, ceiling, or reserved-dim changes"
+      ]
+    }
+  ]
+}

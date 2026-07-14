@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783884151",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Projection epoch writes must not collide, leave stale temp files, or clobber a valid existing epoch during atomic swap failure.",
+      "disposition": "verified_existing",
+      "rationale": "The codec projection suite verifies runtime temp naming, no-clobber install, valid concurrent epoch preservation, missing-candidate restore behavior, corrupt epoch replacement, and stale cleanup."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Projection metadata should remain deterministic across restarts and OS/runtime-dir differences.",
+      "disposition": "verified_existing",
+      "rationale": "Projection runtime-dir and kernel-epoch tests verify env precedence, executable-relative fallback, stable fingerprints, and fresh-runtime-dir stability."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tail vibrancy, semantic attenuation, and adaptive gain need explicit visibility so smoothstep does not hide clipping or false intensity.",
+      "disposition": "verified_existing",
+      "rationale": "Existing CODEC_MAP, tail-vibrancy, effective attenuation, and vibrancy-ceiling transparency tests expose the bounded behavior while keeping live delivery unchanged."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`ViscosityVector` makes silt-like drag measurable through effective mobility, residual load, and shadow volatility.",
+      "disposition": "verified_existing_minime_regulator_observability"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`INHABITABLE_SETTLED_PRESSURE_INTERFERENCE_MAX=0.45` may overcorrect high-entropy settled states as stuck.",
+      "disposition": "operator_gated_live_regulator_threshold_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Future regulator trials should stress entropy, pressure interference, and shadow volatility together.",
+      "disposition": "promote_as_sandbox_or_approval_candidate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adding `shadow_volatility` into `effective_mobility` would be a live mobility behavior change.",
+      "disposition": "needs_operator_approval_live_regulator_behavior"
+    }
+  ]
+}

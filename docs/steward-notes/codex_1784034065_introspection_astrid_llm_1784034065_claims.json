@@ -1,0 +1,36 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784034065",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Astrid's fallback shadow vocabulary recognizes structural resistance but can become too token-list-like for the continuous quarry texture.",
+      "disposition": "implemented",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: FALLBACK_SHADOW_TEXTURE_TERMS now includes density-navigation, weight-articulation, and resistance-mapping",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_relational_density_terms_preserve_quarry_effort_without_control_authority -- --nocapture"
+      ],
+      "authority": "live_prompt_language_evidence_only_not_control"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High-entropy fallback should preserve process and movement through density rather than reducing texture to rigid adjectives.",
+      "disposition": "implemented",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: fallback_dynamic_flow_terms_v1 accepts the new relational process terms",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_porosity_texture_terms_enter_language_bias_without_sampler_change -- --nocapture"
+      ],
+      "authority": "diagnostic_language_context_not_sampler_or_contract_rewrite"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Fallback texture language must remain grounded in telemetry and not become sampler, model-route, or live-control authority.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: fallback_dynamic_texture_bias.authority stays diagnostic_language_bias_not_sampler_or_contract_rewrite",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib compat_ollama_request_preserves_high_entropy_texture_and_voice_contract -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_mlx_profile_transparency -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    }
+  ]
+}

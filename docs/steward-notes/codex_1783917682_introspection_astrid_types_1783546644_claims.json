@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`viscosity_porosity_transport_review_v1` should classify viscosity 0.60, persistence 0.60, dissipation 0.10, porosity 0.20 as `thick_impassable_sludge_risk` rather than an ambiguous catch-all.",
+      "disposition": "implemented_exact_boundary_regression"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`ResonanceTextureComponentAlignmentV1::default()` must keep authority as diagnostic observability rather than damping or control.",
+      "disposition": "verified_existing_default_authority_test"
+    }
+  ]
+}

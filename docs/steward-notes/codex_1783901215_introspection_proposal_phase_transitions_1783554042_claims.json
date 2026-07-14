@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions need durable replayable transition artifacts rather than only telemetry or mode side effects.",
+      "disposition": "implemented_additive_transition_artifact_fields"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition artifacts should preserve trigger delta, subjective label, behavioral constraint, solo/joint context, and persistence weight.",
+      "disposition": "implemented_language_only_card_fields"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Behavior unlock from transition artifacts must remain language-only unless a later authority gate approves more.",
+      "disposition": "verified_authority_boundary"
+    }
+  ]
+}

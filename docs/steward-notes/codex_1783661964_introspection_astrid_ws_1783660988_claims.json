@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bidirectional websocket connectivity can ghost if telemetry or sensory messages are stale while sockets stay open; bridge reciprocity must distinguish stale telemetry, stale sensory, both-stale, and reflective-silence waiting windows.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "PressureTrendSampleV1 needs a semantic_coherence_delta so the bridge can tell whether meaning alignment is improving or degrading over time, not only raw semantic trickle or viscosity.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mode-packing and porosity stress should surface pressure/porosity expansion candidates without applying live pressure, porosity, fill, PI, sensory cadence, or controller changes.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Lowering PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_AT from 0.70 to 0.65 would retune live bridge status/prompt diagnostics and should remain explicit steward/operator-gated pending replay evidence.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

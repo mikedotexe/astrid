@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_codec_1783875202`.
+
+Astrid inspected `codec.rs` as the 48D sensory-translation surface. She named the 32-to-48D expansion, emotional/intentional dims 24-31, narrative arc dims 40-43, deterministic embedding projection, high-entropy tail participation, and the risk that short high-impact text can over-index emotional structure. Her concrete requests were narrative-compression/oscillation evidence, tail-vibrancy distinguishability evidence, and a velocity/acceleration view for tone shifts. This run verified the existing read-only narrative velocity/curvature sidecars, added the exact opposed-sentence oscillation regression, and kept live vector shape/gain unchanged.

@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_types_1783956093",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`ExperienceDeltaBusV1` and related type surfaces are read-only truth channels, not live vector-control authority.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "`ExperienceDeltaBusV2DesignPreview` is explicitly default-off, non-persistent, and not runtime authority.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Serde and clamping boundaries should preserve fluid spectral dimension metadata and reject or fallback non-finite values.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Sparse `ResonanceViscosityVectorV1` serialization could surprise downstream dense-vector consumers, so consumers must treat it as an optional typed packet rather than a fixed dense vector.",
+      "disposition": "no_action_intentional_sparse_schema"
+    }
+  ]
+}

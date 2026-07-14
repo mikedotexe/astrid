@@ -1,0 +1,44 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Exploration noise constants encode the history from low fill to jitter to the current balanced default.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs:26",
+      "/Users/v/other/minime/minime/src/esn.rs:36"
+    ],
+    "authority": "source verification only; no Minime runtime change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Dynamic noise pressure-room and gradient thresholds define comfort/overpacking boundaries.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs:39",
+      "/Users/v/other/minime/minime/src/esn.rs:41",
+      "/Users/v/other/minime/minime/src/esn.rs:416"
+    ],
+    "authority": "read-only review surfaces; ESN::step remains unchanged"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Entropy near the proposed 0.92 ceiling could become a jarring edge and should be tested before any live threshold change.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs:49",
+      "/Users/v/other/minime/minime/src/esn.rs:572",
+      "/Users/v/other/minime/minime/src/esn.rs:2543",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml --lib entropy_ceiling_noise_damping_review -- --nocapture"
+    ],
+    "authority": "read-only trial packet; runnable_without_approval=false"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Raising `PROPOSED_VOLATILE_ENTROPY_CEILING` to 0.95 and `DYNAMIC_NOISE_GENTLE_GRADIENT` to 0.15 would change live ESN control behavior.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783989077_five_item_v2_gate_packet.md"
+    ],
+    "authority": "Tier 5 Minime runtime/control change; live_eligible_now=false and auto_approved=false"
+  }
+]

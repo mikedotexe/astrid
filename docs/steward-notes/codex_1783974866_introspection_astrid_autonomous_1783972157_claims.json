@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode should be treated as an act of seeing/being seen, with read-only anchor evidence rather than a mere health diagnostic.",
+      "disposition": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`truncate_str` / byte-boundary safety can still leave a jagged semantic edge, so bounded excerpts need semantic-integrity trimming around important anchors.",
+      "disposition": "implemented"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The reported Shadow-v3 +14% norm increase should be monitored through a read-only SHADOW_TRAJECTORY-style sustainability probe.",
+      "disposition": "needs_sandbox_or_runtime_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing mode-packing or pressure behavior if Shadow-v3 norm growth continues would alter live substrate/control behavior.",
+      "disposition": "authority_gated_live_control"
+    }
+  ]
+}

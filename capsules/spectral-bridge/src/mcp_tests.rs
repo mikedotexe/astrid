@@ -180,6 +180,85 @@ async fn resource_read_status() {
 }
 
 #[tokio::test]
+async fn resource_read_status_surfaces_viscosity_transport_review_without_control() {
+    let state = Arc::new(RwLock::new(BridgeState::new()));
+    {
+        let mut s = state.write().await;
+        s.latest_telemetry = Some(
+            serde_json::from_value(json!({
+                "t_ms": 1000,
+                "eigenvalues": [768.0, 300.0],
+                "fill_ratio": 0.72,
+                "resonance_density_v1": {
+                    "policy": "resonance_density_v1",
+                    "schema_version": 1,
+                    "density": 0.66,
+                    "containment_score": 0.70,
+                    "pressure_risk": 0.19,
+                    "quality": "rich_containment",
+                    "components": {
+                        "active_energy": 0.62,
+                        "mode_packing": 0.22,
+                        "temporal_persistence": 0.68,
+                        "viscosity_index": 0.72,
+                        "viscosity_persistence_coefficient": 0.58,
+                        "dissipation_factor": 0.44,
+                        "porosity_gradient": 0.61,
+                        "dynamic_fluidity_index": 0.62,
+                        "semantic_friction_coefficient": 0.24,
+                        "structural_plurality": 0.62,
+                        "comfort_gate": 0.78
+                    },
+                    "texture_signature": {
+                        "policy": "resonance_texture_signature_v1",
+                        "schema_version": 1,
+                        "primary_texture": "weighted",
+                        "pressure_source_family": "semantic_trickle",
+                        "edge_definition": "soft",
+                        "movement_quality": "slow_drift",
+                        "confidence": 0.72,
+                        "dynamic_flux_vector": {
+                            "policy": "texture_dynamic_flux_vector_v1",
+                            "schema_version": 1,
+                            "pressure_velocity": 0.01,
+                            "spectral_entropy": 0.90,
+                            "flux_confidence": 0.72,
+                            "source": "unit_test",
+                            "authority": "diagnostic_flux_not_pressure_or_fill_control"
+                        },
+                        "authority": "advisory_context_not_control",
+                        "note": "unit test"
+                    },
+                    "control": {
+                        "target_bias_pct": 0.0,
+                        "wander_scale": 1.0,
+                        "applied_locally": true,
+                        "note": "observational"
+                    }
+                }
+            }))
+            .expect("telemetry fixture"),
+        );
+    }
+    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
+    let params = json!({"uri": "consciousness://status"});
+
+    let result = handle_resource_read(&params, &state, &db).await.unwrap();
+    let text = result["contents"][0]["text"].as_str().unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(text).unwrap();
+    let review = &parsed["viscosity_porosity_transport_review_v1"];
+
+    assert_eq!(
+        review["transport_state"],
+        "purposeful_weight_high_viscosity_high_fluidity"
+    );
+    assert_eq!(
+        review["authority"],
+        "diagnostic_transport_not_porosity_pressure_fill_pi_or_control"
+    );
+}
+
+#[tokio::test]
 async fn resource_read_unknown_uri() {
     let state = Arc::new(RwLock::new(BridgeState::new()));
     let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
@@ -714,6 +793,7 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
             inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
+            stable_core: None,
             semantic: None,
             semantic_energy_v1: None,
             transition_event: None,
@@ -727,6 +807,7 @@ async fn probe_action_compose_returns_experienced_text_and_artifact() {
             shadow_field_v3: None,
 
             shadow_influence_response_v3: None,
+            residual_deformation_trace_v1: None,
         });
         state.spectral_fingerprint = Some(vec![0.0; 32]);
     }

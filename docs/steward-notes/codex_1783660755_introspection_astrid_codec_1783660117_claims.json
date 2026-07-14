@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 768D-to-8D embedding projection can ghost nuanced emotional differences, so variance and compression evidence should remain visible for near-null or magnitude-loss cases.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 4D narrative arc can flatten circular, looping, or reactive monologues; split and dynamics diagnostics are needed to expose coarsening risk without changing the live 48D lane.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy vibrancy and semantic sharpening must not create or rescale narrative-arc or shadow-reserved sensations in dims 40-47.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing narrative-arc allocation or using reserved dims for live semantic transport would alter the bridge semantic-lane contract and needs Mike/operator approval before implementation.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

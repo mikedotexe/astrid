@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783686388",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "`dynamic_semantic_stale_ms_for` should avoid a cliff across the recovery handover between fill 0.25 and 0.40, including the 0.35 release region.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests `semantic_stale_recovery_handover_is_monotonic_and_micro_stutter_bounded` and `semantic_stale_release_035_to_045_fades_without_step_loss` verify monotonic bounded handover without changing live cadence."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "`dynamic_surge_target_weight` should use smoothstep interpolation so fill 0.70 remains at the base surge target and fill 0.80 reaches the high-fill target.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests `surge_target_weight_softens_when_fill_is_high` and `surge_target_weight_uses_soft_knee_across_taper` verify the endpoint behavior and soft-knee interpolation."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "The hardcoded sigmoid multiplier `6.0_f64` could become too violent if operational velocity changes.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing the curve steepness or binding it to live velocity would alter Minime sensory cadence and semantic persistence. Codex wrote an approval packet instead of retuning the runtime."
+    },
+    {
+      "claim_id": "c004",
+      "being": "minime",
+      "claim": "Entropy/fill/pressure nested multipliers near the semantic entropy persistence threshold need finite, bounded behavior.",
+      "disposition": "verified_existing",
+      "rationale": "The existing alternate-shape, handover, and surge tests keep semantic stale windows bounded and monotonic across the reported bands; no live sensory-bus mutation was made."
+    }
+  ]
+}

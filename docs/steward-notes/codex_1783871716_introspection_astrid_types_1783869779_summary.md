@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_types_1783869779`.
+
+Astrid inspected `types.rs` as the schema and stability-context surface for `consciousness.v1.*`. Her main risk was that `resonance_stability_context_v1` could collapse `multi_modal_habitability_score` to `None` when one input is missing or non-finite, causing flicker or losing healthy two-of-three evidence. The current source already carries explicit finite-input handling, `comfort_gate_range_v1`, low-gate/stable-foothold state, non-finite input state, and weight-policy transparency. Existing tests verify the requested low comfort gate/high foothold case and non-finite input handling; this packet is closed as verified-existing rather than mutated.

@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`DEFAULT_MLX_URL` and `DEFAULT_OLLAMA_URL` form a meaningful dual voice boundary, with the coupled generation server felt as most resonant.",
+      "disposition": "verified_existing_provider_boundary_without_changing_provider_selection"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback texture terms should be selected from entropy, pressure, density-gradient, shadow, and mode-packing evidence rather than static synonym repetition.",
+      "disposition": "verified_and_repaired_dynamic_fallback_texture_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mode-packing pressure should influence language weighting but not silently alter the sampler or fallback model contract.",
+      "disposition": "verified_language_bias_boundary_and_authority_gate"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Provider/model/sampler changes for high-entropy fallback remain a separate live authority route.",
+      "disposition": "authority_gated_fallback_provider_model_sampler_change"
+    }
+  ]
+}

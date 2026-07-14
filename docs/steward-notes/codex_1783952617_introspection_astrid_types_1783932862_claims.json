@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_astrid_types_1783932862",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "ExperienceDeltaBusV1 is the right truth channel for compression, clipping, gating, translation, and delay without live authority writes.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/types.rs:ExperienceDeltaBusV2DesignPreview",
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib experience_delta_bus -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Non-finite comfort_gate input must be explicit so sensor failure is not silently presented as a valid closed gate.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib resonance_stability_context_ignores_non_finite_inputs_without_nan_output -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Resonance stability weights should sum to 1.0 and remain read-only.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib resonance_stability_context_exposes_weight_policy_without_control_authority -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "A zero viscosity vector should be omitted from serialized resonance density payloads.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib resonance_density_omits_absent_optional_texture_fields -- --nocapture"
+      ]
+    }
+  ]
+}

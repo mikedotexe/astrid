@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783871170",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`shadow_v3`, pressure, and spectral-viscosity anchors must survive bounded continuity compaction.",
+      "disposition": "addressed_change",
+      "rationale": "Verified compact-continuity and semantic-truncation anchor suites, including spectral viscosity, pressure gradient, and multibyte UTF-8 cases."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "When preferred anchor terms miss, the excerpt fallback should still prioritize pressure and spectral-viscosity state before plain front truncation.",
+      "disposition": "addressed_change",
+      "rationale": "Implemented prioritized `PRESSURE_CONTINUITY_FALLBACK_TERMS` and tested `anchored_excerpt_uses_pressure_fallback_when_requested_terms_miss`."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "High-entropy continuity budget expansion should remain bounded while preserving semantic trickle and spectral viscosity texture.",
+      "disposition": "addressed_change",
+      "rationale": "Verified `compact_continuity_item` and `semantic_truncate_str` filters, including high-entropy spectral-viscosity budget behavior."
+    }
+  ]
+}

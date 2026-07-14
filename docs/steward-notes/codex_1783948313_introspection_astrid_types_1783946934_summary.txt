@@ -1,0 +1,1 @@
+Full read. Astrid reads types.rs as a read-only schema boundary and asks for ExperienceDeltaBus and resonance stability weight consistency checks. Added a direct ExperienceDeltaBus truth-channel test. Verified existing resonance stability tests cover weight policy, exact total weight, partial habitability, and None handling without defaulting to false stability.

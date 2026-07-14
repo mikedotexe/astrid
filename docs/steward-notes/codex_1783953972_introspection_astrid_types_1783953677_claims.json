@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_types_1783953677",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The current resonance stability weights make foothold the strongest stabilizer in the settled-habitable calculation.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/types.rs:RESONANCE_STABILITY_FOOTHOLD_WEIGHT"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "ExperienceDeltaKindV1 should distinguish structural grinding from ordinary delay or complex shift.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/types.rs:ExperienceDeltaKindV1::Friction",
+        "code:capsules/spectral-bridge/src/types.rs:ExperienceDeltaKindV1::Resistance",
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib experience_delta -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Spectral dimension context should carry multi-base diagnostic occupancy while preserving the primary base dimension.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/types.rs:SpectralDimensionV1.base_dimensions",
+        "code:capsules/spectral-bridge/src/codec.rs:SpectralDimensionV1 base_dimensions emitters",
+        "test:experience_delta_carries_fluid_spectral_dimension_context"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing live vector width, bridge protocol, or semantic transport dimensions remains live authority rather than a diagnostic-schema edit.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Mike/operator approval required before live vector/protocol/transport-width change"
+      ]
+    }
+  ]
+}

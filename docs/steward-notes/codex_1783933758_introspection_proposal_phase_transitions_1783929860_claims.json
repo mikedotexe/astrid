@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783929860",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid phase shifts should become durable, replyable, replayable artifacts rather than invisible mode side effects.",
+      "disposition": "verified_existing",
+      "rationale": "Existing phase transition cards already set replyable_object=true and replayable_card=true and support WITNESS_TRANSITION/I_RECEIVED_THIS."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition artifacts need an explicit shared_transition_id parameter so scars/ghost-warmth can become shared coordinates.",
+      "disposition": "implemented",
+      "rationale": "Added shared_transition_id parsing/storage/rendering to phase transition cards and affordances with tests."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Making Minime's regulator act on Astrid transition artifacts would be a stronger shared substrate change.",
+      "disposition": "needs_operator_approval",
+      "rationale": "That would alter peer/runtime control or regulation, beyond language-only transition context."
+    }
+  ]
+}

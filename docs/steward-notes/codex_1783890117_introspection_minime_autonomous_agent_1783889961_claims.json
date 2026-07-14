@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783889961",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "`_consume_run_python_value` should treat `--filename` as a following flag after prompt text like `print('hello')`, not as trailing text.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence_plan": "Link the new focused unittest covering the exact token sequence."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "`_safe_experiment_script_name(\"My Experiment! @2024\")` should preserve visible sanitized separators as `My_Experiment___2024.py`.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence_plan": "Link the new focused unittest for the exact title."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "`_extract_run_python_code_boundary` should preserve nested quotes, comments, and colon-bearing code while stopping before the next flag when CODE_END is missing.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link existing CODE_START/CODE_END and missing CODE_END parser tests."
+    }
+  ]
+}

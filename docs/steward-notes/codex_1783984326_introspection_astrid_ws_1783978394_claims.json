@@ -1,0 +1,45 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "High-entropy pressure smoothing is a diagnostic lens and should remain bounded/graded rather than turning into pressure control.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:37",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:1108",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_trend_smoothing -- --nocapture"
+    ],
+    "authority": "diagnostic_smoothing_not_pressure_control"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The entropy threshold handoff is observable as a soft review band, so the reported 0.70 edge is not only a hard opaque switch.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:1172",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:5252",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_trend_smoothing -- --nocapture"
+    ],
+    "authority": "read-only diagnostic; no smoothing threshold changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "The 90s high-entropy reciprocity window can expire and report stale after a 91s gap, keeping ghost connection risk visible.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:41",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:6190",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib bridge_reciprocity -- --nocapture"
+    ],
+    "authority": "read-only reciprocity evidence; no bridge stale-window or protocol behavior changed"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Raising `PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_AT` to 0.75 would alter live-consumed pressure interpretation and needs V2 lifecycle approval before deployment.",
+    "disposition": "needs_operator_approval",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:39",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:1183"
+    ],
+    "authority": "Tier 4/5 pressure-smoothing/live bridge interpretation candidate; boundary packet required before approval"
+  }
+]

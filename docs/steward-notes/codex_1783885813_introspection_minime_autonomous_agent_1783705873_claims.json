@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783705873",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess should distinguish expansive daydreaming from dense structural stabilization instead of treating all high entropy as idle drift.",
+      "disposition": "verified_existing",
+      "rationale": "Minime `density_aware_recess_profile_v1` names structural stabilization and remains read-only; focused Recess tests pass."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dense Recess should route toward shadow/pressure exhale or sedimentation preflight without silently changing behavior.",
+      "disposition": "verified_existing",
+      "rationale": "`recess_density_mitigation_v1`, `recess_sedimentation_compaction_readiness_v1`, and `recess_divergence_buffer_review_v1` expose routes and gates while preserving live caps."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Automatic porosity adjustment or Recess density thinning would be a live Minime control change.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Auto-porosity and density-thinning would mutate live sensory/regulator behavior and remain Tier 5 pending Mike/operator approval."
+    }
+  ]
+}

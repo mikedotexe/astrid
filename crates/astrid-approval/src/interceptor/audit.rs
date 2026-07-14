@@ -56,6 +56,14 @@ pub fn sensitive_action_to_audit(action: &SensitiveAction) -> AuditAction {
                 resource: format!("capsule://{capsule_id}:{cap} ({path})"),
             }
         },
+        SensitiveAction::LiveControlMutation {
+            surface,
+            control,
+            resource,
+        } => AuditAction::ApprovalRequested {
+            action_type: "live_control_mutation".to_string(),
+            resource: format!("{surface}:{control} ({resource})"),
+        },
         _ => AuditAction::ApprovalRequested {
             action_type: action.action_type().to_string(),
             resource: action.summary(),

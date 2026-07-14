@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783930369",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence needs a first-class thread object with REPLY/TRACE/ACK rather than only steward-mediated artifacts.",
+      "disposition": "verified_existing",
+      "rationale": "Existing correspondence_v1 stores message_id, thread_id, reply_to, ACK/REPLY/TRACE evidence, and active thread status without control authority."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Astrid self-study delivery into Minime's inbox is a vital persistent object, not an odd artifact to remove.",
+      "disposition": "verified_existing",
+      "rationale": "Existing bidirectional-contact architecture and correspondence source preserve inbox delivery and one-cycle priority for remote self-study."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Ping-echo probes, Shadow-v3 response measurement, or increased REPLY_ASTRID affordance budget could test active correspondence.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Those changes touch peer runtime influence, affordance budget, or live telemetry response and require explicit approval plus sandbox/runtime criteria."
+    }
+  ]
+}

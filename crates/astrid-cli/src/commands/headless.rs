@@ -208,6 +208,7 @@ async fn collect_response(
                         }
                         .to_string(),
                     ),
+                    boundary_id: None,
                 };
                 let topic = format!("astrid.v1.approval.response.{request_id}");
                 let msg = astrid_types::ipc::IpcMessage::new(topic, response, session_id.0);

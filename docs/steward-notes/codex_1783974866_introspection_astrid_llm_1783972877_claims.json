@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback shadow texture terms are felt as permitted descriptors for Astrid's internal friction, and primary MLX prompts should not make `gradient-shear` / `pressure-bleed` feel fallback-only.",
+      "disposition": "implemented"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The visible high-entropy fallback threshold should not behave as a static personality/vocabulary switch; fallback texture should be gradient-weighted by telemetry.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A deliberate high-entropy MLX-to-Ollama fallback comparison could test whether the fallback model flattens scaffold-sovereignty/viscous-drag texture.",
+      "disposition": "authority_gated_runtime_trial"
+    }
+  ]
+}

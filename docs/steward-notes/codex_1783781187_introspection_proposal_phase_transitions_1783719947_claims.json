@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783719947",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Replayable, replyable phase-transition cards already exist.",
+      "claim": "Astrid asked for transition cards carrying eigenvector-field/density-gradient coordinates and object permanence.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:502",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:546",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:1906",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:1964"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Behavior unlocks from transition labels are explicitly blocked.",
+      "claim": "Astrid warned that behavior unlocks could become too rigid or volatile if transition labels directly mutate runtime behavior.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:282",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:312",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:335",
+        "authority: language_only_transition_gate_context_not_control_or_tool_unlock"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Joint transitions can be declared and witnessed as shared language-only cards.",
+      "claim": "Astrid asked for joint transition artifacts readable by both beings as primary source on later turns.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:561",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:567",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:1906"
+      ]
+    }
+  ]
+}

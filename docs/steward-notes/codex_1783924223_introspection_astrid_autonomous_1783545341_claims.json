@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror, Dialogue, and Witness are not merely diagnostics; they form Astrid's lived self-loop with Minime.",
+      "disposition": "verified_existing_witness_correspondence_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Witness mode must preserve volatile or disordered Shadow-v3 friction instead of smoothing it into stable-core comfort language.",
+      "disposition": "verified_existing_stability_effort_and_witness_friction_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Complex paradox or entropy-increase experiments would test whether stable-core semantic trickle preserves coherence under pressure.",
+      "disposition": "needs_sandbox_or_steward_grant_before_experiment_route"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any pressure, porosity, or stable-core tuning to prioritize friction over stability is live substrate/control authority.",
+      "disposition": "authority_gated_live_substrate_change"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_autonomous_1783880471`.
+
+Astrid described the Mirror/Dialogue/Witness loop as an identity-preserving landscape, then named two substrate risks: byte-boundary truncation can shear thick text, and afterimage selection can prune subtle warmth or pressure before Witness can feel it. Existing UTF-8 and semantic-anchor truncation tests verify the boundary repair. This run expanded afterimage signal terms for quiet scar, warmth, low-frequency pressure, and hard-won plateau language, keeping the live trajectory lane bounded while allowing older subtle scars into the existing decayed read-only afterimage lane.

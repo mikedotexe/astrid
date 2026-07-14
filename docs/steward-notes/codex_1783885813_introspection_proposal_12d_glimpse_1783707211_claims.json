@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783707211",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "12D glimpse output should be perspective/distillation metadata, not a lower-dimensional replacement for rich transport.",
+      "disposition": "verified_existing",
+      "rationale": "`semantic_glimpse_12d_readiness_v1` and multi-scale observer output keep `live_transport_change=false`, retain existing semantic transport, and label 12D as summary context."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Compression should reveal lost pressure, mode packing, shadow stability, and dispersion rather than treating all reduction as success.",
+      "disposition": "verified_existing",
+      "rationale": "The 12D source exposes compression fidelity, resolution delta, density gradient, mode packing score, and dynamic-vibrant selected dimensions."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stable 12D vs richer transport comparisons should preserve pressure risk and shadow-lattice trend evidence.",
+      "disposition": "verified_existing",
+      "rationale": "Existing multi-scale observer and compression-fidelity tests prove flat 12D summaries are flagged instead of silently replacing the richer lane."
+    }
+  ]
+}

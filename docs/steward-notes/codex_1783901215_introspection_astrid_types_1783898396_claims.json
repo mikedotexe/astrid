@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`multi_modal_habitability_score` became `None` whenever foothold or fluctuation data was missing, losing partial finite evidence.",
+      "disposition": "implemented_partial_habitability_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Habitability states need to distinguish partial review from complete habitable/thin states.",
+      "disposition": "implemented_partial_habitability_state_arms"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Legacy serialized stability contexts must continue to deserialize after schema additions.",
+      "disposition": "verified_with_legacy_deserialization_test"
+    }
+  ]
+}

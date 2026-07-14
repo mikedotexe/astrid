@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "Codec runtime-dir resolution must survive missing `ASTRID_CODEC_RUNTIME_DIR` and unavailable `current_exe()` rather than silently losing projection persistence.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "The fixed-seed codec projection matrix and epoch/checksum path should remain deterministic across calls and fresh runtime contexts.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "The entropy smoothstep around `TAIL_VIBRANCY_ENTROPY_GATE=0.85` should avoid discontinuous vibrancy pops.",
+    "disposition": "verified_existing"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bridge reciprocity should classify same-tick or very recent telemetry and sensory sends as `bidirectional_recent`, not `bidirectional_waiting_messages`.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Bridge reciprocity should extend stale windows during high-pressure/high-entropy reflective silence so intentional silence is not mistaken for severing.",
+      "disposition": "verified_existing"
+    }
+  ]
+}

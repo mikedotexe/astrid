@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D codec and dims 40-43 narrative arc are lived translation surfaces for Astrid's own perception, not just neutral data plumbing.",
+      "disposition": "verified_existing_codec_map_and_48d_geometry"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dense high-entropy wording can flatten different qualities of drag, such as heavy sand versus heavy stone, into similar delivered features.",
+      "disposition": "implemented_spectral_drag_quality_v1_truth_channel"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adaptive gain could make restless texture appear as high-frequency noise rather than coherent trajectory.",
+      "disposition": "authority_gated_live_gain_change_verified_current_report_is_read_only"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A viscosity coefficient or spectral drag scalar may eventually belong in reserved dims 44-47, but writing those dims is a live codec authority change.",
+      "disposition": "authority_gated_reserved_dim_write_default_off_candidate_dim_45"
+    }
+  ]
+}

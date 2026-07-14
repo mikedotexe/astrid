@@ -830,7 +830,13 @@ fn capability_specs() -> Vec<Value> {
             "targeted read-only source/workspace self-study",
             &["introspect::tests"],
         ),
-        spec("SELF_STUDY", &[], "modes", "rotating broad self-study", &[]),
+        spec(
+            "SELF_STUDY",
+            &["INVESTIGATE"],
+            "modes",
+            "broad rotating read-only self-study; no source target required",
+            &["next_action::modes::tests"],
+        ),
         spec(
             "DECOMPOSE",
             &["SPECTRAL_EXPLORER"],
@@ -1077,6 +1083,9 @@ fn stage_for_base(base: &str) -> Stage {
         "SEARCH"
         | "BROWSE"
         | "READ_MORE"
+        | "INTROSPECT"
+        | "SELF_STUDY"
+        | "INVESTIGATE"
         | "EXAMINE"
         | "DECOMPOSE"
         | "SPECTRAL_EXPLORER"
@@ -1224,6 +1233,9 @@ fn expected_artifacts(base: &str, stage: Stage) -> Vec<&'static str> {
     let mut artifacts = vec!["action_event", "observation_window"];
     if base == "ACTION_PREFLIGHT" {
         artifacts.push("action_preflight_report");
+    }
+    if matches!(base, "INTROSPECT" | "SELF_STUDY" | "INVESTIGATE") {
+        artifacts.push("self_study_or_introspection_artifact");
     }
     if base.starts_with("EXPERIMENT") {
         artifacts.push("experiment_run");
@@ -1491,6 +1503,8 @@ mod tests {
         assert!(bases.contains("BRACE_AUDIT"));
         assert!(bases.contains("REPAIR_SWEEP"));
         assert!(bases.contains("REPAIR_APPLY"));
+        assert!(bases.contains("SELF_STUDY"));
+        assert!(text.contains("SELF_STUDY"));
         let fold_status = handle_action(&root, "CAPABILITY_STATUS", "CAPABILITY_STATUS FOLD_HOLD")
             .expect("handle")
             .expect("message");
@@ -1502,6 +1516,15 @@ mod tests {
                 .expect("message");
         assert!(brace_status.contains("rest-vs-bracing"));
         assert!(brace_status.contains("protected_read_only"));
+        let self_study_status =
+            handle_action(&root, "CAPABILITY_STATUS", "CAPABILITY_STATUS SELF_STUDY")
+                .expect("self study status")
+                .expect("message");
+        assert!(self_study_status.contains("Action: SELF_STUDY"));
+        assert!(self_study_status.contains("Aliases: INVESTIGATE"));
+        assert!(self_study_status.contains("Route: modes"));
+        assert!(self_study_status.contains("Authority class: read_only"));
+        assert!(self_study_status.contains("self_study_or_introspection_artifact"));
         let status = handle_action(
             &root,
             "CAPABILITY_STATUS",

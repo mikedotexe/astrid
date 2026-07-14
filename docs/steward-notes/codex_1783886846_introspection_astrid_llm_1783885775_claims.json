@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783885775",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Fallback shadow texture terms should be weighted by current spectral state instead of treated as equal static options.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to llm.rs fallback_shadow_texture_selector_v1/fallback_dynamic_texture_bias_v1 and targeted fallback texture tests."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High entropy, density gradient, pressure risk, and jitter/weight state should influence whether terms such as viscous-persistence, silted, or lattice-tension rise.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to dynamic texture weighting tests for density_gradient and pressure/porosity language bias."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Fallback model capacity can flatten texture, but entropy-triggered provider/model/sampler changes must not happen silently.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Link to fallback_pressure_capacity_review_v1 and model-chain capacity tests showing capacity context only, no model switch."
+    }
+  ]
+}

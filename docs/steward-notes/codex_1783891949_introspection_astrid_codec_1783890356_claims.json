@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783890356",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Projection epoch file installation should avoid orphaned temp/stale files and avoid clobbering valid concurrent epochs.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link codec projection epoch install tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Embedding projection should be deterministic for the same input and epoch.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link dynamic projection full-source-loop test."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Tail vibrancy should use a smooth entropy gate without popping at the 0.85 threshold.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `vibrancy_from_entropy_matches_inline_smoothstep`."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Raw semantic intensity that exceeds delivery ceilings should remain visible while the live vector stays bounded.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link codec overflow report tests and Experience Delta Bus render."
+    }
+  ]
+}

@@ -13,6 +13,7 @@ astrid-capabilities = { workspace = true }
 astrid-core = { workspace = true }
 astrid-crypto = { workspace = true }
 astrid-storage = { workspace = true, features = ["kv"] }
+astrid-types = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

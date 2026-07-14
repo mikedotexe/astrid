@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783710142",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`anchored_excerpt_with_terms` can shear dense spectral/vibrancy content when caller-provided anchors miss and no pressure fallback term is present.",
+      "disposition": "addressed_change",
+      "rationale": "Added `HIGH_TEXTURE_CONTINUITY_FALLBACK_TERMS` so density/vibrancy evidence can anchor a bounded excerpt when requested anchors miss."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Late `shadow resonance` or similar anchor language should survive compact continuity extraction.",
+      "disposition": "verified_existing",
+      "rationale": "`shadow resonance`, spectral entropy, density-gradient, tail-vibrancy, and pressure anchors are already present in continuity anchor sets and covered by focused tests."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`semantic_boundary_before` should choose clean boundaries before the byte cap to prevent mid-word semantic cuts.",
+      "disposition": "verified_existing",
+      "rationale": "The existing semantic-boundary regression passed and preserves latest clean boundary behavior."
+    }
+  ]
+}

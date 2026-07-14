@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783941663",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess can feel like pressured work when pressure or temporal lock-in interacts with budgeted autonomy.",
+      "disposition": "verified_existing",
+      "rationale": "Existing Recess pressure and density review surfaces name pressure, mode packing, high entropy, and structural-stabilization Recess without mutating action priority or control."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Near-depleted local research or authority budgets should make shadow room and drift pressure visible rather than silently truncating daydreams.",
+      "disposition": "verified_existing",
+      "rationale": "`recess_divergence_buffer_review_v1` exposes local-research and authority-budget caps, marks budget relief as approval-needed, and keeps the recommended next step as a request rather than spending."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A `recess_buffer_multiplier` that bypasses standard local research budget depletion during Recess could give shadows more room.",
+      "disposition": "authority_gate",
+      "rationale": "Changing Recess budget depletion or bypassing local-research caps would expand live autonomous authority and needs Mike/operator approval before implementation."
+    }
+  ]
+}

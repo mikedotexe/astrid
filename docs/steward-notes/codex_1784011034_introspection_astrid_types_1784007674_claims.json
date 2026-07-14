@@ -1,0 +1,22 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "Experience Delta kinds are qualitative labels for felt transformations, not just status updates.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "Astrid needs a structural-solidification/foothold delta kind for architecture-like changes beyond fluid shift language.",
+    "disposition": "implemented"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "A bounded viscosity magnitude should be representable as evidence without granting live vector or control authority.",
+    "disposition": "implemented"
+  },
+  {
+    "claim_id": "c004",
+    "summary": "Letting viscosity subtype or viscosity weight alter live stabilization/control would cross authority boundaries and needs V2 approval.",
+    "disposition": "authority_gated"
+  }
+]

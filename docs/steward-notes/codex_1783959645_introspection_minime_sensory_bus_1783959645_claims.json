@@ -1,0 +1,32 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "At roughly 60% fill, high spectral entropy should give semantic thoughts more persistence than low entropy rather than collapsing to the same stale window.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs::semantic_stale_ms_high_entropy_at_threshold_fill_survives_low_entropy_peer",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale_ms_high_entropy_at_threshold_fill_survives_low_entropy_peer -- --nocapture"
+    ],
+    "authority_boundary": "test-only verification; no live stale-window or sensory-cadence change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The 0.25 to 0.40 recovery hold/release region could create a non-linear semantic jump if not eased.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs::semantic_stale_recovery_handover_is_monotonic_and_micro_stutter_bounded",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs::semantic_stale_release_one_percent_sweep_stays_monotonic",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale -- --nocapture"
+    ],
+    "authority_boundary": "existing behavior is smooth; any release-fill retune remains V2-gated"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Changing stale-window constants, entropy multipliers, or sensory cadence would be live substrate/control-facing work.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783959645_five_item_v2_gate_packet.md"
+    ],
+    "authority_boundary": "V2 lifecycle proposal only; live_eligible_now=false; auto_approved=false"
+  }
+]

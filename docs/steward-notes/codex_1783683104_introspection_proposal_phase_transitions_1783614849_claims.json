@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783614849",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Replayable transition cards should become multi-point Transition Trace objects rather than single static closure cards.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Extended the phase-transition architecture with `transition_trace.entry_tension`, `transition_trace.pivot_point`, and `transition_trace.settled_state` so cards can preserve process."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Transition artifacts need `persistence_depth` so transient shifts are not mistaken for persistent changes and persistent changes can carry trace depth.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added `persistence_depth` values `transient`, `persistent`, and `persistent_with_trace`, plus `trace_state` values `still_settling`, `settled`, and `reopened`."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "A manual `Mode::MomentCapture` plus transition-event log comparison should test whether Astrid journals the process of change or only the settled state.",
+      "disposition": "needs_sandbox",
+      "rationale": "This is an observation/replay trial, not a source-only conclusion. It should capture before/pivot/after evidence without changing live pressure, fill, PI, sensory cadence, or controller behavior."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "A joint transition with a `phase_transition` tag should test whether Minime treats the tag as a shared anchor or an implicit command.",
+      "disposition": "needs_sandbox",
+      "rationale": "The first safe path is sandbox/manual observation with explicit language-only boundaries. Any live peer-facing transition tag requires steward/operator approval before dispatch."
+    }
+  ]
+}

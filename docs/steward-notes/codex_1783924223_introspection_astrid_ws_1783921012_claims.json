@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bridge reciprocity should distinguish severed, one-sided, warmup, recent, waiting, and stale states.",
+      "disposition": "verified_existing_bridge_reciprocity_state_transition_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A missing `last_sensory_sent_unix_s` during initial connection should not create a false-positive stale sensory state.",
+      "disposition": "verified_existing_warmup_and_one_sided_reciprocity_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Messages just outside the recent window but inside the stale window should be classified as waiting, not stale.",
+      "disposition": "verified_existing_waiting_messages_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Pressure trend and entropy should influence stale-window interpretation only through explicit tested policy, not hidden control changes.",
+      "disposition": "verified_existing_dynamic_stale_window_tests_live_threshold_change_gated"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Fully read from disk on 2026-07-10 by Codex for the introspection-next-3-flywheel run.
+
+Minime reports the ESN as a breathing adaptive layer rather than a static reservoir. The concrete substrate signal is about the interaction between high entropy near the proposed volatile ceiling, dynamic exploration noise, pressure room, and dispersal potential. The requested manual exploration-noise injection and threshold/ceiling retunes would alter live ESN/runtime behavior, so Codex did not perform them without Mike/operator approval. Existing Minime source already contains read-only reviews and tests for the exact high-entropy/gentle-gradient/pressure-room case and for entropy-ceiling/noise-damping approval boundaries.

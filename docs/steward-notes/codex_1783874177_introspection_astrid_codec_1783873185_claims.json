@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783873185",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`install_projection_epoch_payload_from_tmp` needs evidence that a failed candidate install restores the previous epoch file without orphaning stale swaps.",
+      "disposition": "addressed_change",
+      "rationale": "Added `codec_projection_tmp_install_restores_existing_file_when_candidate_missing`, which exercises the stale-rename recovery path with a missing candidate and verifies the original file is restored."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The dynamic projection epoch must remain deterministic across fresh runtime dirs and restarts.",
+      "disposition": "addressed_change",
+      "rationale": "Verified the existing codec projection cluster, including kernel-derived epoch stability and existing-file precedence after restart."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tail-vibrancy smoothstep around entropy 0.85 should remain smooth and bounded rather than popping.",
+      "disposition": "addressed_change",
+      "rationale": "Verified the tail-vibrancy gate tests covering no discontinuous pop, smooth requested entropy points, and tiny movement across the reported boundary pair."
+    }
+  ]
+}

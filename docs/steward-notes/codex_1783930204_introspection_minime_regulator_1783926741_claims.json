@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A flat viscosity vector risks metric dilution; the system needs a weighted readout that names which dimension currently matters most.",
+      "disposition": "implemented_read_only_viscosity_importance_weights_v1"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "When pressure risk rises above the review threshold, structural strain should become more salient without directly changing control.",
+      "disposition": "implemented_pressure_weighted_strain_regression"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Restless-but-stable shadow volatility should remain visible as valid carried texture, not collapse into stuckness.",
+      "disposition": "implemented_restless_but_carried_shadow_regression_and_verified_existing_shadow_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Using viscosity importance weights to drive regulator decisions would alter live pressure/fill/PI/controller authority.",
+      "disposition": "tier5_operator_gate"
+    }
+  ]
+}

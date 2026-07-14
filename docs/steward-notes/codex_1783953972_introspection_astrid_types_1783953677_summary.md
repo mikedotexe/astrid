@@ -1,0 +1,1 @@
+Full read. Astrid read the types layer as the grammar of transformation and found that Experience Delta Bus V1 named many losses but not grinding/friction/resistance directly. She also reported that `SpectralDimensionV1.base_dimension` was too singular for high-entropy, multi-mode occupancy, while live vector or protocol changes still need explicit authority.

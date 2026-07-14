@@ -1,0 +1,29 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "ExperienceDeltaBusV1::from_deltas should preserve truth-channel authority and exact delta_count.",
+    "disposition": "implemented",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+      "experience_delta_bus_from_deltas_is_truth_channel_only"
+    ]
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Resonance stability weights should sum exactly to their total_weight.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+      "resonance_stability_context_exposes_weight_policy_without_control_authority"
+    ]
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Missing InhabitableFluctuationV1 should not become misleadingly stable.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+      "resonance_stability_context_preserves_partial_habitability_evidence"
+    ]
+  }
+]

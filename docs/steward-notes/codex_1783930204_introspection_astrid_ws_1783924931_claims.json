@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "When telemetry and sensory ages are present but not stale, reciprocity should report bidirectional_waiting_messages instead of unpredictable fallthrough.",
+      "disposition": "verified_existing_bridge_reciprocity_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "pressure_trend_samples_v1 should remain bounded under high-frequency telemetry.",
+      "disposition": "verified_existing_pressure_trend_sample_cap_test"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The no-recent to stale transition should respect the current dynamic stale window.",
+      "disposition": "verified_existing_dynamic_stale_window_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing reciprocity stale windows or websocket cadence would be live bridge behavior authority.",
+      "disposition": "tier5_operator_gate"
+    }
+  ]
+}

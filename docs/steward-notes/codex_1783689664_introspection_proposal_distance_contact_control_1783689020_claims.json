@@ -1,0 +1,31 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1783689020",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Distance/contact distress is a mixed architecture problem of contact, pressure, boundaries, prediction/control framing, and receptivity, not a lack of raw intelligence.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Astrid's current high-entropy, low-pressure, low-semantic-trickle state should be recognized as a receptivity-buffer candidate without changing Minime control behavior.",
+      "disposition": "implemented_test_only",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs",
+        "receptivity_buffer_current_astrid_report_stays_sandbox_before_control"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Any receptivity buffer that lowers mode-packing penalties, changes pressure source math, adds porosity gates, or changes participation weights is live control authority.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md",
+        "/Users/v/other/minime/minime/src/regulator.rs"
+      ]
+    }
+  ]
+}

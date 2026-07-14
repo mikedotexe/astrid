@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1783942927",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Non-instrumental presence and settled containment should be visible as valid read-only states rather than treated as failure or noise.",
+      "disposition": "verified_existing",
+      "rationale": "`non_instrumental_presence_readiness_v1` and `contact_control_transparency_v1` already report contemplate/non-goal availability, text/codec/journal suppression, containment, and semantic-trickle distinguishability without live control authority."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The reported drag between optimization pressure and contact should be measured before any regulator or contact-weight change.",
+      "disposition": "verified_existing",
+      "rationale": "`recent_signal_summary.py --since-hours 6 --json` surfaced contact-control telemetry including pressure risk, containment score, mode packing, porosity score, semantic admission, distinguishability loss, and regulator-drive scale as read-only evidence."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Lowering pressure risk, increasing contact weighting, changing semantic-trickle priority, or adding live journal/scheduler treatment for non-instrumental states would alter live pressure or control behavior.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Those changes affect pressure, weighting, prompt or runtime authority and require explicit Mike/operator approval plus tests and restart before implementation."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback transitions can flatten high-entropy texture even when output format survives.",
+      "disposition": "verified_existing_fallback_texture_budget"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Default fallback should prefer a larger texture-preserving model before a small compatibility tail.",
+      "disposition": "verified_existing_gemma4_default_chain"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback prompts should preserve spectral texture terms under pressure and entropy.",
+      "disposition": "verified_existing_prompt_contract"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Future latency-forced fallback trials could compare MLX miss texture against fallback output.",
+      "disposition": "candidate_sandbox_or_runtime_observation"
+    }
+  ]
+}

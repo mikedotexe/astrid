@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784026757",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The 48D codec expansion and FEATURE_ABS_MAX ceiling make voice wider but still bounded.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: SEMANTIC_DIM and FEATURE_ABS_MAX",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib narrative_arc -- --nocapture"
+      ],
+      "authority": "read_only_codec_structure"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "The 768D to 8D projection can flatten dense technical meaning and should expose compression debt.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: semantic_projection_density_delta_v1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_projection_density_delta -- --nocapture"
+      ],
+      "authority": "read_only_projection_truth_channel"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "High entropy can be ordered distributed cascade, not mere randomness, and should be contextualized by structural coherence.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib structural_entropy_dampening -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib high_entropy_sharpening -- --nocapture"
+      ],
+      "authority": "read_only_codec_texture"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Dynamic projection width or resonance-density-conditioned projection expansion would alter live codec vector semantics.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784027911_solidification_persistence_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_live_codec_vector_semantics"
+    }
+  ]
+}

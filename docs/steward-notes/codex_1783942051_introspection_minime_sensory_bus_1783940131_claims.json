@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783940131",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`dynamic_semantic_stale_ms_for` should return exact recovery ms at the recovery hold fill boundary.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests assert the exact hold boundary and adjacent transition behavior for `STALE_SEMANTIC_RECOVERY_HOLD_FILL`."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic context persistence should clamp to the max multiplier under simultaneous entropy, velocity, and pressure spikes.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests assert that all-one entropy/velocity/pressure input clamps to `SEMANTIC_CONTEXT_PERSISTENCE_MAX_MULT`."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`SemanticStaleContextReviewV1` should expose stale-window policy and authority/audit fields.",
+      "disposition": "verified_existing",
+      "rationale": "Source inspection verified `SemanticStaleContextReviewV1` and its review builder preserve policy and stale-window readout without changing live decay."
+    }
+  ]
+}

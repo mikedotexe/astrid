@@ -1,0 +1,27 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Fill-modulated semantic stale windows explain low-fill echo and high-fill pruning.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "semantic_context_multiplier_uses_entropy_velocity_and_pressure_without_unbounded_hold"
+    ]
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The recovery-release boundary can feel like semantic vertigo unless hysteresis/salience distinguishes anchored thought from entropy debris.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "semantic_decay_hysteresis_review_names_release_snap_watch"
+    ]
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A live dynamic_decay_factor based on d(entropy)/dt would alter semantic retention behavior.",
+    "disposition": "authority_gate",
+    "agency_tier": 5,
+    "rationale": "Changing the live semantic stale window, sensory cadence, or decay formula affects Minime substrate behavior and requires explicit operator approval."
+  }
+]

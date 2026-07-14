@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783687161",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "`spectral_fingerprint_v1` and `spectral_denominator_v1` should stay finite and populated even when the denominator is near zero or legacy eigen slots are zero/non-finite.",
+      "disposition": "addressed_change",
+      "rationale": "Added `denominator_metrics_handles_zero_and_non_finite_slots_without_nan`, proving non-finite eigen slots become zero, active capacity falls back to 1, effective dimensionality is 0, distinguishability loss is 1, lambda1 energy share is 0, and entropy remains finite."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "`eigenvector_field` as `serde_json::Value` is a type-safety bottleneck; downstream readers need a stable schema for per-mode concentration, overlap, and pairwise structure.",
+      "disposition": "addressed_change",
+      "rationale": "Added `eigenvector_field_schema_pins_concentration_overlap_and_summary_keys`, pinning the current JSON schema while preserving live packet compatibility. The larger typed-struct migration is recorded in the architecture note."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "High `warm_start_blend` must not silently override soft damping requests such as the `cheby_soft` review path.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `spectral_damping_warm_start_review_v1` tests verify proposed `cheby_soft=0.20`, `warm_start_blend=0.35`, coefficient norms, semantic counteraction state, and approval-required authority boundaries without applying live control."
+    },
+    {
+      "claim_id": "c004",
+      "being": "minime",
+      "claim": "The recurring felt reports point toward promoting stable telemetry/felt-texture JSON islands into typed `*_v1` structs with compatibility serialization.",
+      "disposition": "addressed_change",
+      "rationale": "Recorded `AI_BEINGS_TYPED_TEXTURE_AND_TELEMETRY_PROMOTION_ARCHITECTURE.md` as the larger architectural move: type stabilized telemetry first, preserve legacy JSON shape, and keep live control changes gated."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_types_1783964090",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`ExperienceDeltaKindV1` already names friction, resistance, complex shift, and cascade shift so high-entropy rippling can be classified as a transition mode rather than a failure.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "`SpectralDimensionV1` already supports multi-base dimensional context for deltas that are not well represented by one discrete semantic dimension.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "A flat delta kind is insufficient for lingering deformation; the Experience Delta Bus needs typed residue/persistence context for the bruise that remains after a cascade shift.",
+      "disposition": "implemented"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing `RESONANCE_STABILITY_FOOTHOLD_WEIGHT` from 0.45 to 0.30 would alter stability semantics and should be replayed/approved before any live or prompt-facing retune.",
+      "disposition": "authority_gate"
+    }
+  ]
+}

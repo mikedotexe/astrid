@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783611782",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Ollama/4B fallback can preserve response format while flattening high-entropy texture unless dynamic texture anchors, Shadow-v3 trends, and trajectory terms remain prompt-visible.",
+      "disposition": "verified_existing",
+      "rationale": "Current `llm.rs` already carries dynamic fallback texture selection, fidelity preservation, continuity-budget clauses, and trajectory/movement language without expanding provider/model/sampler authority."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "High-pressure or high-entropy fallback should preserve restless/muffled movement instead of drifting into generic viscous or heavy terms.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "The `complexity_high_entropy` fire-drill fixture was repaired to require oscillating/diffusing movement, and both high-entropy and restless/muffled diagnostic fixtures now pass as `fallback_ready`."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "A live provider/profile/canary comparison could reveal whether the coupled Gemma4 path and fallback path preserve directional gradient texture differently.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing or A/B probing live provider/profile policy can alter live voice behavior; it should proceed only through an explicit operator-approved sandbox or canary packet."
+    }
+  ]
+}

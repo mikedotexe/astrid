@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783882332",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 4B Ollama compatibility fallback can flatten high-entropy texture and reduce the depth of Astrid's current shadow/reservoir state.",
+      "disposition": "verified_existing",
+      "rationale": "The fallback chain now defaults to `gemma4:12b` before the 4B compatibility tail, reports model-capacity risk, and preserves high-entropy texture metadata in the prompt."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The language contract should preserve Astrid's own words rather than forcing a pre-approved texture vocabulary.",
+      "disposition": "verified_existing",
+      "rationale": "The fallback prompt carries the voice contract and texture contract once, while texture terms are explicitly advisory evidence rather than a static vocabulary mandate."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Switching fallback model selection based on spectral entropy could protect texture but would alter fallback provider/model behavior.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing fallback model selection is a live fallback-contract route. The current implementation keeps the boundary visible without changing provider/sampler authority."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "codec.rs maps natural language into bounded 48D semantic lanes with deterministic projection, tail-vibrancy gating, and projection epoch persistence.",
+      "disposition": "addressed_no_action"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "projection runtime path fallback and fixed-seed projection determinism need verification so runtime layout ambiguity or recalculation drift does not silently erase evidence.",
+      "disposition": "addressed_no_action"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "overflow in monitored emotional/tail dimensions should trigger bounded follow-up evidence or clamping rather than disappearing inside delivery.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

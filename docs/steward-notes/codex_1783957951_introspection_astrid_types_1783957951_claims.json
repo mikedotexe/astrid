@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "`ExperienceDeltaBusV1::from_deltas` must keep `live_vector_write=false` and `live_authority_write=false` even for complex or viscosity-bearing deltas.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs::experience_delta_bus_from_deltas_is_truth_channel_only",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib experience_delta -- --nocapture"
+    ],
+    "authority_boundary": "truth-channel only; no live vector authority"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The V2 design preview must remain default-off and not imply V1 persistence or aggregation authority.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs::experience_delta_bus_v2_preview_is_default_off_typed_aggregation",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib experience_delta -- --nocapture"
+    ],
+    "authority_boundary": "design preview only"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Absent or zero viscosity texture fields should not serialize as false certainty.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs::resonance_density_omits_absent_optional_texture_fields",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib resonance_density_omits_absent_optional_texture_fields -- --nocapture"
+    ],
+    "authority_boundary": "schema/serialization evidence only"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Persistent cross-surface aggregation, bus retention, or live vector authority would be V2 substrate behavior.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783959645_five_item_v2_gate_packet.md"
+    ],
+    "authority_boundary": "V2 lifecycle proposal only; live_eligible_now=false; auto_approved=false"
+  }
+]

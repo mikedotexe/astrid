@@ -1,0 +1,19 @@
+{
+  "introspection_id": "introspection_astrid_types_1783673543",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`resonance_stability_context_v1` should not let NaN/Inf from `ResonanceDensityComponents` or `InhabitableFluctuationV1` survive `.clamp()` and poison habitability context.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added finite unit-interval helpers, ignored non-finite comfort-gate/foothold/fluctuation/pressure-interference inputs, emitted explicit non-finite diagnostic states, and added a regression test asserting finite output."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "`resonance_stability_context_v1` should still identify `gate_low_but_foothold_stable`, and `resonance_stability_weights_v1()` should expose a complete 1.0 weight policy.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests already lock the low-gate/stable-foothold path and verify the weight fields/total, while the new hardening preserves those branches for finite inputs."
+    }
+  ]
+}

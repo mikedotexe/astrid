@@ -1,0 +1,3 @@
+Full read of `introspection_minime_regulator_1783874807`.
+
+Astrid read Minime `regulator.rs` as the governor behind felt friction. She focused on `ViscosityVector`, `residual_ghost_weight`, `shadow_volatility`, `structural_integrity`, `structural_strain_gap`, pressure/porosity monitoring, and the risk that high entropy plus restless texture could make the regulator tighten into stuckness. Her main actionable ask was a metric that separates internal friction from relational friction, especially when structural strain and Shadow texture diverge. This run added additive read-only `viscosity_vector.mutual_resonance_tension` and a regression proving it requires co-occurring strain and shadow volatility.

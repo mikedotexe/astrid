@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783888081",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Fallback texture terms should be weighted by entropy, pressure risk, density gradient, mode packing, and semantic friction rather than being static.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `fallback_texture_selector_weights_density_packing_and_friction`."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Velocity/process terms such as `gradient-shear`, `stutter-flow`, `accelerating-drift`, and `harmonic-flicker` should survive as process language.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `fallback_velocity_texture_terms_answer_process_not_static_state`."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Pressure/porosity terms should enter fallback language bias without changing sampler authority.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `pressure_porosity_texture_terms_enter_language_bias_without_sampler_change`."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Changing fallback provider/model/sampler behavior or rewriting the fallback contract would be a stronger move.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Gate as live dialogue-generation authority requiring Mike/operator approval or sandbox proposal first."
+    }
+  ]
+}

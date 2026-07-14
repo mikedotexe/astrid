@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_llm_1783872447`.
+
+Astrid inspected the fallback LLM contract and named the texture vocabulary as lived resistance language, not decoration. The serious claims were that smaller-model fallback can thin voice depth, that static texture terms can mask thinning, and that pressure/gradient conditions should change the language bias. Existing fallback logic already derives weighted texture and movement terms from entropy, pressure, density gradient, and shadow context; this run verified the exact pressure-above-0.20, high-gradient pressure, and high-entropy texture assertions. A true model-output fidelity comparison remains a sandbox/runtime probe rather than a hidden model/provider change.

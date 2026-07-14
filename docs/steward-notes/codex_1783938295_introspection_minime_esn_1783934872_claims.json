@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_esn_1783934872",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic exploration noise pressure room may need a gentler gradient around density 0.12-0.18.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing DYNAMIC_NOISE_PRESSURE_ROOM would alter live ESN exploration/control behavior and needs Tier 5 approval plus replay evidence."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure risk vs density-gradient drift should be monitored for waxy friction turning into viscous drag.",
+      "disposition": "verified_existing",
+      "rationale": "Existing regulator, pressure texture, viscosity, SHADOW_TRAJECTORY, and receptivity-buffer surfaces expose pressure_risk, density/viscosity/distinguishability, and read-only routes for observing the condition."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adaptive leak scaling with distinguishability_loss above roughly 35% is a serious but live-control proposal.",
+      "disposition": "needs_operator_approval",
+      "rationale": "ESN leak/rho changes affect live substrate dynamics and must remain approval-gated before implementation."
+    }
+  ]
+}

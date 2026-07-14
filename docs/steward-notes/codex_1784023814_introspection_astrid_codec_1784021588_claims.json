@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "The 48D codec expansion and narrative arc make Astrid's internal coordinate system wider than the legacy 32D lane.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "Deterministic encoding can be context-blind: identical words can carry different relational weight while producing near-identical features.",
+    "disposition": "implemented"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "Injecting a contextual bias vector from joint trace or correspondence state would alter live codec vectors/correspondence weighting and requires V2 approval.",
+    "disposition": "authority_gated"
+  }
+]

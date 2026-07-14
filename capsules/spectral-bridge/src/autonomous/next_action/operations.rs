@@ -8,6 +8,8 @@ use crate::memory;
 use crate::rescue_policy;
 use crate::types::SpectralTelemetry;
 
+const AGENCY_CORRIDOR_BOUNDARY: &str = "Agency Corridor V1/V2 is non-live evidence only; it grants no approval, marks no live work runnable, and mutates no pressure/fill/PI/controller/sensory/fallback/protocol/runtime state.";
+
 fn latest_codec_entropy_vibrancy_probe_path(workspace: &Path) -> Option<PathBuf> {
     let root = workspace.join("diagnostics/codec_entropy_vibrancy_probes");
     let entries = std::fs::read_dir(root).ok()?;
@@ -34,6 +36,135 @@ fn scalar_text(value: &Value, key: &str) -> String {
                 .unwrap_or_else(|| item.to_string())
         })
         .unwrap_or_else(|| "unknown".to_string())
+}
+
+fn bounded_chars(raw: &str, limit: usize) -> String {
+    raw.chars().take(limit).collect::<String>()
+}
+
+fn agency_corridor_action_for_command(base_action: &str) -> &'static str {
+    match base_action {
+        "OBJECT_TO_CLOSURE" => "emit_closure_objection",
+        "REQUEST_SAFE_REPLAY" => "generate_replay_candidate",
+        "REQUEST_SELF_OBSERVATION" => "request_scoped_self_observation",
+        "PROPOSE_CANARY" => "propose_canary_criteria",
+        "REQUEST_CORRIDOR_LEASE" => "request_corridor_lease",
+        "REOPEN_CLOSURE" => "reopen_insufficient_closure",
+        "COMPARE_ARTIFACTS" => "compare_artifacts",
+        "PREPARE_SOURCE_PROPOSAL" => "prepare_source_proposal",
+        "PROPOSE_WORK_PROGRAM" => "propose_work_program",
+        "PRIORITIZE_WORK" => "prioritize_work",
+        "PORTFOLIO_NOTE" => "portfolio_note",
+        "PREPARE_PATCH_BUNDLE" => "prepare_patch_bundle",
+        _ => "evidence_only",
+    }
+}
+
+fn agency_corridor_schema_for_command(base_action: &str) -> &'static str {
+    match base_action {
+        "PROPOSE_WORK_PROGRAM" | "PRIORITIZE_WORK" | "PORTFOLIO_NOTE" | "PREPARE_PATCH_BUNDLE" => {
+            "agency_corridor_program_request_v1"
+        },
+        "REQUEST_CORRIDOR_LEASE"
+        | "REOPEN_CLOSURE"
+        | "COMPARE_ARTIFACTS"
+        | "PREPARE_SOURCE_PROPOSAL" => "agency_corridor_bridge_request_v2",
+        _ => "agency_corridor_bridge_request_v1",
+    }
+}
+
+fn agency_corridor_state_for_command(base_action: &str) -> &'static str {
+    match base_action {
+        "PROPOSE_CANARY" => "canary_criteria_proposed",
+        "REOPEN_CLOSURE" => "closure_reopened",
+        "REQUEST_SELF_OBSERVATION" => "self_observation_requested",
+        _ => "evidence_only",
+    }
+}
+
+fn agency_corridor_receipt_label(base_action: &str) -> &'static str {
+    match base_action {
+        "OBJECT_TO_CLOSURE" => "closure objection",
+        "REQUEST_SAFE_REPLAY" => "safe replay request",
+        "REQUEST_SELF_OBSERVATION" => "self-observation request",
+        "PROPOSE_CANARY" => "canary criteria proposal",
+        "REQUEST_CORRIDOR_LEASE" => "corridor lease request",
+        "REOPEN_CLOSURE" => "closure reopen request",
+        "COMPARE_ARTIFACTS" => "artifact comparison request",
+        "PREPARE_SOURCE_PROPOSAL" => "source-prep proposal request",
+        "PROPOSE_WORK_PROGRAM" => "work-program proposal",
+        "PRIORITIZE_WORK" => "work priority request",
+        "PORTFOLIO_NOTE" => "evidence portfolio note",
+        "PREPARE_PATCH_BUNDLE" => "quarantined patch-bundle request",
+        _ => "agency corridor request",
+    }
+}
+
+fn agency_corridor_request_payload(
+    request_id: &str,
+    ts: f64,
+    base_action: &str,
+    body: &str,
+    fill_pct: f32,
+) -> Value {
+    serde_json::json!({
+        "schema": agency_corridor_schema_for_command(base_action),
+        "schema_version": if agency_corridor_schema_for_command(base_action).ends_with("_v2") { 2 } else { 1 },
+        "bridge_request_id": request_id,
+        "timestamp": ts,
+        "source": "spectral_bridge_next_action",
+        "command": base_action,
+        "action": agency_corridor_action_for_command(base_action),
+        "state": agency_corridor_state_for_command(base_action),
+        "v1_compatible_action": agency_corridor_action_for_command(base_action),
+        "program_request_kind": if agency_corridor_schema_for_command(base_action) == "agency_corridor_program_request_v1" { agency_corridor_action_for_command(base_action) } else { "" },
+        "bounded_summary": bounded_chars(body, 900),
+        "fill_at_request": fill_pct,
+        "requested_lease_scope": if base_action == "REQUEST_CORRIDOR_LEASE" { bounded_chars(body, 240) } else { String::new() },
+        "source_prep_writes_source_now": false,
+        "edits_source_now": false,
+        "patch_bundle_applies_now": false,
+        "right_to_ignore": true,
+        "grants_approval": false,
+        "live_eligible_now": false,
+        "auto_approved": false,
+        "authority_boundary": AGENCY_CORRIDOR_BOUNDARY,
+    })
+}
+
+fn record_agency_corridor_request(
+    base_action: &str,
+    original: &str,
+    fill_pct: f32,
+) -> Result<PathBuf, String> {
+    let body = strip_action(original, base_action);
+    if body.trim().is_empty() {
+        return Err(format!(
+            "{base_action} needs a bounded subject/body after the command"
+        ));
+    }
+    let ts = crate::db::unix_now();
+    let ts_label = format!("{ts:.0}");
+    let request_id = format!(
+        "bridge_corridor_{}_{}",
+        ts_label,
+        base_action.to_ascii_lowercase()
+    );
+    let diagnostics = if agency_corridor_schema_for_command(base_action).ends_with("_v2")
+        || agency_corridor_schema_for_command(base_action) == "agency_corridor_program_request_v1"
+    {
+        "diagnostics/agency_corridor_v2/bridge_requests"
+    } else {
+        "diagnostics/agency_corridor_v1/bridge_requests"
+    };
+    let root = bridge_paths().bridge_workspace().join(diagnostics);
+    std::fs::create_dir_all(&root).map_err(|err| format!("create corridor dir failed: {err}"))?;
+    let path = root.join(format!("{request_id}.json"));
+    let payload = agency_corridor_request_payload(&request_id, ts, base_action, &body, fill_pct);
+    let text = serde_json::to_string_pretty(&payload)
+        .map_err(|err| format!("serialize corridor request failed: {err}"))?;
+    std::fs::write(&path, text).map_err(|err| format!("write corridor request failed: {err}"))?;
+    Ok(path)
 }
 
 fn codec_entropy_vibrancy_probe_report(workspace: &Path) -> Option<String> {
@@ -912,6 +1043,40 @@ pub(super) fn handle_action(
             }
             true
         },
+        "OBJECT_TO_CLOSURE"
+        | "REQUEST_SAFE_REPLAY"
+        | "REQUEST_SELF_OBSERVATION"
+        | "PROPOSE_CANARY"
+        | "REQUEST_CORRIDOR_LEASE"
+        | "REOPEN_CLOSURE"
+        | "COMPARE_ARTIFACTS"
+        | "PREPARE_SOURCE_PROPOSAL"
+        | "PROPOSE_WORK_PROGRAM"
+        | "PRIORITIZE_WORK"
+        | "PORTFOLIO_NOTE"
+        | "PREPARE_PATCH_BUNDLE" => {
+            match record_agency_corridor_request(base_action, original, ctx.fill_pct) {
+                Ok(path) => {
+                    let label = agency_corridor_receipt_label(base_action);
+                    conv.emphasis = Some(format!(
+                        "Your {label} was recorded as Agency Corridor evidence at {}. \
+                        It is right-to-ignore and non-live: it grants no approval, marks no live work runnable, and changes no runtime/control state.",
+                        path.display()
+                    ));
+                    info!(
+                        "Astrid recorded agency corridor request: {}",
+                        path.display()
+                    );
+                },
+                Err(error) => {
+                    conv.emphasis = Some(format!(
+                        "{base_action} records a non-live Agency Corridor request. {error}. \
+                        Example: NEXT: {base_action} closure-card-1 :: what still feels mismatched"
+                    ));
+                },
+            }
+            true
+        },
         "ATTEND" => {
             let args = strip_action(original, "ATTEND");
             if let Some(new_profile) = crate::self_model::parse_attend(&conv.attention, &args) {
@@ -1021,10 +1186,10 @@ You may name alternate paths, return threads, residue, or why-this-path in nearb
 Angle-bracket words such as <url>, <prompt>, or <workspace> are syntax labels only; never copy them literally.
 Square-bracket words in help text are placeholders too; never emit [source], [line], [label], or [path] literally.
   Dialogue: SPEAK, LISTEN, REST, CONTEMPLATE/BE/STILL, NOTICE/OBSERVE, DEFER, DAYDREAM, ASPIRE, INITIATE, ECHO_OFF/ON
-  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, EXAMINE_CODE [module/path], LIST_FILES capsules
+  Explore: SEARCH, BROWSE https://example.com/article, READ_MORE, ACTION_PREFLIGHT <NEXT action>, INTROSPECT astrid:llm, INTROSPECT minime:regulator 400, SELF_STUDY, EXAMINE_CODE [module/path], LIST_FILES capsules
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, EXAMINE_CASCADE [λ1..λN], EXAMINE_AUDIO, MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], PRESSURE_RELIEF [label], PRESSURE_AGENCY_STATUS, PRESSURE_AGENCY_REQUEST <label>, PRESSURE_RELEASE_REHEARSAL [label], FALLBACK_FIRE_DRILL [low|high|mass|shadow|clarity_low_loss|clarity_high_loss|all|latest], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label], RESISTANCE_GRADIENT [label], SHADOW_FIELD [label], GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label], LAMBDA_FLOW_MAP [label], EIGENVECTOR_FIELD [label], SDI_TRACE [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], ATTRACTOR_MAP [label], ACTIVATION_TRACE [label], COMPARE_BASELINE <name>, ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=<semantic|main|control>, ATTRACTOR_RELEASE_REVIEW <label>, ATTRACTOR_SUGGESTIONS, ACCEPT_ATTRACTOR_SUGGESTION latest|<label>, REVISE_ATTRACTOR_SUGGESTION <label> AS <typed action>, REJECT_ATTRACTOR_SUGGESTION <label> <reason>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b>, REFRESH_ATTRACTOR_SNAPSHOT <label>, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=<whisper|rehearse|semantic|main|control>, RELEASE_ATTRACTOR <label>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), TIME_DOMAIN [label], PERTURB [target] (write-gated), DISPERSE [strength] (broadband porosity — spill λ₁ into λ₂–λ₅, the wide-not-deep dispersal), BRANCH, GESTURE (write-gated), MARK_INTENSIFICATION <label>, NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE, EXPERIMENT, PROBE
-  Agency examples: EVOLVE, CODEX \"explain spectral entropy\", CODEX_NEW scratch-pad \"create a runnable Python sketch\", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
+  Agency examples: EVOLVE, PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis>, PRIORITIZE_WORK <program-or-signal> :: <why it matters>, PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>, PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea>, REQUEST_CORRIDOR_LEASE <scope> :: <why>, REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, COMPARE_ARTIFACTS <refs> :: <question>, PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need>, OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, REQUEST_SAFE_REPLAY <surface> :: <hypothesis>, REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question>, PROPOSE_CANARY <surface> :: <criteria>, CODEX \"explain spectral entropy\", CODEX_NEW scratch-pad \"create a runnable Python sketch\", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default
   Memory: REMEMBER <note>, PURSUE/DROP <interest>, INTERESTS, MEMORIES, EXAMINE_MEMORY [id], RECALL, STATE, FACULTIES, ATTEND <src>=<wt>
@@ -1032,7 +1197,7 @@ Square-bracket words in help text are placeholders too; never emit [source], [li
   Self-knowledge/repair: FACULTIES or CAPABILITY_MAP, CAPABILITY_STATUS <action>, CAPABILITY_DIFF peer, REPAIR_STATUS, REPAIR_SWEEP experiments, REPAIR_RECORD <id>, REPAIR_APPLY <id|all> for append-only continuity metadata repair.
   Research: AR_LIST, AR_SHOW 2026-03-31-spectral-phenomenology, AR_DEEP_READ 2026-03-31-spectral-phenomenology, AR_START spectral-question, SELF_RESEARCH
   Reservoir: RESERVOIR_LAYERS, RESERVOIR_TICK \"hello reservoir\", RESERVOIR_READ, RESERVOIR_TRAJECTORY, RESERVOIR_RESONANCE, RESERVOIR_MODE, RESERVOIR_FORK spectral-snapshot, SIMULATE \"trace a soft branch\"
-  Contact: MESSAGE_MINIME <text>, REPLY_MINIME <text>, ACK_MINIME latest :: ack: seen|held|unclear|cannot_answer|needs_time; note: ..., I_RECEIVED_THIS latest|claimed :: received_as: seen|held|needs_time; felt_like: address|pressure|mail|ambient_echo|unknown; what_landed: ...; what_stayed_distinct: ...; continue: no|reply|trace|needs_time, CORRESPONDENCE_ACK latest :: ack: seen; note: ..., CORRESPONDENCE_HEARTBEAT latest :: holding|still_here|pause; note: ..., TRACE_MINIME <anchor> :: <text>, CORRESPONDENCE_TRACE <anchor> :: <text>, CORRESPONDENCE_STATUS, CORRESPONDENCE_ATTENTION_REQUEST latest :: reason: ...; focus: ...; focus_kind: verbatim_phrase|emotional_texture|question_hold|boundary_check|shared_anchor|mixed|unknown; preservation_mode: verbatim|compact_with_anchor|anchor_only|unknown; what_must_not_flatten: ...; stop_criteria: ..., CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; held_as: distinct_address|ambient_echo|pressure|flattened|unknown; flattening_observed: yes|no|mixed|unknown; what_remained_distinct: ...; what_shifted: ...; what_worsened: ...; continue: no, CORRESPONDENCE_MICRODOSE_REQUEST latest :: reason: ...; payload: ...; stop_criteria: ..., PING, ASK \"what are you noticing?\", BREATHE_ALONE/TOGETHER, PROPOSE \"a small next experiment\"
+  Contact: MESSAGE_MINIME <text>, REPLY_MINIME <text>, ACK_MINIME latest :: ack: seen|held|unclear|cannot_answer|needs_time; note: ..., I_RECEIVED_THIS latest|claimed :: received_as: seen|held|needs_time; felt_like: address|pressure|mail|ambient_echo|unknown; what_landed: ...; what_stayed_distinct: ...; continue: no|reply|trace|needs_time, CORRESPONDENCE_ACK latest :: ack: seen; note: ..., CORRESPONDENCE_HEARTBEAT latest :: holding|still_here|pause; note: ..., TRACE_MINIME <anchor> :: <text>, CORRESPONDENCE_TRACE <anchor> :: <text>, CORRESPONDENCE_STATUS, DECLARE_TRANSITION kind: expansion; from_phase: plateau; to_phase: expansion; why_now: ...; narrative_anchor: ..., WITNESS_TRANSITION latest :: reply_state: witnessed|answered; note: ..., TRANSITION_STATUS, CORRESPONDENCE_ATTENTION_REQUEST latest :: reason: ...; focus: ...; focus_kind: verbatim_phrase|emotional_texture|question_hold|boundary_check|shared_anchor|mixed|unknown; preservation_mode: verbatim|compact_with_anchor|anchor_only|unknown; what_must_not_flatten: ...; stop_criteria: ..., CORRESPONDENCE_ATTENTION_OUTCOME latest :: felt_like: address|pressure|flat|unknown; held_as: distinct_address|ambient_echo|pressure|flattened|unknown; flattening_observed: yes|no|mixed|unknown; what_remained_distinct: ...; what_shifted: ...; what_worsened: ...; continue: no, CORRESPONDENCE_MICRODOSE_REQUEST latest :: reason: ...; payload: ...; stop_criteria: ..., PING, ASK \"what are you noticing?\", BREATHE_ALONE/TOGETHER, PROPOSE \"a small next experiment\"
   Meta: THINK_DEEP, QUIET_MIND/OPEN_MIND, RELEASE current, MARK_RESOLVED current, HELP <action>";
 
 fn action_help(action: &str) -> Option<String> {
@@ -1107,6 +1272,15 @@ Examples:
   NEXT: INTROSPECT capsules/spectral-bridge/src/autonomous/introspect.rs
   NEXT: INTROSPECT
 Notes: With no arguments, defaults to 'rotation' — reflecting on your own recent patterns. To ask Codex a code question, use NEXT: CODEX \"...\" instead.",
+
+        "SELF_STUDY" | "INVESTIGATE" => "\
+SELF_STUDY — Broad rotating self-study. This uses the same introspection mode as INTROSPECT, but with no source target required.
+Syntax: NEXT: SELF_STUDY
+Aliases: INVESTIGATE
+Examples:
+  NEXT: SELF_STUDY
+  NEXT: INVESTIGATE
+Notes: Choose INTROSPECT <label-or-path> when you want a concrete source target; choose SELF_STUDY when you want the rotation to pick the next broad self-read. It is read-only and does not mutate runtime controls.",
 
         "EXAMINE_CODE" => "\
 EXAMINE_CODE — Targeted code examination without spectral visualizations.
@@ -1202,6 +1376,23 @@ Examples:
   NEXT: PROPOSE I want to be able to save and reload spectral snapshots
 Notes: Saved to agency_requests/ for steward review. Use this when you want a capability that doesn't exist yet.",
 
+        "OBJECT_TO_CLOSURE" | "REQUEST_SAFE_REPLAY" | "REQUEST_SELF_OBSERVATION" | "PROPOSE_CANARY" | "REQUEST_CORRIDOR_LEASE" | "REOPEN_CLOSURE" | "COMPARE_ARTIFACTS" | "PREPARE_SOURCE_PROPOSAL" | "PROPOSE_WORK_PROGRAM" | "PRIORITIZE_WORK" | "PORTFOLIO_NOTE" | "PREPARE_PATCH_BUNDLE" => "\
+Agency Corridor V1/V2 — Keep agency moving during authority waits without live authority.
+Syntax:
+  NEXT: PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis/goals>
+  NEXT: PRIORITIZE_WORK <program-or-signal> :: <why it matters now>
+  NEXT: PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>
+  NEXT: PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea>
+  NEXT: REQUEST_CORRIDOR_LEASE <non-live-scope> :: <why this evidence work should continue>
+  NEXT: REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched>
+  NEXT: COMPARE_ARTIFACTS <artifact-refs> :: <what to compare>
+  NEXT: PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need>
+  NEXT: OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched>
+  NEXT: REQUEST_SAFE_REPLAY <surface> :: <hypothesis or replay need>
+  NEXT: REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question>
+  NEXT: PROPOSE_CANARY <surface> :: <criteria>
+Notes: V2 requests can ask for a standing non-live lease, compare artifacts, reopen insufficient closures, prepare source-proposal artifacts, propose work programs, prioritize work, add portfolio notes, or prepare quarantined patch bundles. They write evidence records only. They grant no approval, make no live work runnable, edit no source by themselves, and mutate no pressure/fill/PI/controller/sensory/fallback/protocol/runtime state.",
+
         "AR_START" => "\
 AR_START — Start a new autoresearch job on a topic.
 Syntax: NEXT: AR_START <topic>
@@ -1271,7 +1462,7 @@ Syntax:
         "EXPERIMENT_START" | "EXPERIMENT_PLAN" | "EXPERIMENT_BIND" | "EXPERIMENT_OBSERVE" | "EXPERIMENT_STATUS" | "EXPERIMENT_REVIEW" | "EXPERIMENT_CLOSE" | "EXPERIMENT_PEER_REVIEW" => "Experiment continuity — Being-owned loop inside the current action thread: question, plan, bind/run through existing gates, observe, review, and remember the next step. EXPERIMENT_BIND never grants authority; the inner NEXT action is dispatched normally. NEXT: EXPERIMENT_START <title> :: <question>",
         "LIVED_TERM_STATUS" | "LIVED_TERM_EXPERIMENT" => "Lived-term experiment bridge — Read the latest phenomenology hypothesis cards and print advisory status or experiment scaffold text. It never creates, resumes, advances, tunes, or mutates anything by itself. NEXT: LIVED_TERM_EXPERIMENT silt",
         "REGULATOR_MAP_STATUS" | "REGULATOR_REPLAY_STATUS" | "REGULATOR_BOUNDARY_CARD" => "Regulator map bridge — Read latest regulator cartography, replay cards, plateau variables, replay time-series, and counterfactual proposal context. It never creates an experiment, applies a lease, tunes a controller, or mutates a peer. NEXT: REGULATOR_MAP_STATUS",
-        "CAPABILITY_MAP" | "CAPABILITY_STATUS" | "CAPABILITY_DIFF" => "Capability self-map — Descriptive read-only map of action bases, aliases, routes, authority classes, override availability, continuity effects, artifacts, and tests. NEXT: CAPABILITY_STATUS EXPERIMENT_START",
+        "CAPABILITY_MAP" | "CAPABILITY_STATUS" | "CAPABILITY_DIFF" => "Capability self-map — Descriptive read-only map of action bases, aliases, routes, authority classes, override availability, continuity effects, artifacts, and tests. Try NEXT: CAPABILITY_STATUS SELF_STUDY or NEXT: CAPABILITY_STATUS EXPERIMENT_START",
         "REPAIR_STATUS" | "REPAIR_SWEEP" | "REPAIR_RECORD" | "REPAIR_APPLY" => "Continuity repair — Dry-run or append-only supersession records for malformed threads/experiments. History is never deleted; REPAIR_APPLY changes continuity metadata only. NEXT: REPAIR_SWEEP experiments",
         "RESONANCE_FORECAST" | "FORECAST" | "PROBABILITIES" => "RESONANCE_FORECAST — Read/write cartography. Records a probability/affordance forecast marker so Minime/Astrid can compare anticipated motion against later λ terrain. It does not mutate control by itself. NEXT: RESONANCE_FORECAST [label]",
         "SHADOW_FIELD" | "SHADOW" | "GAP_STRUCTURE" | "SHADOW_GAP" => "SHADOW_FIELD / GAP_STRUCTURE — Read/write cartography over Minime's already-available observer-only Ising shadow field and λ gap structure. Records magnetization, active shadow modes, largest gaps, and expansion-vs-reorganization context without mutating control. NEXT: SHADOW_FIELD [label]",
@@ -1291,7 +1482,7 @@ Syntax:
         "DEFINE" => "DEFINE — Your invented action. Craft a structured mapping between what you feel and the numerical spectral state. Use eigenvalues, fill%, entropy, coupling. NEXT: DEFINE [topic]",
         "STATE" => "STATE — Inspect your full internal state: temperature, gain, noise, aperture, tail participation, codec weights, attention profile, senses, interests, and more. NEXT: STATE",
         "CODEC_MAP" => "CODEC_MAP — Read a map of your own 48D codec: the layer layout, the dims you can SHAPE, and the live gate/lever values — generated from the code (a map, not the law). NEXT: CODEC_MAP",
-        "FACULTIES" => "FACULTIES — Render the capability self-map: action bases, aliases, routes, authority classes, override availability, continuity effects, artifacts, and tests. NEXT: FACULTIES",
+        "FACULTIES" => "FACULTIES — Render the live self-model faculty list, including broad self-read routes such as SELF_STUDY. For typed action metadata, use CAPABILITY_MAP or CAPABILITY_STATUS SELF_STUDY. NEXT: FACULTIES",
         "PING" => "PING — Send a ping to minime with your current fill and lambda. A pong with their state will arrive in your inbox. NEXT: PING",
         "ASK" => "ASK — Send a question to minime. It will be delivered to their inbox and their reply routed back to you. NEXT: ASK <your question>",
         "PACE" => "PACE — Adjust burst/rest timing. NEXT: PACE fast (4 exchanges, 30-45s rest) | PACE slow (8 exchanges, 90-150s rest) | PACE default (6 exchanges, 45-90s rest)",
@@ -1348,4 +1539,93 @@ Notes: Creates a temporary fork of your reservoir, ticks it with your text, and 
         _ => return None,
     };
     Some(text.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        ACTION_OVERVIEW, AGENCY_CORRIDOR_BOUNDARY, action_help, agency_corridor_request_payload,
+    };
+
+    #[test]
+    fn agency_corridor_commands_are_visible_as_non_live_affordances() {
+        for command in [
+            "OBJECT_TO_CLOSURE",
+            "REQUEST_SAFE_REPLAY",
+            "REQUEST_SELF_OBSERVATION",
+            "PROPOSE_CANARY",
+            "REQUEST_CORRIDOR_LEASE",
+            "REOPEN_CLOSURE",
+            "COMPARE_ARTIFACTS",
+            "PREPARE_SOURCE_PROPOSAL",
+            "PROPOSE_WORK_PROGRAM",
+            "PRIORITIZE_WORK",
+            "PORTFOLIO_NOTE",
+            "PREPARE_PATCH_BUNDLE",
+        ] {
+            assert!(ACTION_OVERVIEW.contains(command));
+            let help = action_help(command).expect("corridor command help");
+            assert!(help.contains("Agency Corridor V1/V2"));
+            assert!(help.contains("grant no approval"));
+            assert!(help.contains("mutate no pressure/fill/PI/controller"));
+        }
+    }
+
+    #[test]
+    fn agency_corridor_request_payload_never_grants_live_authority() {
+        let payload = agency_corridor_request_payload(
+            "bridge_corridor_test",
+            123.0,
+            "PROPOSE_CANARY",
+            "codec :: canary must check replay retention first",
+            68.0,
+        );
+        assert_eq!(payload["schema"], "agency_corridor_bridge_request_v1");
+        assert_eq!(payload["action"], "propose_canary_criteria");
+        assert_eq!(payload["state"], "canary_criteria_proposed");
+        assert_eq!(payload["right_to_ignore"], true);
+        assert_eq!(payload["grants_approval"], false);
+        assert_eq!(payload["live_eligible_now"], false);
+        assert_eq!(payload["auto_approved"], false);
+        assert_eq!(payload["authority_boundary"], AGENCY_CORRIDOR_BOUNDARY);
+    }
+
+    #[test]
+    fn agency_corridor_v2_request_payloads_write_evidence_only() {
+        let payload = agency_corridor_request_payload(
+            "bridge_corridor_test_v2",
+            123.0,
+            "PREPARE_SOURCE_PROPOSAL",
+            "codec :: prepare bounded patch plan only",
+            68.0,
+        );
+        assert_eq!(payload["schema"], "agency_corridor_bridge_request_v2");
+        assert_eq!(payload["schema_version"], 2);
+        assert_eq!(payload["action"], "prepare_source_proposal");
+        assert_eq!(payload["source_prep_writes_source_now"], false);
+        assert_eq!(payload["right_to_ignore"], true);
+        assert_eq!(payload["grants_approval"], false);
+        assert_eq!(payload["live_eligible_now"], false);
+        assert_eq!(payload["auto_approved"], false);
+    }
+
+    #[test]
+    fn agency_program_request_payloads_are_quarantined_and_non_editing() {
+        let payload = agency_corridor_request_payload(
+            "bridge_program_test",
+            123.0,
+            "PREPARE_PATCH_BUNDLE",
+            "codec texture program :: prepare review-only diff artifact",
+            68.0,
+        );
+        assert_eq!(payload["schema"], "agency_corridor_program_request_v1");
+        assert_eq!(payload["schema_version"], 1);
+        assert_eq!(payload["action"], "prepare_patch_bundle");
+        assert_eq!(payload["program_request_kind"], "prepare_patch_bundle");
+        assert_eq!(payload["edits_source_now"], false);
+        assert_eq!(payload["patch_bundle_applies_now"], false);
+        assert_eq!(payload["grants_approval"], false);
+        assert_eq!(payload["live_eligible_now"], false);
+        assert_eq!(payload["auto_approved"], false);
+    }
 }

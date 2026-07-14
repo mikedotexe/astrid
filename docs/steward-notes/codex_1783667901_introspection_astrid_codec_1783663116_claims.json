@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783663116",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Projection epoch persistence could become inconsistent if runtime persistence is unavailable or an env path is non-writable.",
+      "disposition": "verified_existing",
+      "rationale": "The codec already derives a deterministic kernel epoch when no file is readable, writes it when possible, and tests env/file/kernel-derived precedence and repeated fresh-runtime stability."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Projection consistency should be verified through stable projection fingerprints across repeated calls/process-equivalent runs.",
+      "disposition": "verified_existing",
+      "rationale": "Existing dynamic projection tests pin repeatability within an epoch, fingerprint equality for repeated runs, and fingerprint changes across epoch changes."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "The entropy smoothstep gate should be checked against apply_spectral_feedback_inner and TAIL_VIBRANCY_ENTROPY_GATE.",
+      "disposition": "verified_existing",
+      "rationale": "Existing vibrancy tests verify the smoothstep formula, no pop at the 0.85 gate, exact-gate ceiling preservation, and visible-but-gentle 0.90 entropy lift."
+    }
+  ]
+}

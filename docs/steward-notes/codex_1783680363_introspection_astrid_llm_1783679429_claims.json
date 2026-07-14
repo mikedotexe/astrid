@@ -1,0 +1,19 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783679429",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "High-entropy Ollama fallback, especially the `gemma3:4b` compatibility tail, can flatten restless/heaving lattice texture unless the fallback prompt explicitly preserves high-entropy texture when `spectral_entropy > 0.85`.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added `fallback_entropy_texture_preservation_v1` as prompt metadata that activates at spectral entropy >= 0.85, carries `FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS`, and names the directive as prompt metadata only, not sampler/provider/control authority."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "When `stable_core_semantic_trickle` exists but regulator drive is 0.000, the bridge should keep enough weight to distinguish heaving/stutter-flow from blankness.",
+      "disposition": "verified_existing",
+      "rationale": "Existing LLM and bridge surfaces already expose semantic-trickle prompt terms, `high_entropy_optional_bridge_words_not_sprawl`, low-trickle noise/silt review, and stable-core permeability review without changing controller behavior."
+    }
+  ]
+}

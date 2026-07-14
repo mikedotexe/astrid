@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783935548",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "RUN_PYTHON code parsing should not truncate when code contains flag-like text inside comments or strings.",
+      "disposition": "implemented",
+      "rationale": "Minime autonomous_agent.py now uses comment/quote-aware boundary handling for CODE_START blocks and token text values; new tests cover fake flags before CODE_END, missing CODE_END, and tokenized comments."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Authority budgets should cap rapid autonomous sends and prevent the next send after the configured max.",
+      "disposition": "implemented",
+      "rationale": "Added a test that seeds an active authority budget, writes AUTHORITY_BUDGET_MAX_SENDS debit rows, and verifies _active_authority_budget returns none with budget_exhausted status."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Sovereignty Loop authority budgets should remain explicit continuity-control boundaries.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests confirm blocked missing requirements, capped max_sends/ttl, pending steward approval, and that local EXPERIMENT_AUTHORITY_EXECUTE does not perform the bridge-side semantic send."
+    }
+  ]
+}

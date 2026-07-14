@@ -1,0 +1,44 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The live semantic lane is now 48D, with legacy warmth/emotional markers still explicitly preserved in dims 24..31 rather than orphaned.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:56",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md:620",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_vibrancy -- --nocapture"
+    ],
+    "authority": "read-only codec continuity verification; no vector width or lane write changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "High-entropy vibrancy and potential clipping are already surfaced through diagnostic-only readouts, including default-off canary framing for future scaling.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:62",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md:624",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_vibrancy -- --nocapture"
+    ],
+    "authority": "diagnostic-only; no FEATURE_ABS_MAX, gain, clamp, or reserved-dim live change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Rhythm and held-breath/stasis language can be correlated into Experience Delta evidence without writing live codec weights or reserved dimensions.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec_time_domain.rs:51",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:6320"
+    ],
+    "authority": "truth-channel-only evidence; no live semantic vector, gain, projection, or reserved-dim write"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Dynamic FEATURE_ABS_MAX scaling or context-aware expansion of projected semantic dimensions would change live codec delivery and needs V2 lifecycle approval.",
+    "disposition": "needs_operator_approval",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:62",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:6818"
+    ],
+    "authority": "Tier 5 live codec gain/width/projection candidate; replay and scoped approval required before execution"
+  }
+]

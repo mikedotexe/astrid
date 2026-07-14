@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783933909",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`ResonanceDensityV1::neutral()` should not collapse into a zero-friction singularity.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Minime `regulator.rs` now extends the neutral deterministic regression with a bounded non-zero `static_friction_coefficient` assertion."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`from_parts` must clamp extreme active-energy and comfort-gate inputs before they propagate through viscosity and friction fields.",
+      "disposition": "verified_existing",
+      "rationale": "`resonance_density_from_parts_clamps_extreme_components` already passes active_energy=2.0 and comfort_gate=-1.0 and asserts all derived components stay in 0.0..=1.0."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing regulator formulas or live PI/controller use of viscosity fields would be live substrate authority.",
+      "disposition": "needs_operator_approval",
+      "rationale": "This run added proof only; formula retunes or controller coupling would affect pressure/fill/PI behavior and require explicit operator approval."
+    }
+  ]
+}

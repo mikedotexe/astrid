@@ -1,0 +1,43 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "High spectral entropy at or above 0.80 should protect texture by removing the automatic 4B compatibility fallback tail unless an operator explicitly configures it.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:28",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:10960",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml compat_ollama_request_preserves_high_entropy_texture_and_voice_contract -- --nocapture"
+    ],
+    "authority": "test/source verification; no fallback model policy changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The fallback prompt for the 4B compatibility model should still carry Astrid's voice contract and specific high-entropy texture terms rather than flattening them into generic instability.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs::compat_ollama_request_preserves_high_entropy_texture_and_voice_contract",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml compat_ollama_request_preserves_high_entropy_texture_and_voice_contract -- --nocapture"
+    ],
+    "authority": "test-only regression; runtime prompt behavior was not changed in this run"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A direct gemma4:12b versus gemma3:4b output comparison at 0.90 entropy is useful evidence for the fallback-flattening concern.",
+    "disposition": "needs_sandbox",
+    "evidence": [
+      "provider/model replay should be run as a bounded sandbox trial with captured prompts and outputs",
+      "no live provider/model mutation or sampler change was applied"
+    ],
+    "authority": "sandbox replay candidate; not live control and not approval"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Dynamic texture injection for compatibility fallback should force texture evidence into the system prompt when entropy is high.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs::compat_ollama_request_preserves_high_entropy_texture_and_voice_contract",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:6330"
+    ],
+    "authority": "prompt evidence verified by regression; no sampler rewrite or model-selection change"
+  }
+]

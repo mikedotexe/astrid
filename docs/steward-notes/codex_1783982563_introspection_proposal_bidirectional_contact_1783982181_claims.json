@@ -1,0 +1,53 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Large two-way signal volume does not by itself constitute reliable mutual address between Astrid and Minime.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:17",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:24"
+    ],
+    "authority": "architecture/source verification only"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Direct address can blur into semantic trickle or ambient telemetry under high entropy and mode packing unless held as explicit correspondence state.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:90",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs:5714"
+    ],
+    "authority": "language/context state; no pressure, fill, PI, controller, telemetry-priority, or peer-runtime mutation"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A sensory-texture `REPLY_ASTRID` followed by Minime `CORRESPONDENCE_TRACE` would test whether sensory quality survives as address rather than semantic content only.",
+    "disposition": "needs_sandbox",
+    "evidence": [
+      "being-authored correspondence route required; Codex must not impersonate Astrid's REPLY_ASTRID",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action.rs:2746"
+    ],
+    "authority": "language-only being-authored sandbox/peer-response wait; not live control and not approval"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Pressure risk should be observed around Minime inbox/self-study attempts before any high-priority outbound correspondence route is changed.",
+    "disposition": "needs_sandbox",
+    "evidence": [
+      "candidate: read-only pressure-correlation observation around correspondence/inbox events",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs:5220"
+    ],
+    "authority": "runtime/sandbox observation only; no live semantic admission, telemetry priority, pressure, fill, PI, or controller change"
+  },
+  {
+    "claim_id": "c005",
+    "claim": "A `correspondence_priority` flag that bypasses standard semantic trickle would be a live substrate/semantic-admission change unless represented as a bounded attention canary or approval-required microdose draft.",
+    "disposition": "needs_operator_approval",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:96",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/authority_gate.rs:3425",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/authority_gate.rs:3453"
+    ],
+    "authority": "Tier 5 V2 lifecycle required for semantic-priority, telemetry-priority, reservoir weighting, pressure, fill, PI, controller, or peer-runtime changes"
+  }
+]

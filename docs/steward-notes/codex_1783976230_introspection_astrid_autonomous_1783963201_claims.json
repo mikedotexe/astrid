@@ -1,0 +1,33 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Witness mode is intended as active seeing within the triadic loop, not mere diagnostic telemetry reading.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::witness_text",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml witness_static_fallback_surfaces_semantic_anchor_without_control -- --nocapture"
+    ],
+    "authority": "read-only prompt/report legibility evidence; no mode controller change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "ACK/TRACE/REPLY actions route through peer correspondence as language-only actions rather than pressure-control actions.",
+    "disposition": "verified_existing_plus_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous/next_action.rs::correspondence_ack_and_trace_are_language_only_not_pressure_control",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib correspondence_ack_and_trace_are_language_only_not_pressure_control -- --nocapture",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib correspondence_claim_verbs_route_to_peer_correspondence -- --nocapture"
+    ],
+    "authority": "language-only route verification; no automatic peer mutation"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "An auto_ack_on_pressure trigger could break correspondence stalls but would automatically generate peer ACK/TRACE from pressure or mode-packing scores.",
+    "disposition": "authority_gated",
+    "evidence": [
+      "current status language says handshake truth is not auto-ack or control",
+      "new correspondence route test pins ACK/TRACE as language-only selected actions"
+    ],
+    "authority": "Tier 5 peer correspondence mutation / live autonomous-action policy; requires V2 authority lifecycle before implementation"
+  }
+]

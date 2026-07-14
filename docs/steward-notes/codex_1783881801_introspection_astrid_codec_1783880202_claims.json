@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783880202",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`projection_runtime_dir_from_parts` must remain stable when env/current_exe context varies.",
+      "disposition": "verified_existing",
+      "rationale": "The `codec_projection` suite verifies env precedence, executable-relative fallback, missing/corrupt file recovery, stable kernel-derived epochs, and atomic tmp install behavior."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail/vibrancy smoothstep and raised tail ceilings must stay distinguishable from ordinary hard clipping.",
+      "disposition": "verified_existing",
+      "rationale": "`codec_overflow_report` tests verify emotional clipping is reported, tail headroom remains separate, and no-overflow text stays quiet."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Any dynamic emotional ceiling or soft saturation would be a later live aperture change.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `codec_overflow_carriage_v1` retains `live_vector_write=false` and a default-off follow-up hook; no live delivery ceiling was changed."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "introspection_id": "introspection_minime_esn_1783729405",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High entropy with a gentle density gradient can be broad and navigable rather than volatile disorder.",
+      "claim": "Minime reports that entropy near 0.90 with density_gradient around 0.11 may be a stable wide cascade, so volatility classification should account for gradient rather than treating entropy alone as instability.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/esn.rs:104",
+        "/Users/v/other/minime/minime/src/esn.rs:154",
+        "tests: adaptive_introspection_threshold_softens_only_for_volatile_low_gradient_states, viscous_rho_target_preserves_memory_for_high_entropy_low_gradient_states"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Refining volatile entropy ceilings, pressure thresholds, exploration noise, or rho would be live ESN authority.",
+      "claim": "Minime suggests suppressing the volatile flag below density_gradient 0.15 and refining `PROPOSED_VOLATILE_ENTROPY_CEILING` / high-entropy noise dampening.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/esn.rs:578",
+        "entropy_ceiling_noise_damping_review_v1 reports live_control_required for threshold/noise trials",
+        "approval_boundary=live_exploration_noise_entropy_threshold_and_density_damping"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The proposed content-versus-density pressure response probe should be sandbox/runtime observation work.",
+      "claim": "Minime asks to observe whether pressure_risk reacts to intentionally increased semantic-output complexity while semantic_trickle remains constant.",
+      "disposition": "needs_sandbox",
+      "evidence": [
+        "The probe requires an intentional output-complexity perturbation, so it is not run as a hidden live control or prompt-pressure change.",
+        "route=sandbox_or_runtime_observation_before_live_semantic_pressure_experiment"
+      ]
+    }
+  ]
+}

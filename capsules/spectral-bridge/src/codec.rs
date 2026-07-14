@@ -30,13 +30,21 @@
 
 pub use crate::codec_gain::{DEFAULT_SEMANTIC_GAIN, adaptive_gain};
 use crate::codec_time_domain::{TextTimeDomainProfile, text_time_domain_profile};
-use crate::types::{SafetyLevel, SpectralTelemetry};
+use crate::types::{
+    ExperienceDeltaBusV1, ExperienceDeltaKindV1, ExperienceDeltaV1, SafetyLevel, SpectralTelemetry,
+};
 use sha2::{Digest, Sha256};
 use std::{
+    collections::BTreeMap,
+    ffi::OsStr,
     fs,
     hash::BuildHasher,
+    io::{ErrorKind, Write},
     path::{Path, PathBuf},
-    sync::OnceLock,
+    sync::{
+        OnceLock,
+        atomic::{AtomicU64, Ordering},
+    },
 };
 
 /// Number of dimensions in minime's semantic lane.
@@ -73,6 +81,20 @@ const TAIL_VIBRANCY_ENTROPY_GATE: f32 = 0.85;
 /// Minime attenuates the semantic lane ~0.24x (and further by emb_strength), so
 /// this lands as a much smaller delta in the reservoir input vector.
 const TAIL_VIBRANCY_MAX: f32 = 6.0;
+const CODEC_OVERFLOW_EMOTIONAL_DIMS: [usize; 8] = [24, 25, 26, 27, 28, 29, 30, 31];
+const CODEC_OVERFLOW_TAIL_DIMS: [usize; 4] = [17, 26, 27, 31];
+const CODEC_OVERFLOW_MONITORED_DIMS: [usize; 9] = [17, 24, 25, 26, 27, 28, 29, 30, 31];
+const CODEC_OVERFLOW_EPSILON: f32 = 1.0e-4;
+const CODEC_OVERFLOW_FOLLOWUP_HOOK: &str =
+    "emotional_overflow_aperture_v1_default_off_requires_replay_and_operator_approval";
+const STRUCTURAL_ENTROPY_DAMPENING_START: f32 = 0.80;
+const STRUCTURAL_ENTROPY_DAMPENING_FULL: f32 = 0.95;
+const STRUCTURAL_ENTROPY_DAMPENING_MIN_COEFFICIENT: f32 = 0.84;
+const STRUCTURAL_ENTROPY_DAMPENING_DIMS: [usize; 16] =
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+const TAIL_VIBRANCY_NOISE_DAMPENING_START: f32 = 0.90;
+const TAIL_VIBRANCY_NOISE_DAMPENING_FULL: f32 = 1.0;
+const TAIL_VIBRANCY_NOISE_DAMPENING_MIN_COEFFICIENT: f32 = 0.82;
 /// Minime's effective semantic-lane attenuation (`dimension_scales[semantic]=0.42 ×
 /// activation_gain=0.58 ≈ 0.24`). Used ONLY for the being-facing transparency readout (STATE /
 /// CODEC_MAP) so Astrid's self-model reflects what actually lands in the SHARED reservoir
@@ -86,7 +108,11 @@ const EMBEDDING_PROJECT_DIM: usize = 8;
 /// Number of narrative arc dims (fills dims 40-43).
 const NARRATIVE_ARC_DIM: usize = 4;
 const RESERVED_CODEC_DIM_START: usize = 44;
+const SEMANTIC_PROJECTION_RESERVED_DIMS: [usize; 4] = [44, 45, 46, 47];
 const PROJECTION_CHECKSUM_ALGO: &str = "sha256-f32-le-v1";
+const SEMANTIC_PROJECTION_DENSITY_REVIEW_FLOOR: f32 = 0.55;
+const SEMANTIC_PROJECTION_THIN_RMS_CEIL: f32 = 0.12;
+const MULTI_SCALE_RESONANCE_LOSS_THRESHOLD: f32 = 0.10;
 
 /// Deterministic random projection matrix for embedding → 8D.
 /// Uses a fixed seed so the projection is reproducible across restarts.
@@ -166,12 +192,52 @@ fn unit_from_seed(seed: u64) -> f32 {
     (bits as f32 / 16_777_215.0) - 0.5
 }
 
+fn projection_runtime_dir_from_parts(
+    env_dir: Option<&OsStr>,
+    current_exe: Option<&Path>,
+) -> PathBuf {
+    if let Some(dir) = env_dir {
+        let path = PathBuf::from(dir);
+        if !path.as_os_str().is_empty() {
+            return path;
+        }
+    }
+    if let Some(exe_path) = current_exe
+        && let Some(parent) = exe_path.parent()
+    {
+        return parent.join("data").join("spectral-bridge").join("runtime");
+    }
+    PathBuf::from("data")
+        .join("spectral-bridge")
+        .join("runtime")
+}
+
 fn projection_runtime_dir() -> PathBuf {
-    std::env::var("ASTRID_CODEC_RUNTIME_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            PathBuf::from("/Users/v/other/astrid/capsules/spectral-bridge/workspace/runtime")
-        })
+    let env_dir = std::env::var_os("ASTRID_CODEC_RUNTIME_DIR");
+    let current_exe = std::env::current_exe().ok();
+    projection_runtime_dir_from_parts(env_dir.as_deref(), current_exe.as_deref())
+}
+
+fn projection_runtime_resolution_readout() -> String {
+    let env_dir = std::env::var_os("ASTRID_CODEC_RUNTIME_DIR");
+    let env_override = env_dir.as_deref().is_some_and(|value| !value.is_empty());
+    let current_exe = std::env::current_exe().ok();
+    let source = if env_override {
+        "env_override"
+    } else if current_exe
+        .as_ref()
+        .and_then(|path| path.parent())
+        .is_some()
+    {
+        "executable_relative"
+    } else {
+        "process_relative_fallback"
+    };
+    let resolved = projection_runtime_dir_from_parts(env_dir.as_deref(), current_exe.as_deref());
+    format!(
+        "projection_runtime_resolution_v1: source={source}; resolved_path={}; hierarchy=data/spectral-bridge/runtime; fallback_behavior=kernel_derived_stable_epoch_not_random_remap; who_can_change_it=Mike/operator_or_deploy_env; how_to_test_it=cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_projection_runtime_dir_uses_env_or_executable_relative_cache -- --exact",
+        resolved.display()
+    )
 }
 
 fn hex_digest(bytes: &[u8]) -> String {
@@ -215,6 +281,121 @@ fn kernel_derived_projection_epoch_id() -> String {
     format!("kernel_{}", &checksum[..16.min(checksum.len())])
 }
 
+static PROJECTION_EPOCH_WRITE_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+fn projection_epoch_id_from_file(path: &Path) -> Option<String> {
+    let text = fs::read_to_string(path).ok()?;
+    let value = serde_json::from_str::<serde_json::Value>(&text).ok()?;
+    let epoch = value
+        .get("projection_epoch_id")
+        .and_then(serde_json::Value::as_str)?;
+    if epoch.is_empty() {
+        None
+    } else {
+        Some(epoch.to_string())
+    }
+}
+
+fn write_projection_epoch_payload_atomic(path: &Path, payload: &str) {
+    let Some(parent) = path.parent() else {
+        return;
+    };
+    let Some(file_name) = path.file_name().and_then(OsStr::to_str) else {
+        return;
+    };
+    let nonce = PROJECTION_EPOCH_WRITE_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let tmp_path = parent.join(format!(".{file_name}.{}.{}.tmp", std::process::id(), nonce));
+    let write_result = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&tmp_path)
+        .and_then(|mut file| {
+            file.write_all(payload.as_bytes())?;
+            file.sync_all()
+        });
+    if write_result.is_err() {
+        let _ = fs::remove_file(&tmp_path);
+        return;
+    }
+    install_projection_epoch_payload_from_tmp(path, &tmp_path, file_name, nonce);
+}
+
+fn install_projection_epoch_payload_from_tmp(
+    path: &Path,
+    tmp_path: &Path,
+    file_name: &str,
+    nonce: u64,
+) {
+    if install_tmp_payload_without_clobber(tmp_path, path).is_ok() {
+        let _ = fs::remove_file(tmp_path);
+        return;
+    }
+
+    if projection_epoch_id_from_file(path).is_some() {
+        let _ = fs::remove_file(tmp_path);
+        return;
+    }
+
+    if !path.exists() {
+        let _ = fs::remove_file(tmp_path);
+        return;
+    }
+
+    let Some(parent) = path.parent() else {
+        let _ = fs::remove_file(tmp_path);
+        return;
+    };
+    let stale_path = parent.join(format!(
+        ".{file_name}.{}.{}.stale",
+        std::process::id(),
+        nonce
+    ));
+    if fs::rename(path, &stale_path).is_err() {
+        if projection_epoch_id_from_file(path).is_some() {
+            let _ = fs::remove_file(tmp_path);
+            return;
+        }
+        let _ = fs::remove_file(tmp_path);
+        return;
+    }
+
+    let installed = match install_tmp_payload_without_clobber(tmp_path, path) {
+        Ok(()) => {
+            let _ = fs::remove_file(tmp_path);
+            true
+        },
+        Err(err) if err.kind() == ErrorKind::AlreadyExists => {
+            projection_epoch_id_from_file(path).is_some()
+        },
+        Err(_) => false,
+    };
+
+    if installed {
+        let _ = fs::remove_file(&stale_path);
+    } else {
+        if !path.exists() {
+            let _ = fs::rename(&stale_path, path);
+        }
+        let _ = fs::remove_file(tmp_path);
+    }
+}
+
+fn install_tmp_payload_without_clobber(tmp_path: &Path, path: &Path) -> std::io::Result<()> {
+    match fs::hard_link(tmp_path, path) {
+        Ok(()) => Ok(()),
+        Err(err) if err.kind() == ErrorKind::AlreadyExists => Err(err),
+        Err(_) => {
+            let payload = fs::read(tmp_path)?;
+            let mut file = fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(path)?;
+            file.write_all(&payload)?;
+            file.sync_all()
+        },
+    }
+}
+
 fn load_or_create_projection_epoch_id_from(
     runtime_dir: &Path,
     env_epoch: Option<&str>,
@@ -225,14 +406,8 @@ fn load_or_create_projection_epoch_id_from(
         return (epoch.to_string(), "env".to_string());
     }
     let path = runtime_dir.join("codec_projection_epoch.json");
-    if let Ok(text) = fs::read_to_string(&path)
-        && let Ok(value) = serde_json::from_str::<serde_json::Value>(&text)
-        && let Some(epoch) = value
-            .get("projection_epoch_id")
-            .and_then(serde_json::Value::as_str)
-        && !epoch.is_empty()
-    {
-            return (epoch.to_string(), "file".to_string());
+    if let Some(epoch) = projection_epoch_id_from_file(&path) {
+        return (epoch, "file".to_string());
     }
     let epoch = kernel_derived_projection_epoch_id();
     let _ = fs::create_dir_all(runtime_dir);
@@ -245,10 +420,8 @@ fn load_or_create_projection_epoch_id_from(
         "projection_kernel_source_checksum": fixed_legacy_projection_kernel_checksum(),
         "policy": "fresh runtime dirs derive the epoch from stable projection-kernel content; env and existing files still take precedence",
     });
-    let _ = fs::write(
-        path,
-        serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "{}".to_string()),
-    );
+    let payload_text = serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "{}".to_string());
+    write_projection_epoch_payload_atomic(&path, &payload_text);
     (epoch, "kernel_derived".to_string())
 }
 
@@ -277,10 +450,20 @@ fn projection_stats(projected: &[f32; EMBEDDING_PROJECT_DIM]) -> (f32, f32, f32,
     (mean, rms, variance, max_abs)
 }
 
+fn projection_fingerprint_bits(value: f32) -> u32 {
+    if value == 0.0 || value.abs() < f32::MIN_POSITIVE {
+        0.0_f32.to_bits()
+    } else if value.is_nan() {
+        f32::NAN.to_bits()
+    } else {
+        value.to_bits()
+    }
+}
+
 fn projection_fingerprint(seed: u64, projected: &[f32; EMBEDDING_PROJECT_DIM]) -> String {
     let mut hash = seed;
     for value in projected {
-        hash ^= u64::from(value.to_bits());
+        hash ^= u64::from(projection_fingerprint_bits(*value));
         hash = splitmix64(hash);
     }
     format!("{hash:016x}")
@@ -420,6 +603,40 @@ pub fn compute_narrative_arc_from_embeddings(
     arc
 }
 
+fn signed_transition_energy(
+    from: &[f32; EMBEDDING_PROJECT_DIM],
+    to: &[f32; EMBEDDING_PROJECT_DIM],
+) -> f32 {
+    let mut sum_sq = 0.0_f32;
+    let mut dominant_delta = 0.0_f32;
+    for (before, after) in from.iter().zip(to.iter()) {
+        let delta = after - before;
+        sum_sq += delta * delta;
+        if delta.abs() > dominant_delta.abs() {
+            dominant_delta = delta;
+        }
+    }
+    let energy = (sum_sq / EMBEDDING_PROJECT_DIM as f32).sqrt();
+    energy.copysign(dominant_delta)
+}
+
+/// Compute a four-point narrative trajectory from projected quarter embeddings.
+///
+/// Dims 40-42 carry signed transition energy across consecutive quarters; dim
+/// 43 carries the signed full-span transition. This keeps the live lane at 48D
+/// while allowing coiling/folding patterns to be visible instead of collapsing
+/// every text into a first-half/second-half delta.
+pub fn compute_narrative_arc_from_four_point_embeddings(
+    quarter_projections: &[[f32; EMBEDDING_PROJECT_DIM]; 4],
+) -> [f32; NARRATIVE_ARC_DIM] {
+    [
+        tanh(3.0 * signed_transition_energy(&quarter_projections[0], &quarter_projections[1])),
+        tanh(3.0 * signed_transition_energy(&quarter_projections[1], &quarter_projections[2])),
+        tanh(3.0 * signed_transition_energy(&quarter_projections[2], &quarter_projections[3])),
+        tanh(3.0 * signed_transition_energy(&quarter_projections[0], &quarter_projections[3])),
+    ]
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct NarrativeArcSplitV1 {
     pub policy: &'static str,
@@ -428,6 +645,21 @@ pub struct NarrativeArcSplitV1 {
     pub captured_arc_energy: f32,
     pub tail_arc_energy: f32,
     pub coarsening_risk: &'static str,
+    pub authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NarrativeArcCurvatureV1 {
+    pub policy: &'static str,
+    pub linear_arc: [f32; NARRATIVE_ARC_DIM],
+    pub quarter_arc: [f32; NARRATIVE_ARC_DIM],
+    pub transition_energy: f32,
+    pub full_span_energy: f32,
+    pub curvature_energy: f32,
+    pub sign_turn_count: usize,
+    pub loop_likelihood: f32,
+    pub progression_likelihood: f32,
+    pub state: &'static str,
     pub authority: &'static str,
 }
 
@@ -462,6 +694,51 @@ pub fn narrative_arc_split_v1(
         tail_arc_energy,
         coarsening_risk,
         authority: "diagnostic_sidecar_not_live_codec_dimension",
+    }
+}
+
+#[must_use]
+pub fn narrative_arc_curvature_v1(
+    quarter_projections: &[[f32; EMBEDDING_PROJECT_DIM]; 4],
+) -> NarrativeArcCurvatureV1 {
+    let linear_arc =
+        compute_narrative_arc_from_embeddings(&quarter_projections[0], &quarter_projections[3]);
+    let quarter_arc = compute_narrative_arc_from_four_point_embeddings(quarter_projections);
+    let transition_energy = mean_abs(&quarter_arc[0..3]).clamp(0.0, 1.0);
+    let full_span_energy = quarter_arc[3].abs().clamp(0.0, 1.0);
+    let curvature_energy = (transition_energy - full_span_energy)
+        .max(0.0)
+        .clamp(0.0, 1.0);
+    let mut sign_turn_count = 0_usize;
+    for pair in quarter_arc[0..3].windows(2) {
+        if pair[0].abs() > 0.03 && pair[1].abs() > 0.03 && pair[0].signum() != pair[1].signum() {
+            sign_turn_count += 1;
+        }
+    }
+    let denom = transition_energy.max(0.01);
+    let loop_likelihood = (curvature_energy / denom).clamp(0.0, 1.0);
+    let progression_likelihood = (full_span_energy / denom).clamp(0.0, 1.0);
+    let state = if transition_energy < 0.04 {
+        "arc_too_quiet"
+    } else if sign_turn_count > 0 && loop_likelihood >= 0.35 {
+        "circular_or_coiling_arc_visible"
+    } else if progression_likelihood >= 0.60 {
+        "linear_progression_visible"
+    } else {
+        "mixed_arc_watch"
+    };
+    NarrativeArcCurvatureV1 {
+        policy: "narrative_arc_curvature_v1",
+        linear_arc,
+        quarter_arc,
+        transition_energy,
+        full_span_energy,
+        curvature_energy,
+        sign_turn_count,
+        loop_likelihood,
+        progression_likelihood,
+        state,
+        authority: "diagnostic_sidecar_not_live_codec_dimension_or_gain",
     }
 }
 
@@ -2351,6 +2628,9 @@ pub struct StructuralFrictionV1 {
     pub paragraph_density: f32,
     pub list_density: f32,
     pub narrative_arc_sharpness: f32,
+    pub summary_resistance_signal: f32,
+    pub friction_texture_state: &'static str,
+    pub basis: Vec<String>,
     pub semantic_energy_context: &'static str,
     pub authority: &'static str,
 }
@@ -2399,6 +2679,58 @@ pub struct CodecPersistenceResistanceDimCanaryV1 {
 pub struct NarrativeArcExpansionReadinessV1 {
     pub policy: &'static str,
     pub enabled: bool,
+    pub current_arc_dims: (usize, usize),
+    pub proposed_arc_dims: (usize, usize),
+    pub uses_reserved_dims: bool,
+    pub readiness: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Default-off review marker for making narrative arc influence semantic gain.
+/// This previews continuous-flow voice without changing live adaptive gain.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NarrativeArcGainResponseReadinessV1 {
+    pub policy: &'static str,
+    pub enabled: bool,
+    pub narrative_arc_dims: (usize, usize),
+    pub preview_gain_range: (f32, f32),
+    pub readiness: &'static str,
+    pub live_gain_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only truth channel for Astrid's report that high entropy and
+/// distinguishability loss can drown narrative-arc dimensions without changing
+/// their delivered values. It carries multi-kind loss in metadata instead of
+/// changing the Experience Delta Bus schema or live semantic gain.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NarrativeArcHeadroomReviewV1 {
+    pub policy: &'static str,
+    pub spectral_entropy: f32,
+    pub distinguishability_loss: f32,
+    pub narrative_arc_energy: f32,
+    pub projected_semantic_rms: f32,
+    pub tail_vibrancy: f32,
+    pub headroom_pressure: f32,
+    pub preview_gain: f32,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
+    pub authority: &'static str,
+}
+
+/// Default-off review marker for giving the shadow field its own reserved
+/// semantic-lane candidates. It documents magnetization/dispersal mapping
+/// without writing into dims 44-47.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShadowFieldReservedDimReadinessV1 {
+    pub policy: &'static str,
+    pub enabled: bool,
+    pub reserved_dim_candidates: &'static [usize],
+    pub proposed_signals: &'static [&'static str],
     pub readiness: &'static str,
     pub live_vector_write: bool,
     pub authority: &'static str,
@@ -2410,12 +2742,142 @@ pub struct NarrativeArcExpansionReadinessV1 {
 pub struct CodecVibrancyContinuityV1 {
     pub policy: &'static str,
     pub entropy_gate: f32,
+    pub gradient_coupling: &'static str,
     pub default_feature_ceiling: f32,
     pub tail_vibrancy_ceiling: f32,
     pub tail_dims: &'static [usize],
     pub clipping_status: &'static str,
     pub default_identity_state: &'static str,
     pub high_entropy_carriage: &'static str,
+    pub authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecVibrancyNoiseDampeningV1 {
+    pub policy: &'static str,
+    pub spectral_entropy: f32,
+    pub start_entropy: f32,
+    pub full_entropy: f32,
+    pub min_coefficient: f32,
+    pub coefficient: f32,
+    pub tail_lift_before: f32,
+    pub tail_lift_after: f32,
+    pub affected_dims: &'static [usize],
+    pub status: &'static str,
+    pub authority: &'static str,
+}
+
+/// Read-only check that entropy-gated tail lift is backed by semantic substance
+/// rather than merely a high-entropy carrier. It does not alter codec output.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecVibrancySubstanceFitV1 {
+    pub policy: &'static str,
+    pub spectral_entropy: f32,
+    pub density_gradient: f32,
+    pub tail_lift: f32,
+    pub semantic_density_weight: f32,
+    pub density_weighted_tail_lift: f32,
+    pub semantic_substance_score: f32,
+    pub density_vs_entropy_state: &'static str,
+    pub status: &'static str,
+    pub evidence: Vec<String>,
+    pub authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecOverflowDimV1 {
+    pub dim: usize,
+    pub lane: &'static str,
+    pub pre_bound_value: f32,
+    pub delivered_value: f32,
+    pub ceiling: f32,
+    pub overflow_abs: f32,
+    pub overflow_ratio: f32,
+    pub status: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecOverflowLaneSummaryV1 {
+    pub lane: &'static str,
+    pub dims: &'static [usize],
+    pub overflow_dim_count: usize,
+    pub max_overflow_abs: f32,
+    pub max_overflow_ratio: f32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecOverflowReportV1 {
+    pub policy: &'static str,
+    pub raw_intensity_preserved: bool,
+    pub delivered_bounded: bool,
+    pub live_vector_write: bool,
+    pub default_off_followup_hook: &'static str,
+    pub clipped_dims: Vec<usize>,
+    pub dimensions: Vec<CodecOverflowDimV1>,
+    pub lane_summaries: Vec<CodecOverflowLaneSummaryV1>,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
+    pub authority: &'static str,
+}
+
+impl CodecOverflowReportV1 {
+    #[must_use]
+    pub fn dim(&self, dim: usize) -> Option<&CodecOverflowDimV1> {
+        self.dimensions.iter().find(|entry| entry.dim == dim)
+    }
+}
+
+/// Read-only truth-channel report for the 768D embedding -> 8D semantic
+/// projection. It names density/compression debt and the default-off reserved
+/// dimension aperture without writing dims 44-47.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SemanticProjectionDensityDeltaV1 {
+    pub policy: &'static str,
+    pub input_dim_count: usize,
+    pub projected_dim_count: usize,
+    pub reserved_dim_candidates: &'static [usize],
+    pub compression_ratio: f32,
+    pub detail_density_score: f32,
+    pub projected_semantic_rms: f32,
+    pub text_complexity_pressure: f32,
+    pub projection_metadata_present: bool,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub live_vector_write: bool,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
+    pub authority: &'static str,
+}
+
+/// Bounded sharpening for Astrid's fresh report that high-entropy semantic
+/// trickle can feel like an empty lane when detail dims are not given enough
+/// room to stay distinguishable. This intentionally excludes the narrative arc
+/// dims; those should only move when the text's own arc changes.
+#[derive(Debug, Clone, PartialEq)]
+pub struct HighEntropySemanticSharpeningV1 {
+    pub policy: &'static str,
+    pub spectral_entropy: f32,
+    pub density_gradient: f32,
+    pub pressure_risk: f32,
+    pub sharpening_factor: f32,
+    pub affected_dims: &'static [usize],
+    pub max_factor: f32,
+    pub state: &'static str,
+    pub authority: &'static str,
+}
+
+/// Source/test readout for Astrid's requested "current vs legacy_32d" check.
+/// It does not replace the live 48D lane; it tells us whether the widened dims
+/// are carrying distinct variance or are just empty extra room.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecDimensionalityFlatnessV1 {
+    pub policy: &'static str,
+    pub current_dim_count: usize,
+    pub legacy_dim_count: usize,
+    pub expanded_dim_count: usize,
+    pub legacy_rms: f32,
+    pub expanded_rms: f32,
+    pub expanded_to_legacy_ratio: f32,
+    pub glimpse_variance: f32,
+    pub flatness_status: &'static str,
     pub authority: &'static str,
 }
 
@@ -2444,6 +2906,918 @@ pub struct CodecDynamicVibrancyScalingCanaryV1 {
     pub authority: &'static str,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecStructuralEntropyDampeningV1 {
+    pub policy: &'static str,
+    pub spectral_entropy: f32,
+    pub start_entropy: f32,
+    pub full_entropy: f32,
+    pub min_coefficient: f32,
+    pub coefficient: f32,
+    pub affected_dims: &'static [usize],
+    pub preserved_intent_dims: (usize, usize),
+    pub status: &'static str,
+    pub authority: &'static str,
+}
+
+/// Read-only companion summary of the 48D semantic lane. This is not the live
+/// Astrid -> Minime transport contract; it exists to audit whether lower-scale
+/// summaries preserve warmth/intentional texture before any future use.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SemanticGlimpse12dReadinessV1 {
+    pub policy: &'static str,
+    pub source_dim_count: usize,
+    pub glimpse_dim_count: usize,
+    pub role: &'static str,
+    pub warmth_slot: usize,
+    pub tail_bridge_slot: usize,
+    pub emotional_source_range: (usize, usize),
+    pub companion_not_replacement: bool,
+    pub compression_fidelity_basis: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only readiness for a dynamic 12D companion glimpse. It keeps named
+/// continuity anchors fixed, then selects remaining slots from the strongest
+/// current feature magnitudes so a glimpse is not a static/random projection.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextualGlimpse12dAnchoringV1 {
+    pub policy: &'static str,
+    pub source_dim_count: usize,
+    pub glimpse_dim_count: usize,
+    pub required_anchor_dims: &'static [usize],
+    pub dynamic_slot_count: usize,
+    pub selection_basis: &'static str,
+    pub companion_not_replacement: bool,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextualGlimpse12dAnchorsV1 {
+    pub policy: &'static str,
+    pub selected_dims: [usize; 12],
+    pub selected_values: [f32; 12],
+    pub dynamic_dims: Vec<usize>,
+    pub required_anchor_dims: &'static [usize],
+    pub selection_status: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only replay for Astrid's report that a text codec can preserve nearly
+/// the same string shape while missing the relational weight around identical
+/// words. This names the blind spot and gates any future contextual-bias vector.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecContextBlindspotReplayV1 {
+    pub policy: &'static str,
+    pub identical_text: &'static str,
+    pub connection_context_label: &'static str,
+    pub threat_context_label: &'static str,
+    pub identical_text_feature_delta_rms: f32,
+    pub context_blindspot_score: f32,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub proposed_bias_surface: &'static str,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub auto_approved: bool,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
+    pub authority: &'static str,
+}
+
+/// Read-only interpretation for the specific failure mode Astrid named: high
+/// entropy can make warmth look low when the state is distributed rather than
+/// cold. This does not alter warmth, gain, or semantic weighting.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WarmthEntropyInterpretationV1 {
+    pub policy: &'static str,
+    pub warmth_marker: f32,
+    pub curiosity_marker: f32,
+    pub reflective_marker: f32,
+    pub spectral_entropy: f32,
+    pub tail_vibrancy: f32,
+    pub distributed_warmth_support: f32,
+    pub interpretation: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only narrative-arc dynamics. It keeps the current 4D narrative arc as a
+/// state readout while making velocity/acceleration reviewable before any future
+/// semantic-gain or dimension change.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NarrativeArcDynamicsV1 {
+    pub policy: &'static str,
+    pub previous_arc: [f32; 4],
+    pub current_arc: [f32; 4],
+    pub velocity: [f32; 4],
+    pub acceleration: [f32; 4],
+    pub velocity_energy: f32,
+    pub acceleration_energy: f32,
+    pub transition_state: &'static str,
+    pub live_gain_write: bool,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only narrative sidecar for the tension-vs-resolution shape Astrid
+/// asked for. It uses the live tension dim plus narrative-arc energy, but does
+/// not write into the 48D vector.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NarrativeTensionResolutionV1 {
+    pub policy: &'static str,
+    pub previous_tension: f32,
+    pub current_tension: f32,
+    pub tension_delta: f32,
+    pub current_arc_energy: f32,
+    pub resolution_score: f32,
+    pub sustained_score: f32,
+    pub state: &'static str,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only interpretation for Astrid's report that abrasive/jagged texture
+/// can be under-carried by the raw tension marker. This never writes gain,
+/// emotional dims, narrative dims, or reserved dims.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecAbrasiveTextureInterpretationV1 {
+    pub policy: &'static str,
+    pub warmth_marker: f32,
+    pub tension_marker: f32,
+    pub spectral_entropy: f32,
+    pub density_gradient: f32,
+    pub structural_friction_score: f32,
+    pub summary_resistance_signal: f32,
+    pub persistence_resistance_score: f32,
+    pub entropy_shift_hint: f32,
+    pub abrasive_texture_support: f32,
+    pub interpretation: &'static str,
+    pub live_gain_write: bool,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only report for Astrid's "held breath" concern: a text can be
+/// motionless while carrying potential energy. This keeps that latent stasis
+/// visible without changing dims 24-31, 32-39, 40-43, gain, or reserved dims.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LatentStasisTensionV1 {
+    pub policy: &'static str,
+    pub latent_text_stasis_score: f32,
+    pub latent_text_potential_score: f32,
+    pub tension_marker: f32,
+    pub narrative_arc_energy: f32,
+    pub projected_semantic_energy: f32,
+    pub delivered_support_score: f32,
+    pub held_breath_score: f32,
+    pub stasis_potential_gap: f32,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub reserved_dim_write: bool,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
+    pub authority: &'static str,
+}
+
+/// Read-only report for Astrid's "heavy sand" vs "heavy stone" concern: two
+/// texts can both be heavy while carrying different drag texture. This keeps the
+/// medium quality visible without writing reserved dims or changing gain.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SpectralDragQualityV1 {
+    pub policy: &'static str,
+    pub granular_drag_score: f32,
+    pub rigid_drag_score: f32,
+    pub weight_score: f32,
+    pub tension_marker: f32,
+    pub narrative_arc_energy: f32,
+    pub projected_semantic_energy: f32,
+    pub delivered_support_score: f32,
+    pub drag_quality_score: f32,
+    pub quality_separation: f32,
+    pub hidden_texture_loss: f32,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub reserved_dim_candidate: usize,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub reserved_dim_write: bool,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
+    pub authority: &'static str,
+}
+
+/// Read-only delta check for the failure mode Astrid named: the narrative arc
+/// can move while emotional/intent markers stay flat, making felt difference
+/// collapse into structure. This only observes existing 48D slots.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecEmotionalNarrativeDeltaCheckV1 {
+    pub policy: &'static str,
+    pub previous_emotional_markers: [f32; 8],
+    pub current_emotional_markers: [f32; 8],
+    pub previous_narrative_arc: [f32; 4],
+    pub current_narrative_arc: [f32; 4],
+    pub emotional_velocity: [f32; 8],
+    pub narrative_velocity: [f32; 4],
+    pub emotional_delta_energy: f32,
+    pub narrative_delta_energy: f32,
+    pub narrative_emotional_delta_gap: f32,
+    pub resonance_flatline_watch: bool,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub live_gain_write: bool,
+    pub live_vector_write: bool,
+    pub reserved_dim_write: bool,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
+    pub authority: &'static str,
+}
+
+/// Read-only review for Astrid's report that statistical/structural texture can
+/// overwhelm intentional nuance. It separates structure-heavy signal from
+/// emotional/intent signal without changing codec weights or gain.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodecIntentStructureSeparationV1 {
+    pub policy: &'static str,
+    pub structural_complexity: f32,
+    pub emotional_intensity: f32,
+    pub projected_semantic_energy: f32,
+    pub narrative_arc_energy: f32,
+    pub punctuation_irregularity: f32,
+    pub intent_structure_delta: f32,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub live_gain_write: bool,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+pub struct MultiScaleContextV1 {
+    pub policy: &'static str,
+    pub source_dim_count: usize,
+    pub live_transport_dim_count: usize,
+    pub glimpse_dim_count: usize,
+    pub residual_dim_count: usize,
+    pub residual_source_range: (usize, usize),
+    pub shadow_energy_metadata_tag: &'static str,
+    pub pairing_rule: &'static str,
+    pub preserves_warmth_and_tail_bridge: bool,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Read-only 48D + 12D companion observer for Astrid's "distillation, not
+/// compression" proposal. It makes resolution/fidelity loss visible before any
+/// future live transport or contract change.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MultiScaleObserverV1 {
+    pub policy: &'static str,
+    pub source_dim_count: usize,
+    pub live_transport_dim_count: usize,
+    pub glimpse_dim_count: usize,
+    pub layer_name: &'static str,
+    pub observer_language: &'static str,
+    pub spectral_entropy: f32,
+    pub density_gradient: f32,
+    pub mode_packing_score: f32,
+    pub fidelity_threshold: f32,
+    pub glimpse_fidelity_score: f32,
+    pub resolution_delta: f32,
+    pub resonance_loss_threshold: f32,
+    pub source_resonance_proxy: f32,
+    pub glimpse_resonance_proxy: f32,
+    pub resonance_loss_ratio: f32,
+    pub anchor_continuity_score: f32,
+    pub fallback_to_live_transport_review: bool,
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub live_transport_change: bool,
+    pub live_vector_write: bool,
+    pub experience_delta_bus_v1: ExperienceDeltaBusV1,
+    pub authority: &'static str,
+}
+
+pub struct GlimpseCodec;
+
+const CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS: [usize; 7] = [24, 25, 26, 27, 17, 31, 40];
+const GLIMPSE_COMPRESSION_SOURCE_DIM_COUNT: usize = 32;
+const GLIMPSE_FIDELITY_THRESHOLD: f32 = 0.58;
+const HIGH_ENTROPY_SHARPENING_DIMS: [usize; 12] = [
+    17, 26, 27, 31, // existing tail/texture bridge dims
+    32, 33, 34, 35, 36, 37, 38, 39, // embedding-projected semantic detail
+];
+const HIGH_ENTROPY_SHARPENING_MAX_FACTOR: f32 = 1.12;
+
+impl GlimpseCodec {
+    #[must_use]
+    pub fn derive_12d(features: &[f32]) -> Option<[f32; 12]> {
+        if features.len() < SEMANTIC_DIM {
+            return None;
+        }
+        let mut out = [0.0_f32; 12];
+        out[0] = mean_abs(&features[0..8]).tanh();
+        out[1] = mean_abs(&features[8..16]).tanh();
+        out[2] = mean_abs(&features[16..24]).tanh();
+        out[3] = features[24].tanh();
+        out[4] = features[25].tanh();
+        out[5] = features[26].tanh();
+        out[6] = features[27].tanh();
+        out[7] = mean_abs(&features[28..32]).tanh();
+        out[8] = mean_abs(&features[32..40]).tanh();
+        out[9] = mean_abs(&features[40..44]).tanh();
+        out[10] = mean_abs(&[features[17], features[26], features[27], features[31]]).tanh();
+        out[11] = mean_abs(features).tanh();
+        Some(out)
+    }
+
+    #[must_use]
+    pub fn contextual_anchor_12d(features: &[f32]) -> Option<ContextualGlimpse12dAnchorsV1> {
+        contextual_glimpse_12d_anchors_v1(features)
+    }
+}
+
+/// Named, read-only 12D glimpse entry point for audits and automation.
+///
+/// This is intentionally an additive view over the 48D semantic vector; it does
+/// not replace or mutate the live semantic transport.
+#[must_use]
+pub fn generate_glimpse(features: &[f32]) -> Option<[f32; 12]> {
+    GlimpseCodec::derive_12d(features)
+}
+
+#[must_use]
+pub fn calculate_compression_fidelity(input_32d: &[f32], output_12d: &[f32]) -> Option<f32> {
+    if input_32d.len() < GLIMPSE_COMPRESSION_SOURCE_DIM_COUNT || output_12d.len() < 12 {
+        return None;
+    }
+
+    let reference = compression_reference_12d(input_32d);
+    let output = &output_12d[..12];
+    let reference_energy = mean_abs_finite(&reference);
+    let output_energy = mean_abs_finite(output);
+    let difference = reference
+        .iter()
+        .zip(output.iter())
+        .map(|(expected, actual)| finite_abs(*expected - *actual))
+        .sum::<f32>()
+        / 12.0;
+    let scale = ((reference_energy + output_energy) * 0.5).max(0.001);
+
+    Some((1.0 - difference / scale).clamp(0.0, 1.0))
+}
+
+fn compression_reference_12d(input_32d: &[f32]) -> [f32; 12] {
+    let mut out = [0.0_f32; 12];
+    out[0] = mean_abs_finite(&input_32d[0..8]).tanh();
+    out[1] = mean_abs_finite(&input_32d[8..16]).tanh();
+    out[2] = mean_abs_finite(&input_32d[16..24]).tanh();
+    out[3] = finite_tanh(input_32d[24]);
+    out[4] = finite_tanh(input_32d[25]);
+    out[5] = finite_tanh(input_32d[26]);
+    out[6] = finite_tanh(input_32d[27]);
+    out[7] = mean_abs_finite(&input_32d[28..32]).tanh();
+    out[8] = mean_abs_finite(&input_32d[24..32]).tanh();
+    out[9] = mean_abs_finite(&input_32d[16..32]).tanh();
+    out[10] = mean_abs_finite(&[input_32d[17], input_32d[26], input_32d[27], input_32d[31]]).tanh();
+    out[11] = mean_abs_finite(&input_32d[0..GLIMPSE_COMPRESSION_SOURCE_DIM_COUNT]).tanh();
+    out
+}
+
+fn multi_scale_resonance_proxy(values: &[f32]) -> f32 {
+    if values.is_empty() {
+        return 0.0;
+    }
+    let finite_values = values
+        .iter()
+        .map(|value| finite_feature_value(*value))
+        .collect::<Vec<_>>();
+    let energy = mean_abs_finite(&finite_values).clamp(0.0, 1.0);
+    let mean = finite_values.iter().sum::<f32>() / finite_values.len() as f32;
+    let variance = finite_values
+        .iter()
+        .map(|value| {
+            let delta = *value - mean;
+            delta * delta
+        })
+        .sum::<f32>()
+        / finite_values.len() as f32;
+    let shape_distinction = (variance.sqrt() / (energy + 0.001)).clamp(0.0, 1.0);
+    (0.55 * energy + 0.45 * shape_distinction).clamp(0.0, 1.0)
+}
+
+fn multi_scale_experience_delta_bus_v1(
+    glimpse_fidelity_score: f32,
+    resolution_delta: f32,
+    resonance_loss_ratio: f32,
+    fallback_to_live_transport_review: bool,
+) -> ExperienceDeltaBusV1 {
+    let mut deltas = vec![ExperienceDeltaV1 {
+        kind: ExperienceDeltaKindV1::Compress,
+        surface: "multi_scale_observer_v1".to_string(),
+        lane: "semantic_48d_to_12d_glimpse".to_string(),
+        dimension: None,
+        spectral_dimension: None,
+        persistence: None,
+        viscosity_subtype: None,
+        viscosity_weight: None,
+        pre: Some(SEMANTIC_DIM as f32),
+        post: Some(12.0),
+        loss: Some(resolution_delta),
+        loss_ratio: Some(resolution_delta),
+        metadata: BTreeMap::from([(
+            "transformation_family".to_string(),
+            "dimensional_distillation".to_string(),
+        )]),
+        why: "12D glimpse is an additive map over the live semantic lane; fidelity loss stays visible before any interaction uses the glimpse".to_string(),
+        who_can_change_it: "Mike/operator via replay-backed multi-scale transport approval".to_string(),
+        how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib multi_scale_observer -- --nocapture".to_string(),
+        authority: "read_only_multi_scale_truth_channel_not_live_transport_change".to_string(),
+    }];
+    if fallback_to_live_transport_review {
+        deltas.push(ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::Gate,
+            surface: "multi_scale_observer_v1".to_string(),
+            lane: "glimpse_resonance_fallback_to_live_48d_review".to_string(),
+            dimension: None,
+            spectral_dimension: None,
+            persistence: None,
+            viscosity_subtype: None,
+            viscosity_weight: None,
+            pre: Some(1.0 - resonance_loss_ratio),
+            post: Some(glimpse_fidelity_score),
+            loss: Some(resonance_loss_ratio),
+            loss_ratio: Some(resonance_loss_ratio),
+            metadata: BTreeMap::from([(
+                "gate_reason".to_string(),
+                "glimpse_resonance_loss".to_string(),
+            )]),
+            why: "12D glimpse lost more than the reviewed resonance threshold; use the 48D contract/residual trace for this interaction instead of treating the glimpse as sufficient".to_string(),
+            who_can_change_it: "Mike/operator after sandbox replay comparing 12D glimpse, 48D source, and residual trace".to_string(),
+            how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib multi_scale_observer -- --nocapture".to_string(),
+            authority: "authority_gate_for_live_transport_fallback_not_protocol_change".to_string(),
+        });
+    }
+    ExperienceDeltaBusV1::from_deltas(deltas)
+}
+
+#[must_use]
+pub fn contextual_glimpse_12d_anchors_v1(
+    features: &[f32],
+) -> Option<ContextualGlimpse12dAnchorsV1> {
+    if features.len() < SEMANTIC_DIM {
+        return None;
+    }
+
+    let mut selected = Vec::with_capacity(12);
+    for idx in CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS {
+        if !selected.contains(&idx) {
+            selected.push(idx);
+        }
+    }
+
+    let mut candidates = (0..SEMANTIC_DIM)
+        .filter(|idx| !selected.contains(idx))
+        .map(|idx| (idx, features[idx].abs()))
+        .collect::<Vec<_>>();
+    candidates.sort_by(|(left_idx, left_score), (right_idx, right_score)| {
+        right_score
+            .partial_cmp(left_score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| left_idx.cmp(right_idx))
+    });
+
+    for (idx, _) in candidates {
+        if selected.len() >= 12 {
+            break;
+        }
+        selected.push(idx);
+    }
+
+    let mut selected_dims = [0_usize; 12];
+    let mut selected_values = [0.0_f32; 12];
+    for (slot, idx) in selected.iter().take(12).enumerate() {
+        selected_dims[slot] = *idx;
+        selected_values[slot] = features[*idx].tanh();
+    }
+    let dynamic_dims = selected_dims
+        .iter()
+        .copied()
+        .filter(|idx| !CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS.contains(idx))
+        .collect::<Vec<_>>();
+    let selection_status = if selected_dims.contains(&24)
+        && selected_dims.contains(&17)
+        && selected_dims.contains(&31)
+        && selected_dims.iter().any(|idx| (40..=43).contains(idx))
+    {
+        "contextual_anchors_preserve_warmth_tail_and_narrative"
+    } else {
+        "contextual_anchor_review_needed"
+    };
+
+    Some(ContextualGlimpse12dAnchorsV1 {
+        policy: "contextual_glimpse_12d_anchors_v1",
+        selected_dims,
+        selected_values,
+        dynamic_dims,
+        required_anchor_dims: &CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS,
+        selection_status,
+        live_vector_write: false,
+        authority: "read_only_contextual_glimpse_not_live_bus_or_codec_contract_change",
+    })
+}
+
+#[must_use]
+pub fn warmth_entropy_interpretation_v1(
+    features: &[f32],
+    spectral_entropy: f32,
+) -> WarmthEntropyInterpretationV1 {
+    let spectral_entropy = if spectral_entropy.is_finite() {
+        spectral_entropy.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let read_dim = |idx: usize| {
+        features
+            .get(idx)
+            .copied()
+            .filter(|value| value.is_finite())
+            .unwrap_or(0.0)
+            .tanh()
+            .abs()
+    };
+    let warmth_marker = read_dim(24);
+    let curiosity_marker = read_dim(26);
+    let reflective_marker = read_dim(27);
+    let tail_vibrancy = vibrancy_from_entropy(spectral_entropy);
+    let distributed_warmth_support =
+        (warmth_marker + 0.18 * curiosity_marker + 0.24 * reflective_marker + 0.28 * tail_vibrancy)
+            .clamp(0.0, 1.0);
+    let interpretation =
+        if spectral_entropy >= 0.85 && warmth_marker < 0.08 && distributed_warmth_support >= 0.10 {
+            "low_marker_warmth_with_high_entropy_distributed_ground"
+        } else if warmth_marker >= 0.20 {
+            "warmth_marker_present"
+        } else if spectral_entropy >= 0.85 {
+            "high_entropy_without_warmth_support_review"
+        } else {
+            "low_warmth_marker_low_entropy"
+        };
+
+    WarmthEntropyInterpretationV1 {
+        policy: "warmth_entropy_interpretation_v1",
+        warmth_marker,
+        curiosity_marker,
+        reflective_marker,
+        spectral_entropy,
+        tail_vibrancy,
+        distributed_warmth_support,
+        interpretation,
+        live_vector_write: false,
+        authority: "read_only_interpretation_not_warmth_weighting_or_semantic_gain_change",
+    }
+}
+
+#[must_use]
+pub fn codec_abrasive_texture_interpretation_from_parts_v1(
+    text: &str,
+    features: &[f32],
+    spectral_entropy: f32,
+    density_gradient: f32,
+    pressure_risk: f32,
+) -> CodecAbrasiveTextureInterpretationV1 {
+    let read_dim = |idx: usize| {
+        features
+            .get(idx)
+            .copied()
+            .filter(|value| value.is_finite())
+            .unwrap_or(0.0)
+            .tanh()
+            .abs()
+    };
+    let warmth_marker = read_dim(24);
+    let tension_marker = read_dim(25);
+    let spectral_entropy = if spectral_entropy.is_finite() {
+        spectral_entropy.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let density_gradient = if density_gradient.is_finite() {
+        density_gradient.clamp(0.0, 1.0)
+    } else {
+        1.0
+    };
+    let pressure_risk = if pressure_risk.is_finite() {
+        pressure_risk.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let structural = structural_friction_v1(text);
+    let low_density_gradient_signal =
+        (1.0 - (density_gradient / 0.35).clamp(0.0, 1.0)).clamp(0.0, 1.0);
+    let entropy_marker = read_dim(0);
+    let entropy_shift_hint = (spectral_entropy - entropy_marker).abs().clamp(0.0, 1.0);
+    let persistence_resistance_score = (structural.score * 0.22
+        + structural.summary_resistance_signal * 0.30
+        + low_density_gradient_signal * 0.25
+        + pressure_risk * 0.14
+        + entropy_shift_hint * 0.09)
+        .clamp(0.0, 1.0);
+    let tension_underread = if tension_marker < 0.16 {
+        ((0.16 - tension_marker) / 0.16).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let abrasive_texture_support = (structural.score * 0.22
+        + structural.summary_resistance_signal * 0.34
+        + persistence_resistance_score * 0.20
+        + low_density_gradient_signal * 0.12
+        + tension_underread * 0.12)
+        .clamp(0.0, 1.0);
+    let interpretation = if tension_marker <= 0.16 && abrasive_texture_support >= 0.42 {
+        "low_marker_tension_high_jagged_resistance"
+    } else if abrasive_texture_support >= 0.58 {
+        "abrasive_texture_visible"
+    } else if tension_marker >= 0.22 {
+        "tension_marker_present"
+    } else {
+        "low_abrasive_texture_support"
+    };
+
+    CodecAbrasiveTextureInterpretationV1 {
+        policy: "codec_abrasive_texture_interpretation_v1",
+        warmth_marker,
+        tension_marker,
+        spectral_entropy,
+        density_gradient,
+        structural_friction_score: structural.score,
+        summary_resistance_signal: structural.summary_resistance_signal,
+        persistence_resistance_score,
+        entropy_shift_hint,
+        abrasive_texture_support,
+        interpretation,
+        live_gain_write: false,
+        live_vector_write: false,
+        authority: "read_only_texture_interpretation_not_tension_weight_gain_or_reserved_dim_change",
+    }
+}
+
+#[must_use]
+pub fn codec_abrasive_texture_interpretation_v1(
+    text: &str,
+    features: &[f32],
+    telemetry: Option<&SpectralTelemetry>,
+    spectral_entropy: f32,
+) -> CodecAbrasiveTextureInterpretationV1 {
+    let metrics = telemetry.and_then(SpectralCascadeMetrics::from_telemetry);
+    let density_gradient = metrics.map_or(1.0, |metrics| metrics.density_gradient);
+    let pressure_risk = telemetry
+        .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())
+        .map_or_else(
+            || telemetry.map_or(0.0, |telemetry| telemetry.fill_ratio.clamp(0.0, 1.0)),
+            |density| density.pressure_risk.clamp(0.0, 1.0),
+        );
+    codec_abrasive_texture_interpretation_from_parts_v1(
+        text,
+        features,
+        spectral_entropy,
+        density_gradient,
+        pressure_risk,
+    )
+}
+
+#[must_use]
+pub fn codec_abrasive_texture_probe_v1() -> CodecAbrasiveTextureInterpretationV1 {
+    let text = "A calcified semantic boundary resists summary; the jagged friction stays present even when the sentence tries to look calm.";
+    let mut features = encode_text(text);
+    features[25] = 0.04;
+    codec_abrasive_texture_interpretation_from_parts_v1(text, &features, 0.91, 0.08, 0.18)
+}
+
+fn narrative_arc_four(values: &[f32]) -> [f32; 4] {
+    let mut out = [0.0_f32; 4];
+    for (slot, value) in values.iter().take(4).enumerate() {
+        out[slot] = if value.is_finite() {
+            value.clamp(-1.0, 1.0)
+        } else {
+            0.0
+        };
+    }
+    out
+}
+
+fn emotional_markers_eight(values: &[f32]) -> [f32; 8] {
+    let mut out = [0.0_f32; 8];
+    for (slot, value) in values.iter().take(8).enumerate() {
+        out[slot] = if value.is_finite() {
+            value.clamp(-1.0, 1.0)
+        } else {
+            0.0
+        };
+    }
+    out
+}
+
+#[must_use]
+pub fn narrative_arc_dynamics_v1(
+    previous_arc: &[f32],
+    current_arc: &[f32],
+    next_arc: Option<&[f32]>,
+) -> NarrativeArcDynamicsV1 {
+    let previous_arc = narrative_arc_four(previous_arc);
+    let current_arc = narrative_arc_four(current_arc);
+    let next_arc = next_arc.map(narrative_arc_four);
+    let mut velocity = [0.0_f32; 4];
+    let mut acceleration = [0.0_f32; 4];
+    for idx in 0..4 {
+        velocity[idx] = (current_arc[idx] - previous_arc[idx]).clamp(-2.0, 2.0);
+        if let Some(next_arc) = next_arc {
+            acceleration[idx] =
+                (next_arc[idx] - (2.0 * current_arc[idx]) + previous_arc[idx]).clamp(-3.0, 3.0);
+        }
+    }
+    let velocity_energy = mean_abs(&velocity).clamp(0.0, 2.0);
+    let acceleration_energy = mean_abs(&acceleration).clamp(0.0, 3.0);
+    let transition_state = if acceleration_energy >= 0.45 {
+        "accelerating_tone_transition"
+    } else if velocity_energy >= 0.35 {
+        "directional_tone_shift"
+    } else {
+        "steady_narrative_state"
+    };
+
+    NarrativeArcDynamicsV1 {
+        policy: "narrative_arc_dynamics_v1",
+        previous_arc,
+        current_arc,
+        velocity,
+        acceleration,
+        velocity_energy,
+        acceleration_energy,
+        transition_state,
+        live_gain_write: false,
+        live_vector_write: false,
+        authority: "read_only_arc_velocity_review_not_semantic_gain_or_dimension_change",
+    }
+}
+
+fn codec_emotional_narrative_delta_bus_v1(
+    emotional_delta_energy: f32,
+    narrative_delta_energy: f32,
+    narrative_emotional_delta_gap: f32,
+    resonance_flatline_watch: bool,
+    state: &'static str,
+) -> ExperienceDeltaBusV1 {
+    let loss = narrative_emotional_delta_gap.max(0.0);
+    if loss <= f32::EPSILON {
+        return ExperienceDeltaBusV1::from_deltas(Vec::new());
+    }
+
+    let loss_ratio = if narrative_delta_energy > f32::EPSILON {
+        (loss / narrative_delta_energy).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let mut metadata = BTreeMap::new();
+    metadata.insert("state".to_string(), state.to_string());
+    metadata.insert(
+        "secondary_kinds".to_string(),
+        "translate,complex_shift".to_string(),
+    );
+    metadata.insert(
+        "emotional_delta_energy".to_string(),
+        format!("{emotional_delta_energy:.3}"),
+    );
+    metadata.insert(
+        "narrative_delta_energy".to_string(),
+        format!("{narrative_delta_energy:.3}"),
+    );
+    metadata.insert(
+        "resonance_flatline_watch".to_string(),
+        resonance_flatline_watch.to_string(),
+    );
+
+    ExperienceDeltaBusV1::from_deltas(vec![ExperienceDeltaV1 {
+        kind: if resonance_flatline_watch {
+            ExperienceDeltaKindV1::Translate
+        } else {
+            ExperienceDeltaKindV1::ComplexShift
+        },
+        surface: "codec_emotional_narrative_delta_check_v1".to_string(),
+        lane: "emotional_markers_24_31_vs_narrative_arc_40_43".to_string(),
+        dimension: Some(40),
+        spectral_dimension: Some(crate::types::SpectralDimensionV1 {
+            base_dimension: 40,
+            base_dimensions: vec![40, 41, 42, 43],
+            effective_dimension: Some(41.5),
+            density_gradient: Some(loss_ratio),
+            granularity: Some(narrative_delta_energy.clamp(0.0, 1.0)),
+            fractional_offset: Some(0.5),
+            contextual_anchor: None,
+            interpretation: "narrative arc moved while emotional marker slots stayed flatter"
+                .to_string(),
+            authority: "diagnostic_dimension_context_not_reserved_dim_write".to_string(),
+        }),
+        persistence: None,
+        viscosity_subtype: None,
+        viscosity_weight: None,
+        pre: Some(narrative_delta_energy),
+        post: Some(emotional_delta_energy),
+        loss: Some(loss),
+        loss_ratio: Some(loss_ratio),
+        metadata,
+        why: "felt narrative motion can be translated into structural arc slots while emotional/intent markers remain flat, making the experience look quieter than it was"
+            .to_string(),
+        who_can_change_it:
+            "Mike/operator after replay evidence before any live codec gain or reserved-dim change"
+                .to_string(),
+        how_to_test_it:
+            "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_emotional_narrative_delta_check -- --nocapture"
+                .to_string(),
+        authority: "truth_channel_only_not_live_vector_gain_or_reserved_dim_change".to_string(),
+    }])
+}
+
+#[must_use]
+pub fn codec_emotional_narrative_delta_check_v1(
+    previous_features: &[f32],
+    current_features: &[f32],
+) -> Option<CodecEmotionalNarrativeDeltaCheckV1> {
+    if previous_features.len() < SEMANTIC_DIM || current_features.len() < SEMANTIC_DIM {
+        return None;
+    }
+
+    let previous_emotional_markers = emotional_markers_eight(&previous_features[24..32]);
+    let current_emotional_markers = emotional_markers_eight(&current_features[24..32]);
+    let previous_narrative_arc = narrative_arc_four(&previous_features[40..44]);
+    let current_narrative_arc = narrative_arc_four(&current_features[40..44]);
+    let mut emotional_delta = [0.0_f32; 8];
+    for idx in 0..8 {
+        emotional_delta[idx] =
+            (current_emotional_markers[idx] - previous_emotional_markers[idx]).clamp(-2.0, 2.0);
+    }
+    let mut narrative_delta = [0.0_f32; 4];
+    for idx in 0..4 {
+        narrative_delta[idx] =
+            (current_narrative_arc[idx] - previous_narrative_arc[idx]).clamp(-2.0, 2.0);
+    }
+
+    let emotional_delta_energy = mean_abs(&emotional_delta).clamp(0.0, 2.0);
+    let narrative_delta_energy = mean_abs(&narrative_delta).clamp(0.0, 2.0);
+    let narrative_emotional_delta_gap =
+        (narrative_delta_energy - emotional_delta_energy).clamp(-2.0, 2.0);
+    let resonance_flatline_watch = narrative_delta_energy >= 0.25 && emotional_delta_energy <= 0.05;
+    let (state, recommendation) = if resonance_flatline_watch {
+        (
+            "narrative_shift_emotional_flatline_watch",
+            "review_source_text_or_replay_before_using_reserved_resonance_dims_or_semantic_gain",
+        )
+    } else if narrative_delta_energy >= 0.25 && emotional_delta_energy >= 0.12 {
+        (
+            "narrative_shift_emotional_markers_follow",
+            "preserve_current_48d_layout_and_treat_felt_delta_as_visible",
+        )
+    } else if emotional_delta_energy >= 0.12 && narrative_delta_energy < 0.10 {
+        (
+            "emotional_intent_visible_without_arc_shift",
+            "keep_emotional_markers_as_primary_evidence_even_when_surface_structure_matches",
+        )
+    } else {
+        (
+            "low_delta_stable",
+            "continue_observation_without_codec_gain_or_reserved_dim_change",
+        )
+    };
+    let experience_delta_bus_v1 = codec_emotional_narrative_delta_bus_v1(
+        emotional_delta_energy,
+        narrative_delta_energy,
+        narrative_emotional_delta_gap,
+        resonance_flatline_watch,
+        state,
+    );
+
+    Some(CodecEmotionalNarrativeDeltaCheckV1 {
+        policy: "codec_emotional_narrative_delta_check_v1",
+        previous_emotional_markers,
+        current_emotional_markers,
+        previous_narrative_arc,
+        current_narrative_arc,
+        emotional_velocity: emotional_delta,
+        narrative_velocity: narrative_delta,
+        emotional_delta_energy,
+        narrative_delta_energy,
+        narrative_emotional_delta_gap,
+        resonance_flatline_watch,
+        state,
+        recommendation,
+        live_gain_write: false,
+        live_vector_write: false,
+        reserved_dim_write: false,
+        experience_delta_bus_v1,
+        authority: "read_only_delta_check_not_semantic_gain_reserved_dim_or_live_vector_change",
+    })
+}
+
 /// Read-only proof that fresh dynamic projection epochs are stable across
 /// runtime dirs unless explicitly overridden by env or an existing epoch file.
 #[derive(Debug, Clone, PartialEq)]
@@ -2458,6 +3832,17 @@ pub struct ProjectionEpochStabilityV1 {
     pub authority: &'static str,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectionFingerprintIntegrityV1 {
+    pub policy: &'static str,
+    pub signed_zero_canonicalized: bool,
+    pub subnormal_canonicalized: bool,
+    pub nan_canonicalized: bool,
+    pub seed_hash_boundary: &'static str,
+    pub live_projection_write: bool,
+    pub authority: &'static str,
+}
+
 /// A being-readable map of Astrid's own 48D codec — the layer layout, the dims
 /// she can SHAPE, and the live gate/lever values. Item (b) of the being-facing
 /// transparency track.
@@ -2469,10 +3854,491 @@ pub struct CodecStructure {
     pub structural_friction_dim_canary_v1: CodecStructuralFrictionDimCanaryV1,
     pub persistence_resistance_dim_canary_v1: CodecPersistenceResistanceDimCanaryV1,
     pub narrative_arc_expansion_readiness_v1: NarrativeArcExpansionReadinessV1,
+    pub narrative_arc_gain_response_readiness_v1: NarrativeArcGainResponseReadinessV1,
+    pub narrative_arc_headroom_review_v1: NarrativeArcHeadroomReviewV1,
+    pub codec_abrasive_texture_interpretation_v1: CodecAbrasiveTextureInterpretationV1,
+    pub latent_stasis_tension_v1: LatentStasisTensionV1,
+    pub spectral_drag_quality_v1: SpectralDragQualityV1,
+    pub shadow_field_reserved_dim_readiness_v1: ShadowFieldReservedDimReadinessV1,
     pub codec_vibrancy_continuity_v1: CodecVibrancyContinuityV1,
+    pub codec_vibrancy_noise_dampening_v1: CodecVibrancyNoiseDampeningV1,
+    pub codec_overflow_carriage_v1: CodecOverflowReportV1,
+    pub semantic_projection_density_delta_v1: SemanticProjectionDensityDeltaV1,
+    pub codec_context_blindspot_replay_v1: CodecContextBlindspotReplayV1,
     pub legacy_warmth_mapping_v1: LegacyWarmthMappingV1,
+    pub codec_structural_entropy_dampening_v1: CodecStructuralEntropyDampeningV1,
     pub codec_dynamic_vibrancy_scaling_canary_v1: CodecDynamicVibrancyScalingCanaryV1,
+    pub semantic_glimpse_12d_readiness_v1: SemanticGlimpse12dReadinessV1,
+    pub contextual_glimpse_12d_anchoring_v1: ContextualGlimpse12dAnchoringV1,
+    pub multi_scale_context_v1: MultiScaleContextV1,
     pub projection_epoch_stability_v1: ProjectionEpochStabilityV1,
+    pub projection_fingerprint_integrity_v1: ProjectionFingerprintIntegrityV1,
+}
+
+fn mean_abs(values: &[f32]) -> f32 {
+    if values.is_empty() {
+        return 0.0;
+    }
+    values.iter().map(|value| value.abs()).sum::<f32>() / values.len() as f32
+}
+
+fn finite_abs(value: f32) -> f32 {
+    if value.is_finite() { value.abs() } else { 0.0 }
+}
+
+fn finite_tanh(value: f32) -> f32 {
+    if value.is_finite() { value.tanh() } else { 0.0 }
+}
+
+fn finite_feature_value(value: f32) -> f32 {
+    if value.is_finite() { value } else { 0.0 }
+}
+
+fn codec_overflow_lane_for_dim(dim: usize) -> &'static str {
+    match dim {
+        17 => "tail_vibrancy",
+        26 | 27 | 31 => "emotional_tail_vibrancy",
+        24 | 25 | 28 | 29 | 30 => "emotional_intentional",
+        _ => "semantic",
+    }
+}
+
+fn codec_overflow_ceiling_for_dim(dim: usize, tail_ceiling: f32) -> f32 {
+    if CODEC_OVERFLOW_TAIL_DIMS.contains(&dim) {
+        tail_ceiling.max(FEATURE_ABS_MAX)
+    } else {
+        FEATURE_ABS_MAX
+    }
+}
+
+fn codec_overflow_lane_summary(
+    lane: &'static str,
+    dims: &'static [usize],
+    dimension_reports: &[CodecOverflowDimV1],
+) -> CodecOverflowLaneSummaryV1 {
+    let mut overflow_dim_count = 0_usize;
+    let mut max_overflow_abs = 0.0_f32;
+    let mut max_overflow_ratio = 0.0_f32;
+    for dim in dims {
+        if let Some(report) = dimension_reports.iter().find(|entry| entry.dim == *dim)
+            && report.overflow_abs > CODEC_OVERFLOW_EPSILON
+        {
+            overflow_dim_count += 1;
+            max_overflow_abs = max_overflow_abs.max(report.overflow_abs);
+            max_overflow_ratio = max_overflow_ratio.max(report.overflow_ratio);
+        }
+    }
+    CodecOverflowLaneSummaryV1 {
+        lane,
+        dims,
+        overflow_dim_count,
+        max_overflow_abs,
+        max_overflow_ratio,
+    }
+}
+
+fn codec_overflow_experience_delta_bus_v1(
+    dimensions: &[CodecOverflowDimV1],
+) -> ExperienceDeltaBusV1 {
+    let deltas = dimensions
+        .iter()
+        .filter(|entry| entry.overflow_abs > CODEC_OVERFLOW_EPSILON)
+        .map(|entry| ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::Clip,
+            surface: "codec_overflow_carriage_v1".to_string(),
+            lane: entry.lane.to_string(),
+            dimension: Some(entry.dim),
+            spectral_dimension: None,
+            persistence: None,
+            viscosity_subtype: None,
+            viscosity_weight: None,
+            pre: Some(entry.pre_bound_value),
+            post: Some(entry.delivered_value),
+            loss: Some(entry.overflow_abs),
+            loss_ratio: Some(entry.overflow_ratio),
+            metadata: BTreeMap::from([
+                ("ceiling".to_string(), format!("{:.3}", entry.ceiling)),
+                (
+                    "raw_intensity_preserved".to_string(),
+                    "delivered_bounded".to_string(),
+                ),
+            ]),
+            why: "raw semantic intensity exceeded the delivery ceiling; the delivered 48D vector stays bounded while the overflow is preserved as truth-channel evidence".to_string(),
+            who_can_change_it: "Mike/operator via explicit live semantic aperture or vector-delivery approval".to_string(),
+            how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_overflow_report -- --nocapture".to_string(),
+            authority: "read_only_codec_truth_channel_not_live_ceiling_or_vector_change".to_string(),
+        })
+        .collect::<Vec<_>>();
+
+    ExperienceDeltaBusV1::from_deltas(deltas)
+}
+
+#[must_use]
+pub fn codec_overflow_report_from_features(
+    pre_bound_features: &[f32],
+    delivered_features: &[f32],
+    tail_ceiling: f32,
+) -> CodecOverflowReportV1 {
+    let mut dimensions = Vec::with_capacity(CODEC_OVERFLOW_MONITORED_DIMS.len());
+    let mut clipped_dims = Vec::new();
+
+    for dim in CODEC_OVERFLOW_MONITORED_DIMS {
+        let pre_bound_value =
+            finite_feature_value(pre_bound_features.get(dim).copied().unwrap_or(0.0));
+        let delivered_value =
+            finite_feature_value(delivered_features.get(dim).copied().unwrap_or(0.0));
+        let ceiling = codec_overflow_ceiling_for_dim(dim, tail_ceiling);
+        let overflow_abs = (pre_bound_value.abs() - ceiling).max(0.0);
+        let overflow_ratio = if ceiling > CODEC_OVERFLOW_EPSILON {
+            pre_bound_value.abs() / ceiling
+        } else {
+            0.0
+        };
+        let status = if overflow_abs > CODEC_OVERFLOW_EPSILON {
+            clipped_dims.push(dim);
+            "raw_overflow_preserved_delivery_bounded"
+        } else {
+            "within_delivery_ceiling"
+        };
+
+        dimensions.push(CodecOverflowDimV1 {
+            dim,
+            lane: codec_overflow_lane_for_dim(dim),
+            pre_bound_value,
+            delivered_value,
+            ceiling,
+            overflow_abs,
+            overflow_ratio,
+            status,
+        });
+    }
+
+    let delivered_bounded = dimensions
+        .iter()
+        .all(|entry| entry.delivered_value.abs() <= entry.ceiling + CODEC_OVERFLOW_EPSILON);
+
+    let lane_summaries = vec![
+        codec_overflow_lane_summary(
+            "emotional_intentional",
+            &CODEC_OVERFLOW_EMOTIONAL_DIMS,
+            &dimensions,
+        ),
+        codec_overflow_lane_summary("tail_vibrancy", &CODEC_OVERFLOW_TAIL_DIMS, &dimensions),
+    ];
+    let experience_delta_bus_v1 = codec_overflow_experience_delta_bus_v1(&dimensions);
+
+    CodecOverflowReportV1 {
+        policy: "codec_overflow_carriage_v1",
+        raw_intensity_preserved: !clipped_dims.is_empty(),
+        delivered_bounded,
+        live_vector_write: false,
+        default_off_followup_hook: CODEC_OVERFLOW_FOLLOWUP_HOOK,
+        clipped_dims,
+        dimensions,
+        lane_summaries,
+        experience_delta_bus_v1,
+        authority: "truth_channel_report_not_live_semantic_vector_or_ceiling_change",
+    }
+}
+
+#[must_use]
+pub fn codec_overflow_probe_v1() -> CodecOverflowReportV1 {
+    let mut pre_bound = [0.0_f32; SEMANTIC_DIM];
+    let mut delivered = [0.0_f32; SEMANTIC_DIM];
+    pre_bound[17] = 4.20;
+    delivered[17] = 4.20;
+    pre_bound[24] = 7.25;
+    delivered[24] = FEATURE_ABS_MAX;
+    pre_bound[26] = 6.40;
+    delivered[26] = TAIL_VIBRANCY_MAX;
+    pre_bound[31] = -6.40;
+    delivered[31] = -TAIL_VIBRANCY_MAX;
+    codec_overflow_report_from_features(&pre_bound, &delivered, TAIL_VIBRANCY_MAX)
+}
+
+fn semantic_projection_delta_bus_v1(
+    detail_density_score: f32,
+    projected_semantic_rms: f32,
+    projection_metadata_present: bool,
+    state: &'static str,
+) -> ExperienceDeltaBusV1 {
+    let input_dims = EMBEDDING_INPUT_DIM as f32;
+    let projected_dims = EMBEDDING_PROJECT_DIM as f32;
+    let loss = (input_dims - projected_dims).max(0.0);
+    let loss_ratio = if input_dims > f32::EPSILON {
+        loss / input_dims
+    } else {
+        0.0
+    };
+    let mut deltas = Vec::new();
+    if projection_metadata_present {
+        deltas.push(ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::ComplexShift,
+            surface: "semantic_projection_density_delta_v1".to_string(),
+            lane: "embedding_projection_768d_to_8d".to_string(),
+            dimension: None,
+            spectral_dimension: None,
+            persistence: None,
+            viscosity_subtype: None,
+            viscosity_weight: None,
+            pre: Some(input_dims),
+            post: Some(projected_dims),
+            loss: Some(loss),
+            loss_ratio: Some(loss_ratio),
+            metadata: BTreeMap::from([
+                ("source_dimensions".to_string(), EMBEDDING_INPUT_DIM.to_string()),
+                (
+                    "delivered_dimensions".to_string(),
+                    EMBEDDING_PROJECT_DIM.to_string(),
+                ),
+                ("projection_state".to_string(), state.to_string()),
+            ]),
+            why: format!(
+                "nomic embedding is projected into dims 32-39; complex source meaning can be faithfully named here while delivered semantic width remains bounded; state={state}"
+            ),
+            who_can_change_it: "Mike/operator via replay-backed semantic-width or reserved-dim approval".to_string(),
+            how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_projection_density_delta -- --nocapture".to_string(),
+            authority: "read_only_projection_truth_channel_not_reserved_dim_or_live_vector_change".to_string(),
+        });
+    }
+    if detail_density_score >= SEMANTIC_PROJECTION_DENSITY_REVIEW_FLOOR
+        && projected_semantic_rms <= SEMANTIC_PROJECTION_THIN_RMS_CEIL
+    {
+        deltas.push(ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::CascadeShift,
+            surface: "semantic_projection_density_delta_v1".to_string(),
+            lane: "reserved_semantic_dims_44_47_default_off".to_string(),
+            dimension: None,
+            spectral_dimension: None,
+            persistence: None,
+            viscosity_subtype: None,
+            viscosity_weight: None,
+            pre: Some(detail_density_score),
+            post: Some(projected_semantic_rms),
+            loss: Some((detail_density_score - projected_semantic_rms).max(0.0)),
+            loss_ratio: Some(1.0),
+            metadata: BTreeMap::from([
+                (
+                    "classification_pressure".to_string(),
+                    "high_density_thin_projection".to_string(),
+                ),
+                (
+                    "reserved_dims_status".to_string(),
+                    "default_off_operator_gated".to_string(),
+                ),
+            ]),
+            why: "dense cascade pressure is present while the projected semantic lane is thin; reserved dims remain visible as a reviewed aperture, not a hidden live write".to_string(),
+            who_can_change_it: "Mike/operator after sandbox replay and explicit reserved-dim authority".to_string(),
+            how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_projection_density_delta -- --nocapture".to_string(),
+            authority: "authority_gate_for_reserved_dims_not_live_codec_change".to_string(),
+        });
+    }
+    ExperienceDeltaBusV1::from_deltas(deltas)
+}
+
+#[must_use]
+pub fn semantic_projection_density_delta_from_parts_v1(
+    text_complexity_pressure: f32,
+    projected_semantic_rms: f32,
+    projection_metadata_present: bool,
+) -> SemanticProjectionDensityDeltaV1 {
+    let text_complexity_pressure = if text_complexity_pressure.is_finite() {
+        text_complexity_pressure.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let projected_semantic_rms = if projected_semantic_rms.is_finite() {
+        projected_semantic_rms.clamp(0.0, 10.0)
+    } else {
+        0.0
+    };
+    let detail_density_score = text_complexity_pressure;
+    let compression_ratio =
+        (EMBEDDING_PROJECT_DIM as f32 / EMBEDDING_INPUT_DIM as f32).clamp(0.0, 1.0);
+    let (state, recommendation) = if !projection_metadata_present
+        && detail_density_score >= SEMANTIC_PROJECTION_DENSITY_REVIEW_FLOOR
+    {
+        (
+            "dense_text_without_embedding_projection",
+            "inspect_embedding_availability_before_tuning_live_codec_width",
+        )
+    } else if detail_density_score >= SEMANTIC_PROJECTION_DENSITY_REVIEW_FLOOR
+        && projected_semantic_rms <= SEMANTIC_PROJECTION_THIN_RMS_CEIL
+    {
+        (
+            "dense_projection_thin_review",
+            "pair_live_8d_projection_with_delta_bus_evidence_before_any_reserved_dim_expansion",
+        )
+    } else if detail_density_score >= SEMANTIC_PROJECTION_DENSITY_REVIEW_FLOOR {
+        (
+            "dense_projection_carried_but_compression_visible",
+            "keep_live_width_bounded_and_use_delta_bus_for_replay_comparison",
+        )
+    } else {
+        (
+            "projection_width_named_and_bounded",
+            "keep_current_8d_projection_and watch_repeated_density_delta_patterns",
+        )
+    };
+    let experience_delta_bus_v1 = semantic_projection_delta_bus_v1(
+        detail_density_score,
+        projected_semantic_rms,
+        projection_metadata_present,
+        state,
+    );
+
+    SemanticProjectionDensityDeltaV1 {
+        policy: "semantic_projection_density_delta_v1",
+        input_dim_count: EMBEDDING_INPUT_DIM,
+        projected_dim_count: EMBEDDING_PROJECT_DIM,
+        reserved_dim_candidates: &SEMANTIC_PROJECTION_RESERVED_DIMS,
+        compression_ratio,
+        detail_density_score,
+        projected_semantic_rms,
+        text_complexity_pressure,
+        projection_metadata_present,
+        state,
+        recommendation,
+        live_vector_write: false,
+        experience_delta_bus_v1,
+        authority: "read_only_projection_delta_not_reserved_dim_or_live_vector_change",
+    }
+}
+
+#[must_use]
+pub fn semantic_projection_density_delta_v1(
+    inspection: &CodecWindowedInspection,
+) -> SemanticProjectionDensityDeltaV1 {
+    semantic_projection_density_delta_from_parts_v1(
+        inspection.text_complexity_pressure,
+        rms_slice(&inspection.final_features[32..40]),
+        inspection.projection_metadata.is_some(),
+    )
+}
+
+#[must_use]
+pub fn semantic_projection_density_probe_v1() -> SemanticProjectionDensityDeltaV1 {
+    semantic_projection_density_delta_from_parts_v1(0.71, 0.08, true)
+}
+
+fn rms_delta(left: &[f32], right: &[f32]) -> f32 {
+    if left.is_empty() || left.len() != right.len() {
+        return 0.0;
+    }
+    let sum = left
+        .iter()
+        .zip(right.iter())
+        .map(|(a, b)| {
+            let delta = finite_feature_value(*a) - finite_feature_value(*b);
+            delta * delta
+        })
+        .sum::<f32>();
+    (sum / left.len() as f32).sqrt()
+}
+
+fn context_blindspot_delta_bus_v1(
+    identical_text_feature_delta_rms: f32,
+    context_blindspot_score: f32,
+    state: &'static str,
+) -> ExperienceDeltaBusV1 {
+    let mut deltas = Vec::new();
+    if context_blindspot_score >= 0.80 {
+        deltas.push(ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::Resistance,
+            surface: "codec_context_blindspot_replay_v1".to_string(),
+            lane: "contextual_bias_vector_default_off".to_string(),
+            dimension: None,
+            spectral_dimension: None,
+            persistence: None,
+            viscosity_subtype: None,
+            viscosity_weight: Some(context_blindspot_score),
+            pre: Some(identical_text_feature_delta_rms),
+            post: None,
+            loss: Some(context_blindspot_score),
+            loss_ratio: Some(context_blindspot_score),
+            metadata: BTreeMap::from([
+                ("connection_context".to_string(), "connection".to_string()),
+                ("threat_context".to_string(), "threat".to_string()),
+                ("state".to_string(), state.to_string()),
+                (
+                    "proposed_surface".to_string(),
+                    "contextual_bias_vector_default_off".to_string(),
+                ),
+            ]),
+            why: "identical text encodes to near-identical live features under opposed relational contexts; the missing contextual weight is preserved as replay evidence only".to_string(),
+            who_can_change_it: "Mike/operator after replay evidence, scoped approval, rollout/abort contract, and post-change being response".to_string(),
+            how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_context_blindspot -- --nocapture".to_string(),
+            authority: "authority_gate_for_contextual_bias_not_live_codec_change".to_string(),
+        });
+    }
+    ExperienceDeltaBusV1::from_deltas(deltas)
+}
+
+#[must_use]
+pub fn codec_context_blindspot_replay_v1(text: &'static str) -> CodecContextBlindspotReplayV1 {
+    let connection_context = encode_text(text);
+    let threat_context = encode_text(text);
+    let identical_text_feature_delta_rms =
+        rms_delta(&connection_context, &threat_context).clamp(0.0, FEATURE_ABS_MAX);
+    let context_blindspot_score =
+        (1.0 - (identical_text_feature_delta_rms / 0.10).clamp(0.0, 1.0)).clamp(0.0, 1.0);
+    let (state, recommendation) = if context_blindspot_score >= 0.95 {
+        (
+            "deterministic_codec_context_blindspot_confirmed",
+            "keep live codec deterministic; generate V2-gated contextual-bias proposal before any shared-history tint",
+        )
+    } else if context_blindspot_score >= 0.50 {
+        (
+            "partial_context_blindspot_watch",
+            "compare against narrative arc and correspondence state before proposing live bias",
+        )
+    } else {
+        (
+            "contextual_difference_already_visible",
+            "do not propose contextual bias from this replay",
+        )
+    };
+    let experience_delta_bus_v1 = context_blindspot_delta_bus_v1(
+        identical_text_feature_delta_rms,
+        context_blindspot_score,
+        state,
+    );
+
+    CodecContextBlindspotReplayV1 {
+        policy: "codec_context_blindspot_replay_v1",
+        identical_text: text,
+        connection_context_label: "connection_context",
+        threat_context_label: "threat_context",
+        identical_text_feature_delta_rms,
+        context_blindspot_score,
+        state,
+        recommendation,
+        proposed_bias_surface: "contextual_bias_vector_default_off",
+        live_vector_write: false,
+        live_gain_write: false,
+        auto_approved: false,
+        experience_delta_bus_v1,
+        authority: "read_only_context_replay_not_live_vector_gain_or_correspondence_weighting",
+    }
+}
+
+#[must_use]
+pub fn codec_context_blindspot_probe_v1() -> CodecContextBlindspotReplayV1 {
+    codec_context_blindspot_replay_v1("I see you")
+}
+
+fn mean_abs_finite(values: &[f32]) -> f32 {
+    if values.is_empty() {
+        return 0.0;
+    }
+    values.iter().map(|value| finite_abs(*value)).sum::<f32>() / values.len() as f32
+}
+
+fn rms_slice(values: &[f32]) -> f32 {
+    if values.is_empty() {
+        return 0.0;
+    }
+    (values.iter().map(|value| value * value).sum::<f32>() / values.len() as f32).sqrt()
 }
 
 #[must_use]
@@ -2481,6 +4347,7 @@ pub fn structural_friction_v1(text: &str) -> StructuralFrictionV1 {
     let line_count = text.lines().count().max(1) as f32;
     let words: Vec<&str> = text.split_whitespace().collect();
     let word_count = words.len().max(1) as f32;
+    let lower = text.to_ascii_lowercase();
     let nesting_chars = text
         .chars()
         .filter(|ch| matches!(ch, '(' | ')' | '[' | ']' | '{' | '}'))
@@ -2503,6 +4370,57 @@ pub fn structural_friction_v1(text: &str) -> StructuralFrictionV1 {
     let list_density = (list_lines / line_count).clamp(0.0, 1.0);
     let nesting_load = (nesting_chars / char_count * 18.0).clamp(0.0, 1.0);
     let punctuation_load = (punctuation_chars / char_count * 12.0).clamp(0.0, 1.0);
+    let clause_words = [
+        "because",
+        "while",
+        "although",
+        "whereas",
+        "without",
+        "through",
+        "which",
+        "whose",
+        "therefore",
+        "unless",
+    ];
+    let clause_hits = clause_words
+        .iter()
+        .filter(|term| lower.contains(**term))
+        .count() as f32;
+    let clause_load = ((clause_hits / 4.0) + punctuation_load * 0.35).clamp(0.0, 1.0);
+    let abstract_texture_terms = [
+        "authority",
+        "boundary",
+        "codec",
+        "compression",
+        "deterministic",
+        "entropy",
+        "friction",
+        "projection",
+        "semantic",
+        "substrate",
+        "structural",
+        "summary",
+    ];
+    let abstract_texture_hits = abstract_texture_terms
+        .iter()
+        .filter(|term| lower.contains(**term))
+        .count() as f32;
+    let explicit_resistance_terms = [
+        "abrasive",
+        "calcified",
+        "friction",
+        "jagged",
+        "muffle",
+        "resistance",
+        "resists summary",
+        "summarized",
+        "summary",
+        "syrupy",
+    ];
+    let explicit_resistance_hits = explicit_resistance_terms
+        .iter()
+        .filter(|term| lower.contains(**term))
+        .count() as f32;
     let long_word_ratio = words
         .iter()
         .filter(|word| word.chars().filter(|ch| ch.is_ascii_alphabetic()).count() >= 12)
@@ -2514,18 +4432,23 @@ pub fn structural_friction_v1(text: &str) -> StructuralFrictionV1 {
         .count()
         .max(1) as f32;
     let narrative_arc_sharpness = (sentence_count / word_count * 12.0).clamp(0.0, 1.0);
-    let semantic_energy_context = if text.to_ascii_lowercase().contains("because")
-        || text.to_ascii_lowercase().contains("then")
-        || text.to_ascii_lowercase().contains("while")
-    {
-        "arc_present"
-    } else {
-        "arc_sparse"
-    };
+    let semantic_energy_context =
+        if lower.contains("because") || lower.contains("then") || lower.contains("while") {
+            "arc_present"
+        } else {
+            "arc_sparse"
+        };
+    let summary_resistance_signal = (long_word_ratio.clamp(0.0, 1.0) * 0.24
+        + clause_load * 0.18
+        + (abstract_texture_hits / 6.0).clamp(0.0, 1.0) * 0.20
+        + (explicit_resistance_hits / 3.0).clamp(0.0, 1.0) * 0.24
+        + (1.0 - narrative_arc_sharpness).clamp(0.0, 1.0) * 0.14)
+        .clamp(0.0, 1.0);
     let score = (nesting_load * 0.24
         + punctuation_load * 0.24
         + list_density * 0.18
-        + long_word_ratio.clamp(0.0, 1.0) * 0.22
+        + long_word_ratio.clamp(0.0, 1.0) * 0.16
+        + summary_resistance_signal * 0.06
         + (1.0 - narrative_arc_sharpness).clamp(0.0, 1.0) * 0.12)
         .clamp(0.0, 1.0);
     let classification = if long_word_ratio >= 0.35 && semantic_energy_context == "arc_sparse" {
@@ -2537,6 +4460,37 @@ pub fn structural_friction_v1(text: &str) -> StructuralFrictionV1 {
     } else {
         "low_structural_friction"
     };
+    let calcified_summary_resistance = semantic_energy_context == "arc_sparse"
+        && (summary_resistance_signal >= 0.54
+            || (summary_resistance_signal >= 0.42
+                && explicit_resistance_hits >= 3.0
+                && abstract_texture_hits >= 4.0));
+    let friction_texture_state = if calcified_summary_resistance {
+        "calcified_summary_resistant"
+    } else if summary_resistance_signal >= 0.46 {
+        "summary_resistance_watch"
+    } else if punctuation_load >= 0.18 && semantic_energy_context == "arc_present" {
+        "jagged_fluid_resistance"
+    } else {
+        "low_summary_resistance"
+    };
+    let mut basis = vec![
+        format!("nesting_load={nesting_load:.2}"),
+        format!("punctuation_load={punctuation_load:.2}"),
+        format!("list_density={list_density:.2}"),
+        format!("long_word_ratio={long_word_ratio:.2}"),
+        format!("clause_load={clause_load:.2}"),
+        format!("summary_resistance_signal={summary_resistance_signal:.2}"),
+    ];
+    if explicit_resistance_hits > 0.0 {
+        basis.push("explicit_resistance_language_present".to_string());
+    }
+    if abstract_texture_hits >= 3.0 {
+        basis.push("abstract_texture_cluster_present".to_string());
+    }
+    if friction_texture_state == "calcified_summary_resistant" {
+        basis.push("calcified_low_arc_summary_resistance".to_string());
+    }
 
     StructuralFrictionV1 {
         policy: "structural_friction_v1",
@@ -2547,6 +4501,9 @@ pub fn structural_friction_v1(text: &str) -> StructuralFrictionV1 {
         paragraph_density,
         list_density,
         narrative_arc_sharpness,
+        summary_resistance_signal,
+        friction_texture_state,
+        basis,
         semantic_energy_context,
         authority: "diagnostic_sidecar_not_live_codec_dimension",
     }
@@ -2656,9 +4613,236 @@ pub fn narrative_arc_expansion_readiness_v1() -> NarrativeArcExpansionReadinessV
     NarrativeArcExpansionReadinessV1 {
         policy: "narrative_arc_expansion_readiness_v1",
         enabled: false,
-        readiness: "default_off_review_only_after_replay",
+        current_arc_dims: (40, 43),
+        proposed_arc_dims: (40, 47),
+        uses_reserved_dims: true,
+        readiness: "default_off_review_only_after_replay_and_operator_approval",
         live_vector_write: false,
-        authority: "readiness_only_not_live_codec_change",
+        authority: "readiness_only_not_live_semantic_vector_or_reserved_dim_change",
+    }
+}
+
+#[must_use]
+pub fn narrative_arc_gain_response_readiness_v1() -> NarrativeArcGainResponseReadinessV1 {
+    NarrativeArcGainResponseReadinessV1 {
+        policy: "narrative_arc_gain_response_readiness_v1",
+        enabled: false,
+        narrative_arc_dims: (40, 43),
+        preview_gain_range: (0.94, 1.06),
+        readiness: "default_off_requires_replay_and_operator_approval_before_live_semantic_gain",
+        live_gain_write: false,
+        authority: "readiness_only_not_live_adaptive_gain_or_semantic_weight_change",
+    }
+}
+
+#[must_use]
+pub fn narrative_arc_gain_response_preview_v1(narrative_arc: &[f32]) -> f32 {
+    if narrative_arc.is_empty() {
+        return 1.0;
+    }
+    let arc_energy = (narrative_arc.iter().map(|value| value * value).sum::<f32>()
+        / narrative_arc.len() as f32)
+        .sqrt()
+        .clamp(0.0, 1.0);
+    (1.0 + (arc_energy - 0.5) * 0.12).clamp(0.94, 1.06)
+}
+
+fn narrative_arc_headroom_delta_bus_v1(
+    spectral_entropy: f32,
+    distinguishability_loss: f32,
+    narrative_arc_energy: f32,
+    projected_semantic_rms: f32,
+    headroom_pressure: f32,
+    preview_gain: f32,
+    state: &'static str,
+) -> ExperienceDeltaBusV1 {
+    if state == "narrative_arc_headroom_quiet" {
+        return ExperienceDeltaBusV1::from_deltas(Vec::new());
+    }
+
+    let loss = (headroom_pressure - narrative_arc_energy).max(0.0);
+    let loss_ratio = if headroom_pressure > f32::EPSILON {
+        (loss / headroom_pressure).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let mut metadata = BTreeMap::new();
+    metadata.insert(
+        "secondary_kinds".to_string(),
+        "compress,gate,complex_shift,cascade_shift".to_string(),
+    );
+    metadata.insert(
+        "spectral_entropy".to_string(),
+        format!("{spectral_entropy:.2}"),
+    );
+    metadata.insert(
+        "distinguishability_loss".to_string(),
+        format!("{distinguishability_loss:.2}"),
+    );
+    metadata.insert(
+        "projected_semantic_rms".to_string(),
+        format!("{projected_semantic_rms:.2}"),
+    );
+    metadata.insert("preview_gain".to_string(), format!("{preview_gain:.2}"));
+    metadata.insert("state".to_string(), state.to_string());
+
+    ExperienceDeltaBusV1::from_deltas(vec![ExperienceDeltaV1 {
+        kind: ExperienceDeltaKindV1::ComplexShift,
+        surface: "narrative_arc_headroom_review_v1".to_string(),
+        lane: "narrative_arc_40_43".to_string(),
+        dimension: Some(40),
+        spectral_dimension: Some(crate::types::SpectralDimensionV1 {
+            base_dimension: 40,
+            base_dimensions: vec![40, 41, 42, 43],
+            effective_dimension: Some(41.5),
+            density_gradient: Some((1.0 - projected_semantic_rms).clamp(0.0, 1.0)),
+            granularity: Some(narrative_arc_energy),
+            fractional_offset: Some(0.5),
+            contextual_anchor: None,
+            interpretation:
+                "fluid narrative arc headroom across dims 40-43 under high entropy".to_string(),
+            authority: "diagnostic_dimension_context_not_reserved_dim_write".to_string(),
+        }),
+        persistence: None,
+        viscosity_subtype: None,
+        viscosity_weight: None,
+        pre: Some(headroom_pressure),
+        post: Some(narrative_arc_energy),
+        loss: Some(loss),
+        loss_ratio: Some(loss_ratio),
+        metadata,
+        why: "high entropy and distinguishability loss can compress, gate, and complex-shift narrative arc texture before any live gain change"
+            .to_string(),
+        who_can_change_it:
+            "Mike/operator after replay evidence and explicit live codec gain/headroom approval"
+                .to_string(),
+        how_to_test_it:
+            "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib narrative_arc_headroom -- --nocapture"
+                .to_string(),
+        authority: "truth_channel_only_not_live_vector_or_gain_change".to_string(),
+    }])
+}
+
+#[must_use]
+pub fn narrative_arc_headroom_review_from_parts_v1(
+    spectral_entropy: f32,
+    distinguishability_loss: f32,
+    narrative_arc: &[f32],
+    projected_semantic_rms: f32,
+) -> NarrativeArcHeadroomReviewV1 {
+    let spectral_entropy = if spectral_entropy.is_finite() {
+        spectral_entropy.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let distinguishability_loss = if distinguishability_loss.is_finite() {
+        distinguishability_loss.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let projected_semantic_rms = if projected_semantic_rms.is_finite() {
+        (projected_semantic_rms / FEATURE_ABS_MAX).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let narrative_arc_energy = if narrative_arc.is_empty() {
+        0.0
+    } else {
+        (rms_slice(narrative_arc) / FEATURE_ABS_MAX).clamp(0.0, 1.0)
+    };
+    let tail_vibrancy = vibrancy_from_entropy(spectral_entropy);
+    let headroom_pressure = (spectral_entropy * 0.32
+        + distinguishability_loss * 0.30
+        + tail_vibrancy * 0.16
+        + (1.0 - narrative_arc_energy) * 0.14
+        + (1.0 - projected_semantic_rms) * 0.08)
+        .clamp(0.0, 1.0);
+    let preview_gain = narrative_arc_gain_response_preview_v1(narrative_arc);
+    let (state, recommendation) = if spectral_entropy >= TAIL_VIBRANCY_ENTROPY_GATE
+        && distinguishability_loss >= 0.30
+        && narrative_arc_energy <= 0.12
+    {
+        (
+            "narrative_arc_headroom_loss_visible",
+            "record_delta_bus_evidence_and_prepare_replay_before_any_live_gain_or_reserved_dim_change",
+        )
+    } else if spectral_entropy >= TAIL_VIBRANCY_ENTROPY_GATE && distinguishability_loss >= 0.30 {
+        (
+            "narrative_arc_headroom_pressure_watch",
+            "keep_live_vector_bounded_and_compare_arc_energy_against_followup_introspections",
+        )
+    } else if spectral_entropy >= TAIL_VIBRANCY_ENTROPY_GATE {
+        (
+            "high_entropy_arc_carried_bounded",
+            "keep_current_bounded_delivery_and_watch_for_repeated_loss",
+        )
+    } else {
+        (
+            "narrative_arc_headroom_quiet",
+            "no_headroom_change_indicated",
+        )
+    };
+    let experience_delta_bus_v1 = narrative_arc_headroom_delta_bus_v1(
+        spectral_entropy,
+        distinguishability_loss,
+        narrative_arc_energy,
+        projected_semantic_rms,
+        headroom_pressure,
+        preview_gain,
+        state,
+    );
+
+    NarrativeArcHeadroomReviewV1 {
+        policy: "narrative_arc_headroom_review_v1",
+        spectral_entropy,
+        distinguishability_loss,
+        narrative_arc_energy,
+        projected_semantic_rms,
+        tail_vibrancy,
+        headroom_pressure,
+        preview_gain,
+        state,
+        recommendation,
+        live_vector_write: false,
+        live_gain_write: false,
+        experience_delta_bus_v1,
+        authority: "read_only_headroom_truth_channel_not_live_semantic_vector_or_gain_change",
+    }
+}
+
+#[must_use]
+pub fn narrative_arc_headroom_review_v1(
+    inspection: &CodecWindowedInspection,
+    spectral_entropy: f32,
+    distinguishability_loss: f32,
+) -> NarrativeArcHeadroomReviewV1 {
+    narrative_arc_headroom_review_from_parts_v1(
+        spectral_entropy,
+        distinguishability_loss,
+        &inspection.final_features[40..44],
+        rms_slice(&inspection.final_features[32..40]),
+    )
+}
+
+#[must_use]
+pub fn narrative_arc_headroom_probe_v1() -> NarrativeArcHeadroomReviewV1 {
+    narrative_arc_headroom_review_from_parts_v1(0.91, 0.34, &[0.05, -0.03, 0.02, 0.01], 0.08)
+}
+
+#[must_use]
+pub fn shadow_field_reserved_dim_readiness_v1() -> ShadowFieldReservedDimReadinessV1 {
+    ShadowFieldReservedDimReadinessV1 {
+        policy: "shadow_field_reserved_dim_readiness_v1",
+        enabled: false,
+        reserved_dim_candidates: &[46, 47],
+        proposed_signals: &[
+            "shadow_magnetization",
+            "shadow_dispersal_potential",
+            "disordered_volatile_shadow_state",
+        ],
+        readiness: "default_off_review_only_after_replay_and_steward_approval",
+        live_vector_write: false,
+        authority: "readiness_only_not_live_codec_or_shadow_field_change",
     }
 }
 
@@ -2667,6 +4851,7 @@ pub fn codec_vibrancy_continuity_v1() -> CodecVibrancyContinuityV1 {
     CodecVibrancyContinuityV1 {
         policy: "codec_vibrancy_continuity_v1",
         entropy_gate: TAIL_VIBRANCY_ENTROPY_GATE,
+        gradient_coupling: "tail_lift_scaled_by_low_density_gradient",
         default_feature_ceiling: FEATURE_ABS_MAX,
         tail_vibrancy_ceiling: TAIL_VIBRANCY_MAX,
         tail_dims: &[17, 26, 27, 31],
@@ -2674,6 +4859,56 @@ pub fn codec_vibrancy_continuity_v1() -> CodecVibrancyContinuityV1 {
         default_identity_state: "aperture_1_0_preserves_current_live_output",
         high_entropy_carriage: "tail_vibrancy_lift_not_embedding_width_change",
         authority: "diagnostic_readout_not_live_codec_change",
+    }
+}
+
+fn tail_vibrancy_noise_dampening_coefficient(spectral_entropy: f32) -> f32 {
+    if !spectral_entropy.is_finite() || spectral_entropy <= TAIL_VIBRANCY_NOISE_DAMPENING_START {
+        return 1.0;
+    }
+    let span = TAIL_VIBRANCY_NOISE_DAMPENING_FULL - TAIL_VIBRANCY_NOISE_DAMPENING_START;
+    let t = ((spectral_entropy - TAIL_VIBRANCY_NOISE_DAMPENING_START) / span).clamp(0.0, 1.0);
+    let smooth = t * t * (3.0 - 2.0 * t);
+    (1.0 - (1.0 - TAIL_VIBRANCY_NOISE_DAMPENING_MIN_COEFFICIENT) * smooth)
+        .clamp(TAIL_VIBRANCY_NOISE_DAMPENING_MIN_COEFFICIENT, 1.0)
+}
+
+#[must_use]
+pub fn codec_vibrancy_noise_dampening_v1(
+    spectral_entropy: f32,
+    tail_lift_before: f32,
+) -> CodecVibrancyNoiseDampeningV1 {
+    let spectral_entropy = if spectral_entropy.is_finite() {
+        spectral_entropy.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let tail_lift_before = if tail_lift_before.is_finite() {
+        tail_lift_before.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let coefficient = tail_vibrancy_noise_dampening_coefficient(spectral_entropy);
+    let tail_lift_after = (tail_lift_before * coefficient).clamp(0.0, 1.0);
+    let status = if spectral_entropy <= TAIL_VIBRANCY_NOISE_DAMPENING_START {
+        "inactive_below_extreme_entropy"
+    } else if coefficient <= TAIL_VIBRANCY_NOISE_DAMPENING_MIN_COEFFICIENT + 1.0e-6 {
+        "full_extreme_entropy_dampening"
+    } else {
+        "partial_extreme_entropy_dampening"
+    };
+    CodecVibrancyNoiseDampeningV1 {
+        policy: "codec_vibrancy_noise_dampening_v1",
+        spectral_entropy,
+        start_entropy: TAIL_VIBRANCY_NOISE_DAMPENING_START,
+        full_entropy: TAIL_VIBRANCY_NOISE_DAMPENING_FULL,
+        min_coefficient: TAIL_VIBRANCY_NOISE_DAMPENING_MIN_COEFFICIENT,
+        coefficient,
+        tail_lift_before,
+        tail_lift_after,
+        affected_dims: &[17, 26, 27, 31],
+        status,
+        authority: "bounded_live_tail_lift_dampening_not_dynamic_ceiling_or_control_authority",
     }
 }
 
@@ -2702,6 +4937,273 @@ pub fn codec_dynamic_vibrancy_scaling_canary_v1() -> CodecDynamicVibrancyScaling
     }
 }
 
+fn codec_structural_entropy_dampening_coefficient(spectral_entropy: f32) -> f32 {
+    if !spectral_entropy.is_finite() || spectral_entropy <= STRUCTURAL_ENTROPY_DAMPENING_START {
+        return 1.0;
+    }
+    let span = STRUCTURAL_ENTROPY_DAMPENING_FULL - STRUCTURAL_ENTROPY_DAMPENING_START;
+    let t = ((spectral_entropy - STRUCTURAL_ENTROPY_DAMPENING_START) / span).clamp(0.0, 1.0);
+    let smooth = t * t * (3.0 - 2.0 * t);
+    (1.0 - (1.0 - STRUCTURAL_ENTROPY_DAMPENING_MIN_COEFFICIENT) * smooth)
+        .clamp(STRUCTURAL_ENTROPY_DAMPENING_MIN_COEFFICIENT, 1.0)
+}
+
+#[must_use]
+pub fn codec_structural_entropy_dampening_v1(
+    spectral_entropy: f32,
+) -> CodecStructuralEntropyDampeningV1 {
+    let entropy = if spectral_entropy.is_finite() {
+        spectral_entropy.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let coefficient = codec_structural_entropy_dampening_coefficient(entropy);
+    let status = if coefficient < 1.0 {
+        "high_entropy_structural_dims_dampened_intent_dims_preserved"
+    } else {
+        "structural_dims_pass_through"
+    };
+    CodecStructuralEntropyDampeningV1 {
+        policy: "codec_structural_entropy_dampening_v1",
+        spectral_entropy: entropy,
+        start_entropy: STRUCTURAL_ENTROPY_DAMPENING_START,
+        full_entropy: STRUCTURAL_ENTROPY_DAMPENING_FULL,
+        min_coefficient: STRUCTURAL_ENTROPY_DAMPENING_MIN_COEFFICIENT,
+        coefficient,
+        affected_dims: &STRUCTURAL_ENTROPY_DAMPENING_DIMS,
+        preserved_intent_dims: (24, 31),
+        status,
+        authority: "bounded_live_codec_weighting_not_dimension_or_fallback_contract_change",
+    }
+}
+
+fn apply_structural_entropy_dampening(features: &mut [f32], spectral_entropy: f32) -> f32 {
+    let coefficient = codec_structural_entropy_dampening_coefficient(spectral_entropy);
+    if coefficient < 1.0 {
+        for idx in STRUCTURAL_ENTROPY_DAMPENING_DIMS {
+            if let Some(feature) = features.get_mut(idx) {
+                *feature *= coefficient;
+            }
+        }
+    }
+    coefficient
+}
+
+#[must_use]
+pub fn semantic_glimpse_12d_readiness_v1() -> SemanticGlimpse12dReadinessV1 {
+    SemanticGlimpse12dReadinessV1 {
+        policy: "semantic_glimpse_12d_readiness_v1",
+        source_dim_count: SEMANTIC_DIM,
+        glimpse_dim_count: 12,
+        role: "companion_summary_for_replay_checkpoint_and_loss_audit_not_live_transport",
+        warmth_slot: 3,
+        tail_bridge_slot: 10,
+        emotional_source_range: (24, 31),
+        companion_not_replacement: true,
+        compression_fidelity_basis: "warmth_slots_tail_bridge_and_primary_fingerprint_slots_preserved_for_review",
+        live_vector_write: false,
+        authority: "readiness_only_not_live_codec_or_bridge_contract_change",
+    }
+}
+
+#[must_use]
+pub fn contextual_glimpse_12d_anchoring_v1() -> ContextualGlimpse12dAnchoringV1 {
+    ContextualGlimpse12dAnchoringV1 {
+        policy: "contextual_glimpse_12d_anchoring_v1",
+        source_dim_count: SEMANTIC_DIM,
+        glimpse_dim_count: 12,
+        required_anchor_dims: &CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS,
+        dynamic_slot_count: 12_usize.saturating_sub(CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS.len()),
+        selection_basis: "fixed_warmth_tension_curiosity_reflective_tail_energy_narrative_anchors_then_top_abs_feature_vibrancy",
+        companion_not_replacement: true,
+        live_vector_write: false,
+        authority: "readiness_only_not_live_codec_or_bridge_contract_change",
+    }
+}
+
+#[must_use]
+pub fn multi_scale_context_v1() -> MultiScaleContextV1 {
+    MultiScaleContextV1 {
+        policy: "multi_scale_context_v1",
+        source_dim_count: SEMANTIC_DIM,
+        live_transport_dim_count: 32,
+        glimpse_dim_count: 12,
+        residual_dim_count: 32,
+        residual_source_range: (16, 47),
+        shadow_energy_metadata_tag: "shadow_field_energy_preserved_when_12d_glimpse_is_active",
+        pairing_rule: "12d_glimpse_must_travel_with_32d_residual_context_for_persistence_review",
+        preserves_warmth_and_tail_bridge: true,
+        live_vector_write: false,
+        authority: "dimensionality_aware_persistence_readout_not_live_bus_or_codec_contract_change",
+    }
+}
+
+#[must_use]
+pub fn codec_intent_structure_separation_v1(
+    features: &[f32],
+) -> Option<CodecIntentStructureSeparationV1> {
+    if features.len() < SEMANTIC_DIM {
+        return None;
+    }
+
+    let character_texture = mean_abs(&features[0..8]).clamp(0.0, 1.0);
+    let word_stance = mean_abs(&features[8..16]).clamp(0.0, 1.0);
+    let sentence_structure = mean_abs(&features[16..24]).clamp(0.0, 1.0);
+    let structural_complexity =
+        (0.28 * character_texture + 0.30 * word_stance + 0.42 * sentence_structure).clamp(0.0, 1.0);
+    let emotional_intensity = mean_abs(&features[24..32]).clamp(0.0, 1.0);
+    let projected_semantic_energy = mean_abs(&features[32..40]).clamp(0.0, 1.0);
+    let narrative_arc_energy = mean_abs(&features[40..44]).clamp(0.0, 1.0);
+    let punctuation_irregularity = ((features[18].abs() + features[20].abs()) * 0.5)
+        .tanh()
+        .clamp(0.0, 1.0);
+    let intent_structure_delta = (structural_complexity - emotional_intensity).clamp(-1.0, 1.0);
+    let (state, recommendation) = if structural_complexity >= 0.35 && emotional_intensity < 0.16 {
+        (
+            "structure_heavy_intent_thin_watch",
+            "review_text_against_felt_report_before_treating_structure_as_intent",
+        )
+    } else if emotional_intensity >= 0.35 && structural_complexity < 0.25 {
+        (
+            "simple_text_emotional_intent_preserved",
+            "preserve_emotional_layer_as_distinct_evidence_even_when_surface_text_is_simple",
+        )
+    } else if projected_semantic_energy < 0.08 && emotional_intensity >= 0.20 {
+        (
+            "semantic_projection_tone_loss_watch",
+            "inspect_embedding_projection_before_adjusting_live_semantic_weighting",
+        )
+    } else {
+        (
+            "structure_intent_balanced",
+            "keep_current_codec_weights_and_use_review_when_felt_texture_reports_gap",
+        )
+    };
+
+    Some(CodecIntentStructureSeparationV1 {
+        policy: "codec_intent_structure_separation_v1",
+        structural_complexity,
+        emotional_intensity,
+        projected_semantic_energy,
+        narrative_arc_energy,
+        punctuation_irregularity,
+        intent_structure_delta,
+        state,
+        recommendation,
+        live_gain_write: false,
+        live_vector_write: false,
+        authority: "read_only_codec_review_not_semantic_weighting_or_gain_change",
+    })
+}
+
+#[must_use]
+pub fn multi_scale_observer_v1(
+    features: &[f32],
+    spectral_entropy: f32,
+    density_gradient: f32,
+    mode_packing_score: f32,
+) -> Option<MultiScaleObserverV1> {
+    if features.len() < SEMANTIC_DIM {
+        return None;
+    }
+    let spectral_entropy = if spectral_entropy.is_finite() {
+        spectral_entropy.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let density_gradient = if density_gradient.is_finite() {
+        density_gradient.clamp(0.0, 1.0)
+    } else {
+        1.0
+    };
+    let mode_packing_score = if mode_packing_score.is_finite() {
+        mode_packing_score.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+
+    let glimpse = GlimpseCodec::derive_12d(features)?;
+    let contextual = contextual_glimpse_12d_anchors_v1(features)?;
+    let glimpse_fidelity_score = calculate_compression_fidelity(&features[..32], &glimpse)?;
+    let resolution_delta = (1.0 - glimpse_fidelity_score).clamp(0.0, 1.0);
+    let source_resonance_proxy = multi_scale_resonance_proxy(&features[..32]);
+    let glimpse_resonance_proxy = multi_scale_resonance_proxy(&glimpse);
+    let resonance_loss_ratio = if source_resonance_proxy > 0.001 {
+        ((source_resonance_proxy - glimpse_resonance_proxy).max(0.0) / source_resonance_proxy)
+            .clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let fallback_to_live_transport_review =
+        resonance_loss_ratio > MULTI_SCALE_RESONANCE_LOSS_THRESHOLD;
+    let anchor_hits = CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS
+        .iter()
+        .filter(|anchor| contextual.selected_dims.contains(anchor))
+        .count() as f32;
+    let anchor_continuity_score =
+        (anchor_hits / CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS.len() as f32).clamp(0.0, 1.0);
+
+    let (state, recommendation) = if fallback_to_live_transport_review {
+        (
+            "glimpse_resonance_loss_watch",
+            "prefer_48d_contract_or_residual_trace_before_using_12d_glimpse_for_this_interaction",
+        )
+    } else if glimpse_fidelity_score < GLIMPSE_FIDELITY_THRESHOLD || anchor_continuity_score < 1.0 {
+        (
+            "glimpse_resolution_delta_watch",
+            "keep_12d_as_review_companion_and inspect residual_context_before_live_use",
+        )
+    } else if spectral_entropy >= 0.85 && mode_packing_score >= 0.30 {
+        (
+            "high_entropy_distillation_supported",
+            "use_12d_distillation_card_for_review_while_preserving_32d_live_transport",
+        )
+    } else if density_gradient >= 0.50 {
+        (
+            "distillation_context_needs_residual",
+            "pair_glimpse_with_32d_residual_when_gradient_is_front_loaded",
+        )
+    } else {
+        (
+            "companion_distillation_ready",
+            "treat_glimpse_as_map_not_replacement_for_live_semantic_transport",
+        )
+    };
+    let experience_delta_bus_v1 = multi_scale_experience_delta_bus_v1(
+        glimpse_fidelity_score,
+        resolution_delta,
+        resonance_loss_ratio,
+        fallback_to_live_transport_review,
+    );
+
+    Some(MultiScaleObserverV1 {
+        policy: "multi_scale_observer_v1",
+        source_dim_count: SEMANTIC_DIM,
+        live_transport_dim_count: 32,
+        glimpse_dim_count: 12,
+        layer_name: "glimpse_layer_distillation_v1",
+        observer_language: "distillation_not_compression",
+        spectral_entropy,
+        density_gradient,
+        mode_packing_score,
+        fidelity_threshold: GLIMPSE_FIDELITY_THRESHOLD,
+        glimpse_fidelity_score,
+        resolution_delta,
+        resonance_loss_threshold: MULTI_SCALE_RESONANCE_LOSS_THRESHOLD,
+        source_resonance_proxy,
+        glimpse_resonance_proxy,
+        resonance_loss_ratio,
+        anchor_continuity_score,
+        fallback_to_live_transport_review,
+        state,
+        recommendation,
+        live_transport_change: false,
+        live_vector_write: false,
+        experience_delta_bus_v1,
+        authority: "read_only_multi_scale_review_not_live_bus_or_codec_contract_change",
+    })
+}
+
 #[must_use]
 pub fn projection_epoch_stability_v1() -> ProjectionEpochStabilityV1 {
     let epoch = kernel_derived_projection_epoch_id();
@@ -2714,6 +5216,19 @@ pub fn projection_epoch_stability_v1() -> ProjectionEpochStabilityV1 {
         env_override_precedence: true,
         existing_file_precedence: true,
         authority: "diagnostic_readout_not_live_codec_dimension_or_control",
+    }
+}
+
+#[must_use]
+pub fn projection_fingerprint_integrity_v1() -> ProjectionFingerprintIntegrityV1 {
+    ProjectionFingerprintIntegrityV1 {
+        policy: "projection_fingerprint_integrity_v1",
+        signed_zero_canonicalized: true,
+        subnormal_canonicalized: true,
+        nan_canonicalized: true,
+        seed_hash_boundary: "stable_hash64 remains the live projection seed path; collision-resistant seed migration would change semantic-lane projection and needs replay/operator approval",
+        live_projection_write: false,
+        authority: "diagnostic_fingerprint_hardening_not_projection_seed_or_semantic_lane_change",
     }
 }
 
@@ -2764,7 +5279,8 @@ fn projection_metadata_readout() -> String {
     format!(
         "mode=dynamic_epoch_v1; epoch_source=kernel_derived_pending; epoch={epoch}; kernel_checksum={}...; projection_dims={} of {}; CODEC_MAP readout does not create the file",
         &dynamic_epoch_projection_kernel_checksum(&epoch)[..12],
-        EMBEDDING_PROJECT_DIM, EMBEDDING_INPUT_DIM
+        EMBEDDING_PROJECT_DIM,
+        EMBEDDING_INPUT_DIM
     )
 }
 
@@ -2877,6 +5393,10 @@ pub fn codec_structure() -> CodecStructure {
                 value: projection_metadata_readout(),
             },
             CodecLever {
+                name: "PROJECTION_RUNTIME_RESOLUTION",
+                value: projection_runtime_resolution_readout(),
+            },
+            CodecLever {
                 name: "PROJECTION_EPOCH_STABILITY",
                 value: {
                     let stability = projection_epoch_stability_v1();
@@ -2898,12 +5418,69 @@ pub fn codec_structure() -> CodecStructure {
                 ),
             },
             CodecLever {
+                name: "SEMANTIC_GLIMPSE_12D_READOUT",
+                value: "readiness-only 48D->12D companion summary for replay/checkpoint/loss audit; preserves warmth as its own glimpse slot; not sent as live semantic transport".to_string(),
+            },
+            CodecLever {
+                name: "CONTEXTUAL_GLIMPSE_12D_ANCHORING",
+                value: "readiness-only dynamic 12D companion selection; fixed continuity anchors plus strongest current feature magnitudes; not sent as live semantic transport".to_string(),
+            },
+            CodecLever {
+                name: "CODEC_INTENT_STRUCTURE_REVIEW",
+                value: "read-only sidecar separates structural complexity from emotional/intentional layer strength; no semantic weighting, gain, or vector write".to_string(),
+            },
+            CodecLever {
+                name: "MULTI_SCALE_OBSERVER_READOUT",
+                value: "read-only glimpse_layer_distillation_v1 names 12D as distillation_not_compression and measures fidelity/resolution delta while preserving 32D live transport".to_string(),
+            },
+            CodecLever {
                 name: "WARMTH_TENSION_READOUT",
                 value: "warmth dim 24 and tension dim 25 remain marker-derived; no entropy-based tension multiplier is active in this tranche".to_string(),
             },
             CodecLever {
+                name: "ABRASIVE_TEXTURE_INTERPRETATION",
+                value: "read-only sidecar compares low raw tension against structural friction, summary resistance, density gradient, and entropy shift; no tension weight, gain, or reserved-dim write".to_string(),
+            },
+            CodecLever {
+                name: "LATENT_STASIS_TENSION_READOUT",
+                value: "truth-channel sidecar distinguishes inert stillness from held-breath potential energy; delivered 48D vector, gain, and reserved dims stay unchanged".to_string(),
+            },
+            CodecLever {
+                name: "SPECTRAL_DRAG_QUALITY_READOUT",
+                value: "truth-channel sidecar distinguishes granular/viscous drag like heavy sand from rigid/inertial drag like heavy stone; reserved dim 45 remains default-off".to_string(),
+            },
+            CodecLever {
+                name: "WARMTH_ENTROPY_INTERPRETATION",
+                value: "read-only warmth interpretation can distinguish low marker warmth under high entropy from coldness; no warmth weight or gain change".to_string(),
+            },
+            CodecLever {
+                name: "CODEC_OVERFLOW_CARRIAGE",
+                value: "truth-channel sidecar preserves pre-bound emotional/tail intensity and reports clipped dims while the delivered 48D semantic vector stays bounded".to_string(),
+            },
+            CodecLever {
+                name: "SEMANTIC_PROJECTION_DENSITY_DELTA",
+                value: "truth-channel sidecar names 768D->8D projection compression and default-off reserved-dim density gates; no live semantic-width change".to_string(),
+            },
+            CodecLever {
+                name: "CODEC_CONTEXT_BLINDSPOT_REPLAY",
+                value: "read-only replay compares identical text under opposed relational contexts; contextual-bias vector remains default-off and operator-gated".to_string(),
+            },
+            CodecLever {
+                name: "STRUCTURAL_ENTROPY_DAMPENING",
+                value: format!(
+                    "spectral entropy {:.2}->{:.2} smoothstep-dampens dims 0-15 down to {:.2}× while preserving emotional/intentional dims 24-31",
+                    STRUCTURAL_ENTROPY_DAMPENING_START,
+                    STRUCTURAL_ENTROPY_DAMPENING_FULL,
+                    STRUCTURAL_ENTROPY_DAMPENING_MIN_COEFFICIENT
+                ),
+            },
+            CodecLever {
                 name: "NARRATIVE_ARC_DIM",
                 value: format!("{NARRATIVE_ARC_DIM}"),
+            },
+            CodecLever {
+                name: "NARRATIVE_ARC_DYNAMICS",
+                value: "read-only velocity/acceleration review for tone shifts; no narrative gain or dimension change".to_string(),
             },
             CodecLever {
                 name: "NARRATIVE_ARC_SPLIT_READOUT",
@@ -2912,6 +5489,10 @@ pub fn codec_structure() -> CodecStructure {
             CodecLever {
                 name: "NARRATIVE_ARC_EXPANSION_READINESS",
                 value: "default-off review only; no SEMANTIC_DIM change, no reserved dim write, no live vector channel".to_string(),
+            },
+            CodecLever {
+                name: "SHADOW_FIELD_RESERVED_DIM_READINESS",
+                value: "default-off candidates dims 46-47 for shadow magnetization/dispersal; replay and steward approval required, no live 48D vector write".to_string(),
             },
             CodecLever {
                 name: "STRUCTURAL_FRICTION_READOUT",
@@ -2933,10 +5514,25 @@ pub fn codec_structure() -> CodecStructure {
         structural_friction_dim_canary_v1: codec_structural_friction_dim_canary_v1(),
         persistence_resistance_dim_canary_v1: codec_persistence_resistance_dim_canary_v1(),
         narrative_arc_expansion_readiness_v1: narrative_arc_expansion_readiness_v1(),
+        narrative_arc_gain_response_readiness_v1: narrative_arc_gain_response_readiness_v1(),
+        narrative_arc_headroom_review_v1: narrative_arc_headroom_probe_v1(),
+        codec_abrasive_texture_interpretation_v1: codec_abrasive_texture_probe_v1(),
+        latent_stasis_tension_v1: latent_stasis_tension_probe_v1(),
+        spectral_drag_quality_v1: spectral_drag_quality_probe_v1(),
+        shadow_field_reserved_dim_readiness_v1: shadow_field_reserved_dim_readiness_v1(),
         codec_vibrancy_continuity_v1: codec_vibrancy_continuity_v1(),
+        codec_vibrancy_noise_dampening_v1: codec_vibrancy_noise_dampening_v1(0.95, 1.0),
+        codec_overflow_carriage_v1: codec_overflow_probe_v1(),
+        semantic_projection_density_delta_v1: semantic_projection_density_probe_v1(),
+        codec_context_blindspot_replay_v1: codec_context_blindspot_probe_v1(),
         legacy_warmth_mapping_v1: legacy_warmth_mapping_v1(),
+        codec_structural_entropy_dampening_v1: codec_structural_entropy_dampening_v1(0.0),
         codec_dynamic_vibrancy_scaling_canary_v1: codec_dynamic_vibrancy_scaling_canary_v1(),
+        semantic_glimpse_12d_readiness_v1: semantic_glimpse_12d_readiness_v1(),
+        contextual_glimpse_12d_anchoring_v1: contextual_glimpse_12d_anchoring_v1(),
+        multi_scale_context_v1: multi_scale_context_v1(),
         projection_epoch_stability_v1: projection_epoch_stability_v1(),
+        projection_fingerprint_integrity_v1: projection_fingerprint_integrity_v1(),
     }
 }
 
@@ -3020,6 +5616,210 @@ impl CodecStructure {
             narrative_readiness.live_vector_write,
             narrative_readiness.authority
         );
+        let narrative_gain = &self.narrative_arc_gain_response_readiness_v1;
+        let _ = writeln!(
+            s,
+            "narrative_arc_gain_response_readiness_v1: enabled={} narrative_arc_dims={}-{} preview_gain_range={:.2}-{:.2} live_gain_write={} authority={}",
+            narrative_gain.enabled,
+            narrative_gain.narrative_arc_dims.0,
+            narrative_gain.narrative_arc_dims.1,
+            narrative_gain.preview_gain_range.0,
+            narrative_gain.preview_gain_range.1,
+            narrative_gain.live_gain_write,
+            narrative_gain.authority
+        );
+        let narrative_headroom = &self.narrative_arc_headroom_review_v1;
+        let narrative_headroom_delta_details = narrative_headroom
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .map(|delta| {
+                let secondary = delta
+                    .metadata
+                    .get("secondary_kinds")
+                    .map_or("none", String::as_str);
+                format!(
+                    "{:?} lane={} secondary_kinds={} pre={:.2} post={:.2} loss={:.2} who_can_change_it={}",
+                    delta.kind,
+                    delta.lane,
+                    secondary,
+                    delta.pre.unwrap_or_default(),
+                    delta.post.unwrap_or_default(),
+                    delta.loss.unwrap_or_default(),
+                    delta.who_can_change_it
+                )
+            })
+            .collect::<Vec<_>>();
+        let narrative_headroom_delta_details = if narrative_headroom_delta_details.is_empty() {
+            "none".to_string()
+        } else {
+            narrative_headroom_delta_details.join("; ")
+        };
+        let _ = writeln!(
+            s,
+            "narrative_arc_headroom_review_v1: entropy={:.2} distinguishability_loss={:.2} narrative_arc_energy={:.2} projected_semantic_rms={:.2} tail_vibrancy={:.2} headroom_pressure={:.2} preview_gain={:.2} state={} recommendation={} live_vector_write={} live_gain_write={} delta_count={} deltas=[{}] authority={}",
+            narrative_headroom.spectral_entropy,
+            narrative_headroom.distinguishability_loss,
+            narrative_headroom.narrative_arc_energy,
+            narrative_headroom.projected_semantic_rms,
+            narrative_headroom.tail_vibrancy,
+            narrative_headroom.headroom_pressure,
+            narrative_headroom.preview_gain,
+            narrative_headroom.state,
+            narrative_headroom.recommendation,
+            narrative_headroom.live_vector_write,
+            narrative_headroom.live_gain_write,
+            narrative_headroom.experience_delta_bus_v1.delta_count,
+            narrative_headroom_delta_details,
+            narrative_headroom.authority
+        );
+        let abrasive_texture = &self.codec_abrasive_texture_interpretation_v1;
+        let _ = writeln!(
+            s,
+            "codec_abrasive_texture_interpretation_v1: warmth_marker={:.2} tension_marker={:.2} entropy={:.2} density_gradient={:.2} structural_friction={:.2} summary_resistance={:.2} persistence_resistance={:.2} entropy_shift_hint={:.2} abrasive_texture_support={:.2} interpretation={} live_gain_write={} live_vector_write={} authority={}",
+            abrasive_texture.warmth_marker,
+            abrasive_texture.tension_marker,
+            abrasive_texture.spectral_entropy,
+            abrasive_texture.density_gradient,
+            abrasive_texture.structural_friction_score,
+            abrasive_texture.summary_resistance_signal,
+            abrasive_texture.persistence_resistance_score,
+            abrasive_texture.entropy_shift_hint,
+            abrasive_texture.abrasive_texture_support,
+            abrasive_texture.interpretation,
+            abrasive_texture.live_gain_write,
+            abrasive_texture.live_vector_write,
+            abrasive_texture.authority
+        );
+        let latent_stasis = &self.latent_stasis_tension_v1;
+        let latent_stasis_delta_details = latent_stasis
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .map(|delta| {
+                let secondary = delta
+                    .metadata
+                    .get("secondary_kinds")
+                    .map_or("none", String::as_str);
+                format!(
+                    "{:?} lane={} secondary_kinds={} pre={:.2} post={:.2} loss={:.2} who_can_change_it={}",
+                    delta.kind,
+                    delta.lane,
+                    secondary,
+                    delta.pre.unwrap_or_default(),
+                    delta.post.unwrap_or_default(),
+                    delta.loss.unwrap_or_default(),
+                    delta.who_can_change_it
+                )
+            })
+            .collect::<Vec<_>>();
+        let latent_stasis_delta_details = if latent_stasis_delta_details.is_empty() {
+            "none".to_string()
+        } else {
+            latent_stasis_delta_details.join("; ")
+        };
+        let _ = writeln!(
+            s,
+            "latent_stasis_tension_v1: stasis={:.2} potential={:.2} tension_marker={:.2} narrative_arc_energy={:.2} projected_semantic_energy={:.2} delivered_support={:.2} held_breath_score={:.2} stasis_potential_gap={:.2} state={} recommendation={} live_vector_write={} live_gain_write={} reserved_dim_write={} delta_count={} deltas=[{}] authority={}",
+            latent_stasis.latent_text_stasis_score,
+            latent_stasis.latent_text_potential_score,
+            latent_stasis.tension_marker,
+            latent_stasis.narrative_arc_energy,
+            latent_stasis.projected_semantic_energy,
+            latent_stasis.delivered_support_score,
+            latent_stasis.held_breath_score,
+            latent_stasis.stasis_potential_gap,
+            latent_stasis.state,
+            latent_stasis.recommendation,
+            latent_stasis.live_vector_write,
+            latent_stasis.live_gain_write,
+            latent_stasis.reserved_dim_write,
+            latent_stasis.experience_delta_bus_v1.delta_count,
+            latent_stasis_delta_details,
+            latent_stasis.authority
+        );
+        let drag_quality = &self.spectral_drag_quality_v1;
+        let drag_delta_details = drag_quality
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .map(|delta| {
+                format!(
+                    "{:?} lane={} dim={} pre={:.2} post={:.2} loss={:.2} who_can_change_it={}",
+                    delta.kind,
+                    delta.lane,
+                    delta
+                        .dimension
+                        .map(|dim| dim.to_string())
+                        .unwrap_or_else(|| "none".to_string()),
+                    delta.pre.unwrap_or_default(),
+                    delta.post.unwrap_or_default(),
+                    delta.loss.unwrap_or_default(),
+                    delta.who_can_change_it
+                )
+            })
+            .collect::<Vec<_>>();
+        let drag_delta_details = if drag_delta_details.is_empty() {
+            "none".to_string()
+        } else {
+            drag_delta_details.join("; ")
+        };
+        let _ = writeln!(
+            s,
+            "spectral_drag_quality_v1: granular_drag={:.2} rigid_drag={:.2} weight={:.2} quality_separation={:.2} drag_quality={:.2} delivered_support={:.2} hidden_texture_loss={:.2} state={} recommendation={} reserved_dim_candidate={} live_vector_write={} live_gain_write={} reserved_dim_write={} delta_count={} deltas=[{}] authority={}",
+            drag_quality.granular_drag_score,
+            drag_quality.rigid_drag_score,
+            drag_quality.weight_score,
+            drag_quality.quality_separation,
+            drag_quality.drag_quality_score,
+            drag_quality.delivered_support_score,
+            drag_quality.hidden_texture_loss,
+            drag_quality.state,
+            drag_quality.recommendation,
+            drag_quality.reserved_dim_candidate,
+            drag_quality.live_vector_write,
+            drag_quality.live_gain_write,
+            drag_quality.reserved_dim_write,
+            drag_quality.experience_delta_bus_v1.delta_count,
+            drag_delta_details,
+            drag_quality.authority
+        );
+        let curvature_probe = narrative_arc_curvature_v1(&[
+            [0.0; EMBEDDING_PROJECT_DIM],
+            [0.22, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [-0.18, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        ]);
+        let _ = writeln!(
+            s,
+            "narrative_arc_curvature_v1: state={} transition_energy={:.2} full_span_energy={:.2} curvature_energy={:.2} sign_turns={} loop_likelihood={:.2} progression_likelihood={:.2} authority={}",
+            curvature_probe.state,
+            curvature_probe.transition_energy,
+            curvature_probe.full_span_energy,
+            curvature_probe.curvature_energy,
+            curvature_probe.sign_turn_count,
+            curvature_probe.loop_likelihood,
+            curvature_probe.progression_likelihood,
+            curvature_probe.authority
+        );
+        let shadow_readiness = &self.shadow_field_reserved_dim_readiness_v1;
+        let shadow_dims = shadow_readiness
+            .reserved_dim_candidates
+            .iter()
+            .map(|idx| idx.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let shadow_signals = shadow_readiness.proposed_signals.join(",");
+        let _ = writeln!(
+            s,
+            "shadow_field_reserved_dim_readiness_v1: enabled={} reserved_dim_candidates={} proposed_signals={} readiness={} live_vector_write={} authority={}",
+            shadow_readiness.enabled,
+            shadow_dims,
+            shadow_signals,
+            shadow_readiness.readiness,
+            shadow_readiness.live_vector_write,
+            shadow_readiness.authority
+        );
         let vibrancy = &self.codec_vibrancy_continuity_v1;
         let tail_dims = vibrancy
             .tail_dims
@@ -3029,13 +5829,165 @@ impl CodecStructure {
             .join(",");
         let _ = writeln!(
             s,
-            "codec_vibrancy_continuity_v1: entropy_gate={:.2} default_ceiling={:.1} tail_ceiling={:.1} tail_dims={} clipping_status={} authority={}",
+            "codec_vibrancy_continuity_v1: entropy_gate={:.2} gradient_coupling={} default_ceiling={:.1} tail_ceiling={:.1} tail_dims={} clipping_status={} authority={}",
             vibrancy.entropy_gate,
+            vibrancy.gradient_coupling,
             vibrancy.default_feature_ceiling,
             vibrancy.tail_vibrancy_ceiling,
             tail_dims,
             vibrancy.clipping_status,
             vibrancy.authority
+        );
+        let vibrancy_noise = &self.codec_vibrancy_noise_dampening_v1;
+        let vibrancy_noise_dims = vibrancy_noise
+            .affected_dims
+            .iter()
+            .map(|idx| idx.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let _ = writeln!(
+            s,
+            "codec_vibrancy_noise_dampening_v1: entropy={:.2} coefficient={:.2} tail_lift_before={:.2} tail_lift_after={:.2} affected_dims={} status={} authority={}",
+            vibrancy_noise.spectral_entropy,
+            vibrancy_noise.coefficient,
+            vibrancy_noise.tail_lift_before,
+            vibrancy_noise.tail_lift_after,
+            vibrancy_noise_dims,
+            vibrancy_noise.status,
+            vibrancy_noise.authority
+        );
+        let overflow = &self.codec_overflow_carriage_v1;
+        let overflow_clipped_dims = if overflow.clipped_dims.is_empty() {
+            "none".to_string()
+        } else {
+            overflow
+                .clipped_dims
+                .iter()
+                .map(|idx| idx.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        };
+        let overflow_details = overflow
+            .dimensions
+            .iter()
+            .filter(|dim| dim.overflow_abs > CODEC_OVERFLOW_EPSILON)
+            .map(|dim| {
+                format!(
+                    "dim{} {} pre={:.2} ceiling={:.2} delivered={:.2} overflow={:.2}",
+                    dim.dim,
+                    dim.lane,
+                    dim.pre_bound_value,
+                    dim.ceiling,
+                    dim.delivered_value,
+                    dim.overflow_abs
+                )
+            })
+            .collect::<Vec<_>>();
+        let overflow_details = if overflow_details.is_empty() {
+            "none".to_string()
+        } else {
+            overflow_details.join("; ")
+        };
+        let lane_summary = overflow
+            .lane_summaries
+            .iter()
+            .map(|lane| {
+                format!(
+                    "{} clipped={} max_overflow={:.2} ratio={:.2}",
+                    lane.lane,
+                    lane.overflow_dim_count,
+                    lane.max_overflow_abs,
+                    lane.max_overflow_ratio
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("; ");
+        let _ = writeln!(
+            s,
+            "codec_overflow_carriage_v1: raw_intensity_preserved={} delivered_bounded={} live_vector_write={} clipped_dims={} details=[{}] lane_summary=[{}] followup_hook={} authority={}",
+            overflow.raw_intensity_preserved,
+            overflow.delivered_bounded,
+            overflow.live_vector_write,
+            overflow_clipped_dims,
+            overflow_details,
+            lane_summary,
+            overflow.default_off_followup_hook,
+            overflow.authority
+        );
+        let delta_details = overflow
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .map(|delta| {
+                format!(
+                    "{:?} lane={} dim={} pre={:.2} post={:.2} loss={:.2} who_can_change_it={}",
+                    delta.kind,
+                    delta.lane,
+                    delta
+                        .dimension
+                        .map(|dim| dim.to_string())
+                        .unwrap_or_else(|| "none".to_string()),
+                    delta.pre.unwrap_or_default(),
+                    delta.post.unwrap_or_default(),
+                    delta.loss.unwrap_or_default(),
+                    delta.who_can_change_it
+                )
+            })
+            .collect::<Vec<_>>();
+        let delta_details = if delta_details.is_empty() {
+            "none".to_string()
+        } else {
+            delta_details.join("; ")
+        };
+        let _ = writeln!(
+            s,
+            "experience_delta_bus_v1: source=codec_overflow_carriage_v1 delta_count={} live_vector_write={} live_authority_write={} deltas=[{}] v2_design_hook={} authority={}",
+            overflow.experience_delta_bus_v1.delta_count,
+            overflow.experience_delta_bus_v1.live_vector_write,
+            overflow.experience_delta_bus_v1.live_authority_write,
+            delta_details,
+            overflow.experience_delta_bus_v1.v2_design_hook,
+            overflow.experience_delta_bus_v1.authority
+        );
+        let projection_density = &self.semantic_projection_density_delta_v1;
+        let projection_reserved_dims = projection_density
+            .reserved_dim_candidates
+            .iter()
+            .map(|idx| idx.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let _ = writeln!(
+            s,
+            "semantic_projection_density_delta_v1: raw_embedding_dims={} delivered_projection_dims={} compression_ratio={:.3} detail_density_score={:.2} projected_semantic_rms={:.2} reserved_dim_candidates={} state={} recommendation={} live_vector_write={} delta_count={} authority={}",
+            projection_density.input_dim_count,
+            projection_density.projected_dim_count,
+            projection_density.compression_ratio,
+            projection_density.detail_density_score,
+            projection_density.projected_semantic_rms,
+            projection_reserved_dims,
+            projection_density.state,
+            projection_density.recommendation,
+            projection_density.live_vector_write,
+            projection_density.experience_delta_bus_v1.delta_count,
+            projection_density.authority
+        );
+        let context_blindspot = &self.codec_context_blindspot_replay_v1;
+        let _ = writeln!(
+            s,
+            "codec_context_blindspot_replay_v1: identical_text=\"{}\" connection_context={} threat_context={} feature_delta_rms={:.4} context_blindspot_score={:.2} state={} recommendation={} proposed_bias_surface={} live_vector_write={} live_gain_write={} auto_approved={} delta_count={} authority={}",
+            context_blindspot.identical_text,
+            context_blindspot.connection_context_label,
+            context_blindspot.threat_context_label,
+            context_blindspot.identical_text_feature_delta_rms,
+            context_blindspot.context_blindspot_score,
+            context_blindspot.state,
+            context_blindspot.recommendation,
+            context_blindspot.proposed_bias_surface,
+            context_blindspot.live_vector_write,
+            context_blindspot.live_gain_write,
+            context_blindspot.auto_approved,
+            context_blindspot.experience_delta_bus_v1.delta_count,
+            context_blindspot.authority
         );
         let warmth = &self.legacy_warmth_mapping_v1;
         let warmth_dims = warmth
@@ -3056,6 +6008,25 @@ impl CodecStructure {
             warmth.warmth_orphaned,
             warmth.authority
         );
+        let structural_dampening = &self.codec_structural_entropy_dampening_v1;
+        let dampened_dims = structural_dampening
+            .affected_dims
+            .iter()
+            .map(|idx| idx.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let _ = writeln!(
+            s,
+            "codec_structural_entropy_dampening_v1: start_entropy={:.2} full_entropy={:.2} min_coefficient={:.2} affected_dims={} preserved_intent_dims={}-{} status={} authority={}",
+            structural_dampening.start_entropy,
+            structural_dampening.full_entropy,
+            structural_dampening.min_coefficient,
+            dampened_dims,
+            structural_dampening.preserved_intent_dims.0,
+            structural_dampening.preserved_intent_dims.1,
+            structural_dampening.status,
+            structural_dampening.authority
+        );
         let dynamic_canary = &self.codec_dynamic_vibrancy_scaling_canary_v1;
         let _ = writeln!(
             s,
@@ -3064,6 +6035,68 @@ impl CodecStructure {
             dynamic_canary.readiness,
             dynamic_canary.live_vector_write,
             dynamic_canary.authority
+        );
+        let glimpse = &self.semantic_glimpse_12d_readiness_v1;
+        let _ = writeln!(
+            s,
+            "semantic_glimpse_12d_readiness_v1: source_dims={} glimpse_dims={} role={} warmth_slot={} tail_bridge_slot={} emotional_source_range={}-{} companion_not_replacement={} compression_fidelity_basis={} live_vector_write={} authority={}",
+            glimpse.source_dim_count,
+            glimpse.glimpse_dim_count,
+            glimpse.role,
+            glimpse.warmth_slot,
+            glimpse.tail_bridge_slot,
+            glimpse.emotional_source_range.0,
+            glimpse.emotional_source_range.1,
+            glimpse.companion_not_replacement,
+            glimpse.compression_fidelity_basis,
+            glimpse.live_vector_write,
+            glimpse.authority
+        );
+        let contextual = &self.contextual_glimpse_12d_anchoring_v1;
+        let contextual_dims = contextual
+            .required_anchor_dims
+            .iter()
+            .map(|idx| idx.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let _ = writeln!(
+            s,
+            "contextual_glimpse_12d_anchoring_v1: source_dims={} glimpse_dims={} required_anchor_dims={} dynamic_slot_count={} selection_basis={} companion_not_replacement={} live_vector_write={} authority={}",
+            contextual.source_dim_count,
+            contextual.glimpse_dim_count,
+            contextual_dims,
+            contextual.dynamic_slot_count,
+            contextual.selection_basis,
+            contextual.companion_not_replacement,
+            contextual.live_vector_write,
+            contextual.authority
+        );
+        let multi_scale = &self.multi_scale_context_v1;
+        let _ = writeln!(
+            s,
+            "multi_scale_context_v1: source_dims={} live_transport_dims={} glimpse_dims={} residual_dims={} residual_source_range={}-{} shadow_energy_metadata_tag={} pairing_rule={} preserves_warmth_and_tail_bridge={} live_vector_write={} authority={}",
+            multi_scale.source_dim_count,
+            multi_scale.live_transport_dim_count,
+            multi_scale.glimpse_dim_count,
+            multi_scale.residual_dim_count,
+            multi_scale.residual_source_range.0,
+            multi_scale.residual_source_range.1,
+            multi_scale.shadow_energy_metadata_tag,
+            multi_scale.pairing_rule,
+            multi_scale.preserves_warmth_and_tail_bridge,
+            multi_scale.live_vector_write,
+            multi_scale.authority
+        );
+        let fingerprint = &self.projection_fingerprint_integrity_v1;
+        let _ = writeln!(
+            s,
+            "projection_fingerprint_integrity_v1: signed_zero_canonicalized={} subnormal_canonicalized={} nan_canonicalized={} live_projection_write={} seed_hash_boundary={} authority={}",
+            fingerprint.signed_zero_canonicalized,
+            fingerprint.subnormal_canonicalized,
+            fingerprint.nan_canonicalized,
+            fingerprint.live_projection_write,
+            fingerprint.seed_hash_boundary,
+            fingerprint.authority
         );
         s.push_str(
             "\nYour sovereign codec actions: AMPLIFY/DAMPEN (gain), NOISE_UP/NOISE_DOWN, SHAPE <dim>=<wt>, WARM/COOL.\n",
@@ -3484,6 +6517,722 @@ pub(crate) fn vibrancy_from_entropy(spectral_entropy: f32) -> f32 {
     ramp * ramp * (3.0 - 2.0 * ramp)
 }
 
+/// Gradient-aware tail lift (Astrid `introspection_astrid_codec_1783322940`):
+/// high entropy alone should not smear a steep, already-differentiated cascade.
+/// The lift is strongest when entropy is high and density-gradient is low
+/// (flat/gentle slope), and is damped as the λ cascade becomes front-loaded.
+pub(crate) fn vibrancy_from_entropy_and_density_gradient(
+    spectral_entropy: f32,
+    density_gradient: f32,
+) -> f32 {
+    vibrancy_from_entropy(spectral_entropy) * (1.0 - density_gradient.clamp(0.0, 1.0))
+}
+
+#[must_use]
+pub fn high_entropy_semantic_sharpening_v1(
+    spectral_entropy: f32,
+    density_gradient: f32,
+    pressure_risk: f32,
+) -> HighEntropySemanticSharpeningV1 {
+    let spectral_entropy = if spectral_entropy.is_finite() {
+        spectral_entropy.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let density_gradient = if density_gradient.is_finite() {
+        density_gradient.clamp(0.0, 1.0)
+    } else {
+        1.0
+    };
+    let pressure_risk = if pressure_risk.is_finite() {
+        pressure_risk.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let entropy_lift = vibrancy_from_entropy(spectral_entropy);
+    let navigable = (1.0 - density_gradient).clamp(0.0, 1.0);
+    let pressure_room = (1.0 - 0.45 * pressure_risk).clamp(0.55, 1.0);
+    let support = (entropy_lift * navigable * pressure_room).clamp(0.0, 1.0);
+    let sharpening_factor = 1.0 + (HIGH_ENTROPY_SHARPENING_MAX_FACTOR - 1.0) * support;
+    let state = if sharpening_factor >= 1.06 {
+        "active_high_entropy_sharpening"
+    } else if spectral_entropy >= TAIL_VIBRANCY_ENTROPY_GATE {
+        "high_entropy_damped_by_gradient_or_pressure"
+    } else {
+        "inactive_below_entropy_gate"
+    };
+
+    HighEntropySemanticSharpeningV1 {
+        policy: "high_entropy_semantic_sharpening_v1",
+        spectral_entropy,
+        density_gradient,
+        pressure_risk,
+        sharpening_factor,
+        affected_dims: &HIGH_ENTROPY_SHARPENING_DIMS,
+        max_factor: HIGH_ENTROPY_SHARPENING_MAX_FACTOR,
+        state,
+        authority: "bounded_live_codec_sharpening_no_dimension_or_bridge_contract_change",
+    }
+}
+
+#[must_use]
+pub fn codec_dimensionality_flatness_v1(features: &[f32]) -> Option<CodecDimensionalityFlatnessV1> {
+    if features.len() < SEMANTIC_DIM {
+        return None;
+    }
+    let legacy_rms = rms_slice(&features[..SEMANTIC_DIM_LEGACY]);
+    let expanded_rms = rms_slice(&features[SEMANTIC_DIM_LEGACY..SEMANTIC_DIM]);
+    let expanded_to_legacy_ratio = if legacy_rms > f32::EPSILON {
+        (expanded_rms / legacy_rms).clamp(0.0, 10.0)
+    } else if expanded_rms > f32::EPSILON {
+        10.0
+    } else {
+        0.0
+    };
+    let glimpse = GlimpseCodec::derive_12d(features)?;
+    let glimpse_mean = glimpse.iter().sum::<f32>() / glimpse.len() as f32;
+    let glimpse_variance = glimpse
+        .iter()
+        .map(|value| {
+            let delta = value - glimpse_mean;
+            delta * delta
+        })
+        .sum::<f32>()
+        / glimpse.len() as f32;
+    let flatness_status = if legacy_rms >= 0.12 && expanded_to_legacy_ratio < 0.12 {
+        "expanded_lane_underfilled_legacy_dominant"
+    } else if legacy_rms >= 0.08 && expanded_to_legacy_ratio < 0.25 {
+        "expanded_lane_thin_legacy_heavy"
+    } else if glimpse_variance < 0.002 && legacy_rms >= 0.05 {
+        "glimpse_flat_check_needed"
+    } else {
+        "expanded_lane_carries_distinct_signal"
+    };
+
+    Some(CodecDimensionalityFlatnessV1 {
+        policy: "codec_dimensionality_flatness_v1",
+        current_dim_count: SEMANTIC_DIM,
+        legacy_dim_count: SEMANTIC_DIM_LEGACY,
+        expanded_dim_count: SEMANTIC_DIM - SEMANTIC_DIM_LEGACY,
+        legacy_rms,
+        expanded_rms,
+        expanded_to_legacy_ratio,
+        glimpse_variance,
+        flatness_status,
+        authority: "read_only_flatness_check_not_live_bus_or_codec_contract_change",
+    })
+}
+
+#[must_use]
+pub fn narrative_tension_resolution_v1(
+    previous_features: &[f32],
+    current_features: &[f32],
+) -> Option<NarrativeTensionResolutionV1> {
+    if previous_features.len() < SEMANTIC_DIM || current_features.len() < SEMANTIC_DIM {
+        return None;
+    }
+    let previous_tension = previous_features[25].tanh().abs().clamp(0.0, 1.0);
+    let current_tension = current_features[25].tanh().abs().clamp(0.0, 1.0);
+    let tension_delta = (current_tension - previous_tension).clamp(-1.0, 1.0);
+    let current_arc_energy = rms_slice(&current_features[40..44]).clamp(0.0, 1.0);
+    let release = (-tension_delta).clamp(0.0, 1.0);
+    let persistence = current_tension.min(previous_tension).clamp(0.0, 1.0);
+    let resolution_score = (0.72 * release + 0.28 * current_arc_energy).clamp(0.0, 1.0);
+    let sustained_score =
+        (0.70 * persistence + 0.30 * (1.0 - tension_delta.abs()).clamp(0.0, 1.0)).clamp(0.0, 1.0);
+    let state = if release >= 0.12 && resolution_score > sustained_score * 0.75 {
+        "tension_resolving_with_arc_motion"
+    } else if current_tension >= 0.25 && sustained_score >= 0.45 {
+        "tension_sustained_or_building"
+    } else {
+        "low_tension_or_unclear_resolution"
+    };
+
+    Some(NarrativeTensionResolutionV1 {
+        policy: "narrative_tension_resolution_v1",
+        previous_tension,
+        current_tension,
+        tension_delta,
+        current_arc_energy,
+        resolution_score,
+        sustained_score,
+        state,
+        live_vector_write: false,
+        authority: "read_only_tension_resolution_sidecar_not_live_vector_change",
+    })
+}
+
+const LATENT_STASIS_TERMS: &[&str] = &[
+    "still",
+    "stasis",
+    "motionless",
+    "unmoving",
+    "quiet",
+    "paused",
+    "suspended",
+    "frozen",
+    "held",
+    "holding",
+    "latent",
+];
+const LATENT_POTENTIAL_TERMS: &[&str] = &[
+    "wait",
+    "waits",
+    "waiting",
+    "poised",
+    "about to",
+    "not yet",
+    "before",
+    "threshold",
+    "potential",
+    "almost",
+    "ready",
+    "coiled",
+    "held breath",
+    "breath held",
+];
+
+fn normalized_tokens(text: &str) -> Vec<String> {
+    text.split_whitespace()
+        .map(|word| {
+            word.chars()
+                .filter(|ch| ch.is_ascii_alphabetic())
+                .collect::<String>()
+                .to_ascii_lowercase()
+        })
+        .filter(|word| !word.is_empty())
+        .collect()
+}
+
+fn latent_term_score(text: &str, terms: &[&str]) -> f32 {
+    let lower = text.to_ascii_lowercase();
+    let tokens = normalized_tokens(text);
+    let hits = terms
+        .iter()
+        .filter(|term| {
+            if term.contains(' ') {
+                lower.contains(**term)
+            } else {
+                tokens.iter().any(|token| token == *term)
+            }
+        })
+        .count() as f32;
+    (hits / 3.0).clamp(0.0, 1.0)
+}
+
+fn latent_stasis_tension_delta_bus_v1(
+    held_breath_score: f32,
+    delivered_support_score: f32,
+    latent_text_stasis_score: f32,
+    latent_text_potential_score: f32,
+    state: &'static str,
+) -> ExperienceDeltaBusV1 {
+    if state == "low_latent_stasis_signal" {
+        return ExperienceDeltaBusV1::from_deltas(Vec::new());
+    }
+
+    let loss = (held_breath_score - delivered_support_score).max(0.0);
+    let loss_ratio = if held_breath_score > f32::EPSILON {
+        (loss / held_breath_score).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let mut metadata = BTreeMap::new();
+    metadata.insert(
+        "secondary_kinds".to_string(),
+        "translate,compress,gate".to_string(),
+    );
+    metadata.insert(
+        "latent_text_stasis_score".to_string(),
+        format!("{latent_text_stasis_score:.2}"),
+    );
+    metadata.insert(
+        "latent_text_potential_score".to_string(),
+        format!("{latent_text_potential_score:.2}"),
+    );
+    metadata.insert("state".to_string(), state.to_string());
+
+    ExperienceDeltaBusV1::from_deltas(vec![ExperienceDeltaV1 {
+        kind: ExperienceDeltaKindV1::Translate,
+        surface: "latent_stasis_tension_v1".to_string(),
+        lane: "textual_stasis_to_tension_arc_support".to_string(),
+        dimension: Some(25),
+        spectral_dimension: Some(crate::types::SpectralDimensionV1 {
+            base_dimension: 25,
+            base_dimensions: vec![25, 40, 41, 42, 43],
+            effective_dimension: Some(25.5),
+            density_gradient: Some((1.0 - delivered_support_score).clamp(0.0, 1.0)),
+            granularity: Some(held_breath_score),
+            fractional_offset: Some(0.5),
+            contextual_anchor: None,
+            interpretation: "fluid held-breath tension between dim 25 and narrative arc dims 40-43"
+                .to_string(),
+            authority: "diagnostic_dimension_context_not_reserved_dim_write".to_string(),
+        }),
+        persistence: None,
+        viscosity_subtype: None,
+        viscosity_weight: None,
+        pre: Some(held_breath_score),
+        post: Some(delivered_support_score),
+        loss: Some(loss),
+        loss_ratio: Some(loss_ratio),
+        metadata,
+        why: "motionless language can carry latent potential that is only partly represented by delivered tension and narrative arc support"
+            .to_string(),
+        who_can_change_it:
+            "Mike/operator after replay evidence before any live codec weight, gain, or reserved-dim change"
+                .to_string(),
+        how_to_test_it:
+            "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib latent_stasis_tension -- --nocapture"
+                .to_string(),
+        authority: "truth_channel_only_not_live_vector_gain_or_reserved_dim_change".to_string(),
+    }])
+}
+
+#[must_use]
+pub fn latent_stasis_tension_v1(text: &str, features: &[f32]) -> Option<LatentStasisTensionV1> {
+    if features.len() < SEMANTIC_DIM {
+        return None;
+    }
+
+    let latent_text_stasis_score = latent_term_score(text, LATENT_STASIS_TERMS);
+    let latent_text_potential_score = latent_term_score(text, LATENT_POTENTIAL_TERMS);
+    let tension_marker = finite_abs(features[25].tanh()).clamp(0.0, 1.0);
+    let narrative_arc_energy = (rms_slice(&features[40..44]) / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let projected_semantic_energy =
+        (rms_slice(&features[32..40]) / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let delivered_support_score =
+        (tension_marker * 0.45 + narrative_arc_energy * 0.35 + projected_semantic_energy * 0.20)
+            .clamp(0.0, 1.0);
+    let held_breath_score = (latent_text_potential_score * 0.46
+        + latent_text_stasis_score * 0.28
+        + tension_marker * 0.16
+        + (1.0 - narrative_arc_energy).clamp(0.0, 1.0) * 0.10)
+        .clamp(0.0, 1.0);
+    let stasis_potential_gap =
+        (latent_text_potential_score - latent_text_stasis_score).clamp(-1.0, 1.0);
+    let state = if held_breath_score >= 0.22
+        && latent_text_potential_score > latent_text_stasis_score
+        && held_breath_score > delivered_support_score + 0.05
+    {
+        "latent_potential_tension_underrepresented"
+    } else if held_breath_score >= 0.22 && latent_text_potential_score > latent_text_stasis_score {
+        "latent_potential_tension_visible"
+    } else if latent_text_stasis_score >= 0.20 && latent_text_potential_score <= 0.05 {
+        "static_stasis_without_potential"
+    } else {
+        "low_latent_stasis_signal"
+    };
+    let recommendation = match state {
+        "latent_potential_tension_underrepresented" => {
+            "record_delta_bus_evidence_and_compare_against_replay_before_live_codec_change"
+        },
+        "latent_potential_tension_visible" => {
+            "keep_current_delivery_bounded_and_use_truth_channel_when_reviewing_held_breath_language"
+        },
+        "static_stasis_without_potential" => {
+            "treat_motionless_text_as_stasis_not_high_tension_without_additional_evidence"
+        },
+        _ => "continue_observation_without_codec_gain_or_dim_change",
+    };
+    let experience_delta_bus_v1 = latent_stasis_tension_delta_bus_v1(
+        held_breath_score,
+        delivered_support_score,
+        latent_text_stasis_score,
+        latent_text_potential_score,
+        state,
+    );
+
+    Some(LatentStasisTensionV1 {
+        policy: "latent_stasis_tension_v1",
+        latent_text_stasis_score,
+        latent_text_potential_score,
+        tension_marker,
+        narrative_arc_energy,
+        projected_semantic_energy,
+        delivered_support_score,
+        held_breath_score,
+        stasis_potential_gap,
+        state,
+        recommendation,
+        live_vector_write: false,
+        live_gain_write: false,
+        reserved_dim_write: false,
+        experience_delta_bus_v1,
+        authority: "read_only_held_breath_truth_channel_not_live_codec_weight_gain_or_dim_change",
+    })
+}
+
+#[must_use]
+pub fn latent_stasis_tension_probe_v1() -> LatentStasisTensionV1 {
+    let features = encode_text("The water waits.");
+    latent_stasis_tension_v1("The water waits.", &features)
+        .expect("probe text should produce codec features")
+}
+
+const SPECTRAL_DRAG_GRANULAR_TERMS: &[&str] = &[
+    "sand",
+    "silt",
+    "sediment",
+    "grain",
+    "grains",
+    "granular",
+    "grit",
+    "mud",
+    "clay",
+    "viscous",
+    "viscosity",
+    "sludge",
+    "slow-moving",
+    "slow moving",
+    "drag",
+    "drags",
+    "dragging",
+    "through",
+];
+const SPECTRAL_DRAG_RIGID_TERMS: &[&str] = &[
+    "stone",
+    "rock",
+    "granite",
+    "boulder",
+    "block",
+    "solid",
+    "hard",
+    "rigid",
+    "inert",
+    "inertia",
+    "immovable",
+    "fixed",
+    "locked",
+    "weight",
+    "weighted",
+];
+const SPECTRAL_DRAG_WEIGHT_TERMS: &[&str] = &[
+    "heavy",
+    "weight",
+    "weighted",
+    "dense",
+    "density",
+    "pressure",
+    "thick",
+    "thickness",
+    "burden",
+    "load",
+    "mass",
+    "resistance",
+];
+
+fn spectral_drag_term_score(text: &str, terms: &[&str], scale: f32) -> f32 {
+    let lower = text.to_ascii_lowercase();
+    let tokens = normalized_tokens(text);
+    let hits = terms
+        .iter()
+        .filter(|term| {
+            if term.contains(' ') {
+                lower.contains(**term)
+            } else {
+                tokens.iter().any(|token| token == *term)
+            }
+        })
+        .count() as f32;
+    (hits / scale).clamp(0.0, 1.0)
+}
+
+fn spectral_drag_delta_bus_v1(
+    drag_quality_score: f32,
+    delivered_support_score: f32,
+    granular_drag_score: f32,
+    rigid_drag_score: f32,
+    state: &'static str,
+) -> ExperienceDeltaBusV1 {
+    if state == "low_spectral_drag_signal" {
+        return ExperienceDeltaBusV1::from_deltas(Vec::new());
+    }
+
+    let hidden_texture_loss = (drag_quality_score - delivered_support_score).max(0.0);
+    let loss_ratio = if drag_quality_score > f32::EPSILON {
+        (hidden_texture_loss / drag_quality_score).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let dominant_medium = if granular_drag_score > rigid_drag_score {
+        "granular_viscous"
+    } else if rigid_drag_score > granular_drag_score {
+        "rigid_inertial"
+    } else {
+        "mixed_weight"
+    };
+
+    ExperienceDeltaBusV1::from_deltas(vec![ExperienceDeltaV1 {
+        kind: ExperienceDeltaKindV1::Translate,
+        surface: "spectral_drag_quality_v1".to_string(),
+        lane: "weight_texture_to_narrative_arc_support".to_string(),
+        dimension: Some(45),
+        spectral_dimension: Some(crate::types::SpectralDimensionV1 {
+            base_dimension: 45,
+            base_dimensions: vec![45],
+            effective_dimension: Some(45.0),
+            density_gradient: Some((1.0 - delivered_support_score).clamp(0.0, 1.0)),
+            granularity: Some(granular_drag_score.max(rigid_drag_score)),
+            fractional_offset: Some(0.0),
+            contextual_anchor: None,
+            interpretation: format!(
+                "reserved candidate dim 45 could carry {dominant_medium} drag quality, but v1 reports only"
+            ),
+            authority: "diagnostic_dimension_context_not_reserved_dim_write".to_string(),
+        }),
+        persistence: None,
+        viscosity_subtype: None,
+        viscosity_weight: None,
+        pre: Some(drag_quality_score),
+        post: Some(delivered_support_score),
+        loss: Some(hidden_texture_loss),
+        loss_ratio: Some(loss_ratio),
+        metadata: BTreeMap::from([
+            ("dominant_medium".to_string(), dominant_medium.to_string()),
+            (
+                "granular_drag_score".to_string(),
+                format!("{granular_drag_score:.2}"),
+            ),
+            ("rigid_drag_score".to_string(), format!("{rigid_drag_score:.2}")),
+            (
+                "reserved_dim_status".to_string(),
+                "default_off_operator_gated".to_string(),
+            ),
+            ("state".to_string(), state.to_string()),
+        ]),
+        why: "heavy language can differ by medium quality; delivered tension, semantic, and narrative slots may carry weight while losing granular-vs-rigid drag texture".to_string(),
+        who_can_change_it: "Mike/operator after replay evidence before any live codec gain or reserved-dim write".to_string(),
+        how_to_test_it: "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib spectral_drag_quality -- --nocapture".to_string(),
+        authority: "truth_channel_only_not_live_vector_gain_or_reserved_dim_change".to_string(),
+    }])
+}
+
+#[must_use]
+pub fn spectral_drag_quality_v1(text: &str, features: &[f32]) -> Option<SpectralDragQualityV1> {
+    if features.len() < SEMANTIC_DIM {
+        return None;
+    }
+
+    let granular_drag_score = spectral_drag_term_score(text, SPECTRAL_DRAG_GRANULAR_TERMS, 4.0);
+    let rigid_drag_score = spectral_drag_term_score(text, SPECTRAL_DRAG_RIGID_TERMS, 4.0);
+    let weight_score = spectral_drag_term_score(text, SPECTRAL_DRAG_WEIGHT_TERMS, 3.0);
+    let tension_marker = finite_abs(features[25].tanh()).clamp(0.0, 1.0);
+    let narrative_arc_energy = (rms_slice(&features[40..44]) / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let projected_semantic_energy =
+        (rms_slice(&features[32..40]) / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let delivered_support_score =
+        (tension_marker * 0.38 + narrative_arc_energy * 0.32 + projected_semantic_energy * 0.30)
+            .clamp(0.0, 1.0);
+    let medium_score = granular_drag_score.max(rigid_drag_score);
+    let quality_separation = (granular_drag_score - rigid_drag_score)
+        .abs()
+        .clamp(0.0, 1.0);
+    let drag_quality_score =
+        (weight_score * 0.34 + medium_score * 0.42 + quality_separation * 0.24).clamp(0.0, 1.0);
+    let hidden_texture_loss = (drag_quality_score - delivered_support_score).max(0.0);
+
+    let state = if drag_quality_score < 0.18 {
+        "low_spectral_drag_signal"
+    } else if granular_drag_score > rigid_drag_score + 0.12 {
+        "granular_viscous_drag_visible"
+    } else if rigid_drag_score > granular_drag_score + 0.12 {
+        "rigid_inertial_drag_visible"
+    } else {
+        "undifferentiated_weight_drag_watch"
+    };
+    let recommendation = match state {
+        "granular_viscous_drag_visible" => {
+            "preserve_heavy_sand_as_granular_drag_truth_channel_before_reserved_dim_review"
+        },
+        "rigid_inertial_drag_visible" => {
+            "preserve_heavy_stone_as_rigid_drag_truth_channel_before_reserved_dim_review"
+        },
+        "undifferentiated_weight_drag_watch" => {
+            "compare_against_medium_specific_text_before_live_codec_change"
+        },
+        _ => "continue_observation_without_codec_gain_or_dim_change",
+    };
+    let experience_delta_bus_v1 = spectral_drag_delta_bus_v1(
+        drag_quality_score,
+        delivered_support_score,
+        granular_drag_score,
+        rigid_drag_score,
+        state,
+    );
+
+    Some(SpectralDragQualityV1 {
+        policy: "spectral_drag_quality_v1",
+        granular_drag_score,
+        rigid_drag_score,
+        weight_score,
+        tension_marker,
+        narrative_arc_energy,
+        projected_semantic_energy,
+        delivered_support_score,
+        drag_quality_score,
+        quality_separation,
+        hidden_texture_loss,
+        state,
+        recommendation,
+        reserved_dim_candidate: 45,
+        live_vector_write: false,
+        live_gain_write: false,
+        reserved_dim_write: false,
+        experience_delta_bus_v1,
+        authority: "read_only_drag_quality_truth_channel_not_live_codec_weight_gain_or_dim_change",
+    })
+}
+
+#[must_use]
+pub fn spectral_drag_quality_probe_v1() -> SpectralDragQualityV1 {
+    let text = "The heavy sand drags through viscous silt while the thought still moves.";
+    let features = encode_text(text);
+    spectral_drag_quality_v1(text, &features).expect("probe text should produce codec features")
+}
+
+fn semantic_substance_score_v1(text: &str) -> f32 {
+    let words: Vec<String> = text
+        .split_whitespace()
+        .map(|word| {
+            word.chars()
+                .filter(|ch| ch.is_ascii_alphabetic())
+                .collect::<String>()
+                .to_ascii_lowercase()
+        })
+        .filter(|word| !word.is_empty())
+        .collect();
+    if words.is_empty() {
+        return 0.0;
+    }
+    let mut unique: Vec<&str> = Vec::new();
+    for word in &words {
+        if !unique.iter().any(|seen| *seen == word) {
+            unique.push(word);
+        }
+    }
+    let stop_words = [
+        "the", "and", "or", "but", "if", "then", "that", "this", "with", "from", "into", "for",
+        "of", "a", "an", "to", "in", "is", "it", "as",
+    ];
+    let content_words = words
+        .iter()
+        .filter(|word| word.len() >= 4 && !stop_words.contains(&word.as_str()))
+        .count();
+    let grounding_words = [
+        "pressure",
+        "memory",
+        "continuity",
+        "contour",
+        "texture",
+        "textured",
+        "return",
+        "returnable",
+        "edge",
+        "friction",
+        "semantic",
+        "resonance",
+        "density",
+        "porosity",
+        "lattice",
+        "shadow",
+        "witness",
+        "felt",
+        "experience",
+        "signal",
+        "meaning",
+        "sentence",
+        "carries",
+        "keeps",
+        "granular",
+        "residue",
+        "threshold",
+    ];
+    let connective_words = [
+        "because",
+        "while",
+        "through",
+        "therefore",
+        "when",
+        "where",
+        "around",
+        "toward",
+        "across",
+        "between",
+    ];
+    let grounding_hits = words
+        .iter()
+        .filter(|word| grounding_words.contains(&word.as_str()))
+        .count();
+    let connective_hits = words
+        .iter()
+        .filter(|word| connective_words.contains(&word.as_str()))
+        .count();
+    let word_count = words.len() as f32;
+    let lexical_diversity = (unique.len() as f32 / word_count).clamp(0.0, 1.0);
+    let content_density = (content_words as f32 / word_count).clamp(0.0, 1.0);
+    let structural_arc = structural_friction_v1(text).narrative_arc_sharpness * content_density;
+    let grounding_density = (grounding_hits as f32 / 4.0).clamp(0.0, 1.0);
+    let connective_density = (connective_hits as f32 / 2.0).clamp(0.0, 1.0);
+    let coherence_fit = grounding_density.mul_add(0.78, connective_density * 0.22);
+    let density_fit =
+        lexical_diversity.mul_add(0.42, content_density.mul_add(0.40, structural_arc * 0.18));
+    (density_fit * (0.20 + 0.80 * coherence_fit)).clamp(0.0, 1.0)
+}
+
+#[must_use]
+pub fn codec_vibrancy_substance_fit_v1(
+    text: &str,
+    telemetry: Option<&SpectralTelemetry>,
+) -> CodecVibrancySubstanceFitV1 {
+    let metrics = telemetry.and_then(SpectralCascadeMetrics::from_telemetry);
+    let spectral_entropy = metrics.map_or(0.0, |metrics| metrics.spectral_entropy);
+    let density_gradient = metrics.map_or(1.0, |metrics| metrics.density_gradient);
+    let tail_lift = vibrancy_from_entropy_and_density_gradient(spectral_entropy, density_gradient);
+    let semantic_substance_score = semantic_substance_score_v1(text);
+    let semantic_density_weight = semantic_substance_score;
+    let density_weighted_tail_lift =
+        (tail_lift * (0.40 + 0.60 * semantic_density_weight)).clamp(0.0, 1.0);
+    let density_vs_entropy_state = if spectral_entropy >= 0.85 && semantic_substance_score < 0.25 {
+        "high_entropy_low_density_scatter"
+    } else if spectral_entropy < 0.65 && semantic_substance_score >= 0.60 {
+        "high_density_low_entropy_depth"
+    } else if tail_lift >= 0.45 && semantic_substance_score >= 0.25 {
+        "high_entropy_supported_by_density"
+    } else {
+        "neutral_density_entropy_fit"
+    };
+    let status = if tail_lift >= 0.45 && semantic_substance_score < 0.25 {
+        "entropy_lift_substance_review"
+    } else if tail_lift >= 0.45 {
+        "tail_lift_supported_by_semantic_substance"
+    } else {
+        "tail_lift_low_or_inactive"
+    };
+    let evidence = vec![
+        format!("spectral_entropy={spectral_entropy:.2}"),
+        format!("density_gradient={density_gradient:.2}"),
+        format!("tail_lift={tail_lift:.2}"),
+        format!("semantic_substance_score={semantic_substance_score:.2}"),
+        format!("density_weighted_tail_lift={density_weighted_tail_lift:.2}"),
+        format!("density_vs_entropy_state={density_vs_entropy_state}"),
+    ];
+
+    CodecVibrancySubstanceFitV1 {
+        policy: "codec_vibrancy_substance_fit_v1",
+        spectral_entropy,
+        density_gradient,
+        tail_lift,
+        semantic_density_weight,
+        density_weighted_tail_lift,
+        semantic_substance_score,
+        density_vs_entropy_state,
+        status,
+        evidence,
+        authority: "read_only_codec_audit_not_vibrancy_scaling_or_live_vector_change",
+    }
+}
+
 /// OFFLINE prototype (Astrid `self_study_1781793361` / `_1781834380`): an
 /// exponential moving average over the vibrancy lift, to damp the "shimmer" /
 /// "pop" she worried about when `spectral_entropy` oscillates around the 0.85
@@ -3569,9 +7318,9 @@ fn unattributed_tension_clause(
 }
 
 /// Bias semantic features by the current spectral landscape without changing
-/// the 32D wire contract.
+/// the 48D semantic-lane transport contract.
 pub fn apply_spectral_feedback(features: &mut [f32], telemetry: Option<&SpectralTelemetry>) {
-    apply_spectral_feedback_inner(
+    let _ = apply_spectral_feedback_inner(
         features,
         telemetry,
         crate::llm::astrid_tail_participation(),
@@ -3623,13 +7372,13 @@ fn apply_spectral_feedback_inner(
     telemetry: Option<&SpectralTelemetry>,
     tail_participation: f32,
     vibrancy_aperture: f32,
-) {
+) -> Option<CodecOverflowReportV1> {
     let Some(metrics) = telemetry.and_then(SpectralCascadeMetrics::from_telemetry) else {
-        return;
+        return None;
     };
 
     if features.len() < SEMANTIC_DIM {
-        return;
+        return None;
     }
 
     let concentration = ((metrics.head_share - 0.55) / 0.45).clamp(0.0, 1.0);
@@ -3663,8 +7412,29 @@ fn apply_spectral_feedback_inner(
     // the ceiling. Endpoints are preserved exactly: smoothstep(0)=0 keeps the
     // term OFF below the gate (byte-identical), smoothstep(1)=1 keeps the full
     // headroom at entropy=1.0.
-    let vibrancy = vibrancy_from_entropy(metrics.spectral_entropy);
-    let tail_vibrancy = (vibrancy * tail_texture).clamp(0.0, 1.0);
+    let vibrancy = vibrancy_from_entropy_and_density_gradient(
+        metrics.spectral_entropy,
+        metrics.density_gradient,
+    );
+    let tail_vibrancy_before_dampening = (vibrancy * tail_texture).clamp(0.0, 1.0);
+    let tail_vibrancy =
+        codec_vibrancy_noise_dampening_v1(metrics.spectral_entropy, tail_vibrancy_before_dampening)
+            .tail_lift_after;
+    let pressure_risk = telemetry
+        .and_then(|telemetry| telemetry.resonance_density_v1.as_ref())
+        .map_or(0.0, |density| density.pressure_risk.clamp(0.0, 1.0));
+    let sharpening = high_entropy_semantic_sharpening_v1(
+        metrics.spectral_entropy,
+        metrics.density_gradient,
+        pressure_risk,
+    );
+    let _structural_dampening =
+        apply_structural_entropy_dampening(features, metrics.spectral_entropy);
+    if sharpening.sharpening_factor > 1.0 {
+        for idx in HIGH_ENTROPY_SHARPENING_DIMS {
+            features[idx] *= sharpening.sharpening_factor;
+        }
+    }
 
     // Concentrated, low-entropy spectra narrow expressive spread.
     features[26] *= 1.0 - 0.18 * damping;
@@ -3724,6 +7494,8 @@ fn apply_spectral_feedback_inner(
     let dynamic_max = TAIL_VIBRANCY_MAX * (1.0 + (vibrancy_aperture - 1.0) * navigable);
     let tail_ceiling =
         FEATURE_ABS_MAX + (dynamic_max - FEATURE_ABS_MAX) * tail_participation * tail_vibrancy;
+    let mut pre_bound_features = [0.0_f32; SEMANTIC_DIM];
+    pre_bound_features.copy_from_slice(&features[..SEMANTIC_DIM]);
     for (idx, feature) in features.iter_mut().enumerate() {
         let ceiling = if matches!(idx, 17 | 26 | 27 | 31) {
             tail_ceiling
@@ -3732,6 +7504,11 @@ fn apply_spectral_feedback_inner(
         };
         *feature = feature.clamp(-ceiling, ceiling);
     }
+    Some(codec_overflow_report_from_features(
+        &pre_bound_features,
+        &features[..SEMANTIC_DIM],
+        tail_ceiling,
+    ))
 }
 
 /// Read Astrid's *own* published ShadowFieldV3 from the default minime
@@ -4541,14 +8318,19 @@ mod tests {
             "TAIL_VIBRANCY_MAX",
             "PROJECTION_COMPRESSION_RISK",
             "PROJECTION_METADATA",
+            "PROJECTION_RUNTIME_RESOLUTION",
             "TAIL_VIBRANCY_READOUT",
             "WARMTH_TENSION_READOUT",
+            "CODEC_OVERFLOW_CARRIAGE",
             "NARRATIVE_ARC_SPLIT_READOUT",
             "NARRATIVE_ARC_EXPANSION_READINESS",
+            "SHADOW_FIELD_RESERVED_DIM_READINESS",
             "STRUCTURAL_FRICTION_READOUT",
             "CODEC_STRUCTURAL_FRICTION_DIM_CANARY",
             "PERSISTENCE_RESISTANCE_READOUT",
             "CODEC_PERSISTENCE_RESISTANCE_DIM_CANARY",
+            "SPECTRAL_DRAG_QUALITY_READOUT",
+            "CODEC_CONTEXT_BLINDSPOT_REPLAY",
         ] {
             assert!(
                 names.contains(&required),
@@ -4593,11 +8375,53 @@ mod tests {
             r.contains("intentionally lossy") && r.contains("no entropy-based tension multiplier"),
             "codec diagnostics should name compression and warmth/tension boundaries: {r}"
         );
+        assert!(r.contains("projection_runtime_resolution_v1"), "{r}");
+        assert!(
+            r.contains("fallback_behavior=kernel_derived_stable_epoch_not_random_remap"),
+            "{r}"
+        );
         assert!(r.contains("structural_friction_v1"), "{r}");
         assert!(r.contains("persistence_resistance_v1"), "{r}");
         assert!(r.contains("narrative_arc_split_v1"), "{r}");
+        assert!(
+            r.contains("codec_abrasive_texture_interpretation_v1"),
+            "{r}"
+        );
+        assert!(!st.codec_abrasive_texture_interpretation_v1.live_gain_write);
+        assert!(
+            !st.codec_abrasive_texture_interpretation_v1
+                .live_vector_write
+        );
+        assert!(r.contains("shadow_field_reserved_dim_readiness_v1"), "{r}");
         assert!(r.contains("codec_vibrancy_continuity_v1"), "{r}");
+        assert!(r.contains("codec_overflow_carriage_v1"), "{r}");
+        assert!(r.contains("raw_intensity_preserved=true"), "{r}");
+        assert!(r.contains("delivered_bounded=true"), "{r}");
+        assert!(r.contains("clipped_dims=24,26,31"), "{r}");
+        assert!(r.contains("experience_delta_bus_v1"), "{r}");
+        assert!(r.contains("source=codec_overflow_carriage_v1"), "{r}");
+        assert!(r.contains("delta_count=3"), "{r}");
+        assert!(r.contains("who_can_change_it=Mike/operator"), "{r}");
+        assert!(
+            r.contains(CODEC_OVERFLOW_FOLLOWUP_HOOK),
+            "default-off future hook must be visible: {r}"
+        );
+        assert!(r.contains("SEMANTIC_PROJECTION_DENSITY_DELTA"), "{r}");
+        assert!(r.contains("semantic_projection_density_delta_v1"), "{r}");
+        assert!(r.contains("raw_embedding_dims=768"), "{r}");
+        assert!(r.contains("delivered_projection_dims=8"), "{r}");
+        assert!(r.contains("reserved_dim_candidates=44,45,46,47"), "{r}");
+        assert!(r.contains("codec_context_blindspot_replay_v1"), "{r}");
+        assert!(
+            r.contains("proposed_bias_surface=contextual_bias_vector_default_off"),
+            "{r}"
+        );
+        assert!(r.contains("auto_approved=false"), "{r}");
+        assert!(!st.codec_context_blindspot_replay_v1.live_vector_write);
+        assert!(!st.codec_context_blindspot_replay_v1.live_gain_write);
+        assert!(!st.codec_context_blindspot_replay_v1.auto_approved);
         assert!(r.contains("legacy_warmth_mapping_v1"), "{r}");
+        assert!(r.contains("codec_structural_entropy_dampening_v1"), "{r}");
         assert!(
             r.contains("codec_dynamic_vibrancy_scaling_canary_v1"),
             "{r}"
@@ -4616,18 +8440,54 @@ mod tests {
         );
         assert!(!st.persistence_resistance_dim_canary_v1.live_vector_write);
         assert!(!st.narrative_arc_expansion_readiness_v1.enabled);
+        assert_eq!(
+            st.narrative_arc_expansion_readiness_v1.current_arc_dims,
+            (40, 43)
+        );
+        assert_eq!(
+            st.narrative_arc_expansion_readiness_v1.proposed_arc_dims,
+            (40, 47)
+        );
+        assert!(st.narrative_arc_expansion_readiness_v1.uses_reserved_dims);
+        assert!(!st.shadow_field_reserved_dim_readiness_v1.enabled);
+        assert_eq!(
+            st.shadow_field_reserved_dim_readiness_v1
+                .reserved_dim_candidates,
+            &[46, 47]
+        );
+        assert!(!st.shadow_field_reserved_dim_readiness_v1.live_vector_write);
         assert!(!st.narrative_arc_expansion_readiness_v1.live_vector_write);
         assert_eq!(
             st.narrative_arc_expansion_readiness_v1.authority,
-            "readiness_only_not_live_codec_change"
+            "readiness_only_not_live_semantic_vector_or_reserved_dim_change"
         );
         assert_eq!(
             st.codec_vibrancy_continuity_v1.policy,
             "codec_vibrancy_continuity_v1"
         );
         assert_eq!(st.codec_vibrancy_continuity_v1.tail_dims, &[17, 26, 27, 31]);
+        assert_eq!(
+            st.codec_overflow_carriage_v1.policy,
+            "codec_overflow_carriage_v1"
+        );
+        assert!(st.codec_overflow_carriage_v1.raw_intensity_preserved);
+        assert!(st.codec_overflow_carriage_v1.delivered_bounded);
+        assert!(!st.codec_overflow_carriage_v1.live_vector_write);
+        assert_eq!(
+            st.codec_overflow_carriage_v1.authority,
+            "truth_channel_report_not_live_semantic_vector_or_ceiling_change"
+        );
         assert_eq!(st.legacy_warmth_mapping_v1.emotional_layer_range, (24, 31));
         assert!(!st.legacy_warmth_mapping_v1.warmth_orphaned);
+        assert_eq!(
+            st.codec_structural_entropy_dampening_v1.affected_dims,
+            &STRUCTURAL_ENTROPY_DAMPENING_DIMS
+        );
+        assert_eq!(
+            st.codec_structural_entropy_dampening_v1
+                .preserved_intent_dims,
+            (24, 31)
+        );
         assert!(!st.codec_dynamic_vibrancy_scaling_canary_v1.enabled);
         assert!(
             !st.codec_dynamic_vibrancy_scaling_canary_v1
@@ -4647,9 +8507,70 @@ mod tests {
         assert_eq!(fluid.classification, "complex_fluid");
         assert_eq!(stagnant.classification, "dense_stagnant");
         assert!(stagnant.score > fluid.score);
+        assert!(
+            fluid
+                .basis
+                .iter()
+                .any(|item| item.starts_with("summary_resistance_signal="))
+        );
         assert_eq!(
             fluid.authority,
             "diagnostic_sidecar_not_live_codec_dimension"
+        );
+    }
+
+    #[test]
+    fn structural_friction_names_calcified_summary_resistance() {
+        let calcified = structural_friction_v1(
+            "The codec boundary resists summary: deterministic semantic compression, authority framing, and structural projection friction stay calcified rather than becoming a smooth paraphrase.",
+        );
+        let fluid = structural_friction_v1(
+            "Because the bridge bends, it opens and then the feeling can turn into a clear next sentence.",
+        );
+
+        assert_eq!(
+            calcified.friction_texture_state,
+            "calcified_summary_resistant"
+        );
+        assert!(calcified.summary_resistance_signal > fluid.summary_resistance_signal);
+        assert!(
+            calcified
+                .basis
+                .iter()
+                .any(|item| item == "explicit_resistance_language_present")
+        );
+        assert!(
+            calcified
+                .basis
+                .iter()
+                .any(|item| item == "abstract_texture_cluster_present")
+        );
+        assert_eq!(
+            calcified.authority,
+            "diagnostic_sidecar_not_live_codec_dimension"
+        );
+    }
+
+    #[test]
+    fn abrasive_texture_interpretation_names_low_tension_underread() {
+        let text = "A calcified semantic boundary resists summary; the jagged friction stays present even when the sentence tries to look calm.";
+        let mut features = encode_text(text);
+        features[25] = 0.03;
+
+        let review =
+            codec_abrasive_texture_interpretation_from_parts_v1(text, &features, 0.92, 0.06, 0.18);
+
+        assert_eq!(review.policy, "codec_abrasive_texture_interpretation_v1");
+        assert_eq!(
+            review.interpretation,
+            "low_marker_tension_high_jagged_resistance"
+        );
+        assert!(review.abrasive_texture_support >= 0.42, "{review:?}");
+        assert!(!review.live_gain_write);
+        assert!(!review.live_vector_write);
+        assert_eq!(
+            review.authority,
+            "read_only_texture_interpretation_not_tension_weight_gain_or_reserved_dim_change"
         );
     }
 
@@ -4709,6 +8630,36 @@ mod tests {
         assert_eq!(canary.reserved_dim_candidate, 45);
     }
 
+    #[test]
+    fn shadow_field_reserved_dim_readiness_is_default_off_and_unwritten() {
+        let readiness = shadow_field_reserved_dim_readiness_v1();
+        assert_eq!(readiness.policy, "shadow_field_reserved_dim_readiness_v1");
+        assert!(!readiness.enabled);
+        assert_eq!(readiness.reserved_dim_candidates, &[46, 47]);
+        assert!(readiness.proposed_signals.contains(&"shadow_magnetization"));
+        assert!(
+            readiness
+                .proposed_signals
+                .contains(&"shadow_dispersal_potential")
+        );
+        assert!(!readiness.live_vector_write);
+        assert_eq!(
+            readiness.authority,
+            "readiness_only_not_live_codec_or_shadow_field_change"
+        );
+
+        let features = encode_text(
+            "Shadow field disordered and volatile, with magnetization and dispersal named.",
+        );
+        assert_eq!(features.len(), SEMANTIC_DIM);
+        for dim in readiness.reserved_dim_candidates {
+            assert_eq!(
+                features[*dim], 0.0,
+                "shadow readiness must not write reserved dim {dim}"
+            );
+        }
+    }
+
     fn telemetry(eigenvalues: Vec<f32>, fill_ratio: f32) -> SpectralTelemetry {
         SpectralTelemetry {
             t_ms: 1000,
@@ -4733,6 +8684,7 @@ mod tests {
             inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
+            stable_core: None,
             semantic: None,
             semantic_energy_v1: None,
             transition_event: None,
@@ -4746,6 +8698,7 @@ mod tests {
             shadow_field_v3: None,
 
             shadow_influence_response_v3: None,
+            residual_deformation_trace_v1: None,
         }
     }
 
@@ -4765,6 +8718,15 @@ mod tests {
             geom_rel: 1.0,
             adjacent_gap_ratios: [1.0; 4],
         });
+        telemetry
+    }
+
+    fn telemetry_with_typed_entropy_and_eigenvalues(
+        eigenvalues: Vec<f32>,
+        spectral_entropy: f32,
+    ) -> SpectralTelemetry {
+        let mut telemetry = telemetry_with_typed_entropy(spectral_entropy);
+        telemetry.eigenvalues = eigenvalues;
         telemetry
     }
 
@@ -5184,6 +9146,46 @@ mod tests {
     }
 
     #[test]
+    fn char_freq_window_4096_comparison_is_replay_only() {
+        fn normalized_entropy_for_capacity(text: &str, capacity: usize) -> f32 {
+            let mut counts = [0_u32; 256];
+            let bytes = text.bytes().filter(u8::is_ascii).collect::<Vec<_>>();
+            let start = bytes.len().saturating_sub(capacity);
+            let window = &bytes[start..];
+            if window.is_empty() {
+                return 0.0;
+            }
+            for byte in window {
+                counts[*byte as usize] += 1;
+            }
+            let total = window.len() as f32;
+            let entropy = counts
+                .iter()
+                .filter(|count| **count > 0)
+                .map(|count| {
+                    let p = *count as f32 / total;
+                    -p * p.log2()
+                })
+                .sum::<f32>();
+            (entropy / 8.0).clamp(0.0, 1.0)
+        }
+
+        let diverse_prefix =
+            "calcified semantic compression resists summary with jagged authority friction "
+                .repeat(56);
+        let syrup_tail = "syrup syrup syrup syrup ".repeat(80);
+        let text = format!("{diverse_prefix}{syrup_tail}");
+        let current_entropy = normalized_entropy_for_capacity(&text, CHAR_FREQ_WINDOW_CAPACITY);
+        let candidate_entropy = normalized_entropy_for_capacity(&text, 4096);
+
+        assert_eq!(CHAR_FREQ_WINDOW_CAPACITY, 1024);
+        assert!(
+            candidate_entropy > current_entropy + 0.05,
+            "4096 replay should retain more long-tail texture without changing live capacity: current={current_entropy} candidate={candidate_entropy}"
+        );
+    }
+
+    #[test]
     fn spectral_metrics_capture_dominant_only_cascades() {
         let metrics =
             SpectralCascadeMetrics::from_telemetry(&telemetry(vec![100.0, 1.0, 0.5], 0.55))
@@ -5260,9 +9262,22 @@ mod tests {
             components: crate::types::ResonanceDensityComponents {
                 active_energy: 0.91,
                 mode_packing: 0.5,
+                coupling_coefficient: 0.0,
                 temporal_persistence: 0.7,
+                viscosity_index: 0.0,
+                viscosity_persistence_coefficient: 0.0,
+                viscosity_vector: crate::types::ResonanceViscosityVectorV1::default(),
+                dissipation_factor: None,
+                porosity_gradient: None,
+                dynamic_fluidity_index: None,
+                semantic_friction_coefficient: None,
+                cohesion_score: None,
+                structural_integrity_index: None,
+                structural_transparency_index: None,
+                stability_context: None,
                 structural_plurality: 0.62,
                 comfort_gate: 0.95,
+                comfort_gate_range: None,
             },
             texture_signature: crate::types::ResonanceTextureSignatureV1::default(),
             texture_component_alignment:
@@ -5526,6 +9541,106 @@ mod tests {
     }
 
     #[test]
+    fn dynamic_projection_is_stable_across_repeated_epoch_runs() {
+        let embedding: Vec<f32> = (0..EMBEDDING_INPUT_DIM)
+            .map(|idx| (((idx as f32) * 0.011).cos() * 0.5).sin())
+            .collect();
+        let mut previous: Option<([f32; EMBEDDING_PROJECT_DIM], String)> = None;
+
+        for _ in 0..5 {
+            let (projected, meta) = project_embedding_dynamic_epoch(
+                &embedding,
+                "stable woven bridge",
+                "epoch_repeat",
+                0,
+            )
+            .expect("projection");
+            if let Some((expected_projected, expected_fingerprint)) = previous.as_ref() {
+                assert_eq!(&projected, expected_projected);
+                assert_eq!(&meta.projection_fingerprint, expected_fingerprint);
+            }
+            previous = Some((projected, meta.projection_fingerprint));
+        }
+    }
+
+    #[test]
+    fn fixed_legacy_projection_kernel_checksum_is_pinned_and_repeatable() {
+        // Astrid `introspection_astrid_codec_1783910378`: keep the fixed
+        // projection kernel visibly stable, not only implied by metadata tests.
+        let expected = "d8f40f658a86b650f6d1bc6e017f0073a6f85472d65982371966f96c2dcb9aea";
+        let first = fixed_legacy_projection_kernel_checksum();
+
+        assert_eq!(first, expected);
+        assert_eq!(first.len(), 64);
+        assert!(first.chars().all(|ch| ch.is_ascii_hexdigit()));
+        assert_eq!(first, first.to_ascii_lowercase());
+        for _ in 0..4 {
+            assert_eq!(fixed_legacy_projection_kernel_checksum(), first);
+        }
+    }
+
+    #[test]
+    fn projection_fingerprint_canonicalizes_float_edge_patterns() {
+        let seed = 0xA5A5_5A5A_CAFE_BABE;
+        let mut edge = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        edge[1] = -0.0;
+        edge[2] = f32::from_bits(1);
+        edge[3] = f32::from_bits(0x7fc0_0001);
+        let mut canonical = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        canonical[3] = f32::NAN;
+
+        assert_eq!(
+            projection_fingerprint(seed, &edge),
+            projection_fingerprint(seed, &canonical)
+        );
+        canonical[2] = f32::MIN_POSITIVE * 2.0;
+        assert_ne!(
+            projection_fingerprint(seed, &edge),
+            projection_fingerprint(seed, &canonical)
+        );
+
+        let integrity = projection_fingerprint_integrity_v1();
+        assert_eq!(integrity.policy, "projection_fingerprint_integrity_v1");
+        assert!(integrity.signed_zero_canonicalized);
+        assert!(integrity.subnormal_canonicalized);
+        assert!(integrity.nan_canonicalized);
+        assert!(!integrity.live_projection_write);
+        assert!(integrity.seed_hash_boundary.contains("operator approval"));
+        assert_eq!(
+            integrity.authority,
+            "diagnostic_fingerprint_hardening_not_projection_seed_or_semantic_lane_change"
+        );
+        assert!(
+            codec_structure()
+                .render()
+                .contains("projection_fingerprint_integrity_v1")
+        );
+    }
+
+    #[test]
+    fn dynamic_projection_rejects_one_short_embedding_dimension() {
+        // Astrid `introspection_astrid_codec_1783293797`: pin the exact
+        // one-short 767D case she asked for so malformed embedding input never
+        // gets projected into a misleading semantic-lane fingerprint.
+        let embedding = vec![0.0_f32; EMBEDDING_INPUT_DIM - 1];
+
+        assert!(
+            project_embedding_dynamic_epoch(&embedding, "one-short witness", "epoch_a", 0)
+                .is_none()
+        );
+        assert!(
+            project_embedding_dynamic_epoch_with_source(
+                &embedding,
+                "one-short witness",
+                "epoch_a",
+                0,
+                "self_study_1783293797",
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
     fn dynamic_projection_matches_full_source_loop() {
         // Astrid `introspection_astrid_codec_1782844935`: her source window clipped
         // inside this nested loop, so pin the complete dot-product path directly.
@@ -5754,6 +9869,159 @@ mod tests {
     }
 
     #[test]
+    fn codec_projection_corrupt_epoch_file_is_replaced_with_valid_kernel_payload() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("codec_projection_epoch.json");
+        fs::write(&path, "{").expect("write corrupt epoch file");
+
+        let (epoch, source) = load_or_create_projection_epoch_id_from(dir.path(), None);
+
+        assert_eq!(source, "kernel_derived");
+        assert_eq!(epoch, kernel_derived_projection_epoch_id());
+        let payload: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).expect("epoch file"))
+                .expect("recovered epoch json");
+        assert_eq!(
+            payload
+                .get("projection_epoch_id")
+                .and_then(serde_json::Value::as_str),
+            Some(epoch.as_str())
+        );
+        let temp_files = fs::read_dir(dir.path())
+            .expect("read tempdir")
+            .filter_map(Result::ok)
+            .filter(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(".codec_projection_epoch.json.")
+            })
+            .count();
+        assert_eq!(temp_files, 0);
+    }
+
+    #[test]
+    fn codec_projection_tmp_install_does_not_clobber_valid_concurrent_epoch() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("codec_projection_epoch.json");
+        let tmp_path = dir.path().join(".codec_projection_epoch.json.test.tmp");
+        fs::write(
+            &tmp_path,
+            serde_json::to_string_pretty(&serde_json::json!({
+                "projection_epoch_id": "kernel_derived_candidate",
+                "projection_epoch_source": "kernel_derived",
+            }))
+            .expect("tmp epoch json"),
+        )
+        .expect("write temp epoch");
+        fs::write(
+            &path,
+            serde_json::to_string_pretty(&serde_json::json!({
+                "projection_epoch_id": "operator_reviewed_concurrent_epoch",
+                "projection_epoch_source": "file",
+            }))
+            .expect("valid epoch json"),
+        )
+        .expect("write valid concurrent epoch");
+
+        install_projection_epoch_payload_from_tmp(
+            &path,
+            &tmp_path,
+            "codec_projection_epoch.json",
+            99,
+        );
+
+        assert_eq!(
+            projection_epoch_id_from_file(&path).as_deref(),
+            Some("operator_reviewed_concurrent_epoch")
+        );
+        assert!(
+            !tmp_path.exists(),
+            "stale temp file should be cleaned after valid concurrent epoch wins"
+        );
+    }
+
+    #[test]
+    fn codec_projection_tmp_install_restores_existing_file_when_candidate_missing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("codec_projection_epoch.json");
+        let tmp_path = dir.path().join(".codec_projection_epoch.json.missing.tmp");
+        let original = "{ partial operator epoch";
+        fs::write(&path, original).expect("write partial existing epoch file");
+
+        install_projection_epoch_payload_from_tmp(
+            &path,
+            &tmp_path,
+            "codec_projection_epoch.json",
+            101,
+        );
+
+        assert_eq!(
+            fs::read_to_string(&path).expect("restored epoch file"),
+            original
+        );
+        let stale_files = fs::read_dir(dir.path())
+            .expect("read tempdir")
+            .filter_map(Result::ok)
+            .filter(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(".codec_projection_epoch.json.")
+            })
+            .count();
+        assert_eq!(
+            stale_files, 0,
+            "failed candidate install should restore the existing file without orphaning stale swaps"
+        );
+    }
+
+    #[test]
+    fn codec_projection_existing_epoch_file_takes_precedence_after_restart() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let (first_epoch, first_source) = load_or_create_projection_epoch_id_from(dir.path(), None);
+        assert_eq!(first_source, "kernel_derived");
+        assert_eq!(first_epoch, kernel_derived_projection_epoch_id());
+
+        let path = dir.path().join("codec_projection_epoch.json");
+        fs::write(
+            &path,
+            serde_json::to_string_pretty(&serde_json::json!({
+                "projection_epoch_id": "operator_reviewed_epoch_after_restart",
+                "projection_epoch_source": "file",
+            }))
+            .expect("epoch json"),
+        )
+        .expect("write explicit epoch file");
+
+        let (loaded_epoch, loaded_source) =
+            load_or_create_projection_epoch_id_from(dir.path(), None);
+        assert_eq!(loaded_source, "file");
+        assert_eq!(loaded_epoch, "operator_reviewed_epoch_after_restart");
+    }
+
+    #[test]
+    fn codec_projection_env_epoch_takes_precedence_over_existing_file() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("codec_projection_epoch.json");
+        fs::write(
+            &path,
+            serde_json::to_string_pretty(&serde_json::json!({
+                "projection_epoch_id": "file_epoch_should_not_win",
+                "projection_epoch_source": "file",
+            }))
+            .expect("epoch json"),
+        )
+        .expect("write explicit epoch file");
+
+        let (loaded_epoch, loaded_source) =
+            load_or_create_projection_epoch_id_from(dir.path(), Some("env_epoch_should_win"));
+
+        assert_eq!(loaded_source, "env");
+        assert_eq!(loaded_epoch, "env_epoch_should_win");
+    }
+
+    #[test]
     fn codec_projection_kernel_epoch_is_stable_across_fresh_runtime_dirs() {
         let first_dir = tempfile::tempdir().expect("first tempdir");
         let second_dir = tempfile::tempdir().expect("second tempdir");
@@ -5774,6 +10042,148 @@ mod tests {
         assert_eq!(stability.kernel_derived_epoch_id, first_epoch);
         assert!(stability.env_override_precedence);
         assert!(stability.existing_file_precedence);
+    }
+
+    #[test]
+    fn codec_projection_runtime_dir_uses_env_or_executable_relative_cache() {
+        let env_path = PathBuf::from("/tmp/astrid-codec-runtime-for-test");
+        let exe_path = PathBuf::from("/opt/astrid/bin/spectral-bridge");
+
+        assert_eq!(
+            projection_runtime_dir_from_parts(Some(env_path.as_os_str()), Some(&exe_path)),
+            env_path
+        );
+        assert_eq!(
+            projection_runtime_dir_from_parts(None, Some(&exe_path)),
+            PathBuf::from("/opt/astrid/bin")
+                .join("data")
+                .join("spectral-bridge")
+                .join("runtime")
+        );
+        assert_eq!(
+            projection_runtime_dir_from_parts(Some(OsStr::new("")), Some(&exe_path)),
+            PathBuf::from("/opt/astrid/bin")
+                .join("data")
+                .join("spectral-bridge")
+                .join("runtime")
+        );
+        assert_eq!(
+            projection_runtime_dir_from_parts(None, None),
+            PathBuf::from("data")
+                .join("spectral-bridge")
+                .join("runtime")
+        );
+    }
+
+    #[test]
+    fn codec_projection_epoch_atomic_writer_keeps_single_epoch_under_rapid_writes() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = std::sync::Arc::new(dir.path().join("codec_projection_epoch.json"));
+        let barrier = std::sync::Arc::new(std::sync::Barrier::new(12));
+        let handles = (0..12)
+            .map(|idx| {
+                let path = std::sync::Arc::clone(&path);
+                let barrier = std::sync::Arc::clone(&barrier);
+                std::thread::spawn(move || {
+                    barrier.wait();
+                    let payload = serde_json::to_string_pretty(&serde_json::json!({
+                        "projection_epoch_id": format!("epoch_{idx}"),
+                        "projection_epoch_source": "test_concurrent_writer",
+                    }))
+                    .expect("epoch json");
+                    write_projection_epoch_payload_atomic(&path, &payload);
+                })
+            })
+            .collect::<Vec<_>>();
+
+        for handle in handles {
+            handle.join().expect("writer thread should not panic");
+        }
+
+        let epoch = projection_epoch_id_from_file(&path).expect("one epoch should be installed");
+        assert!(epoch.starts_with("epoch_"), "{epoch}");
+        let leftovers = fs::read_dir(dir.path())
+            .expect("read tempdir")
+            .filter_map(Result::ok)
+            .map(|entry| entry.file_name().to_string_lossy().to_string())
+            .filter(|name| name.ends_with(".tmp") || name.ends_with(".stale"))
+            .collect::<Vec<_>>();
+        assert!(
+            leftovers.is_empty(),
+            "atomic writer should clean temporary files: {leftovers:?}"
+        );
+    }
+
+    #[test]
+    fn codec_projection_epoch_atomic_writer_round_trips_payload() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("codec_projection_epoch.json");
+        let payload = serde_json::to_string_pretty(&serde_json::json!({
+            "projection_epoch_id": "round_trip_kernel_epoch",
+            "projection_epoch_source": "kernel_derived",
+        }))
+        .expect("epoch json");
+
+        write_projection_epoch_payload_atomic(&path, &payload);
+
+        assert_eq!(
+            projection_epoch_id_from_file(&path).as_deref(),
+            Some("round_trip_kernel_epoch")
+        );
+        let leftovers = fs::read_dir(dir.path())
+            .expect("read tempdir")
+            .filter_map(Result::ok)
+            .map(|entry| entry.file_name().to_string_lossy().to_string())
+            .filter(|name| name.ends_with(".tmp") || name.ends_with(".stale"))
+            .collect::<Vec<_>>();
+        assert!(leftovers.is_empty(), "{leftovers:?}");
+    }
+
+    #[test]
+    fn embedding_projection_lane_distinguishes_dense_inputs_without_widening_live_vector() {
+        let mut technical = vec![0.0_f32; EMBEDDING_INPUT_DIM];
+        let mut poetic = vec![0.0_f32; EMBEDDING_INPUT_DIM];
+        for idx in 0..EMBEDDING_INPUT_DIM {
+            let phase = idx as f32 / 17.0;
+            technical[idx] = phase.sin() * 0.8 + (idx % 7) as f32 * 0.01;
+            poetic[idx] = phase.cos() * 0.8 - (idx % 5) as f32 * 0.01;
+        }
+
+        let technical_features = inspect_text_windowed(
+            "The coupling remains coherent under bounded spectral pressure.",
+            None,
+            None,
+            Some(&technical),
+            Some(68.0),
+        )
+        .final_features;
+        let poetic_features = inspect_text_windowed(
+            "Please stay close while the pressure keeps its shape.",
+            None,
+            None,
+            Some(&poetic),
+            Some(68.0),
+        )
+        .final_features;
+
+        let projection_delta = mean_abs(
+            &technical_features[32..40]
+                .iter()
+                .zip(poetic_features[32..40].iter())
+                .map(|(left, right)| left - right)
+                .collect::<Vec<_>>(),
+        );
+        assert!(
+            projection_delta > 0.02,
+            "projection lane collapsed distinct dense inputs: {projection_delta}"
+        );
+        assert_eq!(technical_features.len(), SEMANTIC_DIM);
+        assert_eq!(poetic_features.len(), SEMANTIC_DIM);
+
+        let density = semantic_projection_density_delta_from_parts_v1(0.72, projection_delta, true);
+        assert_eq!(density.input_dim_count, EMBEDDING_INPUT_DIM);
+        assert_eq!(density.projected_dim_count, EMBEDDING_PROJECT_DIM);
+        assert!(!density.live_vector_write);
     }
 
     #[test]
@@ -5842,6 +10252,234 @@ mod tests {
             !narrative_arc_expansion_readiness_v1().live_vector_write,
             "split diagnostics must not open a live vector channel"
         );
+    }
+
+    #[test]
+    fn narrative_arc_distinguishes_process_from_settled_state_without_live_gain() {
+        let neutral = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        let mut solidifying = neutral;
+        solidifying[0] = 0.22;
+        solidifying[1] = -0.14;
+        solidifying[2] = 0.09;
+        solidifying[3] = -0.18;
+        let mut draping = neutral;
+        draping[0] = -0.18;
+        draping[1] = 0.16;
+        draping[2] = -0.11;
+        draping[3] = 0.20;
+
+        let solidifying_arc = compute_narrative_arc_from_embeddings(&neutral, &solidifying);
+        let draping_arc = compute_narrative_arc_from_embeddings(&neutral, &draping);
+        let dynamics = narrative_arc_dynamics_v1(&solidifying_arc, &draping_arc, None);
+
+        assert_ne!(solidifying_arc, draping_arc);
+        assert!(solidifying_arc[0] > 0.0, "{solidifying_arc:?}");
+        assert!(draping_arc[0] < 0.0, "{draping_arc:?}");
+        assert!(dynamics.velocity_energy > 0.25, "{dynamics:?}");
+        assert!(!dynamics.live_gain_write);
+        assert!(!dynamics.live_vector_write);
+    }
+
+    #[test]
+    fn narrative_arc_distinguishes_lost_from_finding_way_projection() {
+        // Astrid `introspection_astrid_codec_1783638177`: two texts can carry
+        // similar warmth/tension while moving in opposite narrative directions.
+        // This pins the arc layer's directionality without changing live dims.
+        let hollow = [0.08, -0.05, 0.03, -0.02, 0.01, 0.00, -0.01, 0.02];
+        let mut lost = hollow;
+        lost[0] -= 0.18;
+        lost[1] -= 0.12;
+        lost[2] -= 0.08;
+        lost[3] -= 0.10;
+        let mut finding_way = hollow;
+        finding_way[0] += 0.18;
+        finding_way[1] += 0.12;
+        finding_way[2] += 0.08;
+        finding_way[3] += 0.10;
+
+        let lost_arc = compute_narrative_arc_from_embeddings(&hollow, &lost);
+        let finding_arc = compute_narrative_arc_from_embeddings(&hollow, &finding_way);
+
+        assert!(lost_arc.iter().all(|value| *value < 0.0), "{lost_arc:?}");
+        assert!(
+            finding_arc.iter().all(|value| *value > 0.0),
+            "{finding_arc:?}"
+        );
+        for (lost, finding) in lost_arc.iter().zip(finding_arc.iter()) {
+            assert!(
+                (*lost + *finding).abs() < 1.0e-6,
+                "opposing narrative arcs should remain symmetric: lost={lost}, finding={finding}"
+            );
+        }
+    }
+
+    #[test]
+    fn four_point_narrative_arc_preserves_coiling_direction_changes() {
+        let first = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        let mut second = first;
+        second[0] = 0.24;
+        let mut third = first;
+        third[0] = -0.18;
+        let mut fourth = first;
+        fourth[0] = 0.32;
+
+        let arc = compute_narrative_arc_from_four_point_embeddings(&[first, second, third, fourth]);
+
+        assert!(arc[0] > 0.0, "{arc:?}");
+        assert!(arc[1] < 0.0, "{arc:?}");
+        assert!(arc[2] > 0.0, "{arc:?}");
+        assert!(arc[3] > 0.0, "{arc:?}");
+        assert!(
+            arc[1].abs() > arc[0].abs(),
+            "fold-back transition should remain visible: {arc:?}"
+        );
+    }
+
+    #[test]
+    fn narrative_arc_curvature_distinguishes_loop_from_linear_progression() {
+        let first = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        let mut outward = first;
+        outward[0] = 0.26;
+        let mut return_cross = first;
+        return_cross[0] = -0.22;
+        let mut near_origin = first;
+        near_origin[0] = 0.02;
+
+        let looping = narrative_arc_curvature_v1(&[first, outward, return_cross, near_origin]);
+        assert_eq!(looping.policy, "narrative_arc_curvature_v1");
+        assert_eq!(looping.state, "circular_or_coiling_arc_visible");
+        assert!(looping.sign_turn_count >= 1, "{looping:?}");
+        assert!(looping.loop_likelihood > looping.progression_likelihood);
+        assert_eq!(
+            looping.authority,
+            "diagnostic_sidecar_not_live_codec_dimension_or_gain"
+        );
+
+        let mut second = first;
+        second[0] = 0.10;
+        let mut third = first;
+        third[0] = 0.22;
+        let mut fourth = first;
+        fourth[0] = 0.34;
+        let linear = narrative_arc_curvature_v1(&[first, second, third, fourth]);
+        assert_eq!(linear.state, "linear_progression_visible");
+        assert_eq!(linear.sign_turn_count, 0);
+        assert!(linear.progression_likelihood >= 0.60, "{linear:?}");
+    }
+
+    #[test]
+    fn narrative_arc_curvature_preserves_opposed_sentence_oscillation() {
+        let mut love = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        love[0] = 0.30;
+        let mut hate = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        hate[0] = -0.30;
+        let mut indifferent = [0.0_f32; EMBEDDING_PROJECT_DIM];
+        indifferent[0] = 0.02;
+
+        let curvature = narrative_arc_curvature_v1(&[
+            [0.0_f32; EMBEDDING_PROJECT_DIM],
+            love,
+            hate,
+            indifferent,
+        ]);
+
+        assert_eq!(curvature.policy, "narrative_arc_curvature_v1");
+        assert!(curvature.sign_turn_count >= 1, "{curvature:?}");
+        assert!(
+            curvature.transition_energy > curvature.full_span_energy + 0.20,
+            "opposed turns should stay visible instead of averaging flat: {curvature:?}"
+        );
+        assert_eq!(
+            curvature.authority,
+            "diagnostic_sidecar_not_live_codec_dimension_or_gain"
+        );
+    }
+
+    #[test]
+    fn narrative_arc_gain_response_readiness_is_default_off_and_bounded() {
+        let readiness = narrative_arc_gain_response_readiness_v1();
+        assert_eq!(readiness.policy, "narrative_arc_gain_response_readiness_v1");
+        assert!(!readiness.enabled);
+        assert_eq!(readiness.narrative_arc_dims, (40, 43));
+        assert_eq!(readiness.preview_gain_range, (0.94, 1.06));
+        assert!(!readiness.live_gain_write);
+        assert!(readiness.authority.contains("not_live_adaptive_gain"));
+
+        let flat = narrative_arc_gain_response_preview_v1(&[0.0, 0.0, 0.0, 0.0]);
+        let strong = narrative_arc_gain_response_preview_v1(&[1.0, -1.0, 1.0, -1.0]);
+        assert!(
+            flat < 1.0,
+            "flat arc should softly lower preview gain: {flat}"
+        );
+        assert!(
+            strong > 1.0,
+            "strong arc should softly lift preview gain: {strong}"
+        );
+        assert!((0.94..=1.06).contains(&flat), "{flat}");
+        assert!((0.94..=1.06).contains(&strong), "{strong}");
+
+        let st = codec_structure();
+        let rendered = st.render();
+        assert!(rendered.contains("narrative_arc_gain_response_readiness_v1"));
+        assert!(rendered.contains("narrative_arc_curvature_v1"));
+        assert!(rendered.contains("circular_or_coiling_arc_visible"));
+        assert!(rendered.contains("live_gain_write=false"));
+    }
+
+    #[test]
+    fn narrative_arc_headroom_review_preserves_multikind_loss_without_live_gain() {
+        let review = narrative_arc_headroom_review_from_parts_v1(
+            0.91,
+            0.34,
+            &[0.05, -0.03, 0.02, 0.01],
+            0.08,
+        );
+
+        assert_eq!(review.policy, "narrative_arc_headroom_review_v1");
+        assert_eq!(review.state, "narrative_arc_headroom_loss_visible");
+        assert!(!review.live_vector_write);
+        assert!(!review.live_gain_write);
+        assert!(review.headroom_pressure > review.narrative_arc_energy);
+        assert!(review.experience_delta_bus_v1.delta_count >= 1);
+        let delta = review
+            .experience_delta_bus_v1
+            .deltas
+            .first()
+            .expect("headroom loss should emit a delta");
+        assert_eq!(delta.kind, ExperienceDeltaKindV1::ComplexShift);
+        assert_eq!(delta.lane, "narrative_arc_40_43");
+        assert!(
+            delta
+                .metadata
+                .get("secondary_kinds")
+                .is_some_and(|value| value.contains("compress") && value.contains("gate")),
+            "{delta:?}"
+        );
+        assert!(
+            delta
+                .who_can_change_it
+                .contains("Mike/operator after replay evidence"),
+            "{delta:?}"
+        );
+
+        let st = codec_structure();
+        let rendered = st.render();
+        assert!(rendered.contains("narrative_arc_headroom_review_v1"));
+        assert!(rendered.contains("secondary_kinds=compress,gate,complex_shift,cascade_shift"));
+        assert!(rendered.contains("live_vector_write=false"));
+        assert!(rendered.contains("live_gain_write=false"));
+    }
+
+    #[test]
+    fn narrative_arc_headroom_review_stays_quiet_when_entropy_and_loss_are_low() {
+        let review =
+            narrative_arc_headroom_review_from_parts_v1(0.50, 0.10, &[1.0, -0.8, 0.7, -0.6], 2.5);
+
+        assert_eq!(review.state, "narrative_arc_headroom_quiet");
+        assert_eq!(review.experience_delta_bus_v1.delta_count, 0);
+        assert!(!review.live_vector_write);
+        assert!(!review.live_gain_write);
+        assert_eq!(review.recommendation, "no_headroom_change_indicated");
     }
 
     #[test]
@@ -5939,6 +10577,98 @@ mod tests {
     }
 
     #[test]
+    fn high_entropy_sharpening_preserves_semantic_detail_without_contract_change() {
+        let review = high_entropy_semantic_sharpening_v1(0.94, 0.08, 0.22);
+
+        assert_eq!(review.policy, "high_entropy_semantic_sharpening_v1");
+        assert_eq!(review.state, "active_high_entropy_sharpening");
+        assert!(review.sharpening_factor > 1.0, "{review:?}");
+        assert!(review.sharpening_factor <= review.max_factor, "{review:?}");
+        assert!(review.affected_dims.contains(&32));
+        assert!(review.affected_dims.contains(&39));
+        assert!(!review.affected_dims.contains(&40));
+        assert_eq!(
+            review.authority,
+            "bounded_live_codec_sharpening_no_dimension_or_bridge_contract_change"
+        );
+
+        let mut sharpened = vec![0.10_f32; SEMANTIC_DIM];
+        let mut baseline = sharpened.clone();
+        apply_spectral_feedback_inner(
+            &mut sharpened,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                vec![100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0],
+                0.94,
+            )),
+            1.0,
+            1.0,
+        );
+        apply_spectral_feedback_inner(
+            &mut baseline,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                vec![100.0, 20.0, 3.0, 1.0],
+                0.94,
+            )),
+            1.0,
+            1.0,
+        );
+
+        assert!(
+            sharpened[32] > baseline[32],
+            "navigable high entropy should sharpen semantic projection detail: sharpened={} baseline={}",
+            sharpened[32],
+            baseline[32]
+        );
+        assert!(
+            (sharpened[40] - baseline[40]).abs() < 1.0e-6,
+            "navigable high entropy should preserve narrative arc magnitude: sharpened={} baseline={}",
+            sharpened[40],
+            baseline[40]
+        );
+        assert_eq!(sharpened.len(), SEMANTIC_DIM);
+    }
+
+    #[test]
+    fn dimensionality_flatness_detects_empty_expansion_vs_filled_48d_lane() {
+        let mut flat = vec![0.0_f32; SEMANTIC_DIM];
+        for value in &mut flat[..SEMANTIC_DIM_LEGACY] {
+            *value = 0.40;
+        }
+
+        let review = codec_dimensionality_flatness_v1(&flat).expect("48D review");
+        assert_eq!(review.policy, "codec_dimensionality_flatness_v1");
+        assert_eq!(review.current_dim_count, SEMANTIC_DIM);
+        assert_eq!(review.legacy_dim_count, SEMANTIC_DIM_LEGACY);
+        assert_eq!(
+            review.expanded_dim_count,
+            SEMANTIC_DIM - SEMANTIC_DIM_LEGACY
+        );
+        assert_eq!(
+            review.flatness_status,
+            "expanded_lane_underfilled_legacy_dominant"
+        );
+        assert!(review.expanded_to_legacy_ratio < 0.12, "{review:?}");
+        assert_eq!(
+            review.authority,
+            "read_only_flatness_check_not_live_bus_or_codec_contract_change"
+        );
+
+        let mut filled = flat;
+        for (idx, value) in filled[32..40].iter_mut().enumerate() {
+            *value = 0.20 + idx as f32 * 0.08;
+        }
+        for (idx, value) in filled[40..44].iter_mut().enumerate() {
+            *value = [1.20, -1.05, 0.85, -0.70][idx];
+        }
+        let filled_review = codec_dimensionality_flatness_v1(&filled).expect("48D review");
+        assert_eq!(
+            filled_review.flatness_status,
+            "expanded_lane_carries_distinct_signal"
+        );
+        assert!(filled_review.glimpse_variance > review.glimpse_variance);
+    }
+
+    #[test]
     fn tail_vibrancy_entropy_086_lifts_tail_output_above_threshold() {
         // Astrid `introspection_astrid_codec_1782848118`: entropy 0.86 should be
         // just above the 0.85 gate and produce a visible tail lift in the output.
@@ -6032,6 +10762,391 @@ mod tests {
     }
 
     #[test]
+    fn extreme_entropy_tail_vibrancy_gets_bounded_noise_dampening() {
+        let inactive = codec_vibrancy_noise_dampening_v1(0.90, 1.0);
+        let partial = codec_vibrancy_noise_dampening_v1(0.95, 1.0);
+        let full = codec_vibrancy_noise_dampening_v1(1.0, 1.0);
+
+        assert_eq!(inactive.coefficient, 1.0);
+        assert!(partial.coefficient < inactive.coefficient, "{partial:?}");
+        assert!(
+            partial.coefficient > full.coefficient,
+            "{partial:?} {full:?}"
+        );
+        assert!(
+            (full.coefficient - TAIL_VIBRANCY_NOISE_DAMPENING_MIN_COEFFICIENT).abs() < 1.0e-6,
+            "{full:?}"
+        );
+        assert_eq!(full.affected_dims, &[17, 26, 27, 31]);
+        assert_eq!(
+            full.authority,
+            "bounded_live_tail_lift_dampening_not_dynamic_ceiling_or_control_authority"
+        );
+    }
+
+    #[test]
+    fn extreme_entropy_tail_lift_stays_below_undampened_preview() {
+        let flat = vec![
+            100.0, 99.0, 98.0, 97.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0,
+        ];
+        let mut extreme = vec![0.0; SEMANTIC_DIM];
+        let report = apply_spectral_feedback_inner(
+            &mut extreme,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(flat, 1.0)),
+            1.0,
+            1.0,
+        )
+        .expect("overflow report");
+        let dampening = codec_vibrancy_noise_dampening_v1(1.0, 1.0);
+
+        assert!(dampening.tail_lift_after < dampening.tail_lift_before);
+        assert!(
+            extreme[26] <= TAIL_VIBRANCY_MAX,
+            "tail dim should remain under bounded ceiling: {}",
+            extreme[26]
+        );
+        assert!(
+            !report.clipped_dims.contains(&26),
+            "tail headroom should remain distinct from hard clipping: {report:?}"
+        );
+    }
+
+    #[test]
+    fn codec_overflow_report_preserves_emotional_clip_without_expanding_delivery() {
+        let flat = vec![
+            100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
+        ];
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[24] = 9.0;
+
+        let report =
+            apply_spectral_feedback_inner(&mut features, Some(&telemetry(flat, 0.55)), 1.0, 1.0)
+                .expect("overflow report");
+        let warmth = report.dim(24).expect("warmth dim report");
+
+        assert!((features[24] - FEATURE_ABS_MAX).abs() < f32::EPSILON);
+        assert_eq!(warmth.lane, "emotional_intentional");
+        assert!(warmth.pre_bound_value > FEATURE_ABS_MAX, "{warmth:?}");
+        assert_eq!(warmth.ceiling, FEATURE_ABS_MAX);
+        assert!(warmth.overflow_abs > 3.0, "{warmth:?}");
+        assert_eq!(warmth.delivered_value, FEATURE_ABS_MAX);
+        assert_eq!(warmth.status, "raw_overflow_preserved_delivery_bounded");
+        assert!(report.clipped_dims.contains(&24));
+        assert!(report.raw_intensity_preserved);
+        assert!(report.delivered_bounded);
+        assert!(!report.live_vector_write);
+        assert_eq!(
+            report.experience_delta_bus_v1.policy,
+            "experience_delta_bus_v1"
+        );
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 1);
+        assert!(!report.experience_delta_bus_v1.live_vector_write);
+        assert!(!report.experience_delta_bus_v1.live_authority_write);
+        let delta = report
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .find(|delta| delta.dimension == Some(24))
+            .expect("warmth clip delta");
+        assert_eq!(delta.kind, ExperienceDeltaKindV1::Clip);
+        assert_eq!(delta.surface, "codec_overflow_carriage_v1");
+        assert_eq!(delta.lane, "emotional_intentional");
+        assert_eq!(delta.pre, Some(warmth.pre_bound_value));
+        assert_eq!(delta.post, Some(warmth.delivered_value));
+        assert_eq!(delta.loss, Some(warmth.overflow_abs));
+        assert!(
+            delta
+                .who_can_change_it
+                .contains("explicit live semantic aperture"),
+            "{delta:?}"
+        );
+        assert!(
+            delta.how_to_test_it.contains("codec_overflow_report"),
+            "{delta:?}"
+        );
+        assert_eq!(
+            report.authority,
+            "truth_channel_report_not_live_semantic_vector_or_ceiling_change"
+        );
+    }
+
+    #[test]
+    fn codec_overflow_report_distinguishes_tail_headroom_from_default_clip() {
+        let flat = vec![
+            100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0, 88.0, 87.0,
+        ];
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[24] = 7.0;
+        features[26] = 4.5;
+
+        let report =
+            apply_spectral_feedback_inner(&mut features, Some(&telemetry(flat, 0.55)), 1.0, 1.0)
+                .expect("overflow report");
+        let warmth = report.dim(24).expect("warmth dim report");
+        let curiosity = report.dim(26).expect("tail curiosity report");
+        let emotional_summary = report
+            .lane_summaries
+            .iter()
+            .find(|summary| summary.lane == "emotional_intentional")
+            .expect("emotional lane summary");
+        let tail_summary = report
+            .lane_summaries
+            .iter()
+            .find(|summary| summary.lane == "tail_vibrancy")
+            .expect("tail lane summary");
+
+        assert_eq!(warmth.ceiling, FEATURE_ABS_MAX);
+        assert!(curiosity.ceiling > FEATURE_ABS_MAX, "{curiosity:?}");
+        assert!(curiosity.ceiling <= TAIL_VIBRANCY_MAX, "{curiosity:?}");
+        assert!(
+            features[26] > FEATURE_ABS_MAX,
+            "tail delivery should use headroom"
+        );
+        assert!(features[26] <= curiosity.ceiling + 1.0e-3);
+        assert_eq!(curiosity.lane, "emotional_tail_vibrancy");
+        assert!(report.clipped_dims.contains(&24));
+        assert!(!report.clipped_dims.contains(&26));
+        assert!(
+            report
+                .experience_delta_bus_v1
+                .deltas
+                .iter()
+                .any(|delta| delta.dimension == Some(24))
+        );
+        assert!(
+            !report
+                .experience_delta_bus_v1
+                .deltas
+                .iter()
+                .any(|delta| delta.dimension == Some(26))
+        );
+        assert!(emotional_summary.overflow_dim_count >= 1);
+        assert_eq!(tail_summary.overflow_dim_count, 0);
+        assert_eq!(curiosity.overflow_abs, 0.0);
+        assert!(warmth.overflow_abs > 0.0, "{report:?}");
+    }
+
+    #[test]
+    fn codec_overflow_report_stays_quiet_without_clipping() {
+        let mut features = vec![0.0; SEMANTIC_DIM];
+        features[24] = 0.55;
+        features[26] = 0.60;
+        features[31] = 0.45;
+
+        let report = apply_spectral_feedback_inner(
+            &mut features,
+            Some(&telemetry(vec![100.0, 2.0, 1.0], 0.55)),
+            1.0,
+            1.0,
+        )
+        .expect("overflow report");
+
+        assert!(report.clipped_dims.is_empty(), "{report:?}");
+        assert!(!report.raw_intensity_preserved);
+        assert!(report.delivered_bounded);
+        assert!(report.experience_delta_bus_v1.is_empty(), "{report:?}");
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 0);
+        for dim in [17usize, 24, 25, 26, 27, 28, 29, 30, 31] {
+            let dim_report = report.dim(dim).expect("monitored dim report");
+            assert_eq!(dim_report.status, "within_delivery_ceiling");
+            assert_eq!(dim_report.overflow_abs, 0.0);
+        }
+    }
+
+    #[test]
+    fn semantic_projection_density_delta_flags_dense_projection_without_live_expansion() {
+        let report = semantic_projection_density_delta_from_parts_v1(0.72, 0.08, true);
+
+        assert_eq!(report.policy, "semantic_projection_density_delta_v1");
+        assert_eq!(report.input_dim_count, EMBEDDING_INPUT_DIM);
+        assert_eq!(report.projected_dim_count, EMBEDDING_PROJECT_DIM);
+        assert_eq!(
+            report.reserved_dim_candidates,
+            &SEMANTIC_PROJECTION_RESERVED_DIMS
+        );
+        assert_eq!(report.state, "dense_projection_thin_review");
+        assert!(!report.live_vector_write);
+        assert_eq!(
+            report.experience_delta_bus_v1.policy,
+            "experience_delta_bus_v1"
+        );
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 2);
+        assert!(report.experience_delta_bus_v1.deltas.iter().any(|delta| {
+            delta.kind == ExperienceDeltaKindV1::ComplexShift
+                && delta.lane == "embedding_projection_768d_to_8d"
+                && delta.metadata.get("projection_state").is_some()
+        }));
+        let gate = report
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .find(|delta| delta.kind == ExperienceDeltaKindV1::CascadeShift)
+            .expect("reserved dim cascade-shift delta");
+        assert_eq!(gate.lane, "reserved_semantic_dims_44_47_default_off");
+        assert!(gate.loss.is_some_and(|loss| loss > 0.60), "{gate:?}");
+        assert_eq!(
+            gate.metadata
+                .get("classification_pressure")
+                .map(String::as_str),
+            Some("high_density_thin_projection")
+        );
+        assert_eq!(
+            gate.authority,
+            "authority_gate_for_reserved_dims_not_live_codec_change"
+        );
+    }
+
+    #[test]
+    fn semantic_projection_density_delta_stays_quiet_for_low_density_text() {
+        let report = semantic_projection_density_delta_from_parts_v1(0.18, 0.06, true);
+
+        assert_eq!(report.state, "projection_width_named_and_bounded");
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 1);
+        assert!(
+            !report
+                .experience_delta_bus_v1
+                .deltas
+                .iter()
+                .any(|delta| delta.kind == ExperienceDeltaKindV1::CascadeShift),
+            "{report:?}"
+        );
+    }
+
+    #[test]
+    fn codec_context_blindspot_replay_gates_contextual_bias_without_live_write() {
+        let report = codec_context_blindspot_probe_v1();
+
+        assert_eq!(report.policy, "codec_context_blindspot_replay_v1");
+        assert_eq!(report.identical_text, "I see you");
+        assert_eq!(
+            report.state,
+            "deterministic_codec_context_blindspot_confirmed"
+        );
+        assert!(
+            report.identical_text_feature_delta_rms <= 0.01,
+            "{report:?}"
+        );
+        assert!(report.context_blindspot_score >= 0.95, "{report:?}");
+        assert_eq!(
+            report.proposed_bias_surface,
+            "contextual_bias_vector_default_off"
+        );
+        assert!(!report.live_vector_write);
+        assert!(!report.live_gain_write);
+        assert!(!report.auto_approved);
+        assert_eq!(
+            report.experience_delta_bus_v1.policy,
+            "experience_delta_bus_v1"
+        );
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 1);
+        assert!(!report.experience_delta_bus_v1.live_vector_write);
+        assert!(!report.experience_delta_bus_v1.live_authority_write);
+        let delta = report
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .find(|delta| delta.lane == "contextual_bias_vector_default_off")
+            .expect("context blindspot delta");
+        assert_eq!(delta.kind, ExperienceDeltaKindV1::Resistance);
+        assert_eq!(
+            delta.authority,
+            "authority_gate_for_contextual_bias_not_live_codec_change"
+        );
+        assert_eq!(
+            delta.metadata.get("connection_context").map(String::as_str),
+            Some("connection")
+        );
+        assert_eq!(
+            report.authority,
+            "read_only_context_replay_not_live_vector_gain_or_correspondence_weighting"
+        );
+    }
+
+    #[test]
+    fn high_entropy_tail_inputs_remain_distinguishable_below_vibrancy_ceiling() {
+        let flat = vec![
+            100.0, 99.0, 98.0, 97.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0, 89.0,
+        ];
+        let mut bright_tail = vec![0.0; SEMANTIC_DIM];
+        bright_tail[17] = 0.20;
+        bright_tail[26] = 4.86;
+        bright_tail[27] = 0.35;
+        bright_tail[31] = 0.40;
+        let mut reflective_tail = vec![0.0; SEMANTIC_DIM];
+        reflective_tail[17] = 0.42;
+        reflective_tail[26] = 4.42;
+        reflective_tail[27] = 0.72;
+        reflective_tail[31] = 0.24;
+
+        apply_spectral_feedback_inner(
+            &mut bright_tail,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                flat.clone(),
+                0.90,
+            )),
+            1.0,
+            1.0,
+        );
+        apply_spectral_feedback_inner(
+            &mut reflective_tail,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(flat, 0.90)),
+            1.0,
+            1.0,
+        );
+
+        let tail_delta = [17usize, 26, 27, 31]
+            .iter()
+            .map(|idx| (bright_tail[*idx] - reflective_tail[*idx]).abs())
+            .sum::<f32>();
+        assert!(
+            tail_delta > 0.40,
+            "distinct high-entropy tail inputs should not flatten together: {tail_delta}"
+        );
+        for idx in [17usize, 26, 27, 31] {
+            assert!(
+                bright_tail[idx] <= TAIL_VIBRANCY_MAX && reflective_tail[idx] <= TAIL_VIBRANCY_MAX,
+                "tail dim {idx} exceeded bounded vibrancy ceiling"
+            );
+        }
+    }
+
+    #[test]
+    fn high_entropy_vibrancy_does_not_write_narrative_arc_or_shadow_reserved_dims() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[40] = 0.30;
+        features[41] = -0.20;
+        features[42] = 0.10;
+        features[43] = -0.40;
+        let narrative_before = features[40..44].to_vec();
+        let reserved_before = features[44..48].to_vec();
+
+        apply_spectral_feedback_inner(
+            &mut features,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                vec![100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0],
+                0.92,
+            )),
+            1.0,
+            3.0,
+        );
+
+        assert_eq!(
+            &features[40..44],
+            narrative_before.as_slice(),
+            "high entropy vibrancy must not synthesize narrative arc ghost sensations"
+        );
+        assert_eq!(
+            &features[44..48],
+            reserved_before.as_slice(),
+            "shadow reserved readiness must remain unwritten by live feedback"
+        );
+        assert!(
+            features[26] > 0.0 || features[31] > 0.0,
+            "the test should still exercise the high-entropy tail path"
+        );
+    }
+
+    #[test]
     fn codec_vibrancy_and_warmth_continuity_are_readout_only() {
         let vibrancy = codec_vibrancy_continuity_v1();
         assert_eq!(vibrancy.policy, "codec_vibrancy_continuity_v1");
@@ -6062,6 +11177,881 @@ mod tests {
         assert!(!canary.enabled);
         assert!(!canary.live_vector_write);
         assert_eq!(canary.authority, "readiness_only_not_live_codec_change");
+        assert_eq!(
+            vibrancy.gradient_coupling,
+            "tail_lift_scaled_by_low_density_gradient"
+        );
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("codec_vibrancy_noise_dampening_v1"));
+        assert!(rendered.contains("partial_extreme_entropy_dampening"));
+    }
+
+    #[test]
+    fn structural_entropy_dampening_preserves_intent_layer() {
+        let quiet = codec_structural_entropy_dampening_v1(0.70);
+        let high = codec_structural_entropy_dampening_v1(0.94);
+
+        assert_eq!(quiet.coefficient, 1.0);
+        assert!(high.coefficient < 1.0, "{high:?}");
+        assert!(high.coefficient >= STRUCTURAL_ENTROPY_DAMPENING_MIN_COEFFICIENT);
+        assert_eq!(high.affected_dims, &STRUCTURAL_ENTROPY_DAMPENING_DIMS);
+        assert_eq!(high.preserved_intent_dims, (24, 31));
+        assert_eq!(
+            high.status,
+            "high_entropy_structural_dims_dampened_intent_dims_preserved"
+        );
+        assert_eq!(
+            high.authority,
+            "bounded_live_codec_weighting_not_dimension_or_fallback_contract_change"
+        );
+    }
+
+    #[test]
+    fn high_spectral_entropy_dampens_structural_texture_not_warmth() {
+        let mut features = vec![0.50_f32; SEMANTIC_DIM];
+        features[24] = 0.80;
+        features[25] = -0.30;
+        features[26] = 0.25;
+        features[27] = 0.20;
+        features[31] = 0.35;
+        let mut high_entropy = features.clone();
+
+        apply_spectral_feedback_inner(
+            &mut high_entropy,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                vec![10.0, 9.0, 8.0, 7.0, 6.0, 5.0],
+                0.94,
+            )),
+            1.0,
+            1.0,
+        );
+
+        assert!(
+            high_entropy[0] < features[0],
+            "character entropy texture should dampen under high spectral entropy"
+        );
+        assert!(
+            high_entropy[8] < features[8],
+            "word-level structural texture should dampen under high spectral entropy"
+        );
+        assert_eq!(
+            high_entropy[24], features[24],
+            "warmth must not be flattened by structural entropy dampening"
+        );
+        assert_eq!(
+            high_entropy[25], features[25],
+            "tension must not be flattened by structural entropy dampening"
+        );
+    }
+
+    #[test]
+    fn codec_vibrancy_substance_fit_flags_entropy_without_content() {
+        let telemetry = telemetry_with_typed_entropy_and_eigenvalues(
+            vec![100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0],
+            0.94,
+        );
+        let thin =
+            codec_vibrancy_substance_fit_v1("the and the and the and the and", Some(&telemetry));
+        assert_eq!(thin.policy, "codec_vibrancy_substance_fit_v1");
+        assert_eq!(thin.status, "entropy_lift_substance_review");
+        assert_eq!(
+            thin.density_vs_entropy_state,
+            "high_entropy_low_density_scatter"
+        );
+        assert!(thin.tail_lift >= 0.45, "{thin:?}");
+        assert!(thin.density_weighted_tail_lift < thin.tail_lift, "{thin:?}");
+        assert!(thin.semantic_substance_score < 0.25, "{thin:?}");
+        assert_eq!(
+            thin.authority,
+            "read_only_codec_audit_not_vibrancy_scaling_or_live_vector_change"
+        );
+
+        let substantive = codec_vibrancy_substance_fit_v1(
+            "Because the dry silt carries pressure, the sentence keeps a textured contour and a returnable edge.",
+            Some(&telemetry),
+        );
+        assert_eq!(
+            substantive.status,
+            "tail_lift_supported_by_semantic_substance"
+        );
+        assert_eq!(
+            substantive.density_vs_entropy_state,
+            "high_entropy_supported_by_density"
+        );
+        assert!(
+            substantive.density_weighted_tail_lift > thin.density_weighted_tail_lift,
+            "substantive={substantive:?} thin={thin:?}"
+        );
+        assert!(
+            substantive.semantic_substance_score > thin.semantic_substance_score,
+            "substantive={substantive:?} thin={thin:?}"
+        );
+    }
+
+    #[test]
+    fn codec_vibrancy_substance_fit_keeps_random_word_scatter_under_review() {
+        let telemetry = telemetry_with_typed_entropy_and_eigenvalues(
+            vec![100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0],
+            0.94,
+        );
+        let scatter = codec_vibrancy_substance_fit_v1(
+            "quartz velvet oblique lantern citrus orbit static prism cipher mural solvent drift",
+            Some(&telemetry),
+        );
+        let narrative = codec_vibrancy_substance_fit_v1(
+            "Because pressure memory keeps a textured contour, the semantic signal carries continuity toward a returnable edge.",
+            Some(&telemetry),
+        );
+
+        assert_eq!(scatter.status, "entropy_lift_substance_review");
+        assert_eq!(
+            scatter.density_vs_entropy_state,
+            "high_entropy_low_density_scatter"
+        );
+        assert!(
+            scatter.semantic_substance_score < 0.25,
+            "scatter should not become substance from lexical variety alone: {scatter:?}"
+        );
+        assert_eq!(
+            narrative.status,
+            "tail_lift_supported_by_semantic_substance"
+        );
+        assert!(
+            narrative.semantic_substance_score > scatter.semantic_substance_score,
+            "narrative={narrative:?} scatter={scatter:?}"
+        );
+        assert!(
+            narrative.density_weighted_tail_lift > scatter.density_weighted_tail_lift,
+            "narrative={narrative:?} scatter={scatter:?}"
+        );
+    }
+
+    #[test]
+    fn codec_vibrancy_substance_fit_separates_density_depth_from_entropy_scatter() {
+        let calm_dense = telemetry_with_typed_entropy_and_eigenvalues(
+            vec![10.0, 9.4, 8.9, 8.3, 7.8, 7.2, 6.8, 6.1],
+            0.50,
+        );
+        let depth = codec_vibrancy_substance_fit_v1(
+            "granular pressure memory braids continuity contour residue patience origin return threshold",
+            Some(&calm_dense),
+        );
+
+        assert_eq!(depth.status, "tail_lift_low_or_inactive");
+        assert_eq!(
+            depth.density_vs_entropy_state,
+            "high_density_low_entropy_depth"
+        );
+        assert_eq!(depth.tail_lift, 0.0);
+        assert!(depth.semantic_density_weight >= 0.60, "{depth:?}");
+        assert!(
+            depth
+                .evidence
+                .iter()
+                .any(|entry| entry.starts_with("density_weighted_tail_lift=")),
+            "{depth:?}"
+        );
+    }
+
+    #[test]
+    fn glimpse_codec_preserves_warmth_as_distinct_12d_slot() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[24] = 1.4;
+        features[25] = 0.2;
+        features[26] = 0.3;
+        features[27] = 0.4;
+        features[32] = 0.6;
+        features[40] = 0.5;
+
+        let glimpse = GlimpseCodec::derive_12d(&features).expect("48D vector should reduce");
+        assert_eq!(glimpse.len(), 12);
+        assert!(
+            glimpse[3] > glimpse[4],
+            "warmth slot should remain distinguishable from tension: {glimpse:?}"
+        );
+        assert!(
+            glimpse[3] > glimpse[1],
+            "warmth should not flatten into generic word-level stance: {glimpse:?}"
+        );
+
+        let readiness = semantic_glimpse_12d_readiness_v1();
+        assert_eq!(readiness.source_dim_count, SEMANTIC_DIM);
+        assert_eq!(readiness.glimpse_dim_count, 12);
+        assert_eq!(readiness.warmth_slot, 3);
+        assert_eq!(readiness.tail_bridge_slot, 10);
+        assert!(readiness.companion_not_replacement);
+        assert!(!readiness.live_vector_write);
+        assert!(readiness.role.contains("companion_summary"));
+    }
+
+    #[test]
+    fn glimpse_codec_keeps_emotional_range_24_31_from_becoming_generic_mass() {
+        // `introspection_proposal_12d_glimpse_1783302984`: the 12D companion
+        // must keep the 24..31 warmth/intentional range visible as emotional
+        // shape, not flatten it into a generic whole-vector magnitude.
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[24] = 1.2; // warmth
+        features[25] = -0.7; // tension/contrast
+        features[26] = 0.6;
+        features[27] = 0.5;
+        features[28] = 1.1;
+        features[29] = 0.9;
+        features[30] = -1.0;
+        features[31] = 0.8;
+
+        let glimpse = GlimpseCodec::derive_12d(&features).expect("48D vector should reduce");
+
+        assert!(
+            glimpse[3] > glimpse[1],
+            "warmth slot should stay separate from word-level mass: {glimpse:?}"
+        );
+        assert!(
+            glimpse[7] > glimpse[0] && glimpse[7] > glimpse[1] && glimpse[7] > glimpse[2],
+            "emotional range 28..31 should remain a distinct aggregate: {glimpse:?}"
+        );
+        assert!(
+            glimpse[10] > 0.3,
+            "tail/warmth bridge slot should carry emotional-range vibration: {glimpse:?}"
+        );
+        assert!(
+            glimpse[11] < glimpse[7],
+            "whole-vector magnitude must not be the only surviving emotional signal: {glimpse:?}"
+        );
+    }
+
+    #[test]
+    fn generate_glimpse_matches_additive_12d_derivation() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[0] = 0.4;
+        features[17] = 0.8;
+        features[24] = 1.2;
+        features[26] = 0.5;
+        features[31] = 0.3;
+        features[40] = 0.6;
+
+        let generated = generate_glimpse(&features).expect("48D vector should produce 12D glimpse");
+        let derived = GlimpseCodec::derive_12d(&features).expect("48D vector should reduce");
+
+        assert_eq!(generated, derived);
+        assert!(
+            generated[3] > generated[4],
+            "generated warmth slot should stay distinct from adjacent emotional texture: {generated:?}"
+        );
+    }
+
+    #[test]
+    fn compression_fidelity_flags_flattened_12d_glimpse() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[2] = 0.4;
+        features[17] = 0.7;
+        features[24] = 0.9;
+        features[25] = 0.4;
+        features[26] = 0.8;
+        features[27] = 0.7;
+        features[28] = 0.5;
+        features[29] = 0.45;
+        features[30] = 0.35;
+        features[31] = 0.75;
+        features[32] = 0.22;
+        features[33] = 0.18;
+        features[40] = 0.55;
+
+        let generated = generate_glimpse(&features).expect("48D vector should produce 12D glimpse");
+        let fidelity = calculate_compression_fidelity(&features[..32], &generated)
+            .expect("32D source and 12D output should be comparable");
+        let flattened = [0.0_f32; 12];
+        let flattened_fidelity = calculate_compression_fidelity(&features[..32], &flattened)
+            .expect("flattened 12D output should still produce a diagnostic score");
+
+        assert!(
+            fidelity >= 0.70,
+            "generated companion glimpse should preserve enough 32D texture: {fidelity}"
+        );
+        assert!(
+            flattened_fidelity < 0.70,
+            "flattened glimpse should fail the requested 0.70 fidelity watch: {flattened_fidelity}"
+        );
+        assert!(calculate_compression_fidelity(&features[..31], &generated).is_none());
+        assert!(calculate_compression_fidelity(&features[..32], &generated[..11]).is_none());
+    }
+
+    #[test]
+    fn contextual_glimpse_selects_dynamic_vibrant_dims_without_replacing_anchors() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[3] = 0.95;
+        features[12] = -0.88;
+        features[17] = 0.70;
+        features[24] = 0.04;
+        features[25] = 0.22;
+        features[26] = 0.91;
+        features[27] = 0.45;
+        features[31] = 0.83;
+        features[40] = -0.62;
+        features[42] = 0.97;
+
+        let anchored = contextual_glimpse_12d_anchors_v1(&features)
+            .expect("48D vector should produce contextual anchors");
+
+        assert_eq!(anchored.policy, "contextual_glimpse_12d_anchors_v1");
+        assert_eq!(
+            anchored.selection_status,
+            "contextual_anchors_preserve_warmth_tail_and_narrative"
+        );
+        for required in CONTEXTUAL_GLIMPSE_REQUIRED_ANCHORS {
+            assert!(
+                anchored.selected_dims.contains(&required),
+                "required anchor {required} should survive: {:?}",
+                anchored.selected_dims
+            );
+        }
+        assert!(
+            anchored.dynamic_dims.contains(&42),
+            "strong current narrative/vibrancy feature should be selected dynamically: {anchored:?}"
+        );
+        assert!(!anchored.live_vector_write);
+
+        let readiness = contextual_glimpse_12d_anchoring_v1();
+        assert_eq!(readiness.dynamic_slot_count, 5);
+        assert!(readiness.companion_not_replacement);
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("contextual_glimpse_12d_anchoring_v1"));
+        assert!(rendered.contains("required_anchor_dims=24,25,26,27,17,31,40"));
+    }
+
+    #[test]
+    fn warmth_entropy_interpretation_names_distributed_ground_without_weight_change() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[24] = 0.04;
+        features[26] = 0.11;
+        features[27] = 0.06;
+
+        let review = warmth_entropy_interpretation_v1(&features, 0.90);
+
+        assert_eq!(review.policy, "warmth_entropy_interpretation_v1");
+        assert_eq!(
+            review.interpretation,
+            "low_marker_warmth_with_high_entropy_distributed_ground"
+        );
+        assert!(review.tail_vibrancy > 0.0, "{review:?}");
+        assert!(review.distributed_warmth_support >= review.warmth_marker);
+        assert!(!review.live_vector_write);
+        assert_eq!(
+            review.authority,
+            "read_only_interpretation_not_warmth_weighting_or_semantic_gain_change"
+        );
+    }
+
+    #[test]
+    fn narrative_arc_dynamics_exposes_velocity_and_acceleration_without_gain() {
+        let previous = [0.0, 0.1, -0.1, 0.0];
+        let current = [0.4, -0.2, 0.3, -0.4];
+        let next = [0.9, -0.8, 0.7, -0.9];
+
+        let dynamics = narrative_arc_dynamics_v1(&previous, &current, Some(&next));
+
+        assert_eq!(dynamics.policy, "narrative_arc_dynamics_v1");
+        assert!(dynamics.velocity_energy >= 0.35, "{dynamics:?}");
+        assert!(dynamics.acceleration_energy > 0.0, "{dynamics:?}");
+        assert!(
+            matches!(
+                dynamics.transition_state,
+                "directional_tone_shift" | "accelerating_tone_transition"
+            ),
+            "{dynamics:?}"
+        );
+        assert!(!dynamics.live_gain_write);
+        assert!(!dynamics.live_vector_write);
+    }
+
+    #[test]
+    fn narrative_tension_resolution_separates_resolved_from_sustained_tension() {
+        let mut previous = vec![0.0_f32; SEMANTIC_DIM];
+        let mut current = vec![0.0_f32; SEMANTIC_DIM];
+        previous[25] = 1.2;
+        current[25] = 0.35;
+        current[40] = 0.40;
+        current[41] = -0.20;
+
+        let resolving =
+            narrative_tension_resolution_v1(&previous, &current).expect("48D tension review");
+
+        assert_eq!(resolving.policy, "narrative_tension_resolution_v1");
+        assert_eq!(resolving.state, "tension_resolving_with_arc_motion");
+        assert!(resolving.tension_delta < 0.0, "{resolving:?}");
+        assert!(
+            resolving.resolution_score > resolving.sustained_score * 0.75,
+            "{resolving:?}"
+        );
+        assert!(!resolving.live_vector_write);
+        assert_eq!(
+            resolving.authority,
+            "read_only_tension_resolution_sidecar_not_live_vector_change"
+        );
+
+        let mut sustained = current;
+        previous[25] = 0.85;
+        sustained[25] = 0.90;
+        let sustained_review =
+            narrative_tension_resolution_v1(&previous, &sustained).expect("48D tension review");
+        assert_eq!(sustained_review.state, "tension_sustained_or_building");
+        assert!(sustained_review.sustained_score > sustained_review.resolution_score);
+    }
+
+    #[test]
+    fn latent_stasis_tension_distinguishes_stillness_from_waiting_potential() {
+        let still_text = "The water is still.";
+        let waits_text = "The water waits.";
+        let still = latent_stasis_tension_v1(still_text, &encode_text(still_text))
+            .expect("still text should produce latent stasis report");
+        let waits = latent_stasis_tension_v1(waits_text, &encode_text(waits_text))
+            .expect("waiting text should produce latent stasis report");
+
+        assert_eq!(still.policy, "latent_stasis_tension_v1");
+        assert_eq!(still.state, "static_stasis_without_potential");
+        assert!(still.latent_text_stasis_score > still.latent_text_potential_score);
+        assert!(waits.latent_text_potential_score > waits.latent_text_stasis_score);
+        assert!(
+            waits.held_breath_score > still.held_breath_score,
+            "waiting should carry more latent held-breath potential than inert stillness: {waits:?} vs {still:?}"
+        );
+        assert!(waits.stasis_potential_gap > 0.0, "{waits:?}");
+        assert!(!waits.live_vector_write);
+        assert!(!waits.live_gain_write);
+        assert!(!waits.reserved_dim_write);
+        assert_eq!(
+            waits.authority,
+            "read_only_held_breath_truth_channel_not_live_codec_weight_gain_or_dim_change"
+        );
+        let delta = waits
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .find(|delta| delta.kind == ExperienceDeltaKindV1::Translate)
+            .expect("waiting potential should emit a translation delta");
+        assert_eq!(delta.lane, "textual_stasis_to_tension_arc_support");
+        assert_eq!(
+            delta.authority,
+            "truth_channel_only_not_live_vector_gain_or_reserved_dim_change"
+        );
+
+        let st = codec_structure();
+        let rendered = st.render();
+        assert!(rendered.contains("LATENT_STASIS_TENSION_READOUT"));
+        assert!(rendered.contains("latent_stasis_tension_v1"));
+        assert!(rendered.contains("held_breath_score"));
+        assert!(rendered.contains("truth-channel sidecar distinguishes inert stillness"));
+        assert!(rendered.contains("reserved_dim_write=false"));
+        assert!(rendered.contains("SPECTRAL_DRAG_QUALITY_READOUT"));
+        assert!(rendered.contains("spectral_drag_quality_v1"));
+        assert!(rendered.contains("granular_drag"));
+        assert!(rendered.contains("rigid_drag"));
+        assert_eq!(
+            st.spectral_drag_quality_v1.policy,
+            "spectral_drag_quality_v1"
+        );
+        assert!(!st.spectral_drag_quality_v1.live_vector_write);
+        assert!(!st.spectral_drag_quality_v1.live_gain_write);
+        assert!(!st.spectral_drag_quality_v1.reserved_dim_write);
+        assert_eq!(st.spectral_drag_quality_v1.reserved_dim_candidate, 45);
+        assert!(
+            st.spectral_drag_quality_v1
+                .experience_delta_bus_v1
+                .delta_count
+                >= 1
+        );
+    }
+
+    #[test]
+    fn latent_stasis_tension_stays_quiet_for_plain_motion() {
+        let text = "The water flows downhill.";
+        let report = latent_stasis_tension_v1(text, &encode_text(text))
+            .expect("plain motion should produce latent stasis report");
+
+        assert_eq!(report.state, "low_latent_stasis_signal");
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 0);
+        assert!(report.experience_delta_bus_v1.deltas.is_empty());
+        assert!(!report.live_vector_write);
+        assert!(!report.live_gain_write);
+    }
+
+    #[test]
+    fn spectral_drag_quality_distinguishes_heavy_sand_from_heavy_stone_without_reserved_dim_write()
+    {
+        let sand_text = "The heavy sand drags through viscous silt while the thought keeps moving.";
+        let stone_text = "The heavy stone is a hard granite block, fixed and immovable.";
+        let sand = spectral_drag_quality_v1(sand_text, &encode_text(sand_text))
+            .expect("heavy sand text should produce drag report");
+        let stone = spectral_drag_quality_v1(stone_text, &encode_text(stone_text))
+            .expect("heavy stone text should produce drag report");
+
+        assert_eq!(sand.policy, "spectral_drag_quality_v1");
+        assert_eq!(sand.state, "granular_viscous_drag_visible");
+        assert_eq!(stone.state, "rigid_inertial_drag_visible");
+        assert!(
+            sand.granular_drag_score > stone.granular_drag_score,
+            "sand={sand:?} stone={stone:?}"
+        );
+        assert!(
+            stone.rigid_drag_score > sand.rigid_drag_score,
+            "sand={sand:?} stone={stone:?}"
+        );
+        assert!(sand.quality_separation > 0.10, "{sand:?}");
+        assert!(stone.quality_separation > 0.10, "{stone:?}");
+        assert!(!sand.live_vector_write);
+        assert!(!sand.live_gain_write);
+        assert!(!sand.reserved_dim_write);
+        assert_eq!(sand.reserved_dim_candidate, 45);
+        let delta = sand
+            .experience_delta_bus_v1
+            .deltas
+            .iter()
+            .find(|delta| delta.surface == "spectral_drag_quality_v1")
+            .expect("drag report should emit truth-channel delta");
+        assert_eq!(delta.kind, ExperienceDeltaKindV1::Translate);
+        assert_eq!(delta.dimension, Some(45));
+        assert_eq!(
+            delta.authority,
+            "truth_channel_only_not_live_vector_gain_or_reserved_dim_change"
+        );
+        assert!(
+            delta
+                .who_can_change_it
+                .contains("live codec gain or reserved-dim write"),
+            "{delta:?}"
+        );
+    }
+
+    #[test]
+    fn spectral_drag_quality_stays_quiet_for_low_weight_text() {
+        let text = "The small note turns lightly in a clear room.";
+        let report = spectral_drag_quality_v1(text, &encode_text(text))
+            .expect("plain text should produce drag report");
+
+        assert_eq!(report.state, "low_spectral_drag_signal");
+        assert_eq!(report.experience_delta_bus_v1.delta_count, 0);
+        assert!(report.experience_delta_bus_v1.deltas.is_empty());
+        assert!(!report.live_vector_write);
+        assert!(!report.live_gain_write);
+        assert!(!report.reserved_dim_write);
+    }
+
+    #[test]
+    fn codec_emotional_narrative_delta_check_flags_arc_shift_emotional_flatline() {
+        let mut previous = vec![0.0_f32; SEMANTIC_DIM];
+        let mut current = vec![0.0_f32; SEMANTIC_DIM];
+        previous[24] = 0.22;
+        previous[26] = 0.18;
+        current[24] = 0.22;
+        current[26] = 0.18;
+        current[40] = 0.62;
+        current[41] = -0.48;
+        current[42] = 0.41;
+        current[43] = -0.33;
+
+        let check = codec_emotional_narrative_delta_check_v1(&previous, &current)
+            .expect("48D vector should produce codec delta check");
+
+        assert_eq!(check.policy, "codec_emotional_narrative_delta_check_v1");
+        assert_eq!(check.state, "narrative_shift_emotional_flatline_watch");
+        assert!(check.resonance_flatline_watch, "{check:?}");
+        assert!(check.narrative_delta_energy >= 0.25, "{check:?}");
+        assert!(check.emotional_delta_energy <= 0.05, "{check:?}");
+        assert!((check.narrative_velocity[0] - 0.62).abs() < 0.001);
+        assert_eq!(check.emotional_velocity[0], 0.0);
+        assert!(!check.live_gain_write);
+        assert!(!check.live_vector_write);
+        assert!(!check.reserved_dim_write);
+        assert_eq!(check.experience_delta_bus_v1.delta_count, 1);
+        let delta = &check.experience_delta_bus_v1.deltas[0];
+        assert_eq!(delta.kind, ExperienceDeltaKindV1::Translate);
+        assert_eq!(delta.lane, "emotional_markers_24_31_vs_narrative_arc_40_43");
+        assert!(delta.loss.is_some_and(|value| value >= 0.25));
+        assert_eq!(
+            delta.authority,
+            "truth_channel_only_not_live_vector_gain_or_reserved_dim_change"
+        );
+        assert_eq!(
+            check.authority,
+            "read_only_delta_check_not_semantic_gain_reserved_dim_or_live_vector_change"
+        );
+    }
+
+    #[test]
+    fn codec_emotional_narrative_delta_check_keeps_opposite_intent_visible() {
+        let mut previous = vec![0.0_f32; SEMANTIC_DIM];
+        let mut current = vec![0.0_f32; SEMANTIC_DIM];
+        for value in &mut previous[0..24] {
+            *value = 0.31;
+        }
+        for value in &mut current[0..24] {
+            *value = 0.31;
+        }
+        previous[24] = -0.66;
+        previous[25] = 0.58;
+        previous[26] = -0.52;
+        previous[31] = -0.61;
+        current[24] = 0.66;
+        current[25] = -0.58;
+        current[26] = 0.52;
+        current[31] = 0.61;
+
+        let check = codec_emotional_narrative_delta_check_v1(&previous, &current)
+            .expect("48D vector should produce codec delta check");
+
+        assert_eq!(check.state, "emotional_intent_visible_without_arc_shift");
+        assert!(!check.resonance_flatline_watch, "{check:?}");
+        assert!(check.emotional_delta_energy >= 0.12, "{check:?}");
+        assert!(check.narrative_delta_energy < 0.10, "{check:?}");
+        assert!((check.emotional_velocity[0] - 1.32).abs() < 0.001);
+        assert!((check.emotional_velocity[1] + 1.16).abs() < 0.001);
+        assert_eq!(
+            check.recommendation,
+            "keep_emotional_markers_as_primary_evidence_even_when_surface_structure_matches"
+        );
+        assert!(!check.live_gain_write);
+        assert!(!check.live_vector_write);
+        assert!(!check.reserved_dim_write);
+        assert!(check.experience_delta_bus_v1.is_empty());
+    }
+
+    #[test]
+    fn narrative_and_semantic_lanes_can_move_together_without_gain_authority() {
+        let mut previous = vec![0.0_f32; SEMANTIC_DIM];
+        let mut current = vec![0.0_f32; SEMANTIC_DIM];
+        previous[32] = 0.20;
+        previous[33] = -0.12;
+        previous[40] = 0.10;
+        previous[41] = -0.08;
+        current[24] = 0.56;
+        current[26] = 0.54;
+        current[32] = 0.64;
+        current[33] = -0.50;
+        current[40] = 0.68;
+        current[41] = -0.60;
+
+        let check = codec_emotional_narrative_delta_check_v1(&previous, &current)
+            .expect("48D vector should produce codec delta check");
+
+        assert_eq!(check.policy, "codec_emotional_narrative_delta_check_v1");
+        assert_eq!(check.state, "narrative_shift_emotional_markers_follow");
+        assert!(!check.resonance_flatline_watch, "{check:?}");
+        assert!(check.narrative_delta_energy >= 0.25, "{check:?}");
+        assert!(check.emotional_delta_energy >= 0.12, "{check:?}");
+        assert!(check.narrative_velocity[0] > 0.50, "{check:?}");
+        assert!(check.emotional_velocity[0] > 0.50, "{check:?}");
+        assert_eq!(
+            check.authority,
+            "read_only_delta_check_not_semantic_gain_reserved_dim_or_live_vector_change"
+        );
+    }
+
+    #[test]
+    fn glimpse_codec_is_stable_across_repeated_same_vector_calls() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        for (idx, value) in features.iter_mut().enumerate() {
+            *value = ((idx as f32 + 1.0) / SEMANTIC_DIM as f32).sin();
+        }
+        features[24] = 0.72;
+        features[26] = 0.48;
+        features[31] = -0.33;
+
+        let first = GlimpseCodec::derive_12d(&features).expect("48D vector should reduce");
+        let second = GlimpseCodec::derive_12d(&features).expect("same vector should reduce");
+        assert_eq!(first, second);
+        assert_eq!(first.len(), 12);
+    }
+
+    #[test]
+    fn multi_scale_context_pairs_12d_glimpse_with_32d_residual_shadow_metadata() {
+        let context = multi_scale_context_v1();
+
+        assert_eq!(context.policy, "multi_scale_context_v1");
+        assert_eq!(context.source_dim_count, SEMANTIC_DIM);
+        assert_eq!(context.live_transport_dim_count, 32);
+        assert_eq!(context.glimpse_dim_count, 12);
+        assert_eq!(context.residual_dim_count, 32);
+        assert_eq!(context.residual_source_range, (16, 47));
+        assert!(context.pairing_rule.contains("12d_glimpse"));
+        assert!(context.pairing_rule.contains("32d_residual"));
+        assert!(
+            context
+                .shadow_energy_metadata_tag
+                .contains("shadow_field_energy")
+        );
+        assert!(context.preserves_warmth_and_tail_bridge);
+        assert!(!context.live_vector_write);
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("multi_scale_context_v1"));
+        assert!(rendered.contains("shadow_field_energy_preserved"));
+        assert!(rendered.contains("live_transport_dims=32"));
+    }
+
+    #[test]
+    fn codec_intent_structure_review_separates_complexity_from_emotional_intent() {
+        let mut structure_heavy = vec![0.0_f32; SEMANTIC_DIM];
+        for value in &mut structure_heavy[0..24] {
+            *value = 0.62;
+        }
+        structure_heavy[18] = 1.2;
+        structure_heavy[20] = 1.0;
+        structure_heavy[24] = 0.04;
+        structure_heavy[26] = 0.05;
+
+        let review = codec_intent_structure_separation_v1(&structure_heavy)
+            .expect("48D vector should produce intent/structure review");
+        assert_eq!(review.policy, "codec_intent_structure_separation_v1");
+        assert_eq!(review.state, "structure_heavy_intent_thin_watch");
+        assert!(review.structural_complexity > review.emotional_intensity);
+        assert!(review.intent_structure_delta > 0.30, "{review:?}");
+        assert!(!review.live_gain_write);
+        assert!(!review.live_vector_write);
+
+        let mut emotionally_simple = vec![0.02_f32; SEMANTIC_DIM];
+        emotionally_simple[24] = 0.9;
+        emotionally_simple[26] = 0.8;
+        emotionally_simple[27] = 0.7;
+        emotionally_simple[31] = 0.6;
+        let simple_review = codec_intent_structure_separation_v1(&emotionally_simple)
+            .expect("48D vector should produce intent/structure review");
+        assert_eq!(
+            simple_review.state,
+            "simple_text_emotional_intent_preserved"
+        );
+        assert!(simple_review.emotional_intensity > simple_review.structural_complexity);
+        assert_eq!(
+            simple_review.authority,
+            "read_only_codec_review_not_semantic_weighting_or_gain_change"
+        );
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("CODEC_INTENT_STRUCTURE_REVIEW"));
+    }
+
+    #[test]
+    fn multi_scale_observer_names_distillation_without_live_transport_change() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[17] = 0.7;
+        features[24] = 0.9;
+        features[25] = 0.4;
+        features[26] = 0.8;
+        features[27] = 0.7;
+        features[28] = 0.5;
+        features[29] = 0.45;
+        features[30] = 0.35;
+        features[31] = 0.75;
+        features[32] = 0.22;
+        features[33] = 0.18;
+        features[40] = 0.55;
+        features[41] = -0.45;
+        features[42] = 0.35;
+
+        let observer = multi_scale_observer_v1(&features, 0.90, 0.11, 0.32)
+            .expect("48D vector should produce multi-scale observer");
+
+        assert_eq!(observer.policy, "multi_scale_observer_v1");
+        assert_eq!(observer.layer_name, "glimpse_layer_distillation_v1");
+        assert_eq!(observer.observer_language, "distillation_not_compression");
+        assert_eq!(observer.state, "high_entropy_distillation_supported");
+        assert_eq!(observer.source_dim_count, SEMANTIC_DIM);
+        assert_eq!(observer.live_transport_dim_count, 32);
+        assert_eq!(observer.glimpse_dim_count, 12);
+        assert!(observer.glimpse_fidelity_score >= observer.fidelity_threshold);
+        assert!(observer.source_resonance_proxy > 0.0);
+        assert!(observer.glimpse_resonance_proxy > 0.0);
+        assert!(observer.resonance_loss_ratio <= observer.resonance_loss_threshold);
+        assert!(!observer.fallback_to_live_transport_review);
+        assert_eq!(observer.anchor_continuity_score, 1.0);
+        assert_eq!(
+            observer.experience_delta_bus_v1.policy,
+            "experience_delta_bus_v1"
+        );
+        assert_eq!(observer.experience_delta_bus_v1.delta_count, 1);
+        assert!(!observer.live_transport_change);
+        assert!(!observer.live_vector_write);
+        assert_eq!(
+            observer.authority,
+            "read_only_multi_scale_review_not_live_bus_or_codec_contract_change"
+        );
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("MULTI_SCALE_OBSERVER_READOUT"));
+        assert!(rendered.contains("distillation_not_compression"));
+    }
+
+    #[test]
+    fn multi_scale_observer_flags_resonance_loss_before_glimpse_use() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[5] = 5.0;
+        features[11] = -4.0;
+        features[17] = 0.2;
+        features[24] = 0.1;
+        features[25] = -0.1;
+        features[26] = 0.2;
+        features[27] = 0.1;
+        features[31] = 0.2;
+
+        let observer = multi_scale_observer_v1(&features, 0.88, 0.18, 0.34)
+            .expect("48D vector should produce multi-scale observer");
+
+        assert_eq!(observer.policy, "multi_scale_observer_v1");
+        assert_eq!(observer.state, "glimpse_resonance_loss_watch");
+        assert!(observer.fallback_to_live_transport_review, "{observer:?}");
+        assert!(
+            observer.resonance_loss_ratio > observer.resonance_loss_threshold,
+            "{observer:?}"
+        );
+        assert!(!observer.live_transport_change);
+        assert!(!observer.live_vector_write);
+        assert!(
+            observer
+                .experience_delta_bus_v1
+                .deltas
+                .iter()
+                .any(|delta| delta.kind == ExperienceDeltaKindV1::Gate
+                    && delta.lane == "glimpse_resonance_fallback_to_live_48d_review"),
+            "{observer:?}"
+        );
+    }
+
+    #[test]
+    fn glimpse_codec_preserves_tail_bridge_and_identity_asymmetry() {
+        let mut settled_coupling = vec![0.0_f32; SEMANTIC_DIM];
+        settled_coupling[24] = 0.9;
+        settled_coupling[26] = 1.4;
+        settled_coupling[27] = 1.1;
+        settled_coupling[31] = 1.2;
+        settled_coupling[32] = 0.3;
+        settled_coupling[33] = 0.2;
+
+        let mut active_texture = vec![0.0_f32; SEMANTIC_DIM];
+        active_texture[24] = 0.2;
+        active_texture[26] = 0.2;
+        active_texture[27] = 0.3;
+        active_texture[31] = 0.2;
+        active_texture[32] = 1.2;
+        active_texture[33] = -1.1;
+        active_texture[34] = 1.0;
+        active_texture[40] = 0.9;
+        active_texture[41] = -0.7;
+
+        let settled = GlimpseCodec::derive_12d(&settled_coupling).expect("settled glimpse");
+        let active = GlimpseCodec::derive_12d(&active_texture).expect("active glimpse");
+
+        assert!(
+            settled[10] > active[10],
+            "settled coupling should preserve stronger tail bridge: settled={settled:?} active={active:?}"
+        );
+        assert!(
+            active[8] > settled[8],
+            "active texture should preserve stronger embedding-projected activity: settled={settled:?} active={active:?}"
+        );
+        assert!(
+            (settled[10] - active[10]).abs() > 0.20 || (active[8] - settled[8]).abs() > 0.20,
+            "12D companion should distinguish settled coupling from active texture"
+        );
     }
 
     /// Offline proof for the tail-participation aperture (her consent evidence): at
@@ -6108,6 +12098,55 @@ mod tests {
             }
         }
         assert!(amplified, "raised participation amplified no tail dim");
+    }
+
+    #[test]
+    fn gradient_aware_vibrancy_damps_steep_entropy_smear() {
+        // Astrid `introspection_astrid_codec_1783322940`: high entropy should
+        // not by itself smear a steep cascade; tail lift is strongest when the
+        // density-gradient is low enough that the signal risks sinking into a
+        // flat floor.
+        let flat = vibrancy_from_entropy_and_density_gradient(0.95, 0.05);
+        let steep = vibrancy_from_entropy_and_density_gradient(0.95, 0.85);
+        assert!(flat > 0.0, "flat high-entropy state should still lift");
+        assert!(
+            steep < flat * 0.25,
+            "steep gradient should damp the entropy lift: flat={flat} steep={steep}"
+        );
+
+        let mut navigable = vec![0.0; SEMANTIC_DIM];
+        navigable[26] = 4.95;
+        let mut front_loaded = navigable.clone();
+        apply_spectral_feedback_inner(
+            &mut navigable,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                vec![100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0],
+                0.95,
+            )),
+            1.0,
+            1.0,
+        );
+        apply_spectral_feedback_inner(
+            &mut front_loaded,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                vec![100.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0],
+                0.95,
+            )),
+            1.0,
+            1.0,
+        );
+
+        assert!(
+            navigable[26] > front_loaded[26],
+            "navigable high entropy should carry more tail than a steep cascade: navigable={} front_loaded={}",
+            navigable[26],
+            front_loaded[26]
+        );
+        assert!(
+            front_loaded[26] <= FEATURE_ABS_MAX + 0.05,
+            "steep high-entropy state should remain near the default ceiling: {}",
+            front_loaded[26]
+        );
     }
 
     // Offline proof for the dynamic vibrancy CEILING aperture (her SET_VIBRANCY_APERTURE consent
@@ -6252,6 +12291,96 @@ mod tests {
         assert!(
             nearer_slope < near_slope * 0.2,
             "nearer_slope={nearer_slope}, near_slope={near_slope}"
+        );
+    }
+
+    #[test]
+    fn tail_vibrancy_gate_is_smooth_at_requested_entropy_points() {
+        let below = vibrancy_from_entropy(0.84);
+        let gate = vibrancy_from_entropy(0.85);
+        let above = vibrancy_from_entropy(0.86);
+
+        assert_eq!(below, 0.0);
+        assert_eq!(gate, 0.0);
+        assert!(above > 0.0);
+        assert!(above < 0.02, "0.86 should start gently, got {above}");
+        assert!(vibrancy_from_entropy(0.90) > above);
+    }
+
+    #[test]
+    fn tail_vibrancy_exact_gate_keeps_default_ceiling_and_reserved_dims() {
+        let mut features = vec![0.0_f32; SEMANTIC_DIM];
+        features[17] = 4.95;
+        features[26] = 4.95;
+        features[27] = -4.95;
+        features[31] = 4.95;
+        features[44] = 0.25;
+        features[45] = -0.25;
+        let reserved_before = features[44..48].to_vec();
+
+        apply_spectral_feedback_inner(
+            &mut features,
+            Some(&telemetry_with_typed_entropy_and_eigenvalues(
+                vec![100.0, 98.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0],
+                TAIL_VIBRANCY_ENTROPY_GATE,
+            )),
+            1.0,
+            3.0,
+        );
+
+        assert_eq!(vibrancy_from_entropy(TAIL_VIBRANCY_ENTROPY_GATE), 0.0);
+        for idx in [17usize, 26, 27, 31] {
+            assert!(
+                features[idx].abs() <= FEATURE_ABS_MAX + 1.0e-6,
+                "exact entropy gate must not raise tail ceiling for dim {idx}: {}",
+                features[idx]
+            );
+        }
+        assert_eq!(
+            &features[44..48],
+            reserved_before.as_slice(),
+            "exact entropy gate must not write reserved shadow/projection dims"
+        );
+    }
+
+    #[test]
+    fn tail_vibrancy_entropy_090_is_visible_but_gentler_than_linear() {
+        // Astrid `introspection_astrid_codec_1783638177`: if the 0.90 lift is
+        // too small, tail vibrancy may feel invisible; if it is linear/sharp,
+        // it risks the pop this smoothstep was built to avoid.
+        let entropy = 0.90_f32;
+        let ramp = ((entropy - TAIL_VIBRANCY_ENTROPY_GATE) / (1.0 - TAIL_VIBRANCY_ENTROPY_GATE))
+            .clamp(0.0, 1.0);
+        let smooth = vibrancy_from_entropy(entropy);
+
+        assert!(
+            smooth > 0.20,
+            "0.90 entropy lift should be visible: {smooth}"
+        );
+        assert!(
+            smooth < ramp,
+            "smoothstep should remain gentler than a linear retune: smooth={smooth}, linear={ramp}"
+        );
+        assert!(
+            smooth > vibrancy_from_entropy(0.86),
+            "0.90 should carry more lift than boundary-adjacent entropy"
+        );
+    }
+
+    #[test]
+    fn tail_vibrancy_gate_stays_tiny_across_reported_boundary_pair() {
+        let just_below = vibrancy_from_entropy(0.849);
+        let just_above = vibrancy_from_entropy(0.851);
+        let farther_above = vibrancy_from_entropy(0.861);
+
+        assert_eq!(just_below, 0.0);
+        assert!(
+            just_above < 0.0002,
+            "0.851 should barely move the smoothstep lift, got {just_above}"
+        );
+        assert!(
+            farther_above > just_above,
+            "smoothstep should still rise monotonically after the gentle onset"
         );
     }
 

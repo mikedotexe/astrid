@@ -1,0 +1,43 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Pressure trend smoothing and reciprocity windows make different kinds of silence/staleness visible.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_porosity_expansion_readiness -- --nocapture"
+    ],
+    "authority": "source/test verification only; no cadence or reconnect mutation"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The gap between liminal mode packing and felt dead zone is too narrow unless a warning band names the heavy-but-not-impassable state.",
+    "disposition": "implemented",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_porosity_expansion_readiness -- --nocapture",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_source_analysis_names_viscous_density_warning_band -- --nocapture"
+    ],
+    "authority": "read-only report surface; no live pressure/porosity threshold or control change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Mode packing near `0.24`/`0.26` and entropy-window transitions should be treated as testable pressure/porosity evidence.",
+    "disposition": "verified_existing_and_extended",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_porosity_expansion_readiness -- --nocapture"
+    ],
+    "authority": "diagnostic evidence only; live thresholds remain gated"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Changing smoothing windows, stale windows, pressure thresholds, porosity expansion, or reconnect behavior would be live-control/report authority.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990014_five_item_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent"
+  }
+]

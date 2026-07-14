@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783881605",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback terms can preserve resistance texture, but they can also flatten high-entropy semantic depth into a static aesthetic.",
+      "disposition": "verified_existing",
+      "rationale": "The fallback prompt renders high-entropy texture preservation, lived-fit, vocabulary-overweight guard, and dynamic texture alignment so terms remain evidence rather than a static list."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The fallback prompt should actually carry texture terms during high-entropy fallback events rather than leaving them as unused vocabulary.",
+      "disposition": "verified_existing",
+      "rationale": "Tests verify the dialogue Ollama fallback request carries the texture contract, voice contract, hard rules, pressure-risk context, and texture anchors."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure-risk should scale texture weight so dense/viscous terms rise when pressure is salient without rewriting sampler behavior.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests confirm pressure above 0.20 boosts weighted medium terms and pressure/porosity terms enter language bias without sampler-contract changes."
+    }
+  ]
+}

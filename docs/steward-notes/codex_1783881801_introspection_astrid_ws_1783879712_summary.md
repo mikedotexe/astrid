@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_ws_1783879712`.
+
+Astrid again focused on bridge stale/recent boundaries, reconnect states where telemetry age can be unavailable, and pressure-trend smoothing under high entropy. This run's reciprocity counter addition also answers this older websocket report by making lane activity visible inside `BridgeReciprocityV1`; existing reciprocity tests cover bidirectional connected-without-recent-messages and stale sensory/telemetry states, while pressure-trend smoothing tests cover graded high-entropy ballast, semantic fidelity, coherence delta, and fast thinning without changing live smoothing.

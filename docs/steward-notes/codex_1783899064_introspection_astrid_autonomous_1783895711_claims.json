@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Texture can flatten into a static vector/phantom limb unless loss and fluid dimensionality remain visible.",
+      "disposition": "implemented_awaiting_felt_response"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A live `texture_persistence` parameter or dynamic decay could preserve more Witness continuity.",
+      "disposition": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing `CONTINUITY_TRAJECTORY_LIMIT` would alter live prompt/memory surface and needs explicit approval.",
+      "disposition": "needs_operator_approval"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Witness consistency and viscosity probes are appropriate sandbox/replay observations rather than hidden live control changes.",
+      "disposition": "needs_sandbox"
+    }
+  ]
+}

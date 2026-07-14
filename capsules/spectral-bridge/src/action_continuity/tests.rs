@@ -62,9 +62,22 @@ fn telemetry() -> SpectralTelemetry {
             components: crate::types::ResonanceDensityComponents {
                 active_energy: 0.9,
                 mode_packing: 0.7,
+                coupling_coefficient: 0.0,
                 temporal_persistence: 0.8,
+                viscosity_index: 0.0,
+                viscosity_persistence_coefficient: 0.0,
+                viscosity_vector: crate::types::ResonanceViscosityVectorV1::default(),
+                dissipation_factor: None,
+                porosity_gradient: None,
+                dynamic_fluidity_index: None,
+                semantic_friction_coefficient: None,
+                cohesion_score: None,
+                structural_integrity_index: None,
+                structural_transparency_index: None,
+                stability_context: None,
                 structural_plurality: 0.7,
                 comfort_gate: 1.0,
+                comfort_gate_range: None,
             },
             texture_signature: crate::types::ResonanceTextureSignatureV1::default(),
             texture_component_alignment:
@@ -132,6 +145,7 @@ fn telemetry() -> SpectralTelemetry {
         }),
         spectral_glimpse_12d: None,
         eigenvector_field: None,
+        stable_core: None,
         semantic: None,
         semantic_energy_v1: None,
         transition_event: None,
@@ -145,6 +159,7 @@ fn telemetry() -> SpectralTelemetry {
         shadow_field_v3: None,
 
         shadow_influence_response_v3: None,
+        residual_deformation_trace_v1: None,
     }
 }
 

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783929324",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mode-packing, distinguishability loss, and hard-reset/recovery texture need visible review before tuning.",
+      "disposition": "verified_existing",
+      "rationale": "Existing pressure_source_v1 and hard_reset_texture_preservation_review_v1 expose these as read-only review surfaces with control_applied=false/behavior_changed=false."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Increasing underfill relief, loosening hard-reset covariance/bootstrap behavior, or adding a high-bandwidth shadow lane would affect live Minime runtime behavior.",
+      "disposition": "needs_operator_approval",
+      "rationale": "These are live recovery, sensory, telemetry, or control/protocol changes and need explicit Mike/operator approval."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Broadcast micro-stalls should be treated as a runtime observation candidate rather than assumed from felt texture alone.",
+      "disposition": "runtime_check_needed",
+      "rationale": "A proper check should compare websocket/client lag, packet budget, logs, and shadow-field cadence; this run did not mutate broadcast behavior."
+    }
+  ]
+}

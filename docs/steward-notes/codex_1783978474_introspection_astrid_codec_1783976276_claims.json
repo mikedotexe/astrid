@@ -1,0 +1,42 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Projection epoch metadata should persist through `write_projection_epoch_payload_atomic` and be readable by `projection_epoch_id_from_file`.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/codec.rs::codec_projection_epoch_atomic_writer_round_trips_payload",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_projection_epoch_atomic_writer_round_trips_payload -- --nocapture"
+    ],
+    "authority": "test-only regression; runtime directory behavior unchanged"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Codec runtime directory resolution should honor `ASTRID_CODEC_RUNTIME_DIR`, executable-relative fallback, and relative fallback paths explicitly.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "capsules/spectral-bridge/src/codec.rs::projection_runtime_dir_from_parts",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_projection_runtime_dir_uses_env_or_executable_relative_cache -- --nocapture"
+    ],
+    "authority": "source/test verification only; no runtime path policy changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Projection consistency should remain pinned to deterministic source-loop behavior for the 768D-to-8D dynamic projection.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "capsules/spectral-bridge/src/codec.rs::dynamic_projection_matches_full_source_loop",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib dynamic_projection_matches_full_source_loop -- --nocapture"
+    ],
+    "authority": "read-only test verification; projection matrix and live 48D vector unchanged"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Adding an explicit writability/error-handling wrapper for configured runtime directories would change codec runtime persistence policy and should remain a separate approval-scoped design if desired.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "current fallback remains kernel-derived deterministic epoch when persistence fails",
+      "projection_runtime_resolution_v1 documents who_can_change_it=Mike/operator_or_deploy_env"
+    ],
+    "authority": "Tier 4/5 runtime persistence policy gate; no live persistence policy change applied"
+  }
+]

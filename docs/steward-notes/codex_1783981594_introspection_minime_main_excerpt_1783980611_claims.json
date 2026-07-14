@@ -1,0 +1,59 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "EigenPacket is the primary telemetry contract and now carries typed spectral shape fields, not only scalar magnitudes.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/main.rs:229",
+      "/Users/v/other/minime/minime/src/main.rs:250",
+      "/Users/v/other/minime/minime/src/main.rs:280",
+      "/Users/v/other/minime/minime/src/main.rs:303",
+      "/Users/v/other/minime/minime/src/main.rs:308"
+    ],
+    "authority": "source verification only"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The top-k eigenvector field can create serialization/payload pressure and needs bounded review evidence.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/main.rs:603",
+      "/Users/v/other/minime/minime/src/main.rs:8452",
+      "cargo test --manifest-path minime/Cargo.toml eigenpacket_payload_budget_review_flags_large_top_component_payload -- --nocapture"
+    ],
+    "authority": "read-only payload budget review; no websocket cadence or eigenvector export change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "spectral_fingerprint_v1 should map to SpectralFingerprintV1 and serialize alongside legacy spectral_fingerprint.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/spectral_fingerprint.rs:10",
+      "/Users/v/other/minime/minime/src/main.rs:8481",
+      "cargo test --manifest-path minime/Cargo.toml eigenpacket_serializes_legacy_and_typed_fingerprint -- --nocapture"
+    ],
+    "authority": "schema/test verification only"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Warm-start blend sensitivity is live damping/recovery behavior and should not be changed from introspection alone.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/main.rs:8764",
+      "/Users/v/other/minime/minime/src/main.rs:8781",
+      "cargo test --manifest-path minime/Cargo.toml spectral_damping_warm_start_review_gates_live_trial_without_control -- --nocapture"
+    ],
+    "authority": "Tier 5 damping/recovery wait; review packet only, no live recovery retune"
+  },
+  {
+    "claim_id": "c005",
+    "claim": "semantic_stale_shape influences timing windows and should be tested before any cadence or stale-window retune.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:143",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:3441",
+      "cargo test --manifest-path minime/Cargo.toml semantic_stale -- --nocapture"
+    ],
+    "authority": "targeted sensory-bus verification; no cadence or stale-window change"
+  }
+]

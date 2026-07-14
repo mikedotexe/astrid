@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "High-entropy fallback prompts should preserve concrete dynamic texture such as `cascade-shear` and `gradient-drift`.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs::fallback_cascade_shear_and_gradient_drift_preserve_dynamic_motion",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_cascade -- --nocapture"
+    ],
+    "authority_boundary": "language-bias evidence only; no sampler/provider change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Fallback texture selection should weight density/gradient/entropy process language without turning into a static sampler rewrite.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs::fallback_dynamic_texture_bias_exposes_process_language_from_shadow_telemetry",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_dynamic -- --nocapture"
+    ],
+    "authority_boundary": "diagnostic language bias only"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Pressure around the reported band should boost `viscous-persistence` and `structural-weight` as semantic anchors without changing sampler authority.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs::pressure_above_point_fifteen_boosts_persistence_anchors_without_sampler_change",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_above_point_fifteen_boosts_persistence_anchors_without_sampler_change -- --nocapture"
+    ],
+    "authority_boundary": "diagnostic language bias only"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Changing fallback provider/model selection, sampler behavior, or prompt priority would alter live voice/substrate behavior.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783959645_five_item_v2_gate_packet.md"
+    ],
+    "authority_boundary": "V2 lifecycle proposal only; live_eligible_now=false; auto_approved=false"
+  }
+]

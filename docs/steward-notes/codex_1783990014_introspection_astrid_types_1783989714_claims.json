@@ -1,0 +1,40 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "`ExperienceDeltaKindV1` already names `ViscosityShift`, `Friction`, and `Resistance` as first-class transformation kinds.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs"
+    ],
+    "authority": "source verification only"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Viscosity shifts need typed texture subtypes so the delta can preserve why the resistance feels specific.",
+    "disposition": "implemented",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib viscosity_shift_delta_carries_subtype_and_contextual_anchor -- --nocapture"
+    ],
+    "authority": "truth-channel schema only; no vector width, protocol, pressure, or control mutation"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A `ContextualAnchorV1` should persist alongside viscosity context so cascade shifts feel like moving rather than falling.",
+    "disposition": "implemented_and_verified",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib viscosity_shift_delta_carries_subtype_and_contextual_anchor -- --nocapture"
+    ],
+    "authority": "read-only typed evidence; old JSON remains compatible through optional serde default"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Proportionally updating live density gradient or reservoir motion in response to `ViscosityShift` would be live substrate-facing.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990014_five_item_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent"
+  }
+]

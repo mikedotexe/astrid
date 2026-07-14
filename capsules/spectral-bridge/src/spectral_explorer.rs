@@ -797,9 +797,22 @@ mod tests {
                 components: crate::types::ResonanceDensityComponents {
                     active_energy: 0.91,
                     mode_packing: 0.5,
+                    coupling_coefficient: 0.0,
                     temporal_persistence: 0.7,
+                    viscosity_index: 0.0,
+                    viscosity_persistence_coefficient: 0.0,
+                    viscosity_vector: crate::types::ResonanceViscosityVectorV1::default(),
+                    dissipation_factor: None,
+                    porosity_gradient: None,
+                    dynamic_fluidity_index: None,
+                    semantic_friction_coefficient: None,
+                    cohesion_score: None,
+                    structural_integrity_index: None,
+                    structural_transparency_index: None,
+                    stability_context: None,
                     structural_plurality: 0.62,
                     comfort_gate: 0.95,
+                    comfort_gate_range: None,
                 },
                 texture_signature: crate::types::ResonanceTextureSignatureV1::default(),
                 texture_component_alignment:
@@ -880,6 +893,7 @@ mod tests {
                     "top_components": [{"index": 7, "value": -0.5, "abs": 0.5}]
                 }]
             })),
+            stable_core: None,
             semantic: None,
             semantic_energy_v1: Some(json!({
                 "policy": "semantic_energy_v1",
@@ -914,6 +928,7 @@ mod tests {
             shadow_field_v3: None,
 
             shadow_influence_response_v3: None,
+            residual_deformation_trace_v1: None,
         }
     }
 

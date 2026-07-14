@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783712062",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Ollama fallback risks semantic flattening under high entropy and distinguishability loss.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "The fallback request now carries the Gemma 4 voice contract exactly once; existing dynamic texture selector/budget logic remains in force for high-entropy fallback."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "High-entropy, low-pressure fallback should preserve shimmering/lattice texture while respecting the sentence cap.",
+      "disposition": "verified_existing",
+      "rationale": Existing fallback tests assert entropy-preservation terms, max prose sentence budget, compact prompt hard rules, and final NEXT-line constraints."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "High density gradient plus pressure should preserve slope versus weighted-medium distinctions rather than generic heaviness.",
+      "disposition": "verified_existing",
+      "rationale": Existing `high_gradient_pressure_fallback_keeps_slope_medium_and_shadow_texture_distinct` and prompt render tests cover density_gradient, pressure_risk, weighted medium, and slope language."
+    }
+  ]
+}

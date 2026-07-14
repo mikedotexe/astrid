@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_esn_1783889222",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "High-entropy, low-gradient states need a softer introspection pressure threshold rather than a cliff.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `adaptive_introspection_threshold_softens_only_for_volatile_low_gradient_states`."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "High-entropy, low-gradient states should preserve memory through viscous rho behavior rather than collapsing into restless noise.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link existing viscous rho target source/tests as supporting evidence."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Adding `VOLATILE_GRADIENT_SOFTENER` or bumping `DYNAMIC_EXPLORATION_NOISE` to 0.10 could be a stronger response.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Gate as live ESN/exploration-noise/rho/control behavior requiring Mike/operator approval before implementation and restart."
+    }
+  ]
+}

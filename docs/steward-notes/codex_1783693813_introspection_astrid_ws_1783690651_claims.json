@@ -1,0 +1,46 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783690651",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "High-entropy pressure smoothing should avoid a sudden 5-to-15 sample window jump by interpolating between entropy 0.70 and 0.95.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+        "pressure_trend_dynamic_window_capacity_v1",
+        "pressure_viscosity_coefficient",
+        "pressure_trend_smoothing_uses_graded_high_entropy_ballast_window"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "At entropy below the high-entropy threshold, pressure should sharpen by staying on the base window instead of silently retaining high-entropy ballast.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+        "pressure_viscosity_coefficient",
+        "entropy_threshold_state_v1"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "A 90s high-entropy reflective stale window can feel like connected-not-seen ghosting if it never expires, so expiration evidence should stay visible.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+        "bridge_reciprocity_expires_high_entropy_reflective_silence_window",
+        "bridge_reflective_silence_extends_for_high_entropy_pressure"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing pressure smoothing thresholds, stale-window duration, or telemetry/sensory cadence would be live bridge authority and should stay operator-gated unless explicitly approved.",
+      "disposition": "needs_operator_approval",
+      "evidence": [
+        "docs/steward-notes/codex_1783693813_introspection_astrid_ws_1783690651_pressure_stale_window_approval_packet.md",
+        "no pressure, stale-window, sensory cadence, or controller behavior changed",
+        "authority boundary recorded in claim disposition"
+      ]
+    }
+  ]
+}

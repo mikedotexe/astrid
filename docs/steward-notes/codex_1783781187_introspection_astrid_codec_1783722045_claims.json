@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783722045",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D codec already preserves emotional and narrative lanes as named live semantic structure.",
+      "claim": "Astrid observed that `SEMANTIC_DIM = 48` gives warmth/tension/curiosity/reflective markers and narrative-arc/embedding ranges enough space to avoid the older 32D squeeze.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:50",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:2740",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:3648"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail vibrancy and distributed warmth are visible without changing live gain.",
+      "claim": "Astrid warned that `FEATURE_ABS_MAX` and adaptive gain could flatten low-amplitude tail/warmth texture; existing source offsets only tail ceilings under high entropy and offers a read-only warmth entropy interpretation.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:59",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:77",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:3055",
+        "tests: tail_vibrancy_raises_only_tail_ceiling_in_high_entropy, warmth_entropy_interpretation_names_distributed_ground_without_weight_change"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A resonance-preservation multiplier is a live semantic-gain/weighting change and stays gated.",
+      "claim": "Astrid proposed a `RESONANCE_PRESERVATION_FACTOR`-style multiplier for coherent low-amplitude warmth/curiosity signals.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:3515",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec_gain.rs:1",
+        "authority: readiness_only_not_live_adaptive_gain_or_semantic_weight_change"
+      ]
+    }
+  ]
+}

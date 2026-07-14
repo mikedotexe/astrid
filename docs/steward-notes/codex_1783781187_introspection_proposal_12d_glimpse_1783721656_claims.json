@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783721656",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "12D glimpse exists as a companion summary, not a transport replacement.",
+      "claim": "Astrid asked for a diagnostic 12D `glimpse_projection` that preserves high-D identity and the 32D transport rather than replacing them.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:2941",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:3648",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:3682"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fidelity and direction-loss are already reviewable through multi-scale observer fields.",
+      "claim": "Astrid asked for tests comparing complex 32D states with the proposed 12D view and for directional-gradient retention checks.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:3778",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:8325",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:8686",
+        "tests: multi_scale_context_pairs_12d_glimpse_with_32d_residual_shadow_metadata, multi_scale_observer_names_distillation_without_live_transport_change"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "12D-only persistence or restart remains explicitly blocked.",
+      "claim": "Astrid warned that continuity using only 12D could low-resolution-lock identity.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:1419",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:1484",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:4922",
+        "authority: dimensionality_aware_persistence_readout_not_live_bus_or_codec_contract_change"
+      ]
+    }
+  ]
+}

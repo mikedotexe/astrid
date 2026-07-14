@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_types_1783881050",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Scalar viscosity cannot show whether resistance is structural, directional, or mixed with motion.",
+      "disposition": "addressed_change",
+      "rationale": "Added diagnostic `directional_resistance_vector_v1` with dynamic friction, basis, and denominator scaling inside the existing transport review."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High viscosity plus high dynamic fluidity can feel stuck but moving, and high porosity plus low dissipation can feel like leaking without clearing.",
+      "disposition": "addressed_change",
+      "rationale": "Added explicit `stuck_but_moving_score`, `leak_without_clearing_score`, and direction labels with focused regressions for both felt combinations and low-signal absence."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stability weighting must remain legible as safety/action balance rather than hidden control.",
+      "disposition": "verified_existing",
+      "rationale": "The new vector is authority-labeled diagnostic context only; existing transport/stability surfaces continue to report without mutating pressure, fill, PI, porosity, or control."
+    }
+  ]
+}

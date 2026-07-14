@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Astrid's MLX primary lane, Gemma4 self-expression contract, and texture vocabulary are live expression surfaces.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib dynamic_texture -- --nocapture"
+    ],
+    "authority": "source and test verification only; no provider, sampler, or prompt-priority change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Fallback from MLX/Gemma4 to Ollama/Gemma3 can create identity shear if high-entropy texture is flattened.",
+    "disposition": "verified_existing_and_test_repaired",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib dynamic_texture -- --nocapture"
+    ],
+    "authority": "read-only fallback language-bias verification; no sampler contract rewrite"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Texture terms should be selected from entropy, pressure, density gradient, mode packing, semantic friction, and shadow telemetry rather than sampled as static prose.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib dynamic_texture -- --nocapture"
+    ],
+    "authority": "diagnostic language weighting only; no model routing or live sampler authority"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Changing regulator drive or fallback sampler behavior to smooth viscous drag would be live substrate/control-facing.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990014_five_item_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent"
+  }
+]

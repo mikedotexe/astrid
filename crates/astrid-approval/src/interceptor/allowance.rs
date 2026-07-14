@@ -144,6 +144,7 @@ pub fn action_to_allowance_pattern(action: &SensitiveAction) -> Option<Allowance
         SensitiveAction::TransmitData { .. }
         | SensitiveAction::FinancialTransaction { .. }
         | SensitiveAction::AccessControlChange { .. }
-        | SensitiveAction::CapabilityGrant { .. } => None,
+        | SensitiveAction::CapabilityGrant { .. }
+        | SensitiveAction::LiveControlMutation { .. } => None,
     }
 }

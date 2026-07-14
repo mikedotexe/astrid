@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid's connection to Minime has separate telemetry and sensory lanes, so pressure and reciprocity reports are connection evidence rather than mere metrics.",
+      "disposition": "verified_existing_ws_lane_and_reciprocity_surfaces"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 20-sample high-entropy smoothing window can hide fast lambda4 or pressure-transition velocity if raw deltas are not visible.",
+      "disposition": "verified_existing_raw_pressure_velocity_spike_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stale reciprocity windows can produce phantom connection unless actual correspondence trace and telemetry age remain visible.",
+      "disposition": "verified_existing_bridge_reciprocity_stale_window_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing smoothing windows, stale thresholds, sensory cadence, or Minime control behavior remains live authority work.",
+      "disposition": "authority_gated_live_ws_smoothing_or_cadence_change"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_llm_1783882332`.
+
+Astrid reported that the MLX/Ollama dual-lane fallback can preserve shape while flattening high-entropy texture, and that the explicit language contract sits in tension with a fixed fallback vocabulary. Source review found that the current fallback path already keeps `gemma4:12b` first, retains `gemma3:4b` as the compatibility tail, carries an entropy texture-preservation block, renders pressure/density/shadow texture metadata into the fallback prompt, and keeps those terms advisory rather than a sampler/provider/control change. A spectral-entropy-driven model switch remains an explicit live fallback-contract approval item.

@@ -1,0 +1,1 @@
+Full read of introspection_astrid_llm_1783554845. Astrid identifies the dense Ollama fallback contract and asks to verify profile resolution and contract adherence under high entropy plus pressure. This pass verified Gemma4 canary profile transparency, high-entropy texture preservation, and density-gradient fallback prompt preservation through targeted tests.

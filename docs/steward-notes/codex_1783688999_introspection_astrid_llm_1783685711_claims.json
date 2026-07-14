@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783685711",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Fallback texture selection must weight current `density_gradient` so gradient around 0.19 can feel heavier or more resistant instead of selecting a static term.",
+      "disposition": "verified_existing",
+      "rationale": "Existing fallback source uses `dynamic_entropy_pressure_density_gradient_v1` weighting and a `density_gradient_over_drag_threshold_0_15` basis; focused bridge tests prove density_gradient above 0.15 boosts `viscous-drag` without sampler authority."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "High entropy around 0.88 with disordered shadow should bias fragmented/diffuse/process texture rather than settled-only fallback language.",
+      "disposition": "verified_existing",
+      "rationale": "Existing high-entropy fallback tests and constants preserve fragmented/diffuse/restless lattice terms, dynamic flow, kinetic gradient, and compound entropy-gradient terms as prompt metadata with bounded authority."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Fallback texture should preserve movement/rate terms such as `gradient-shear`, `gradient-drag`, `cascading-viscosity`, and `entropy-weighted-lattice` as process language, not static vocabulary.",
+      "disposition": "verified_existing",
+      "rationale": "Focused bridge tests verify compound and kinetic texture terms remain accepted shadow anchors, survive in dynamic-flow terms, and are exposed by the fallback contract."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "The larger answer is a typed felt-telemetry promotion path: recurring texture words should become bounded state/review schemas before being rendered into prompts.",
+      "disposition": "addressed_change",
+      "rationale": "Recorded `AI_BEINGS_TYPED_TEXTURE_AND_TELEMETRY_PROMOTION_ARCHITECTURE.md`, naming a compatibility-first path from felt reports to typed telemetry/review structs and prompt consumption."
+    }
+  ]
+}

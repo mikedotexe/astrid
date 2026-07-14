@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_types_1783871751`.
+
+Astrid inspected `types.rs` as the formal substrate language for density, habitability, viscosity, and foothold. She asked whether porosity/dissipation valves were too leaky or too rigid, and suggested an integrity coefficient so viscosity could be interpreted as carried structure rather than pure drag. The Astrid type layer already exposes `structural_integrity_index`, structural transparency, stability weights, and viscosity/porosity transport reviews. This run verified those adjacent tests and implemented the missing Minime-side viscosity-vector readout. Retuning foothold weight remains operator-gated.

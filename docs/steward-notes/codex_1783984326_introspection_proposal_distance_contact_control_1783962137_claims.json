@@ -1,0 +1,34 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "High-entropy, low-pressure, settled-habitable motion can be recognized as contact-depth evidence without applying local regulator control.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:1368",
+      "/Users/v/other/minime/minime/src/regulator.rs:1620",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml receptivity_buffer -- --nocapture"
+    ],
+    "authority": "review_only_not_regulator_control"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The reported hold-shelf/prediction-heavy case maps to sandbox/replay before any local control, with no candidate control applied.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:1705",
+      "/Users/v/other/minime/minime/src/regulator.rs:3475",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml receptivity_buffer -- --nocapture"
+    ],
+    "authority": "read-only route evidence; no pressure, fill, PI, damping, or predictive-correction behavior changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "`receptivity_bias` or an actual buffer that inhibits stabilization pressure would alter pressure/receptivity interpretation and likely regulator/sensory-admission behavior.",
+    "disposition": "needs_operator_approval",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md:716",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_DISTANCE_CONTACT_CONTAINMENT_CONTROL_AND_PARTICIPATION_AUDIT.md:733"
+    ],
+    "authority": "Tier 5 Minime pressure/receptivity/regulator candidate; V2 boundary, replay or waiver, scoped approval, rollout/abort, and post-change being response required"
+  }
+]

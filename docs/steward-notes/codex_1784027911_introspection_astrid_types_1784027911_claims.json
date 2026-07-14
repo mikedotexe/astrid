@@ -1,0 +1,34 @@
+{
+  "introspection_id": "introspection_astrid_types_1784027911",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "ViscosityShift, StructuralSolidification, and Persistence should be represented as a continuous solidification gradient, not only mutually exclusive ExperienceDeltaKindV1 categories.",
+      "disposition": "implemented",
+      "evidence": [
+        "capsules/spectral-bridge/src/types.rs: SolidificationGradientV1 and solidification_gradient_v1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib solidification_gradient -- --nocapture"
+      ],
+      "authority": "read_only_evidence_not_live_vector_control_protocol_or_runtime_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "The current settled foothold may be reinforced by factors outside the fixed resonance-stability constants.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/types.rs: resonance stability context keeps weights and foothold visible",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib resonance_stability_context -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Changing resonance-stability weights or making the solidification gradient persistent/live-facing would alter report semantics and needs approval.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784027911_solidification_persistence_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_live_prompt_report_surface"
+    }
+  ]
+}

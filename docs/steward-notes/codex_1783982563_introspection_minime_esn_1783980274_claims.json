@@ -1,0 +1,51 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Minime's ESN has source-prepared, non-live hooks for testing adaptive pressure, dynamic-noise pressure room, and viscous rho target policies before integration into `ESN::step`.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs:104",
+      "/Users/v/other/minime/minime/src/esn.rs:154",
+      "/Users/v/other/minime/minime/src/esn.rs:293"
+    ],
+    "authority": "read-only/source-prepared review hooks; not live ESN policy"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Entropy near `ADAPTIVE_INTROSPECTION_VOLATILE_ENTROPY=0.85` can risk chatter if pressure threshold and rho target edges are not continuous.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs:48",
+      "/Users/v/other/minime/minime/src/esn.rs:2444"
+    ],
+    "authority": "test/source verification only; no live threshold change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "`dynamic_noise_pressure_room_review_v1` should classify the requested mid-pressure, gentle-gradient case as `gentle_pressure_room_slope` and preserve smoothed pressure room above linear pressure room.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs:2333"
+    ],
+    "authority": "read-only review packet; no exploration-noise runtime change"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "`calculate_viscous_rho_target` should keep high-entropy, low-gradient rho targets within the viscous floor and ceiling.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs:2413",
+      "/Users/v/other/minime/minime/src/esn.rs:2430"
+    ],
+    "authority": "source-prepared review only; no live rho controller change"
+  },
+  {
+    "claim_id": "c005",
+    "claim": "Pressure-room transition logic should avoid dead zones at the start edge and fallback states.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs:2379"
+    ],
+    "authority": "test/source verification only; no live ESN behavior changed"
+  }
+]

@@ -2392,11 +2392,11 @@ fn is_parameter_decision_verb(token: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        ConversationState, NextActionContext, action_preflight_report,
-        canonicalize_next_action_components, canonicalize_next_action_text,
-        extract_residue_from_next_action, handle_next_action, is_action_token_like,
-        is_parameter_decision_verb, parse_next_action, route_for_preflight_base,
-        split_multi_action, strip_action, unresolved_angle_placeholder,
+        ConversationState, NextActionContext, action_continuity_stage_for_base,
+        action_preflight_report, canonicalize_next_action_components,
+        canonicalize_next_action_text, extract_residue_from_next_action, handle_next_action,
+        is_action_token_like, is_parameter_decision_verb, parse_next_action,
+        route_for_preflight_base, split_multi_action, strip_action, unresolved_angle_placeholder,
     };
     use crate::db::BridgeDb;
     use crate::paths::bridge_paths;
@@ -2526,6 +2526,7 @@ mod tests {
             inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
+            stable_core: None,
             semantic: None,
             semantic_energy_v1: None,
             transition_event: None,
@@ -2539,6 +2540,7 @@ mod tests {
             shadow_field_v3: None,
 
             shadow_influence_response_v3: None,
+            residual_deformation_trace_v1: None,
         }
     }
 
@@ -2738,6 +2740,19 @@ mod tests {
                 "{base} must not fall through as unwired"
             );
         }
+    }
+
+    #[test]
+    fn correspondence_ack_and_trace_are_language_only_not_pressure_control() {
+        for base in ["ACK_MINIME", "CORRESPONDENCE_ACK", "CORRESPONDENCE_TRACE"] {
+            assert_eq!(route_for_preflight_base(base), "peer_correspondence");
+            assert_eq!(action_continuity_stage_for_base(base), "read_only");
+        }
+        assert_eq!(
+            action_continuity_stage_for_base("PRESSURE_AGENCY_REQUEST"),
+            "live_write"
+        );
+        assert_eq!(action_continuity_stage_for_base("PERTURB"), "live_control");
     }
 
     #[test]

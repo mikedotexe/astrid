@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783969872",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The codec maps text into the bounded 48D semantic lane and uses a deterministic 768D-to-8D projection matrix whose legacy kernel checksum should remain stable across runs.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Projection runtime directory resolution depends on `ASTRID_CODEC_RUNTIME_DIR` or the executable-relative `data/spectral-bridge/runtime` hierarchy and needs regression coverage for fallback behavior.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "The 0.85 entropy soft gate should use smoothstep so tail vibrancy begins with zero slope and avoids a sensory pop.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "`apply_spectral_feedback_inner` should keep tail vibrancy bounded by `TAIL_VIBRANCY_MAX` and leave reserved dims unchanged at the exact entropy gate.",
+      "disposition": "verified_existing"
+    }
+  ]
+}

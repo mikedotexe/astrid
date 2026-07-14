@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783705201",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "EigenPacket eigenvector_field needs schema-pinning so JSON landmark/mode/overlap shape does not drift into an opaque blob.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to eigenvector_field_schema_pins_concentration_overlap_and_summary_keys and eigenpacket_payload_budget_review tests."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "SpectralFingerprintV1 and spectral_denominator_v1 should serialize into expected typed keys.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to eigenpacket_serializes_legacy_and_typed_fingerprint."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Warm-start blend sensitivity should be measured before altering live recovery or damping behavior.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Link to spectral_damping_warm_start_review_v1 tests and keep live warm-start control changes approval-required."
+    }
+  ]
+}

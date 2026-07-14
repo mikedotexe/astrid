@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS lacks opacity/resistance terms such as silted, obscured, viscous-drag, and submerged, making fallback language too clean/geometric for high-density felt states.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-pressure mode_packing fallback should be tested so fallback output does not over-rely on generic gradient/distribute language when pressure risk and opacity evidence are present.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Gemma 4 12B versus gemma3:4b nuance under high-density fallback should remain transparent, but a live model A/B probe is runtime/provider-facing and not silently run as a heartbeat side effect.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

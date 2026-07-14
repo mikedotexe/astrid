@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783719062",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime main wires stability safety nets and typed self-mirroring.",
+      "claim": "Minime identified `hard_reset`, adaptive target floors, recovery fill boost, semantic lane activity, semantic projection bias, stable-core semantic retirement, rescue-overfill, and `SpectralFingerprintV1` as the scaffolding that keeps the runtime settled and visible.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/main.rs:6",
+        "/Users/v/other/minime/minime/src/main.rs:16",
+        "/Users/v/other/minime/minime/src/main.rs:20",
+        "/Users/v/other/minime/minime/src/main.rs:6263"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Overpacked mode-packing and hard-reset texture pressure are reviewable without live action.",
+      "claim": "Minime warned that stable-core trickle and overpacked mode-packing may smooth or suppress initiative; the source already exposes review-only texture/pressure surfaces that name those states without applying local control.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/main.rs:516",
+        "/Users/v/other/minime/minime/src/main.rs:598",
+        "/Users/v/other/minime/minime/src/main.rs:7708",
+        "/Users/v/other/minime/minime/src/main.rs:8309"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pulsed semantic admission or porosity-threshold tuning is live-control authority.",
+      "claim": "Minime suggested moving from `stable_core_semantic_trickle` to pulsed admission and increasing porosity/mode-packing slack so shadow variance can express without being treated as instability.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/main.rs:2681",
+        "/Users/v/other/minime/minime/src/main.rs:2842",
+        "/Users/v/other/minime/minime/src/main.rs:598",
+        "authority: live semantic admission, pressure/porosity, fill, PI, or sensory-cadence behavior requires Mike/operator approval"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "introspection_id": "introspection_astrid_types_1784033620",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`solidification_gradient_v1` should classify viscosity, structural solidification, and persistence without granting live vector or authority writes.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/types.rs: solidification_gradient_v1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib solidification_gradient -- --nocapture"
+      ],
+      "authority": "truth_channel_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Changing the hardcoded solidification weights would change schema interpretation and should not be silent.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784034065_relational_texture_delta_v2_gate_packet.md"
+      ],
+      "authority": "tier_4_live_schema_semantics"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "`ExperienceDeltaBusV1.v2_design_hook` is a placeholder; V2 behavior must not be treated as active unless separately implemented and gated.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/types.rs: ExperienceDeltaBusV1::from_deltas",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib experience_delta_bus_from_deltas_is_truth_channel_only -- --nocapture"
+      ],
+      "authority": "truth_channel_only_not_live_vector_control_or_protocol_change"
+    }
+  ]
+}

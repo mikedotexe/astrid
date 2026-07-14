@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_ws_1783873874`.
+
+Astrid inspected `ws.rs` as the two-lane telemetry/sensory nervous system. She named `PressureTrendSampleV1`, pressure trend smoothing, stale reciprocity windows, semantic trickle, mode packing, and high entropy around the smoothing handoff. Her actionable safe request was a semantic coherence index so trickle has meaning-continuity context, while stale-window tightening and pressure/porosity expansion thresholds are live behavioral changes. This run added optional `semantic_coherence_index` to `PressureTrendSmoothingV1` and wired it from the existing coherence proxy; stale-window and expansion changes remain operator-gated.

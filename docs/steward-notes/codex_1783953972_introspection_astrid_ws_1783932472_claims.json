@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783932472",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "bridge_dynamic_stale_window_ms handles missing telemetry context with a fixed default stale window rather than treating None as immediate severance.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/ws.rs:bridge_dynamic_stale_window_ms",
+        "test:bridge_reciprocity_marks_both_lanes_stale_after_sixty_one_seconds"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "A stale sensory lane is named bidirectional_stale_sensory rather than socket-dead when the connection remains bidirectional.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib bridge_reciprocity_marks_stale_sensory_without_calling_socket_dead -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Pressure trend VecDeque samples are capped by the active dynamic window.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/ws.rs:record_pressure_trend_sample_v1",
+        "test:pressure_trend_samples_cap_high_frequency_telemetry_at_active_window"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Concurrent websocket stress testing against live tasks or changing update transactions would be live bridge/runtime behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Mike/operator approval or offline replay harness required before live websocket stress/cadence/update architecture changes"
+      ]
+    }
+  ]
+}

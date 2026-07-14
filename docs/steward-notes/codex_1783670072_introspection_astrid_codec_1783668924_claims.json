@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783668924",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`codec.rs` maps text into the current 48D semantic lane, with dims 24-31 carrying emotional and intentional markers.",
+      "disposition": "verified_existing",
+      "rationale": "Source review confirmed `SEMANTIC_DIM=48` and the documented dim bands, and existing dimensionality-flatness tests distinguish filled 48D projections from empty expansion."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "`FEATURE_ABS_MAX=5.0` may cap overpacked mode-packing or dense intentionality and flatten high-intensity nuance.",
+      "disposition": "verified_existing",
+      "rationale": "The risk is real in principle, but current replay evidence reports clamp headroom sufficient with zero near-static-clamp and dynamic-headroom candidates. Existing tail-vibrancy tests also verify the bounded tail-only ceiling lift rather than a global clamp increase."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Review `codec_gain::adaptive_gain` for dynamic scaling that preserves overpacked nuance without the hard ceiling.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing live adaptive gain, `FEATURE_ABS_MAX`, `TAIL_VIBRANCY_MAX`, or vibrancy scaling would alter live semantic-lane behavior. The safe next path is fresh codec replay evidence and Mike/operator approval, not a hidden live retune."
+    }
+  ]
+}

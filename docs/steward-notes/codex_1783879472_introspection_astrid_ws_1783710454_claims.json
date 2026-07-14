@@ -1,0 +1,17 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783710454",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure trend smoothing should be a continuous/graded high-entropy curve rather than a static jump.",
+      "disposition": "verified_existing",
+      "rationale": "Focused WS tests verify an entropy handoff band and graded smoothing ballast without a static window jump."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A low-energy reciprocity heartbeat could anchor legacy bidirectional observation when distinguishability loss rises.",
+      "disposition": "authority_gate",
+      "rationale": "Adding heartbeat behavior would alter live cadence/connection semantics and needs explicit operator approval; current work only verified existing heartbeat-delta diagnostics."
+    }
+  ]
+}

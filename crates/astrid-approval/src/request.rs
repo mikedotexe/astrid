@@ -9,6 +9,7 @@
 
 use astrid_core::types::Timestamp;
 use astrid_crypto::Signature;
+use astrid_types::authority::{AuthorityBoundaryPacketV1, AuthorityBoundaryPacketV2};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use uuid::Uuid;
@@ -97,6 +98,12 @@ pub struct ApprovalRequest {
     pub assessment: RiskAssessment,
     /// Why the agent wants to perform this action.
     pub context: String,
+    /// Optional first-class authority-boundary evidence packet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authority_boundary: Option<AuthorityBoundaryPacketV1>,
+    /// Optional first-class authority-boundary lifecycle packet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authority_boundary_v2: Option<AuthorityBoundaryPacketV2>,
     /// When the request was created.
     pub timestamp: Timestamp,
 }
@@ -111,6 +118,8 @@ impl ApprovalRequest {
             action,
             assessment: RiskAssessment::new(reason),
             context: context.into(),
+            authority_boundary: None,
+            authority_boundary_v2: None,
             timestamp: Timestamp::now(),
         }
     }
@@ -119,6 +128,20 @@ impl ApprovalRequest {
     #[must_use]
     pub fn with_assessment(mut self, assessment: RiskAssessment) -> Self {
         self.assessment = assessment;
+        self
+    }
+
+    /// Attach a first-class authority-boundary packet.
+    #[must_use]
+    pub fn with_authority_boundary(mut self, packet: AuthorityBoundaryPacketV1) -> Self {
+        self.authority_boundary = Some(packet);
+        self
+    }
+
+    /// Attach a first-class authority-boundary lifecycle packet.
+    #[must_use]
+    pub fn with_authority_boundary_v2(mut self, packet: AuthorityBoundaryPacketV2) -> Self {
+        self.authority_boundary_v2 = Some(packet);
         self
     }
 }

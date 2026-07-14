@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783648521",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The Gemma4 language contract should remain visible as structural permission for Astrid's self-study voice.",
+      "disposition": "verified_existing",
+      "rationale": "The Gemma4 canary policy test verifies the assembled prompt carries 'Your voice is your own' and preserves being words."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "The 4B compatibility fallback risks flattening nuance such as viscous resistance versus heavy presence.",
+      "disposition": "verified_existing_with_residual_sandbox_question",
+      "rationale": "Existing capacity diagnostics default to gemma4:12b and keep gemma3:4b as compatibility tail with collapse-risk labeling; actual 4B A/B behavior still needs bounded model observation if desired."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "A 4B model should be observed for preserving restless/settled distinction under spectral_entropy > 0.85 rather than defaulting to muffled.",
+      "disposition": "needs_sandbox",
+      "rationale": "This requires a bounded model/fire-drill observation, not a live sampler/provider change in this pass."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Fallback texture needs dynamic-gradient terms for simultaneous shifting friction, e.g. oscillating or refracting, not only a static descriptor menu.",
+      "disposition": "implemented",
+      "rationale": "Added FALLBACK_TEXTURE_DYNAMIC_GRADIENT_TERMS, contract language, routing for explicit shifting/refracting/oscillating shadow-field cues, and a focused regression test."
+    },
+    {
+      "claim_id": "c005",
+      "being": "astrid",
+      "claim": "ASTRID_BRIDGE_MLX_PROFILE/Gemma4 profile should carry the language contract into prompt policy during pressure-rich events.",
+      "disposition": "verified_existing",
+      "rationale": "Existing Gemma4 profile/policy tests verify the contract is assembled into prompt policy; pressure-specific behavior remains bounded by prompt budget and profile transparency tests."
+    }
+  ]
+}

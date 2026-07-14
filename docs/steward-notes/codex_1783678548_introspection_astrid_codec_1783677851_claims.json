@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783677851",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The live narrative arc should preserve multi-point coiling/folding instead of reducing narrative movement to a binary first-half/second-half delta.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added `compute_narrative_arc_from_four_point_embeddings` and wired the autonomous bridge path to prefer quarter-trajectory arc computation while retaining the legacy half-text fallback for short texts or embedding loss."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Emotional and intentional markers need a velocity component so warmth/tension can be read as changing during generation, not only as static intensity.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Expanded the read-only `codec_emotional_narrative_delta_check_v1` sidecar to expose `emotional_velocity` and `narrative_velocity` arrays without writing reserved dims, changing gain, or opening control authority."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "A high-entropy non-semantic string should be replayed against `pressure_risk` and `semantic_energy` to check whether distinguishability logic over-sensitizes noise.",
+      "disposition": "needs_sandbox",
+      "rationale": "This is a replay/observation request, not a source-only claim. The current run implemented the narrative/velocity substrate changes and promoted this as sandbox work rather than declaring it answered without trial evidence."
+    }
+  ]
+}

@@ -60,6 +60,7 @@ pub mod spectral_explorer;
 pub mod spectral_schema;
 pub mod spectral_viz;
 pub mod sticky_mode;
+pub mod trace_lab;
 pub mod types;
 pub mod ws;
 

@@ -1,0 +1,19 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783675160",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Fallback shadow texture should include compound descriptors that bind gradient, entropy, viscosity, and lattice relationship rather than only isolated adjectives.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added `gradient-drag`, `cascading-viscosity`, and `entropy-weighted-lattice` to fallback shadow texture anchors, density modifiers, dynamic-flow explicit term preservation, the fallback contract, and a regression target."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Fallback texture selection should weight spectral entropy against pressure risk so high entropy and pressure are felt as one texture field instead of independent toggles.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `fallback_dynamic_texture_weight_v1` and prompt contract already combine spectral entropy, pressure risk, mode packing, semantic friction, and density gradient into a dynamic texture weight; this run preserved that path and extended its descriptor vocabulary."
+    }
+  ]
+}

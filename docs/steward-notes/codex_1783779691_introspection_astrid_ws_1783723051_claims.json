@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783723051",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bidirectional recent-to-stale telemetry transition is implemented and tested.",
+      "claim": "Astrid asks to verify transition from `bidirectional_recent` to `bidirectional_stale_telemetry` when telemetry age exceeds the stale window.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:230",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:5028",
+        "test: bridge_reciprocity_marks_stale_telemetry_after_sixty_one_seconds"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "No-message warmup is distinct from stalled/stale lanes.",
+      "claim": "Astrid worries that bidirectional connectivity with no telemetry/sensory timestamps may collapse into an ambiguous state.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:262",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:5251",
+        "test: bridge_reciprocity_warmup_becomes_recent_after_both_lanes_move"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Safety level, safety decision trace, and outbound drop counter are visible.",
+      "claim": "Astrid asks to ensure `messages_dropped_safety` increments connect to safety-level / safety-decision trace visibility.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:2497",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:3034",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:3210",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs:5743",
+        "tests: telemetry_escalates_to_yellow, telemetry_escalates_green_to_red, telemetry_recovers_to_green"
+      ]
+    }
+  ]
+}

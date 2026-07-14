@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783673126",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Pressure trend smoothing should be dynamically linked to `spectral_entropy` rather than a single static high-entropy window.",
+      "disposition": "verified_existing",
+      "rationale": "`pressure_trend_dynamic_window_capacity_v1` already scales the smoothing window from the base window to the high-entropy ballast window, with porosity ballast and regression tests covering 0.90/0.95 entropy cases."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "`BRIDGE_RECIPROCITY_STALE_WINDOW_MS=60s` and pressure/porosity stale windows may mask fast reservoir collapse before the bridge notices stale lanes.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Retuning stale-window thresholds changes live bridge status cadence and correspondence interpretation. This remains an explicit live-authority approval item rather than a hidden code change."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Spectral drift velocity and reciprocity latency should be observed in replay/sandbox to see whether drift spikes with entropy 0.90 or lags behind it.",
+      "disposition": "needs_sandbox",
+      "rationale": "The source already records `spectral_drift_velocity` and reciprocity status; the unresolved question is empirical timing, so it should become a sandbox/replay trial rather than source-only proof."
+    }
+  ]
+}

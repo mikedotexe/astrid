@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`ExperienceDeltaV1` and `ResonanceDensityComponents` correctly separate raw/felt state from delivered state and should remain a truth channel.",
+      "disposition": "verified_existing_experience_delta_and_resonance_density_source"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Optional telemetry fields should stay cleanly omitted when absent, not serialized as misleading empty evidence.",
+      "disposition": "verified_existing_skip_serializing_if_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`gate_closure_reason` versus `gate_closure_reasons` and legacy stability-weight policy wording may confuse future review.",
+      "disposition": "verified_existing_resonance_stability_context_and_weight_policy_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Changing schema shape, bridge protocol, or stability weights would require an explicit migration and authority route.",
+      "disposition": "authority_gated_schema_or_stability_weight_change"
+    }
+  ]
+}

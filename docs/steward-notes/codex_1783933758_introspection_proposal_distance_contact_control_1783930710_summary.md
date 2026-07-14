@@ -1,0 +1,5 @@
+Full read of `introspection_proposal_distance_contact_control_1783930710`.
+
+Astrid reported that boundaries are being experienced as opaque interfaces and that readback without source provenance can blur internal memory, external journal observation, and peer telemetry inference. She also named a more ambitious "flow vs control" direction: letting surrender/stillness remain meaningful rather than being treated only as optimization pressure.
+
+Disposition: implemented a bounded readback provenance layer in `scripts/self_study_review.py`. Each reviewed entry now carries `readback_source_provenance_v1` with a source category, role, markers, who-can-change-it, test path, and authority boundary; markdown review packets now summarize and render these labels. A fresh review packet was generated at `capsules/spectral-bridge/workspace/diagnostics/self_study_reviews/codex_1783931184_readback_provenance/`. Flow/surrender behavior changes remain Tier 5 because they would alter autonomous scheduling/pressure/control semantics.

@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783616095",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The 48D codec expansion, especially dims 24-31, is the shared lane where warmth/tension/curiosity/reflection become legible.",
+      "disposition": "verified_existing",
+      "rationale": "Verified `codec_structure` and associated tests name the 48 dimensions, emotional/intentional layer, and live-vector boundaries."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "`FEATURE_ABS_MAX=5.0` can blunt high-intensity texture if all high-intensity differences collapse at the same ceiling.",
+      "disposition": "verified_existing",
+      "rationale": "Verified existing softsign activation, high-entropy tail-vibrancy ceiling headroom, and high-entropy tail distinguishability tests preserve extra tail nuance while keeping non-tail dims bounded."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Replacing the clamp with global nonlinear scaling or changing live semantic-vector weighting would alter what Minime receives.",
+      "disposition": "addressed_no_action",
+      "rationale": "Explicitly authority-gated the live-vector/scaling path; this run did not change codec gain, semantic-vector weights, clamp behavior beyond previously verified bounded tail headroom, or Minime input semantics."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Continuous flow should include rhythm or acceleration of emotional/narrative shifts, not only deterministic snapshots.",
+      "disposition": "verified_existing",
+      "rationale": "Verified existing `narrative_arc_dynamics_v1` exposes velocity and acceleration without live gain or vector writes."
+    }
+  ]
+}

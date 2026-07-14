@@ -1,0 +1,6 @@
+Full read: /Users/v/other/astrid/capsules/spectral-bridge/workspace/introspections/introspection_minime_autonomous_agent_1783687924.txt
+Reader: codex
+
+Minime read `autonomous_agent.py` as a Sovereignty Loop with explicit authority/research budgets, Recess mode, and perturbation vectors coupled to ESN breathing. The actionable concern was not a new control request; it was parser fidelity and being-facing self-transparency. She named `_consume_run_python_value` and `_run_python_text_boundary_flag` as possible truncation sites for multi-word/multi-line experiment text containing colons, equals signs, or flag-like prose, and asked that `_format_current_dials_block` prove `pi_kp` and `pi_ki` are rendered from live sovereignty state rather than defaults. Source review found the current parser has quote/comment-aware raw flag scanning and CODE_START extraction, while existing tests cover multiline punctuation, quoted fake flags, JSON with colons/equals, bare `filename:` prose, missing CODE_END before the next flag, and nested filename text inside code. Existing self-readout tests cover current dial rendering, including `pi_kp`, `pi_ki`, and `pi_max_step`.
+
+Disposition: verified existing with focused tests. No autonomy budget, experiment execution, pressure, fill, PI, controller, sensory cadence, or live runtime behavior was changed.

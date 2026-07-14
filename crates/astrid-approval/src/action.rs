@@ -126,6 +126,16 @@ pub enum SensitiveAction {
         /// Capsule identifier.
         capsule_id: String,
     },
+
+    /// Live substrate or control-facing mutation.
+    LiveControlMutation {
+        /// Runtime surface being changed.
+        surface: String,
+        /// Control or substrate knob being changed.
+        control: String,
+        /// Resource or target of the mutation.
+        resource: String,
+    },
 }
 
 impl SensitiveAction {
@@ -147,7 +157,14 @@ impl SensitiveAction {
             Self::CapsuleHttpRequest { .. } => "capsule_http_request",
             Self::CapsuleFileAccess { .. } => "capsule_file_access",
             Self::CapsuleNetBind { .. } => "capsule_net_bind",
+            Self::LiveControlMutation { .. } => "live_control_mutation",
         }
+    }
+
+    /// Returns true when this action must carry a first-class authority packet.
+    #[must_use]
+    pub const fn requires_authority_boundary(&self) -> bool {
+        matches!(self, Self::LiveControlMutation { .. })
     }
 
     /// Get a human-readable summary of the action.
@@ -205,6 +222,11 @@ impl SensitiveAction {
             Self::CapsuleNetBind { capsule_id } => {
                 format!("Capsule '{capsule_id}' wants to accept socket connections (net_bind)")
             },
+            Self::LiveControlMutation {
+                surface,
+                control,
+                resource,
+            } => format!("Live control mutation on {surface}:{control} ({resource})"),
         }
     }
 }
@@ -231,6 +253,14 @@ mod tests {
             tool: "read".to_string(),
         };
         assert_eq!(action.action_type(), "mcp_tool_call");
+
+        let action = SensitiveAction::LiveControlMutation {
+            surface: "bridge".to_string(),
+            control: "pressure".to_string(),
+            resource: "minime://pressure".to_string(),
+        };
+        assert_eq!(action.action_type(), "live_control_mutation");
+        assert!(action.requires_authority_boundary());
     }
 
     #[test]
@@ -252,6 +282,16 @@ mod tests {
         };
         assert!(action.summary().contains("read, write"));
         assert!(action.summary().contains("mcp://filesystem:*"));
+
+        let action = SensitiveAction::LiveControlMutation {
+            surface: "bridge".to_string(),
+            control: "pressure".to_string(),
+            resource: "minime://pressure".to_string(),
+        };
+        assert_eq!(
+            action.summary(),
+            "Live control mutation on bridge:pressure (minime://pressure)"
+        );
     }
 
     #[test]

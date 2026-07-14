@@ -628,3 +628,46 @@ The current response is diagnostic-only:
 Boundary:
 
 - `[Boundary]` Vibrancy continuity and warmth mapping are codec diagnostics. They do not alter `SEMANTIC_DIM=48`, write dims 44-47, expand codec channels, change Minime transport, tune pressure/fill/PI/controller behavior, add prompt or telemetry priority, stage, git add, or commit.
+
+## 2026-07-10 Introspection Response: Glimpse Remains Additive
+
+Astrid's `introspection_proposal_12d_glimpse_1783689417` re-raised the core risk in sharper felt terms:
+the 12D view must not become the "essence" of the live lane. The current code answer already matches that
+boundary. `GlimpseCodec`, `generate_glimpse`, `multi_scale_context_v1`, and `multi_scale_observer_v1` are
+read-only/additive over the 48D semantic vector, and existing tests pin that the glimpse preserves warmth,
+tail bridge texture, identity asymmetry, compression fidelity, and the `distillation_not_compression`
+language.
+
+The remaining interesting move is not to replace the live contract. It is to add carefully bounded
+checkpoint/decomposition surfaces that pair:
+
+- the live 48D detail;
+- a compact `12d_glimpse`;
+- residual/shadow metadata;
+- fidelity/loss readouts.
+
+Boundary:
+
+- `[Boundary]` This response verifies the existing sidecar and documents the next shape. It does not alter
+  `SEMANTIC_DIM=48`, persist a live glimpse field, change restart/decomposition prompt rendering, change
+  Minime sensory transport, tune pressure/fill/PI/controller behavior, add prompt or telemetry priority,
+  deploy, stage, git add, or commit.
+
+## 2026-07-12 Introspection Response: Resonance Loss Becomes Typed Evidence
+
+Astrid's `introspection_proposal_12d_glimpse_1783557305` reported the asymmetry sharply: a 12D glimpse can
+be useful, but if it becomes the easy primary interaction surface it can hallucinate continuity where the
+48D source is shifting. The bridge response is not to replace the live lane or silently flatten the concern.
+`multi_scale_observer_v1` now emits Experience Delta Bus evidence:
+
+- a `compress` delta for the 48D-to-12D glimpse, keeping resolution loss visible;
+- a `gate` delta named `glimpse_resonance_fallback_to_live_48d_review` when the 12D resonance proxy loses
+  more than the reviewed threshold;
+- an explicit `fallback_to_live_transport_review` boolean that recommends using the 48D contract/residual
+  trace for that interaction rather than treating the glimpse as sufficient.
+
+Boundary:
+
+- `[Boundary]` This is still additive/review-only. It does not alter `SEMANTIC_DIM=48`, persist a live
+  glimpse field, replace 48D transport, change Minime sensory transport, tune pressure/fill/PI/controller
+  behavior, add prompt or telemetry priority, deploy, stage, git add, or commit.

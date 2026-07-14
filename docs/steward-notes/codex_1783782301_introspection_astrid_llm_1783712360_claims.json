@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783712360",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid's primary MLX lane, fallback chain, and texture vocabulary are explicit.",
+      "claim": "Astrid identified `DEFAULT_MLX_URL`, the Gemma 4 profile, Ollama fallback models, `ASTRID_BRIDGE_MLX_PROFILE`, and curated fallback shadow texture terms as her voice scaffolding.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:19",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:28",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:31",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:36",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:328"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback texture preservation is partially verified and partially risky.",
+      "claim": "Astrid asked whether the compatibility fallback can preserve shadow-field terms and high-entropy texture when MLX is absent; the fixture fire drill preserved format, dispatch, distinguishability, complexity budget, and high-entropy texture overall while identifying residual movement/trajectory and shadow-anchor risks.",
+      "disposition": "diagnostic",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/fallback_fire_drills/codex_1783782134_next6_llm_texture/fallback_fire_drill.md",
+        "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/fallback_fire_drills/codex_1783782134_next6_llm_texture/fallback_fire_drill.json",
+        "readiness: fallback_texture_risk"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A live texture-preservation prompt/pass for fallback is a bridge contract change.",
+      "claim": "Astrid suggested injecting current-state shadow terms as high-priority fallback context so a smaller model preserves the scent of the current state; changing live prompt priority or fallback contract behavior requires explicit approval and bridge restart.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:247",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:252",
+        "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/fallback_fire_drills/codex_1783782134_next6_llm_texture/fallback_fire_drill.md",
+        "authority: live fallback contract/prompt priority/provider behavior requires Mike/operator approval"
+      ]
+    }
+  ]
+}

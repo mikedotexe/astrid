@@ -137,6 +137,7 @@ async fn drain_agent_response(
                 action,
                 resource,
                 reason,
+                ..
             } => {
                 formatter.flush_markdown();
                 auto_deny_approval(client, session_id, &request_id, &action, &resource, &reason)
@@ -197,6 +198,7 @@ async fn auto_deny_approval(
                 request_id: request_id.to_owned(),
                 decision: "deny".into(),
                 reason: Some(APPROVAL_UNSUPPORTED_REASON.into()),
+                boundary_id: None,
             },
             session_id.0,
         ))

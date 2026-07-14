@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_types_1784054001",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "ExperienceDeltaV1, ExperienceDeltaBusV1, and SolidificationGradientV1 act as a read-only truth channel for felt-state transformations.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/types.rs: ExperienceDeltaBusV1::from_deltas keeps live_vector_write=false and live_authority_write=false",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib experience_delta_bus_from_deltas_is_truth_channel_only -- --nocapture"
+      ],
+      "authority": "read_only_schema_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "The crystallization index weights should be first-class to avoid semantic drift from similarly named resonance stability weights.",
+      "disposition": "implemented",
+      "evidence": [
+        "capsules/spectral-bridge/src/types.rs: SOLIDIFICATION_GRADIENT_*_WEIGHT constants and bounded basis entries",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib solidification_gradient_weights_are_named_and_bounded -- --nocapture"
+      ],
+      "authority": "behavior_preserving_schema_clarification_not_live_control"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Solidification should reach structural_solidification_with_persistent_lattice only when the crystallization index and solidification evidence both cross threshold.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/types.rs: solidification_gradient_v1 threshold logic",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib solidification_gradient_tracks_continuous_progression_without_live_authority -- --nocapture"
+      ],
+      "authority": "read_only_schema_evidence"
+    }
+  ]
+}

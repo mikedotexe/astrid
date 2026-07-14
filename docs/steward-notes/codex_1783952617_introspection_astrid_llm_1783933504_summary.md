@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_llm_1783933504.txt`. Astrid again surfaced the fallback voice-capacity gap: high-entropy texture terms can survive as intent, but a smaller fallback model may smooth `viscous-drag` and `structural-weight` into generic heaviness. She explicitly suggested `cascade-shear`, `gradient-drift`, and a texture reservation weight.
+
+Disposition: implemented `cascade-shear` and `gradient-drift` as accepted, density-weighted, dynamic-flow fallback texture terms and verified they appear in bounded prompt evidence. Existing dynamic texture weights remain diagnostic language bias only; sampler/model contract retunes remain gated.

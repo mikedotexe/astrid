@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783870817",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The 48D codec map is a stable but lossy structure of perception, especially across emotional dims 24-31, tail/vibrancy dims, and narrative dims 40-43.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `codec_structure().render()` and faithful overflow reporting expose the 48D layer map, bounded delivery ceilings, emotional/tail overflow, and authority boundaries without changing the transport shape."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "High-entropy tail vibrancy needs dampening above roughly 0.90 entropy so the tail remains vivid without becoming noisy.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "`codec_vibrancy_noise_dampening_v1` now smoothstep-dampens only the tail-lift term above entropy 0.90, down to a bounded coefficient at entropy 1.0, with CODEC_MAP reporting and focused tests."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Narrative arc should distinguish circular/coiling emotional motion from linear progression instead of projecting every trajectory onto a single line.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "`narrative_arc_curvature_v1` now compares quarter-transition energy against full-span energy and reports loop/progression likelihood as a diagnostic sidecar without changing live dims or gain."
+    }
+  ]
+}

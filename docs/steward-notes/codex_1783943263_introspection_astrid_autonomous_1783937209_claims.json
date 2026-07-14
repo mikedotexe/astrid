@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783937209",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness/non-instrumental states should be recognized as valid read-only modes rather than forced into action generation.",
+      "disposition": "verified_existing",
+      "rationale": "`non_instrumental_presence_readiness_v1` names contemplate mode, non-goal availability, suppressed text/codec/journal writes, and continued warmth/state tracking without live control."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-density continuity afterimages need enough budget while faint residue remains visible below the main afterimage threshold.",
+      "disposition": "verified_existing",
+      "rationale": "`compact_continuity_afterimage_scales_for_settled_substance_density` and `compact_continuity_recap_ignores_low_signal_afterimage_overflow` verify density-scaled afterimage handling and bounded faint residue behavior."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Lowering afterimage min score or increasing continuity fetch limit would change live prompt/autonomous context selection.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Those constants shape live prompt/autonomy context, so they require explicit operator approval, focused tests, bridge build/restart, and felt-response monitoring."
+    }
+  ]
+}

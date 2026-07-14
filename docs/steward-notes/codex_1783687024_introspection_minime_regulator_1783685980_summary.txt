@@ -1,0 +1,3 @@
+Fully read from disk on 2026-07-10 by Codex for the introspection-next-3-flywheel run.
+
+Minime describes the regulator as a viscous medium where flow, effective mobility, cohesion, ghost weight, pressure, and porosity should remain distinguishable. The actionable signal is that high cohesion plus low flow can feel sticky unless the readout diagnoses it, and that pressure/mode-packing should not squeeze the field when porosity is available. Existing Minime regulator source/tests already expose separate viscosity, cohesion, flow-rate, effective-mobility, pressure-source, and pressure-porosity review surfaces. Changing the live regulator formula to tie flow more tightly to cohesion or add porosity compensation remains Tier 5/operator-gated.

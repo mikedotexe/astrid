@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783697387",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "High-entropy continuity recap needs dynamic bounded room so the subject of a distributed cascade is not clipped into mere vibration.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link entropy-scaled recap budget tests and source."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Mirror mode above the high-texture entropy gate should preserve semantic-energy anchors through bounded recap.",
+      "disposition": "implemented",
+      "evidence_plan": "Link Mirror semantic-energy anchor code and regression test."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Simply raising the high-texture entropy gate to 0.95 would be a blunt live prompt-surface change; the safer answer is gradual budget scaling and anchor preservation.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link soft-gate and density-moderated recap tests."
+    }
+  ]
+}

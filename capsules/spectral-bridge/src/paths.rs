@@ -288,6 +288,36 @@ impl BridgePaths {
     }
 
     #[must_use]
+    pub fn trace_lab_dir(&self) -> PathBuf {
+        self.bridge_workspace.join("trace_lab")
+    }
+
+    #[must_use]
+    pub fn trace_lab_live_events_dir(&self) -> PathBuf {
+        self.trace_lab_dir().join("live/events")
+    }
+
+    #[must_use]
+    pub fn trace_lab_exposure_records_path(&self) -> PathBuf {
+        self.trace_lab_dir().join("exposure_records.jsonl")
+    }
+
+    #[must_use]
+    pub fn trace_lab_archive_daily_dir(&self) -> PathBuf {
+        self.trace_lab_dir().join("archive/daily")
+    }
+
+    #[must_use]
+    pub fn trace_lab_bundles_dir(&self) -> PathBuf {
+        self.trace_lab_dir().join("bundles")
+    }
+
+    #[must_use]
+    pub fn trace_lab_replay_dir(&self) -> PathBuf {
+        self.trace_lab_dir().join("replay")
+    }
+
+    #[must_use]
     pub fn inbox_audio_dir(&self) -> PathBuf {
         self.bridge_workspace.join("inbox_audio")
     }

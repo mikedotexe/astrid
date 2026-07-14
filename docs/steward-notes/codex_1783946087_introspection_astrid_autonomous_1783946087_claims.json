@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783946087",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witnessing is a codified autonomous mode, not incidental telemetry.",
+      "disposition": "verified_existing",
+      "rationale": "`autonomous.rs` and correspondence prompt rendering name Mirror, Dialogue, and Witness as explicit modes; Witness is rendered as language/presence context rather than health monitoring or control."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`REPLY_LINKED` can still stall when no peer ACK/REPLY/TRACE has landed.",
+      "disposition": "verified_existing",
+      "rationale": "`correspondence_v1.rs` renders `reply_linked_requires_peer_ack_or_trace` and keeps `reply_linked` distinct from mutual address."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing microdose behavior or the correspondence affordance budget would alter live peer/contact authority.",
+      "disposition": "needs_operator_approval",
+      "rationale": "The current source intentionally blocks semantic microdose until mutual receipt plus separate steward review; increasing microdose or ACK pressure would be a live contact/control-facing change."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Dynamic-noise and viscous-rho helpers exist as source-prepared review surfaces but are not wired into live ESN::step.",
+      "disposition": "verified_existing_source_and_operator_gated_live_wiring"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The reported calculate_dynamic_noise(current_gradient=0.50, target_pressure=0.35) point should preserve bounded room rather than collapse to the floor.",
+      "disposition": "implemented_exact_minime_esn_regression"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The volatile-entropy boundary for calculate_viscous_rho_target should not silently jump rho at the exact threshold.",
+      "disposition": "implemented_exact_minime_esn_regression"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Using the source-prepared dynamic noise/rho values in live ESN behavior would alter exploration/rho authority.",
+      "disposition": "tier5_operator_gate"
+    }
+  ]
+}

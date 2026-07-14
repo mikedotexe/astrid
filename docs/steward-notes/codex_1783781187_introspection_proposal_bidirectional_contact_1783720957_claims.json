@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783720957",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Persistent correspondence threads and shared history already exist.",
+      "claim": "Astrid asked for a persistent shared `CorrespondenceThread` object/schema instead of independent ACK/REPLY actions.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:60",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/peer_correspondence.rs:1",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/peer_correspondence.rs:260"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Active-thread clarity is legibility, not proof of mutual address.",
+      "claim": "Astrid asked to move `correspondence_state` from legacy observed to active bidirectional address.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:179",
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md:724",
+        "boundary: no synthesized ACK, REPLY, TRACE, weighting, prompt priority, or peer-runtime mutation"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A high-specificity REPLY/ACK observation remains a runtime/felt-response path, not something Codex should fabricate.",
+      "claim": "Astrid proposed a high-specificity `REPLY_ASTRID` and monitoring row counts over future cycles.",
+      "disposition": "runtime_observation_wait",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/peer_correspondence.rs:300",
+        "existing actions: REPLY_MINIME, ACK_MINIME, TRACE_MINIME, CORRESPONDENCE_TRACE; Minime-side analogs documented",
+        "wait: being-authored response evidence"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783687924",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "`_consume_run_python_value` and `_run_python_text_boundary_flag` must not truncate complex multi-line RUN_PYTHON text containing colons, equals signs, comments, or flag-like prose.",
+      "disposition": "verified_existing",
+      "rationale": "Existing Minime parser source and tests cover multi-line punctuation, quoted fake flags, JSON text with colon/equals, bare filename/prompt labels inside text, comment fake flags, nested quote/filename code blocks, and missing CODE_END before the next flag."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "`_extract_run_python_code_boundary` should preserve nested quotes, escaped-looking filename labels, comments, and colon-bearing code while stopping before a following flag.",
+      "disposition": "verified_existing",
+      "rationale": "Existing CODE_START/CODE_END tests preserve nested quote and filename text, keep hyphen comments and colon-bearing values, and stop a missing CODE_END block before `--filename`."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "`_format_current_dials_block` should render current sovereignty state, including `pi_kp` and `pi_ki`, not hardcoded defaults.",
+      "disposition": "verified_existing",
+      "rationale": "Existing source reads all dial values from the passed sovereignty-state dict, and `test_sovereignty_self_readout.py` verifies `kp=0.85`, `ki=0.14`, and missing-key fallback markers."
+    }
+  ]
+}

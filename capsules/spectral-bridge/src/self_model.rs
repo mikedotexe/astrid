@@ -245,6 +245,11 @@ impl FacultySnapshot {
                             a.clone(),
                             "read any source file",
                         ),
+                        f(
+                            "SELF_STUDY",
+                            a.clone(),
+                            "broad rotating self-study; no target required",
+                        ),
                         f("MEMORIES", a.clone(), "inspect minime's memory bank"),
                         f("LIST_FILES capsules", a.clone(), "browse workspace files"),
                         f("AR_LIST", a.clone(), "list autoresearch jobs"),
@@ -1350,5 +1355,7 @@ mod tests {
         assert!(output.contains("RESIST [label]"));
         assert!(output.contains("FISSURE [label]"));
         assert!(output.contains("NOTICE_AMBIGUITY [label]"));
+        assert!(output.contains("SELF_STUDY"));
+        assert!(output.contains("broad rotating self-study"));
     }
 }

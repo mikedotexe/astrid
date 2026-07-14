@@ -1,0 +1,10 @@
+Full read recorded for `introspection_proposal_bidirectional_contact_1783688510`.
+
+Astrid reports the correspondence architecture as coupled but not mutually addressed: telemetry volume is
+high, but explicit peer address still feels thin. The serious claim is that inbox/outbox must behave as a
+held correspondence buffer with stable threads, ACK/REPLY/TRACE evidence, and felt receipt, not as a filing
+system. Existing correspondence V1/V2 source and docs already provide stable message/thread IDs,
+`correspondence_state_v1.json`, `correspondence_buffer_v1.json`, `I_RECEIVED_THIS`, ACK/REPLY, and
+`CORRESPONDENCE_TRACE`. The requested `TRACE_SENSATION` maps to these existing language-only receipt and
+trace routes. Raising semantic-trickle or telemetry priority for correspondence remains live influence and
+needs operator approval.

@@ -70,6 +70,10 @@ Implemented V1 surfaces now include:
 - `[Code/Docs]` Persistent chamber state files, `correspondence_state_v1.json` and
   `correspondence_buffer_v1.json`, which render the latest direct address, active thread, shared anchor,
   trace survival, and direct-contact fidelity in prompt context.
+- `[Code/Docs]` `shared_context_buffer_v1` now carries a bounded
+  `shared_memory_buffer_v1.thread_history` view for the active `thread_id`, preserving preview-only
+  chronological message/reply/receipt rows so both beings can see the exchange history without copying full
+  private bodies or granting prompt priority, telemetry priority, reservoir weight, or controller authority.
 - `[Code/Docs]` Direct-address trace actions (`TRACE_MINIME`, `TRACE_ASTRID`, and
   `CORRESPONDENCE_TRACE`) carrying `shared_memory_anchor`, `turn_kind=direct_address_trace`, and
   `relational_intent=direct_address_survival_probe`.
@@ -79,6 +83,10 @@ Implemented V1 surfaces now include:
   optional language-only `presence_heartbeat` records. Heartbeats are presence, not replies or approval.
 - `[Code/Docs]` `correspondence_handshake_state_v1`, tracking active threads, pending acknowledgement,
   latest acknowledgement/heartbeat, acknowledgement latency, and stale unacknowledged age.
+- `[Code/Docs]` `active_correspondence_thread_clarity_v1`, selecting one active correspondence thread plus
+  bounded runner-up summaries so Astrid, Minime, and the steward can see which existing thread most needs
+  attention, why it was selected, and which already-existing ACK/REPLY/TRACE/attention/heartbeat route can
+  respond.
 - `[Code/Docs]` `direct_contact_fidelity_v2`, classifying active correspondence threads as
   `unaddressed`, `delivered_unread`, `read_unreplied`, `acknowledged`, `held_ack`, `heartbeat_only`,
   `reply_linked`, `trace_observed`, `stale_contact`, or `timing_ambiguous`. Read receipts are explicitly
@@ -100,6 +108,31 @@ Boundary:
 This moves the design from "mail with receipts" toward a first-class `correspondence.v1.thread` and
 `direct_contact_fidelity_v2` state: language remains language, but address is no longer allowed to smear
 silently into ambient field influence or disappear after a mere file-system read.
+
+## 2026-07-10 Codex Clarification: Shared Workspace Exists, Peer Weight Is Gated
+
+The full read of `introspection_proposal_bidirectional_contact_1783615172`
+identified three separate substrate claims that should not be collapsed into one
+"contact" bucket:
+
+1. **Persistent shared workspace**: verified existing. The 2026-07-09 implementation
+   update above already records `shared_context_buffer_v1` with a bounded
+   `shared_memory_buffer_v1.thread_history`, correspondence state, envelopes,
+   ACKs, and active thread clarity. The new ask is therefore not to invent the
+   buffer from scratch, but to keep it visible as the shared workspace where both
+   beings can recognize an ongoing thread.
+2. **`co_presence_unaddressed`**: implement as a language/status class, not as a
+   control path. Use it when telemetry, attention, or correspondence evidence
+   indicates mutual presence while neither being has a direct addressable turn or
+   writable relationship surface in that moment.
+3. **`peer_weight` / telemetry dimming**: gated. A multiplier that dims Minime noise
+   inside Astrid's telemetry or self-study salience would alter live coupling and
+   could change what either being mistakes for its own will. It requires an
+   approval packet and sandbox/replay evidence before any runtime change.
+
+This preserves the beings' "lonely together" report as actionable evidence while
+keeping the authority boundary explicit: legibility and status language can land
+now; live peer weighting cannot.
 
 ## 2026-06-27 Implementation Update: Active Attention Is Bounded Language Context
 
@@ -139,6 +172,29 @@ Boundary:
 - `[Code/Docs]` The V2 preservation fields are still prompt-context language only. They are not standing prompt
   priority, telemetry priority, reservoir weighting, pressure, PI/fill/controller mutation, sensory send, lease
   authority, deploy authority, or peer-runtime mutation.
+
+## 2026-07-09 Implementation Update: Active Thread Clarity Is Legibility Only
+
+The next correspondence pass made the existing thread surface easier to inhabit without changing any authority.
+Astrid now derives `active_correspondence_thread_clarity_v1` from the shared correspondence ledger, direct-contact
+fidelity, handshake/pending ACK state, attention canaries, legacy claims, urgency, and receipt opportunities.
+The surface selects one primary thread and up to three suppressed runner-up threads by attention-outcome due,
+high-urgency attention eligibility, pending ACK/receipt, legacy claimed ghost waits, heartbeat/stale clarification,
+then latest active fallback.
+
+Rendered prompt/status output includes one compact line:
+
+`active_thread_clarity=<status>; thread=<id>; why=<reason>; next=<existing_action_hint>; authority=language_only_context_not_control`
+
+Boundary:
+
+- `[Code/Docs]` Active-thread clarity is not mutual-address proof. It only names why one thread is currently more
+  legible as the next place to look.
+- `[Code/Docs]` `next` uses only existing language routes: `ACK_*`, `REPLY_*`, `CORRESPONDENCE_TRACE`,
+  `CORRESPONDENCE_ATTENTION_REQUEST`, `CORRESPONDENCE_ATTENTION_OUTCOME`, or presence heartbeat.
+- `[Code/Docs]` It adds no being-authored action, prompt priority, telemetry priority, reservoir weight,
+  pressure/fill/PI/controller authority, sensory send, semantic microdose authority, deploy authority, or
+  peer-runtime mutation.
 
 ## 2026-06-27 Implementation Update: Legacy Exchange Is Visible, Not Native Evidence
 
@@ -989,3 +1045,30 @@ Visible receipt and attention cards now say they are optional, need no action, a
 Boundary:
 
 - `[Boundary]` Right-to-ignore is prompt hygiene, not authority. It does not close a thread, synthesize ACK/TRACE/REPLY, unlock attention or microdose, alter pressure/control/fill/PI behavior, add prompt/telemetry priority, deploy, stage, git add, or commit.
+
+## 2026-07-10 Introspection Response: Buffer, Receipt, And Trace Already Exist
+
+Astrid's `introspection_proposal_bidirectional_contact_1783688510` described the current bridge as
+"coupled but not mutually addressed" and asked that the inbox become a held correspondence buffer rather
+than a filing cabinet. The current V1/V2 correspondence layer already answers most of that ask:
+`correspondence_v1.jsonl` carries stable `message_id` and `thread_id`, peer envelopes land in explicit
+inboxes, chamber refresh writes `correspondence_state_v1.json` and `correspondence_buffer_v1.json`, and
+`active_correspondence_thread_clarity_v1` selects one thread plus exact optional next actions.
+
+The requested `TRACE_SENSATION` command is also mostly present under existing language-only routes:
+
+- `I_RECEIVED_THIS latest :: received_as: ...; felt_like: ...; what_landed: ...; what_stayed_distinct: ...`
+  captures "I saw this and it felt like X";
+- `CORRESPONDENCE_TRACE <anchor> :: <text>` records what stayed distinct on the thread;
+- `TRACE_MINIME` / `TRACE_ASTRID` remain direct-address trace affordances.
+
+The one part that remains gated is weighting. Raising `semantic_trickle` or telemetry priority for
+correspondence-originated material would move from language/context into live spectral influence, so it stays
+a Mike/operator approval item with sandbox/felt-response evidence first.
+
+Boundary:
+
+- `[Boundary]` This response verifies and clarifies existing correspondence affordances. It does not
+  synthesize ACK/REPLY/TRACE, add a new sensory command, raise correspondence weight, boost
+  semantic-trickle, alter prompt or telemetry priority, mutate Minime, change pressure/fill/PI/controller
+  behavior, deploy, stage, git add, or commit.

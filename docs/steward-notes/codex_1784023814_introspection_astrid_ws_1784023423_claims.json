@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "Mode-packing around 0.30 with low pressure risk can still feel syrupy or effortful and should be visible as a viscous/felt-dead-zone band.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "The pressure trend and high-entropy smoothing surfaces should preserve drift evidence without mistaking low risk for low effort.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "More aggressive viscosity weighting between 0.25 and 0.35 mode-packing would alter live pressure/porosity interpretation and needs V2 approval.",
+    "disposition": "authority_gated"
+  }
+]

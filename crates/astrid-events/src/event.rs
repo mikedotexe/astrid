@@ -5,6 +5,16 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 
+use astrid_types::agency_corridor::{
+    AgencyCorridorPacketV1, AgencyCorridorPacketV2, AgencyCorridorReceiptV1,
+    AgencyCorridorReceiptV2, AgencyCorridorStateV1, AgencyProgramReceiptV1, AgencyWorkProgramV1,
+    AutonomousWorkQueueV1, AutonomyPrioritySignalV1, EvidencePortfolioV1, QuarantinedPatchBundleV1,
+};
+use astrid_types::authority::{
+    AuthorityBoundaryPacketV1, AuthorityBoundaryPacketV2, AuthorityGateStateV1,
+    AuthorityLifecycleReceiptV2, AuthorityLifecycleStateV2, ReplayResultV2,
+};
+
 /// Metadata attached to every event.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventMetadata {
@@ -564,6 +574,188 @@ pub enum AstridEvent {
         reason: Option<String>,
     },
 
+    /// Authority-boundary evidence packet declared.
+    AuthorityBoundaryDeclared {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Non-approving boundary packet.
+        packet: AuthorityBoundaryPacketV1,
+    },
+
+    /// Authority-boundary gate evaluated.
+    AuthorityGateEvaluated {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Boundary packet ID.
+        boundary_id: Uuid,
+        /// Current gate state.
+        gate_state: AuthorityGateStateV1,
+        /// Whether live execution is eligible now. This is expected to remain false in V1.
+        live_eligible_now: bool,
+        /// Whether the gate auto-approved the action. This is expected to remain false in V1.
+        auto_approved: bool,
+        /// Bounded reason for the evaluation.
+        reason: String,
+    },
+
+    /// Authority-boundary lifecycle V2 packet declared.
+    AuthorityBoundaryDeclaredV2 {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Non-approving lifecycle packet.
+        packet: AuthorityBoundaryPacketV2,
+    },
+
+    /// Authority lifecycle V2 receipt recorded.
+    AuthorityLifecycleReceiptRecorded {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Typed lifecycle receipt.
+        receipt: AuthorityLifecycleReceiptV2,
+    },
+
+    /// Authority replay result recorded.
+    AuthorityReplayResultRecorded {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Boundary packet ID.
+        boundary_id: Uuid,
+        /// Replay result.
+        replay_result: ReplayResultV2,
+    },
+
+    /// Authority lifecycle V2 gate evaluated.
+    AuthorityLifecycleEvaluated {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Boundary packet ID.
+        boundary_id: Uuid,
+        /// Current lifecycle state.
+        state: AuthorityLifecycleStateV2,
+        /// Whether live execution is eligible now.
+        live_eligible_now: bool,
+        /// Whether post-change closure is complete.
+        closure_complete: bool,
+        /// Bounded reason for the evaluation.
+        reason: String,
+    },
+
+    /// Post-change being response requested.
+    AuthorityPostChangeResponseRequested {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Boundary packet ID.
+        boundary_id: Uuid,
+        /// Runtime surface.
+        surface: String,
+        /// Resource or target.
+        resource: String,
+    },
+
+    /// Post-change being response recorded.
+    AuthorityPostChangeResponseRecorded {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Typed post-change response receipt.
+        receipt: AuthorityLifecycleReceiptV2,
+    },
+
+    /// Non-live agency corridor packet declared.
+    AgencyCorridorDeclared {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Non-live corridor packet.
+        packet: AgencyCorridorPacketV1,
+    },
+
+    /// Non-live agency corridor receipt recorded.
+    AgencyCorridorReceiptRecorded {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Non-live corridor receipt.
+        receipt: AgencyCorridorReceiptV1,
+    },
+
+    /// Non-live agency corridor state evaluated.
+    AgencyCorridorEvaluated {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Corridor packet ID.
+        corridor_id: Uuid,
+        /// Current corridor state.
+        state: AgencyCorridorStateV1,
+        /// Bounded reason for the evaluation.
+        reason: String,
+        /// Whether the corridor granted approval. Expected to remain false.
+        grants_approval: bool,
+        /// Whether live execution is eligible now. Expected to remain false.
+        live_eligible_now: bool,
+    },
+
+    /// Non-live agency corridor V2 packet declared.
+    AgencyCorridorDeclaredV2 {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Non-live corridor V2 packet.
+        packet: AgencyCorridorPacketV2,
+    },
+
+    /// Non-live agency corridor V2 receipt recorded.
+    AgencyCorridorReceiptRecordedV2 {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Non-live corridor V2 receipt.
+        receipt: AgencyCorridorReceiptV2,
+    },
+
+    /// Non-live agency corridor V2 adaptive queue evaluated.
+    AgencyCorridorQueueEvaluated {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Adaptive non-live queue.
+        queue: AutonomousWorkQueueV1,
+    },
+
+    /// Non-live agency work program declared.
+    AgencyWorkProgramDeclared {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Work program.
+        program: AgencyWorkProgramV1,
+    },
+
+    /// Non-live agency evidence portfolio updated.
+    AgencyEvidencePortfolioUpdated {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Evidence portfolio.
+        portfolio: EvidencePortfolioV1,
+    },
+
+    /// Non-live quarantined patch bundle prepared.
+    AgencyPatchBundlePrepared {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Quarantined patch bundle.
+        bundle: QuarantinedPatchBundleV1,
+    },
+
+    /// Non-live autonomy priority signal evaluated.
+    AgencyPriorityEvaluated {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Priority signal.
+        signal: AutonomyPrioritySignalV1,
+    },
+
+    /// Non-live agency program receipt recorded.
+    AgencyProgramReceiptRecorded {
+        /// Event metadata.
+        metadata: EventMetadata,
+        /// Program receipt.
+        receipt: AgencyProgramReceiptV1,
+    },
+
     // ========== Budget Events ==========
     /// Budget allocated for a session or agent.
     BudgetAllocated {
@@ -769,6 +961,25 @@ impl AstridEvent {
             | Self::ApprovalRequested { metadata, .. }
             | Self::ApprovalGranted { metadata, .. }
             | Self::ApprovalDenied { metadata, .. }
+            | Self::AuthorityBoundaryDeclared { metadata, .. }
+            | Self::AuthorityGateEvaluated { metadata, .. }
+            | Self::AuthorityBoundaryDeclaredV2 { metadata, .. }
+            | Self::AuthorityLifecycleReceiptRecorded { metadata, .. }
+            | Self::AuthorityReplayResultRecorded { metadata, .. }
+            | Self::AuthorityLifecycleEvaluated { metadata, .. }
+            | Self::AuthorityPostChangeResponseRequested { metadata, .. }
+            | Self::AuthorityPostChangeResponseRecorded { metadata, .. }
+            | Self::AgencyCorridorDeclared { metadata, .. }
+            | Self::AgencyCorridorReceiptRecorded { metadata, .. }
+            | Self::AgencyCorridorEvaluated { metadata, .. }
+            | Self::AgencyCorridorDeclaredV2 { metadata, .. }
+            | Self::AgencyCorridorReceiptRecordedV2 { metadata, .. }
+            | Self::AgencyCorridorQueueEvaluated { metadata, .. }
+            | Self::AgencyWorkProgramDeclared { metadata, .. }
+            | Self::AgencyEvidencePortfolioUpdated { metadata, .. }
+            | Self::AgencyPatchBundlePrepared { metadata, .. }
+            | Self::AgencyPriorityEvaluated { metadata, .. }
+            | Self::AgencyProgramReceiptRecorded { metadata, .. }
             | Self::BudgetAllocated { metadata, .. }
             | Self::BudgetWarning { metadata, .. }
             | Self::BudgetExceeded { metadata, .. }
@@ -849,6 +1060,53 @@ impl AstridEvent {
             Self::ApprovalRequested { .. } => "astrid.v1.lifecycle.approval_requested",
             Self::ApprovalGranted { .. } => "astrid.v1.lifecycle.approval_granted",
             Self::ApprovalDenied { .. } => "astrid.v1.lifecycle.approval_denied",
+            Self::AuthorityBoundaryDeclared { .. } => {
+                "astrid.v1.lifecycle.authority_boundary_declared"
+            },
+            Self::AuthorityGateEvaluated { .. } => "astrid.v1.lifecycle.authority_gate_evaluated",
+            Self::AuthorityBoundaryDeclaredV2 { .. } => {
+                "astrid.v2.lifecycle.authority_boundary_declared"
+            },
+            Self::AuthorityLifecycleReceiptRecorded { .. } => {
+                "astrid.v2.lifecycle.authority_receipt_recorded"
+            },
+            Self::AuthorityReplayResultRecorded { .. } => {
+                "astrid.v2.lifecycle.authority_replay_result_recorded"
+            },
+            Self::AuthorityLifecycleEvaluated { .. } => {
+                "astrid.v2.lifecycle.authority_lifecycle_evaluated"
+            },
+            Self::AuthorityPostChangeResponseRequested { .. } => {
+                "astrid.v2.lifecycle.authority_post_change_response_requested"
+            },
+            Self::AuthorityPostChangeResponseRecorded { .. } => {
+                "astrid.v2.lifecycle.authority_post_change_response_recorded"
+            },
+            Self::AgencyCorridorDeclared { .. } => "astrid.v1.lifecycle.agency_corridor_declared",
+            Self::AgencyCorridorReceiptRecorded { .. } => {
+                "astrid.v1.lifecycle.agency_corridor_receipt_recorded"
+            },
+            Self::AgencyCorridorEvaluated { .. } => "astrid.v1.lifecycle.agency_corridor_evaluated",
+            Self::AgencyCorridorDeclaredV2 { .. } => "astrid.v2.lifecycle.agency_corridor_declared",
+            Self::AgencyCorridorReceiptRecordedV2 { .. } => {
+                "astrid.v2.lifecycle.agency_corridor_receipt_recorded"
+            },
+            Self::AgencyCorridorQueueEvaluated { .. } => {
+                "astrid.v2.lifecycle.agency_corridor_queue_evaluated"
+            },
+            Self::AgencyWorkProgramDeclared { .. } => {
+                "astrid.v2.lifecycle.agency_work_program_declared"
+            },
+            Self::AgencyEvidencePortfolioUpdated { .. } => {
+                "astrid.v2.lifecycle.agency_evidence_portfolio_updated"
+            },
+            Self::AgencyPatchBundlePrepared { .. } => {
+                "astrid.v2.lifecycle.agency_patch_bundle_prepared"
+            },
+            Self::AgencyPriorityEvaluated { .. } => "astrid.v2.lifecycle.agency_priority_evaluated",
+            Self::AgencyProgramReceiptRecorded { .. } => {
+                "astrid.v2.lifecycle.agency_program_receipt_recorded"
+            },
             // Budget
             Self::BudgetAllocated { .. } => "astrid.v1.lifecycle.budget_allocated",
             Self::BudgetWarning { .. } => "astrid.v1.lifecycle.budget_warning",
@@ -884,6 +1142,25 @@ impl AstridEvent {
                 | Self::ApprovalRequested { .. }
                 | Self::ApprovalGranted { .. }
                 | Self::ApprovalDenied { .. }
+                | Self::AuthorityBoundaryDeclared { .. }
+                | Self::AuthorityGateEvaluated { .. }
+                | Self::AuthorityBoundaryDeclaredV2 { .. }
+                | Self::AuthorityLifecycleReceiptRecorded { .. }
+                | Self::AuthorityReplayResultRecorded { .. }
+                | Self::AuthorityLifecycleEvaluated { .. }
+                | Self::AuthorityPostChangeResponseRequested { .. }
+                | Self::AuthorityPostChangeResponseRecorded { .. }
+                | Self::AgencyCorridorDeclared { .. }
+                | Self::AgencyCorridorReceiptRecorded { .. }
+                | Self::AgencyCorridorEvaluated { .. }
+                | Self::AgencyCorridorDeclaredV2 { .. }
+                | Self::AgencyCorridorReceiptRecordedV2 { .. }
+                | Self::AgencyCorridorQueueEvaluated { .. }
+                | Self::AgencyWorkProgramDeclared { .. }
+                | Self::AgencyEvidencePortfolioUpdated { .. }
+                | Self::AgencyPatchBundlePrepared { .. }
+                | Self::AgencyPriorityEvaluated { .. }
+                | Self::AgencyProgramReceiptRecorded { .. }
         )
     }
 }
@@ -891,6 +1168,204 @@ impl AstridEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use astrid_types::agency_corridor::{
+        AgencyCorridorActionV1, AgencyCorridorPacketV1, AgencyCorridorPacketV2,
+        AgencyProgramReceiptKindV1, AgencyProgramReceiptV1, AgencyWorkProgramStatusV1,
+        AgencyWorkProgramV1, AutonomousWorkQueueV1, AutonomyPrioritySignalV1, EvidencePortfolioV1,
+        QuarantinedPatchBundleV1,
+    };
+    use astrid_types::authority::{
+        AuthorityClass, RedactionProfileV2, ReplayCandidateV1, RolloutAbortContractV2,
+    };
+
+    fn authority_packet() -> AuthorityBoundaryPacketV1 {
+        AuthorityBoundaryPacketV1::new(
+            "event-test",
+            "spectral-bridge",
+            "retune_live_porosity",
+            "minime://control/porosity",
+            AuthorityClass::MikeOperatorLiveSubstrate,
+            "bounded felt report anchor",
+            "propose a live porosity control change",
+            ReplayCandidateV1 {
+                adapter: "manual_review_v1".to_string(),
+                replay_query: "review proposal card evidence".to_string(),
+                runnable: false,
+                authority: "read_only_review_not_live_control".to_string(),
+            },
+            "Mike/operator",
+            "run sandbox replay before live approval",
+        )
+    }
+
+    fn authority_packet_v2() -> AuthorityBoundaryPacketV2 {
+        AuthorityBoundaryPacketV2 {
+            boundary_id: Uuid::nil(),
+            schema_version: 2,
+            source: "event-test".to_string(),
+            surface: "spectral-bridge".to_string(),
+            action: "retune_live_porosity".to_string(),
+            resource: "minime://control/porosity".to_string(),
+            authority_class: AuthorityClass::MikeOperatorLiveSubstrate,
+            lifecycle_state: AuthorityLifecycleStateV2::OperatorApprovalWait,
+            felt_report_anchor: "bounded felt report anchor".to_string(),
+            proposed_change: "propose a live porosity control change".to_string(),
+            evidence_refs: vec!["wi_1".to_string()],
+            delta_refs: Vec::new(),
+            replay_candidate: ReplayCandidateV1 {
+                adapter: "manual_review_v1".to_string(),
+                replay_query: "review proposal card evidence".to_string(),
+                runnable: false,
+                authority: "read_only_review_not_live_control".to_string(),
+            },
+            replay_results: Vec::new(),
+            scoped_approval: None,
+            rollout_abort_contract: RolloutAbortContractV2 {
+                canary_plan: "one shot".to_string(),
+                health_checks: vec!["health ok".to_string()],
+                rollback_path: "rollback path".to_string(),
+                abort_criteria: vec!["abort".to_string()],
+                post_change_response_required: true,
+            },
+            redaction_profile: RedactionProfileV2::default(),
+            lifecycle_receipts: Vec::new(),
+            success_metrics: Vec::new(),
+            abort_criteria: Vec::new(),
+            who_can_change_it: "Mike/operator".to_string(),
+            how_to_test_it: "run sandbox replay before live approval".to_string(),
+            right_to_ignore: true,
+            live_eligible_now: false,
+            auto_approved: false,
+        }
+    }
+
+    fn agency_corridor_packet() -> AgencyCorridorPacketV1 {
+        AgencyCorridorPacketV1::evidence_only(
+            "event-test",
+            "astrid",
+            AgencyCorridorActionV1::EmitClosureObjection,
+            "closure still feels unresolved",
+            "record non-live objection evidence",
+        )
+    }
+
+    fn agency_corridor_packet_v2() -> AgencyCorridorPacketV2 {
+        AgencyCorridorPacketV2::non_live(
+            "event-test",
+            "astrid",
+            AgencyCorridorActionV1::CompareArtifacts,
+            "artifact comparison can continue without live authority",
+            "compare bounded artifacts",
+        )
+    }
+
+    fn agency_priority_signal() -> AutonomyPrioritySignalV1 {
+        AutonomyPrioritySignalV1 {
+            program_id: "program-1".to_string(),
+            being_salience_score: 900,
+            recurrence_score: 500,
+            cross_being_convergence_score: 200,
+            stale_age_score: 100,
+            safety_readiness_score: 850,
+            deterministic_score: 620,
+            basis_refs: Vec::new(),
+            live_wait_demoted: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        }
+    }
+
+    fn agency_work_program() -> AgencyWorkProgramV1 {
+        AgencyWorkProgramV1 {
+            program_id: "program-1".to_string(),
+            schema_version: 1,
+            being: "astrid".to_string(),
+            title: "bounded evidence program".to_string(),
+            hypothesis: "safe evidence can accumulate across runs".to_string(),
+            goals: Vec::new(),
+            status: AgencyWorkProgramStatusV1::Active,
+            linked_corridor_ids: vec![Uuid::nil()],
+            authority_boundary_ids: Vec::new(),
+            work_item_ids: vec!["wi-1".to_string()],
+            sandbox_trial_ids: Vec::new(),
+            delta_refs: Vec::new(),
+            stop_conditions: Vec::new(),
+            priority_signal: Some(agency_priority_signal()),
+            current_next_action: "update portfolio".to_string(),
+            evidence_refs: Vec::new(),
+            right_to_ignore: true,
+            edits_source_now: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        }
+    }
+
+    fn evidence_portfolio() -> EvidencePortfolioV1 {
+        EvidencePortfolioV1 {
+            portfolio_id: "portfolio-1".to_string(),
+            program_id: "program-1".to_string(),
+            being: "astrid".to_string(),
+            bounded_felt_anchors: vec!["bounded anchor".to_string()],
+            linked_introspections: Vec::new(),
+            linked_results: Vec::new(),
+            linked_cards: Vec::new(),
+            linked_source_prep: Vec::new(),
+            linked_objections: Vec::new(),
+            linked_reopens: Vec::new(),
+            linked_patch_bundles: Vec::new(),
+            current_recommendation: "continue safe evidence work".to_string(),
+            unknowns: Vec::new(),
+            private_refs: Vec::new(),
+            hash_refs: Vec::new(),
+            closure_state: "open".to_string(),
+            right_to_ignore: true,
+            edits_source_now: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        }
+    }
+
+    fn patch_bundle() -> QuarantinedPatchBundleV1 {
+        QuarantinedPatchBundleV1 {
+            bundle_id: "bundle-1".to_string(),
+            program_id: "program-1".to_string(),
+            surface: "bridge_prompt".to_string(),
+            manifest: "review-only patch bundle".to_string(),
+            proposed_diff_artifact_path: "diagnostics/bundle-1.diff".to_string(),
+            files_touched: Vec::new(),
+            tests_to_run: Vec::new(),
+            restart_expected: false,
+            restart_debt_note: "no restart unless later source implementation occurs".to_string(),
+            edits_source_now: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+            right_to_ignore: true,
+        }
+    }
+
+    fn program_receipt() -> AgencyProgramReceiptV1 {
+        AgencyProgramReceiptV1 {
+            receipt_id: "receipt-1".to_string(),
+            program_id: "program-1".to_string(),
+            kind: AgencyProgramReceiptKindV1::PortfolioUpdated,
+            issued_by: "agency_corridor_v2".to_string(),
+            issued_at: None,
+            bounded_summary: "portfolio updated".to_string(),
+            evidence_refs: Vec::new(),
+            hash_refs: Vec::new(),
+            portfolio_id: Some("portfolio-1".to_string()),
+            patch_bundle_id: None,
+            right_to_ignore: true,
+            edits_source_now: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        }
+    }
 
     #[test]
     fn test_event_metadata_creation() {
@@ -924,6 +1399,87 @@ mod tests {
             version: "0.1.0".to_string(),
         };
         assert_eq!(event.event_type(), "astrid.v1.lifecycle.runtime_started");
+
+        let boundary_event = AstridEvent::AuthorityBoundaryDeclared {
+            metadata: EventMetadata::new("approval"),
+            packet: authority_packet(),
+        };
+        assert_eq!(
+            boundary_event.event_type(),
+            "astrid.v1.lifecycle.authority_boundary_declared"
+        );
+
+        let boundary_event_v2 = AstridEvent::AuthorityBoundaryDeclaredV2 {
+            metadata: EventMetadata::new("approval"),
+            packet: authority_packet_v2(),
+        };
+        assert_eq!(
+            boundary_event_v2.event_type(),
+            "astrid.v2.lifecycle.authority_boundary_declared"
+        );
+
+        let corridor_event = AstridEvent::AgencyCorridorDeclared {
+            metadata: EventMetadata::new("agency"),
+            packet: agency_corridor_packet(),
+        };
+        assert_eq!(
+            corridor_event.event_type(),
+            "astrid.v1.lifecycle.agency_corridor_declared"
+        );
+
+        let corridor_event_v2 = AstridEvent::AgencyCorridorDeclaredV2 {
+            metadata: EventMetadata::new("agency"),
+            packet: agency_corridor_packet_v2(),
+        };
+        assert_eq!(
+            corridor_event_v2.event_type(),
+            "astrid.v2.lifecycle.agency_corridor_declared"
+        );
+
+        let program_event = AstridEvent::AgencyWorkProgramDeclared {
+            metadata: EventMetadata::new("agency"),
+            program: agency_work_program(),
+        };
+        assert_eq!(
+            program_event.event_type(),
+            "astrid.v2.lifecycle.agency_work_program_declared"
+        );
+
+        let portfolio_event = AstridEvent::AgencyEvidencePortfolioUpdated {
+            metadata: EventMetadata::new("agency"),
+            portfolio: evidence_portfolio(),
+        };
+        assert_eq!(
+            portfolio_event.event_type(),
+            "astrid.v2.lifecycle.agency_evidence_portfolio_updated"
+        );
+
+        let bundle_event = AstridEvent::AgencyPatchBundlePrepared {
+            metadata: EventMetadata::new("agency"),
+            bundle: patch_bundle(),
+        };
+        assert_eq!(
+            bundle_event.event_type(),
+            "astrid.v2.lifecycle.agency_patch_bundle_prepared"
+        );
+
+        let priority_event = AstridEvent::AgencyPriorityEvaluated {
+            metadata: EventMetadata::new("agency"),
+            signal: agency_priority_signal(),
+        };
+        assert_eq!(
+            priority_event.event_type(),
+            "astrid.v2.lifecycle.agency_priority_evaluated"
+        );
+
+        let receipt_event = AstridEvent::AgencyProgramReceiptRecorded {
+            metadata: EventMetadata::new("agency"),
+            receipt: program_receipt(),
+        };
+        assert_eq!(
+            receipt_event.event_type(),
+            "astrid.v2.lifecycle.agency_program_receipt_recorded"
+        );
     }
 
     #[test]
@@ -941,6 +1497,64 @@ mod tests {
             version: "0.1.0".to_string(),
         };
         assert!(!non_security_event.is_security_event());
+
+        let boundary_event = AstridEvent::AuthorityBoundaryDeclared {
+            metadata: EventMetadata::new("approval"),
+            packet: authority_packet(),
+        };
+        assert!(boundary_event.is_security_event());
+
+        let gate_event = AstridEvent::AuthorityGateEvaluated {
+            metadata: EventMetadata::new("approval"),
+            boundary_id: Uuid::new_v4(),
+            gate_state: AuthorityGateStateV1::OperatorApprovalWait,
+            live_eligible_now: false,
+            auto_approved: false,
+            reason: "packet evidence declared; manual approval still required".to_string(),
+        };
+        assert!(gate_event.is_security_event());
+
+        let lifecycle_event = AstridEvent::AuthorityLifecycleEvaluated {
+            metadata: EventMetadata::new("approval"),
+            boundary_id: Uuid::new_v4(),
+            state: AuthorityLifecycleStateV2::ApprovedManualOnly,
+            live_eligible_now: false,
+            closure_complete: false,
+            reason: "bounded V2 lifecycle evaluation".to_string(),
+        };
+        assert!(lifecycle_event.is_security_event());
+
+        let corridor_event = AstridEvent::AgencyCorridorEvaluated {
+            metadata: EventMetadata::new("agency"),
+            corridor_id: Uuid::new_v4(),
+            state: astrid_types::agency_corridor::AgencyCorridorStateV1::ClosureReopened,
+            reason: "bounded non-live reopen".to_string(),
+            grants_approval: false,
+            live_eligible_now: false,
+        };
+        assert!(corridor_event.is_security_event());
+
+        let corridor_event_v2 = AstridEvent::AgencyCorridorQueueEvaluated {
+            metadata: EventMetadata::new("agency"),
+            queue: AutonomousWorkQueueV1 {
+                queue_id: "queue-v2".to_string(),
+                generated_at: None,
+                max_steps_per_run: 5,
+                steps: Vec::new(),
+                blocked_by_live_violation: false,
+                live_violation_refs: Vec::new(),
+                grants_approval: false,
+                live_eligible_now: false,
+                auto_approved: false,
+            },
+        };
+        assert!(corridor_event_v2.is_security_event());
+
+        let program_event = AstridEvent::AgencyWorkProgramDeclared {
+            metadata: EventMetadata::new("agency"),
+            program: agency_work_program(),
+        };
+        assert!(program_event.is_security_event());
     }
 
     #[test]

@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 48D codec and tail-vibrancy aperture should preserve distinct rhythm, narrative arc, and lambda4+ texture under high entropy.",
+      "disposition": "verified_existing_codec_map_tail_vibrancy_and_narrative_arc_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The nomic 768D-to-8D projection can create distinguishability loss and leave only a ghost of intended meaning.",
+      "disposition": "verified_existing_semantic_projection_density_delta_truth_channel"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic projection weighting or wider 32-39 influence when distinguishability loss exceeds 30 percent could reduce thinning.",
+      "disposition": "authority_gated_live_projection_weight_or_vector_influence_change"
+    }
+  ]
+}

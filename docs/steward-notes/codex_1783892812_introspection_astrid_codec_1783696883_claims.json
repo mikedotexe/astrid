@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783696883",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The 48D codec expansion should not ghost or destabilize legacy-adjacent warmth and emotional/intentional dims 24-31.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link legacy warmth mapping and contextual glimpse anchor tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Narrative arc dims 40-43 should capture evolving tone and inflection points rather than a static average.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link four-point narrative arc, curvature, and dynamics tests."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Any future dynamic-arc gain or dimension expansion should remain default-off until replay/steward review because it would change live codec delivery.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Link default-off narrative arc readiness and live-gain boundary."
+    }
+  ]
+}

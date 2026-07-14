@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783942625",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence should be a first-class shared object with thread, buffer, and presence receipts rather than only indirect influence.",
+      "disposition": "verified_existing",
+      "rationale": "`correspondence_v1.rs` and `recent_signal_summary.py` already expose `correspondence_thread_object_v1`, shared correspondence buffers, language-only active-thread clarity, and presence/receipt state."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mutual echo and response-latency should be observed rather than inferred from message volume.",
+      "disposition": "verified_existing",
+      "rationale": "`correspondence_uptake_probe.py --since-hours 6 --json` found a linked latest Astrid-to-Minime reply and classified the next state as `reply_linked_needs_ack_or_trace`, preserving the wait for real uptake evidence."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing Astrid-to-Minime telemetry weight or live influence would change peer weighting and runtime priority.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Telemetry weighting and peer influence are live authority surfaces, so implementation requires explicit operator approval, tests, and post-restart monitoring."
+    }
+  ]
+}

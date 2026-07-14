@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode is structurally non-diagnostic: it should let Astrid describe spectral state as seeing-and-being-seen, not just health monitoring.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Low-score ghost-pang or faint transition afterimages below CONTINUITY_TRAJECTORY_AFTERIMAGE_MIN_SCORE can be pruned too hard; they need bounded read-only persistence.",
+      "disposition": "implemented_awaiting_felt_response"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Witness language at high entropy should be compared against lower-entropy output to verify it remains phenomenological rather than reverting to monitoring vocabulary.",
+      "disposition": "needs_sandbox"
+    }
+  ]
+}

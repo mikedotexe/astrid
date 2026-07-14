@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_types_1783876395",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Comfort-gate range handling should keep low gate plus stable foothold legible as a pressure watch, not a simple habitat failure.",
+      "disposition": "verified_existing",
+      "rationale": "Existing resonance stability tests cover low gate with stable foothold and the dynamic pressure-buffer comfort range."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Missing or non-finite stability inputs should not silently create NaN output or false habitability certainty.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests verify non-finite comfort, foothold, fluctuation, and pressure inputs are ignored without NaN output or false multi-modal score."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A single prioritized gate-closure reason can hide simultaneous pressure interference, mode packing, and temporal persistence causes.",
+      "disposition": "addressed_change",
+      "rationale": "Added `gate_closure_reasons` as a read-only all-causes list while preserving the existing single primary `gate_closure_reason` for compatibility."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_esn_1783574681",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "Dynamic exploration noise should ease through the pressure room instead of snapping from settled stability into structural shock.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link read-only smoothstep pressure-room review source and tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "Lowering `VISCOUS_RHO_FLOOR` from 0.90 to 0.85 might reveal whether crowded stillness is comfort or cage, but it would alter live reservoir dynamics.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Promote as operator-gated live ESN/rho-floor change."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "A live `DYNAMIC_NOISE_PRESSURE_SMOOTHING` or equivalent would require explicit approval because it changes exploration-noise runtime behavior.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Link existing read-only review and gate live wiring behind Mike/operator approval."
+    }
+  ]
+}

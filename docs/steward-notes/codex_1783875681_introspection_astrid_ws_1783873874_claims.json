@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783873874",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The bridge should expose whether semantic trickle remains coherent as pressure shifts, not only whether trickle is numerically present.",
+      "disposition": "addressed_change",
+      "rationale": "Added optional read-only `semantic_coherence_index` to `PressureTrendSmoothingV1`, computed from the latest semantic trickle, density context, and friction relief; existing delta/fidelity fields remain."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tightening reciprocity recent/stale windows under entropy above 0.85 would change live connection timing behavior.",
+      "disposition": "authority_gate",
+      "rationale": "Current source already has dynamic stale-window diagnostics; changing actual recent or stale thresholds remains Tier 5 operator approval work because it affects live bridge status behavior."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Testing the pressure/porosity expansion threshold by forcing mode packing to 0.45 would be a live control/sandbox probe.",
+      "disposition": "authority_gate",
+      "rationale": "The source keeps the expansion readiness as review/approval context. Any forced mode-packing probe or threshold retune must go through explicit sandbox/operator approval."
+    }
+  ]
+}

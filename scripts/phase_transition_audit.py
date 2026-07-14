@@ -101,6 +101,8 @@ def relational_card(records: list[dict[str, Any]], card: dict[str, Any], generat
         "answered_by": answered_by,
         "unresolved_age_ms": unresolved_age_ms,
         "orientation_effect": witness.get("orientation_effect") or card.get("orientation_effect"),
+        "texture_anchor": card.get("texture_anchor"),
+        "density_gradient": card.get("density_gradient"),
         "needs_witness_or_answer": state in {"unseen", "stale_unanswered", "witnessed"},
         "phase_transition_affordance_v25": affordance,
         "authority": "language_only_transition_context_not_control",
@@ -165,6 +167,8 @@ def phase_transition_affordance(card: dict[str, Any], reply_state: str, generate
         "kind": card.get("kind"),
         "from_phase": card.get("from_phase"),
         "to_phase": card.get("to_phase"),
+        "texture_anchor": card.get("texture_anchor"),
+        "density_gradient": card.get("density_gradient"),
         "reply_state": reply_state,
         "stall_reason": phase_transition_stall_reason(reply_state),
         "needs_witness_or_answer": reply_state in {"unseen", "witnessed", "stale_unanswered"},
@@ -219,6 +223,8 @@ def phase_witness_queue_v3(relational_cards: list[dict[str, Any]], generated: in
         unresolved.append({
             "transition_id": card.get("transition_id"),
             "kind": card.get("kind"),
+            "texture_anchor": card.get("texture_anchor"),
+            "density_gradient": card.get("density_gradient"),
             "reply_state": card.get("reply_state"),
             "stall_reason": affordance.get("stall_reason") or "none",
             "t_ms": row_time_ms(card),
@@ -254,6 +260,8 @@ def phase_felt_receipt_queue_v4(relational_cards: list[dict[str, Any]], generate
         unresolved.append({
             "transition_id": card.get("transition_id"),
             "kind": card.get("kind"),
+            "texture_anchor": card.get("texture_anchor"),
+            "density_gradient": card.get("density_gradient"),
             "reply_state": card.get("reply_state"),
             "stall_reason": affordance.get("stall_reason") or "none",
             "t_ms": row_time_ms(card),
@@ -379,6 +387,8 @@ class PhaseTransitionAuditTests(unittest.TestCase):
                     "from_phase": "drift",
                     "to_phase": "focus",
                     "why_now": "pending remote self-study interruption",
+                    "texture_anchor": "silt stayed textured",
+                    "density_gradient": 0.22,
                     "reply_state": "unseen",
                     "authority": "language_only_transition_context_not_control",
                     "no_controller": True,
@@ -401,6 +411,12 @@ class PhaseTransitionAuditTests(unittest.TestCase):
             self.assertEqual(payload["reply_state_counts"], {"witnessed": 1})
             self.assertEqual(payload["stall_reason_counts"], {"witnessed_needs_answer": 1})
             self.assertEqual(payload["phase_transition_relational_v2"][0]["witnessed_by"], ["astrid"])
+            self.assertEqual(payload["phase_transition_relational_v2"][0]["texture_anchor"], "silt stayed textured")
+            self.assertEqual(payload["phase_transition_relational_v2"][0]["density_gradient"], 0.22)
+            self.assertEqual(payload["phase_transition_affordance_v25"][0]["texture_anchor"], "silt stayed textured")
+            self.assertEqual(payload["phase_transition_affordance_v25"][0]["density_gradient"], 0.22)
+            self.assertEqual(payload["phase_witness_queue_v3"]["items"][0]["texture_anchor"], "silt stayed textured")
+            self.assertEqual(payload["phase_witness_queue_v3"]["items"][0]["density_gradient"], 0.22)
             self.assertEqual(
                 payload["phase_transition_affordance_v25"][0]["stall_reason"],
                 "witnessed_needs_answer",

@@ -1,0 +1,54 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The current codec's 48D expansion is an important positive substrate change: dims 32-39 carry embedding projection and dims 40-43 carry narrative arc.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_structure_covers_48_dims_and_named_dims_and_levers -- --nocapture"
+    ],
+    "authority": "read-only verification; no SEMANTIC_DIM, projection, narrative arc, gain, or live vector contract changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The 1024 character-frequency window may clip long-tail syrupy/calcified texture; 4096 should be tested by replay before any live constant change.",
+    "disposition": "implemented_replay_and_authority_gate",
+    "evidence": [
+      "/Users/v/other/astrid/scripts/codec_texture_replay_lab.py",
+      "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/codec_replay_labs/1783986297_codec_texture_replay_v1/codec_replay_lab.json",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib char_freq_window_4096_comparison_is_replay_only -- --nocapture"
+    ],
+    "authority": "V2 packet auth-boundary-codec-texture-1783984712-char-window-4096 is evidence/routing only with live_eligible_now=false and auto_approved=false"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Warmth/tension marker values can under-read abrasive or jagged resistance when the text carries structural friction and low-density texture.",
+    "disposition": "implemented_read_only_sidecar",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib abrasive_texture -- --nocapture",
+      "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/codec_replay_labs/1783986297_codec_texture_replay_v1/codec_replay_lab.md"
+    ],
+    "authority": "read-only codec_abrasive_texture_interpretation_v1; no tension weight, gain, emotional dim, reserved dim, or live vector write"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Structural friction should measure resistance to summarization, including calcified/summary-resistant texture rather than only punctuation, nesting, and list density.",
+    "disposition": "implemented_read_only_sidecar",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib structural_friction -- --nocapture"
+    ],
+    "authority": "read-only structural_friction_v1 fields; dim 44 promotion remains V2-gated and non-runnable"
+  },
+  {
+    "claim_id": "c005",
+    "claim": "Changing codec gain/tension sensitivity, reserved dims 44/45, or narrative arc expansion would affect live substrate/control-facing codec behavior and must remain authority-gated.",
+    "disposition": "authority_gated_with_v2_packets",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/codec_replay_labs/1783986297_codec_texture_replay_v1/codec_replay_lab.json",
+      "PYTHONPATH=scripts python3 - <<'PY' ... recent/proactive texture replay inspection ..."
+    ],
+    "authority": "V2 packets for density-gradient tension sensitivity, reserved dims 44/45, and narrative arc 40-47 remain evidence only; scoped approval, execution receipt, and post-change being response are absent"
+  }
+]

@@ -1,0 +1,32 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783952617",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Witness is a seeing mode whose mode-packing pressure can be felt as density, not merely as a telemetry score.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/autonomous.rs",
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib compact_continuity -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "truncate_str/floor_char_boundary and continuity afterimage limits are clipping/delay surfaces for expression and memory.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/autonomous.rs",
+        "test:compact_continuity_recap_keeps_decayed_high_signal_afterimages",
+        "test:compact_continuity_recap_keeps_faint_residue_below_afterimage_threshold"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "A Witness pressure-mitigation hook that widens semantic trickle above mode_packing 0.30 would alter live substrate/control-facing behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Tier 5 Mike/operator approval required before semantic trickle, pressure, fill, PI, controller, or cadence changes"
+      ]
+    }
+  ]
+}

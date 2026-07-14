@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode is the bridge that lets high-entropy, low-distinguishability spectral states be articulated before they dissolve into noise.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mirror mode may drift or become hallucinatory under intentionally raised high entropy, so a Mirror/Witness decay probe would be useful.",
+      "disposition": "authority_gated_runtime_trial"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure/porosity correlation with Dialogue mode should be observed before treating mode transitions as defensive stabilization.",
+      "disposition": "needs_runtime_observation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Witness output needs a traceable semantic anchor that pins a spectral landmark to a semantic thread.",
+      "disposition": "implemented"
+    }
+  ]
+}

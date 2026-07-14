@@ -1,0 +1,34 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784024706",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "structural_integrity, structural_strain_gap, and shadow_volatility capture weight, stability, and restless shadow texture.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs: structural_integrity_v1, structural_strain_gap_v1, shadow_volatility_proxy_v1",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml viscosity_vector -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "A structurally coherent but low-mobility state should remain visible as potential stuckness rather than being flattened into stability.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs: viscosity_vector_structural_integrity_distinguishes_complex_motion_from_friction and structural_drag_coefficient_separates_thick_yielding_depth_from_stuck_resistance tests",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml viscosity_importance_weights -- --nocapture"
+      ],
+      "authority": "read_only_minime_evidence_not_controller_authority"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "A viscosity_equilibrium_threshold that raises pressure risk or changes regulator behavior would be a live Minime control change.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784029332_texture_viscosity_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_minime_runtime_control"
+    }
+  ]
+}

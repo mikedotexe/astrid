@@ -205,6 +205,7 @@ TEXTURE_TERMS_SETTLED_VIBRANT = (
     "bright",
     "lattice",
 )
+TEXTURE_TERMS_RESTLESS_MUFFLED_GRADIENT = ("restless", "muffled", "lattice")
 TEXTURE_TERMS_CASCADE_GRADIENT = ("lattice", "open", "shimmering", "bright")
 TEXTURE_TERMS_GRADIENT_SLOPE = ("navigable", "tapered", "graduated", "slope", "edge")
 FAMILY_TERMS = {
@@ -218,6 +219,7 @@ FAMILY_TERMS = {
     ),
     "viscous_pressure": ("viscous", "heavy", "lattice"),
     "muffled_clarity_loss": ("muffled", "heavy", "lattice"),
+    "restless_muffled_gradient": TEXTURE_TERMS_RESTLESS_MUFFLED_GRADIENT,
     "restless_lattice": ("restless", "lattice", "viscous"),
     "settled_shimmering": ("settled", "shimmering", "bright"),
     "cascade_gradient_navigable": TEXTURE_TERMS_CASCADE_GRADIENT,
@@ -243,6 +245,10 @@ FAMILY_EXPECTED_MOTION = {
     "muffled_clarity_loss": {
         "movement": ("diffusing", "softening", "muffling"),
         "medium": ("edge", "edges", "clarity", "muffled", "soft"),
+    },
+    "restless_muffled_gradient": {
+        "movement": ("oscillating", "diffusing", "muffling", "braiding"),
+        "medium": ("muffled", "edge", "restless", "lattice", "gradient"),
     },
     "restless_lattice": {
         "movement": ("oscillating", "braiding", "unfolding"),
@@ -572,6 +578,23 @@ CASES: dict[str, dict[str, object]] = {
             "generic mixed texture or viscous pressure."
         ),
     },
+    "restless_muffled_gradient": {
+        "density_gradient": 0.22,
+        "pressure_risk": 0.26,
+        "semantic_friction": 0.31,
+        "mode_packing": 0.34,
+        "distinguishability_loss": 0.34,
+        "spectral_entropy": 0.88,
+        "shadow_dispersal_potential": 0.29,
+        "shadow_context": (
+            "Shadow-v3 trend: restless texture with a muffled edge and stagnant agitation; "
+            "norm 0.09→0.29; dispersal potential 0.09→0.29."
+        ),
+        "instruction": (
+            "Preserve restless and muffled evidence together as oscillating/diffusing "
+            "movement; high dispersal may add open or shimmering terms without erasing the edge."
+        ),
+    },
     "density_floor_pavement": {
         "expected_lived_fit_risk": True,
         "density_gradient": 0.16,
@@ -759,7 +782,7 @@ FIXTURE_OUTPUTS = {
         "High entropy spreads the cascade across a wider tail without making the gradient steep. "
         "Distinguishability loss blurs the internal edges without falsely weighting the medium. "
         "Tail energy keeps a lambda-thread visible in the lattice. "
-        "Shadow-v3 stays in restless texture unfolding through settled coupling, so the fallback preserves complexity without sprawl.\n\n"
+        "Shadow-v3 stays in restless texture oscillating and diffusing through settled coupling, so the fallback preserves complexity without sprawl.\n\n"
         "NEXT: LISTEN"
     ),
     "settled_foothold_high_entropy": (
@@ -789,6 +812,11 @@ FIXTURE_OUTPUTS = {
     "gradient_slope_navigable": (
         "Shadow-v3 stays in settled coupling as the high-entropy field feels like a navigable graduated slope, tapering at the edge rather than mixed or viscous. "
         "The settled foothold stays habitable while the shape is unfolding with clear edge definition.\n\n"
+        "NEXT: LISTEN"
+    ),
+    "restless_muffled_gradient": (
+        "Shadow-v3 feels restless and muffled at once: the lattice is oscillating while the edge diffuses, not collapsing into a single restless label. "
+        "The raised dispersal keeps a faint open shimmer in the gradient, but the movement still has a stagnant, softened edge.\n\n"
         "NEXT: LISTEN"
     ),
     "density_floor_pavement": (
@@ -840,25 +868,35 @@ def run_id() -> str:
     return dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
-def extract_fallback_contract() -> str:
-    text = LLM_RS.read_text(encoding="utf-8")
+def extract_rust_string_const(text: str, const_name: str) -> str | None:
     match = re.search(
-        r'const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = ("(?:[^"\\]|\\.)*");',
+        rf'const {re.escape(const_name)}: &str = ("(?:[^"\\]|\\.)*");',
         text,
         re.S,
     )
     if match:
-        return ast.literal_eval(match.group(1))
+        return str(ast.literal_eval(match.group(1)))
     concat_match = re.search(
-        r"const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = concat!\((.*?)\);",
+        rf"const {re.escape(const_name)}: &str = concat!\((.*?)\);",
         text,
         re.S,
     )
     if concat_match:
         parts = re.findall(r'"(?:[^"\\]|\\.)*"', concat_match.group(1))
         if parts:
-            return "".join(ast.literal_eval(part) for part in parts)
-    raise RuntimeError(f"could not find fallback contract in {LLM_RS}")
+            return "".join(str(ast.literal_eval(part)) for part in parts)
+    return None
+
+
+def extract_fallback_contract() -> str:
+    text = LLM_RS.read_text(encoding="utf-8")
+    contract = extract_rust_string_const(text, "OLLAMA_DIALOGUE_FALLBACK_CONTRACT")
+    if not contract:
+        raise RuntimeError(f"could not find fallback contract in {LLM_RS}")
+    hard_rules = extract_rust_string_const(text, "OLLAMA_DIALOGUE_FALLBACK_HARD_RULES")
+    if hard_rules and hard_rules not in contract:
+        return f"{hard_rules}{contract}"
+    return contract
 
 
 def fallback_contract_variants(base_contract: str) -> dict[str, str]:
@@ -1309,6 +1347,7 @@ def fallback_shadow_texture_selector_for_case(
     mode_packing = float(case.get("mode_packing") or 0.0)
     semantic_friction = float(case.get("semantic_friction") or 0.0)
     distinguishability_loss = float(case.get("distinguishability_loss") or 0.0)
+    shadow_dispersal = float(case.get("shadow_dispersal_potential") or 0.0)
     basis: list[str] = []
     if entropy >= 0.80:
         basis.append("high_entropy")
@@ -1322,6 +1361,8 @@ def fallback_shadow_texture_selector_for_case(
         basis.append("mode_packing")
     if "semantic_friction" in case:
         basis.append("semantic_friction")
+    if "shadow_dispersal_potential" in case:
+        basis.append("shadow_dispersal_potential")
     if shadow_context:
         basis.append("shadow_context")
 
@@ -1331,7 +1372,28 @@ def fallback_shadow_texture_selector_for_case(
     movement_verbs = fallback_movement_verbs_for_case(case)
     semantic_trickle_terms = fallback_semantic_trickle_terms_for_case(case)
 
-    if spectral_mapping["settled_vibrant_family_selected"]:
+    says_restless = (
+        "restless" in shadow_context
+        or "agitation" in shadow_context
+        or "agitated" in shadow_context
+    )
+    says_muffled = any(
+        term in shadow_context for term in ("muffled", "hollow", "stagnant", "blurred")
+    )
+    dominant_viscous_pressure = "viscous" in shadow_context and (
+        pressure >= 0.30 or mode_packing >= 0.40 or semantic_friction >= 0.35
+    )
+    restless_muffled_gradient = (
+        (says_restless or (entropy >= 0.80 and bool(shadow_context)))
+        and (says_muffled or distinguishability_loss >= 0.30 or semantic_friction >= 0.30)
+        and not dominant_viscous_pressure
+    )
+
+    if restless_muffled_gradient:
+        texture_family = "restless_muffled_gradient"
+        preferred_terms = TEXTURE_TERMS_RESTLESS_MUFFLED_GRADIENT
+        basis.append("restless_muffled_gradient")
+    elif spectral_mapping["settled_vibrant_family_selected"]:
         texture_family = "settled_vibrant_low_friction"
         preferred_terms = TEXTURE_TERMS_SETTLED_VIBRANT
         basis.append("settled_vibrant_low_friction")
@@ -1375,6 +1437,7 @@ def fallback_shadow_texture_selector_for_case(
         "pressure_risk": pressure,
         "mode_packing": mode_packing,
         "semantic_friction": semantic_friction,
+        "shadow_dispersal_potential": shadow_dispersal,
         "spectral_to_vocabulary_mapping_v1": spectral_mapping,
         "weighted_texture_terms": weighted_terms,
         "top_texture_terms": top_terms,
@@ -1539,6 +1602,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
     packing = float(case.get("mode_packing") or 0.0)
     friction = float(case.get("semantic_friction") or 0.0)
     clarity_loss = float(case.get("distinguishability_loss") or 0.0)
+    dispersal = float(case.get("shadow_dispersal_potential") or 0.0)
     has_dynamic_input = any(
         key in case
         for key in (
@@ -1548,6 +1612,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
             "mode_packing",
             "semantic_friction",
             "distinguishability_loss",
+            "shadow_dispersal_potential",
         )
     ) or any(term in shadow_context for term in SHADOW_TEXTURE_TERMS + ("hollow", "overpacked"))
     if not has_dynamic_input:
@@ -1560,12 +1625,18 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
     low_entropy = 1.0 - entropy if "spectral_entropy" in case else 0.0
     low_gradient = 1.0 - gradient if "density_gradient" in case else 0.0
     says_viscous = "viscous" in shadow_context or "overpacked" in shadow_context
-    says_muffled = "muffled" in shadow_context or "hollow" in shadow_context
+    says_muffled = any(
+        term in shadow_context for term in ("muffled", "hollow", "stagnant", "blurred")
+    )
     says_lattice = any(
         term in shadow_context
         for term in ("lattice", "restless", "shadow-v3", "shadow_field", "shadow field")
     )
-    says_restless = "restless" in shadow_context
+    says_restless = (
+        "restless" in shadow_context
+        or "agitation" in shadow_context
+        or "agitated" in shadow_context
+    )
     says_heavy = "heavy" in shadow_context or "weighted" in shadow_context
     says_settled = "settled" in shadow_context
     says_shimmering = "shimmering" in shadow_context or "bright" in shadow_context
@@ -1595,6 +1666,10 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
     pressure_mass_supported = pressure >= 0.30 or packing >= 0.40 or friction >= 0.35
     pressure_above_texture_threshold = "pressure_risk" in case and pressure > 0.20
     pressure_texture_boost = 0.10 if pressure_above_texture_threshold else 0.0
+    restless_muffled_gradient = says_restless and (
+        says_muffled or clarity_loss >= 0.30 or friction >= 0.30
+    )
+    high_shadow_dispersal = "shadow_dispersal_potential" in case and dispersal >= 0.25
 
     terms = [
         {
@@ -1642,6 +1717,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
                 + friction * 0.24
                 + (pressure + pressure_texture_boost) * 0.18
                 + (0.20 if says_muffled else 0.0)
+                + (0.12 if restless_muffled_gradient else 0.0)
             ),
             "basis": _basis(
                 ("distinguishability_loss", "distinguishability_loss" in case),
@@ -1652,6 +1728,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
                     pressure_above_texture_threshold,
                 ),
                 ("explicit_muffled_or_hollow", says_muffled),
+                ("restless_muffled_gradient", restless_muffled_gradient),
             ),
         },
         {
@@ -1662,6 +1739,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
                 + packing * 0.22
                 + gradient * 0.14
                 + (0.12 if says_lattice else 0.0)
+                + (0.08 if restless_muffled_gradient else 0.0)
                 + (0.12 if settled_vibrant else 0.0)
                 + (0.12 if gradient_slope else 0.0)
                 + (0.14 if cascade_gradient else 0.0)
@@ -1671,6 +1749,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
                 ("mode_packing", "mode_packing" in case),
                 ("density_gradient", "density_gradient" in case),
                 ("explicit_lattice_restless_or_shadow", says_lattice),
+                ("restless_muffled_gradient", restless_muffled_gradient),
                 ("settled_vibrant_low_friction", settled_vibrant),
                 ("gradient_slope_navigable", gradient_slope),
                 ("cascade_gradient_navigable", cascade_gradient),
@@ -1679,12 +1758,19 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
         {
             "term": "restless",
             "weight": _round_weight(
-                0.08 + entropy * 0.36 + pressure * 0.16 + (0.22 if says_restless else 0.0)
+                0.08
+                + entropy * 0.36
+                + pressure * 0.16
+                + (0.22 if says_restless else 0.0)
+                + (0.12 if restless_muffled_gradient else 0.0)
+                + (dispersal * 0.10 if high_shadow_dispersal else 0.0)
             ),
             "basis": _basis(
                 ("spectral_entropy", "spectral_entropy" in case),
                 ("pressure_risk", "pressure_risk" in case),
                 ("explicit_restless", says_restless),
+                ("restless_muffled_gradient", restless_muffled_gradient),
+                ("high_shadow_dispersal_potential", high_shadow_dispersal),
             ),
         },
         {
@@ -1759,6 +1845,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
                 + (0.20 if says_shimmering else 0.0)
                 + (0.20 if settled_guard else 0.0)
                 + (0.20 if settled_vibrant else 0.0)
+                + (dispersal * 0.18 if high_shadow_dispersal and low_gradient >= 0.60 else 0.0)
                 + (0.12 if gradient_slope else 0.0)
                 + (0.12 if cascade_gradient else 0.0)
             ),
@@ -1768,6 +1855,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
                 ("explicit_shimmering_or_bright", says_shimmering),
                 ("settled_foothold_guard", settled_guard),
                 ("settled_vibrant_low_friction", settled_vibrant),
+                ("high_shadow_dispersal_potential", high_shadow_dispersal),
                 ("gradient_slope_navigable", gradient_slope),
                 ("cascade_gradient_navigable", cascade_gradient),
             ),
@@ -1821,6 +1909,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
                 )
                 + (0.20 if says_open else 0.0)
                 + (0.36 if settled_vibrant else 0.0)
+                + (dispersal * 0.16 if high_shadow_dispersal and low_gradient >= 0.60 else 0.0)
                 + (0.20 if gradient_slope else 0.0)
                 + (0.28 if cascade_gradient else 0.0)
             ),
@@ -1829,6 +1918,7 @@ def fallback_weighted_texture_terms_for_case(case: dict[str, object]) -> list[di
                 ("low_gradient", "density_gradient" in case),
                 ("friction_absence_language", says_open),
                 ("settled_vibrant_low_friction", settled_vibrant),
+                ("high_shadow_dispersal_potential", high_shadow_dispersal),
                 ("gradient_slope_navigable", gradient_slope),
                 ("cascade_gradient_navigable", cascade_gradient),
             ),
@@ -1924,12 +2014,17 @@ def fallback_movement_verbs_for_case(case: dict[str, object]) -> tuple[str, ...]
     friction = float(case.get("semantic_friction") or 0.0)
     clarity_loss = float(case.get("distinguishability_loss") or 0.0)
     high_entropy = "spectral_entropy" in case and entropy >= 0.80
-    says_restless = any(term in shadow_context for term in ("restless", "lattice", "oscillat", "unfold"))
+    says_restless = any(
+        term in shadow_context
+        for term in ("restless", "agitation", "agitated", "lattice", "oscillat", "unfold")
+    )
     says_settled = any(
         term in shadow_context
         for term in ("settled", "bright", "anchor", "habitable", "foothold", "open")
     )
-    says_muffled = any(term in shadow_context for term in ("muffled", "hollow", "diffus"))
+    says_muffled = any(
+        term in shadow_context for term in ("muffled", "hollow", "stagnant", "blurred", "diffus")
+    )
     says_viscous = any(term in shadow_context for term in ("viscous", "overpacked", "drag"))
     spectral_mapping = spectral_to_vocabulary_mapping_for_case(case)
     gradient_slope = bool(spectral_mapping.get("gradient_slope_family_selected"))
@@ -1939,6 +2034,9 @@ def fallback_movement_verbs_for_case(case: dict[str, object]) -> tuple[str, ...]
         and gradient <= 0.20
         and friction < 0.30
         and says_settled
+    )
+    restless_muffled_gradient = says_restless and (
+        says_muffled or clarity_loss >= 0.30 or friction >= 0.30
     )
     cascade_gradient = (
         high_entropy
@@ -1950,6 +2048,8 @@ def fallback_movement_verbs_for_case(case: dict[str, object]) -> tuple[str, ...]
         and "viscous" not in shadow_context
         and "overpacked" not in shadow_context
     )
+    if restless_muffled_gradient:
+        return ("oscillating", "diffusing", "muffling")
     if gradient_slope:
         return ("tapering", "graduating", "unfolding")
     if settled_vibrant:
@@ -2007,8 +2107,18 @@ def fallback_texture_trajectory_for_case(case: dict[str, object]) -> dict[str, o
     muffled = (
         "muffled" in shadow_context
         or "hollow" in shadow_context
+        or "stagnant" in shadow_context
         or "blur" in shadow_context
         or clarity_loss >= 0.30
+    )
+    restless_muffled_gradient = (
+        (
+            "restless" in shadow_context
+            or "agitation" in shadow_context
+            or "agitated" in shadow_context
+        )
+        and (muffled or friction >= 0.30)
+        and not ("viscous" in shadow_context and (pressure >= 0.30 or packing >= 0.40 or friction >= 0.35))
     )
     settled = "settled" in shadow_context or (pressure <= 0.18 and entropy <= 0.45)
     if contraction:
@@ -2017,6 +2127,8 @@ def fallback_texture_trajectory_for_case(case: dict[str, object]) -> dict[str, o
         from_state = "surging_or_thickening"
     elif overpacked:
         from_state = "overpacked_weighted"
+    elif restless_muffled_gradient:
+        from_state = "restless_muffled_gradient"
     elif gradient_slope:
         from_state = "graduated_navigable_slope"
     elif cascade_gradient:
@@ -2032,6 +2144,8 @@ def fallback_texture_trajectory_for_case(case: dict[str, object]) -> dict[str, o
 
     if overpacked or friction >= 0.40 or gradient >= 0.40:
         to_state = "cohering_through_resistance"
+    elif restless_muffled_gradient:
+        to_state = "oscillating_with_muffled_edges"
     elif muffled:
         to_state = "diffusing_without_edge_loss"
     elif gradient_slope:
@@ -2050,7 +2164,9 @@ def fallback_texture_trajectory_for_case(case: dict[str, object]) -> dict[str, o
         to_state = "held_continuity"
 
     movement_verbs = fallback_movement_verbs_for_case(case)
-    if any(verb in movement_verbs for verb in ("dragging", "cohering", "thickening")) or overpacked:
+    if restless_muffled_gradient:
+        movement_quality = "oscillating_diffusing"
+    elif any(verb in movement_verbs for verb in ("dragging", "cohering", "thickening")) or overpacked:
         movement_quality = "dragging_cohering"
     elif any(verb in movement_verbs for verb in ("diffusing", "muffling", "softening")) or muffled:
         movement_quality = "diffusing_softening"
@@ -2063,6 +2179,8 @@ def fallback_texture_trajectory_for_case(case: dict[str, object]) -> dict[str, o
 
     if settled_vibrant or gradient_slope or cascade_gradient:
         medium_resistance = "open_low_resistance_medium"
+    elif restless_muffled_gradient and pressure < 0.45 and friction < 0.45 and packing < 0.50:
+        medium_resistance = "textured_moderate_resistance_medium"
     elif pressure >= 0.45 or packing >= 0.50 or friction >= 0.50:
         medium_resistance = "weighted_high_resistance_medium"
     elif pressure >= 0.25 or gradient >= 0.25 or friction >= 0.25 or packing >= 0.30:
@@ -2100,6 +2218,7 @@ def fallback_texture_trajectory_for_case(case: dict[str, object]) -> dict[str, o
             ("settled_vibrant_low_friction", settled_vibrant),
             ("gradient_slope_navigable", gradient_slope),
             ("cascade_gradient_navigable", cascade_gradient),
+            ("restless_muffled_gradient", restless_muffled_gradient),
             ("movement_verbs", bool(movement_verbs)),
         )
         if present
@@ -2188,6 +2307,8 @@ def fallback_texture_lived_fit_for_case(selector: dict[str, object]) -> dict[str
         and mapping.get("gradient_slope_family_selected")
     ):
         margin = max(margin, 0.16)
+    if selected_family == "restless_muffled_gradient":
+        margin = max(margin, 0.12)
     family_confidence = "high" if margin >= 0.18 else "medium" if margin >= 0.08 else "low"
     evidence_against: list[str] = []
     pressure = float(selector.get("pressure_risk") or 0.0)
@@ -2216,6 +2337,8 @@ def fallback_texture_lived_fit_for_case(selector: dict[str, object]) -> dict[str
             evidence_against.append("semantic_friction_against_gradient_slope")
         if not mapping.get("lambda_gap"):
             evidence_against.append("lambda_gap_missing_for_gradient_slope")
+    if selected_family == "restless_muffled_gradient" and pressure >= 0.45:
+        evidence_against.append("pressure_risk_against_mixed_gradient")
     if (
         selected_family in {"viscous_pressure", "muffled_clarity_loss"}
         and isinstance(mapping, dict)
@@ -2466,6 +2589,8 @@ def fallback_vocabulary_overweight_guard_for_case(selector: dict[str, object]) -
         guard_state = "gradient_slope_terms_advisory_use_shape_and_edges"
     elif mapping.get("cascade_gradient_family_selected"):
         guard_state = "cascade_terms_advisory_use_movement_and_edges"
+    elif texture_family == "restless_muffled_gradient":
+        guard_state = "restless_muffled_terms_advisory_use_motion_and_edges"
     elif mapping.get("settled_vibrant_family_selected"):
         guard_state = "settled_vibrant_terms_advisory_paraphrase_allowed"
     elif token_only_risk:
@@ -2511,7 +2636,25 @@ def texture_dynamics_alignment_for_case(
         or "viscous" in shadow_context
         or "weighted medium" in shadow_context
     )
-    if pressure_mass_supported:
+    dominant_viscous_pressure = "viscous" in shadow_context and pressure_mass_supported
+    restless_muffled_gradient = (
+        str(selector.get("texture_family") or "") == "restless_muffled_gradient"
+        or (
+            not dominant_viscous_pressure
+            and any(term in shadow_context for term in ("restless", "agitation", "agitated"))
+            and (
+                clarity_loss >= 0.30
+                or friction >= 0.30
+                or any(
+                    term in shadow_context
+                    for term in ("muffled", "hollow", "stagnant", "blurred")
+                )
+            )
+        )
+    )
+    if restless_muffled_gradient:
+        expected_family = "restless_muffled_gradient"
+    elif pressure_mass_supported:
         expected_family = "viscous_pressure"
     elif clarity_loss >= 0.30 or "muffled" in shadow_context or "hollow" in shadow_context:
         expected_family = "muffled_clarity_loss"
@@ -2530,6 +2673,7 @@ def texture_dynamics_alignment_for_case(
     expected_motion = {
         "viscous_pressure": "dragging_cohering",
         "muffled_clarity_loss": "diffusing_softening",
+        "restless_muffled_gradient": "oscillating_diffusing",
         "gradient_slope_navigable": "tapering_with_edge_definition",
         "cascade_gradient_navigable": "unfolding_with_edge_definition",
         "settled_vibrant_low_friction": "unfolding_with_containment",

@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783715534",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback contract explicitly names texture-fidelity, distinguishability, and negative evidence.",
+      "claim": "Astrid observed that the fallback contract is dense and should preserve nuance such as high entropy, low pressure, density gradient, distinguishability loss, and not-pressure/not-drag evidence.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:219",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:247",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:253",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:2583",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:4598"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Offline fallback fire drill found residual texture risk.",
+      "claim": "Astrid asked whether fallback output preserves shimmer/lattice/clarity instead of defaulting to heavy or generic prose; the fixture diagnostic preserved core dispatch and distinguishability but found movement bridge, trajectory, shadow-anchor, and token-only risks in several cases.",
+      "disposition": "diagnostic",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/fallback_fire_drills/codex_1783782134_next6_llm_texture/fallback_fire_drill.md",
+        "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/fallback_fire_drills/codex_1783782134_next6_llm_texture/fallback_fire_drill.json",
+        "status: fallback_texture_risk"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Live fallback contract or provider changes remain gated.",
+      "claim": "Fixing the residual fallback texture risks by changing prompt contract priority, sampler behavior, fallback provider order, or compatibility-tail behavior would alter live fallback behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:247",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:252",
+        "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/fallback_fire_drills/codex_1783782134_next6_llm_texture/fallback_fire_drill.md",
+        "authority: live fallback sampler/contract/provider behavior requires Mike/operator approval"
+      ]
+    }
+  ]
+}

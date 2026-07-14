@@ -1,0 +1,17 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783878394",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The Ollama fallback contract may over-constrain a smaller model and confuse pressure-medium language with density-gradient slope language.",
+      "disposition": "verified_existing",
+      "rationale": "Focused fallback prompt tests verify the hard rule that pressure_risk > 0.20 with low density_gradient should name weighted medium around a gentle slope, not inflate slope drag."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`spectral_to_vocabulary_mapping_v1` should be functional prompt metadata, not just a list of words.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `fallback_continuity_budget_v1` and prompt-render tests verify computed mapping, selected texture family, weighted terms, capacity review, and hard NEXT constraints are rendered into the compact fallback system prompt."
+    }
+  ]
+}

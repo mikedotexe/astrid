@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783698475",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Fallback texture vocabulary should be weighted by current state rather than used as static labels.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link fallback texture selector and lived-fit tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "High-entropy fallback should avoid silent degradation to a smaller model that flattens texture.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link default `gemma4:12b` fallback chain and capacity review tests."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "A model-output comparison between 12B and 4B during high entropy would be a runtime observation, not an automatic route change.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Gate live provider/model comparison or routing changes behind explicit operator-approved fallback fire drill or sandbox packet."
+    }
+  ]
+}

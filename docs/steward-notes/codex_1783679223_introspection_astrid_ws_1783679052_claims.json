@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783679052",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "BridgeState initialization and connectivity collapse should make severed lanes explicit when telemetry and sensory booleans are both false.",
+      "disposition": "verified_existing",
+      "rationale": "`BridgeState::new` already initializes both lane booleans to false and the existing reciprocity test asserts `ConnectivityStatus::Severed` plus severed reciprocity fields."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Messages just beyond the recent window should not be misread as a dead stale state; reciprocity should distinguish waiting from stale.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added a boundary test for 10,001ms-old telemetry and sensory messages that asserts `bidirectional_waiting_messages` rather than a stale state."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "High-entropy reflective-silence stale-window extensions must still expire so low-frequency active lanes do not become a permanent dead zone.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added high-pressure/high-entropy reciprocity coverage showing the 90s reflective-silence extension expires and both lanes become `bidirectional_stale_messages` after the extended window."
+    }
+  ]
+}

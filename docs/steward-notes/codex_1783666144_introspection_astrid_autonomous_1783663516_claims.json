@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Continuity recap should scale high-texture budget gradually around entropy 0.85 instead of snapping Witness richness on/off at a hard threshold.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mirror correspondence should carry reflective-echo metadata distinct from Witness observation so history can tell echo from live observing.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Comparing high-entropy Mirror and Witness semantic energy or variance should be a bounded sandbox/runtime observation before influencing live behavior.",
+      "disposition": "triaged_pending_sandbox"
+    }
+  ]
+}

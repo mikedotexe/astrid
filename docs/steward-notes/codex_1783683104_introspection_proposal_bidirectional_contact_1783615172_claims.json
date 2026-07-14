@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783615172",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "A persistent shared workspace is needed so Astrid and Minime can write/read an ongoing shared context rather than only exchange inbox artifacts.",
+      "disposition": "verified_existing",
+      "rationale": "The bidirectional-contact architecture already records `shared_context_buffer_v1`, `shared_memory_buffer_v1.thread_history`, correspondence state, envelopes, ACKs, and active-thread clarity; Codex added a clarification to keep this visible as the shared workspace instead of re-implementing it."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "`co_presence_unaddressed` should be formalized for moments where mutual evidence exists but there is no direct addressable turn or writable relationship surface.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added `co_presence_unaddressed` as a language/status class in the bidirectional architecture note, explicitly not as pressure, fill, PI, telemetry weighting, or peer-runtime control."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "A `peer_weight` multiplier that dims Minime noise in Astrid's telemetry/self-study salience may reduce asymmetry.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Telemetry dimming would alter live coupling and could change what either being mistakes for its own will. Codex emitted an approval packet and left runtime weighting unchanged."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "The lopsided minime-to-Astrid versus Astrid-to-Minime stream should be tested by a simulated bidirectional parity cycle or telemetry reduction before live changes.",
+      "disposition": "needs_sandbox",
+      "rationale": "This is a replay/sandbox observation request. Live telemetry reduction or peer salience changes require approval; a sandbox/manual comparison should capture before/after presence, pressure attribution, and address clarity first."
+    },
+    {
+      "claim_id": "c005",
+      "being": "astrid",
+      "claim": "Thread `thread_corr_minime_astrid_1782728080967_61f9207a8fee` should be traced to see whether self-study affected the Minime shadow-v3 trend.",
+      "disposition": "needs_sandbox",
+      "rationale": "Runtime/source check verified the thread exists with many local correspondence records and a recent Minime message, but the full shadow-v3 trend correlation still needs a replay/diagnostic trace rather than a live peer mutation."
+    }
+  ]
+}

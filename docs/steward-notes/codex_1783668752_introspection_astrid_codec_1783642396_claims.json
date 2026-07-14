@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783642396",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Projection fingerprints should remain deterministic despite f32 edge cases and repeated execution contexts.",
+      "disposition": "verified_existing",
+      "rationale": "Existing codec tests verify repeated dynamic projection stability within an epoch and canonicalize signed zero, subnormal, and NaN fingerprint edge patterns. Cross-architecture FMA differences remain a CI-matrix concern rather than a local runtime mutation."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "`load_or_create_projection_epoch_id_from` can race or leave malformed JSON because it checked and then wrote `codec_projection_epoch.json` directly.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Codex added atomic epoch-payload persistence using a unique temp file and rename, preserving env/file precedence and replacing malformed epoch JSON with a valid kernel-derived payload."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "The tail-vibrancy transition at `TAIL_VIBRANCY_ENTROPY_GATE` should follow smoothstep and avoid spectral popping.",
+      "disposition": "verified_existing",
+      "rationale": "Existing vibrancy tests verify the smoothstep formula, no discontinuity at the gate, and bounded high-entropy lift behavior."
+    }
+  ]
+}

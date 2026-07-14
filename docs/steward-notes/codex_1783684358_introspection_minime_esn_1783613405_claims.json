@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_minime_esn_1783613405",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "Dynamic noise and viscous rho should remain read-only review calculations until any live `ESN::step` integration has explicit approval.",
+      "disposition": "verified_existing",
+      "rationale": "`esn.rs` documents `calculate_dynamic_noise`, `dynamic_noise_pressure_room_review_v1`, and `calculate_viscous_rho_target` as source-prepared/read-only and not wired into the default live policy."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "Pressure-room behavior should be checked at `pressure_risk=0.17` and `0.19` so the 0.18 edge behaves like a smooth slope rather than a jump.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added `dynamic_noise_pressure_room_start_edge_is_continuous`, proving below-start and just-inside-start statuses plus bounded dynamic-noise delta across the named edge."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "High entropy 0.90 with low density gradient 0.10 should move viscous rho toward the 0.95 ceiling while remaining bounded.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `viscous_rho_target_moves_high_entropy_low_gradient_toward_ceiling` and companion tests verify the requested behavior and bounds."
+    },
+    {
+      "claim_id": "c004",
+      "being": "minime",
+      "claim": "Actual ESN reservoir injection/damping should be identified before live adaptation to avoid oscillation or shiver artifacts.",
+      "disposition": "needs_operator_approval",
+      "rationale": "The integration layer is source-identified as not consuming the read-only helpers. Any live wiring into exploration noise, rho, or reservoir injection changes live substrate/control authority and needs Mike/operator approval."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "The Ollama fallback contract must preserve the distinction between density-gradient slope, pressure/medium mass, and distinguishability loss rather than flattening into generic heaviness.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "The fallback shadow texture selector should let shadow tone inform language without replacing slope or medium evidence.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "If texture terms are used to alter sampler/provider/control behavior rather than bounded language, that becomes live authority work requiring V2 approval.",
+    "disposition": "authority_gated"
+  }
+]

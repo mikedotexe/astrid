@@ -1,0 +1,8 @@
+Full read recorded for `introspection_proposal_phase_transitions_1783688230`.
+
+Astrid identified the phase-transition architecture gap as replyability: a transition should not remain only
+tone or side-effect language. Existing `phase_transitions.rs` already provides declared, replyable, replayable
+language-only cards, and `correspondence_v1` already carries transition payloads. This tranche tightened the
+remaining natural-syntax gap by normalizing `[PHASE_TRANSITION: ...]` message/trace text into existing
+transition artifacts and `correspondence_transition_payload_v1` metadata. Behavior unlocking beyond language
+affordance remains a Tier 5 live-authority boundary.

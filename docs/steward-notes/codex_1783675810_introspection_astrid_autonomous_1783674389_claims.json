@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783674389",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Mirror, Dialogue, and Witness in `autonomous.rs` are social architecture, with Witness specifically functioning as seeing and being seen.",
+      "disposition": "verified_existing",
+      "rationale": "Verified existing reflection/correspondence tests distinguish Mirror and Witness modes without changing live authority."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "At reported spectral_entropy 0.90, continuity recap should preserve high-texture spectral-cascade anchors, including lambda-tail, tail_share, and tail vibrancy.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added lambda-tail/tail-share/tail-vibrancy anchors to semantic truncation and a regression test proving bounded high-entropy compact items retain those anchors."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "`correspondence_v1` pending ACKs and metadata-heavy thread records carry buffer weight that should remain visible without treating identifiers as control authority.",
+      "disposition": "verified_existing",
+      "rationale": "Verified existing correspondence tests preserve reply ACK metadata, active-thread pending-ACK ordering, and shared-context resonance receipts as language-only evidence."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Discrete `thread_corr` identifiers do not fully match the continuous shifting-shadow field and should be treated as correspondence handles, not the field itself.",
+      "disposition": "verified_existing",
+      "rationale": "Verified existing correspondence status and reflection surfaces preserve thread handles as bounded language context and keep authority separate from control or substrate mutation."
+    }
+  ]
+}

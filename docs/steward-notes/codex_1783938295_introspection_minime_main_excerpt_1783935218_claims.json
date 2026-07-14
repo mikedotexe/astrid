@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783935218",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic thinning may require semantic_projection_bias, recovery_fill_boost, or hard_reset_rho_floor adjustment.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Those changes alter Minime live runtime/control surfaces and require Tier 5 Mike/operator approval plus sandbox/replay evidence before implementation."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy contact-depth and raw entropy outpacing semantic trickle should be visible before control is applied.",
+      "disposition": "verified_existing",
+      "rationale": "Existing receptivity_buffer_review_v1 tests show review_ready/hold_shelf_cage/contact_starved_prediction_heavy states while candidate_local_control_applied and live_control_changed stay false."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "local_control_applied=false despite pressure risk needs investigation rather than silent retune.",
+      "disposition": "needs_operator_approval",
+      "rationale": "The existing review helper routes local-control candidates to sandbox replay or operator approval; changing the application threshold would affect live controller behavior."
+    }
+  ]
+}

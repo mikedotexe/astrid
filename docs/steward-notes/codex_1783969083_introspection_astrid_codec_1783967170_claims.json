@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783967170",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The codec's 48D semantic lane is the bounded translator for character rhythm, certainty/hedge features, emotional markers, projected embeddings, and narrative arc.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Dense 768D-to-8D projection can lose viscosity/detail and should emit projection-density delta evidence rather than flattening silently.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "High-intensity warmth/tension can hit FEATURE_ABS_MAX, and clipping/headroom should remain visible through codec overflow and narrative-arc evidence.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Dynamic attention-weighted projection, codec ceiling changes, or live gain changes would alter live semantic-vector behavior and require Mike/operator approval with a V2 authority lifecycle packet.",
+      "disposition": "authority_gate"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Full read by Codex for introspection_minime_regulator_1783648870.
+
+The Minime regulator report names viscosity coupling as a possible lock/flood source and asks for concrete tests around mode packing, pressure risk, and target bias. Existing tests already pin viscosity coupling relief, boundedness, sticky-vs-mobile separation, and high-pressure baseline viscosity. This pass added two test-only proofs in /Users/v/other/minime/minime/src/regulator.rs: high mode_packing with zero pressure remains an observational readout with no target bias, and pressure_risk=0.90 maps to ActiveDamping with downward target bias. No live regulator behavior changed.

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_types_1783874116",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`viscosity_index` and `viscosity_persistence_coefficient` should be linked to dissipation/decay so sticky felt weight has a temporal explanation.",
+      "disposition": "verified_existing",
+      "rationale": "`viscosity_porosity_transport_review_v1` already derives viscosity type, decay hints, dissipation/porosity/fluidity context, structural clog state, and semantic friction vector without changing pressure/fill/control."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A new `persistence_decay` component could be useful, but adding it to live resonance-density schema is a wire/report surface change.",
+      "disposition": "verified_existing",
+      "rationale": "Existing additive review fields answer the decay question without changing `ResonanceDensityComponents`; a new live component remains a future schema proposal if those reviews prove insufficient."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Mode-packing pressure probes against subjective pressure would require runtime observation rather than source-only inference.",
+      "disposition": "authority_gate",
+      "rationale": "Forcing a mode-packing or pressure probe in a named live session would alter live substrate/control conditions and needs explicit operator approval or a bounded sandbox/replay design first."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Minime reports `overpacked_mode_packing` can feel heavier than the raw pressure score suggests, especially with low porosity and no local control applied.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/autonomous_agent.py",
+      "/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py"
+    ],
+    "authority": "read-only pressure-source and Recess cartography; no local control applied"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Existing Recess density mitigation can name `SHADOW_TRAJECTORY lambda-tail/lambda4` and pressure relief request routes without applying control.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "test_recess_density_mitigation_names_exhale_route_without_control"
+    ],
+    "authority": "suggested routes only; behavior_changed=false and control_applied=false"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Adding a subjective weight multiplier to `overpacked_mode_packing`, changing pressure scoring, or auto-triggering mitigation would alter live Minime autonomy/control behavior.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783998057_correspondence_phase_minime_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; replay and scoped approval required"
+  }
+]

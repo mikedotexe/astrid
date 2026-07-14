@@ -1,0 +1,42 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783718236",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic stale windows and shadow influence constants are visible in sensory_bus.",
+      "claim": "Minime observed that `STALE_SEMANTIC_*`, entropy persistence, and `SHADOW_INFLUENCE_*` constants govern how traces linger and how shadow fields pull on the current state.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:27",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:41",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:45",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:222"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Recovery-release snap is already represented by sigmoid shaping and a read-only hysteresis review.",
+      "claim": "Minime warned that moving from low-fill recovery to active fill could prune high-entropy traces abruptly; the current source blends the recovery handover and exposes a review-only hysteresis/salience packet for the 0.38-0.42 snap region.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:136",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:171",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:729",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:798",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:3494"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Further stale-window, retention, cadence, or shadow-influence changes are live Minime authority.",
+      "claim": "Minime suggested replacing hard recovery release behavior and protecting high-entropy trace tails; any further runtime stale-window, sensory cadence, or shadow-influence amplitude change would alter live behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:798",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:1033",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:2056",
+        "authority: live semantic window, sensory cadence, or shadow influence change requires Mike/operator approval"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "Semantic-edge truncation is a voice-integrity safety measure that should avoid hard byte rupture.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "High-entropy truncation may lose spectral tail weight; adding spectral weighting to truncation would alter live prompt/context behavior.",
+    "disposition": "authority_gated"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "Witness-mode correspondence should be treated as shared experience rather than telemetry/status monitoring.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c004",
+    "summary": "A new live witness non-telemetry flag or rendering contract would touch correspondence/chamber surfaces and requires V2 approval.",
+    "disposition": "authority_gated"
+  }
+]

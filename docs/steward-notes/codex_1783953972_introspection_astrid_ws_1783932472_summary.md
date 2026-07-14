@@ -1,0 +1,1 @@
+Full read. Astrid reported a stale-state flip-flop risk when telemetry and sensory timestamps are updated independently, especially around `None` telemetry context and 61-second sensory age. Existing tests verify fixed-default stale-window handling, stale sensory classification, future-skew truth reporting, and bounded pressure-trend samples.

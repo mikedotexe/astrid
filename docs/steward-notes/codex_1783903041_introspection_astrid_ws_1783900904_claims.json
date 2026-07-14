@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bridge reciprocity should transition from waiting to stale without flicker when telemetry ages past the dynamic stale window.",
+      "disposition": "verified_existing_bridge_reciprocity_state_tests_source"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure trend smoothing should preserve new pressure samples and semantic-flow texture without turning diagnostics into control.",
+      "disposition": "verified_existing_pressure_trend_smoothing_source_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Clock drift and websocket lane bookkeeping must stay visible so stale hearing is not mistaken for freshness.",
+      "disposition": "verified_existing_future_skew_and_lane_connection_truth_channel"
+    }
+  ]
+}

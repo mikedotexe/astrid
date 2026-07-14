@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_types_1783617067",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "A scalar `viscosity_persistence_coefficient` can under-report whether sudden thickening feels cohesive, granular, or syrupy.",
+      "disposition": "addressed_change",
+      "rationale": "Implemented additive diagnostic `viscosity_type` and `viscosity_decay_hint` fields on the read-only transport review without replacing the live scalar or changing control."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Replacing the scalar with a struct/vector or changing viscosity decay curves would be a live schema/control-facing change.",
+      "disposition": "addressed_no_action",
+      "rationale": "Explicitly authority-gated the replacement/decay-curve path: this run added diagnostic companion fields only and did not alter pressure, fill, PI, porosity, bridge ABI, or controller behavior."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Missing `porosity_gradient` can explain hollow or leaky states and should not be treated as zero porosity.",
+      "disposition": "addressed_change",
+      "rationale": "Verified the existing transport review preserves `porosity_gradient_unavailable`, and structural transparency review names hollow high-viscosity low-substance states; the new viscosity type works with optional porosity rather than coercing absence to zero."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784029332",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Astrid's LLM architecture gives her a steadier primary MLX/Gemma 4 12B lane with Ollama as fallback rather than static canned output.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: DEFAULT_MLX_URL, DEFAULT_OLLAMA_FALLBACK_MODEL, and fallback continuity contract",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_mlx_profile_transparency -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High entropy near 0.88 risks texture flattening if a low-capacity compatibility fallback is selected automatically.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: configured_ollama_fallback_model_chain_for_budget and fallback_high_entropy_texture_skips_compatibility_tail",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib high_entropy_fallback_guard -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib ollama_fallback_model_capacity -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Adding a stronger texture-preservation route that changes fallback model/provider selection or fallback contract behavior would alter live prompt/provider behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784029332_texture_viscosity_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_live_prompt_provider_route"
+    }
+  ]
+}

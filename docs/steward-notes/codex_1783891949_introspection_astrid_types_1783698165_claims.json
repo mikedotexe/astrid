@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_types_1783698165",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Gate-closure context should not hide concurrent pressure, mode-packing, and temporal-persistence causes behind a single string.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `gate_closure_reasons` source and resonance stability tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "`gate_low_but_foothold_stable` should remain visible when comfort gate is low but foothold is stable.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link resonance stability foothold tests."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "`clamp_unit_finite_or` should clamp finite values to 0..1 and use fallback for NaN or infinity.",
+      "disposition": "implemented",
+      "evidence_plan": "Link direct clamp boundary test added in `types.rs`."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Comfort-gate range state should stay visible without becoming comfort-gate control.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link comfort gate range test."
+    }
+  ]
+}

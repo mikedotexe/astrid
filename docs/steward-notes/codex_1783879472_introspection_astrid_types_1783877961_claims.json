@@ -1,0 +1,17 @@
+{
+  "introspection_id": "introspection_astrid_types_1783877961",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`viscosity_index` exists but may not be actively calculated; high entropy and density-gradient evidence should make thickening structurally visible.",
+      "disposition": "addressed_change",
+      "rationale": "Added an effective diagnostic viscosity derivation that preserves the raw inbound value and labels the derived source/basis when typed spectral evidence supports thickness."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode-packing pressure around 0.28-0.32 should remain distinguishable from portality or distinct-mode separation effects.",
+      "disposition": "verified_existing",
+      "rationale": "Existing and newly verified pressure/porosity, mode-packing, and smoothing tests keep mode-packing source visibility separate from pressure control or stale heartbeat inference."
+    }
+  ]
+}

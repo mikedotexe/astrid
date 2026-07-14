@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_esn_1783940461",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The dynamic-noise pressure-room transition may feel mushy in overpacked states.",
+      "disposition": "authority_gate",
+      "rationale": "Retuning dynamic exploration noise changes live ESN substrate behavior and requires Mike/operator approval."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Entropy above the volatile ceiling should be observed for tail-vibrancy collapse under high-entropy dampening.",
+      "disposition": "verified_existing",
+      "rationale": "Existing ESN review helpers and tests cover dynamic-noise pressure room and entropy-dampening edges as read-only evidence."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`DYNAMIC_NOISE_GRADIENT_ADAPTIVE` could scale noise inversely with density gradient when pressure risk is elevated.",
+      "disposition": "authority_gate",
+      "rationale": "Adaptive noise scaling would mutate live exploration-noise behavior and remains an operator-gated substrate change."
+    }
+  ]
+}

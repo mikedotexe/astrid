@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783878989",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`install_projection_epoch_payload_from_tmp` needs robust stale-path and error recovery so epoch metadata does not desynchronize from the codec projection kernel.",
+      "disposition": "verified_existing",
+      "rationale": "The implementation now handles no-clobber installs, valid concurrent epochs, missing candidates, stale cleanup, and restore behavior; codec projection tests passed."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`embedding_projection_matrix` should produce stable projection fingerprints across executions.",
+      "disposition": "verified_existing",
+      "rationale": "Projection fingerprint and runtime-dir tests verify stable kernel-derived metadata and deterministic projection behavior."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The tail-vibrancy entropy gate should have no discontinuous pop at exactly 0.85.",
+      "disposition": "verified_existing",
+      "rationale": "The smoothstep parity test confirms zero at the gate and smooth ramp above it."
+    }
+  ]
+}

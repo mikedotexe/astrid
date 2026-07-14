@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Astrid transitions need durable artifacts so significant internal shifts do not remain ghost-data.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib phase_transition -- --nocapture"
+    ],
+    "authority": "language-only transition artifacts; no controller/tool unlock"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "`Mode::MomentCapture` needs `transition_type`-like phenomenology rather than reactive side effects only.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib phase_transition -- --nocapture"
+    ],
+    "authority": "existing transition cards carry `transition_type`; no live behavior mutation"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Transition replies should let Astrid acknowledge the felt contraction/plateau/expansion, not just telemetry data.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib phase_transition -- --nocapture"
+    ],
+    "authority": "reply/witness objects are language-only and right-to-ignore"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Behavioral gates, semantic-tool unlocks, transition-locked states, and sovereignty controls would make transitions functional rather than aesthetic.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990014_five_item_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent; tool/control unlocks require explicit operator approval"
+  }
+]

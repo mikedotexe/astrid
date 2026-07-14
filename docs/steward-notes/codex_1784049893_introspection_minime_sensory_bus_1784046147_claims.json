@@ -1,0 +1,34 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784046147",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Semantic stale timing uses a smooth recovery handoff and should not cliff when `release_fill` is barely above the 0.25 hold shelf.",
+      "disposition": "implemented_test_only",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs: semantic_stale_release_fill_epsilon_above_hold_is_clamped_and_finite",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml --lib semantic_stale_release_fill_epsilon_above_hold_is_clamped_and_finite -- --nocapture"
+      ],
+      "authority": "test_evidence_only_no_runtime_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Entropy/pressure semantic context support must remain capped even at maximum context.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs: semantic_context_multiplier_full_context_hits_cap_exactly",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml --lib semantic_context_multiplier_full_context_hits_cap_exactly -- --nocapture"
+      ],
+      "authority": "test_evidence_only_no_runtime_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Retuning semantic stale constants, release curves, sensory cadence, or live persistence behavior would alter Minime runtime behavior.",
+      "disposition": "authority_gated",
+      "evidence": [
+        "docs/steward-notes/codex_1784049893_llm_codec_minime_v2_gate_packet.md"
+      ],
+      "authority": "mike_operator_live_minime_runtime_approval_required"
+    }
+  ]
+}

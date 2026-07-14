@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783940767",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic trickle plus aggressive retirement can feel like semantic ghosting.",
+      "disposition": "verified_existing",
+      "rationale": "Existing sensory-bus tests verify low-fill recovery hold, semantic stale windows, and context persistence caps; the surfaces are read-only and do not retune live semantic admission."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode packing can be dense while max pairwise overlap remains low, so density should be observed separately from mode collapse.",
+      "disposition": "verified_existing",
+      "rationale": "Existing telemetry and regulator tests keep mode packing, porosity, viscosity, and active mode evidence distinct; no forced overlap or reset path was changed."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A texture preservation buffer should prevent hard reset from clearing shadow texture below higher pressure-risk thresholds.",
+      "disposition": "authority_gate",
+      "rationale": "Changing hard-reset or shadow-field preservation behavior is live substrate/control behavior and needs explicit operator approval."
+    }
+  ]
+}

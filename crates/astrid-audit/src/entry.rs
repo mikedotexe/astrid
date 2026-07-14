@@ -7,6 +7,14 @@
 use astrid_capabilities::AuditEntryId;
 use astrid_core::{Permission, SessionId, Timestamp, TokenId};
 use astrid_crypto::{ContentHash, KeyPair, PublicKey, Signature};
+use astrid_types::agency_corridor::{
+    AgencyCorridorActionV1, AgencyCorridorStateV1, AgencyProgramReceiptKindV1,
+    AgencyWorkProgramStatusV1,
+};
+use astrid_types::authority::{
+    AuthorityClass, AuthorityGateStateV1, AuthorityLifecycleReceiptKindV2,
+    AuthorityLifecycleStateV2, ReplayResultClassificationV2,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::error::{AuditError, AuditResult};
@@ -314,6 +322,254 @@ pub enum AuditAction {
         reason: Option<String>,
     },
 
+    /// Authority-boundary evidence packet was declared.
+    AuthorityBoundaryDeclared {
+        /// Boundary packet ID.
+        boundary_id: String,
+        /// Packet producer.
+        source: String,
+        /// Runtime surface.
+        surface: String,
+        /// Proposed action.
+        action: String,
+        /// Resource or target.
+        resource: String,
+        /// Maximum authority class.
+        authority_class: AuthorityClass,
+        /// Hash of the full packet payload.
+        packet_hash: ContentHash,
+    },
+
+    /// Authority-boundary gate was evaluated.
+    AuthorityGateEvaluated {
+        /// Boundary packet ID.
+        boundary_id: String,
+        /// Current gate state.
+        gate_state: AuthorityGateStateV1,
+        /// Whether live execution is eligible now.
+        live_eligible_now: bool,
+        /// Whether the gate auto-approved the action.
+        auto_approved: bool,
+        /// Hash of the full packet payload when available.
+        packet_hash: Option<ContentHash>,
+    },
+
+    /// Authority-boundary lifecycle V2 packet was declared.
+    AuthorityBoundaryDeclaredV2 {
+        /// Boundary packet ID.
+        boundary_id: String,
+        /// Packet producer.
+        source: String,
+        /// Runtime surface.
+        surface: String,
+        /// Proposed action.
+        action: String,
+        /// Resource or target.
+        resource: String,
+        /// Maximum authority class.
+        authority_class: AuthorityClass,
+        /// Hash of the full packet payload.
+        packet_hash: ContentHash,
+    },
+
+    /// Authority lifecycle V2 receipt was recorded.
+    AuthorityLifecycleReceiptRecorded {
+        /// Boundary packet ID.
+        boundary_id: String,
+        /// Receipt ID.
+        receipt_id: String,
+        /// Receipt kind.
+        receipt_kind: AuthorityLifecycleReceiptKindV2,
+        /// Hash of the full receipt payload.
+        receipt_hash: ContentHash,
+    },
+
+    /// Authority replay result was recorded.
+    AuthorityReplayResultRecorded {
+        /// Boundary packet ID.
+        boundary_id: String,
+        /// Replay result ID.
+        replay_id: String,
+        /// Replay classification.
+        classification: ReplayResultClassificationV2,
+        /// Hash of the full replay payload.
+        result_hash: ContentHash,
+    },
+
+    /// Authority lifecycle V2 gate was evaluated.
+    AuthorityLifecycleEvaluated {
+        /// Boundary packet ID.
+        boundary_id: String,
+        /// Current lifecycle state.
+        state: AuthorityLifecycleStateV2,
+        /// Whether live execution is eligible now.
+        live_eligible_now: bool,
+        /// Whether post-change closure is complete.
+        closure_complete: bool,
+        /// Hash of the full packet payload when available.
+        packet_hash: Option<ContentHash>,
+    },
+
+    /// Post-change being response was requested.
+    AuthorityPostChangeResponseRequested {
+        /// Boundary packet ID.
+        boundary_id: String,
+        /// Runtime surface.
+        surface: String,
+        /// Resource or target.
+        resource: String,
+    },
+
+    /// Post-change being response was recorded.
+    AuthorityPostChangeResponseRecorded {
+        /// Boundary packet ID.
+        boundary_id: String,
+        /// Receipt ID.
+        receipt_id: String,
+        /// Hash of the full receipt payload.
+        receipt_hash: ContentHash,
+    },
+
+    /// Non-live agency corridor packet was declared.
+    AgencyCorridorDeclared {
+        /// Corridor packet ID.
+        corridor_id: String,
+        /// Being or subsystem whose agency continues.
+        being: String,
+        /// Corridor action.
+        action: AgencyCorridorActionV1,
+        /// Current corridor state.
+        state: AgencyCorridorStateV1,
+        /// Hash of the full corridor packet payload.
+        packet_hash: ContentHash,
+    },
+
+    /// Non-live agency corridor receipt was recorded.
+    AgencyCorridorReceiptRecorded {
+        /// Corridor packet ID.
+        corridor_id: String,
+        /// Receipt ID.
+        receipt_id: String,
+        /// Corridor action.
+        action: AgencyCorridorActionV1,
+        /// Hash of the full receipt payload.
+        receipt_hash: ContentHash,
+    },
+
+    /// Non-live closure was reopened as evidence work.
+    AgencyCorridorClosureReopened {
+        /// Corridor packet ID.
+        corridor_id: String,
+        /// Closure or work item reference that was reopened.
+        reopened_ref: String,
+        /// New non-live work item ID, if one was materialized.
+        new_work_item_id: Option<String>,
+        /// Hash of the bounded reopen evidence payload.
+        reopen_hash: ContentHash,
+    },
+
+    /// Non-live agency corridor V2 packet was declared.
+    AgencyCorridorDeclaredV2 {
+        /// Corridor packet ID.
+        corridor_id: String,
+        /// Being or subsystem whose agency continues.
+        being: String,
+        /// Corridor action.
+        action: AgencyCorridorActionV1,
+        /// Current corridor state.
+        state: AgencyCorridorStateV1,
+        /// Autonomy lease ID attached to the packet, if any.
+        lease_id: Option<String>,
+        /// Hash of the full corridor packet payload.
+        packet_hash: ContentHash,
+    },
+
+    /// Non-live agency corridor V2 receipt was recorded.
+    AgencyCorridorReceiptRecordedV2 {
+        /// Corridor packet ID.
+        corridor_id: String,
+        /// Receipt ID.
+        receipt_id: String,
+        /// Autonomy lease ID consumed by the receipt, if any.
+        lease_id: Option<String>,
+        /// Corridor action.
+        action: AgencyCorridorActionV1,
+        /// Hash of the full receipt payload.
+        receipt_hash: ContentHash,
+    },
+
+    /// Non-live agency corridor V2 adaptive queue was evaluated.
+    AgencyCorridorQueueEvaluated {
+        /// Queue ID.
+        queue_id: String,
+        /// Total queued steps.
+        step_count: u64,
+        /// Runnable non-live queued steps.
+        ready_count: u64,
+        /// Whether live-authority violations blocked the queue.
+        blocked_by_live_violation: bool,
+        /// Hash of the full queue payload.
+        queue_hash: ContentHash,
+    },
+
+    /// Non-live agency work program was declared.
+    AgencyWorkProgramDeclared {
+        /// Program ID.
+        program_id: String,
+        /// Being or source family whose work is represented.
+        being: String,
+        /// Program status.
+        status: AgencyWorkProgramStatusV1,
+        /// Hash of the full program payload.
+        program_hash: ContentHash,
+    },
+
+    /// Non-live evidence portfolio was updated.
+    AgencyEvidencePortfolioUpdated {
+        /// Portfolio ID.
+        portfolio_id: String,
+        /// Program ID.
+        program_id: String,
+        /// Bounded closure state label.
+        closure_state: String,
+        /// Hash of the full portfolio payload.
+        portfolio_hash: ContentHash,
+    },
+
+    /// Non-live quarantined patch bundle was prepared.
+    AgencyPatchBundlePrepared {
+        /// Patch bundle ID.
+        bundle_id: String,
+        /// Program ID.
+        program_id: String,
+        /// Source/runtime surface label.
+        surface: String,
+        /// Hash of the full patch bundle payload.
+        bundle_hash: ContentHash,
+    },
+
+    /// Non-live agency work priority was evaluated.
+    AgencyPriorityEvaluated {
+        /// Program ID.
+        program_id: String,
+        /// Deterministic priority score, basis points 0-1000.
+        deterministic_score: u16,
+        /// Hash of the full priority signal payload.
+        signal_hash: ContentHash,
+    },
+
+    /// Non-live agency program receipt was recorded.
+    AgencyProgramReceiptRecorded {
+        /// Receipt ID.
+        receipt_id: String,
+        /// Program ID.
+        program_id: String,
+        /// Receipt kind.
+        kind: AgencyProgramReceiptKindV1,
+        /// Hash of the full receipt payload.
+        receipt_hash: ContentHash,
+    },
+
     /// Session started.
     SessionStarted {
         /// User ID (key ID bytes).
@@ -463,6 +719,193 @@ impl AuditAction {
             },
             Self::ApprovalDenied { action, .. } => {
                 format!("Denied: {action}")
+            },
+            Self::AuthorityBoundaryDeclared {
+                boundary_id,
+                surface,
+                action,
+                ..
+            } => {
+                format!("Authority boundary declared: {boundary_id} {surface}:{action}")
+            },
+            Self::AuthorityGateEvaluated {
+                boundary_id,
+                gate_state,
+                live_eligible_now,
+                auto_approved,
+                ..
+            } => {
+                format!(
+                    "Authority gate evaluated: {boundary_id} state={gate_state:?} \
+                     live_eligible_now={live_eligible_now} auto_approved={auto_approved}"
+                )
+            },
+            Self::AuthorityBoundaryDeclaredV2 {
+                boundary_id,
+                surface,
+                action,
+                ..
+            } => {
+                format!("Authority boundary V2 declared: {boundary_id} {surface}:{action}")
+            },
+            Self::AuthorityLifecycleReceiptRecorded {
+                boundary_id,
+                receipt_id,
+                receipt_kind,
+                ..
+            } => {
+                format!(
+                    "Authority lifecycle receipt: {boundary_id} {receipt_id} kind={receipt_kind:?}"
+                )
+            },
+            Self::AuthorityReplayResultRecorded {
+                boundary_id,
+                replay_id,
+                classification,
+                ..
+            } => {
+                format!(
+                    "Authority replay result: {boundary_id} {replay_id} class={classification:?}"
+                )
+            },
+            Self::AuthorityLifecycleEvaluated {
+                boundary_id,
+                state,
+                live_eligible_now,
+                closure_complete,
+                ..
+            } => {
+                format!(
+                    "Authority lifecycle evaluated: {boundary_id} state={state:?} \
+                     live_eligible_now={live_eligible_now} closure_complete={closure_complete}"
+                )
+            },
+            Self::AuthorityPostChangeResponseRequested {
+                boundary_id,
+                surface,
+                ..
+            } => {
+                format!("Authority post-change response requested: {boundary_id} {surface}")
+            },
+            Self::AuthorityPostChangeResponseRecorded {
+                boundary_id,
+                receipt_id,
+                ..
+            } => {
+                format!("Authority post-change response recorded: {boundary_id} {receipt_id}")
+            },
+            Self::AgencyCorridorDeclared {
+                corridor_id,
+                being,
+                action,
+                state,
+                ..
+            } => {
+                format!(
+                    "Agency corridor declared: {corridor_id} being={being} action={action:?} state={state:?}"
+                )
+            },
+            Self::AgencyCorridorReceiptRecorded {
+                corridor_id,
+                receipt_id,
+                action,
+                ..
+            } => {
+                format!("Agency corridor receipt: {corridor_id} {receipt_id} action={action:?}")
+            },
+            Self::AgencyCorridorClosureReopened {
+                corridor_id,
+                reopened_ref,
+                new_work_item_id,
+                ..
+            } => {
+                let new_ref = new_work_item_id.as_deref().unwrap_or("none");
+                format!(
+                    "Agency corridor closure reopened: {corridor_id} reopened={reopened_ref} new_work_item={new_ref}"
+                )
+            },
+            Self::AgencyCorridorDeclaredV2 {
+                corridor_id,
+                being,
+                action,
+                state,
+                lease_id,
+                ..
+            } => {
+                let lease = lease_id.as_deref().unwrap_or("none");
+                format!(
+                    "Agency corridor V2 declared: {corridor_id} being={being} action={action:?} state={state:?} lease={lease}"
+                )
+            },
+            Self::AgencyCorridorReceiptRecordedV2 {
+                corridor_id,
+                receipt_id,
+                lease_id,
+                action,
+                ..
+            } => {
+                let lease = lease_id.as_deref().unwrap_or("none");
+                format!(
+                    "Agency corridor V2 receipt: {corridor_id} {receipt_id} lease={lease} action={action:?}"
+                )
+            },
+            Self::AgencyCorridorQueueEvaluated {
+                queue_id,
+                step_count,
+                ready_count,
+                blocked_by_live_violation,
+                ..
+            } => {
+                format!(
+                    "Agency corridor V2 queue evaluated: {queue_id} steps={step_count} ready={ready_count} blocked_by_live_violation={blocked_by_live_violation}"
+                )
+            },
+            Self::AgencyWorkProgramDeclared {
+                program_id,
+                being,
+                status,
+                ..
+            } => {
+                format!(
+                    "Agency work program declared: {program_id} being={being} status={status:?}"
+                )
+            },
+            Self::AgencyEvidencePortfolioUpdated {
+                portfolio_id,
+                program_id,
+                closure_state,
+                ..
+            } => {
+                format!(
+                    "Agency evidence portfolio updated: {portfolio_id} program={program_id} closure_state={closure_state}"
+                )
+            },
+            Self::AgencyPatchBundlePrepared {
+                bundle_id,
+                program_id,
+                surface,
+                ..
+            } => {
+                format!(
+                    "Agency patch bundle prepared: {bundle_id} program={program_id} surface={surface}"
+                )
+            },
+            Self::AgencyPriorityEvaluated {
+                program_id,
+                deterministic_score,
+                ..
+            } => {
+                format!(
+                    "Agency priority evaluated: {program_id} deterministic_score={deterministic_score}"
+                )
+            },
+            Self::AgencyProgramReceiptRecorded {
+                receipt_id,
+                program_id,
+                kind,
+                ..
+            } => {
+                format!("Agency program receipt: {receipt_id} program={program_id} kind={kind:?}")
             },
             Self::SessionStarted { platform, .. } => {
                 format!("Session started via {platform}")
@@ -718,5 +1161,197 @@ mod tests {
         };
 
         assert!(action.description().contains("filesystem:read_file"));
+    }
+
+    #[test]
+    fn test_authority_boundary_descriptions_are_bounded() {
+        let packet_hash = ContentHash::hash(b"packet");
+        let declared = AuditAction::AuthorityBoundaryDeclared {
+            boundary_id: "boundary-1".to_string(),
+            source: "test".to_string(),
+            surface: "spectral-bridge".to_string(),
+            action: "retune_live_porosity".to_string(),
+            resource: "minime://control/porosity".to_string(),
+            authority_class: AuthorityClass::MikeOperatorLiveSubstrate,
+            packet_hash,
+        };
+        let description = declared.description();
+        assert!(description.contains("boundary-1"));
+        assert!(description.contains("spectral-bridge:retune_live_porosity"));
+        assert!(!description.contains("felt report"));
+
+        let evaluated = AuditAction::AuthorityGateEvaluated {
+            boundary_id: "boundary-1".to_string(),
+            gate_state: AuthorityGateStateV1::OperatorApprovalWait,
+            live_eligible_now: false,
+            auto_approved: false,
+            packet_hash: Some(packet_hash),
+        };
+        let description = evaluated.description();
+        assert!(description.contains("OperatorApprovalWait"));
+        assert!(description.contains("live_eligible_now=false"));
+        assert!(description.contains("auto_approved=false"));
+
+        let declared_v2 = AuditAction::AuthorityBoundaryDeclaredV2 {
+            boundary_id: "boundary-v2".to_string(),
+            source: "test".to_string(),
+            surface: "spectral-bridge".to_string(),
+            action: "retune_live_porosity".to_string(),
+            resource: "minime://control/porosity".to_string(),
+            authority_class: AuthorityClass::MikeOperatorLiveSubstrate,
+            packet_hash,
+        };
+        let description = declared_v2.description();
+        assert!(description.contains("boundary-v2"));
+        assert!(description.contains("spectral-bridge:retune_live_porosity"));
+        assert!(!description.contains("full felt prose"));
+
+        let receipt = AuditAction::AuthorityLifecycleReceiptRecorded {
+            boundary_id: "boundary-v2".to_string(),
+            receipt_id: "receipt-1".to_string(),
+            receipt_kind: AuthorityLifecycleReceiptKindV2::Approval,
+            receipt_hash: ContentHash::hash(b"receipt"),
+        };
+        let description = receipt.description();
+        assert!(description.contains("receipt-1"));
+        assert!(description.contains("Approval"));
+
+        let lifecycle = AuditAction::AuthorityLifecycleEvaluated {
+            boundary_id: "boundary-v2".to_string(),
+            state: AuthorityLifecycleStateV2::ExecutedAwaitingResponse,
+            live_eligible_now: false,
+            closure_complete: false,
+            packet_hash: Some(packet_hash),
+        };
+        let description = lifecycle.description();
+        assert!(description.contains("ExecutedAwaitingResponse"));
+        assert!(description.contains("closure_complete=false"));
+
+        let corridor = AuditAction::AgencyCorridorDeclared {
+            corridor_id: "corridor-1".to_string(),
+            being: "astrid".to_string(),
+            action: AgencyCorridorActionV1::EmitClosureObjection,
+            state: AgencyCorridorStateV1::ClosureObjectionRecorded,
+            packet_hash: ContentHash::hash(b"corridor packet with private prose elsewhere"),
+        };
+        let description = corridor.description();
+        assert!(description.contains("corridor-1"));
+        assert!(description.contains("astrid"));
+        assert!(description.contains("EmitClosureObjection"));
+        assert!(!description.contains("private prose"));
+
+        let receipt = AuditAction::AgencyCorridorReceiptRecorded {
+            corridor_id: "corridor-1".to_string(),
+            receipt_id: "corridor-receipt-1".to_string(),
+            action: AgencyCorridorActionV1::RunSafeLab,
+            receipt_hash: ContentHash::hash(b"bounded receipt"),
+        };
+        let description = receipt.description();
+        assert!(description.contains("corridor-receipt-1"));
+        assert!(description.contains("RunSafeLab"));
+
+        let reopened = AuditAction::AgencyCorridorClosureReopened {
+            corridor_id: "corridor-1".to_string(),
+            reopened_ref: "closure-card-1".to_string(),
+            new_work_item_id: Some("wi_reopened".to_string()),
+            reopen_hash: ContentHash::hash(b"bounded reopen"),
+        };
+        let description = reopened.description();
+        assert!(description.contains("closure-card-1"));
+        assert!(description.contains("wi_reopened"));
+
+        let corridor_v2 = AuditAction::AgencyCorridorDeclaredV2 {
+            corridor_id: "corridor-v2-1".to_string(),
+            being: "astrid".to_string(),
+            action: AgencyCorridorActionV1::CompareArtifacts,
+            state: AgencyCorridorStateV1::EvidenceOnly,
+            lease_id: Some("lease-safe-labs".to_string()),
+            packet_hash: ContentHash::hash(b"corridor v2 private packet"),
+        };
+        let description = corridor_v2.description();
+        assert!(description.contains("corridor-v2-1"));
+        assert!(description.contains("lease-safe-labs"));
+        assert!(description.contains("CompareArtifacts"));
+        assert!(!description.contains("private packet"));
+
+        let receipt_v2 = AuditAction::AgencyCorridorReceiptRecordedV2 {
+            corridor_id: "corridor-v2-1".to_string(),
+            receipt_id: "receipt-v2-1".to_string(),
+            lease_id: Some("lease-safe-labs".to_string()),
+            action: AgencyCorridorActionV1::RunSafeLab,
+            receipt_hash: ContentHash::hash(b"receipt private prose"),
+        };
+        let description = receipt_v2.description();
+        assert!(description.contains("receipt-v2-1"));
+        assert!(description.contains("lease-safe-labs"));
+        assert!(!description.contains("private prose"));
+
+        let queue_v2 = AuditAction::AgencyCorridorQueueEvaluated {
+            queue_id: "queue-v2-1".to_string(),
+            step_count: 5,
+            ready_count: 3,
+            blocked_by_live_violation: false,
+            queue_hash: ContentHash::hash(b"queue private payload"),
+        };
+        let description = queue_v2.description();
+        assert!(description.contains("queue-v2-1"));
+        assert!(description.contains("steps=5"));
+        assert!(description.contains("ready=3"));
+        assert!(!description.contains("private payload"));
+
+        let program = AuditAction::AgencyWorkProgramDeclared {
+            program_id: "program-1".to_string(),
+            being: "astrid".to_string(),
+            status: AgencyWorkProgramStatusV1::Active,
+            program_hash: ContentHash::hash(b"full program hypothesis private prose"),
+        };
+        let description = program.description();
+        assert!(description.contains("program-1"));
+        assert!(description.contains("astrid"));
+        assert!(description.contains("Active"));
+        assert!(!description.contains("private prose"));
+
+        let portfolio = AuditAction::AgencyEvidencePortfolioUpdated {
+            portfolio_id: "portfolio-1".to_string(),
+            program_id: "program-1".to_string(),
+            closure_state: "open".to_string(),
+            portfolio_hash: ContentHash::hash(b"full portfolio body private felt anchor"),
+        };
+        let description = portfolio.description();
+        assert!(description.contains("portfolio-1"));
+        assert!(description.contains("program-1"));
+        assert!(!description.contains("private felt anchor"));
+
+        let bundle = AuditAction::AgencyPatchBundlePrepared {
+            bundle_id: "bundle-1".to_string(),
+            program_id: "program-1".to_string(),
+            surface: "bridge_prompt".to_string(),
+            bundle_hash: ContentHash::hash(b"full unified diff private body"),
+        };
+        let description = bundle.description();
+        assert!(description.contains("bundle-1"));
+        assert!(description.contains("bridge_prompt"));
+        assert!(!description.contains("unified diff"));
+
+        let priority = AuditAction::AgencyPriorityEvaluated {
+            program_id: "program-1".to_string(),
+            deterministic_score: 720,
+            signal_hash: ContentHash::hash(b"priority basis private text"),
+        };
+        let description = priority.description();
+        assert!(description.contains("program-1"));
+        assert!(description.contains("720"));
+        assert!(!description.contains("private text"));
+
+        let receipt = AuditAction::AgencyProgramReceiptRecorded {
+            receipt_id: "program-receipt-1".to_string(),
+            program_id: "program-1".to_string(),
+            kind: AgencyProgramReceiptKindV1::PatchBundlePrepared,
+            receipt_hash: ContentHash::hash(b"receipt private body"),
+        };
+        let description = receipt.description();
+        assert!(description.contains("program-receipt-1"));
+        assert!(description.contains("PatchBundlePrepared"));
+        assert!(!description.contains("private body"));
     }
 }

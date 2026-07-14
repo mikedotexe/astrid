@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The 12D glimpse is additive over the live 48D semantic lane and must not become the primary essence of transport.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md:634",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs:6330",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib glimpse -- --nocapture"
+    ],
+    "authority": "read-only/additive sidecar; no live transport replacement or vector-width change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Warmth and tail/identity asymmetry survive the 12D glimpse tests rather than being generic averaged mass.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib glimpse -- --nocapture"
+    ],
+    "authority": "test verification only; no live codec or Minime sensory transport change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "When resonance loss is too high, the observer can recommend fallback to the live 48D contract before using the 12D glimpse as sufficient.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md:658",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib multi_scale_observer -- --nocapture"
+    ],
+    "authority": "review-only Experience Delta evidence; no protocol, prompt priority, or live transport behavior changed"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "A dynamic scale toggle or persistent live 12D field would affect live substrate/reporting surfaces and must remain V2-gated.",
+    "disposition": "needs_operator_approval",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_MULTI_SCALE_REPRESENTATION_AND_12D_GLIMPSE_AUDIT.md:671"
+    ],
+    "authority": "Tier 4/5 bridge prompt/report/protocol-adjacent candidate; boundary packet plus replay required"
+  }
+]

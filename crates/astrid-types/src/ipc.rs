@@ -5,6 +5,16 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 
+use crate::agency_corridor::{
+    AgencyCorridorPacketV1, AgencyCorridorPacketV2, AgencyCorridorReceiptV1,
+    AgencyCorridorReceiptV2, AgencyCorridorStateV1, AgencyProgramReceiptV1, AgencyWorkProgramV1,
+    AutonomousWorkQueueV1, AutonomyPrioritySignalV1, EvidencePortfolioV1, QuarantinedPatchBundleV1,
+};
+use crate::authority::{
+    AuthorityBoundaryPacketV1, AuthorityBoundaryPacketV2, AuthorityLifecycleReceiptV2,
+    AuthorityLifecycleStateV2, ReplayResultV2,
+};
+
 /// A cross-boundary message sent over the event bus between WASM guests and the host.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IpcMessage {
@@ -103,6 +113,12 @@ pub enum IpcPayload {
         resource: String,
         /// Justification.
         reason: String,
+        /// Optional first-class authority-boundary evidence packet.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        authority_boundary: Option<AuthorityBoundaryPacketV1>,
+        /// Optional first-class authority-boundary lifecycle packet.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        authority_boundary_v2: Option<AuthorityBoundaryPacketV2>,
     },
     /// Response to an [`ApprovalRequired`](IpcPayload::ApprovalRequired).
     ApprovalResponse {
@@ -113,6 +129,125 @@ pub enum IpcPayload {
         /// Optional reason for the decision.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         reason: Option<String>,
+        /// Optional authority-boundary packet identifier being answered.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        boundary_id: Option<Uuid>,
+    },
+    /// First-class authority-boundary evidence declaration.
+    AuthorityBoundaryDeclared {
+        /// Non-approving boundary packet.
+        packet: AuthorityBoundaryPacketV1,
+    },
+    /// First-class V2 authority lifecycle boundary declaration.
+    AuthorityBoundaryDeclaredV2 {
+        /// Non-approving lifecycle packet.
+        packet: AuthorityBoundaryPacketV2,
+    },
+    /// A V2 lifecycle receipt was recorded.
+    AuthorityLifecycleReceiptRecorded {
+        /// Typed lifecycle receipt.
+        receipt: AuthorityLifecycleReceiptV2,
+    },
+    /// A replay result was recorded for a V2 lifecycle.
+    AuthorityReplayResultRecorded {
+        /// Boundary packet id.
+        boundary_id: Uuid,
+        /// Replay result.
+        replay_result: ReplayResultV2,
+    },
+    /// A V2 lifecycle gate was evaluated.
+    AuthorityLifecycleEvaluated {
+        /// Boundary packet id.
+        boundary_id: Uuid,
+        /// Current lifecycle state.
+        state: AuthorityLifecycleStateV2,
+        /// Whether live execution is eligible now.
+        live_eligible_now: bool,
+        /// Whether post-change lifecycle closure is complete.
+        closure_complete: bool,
+        /// Optional bounded reason.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reason: Option<String>,
+    },
+    /// A post-change being response was requested.
+    AuthorityPostChangeResponseRequested {
+        /// Boundary packet id.
+        boundary_id: Uuid,
+        /// Runtime surface.
+        surface: String,
+        /// Resource or target.
+        resource: String,
+    },
+    /// A post-change being response was recorded.
+    AuthorityPostChangeResponseRecorded {
+        /// Typed post-change response receipt.
+        receipt: AuthorityLifecycleReceiptV2,
+    },
+    /// First-class non-live agency corridor packet declared.
+    AgencyCorridorDeclared {
+        /// Non-live corridor packet.
+        packet: AgencyCorridorPacketV1,
+    },
+    /// Agency corridor receipt was recorded.
+    AgencyCorridorReceiptRecorded {
+        /// Non-live corridor receipt.
+        receipt: AgencyCorridorReceiptV1,
+    },
+    /// Agency corridor state was evaluated.
+    AgencyCorridorEvaluated {
+        /// Corridor packet id.
+        corridor_id: Uuid,
+        /// Current corridor state.
+        state: AgencyCorridorStateV1,
+        /// Bounded reason.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reason: Option<String>,
+        /// Corridor packets never grant approval.
+        #[serde(default)]
+        grants_approval: bool,
+        /// Corridor packets never make live execution eligible.
+        #[serde(default)]
+        live_eligible_now: bool,
+    },
+    /// First-class non-live agency corridor V2 packet declared.
+    AgencyCorridorDeclaredV2 {
+        /// Non-live corridor V2 packet.
+        packet: AgencyCorridorPacketV2,
+    },
+    /// Agency corridor V2 receipt was recorded.
+    AgencyCorridorReceiptRecordedV2 {
+        /// Non-live corridor V2 receipt.
+        receipt: AgencyCorridorReceiptV2,
+    },
+    /// Agency corridor V2 adaptive queue was evaluated.
+    AgencyCorridorQueueEvaluated {
+        /// Non-live adaptive queue.
+        queue: AutonomousWorkQueueV1,
+    },
+    /// Non-live agency work program was declared.
+    AgencyWorkProgramDeclared {
+        /// Non-live work program.
+        program: AgencyWorkProgramV1,
+    },
+    /// Non-live evidence portfolio was updated.
+    AgencyEvidencePortfolioUpdated {
+        /// Evidence portfolio memory unit.
+        portfolio: EvidencePortfolioV1,
+    },
+    /// Non-live quarantined patch bundle was prepared.
+    AgencyPatchBundlePrepared {
+        /// Quarantined patch bundle artifact.
+        bundle: QuarantinedPatchBundleV1,
+    },
+    /// Non-live autonomy priority was evaluated.
+    AgencyPriorityEvaluated {
+        /// Deterministic priority signal.
+        signal: AutonomyPrioritySignalV1,
+    },
+    /// Non-live agency program receipt was recorded.
+    AgencyProgramReceiptRecorded {
+        /// Program receipt.
+        receipt: AgencyProgramReceiptV1,
     },
     /// A capsule needs environment variables to be provided by the user.
     OnboardingRequired {
@@ -229,6 +364,24 @@ impl IpcPayload {
                 | "agent_response"
                 | "approval_required"
                 | "approval_response"
+                | "authority_boundary_declared"
+                | "authority_boundary_declared_v2"
+                | "authority_lifecycle_receipt_recorded"
+                | "authority_replay_result_recorded"
+                | "authority_lifecycle_evaluated"
+                | "authority_post_change_response_requested"
+                | "authority_post_change_response_recorded"
+                | "agency_corridor_declared"
+                | "agency_corridor_receipt_recorded"
+                | "agency_corridor_evaluated"
+                | "agency_corridor_declared_v2"
+                | "agency_corridor_receipt_recorded_v2"
+                | "agency_corridor_queue_evaluated"
+                | "agency_work_program_declared"
+                | "agency_evidence_portfolio_updated"
+                | "agency_patch_bundle_prepared"
+                | "agency_priority_evaluated"
+                | "agency_program_receipt_recorded"
                 | "onboarding_required"
                 | "llm_request"
                 | "llm_stream_event"
@@ -420,7 +573,239 @@ mod tests {
     /// match arm *and* the representatives list below, this test fails.
     #[test]
     fn is_known_tag_covers_all_variants() {
-        const EXPECTED_VARIANT_COUNT: usize = 17;
+        const EXPECTED_VARIANT_COUNT: usize = 35;
+        let packet = crate::authority::AuthorityBoundaryPacketV1::new(
+            "test",
+            "bridge",
+            "retune_pressure",
+            "minime://pressure",
+            crate::authority::AuthorityClass::MikeOperatorLiveSubstrate,
+            "felt anchor",
+            "proposed change",
+            crate::authority::ReplayCandidateV1 {
+                adapter: "manual".to_string(),
+                replay_query: "review".to_string(),
+                runnable: false,
+                authority: "read_only".to_string(),
+            },
+            "Mike/operator",
+            "serde roundtrip",
+        );
+        let replay_result = crate::authority::ReplayResultV2 {
+            replay_id: "replay-1".to_string(),
+            adapter: "manual".to_string(),
+            classification: crate::authority::ReplayResultClassificationV2::Passed,
+            input_refs: vec!["trial-1".to_string()],
+            pre_observations: std::collections::BTreeMap::new(),
+            post_observations: std::collections::BTreeMap::new(),
+            confidence: Some(0.9),
+            failure_modes: Vec::new(),
+            evidence_refs: vec!["result-card-1".to_string()],
+            bounded_summary: "bounded replay passed".to_string(),
+            occurred_at: None,
+        };
+        let scoped_approval = crate::authority::ScopedApprovalV2 {
+            approval_id: "approval-1".to_string(),
+            scope_kind: crate::authority::ScopedApprovalKindV2::OneShot,
+            issued_by: "Mike/operator".to_string(),
+            issued_at: None,
+            expires_at: None,
+            resources: vec!["minime://pressure".to_string()],
+            telemetry_conditions: vec![crate::authority::TelemetryConditionV2 {
+                signal: "fill_pct".to_string(),
+                operator: "<=".to_string(),
+                threshold: "0.75".to_string(),
+                observed: Some("0.71".to_string()),
+                passed: true,
+            }],
+            consumed: false,
+        };
+        let receipt = crate::authority::AuthorityLifecycleReceiptV2 {
+            receipt_id: "receipt-1".to_string(),
+            boundary_id: Uuid::nil(),
+            kind: crate::authority::AuthorityLifecycleReceiptKindV2::Approval,
+            issued_by: "Mike/operator".to_string(),
+            issued_at: None,
+            packet_hash: Some("hash".to_string()),
+            receipt_hash_refs: Vec::new(),
+            bounded_summary: "bounded approval".to_string(),
+            evidence_refs: Vec::new(),
+            scoped_approval: Some(scoped_approval.clone()),
+            replay_result: None,
+            right_to_ignore: true,
+        };
+        let packet_v2 = crate::authority::AuthorityBoundaryPacketV2 {
+            boundary_id: Uuid::nil(),
+            schema_version: 2,
+            source: "test".to_string(),
+            surface: "bridge".to_string(),
+            action: "retune_pressure".to_string(),
+            resource: "minime://pressure".to_string(),
+            authority_class: crate::authority::AuthorityClass::MikeOperatorLiveSubstrate,
+            lifecycle_state: crate::authority::AuthorityLifecycleStateV2::OperatorApprovalWait,
+            felt_report_anchor: "felt anchor".to_string(),
+            proposed_change: "change".to_string(),
+            evidence_refs: vec!["wi_1".to_string()],
+            delta_refs: vec![crate::authority::ExperienceDeltaRefV2 {
+                delta_id: Some("delta-1".to_string()),
+                delta_hash: None,
+                surface: "codec".to_string(),
+                kind: "gate".to_string(),
+                lane: Some("semantic".to_string()),
+            }],
+            replay_candidate: crate::authority::ReplayCandidateV1 {
+                adapter: "manual".to_string(),
+                replay_query: "review".to_string(),
+                runnable: false,
+                authority: "read_only".to_string(),
+            },
+            replay_results: vec![replay_result.clone()],
+            scoped_approval: Some(scoped_approval),
+            rollout_abort_contract: crate::authority::RolloutAbortContractV2 {
+                canary_plan: "one-shot".to_string(),
+                health_checks: vec!["health".to_string()],
+                rollback_path: "rollback".to_string(),
+                abort_criteria: vec!["abort".to_string()],
+                post_change_response_required: true,
+            },
+            redaction_profile: crate::authority::RedactionProfileV2::default(),
+            lifecycle_receipts: vec![receipt.clone()],
+            success_metrics: Vec::new(),
+            abort_criteria: Vec::new(),
+            who_can_change_it: "Mike/operator".to_string(),
+            how_to_test_it: "test".to_string(),
+            right_to_ignore: true,
+            live_eligible_now: false,
+            auto_approved: false,
+        };
+        let corridor_packet_v2 = crate::agency_corridor::AgencyCorridorPacketV2::non_live(
+            "test",
+            "astrid",
+            crate::agency_corridor::AgencyCorridorActionV1::CompareArtifacts,
+            "bounded comparison can continue without live authority",
+            "compare artifacts and prepare evidence",
+        );
+        let corridor_receipt_v2 = crate::agency_corridor::AgencyCorridorReceiptV2 {
+            receipt_id: "corridor-receipt-v2-1".to_string(),
+            corridor_id: Uuid::nil(),
+            lease_id: Some("lease-safe-labs".to_string()),
+            step_id: Some("step-1".to_string()),
+            action: crate::agency_corridor::AgencyCorridorActionV1::RunSafeLab,
+            issued_by: "agency_corridor_v2".to_string(),
+            issued_at: None,
+            bounded_summary: "bounded safe-lab receipt".to_string(),
+            evidence_refs: Vec::new(),
+            hash_refs: Vec::new(),
+            source_prep_proposal_ref: None,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+            right_to_ignore: true,
+        };
+        let corridor_queue = crate::agency_corridor::AutonomousWorkQueueV1 {
+            queue_id: "queue-v1".to_string(),
+            generated_at: None,
+            max_steps_per_run: 5,
+            steps: Vec::new(),
+            blocked_by_live_violation: false,
+            live_violation_refs: Vec::new(),
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        };
+        let priority_signal = crate::agency_corridor::AutonomyPrioritySignalV1 {
+            program_id: "program-1".to_string(),
+            being_salience_score: 900,
+            recurrence_score: 400,
+            cross_being_convergence_score: 300,
+            stale_age_score: 100,
+            safety_readiness_score: 850,
+            deterministic_score: 610,
+            basis_refs: vec!["corridor-v2".to_string()],
+            live_wait_demoted: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        };
+        let work_program = crate::agency_corridor::AgencyWorkProgramV1 {
+            program_id: "program-1".to_string(),
+            schema_version: 1,
+            being: "astrid".to_string(),
+            title: "bounded evidence program".to_string(),
+            hypothesis: "safe corridor evidence can accumulate across runs".to_string(),
+            goals: vec!["collect evidence".to_string()],
+            status: crate::agency_corridor::AgencyWorkProgramStatusV1::Active,
+            linked_corridor_ids: vec![Uuid::nil()],
+            authority_boundary_ids: Vec::new(),
+            work_item_ids: vec!["wi-1".to_string()],
+            sandbox_trial_ids: Vec::new(),
+            delta_refs: Vec::new(),
+            stop_conditions: vec!["live violation".to_string()],
+            priority_signal: Some(priority_signal.clone()),
+            current_next_action: "update evidence portfolio".to_string(),
+            evidence_refs: Vec::new(),
+            right_to_ignore: true,
+            edits_source_now: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        };
+        let portfolio = crate::agency_corridor::EvidencePortfolioV1 {
+            portfolio_id: "portfolio-1".to_string(),
+            program_id: "program-1".to_string(),
+            being: "astrid".to_string(),
+            bounded_felt_anchors: vec!["bounded felt anchor".to_string()],
+            linked_introspections: Vec::new(),
+            linked_results: Vec::new(),
+            linked_cards: Vec::new(),
+            linked_source_prep: Vec::new(),
+            linked_objections: Vec::new(),
+            linked_reopens: Vec::new(),
+            linked_patch_bundles: Vec::new(),
+            current_recommendation: "continue evidence collection".to_string(),
+            unknowns: Vec::new(),
+            private_refs: Vec::new(),
+            hash_refs: Vec::new(),
+            closure_state: "open".to_string(),
+            right_to_ignore: true,
+            edits_source_now: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        };
+        let patch_bundle = crate::agency_corridor::QuarantinedPatchBundleV1 {
+            bundle_id: "bundle-1".to_string(),
+            program_id: "program-1".to_string(),
+            surface: "bridge_prompt".to_string(),
+            manifest: "review-only bundle".to_string(),
+            proposed_diff_artifact_path: "diagnostics/patch_bundles/bundle-1.diff".to_string(),
+            files_touched: vec!["capsules/spectral-bridge/src/llm.rs".to_string()],
+            tests_to_run: vec!["cargo test".to_string()],
+            restart_expected: true,
+            restart_debt_note: "later source implementation would need restart".to_string(),
+            edits_source_now: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+            right_to_ignore: true,
+        };
+        let program_receipt = crate::agency_corridor::AgencyProgramReceiptV1 {
+            receipt_id: "program-receipt-1".to_string(),
+            program_id: "program-1".to_string(),
+            kind: crate::agency_corridor::AgencyProgramReceiptKindV1::PortfolioUpdated,
+            issued_by: "agency_corridor_v2".to_string(),
+            issued_at: None,
+            bounded_summary: "portfolio updated".to_string(),
+            evidence_refs: Vec::new(),
+            hash_refs: Vec::new(),
+            portfolio_id: Some("portfolio-1".to_string()),
+            patch_bundle_id: None,
+            right_to_ignore: true,
+            edits_source_now: false,
+            grants_approval: false,
+            live_eligible_now: false,
+            auto_approved: false,
+        };
 
         let representatives: Vec<IpcPayload> = vec![
             IpcPayload::RawJson(serde_json::json!({"key": "val"})),
@@ -439,11 +824,89 @@ mod tests {
                 action: String::new(),
                 resource: String::new(),
                 reason: String::new(),
+                authority_boundary: None,
+                authority_boundary_v2: None,
             },
             IpcPayload::ApprovalResponse {
                 request_id: "req-1".into(),
                 decision: "approve".into(),
                 reason: None,
+                boundary_id: None,
+            },
+            IpcPayload::AuthorityBoundaryDeclared { packet },
+            IpcPayload::AuthorityBoundaryDeclaredV2 { packet: packet_v2 },
+            IpcPayload::AuthorityLifecycleReceiptRecorded {
+                receipt: receipt.clone(),
+            },
+            IpcPayload::AuthorityReplayResultRecorded {
+                boundary_id: Uuid::nil(),
+                replay_result,
+            },
+            IpcPayload::AuthorityLifecycleEvaluated {
+                boundary_id: Uuid::nil(),
+                state: crate::authority::AuthorityLifecycleStateV2::ApprovedManualOnly,
+                live_eligible_now: false,
+                closure_complete: false,
+                reason: Some("bounded reason".to_string()),
+            },
+            IpcPayload::AuthorityPostChangeResponseRequested {
+                boundary_id: Uuid::nil(),
+                surface: "bridge".to_string(),
+                resource: "minime://pressure".to_string(),
+            },
+            IpcPayload::AuthorityPostChangeResponseRecorded { receipt },
+            IpcPayload::AgencyCorridorDeclared {
+                packet: crate::agency_corridor::AgencyCorridorPacketV1::evidence_only(
+                    "test",
+                    "astrid",
+                    crate::agency_corridor::AgencyCorridorActionV1::EmitClosureObjection,
+                    "closure still feels unresolved",
+                    "record non-live objection evidence",
+                ),
+            },
+            IpcPayload::AgencyCorridorReceiptRecorded {
+                receipt: crate::agency_corridor::AgencyCorridorReceiptV1 {
+                    receipt_id: "corridor-receipt-1".to_string(),
+                    corridor_id: Uuid::nil(),
+                    action: crate::agency_corridor::AgencyCorridorActionV1::RunSafeLab,
+                    issued_by: "agency_corridor_v1".to_string(),
+                    issued_at: None,
+                    bounded_summary: "bounded safe lab receipt".to_string(),
+                    evidence_refs: Vec::new(),
+                    hash_refs: Vec::new(),
+                    grants_approval: false,
+                    live_eligible_now: false,
+                    right_to_ignore: true,
+                },
+            },
+            IpcPayload::AgencyCorridorEvaluated {
+                corridor_id: Uuid::nil(),
+                state: crate::agency_corridor::AgencyCorridorStateV1::EvidenceOnly,
+                reason: Some("non-live corridor evidence".to_string()),
+                grants_approval: false,
+                live_eligible_now: false,
+            },
+            IpcPayload::AgencyCorridorDeclaredV2 {
+                packet: corridor_packet_v2,
+            },
+            IpcPayload::AgencyCorridorReceiptRecordedV2 {
+                receipt: corridor_receipt_v2,
+            },
+            IpcPayload::AgencyCorridorQueueEvaluated {
+                queue: corridor_queue,
+            },
+            IpcPayload::AgencyWorkProgramDeclared {
+                program: work_program,
+            },
+            IpcPayload::AgencyEvidencePortfolioUpdated { portfolio },
+            IpcPayload::AgencyPatchBundlePrepared {
+                bundle: patch_bundle,
+            },
+            IpcPayload::AgencyPriorityEvaluated {
+                signal: priority_signal,
+            },
+            IpcPayload::AgencyProgramReceiptRecorded {
+                receipt: program_receipt,
             },
             IpcPayload::OnboardingRequired {
                 capsule_id: String::new(),

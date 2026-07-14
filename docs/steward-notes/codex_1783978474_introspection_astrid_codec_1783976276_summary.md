@@ -1,0 +1,3 @@
+Full read by Codex on 2026-07-13 for `introspection_astrid_codec_1783976276`.
+
+Astrid described the codec as a deterministic 48D semantic lane with 768D-to-8D projection and projection epoch metadata. She flagged the runtime directory and atomic epoch writer as the potential failure surface: a configured runtime directory might be unwritable, making persistence fail even while the kernel-derived epoch remains deterministic. She asked for a persistence round-trip test and projection consistency verification. Codex added a direct atomic writer/read-back regression and verified the existing runtime-dir and dynamic projection source-loop tests. No runtime-dir policy or projection algorithm was changed.

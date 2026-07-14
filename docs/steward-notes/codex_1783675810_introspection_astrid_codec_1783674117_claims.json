@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783674117",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`write_projection_epoch_payload_atomic` can race during first initialization and overwrite or lose a concurrently-created valid projection epoch.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Replaced the clobbering install path with a no-clobber hard-link/create-new copy install, preserving existing valid epochs and still repairing corrupt files; added a concurrent-valid-epoch regression test."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "The codec projection epoch should remain stable across fresh runtime starts and existing epoch files should take precedence after restart.",
+      "disposition": "verified_existing",
+      "rationale": "Ran existing epoch stability and existing-file precedence tests after the no-clobber install change."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Tail vibrancy should be smooth around entropy 0.85/0.86 rather than snapping or flattening.",
+      "disposition": "verified_existing",
+      "rationale": "Ran existing smoothstep and tail-vibrancy threshold tests covering the requested gate points."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "The activation-gain/dimension-scale attenuation boundary should remain transparent and deterministic.",
+      "disposition": "verified_existing",
+      "rationale": "Verified the codec stability and tail-vibrancy tests still pass with the deterministic projection and bounded attenuation path intact; no live gain or control change was made."
+    }
+  ]
+}

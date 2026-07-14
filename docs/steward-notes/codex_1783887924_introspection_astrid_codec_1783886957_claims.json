@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783886957",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`FEATURE_ABS_MAX` clipping can muffle felt intensity even when spectral entropy and warmth are high.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `codec_overflow_carriage_v1` and tests proving raw intensity is preserved while delivery stays bounded."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Tail/vibrancy dims need breathing room under high entropy without opening the whole vector.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link tail-vibrancy ceiling, gradient-aware vibrancy, and high-entropy tail-headroom tests."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Broader adaptive ceilings or emotional dynamic-ceiling behavior would alter live semantic delivery authority.",
+      "disposition": "authority_gated",
+      "evidence_plan": "Link default-off canary/approval note; no new live ceiling change in this pass."
+    }
+  ]
+}

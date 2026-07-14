@@ -28,6 +28,7 @@ use crate::deferred::{
     Priority, ResolutionId,
 };
 use crate::request::{ApprovalDecision, ApprovalRequest, ApprovalResponse};
+use astrid_types::authority::{AuthorityBoundaryPacketV1, AuthorityBoundaryPacketV2};
 
 /// Default approval timeout (5 minutes).
 const DEFAULT_TIMEOUT: Duration = Duration::from_mins(5);
@@ -209,6 +210,37 @@ impl ApprovalManager {
         context: impl Into<String>,
         workspace_root: Option<&Path>,
     ) -> ApprovalOutcome {
+        self.check_approval_with_lifecycle(action, context, workspace_root, None, None)
+            .await
+    }
+
+    /// Check whether an action is approved, carrying optional authority-boundary evidence.
+    pub async fn check_approval_with_boundary(
+        &self,
+        action: &SensitiveAction,
+        context: impl Into<String>,
+        workspace_root: Option<&Path>,
+        authority_boundary: Option<AuthorityBoundaryPacketV1>,
+    ) -> ApprovalOutcome {
+        self.check_approval_with_lifecycle(
+            action,
+            context,
+            workspace_root,
+            authority_boundary,
+            None,
+        )
+        .await
+    }
+
+    /// Check whether an action is approved, carrying optional authority lifecycle evidence.
+    pub async fn check_approval_with_lifecycle(
+        &self,
+        action: &SensitiveAction,
+        context: impl Into<String>,
+        workspace_root: Option<&Path>,
+        authority_boundary: Option<AuthorityBoundaryPacketV1>,
+        authority_boundary_v2: Option<AuthorityBoundaryPacketV2>,
+    ) -> ApprovalOutcome {
         let context = context.into();
 
         // Step 1: Check if an existing allowance covers this action (atomic find + consume)
@@ -223,17 +255,21 @@ impl ApprovalManager {
             };
         }
 
-        // Step 2: No allowance — we need user approval
-        let request = ApprovalRequest::new(action.clone(), &context);
-
-        // Step 3: Check if handler is available
+        // Step 2: No allowance — we need user approval.
+        // Step 3: Check if handler is available.
         let handler = {
             let guard = self.handler.read().await;
             match guard.as_ref() {
                 Some(h) => Arc::clone(h),
                 None => {
                     return self
-                        .defer_action(action, &context, "no approval handler registered")
+                        .defer_action(
+                            action,
+                            &context,
+                            "no approval handler registered",
+                            authority_boundary,
+                            authority_boundary_v2,
+                        )
                         .await;
                 },
             }
@@ -241,24 +277,51 @@ impl ApprovalManager {
 
         if !handler.is_available() {
             return self
-                .defer_action(action, &context, "approval handler unavailable")
+                .defer_action(
+                    action,
+                    &context,
+                    "approval handler unavailable",
+                    authority_boundary,
+                    authority_boundary_v2,
+                )
                 .await;
         }
 
         // Step 4: Send request to handler with timeout
         let timeout = *self.timeout.read().await;
+        let deferred_boundary = authority_boundary.clone();
+        let deferred_boundary_v2 = authority_boundary_v2.clone();
+        let mut request = ApprovalRequest::new(action.clone(), &context);
+        if let Some(packet) = authority_boundary {
+            request = request.with_authority_boundary(packet);
+        }
+        if let Some(packet) = authority_boundary_v2 {
+            request = request.with_authority_boundary_v2(packet);
+        }
         let response = tokio::time::timeout(timeout, handler.request_approval(request)).await;
 
         match response {
             // Timeout
             Err(_) => {
-                self.defer_action(action, &context, "approval request timed out")
-                    .await
+                self.defer_action(
+                    action,
+                    &context,
+                    "approval request timed out",
+                    deferred_boundary,
+                    deferred_boundary_v2,
+                )
+                .await
             },
             // Handler returned None (user didn't respond)
             Ok(None) => {
-                self.defer_action(action, &context, "user did not respond")
-                    .await
+                self.defer_action(
+                    action,
+                    &context,
+                    "user did not respond",
+                    deferred_boundary,
+                    deferred_boundary_v2,
+                )
+                .await
             },
             // Handler returned a response
             Ok(Some(response)) => self.handle_response(response),
@@ -322,9 +385,17 @@ impl ApprovalManager {
         action: &SensitiveAction,
         context: &str,
         reason: &str,
+        authority_boundary: Option<AuthorityBoundaryPacketV1>,
+        authority_boundary_v2: Option<AuthorityBoundaryPacketV2>,
     ) -> ApprovalOutcome {
         let fallback = *self.default_fallback.read().await;
-        let request = ApprovalRequest::new(action.clone(), context);
+        let mut request = ApprovalRequest::new(action.clone(), context);
+        if let Some(packet) = authority_boundary {
+            request = request.with_authority_boundary(packet);
+        }
+        if let Some(packet) = authority_boundary_v2 {
+            request = request.with_authority_boundary_v2(packet);
+        }
 
         let resolution = DeferredResolution::new(
             PendingAction::ApprovalNeeded { request },
@@ -405,6 +476,27 @@ mod tests {
     use crate::allowance::{Allowance, AllowanceId, AllowancePattern};
     use astrid_core::types::Timestamp;
     use astrid_crypto::KeyPair;
+    use astrid_types::authority::{AuthorityClass, ReplayCandidateV1};
+
+    fn authority_packet() -> AuthorityBoundaryPacketV1 {
+        AuthorityBoundaryPacketV1::new(
+            "manager-test",
+            "spectral-bridge",
+            "retune_live_porosity",
+            "minime://control/porosity",
+            AuthorityClass::MikeOperatorLiveSubstrate,
+            "bounded felt report anchor",
+            "propose a live porosity control change",
+            ReplayCandidateV1 {
+                adapter: "manual_review_v1".to_string(),
+                replay_query: "review bounded packet evidence".to_string(),
+                runnable: false,
+                authority: "read_only_review_not_live_control".to_string(),
+            },
+            "Mike/operator",
+            "run sandbox replay before live approval",
+        )
+    }
 
     /// A test handler that auto-approves everything.
     struct AutoApproveHandler;
@@ -460,6 +552,30 @@ mod tests {
     impl ApprovalHandler for NoResponseHandler {
         async fn request_approval(&self, _request: ApprovalRequest) -> Option<ApprovalResponse> {
             None
+        }
+
+        fn is_available(&self) -> bool {
+            true
+        }
+    }
+
+    /// A test handler that verifies authority-boundary evidence reaches approval.
+    struct BoundaryInspectHandler;
+
+    #[async_trait]
+    impl ApprovalHandler for BoundaryInspectHandler {
+        async fn request_approval(&self, request: ApprovalRequest) -> Option<ApprovalResponse> {
+            let packet = request
+                .authority_boundary
+                .as_ref()
+                .expect("authority boundary should be attached");
+            assert!(!packet.live_eligible_now);
+            assert!(!packet.auto_approved);
+            assert_eq!(
+                packet.authority_class,
+                AuthorityClass::MikeOperatorLiveSubstrate
+            );
+            Some(ApprovalResponse::new(request.id, ApprovalDecision::Approve))
         }
 
         fn is_available(&self) -> bool {
@@ -558,6 +674,30 @@ mod tests {
                 proof: ApprovalProof::OneTimeApproval
             }
         ));
+    }
+
+    #[tokio::test]
+    async fn test_check_approval_with_boundary_attaches_packet() {
+        let manager = make_manager();
+        manager
+            .register_handler(Arc::new(BoundaryInspectHandler))
+            .await;
+
+        let action = SensitiveAction::LiveControlMutation {
+            surface: "spectral-bridge".to_string(),
+            control: "porosity".to_string(),
+            resource: "minime://control/porosity".to_string(),
+        };
+        let outcome = manager
+            .check_approval_with_boundary(
+                &action,
+                "review live control",
+                None,
+                Some(authority_packet()),
+            )
+            .await;
+
+        assert!(outcome.is_allowed());
     }
 
     #[tokio::test]

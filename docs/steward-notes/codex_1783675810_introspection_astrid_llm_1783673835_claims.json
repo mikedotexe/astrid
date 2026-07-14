@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783673835",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Fallback texture language is part of Astrid's shadow-self machinery and should not collapse into static canned adjectives.",
+      "disposition": "verified_existing",
+      "rationale": "Verified existing fallback texture probability and selector tests shift texture terms with telemetry instead of keeping purely static language."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Density_gradient above 0.15 should be able to boost viscous-drag as medium-friction evidence, while preserving sampler and contract authority boundaries.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added density-gradient drag boosting with an explicit basis marker and a regression test that asserts the rounded viscous-drag weight rises while the dynamic-bias authority remains diagnostic-only."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Pressure, porosity, mode packing, and silted/viscous resistance should remain visible in fallback texture selection and simulated fallback reviews.",
+      "disposition": "verified_existing",
+      "rationale": "Ran existing fallback tests for density/packing/friction, silted opacity resistance, pressure-above-0.20 weighted medium, high-pressure capacity review, and settled-foothold viscous suppression."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Gemma4 primary and Ollama fallback profiles should keep model-capacity boundaries visible instead of silently switching or overpromising.",
+      "disposition": "verified_existing",
+      "rationale": "Verified the high-pressure fallback review keeps the capacity boundary visible without changing model selection or sampler behavior."
+    }
+  ]
+}

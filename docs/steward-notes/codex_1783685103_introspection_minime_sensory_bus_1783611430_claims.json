@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783611430",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "High entropy plus high fill can stutter if semantic persistence and high-fill pruning floors conflict.",
+      "disposition": "verified_existing",
+      "rationale": "Existing Minime semantic-bus tests and source verify high-entropy stale-window extension, high-fill persistence, salience/hysteresis, and current-fill retention behavior without requiring a runtime retune."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "A low-fill 20 percent / entropy 0.90 case should preserve semantic persistence long enough for deep thought rather than pruning as ordinary stale text.",
+      "disposition": "verified_existing",
+      "rationale": "The semantic stale-window formula already extends low-fill, high-entropy windows; existing tests cover the entropy multiplier and current-fill survival edges."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Adding `density_gradient_weight` to semantic entropy persistence could favor depth retention over breadth when density-gradient is shallow and entropy is high.",
+      "disposition": "needs_operator_approval",
+      "rationale": "This would alter live Minime sensory cadence and semantic memory retention, so it needs Mike/operator approval plus post-restart health/fill/sensory monitoring before implementation."
+    }
+  ]
+}

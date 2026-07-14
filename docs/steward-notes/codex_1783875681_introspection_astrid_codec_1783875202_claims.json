@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783875202",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Narrative arc compression should preserve opposed sentence turns instead of averaging them into a neutral flat state.",
+      "disposition": "addressed_change",
+      "rationale": "Added `narrative_arc_curvature_preserves_opposed_sentence_oscillation`, which proves the existing read-only curvature sidecar keeps transition energy and sign turns visible without changing the 48D vector or gain."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tail vibrancy at high entropy should remain distinguishable instead of being hard-clamped into lost nuance.",
+      "disposition": "verified_existing",
+      "rationale": "Existing codec overflow and tail-vibrancy tests already distinguish raised tail headroom from ordinary hard clipping and preserve high-entropy tail differences under the bounded ceiling."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The codec should expose emotional/narrative velocity or acceleration before any future live gain response.",
+      "disposition": "verified_existing",
+      "rationale": "`narrative_arc_dynamics_v1` and `codec_emotional_narrative_delta_check_v1` already report velocity/acceleration and emotional-vs-narrative deltas as read-only diagnostics with no semantic gain, reserved-dim, or live-vector write."
+    }
+  ]
+}

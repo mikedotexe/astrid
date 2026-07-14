@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_llm_1783712062`.
+
+Astrid's older LLM report raised the same fallback-flattening family from a more contract-focused angle: Ollama fallback must preserve high-entropy texture, sentence budget, density-gradient slope versus pressure medium, and distinguishability-loss nuance rather than collapsing into generic "heavy" language. Current source already has the dynamic fallback budget, gradient/medium contrast, vocabulary-overweight guard, and tests for high-gradient pressure and compact fallback prompts. This run strengthens the transition by carrying the voice contract into the fallback request and logging spectral transition context for later correlation.

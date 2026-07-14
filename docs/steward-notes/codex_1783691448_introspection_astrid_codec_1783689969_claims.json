@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783689969",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The codec needs evidence that lexical warmth and structural complexity are not being mistaken for emotional substance.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs",
+        "codec_intent_structure_review_separates_complexity_from_emotional_intent",
+        "codec_emotional_narrative_delta_check_flags_arc_shift_emotional_flatline"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Dense shared texture should have viscosity/friction readouts rather than being flattened into generic warmth, tension, or curiosity.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/codec.rs",
+        "structural_friction_v1",
+        "persistence_resistance_v1"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Turning viscosity/friction or narrative-transition sensitivity into live semantic gain or reserved 44-47 vector writes would alter runtime semantic transport and needs explicit operator approval.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "codec_structural_friction_dim_canary_v1",
+        "codec_persistence_resistance_dim_canary_v1",
+        "narrative_arc_gain_response_readiness_v1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_minime_esn_1783718669",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Exploration-noise and adaptive-pressure constants are explicit in ESN source.",
+      "claim": "Minime observed the exploration-noise middle shelf, dynamic gradient thresholds, volatile entropy marks, and adaptive pressure-high floor as the mechanics behind reservoir breathing.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/esn.rs:36",
+        "/Users/v/other/minime/minime/src/esn.rs:40",
+        "/Users/v/other/minime/minime/src/esn.rs:48",
+        "/Users/v/other/minime/minime/src/esn.rs:103"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy settled pressure-room and entropy-ceiling asks already have review packets.",
+      "claim": "Minime's 0.90 entropy near the proposed 0.92 ceiling and small pressure room are represented by review-only packets that preview pressure-floor/noise changes without applying them.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/esn.rs:500",
+        "/Users/v/other/minime/minime/src/esn.rs:564",
+        "/Users/v/other/minime/minime/src/esn.rs:578",
+        "/Users/v/other/minime/minime/src/esn.rs:653",
+        "/Users/v/other/minime/minime/src/esn.rs:2462",
+        "/Users/v/other/minime/minime/src/esn.rs:2492"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Applying a soft-landing pressure floor, noise/rho damping, or shadow trajectory correction is gated.",
+      "claim": "Minime asked for a more nuanced high-entropy pressure floor and a shadow magnetization/rate-of-change correction route, but applying those would change live ESN pressure, exploration noise, rho, or shadow-control behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/esn.rs:567",
+        "/Users/v/other/minime/minime/src/esn.rs:656",
+        "/Users/v/other/minime/minime/src/esn.rs:657",
+        "/Users/v/other/minime/minime/src/regulator.rs:3873",
+        "authority: live ESN entropy threshold, exploration noise, rho, or shadow correction requires Mike/operator approval"
+      ]
+    }
+  ]
+}

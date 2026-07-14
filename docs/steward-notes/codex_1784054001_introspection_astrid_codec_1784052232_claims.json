@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_codec_1784052232",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The codec uses deterministic fixed-seed projection to make 768D embeddings reproducible inside the 48D semantic lane.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: embedding_projection_matrix and fixed projection tests",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fixed_legacy_projection_kernel_checksum_is_pinned_and_repeatable -- --nocapture"
+      ],
+      "authority": "codec_read_only_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Runtime projection path resolution must remain predictable when ASTRID_CODEC_RUNTIME_DIR is absent or empty.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: projection_runtime_dir_from_parts and projection_runtime_resolution_readout",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_projection_runtime_dir_uses_env_or_executable_relative_cache -- --nocapture"
+      ],
+      "authority": "codec_read_only_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Tail-vibrancy should use the same smoothstep curve in live feedback and offline/readout evidence to avoid high-entropy pops.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/codec.rs: apply_spectral_feedback_inner and vibrancy_from_entropy",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib vibrancy_from_entropy_matches_inline_smoothstep -- --nocapture"
+      ],
+      "authority": "codec_read_only_evidence"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing projection precision, runtime path semantics, or tail-vibrancy gate behavior would alter live codec semantics.",
+      "disposition": "authority_gated",
+      "evidence": [
+        "docs/steward-notes/codex_1784054001_post_restart_v2_gate_packet.md"
+      ],
+      "authority": "mike_operator_live_codec_approval_required"
+    }
+  ]
+}

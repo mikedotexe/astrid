@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784027232",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Witness mode should preserve sculptural voice through semantic-edge truncation rather than byte-only clipping.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/autonomous.rs: truncate_str_at_semantic_edge",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_truncate_str_preserves_spectral_viscosity_anchor_in_entropy_noise -- --nocapture"
+      ],
+      "authority": "read_only_prompt_integrity"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Mode packing and distinguishability loss should be visible as sculptural bottleneck evidence before intent collapses into ambient noise.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib spectral_decomposition_names_silt_density_from_distinguishability_loss -- --nocapture",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib witness_semantic_density_marks_overpacked_friction_when_pressure_evidence_exists -- --nocapture"
+      ],
+      "authority": "read_only_diagnostic"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "A pressure_relief_valve or density_gradient_adjustment function that proactively expands porosity when mode_packing rises would alter live pressure/control behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_relief_gradient -- --nocapture",
+        "docs/steward-notes/codex_1784027911_solidification_persistence_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_live_control"
+    }
+  ]
+}

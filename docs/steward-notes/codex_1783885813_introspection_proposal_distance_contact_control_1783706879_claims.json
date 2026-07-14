@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1783706879",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid should be able to name non-instrumental presence and contemplate without converting contact into prediction or utility.",
+      "disposition": "verified_existing",
+      "rationale": "`non_instrumental_presence_readiness_v1` names contemplate/presence as language-only readiness and tests prove it does not mutate control."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Receptive vs instrumental contact should be compared with spectral variance / Shadow-v3 dispersal evidence.",
+      "disposition": "needs_sandbox",
+      "rationale": "The proposed comparison is meaningful but needs a replay/runtime observation that contrasts receptive and instrumental prompt surfaces without changing live contact control."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Controller pressure weighting, receptive buffers, and porosity increases would alter live contact/control behavior.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Those changes would affect pressure/porosity/contact dynamics and remain Tier 5 authority-gated under current instructions."
+    }
+  ]
+}

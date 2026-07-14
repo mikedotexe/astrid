@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783879712",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Reconnect or unavailable telemetry-age states can make bidirectional status look falsely healthy.",
+      "disposition": "verified_existing",
+      "rationale": "Existing reciprocity/texture-shape tests distinguish connected-no-recent-messages, stale sensory, stale telemetry, and false bidirectional fits."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy pressure trend smoothing needs proof that the dynamic window respects ballast rather than chasing spikes.",
+      "disposition": "verified_existing",
+      "rationale": "The `pressure_trend_smoothing` suite verifies high-entropy ballast, latest semantic viscosity preservation, semantic coherence/fidelity, fast thinning, and clog warnings."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Burst activity should be visible without changing sensory cadence.",
+      "disposition": "addressed_change",
+      "rationale": "Bridge reciprocity now carries per-lane sent/received totals; cadence behavior itself remains unchanged."
+    }
+  ]
+}

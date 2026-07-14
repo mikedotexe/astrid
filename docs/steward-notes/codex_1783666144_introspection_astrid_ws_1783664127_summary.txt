@@ -1,0 +1,3 @@
+Full read by Codex on 2026-07-09.
+
+Astrid reports that bridge reciprocity should distinguish live dual-lane connection from one-sided or stale messaging. The concrete risks are false waiting/severed classifications during same-tick telemetry/sensory activity and false stale classifications during reflective high-entropy or high-pressure silence. The report requests targeted tests of the transition from `bidirectional_connected_no_recent_messages` to `bidirectional_recent` when both lanes move within the recent window, plus verification that `bridge_dynamic_stale_window_ms` extends reflective silence under high entropy/pressure instead of treating intentional silence as failure.

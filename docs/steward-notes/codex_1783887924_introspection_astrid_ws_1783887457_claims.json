@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783887457",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "A longer pressure/porosity stale window can create ghost weight when pressure context outlives fresher reciprocity context.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `bridge_dynamic_stale_window_ms`, pressure-source analysis, and ghost-stability tests."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Mode packing near the felt dead-zone threshold should remain visible as transition-edge evidence.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `felt_mode_packing_dead_zone_watch` diagnostics and pressure-source tests."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Lowering the felt dead-zone threshold or tightening pressure stale windows would alter live pressure/cadence semantics.",
+      "disposition": "authority_gated",
+      "evidence_plan": "Record explicit boundary: live stale-window or threshold changes require Mike/operator approval."
+    }
+  ]
+}

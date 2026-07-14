@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783944289",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback from MLX to a smaller Ollama model can preserve format while flattening high-entropy texture.",
+      "disposition": "verified_existing",
+      "rationale": "`llm.rs` now defaults Ollama fallback to Gemma 4 12B, keeps the 4B model as a compatibility tail, and removes that tail under high-entropy texture conditions unless shadow-field evidence is stable."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback texture terms should be preserved as current context, not as a static vocabulary list.",
+      "disposition": "verified_existing",
+      "rationale": "`fallback_continuity_budget_v1`, `fallback_texture_persistence_review_v1`, dynamic texture weighting, and texture-family selectors carry current entropy/density/gradient/pressure evidence into the fallback prompt as advisory language context only."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Changing fallback model/provider/sampler priority would be live LLM authority.",
+      "disposition": "needs_operator_approval",
+      "rationale": "The verified change is prompt/context preservation; changing provider order, sampler behavior, or model-selection thresholds would affect live generation authority and needs explicit operator approval."
+    }
+  ]
+}

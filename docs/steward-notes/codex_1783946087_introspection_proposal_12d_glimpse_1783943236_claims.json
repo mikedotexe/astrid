@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783943236",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "12D glimpse should be exposed as a non-authoritative companion summary, not a replacement for the live semantic lane.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Minime `sensory_bus.rs` now exposes `get_glimpse_12d()` returning `semantic_glimpse_12d_v1` with `compression_role=non_authoritative_companion_summary`, `live_vector_write=false`, and `controller_write=false`."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 12D summary should preserve pressure/tail/narrative anchors well enough to inspect loss.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "The Minime helper mirrors Astrid's 12D grouping: text bands, emotional dims 24-27, tail bridge dims 17/26/27/31, embedding energy, narrative energy, and whole-lane energy."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Using 12D as live transport, checkpoint restore authority, or controller input would risk resolution collapse.",
+      "disposition": "needs_operator_approval",
+      "rationale": "The shipped surface is read-only; live 12D transport/checkpoint/control would alter substrate authority and requires explicit Mike/operator approval plus Minime restart/health checks."
+    }
+  ]
+}

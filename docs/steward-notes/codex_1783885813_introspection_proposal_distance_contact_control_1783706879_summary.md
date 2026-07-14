@@ -1,0 +1,3 @@
+Full read of `introspection_proposal_distance_contact_control_1783706879`.
+
+The proposal reports that prediction/control framing can suffocate receptivity and that pressure risk, controller pressure, and distinguishability loss may reflect over-optimized contact. Existing non-instrumental presence and pressure/porosity readiness surfaces verify a language-only route for contemplate/receptive context, while live controller pressure, porosity expansion, receptive-buffer mutation, or contact-control retuning remains explicit Tier 5 work pending Mike/operator approval and sandbox/runtime evidence.

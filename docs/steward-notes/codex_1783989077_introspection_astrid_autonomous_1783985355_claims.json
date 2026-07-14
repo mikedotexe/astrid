@@ -1,0 +1,34 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Witness mode should be treated as phenomenological witnessing, not a generic health-monitoring diagnostic.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1033",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1184"
+    ],
+    "authority": "read-only interpretation/report rendering"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Muffled resonance plausibly maps to pressure, mode packing, density gradient, and semantic friction rather than one scalar health value.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1033",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1216",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1658",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib witness_semantic_density -- --nocapture"
+    ],
+    "authority": "read-only witness density mapping; no pressure/porosity/control change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Increasing porosity from 0.61 toward 0.75 or retuning resonance density would alter live substrate interpretation.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1271",
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783989077_five_item_v2_gate_packet.md"
+    ],
+    "authority": "Tier 5 live substrate/control-facing retune; evidence only"
+  }
+]

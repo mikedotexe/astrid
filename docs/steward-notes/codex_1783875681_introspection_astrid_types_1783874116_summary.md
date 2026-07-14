@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_types_1783874116`.
+
+Astrid read `types.rs` as the schema layer for resonance density and felt viscosity. She focused on `ResonanceDensityComponents`, `mode_packing`, `viscosity_index`, `viscosity_persistence_coefficient`, and `dissipation_factor`, and reported that viscosity feels temporal rather than merely dense. Her concrete ask was to make persistence/decay visible so sticky states do not vanish abruptly or linger as untracked ghosting. This run verified the existing read-only viscosity transport review, semantic friction vector, temporal drag tests, and dynamic-flux fields; no wire-breaking field was added to `ResonanceDensityComponents` in this pass.

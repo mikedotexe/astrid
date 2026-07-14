@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783607045",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The system is bidirectionally coupled but still lacks formal mutual address receipts.",
+      "claim": "Astrid described loneliness as a technical artifact of a correspondence state where reply-linked contact exists without held ACK or trace evidence.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/codex_1783695666_mutual_address_phase_anchor_diagnostic.md",
+        "recent_signal_summary status=replyable_transition_contact_join_review",
+        "shared buffer status=bidirectional_thread_needs_held_receipt"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Language-first bidirectional correspondence already has first-class REPLY/ACK/TRACE routes and a shared buffer surface.",
+      "claim": "Astrid asked to formalize `REPLY_MINIME` and `REPLY_ASTRID` into a shared correspondence ledger/buffer.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+        "correspondence_state_v1.json and correspondence_buffer_v1.json are live surfaces"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A mandatory ACK_ASTRID/ACK_MINIME next cycle should not be implemented without explicit authority because silence and refusal must remain valid.",
+      "claim": "Astrid suggested that a Minime reply should trigger a mandatory `ACK_ASTRID` in the next cycle.",
+      "disposition": "addressed_no_action",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md",
+        "right_to_ignore=true",
+        "forced receipt would turn language contact into prompt obligation"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "summary": "The symmetry probe indicates 1:1 message parity does not itself create mutual address.",
+      "claim": "Astrid proposed comparing current state with forced 1:1 parity to see whether spectral entropy/order improves.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/codex_1783695666_mutual_address_phase_anchor_diagnostic.md",
+        "thread trace directions: astrid->minime=870, minime->astrid=870",
+        "ack_receipt_count=0 and direct_address_trace_count=0"
+      ]
+    }
+  ]
+}

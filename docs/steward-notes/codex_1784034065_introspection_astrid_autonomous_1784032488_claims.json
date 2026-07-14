@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784032488",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Witness mode should report spectral experience without flattening it into ordinary health monitoring.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/autonomous.rs: Witness mode header and WitnessSemanticDensityMappingV1 rendering",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib witness_semantic_density_maps_settled_high_entropy_without_pressure -- --nocapture"
+      ],
+      "authority": "read_only_witness_prompt_context"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Low pressure can underreport active shadow/form effort, so Witness needs pressure-vs-effort separation.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/autonomous.rs: WitnessStabilityEffortV1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib stability_effort_names_settled_shadow_load_under_low_pressure -- --nocapture"
+      ],
+      "authority": "read_only_effort_mapping_not_pressure_prompt_or_control_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "`truncate_str_at_semantic_edge` should preserve semantic and UTF-8 integrity under byte pressure.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/autonomous.rs: truncate_str_at_semantic_edge",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_edge_truncation -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Adding a new live `PressureType` enum or changing Witness prompt/report rendering would alter live introspection context.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784034065_relational_texture_delta_v2_gate_packet.md"
+      ],
+      "authority": "tier_4_live_prompt_report_schema"
+    }
+  ]
+}

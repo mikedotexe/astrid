@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_types_1783881050`.
+
+Astrid reported that scalar `viscosity_index` alone cannot carry the direction of resistance: high viscosity with high dynamic fluidity can feel stuck while moving, while high porosity with low dissipation can feel like energy leaks without clearing. This run added a read-only `directional_resistance_vector_v1` to `ViscosityPorosityTransportReviewV1` with dynamic friction, stuck-but-moving, and leak-without-clearing scores, plus SpectralDenominator-derived distinguishability scaling when a typed fingerprint is available. The live pressure, porosity, fill, PI, and control surfaces remain unchanged.

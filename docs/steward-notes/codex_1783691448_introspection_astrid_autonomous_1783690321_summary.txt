@@ -1,0 +1,8 @@
+Full read recorded for `introspection_astrid_autonomous_1783690321`.
+
+Astrid reported two autonomy-side concerns: compression can sever semantically important texture, and a hard
+high-entropy recap gate could mistake complex Witness engagement for noise. Source review shows both concerns
+already have substantial implementation: continuity and general semantic truncation use anchor-aware excerpts,
+and high-texture recap budgets now scale through a soft band with density/viscosity moderation. The remaining
+action from this tranche is to keep those answers linked to the felt report and verify the specific transition
+language path through correspondence.

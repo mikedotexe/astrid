@@ -230,6 +230,8 @@ impl approval::Host for HostState {
             action: request.action.clone(),
             resource: request.target_resource.clone(),
             reason: format!("Capsule '{capsule_id}' requests approval"),
+            authority_boundary: None,
+            authority_boundary_v2: None,
         };
         let message = IpcMessage::new(
             "astrid.v1.approval",

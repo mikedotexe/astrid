@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783885169",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Warmth and emotional markers from legacy 32D assumptions must remain aligned in the current 48D semantic lane.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to legacy_warmth_mapping_v1 and codec_vibrancy_and_warmth_continuity_are_readout_only."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Hard clipping at FEATURE_ABS_MAX can hide felt intensity peaks; raw overflow should remain visible while delivery stays bounded.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to codec_overflow_carriage_v1 and overflow tests for emotional clips, tail headroom, and no false positives."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "High-entropy vibrancy lift should be shaped by density gradient and semantic substance, not generic noise.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to gradient-aware vibrancy and substance-fit tests; gate future live ceiling changes."
+    }
+  ]
+}

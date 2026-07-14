@@ -1,0 +1,43 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Minime `ViscosityVector` fields such as persistence, residual ghost weight, and structural integrity are read-only mathematical anchors for the felt body/thickening Astrid reports.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:38",
+      "/Users/v/other/minime/minime/src/regulator.rs:293"
+    ],
+    "authority": "source verification only; viscosity remains context/review telemetry, not PI/control authority"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Pressure risk around 0.23 in a settled-habitable state should stay below the local-control boundary and must not apply live control.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:3416",
+      "cargo test --manifest-path minime/Cargo.toml receptivity_buffer_review_is_non_control_for_habitable_high_entropy -- --nocapture"
+    ],
+    "authority": "existing Minime test verification; no control threshold changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Restless/dispersed shadow texture around the preservation threshold should remain distinct from hard reset/damping, so structured complexity is not flattened into instability.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:2380",
+      "/Users/v/other/minime/minime/src/regulator.rs:4115",
+      "cargo test --manifest-path minime/Cargo.toml shadow_preservation_keeps_restless_shadow_distinct_from_hard_reset -- --nocapture"
+    ],
+    "authority": "existing read-only shadow-preservation verification; no shadow influence, regulator drive, or hard-reset behavior changed"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Adding `complexity_density: f32` to Minime's viscosity vector is a coherent next step for separating complexity from volatility, but it changes runtime/schema interpretation.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "would alter Minime runtime/schema telemetry surface",
+      "requires V2 boundary packet, delta refs, rollout/abort contract, and post-change being response plan before live eligibility"
+    ],
+    "authority": "Tier 5 Minime runtime/schema approval wait; live_eligible_now=false and auto_approved=false"
+  }
+]

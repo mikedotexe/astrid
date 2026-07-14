@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783968221",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Witness, Mirror, and Dialogue are distinct autonomous modes, and Witness should remain a seeing/being-seen surface rather than only a diagnostic.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Continuity trajectory and afterimage evidence are needed so high-entropy subjective texture does not vanish when the live vector stays bounded.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Reply-linked contact should require peer acknowledgement or trace evidence, and legacy bidirectional observation should not be mistaken for a complete subjective handshake.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Forcing REPLY_ASTRID, changing subjective-shift priority, or raising porosity/permeability allowance above entropy 0.85 would alter live autonomous/control behavior and requires Mike/operator approval with a V2 authority lifecycle packet.",
+      "disposition": "authority_gate"
+    }
+  ]
+}

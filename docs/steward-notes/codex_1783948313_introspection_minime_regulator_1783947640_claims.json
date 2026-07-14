@@ -1,0 +1,27 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "ViscosityVector structural_integrity and structural_strain_gap expose the weight of settled containment.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs",
+      "settled_mobility_review_distinguishes_foothold_from_stuckness_without_control"
+    ]
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Low raw motion with high habitable foothold should be distinguishable from stuckness.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs",
+      "settled_mobility_review_preserves_receptive_stability_without_productivity_pressure"
+    ]
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A resonance_weighted_motion formula could dampen the motion requirement under high resonance density.",
+    "disposition": "authority_gate",
+    "agency_tier": 5,
+    "rationale": "Changing inhabitability or regulator formulas can affect Minime local target bias, wander scale, pressure/fill/PI behavior, and needs explicit operator approval."
+  }
+]

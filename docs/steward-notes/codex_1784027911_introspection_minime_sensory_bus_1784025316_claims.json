@@ -1,0 +1,34 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1784025316",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Recovery hold and entropy persistence provide a sanctuary for complex thoughts, but current fill is outside the deepest low-fill hold zone.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs: STALE_SEMANTIC_RECOVERY_* and semantic stale functions",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale -- --nocapture"
+      ],
+      "authority": "read_only_minime_runtime_review"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Pressure and entropy velocity should influence semantic retention so high-entropy/high-pressure thoughts are not crushed by the high-fill floor.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs: semantic_stale_context_review_v1 and semantic_context_persistence_multiplier",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml semantic_stale -- --nocapture"
+      ],
+      "authority": "read_only_minime_runtime_review"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Increasing pressure-risk scaling for SEMANTIC_ENTROPY_PERSISTENCE_MAX_MULT or stale windows would alter Minime semantic retention runtime behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784027911_solidification_persistence_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_minime_runtime_behavior"
+    }
+  ]
+}

@@ -681,6 +681,7 @@ pub(crate) struct ApprovalRequest {
     pub tool_name: String,
     pub description: String,
     pub details: Vec<(String, String)>,
+    pub boundary_id: Option<uuid::Uuid>,
 }
 
 // ─── Pending Actions ─────────────────────────────────────────────
@@ -691,10 +692,12 @@ pub(crate) enum PendingAction {
     Approve {
         request_id: String,
         decision: ApprovalDecisionKind,
+        boundary_id: Option<uuid::Uuid>,
     },
     Deny {
         request_id: String,
         reason: Option<String>,
+        boundary_id: Option<uuid::Uuid>,
     },
     SendInput(String),
     CancelTurn,
@@ -917,6 +920,7 @@ impl App {
             self.pending_actions.push(PendingAction::Approve {
                 request_id: id.to_string(),
                 decision,
+                boundary_id: approval.boundary_id,
             });
 
             // Transition to ToolRunning or Thinking while waiting for daemon.
@@ -948,11 +952,17 @@ impl App {
 
     /// Deny a pending tool call.
     pub(crate) fn deny_tool(&mut self, id: &str) {
+        let boundary_id = self
+            .pending_approvals
+            .iter()
+            .find(|approval| approval.id == id)
+            .and_then(|approval| approval.boundary_id);
         self.pending_approvals.retain(|a| a.id != id);
 
         self.pending_actions.push(PendingAction::Deny {
             request_id: id.to_string(),
             reason: None,
+            boundary_id,
         });
 
         self.push_notice("Tool call denied.");

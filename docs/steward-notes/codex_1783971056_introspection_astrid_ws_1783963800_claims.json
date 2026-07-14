@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783963800",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`BridgeState` tracks telemetry/sensory lane freshness, safety state, lane traces, and WebSocket metrics used by `bridge_reciprocity_v1`.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "`bridge_reciprocity_v1` should transition from bidirectional waiting/recent states to `bidirectional_stale_telemetry` when telemetry age exceeds the stale window.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Clock skew should be visible as a truth channel so local/future timestamps do not get confused with ordinary network latency.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Malformed telemetry and safety-drop accounting should be observable without automatically escalating global safety state or causing a live reconnection/control retune.",
+      "disposition": "verified_existing"
+    }
+  ]
+}

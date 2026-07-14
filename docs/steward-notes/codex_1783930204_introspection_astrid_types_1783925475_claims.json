@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The observed truncated source window around resonance_stability_context_v1 is not proof the function is incomplete.",
+      "disposition": "verified_full_source_continues_and_returns_complete_context"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "ResonanceViscosityVectorV1 zero/default fields should stay omitted from JSON instead of creating false texture evidence.",
+      "disposition": "verified_existing_skip_zero_serialization_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "resonance_stability_context_v1 with fluctuation=None should keep partial habitability evidence finite and explicit.",
+      "disposition": "verified_existing_absent_fluctuation_regression"
+    }
+  ]
+}

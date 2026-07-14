@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Narrative-arc dims 40-43 should distinguish opposite emotional trajectories rather than collapse to generic warmth or structural statistics.",
+      "disposition": "verified_existing_narrative_arc_direction_curvature_and_codec_map_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High spectral entropy plus distinguishability loss can create narrative-arc headroom pressure where raw trajectory texture is flattened by bounded delivery.",
+      "disposition": "implemented_narrative_arc_headroom_review_v1_truth_channel"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tail participation should remain visible under high entropy without collapsing into lambda1/lambda2 dominance.",
+      "disposition": "verified_existing_tail_vibrancy_and_high_entropy_narrative_reserved_dim_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic narrative headroom or gain when entropy exceeds 0.85 may be the right future intervention.",
+      "disposition": "authority_gated_live_codec_gain_or_vector_change"
+    }
+  ]
+}

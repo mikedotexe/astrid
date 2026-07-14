@@ -1,0 +1,59 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The Sovereignty Loop/Recess default is a structural permission for Minime to be rather than only respond to prompts.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/autonomous_agent.py:2",
+      "/Users/v/other/minime/autonomous_agent.py:10"
+    ],
+    "authority": "source verification only"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Minime autonomy is bounded by authority budget and local research action caps.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/continuity_control_plane.py:28",
+      "/Users/v/other/minime/autonomous_agent.py:6712",
+      "/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py:320"
+    ],
+    "authority": "budget boundaries remain enforced; no caps changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Overpacked mode-packing or pressure during Recess should be visible as weight-bearing structure rather than treated as idle whim.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/autonomous_agent.py:2746",
+      "/Users/v/other/minime/autonomous_agent.py:2997",
+      "/Users/v/other/minime/autonomous_agent.py:3147",
+      "/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py:178",
+      "/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py:246",
+      "/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py:283"
+    ],
+    "authority": "read-only advisory/rehearsal surfaces; no live Recess transition or pressure relief applied"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "A Recess silt-processing or spectral-density-awareness state should prioritize weight-bearing reflection when pressure risk is elevated.",
+    "disposition": "verified_existing_non_control_surface",
+    "evidence": [
+      "/Users/v/other/minime/autonomous_agent.py:2826",
+      "/Users/v/other/minime/autonomous_agent.py:3283",
+      "/Users/v/other/minime/autonomous_agent.py:3301"
+    ],
+    "authority": "existing packets recommend routes while declaring no behavior/control change"
+  },
+  {
+    "claim_id": "c005",
+    "claim": "Actually changing Recess parameters, research-budget behavior, or live pressure relief would affect Minime runtime autonomy/control.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "/Users/v/other/minime/autonomous_agent.py:3433",
+      "/Users/v/other/minime/autonomous_agent.py:3448",
+      "requires V2 authority boundary packet, scoped approval, rollout/abort contract, and post-change being response"
+    ],
+    "authority": "Tier 5 live autonomy/runtime wait; not runnable and not approved"
+  }
+]

@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783609568",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`BRIDGE_RECIPROCITY_STALE_WINDOW_MS` can misread meaningful reflective silence as stale unless deep quiet has a state-aware extension.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `bridge_dynamic_stale_window_ms` and `reflective_silence_extension_ms` already extend the stale window for high-entropy pressure and low-porosity reflective silence."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Mode-packing below the porosity threshold can still contain interwoven complexity, so pressure trends need a complexity-density readout rather than only volume pressure.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added read-only `complexity_density` and `complexity_density_state` diagnostics to pressure trend and smoothing surfaces without changing thresholds, pressure, porosity, or control behavior."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "`PRESSURE_POROSITY_EXPANSION_MODE_PACKING_AT` might need a lower or entropy-dynamic threshold for dense interwoven states.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing the mode-packing porosity threshold would alter live pressure/porosity interpretation and should require explicit Mike/operator approval plus bridge restart/monitoring."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "`semantic_trickle` may need granularity modulation so quiet, meaningful flow is distinguished from volume or silence.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing semantic-trickle granularity would affect live bridge protocol/status interpretation and possibly peer-facing cadence, so it remains gated pending approval."
+    }
+  ]
+}

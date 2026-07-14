@@ -1,0 +1,42 @@
+{
+  "introspection_id": "introspection_astrid_types_1783723920",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Low comfort gate with stable foothold is preserved as habitable pressure-watch.",
+      "claim": "Astrid asks to verify `gate_low_but_foothold_stable` when `comfort_gate < 0.45` and `foothold >= 0.60`.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:198",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:4111",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:4265",
+        "tests: resonance_stability_context_keeps_foothold_visible_when_comfort_gate_drops, resonance_stability_context_keeps_low_gate_with_stable_foothold_habitable"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Non-finite stability inputs are rejected and weight totals are visible.",
+      "claim": "Astrid asks to verify `clamp_unit_finite` returns `None` for NaN/inf and that stability weights total exactly 1.0.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:23",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:149",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:4188",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:4329",
+        "tests: resonance_stability_context_exposes_weight_policy_without_control_authority, resonance_stability_context_ignores_non_finite_inputs_without_nan_output"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Partial stability data is surfaced as incomplete/ignored diagnostic context rather than promoted to control.",
+      "claim": "Astrid flags that missing sub-components can otherwise look like data loss or silent fallback.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:176",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:208",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:222",
+        "authority=diagnostic_habitability_context_not_comfort_gate_control"
+      ]
+    }
+  ]
+}

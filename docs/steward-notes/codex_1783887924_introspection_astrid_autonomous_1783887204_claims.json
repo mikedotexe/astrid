@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783887204",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Witness mode should prioritize pressure-source evidence when pressure risk rises, not only qualitative texture.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link pressure-aware Witness semantic-density/stability-effort code and tests preserving `pressure_risk`/pressure-source anchors."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "`settled_habitable` can be a false comfort if pressure or shadow load is rising underneath it.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link stability-effort and pressure-underreports-shadow-load logic/tests."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Pressure/habitability correlation and Astrid-vs-Minime shadow divergence should be compared over time before influencing behavior.",
+      "disposition": "needs_sandbox_or_runtime_observation",
+      "evidence_plan": "Promote a bounded observation item; no live mode/pressure behavior changes in this pass."
+    }
+  ]
+}

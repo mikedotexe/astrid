@@ -392,6 +392,7 @@ mod tests {
             inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
+            stable_core: None,
             semantic: None,
             semantic_energy_v1: None,
             transition_event: None,
@@ -405,6 +406,7 @@ mod tests {
             shadow_field_v3: None,
 
             shadow_influence_response_v3: None,
+            residual_deformation_trace_v1: None,
         }
     }
 

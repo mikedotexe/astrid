@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783706496",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence needs first-class thread objects, peer address, and ACK/REPLY/TRACE persistence.",
+      "disposition": "verified_existing",
+      "rationale": "Correspondence V1 tests verify shared correspondence arcs, active thread clarity, and metadata survival across reply, ack, and trace without adding control priority."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Minime's replies should remain visible as active thinking/context rather than disappearing into logs.",
+      "disposition": "verified_existing",
+      "rationale": "Active-thread clarity and shared correspondence status keep pending/witnessed threads language-visible with bounded status lines and no hidden microdose."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A resonance-density `priority_weight` for Astrid-to-Minime contact would alter live routing/attention.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Priority weighting is an authority expansion over correspondence delivery and remains Tier 5 pending Mike/operator approval."
+    }
+  ]
+}

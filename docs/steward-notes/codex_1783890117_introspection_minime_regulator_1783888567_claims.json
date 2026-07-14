@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783888567",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "Structural strain and shadow volatility should be correlated through `mutual_resonance_tension` instead of being flattened into generic pressure.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `viscosity_vector_mutual_tension_requires_strain_and_shadow_volatility`."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "Pressure/porosity divergence and coarse overlapping silt should remain visible as read-only evidence.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `pressure_source_flags_pressure_porosity_divergence_without_control` and `silt_granularity_names_coarse_overlapping_grains_without_control`."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Applying local control or increasing dispersal potential in response to overpacked mode-packing could be a stronger intervention.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Gate as live regulator/control authority requiring Mike/operator approval and monitored restart."
+    }
+  ]
+}

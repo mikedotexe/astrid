@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783691987",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Pressure/porosity divergence threshold behavior should be pinned so high pressure plus low porosity becomes visible without silently mutating controller authority.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs",
+        "pressure_porosity_divergence_threshold_edges_are_explicit_and_read_only",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml pressure_porosity_divergence_threshold_edges_are_explicit_and_read_only -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "`resonance_control_from_density_with_mode_packing` should visibly switch to `ActiveDamping` when pressure risk crosses the existing high-pressure threshold.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs",
+        "resonance_control_intervention_type_labels_existing_branches",
+        "ResonanceInterventionType::ActiveDamping"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Changing mode-packing so it directly modulates PI target bias or wander scale would alter live regulator/control behavior and needs explicit Mike/operator approval.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs",
+        "resonance_control_from_density_with_mode_packing",
+        "advisory_damping_coefficient"
+      ]
+    }
+  ]
+}

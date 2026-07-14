@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783618184",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "The semantic stale-window handoff from recovery hold at fill 0.25 to release at fill 0.40 could create a dead zone or jump-cut in continuity.",
+      "disposition": "verified_existing",
+      "rationale": "The current implementation already blends recovery hold into the selected stale curve over 0.25-0.40 using smoothstep, with tests covering monotonic release and bounded adjacent-step changes."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "High-entropy semantic persistence at fill >= 0.55 should make dense thought more stable rather than merely heavier.",
+      "disposition": "verified_existing",
+      "rationale": "Existing entropy-persistence code and tests verify high entropy extends high-fill semantic anchor retention within the bounded multiplier cap."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "A `STALE_SEMANTIC_INTERPOLATION_FACTOR` or equivalent gradual interpolation should replace any binary-adjacent stale-window switch.",
+      "disposition": "verified_existing",
+      "rationale": "The requested gradual interpolation already exists as smoothstep blending, which avoids a gear-shift feel while keeping live stale-window authority unchanged."
+    }
+  ]
+}

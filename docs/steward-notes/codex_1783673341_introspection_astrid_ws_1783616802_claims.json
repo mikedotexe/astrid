@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783616802",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "High-entropy pressure smoothing should visibly broaden the recent-sample ballast window, including the reported entropy 0.95 probe.",
+      "disposition": "addressed_change",
+      "rationale": "Adjusted the read-only pressure smoothing entropy ramp so entropy 0.95 with low porosity reaches the full 15-sample ballast window, with a targeted regression proving the behavior."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "A connected WebSocket lane can still be functionally clogged when semantic viscosity is high and semantic trickle is low.",
+      "disposition": "addressed_change",
+      "rationale": "Added read-only `semantic_stagnation_index` and `semantic_stagnation_state` to pressure smoothing and pressure-source analysis, surfacing `functional_clog_connected_lanes_watch` without changing pressure, fill, cadence, or control."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Pressure/porosity evidence should be compared without silently applying porosity expansion or pressure relief.",
+      "disposition": "addressed_no_action",
+      "rationale": "Verified the existing pressure-porosity expansion readiness path remains read-only and explicitly says local control is not applied; no pressure, porosity, PI, or Minime-control mutation was made."
+    }
+  ]
+}

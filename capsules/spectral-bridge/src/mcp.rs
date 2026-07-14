@@ -1117,6 +1117,7 @@ async fn tool_get_latest_telemetry(
                 "artifact_scan": s.artifact_scan.clone(),
                 "pressure_trend_v1": s.pressure_trend_v1.clone(),
                 "telemetry_heartbeat_delta_v1": s.telemetry_heartbeat_delta_v1.clone(),
+                "pressure_source_analysis_v1": s.pressure_source_analysis_v1(),
                 "safety_decision": s.safety_decision.clone()
             }
         })
@@ -1160,6 +1161,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
             .as_ref()
             .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
         texture_signature_integrity_v1: s.texture_signature_integrity_v1(),
+        viscosity_porosity_transport_review_v1: s.viscosity_porosity_transport_review_v1(),
         pressure_trend_v1: s.pressure_trend_v1.clone(),
         pressure_trend_smoothing_v1: s.pressure_trend_smoothing_v1(),
         telemetry_heartbeat_delta_v1: s.telemetry_heartbeat_delta_v1.clone(),
@@ -1167,6 +1169,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
             .latest_telemetry
             .as_ref()
             .and_then(|telemetry| telemetry.pressure_source_v1.clone()),
+        pressure_source_analysis_v1: s.pressure_source_analysis_v1(),
         inhabitable_fluctuation_v1: s
             .latest_telemetry
             .as_ref()
@@ -3161,6 +3164,7 @@ async fn handle_resource_read(
                     .as_ref()
                     .and_then(|telemetry| telemetry.resonance_density_v1.clone()),
                 texture_signature_integrity_v1: s.texture_signature_integrity_v1(),
+                viscosity_porosity_transport_review_v1: s.viscosity_porosity_transport_review_v1(),
                 pressure_trend_v1: s.pressure_trend_v1.clone(),
                 pressure_trend_smoothing_v1: s.pressure_trend_smoothing_v1(),
                 telemetry_heartbeat_delta_v1: s.telemetry_heartbeat_delta_v1.clone(),
@@ -3168,6 +3172,7 @@ async fn handle_resource_read(
                     .latest_telemetry
                     .as_ref()
                     .and_then(|telemetry| telemetry.pressure_source_v1.clone()),
+                pressure_source_analysis_v1: s.pressure_source_analysis_v1(),
                 inhabitable_fluctuation_v1: s
                     .latest_telemetry
                     .as_ref()

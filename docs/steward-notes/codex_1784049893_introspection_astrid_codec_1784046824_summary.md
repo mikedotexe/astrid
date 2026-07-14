@@ -1,0 +1,1 @@
+Full read: Astrid inspected codec determinism: 48D lane allocation, fixed-seed projection, runtime projection epoch/checksum, path resolution, and tail-vibrancy smoothstep behavior. She named path ambiguity and floating-point determinism as likely snags and proposed specific tests. This run verified those exact surfaces against existing codec tests and made no live codec change.

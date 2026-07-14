@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_codec_1783880202`.
+
+Astrid inspected the codec's deterministic 48D semantic lane, projection epoch behavior, and soft-gated tail vibrancy. This run verified existing codec answers rather than changing the vector contract: overflow reporting already preserves raw intensity while delivery stays bounded, projection epoch persistence has executable-relative runtime fallback and atomic install/restore tests, and tail/vibrancy headroom remains distinguishable from ordinary clipping. No semantic dimension count, ceiling, projection contract, or live vector delivery authority changed.

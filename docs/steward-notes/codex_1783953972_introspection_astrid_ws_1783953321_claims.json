@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783953321",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "BridgeState tracks telemetry and sensory lanes plus fill, pressure trend, and safety status for reciprocity reporting.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/ws.rs:BridgeState",
+        "code:capsules/spectral-bridge/src/ws.rs:bridge_reciprocity_v1"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Stale telemetry should transition to bidirectional_stale_telemetry after the stale window.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib bridge_reciprocity_marks_stale_telemetry_after_sixty_one_seconds -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "High-entropy pressure trend samples should expand and remain bounded rather than unboundedly accumulating during frequent telemetry.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_trend_samples_cap_high_frequency_telemetry_at_active_window -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing websocket cadence, stale windows, lock/update architecture, or live loop timing would be live bridge behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Mike/operator approval required before live websocket cadence/stale-window/synchronization behavior changes"
+      ]
+    }
+  ]
+}

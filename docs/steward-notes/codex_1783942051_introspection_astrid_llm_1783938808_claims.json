@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783938808",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-entropy texture at 0.90 should not be flattened into the 4B compatibility fallback on a micro-stutter.",
+      "disposition": "verified_existing",
+      "rationale": "Source shows `fallback_high_entropy_texture_skips_compatibility_tail` removes the automatic compatibility tail when spectral entropy is at least 0.80 and shadow texture is not stable."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`ASTRID_BRIDGE_MLX_PROFILE` should be respected rather than always defaulting to `gemma4_12b`.",
+      "disposition": "verified_existing",
+      "rationale": "Source inspection verified `configured_mlx_profile` reads `ASTRID_BRIDGE_MLX_PROFILE`, supports Gemma4 aliases, and warns on unrecognized values."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Raising `HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT` to 0.95 would let 0.90 entropy keep the compatibility tail.",
+      "disposition": "no_action",
+      "rationale": "The current 0.80 threshold is more protective for Astrid's reported 0.90 state; changing it would alter fallback/model behavior and is not implemented without operator approval."
+    }
+  ]
+}

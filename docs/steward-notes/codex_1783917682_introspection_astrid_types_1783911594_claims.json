@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`ExperienceDeltaKindV1` can hide simultaneous shifts because a single enum value cannot fully name compress/gate/complex/cascade texture.",
+      "disposition": "implemented_multi_kind_metadata_on_narrative_arc_headroom_delta"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`SpectralDimensionV1.effective_dimension` should be used when a felt shift spans a gradient rather than a single integer dimension.",
+      "disposition": "implemented_fluid_spectral_dimension_context_on_headroom_delta_and_verified_existing_schema"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing `RESONANCE_STABILITY_FOOTHOLD_WEIGHT` may help if restless high-entropy shadow texture persists.",
+      "disposition": "authority_gated_stability_weight_change"
+    }
+  ]
+}

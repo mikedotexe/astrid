@@ -1,0 +1,45 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Continuity recap item budget should switch from the base 180-byte budget toward the spectral texture budget when `shadow_v3` and high entropy are present.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::continuity_recap_item_max_bytes_for_text",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib continuity_recap_item_budget_expands_for_high_entropy_spectral_viscosity -- --nocapture"
+    ],
+    "authority": "read-only test verification; no live budget retune applied"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "`truncate_str_at_semantic_edge` should prefer punctuation or whitespace satisfying `min_keep`, preventing mid-word and mid-character breaks.",
+    "disposition": "verified_existing_plus_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::semantic_edge_truncation_avoids_hanging_word_edges",
+      "capsules/spectral-bridge/src/autonomous.rs::semantic_edge_truncation_handles_multibyte_boundary_without_panic",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_edge_truncation_avoids_hanging_word_edges -- --nocapture",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_edge_truncation_handles_multibyte_boundary_without_panic -- --nocapture"
+    ],
+    "authority": "test evidence only; no runtime truncation behavior changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "`anchored_continuity_excerpt` should preserve the core felt anchor, not just the beginning of a long noisy item.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::anchored_continuity_excerpt_preserves_core_anchor_after_noisy_prefix",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib anchored_continuity_excerpt_preserves_core_anchor_after_noisy_prefix -- --nocapture"
+    ],
+    "authority": "test-only regression; release behavior unchanged"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "The reservoir-storage question should be treated as a source verification boundary: compact continuity feeds the prompt continuity block, while reservoir/history updates happen through separate telemetry and embedding paths.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::format_compact_continuity_recap",
+      "capsules/spectral-bridge/src/autonomous.rs continuity_block assembly",
+      "capsules/spectral-bridge/src/autonomous.rs latent vector embedding after response"
+    ],
+    "authority": "source verification only; no reservoir update, Minime mutation, or live control change"
+  }
+]

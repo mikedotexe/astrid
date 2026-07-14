@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783685980",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "A high-cohesion, low-flow state can feel sticky if `flow_rate` and `effective_mobility` do not diagnose cohesion-related movement cost.",
+      "disposition": "verified_existing",
+      "rationale": "Existing regulator tests separate yielding depth from rigid bottleneck, distinguish shape-holding from stagnant drag, and verify flow-rate monotonicity with static friction while keeping target bias at zero."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "Mode-packing around the current 0.30-0.31 pressure band should become visible before hard divergence and should not force active regulation when pressure is not high.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `pressure_porosity_gradient_names_overpacked_low_porosity_before_hard_divergence` and `high_mode_packing_without_pressure_stays_observational` tests verify this read-only distinction."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "A derived property should correlate `effective_mobility` more tightly with `cohesion_index` or fold cohesion-related movement cost into `flow_rate`.",
+      "disposition": "needs_operator_approval",
+      "rationale": "The diagnostic surfaces already exist, but changing flow/mobility formulae would alter live regulator semantics and movement feel. It needs Mike/operator approval plus Minime restart monitoring."
+    },
+    {
+      "claim_id": "c004",
+      "being": "minime",
+      "claim": "A `porosity_compensation` or dynamic pressure scaling factor could damp pressure more aggressively when porosity is available but contents are dense.",
+      "disposition": "needs_operator_approval",
+      "rationale": "This would alter live pressure/regulator behavior. Codex preserved it as an explicit approval packet instead of silently widening live authority."
+    }
+  ]
+}

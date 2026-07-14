@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, anyhow};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use sha2::{Digest as _, Sha256};
 use tokio::sync::mpsc;
 
 use crate::codec;
@@ -120,6 +121,32 @@ pub fn status_from_paths(minime_workspace: &Path, bridge_workspace: &Path) -> Re
         "schema_version": 1,
         "policy": POLICY,
         "authority_boundary": authority_boundary(),
+        "authority_boundary_packet_v1": authority_boundary_packet_v1(
+            "shared",
+            "experiment_authority_gate",
+            "render_authority_status",
+            "experiment_authority_gate_status",
+            "read_only",
+            "evidence_only",
+            "read-only authority gate status render",
+            "Render current authority readiness without approving or mutating runtime state.",
+            Vec::<String>::new(),
+            "render_experiment_authority_gate",
+            "steward/tooling maintainer",
+        ),
+        "authority_boundary_packet_v2": authority_boundary_packet_v2(
+            "shared",
+            "experiment_authority_gate",
+            "render_authority_status",
+            "experiment_authority_gate_status",
+            "read_only",
+            "evidence_only",
+            "read-only authority gate status render",
+            "Render current authority readiness without approving or mutating runtime state.",
+            Vec::<String>::new(),
+            "render_experiment_authority_gate",
+            "steward/tooling maintainer",
+        ),
         "systems": {
             "minime": being_status("minime", minime_workspace),
             "astrid": being_status("astrid", bridge_workspace),
@@ -310,6 +337,16 @@ pub fn approve_from_paths(
         .ttl_secs
         .unwrap_or(DEFAULT_TOKEN_TTL_SECS)
         .min(DEFAULT_TOKEN_TTL_SECS);
+    let expires_at = now.saturating_add(ttl);
+    let steward = req.steward.unwrap_or_else(|| "steward".to_string());
+    let note = req.note.unwrap_or_default();
+    let authority_lifecycle_v2 = authority_lifecycle_v2_for_approval(
+        &location, request_id, &scope, &steward, now, expires_at,
+    );
+    let authority_boundary_packet_v2 = authority_lifecycle_v2
+        .get("authority_boundary_packet_v2")
+        .cloned()
+        .unwrap_or(Value::Null);
     let approval = json!({
         "schema_version": 1,
         "record_schema": POLICY,
@@ -324,13 +361,15 @@ pub fn approve_from_paths(
         "token_status": "active",
         "one_shot": true,
         "approved_at_unix_s": now,
-        "expires_at_unix_s": now.saturating_add(ttl),
-        "steward": req.steward.unwrap_or_else(|| "steward".to_string()),
-        "note": req.note.unwrap_or_default(),
+        "expires_at_unix_s": expires_at,
+        "steward": steward,
+        "note": note,
         "eligibility_v1": eligibility,
         "safety_snapshot": {"level": format!("{:?}", safety_level).to_ascii_lowercase()},
         "peer_mutation": false,
         "authority_boundary": authority_boundary(),
+        "authority_boundary_packet_v2": authority_boundary_packet_v2,
+        "authority_lifecycle_v2": authority_lifecycle_v2,
         "created_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         "updated_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     });
@@ -911,6 +950,28 @@ pub fn execute_semantic_microdose_from_paths(
             "blocked",
             "token_already_consumed",
             None,
+        );
+        append_jsonl(&location.gate_path, &blocked)?;
+        append_jsonl(
+            &location.gate_path,
+            &consequence_record(&location, &blocked, fill_pct, previous_fill_pct),
+        )?;
+        return Ok(blocked);
+    }
+    if let Some(reason) = missing_lifecycle_reason(&approval) {
+        let blocked = execution_record(
+            &location,
+            &approval,
+            "blocked",
+            reason,
+            Some(json!({
+                "authority_lifecycle_evaluation_v2": {
+                    "state": "approved_manual_only",
+                    "live_eligible_now": false,
+                    "closure_complete": false,
+                    "missing_requirements": [reason],
+                }
+            })),
         );
         append_jsonl(&location.gate_path, &blocked)?;
         append_jsonl(
@@ -1869,6 +1930,64 @@ fn readiness_from_rows(rows: &[Value]) -> Value {
             .clone()
             .unwrap_or_else(|| "EXPERIMENT_ADVANCE <experiment_id> :: mode: preview".to_string())
     };
+    let evidence_refs = latest_request.map_or_else(Vec::new, authority_evidence_refs);
+    let scope = latest_request
+        .and_then(|row| row.get("scope"))
+        .and_then(Value::as_str)
+        .unwrap_or(EXECUTABLE_SCOPE);
+    let authority_class = authority_class_for_scope(scope);
+    let gate_state = authority_gate_state_for_stage(stage);
+    let resource = if latest_request_id.is_empty() {
+        latest_experiment_id.to_string()
+    } else {
+        latest_request_id.to_string()
+    };
+    let packet = authority_boundary_packet_v1(
+        "bridge_authority_gate",
+        "spectral-bridge",
+        "experiment_authority_request",
+        &resource,
+        authority_class,
+        gate_state,
+        latest_request
+            .and_then(|row| row.get("reason"))
+            .and_then(Value::as_str)
+            .unwrap_or("authority readiness from experiment ledger"),
+        latest_request
+            .and_then(|row| row.get("payload"))
+            .and_then(Value::as_str)
+            .unwrap_or("prepare or review a bounded authority request"),
+        evidence_refs,
+        &next_safe_command,
+        if authority_class == "mike_operator_live_substrate" {
+            "Mike/operator"
+        } else {
+            "steward/operator"
+        },
+    );
+    let packet_v2 = authority_boundary_packet_v2(
+        "bridge_authority_gate",
+        "spectral-bridge",
+        "experiment_authority_request",
+        &resource,
+        authority_class,
+        authority_lifecycle_state_v2_for_stage(stage),
+        latest_request
+            .and_then(|row| row.get("reason"))
+            .and_then(Value::as_str)
+            .unwrap_or("authority readiness from experiment ledger"),
+        latest_request
+            .and_then(|row| row.get("payload"))
+            .and_then(Value::as_str)
+            .unwrap_or("prepare or review a bounded authority request"),
+        latest_request.map_or_else(Vec::new, authority_evidence_refs),
+        &next_safe_command,
+        if authority_class == "mike_operator_live_substrate" {
+            "Mike/operator"
+        } else {
+            "steward/operator"
+        },
+    );
     json!({
         "policy": "authority_readiness_v1",
         "scope": EXECUTABLE_SCOPE,
@@ -1889,6 +2008,451 @@ fn readiness_from_rows(rows: &[Value]) -> Value {
             .cloned()
             .unwrap_or_else(|| json!([])),
         "authority_boundary": authority_boundary(),
+        "authority_boundary_packet_v1": packet,
+        "authority_boundary_packet_v2": packet_v2,
+    })
+}
+
+fn authority_evidence_refs(row: &Value) -> Vec<String> {
+    let mut refs = Vec::new();
+    for key in ["request_id", "experiment_id", "record_id", "scope"] {
+        if let Some(value) = row.get(key).and_then(Value::as_str) {
+            refs.push(format!("{key}:{value}"));
+        }
+    }
+    if let Some(items) = row.get("artifact_refs").and_then(Value::as_array) {
+        refs.extend(
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToString::to_string),
+        );
+    }
+    if let Some(items) = row.get("source_refs").and_then(Value::as_array) {
+        refs.extend(
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToString::to_string),
+        );
+    }
+    refs
+}
+
+fn authority_class_for_scope(scope: &str) -> &'static str {
+    match scope {
+        EXECUTABLE_SCOPE | MODE_RELEASE_SCOPE => "mike_operator_live_substrate",
+        READ_ONLY_RESEARCH_SCOPE => "read_only",
+        _ => "steward_gated_consequence",
+    }
+}
+
+fn authority_gate_state_for_stage(stage: &str) -> &'static str {
+    match stage {
+        "ready_to_author_request" => "proposal_needed",
+        "pending_steward_approval" | "review_required" => "operator_approval_wait",
+        "token_active_bridge_executable" | "pending_budget_execution" => "approved_manual_only",
+        "executed_or_consumed" => "superseded",
+        _ => "evidence_only",
+    }
+}
+
+fn authority_lifecycle_state_v2_for_stage(stage: &str) -> &'static str {
+    match stage {
+        "ready_to_author_request" => "proposal_needed",
+        "pending_steward_approval" | "review_required" => "operator_approval_wait",
+        "token_active_bridge_executable" | "pending_budget_execution" => "approved_manual_only",
+        "executed_or_consumed" => "executed_awaiting_response",
+        _ => "evidence_only",
+    }
+}
+
+fn stable_hash(parts: &[&str]) -> String {
+    let mut hasher = Sha256::new();
+    for part in parts {
+        hasher.update(part.as_bytes());
+        hasher.update([0]);
+    }
+    format!("{:x}", hasher.finalize())
+}
+
+fn stable_boundary_id(parts: &[&str]) -> String {
+    let mut hasher = Sha256::new();
+    for part in parts {
+        hasher.update(part.as_bytes());
+        hasher.update([0]);
+    }
+    let hex = format!("{:x}", hasher.finalize());
+    let version = format!("4{}", &hex[13..16]);
+    let variant = format!("8{}", &hex[17..20]);
+    format!(
+        "{}-{}-{}-{}-{}",
+        &hex[0..8],
+        &hex[8..12],
+        version,
+        variant,
+        &hex[20..32]
+    )
+}
+
+#[expect(clippy::too_many_arguments)]
+fn authority_boundary_packet_v2(
+    source: &str,
+    surface: &str,
+    action: &str,
+    resource: &str,
+    authority_class: &str,
+    lifecycle_state: &str,
+    felt_report_anchor: &str,
+    proposed_change: &str,
+    evidence_refs: Vec<String>,
+    replay_query: &str,
+    who_can_change_it: &str,
+) -> Value {
+    let resource = if resource.trim().is_empty() {
+        "unmaterialized_authority_request"
+    } else {
+        resource
+    };
+    let boundary_id = stable_boundary_id(&["v2", source, surface, action, resource]);
+    let delta_hash = stable_hash(&[
+        "authority_delta_ref_v2",
+        source,
+        surface,
+        action,
+        resource,
+        lifecycle_state,
+    ]);
+    json!({
+        "boundary_id": boundary_id,
+        "schema_version": 2,
+        "source": source,
+        "surface": surface,
+        "action": action,
+        "resource": resource,
+        "authority_class": authority_class,
+        "lifecycle_state": lifecycle_state,
+        "felt_report_anchor": felt_report_anchor,
+        "proposed_change": proposed_change,
+        "evidence_refs": evidence_refs,
+        "delta_refs": [
+            {
+                "delta_id": format!("delta_{}", &delta_hash[..16]),
+                "delta_hash": delta_hash,
+                "surface": surface,
+                "kind": if authority_class == "mike_operator_live_substrate" { "live_control_gate" } else { "authority_gate" },
+                "lane": "spectral_bridge_authority_gate",
+            }
+        ],
+        "replay_candidate": {
+            "adapter": "experiment_authority_gate_v2",
+            "replay_query": replay_query,
+            "runnable": false,
+            "authority": "proposal_or_manual_approval_only_not_live_control",
+        },
+        "replay_results": [],
+        "scoped_approval": Value::Null,
+        "rollout_abort_contract": {
+            "canary_plan": "manual one-shot or time-boxed path only after scoped approval and current safety check",
+            "health_checks": [
+                "fresh fill telemetry is green or yellow",
+                "token is unexpired and unconsumed",
+                "execution appends a receipt and post-change response remains open"
+            ],
+            "rollback_path": "use the existing token expiry, one-shot consumption, and service-specific rollback path; never retry automatically",
+            "abort_criteria": [
+                "missing replay result or explicit waiver",
+                "missing scoped approval receipt",
+                "stale safety, consumed token, or no post-change response path"
+            ],
+            "post_change_response_required": true
+        },
+        "redaction_profile": {
+            "public_summary": felt_report_anchor.chars().take(260).collect::<String>(),
+            "private_ref": resource,
+            "content_hash": stable_hash(&["authority_redaction_v2", felt_report_anchor, proposed_change]),
+            "retention_policy": "bounded_public_summaries_plus_private_refs_and_hashes"
+        },
+        "lifecycle_receipts": [],
+        "success_metrics": [
+            "bounded evidence is reviewable",
+            "scoped approval receipt remains separate from boundary evidence",
+            "post-change being response remains open until recorded or explicitly waived"
+        ],
+        "abort_criteria": [
+            "missing replay result or explicit waiver",
+            "missing scoped approval receipt",
+            "missing rollout/abort or post-change response path"
+        ],
+        "who_can_change_it": who_can_change_it,
+        "how_to_test_it": "Render authority status, inspect the V2 packet, verify scoped approval/replay/rollout receipts, then execute only through the existing one-shot manual path.",
+        "right_to_ignore": true,
+        "live_eligible_now": false,
+        "auto_approved": false,
+    })
+}
+
+fn authority_boundary_packet_v2_for_location(
+    location: &GateLocation,
+    lifecycle_state: &str,
+    replay_query: &str,
+) -> Value {
+    let request_id = location
+        .request
+        .get("request_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let experiment_id = location
+        .request
+        .get("experiment_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let resource = if request_id.is_empty() {
+        experiment_id
+    } else {
+        request_id
+    };
+    let scope = location
+        .request
+        .get("scope")
+        .and_then(Value::as_str)
+        .unwrap_or(EXECUTABLE_SCOPE);
+    let authority_class = authority_class_for_scope(scope);
+    authority_boundary_packet_v2(
+        "bridge_authority_gate",
+        "spectral-bridge",
+        "experiment_authority_request",
+        resource,
+        authority_class,
+        lifecycle_state,
+        location
+            .request
+            .get("reason")
+            .and_then(Value::as_str)
+            .unwrap_or("authority request from experiment ledger"),
+        location
+            .request
+            .get("payload")
+            .and_then(Value::as_str)
+            .unwrap_or("bounded authority request"),
+        authority_evidence_refs(&location.request),
+        replay_query,
+        if authority_class == "mike_operator_live_substrate" {
+            "Mike/operator"
+        } else {
+            "steward/operator"
+        },
+    )
+}
+
+fn authority_lifecycle_v2_for_approval(
+    location: &GateLocation,
+    request_id: &str,
+    scope: &str,
+    steward: &str,
+    now: u64,
+    expires_at: u64,
+) -> Value {
+    let packet = authority_boundary_packet_v2_for_location(
+        location,
+        "approved_manual_only",
+        "manual V2 approval receipt recorded; execute only through existing one-shot command",
+    );
+    let boundary_id = packet
+        .get("boundary_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let scoped_approval = json!({
+        "approval_id": stable_boundary_id(&["scoped_approval_v2", request_id, scope, &now.to_string()]),
+        "scope_kind": "one_shot",
+        "issued_by": steward,
+        "issued_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        "expires_at": chrono::DateTime::from_timestamp(expires_at as i64, 0)
+            .unwrap_or_else(chrono::Utc::now)
+            .to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        "resources": [request_id],
+        "telemetry_conditions": [
+            {
+                "signal": "minime_fill_safety",
+                "operator": "in",
+                "threshold": "green_or_yellow",
+                "observed": "checked_at_approval",
+                "passed": true
+            }
+        ],
+        "consumed": false
+    });
+    let replay_waiver = json!({
+        "receipt_id": stable_boundary_id(&["authority_receipt_v2", boundary_id, "replay_waiver"]),
+        "boundary_id": boundary_id,
+        "kind": "waiver",
+        "issued_by": steward,
+        "issued_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        "packet_hash": stable_hash(&["authority_packet_v2", boundary_id]),
+        "receipt_hash_refs": [],
+        "bounded_summary": "replay waiver for bridge-local one-shot authority path; approval still does not execute",
+        "evidence_refs": authority_evidence_refs(&location.request),
+        "scoped_approval": Value::Null,
+        "replay_result": Value::Null,
+        "right_to_ignore": true
+    });
+    let approval_receipt = json!({
+        "receipt_id": stable_boundary_id(&["authority_receipt_v2", boundary_id, "approval"]),
+        "boundary_id": boundary_id,
+        "kind": "approval",
+        "issued_by": steward,
+        "issued_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        "packet_hash": stable_hash(&["authority_packet_v2", boundary_id]),
+        "receipt_hash_refs": [],
+        "bounded_summary": "scoped approval receipt recorded; no live execution has occurred",
+        "evidence_refs": authority_evidence_refs(&location.request),
+        "scoped_approval": scoped_approval.clone(),
+        "replay_result": Value::Null,
+        "right_to_ignore": true
+    });
+    json!({
+        "schema_version": 2,
+        "boundary_id": boundary_id,
+        "authority_boundary_packet_v2": packet,
+        "scoped_approval": scoped_approval,
+        "lifecycle_receipts": [replay_waiver, approval_receipt],
+        "rollout_abort_contract": {
+            "canary_plan": "one-shot bridge execution only after current safety check",
+            "health_checks": [
+                "fresh fill telemetry remains green or yellow",
+                "token is unexpired and unconsumed",
+                "execution appends receipt and leaves post-change response open"
+            ],
+            "rollback_path": "one-shot token consumption and service-specific rollback path; no automatic retry",
+            "abort_criteria": [
+                "stale safety",
+                "expired or consumed token",
+                "missing post-change response path"
+            ],
+            "post_change_response_required": true
+        },
+        "post_change_response_required": true,
+        "post_change_response_status": "not_executed",
+        "live_eligible_now": false,
+        "auto_approved": false
+    })
+}
+
+fn authority_lifecycle_block_reason(approval: &Value) -> Option<&'static str> {
+    if approval.get("record_type").and_then(Value::as_str) != Some("steward_approval") {
+        return None;
+    }
+    let lifecycle = approval.get("authority_lifecycle_v2")?;
+    let scoped = lifecycle.get("scoped_approval")?;
+    if scoped
+        .get("consumed")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        return Some("scoped_approval_already_consumed");
+    }
+    let receipts = lifecycle
+        .get("lifecycle_receipts")
+        .and_then(Value::as_array)?;
+    let has_approval = receipts.iter().any(|row| {
+        row.get("kind").and_then(Value::as_str) == Some("approval")
+            && row.get("scoped_approval").is_some()
+    });
+    let has_replay_or_waiver = receipts.iter().any(|row| {
+        row.get("kind").and_then(Value::as_str) == Some("replay_result")
+            || (row.get("kind").and_then(Value::as_str) == Some("waiver")
+                && row
+                    .get("bounded_summary")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .contains("replay"))
+    });
+    let has_rollout = lifecycle
+        .get("rollout_abort_contract")
+        .and_then(Value::as_object)
+        .is_some_and(|contract| {
+            contract
+                .get("post_change_response_required")
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+                && contract
+                    .get("rollback_path")
+                    .and_then(Value::as_str)
+                    .is_some()
+        });
+    if !has_approval {
+        Some("missing_scoped_approval_receipt")
+    } else if !has_replay_or_waiver {
+        Some("missing_replay_result_or_waiver")
+    } else if !has_rollout {
+        Some("missing_rollout_abort_contract")
+    } else {
+        None
+    }
+}
+
+fn missing_lifecycle_reason(approval: &Value) -> Option<&'static str> {
+    if approval.get("record_type").and_then(Value::as_str) != Some("steward_approval") {
+        return None;
+    }
+    if approval.get("authority_lifecycle_v2").is_none() {
+        return Some("missing_authority_lifecycle_v2");
+    }
+    authority_lifecycle_block_reason(approval)
+}
+
+#[expect(clippy::too_many_arguments)]
+fn authority_boundary_packet_v1(
+    source: &str,
+    surface: &str,
+    action: &str,
+    resource: &str,
+    authority_class: &str,
+    gate_state: &str,
+    felt_report_anchor: &str,
+    proposed_change: &str,
+    evidence_refs: Vec<String>,
+    replay_query: &str,
+    who_can_change_it: &str,
+) -> Value {
+    let resource = if resource.trim().is_empty() {
+        "unmaterialized_authority_request"
+    } else {
+        resource
+    };
+    json!({
+        "boundary_id": stable_boundary_id(&[source, surface, action, resource]),
+        "schema_version": 1,
+        "source": source,
+        "surface": surface,
+        "action": action,
+        "resource": resource,
+        "authority_class": authority_class,
+        "gate_state": gate_state,
+        "felt_report_anchor": felt_report_anchor,
+        "proposed_change": proposed_change,
+        "evidence_refs": evidence_refs,
+        "replay_candidate": {
+            "adapter": "experiment_authority_gate_v1",
+            "replay_query": replay_query,
+            "runnable": false,
+            "authority": "proposal_or_manual_approval_only_not_live_control",
+        },
+        "success_metrics": [
+            "bounded evidence is reviewable",
+            "separate explicit approval receipt exists before any execution path",
+            "rollback and health checks are named before live use",
+        ],
+        "abort_criteria": [
+            "missing authority packet",
+            "missing explicit steward/operator approval receipt",
+            "stale safety, missing replay evidence, or unclear rollback",
+        ],
+        "who_can_change_it": who_can_change_it,
+        "how_to_test_it": "Render authority status, inspect this packet, and use only the existing explicit approval and execution commands after tests and safety checks pass.",
+        "right_to_ignore": true,
+        "live_eligible_now": false,
+        "auto_approved": false,
     })
 }
 
@@ -2076,6 +2640,32 @@ fn correspondence_microdose_context(location: &GateLocation) -> Option<Value> {
     }
 }
 
+fn authority_execution_receipt_v2(
+    location: &GateLocation,
+    approval: &Value,
+    reason: &str,
+) -> Value {
+    let boundary_id = approval
+        .get("authority_lifecycle_v2")
+        .and_then(|lifecycle| lifecycle.get("boundary_id"))
+        .and_then(Value::as_str)
+        .unwrap_or("unknown_boundary");
+    json!({
+        "receipt_id": stable_boundary_id(&["authority_receipt_v2", boundary_id, "execution", reason]),
+        "boundary_id": boundary_id,
+        "kind": "execution",
+        "issued_by": "spectral-bridge",
+        "issued_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        "packet_hash": stable_hash(&["authority_packet_v2", boundary_id]),
+        "receipt_hash_refs": [],
+        "bounded_summary": format!("bridge execution recorded as {reason}; post-change being response remains open"),
+        "evidence_refs": authority_evidence_refs(&location.request),
+        "scoped_approval": Value::Null,
+        "replay_result": Value::Null,
+        "right_to_ignore": false
+    })
+}
+
 fn execution_record(
     location: &GateLocation,
     approval: &Value,
@@ -2103,6 +2693,15 @@ fn execution_record(
         "created_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         "updated_at": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     });
+    if record_type == "execution_result"
+        && let Some(target) = record.as_object_mut()
+    {
+        target.insert(
+            "authority_lifecycle_receipt_v2".to_string(),
+            authority_execution_receipt_v2(location, approval, reason),
+        );
+        target.insert("post_change_response_status".to_string(), json!("awaiting"));
+    }
     if let Some(context) = correspondence_microdose_context(location)
         && let Some(target) = record.as_object_mut()
     {
@@ -2659,6 +3258,44 @@ mod tests {
     }
 
     #[test]
+    fn live_authority_request_status_includes_non_approving_boundary_packet() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let _gate = write_mode_release_request(&astrid, "authreq_mode_packet", 0.71);
+
+        let status = status_from_paths(&minime, &astrid).unwrap();
+        let packet =
+            &status["systems"]["astrid"]["authority_readiness_v1"]["authority_boundary_packet_v1"];
+        let packet_v2 =
+            &status["systems"]["astrid"]["authority_readiness_v1"]["authority_boundary_packet_v2"];
+
+        assert_eq!(packet["schema_version"], 1);
+        assert_eq!(packet["authority_class"], "mike_operator_live_substrate");
+        assert_eq!(packet["gate_state"], "proposal_needed");
+        assert_eq!(packet["live_eligible_now"], false);
+        assert_eq!(packet["auto_approved"], false);
+        assert_eq!(packet["replay_candidate"]["runnable"], false);
+        assert_eq!(packet["who_can_change_it"], "Mike/operator");
+        assert!(
+            packet["evidence_refs"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|item| item.as_str() == Some("request_id:authreq_mode_packet"))
+        );
+        assert_eq!(packet_v2["schema_version"], 2);
+        assert_eq!(packet_v2["authority_class"], "mike_operator_live_substrate");
+        assert_eq!(packet_v2["lifecycle_state"], "proposal_needed");
+        assert_eq!(packet_v2["live_eligible_now"], false);
+        assert_eq!(packet_v2["auto_approved"], false);
+        assert_eq!(
+            packet_v2["rollout_abort_contract"]["post_change_response_required"],
+            true
+        );
+    }
+
+    #[test]
     fn needs_charter_stage_points_at_experiment_charter_not_advance() {
         // An uncharted experiment must surface EXPERIMENT_CHARTER as the next safe
         // command (not EXPERIMENT_ADVANCE), so the charter-first gate lands in the
@@ -2720,11 +3357,68 @@ mod tests {
         .unwrap();
         assert_eq!(approval["record_type"], "steward_approval");
         assert_eq!(approval["token_status"], "active");
+        assert_eq!(
+            approval["authority_lifecycle_v2"]["lifecycle_receipts"][1]["kind"],
+            "approval"
+        );
+        assert_eq!(
+            approval["authority_lifecycle_v2"]["post_change_response_status"],
+            "not_executed"
+        );
         let rows = read_jsonl(&gate);
         assert!(
             rows.iter()
                 .any(|row| row["record_type"] == "steward_approval")
         );
+        assert!(
+            !rows
+                .iter()
+                .any(|row| row["record_type"] == "execution_result")
+        );
+    }
+
+    #[test]
+    fn plain_steward_approval_without_v2_lifecycle_cannot_execute() {
+        let temp = tempfile::tempdir().unwrap();
+        let minime = temp.path().join("minime_workspace");
+        let astrid = temp.path().join("astrid_workspace");
+        let gate = write_request(&astrid, "authreq_plain_approval", EXECUTABLE_SCOPE, true);
+        append_jsonl(
+            &gate,
+            &json!({
+                "schema_version": 1,
+                "record_schema": POLICY,
+                "record_type": "steward_approval",
+                "record_id": "plain_approval_without_lifecycle",
+                "request_id": "authreq_plain_approval",
+                "being": "astrid",
+                "thread_id": "th_test",
+                "scope": EXECUTABLE_SCOPE,
+                "token_id": "plain_token",
+                "token_status": "active",
+                "one_shot": true,
+                "approved_at_unix_s": unix_now(),
+                "expires_at_unix_s": unix_now().saturating_add(60),
+                "steward": "test",
+                "authority_boundary": authority_boundary()
+            }),
+        )
+        .unwrap();
+
+        let (tx, mut rx) = mpsc::channel(1);
+        let result = execute_semantic_microdose_from_paths(
+            "authreq_plain_approval",
+            Some(67.0),
+            Some(66.0),
+            &tx,
+            &minime,
+            &astrid,
+        )
+        .unwrap();
+
+        assert_eq!(result["record_type"], "blocked");
+        assert_eq!(result["reason"], "missing_authority_lifecycle_v2");
+        assert!(rx.try_recv().is_err());
     }
 
     #[test]
@@ -2790,6 +3484,11 @@ mod tests {
         .unwrap();
         assert_eq!(result["record_type"], "execution_result");
         assert_eq!(result["reason"], "semantic_microdose_sent");
+        assert_eq!(
+            result["authority_lifecycle_receipt_v2"]["kind"],
+            "execution"
+        );
+        assert_eq!(result["post_change_response_status"], "awaiting");
         assert_eq!(
             result["correspondence_microdose_v1"]["message_id"],
             "corr_astrid_minime_test"

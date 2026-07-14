@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "Phase transitions should become replayable and replyable artifacts rather than journal-only or mode-capture side effects.",
+    "disposition": "implemented_language_only"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "`TransitionArtifact` evidence should preserve both `spectral_entropy` and `density_gradient` so thickening/syrup texture is not flattened into mode labels.",
+    "disposition": "implemented_language_only"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "Any behavior unlock, pressure/local-control adjustment, or transition-sensitive tool availability remains live-control authority and needs a complete V2 lifecycle before execution.",
+    "disposition": "authority_gated_v2"
+  }
+]

@@ -134,6 +134,12 @@ impl SecurityPolicy {
             | SensitiveAction::CapsuleNetBind { capsule_id, .. } => {
                 self.check_capsule_action(capsule_id, action)
             },
+            SensitiveAction::LiveControlMutation {
+                surface, control, ..
+            } => PolicyResult::RequiresApproval(RiskAssessment::new(format!(
+                "live substrate/control mutation requires explicit authority boundary: \
+                     {surface}:{control}"
+            ))),
         }
     }
 

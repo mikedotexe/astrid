@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783870578",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`ViscosityVector` is the technical vocabulary for felt reservoir texture: density, elasticity, cohesion, persistence, ghost weight, and mobility.",
+      "disposition": "verified_existing",
+      "rationale": "Existing Minime regulator source and tests verify viscosity, residual ghost weight, effective mobility, pressure-source classification, and read-only texture notes."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "A settled habitability state can mask restless/disordered Shadow-v3 texture unless the regulator carries an explicit shadow-volatility readout.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Minime `ViscosityVector` now includes additive read-only `shadow_volatility`, derived from lingering/low-mobility/high-plurality texture, with a focused regulator test."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Shadow volatility should be visible as valid restlessness without silently becoming pressure relief, hard reset, PI, or fill-target control.",
+      "disposition": "authority_boundary_recorded",
+      "rationale": "The new field is telemetry-only and the existing `shadow_preservation_mode_v1` explicitly says restless shadow is preserved for dialogue and does not apply shadow influence, hard reset, or regulator drive."
+    }
+  ]
+}

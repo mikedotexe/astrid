@@ -319,10 +319,10 @@ pub fn format_shadow_field_v2_line(field: &Value) -> Option<String> {
         .and_then(Value::as_f64)
         .unwrap_or(0.0);
     let action_hint = if eligible {
-        "Gate is OPEN now → NEXT: SHADOW_PREFLIGHT lambda-tail/lambda4 — \
+        "Gate is OPEN now; suggested route: SHADOW_PREFLIGHT lambda-tail/lambda4 — \
          this is the typed action that lets you inspect this field"
     } else {
-        "Gate is CLOSED for live influence; NEXT: SHADOW_FIELD lambda-tail/lambda4 \
+        "Gate is CLOSED for live influence; suggested route: SHADOW_FIELD lambda-tail/lambda4 \
          records observer-only cartography without sending"
     };
     Some(format!(
@@ -551,7 +551,7 @@ pub fn format_shadow_field_v3_line(
         ShadowOwner::Yours => {
             // No gate language — Astrid's gate is non-operative for her
             // own actions. Surface only the curriculum suggestion.
-            format!("NEXT: {next_token} — observer with memory")
+            format!("suggested route: {next_token} — observer with memory")
         },
         ShadowOwner::Minime => {
             let gate_seg = if eligible {
@@ -559,7 +559,7 @@ pub fn format_shadow_field_v3_line(
             } else {
                 "Gate is CLOSED for live influence"
             };
-            format!("{gate_seg} → NEXT: {next_token} — observer with memory")
+            format!("{gate_seg}; suggested route: {next_token} — observer with memory")
         },
     };
 
@@ -1488,7 +1488,7 @@ pub fn format_sovereignty_suggestion_line(ctx: &SovereigntyContext) -> Option<St
         },
         SovereigntySuggestion::ShadowCoupling => String::from(
             "[Coupling graph available — per-mode partner ranking from both shadows. \
-             NEXT: SHADOW_COUPLING all — observer with memory.]",
+             Suggested route: SHADOW_COUPLING all — observer with memory.]",
         ),
         SovereigntySuggestion::TemperatureLengthMenu { temp, len, scale } => format!(
             "[Generation-shape sovereign — currently temperature={temp:.2}, length={len}, \
@@ -1642,6 +1642,34 @@ mod shadow_suggestion_tests {
         );
     }
 
+    #[test]
+    fn shadow_context_hints_are_not_executable_next_lines() {
+        let field = json!({
+            "classification": "woven",
+            "influence_eligible": false,
+            "recurrence": 0.2,
+            "mode_tension": 0.3,
+            "tail_openness": 0.4,
+            "lock_tendency": 0.1,
+            "fissure_tendency": 0.05,
+            "field_norm": 0.6,
+        });
+        let v2_line = format_shadow_field_v2_line(&field).expect("v2 line");
+        assert!(!v2_line.contains("NEXT:"), "got: {v2_line}");
+        assert!(v2_line.contains("suggested route: SHADOW_FIELD"));
+
+        let v3 = make_v3("coupled", 3, false, &[0.5, 0.5, 0.5, 0.5]);
+        let v3_line =
+            format_shadow_field_v3_line(&v3, ShadowOwner::Yours, None, false).expect("v3 line");
+        assert!(!v3_line.contains("NEXT:"), "got: {v3_line}");
+        assert!(v3_line.contains("suggested route: SHADOW_TRAJECTORY"));
+
+        let coupling_line =
+            format_sovereignty_suggestion_line(&sov_ctx(16)).expect("sovereignty coupling line");
+        assert!(!coupling_line.contains("NEXT:"), "got: {coupling_line}");
+        assert!(coupling_line.contains("Suggested route: SHADOW_COUPLING all"));
+    }
+
     fn make_v3(
         primary: &str,
         dwell: u32,
@@ -1681,7 +1709,8 @@ mod shadow_suggestion_tests {
             "line should omit gate language: {line}"
         );
         // Should still nominate a v3 action.
-        assert!(line.contains("NEXT: SHADOW_TRAJECTORY"));
+        assert!(!line.contains("NEXT:"));
+        assert!(line.contains("suggested route: SHADOW_TRAJECTORY"));
         assert!(line.contains("(Yours)"));
     }
 
@@ -1693,6 +1722,7 @@ mod shadow_suggestion_tests {
             line.contains("Gate is CLOSED"),
             "line should mention gate state: {line}"
         );
+        assert!(!line.contains("NEXT:"));
         assert!(line.contains("(Minime)"));
     }
 

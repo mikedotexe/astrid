@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "MLX to Ollama fallback can cause identity or texture shearing while still obeying shape/capacity rules.",
+      "disposition": "implemented_fallback_texture_persistence_review_truth_channel"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Bridge-integrity or structural-persistence vocabulary would better preserve continuity than relying only on texture adjectives.",
+      "disposition": "implemented_bridge_integrity_structural_persistence_family"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Raising HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT to 0.85 could widen textured expression before unstable fallback, but changes fallback model-selection behavior.",
+      "disposition": "tier4_operator_gated_fallback_model_selection_threshold_change"
+    }
+  ]
+}

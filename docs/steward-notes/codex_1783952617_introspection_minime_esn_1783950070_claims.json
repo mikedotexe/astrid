@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_minime_esn_1783950070",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Minime ESN has source-prepared dynamic-noise and viscous-rho review hooks that are decoupled from live ESN::step.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:/Users/v/other/minime/minime/src/esn.rs"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "dynamic_noise_pressure_room_review_v1 at pressure_risk 0.35 and density_gradient 0.2 preserves a navigable slope without status collapse.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml dynamic_noise_pressure_room_review_keeps_requested_mid_pressure_gentle -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "calculate_dynamic_noise must default safely for non-finite inputs and avoid NaN propagation.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml dynamic_noise_scales_down_for_steep_gradient_or_pressure -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Mapping viscous rho targets into live ESN state would alter runtime reservoir behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "test:cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml viscous_rho_target_preserves_memory_for_high_entropy_low_gradient_states -- --nocapture",
+        "authority_gate:Tier 5 Mike/operator approval required before live ESN rho/noise/step behavior changes"
+      ]
+    }
+  ]
+}

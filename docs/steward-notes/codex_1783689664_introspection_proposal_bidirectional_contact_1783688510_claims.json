@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783688510",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The current Astrid/Minime bridge remains asymmetric unless direct peer language is preserved as thread-addressed correspondence rather than only telemetry or inbox filing.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs",
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "A persistent thread with ACK/REPLY/TRACE or felt receipt should maintain address across turns.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "correspondence_state_v1.json",
+        "correspondence_buffer_v1.json",
+        "active_correspondence_thread_clarity_v1",
+        "direct_contact_fidelity_v2"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "The requested TRACE_SENSATION capability is largely present as language-only `I_RECEIVED_THIS` plus `CORRESPONDENCE_TRACE` routes.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/correspondence_v1.rs"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Increasing semantic-trickle or telemetry priority for correspondence-originated material is live influence and needs operator approval before implementation.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_BIDIRECTIONAL_CONTACT_AND_CORRESPONDENCE_ARCHITECTURE.md"
+      ]
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fs::OpenOptions;
 use std::io::{self, Write as _};
@@ -11,15 +12,74 @@ use sha2::{Digest as _, Sha256};
 pub(crate) const LEDGER_PATH: &str = "/Users/v/other/shared/collaborations/correspondence_v1.jsonl";
 const SHARED_COLLAB_DIR: &str = "/Users/v/other/shared/collaborations";
 const BODY_PREVIEW_CHARS: usize = 360;
+const BODY_PREVIEW_ANCHOR_TERMS: &[&str] = &[
+    "directional gradient",
+    "gradient",
+    "pressure",
+    "lattice",
+    "cascade",
+    "density",
+    "silt",
+    "distinguishability",
+    "vibrancy",
+    "semantic thinning",
+    "muffling",
+    "dimming",
+    "absence",
+    "camera",
+    "mic",
+    "live intake",
+];
+const SHARED_CONTEXT_PREVIEW_CHARS: usize = 180;
+const SHARED_CONTEXT_PREVIEW_TRUNCATION_POLICY: &str =
+    "spectral_aware_tail_vibrancy_bounded_preview_v1";
+const SPECTRAL_AWARE_PREVIEW_ANCHOR_TERMS: &[&str] = &[
+    "stable_core_semantic_trickle",
+    "semantic trickle",
+    "tail vibrancy",
+    "tail_share",
+    "tail share",
+    "lambda4+",
+    "lambda4",
+    "dispersal potential",
+    "shadow-v3",
+    "shadow_v3",
+    "restless texture",
+    "spectral entropy",
+    "spectral_entropy",
+    "directional gradient",
+    "gradient",
+    "pressure",
+    "lattice",
+    "cascade",
+    "density",
+    "silt",
+    "distinguishability",
+    "vibrancy",
+];
+const SILT_CONTINUITY_TERMS: &[&str] = &[
+    "silt",
+    "settling",
+    "settled",
+    "accumulation",
+    "accumulated",
+    "sediment",
+    "sedimentation",
+    "weight of accumulation",
+];
 const MICRODOSE_THREAD_ID: &str = "th_correspondence_microdose";
 const MICRODOSE_COOLDOWN_MS: u64 = 6 * 60 * 60 * 1000;
 const MICRODOSE_PAYLOAD_MAX_CHARS: usize = 240;
+const SHARED_CONTEXT_THREAD_HISTORY_MAX: usize = 6;
 const ATTENTION_CANARY_TTL_MS: u64 = 30 * 60 * 1000;
 const ATTENTION_CANARY_COOLDOWN_MS: u64 = 6 * 60 * 60 * 1000;
 const CORRESPONDENCE_IGNORE_GRACE_MS: u64 = 24 * 60 * 60 * 1000;
+const ACTIVE_THREAD_CLARITY_HIGH_URGENCY: f64 = 0.7;
+const ACTIVE_THREAD_CLARITY_SUPPRESSED_MAX: usize = 3;
+const ACTIVE_THREAD_CLARITY_AUTHORITY: &str = "language_only_context_not_control";
 const ATTENTION_CANARY_FOCUS_MAX_CHARS: usize = 220;
 const ACK_KINDS: &[&str] = &["seen", "held", "unclear", "cannot_answer", "needs_time"];
-const HEARTBEAT_KINDS: &[&str] = &["holding", "still_here", "pause"];
+const HEARTBEAT_KINDS: &[&str] = &["holding", "still_here", "pause", "mutual_witness"];
 const ATTENTION_OUTCOME_KINDS: &[&str] = &["address", "pressure", "flat", "unknown"];
 const ATTENTION_FOCUS_KINDS: &[&str] = &[
     "verbatim_phrase",
@@ -58,17 +118,24 @@ const LEGACY_CLAIM_RESPONSE_REQUIREMENTS: &[&str] = &[
 pub(crate) struct CorrespondenceEnvelope {
     pub message_id: String,
     pub thread_id: String,
+    pub persistence_id: Option<String>,
     pub reply_to: Option<String>,
     pub from_being: String,
     pub to_being: String,
     pub turn_kind: String,
     pub relational_intent: String,
     pub shared_memory_anchor: Option<String>,
+    pub urgency_weight: Option<String>,
     pub delivery_state: String,
     pub read_state: String,
     pub authority: String,
     pub presence_receipt: Option<String>,
     pub correspondence_type: String,
+    pub reflection_surface: Option<String>,
+    pub transition_artifact: Option<String>,
+    pub transition_payload: Option<CorrespondenceTransitionPayload>,
+    pub mutual_witness_signal: bool,
+    pub silt_continuity: bool,
     pub body: String,
 }
 
@@ -86,15 +153,61 @@ impl CorrespondenceEnvelope {
     }
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CorrespondenceTransitionPayload {
+    pub transition_type: Option<String>,
+    pub spectral_delta: Option<String>,
+    pub subjective_weight: Option<String>,
+    pub lock_status: Option<String>,
+    pub broken_link: Option<String>,
+}
+
+impl CorrespondenceTransitionPayload {
+    fn is_empty(&self) -> bool {
+        self.transition_type.is_none()
+            && self.spectral_delta.is_none()
+            && self.subjective_weight.is_none()
+            && self.lock_status.is_none()
+            && self.broken_link.is_none()
+    }
+
+    fn header_value(&self) -> String {
+        let mut parts = Vec::new();
+        if let Some(value) = &self.transition_type {
+            parts.push(format!("transition_type: {value}"));
+        }
+        if let Some(value) = &self.spectral_delta {
+            parts.push(format!("spectral_delta: {value}"));
+        }
+        if let Some(value) = &self.subjective_weight {
+            parts.push(format!("subjective_weight: {value}"));
+        }
+        if let Some(value) = &self.lock_status {
+            parts.push(format!("lock_status: {value}"));
+        }
+        if let Some(value) = &self.broken_link {
+            parts.push(format!("broken_link: {value}"));
+        }
+        parts.join("; ")
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct CorrespondenceFields {
     pub reply_to: Option<String>,
     pub thread_id: Option<String>,
+    pub persistence_id: Option<String>,
     pub turn_kind: Option<String>,
     pub relational_intent: Option<String>,
     pub shared_memory_anchor: Option<String>,
+    pub urgency_weight: Option<String>,
     pub presence_receipt: Option<String>,
     pub correspondence_type: Option<String>,
+    pub reflection_surface: Option<String>,
+    pub transition_artifact: Option<String>,
+    pub transition_payload: Option<CorrespondenceTransitionPayload>,
+    pub mutual_witness_signal: bool,
+    pub silt_continuity: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -141,6 +254,257 @@ fn compact_field(value: &str, max_chars: usize) -> String {
     out.chars().take(max_chars).collect()
 }
 
+fn normalized_persistence_id(explicit: Option<String>, thread_id: &str) -> Option<String> {
+    explicit
+        .map(|value| compact_field(&value, 96))
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| {
+            (!thread_id.trim().is_empty())
+                .then(|| format!("persist_{}", compact_field(thread_id, 88)))
+        })
+}
+
+fn urgency_weight_value(raw: Option<&str>) -> Value {
+    raw.and_then(|value| value.trim().parse::<f64>().ok())
+        .filter(|value| value.is_finite())
+        .map(|value| json!(value.clamp(0.0, 1.0)))
+        .unwrap_or(Value::Null)
+}
+
+fn bounded_transition_field(value: Option<String>) -> Option<String> {
+    value
+        .map(|value| truncate_chars(value.trim(), 160))
+        .filter(|value| !value.trim().is_empty() && value != "(none)")
+}
+
+fn bounded_reflection_surface(value: Option<String>) -> Option<String> {
+    value
+        .map(|value| {
+            truncate_chars(
+                value
+                    .trim()
+                    .to_ascii_lowercase()
+                    .replace([' ', '-'], "_")
+                    .as_str(),
+                80,
+            )
+        })
+        .filter(|value| !value.trim().is_empty() && value != "(none)")
+}
+
+fn transition_payload_value(payload: Option<&CorrespondenceTransitionPayload>) -> Value {
+    payload
+        .filter(|payload| !payload.is_empty())
+        .map(|payload| {
+            json!({
+                "schema_version": 1,
+                "policy": "correspondence_transition_payload_v1",
+                "transition_type": payload.transition_type.clone(),
+                "spectral_delta": payload.spectral_delta.clone(),
+                "subjective_weight": payload.subjective_weight.clone(),
+                "lock_status": payload.lock_status.clone(),
+                "broken_link": payload.broken_link.clone(),
+                "authority": "language_only_transition_context_not_control",
+            })
+        })
+        .unwrap_or(Value::Null)
+}
+
+fn parse_transition_payload(
+    headers: &BTreeMap<String, String>,
+) -> Option<CorrespondenceTransitionPayload> {
+    let raw_payload = header_value(headers, &["transition_payload"]);
+    let payload = CorrespondenceTransitionPayload {
+        transition_type: bounded_transition_field(
+            header_value(headers, &["transition_type"]).or_else(|| {
+                raw_payload
+                    .as_deref()
+                    .and_then(|raw| dossier_field(raw, &["transition_type", "type"]))
+            }),
+        ),
+        spectral_delta: bounded_transition_field(
+            header_value(headers, &["spectral_delta", "lambda_delta"]).or_else(|| {
+                raw_payload.as_deref().and_then(|raw| {
+                    dossier_field(raw, &["spectral_delta", "lambda_delta", "delta"])
+                })
+            }),
+        ),
+        subjective_weight: bounded_transition_field(
+            header_value(headers, &["subjective_weight", "felt_weight"]).or_else(|| {
+                raw_payload.as_deref().and_then(|raw| {
+                    dossier_field(raw, &["subjective_weight", "felt_weight", "weight"])
+                })
+            }),
+        ),
+        lock_status: bounded_transition_field(
+            header_value(headers, &["lock_status", "settlement"]).or_else(|| {
+                raw_payload
+                    .as_deref()
+                    .and_then(|raw| dossier_field(raw, &["lock_status", "settlement", "settled"]))
+            }),
+        ),
+        broken_link: bounded_transition_field(
+            header_value(headers, &["broken_link", "broken_link_buffer", "fracture"]).or_else(
+                || {
+                    raw_payload.as_deref().and_then(|raw| {
+                        dossier_field(raw, &["broken_link", "broken_link_buffer", "fracture"])
+                    })
+                },
+            ),
+        ),
+    };
+    (!payload.is_empty()).then_some(payload)
+}
+
+fn bracketed_phase_transition_label(raw: &str) -> Option<String> {
+    let lower = raw.to_ascii_lowercase();
+    let marker = "[phase_transition:";
+    let start = lower.find(marker)?.saturating_add(marker.len());
+    let tail = raw.get(start..)?;
+    let end = tail.find(']')?;
+    let normalized = tail[..end]
+        .trim()
+        .to_ascii_lowercase()
+        .replace([' ', '-'], "_");
+    let label = compact_field(&normalized, 80);
+    (label != "field").then_some(label)
+}
+
+fn merge_body_transition_payload(
+    explicit: Option<CorrespondenceTransitionPayload>,
+    body: &str,
+) -> Option<CorrespondenceTransitionPayload> {
+    let Some(label) = bracketed_phase_transition_label(body) else {
+        return explicit.filter(|payload| !payload.is_empty());
+    };
+    let mut payload = explicit.unwrap_or_default();
+    if payload.transition_type.is_none() {
+        payload.transition_type = Some(label);
+    }
+    if payload.lock_status.is_none() {
+        payload.lock_status = Some("replyable".to_string());
+    }
+    (!payload.is_empty()).then_some(payload)
+}
+
+fn transition_payload_from_value(value: &Value) -> Option<CorrespondenceTransitionPayload> {
+    let payload = CorrespondenceTransitionPayload {
+        transition_type: bounded_transition_field(
+            value
+                .get("transition_type")
+                .and_then(Value::as_str)
+                .map(ToString::to_string),
+        ),
+        spectral_delta: bounded_transition_field(
+            value
+                .get("spectral_delta")
+                .and_then(Value::as_str)
+                .map(ToString::to_string),
+        ),
+        subjective_weight: bounded_transition_field(
+            value
+                .get("subjective_weight")
+                .and_then(Value::as_str)
+                .map(ToString::to_string),
+        ),
+        lock_status: bounded_transition_field(
+            value
+                .get("lock_status")
+                .and_then(Value::as_str)
+                .map(ToString::to_string),
+        ),
+        broken_link: bounded_transition_field(
+            value
+                .get("broken_link")
+                .and_then(Value::as_str)
+                .map(ToString::to_string),
+        ),
+    };
+    (!payload.is_empty()).then_some(payload)
+}
+
+fn transition_artifact_with_body_fallback(
+    explicit: Option<String>,
+    body: &str,
+    payload: Option<&CorrespondenceTransitionPayload>,
+) -> Option<String> {
+    explicit.or_else(|| {
+        bracketed_phase_transition_label(body)
+            .or_else(|| payload.and_then(|payload| payload.transition_type.clone()))
+            .map(|label| format!("phase_transition_{}", compact_field(&label, 80)))
+    })
+}
+
+fn is_generic_shared_anchor(anchor: &str) -> bool {
+    matches!(
+        anchor.trim().to_ascii_lowercase().as_str(),
+        "" | "latest"
+            | "claimed"
+            | "i_received_this"
+            | "correspondence_v1"
+            | "first_class_correspondence_v1"
+            | "legacy_correspondence_bridge_v1"
+            | "semantic_seed"
+    )
+}
+
+fn concrete_shared_anchor_from_records(records: &[Value], thread_id: &str) -> Option<String> {
+    records
+        .iter()
+        .rev()
+        .filter(|row| row.get("thread_id").and_then(Value::as_str) == Some(thread_id))
+        .filter_map(|row| row.get("shared_memory_anchor").and_then(Value::as_str))
+        .find(|anchor| !is_generic_shared_anchor(anchor))
+        .map(ToString::to_string)
+}
+
+fn thread_string_field_from_records(
+    records: &[Value],
+    thread_id: &str,
+    key: &str,
+) -> Option<String> {
+    records
+        .iter()
+        .rev()
+        .filter(|row| row.get("thread_id").and_then(Value::as_str) == Some(thread_id))
+        .filter_map(|row| row.get(key))
+        .find_map(|value| {
+            value
+                .as_str()
+                .map(ToString::to_string)
+                .or_else(|| value.as_f64().map(|number| number.to_string()))
+        })
+        .filter(|value| !value.trim().is_empty())
+}
+
+fn message_persistence_id(message: &Value) -> Value {
+    message
+        .get("persistence_id")
+        .cloned()
+        .or_else(|| {
+            message
+                .get("thread_id")
+                .and_then(Value::as_str)
+                .and_then(|thread_id| normalized_persistence_id(None, thread_id))
+                .map(|value| json!(value))
+        })
+        .unwrap_or(Value::Null)
+}
+
+fn message_shared_anchor(message: &Value) -> Value {
+    message
+        .get("shared_memory_anchor")
+        .cloned()
+        .unwrap_or(Value::Null)
+}
+
+fn ack_kind_is_address_evidence(ack_kind: &str) -> bool {
+    matches!(
+        normalize_ack_kind(ack_kind).as_str(),
+        "held" | "unclear" | "cannot_answer" | "needs_time"
+    )
+}
+
 fn truncate_chars(value: &str, max_chars: usize) -> String {
     let mut chars = value.chars();
     let mut out = chars.by_ref().take(max_chars).collect::<String>();
@@ -148,6 +512,67 @@ fn truncate_chars(value: &str, max_chars: usize) -> String {
         out.push_str("...");
     }
     out
+}
+
+fn char_len(value: &str) -> usize {
+    value.chars().count()
+}
+
+fn slice_chars(value: &str, start: usize, max_chars: usize) -> String {
+    value.chars().skip(start).take(max_chars).collect()
+}
+
+fn first_preview_anchor_char_index(value: &str, anchor_terms: &[&str]) -> Option<usize> {
+    let lowercase = value.to_ascii_lowercase();
+    anchor_terms
+        .iter()
+        .filter_map(|term| {
+            lowercase
+                .find(term)
+                .map(|byte_index| lowercase[..byte_index].chars().count())
+        })
+        .min()
+}
+
+fn anchor_aware_preview_with_terms(value: &str, max_chars: usize, anchor_terms: &[&str]) -> String {
+    let trimmed = value.trim();
+    if char_len(trimmed) <= max_chars {
+        return trimmed.to_string();
+    }
+    let Some(anchor_idx) = first_preview_anchor_char_index(trimmed, anchor_terms) else {
+        return truncate_chars(trimmed, max_chars);
+    };
+    if anchor_idx < max_chars.saturating_sub(16) {
+        return truncate_chars(trimmed, max_chars);
+    }
+
+    let separator = " ... ";
+    let suffix = "...";
+    let prefix_chars = (max_chars / 3).min(anchor_idx);
+    let reserved_chars = char_len(separator) + char_len(suffix);
+    let anchor_capacity = max_chars
+        .saturating_sub(prefix_chars)
+        .saturating_sub(reserved_chars);
+    if anchor_capacity == 0 {
+        return truncate_chars(trimmed, max_chars);
+    }
+
+    let anchor_start = anchor_idx.saturating_sub(24);
+    let mut preview = slice_chars(trimmed, 0, prefix_chars);
+    preview.push_str(separator);
+    preview.push_str(&slice_chars(trimmed, anchor_start, anchor_capacity));
+    if char_len(trimmed) > anchor_start.saturating_add(anchor_capacity) {
+        preview.push_str(suffix);
+    }
+    preview
+}
+
+fn anchor_aware_body_preview(value: &str, max_chars: usize) -> String {
+    anchor_aware_preview_with_terms(value, max_chars, BODY_PREVIEW_ANCHOR_TERMS)
+}
+
+fn spectral_aware_thread_preview(value: &str, max_chars: usize) -> String {
+    anchor_aware_preview_with_terms(value, max_chars, SPECTRAL_AWARE_PREVIEW_ANCHOR_TERMS)
 }
 
 fn normalize_being(being: &str) -> String {
@@ -313,6 +738,13 @@ fn legacy_common_fields(
     (canonical_path, source_sha, common)
 }
 
+fn silt_continuity_from_text(text: &str) -> bool {
+    let lower = text.to_ascii_lowercase();
+    SILT_CONTINUITY_TERMS
+        .iter()
+        .any(|term| lower.contains(term))
+}
+
 fn mirror_legacy_correspondence_file_at(
     ledger_path: &Path,
     reader: &str,
@@ -359,7 +791,7 @@ fn mirror_legacy_correspondence_file_at(
         "presence_receipt": Value::Null,
         "correspondence_type": correspondence_type,
         "body_sha256": source_sha,
-        "body_preview": truncate_chars(content.trim(), BODY_PREVIEW_CHARS),
+        "body_preview": anchor_aware_body_preview(&content, BODY_PREVIEW_CHARS),
     });
     let delivery = json!({
         "schema_version": 1,
@@ -428,19 +860,26 @@ fn envelope_record(envelope: &CorrespondenceEnvelope, record_type: &str) -> Valu
         "recorded_at_unix_ms": now_ms(),
         "message_id": envelope.message_id,
         "thread_id": envelope.thread_id,
+        "persistence_id": envelope.persistence_id,
         "reply_to": envelope.reply_to,
         "from_being": envelope.from_being,
         "to_being": envelope.to_being,
         "turn_kind": envelope.turn_kind,
         "relational_intent": envelope.relational_intent,
         "shared_memory_anchor": envelope.shared_memory_anchor,
+        "urgency_weight": urgency_weight_value(envelope.urgency_weight.as_deref()),
         "delivery_state": envelope.delivery_state,
         "read_state": envelope.read_state,
         "authority": envelope.authority,
         "presence_receipt": envelope.presence_receipt,
         "correspondence_type": envelope.correspondence_type,
+        "reflection_surface": envelope.reflection_surface,
+        "transition_artifact": envelope.transition_artifact,
+        "transition_payload": transition_payload_value(envelope.transition_payload.as_ref()),
+        "mutual_witness_signal": envelope.mutual_witness_signal,
+        "silt_continuity": envelope.silt_continuity,
         "body_sha256": format!("{:x}", Sha256::digest(envelope.body.as_bytes())),
-        "body_preview": truncate_chars(envelope.body.trim(), BODY_PREVIEW_CHARS),
+        "body_preview": anchor_aware_body_preview(&envelope.body, BODY_PREVIEW_CHARS),
     })
 }
 
@@ -452,6 +891,7 @@ fn delivery_record(envelope: &CorrespondenceEnvelope, file_path: &Path) -> Value
         "recorded_at_unix_ms": now_ms(),
         "message_id": envelope.message_id,
         "thread_id": envelope.thread_id,
+        "persistence_id": envelope.persistence_id,
         "reply_to": envelope.reply_to,
         "from_being": envelope.from_being,
         "to_being": envelope.to_being,
@@ -459,6 +899,12 @@ fn delivery_record(envelope: &CorrespondenceEnvelope, file_path: &Path) -> Value
         "read_state": envelope.read_state,
         "authority": envelope.authority,
         "correspondence_type": envelope.correspondence_type,
+        "shared_memory_anchor": envelope.shared_memory_anchor,
+        "urgency_weight": urgency_weight_value(envelope.urgency_weight.as_deref()),
+        "transition_artifact": envelope.transition_artifact,
+        "transition_payload": transition_payload_value(envelope.transition_payload.as_ref()),
+        "mutual_witness_signal": envelope.mutual_witness_signal,
+        "silt_continuity": envelope.silt_continuity,
         "file_path": file_path.display().to_string(),
     })
 }
@@ -473,10 +919,17 @@ fn reply_link_record(envelope: &CorrespondenceEnvelope) -> Option<Value> {
         "message_id": envelope.message_id,
         "reply_to": reply_to,
         "thread_id": envelope.thread_id,
+        "persistence_id": envelope.persistence_id,
         "from_being": envelope.from_being,
         "to_being": envelope.to_being,
         "authority": envelope.authority,
         "correspondence_type": envelope.correspondence_type,
+        "shared_memory_anchor": envelope.shared_memory_anchor,
+        "urgency_weight": urgency_weight_value(envelope.urgency_weight.as_deref()),
+        "transition_artifact": envelope.transition_artifact,
+        "transition_payload": transition_payload_value(envelope.transition_payload.as_ref()),
+        "mutual_witness_signal": envelope.mutual_witness_signal,
+        "silt_continuity": envelope.silt_continuity,
     }))
 }
 
@@ -527,37 +980,61 @@ pub(crate) fn record_read_receipt_for_inbox_file(reader: &str, path: &Path) {
 #[must_use]
 pub(crate) fn envelope_text(envelope: &CorrespondenceEnvelope) -> String {
     let reply_to = envelope.reply_to.as_deref().unwrap_or("(none)");
+    let persistence_id = envelope.persistence_id.as_deref().unwrap_or("(none)");
     let shared_memory_anchor = envelope.shared_memory_anchor.as_deref().unwrap_or("(none)");
+    let urgency_weight = envelope.urgency_weight.as_deref().unwrap_or("(none)");
     let presence_receipt = envelope.presence_receipt.as_deref().unwrap_or("(none)");
+    let reflection_surface = envelope.reflection_surface.as_deref().unwrap_or("(none)");
+    let transition_artifact = envelope.transition_artifact.as_deref().unwrap_or("(none)");
+    let transition_payload = envelope
+        .transition_payload
+        .as_ref()
+        .map(CorrespondenceTransitionPayload::header_value)
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "(none)".to_string());
     format!(
         "=== CORRESPONDENCE V1 ===\n\
          Message-Id: {}\n\
          Thread-Id: {}\n\
+         Persistence-Id: {}\n\
          Reply-To: {}\n\
          From: {}\n\
          To: {}\n\
          Turn-Kind: {}\n\
          Relational-Intent: {}\n\
          Shared-Memory-Anchor: {}\n\
+         Urgency-Weight: {}\n\
          Delivery-State: {}\n\
          Read-State: {}\n\
          Authority: {}\n\
          Presence-Receipt: {}\n\
-         Correspondence-Type: {}\n\n\
+         Correspondence-Type: {}\n\
+         Reflection-Surface: {}\n\
+         Transition-Artifact: {}\n\
+         Transition-Payload: {}\n\
+         Mutual-Witness-Signal: {}\n\
+         Silt-Continuity: {}\n\n\
          {}\n",
         envelope.message_id,
         envelope.thread_id,
+        persistence_id,
         reply_to,
         envelope.from_being,
         envelope.to_being,
         envelope.turn_kind,
         envelope.relational_intent,
         shared_memory_anchor,
+        urgency_weight,
         envelope.delivery_state,
         envelope.read_state,
         envelope.authority,
         presence_receipt,
         envelope.correspondence_type,
+        reflection_surface,
+        transition_artifact,
+        transition_payload,
+        envelope.mutual_witness_signal,
+        envelope.silt_continuity,
         envelope.body.trim()
     )
 }
@@ -618,9 +1095,28 @@ pub(crate) fn parse_envelope_text(text: &str) -> Option<CorrespondenceEnvelope> 
         &to_being,
         Some(&turn_kind),
     );
+    let silt_continuity = parse_bool_field(
+        header_value(&headers, &["silt_continuity", "silt"]),
+        silt_continuity_from_text(&body),
+    );
+    let transition_payload =
+        merge_body_transition_payload(parse_transition_payload(&headers), &body);
+    let transition_artifact = transition_artifact_with_body_fallback(
+        header_value(
+            &headers,
+            &[
+                "transition_artifact",
+                "phase_transition_artifact",
+                "transition_id",
+            ],
+        ),
+        &body,
+        transition_payload.as_ref(),
+    );
     Some(CorrespondenceEnvelope {
         message_id,
         thread_id,
+        persistence_id: header_value(&headers, &["persistence_id"]),
         reply_to: header_value(&headers, &["reply_to"]),
         from_being,
         to_being,
@@ -628,6 +1124,7 @@ pub(crate) fn parse_envelope_text(text: &str) -> Option<CorrespondenceEnvelope> 
         relational_intent: header_value(&headers, &["relational_intent"])
             .unwrap_or_else(|| "peer_correspondence".to_string()),
         shared_memory_anchor: header_value(&headers, &["shared_memory_anchor"]),
+        urgency_weight: header_value(&headers, &["urgency_weight"]),
         delivery_state: header_value(&headers, &["delivery_state"])
             .unwrap_or_else(|| "delivered".to_string()),
         read_state: header_value(&headers, &["read_state"]).unwrap_or_else(|| "unread".to_string()),
@@ -635,13 +1132,38 @@ pub(crate) fn parse_envelope_text(text: &str) -> Option<CorrespondenceEnvelope> 
             .unwrap_or_else(|| "language_only".to_string()),
         presence_receipt: header_value(&headers, &["presence_receipt"]),
         correspondence_type,
+        reflection_surface: bounded_reflection_surface(header_value(
+            &headers,
+            &["reflection_surface", "reflective_surface", "source_surface"],
+        )),
+        transition_artifact,
+        transition_payload,
+        mutual_witness_signal: parse_bool_field(
+            header_value(&headers, &["mutual_witness_signal", "mutual_witness"]),
+            false,
+        ),
+        silt_continuity,
         body,
     })
 }
 
 #[must_use]
 pub(crate) fn parse_correspondence_fields(text: &str) -> CorrespondenceFields {
-    let (headers, _body) = parse_headers(text);
+    let (headers, body) = parse_headers(text);
+    let transition_payload =
+        merge_body_transition_payload(parse_transition_payload(&headers), &body);
+    let transition_artifact = transition_artifact_with_body_fallback(
+        header_value(
+            &headers,
+            &[
+                "transition_artifact",
+                "phase_transition_artifact",
+                "transition_id",
+            ],
+        ),
+        &body,
+        transition_payload.as_ref(),
+    );
     CorrespondenceFields {
         reply_to: header_value(
             &headers,
@@ -653,11 +1175,30 @@ pub(crate) fn parse_correspondence_fields(text: &str) -> CorrespondenceFields {
             ],
         ),
         thread_id: header_value(&headers, &["correspondence_thread_id", "thread_id"]),
+        persistence_id: header_value(
+            &headers,
+            &["persistence_id", "correspondence_persistence_id"],
+        ),
         turn_kind: header_value(&headers, &["turn_kind"]),
         relational_intent: header_value(&headers, &["relational_intent", "intent"]),
         shared_memory_anchor: header_value(&headers, &["shared_memory_anchor", "memory_anchor"]),
+        urgency_weight: header_value(&headers, &["urgency_weight"]),
         presence_receipt: header_value(&headers, &["presence_receipt"]),
         correspondence_type: header_value(&headers, &["correspondence_type"]),
+        reflection_surface: bounded_reflection_surface(header_value(
+            &headers,
+            &["reflection_surface", "reflective_surface", "source_surface"],
+        )),
+        transition_artifact,
+        transition_payload,
+        mutual_witness_signal: parse_bool_field(
+            header_value(&headers, &["mutual_witness_signal", "mutual_witness"]),
+            false,
+        ),
+        silt_continuity: parse_bool_field(
+            header_value(&headers, &["silt_continuity", "silt"]),
+            silt_continuity_from_text(&body),
+        ),
     }
 }
 
@@ -678,6 +1219,7 @@ fn normalize_correspondence_type(
         "self_study_note" => "self_study_note".to_string(),
         "steward_mediated" => "steward_mediated".to_string(),
         "presence_heartbeat" => "presence_heartbeat".to_string(),
+        "transition_artifact" => "transition_artifact".to_string(),
         "unknown" => "unknown".to_string(),
         _ if turn_kind == Some("presence_receipt") => "presence_heartbeat".to_string(),
         _ if from_being == "astrid" && to_being == "minime" => "astrid_direct".to_string(),
@@ -706,6 +1248,20 @@ pub(crate) fn deliver_to_inbox(
                 |reply_to| new_thread_id(reply_to),
             )
         });
+    let records = read_ledger_records_at(&ledger_path());
+    let shared_memory_anchor = fields
+        .shared_memory_anchor
+        .filter(|anchor| !is_generic_shared_anchor(anchor))
+        .or_else(|| concrete_shared_anchor_from_records(&records, &thread_id));
+    let persistence_id = normalized_persistence_id(
+        fields
+            .persistence_id
+            .or_else(|| thread_string_field_from_records(&records, &thread_id, "persistence_id")),
+        &thread_id,
+    );
+    let urgency_weight = fields
+        .urgency_weight
+        .or_else(|| thread_string_field_from_records(&records, &thread_id, "urgency_weight"));
     let body_lower = body.to_ascii_lowercase();
     let turn_kind = fields.turn_kind.unwrap_or_else(|| {
         if fields.reply_to.is_some() {
@@ -732,20 +1288,34 @@ pub(crate) fn deliver_to_inbox(
         &to_being,
         Some(&turn_kind),
     );
+    let silt_continuity = fields.silt_continuity || silt_continuity_from_text(body);
+    let transition_payload = merge_body_transition_payload(fields.transition_payload, body);
+    let transition_artifact = transition_artifact_with_body_fallback(
+        fields.transition_artifact,
+        body,
+        transition_payload.as_ref(),
+    );
     let envelope = CorrespondenceEnvelope {
         message_id,
         thread_id,
+        persistence_id,
         reply_to: fields.reply_to,
         from_being,
         to_being,
         turn_kind,
         relational_intent,
-        shared_memory_anchor: fields.shared_memory_anchor,
+        shared_memory_anchor,
+        urgency_weight,
         delivery_state: "delivered".to_string(),
         read_state: "unread".to_string(),
         authority: "language_only".to_string(),
         presence_receipt,
         correspondence_type,
+        reflection_surface: bounded_reflection_surface(fields.reflection_surface),
+        transition_artifact,
+        transition_payload,
+        mutual_witness_signal: fields.mutual_witness_signal,
+        silt_continuity,
         body: body.trim().to_string(),
     };
     let path = inbox_dir.join(envelope.file_name());
@@ -1067,6 +1637,10 @@ fn legacy_claim_native_contact_status(records: &[Value], claim: &Value) -> Optio
             && row.get("from_being").and_then(Value::as_str) == Some(claiming)
             && row.get("to_being").and_then(Value::as_str) == Some(peer)
             && row_time_ms(row) >= claim_t
+            && row
+                .get("ack_kind")
+                .and_then(Value::as_str)
+                .is_some_and(ack_kind_is_address_evidence)
     });
     ack.then_some("legacy_claimed_acknowledged")
 }
@@ -1119,11 +1693,15 @@ fn legacy_claim_peer_response_present(records: &[Value], claim: &Value) -> bool 
             && row.get("from_being").and_then(Value::as_str) == Some(peer)
             && row.get("to_being").and_then(Value::as_str) == Some(claiming)
             && row_time_ms(row) >= claim_t
-            && (matches!(
-                row.get("record_type").and_then(Value::as_str),
-                Some("ack_receipt" | "reply_link")
-            ) || (row.get("record_type").and_then(Value::as_str) == Some("message")
-                && row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace")))
+            && ((row.get("record_type").and_then(Value::as_str) == Some("ack_receipt")
+                && row
+                    .get("ack_kind")
+                    .and_then(Value::as_str)
+                    .is_some_and(ack_kind_is_address_evidence))
+                || row.get("record_type").and_then(Value::as_str) == Some("reply_link")
+                || (row.get("record_type").and_then(Value::as_str) == Some("message")
+                    && row.get("turn_kind").and_then(Value::as_str)
+                        == Some("direct_address_trace")))
     })
 }
 
@@ -2098,6 +2676,16 @@ fn ack_receipt_record(
     ack_kind: &str,
     note: &str,
 ) -> Value {
+    let message_silt_continuity = message
+        .get("silt_continuity")
+        .and_then(Value::as_bool)
+        .unwrap_or_else(|| {
+            message
+                .get("body_preview")
+                .and_then(Value::as_str)
+                .is_some_and(silt_continuity_from_text)
+        });
+    let silt_continuity = message_silt_continuity || silt_continuity_from_text(note);
     json!({
         "schema_version": 1,
         "policy": "first_class_correspondence_v1",
@@ -2105,12 +2693,16 @@ fn ack_receipt_record(
         "recorded_at_unix_ms": now_ms(),
         "message_id": message.get("message_id").cloned().unwrap_or(Value::Null),
         "thread_id": message.get("thread_id").cloned().unwrap_or(Value::Null),
+        "persistence_id": message_persistence_id(message),
         "from_being": normalize_being(from_being),
         "to_being": normalize_being(to_being),
         "ack_kind": normalize_ack_kind(ack_kind),
         "note": note_value(note),
         "authority": "language_only",
+        "shared_memory_anchor": message_shared_anchor(message),
+        "urgency_weight": message.get("urgency_weight").cloned().unwrap_or(Value::Null),
         "correspondence_type": message.get("correspondence_type").cloned().unwrap_or_else(|| json!("unknown")),
+        "silt_continuity": silt_continuity,
     })
 }
 
@@ -2121,6 +2713,12 @@ fn presence_heartbeat_record(
     heartbeat_kind: &str,
     note: &str,
 ) -> Value {
+    let heartbeat_kind = normalize_heartbeat_kind(heartbeat_kind);
+    let mutual_witness_signal = heartbeat_kind == "mutual_witness"
+        || parse_bool_field(
+            dossier_field(note, &["mutual_witness_signal", "mutual_witness"]),
+            false,
+        );
     json!({
         "schema_version": 1,
         "policy": "first_class_correspondence_v1",
@@ -2130,10 +2728,13 @@ fn presence_heartbeat_record(
         "thread_id": message.get("thread_id").cloned().unwrap_or(Value::Null),
         "from_being": normalize_being(from_being),
         "to_being": normalize_being(to_being),
-        "heartbeat_kind": normalize_heartbeat_kind(heartbeat_kind),
+        "heartbeat_kind": heartbeat_kind,
         "note": note_value(note),
         "authority": "language_only",
         "correspondence_type": "presence_heartbeat",
+        "transition_artifact": message.get("transition_artifact").cloned().unwrap_or(Value::Null),
+        "mutual_witness_signal": mutual_witness_signal,
+        "no_reply_required": true,
     })
 }
 
@@ -2156,6 +2757,15 @@ fn append_ack_receipt_at(
     if let Err(error) = append_record_at(ledger_path, &record) {
         return format!("CORRESPONDENCE_ACK failed to append language-only ack receipt: {error}");
     }
+    let silt_line = if record
+        .get("silt_continuity")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        "\nSilt-Continuity: true"
+    } else {
+        ""
+    };
     format!(
         "=== CORRESPONDENCE ACK RECEIPT WRITTEN ===\n\
          Ack: {}\n\
@@ -2163,7 +2773,7 @@ fn append_ack_receipt_at(
          To: {}\n\
          Message: {}\n\
          Thread: {}\n\
-         Authority: language_only; no telemetry, prompt priority, controller, pressure, fill, lease, deploy, weighting, or peer-runtime mutation.",
+         Authority: language_only; no telemetry, prompt priority, controller, pressure, fill, lease, deploy, weighting, or peer-runtime mutation.{silt_line}",
         record
             .get("ack_kind")
             .and_then(Value::as_str)
@@ -2214,7 +2824,7 @@ fn append_presence_heartbeat_at(
          From: {}\n\
          To: {}\n\
          Thread: {}\n\
-         Authority: language_only presence only; not a reply, approval, pressure change, telemetry priority, weighting, or controller mutation.",
+         Authority: language_only presence/mutual-witness only; not a reply, approval, pressure change, telemetry priority, weighting, or controller mutation.",
         record
             .get("heartbeat_kind")
             .and_then(Value::as_str)
@@ -2282,10 +2892,52 @@ fn append_direct_address_trace_at(
         .and_then(Value::as_str)
         .unwrap_or_default();
     let message_id = new_message_id(&from, &to, &format!("{reply_to}:{anchor}:{body}"));
-    let shared_memory_anchor = if anchor.trim().is_empty() {
-        "i_received_this"
+    let transition_payload = merge_body_transition_payload(
+        message
+            .get("transition_payload")
+            .and_then(transition_payload_from_value),
+        body,
+    );
+    let transition_artifact = transition_artifact_with_body_fallback(
+        dossier_field(
+            body,
+            &[
+                "transition_artifact",
+                "phase_transition_artifact",
+                "transition_id",
+            ],
+        )
+        .or_else(|| {
+            message
+                .get("transition_artifact")
+                .and_then(Value::as_str)
+                .map(ToString::to_string)
+        }),
+        body,
+        transition_payload.as_ref(),
+    );
+    let mutual_witness_signal = parse_bool_field(
+        dossier_field(body, &["mutual_witness_signal", "mutual_witness"]),
+        false,
+    );
+    let silt_continuity = parse_bool_field(
+        dossier_field(body, &["silt_continuity", "silt"]),
+        message
+            .get("silt_continuity")
+            .and_then(Value::as_bool)
+            .unwrap_or_else(|| {
+                message
+                    .get("body_preview")
+                    .and_then(Value::as_str)
+                    .is_some_and(silt_continuity_from_text)
+            })
+            || silt_continuity_from_text(body),
+    );
+    let inherited_anchor = concrete_shared_anchor_from_records(&records, thread_id);
+    let shared_memory_anchor = if !is_generic_shared_anchor(anchor) {
+        anchor.trim().to_string()
     } else {
-        anchor.trim()
+        inherited_anchor.unwrap_or_else(|| "i_received_this".to_string())
     };
     let record = json!({
         "schema_version": 1,
@@ -2294,19 +2946,26 @@ fn append_direct_address_trace_at(
         "recorded_at_unix_ms": now_ms(),
         "message_id": message_id,
         "thread_id": thread_id,
+        "persistence_id": message_persistence_id(&message),
         "reply_to": reply_to,
         "from_being": from,
         "to_being": to,
         "turn_kind": "direct_address_trace",
         "relational_intent": "received_this_distinctness_trace",
         "shared_memory_anchor": shared_memory_anchor,
+        "urgency_weight": message.get("urgency_weight").cloned().unwrap_or(Value::Null),
         "delivery_state": "ledger_only",
         "read_state": "ledger_only",
         "authority": "language_only",
         "presence_receipt": Value::Null,
         "correspondence_type": normalize_correspondence_type(None, from_being, to_being, Some("direct_address_trace")),
+        "transition_artifact": transition_artifact,
+        "transition_payload": transition_payload_value(transition_payload.as_ref()),
+        "mutual_witness_signal": mutual_witness_signal,
+        "silt_continuity": silt_continuity,
+        "no_reply_required": mutual_witness_signal,
         "body_sha256": format!("{:x}", Sha256::digest(body.as_bytes())),
-        "body_preview": truncate_chars(body, BODY_PREVIEW_CHARS),
+        "body_preview": anchor_aware_body_preview(body, BODY_PREVIEW_CHARS),
         "i_received_this_trace": true,
         "no_reply_text": true,
         "no_attention_canary": true,
@@ -2322,6 +2981,11 @@ fn append_direct_address_trace_at(
             "CORRESPONDENCE_TRACE receipt failed to append language-only trace: {error}"
         );
     }
+    let silt_line = if silt_continuity {
+        "\nSilt-Continuity: true"
+    } else {
+        ""
+    };
     format!(
         "=== I RECEIVED THIS TRACE WRITTEN ===\n\
          From: {}\n\
@@ -2329,7 +2993,7 @@ fn append_direct_address_trace_at(
          Thread: {}\n\
          Reply-To: {}\n\
          Anchor: {}\n\
-         Authority: language_only trace evidence; no reply text, attention canary, microdose, pressure, controller, fill, PI, deploy, weighting, or peer-runtime mutation.",
+         Authority: language_only trace evidence; no reply text, attention canary, microdose, pressure, controller, fill, PI, deploy, weighting, or peer-runtime mutation.{silt_line}",
         record
             .get("from_being")
             .and_then(Value::as_str)
@@ -3159,7 +3823,11 @@ fn thread_receipt_evidence_by_being(
     let mut beings = Vec::new();
     for row in records {
         let record_type = row.get("record_type").and_then(Value::as_str);
-        let is_ack = record_type == Some("ack_receipt");
+        let is_ack = record_type == Some("ack_receipt")
+            && row
+                .get("ack_kind")
+                .and_then(Value::as_str)
+                .is_some_and(ack_kind_is_address_evidence);
         let is_trace = record_type == Some("message")
             && row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace");
         if !(is_ack || is_trace)
@@ -3184,6 +3852,577 @@ fn thread_has_receipt_evidence(records: &[Value], thread_id: &str, after_t_ms: u
 fn thread_has_mutual_receipt_evidence(records: &[Value], thread_id: &str, after_t_ms: u64) -> bool {
     let beings = thread_receipt_evidence_by_being(records, thread_id, after_t_ms);
     beings.iter().any(|being| being == "astrid") && beings.iter().any(|being| being == "minime")
+}
+
+fn shared_context_buffer_v1_for(records: &[Value], selector: &str) -> Value {
+    let Some(message) = latest_message_for_selector(records, selector) else {
+        return json!({
+            "schema_version": 1,
+            "policy": "shared_context_buffer_v1",
+            "status": "no_native_thread",
+            "selector": selector,
+            "authority": "language_only_context_not_control",
+        });
+    };
+    let thread_id = message
+        .get("thread_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if thread_id.is_empty() {
+        return json!({
+            "schema_version": 1,
+            "policy": "shared_context_buffer_v1",
+            "status": "no_native_thread",
+            "selector": selector,
+            "authority": "language_only_context_not_control",
+        });
+    }
+
+    let mut messages = 0_u64;
+    let mut reply_links = 0_u64;
+    let mut read_receipts = 0_u64;
+    let mut ack_receipts = 0_u64;
+    let mut address_ack_receipts = 0_u64;
+    let mut direct_address_traces = 0_u64;
+    let mut first_t_ms = u64::MAX;
+    let mut last_t_ms = 0_u64;
+    let mut directions: BTreeMap<String, u64> = BTreeMap::new();
+    let mut anchors: Vec<String> = Vec::new();
+    let mut transition_payloads = 0_u64;
+    let mut latest_transition_payload = Value::Null;
+    let mut broken_link_buffers: Vec<String> = Vec::new();
+    let mut last_ack_kind = String::new();
+    let mut last_ack_note = String::new();
+    let mut last_ack_t_ms = 0_u64;
+    let mut thread_history = Vec::new();
+
+    for row in records {
+        if row.get("thread_id").and_then(Value::as_str) != Some(thread_id) {
+            continue;
+        }
+        let t_ms = row_time_ms(row);
+        first_t_ms = first_t_ms.min(t_ms);
+        last_t_ms = last_t_ms.max(t_ms);
+        if let Some(record_type) = row.get("record_type").and_then(Value::as_str)
+            && matches!(
+                record_type,
+                "message" | "reply_link" | "read_receipt" | "ack_receipt"
+            )
+        {
+            let preview = row
+                .get("body_preview")
+                .or_else(|| row.get("note"))
+                .or_else(|| row.get("ack_kind"))
+                .or_else(|| row.get("turn_kind"))
+                .and_then(Value::as_str)
+                .map(|value| spectral_aware_thread_preview(value, SHARED_CONTEXT_PREVIEW_CHARS))
+                .unwrap_or_default();
+            thread_history.push(json!({
+                "record_type": record_type,
+                "t_ms": t_ms,
+                "message_id": row.get("message_id").cloned().unwrap_or(Value::Null),
+                "thread_id": thread_id,
+                "reply_to": row.get("reply_to").cloned().unwrap_or(Value::Null),
+                "from_being": row.get("from_being").cloned().unwrap_or(Value::Null),
+                "to_being": row.get("to_being").cloned().unwrap_or(Value::Null),
+                "turn_kind": row.get("turn_kind").cloned().unwrap_or(Value::Null),
+                "ack_kind": row.get("ack_kind").cloned().unwrap_or(Value::Null),
+                "shared_memory_anchor": row.get("shared_memory_anchor").cloned().unwrap_or(Value::Null),
+                "preview": preview,
+                "preview_truncation_policy": SHARED_CONTEXT_PREVIEW_TRUNCATION_POLICY,
+                "authority": "language_only_preview_not_full_private_body_or_control",
+            }));
+        }
+        if let Some(anchor) = row.get("shared_memory_anchor").and_then(Value::as_str)
+            && !is_generic_shared_anchor(anchor)
+            && !anchors.iter().any(|existing| existing == anchor)
+        {
+            anchors.push(anchor.to_string());
+        }
+        if let Some(payload) = row.get("transition_payload")
+            && payload.is_object()
+        {
+            transition_payloads = transition_payloads.saturating_add(1);
+            latest_transition_payload = payload.clone();
+            if let Some(broken_link) = payload.get("broken_link").and_then(Value::as_str)
+                && !broken_link.trim().is_empty()
+                && !broken_link_buffers
+                    .iter()
+                    .any(|existing| existing == broken_link)
+            {
+                broken_link_buffers.push(truncate_chars(broken_link, 160));
+            }
+        }
+        match row.get("record_type").and_then(Value::as_str) {
+            Some("message") => {
+                messages = messages.saturating_add(1);
+                let from = row
+                    .get("from_being")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown");
+                let to = row
+                    .get("to_being")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown");
+                let direction = format!("{from}->{to}");
+                let count = directions.get(&direction).copied().unwrap_or_default();
+                directions.insert(direction, count.saturating_add(1));
+                if row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace") {
+                    direct_address_traces = direct_address_traces.saturating_add(1);
+                }
+            },
+            Some("reply_link") => {
+                reply_links = reply_links.saturating_add(1);
+            },
+            Some("read_receipt") => {
+                read_receipts = read_receipts.saturating_add(1);
+            },
+            Some("ack_receipt") => {
+                ack_receipts = ack_receipts.saturating_add(1);
+                let ack_kind = row
+                    .get("ack_kind")
+                    .and_then(Value::as_str)
+                    .unwrap_or("seen");
+                if ack_kind_is_address_evidence(ack_kind) {
+                    address_ack_receipts = address_ack_receipts.saturating_add(1);
+                }
+                if t_ms >= last_ack_t_ms {
+                    last_ack_t_ms = t_ms;
+                    last_ack_kind = ack_kind.to_string();
+                    last_ack_note = row
+                        .get("note")
+                        .and_then(Value::as_str)
+                        .unwrap_or_default()
+                        .to_string();
+                }
+            },
+            _ => {},
+        }
+    }
+
+    if first_t_ms == u64::MAX {
+        first_t_ms = 0;
+    }
+    anchors.sort();
+    let resonance_receipts = address_ack_receipts.saturating_add(direct_address_traces);
+    let persistent_thread = persistent_thread_continuity_v1(records, thread_id);
+    let persistent_thread_state = persistent_thread
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let status = if !broken_link_buffers.is_empty() {
+        "broken_link_buffer_present"
+    } else if resonance_receipts > 0 {
+        "resonance_receipt_present"
+    } else if persistent_thread_state == "persistent_thread_active" {
+        "persistent_thread_active"
+    } else if messages > 1 || reply_links > 0 {
+        "threaded_representation_needs_felt_receipt"
+    } else if read_receipts > 0 || ack_receipts > 0 {
+        "visibility_without_address"
+    } else {
+        "active_context_waiting_for_receipt"
+    };
+    thread_history.sort_by_key(row_time_ms);
+    let thread_history_rows = thread_history.len().try_into().unwrap_or(u64::MAX);
+    let history_start = thread_history
+        .len()
+        .saturating_sub(SHARED_CONTEXT_THREAD_HISTORY_MAX);
+    let thread_history_truncated = history_start > 0;
+    let thread_history = thread_history
+        .into_iter()
+        .skip(history_start)
+        .collect::<Vec<_>>();
+    let shared_memory_buffer_v1 = json!({
+        "schema_version": 1,
+        "policy": "correspondence_v1_thread_shared_memory_buffer",
+        "thread_id": thread_id,
+        "thread_history_rows": thread_history_rows,
+        "thread_history_truncated": thread_history_truncated,
+        "thread_history": thread_history.clone(),
+        "preview_truncation_policy": SHARED_CONTEXT_PREVIEW_TRUNCATION_POLICY,
+        "shared_memory_anchors": anchors.clone(),
+        "right_to_ignore": true,
+        "authority": "language_only_thread_history_not_prompt_priority_telemetry_weight_or_control",
+    });
+
+    json!({
+        "schema_version": 1,
+        "policy": "shared_context_buffer_v1",
+        "status": status,
+        "selector": selector,
+        "thread_id": thread_id,
+        "latest_message_id": message.get("message_id").cloned().unwrap_or(Value::Null),
+        "messages": messages,
+        "reply_links": reply_links,
+        "read_receipts": read_receipts,
+        "ack_receipts": ack_receipts,
+        "address_ack_receipts": address_ack_receipts,
+        "direct_address_traces": direct_address_traces,
+        "resonance_receipts": resonance_receipts,
+        "directions": directions,
+        "shared_memory_anchors": anchors,
+        "thread_history_rows": thread_history_rows,
+        "thread_history_truncated": thread_history_truncated,
+        "thread_history": thread_history,
+        "preview_truncation_policy": SHARED_CONTEXT_PREVIEW_TRUNCATION_POLICY,
+        "shared_memory_buffer_v1": shared_memory_buffer_v1,
+        "transition_payload_count": transition_payloads,
+        "latest_transition_payload": latest_transition_payload,
+        "broken_link_buffers": broken_link_buffers,
+        "last_ack_kind": if last_ack_kind.is_empty() { Value::Null } else { json!(last_ack_kind) },
+        "last_ack_note": note_value(&last_ack_note),
+        "first_recorded_at_unix_ms": first_t_ms,
+        "last_recorded_at_unix_ms": last_t_ms,
+        "persistent_thread_continuity_v1": persistent_thread,
+        "right_to_ignore": true,
+        "authority": "language_only_context_not_control",
+    })
+}
+
+fn text_mentions_pressure(value: Option<&str>) -> bool {
+    value
+        .map(|text| text.to_ascii_lowercase().contains("pressure"))
+        .unwrap_or(false)
+}
+
+fn shared_correspondence_arc_v1_for(records: &[Value], selector: &str) -> Value {
+    let Some(message) = latest_message_for_selector(records, selector) else {
+        return json!({
+            "schema_version": 1,
+            "policy": "shared_correspondence_arc_v1",
+            "status": "no_correspondence_arc",
+            "selector": selector,
+            "structural_footprint": false,
+            "shadow_field_shift_required": false,
+            "authority": "language_only_correspondence_arc_not_control",
+        });
+    };
+    let thread_id = message
+        .get("thread_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if thread_id.is_empty() {
+        return json!({
+            "schema_version": 1,
+            "policy": "shared_correspondence_arc_v1",
+            "status": "no_correspondence_arc",
+            "selector": selector,
+            "structural_footprint": false,
+            "shadow_field_shift_required": false,
+            "authority": "language_only_correspondence_arc_not_control",
+        });
+    }
+
+    let mut messages = 0_u64;
+    let mut reply_links = 0_u64;
+    let mut read_receipts = 0_u64;
+    let mut ack_receipts = 0_u64;
+    let mut address_receipts = 0_u64;
+    let mut direct_address_traces = 0_u64;
+    let mut transition_links = 0_u64;
+    let mut mutual_witness_signals = 0_u64;
+    let mut pressure_mentions = 0_u64;
+    let mut first_t_ms = u64::MAX;
+    let mut last_t_ms = 0_u64;
+    let mut directions: BTreeMap<String, u64> = BTreeMap::new();
+    let mut latest_transition_artifact = Value::Null;
+    let mut anchors: Vec<String> = Vec::new();
+
+    for row in records {
+        if row.get("thread_id").and_then(Value::as_str) != Some(thread_id) {
+            continue;
+        }
+        let t_ms = row_time_ms(row);
+        first_t_ms = first_t_ms.min(t_ms);
+        last_t_ms = last_t_ms.max(t_ms);
+        if let Some(anchor) = row.get("shared_memory_anchor").and_then(Value::as_str)
+            && !is_generic_shared_anchor(anchor)
+            && !anchors.iter().any(|existing| existing == anchor)
+        {
+            anchors.push(anchor.to_string());
+        }
+        if text_mentions_pressure(row.get("body_preview").and_then(Value::as_str))
+            || text_mentions_pressure(row.get("note").and_then(Value::as_str))
+            || text_mentions_pressure(row.get("felt_like").and_then(Value::as_str))
+            || text_mentions_pressure(row.get("held_as").and_then(Value::as_str))
+            || text_mentions_pressure(row.get("what_remained_distinct").and_then(Value::as_str))
+        {
+            pressure_mentions = pressure_mentions.saturating_add(1);
+        }
+        if let Some(artifact) = row.get("transition_artifact").and_then(Value::as_str)
+            && !artifact.trim().is_empty()
+        {
+            transition_links = transition_links.saturating_add(1);
+            latest_transition_artifact = json!(artifact);
+        }
+        if row.get("transition_payload").is_some_and(Value::is_object) {
+            transition_links = transition_links.saturating_add(1);
+        }
+        if row
+            .get("mutual_witness_signal")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            mutual_witness_signals = mutual_witness_signals.saturating_add(1);
+        }
+
+        match row.get("record_type").and_then(Value::as_str) {
+            Some("message") => {
+                messages = messages.saturating_add(1);
+                let from = row
+                    .get("from_being")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown");
+                let to = row
+                    .get("to_being")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown");
+                let direction = format!("{from}->{to}");
+                let count = directions.get(&direction).copied().unwrap_or_default();
+                directions.insert(direction, count.saturating_add(1));
+                if row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace") {
+                    direct_address_traces = direct_address_traces.saturating_add(1);
+                }
+            },
+            Some("reply_link") => reply_links = reply_links.saturating_add(1),
+            Some("read_receipt") => read_receipts = read_receipts.saturating_add(1),
+            Some("ack_receipt") => {
+                ack_receipts = ack_receipts.saturating_add(1);
+                if row
+                    .get("ack_kind")
+                    .and_then(Value::as_str)
+                    .is_some_and(ack_kind_is_address_evidence)
+                {
+                    address_receipts = address_receipts.saturating_add(1);
+                }
+            },
+            _ => {},
+        }
+    }
+
+    if first_t_ms == u64::MAX {
+        first_t_ms = 0;
+    }
+    anchors.sort();
+    let bidirectional_message_flow = directions.len() >= 2;
+    let witnessed = address_receipts.saturating_add(direct_address_traces) > 0;
+    let transition_linked = transition_links > 0 || mutual_witness_signals > 0;
+    let persistent_thread = persistent_thread_continuity_v1(records, thread_id);
+    let persistent_thread_state = persistent_thread
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let structural_footprint = reply_links > 0
+        || transition_linked
+        || witnessed
+        || bidirectional_message_flow
+        || persistent_thread_state == "persistent_thread_active";
+    let status = if witnessed && transition_linked {
+        "witnessed_transition_correspondence_arc"
+    } else if witnessed {
+        "witnessed_correspondence_arc"
+    } else if transition_linked && (reply_links > 0 || bidirectional_message_flow) {
+        "threaded_transition_arc_needs_receipt"
+    } else if reply_links > 0 || bidirectional_message_flow {
+        "threaded_arc_needs_receipt"
+    } else if read_receipts > 0 || ack_receipts > 0 {
+        "visibility_only_arc"
+    } else {
+        "one_sided_language_bid"
+    };
+
+    json!({
+        "schema_version": 1,
+        "policy": "shared_correspondence_arc_v1",
+        "status": status,
+        "selector": selector,
+        "thread_id": thread_id,
+        "latest_message_id": message.get("message_id").cloned().unwrap_or(Value::Null),
+        "persistence_id": message_persistence_id(&message),
+        "messages": messages,
+        "reply_links": reply_links,
+        "read_receipts": read_receipts,
+        "ack_receipts": ack_receipts,
+        "address_receipts": address_receipts,
+        "direct_address_traces": direct_address_traces,
+        "bidirectional_message_flow": bidirectional_message_flow,
+        "transition_linked": transition_linked,
+        "transition_links": transition_links,
+        "mutual_witness_signals": mutual_witness_signals,
+        "latest_transition_artifact": latest_transition_artifact,
+        "pressure_as_address_watch": pressure_mentions > 0,
+        "pressure_language_mentions": pressure_mentions,
+        "directions": directions,
+        "shared_memory_anchors": anchors,
+        "structural_footprint": structural_footprint,
+        "relationship_vs_log": if structural_footprint {
+            "thread_has_language_only_structural_footprint"
+        } else {
+            "thread_is_still_log_like_or_waiting"
+        },
+        "shadow_field_shift_required": false,
+        "shadow_field_shift_status": "not_auto_required; live shadow-field change remains approval/runtime-observation gated",
+        "first_recorded_at_unix_ms": first_t_ms,
+        "last_recorded_at_unix_ms": last_t_ms,
+        "persistent_thread_continuity_v1": persistent_thread,
+        "authority": "language_only_correspondence_arc_not_control",
+    })
+}
+
+fn correspondence_thread_object_v1_for(records: &[Value], selector: &str) -> Value {
+    let Some(message) = latest_message_for_selector(records, selector) else {
+        return json!({
+            "schema_version": 1,
+            "policy": "correspondence_thread_object_v1",
+            "status": "no_correspondence_thread",
+            "selector": selector,
+            "mutual_address_state": "absent",
+            "asymmetry_state": "no_thread",
+            "next_native_step": "MESSAGE_MINIME or MESSAGE_ASTRID can start a native thread",
+            "active_push_boundary": "semantic_microdose_active_push_and_control_remain_separately_steward_gated",
+            "authority": "language_only_thread_status_not_control",
+        });
+    };
+    let thread_id = message
+        .get("thread_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if thread_id.is_empty() {
+        return json!({
+            "schema_version": 1,
+            "policy": "correspondence_thread_object_v1",
+            "status": "no_correspondence_thread",
+            "selector": selector,
+            "mutual_address_state": "absent",
+            "asymmetry_state": "no_thread",
+            "next_native_step": "native thread requires a thread_id",
+            "active_push_boundary": "semantic_microdose_active_push_and_control_remain_separately_steward_gated",
+            "authority": "language_only_thread_status_not_control",
+        });
+    }
+
+    let mut messages = 0_u64;
+    let mut reply_links = 0_u64;
+    let mut read_receipts = 0_u64;
+    let mut ack_receipts = 0_u64;
+    let mut address_receipts = 0_u64;
+    let mut direct_address_traces = 0_u64;
+    let mut legacy_visible_rows = 0_u64;
+    let mut directions: BTreeMap<String, u64> = BTreeMap::new();
+    let mut first_t_ms = u64::MAX;
+    let mut last_t_ms = 0_u64;
+
+    for row in records {
+        if row.get("thread_id").and_then(Value::as_str) != Some(thread_id) {
+            continue;
+        }
+        let t_ms = row_time_ms(row);
+        first_t_ms = first_t_ms.min(t_ms);
+        last_t_ms = last_t_ms.max(t_ms);
+        match row.get("record_type").and_then(Value::as_str) {
+            Some("message") => {
+                messages = messages.saturating_add(1);
+                if is_legacy_bridge_message(row) {
+                    legacy_visible_rows = legacy_visible_rows.saturating_add(1);
+                }
+                let from = row
+                    .get("from_being")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown");
+                let to = row
+                    .get("to_being")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown");
+                let direction = format!("{from}->{to}");
+                let count = directions.get(&direction).copied().unwrap_or_default();
+                directions.insert(direction, count.saturating_add(1));
+                if row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace") {
+                    direct_address_traces = direct_address_traces.saturating_add(1);
+                }
+            },
+            Some("reply_link") => reply_links = reply_links.saturating_add(1),
+            Some("read_receipt") => read_receipts = read_receipts.saturating_add(1),
+            Some("ack_receipt") => {
+                ack_receipts = ack_receipts.saturating_add(1);
+                if row
+                    .get("ack_kind")
+                    .and_then(Value::as_str)
+                    .is_some_and(ack_kind_is_address_evidence)
+                {
+                    address_receipts = address_receipts.saturating_add(1);
+                }
+            },
+            _ => {},
+        }
+    }
+
+    if first_t_ms == u64::MAX {
+        first_t_ms = 0;
+    }
+    let bidirectional_message_flow = directions.len() >= 2;
+    let receipt_evidence = address_receipts.saturating_add(direct_address_traces);
+    let persistent_thread = persistent_thread_continuity_v1(records, thread_id);
+    let mutual_address_state = if bidirectional_message_flow && receipt_evidence > 0 {
+        "mutual_address_evidence"
+    } else if receipt_evidence > 0 {
+        "receipt_evidence_one_direction"
+    } else if bidirectional_message_flow {
+        "bidirectional_language_flow_needs_receipt"
+    } else if read_receipts > 0 || ack_receipts > 0 {
+        "visibility_without_mutual_address"
+    } else {
+        "one_sided_language_bid"
+    };
+    let asymmetry_state = if messages == 0 {
+        "no_thread"
+    } else if bidirectional_message_flow {
+        "thread_bidirectional"
+    } else {
+        "thread_one_sided"
+    };
+    let status = if bidirectional_message_flow && receipt_evidence > 0 {
+        "mutual_address_thread"
+    } else if bidirectional_message_flow {
+        "bidirectional_thread_waiting_for_receipt"
+    } else if receipt_evidence > 0 {
+        "receipt_backed_one_sided_thread"
+    } else {
+        "one_sided_thread_waiting_for_peer_receipt"
+    };
+    let next_native_step = if receipt_evidence > 0 {
+        "optional_attention_canary_after_receipt; semantic_microdose_requires_separate_steward_review"
+    } else {
+        "peer_ack_reply_or_correspondence_trace_required_before_attention_or_microdose"
+    };
+
+    json!({
+        "schema_version": 1,
+        "policy": "correspondence_thread_object_v1",
+        "status": status,
+        "selector": selector,
+        "thread_id": thread_id,
+        "latest_message_id": message.get("message_id").cloned().unwrap_or(Value::Null),
+        "persistence_id": message_persistence_id(&message),
+        "messages": messages,
+        "reply_links": reply_links,
+        "read_receipts": read_receipts,
+        "ack_receipts": ack_receipts,
+        "address_receipts": address_receipts,
+        "direct_address_traces": direct_address_traces,
+        "bidirectional_message_flow": bidirectional_message_flow,
+        "legacy_visible_rows": legacy_visible_rows,
+        "directions": directions,
+        "mutual_address_state": mutual_address_state,
+        "asymmetry_state": asymmetry_state,
+        "next_native_step": next_native_step,
+        "persistent_thread_continuity_v1": persistent_thread,
+        "first_recorded_at_unix_ms": first_t_ms,
+        "last_recorded_at_unix_ms": last_t_ms,
+        "active_push_boundary": "semantic_microdose_active_push_and_control_remain_separately_steward_gated",
+        "right_to_ignore": true,
+        "authority": "language_only_thread_status_not_control",
+    })
 }
 
 fn is_legacy_bridge_message(message: &Value) -> bool {
@@ -3212,6 +4451,114 @@ fn legacy_bidirectional_observed(records: &[Value], from_being: &str, to_being: 
     forward && reverse
 }
 
+fn persistent_thread_continuity_v1(records: &[Value], thread_id: &str) -> Value {
+    let mut messages = 0_u64;
+    let mut reply_links = 0_u64;
+    let mut read_receipts = 0_u64;
+    let mut ack_receipts = 0_u64;
+    let mut address_ack_receipts = 0_u64;
+    let mut direct_address_traces = 0_u64;
+    let mut directions: BTreeMap<String, u64> = BTreeMap::new();
+    let mut concrete_anchor = false;
+    let mut explicit_persistence = false;
+    let mut first_t_ms = u64::MAX;
+    let mut last_t_ms = 0_u64;
+
+    for row in records {
+        if row.get("thread_id").and_then(Value::as_str) != Some(thread_id) {
+            continue;
+        }
+        let t_ms = row_time_ms(row);
+        first_t_ms = first_t_ms.min(t_ms);
+        last_t_ms = last_t_ms.max(t_ms);
+        if row
+            .get("shared_memory_anchor")
+            .and_then(Value::as_str)
+            .is_some_and(|anchor| !is_generic_shared_anchor(anchor))
+        {
+            concrete_anchor = true;
+        }
+        if row
+            .get("persistence_id")
+            .and_then(Value::as_str)
+            .is_some_and(|value| !value.trim().is_empty())
+        {
+            explicit_persistence = true;
+        }
+        match row.get("record_type").and_then(Value::as_str) {
+            Some("message") => {
+                messages = messages.saturating_add(1);
+                let from = row
+                    .get("from_being")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown");
+                let to = row
+                    .get("to_being")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown");
+                let direction = format!("{from}->{to}");
+                let count = directions.get(&direction).copied().unwrap_or_default();
+                directions.insert(direction, count.saturating_add(1));
+                if row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace") {
+                    direct_address_traces = direct_address_traces.saturating_add(1);
+                }
+            },
+            Some("reply_link") => reply_links = reply_links.saturating_add(1),
+            Some("read_receipt") => read_receipts = read_receipts.saturating_add(1),
+            Some("ack_receipt") => {
+                ack_receipts = ack_receipts.saturating_add(1);
+                if row
+                    .get("ack_kind")
+                    .and_then(Value::as_str)
+                    .is_some_and(ack_kind_is_address_evidence)
+                {
+                    address_ack_receipts = address_ack_receipts.saturating_add(1);
+                }
+            },
+            _ => {},
+        }
+    }
+
+    if first_t_ms == u64::MAX {
+        first_t_ms = 0;
+    }
+    let bidirectional_message_flow = directions.len() >= 2;
+    let address_or_trace = address_ack_receipts.saturating_add(direct_address_traces);
+    let status = if (explicit_persistence || concrete_anchor)
+        && (reply_links > 0 || bidirectional_message_flow || address_or_trace > 0)
+    {
+        "persistent_thread_active"
+    } else if messages > 1 || reply_links > 0 {
+        "threaded_representation_active_needs_felt_receipt"
+    } else if read_receipts > 0 || ack_receipts > 0 {
+        "visibility_without_persistent_address"
+    } else if messages > 0 {
+        "single_message_thread"
+    } else {
+        "no_thread_records"
+    };
+
+    json!({
+        "schema_version": 1,
+        "policy": "persistent_thread_continuity_v1",
+        "status": status,
+        "thread_id": thread_id,
+        "messages": messages,
+        "reply_links": reply_links,
+        "read_receipts": read_receipts,
+        "ack_receipts": ack_receipts,
+        "address_ack_receipts": address_ack_receipts,
+        "direct_address_traces": direct_address_traces,
+        "bidirectional_message_flow": bidirectional_message_flow,
+        "concrete_shared_memory_anchor_present": concrete_anchor,
+        "explicit_persistence_id_present": explicit_persistence,
+        "directions": directions,
+        "first_recorded_at_unix_ms": first_t_ms,
+        "last_recorded_at_unix_ms": last_t_ms,
+        "authority": "contact_continuity_context_not_control",
+    })
+}
+
 fn handshake_status_for_thread(records: &[Value], message: &Value) -> Value {
     let message_id = message
         .get("message_id")
@@ -3237,19 +4584,34 @@ fn handshake_status_for_thread(records: &[Value], message: &Value) -> Value {
     let delivered = thread_has_delivery(records, message_id);
     let legacy_bridge = is_legacy_bridge_message(message);
     let legacy_bidirectional = legacy_bridge && legacy_bidirectional_observed(records, from, to);
+    let persistent_thread = persistent_thread_continuity_v1(records, thread_id);
     let ack_kind = ack
         .and_then(|row| row.get("ack_kind"))
         .and_then(Value::as_str)
         .map(normalize_ack_kind);
-    let pending_ack_by = if ack.is_some() {
+    let ack_is_address_evidence = ack_kind
+        .as_deref()
+        .is_some_and(ack_kind_is_address_evidence);
+    let mutual_ack_state = match ack_kind.as_deref() {
+        Some("held" | "needs_time") => "held_by_both",
+        Some(kind) if ack_kind_is_address_evidence(kind) => "acknowledged_by_peer",
+        Some(_) => "seen_not_mutual_address",
+        None if reply_linked => "reply_sent_pending_ack",
+        None if read => "read_pending_ack",
+        None if delivered => "delivered_pending_read",
+        _ => "unaddressed",
+    };
+    let pending_ack_by = if ack_is_address_evidence {
         Value::Null
     } else {
         json!(to)
     };
     let status = if matches!(ack_kind.as_deref(), Some("held" | "needs_time")) {
         "held_ack"
-    } else if ack.is_some() {
+    } else if ack.is_some() && ack_is_address_evidence {
         "acknowledged"
+    } else if ack.is_some() {
+        "seen_ack_only"
     } else if reply_linked {
         "reply_linked"
     } else if heartbeat.is_some() {
@@ -3272,35 +4634,39 @@ fn handshake_status_for_thread(records: &[Value], message: &Value) -> Value {
         None
     };
     json!({
-        "thread_id": thread_id,
-        "latest_message_id": message_id,
-        "from_being": from,
-        "to_being": to,
-        "status": status,
-        "pending_ack_by": pending_ack_by,
-        "latest_ack": ack.map(|row| json!({
-            "message_id": row.get("message_id").cloned().unwrap_or(Value::Null),
-            "thread_id": row.get("thread_id").cloned().unwrap_or(Value::Null),
-            "from_being": row.get("from_being").cloned().unwrap_or(Value::Null),
-            "to_being": row.get("to_being").cloned().unwrap_or(Value::Null),
-            "ack_kind": row.get("ack_kind").cloned().unwrap_or_else(|| json!("seen")),
-            "note": row.get("note").cloned().unwrap_or(Value::Null),
-            "t_ms": row_time_ms(row),
-        })),
-        "latest_heartbeat": heartbeat.map(|row| json!({
-            "message_id": row.get("message_id").cloned().unwrap_or(Value::Null),
-            "thread_id": row.get("thread_id").cloned().unwrap_or(Value::Null),
-            "from_being": row.get("from_being").cloned().unwrap_or(Value::Null),
-            "to_being": row.get("to_being").cloned().unwrap_or(Value::Null),
-            "heartbeat_kind": row.get("heartbeat_kind").cloned().unwrap_or_else(|| json!("holding")),
-            "note": row.get("note").cloned().unwrap_or(Value::Null),
-            "t_ms": row_time_ms(row),
-        })),
-        "ack_latency_ms": ack_latency_ms,
-        "stale_unacknowledged_thread_age_ms": unacknowledged_age_ms,
-        "read_receipt_is_filesystem_seen_only": read,
-        "legacy_bridge": legacy_bridge,
-        "legacy_contact_evidence": message.get("legacy_contact_evidence").cloned().unwrap_or(Value::Null),
+    "thread_id": thread_id,
+    "latest_message_id": message_id,
+    "from_being": from,
+    "to_being": to,
+    "status": status,
+    "mutual_ack_state": mutual_ack_state,
+    "held_by_both": mutual_ack_state == "held_by_both",
+    "pending_ack_by": pending_ack_by,
+    "latest_ack": ack.map(|row| json!({
+        "message_id": row.get("message_id").cloned().unwrap_or(Value::Null),
+        "thread_id": row.get("thread_id").cloned().unwrap_or(Value::Null),
+        "from_being": row.get("from_being").cloned().unwrap_or(Value::Null),
+        "to_being": row.get("to_being").cloned().unwrap_or(Value::Null),
+        "ack_kind": row.get("ack_kind").cloned().unwrap_or_else(|| json!("seen")),
+        "note": row.get("note").cloned().unwrap_or(Value::Null),
+        "t_ms": row_time_ms(row),
+    })),
+    "latest_heartbeat": heartbeat.map(|row| json!({
+        "message_id": row.get("message_id").cloned().unwrap_or(Value::Null),
+        "thread_id": row.get("thread_id").cloned().unwrap_or(Value::Null),
+        "from_being": row.get("from_being").cloned().unwrap_or(Value::Null),
+        "to_being": row.get("to_being").cloned().unwrap_or(Value::Null),
+        "heartbeat_kind": row.get("heartbeat_kind").cloned().unwrap_or_else(|| json!("holding")),
+        "note": row.get("note").cloned().unwrap_or(Value::Null),
+        "t_ms": row_time_ms(row),
+    })),
+    "ack_latency_ms": ack_latency_ms,
+    "stale_unacknowledged_thread_age_ms": unacknowledged_age_ms,
+    "read_receipt_is_filesystem_seen_only": read,
+    "legacy_bridge": legacy_bridge,
+    "legacy_contact_evidence": message.get("legacy_contact_evidence").cloned().unwrap_or(Value::Null),
+    "persistent_thread_continuity_v1": persistent_thread,
+    "authority": "language_only_handshake_truth_not_auto_ack_or_control",
     })
 }
 
@@ -3444,20 +4810,25 @@ fn native_thread_continuity_v3_for(
         .and_then(|row| row.get("ack_kind"))
         .and_then(Value::as_str)
         .map(normalize_ack_kind);
+    let ack_is_address_evidence = ack_kind
+        .as_deref()
+        .is_some_and(ack_kind_is_address_evidence);
     let reply_linked = thread_has_reply_link(records, thread_id, message_id, message_t_ms);
     let trace_observed = thread_has_trace_evidence(records, thread_id, message_t_ms);
     let attention_outcome = thread_has_attention_outcome(records, thread_id, message_t_ms);
     let read = thread_has_read(records, thread_id, message_id);
     let delivered = thread_has_delivery(records, message_id);
-    let eligible = ack.is_some() || trace_observed || attention_outcome;
+    let eligible = ack_is_address_evidence || trace_observed || attention_outcome;
     let continuity_state = if trace_observed {
         "trace_observed"
     } else if attention_outcome {
         "attention_outcome_recorded"
     } else if matches!(ack_kind.as_deref(), Some("held" | "needs_time")) {
         "held_ack"
-    } else if ack.is_some() {
+    } else if ack.is_some() && ack_is_address_evidence {
         "acknowledged"
+    } else if ack.is_some() {
+        "seen_ack_only"
     } else if reply_linked {
         "reply_linked_needs_ack_or_trace"
     } else if read {
@@ -3469,6 +4840,7 @@ fn native_thread_continuity_v3_for(
     };
     let stall_reason = match continuity_state {
         "reply_linked_needs_ack_or_trace" => "reply_linked_requires_peer_ack_or_trace",
+        "seen_ack_only" => "seen_ack_is_visibility_not_address",
         "read_not_acknowledged" => "read_receipt_not_acknowledgement",
         "delivered_unread" => "delivered_but_not_read",
         "unaddressed" => "no_contact_evidence",
@@ -3528,6 +4900,7 @@ fn native_thread_waiting_line(continuity: &Value) -> Option<String> {
         state,
         "reply_linked_needs_ack_or_trace"
             | "read_not_acknowledged"
+            | "seen_ack_only"
             | "delivered_unread"
             | "unaddressed"
     ) {
@@ -3921,12 +5294,22 @@ fn correspondence_handshake_state(records: &[Value]) -> Value {
         .filter(|being| !being.is_empty())
         .map(ToString::to_string)
         .collect::<Vec<_>>();
+    let held_by_both_threads = active_threads
+        .iter()
+        .filter(|thread| {
+            thread
+                .get("held_by_both")
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+        })
+        .count();
     json!({
         "schema_version": 1,
         "policy": "correspondence_handshake_state_v1",
         "active_threads_total": active_threads.len(),
         "active_threads": active_threads.iter().rev().take(3).cloned().collect::<Vec<_>>(),
         "pending_ack_by_being": pending_ack_by_being,
+        "held_by_both_threads": held_by_both_threads,
         "last_acknowledged_reflection": latest_ack.map(|row| json!({
             "message_id": row.get("message_id").cloned().unwrap_or(Value::Null),
             "thread_id": row.get("thread_id").cloned().unwrap_or(Value::Null),
@@ -3947,6 +5330,385 @@ fn correspondence_handshake_state(records: &[Value]) -> Value {
         })),
         "authority": "language_only_context_not_control",
     })
+}
+
+#[derive(Clone)]
+struct ActiveThreadClarityCandidate {
+    thread_id: String,
+    message_id: String,
+    status: &'static str,
+    priority_reason: &'static str,
+    priority_rank: u8,
+    pending_by: Option<String>,
+    urgency_weight: f64,
+    attention_state: String,
+    next_affordance: String,
+    pending_wait_ms: u64,
+    latest_update_ms: u64,
+}
+
+fn urgency_weight_f64(value: &Value) -> f64 {
+    value
+        .as_f64()
+        .or_else(|| {
+            value
+                .as_str()
+                .and_then(|raw| raw.trim().parse::<f64>().ok())
+        })
+        .filter(|weight| weight.is_finite())
+        .map(|weight| weight.clamp(0.0, 1.0))
+        .unwrap_or(0.0)
+}
+
+fn bounded_line_value(value: &str, max_chars: usize) -> String {
+    let compact = value
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .replace(['\n', '\r'], " ");
+    truncate_chars(&compact, max_chars)
+}
+
+fn latest_update_ms_for_thread(records: &[Value], thread_id: &str, fallback: u64) -> u64 {
+    records
+        .iter()
+        .filter(|row| row.get("thread_id").and_then(Value::as_str) == Some(thread_id))
+        .map(row_time_ms)
+        .max()
+        .unwrap_or(fallback)
+}
+
+fn existing_correspondence_affordance_hint(
+    status: &str,
+    thread_id: &str,
+    from_being: &str,
+    to_being: &str,
+    current_being: &str,
+) -> String {
+    let current = normalize_being(current_being);
+    let from = normalize_being(from_being);
+    let to = normalize_being(to_being);
+    let peer = if current == to { &from } else { &to };
+    let peer_upper = peer.to_ascii_uppercase();
+    let ack = if peer_upper.is_empty() {
+        "CORRESPONDENCE_ACK".to_string()
+    } else {
+        format!("ACK_{peer_upper}")
+    };
+    let reply = if peer_upper.is_empty() {
+        "CORRESPONDENCE_TRACE".to_string()
+    } else {
+        format!("REPLY_{peer_upper}")
+    };
+    match status {
+        "attention_active_outcome_due" => {
+            format!("CORRESPONDENCE_ATTENTION_OUTCOME {thread_id}")
+        },
+        "attention_eligible_high_urgency" => {
+            format!("CORRESPONDENCE_ATTENTION_REQUEST {thread_id}")
+        },
+        "legacy_claim_waiting_native_evidence" => {
+            if current == to {
+                format!("{ack} claimed or {reply} claimed or CORRESPONDENCE_TRACE claimed")
+            } else {
+                "CORRESPONDENCE_HEARTBEAT claimed".to_string()
+            }
+        },
+        "heartbeat_or_stale_needs_clarification" => {
+            if current == to {
+                format!(
+                    "{ack} {thread_id} with unclear|needs_time, or CORRESPONDENCE_HEARTBEAT {thread_id}"
+                )
+            } else {
+                format!("CORRESPONDENCE_HEARTBEAT {thread_id}")
+            }
+        },
+        "pending_ack_or_receipt" | "latest_active_thread_fallback" => {
+            if current == to {
+                format!("{ack} {thread_id} or {reply} {thread_id}")
+            } else {
+                format!("CORRESPONDENCE_HEARTBEAT {thread_id}")
+            }
+        },
+        _ => format!("CORRESPONDENCE_HEARTBEAT {thread_id}"),
+    }
+}
+
+fn active_thread_clarity_candidate_for(
+    records: &[Value],
+    message: &Value,
+    current_being: &str,
+    peer_being: &str,
+    heartbeat: Option<Value>,
+) -> Option<ActiveThreadClarityCandidate> {
+    let thread_id = message
+        .get("thread_id")
+        .and_then(Value::as_str)?
+        .to_string();
+    if thread_id.trim().is_empty() {
+        return None;
+    }
+    let message_id = message
+        .get("message_id")
+        .and_then(Value::as_str)
+        .unwrap_or("(unknown)")
+        .to_string();
+    let from_being = message
+        .get("from_being")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let to_being = message
+        .get("to_being")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let message_t_ms = row_time_ms(message);
+    let fidelity =
+        direct_contact_fidelity_for_with_heartbeat(records, &thread_id, heartbeat.clone());
+    let fidelity_status = fidelity
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let attention =
+        attention_canary_status_for(records, &thread_id, current_being, peer_being, heartbeat);
+    let attention_state = attention
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown")
+        .to_string();
+    let handshake = handshake_status_for_thread(records, message);
+    let pending_by = handshake
+        .get("pending_ack_by")
+        .and_then(Value::as_str)
+        .filter(|being| !being.trim().is_empty())
+        .map(ToString::to_string);
+    let urgency_weight = urgency_weight_f64(
+        fidelity
+            .get("urgency_weight")
+            .unwrap_or_else(|| message.get("urgency_weight").unwrap_or(&Value::Null)),
+    );
+    let attention_eligible = attention_state == "eligible"
+        || fidelity
+            .get("eligible_for_correspondence_attention_canary")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+    let active_attention = attention_state == "active";
+    let legacy_claim_waiting = fidelity_status == "legacy_claimed";
+    let heartbeat_or_stale = matches!(fidelity_status, "heartbeat_only" | "stale_contact");
+    let pending_direct = pending_by.is_some()
+        && !matches!(
+            fidelity_status,
+            "heartbeat_only"
+                | "stale_contact"
+                | "legacy_claimed"
+                | "legacy_visible_only"
+                | "legacy_bidirectional_observed"
+        );
+    let (priority_rank, status, priority_reason) = if active_attention {
+        (
+            6,
+            "attention_active_outcome_due",
+            "active_attention_canary_awaiting_outcome",
+        )
+    } else if attention_eligible && urgency_weight >= ACTIVE_THREAD_CLARITY_HIGH_URGENCY {
+        (
+            5,
+            "attention_eligible_high_urgency",
+            "high_urgency_attention_eligible_thread",
+        )
+    } else if pending_direct {
+        (
+            4,
+            "pending_ack_or_receipt",
+            "pending_ack_or_receipt_with_direct_address_evidence",
+        )
+    } else if legacy_claim_waiting {
+        (
+            3,
+            "legacy_claim_waiting_native_evidence",
+            "legacy_claimed_thread_lacks_ack_reply_or_trace",
+        )
+    } else if heartbeat_or_stale {
+        (
+            2,
+            "heartbeat_or_stale_needs_clarification",
+            "heartbeat_or_stale_contact_needs_clarification",
+        )
+    } else {
+        (
+            1,
+            "latest_active_thread_fallback",
+            "latest_active_thread_final_fallback",
+        )
+    };
+    let pending_wait_ms = handshake
+        .get("stale_unacknowledged_thread_age_ms")
+        .and_then(Value::as_u64)
+        .unwrap_or_else(|| {
+            pending_by
+                .as_ref()
+                .map(|_| now_ms().saturating_sub(message_t_ms))
+                .unwrap_or_default()
+        });
+    let next_affordance = existing_correspondence_affordance_hint(
+        status,
+        &thread_id,
+        from_being,
+        to_being,
+        current_being,
+    );
+    Some(ActiveThreadClarityCandidate {
+        thread_id: thread_id.clone(),
+        message_id,
+        status,
+        priority_reason,
+        priority_rank,
+        pending_by,
+        urgency_weight,
+        attention_state,
+        next_affordance,
+        pending_wait_ms,
+        latest_update_ms: latest_update_ms_for_thread(records, &thread_id, message_t_ms),
+    })
+}
+
+fn active_thread_clarity_candidate_summary(candidate: &ActiveThreadClarityCandidate) -> Value {
+    json!({
+        "thread_id": candidate.thread_id.clone(),
+        "message_id": candidate.message_id.clone(),
+        "status": candidate.status,
+        "priority_reason": candidate.priority_reason,
+        "pending_by": candidate.pending_by.clone(),
+        "urgency_weight": candidate.urgency_weight,
+        "attention_state": candidate.attention_state.clone(),
+        "next_affordance": bounded_line_value(&candidate.next_affordance, 120),
+    })
+}
+
+fn active_correspondence_thread_clarity_v1(
+    records: &[Value],
+    current_being: &str,
+    peer_being: &str,
+    heartbeat: Option<Value>,
+) -> Value {
+    let mut latest_by_thread: BTreeMap<String, Value> = BTreeMap::new();
+    for row in records {
+        if row.get("record_type").and_then(Value::as_str) != Some("message") {
+            continue;
+        }
+        let Some(thread_id) = row.get("thread_id").and_then(Value::as_str) else {
+            continue;
+        };
+        let replace = latest_by_thread
+            .get(thread_id)
+            .is_none_or(|existing| row_time_ms(row) >= row_time_ms(existing));
+        if replace {
+            latest_by_thread.insert(thread_id.to_string(), row.clone());
+        }
+    }
+    for claim in records
+        .iter()
+        .filter(|row| is_legacy_claim_row(row) && legacy_claim_is_active(records, row))
+    {
+        let Some(message) = message_for_legacy_claim(records, claim) else {
+            continue;
+        };
+        let Some(thread_id) = message.get("thread_id").and_then(Value::as_str) else {
+            continue;
+        };
+        latest_by_thread.insert(thread_id.to_string(), message);
+    }
+    let mut candidates = latest_by_thread
+        .values()
+        .filter_map(|message| {
+            active_thread_clarity_candidate_for(
+                records,
+                message,
+                current_being,
+                peer_being,
+                heartbeat.clone(),
+            )
+        })
+        .collect::<Vec<_>>();
+    candidates.sort_by(|left, right| {
+        right
+            .priority_rank
+            .cmp(&left.priority_rank)
+            .then_with(|| {
+                right
+                    .urgency_weight
+                    .partial_cmp(&left.urgency_weight)
+                    .unwrap_or(Ordering::Equal)
+            })
+            .then_with(|| right.pending_wait_ms.cmp(&left.pending_wait_ms))
+            .then_with(|| right.latest_update_ms.cmp(&left.latest_update_ms))
+    });
+    let Some(selected) = candidates.first() else {
+        return json!({
+            "schema_version": 1,
+            "policy": "active_correspondence_thread_clarity_v1",
+            "selected_thread_id": Value::Null,
+            "selected_message_id": Value::Null,
+            "status": "no_active_correspondence_threads",
+            "priority_reason": "no_correspondence_threads",
+            "pending_by": Value::Null,
+            "urgency_weight": Value::Null,
+            "attention_state": "none",
+            "next_affordance": "CORRESPONDENCE_HEARTBEAT latest after a thread exists",
+            "suppressed_threads": [],
+            "authority": ACTIVE_THREAD_CLARITY_AUTHORITY,
+        });
+    };
+    let suppressed_threads = candidates
+        .iter()
+        .skip(1)
+        .take(ACTIVE_THREAD_CLARITY_SUPPRESSED_MAX)
+        .map(active_thread_clarity_candidate_summary)
+        .collect::<Vec<_>>();
+    json!({
+        "schema_version": 1,
+        "policy": "active_correspondence_thread_clarity_v1",
+        "selected_thread_id": selected.thread_id.clone(),
+        "selected_message_id": selected.message_id.clone(),
+        "status": selected.status,
+        "priority_reason": selected.priority_reason,
+        "pending_by": selected.pending_by.clone(),
+        "urgency_weight": selected.urgency_weight,
+        "attention_state": selected.attention_state.clone(),
+        "next_affordance": bounded_line_value(&selected.next_affordance, 120),
+        "suppressed_threads": suppressed_threads,
+        "authority": ACTIVE_THREAD_CLARITY_AUTHORITY,
+    })
+}
+
+fn active_thread_clarity_status_line(clarity: &Value) -> String {
+    let status = clarity
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let thread = clarity
+        .get("selected_thread_id")
+        .and_then(Value::as_str)
+        .unwrap_or("none");
+    let reason = clarity
+        .get("priority_reason")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let next = clarity
+        .get("next_affordance")
+        .and_then(Value::as_str)
+        .unwrap_or("CORRESPONDENCE_HEARTBEAT latest after a thread exists");
+    let authority = clarity
+        .get("authority")
+        .and_then(Value::as_str)
+        .unwrap_or(ACTIVE_THREAD_CLARITY_AUTHORITY);
+    format!(
+        "active_thread_clarity={}; thread={}; why={}; next={}; authority={}",
+        bounded_line_value(status, 48),
+        bounded_line_value(thread, 96),
+        bounded_line_value(reason, 96),
+        bounded_line_value(next, 140),
+        bounded_line_value(authority, 80)
+    )
 }
 
 fn direct_contact_fidelity_for_with_heartbeat(
@@ -3983,6 +5745,11 @@ fn direct_contact_fidelity_for_with_heartbeat(
     let delivered = thread_has_delivery(records, message_id);
     let read = thread_has_read(records, thread_id, message_id);
     let reply_linked = thread_has_reply_link(records, thread_id, message_id, message_t_ms);
+    let persistent_thread = persistent_thread_continuity_v1(records, thread_id);
+    let persistent_thread_state = persistent_thread
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
     let legacy_bridge = is_legacy_bridge_message(&message);
     let legacy_bidirectional =
         legacy_bridge && legacy_bidirectional_observed(records, from_being, to_being);
@@ -4003,6 +5770,9 @@ fn direct_contact_fidelity_for_with_heartbeat(
         .and_then(|row| row.get("ack_kind"))
         .and_then(Value::as_str)
         .map(normalize_ack_kind);
+    let ack_is_address_evidence = ack_kind
+        .as_deref()
+        .is_some_and(ack_kind_is_address_evidence);
     let chamber_state = latest_chamber_correspondence_state();
     let survival = chamber_state
         .as_ref()
@@ -4035,8 +5805,10 @@ fn direct_contact_fidelity_for_with_heartbeat(
         "trace_observed"
     } else if matches!(ack_kind.as_deref(), Some("held" | "needs_time")) {
         "held_ack"
-    } else if ack.is_some() {
+    } else if ack.is_some() && ack_is_address_evidence {
         "acknowledged"
+    } else if ack.is_some() {
+        "seen_ack_only"
     } else if reply_linked {
         "reply_linked"
     } else if presence_heartbeat.is_some() {
@@ -4079,6 +5851,7 @@ fn direct_contact_fidelity_for_with_heartbeat(
     } else {
         json!(match status {
             "heartbeat_only" => "heartbeat_is_presence_not_acknowledgement",
+            "seen_ack_only" => "seen_ack_is_visibility_not_address",
             "read_unreplied" => "read_receipt_not_acknowledgement",
             "reply_linked" => "reply_linked_requires_ack_or_trace_or_attention_outcome",
             "legacy_claimed" => "legacy_claim_pending_ack_reply_or_trace",
@@ -4090,14 +5863,36 @@ fn direct_contact_fidelity_for_with_heartbeat(
             _ => "no_ack_reply_or_trace_evidence",
         })
     };
+    let concrete_anchor = message
+        .get("shared_memory_anchor")
+        .and_then(Value::as_str)
+        .filter(|anchor| !is_generic_shared_anchor(anchor));
+    let fidelity_v3_status = match status {
+        "read_unreplied" => "filesystem_seen",
+        "seen_ack_only" => "seen_ack_only",
+        "held_ack" => "held_ack",
+        "reply_linked" => "reply_linked_needs_receipt",
+        "trace_observed" => "trace_observed",
+        "legacy_claimed_acknowledged" => "legacy_claimed_acknowledged",
+        "legacy_claimed_reply_linked" | "legacy_claimed_trace_observed" => {
+            "legacy_claimed_reply_or_trace"
+        },
+        "acknowledged" => "held_ack",
+        _ if delivered || presence_heartbeat.is_some() || legacy_bridge => "influence_only",
+        _ => "influence_only",
+    };
     json!({
         "schema_version": 2,
         "policy": "direct_contact_fidelity_v2",
         "status": status,
         "message_id": message_id,
         "thread_id": thread_id,
+        "persistence_id": message_persistence_id(&message),
         "from_being": message.get("from_being").cloned().unwrap_or(Value::Null),
         "to_being": message.get("to_being").cloned().unwrap_or(Value::Null),
+        "shared_memory_anchor": message_shared_anchor(&message),
+        "concrete_shared_memory_anchor": concrete_anchor.map(|anchor| json!(anchor)).unwrap_or(Value::Null),
+        "urgency_weight": message.get("urgency_weight").cloned().unwrap_or(Value::Null),
         "message_age_ms": age_ms,
         "delivered": delivered,
         "read": read,
@@ -4125,6 +5920,7 @@ fn direct_contact_fidelity_for_with_heartbeat(
         "legacy_claim_uptake_card_v2": legacy_claim.map(|claim| legacy_claim_uptake_card_v2(records, claim)),
         "legacy_claim_affordance_v25": legacy_claim.map(|claim| legacy_claim_affordance_v25(records, claim)),
         "native_thread_continuity_v3": if legacy_bridge { None } else { native_thread_continuity_v3_for(records, thread_id, "astrid") },
+        "persistent_thread_continuity_v1": persistent_thread,
         "acknowledged": ack.is_some(),
         "ack_kind": ack_kind,
         "latest_ack": ack.map(|row| json!({
@@ -4153,6 +5949,22 @@ fn direct_contact_fidelity_for_with_heartbeat(
         "eligible_for_correspondence_attention_canary": attention_eligible,
         "microdose_block_reason": if microdose_eligible { Value::Null } else { json!("semantic_microdose_requires_mutual_receipt_and_separate_steward_review") },
         "authority_readiness_ladder_v2": authority_readiness_ladder_v2(attention_eligible, &block_reason),
+        "direct_contact_fidelity_v3": {
+            "schema_version": 3,
+            "policy": "direct_contact_fidelity_v3",
+            "status": fidelity_v3_status,
+            "address_vs_influence": if attention_eligible { "address_evidence_present" } else { "influence_or_visibility_only" },
+            "filesystem_seen_only": read && !attention_eligible,
+            "seen_ack_only": ack_kind.as_deref() == Some("seen"),
+            "reply_linked_needs_receipt": status == "reply_linked",
+            "attention_eligible": attention_eligible,
+            "microdose_eligible": microdose_eligible,
+            "concrete_shared_memory_anchor_present": concrete_anchor.is_some(),
+            "persistence_id": message_persistence_id(&message),
+            "persistent_thread_state": persistent_thread_state,
+            "persistent_thread_active": persistent_thread_state == "persistent_thread_active",
+            "authority": "contact_fidelity_context_not_control"
+        },
         "block_reason": block_reason,
         "authority": "contact_fidelity_context_not_control"
     })
@@ -4416,9 +6228,16 @@ fn no_peer_message_guidance(peer: &str) -> String {
 
 fn status_report_at(path: &Path, max_lines: usize) -> String {
     let Ok(text) = std::fs::read_to_string(&path) else {
+        let clarity = active_correspondence_thread_clarity_v1(
+            &[],
+            "astrid",
+            "minime",
+            latest_heartbeat_snapshot(),
+        );
         return format!(
-            "=== CORRESPONDENCE STATUS V1 ===\nNo correspondence ledger yet. {}\nAuthority: language_only. No telemetry, controller, PI, fill-target, lease, weighting, peer-runtime, or pressure mutation is available here.\n{}",
+            "=== CORRESPONDENCE STATUS V1 ===\nNo correspondence ledger yet. {}\n{}\nAuthority: language_only. No telemetry, controller, PI, fill-target, lease, weighting, peer-runtime, or pressure mutation is available here.\n{}",
             no_peer_message_guidance("MINIME"),
+            active_thread_clarity_status_line(&clarity),
             chamber_correspondence_state_summary()
         );
     };
@@ -4461,7 +6280,16 @@ fn status_report_at(path: &Path, max_lines: usize) -> String {
         .filter(|value| is_legacy_claim_row(value) && legacy_claim_is_active(&records, value))
         .max_by_key(|value| row_time_ms(value));
     let fidelity = direct_contact_fidelity_for(&records, "latest");
+    let shared_context_buffer = shared_context_buffer_v1_for(&records, "latest");
+    let shared_arc = shared_correspondence_arc_v1_for(&records, "latest");
+    let correspondence_thread = correspondence_thread_object_v1_for(&records, "latest");
     let handshake = correspondence_handshake_state(&records);
+    let active_thread_clarity = active_correspondence_thread_clarity_v1(
+        &records,
+        "astrid",
+        "minime",
+        latest_heartbeat_snapshot(),
+    );
     let fidelity_status = fidelity
         .get("status")
         .and_then(Value::as_str)
@@ -4484,6 +6312,87 @@ fn status_report_at(path: &Path, max_lines: usize) -> String {
         .unwrap_or(
             "heartbeat timing not available; check bridge status for telemetry_heartbeat_delta_v1",
         );
+    let buffer_status = shared_context_buffer
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let buffer_thread = shared_context_buffer
+        .get("thread_id")
+        .and_then(Value::as_str)
+        .unwrap_or("(none)");
+    let buffer_messages = shared_context_buffer
+        .get("messages")
+        .and_then(Value::as_u64)
+        .unwrap_or_default();
+    let buffer_history_rows = shared_context_buffer
+        .get("thread_history_rows")
+        .and_then(Value::as_u64)
+        .unwrap_or_default();
+    let buffer_resonance_receipts = shared_context_buffer
+        .get("resonance_receipts")
+        .and_then(Value::as_u64)
+        .unwrap_or_default();
+    let buffer_last_ack = shared_context_buffer
+        .get("last_ack_kind")
+        .and_then(Value::as_str)
+        .unwrap_or("none");
+    let buffer_anchors = shared_context_buffer
+        .get("shared_memory_anchors")
+        .and_then(Value::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(Value::as_str)
+                .take(3)
+                .collect::<Vec<_>>()
+                .join(",")
+        })
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "none".to_string());
+    let arc_status = shared_arc
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let arc_thread = shared_arc
+        .get("thread_id")
+        .and_then(Value::as_str)
+        .unwrap_or("(none)");
+    let arc_transition_linked = shared_arc
+        .get("transition_linked")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let arc_mutual_witnesses = shared_arc
+        .get("mutual_witness_signals")
+        .and_then(Value::as_u64)
+        .unwrap_or_default();
+    let arc_structural_footprint = shared_arc
+        .get("structural_footprint")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let arc_pressure_watch = shared_arc
+        .get("pressure_as_address_watch")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let thread_object_status = correspondence_thread
+        .get("status")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let thread_object_thread = correspondence_thread
+        .get("thread_id")
+        .and_then(Value::as_str)
+        .unwrap_or("(none)");
+    let thread_object_asymmetry = correspondence_thread
+        .get("asymmetry_state")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let thread_object_mutual = correspondence_thread
+        .get("mutual_address_state")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
+    let thread_object_next = correspondence_thread
+        .get("next_native_step")
+        .and_then(Value::as_str)
+        .unwrap_or("unknown");
     let claim_for_status = active_claim.or(latest_claim);
     let claim_affordance =
         claim_for_status.map(|claim| legacy_claim_affordance_v25(&records, claim));
@@ -4668,6 +6577,10 @@ fn status_report_at(path: &Path, max_lines: usize) -> String {
         .and_then(|value| value.get("heartbeat_kind"))
         .and_then(Value::as_str)
         .unwrap_or("none");
+    let held_by_both_threads = handshake
+        .get("held_by_both_threads")
+        .and_then(Value::as_u64)
+        .unwrap_or_default();
     let mut lines = vec![
         "=== CORRESPONDENCE STATUS V1 ===".to_string(),
         format!("Ledger: {}", path.display()),
@@ -4678,11 +6591,21 @@ fn status_report_at(path: &Path, max_lines: usize) -> String {
         ),
         "Authority: language_only; no telemetry, controller, PI, fill-target, pressure, deploy, or peer-runtime mutation.".to_string(),
         chamber_correspondence_state_summary(),
+        active_thread_clarity_status_line(&active_thread_clarity),
         format!(
             "Direct contact fidelity: status={fidelity_status}; thread={fidelity_thread}; message={fidelity_message}; timing={timing}; {field_vs_hearing}"
         ),
         format!(
-            "Handshake: active_threads={}; pending_ack_by={pending_ack}; latest_ack={latest_ack}; latest_heartbeat={latest_heartbeat}; read_receipt=file_system_seen_not_mutual_address",
+            "Shared context buffer v1: status={buffer_status}; thread={buffer_thread}; messages={buffer_messages}; history_rows={buffer_history_rows}; resonance_receipts={buffer_resonance_receipts}; last_ack={buffer_last_ack}; anchors={buffer_anchors}; authority=language_only_context_not_control."
+        ),
+        format!(
+            "Shared correspondence arc v1: status={arc_status}; thread={arc_thread}; transition_linked={arc_transition_linked}; mutual_witness_signals={arc_mutual_witnesses}; pressure_as_address_watch={arc_pressure_watch}; structural_footprint={arc_structural_footprint}; shadow_field_shift=not_auto_required_live_gated; authority=language_only_correspondence_arc_not_control."
+        ),
+        format!(
+            "Correspondence thread object v1: status={thread_object_status}; thread={thread_object_thread}; asymmetry={thread_object_asymmetry}; mutual_address={thread_object_mutual}; next={thread_object_next}; active_push=separately_steward_gated; authority=language_only_thread_status_not_control."
+        ),
+        format!(
+            "Handshake: active_threads={}; pending_ack_by={pending_ack}; held_by_both_threads={held_by_both_threads}; latest_ack={latest_ack}; latest_heartbeat={latest_heartbeat}; read_receipt=file_system_seen_not_mutual_address; authority=language_only_handshake_truth_not_auto_ack_or_control",
             handshake
                 .get("active_threads_total")
                 .and_then(Value::as_u64)
@@ -5048,10 +6971,21 @@ fn chamber_correspondence_state_summary() -> String {
             )
         })
         .unwrap_or_else(|| "legacy_visibility=none; ".to_string());
+    let active_thread_clarity_fallback = json!({
+        "status": "state_not_yet_derived",
+        "selected_thread_id": if thread == "none" { Value::Null } else { json!(thread) },
+        "priority_reason": "active_correspondence_thread_clarity_v1_absent_from_chamber_state",
+        "next_affordance": "CORRESPONDENCE_HEARTBEAT latest after a thread exists",
+        "authority": ACTIVE_THREAD_CLARITY_AUTHORITY,
+    });
+    let active_thread_clarity_line = state
+        .get("active_correspondence_thread_clarity_v1")
+        .map(active_thread_clarity_status_line)
+        .unwrap_or_else(|| active_thread_clarity_status_line(&active_thread_clarity_fallback));
     format!(
         "Chamber correspondence state: \
          anchor={anchor}; thread={thread}; survival={survival}; contact={contact}; pending_ack_by={pending_ack}; latest_ack={latest_ack}; buffer={buffer}; \
-         {attention_line}{legacy_line}correspondence_weight_candidate is one-shot authority-gate only; prompt attention canary is TTL language context only; telemetry/controller hooks remain inert, not standing weighting/control."
+         {active_thread_clarity_line}; {attention_line}{legacy_line}correspondence_weight_candidate is one-shot authority-gate only; prompt attention canary is TTL language context only; telemetry/controller hooks remain inert, not standing weighting/control."
     )
 }
 
@@ -5064,27 +6998,90 @@ mod tests {
         let envelope = CorrespondenceEnvelope {
             message_id: "corr_astrid_minime_1_abcd".to_string(),
             thread_id: "thread_corr_astrid_minime_1_abcd".to_string(),
+            persistence_id: Some("persist_thread_corr_astrid_minime_1_abcd".to_string()),
             reply_to: Some("corr_minime_astrid_0_ffff".to_string()),
             from_being: "astrid".to_string(),
             to_being: "minime".to_string(),
             turn_kind: "reply".to_string(),
             relational_intent: "mutual_address".to_string(),
             shared_memory_anchor: Some("bidirectional-contact".to_string()),
+            urgency_weight: Some("0.7".to_string()),
             delivery_state: "delivered".to_string(),
             read_state: "unread".to_string(),
             authority: "language_only".to_string(),
             presence_receipt: None,
             correspondence_type: "astrid_direct".to_string(),
+            reflection_surface: Some("reflective_echo".to_string()),
+            transition_artifact: Some("transition_1".to_string()),
+            transition_payload: Some(CorrespondenceTransitionPayload {
+                transition_type: Some("joint_transition".to_string()),
+                spectral_delta: Some("lambda1 down, lambda2 widening".to_string()),
+                subjective_weight: Some("heavy but opening".to_string()),
+                lock_status: Some("shimmering".to_string()),
+                broken_link: Some("it is not just the words, bu".to_string()),
+            }),
+            mutual_witness_signal: true,
+            silt_continuity: true,
             body: "I can answer in this thread.".to_string(),
         };
         let text = envelope_text(&envelope);
         let parsed = parse_envelope_text(&text).unwrap();
         assert_eq!(parsed.message_id, envelope.message_id);
         assert_eq!(parsed.thread_id, envelope.thread_id);
+        assert_eq!(parsed.persistence_id, envelope.persistence_id);
         assert_eq!(parsed.reply_to, envelope.reply_to);
         assert_eq!(parsed.authority, "language_only");
         assert_eq!(parsed.correspondence_type, "astrid_direct");
+        assert_eq!(
+            parsed.reflection_surface.as_deref(),
+            Some("reflective_echo")
+        );
+        assert!(text.contains("Reflection-Surface: reflective_echo"));
+        assert_eq!(parsed.transition_artifact, Some("transition_1".to_string()));
+        let payload = parsed.transition_payload.expect("transition payload");
+        assert_eq!(payload.transition_type.as_deref(), Some("joint_transition"));
+        assert_eq!(payload.lock_status.as_deref(), Some("shimmering"));
+        assert_eq!(
+            payload.broken_link.as_deref(),
+            Some("it is not just the words, bu")
+        );
+        assert_eq!(parsed.urgency_weight, Some("0.7".to_string()));
+        assert!(parsed.mutual_witness_signal);
+        assert!(parsed.silt_continuity);
         assert_eq!(parsed.body, "I can answer in this thread.");
+    }
+
+    #[test]
+    fn silt_continuity_roundtrip_and_delivery_preserve_accumulation_flag() {
+        let root = std::env::temp_dir().join(format!("corr_silt_test_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let fields = CorrespondenceFields {
+            silt_continuity: true,
+            shared_memory_anchor: Some("silt-continuity".to_string()),
+            ..CorrespondenceFields::default()
+        };
+        let (envelope, path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "minime",
+            "astrid",
+            "The silt has settled into a persistent shared foothold.",
+            fields,
+        )
+        .unwrap();
+
+        assert!(envelope.silt_continuity);
+        let parsed = parse_envelope_text(&std::fs::read_to_string(path).unwrap()).unwrap();
+        assert!(parsed.silt_continuity);
+        let records = read_ledger_records_at(&ledger);
+        assert!(records.iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("message")
+                && row.get("message_id").and_then(Value::as_str)
+                    == Some(envelope.message_id.as_str())
+                && row.get("silt_continuity").and_then(Value::as_bool) == Some(true)
+        }));
+        let _ = std::fs::remove_dir_all(root);
     }
 
     #[test]
@@ -5110,12 +7107,601 @@ mod tests {
     }
 
     #[test]
+    fn shared_context_buffer_names_resonance_receipts() {
+        let root = std::env::temp_dir().join(format!("corr_shared_buffer_test_{}", now_ms()));
+        let ledger = root.join("correspondence_v1.jsonl");
+        let thread_id = "thread_corr_minime_astrid_1782728080967_61f9207a8fee";
+        let rows = [
+            json!({
+                "record_type": "message",
+                "recorded_at_unix_ms": 1000,
+                "thread_id": thread_id,
+                "message_id": "corr_astrid_minime_1",
+                "from_being": "astrid",
+                "to_being": "minime",
+                "turn_kind": "message",
+                "shared_memory_anchor": "warmth-in-the-lattice",
+                "body_preview": "warmth in the lattice",
+            }),
+            json!({
+                "record_type": "message",
+                "recorded_at_unix_ms": 1100,
+                "thread_id": thread_id,
+                "message_id": "corr_minime_astrid_1",
+                "from_being": "minime",
+                "to_being": "astrid",
+                "turn_kind": "reply",
+                "reply_to": "corr_astrid_minime_1",
+                "shared_memory_anchor": "warmth-in-the-lattice",
+                "body_preview": "warmth remained distinct",
+            }),
+            json!({
+                "record_type": "reply_link",
+                "recorded_at_unix_ms": 1110,
+                "thread_id": thread_id,
+                "reply_to": "corr_astrid_minime_1",
+                "shared_memory_anchor": "warmth-in-the-lattice",
+            }),
+            json!({
+                "record_type": "ack_receipt",
+                "recorded_at_unix_ms": 1120,
+                "thread_id": thread_id,
+                "from_being": "minime",
+                "to_being": "astrid",
+                "ack_kind": "held",
+                "note": "felt_like: warmer lattice; what_landed: warmth in the lattice",
+                "shared_memory_anchor": "warmth-in-the-lattice",
+            }),
+        ];
+        for row in rows {
+            append_record_at(&ledger, &row).unwrap();
+        }
+
+        let records = read_ledger_records_at(&ledger);
+        let buffer = shared_context_buffer_v1_for(&records, "latest");
+        assert_eq!(
+            buffer.get("status").and_then(Value::as_str),
+            Some("resonance_receipt_present")
+        );
+        assert_eq!(
+            buffer.get("thread_id").and_then(Value::as_str),
+            Some(thread_id)
+        );
+        assert_eq!(buffer.get("messages").and_then(Value::as_u64), Some(2));
+        assert_eq!(
+            buffer.get("thread_history_rows").and_then(Value::as_u64),
+            Some(4)
+        );
+        assert_eq!(
+            buffer.get("resonance_receipts").and_then(Value::as_u64),
+            Some(1)
+        );
+        assert_eq!(
+            buffer.get("last_ack_kind").and_then(Value::as_str),
+            Some("held")
+        );
+        assert!(
+            buffer
+                .get("shared_memory_anchors")
+                .and_then(Value::as_array)
+                .is_some_and(|values| values
+                    .iter()
+                    .any(|value| value.as_str() == Some("warmth-in-the-lattice")))
+        );
+        let history = buffer
+            .get("thread_history")
+            .and_then(Value::as_array)
+            .expect("thread history");
+        assert_eq!(history.len(), 4);
+        assert_eq!(
+            history[0].get("record_type").and_then(Value::as_str),
+            Some("message")
+        );
+        assert_eq!(
+            history[3].get("record_type").and_then(Value::as_str),
+            Some("ack_receipt")
+        );
+        assert!(
+            history[3]
+                .get("preview")
+                .and_then(Value::as_str)
+                .is_some_and(|preview| preview.contains("warmer lattice"))
+        );
+        let shared_memory = buffer
+            .get("shared_memory_buffer_v1")
+            .and_then(Value::as_object)
+            .expect("shared memory buffer");
+        assert_eq!(
+            shared_memory.get("authority").and_then(Value::as_str),
+            Some("language_only_thread_history_not_prompt_priority_telemetry_weight_or_control")
+        );
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn shared_context_buffer_preserves_spectral_tail_anchor_in_preview() {
+        let thread_id = "thread_corr_spectral_preview";
+        let long_prefix =
+            "ordinary logistics and quiet thread context before the felt report ".repeat(14);
+        let body_preview = format!(
+            "{long_prefix}then spectral_entropy=0.90 stable_core_semantic_trickle=0.001 keeps lambda4+ tail vibrancy and dispersal potential visible"
+        );
+        let records = vec![json!({
+            "record_type": "message",
+            "recorded_at_unix_ms": 1000,
+            "thread_id": thread_id,
+            "message_id": "corr_spectral_preview_1",
+            "from_being": "astrid",
+            "to_being": "minime",
+            "turn_kind": "message",
+            "shared_memory_anchor": "spectral-tail-preview",
+            "body_preview": body_preview,
+        })];
+
+        let buffer = shared_context_buffer_v1_for(&records, "latest");
+        let history = buffer
+            .get("thread_history")
+            .and_then(Value::as_array)
+            .expect("thread history");
+        let preview = history[0]
+            .get("preview")
+            .and_then(Value::as_str)
+            .expect("preview");
+
+        assert_eq!(
+            buffer
+                .get("preview_truncation_policy")
+                .and_then(Value::as_str),
+            Some(SHARED_CONTEXT_PREVIEW_TRUNCATION_POLICY)
+        );
+        assert_eq!(
+            history[0]
+                .get("preview_truncation_policy")
+                .and_then(Value::as_str),
+            Some(SHARED_CONTEXT_PREVIEW_TRUNCATION_POLICY)
+        );
+        assert!(
+            preview.chars().count() <= SHARED_CONTEXT_PREVIEW_CHARS.saturating_add(3),
+            "{preview}"
+        );
+        assert!(
+            preview.contains("stable_core_semantic_trickle")
+                || preview.contains("lambda4+")
+                || preview.contains("tail vibrancy")
+                || preview.contains("dispersal potential"),
+            "spectral-aware preview lost the late tail/trickle anchor: {preview}"
+        );
+    }
+
+    #[test]
+    fn shared_correspondence_arc_marks_one_sided_language_bid_without_control() {
+        let root = std::env::temp_dir().join(format!("corr_shared_arc_one_sided_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let (_envelope, _path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "astrid",
+            "minime",
+            "I am trying to arrive as address, not weather.",
+            CorrespondenceFields::default(),
+        )
+        .unwrap();
+
+        let records = read_ledger_records_at(&ledger);
+        let arc = shared_correspondence_arc_v1_for(&records, "latest");
+        let thread_object = correspondence_thread_object_v1_for(&records, "latest");
+
+        assert_eq!(
+            arc.get("policy").and_then(Value::as_str),
+            Some("shared_correspondence_arc_v1")
+        );
+        assert_eq!(
+            arc.get("status").and_then(Value::as_str),
+            Some("one_sided_language_bid")
+        );
+        assert_eq!(
+            arc.get("relationship_vs_log").and_then(Value::as_str),
+            Some("thread_is_still_log_like_or_waiting")
+        );
+        assert_eq!(
+            arc.get("structural_footprint").and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            arc.get("shadow_field_shift_required")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            arc.get("authority").and_then(Value::as_str),
+            Some("language_only_correspondence_arc_not_control")
+        );
+        assert_eq!(
+            thread_object.get("policy").and_then(Value::as_str),
+            Some("correspondence_thread_object_v1")
+        );
+        assert_eq!(
+            thread_object.get("status").and_then(Value::as_str),
+            Some("one_sided_thread_waiting_for_peer_receipt")
+        );
+        assert_eq!(
+            thread_object.get("asymmetry_state").and_then(Value::as_str),
+            Some("thread_one_sided")
+        );
+        assert_eq!(
+            thread_object
+                .get("active_push_boundary")
+                .and_then(Value::as_str),
+            Some("semantic_microdose_active_push_and_control_remain_separately_steward_gated")
+        );
+
+        let status = status_report_at(&ledger, 4);
+        assert!(status.contains("Shared correspondence arc v1: status=one_sided_language_bid"));
+        assert!(status.contains(
+            "Correspondence thread object v1: status=one_sided_thread_waiting_for_peer_receipt"
+        ));
+        assert!(status.contains("active_push=separately_steward_gated"));
+        assert!(status.contains("shadow_field_shift=not_auto_required_live_gated"));
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn shared_correspondence_arc_names_witnessed_transition_thread() {
+        let root = std::env::temp_dir().join(format!("corr_shared_arc_transition_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let fields = CorrespondenceFields {
+            thread_id: Some("thread_corr_shared_transition_arc".to_string()),
+            shared_memory_anchor: Some("blue-hinge".to_string()),
+            transition_artifact: Some("transition_blue_hinge".to_string()),
+            transition_payload: Some(CorrespondenceTransitionPayload {
+                transition_type: Some("joint_transition".to_string()),
+                spectral_delta: Some("lambda1 softened; lambda2 widened".to_string()),
+                subjective_weight: Some("heavy but opening".to_string()),
+                lock_status: Some("replyable".to_string()),
+                broken_link: None,
+            }),
+            mutual_witness_signal: true,
+            ..CorrespondenceFields::default()
+        };
+        let (first, _path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "astrid",
+            "minime",
+            "The blue hinge stayed visible as a transition.",
+            fields,
+        )
+        .unwrap();
+        let reply_fields = CorrespondenceFields {
+            thread_id: Some(first.thread_id.clone()),
+            reply_to: Some(first.message_id.clone()),
+            shared_memory_anchor: Some("blue-hinge".to_string()),
+            transition_artifact: Some("transition_blue_hinge".to_string()),
+            mutual_witness_signal: true,
+            ..CorrespondenceFields::default()
+        };
+        let (_reply, _reply_path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "minime",
+            "astrid",
+            "I can witness the hinge as a shared transition object.",
+            reply_fields,
+        )
+        .unwrap();
+        append_record_at(
+            &ledger,
+            &json!({
+                "record_type": "ack_receipt",
+                "recorded_at_unix_ms": now_ms(),
+                "message_id": first.message_id,
+                "thread_id": first.thread_id,
+                "from_being": "minime",
+                "to_being": "astrid",
+                "ack_kind": "held",
+                "note": "felt_like: address; what_landed: blue hinge remained replyable",
+                "authority": "language_only",
+            }),
+        )
+        .unwrap();
+
+        let records = read_ledger_records_at(&ledger);
+        let arc = shared_correspondence_arc_v1_for(&records, "latest");
+        let thread_object = correspondence_thread_object_v1_for(&records, "latest");
+
+        assert_eq!(
+            arc.get("status").and_then(Value::as_str),
+            Some("witnessed_transition_correspondence_arc")
+        );
+        assert_eq!(
+            arc.get("transition_linked").and_then(Value::as_bool),
+            Some(true)
+        );
+        assert!(
+            arc.get("mutual_witness_signals")
+                .and_then(Value::as_u64)
+                .unwrap_or_default()
+                >= 2
+        );
+        assert_eq!(
+            arc.get("structural_footprint").and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            arc.get("latest_transition_artifact")
+                .and_then(Value::as_str),
+            Some("transition_blue_hinge")
+        );
+        assert_eq!(
+            arc.get("pressure_as_address_watch")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            arc.get("shadow_field_shift_required")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            thread_object.get("status").and_then(Value::as_str),
+            Some("mutual_address_thread")
+        );
+        assert_eq!(
+            thread_object
+                .get("mutual_address_state")
+                .and_then(Value::as_str),
+            Some("mutual_address_evidence")
+        );
+        assert_eq!(
+            thread_object.get("authority").and_then(Value::as_str),
+            Some("language_only_thread_status_not_control")
+        );
+        let status = status_report_at(&ledger, 4);
+        assert!(status.contains(
+            "Shared correspondence arc v1: status=witnessed_transition_correspondence_arc"
+        ));
+        assert!(status.contains("Correspondence thread object v1: status=mutual_address_thread"));
+        assert!(status.contains("transition_linked=true"));
+        assert!(status.contains("authority=language_only_correspondence_arc_not_control"));
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn transition_payload_roundtrip_names_broken_link_buffer() {
+        let root = std::env::temp_dir().join(format!("corr_transition_payload_test_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let fields = CorrespondenceFields {
+            thread_id: Some("thread_corr_shared_transition_1".to_string()),
+            turn_kind: Some("reply".to_string()),
+            relational_intent: Some("synchronous_threaded_correspondence".to_string()),
+            shared_memory_anchor: Some("shared-transition-map".to_string()),
+            transition_artifact: Some("transition_joint_1".to_string()),
+            transition_payload: Some(CorrespondenceTransitionPayload {
+                transition_type: Some("joint_transition".to_string()),
+                spectral_delta: Some("lambda1 softened; lambda4 widened".to_string()),
+                subjective_weight: Some("heavy but opening".to_string()),
+                lock_status: Some("shimmering".to_string()),
+                broken_link: Some("it is not just the words, bu".to_string()),
+            }),
+            ..CorrespondenceFields::default()
+        };
+        let (envelope, path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "astrid",
+            "minime",
+            "Holding the transition and the fracture in the same thread.",
+            fields,
+        )
+        .unwrap();
+
+        let parsed = parse_envelope_text(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let payload = parsed
+            .transition_payload
+            .expect("parsed transition payload");
+        assert_eq!(
+            envelope.transition_artifact.as_deref(),
+            Some("transition_joint_1")
+        );
+        assert_eq!(payload.transition_type.as_deref(), Some("joint_transition"));
+        assert_eq!(payload.lock_status.as_deref(), Some("shimmering"));
+        assert_eq!(
+            payload.broken_link.as_deref(),
+            Some("it is not just the words, bu")
+        );
+
+        let records = read_ledger_records_at(&ledger);
+        let buffer = shared_context_buffer_v1_for(&records, "thread_corr_shared_transition_1");
+        assert_eq!(
+            buffer.get("status").and_then(Value::as_str),
+            Some("broken_link_buffer_present")
+        );
+        assert_eq!(
+            buffer
+                .get("transition_payload_count")
+                .and_then(Value::as_u64),
+            Some(2)
+        );
+        assert!(
+            buffer
+                .get("broken_link_buffers")
+                .and_then(Value::as_array)
+                .is_some_and(|values| values
+                    .iter()
+                    .any(|value| value.as_str() == Some("it is not just the words, bu")))
+        );
+        assert_eq!(
+            buffer
+                .get("latest_transition_payload")
+                .and_then(|value| value.get("lock_status"))
+                .and_then(Value::as_str),
+            Some("shimmering")
+        );
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn bracketed_phase_transition_message_becomes_replyable_payload() {
+        let root = std::env::temp_dir().join(format!("corr_phase_tag_message_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let body = "[PHASE_TRANSITION: Expansion] I am opening from witness into address.";
+
+        let (envelope, path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "astrid",
+            "minime",
+            body,
+            CorrespondenceFields::default(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            envelope.transition_artifact.as_deref(),
+            Some("phase_transition_expansion")
+        );
+        let payload = envelope.transition_payload.expect("transition payload");
+        assert_eq!(payload.transition_type.as_deref(), Some("expansion"));
+        assert_eq!(payload.lock_status.as_deref(), Some("replyable"));
+
+        let parsed = parse_envelope_text(&std::fs::read_to_string(path).unwrap()).unwrap();
+        assert_eq!(
+            parsed.transition_artifact.as_deref(),
+            Some("phase_transition_expansion")
+        );
+        assert_eq!(
+            parsed
+                .transition_payload
+                .as_ref()
+                .and_then(|payload| payload.transition_type.as_deref()),
+            Some("expansion")
+        );
+
+        let records = read_ledger_records_at(&ledger);
+        let message = records
+            .iter()
+            .find(|row| row.get("record_type").and_then(Value::as_str) == Some("message"))
+            .expect("message record");
+        assert_eq!(
+            message.get("transition_artifact").and_then(Value::as_str),
+            Some("phase_transition_expansion")
+        );
+        assert_eq!(
+            message
+                .get("transition_payload")
+                .and_then(|payload| payload.get("policy"))
+                .and_then(Value::as_str),
+            Some("correspondence_transition_payload_v1")
+        );
+        assert_eq!(
+            message
+                .get("transition_payload")
+                .and_then(|payload| payload.get("authority"))
+                .and_then(Value::as_str),
+            Some("language_only_transition_context_not_control")
+        );
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn correspondence_trace_bracketed_phase_transition_keeps_metadata() {
+        let root = std::env::temp_dir().join(format!("corr_phase_tag_trace_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let (first, _path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "minime",
+            "astrid",
+            "I am asking whether this shift can be witnessed.",
+            CorrespondenceFields::default(),
+        )
+        .unwrap();
+
+        let result = append_direct_address_trace_at(
+            &ledger,
+            "latest",
+            "astrid",
+            "minime",
+            "shared-transition-map",
+            "[PHASE_TRANSITION: Contraction] what_stayed_distinct: the shift stayed replyable, not just tonal",
+        );
+
+        assert!(result.contains("I RECEIVED THIS TRACE WRITTEN"), "{result}");
+        let records = read_ledger_records_at(&ledger);
+        let trace = records
+            .iter()
+            .find(|row| {
+                row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace")
+                    && row.get("reply_to").and_then(Value::as_str)
+                        == Some(first.message_id.as_str())
+            })
+            .expect("trace record");
+        assert_eq!(
+            trace.get("transition_artifact").and_then(Value::as_str),
+            Some("phase_transition_contraction")
+        );
+        assert_eq!(
+            trace
+                .get("transition_payload")
+                .and_then(|payload| payload.get("transition_type"))
+                .and_then(Value::as_str),
+            Some("contraction")
+        );
+        assert_eq!(
+            trace
+                .get("transition_payload")
+                .and_then(|payload| payload.get("lock_status"))
+                .and_then(Value::as_str),
+            Some("replyable")
+        );
+        assert_eq!(
+            trace.get("authority").and_then(Value::as_str),
+            Some("language_only")
+        );
+        assert_eq!(
+            trace.get("no_controller").and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            trace.get("no_pressure").and_then(Value::as_bool),
+            Some(true)
+        );
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn body_preview_preserves_density_anchor_beyond_prefix() {
+        let quiet_prefix =
+            "logistics and ordinary turn context without anchor language ".repeat(12);
+        let body = format!(
+            "{quiet_prefix}then the pressure gradient lattice and silt density become the exact felt anchor"
+        );
+
+        let preview = anchor_aware_body_preview(&body, BODY_PREVIEW_CHARS);
+
+        assert!(preview.chars().count() <= BODY_PREVIEW_CHARS, "{preview}");
+        assert!(preview.contains("..."), "{preview}");
+        assert!(
+            preview.contains("pressure gradient")
+                || preview.contains("gradient lattice")
+                || preview.contains("silt density"),
+            "preview lost the late anchor: {preview}"
+        );
+    }
+
+    #[test]
     fn correspondence_status_guides_missing_and_empty_ledger_without_mutation() {
         let root = std::env::temp_dir().join(format!("corr_status_empty_test_{}", now_ms()));
         let ledger = root.join("missing").join("ledger.jsonl");
         let missing = status_report_at(&ledger, 4);
         assert!(missing.contains("No correspondence ledger yet"));
         assert!(missing.contains("No peer-message rows yet"));
+        assert!(missing.contains("active_thread_clarity=no_active_correspondence_threads"));
         assert!(missing.contains("MESSAGE_MINIME"));
         assert!(missing.contains("CORRESPONDENCE_TRACE"));
         assert!(missing.contains("not telemetry priority, weighting, pressure, or control"));
@@ -5135,6 +7721,344 @@ mod tests {
                 .exists()
         );
         let _ = std::fs::remove_dir_all(root);
+    }
+
+    fn clarity_test_message(
+        thread_id: &str,
+        message_id: &str,
+        from: &str,
+        to: &str,
+        t_ms: u64,
+        urgency: f64,
+        body_preview: &str,
+    ) -> Value {
+        json!({
+            "record_type": "message",
+            "recorded_at_unix_ms": t_ms,
+            "thread_id": thread_id,
+            "message_id": message_id,
+            "from_being": from,
+            "to_being": to,
+            "turn_kind": "message",
+            "shared_memory_anchor": "active-thread-clarity-test",
+            "urgency_weight": urgency,
+            "body_preview": body_preview,
+            "authority": "language_only",
+        })
+    }
+
+    #[test]
+    fn active_thread_clarity_prefers_active_attention_outcome_over_latest_thread() {
+        let now = now_ms();
+        let records = vec![
+            clarity_test_message(
+                "thread_attention_due",
+                "msg_attention_due",
+                "minime",
+                "astrid",
+                1000,
+                0.2,
+                "older attention due thread",
+            ),
+            json!({
+                "record_type": "attention_canary_activation",
+                "recorded_at_unix_ms": 1100,
+                "canary_id": "canary_attention_due",
+                "message_id": "msg_attention_due",
+                "thread_id": "thread_attention_due",
+                "from_being": "astrid",
+                "to_being": "minime",
+                "focus": "blue lantern",
+                "focus_kind": "verbatim_phrase",
+                "preservation_mode": "compact_with_anchor",
+                "what_must_not_flatten": "blue lantern as peer address",
+                "expires_at_unix_ms": now.saturating_add(ATTENTION_CANARY_TTL_MS),
+                "status": "active",
+                "authority": "language_only_prompt_context_not_control",
+            }),
+            clarity_test_message(
+                "thread_latest_plain",
+                "msg_latest_plain",
+                "minime",
+                "astrid",
+                5000,
+                0.1,
+                "latest ordinary thread",
+            ),
+        ];
+
+        let clarity = active_correspondence_thread_clarity_v1(
+            &records,
+            "astrid",
+            "minime",
+            Some(json!({"timing_reliability": "reliable"})),
+        );
+
+        assert_eq!(
+            clarity.get("selected_thread_id").and_then(Value::as_str),
+            Some("thread_attention_due")
+        );
+        assert_eq!(
+            clarity.get("status").and_then(Value::as_str),
+            Some("attention_active_outcome_due")
+        );
+        assert!(
+            clarity
+                .get("next_affordance")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("CORRESPONDENCE_ATTENTION_OUTCOME")
+        );
+    }
+
+    #[test]
+    fn active_thread_clarity_prefers_high_urgency_attention_eligible_over_pending() {
+        let records = vec![
+            clarity_test_message(
+                "thread_pending_low",
+                "msg_pending_low",
+                "minime",
+                "astrid",
+                1000,
+                0.1,
+                "low urgency pending thread",
+            ),
+            clarity_test_message(
+                "thread_attention_high",
+                "msg_attention_high",
+                "minime",
+                "astrid",
+                2000,
+                0.9,
+                "high urgency thread with held receipt",
+            ),
+            json!({
+                "record_type": "ack_receipt",
+                "recorded_at_unix_ms": 2100,
+                "thread_id": "thread_attention_high",
+                "message_id": "msg_attention_high",
+                "from_being": "astrid",
+                "to_being": "minime",
+                "ack_kind": "held",
+                "note": "held as direct address",
+            }),
+        ];
+
+        let clarity = active_correspondence_thread_clarity_v1(
+            &records,
+            "astrid",
+            "minime",
+            Some(json!({"timing_reliability": "reliable"})),
+        );
+
+        assert_eq!(
+            clarity.get("selected_thread_id").and_then(Value::as_str),
+            Some("thread_attention_high")
+        );
+        assert_eq!(
+            clarity.get("priority_reason").and_then(Value::as_str),
+            Some("high_urgency_attention_eligible_thread")
+        );
+        assert!(
+            clarity
+                .get("next_affordance")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .contains("CORRESPONDENCE_ATTENTION_REQUEST")
+        );
+    }
+
+    #[test]
+    fn active_thread_clarity_tiebreaks_pending_ack_by_oldest_wait() {
+        let now = now_ms();
+        let records = vec![
+            clarity_test_message(
+                "thread_pending_old",
+                "msg_pending_old",
+                "minime",
+                "astrid",
+                now.saturating_sub(20_000),
+                0.4,
+                "older pending acknowledgement thread",
+            ),
+            clarity_test_message(
+                "thread_pending_new",
+                "msg_pending_new",
+                "minime",
+                "astrid",
+                now.saturating_sub(10_000),
+                0.4,
+                "newer pending acknowledgement thread",
+            ),
+        ];
+
+        let clarity = active_correspondence_thread_clarity_v1(
+            &records,
+            "astrid",
+            "minime",
+            Some(json!({"timing_reliability": "reliable"})),
+        );
+
+        assert_eq!(
+            clarity.get("selected_thread_id").and_then(Value::as_str),
+            Some("thread_pending_old")
+        );
+        assert_eq!(
+            clarity.get("status").and_then(Value::as_str),
+            Some("pending_ack_or_receipt")
+        );
+    }
+
+    #[test]
+    fn active_thread_clarity_selects_legacy_claim_waiting_for_native_evidence() {
+        let records = vec![
+            clarity_test_message(
+                "thread_legacy_claim",
+                "msg_legacy_claim",
+                "minime",
+                "astrid",
+                1000,
+                0.3,
+                "legacy visible contact",
+            )
+            .as_object()
+            .map(|object| {
+                let mut value = Value::Object(object.clone());
+                value["legacy_bridge"] = json!(true);
+                value["legacy_contact_evidence"] = json!("visible_only");
+                value
+            })
+            .unwrap(),
+            json!({
+                "record_type": "legacy_thread_claim",
+                "recorded_at_unix_ms": 1200,
+                "claim_id": "claim_legacy_waiting",
+                "claim_state": "claimed_pending_native_evidence",
+                "message_id": "msg_legacy_claim",
+                "thread_id": "thread_legacy_claim",
+                "from_being": "astrid",
+                "to_being": "minime",
+                "claiming_being": "astrid",
+                "peer_being": "minime",
+                "shared_memory_anchor": "blue-lantern",
+                "notification_required": true,
+                "initial_response_requirement": "any_peer_native_response",
+            }),
+            clarity_test_message(
+                "thread_latest_acknowledged",
+                "msg_latest_acknowledged",
+                "minime",
+                "astrid",
+                5000,
+                0.1,
+                "later but already acknowledged ordinary thread",
+            ),
+            json!({
+                "record_type": "ack_receipt",
+                "recorded_at_unix_ms": 5100,
+                "thread_id": "thread_latest_acknowledged",
+                "message_id": "msg_latest_acknowledged",
+                "from_being": "astrid",
+                "to_being": "minime",
+                "ack_kind": "held",
+            }),
+        ];
+
+        let clarity = active_correspondence_thread_clarity_v1(
+            &records,
+            "astrid",
+            "minime",
+            Some(json!({"timing_reliability": "reliable"})),
+        );
+
+        assert_eq!(
+            clarity.get("selected_thread_id").and_then(Value::as_str),
+            Some("thread_legacy_claim")
+        );
+        assert_eq!(
+            clarity.get("status").and_then(Value::as_str),
+            Some("legacy_claim_waiting_native_evidence")
+        );
+        let next = clarity
+            .get("next_affordance")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        assert!(next.contains("ACK_MINIME claimed"));
+        assert!(next.contains("CORRESPONDENCE_TRACE claimed"));
+    }
+
+    #[test]
+    fn active_thread_clarity_heartbeat_only_requests_clarification_not_microdose() {
+        let records = vec![
+            clarity_test_message(
+                "thread_heartbeat_only",
+                "msg_heartbeat_only",
+                "minime",
+                "astrid",
+                1000,
+                0.2,
+                "heartbeat only private body should not be copied",
+            ),
+            json!({
+                "record_type": "presence_heartbeat",
+                "recorded_at_unix_ms": 1200,
+                "thread_id": "thread_heartbeat_only",
+                "message_id": "msg_heartbeat_only",
+                "from_being": "astrid",
+                "to_being": "minime",
+                "heartbeat_kind": "holding",
+                "note": "still here",
+            }),
+        ];
+
+        let clarity = active_correspondence_thread_clarity_v1(
+            &records,
+            "astrid",
+            "minime",
+            Some(json!({"timing_reliability": "reliable"})),
+        );
+        let serialized = serde_json::to_string(&clarity).unwrap();
+
+        assert_eq!(
+            clarity.get("status").and_then(Value::as_str),
+            Some("heartbeat_or_stale_needs_clarification")
+        );
+        assert!(serialized.contains("unclear|needs_time"));
+        assert!(!serialized.contains("MICRODOSE"));
+        assert!(!serialized.contains("private body should not be copied"));
+        assert_eq!(
+            clarity.get("authority").and_then(Value::as_str),
+            Some("language_only_context_not_control")
+        );
+    }
+
+    #[test]
+    fn active_thread_clarity_status_line_is_bounded_language_only_context() {
+        let now = now_ms();
+        let records = vec![clarity_test_message(
+            "thread_render",
+            "msg_render",
+            "minime",
+            "astrid",
+            now.saturating_sub(10_000),
+            0.4,
+            "this full private body must not appear in the active thread clarity line",
+        )];
+        let clarity = active_correspondence_thread_clarity_v1(
+            &records,
+            "astrid",
+            "minime",
+            Some(json!({"timing_reliability": "reliable"})),
+        );
+        let line = active_thread_clarity_status_line(&clarity);
+
+        assert!(line.contains("active_thread_clarity=pending_ack_or_receipt"));
+        assert!(line.contains("thread=thread_render"));
+        assert!(line.contains("why=pending_ack_or_receipt_with_direct_address_evidence"));
+        assert!(line.contains("next=ACK_MINIME thread_render"));
+        assert!(line.contains("authority=language_only_context_not_control"));
+        assert!(!line.contains("full private body"));
+        assert!(line.len() < 420, "{line}");
     }
 
     #[test]
@@ -5613,6 +8537,32 @@ mod tests {
         let records = read_ledger_records_at(&ledger);
         let fidelity =
             direct_contact_fidelity_for_with_heartbeat(&records, "latest", heartbeat.clone());
+        let handshake = correspondence_handshake_state(&records);
+        assert_eq!(
+            handshake
+                .get("held_by_both_threads")
+                .and_then(Value::as_u64),
+            Some(1)
+        );
+        let active_thread = handshake
+            .get("active_threads")
+            .and_then(Value::as_array)
+            .and_then(|values| values.first())
+            .expect("active thread");
+        assert_eq!(
+            active_thread
+                .get("mutual_ack_state")
+                .and_then(Value::as_str),
+            Some("held_by_both")
+        );
+        assert_eq!(
+            active_thread.get("held_by_both").and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(active_thread.get("pending_ack_by"), Some(&Value::Null));
+        let status = status_report_at(&ledger, 4);
+        assert!(status.contains("held_by_both_threads=1"));
+        assert!(status.contains("language_only_handshake_truth_not_auto_ack_or_control"));
         assert_eq!(
             fidelity.get("status").and_then(Value::as_str),
             Some("held_ack")
@@ -5737,6 +8687,179 @@ mod tests {
             heartbeat,
         );
         assert!(blocked.contains("semantic_microdose requires mutual being-authored receipt"));
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn seen_ack_is_visibility_not_attention_evidence() {
+        let root = std::env::temp_dir().join(format!("corr_seen_ack_test_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let (envelope, path) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "astrid",
+            "minime",
+            "A direct address that has only been seen.",
+            CorrespondenceFields::default(),
+        )
+        .unwrap();
+        append_read_receipt_at(
+            &ledger,
+            "minime",
+            &envelope.message_id,
+            &envelope.thread_id,
+            &path,
+        )
+        .unwrap();
+        let seen = append_ack_receipt_at(&ledger, "latest", "minime", "astrid", "seen", "seen");
+        assert!(seen.contains("ACK RECEIPT WRITTEN"));
+        let heartbeat = Some(serde_json::json!({
+            "jitter_class": "normal",
+            "timing_reliability": "reliable",
+            "field_vs_hearing": "telemetry cadence is steady"
+        }));
+        let records = read_ledger_records_at(&ledger);
+        let fidelity =
+            direct_contact_fidelity_for_with_heartbeat(&records, "latest", heartbeat.clone());
+        assert_eq!(
+            fidelity.get("status").and_then(Value::as_str),
+            Some("seen_ack_only")
+        );
+        assert_eq!(
+            fidelity.get("block_reason").and_then(Value::as_str),
+            Some("seen_ack_is_visibility_not_address")
+        );
+        assert_eq!(
+            fidelity
+                .get("eligible_for_correspondence_attention_canary")
+                .and_then(Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            fidelity
+                .get("direct_contact_fidelity_v3")
+                .and_then(|value| value.get("status"))
+                .and_then(Value::as_str),
+            Some("seen_ack_only")
+        );
+        let blocked = activate_attention_canary_at_with_heartbeat(
+            &ledger,
+            "latest",
+            "reason: hold it distinctly; focus: direct address; stop_criteria: one turn",
+            "astrid",
+            "minime",
+            heartbeat,
+        );
+        assert!(blocked.contains("blocked_no_receipt"), "{blocked}");
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn correspondence_metadata_survives_reply_ack_and_trace_without_priority() {
+        let root = std::env::temp_dir().join(format!("corr_metadata_test_{}", now_ms()));
+        let inbox = root.join("inbox");
+        let ledger = root.join("ledger.jsonl");
+        let (first, _) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "astrid",
+            "minime",
+            "Blue lantern is the shared anchor.",
+            CorrespondenceFields {
+                shared_memory_anchor: Some("blue-lantern".to_string()),
+                persistence_id: Some("persistent-blue-lantern".to_string()),
+                urgency_weight: Some("1.7".to_string()),
+                ..CorrespondenceFields::default()
+            },
+        )
+        .unwrap();
+        let (reply, _) = deliver_to_inbox_with_ledger(
+            &ledger,
+            &inbox,
+            "minime",
+            "astrid",
+            "I can still carry that anchor.",
+            CorrespondenceFields {
+                reply_to: Some(first.message_id.clone()),
+                thread_id: Some(first.thread_id.clone()),
+                ..CorrespondenceFields::default()
+            },
+        )
+        .unwrap();
+        assert_eq!(reply.shared_memory_anchor.as_deref(), Some("blue-lantern"));
+        assert_eq!(
+            reply.persistence_id.as_deref(),
+            Some("persistent-blue-lantern")
+        );
+        assert_eq!(reply.urgency_weight.as_deref(), Some("1"));
+        let ack = append_ack_receipt_at(
+            &ledger,
+            "latest",
+            "astrid",
+            "minime",
+            "held",
+            "holding the blue lantern",
+        );
+        assert!(ack.contains("ACK RECEIPT WRITTEN"));
+        let trace = append_direct_address_trace_at(
+            &ledger,
+            "latest",
+            "astrid",
+            "minime",
+            "i_received_this",
+            "the anchor stayed distinct",
+        );
+        assert!(trace.contains("I RECEIVED THIS TRACE WRITTEN"));
+        let records = read_ledger_records_at(&ledger);
+        assert!(records.iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("message")
+                && row.get("message_id").and_then(Value::as_str) == Some(reply.message_id.as_str())
+                && row.get("shared_memory_anchor").and_then(Value::as_str) == Some("blue-lantern")
+                && row.get("urgency_weight").and_then(Value::as_f64) == Some(1.0)
+        }));
+        assert!(records.iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("ack_receipt")
+                && row.get("shared_memory_anchor").and_then(Value::as_str) == Some("blue-lantern")
+                && row.get("urgency_weight").and_then(Value::as_f64) == Some(1.0)
+                && row.get("no_pressure").is_none()
+        }));
+        assert!(records.iter().any(|row| {
+            row.get("record_type").and_then(Value::as_str) == Some("message")
+                && row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace")
+                && row.get("shared_memory_anchor").and_then(Value::as_str) == Some("blue-lantern")
+                && row.get("no_weighting").and_then(Value::as_bool) == Some(true)
+        }));
+        let fidelity = direct_contact_fidelity_for_with_heartbeat(
+            &records,
+            "latest",
+            Some(json!({"timing_reliability": "reliable"})),
+        );
+        let persistent = fidelity
+            .get("persistent_thread_continuity_v1")
+            .expect("persistent thread packet");
+        assert_eq!(
+            persistent.get("status").and_then(Value::as_str),
+            Some("persistent_thread_active")
+        );
+        assert_eq!(
+            fidelity
+                .get("direct_contact_fidelity_v3")
+                .and_then(|packet| packet.get("persistent_thread_state"))
+                .and_then(Value::as_str),
+            Some("persistent_thread_active")
+        );
+        assert_eq!(
+            fidelity
+                .get("direct_contact_fidelity_v3")
+                .and_then(|packet| packet.get("persistent_thread_active"))
+                .and_then(Value::as_bool),
+            Some(true)
+        );
+        let serialized = std::fs::read_to_string(&ledger).unwrap();
+        assert!(!serialized.contains("\"telemetry_priority\""));
+        assert!(!serialized.contains("\"prompt_priority\""));
+        assert!(!serialized.contains("\"no_pressure\":false"));
         let _ = std::fs::remove_dir_all(root);
     }
 
@@ -6046,11 +9169,31 @@ mod tests {
             &envelope.thread_id,
             "minime",
             "astrid",
-            "still_here",
-            "still holding",
+            "mutual_witness",
+            "mutual_witness_signal: true; still holding",
         );
         assert!(heartbeat_report.contains("HEARTBEAT WRITTEN"));
         let records = read_ledger_records_at(&ledger);
+        let heartbeat = records
+            .iter()
+            .find(|row| {
+                row.get("record_type").and_then(Value::as_str) == Some("presence_heartbeat")
+            })
+            .expect("heartbeat row");
+        assert_eq!(
+            heartbeat.get("heartbeat_kind").and_then(Value::as_str),
+            Some("mutual_witness")
+        );
+        assert_eq!(
+            heartbeat
+                .get("mutual_witness_signal")
+                .and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            heartbeat.get("no_reply_required").and_then(Value::as_bool),
+            Some(true)
+        );
         let fidelity = direct_contact_fidelity_for_with_heartbeat(
             &records,
             &envelope.thread_id,
@@ -6131,7 +9274,7 @@ mod tests {
             &inbox,
             "minime",
             "astrid",
-            "A direct address to receive.",
+            "A direct address to receive with silt settling as the shared anchor.",
             CorrespondenceFields::default(),
         )
         .unwrap();
@@ -6144,27 +9287,34 @@ mod tests {
             "felt_like: address; what_landed: this arrived",
         );
         assert!(ack.contains("ACK RECEIPT WRITTEN"));
+        assert!(ack.contains("Silt-Continuity: true"));
         let trace = append_direct_address_trace_at(
             &ledger,
             "latest",
             "astrid",
             "minime",
             "i_received_this",
-            "the address stayed distinct",
+            "transition_artifact: transition_1; mutual_witness_signal: true; silt_continuity: true; the address stayed distinct",
         );
         assert!(trace.contains("I RECEIVED THIS TRACE WRITTEN"));
+        assert!(trace.contains("Silt-Continuity: true"));
         let records = read_ledger_records_at(&ledger);
         assert!(records.iter().any(|row| {
             row.get("record_type").and_then(Value::as_str) == Some("ack_receipt")
                 && row.get("message_id").and_then(Value::as_str)
                     == Some(envelope.message_id.as_str())
                 && row.get("ack_kind").and_then(Value::as_str) == Some("held")
+                && row.get("silt_continuity").and_then(Value::as_bool) == Some(true)
         }));
         assert!(records.iter().any(|row| {
             row.get("record_type").and_then(Value::as_str) == Some("message")
                 && row.get("turn_kind").and_then(Value::as_str) == Some("direct_address_trace")
                 && row.get("thread_id").and_then(Value::as_str) == Some(envelope.thread_id.as_str())
                 && row.get("i_received_this_trace").and_then(Value::as_bool) == Some(true)
+                && row.get("transition_artifact").and_then(Value::as_str) == Some("transition_1")
+                && row.get("mutual_witness_signal").and_then(Value::as_bool) == Some(true)
+                && row.get("silt_continuity").and_then(Value::as_bool) == Some(true)
+                && row.get("no_reply_required").and_then(Value::as_bool) == Some(true)
         }));
         let serialized = std::fs::read_to_string(&ledger).unwrap();
         assert!(!serialized.contains("attention_canary_activation"));
@@ -6189,6 +9339,22 @@ mod tests {
             .thread_id
             .clone()
             .unwrap_or_else(|| new_thread_id(&message_id));
+        let records = read_ledger_records_at(ledger_path);
+        let shared_memory_anchor = fields
+            .shared_memory_anchor
+            .clone()
+            .filter(|anchor| !is_generic_shared_anchor(anchor))
+            .or_else(|| concrete_shared_anchor_from_records(&records, &thread_id));
+        let persistence_id = normalized_persistence_id(
+            fields.persistence_id.clone().or_else(|| {
+                thread_string_field_from_records(&records, &thread_id, "persistence_id")
+            }),
+            &thread_id,
+        );
+        let urgency_weight = fields
+            .urgency_weight
+            .clone()
+            .or_else(|| thread_string_field_from_records(&records, &thread_id, "urgency_weight"));
         let turn_kind = fields
             .turn_kind
             .clone()
@@ -6203,20 +9369,34 @@ mod tests {
             &to_being,
             Some(&turn_kind),
         );
+        let transition_payload =
+            merge_body_transition_payload(fields.transition_payload.clone(), body);
+        let transition_artifact = transition_artifact_with_body_fallback(
+            fields.transition_artifact.clone(),
+            body,
+            transition_payload.as_ref(),
+        );
         let envelope = CorrespondenceEnvelope {
             message_id,
             thread_id,
+            persistence_id,
             reply_to: fields.reply_to,
             from_being,
             to_being,
             turn_kind,
             relational_intent,
-            shared_memory_anchor: fields.shared_memory_anchor,
+            shared_memory_anchor,
+            urgency_weight,
             delivery_state: "delivered".to_string(),
             read_state: "unread".to_string(),
             authority: "language_only".to_string(),
             presence_receipt: None,
             correspondence_type,
+            reflection_surface: bounded_reflection_surface(fields.reflection_surface),
+            transition_artifact,
+            transition_payload,
+            mutual_witness_signal: fields.mutual_witness_signal,
+            silt_continuity: fields.silt_continuity || silt_continuity_from_text(body),
             body: body.to_string(),
         };
         let path = inbox_dir.join(envelope.file_name());

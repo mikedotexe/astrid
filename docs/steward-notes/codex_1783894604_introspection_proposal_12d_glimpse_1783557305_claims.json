@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783557305",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "A 12D glimpse can lose distinction relative to the 48D live source and should not silently become the primary interaction surface.",
+      "disposition": "implemented",
+      "evidence_plan": "Link multi_scale_observer_v1 resonance-loss fields, Experience Delta Bus deltas, audit note, and targeted tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "The multi-scale architecture should fallback to the 48D contract or residual trace when the 12D glimpse loses too much resonance.",
+      "disposition": "implemented",
+      "evidence_plan": "Link fallback_to_live_transport_review and glimpse_resonance_fallback_to_live_48d_review gate evidence."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Replacing live 48D semantic transport with a 12D contract would be a live protocol/transport authority change.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Link audit boundary and keep any replacement or persistence prompt wiring behind Mike/operator approval."
+    }
+  ]
+}

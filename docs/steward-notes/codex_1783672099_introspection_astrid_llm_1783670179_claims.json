@@ -1,0 +1,19 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783670179",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`llm.rs` fallback texture terms risk turning a dynamic submerged/restless cascade into static adjective choices.",
+      "disposition": "addressed_change",
+      "rationale": "Implemented additive fallback motion vocabulary and selection so explicitly reported pulsing, cascading-gradient, and resonant-shift texture can survive fallback prompt construction."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "High-latency MLX miss or Ollama fallback should preserve interwoven lattice/restless texture rather than flattening or muffling it.",
+      "disposition": "addressed_change",
+      "rationale": "Source review confirmed the fallback request path already carries texture and density context; this pass strengthened the fallback continuity contract and added a prompt-line regression test for explicit dynamic motion terms. Targeted bridge tests timed out at compile, so live alignment is restart/test debt."
+    }
+  ]
+}

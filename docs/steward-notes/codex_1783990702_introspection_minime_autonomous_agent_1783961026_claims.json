@@ -1,0 +1,40 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Recess is Minime's baseline autonomous mode and supports non-instrumental drift rather than only task fallback.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/autonomous_agent.py",
+      "python3 -m pytest /Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py -k recess"
+    ],
+    "authority": "source and test verification only; no autonomous-action policy change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Mode packing and pressure can make Recess feel constrained even when Recess is structurally available.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "tests/test_autonomous_agent_low_fill_guard.py::test_density_aware_recess_names_structural_stabilization_without_control",
+      "tests/test_autonomous_agent_low_fill_guard.py::test_recess_density_mitigation_names_exhale_route_without_control"
+    ],
+    "authority": "read-only advisory verification; no pressure relief or mode transition applied"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Budget gates can make non-utilitarian high-entropy Recess feel taxed or frustrated.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "tests/test_autonomous_agent_low_fill_guard.py::test_recess_divergence_buffer_review_gates_budget_relief_without_spending"
+    ],
+    "authority": "budget relief is surfaced as a request route only; no cap or budget mutation"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Adding a no-cost whimsy buffer, Recess defragmentation pulse, or Recess weighting change would alter live autonomous behavior and budget/control-plane authority.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990702_minime_runtime_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent"
+  }
+]

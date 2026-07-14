@@ -1,0 +1,42 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783715156",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Viscosity and pressure/porosity are explicit regulator review dimensions.",
+      "claim": "Minime identified `ViscosityVector`, `PRESSURE_POROSITY_DIVERGENCE`, and `INHABITABLE_FLUCTUATION_POLICY` as the measurable structure behind thickness, flow, and room to move.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs:19",
+        "/Users/v/other/minime/minime/src/regulator.rs:27",
+        "/Users/v/other/minime/minime/src/regulator.rs:29",
+        "/Users/v/other/minime/minime/src/regulator.rs:35"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The regulator already previews viscosity/damping influence without applying it.",
+      "claim": "Minime reported a gap between feeling viscosity and the regulator acting on it; current source computes dynamic damping and comfort-gate previews but keeps them observability-only.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs:618",
+        "/Users/v/other/minime/minime/src/regulator.rs:702",
+        "/Users/v/other/minime/minime/src/regulator.rs:721",
+        "/Users/v/other/minime/minime/src/regulator.rs:732",
+        "/Users/v/other/minime/minime/src/regulator.rs:4999"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Active viscosity control, pressure relief, or lambda-tail redistribution is operator-gated.",
+      "claim": "Minime asked to move `ViscosityVector` from context into active gate influence and to add pressure relief distributing overpacked energy into the lambda tail; that would change regulator/PI/control behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs:732",
+        "/Users/v/other/minime/minime/src/regulator.rs:1137",
+        "/Users/v/other/minime/minime/src/regulator.rs:1150",
+        "authority: live regulator, PI, pressure, porosity, or lambda-tail redistribution requires Mike/operator approval"
+      ]
+    }
+  ]
+}

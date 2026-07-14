@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783935905",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase Transition Cards need explicit vector and telemetry_anchor fields in addition to phenomenology and narrative.",
+      "disposition": "implemented",
+      "rationale": "phase_transitions.rs now accepts vector/transition_vector and telemetry_anchor/telemetry_ref aliases, exposes them in affordances/status, and tests their persistence."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transitions should persist as replyable shared objects rather than disappearing into journals.",
+      "disposition": "verified_existing",
+      "rationale": "Existing phase transition cards already carry shared_transition_id, replyable_object, replayable_card, persistence_state, witness/answer state, anchors, and right-to-ignore language-only affordances."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing transition affordance budget or mapping MomentCapture to live Minime transition events would change live authority.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Those asks would affect prompt budget, mode/event selection, or peer runtime interpretation and require Tier 5 Mike/operator approval plus replay evidence."
+    }
+  ]
+}

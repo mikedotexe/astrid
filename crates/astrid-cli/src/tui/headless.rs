@@ -286,6 +286,7 @@ pub(crate) async fn run(cfg: HeadlessConfig<'_>) -> anyhow::Result<()> {
                             request_id: request_id.clone(),
                             decision: decision.into(),
                             reason: Some(reason.into()),
+                            boundary_id: None,
                         },
                         cfg.session_id.0,
                     ))

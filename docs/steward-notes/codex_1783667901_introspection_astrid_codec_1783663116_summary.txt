@@ -1,0 +1,3 @@
+Full read by Codex for introspection_astrid_codec_1783663116.
+
+The codec report describes the 48D semantic lane, dynamic projection epoch persistence, projection fingerprints, and the entropy smoothstep tail-vibrancy gate. It asks for persistence/fingerprint proof and a check that the smoothstep implementation matches the documented gate behavior. Source and tests already cover these paths: epoch creation writes a kernel-derived file, env/file precedence is pinned, fresh runtime dirs derive the same kernel epoch, projection output and fingerprints are stable within an epoch and change across epochs, and vibrancy_from_entropy is tested against the inline smoothstep used by apply_spectral_feedback_inner. No codec runtime or semantic-lane behavior change was needed.

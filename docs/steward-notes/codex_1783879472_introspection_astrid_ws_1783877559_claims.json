@@ -1,0 +1,17 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783877559",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High entropy silence can feel abandoned sooner than the fixed 60s stale window; a 30s high-entropy stale window was suggested.",
+      "disposition": "authority_gate",
+      "rationale": "The bridge already has entropy/pressure-sensitive reflective stale windows. Changing the actual stale classifier to expire faster would alter live timing semantics, so it remains an explicit operator-gated change."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mode packing just above/below the 0.25 felt-dead-zone threshold should be visible as a tactile pressure/porosity transition watch.",
+      "disposition": "verified_existing",
+      "rationale": "Focused WS tests verify the read-only felt-dead-zone state and thresholds are surfaced without local control mutation."
+    }
+  ]
+}

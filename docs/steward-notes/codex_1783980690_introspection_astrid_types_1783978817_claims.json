@@ -1,0 +1,42 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "`ExperienceDeltaV1` should roundtrip with both populated `SpectralDimensionV1` and `DeltaPersistenceV1`, while optional absent fields remain omitted.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs::experience_delta_roundtrips_dimension_and_persistence_together",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml experience_delta -- --nocapture"
+    ],
+    "authority": "test-only schema regression; no wire protocol expansion or persistence change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "`clamp_unit_finite` should return `None` for NaN/Infinity and clamp finite out-of-range values to 0.0..=1.0.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs::clamp_unit_finite_rejects_nonfinite_and_clamps_unit_range",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml clamp_unit -- --nocapture"
+    ],
+    "authority": "test-only helper regression; no telemetry/control behavior changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "`ExperienceDeltaBusV2DesignPreview` is explicitly default-off, nonpersistent, replay-not-ready, and does not emit raw state.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs::experience_delta_bus_v2_preview_is_default_off_typed_aggregation",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml experience_delta -- --nocapture"
+    ],
+    "authority": "schema/test verification; V2 preview remains design-only and not live authority"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "`ResonanceDensityComponents` carries `ResonanceViscosityVectorV1` as bridge-preserved telemetry rather than pressure/fill/PI/sensory/control authority.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:293",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/types.rs:330"
+    ],
+    "authority": "source verification; no live vector/control path changed"
+  }
+]

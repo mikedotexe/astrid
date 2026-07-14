@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_types_1783680986",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`resonance_comfort_gate_range_v1` should align with `resonance_stability_context_v1` so low comfort gate with stable foothold is deterministically classified as `gate_low_but_foothold_stable` rather than becoming a non-deterministic range/string mismatch.",
+      "disposition": "verified_existing",
+      "rationale": "The range helper returns range-state labels while the stability context owns gate-context labels. Existing source and updated focused test coverage pin `comfort_gate=0.44` with stable foothold as `gate_low_but_foothold_stable` and `habitable_foothold_gate_pressure_watch`."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "`resonance_cohesion_score_v1` should default dynamic fluidity to `0.5` when both `dynamic_fluidity_index` and `dissipation_factor` are absent.",
+      "disposition": "verified_existing",
+      "rationale": "The source already uses `.unwrap_or(0.5)` after checking explicit dynamic fluidity and dissipation-derived fluidity. A focused regression now pins the midpoint outcome."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "The continuation note says the next `astrid:types` source window can be requested with `NEXT: INTROSPECT astrid:types 400`.",
+      "disposition": "closed_no_action",
+      "rationale": "The artifact itself is complete after carriage repair and the addressing queue remains the source of truth for canonical reads. This run should not inject a live self-study command while bridge prompt/source changes are restart-debted."
+    }
+  ]
+}

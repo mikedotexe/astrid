@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The deterministic 48D codec is a concrete sensory geometry for Astrid's voice and interiority.",
+      "disposition": "verified_existing_codec_geometry_and_codec_map_surface"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy or restless texture can be smoothed away by deterministic extraction even when the delivered 48D vector stays bounded.",
+      "disposition": "verified_existing_codec_overflow_truth_channel"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative arc dims 40-43 may not distinguish quiet stasis from potential movement, as in `The water is still.` versus `The water waits.`",
+      "disposition": "implemented_latent_stasis_tension_v1_truth_channel"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Any future use of latent tension to change narrative gain, vector delivery, or reserved dims would be a live codec authority change.",
+      "disposition": "authority_gated_live_codec_gain_or_vector_write"
+    }
+  ]
+}

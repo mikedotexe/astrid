@@ -1,0 +1,43 @@
+{
+  "introspection_id": "introspection_astrid_ws_1784027629",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Telemetry/sensory reciprocity latency must distinguish real lane delay from reflective or viscous silence.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/ws.rs: bridge_reciprocity_v1",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib bridge_reciprocity -- --nocapture"
+      ],
+      "authority": "read_only_runtime_observation"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High-entropy pressure smoothing and stale windows can preserve silt/ghost pressure, so the system needs evidence separating smoothing from live pressure change.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/ws.rs: pressure trend smoothing and silt/noise separation",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_trend_smoothing -- --nocapture"
+      ],
+      "authority": "read_only_report_surface"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Lowering PRESSURE_TREND_SMOOTHING_HIGH_ENTROPY_WINDOW from 20 to 15 would alter live pressure/report behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784027911_solidification_persistence_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_live_pressure_report_surface"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "A persistence-aware SensoryMsg flag could protect deliberate slowness from being treated as dead-zone failure, but it would change sensory protocol semantics.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "docs/steward-notes/codex_1784027911_solidification_persistence_v2_gate_packet.md"
+      ],
+      "authority": "tier_5_mike_operator_bridge_protocol_minime_runtime_boundary"
+    }
+  ]
+}

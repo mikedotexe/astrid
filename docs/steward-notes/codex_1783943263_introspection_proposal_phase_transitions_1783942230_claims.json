@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783942230",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be replyable and replayable artifacts rather than only narrative labels.",
+      "disposition": "verified_existing",
+      "rationale": "`phase_transitions.rs` records replyable/replayable transition cards with shared transition IDs, lock status, and right-to-ignore/language-only authority fields."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "TransitionCards should preserve spectral signature, vector, telemetry anchor, density gradient, and gate/capability context.",
+      "disposition": "verified_existing",
+      "rationale": "`append_transition_card_at` and targeted phase-transition tests preserve spectral signatures, transition vectors, telemetry anchors, density gradients, `transition_gate_v1`, and `transition_capabilities_v1` without live control."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Automatically contracting affordance budgets or changing behavior when a transition occurs would mutate live runtime authority.",
+      "disposition": "needs_operator_approval",
+      "rationale": "`phase_transition_audit.py --since-hours 6 --json` shows unseen cards needing witness/answer; behavior gates and affordance-budget consequences should wait for explicit operator approval."
+    }
+  ]
+}

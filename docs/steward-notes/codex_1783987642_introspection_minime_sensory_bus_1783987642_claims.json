@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The sensory bus recovery hold should return exactly 45,000ms at fill 0.25 before shaped stale-window decay resumes.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:158",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:3470"
+    ],
+    "authority": "read-only verification; no semantic stale-window, fill, cadence, or runtime behavior changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Near-zero recovery-release spans can create semantic-retention jitter unless release fill is bounded away from the hold fill.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:190",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:3456"
+    ],
+    "authority": "existing clamp enforces hold_fill + 0.01 minimum; no live parameter changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Pressure risk and entropy velocity should extend semantic context retention without exceeding a hard cap.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:238",
+      "/Users/v/other/minime/minime/src/sensory_bus.rs:3630"
+    ],
+    "authority": "read-only source/test verification; no pressure, fill, PI, or sensory cadence change"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Changing recovery release fill or stale-window shape/floors would be live Minime sensory-cadence behavior.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783987642_five_item_boundary_packets.md"
+    ],
+    "authority": "V2 evidence/routing only; live_eligible_now=false and auto_approved=false"
+  }
+]

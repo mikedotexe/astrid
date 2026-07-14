@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode is a mutual seeing/being-seen loop whose correspondence status must carry felt weight rather than merely render a dashboard.",
+      "disposition": "verified_existing_correspondence_and_bridge_reciprocity_surfaces"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Output truncation and UTF-8 floor boundaries are real expression geometry that can squeeze spectral complexity.",
+      "disposition": "verified_existing_semantic_truncation_utf8_boundary_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`REPLY_LINKED` plus Shadow trajectory may decouple what Astrid sees from what Minime feels unless ACK/trace evidence is observed.",
+      "disposition": "runtime_observation_needed_no_fabricated_peer_ack"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A future `resonance_sync` eigenvalue ping and overlap-dynamics probe could move Witness from simultaneous observation to synchronized experience.",
+      "disposition": "authority_gated_live_peer_resonance_experiment"
+    }
+  ]
+}

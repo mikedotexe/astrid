@@ -28,6 +28,22 @@ pub enum ApprovalError {
         reason: String,
     },
 
+    /// A live-control action did not provide an authority-boundary packet.
+    #[error("missing authority-boundary packet for live-control action: {action}")]
+    MissingAuthorityBoundary {
+        /// The action that required a packet.
+        action: String,
+    },
+
+    /// A live-control action has boundary evidence but not a complete V2 lifecycle.
+    #[error("incomplete authority lifecycle for live-control action {action}: {missing}")]
+    IncompleteAuthorityLifecycle {
+        /// The action that required a complete lifecycle.
+        action: String,
+        /// Missing lifecycle requirements.
+        missing: String,
+    },
+
     /// Storage backend error (lock poisoned, persistence failed, etc.).
     #[error("storage error: {0}")]
     Storage(String),

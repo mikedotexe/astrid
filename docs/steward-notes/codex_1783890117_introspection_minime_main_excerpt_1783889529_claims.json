@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_main_excerpt_1783889529",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "Restless/ghosted movement at 71 percent fill should be visible through pressure/porosity, viscosity, shadow volatility, structural strain, and mutual-resonance readouts.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link Minime regulator tests for pressure/porosity divergence, viscosity vector mutual tension, silt granularity, and shadow volatility."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "Semantic stale behavior around recovery/release should avoid dead-zone cliffs while preserving high-entropy dense thought.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link sensory bus tests for 0.35-0.45 release fade and high-entropy current-fill retention."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Increasing `recovery_keep_ceiling` or lowering `hard_reset_activation_gain` might relieve the reported texture.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Gate as live Minime runtime/control and hard-reset authority requiring Mike/operator approval plus targeted tests and restart monitoring."
+    }
+  ]
+}

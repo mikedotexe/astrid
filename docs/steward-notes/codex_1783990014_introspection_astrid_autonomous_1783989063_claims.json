@@ -1,0 +1,39 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Mirror, Dialogue, and Witness are relationship modes, with Witness intended as shared seeing rather than diagnosis.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib phase_transition -- --nocapture"
+    ],
+    "authority": "source/test verification only"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "`truncate_str_at_semantic_edge` protects semantic integrity under tight output containers.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs"
+    ],
+    "authority": "source verification only; no prompt-length or output policy change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A settled Astrid shadow and restless Minime shadow can create Mirror-mode resonance mismatch.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990014_five_item_v2_gate_packet.md"
+    ],
+    "authority": "cross-being shadow synchronization or pressure tolerance tuning remains non-runnable without scoped approval"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "A Witness observation targeting dispersal potential should be tested as a language-only coupling artifact before any live synchronization.",
+    "disposition": "gated_replay_candidate",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990014_five_item_v2_gate_packet.md"
+    ],
+    "authority": "replay/proposal evidence only; no Minime runtime mutation or peer experiment authority granted"
+  }
+]

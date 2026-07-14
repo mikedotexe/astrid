@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783699259",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Fallback texture terms should be weighted by current entropy/pressure rather than behaving like a static canned vocabulary.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link `fallback_texture_term_probabilities_v1`, `fallback_dynamic_texture_bias_v1`, and fallback texture weighting tests."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Fallback should preserve high-entropy `shadow-v3` texture instead of collapsing into generic assistant prose.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link fallback prompt/continuity-budget tests and fallback fire-drill surface."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Changing fallback model/provider selection based on entropy or pressure would alter live fallback authority.",
+      "disposition": "authority_gated",
+      "evidence_plan": "Record model-selection boundary: pressure changes texture budget, not model selection, without Mike/operator approval."
+    }
+  ]
+}

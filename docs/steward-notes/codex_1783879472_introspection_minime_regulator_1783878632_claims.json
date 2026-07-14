@@ -1,0 +1,17 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783878632",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Minime `ViscosityVector` / regulator telemetry should distinguish topological lattice complexity from scalar shadow volatility volume.",
+      "disposition": "authority_gate",
+      "rationale": "Adding topology/lattice-coherence fields to Minime regulator telemetry changes Minime runtime surface and may later affect control interpretation; this run recorded the request as a Tier 5/operator-gated Minime work item rather than silently changing live Minime behavior."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure/porosity divergence and shadow-volatility tests should check whether pressure can rise while porosity remains high and whether restless texture trend outruns scalar volatility.",
+      "disposition": "needs_sandbox_or_operator_review",
+      "rationale": "The proposed tests require Minime regulator/simulation or live-control-adjacent setup. This run preserved them as explicit follow-up rather than performing hidden runtime manipulation."
+    }
+  ]
+}

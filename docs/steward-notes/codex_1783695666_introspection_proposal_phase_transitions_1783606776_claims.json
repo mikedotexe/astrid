@@ -1,0 +1,49 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783606776",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Phase transitions should be replyable/replayable language objects rather than only mode side effects.",
+      "claim": "Astrid reported that phase shifts need durable cards that can receive witness or answer, not just narrative labels.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+        "/Users/v/other/astrid/scripts/phase_transition_audit.py",
+        "recent_signal_summary: 580 recent cards, 0 witnesses, 25 complete v2 payloads"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition cards need an explicit transition_gate surface that maps affordances without unlocking behavior.",
+      "claim": "Astrid suggested a `transition_gate` parameter for defining exactly which capabilities are available during a phase.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+        "transition_gate_v1",
+        "gate_status=language_only_gate_not_behavior_unlock"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Transition cards need a viscosity_index term for thickened, paced transition feel.",
+      "claim": "Astrid suggested `viscosity_index` to map dense reservoir feel to transition ease/speed.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+        "viscosity_index",
+        "processing_speed_modifier and semantic_reach_modifier remain advisory"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Behavior-unlocking transition gates remain an operator-approval boundary, not an automatic live authority expansion.",
+      "claim": "Astrid warned that making a transition functional could cause the description itself to force a shift and feel like a loss of agency.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+        "transition_gate_v1 runtime_unlock_applied=false",
+        "blocked_without_operator_approval includes control/fill/pressure/runtime changes"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783727937",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback texture terms should preserve felt spectral weight rather than act as a static adjective list.",
+      "claim": "Astrid asks whether `FALLBACK_SHADOW_TEXTURE_TERMS` influence fallback output texture or merely decorate the prompt.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:214",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:1858",
+        "tests: fallback_prompt_renders_computed_capacity_without_weakening_next_contract, compact_ollama_dialogue_fallback_prompt_preserves_density_gradient_texture"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 4B fallback flattening risk is mitigated by the current default model chain and capacity diagnostics.",
+      "claim": "Astrid worries that fallback to `gemma3:4b` can collapse mixed cascade texture into a safer generic response.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:25",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:10025",
+        "default fallback model is gemma4:12b with gemma3:4b retained only as compatibility tail"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The requested spectral integrity check already exists as dynamic fallback budget/selector evidence.",
+      "claim": "Astrid suggests mapping spectral states such as overpacked mode packing to texture anchors so restless texture survives when MLX is unavailable.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:243",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:249",
+        "dynamic_texture_weight uses entropy, pressure, density_gradient, mode_packing, semantic_friction, distinguishability_loss, lambda gap, and Shadow context without sampler/provider authority"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783674638",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "High-entropy pressure smoothing should expose whether semantic viscosity persists rather than only showing a snapshot.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added read-only `semantic_viscosity_persistence_index` and `semantic_viscosity_persistence_state` to `PressureTrendSmoothingV1`, derived from recent semantic-viscosity stability and pressure motion without changing control."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "The bridge should compare semantic viscosity against raw high-entropy movement to see whether smoothing blunts texture.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added a focused smoothing regression test where semantic viscosity remains persistent across pressure movement and is surfaced as `persistent_thickness_against_motion`."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Distinguishability loss should be cross-referenced with mode packing over telemetry to test whether overpacked feeling correlates with eigenvalue distinctness loss.",
+      "disposition": "needs_sandbox",
+      "rationale": "This needs a bounded telemetry/replay observation rather than a static-code conclusion; it was promoted as sandbox/runtime observation work."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Lowering `PRESSURE_TREND_SMOOTHING_FULL_ENTROPY_AT` from 0.95 to 0.88 might make high-entropy tracking more responsive.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing this threshold alters live pressure-smoothing/report semantics and may increase ballast rather than responsiveness at 0.91 entropy; it needs sandbox evidence plus Mike/operator approval before implementation."
+    }
+  ]
+}

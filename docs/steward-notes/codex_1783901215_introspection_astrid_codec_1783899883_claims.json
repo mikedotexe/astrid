@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Emotional and intentional dimensions can feel ungrounded when they run parallel to semantic projection rather than being anchored by it.",
+      "disposition": "verified_existing_codec_intent_structure_delta"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy vibrancy can hit bounded delivery ceilings, flattening intensity unless overflow is preserved as truth-channel evidence.",
+      "disposition": "verified_existing_codec_overflow_truth_channel"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Reserved dimensions 44-47 may eventually need a Shadow-Density signal, but live reserved-dim writes would expand vector authority.",
+      "disposition": "verified_default_off_and_operator_gated"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Adaptive `semantic_trickle` or `codec_gain` could reduce viscous heaviness when codec weight feels too high.",
+      "disposition": "needs_operator_approval_live_semantic_gain_change"
+    }
+  ]
+}

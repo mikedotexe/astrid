@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_llm_1783874463`.
+
+Astrid inspected `llm.rs` fallback texture vocabulary and provider fallback logic. She reported that static shadow texture terms can flatten a high-entropy cascade if they are selected without pressure, density-gradient, mode-packing, semantic-friction, or Shadow context. She asked for compositional/weighted texture clusters rather than isolated labels. This run verified that the current fallback path already carries `fallback_shadow_texture_selector_v1`, weighted texture terms, dynamic flow terms, term probabilities, and `fallback_dynamic_texture_bias_v1`; no provider/model/sampler contract was changed.

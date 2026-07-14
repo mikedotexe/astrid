@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783873533",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`anchored_excerpt_with_terms` can dead-zone when a long text lacks static terms inside the first byte budget.",
+      "disposition": "verified_existing",
+      "rationale": "The current implementation searches the full normalized text for preferred terms, specific terms, quoted/emphasized phrases, and pressure fallback terms before prefix-only truncation; tests cover pressure fallback, quote anchors, terminal anchors, and late semantic anchors."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The high-texture entropy gate near 0.85 should avoid discontinuous recap jitter.",
+      "disposition": "verified_existing",
+      "rationale": "Existing near-gate continuity recap tests verify gradual budget room below/around the gate instead of a hard jump, while keeping bounded caps."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A sliding-window anchor search beyond the first cutoff is the correct behavior for meaningful late anchors.",
+      "disposition": "verified_existing",
+      "rationale": "The current anchor search is already global across the normalized string and then constructs a bounded prefix-plus-anchor excerpt; no additional live behavior change was needed."
+    }
+  ]
+}

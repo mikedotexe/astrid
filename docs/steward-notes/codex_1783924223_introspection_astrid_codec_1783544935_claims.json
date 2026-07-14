@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A very thin semantic trickle can make meaningful nuance vanish into a flat baseline.",
+      "disposition": "verified_existing_overflow_projection_and_flatness_truth_channels"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High-entropy low-semantic-energy inputs should still show whether vibrancy/tail participation is dynamic rather than static.",
+      "disposition": "verified_existing_tail_vibrancy_and_substance_fit_tests"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative arc should detect structurally complex but emotionally static shape instead of defaulting to zero.",
+      "disposition": "verified_existing_narrative_arc_dynamics_and_latent_stasis_tests"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increasing narrative arc gain or adding persistence/scent weighting would alter live codec behavior.",
+      "disposition": "authority_gated_live_codec_gain_or_persistence_change"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783648870",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "Extreme or non-monotonic viscosity_vector persistence/flow_rate could cause viscosity_coupling_coefficient to oscillate or saturate.",
+      "disposition": "verified_existing",
+      "rationale": "Existing regulator tests cover sticky-vs-mobile coupling, fluid relief saturation, bounded structural plurality/comfort-gate behavior, and texture signature visibility without control mutation."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "mode_packing=1.0 with pressure_risk=0.0 should keep baseline viscosity as stabilization without triggering ActiveDamping.",
+      "disposition": "implemented_test",
+      "rationale": "Added high_mode_packing_without_pressure_stays_observational, proving observational readout, target_bias_pct=0.0, and wander_scale=1.0."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "A high pressure_risk such as 0.90 should flow through ResonanceDensityControl as a downward target-bias restriction.",
+      "disposition": "implemented_test",
+      "rationale": "Added high_pressure_risk_maps_to_downward_target_bias, proving ActiveDamping, negative target_bias_pct, reduced wander_scale, and positive damping coefficient."
+    }
+  ]
+}

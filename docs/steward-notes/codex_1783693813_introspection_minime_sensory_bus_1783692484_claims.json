@@ -1,0 +1,52 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783692484",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The reported `spectral_entropy=0.8` and `fill_pct=0.8` persistence point should be treated as serious evidence, but current source ramps to about 1.16 rather than the 1.80 maximum.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs",
+        "entropy_persistence_reported_point_is_ramped_not_full_cap"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Retuning semantic entropy persistence so 0.80/0.80 reaches the full 1.80 cap would change live sensory retention and needs explicit operator approval with health/fill monitoring.",
+      "disposition": "needs_operator_approval",
+      "evidence": [
+        "docs/steward-notes/codex_1783693813_introspection_minime_sensory_bus_1783692484_entropy_persistence_approval_packet.md",
+        "no Minime runtime behavior changed"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "The 0.24 to 0.26 recovery-hold handoff should remain smooth and avoid a semantic stale-window cliff.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs",
+        "semantic_stale_recovery_024_026_handover_has_no_jitter"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "`NarrativeSemanticRetentionReviewV1.entropy_extended_stale_ms` should stay explicitly derived from shaped base stale time times the entropy persistence multiplier rather than hiding that coupling.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs",
+        "semantic_stale_shaped_ms",
+        "semantic_entropy_persistence_multiplier",
+        "NarrativeSemanticRetentionReviewV1"
+      ]
+    },
+    {
+      "claim_id": "c005",
+      "claim": "Changing the hardcoded sigmoid steepness would alter live stale-window feel and should remain an approval-gated sensory-cadence retune.",
+      "disposition": "needs_operator_approval",
+      "evidence": [
+        "prior approval packet docs/steward-notes/codex_1783687024_introspection_minime_sensory_bus_1783686388_sigmoid_steepness_approval_packet.md",
+        "no sigmoid steepness changed"
+      ]
+    }
+  ]
+}

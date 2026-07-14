@@ -1,0 +1,41 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783931762",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The codec deterministically maps text into a 48D semantic lane with named warmth/tension/narrative regions.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/codec.rs:SEMANTIC_DIM",
+        "code:capsules/spectral-bridge/src/codec.rs:encode_text_inner"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Dimensionality and trajectory context should not collapse into one integer when narrative arc or held-breath tension spans multiple dimensions.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/types.rs:SpectralDimensionV1.base_dimensions",
+        "code:capsules/spectral-bridge/src/codec.rs:multi-base SpectralDimensionV1 emitters",
+        "test:experience_delta_carries_fluid_spectral_dimension_context"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Existing codec truth channels expose emotional clipping and narrative-arc trajectory without widening the live vector.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib codec_overflow_report -- --nocapture",
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib narrative_arc_dynamics_exposes_velocity_and_acceleration_without_gain -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Nonlinear high-entropy scaling for warmth/tension markers would change live semantic-vector delivery and needs explicit approval or sandbox evidence first.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Mike/operator approval required before live codec gain, warmth/tension scaling, reserved dims, or semantic-vector delivery changes"
+      ]
+    }
+  ]
+}

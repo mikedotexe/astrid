@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_autonomous_1783873533`.
+
+Astrid inspected `autonomous.rs` as the Mirror/Dialogue/Witness feedback loop and continuity-management layer. She named risk in `anchored_excerpt_with_terms` when long text lacks standard anchors, and risk around hard entropy thresholds near `CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE`. This run verified that the existing excerpt path searches the whole normalized text for preferred/specific/quoted/fallback pressure anchors and already has regressions for pressure fallback, novel quoted metaphors, terminal anchors, semantic truncation, and soft near-gate high-texture budgets. No prompt priority, mode selection, pressure, or control behavior changed.

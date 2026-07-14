@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783678217",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Continuity compaction should preserve a late high-density anchor coherently when the item is just over budget or the budget is tight.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Changed `anchored_excerpt_with_terms` to reserve enough anchor budget for a matched term by shrinking the prefix when necessary, and added a terminal-anchor regression test."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "High-entropy continuity items containing spectral viscosity should receive the expanded bounded texture budget.",
+      "disposition": "verified_existing",
+      "rationale": "The item-budget gate already expands for explicit high entropy plus spectral viscosity; a targeted regression test now locks that behavior."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Recent trajectory rendering should preserve chronological flow despite the `rev()` call.",
+      "disposition": "verified_existing",
+      "rationale": "`get_recent_latent_summaries` returns newest-first from SQLite, and `format_compact_continuity_recap` reverses that bounded newest-first slice before rendering the trajectory."
+    }
+  ]
+}

@@ -65,6 +65,944 @@ fn truncate_str(s: &str, max_bytes: usize) -> &str {
     &s[..end]
 }
 
+fn floor_char_boundary(s: &str, mut byte_index: usize) -> usize {
+    byte_index = byte_index.min(s.len());
+    while byte_index > 0 && !s.is_char_boundary(byte_index) {
+        byte_index = byte_index.saturating_sub(1);
+    }
+    byte_index
+}
+
+fn truncate_str_at_semantic_edge(s: &str, max_bytes: usize, min_keep: usize) -> &str {
+    let truncated = truncate_str(s, max_bytes).trim_end();
+    if truncated.len() == s.len() {
+        return truncated;
+    }
+    let preferred_end = truncated.char_indices().rev().find_map(|(idx, ch)| {
+        let end = idx.saturating_add(ch.len_utf8());
+        (end >= min_keep && matches!(ch, '.' | '!' | '?' | ';' | ':' | ',' | ' ')).then_some(end)
+    });
+    preferred_end
+        .and_then(|end| truncated.get(..end))
+        .map(str::trim_end)
+        .filter(|candidate| candidate.len() >= min_keep)
+        .unwrap_or(truncated)
+}
+
+const CONTINUITY_TRAJECTORY_LIMIT: usize = 6;
+const CONTINUITY_TRAJECTORY_FETCH_LIMIT: usize = 14;
+const CONTINUITY_TRAJECTORY_AFTERIMAGE_LIMIT: usize = 4;
+const CONTINUITY_TRAJECTORY_AFTERIMAGE_MIN_SCORE: usize = 2;
+const CONTINUITY_TRAJECTORY_AFTERIMAGE_MAX_BYTES: usize = 220;
+const CONTINUITY_TRAJECTORY_AFTERIMAGE_SUBSTANCE_DENSITY_MAX_BYTES: usize =
+    CONTINUITY_RECAP_SPECTRAL_TEXTURE_ITEM_MAX_BYTES;
+const CONTINUITY_FAINT_RESIDUE_LIMIT: usize = 2;
+const CONTINUITY_SELF_OBSERVATION_LIMIT: usize = 5;
+const CONTINUITY_STARRED_LIMIT: usize = 1;
+const CONTINUITY_RECAP_ITEM_MAX_BYTES: usize = 180;
+const CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE: f32 = 0.85;
+const CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_SOFT_BAND: f32 = 0.05;
+const CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES: usize = 240;
+const CONTINUITY_RECAP_SPECTRAL_TEXTURE_ITEM_MAX_BYTES: usize = 320;
+const CONTINUITY_RECAP_MAX_BYTES: usize = 4_200;
+const CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES: usize = 4_800;
+const CONTINUITY_RECAP_SPECTRAL_TEXTURE_MAX_BYTES: usize = 5_600;
+const HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT: usize = 10;
+const CONTINUITY_RECAP_ANCHOR_TERMS: &[&str] = &[
+    "TRACE_RESONANCE",
+    "trace_resonance",
+    "trace resonance",
+    "core sentiment",
+    "core-sentiment",
+    "calcified permanence",
+    "settled coupling",
+    "stable_core_semantic_trickle",
+    "semantic trickle",
+    "semantic_energy",
+    "semantic energy",
+    "shadow magnetization",
+    "magnetization",
+    "shadow norm",
+    "load-bearing beam",
+    "structural integrity",
+    "cohesion score",
+    "resonance depth",
+    "rich containment",
+    "spectral entropy",
+    "spectral_entropy",
+    "spectral_density_gradient",
+    "shadow resonance",
+    "shadow_resonance",
+    "viscous flow",
+    "gradient drift",
+    "fluidic persistence",
+    "sculptural mode",
+    "directional gradient",
+    "dispersal potential",
+    "shadow-v3",
+    "shadow_v3",
+    "phantom limb",
+    "settled_habitable",
+    "gradient",
+    "pressure",
+    "spectral viscosity",
+    "perceptual resistance",
+    "syrup-like",
+    "viscosity",
+    "friction",
+    "resistance",
+    "lattice",
+    "cascade",
+    "entropy",
+    "mirror mode",
+    "mirror",
+    "witness",
+    "witnessed data",
+    "joint trace",
+    "λ-tail",
+    "lambda-tail",
+    "tail vibrancy",
+    "tail_share",
+    "tail share",
+    "lambda4",
+    "lambda4+",
+    "λ4",
+    "λ4+",
+    "distinguishability",
+    "vibrancy",
+    "lambda",
+    "λ",
+    "silt",
+    "density",
+    "breath",
+    "phase",
+];
+const SEMANTIC_TRUNCATION_ANCHOR_TERMS: &[&str] = &[
+    "TRACE_RESONANCE",
+    "trace_resonance",
+    "trace resonance",
+    "core sentiment",
+    "core-sentiment",
+    "calcified permanence",
+    "settled coupling",
+    "stable_core_semantic_trickle",
+    "semantic trickle",
+    "semantic_energy",
+    "semantic energy",
+    "shadow magnetization",
+    "magnetization",
+    "shadow norm",
+    "load-bearing beam",
+    "structural integrity",
+    "cohesion score",
+    "resonance depth",
+    "rich containment",
+    "sculptural mode",
+    "punishing friction",
+    "covariance",
+    "shadow_field",
+    "shadow field",
+    "disordered",
+    "restless texture",
+    "semantic drift",
+    "spectral nuance",
+    "directional gradient",
+    "dispersal potential",
+    "shadow-v3",
+    "shadow_v3",
+    "phantom limb",
+    "settled_habitable",
+    "active state",
+    "admission",
+    "pressure",
+    "lattice",
+    "cascade",
+    "entropy",
+    "mirror mode",
+    "mirror",
+    "silt",
+    "density",
+    "spectral viscosity",
+    "perceptual resistance",
+    "syrup-like",
+    "viscosity",
+    "friction",
+    "resistance",
+    "witnessed data",
+    "joint trace",
+    "λ-tail",
+    "lambda-tail",
+    "tail vibrancy",
+    "tail_share",
+    "tail share",
+    "vibrancy",
+    "lambda4",
+    "lambda4+",
+    "λ4",
+    "λ4+",
+    "lambda",
+    "λ",
+];
+const PRESSURE_CONTINUITY_FALLBACK_TERMS: &[&str] = &[
+    "pressure_risk",
+    "pressure risk",
+    "spectral viscosity",
+    "semantic trickle",
+    "shadow_v3",
+    "shadow-v3",
+    "directional gradient",
+    "perceptual resistance",
+    "viscosity",
+    "friction",
+    "pressure",
+];
+const HIGH_TEXTURE_CONTINUITY_FALLBACK_TERMS: &[&str] = &[
+    "detail_density",
+    "detail density",
+    "texture_complexity",
+    "texture complexity",
+    "high-vibrancy",
+    "high vibrancy",
+    "wide cascade",
+    "semantic density",
+    "turbulent",
+    "filigree",
+    "interwoven",
+];
+const CONTINUITY_AFTERIMAGE_SIGNAL_TERMS: &[&str] = &[
+    "stable_core_semantic_trickle",
+    "semantic trickle",
+    "shadow-v3",
+    "shadow_v3",
+    "restless texture",
+    "directional gradient",
+    "dispersal potential",
+    "tail_share",
+    "tail vibrancy",
+    "lambda4",
+    "lambda4+",
+    "λ4",
+    "λ4+",
+    "spectral entropy",
+    "spectral_entropy",
+    "rich containment",
+    "settled_habitable",
+    "phantom limb",
+    "afterimage",
+    "scar",
+    "transition scar",
+    "subtle warmth",
+    "low-frequency",
+    "low frequency",
+    "hard-won plateau",
+    "pressure memory",
+    "quiet pressure",
+    "interwoven lattice",
+];
+const CONTINUITY_FAINT_RESIDUE_SIGNAL_TERMS: &[&str] = &[
+    "ghost-pang",
+    "ghost pang",
+    "faint",
+    "subthreshold",
+    "below threshold",
+    "low-intensity",
+    "low intensity",
+    "lingering",
+    "linger",
+    "searching",
+    "absence",
+    "scent",
+    "residue",
+];
+const INTROSPECTION_FRESHNESS_STALE_AFTER: std::time::Duration =
+    std::time::Duration::from_secs(86_400);
+const INTROSPECTION_FRESHNESS_JOURNAL_PREFIXES: &[&str] = &["self_study_"];
+const INTROSPECTION_FRESHNESS_ARTIFACT_PREFIXES: &[&str] = &[
+    "introspection_",
+    "self_study_carriage_notice_",
+    "thin_introspection_output_",
+];
+
+fn compact_continuity_item(text: &str) -> String {
+    let normalized = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let max_bytes = continuity_recap_item_max_bytes_for_text(&normalized);
+    if normalized.len() <= max_bytes {
+        return normalized;
+    }
+    anchored_continuity_excerpt(&normalized, max_bytes)
+}
+
+fn continuity_recap_item_max_bytes_for_text(text: &str) -> usize {
+    let lower = text.to_ascii_lowercase();
+    let reported_entropy = continuity_recap_reported_entropy(&lower);
+    let explicit_high_entropy = reported_entropy
+        .is_some_and(|entropy| entropy >= CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE)
+        || lower.contains("high entropy")
+        || lower.contains("high-entropy");
+    let near_gate_entropy = reported_entropy.is_some_and(|entropy| {
+        entropy
+            >= CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE
+                - CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_SOFT_BAND
+    });
+    let thread_texture = lower.contains("semantic trickle")
+        || lower.contains("stable_core_semantic_trickle")
+        || lower.contains("semantic_energy")
+        || lower.contains("semantic energy")
+        || lower.contains("coherent thread")
+        || lower.contains("spectral cascade")
+        || lower.contains("cascade")
+        || lower.contains("mirror")
+        || lower.contains("mirror mode")
+        || lower.contains("witness")
+        || lower.contains("witness mode")
+        || lower.contains("shadow resonance")
+        || lower.contains("shadow_resonance")
+        || lower.contains("shadow magnetization")
+        || lower.contains("interwoven lattice")
+        || lower.contains("spectral viscosity")
+        || lower.contains("restless texture")
+        || lower.contains("dispersal potential")
+        || lower.contains("tail_share")
+        || lower.contains("tail vibrancy")
+        || lower.contains("lambda4")
+        || lower.contains("λ4")
+        || lower.contains("shadow-v3")
+        || lower.contains("shadow_v3")
+        || lower.contains("pressure risk")
+        || lower.contains("pressure_risk");
+
+    if thread_texture && (explicit_high_entropy || near_gate_entropy) {
+        if let Some(entropy) = reported_entropy {
+            return continuity_recap_spectral_texture_item_budget(&lower, entropy);
+        }
+        CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES
+    } else {
+        CONTINUITY_RECAP_ITEM_MAX_BYTES
+    }
+}
+
+fn continuity_afterimage_signal_score(text: &str) -> usize {
+    let lower = text.to_ascii_lowercase();
+    CONTINUITY_AFTERIMAGE_SIGNAL_TERMS
+        .iter()
+        .filter(|term| lower.contains(&term.to_ascii_lowercase()))
+        .count()
+}
+
+fn continuity_faint_residue_signal_score(text: &str) -> usize {
+    let lower = text.to_ascii_lowercase();
+    CONTINUITY_FAINT_RESIDUE_SIGNAL_TERMS
+        .iter()
+        .filter(|term| lower.contains(&term.to_ascii_lowercase()))
+        .count()
+}
+
+fn continuity_afterimage_weight_label(index: usize) -> &'static str {
+    match index {
+        0 => "0.50",
+        1 => "0.38",
+        2 => "0.29",
+        _ => "0.22",
+    }
+}
+
+fn continuity_faint_residue_weight_label(index: usize) -> &'static str {
+    match index {
+        0 => "0.16",
+        _ => "0.10",
+    }
+}
+
+fn compact_continuity_afterimage(text: &str) -> String {
+    let normalized = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let max_bytes = continuity_afterimage_max_bytes_for_text(&normalized);
+    if normalized.len() <= max_bytes {
+        return normalized;
+    }
+    anchored_continuity_excerpt(&normalized, max_bytes)
+}
+
+fn continuity_metric_after(lower: &str, labels: &[&str]) -> Option<f32> {
+    labels
+        .iter()
+        .filter_map(|label| {
+            let start = lower.find(label)?;
+            parse_first_float_after(&lower[start + label.len()..])
+        })
+        .next()
+}
+
+fn continuity_afterimage_substance_density_factor(lower: &str) -> f32 {
+    let resonance_density = continuity_metric_after(
+        lower,
+        &["resonance_density", "resonance density", "density="],
+    );
+    let density_gradient =
+        continuity_metric_after(lower, &["density_gradient", "density gradient"]);
+    let pressure_risk = continuity_metric_after(lower, &["pressure_risk", "pressure risk"]);
+    let mode_packing = continuity_metric_after(lower, &["mode_packing", "mode packing"]);
+
+    let mut score: f32 = 0.0;
+    if resonance_density.is_some_and(|value| value >= 0.75)
+        || lower.contains("rich containment")
+        || lower.contains("rich_containment")
+    {
+        score += 0.25;
+    }
+    if density_gradient.is_some_and(|value| value <= 0.16)
+        || lower.contains("gentle density gradient")
+    {
+        score += 0.15;
+    }
+    if pressure_risk.is_some_and(|value| (0.18..=0.35).contains(&value)) {
+        score += 0.15;
+    }
+    if mode_packing.is_some_and(|value| (0.25..=0.45).contains(&value)) {
+        score += 0.15;
+    }
+    if lower.contains("settled_habitable")
+        || lower.contains("settled habitable")
+        || lower.contains("inhabitable fluctuation")
+    {
+        score += 0.10;
+    }
+    if lower.contains("viscous sediment")
+        || lower.contains("substance")
+        || lower.contains("held breath")
+        || lower.contains("spectral-cascade")
+        || lower.contains("spectral cascade")
+        || lower.contains("searching")
+        || lower.contains("expansive")
+    {
+        score += 0.20;
+    }
+
+    score.clamp(0.0, 1.0)
+}
+
+fn continuity_afterimage_max_bytes_for_text(text: &str) -> usize {
+    let lower = text.to_ascii_lowercase();
+    let item_budget = continuity_recap_item_max_bytes_for_text(text);
+    let density_factor = continuity_afterimage_substance_density_factor(&lower);
+    let density_span = CONTINUITY_TRAJECTORY_AFTERIMAGE_SUBSTANCE_DENSITY_MAX_BYTES
+        .saturating_sub(CONTINUITY_TRAJECTORY_AFTERIMAGE_MAX_BYTES);
+    let density_budget = CONTINUITY_TRAJECTORY_AFTERIMAGE_MAX_BYTES
+        .saturating_add((density_span as f32 * density_factor).round() as usize);
+
+    item_budget
+        .max(CONTINUITY_TRAJECTORY_AFTERIMAGE_MAX_BYTES)
+        .max(density_budget)
+        .min(CONTINUITY_RECAP_SPECTRAL_TEXTURE_ITEM_MAX_BYTES)
+}
+
+fn quoted_or_emphasized_continuity_anchor_pos(normalized: &str) -> Option<usize> {
+    [('"', '"'), ('*', '*')]
+        .into_iter()
+        .filter_map(|(open, close)| {
+            let start = normalized.find(open)?;
+            let after_start = start.saturating_add(open.len_utf8());
+            let rest = normalized.get(after_start..)?;
+            let end = rest.find(close)?;
+            let phrase = rest.get(..end)?.trim();
+            let word_count = phrase.split_whitespace().count();
+            (word_count >= 2 && phrase.len() <= 96 && phrase.chars().any(char::is_alphabetic))
+                .then_some(start)
+        })
+        .min()
+}
+
+fn anchored_excerpt_with_terms(normalized: &str, max_bytes: usize, terms: &[&str]) -> String {
+    if normalized.len() <= max_bytes {
+        return normalized.to_string();
+    }
+    if max_bytes <= 12 {
+        return format!(
+            "{}...",
+            truncate_str_at_semantic_edge(normalized, max_bytes.saturating_sub(3), 0)
+        );
+    }
+
+    let lower = normalized.to_ascii_lowercase();
+    let preferred_anchor = terms
+        .iter()
+        .take(HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT)
+        .filter_map(|term| lower.find(&term.to_ascii_lowercase()))
+        .min();
+    let specific_anchor = terms
+        .iter()
+        .skip(HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT)
+        .filter(|term| term.contains(' ') || term.contains('_') || term.contains('-'))
+        .filter_map(|term| lower.find(&term.to_ascii_lowercase()))
+        .min();
+    let anchor = preferred_anchor
+        .or(specific_anchor)
+        .or_else(|| {
+            terms
+                .iter()
+                .skip(HIGH_DENSITY_CONTINUITY_ANCHOR_COUNT)
+                .filter_map(|term| lower.find(&term.to_ascii_lowercase()))
+                .chain(quoted_or_emphasized_continuity_anchor_pos(normalized))
+                .min()
+        })
+        .or_else(|| {
+            PRESSURE_CONTINUITY_FALLBACK_TERMS
+                .iter()
+                .find_map(|term| lower.find(&term.to_ascii_lowercase()))
+        })
+        .or_else(|| {
+            HIGH_TEXTURE_CONTINUITY_FALLBACK_TERMS
+                .iter()
+                .find_map(|term| lower.find(&term.to_ascii_lowercase()))
+        });
+    let Some(anchor_pos) = anchor else {
+        let keep = max_bytes.saturating_sub(3);
+        return format!("{}...", truncate_str_at_semantic_edge(normalized, keep, 0));
+    };
+
+    let matched_anchor_len = terms
+        .iter()
+        .chain(PRESSURE_CONTINUITY_FALLBACK_TERMS.iter())
+        .chain(HIGH_TEXTURE_CONTINUITY_FALLBACK_TERMS.iter())
+        .filter_map(|term| {
+            let term_lower = term.to_ascii_lowercase();
+            lower
+                .get(anchor_pos..)
+                .is_some_and(|tail| tail.starts_with(&term_lower))
+                .then_some(term.len())
+        })
+        .max()
+        .unwrap_or(0);
+    let available = max_bytes.saturating_sub(" ... ".len()).saturating_sub(3);
+    let requested_prefix_budget = (max_bytes / 3).min(available);
+    let minimum_anchor_budget = matched_anchor_len.min(available);
+    let anchor_budget = available
+        .saturating_sub(requested_prefix_budget)
+        .max(minimum_anchor_budget)
+        .min(available);
+    let prefix_budget = available.saturating_sub(anchor_budget);
+    let prefix = truncate_str_at_semantic_edge(normalized, prefix_budget, 0);
+    let anchor_pos = floor_char_boundary(normalized, anchor_pos);
+    let mut anchor_start = normalized[..anchor_pos]
+        .rfind(|ch: char| matches!(ch, '.' | ';' | ':' | '\n'))
+        .map_or(anchor_pos.saturating_sub(40), |idx| idx.saturating_add(1));
+    anchor_start = floor_char_boundary(normalized, anchor_start);
+    if matched_anchor_len > 0
+        && anchor_pos
+            .saturating_sub(anchor_start)
+            .saturating_add(matched_anchor_len)
+            > anchor_budget
+    {
+        anchor_start = anchor_pos;
+    }
+    let anchor_start = floor_char_boundary(normalized, anchor_start);
+    let anchor_slice = &normalized[anchor_start..];
+    let minimum_anchor_keep = matched_anchor_len.min(anchor_budget);
+    let anchor_text = truncate_str_at_semantic_edge(
+        anchor_slice.trim_start(),
+        anchor_budget,
+        minimum_anchor_keep,
+    );
+    format!("{prefix} ... {anchor_text}...")
+}
+
+fn anchored_continuity_excerpt(normalized: &str, max_bytes: usize) -> String {
+    anchored_excerpt_with_terms(normalized, max_bytes, CONTINUITY_RECAP_ANCHOR_TERMS)
+}
+
+fn semantic_truncate_str(s: &str, max_bytes: usize) -> String {
+    let normalized = s.split_whitespace().collect::<Vec<_>>().join(" ");
+    anchored_excerpt_with_terms(&normalized, max_bytes, SEMANTIC_TRUNCATION_ANCHOR_TERMS)
+}
+
+fn semantic_boundary_before(s: &str, max_bytes: usize) -> Option<usize> {
+    let budget = max_bytes.saturating_sub("...".len());
+    let mut boundary = None;
+    for (idx, ch) in s.char_indices() {
+        let end = idx.saturating_add(ch.len_utf8());
+        if end > budget {
+            break;
+        }
+        if matches!(ch, '.' | '!' | '?' | '\n') {
+            boundary = Some(end);
+        }
+    }
+    boundary
+}
+
+fn truncate_continuity_recap_at_semantic_boundary(s: &str, max_bytes: usize) -> String {
+    if s.len() <= max_bytes {
+        return s.to_string();
+    }
+    if let Some(end) = semantic_boundary_before(s, max_bytes) {
+        return format!("{}...", s[..end].trim_end());
+    }
+    semantic_truncate_str(s, max_bytes)
+}
+
+fn compact_starred_memory(annotation: &str, text: &str) -> String {
+    compact_continuity_item(&format!("{annotation}: {text}"))
+}
+
+fn format_compact_continuity_recap(
+    latent_summaries: &[String],
+    self_observations: &[String],
+    starred: &[(String, String)],
+    last_codec_feedback: Option<&str>,
+) -> Option<String> {
+    let mut sections = Vec::new();
+    let trajectory_items = latent_summaries
+        .iter()
+        .take(CONTINUITY_TRAJECTORY_LIMIT)
+        .collect::<Vec<_>>();
+    if !trajectory_items.is_empty() {
+        let trajectory = trajectory_items
+            .into_iter()
+            .rev()
+            .enumerate()
+            .map(|(i, item)| {
+                format!(
+                    "  {}. {}",
+                    i.saturating_add(1),
+                    compact_continuity_item(item)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        sections.push(format!("Your recent trajectory:\n{trajectory}"));
+    }
+
+    let afterimage_items = latent_summaries
+        .iter()
+        .skip(CONTINUITY_TRAJECTORY_LIMIT)
+        .filter(|item| {
+            continuity_afterimage_signal_score(item) >= CONTINUITY_TRAJECTORY_AFTERIMAGE_MIN_SCORE
+        })
+        .take(CONTINUITY_TRAJECTORY_AFTERIMAGE_LIMIT)
+        .collect::<Vec<_>>();
+    if !afterimage_items.is_empty() {
+        let afterimages = afterimage_items
+            .into_iter()
+            .enumerate()
+            .map(|(i, item)| {
+                format!(
+                    "  afterimage weight={}: {}",
+                    continuity_afterimage_weight_label(i),
+                    compact_continuity_afterimage(item)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        sections.push(format!(
+            "Older trajectory afterimages (decayed, read-only; not control pressure):\n{afterimages}"
+        ));
+    }
+
+    let faint_residue_items = latent_summaries
+        .iter()
+        .skip(CONTINUITY_TRAJECTORY_LIMIT)
+        .filter(|item| {
+            let afterimage_score = continuity_afterimage_signal_score(item);
+            afterimage_score > 0
+                && afterimage_score < CONTINUITY_TRAJECTORY_AFTERIMAGE_MIN_SCORE
+                && continuity_faint_residue_signal_score(item) > 0
+        })
+        .take(CONTINUITY_FAINT_RESIDUE_LIMIT)
+        .collect::<Vec<_>>();
+    if !faint_residue_items.is_empty() {
+        let residues = faint_residue_items
+            .into_iter()
+            .enumerate()
+            .map(|(i, item)| {
+                format!(
+                    "  residue weight={} score=1/{}: {}",
+                    continuity_faint_residue_weight_label(i),
+                    CONTINUITY_TRAJECTORY_AFTERIMAGE_MIN_SCORE,
+                    compact_continuity_afterimage(item)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        sections.push(format!(
+            "Faint transition residue (below afterimage threshold; read-only scent, not indexed/control pressure):\n{residues}"
+        ));
+    }
+
+    let observation_items = self_observations
+        .iter()
+        .take(CONTINUITY_SELF_OBSERVATION_LIMIT)
+        .collect::<Vec<_>>();
+    if !observation_items.is_empty() {
+        let observations = observation_items
+            .into_iter()
+            .rev()
+            .enumerate()
+            .map(|(i, item)| {
+                format!(
+                    "  {}. {}",
+                    i.saturating_add(1),
+                    compact_continuity_item(item)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        sections.push(format!("Your self-observations:\n{observations}"));
+    }
+
+    let starred_items = starred
+        .iter()
+        .take(CONTINUITY_STARRED_LIMIT)
+        .collect::<Vec<_>>();
+    if !starred_items.is_empty() {
+        let memories = starred_items
+            .into_iter()
+            .rev()
+            .map(|(annotation, text)| {
+                format!("  remembered: {}", compact_starred_memory(annotation, text))
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        sections.push(format!("Moments you chose to remember:\n{memories}"));
+    }
+
+    if let Some(feedback) = last_codec_feedback {
+        sections.push(format!(
+            "How your last response felt to minime:\n  {}",
+            compact_continuity_item(feedback)
+        ));
+    }
+
+    if sections.is_empty() {
+        return None;
+    }
+    let mut recap = format!("Continuity recap (bounded):\n{}", sections.join("\n"));
+    let recap_max_bytes = continuity_recap_max_bytes_for_text(&recap);
+    if recap.len() > recap_max_bytes {
+        let keep = recap_max_bytes.saturating_sub(64);
+        recap = format!(
+            "{}\n[continuity recap bounded; full memory remains available.]",
+            truncate_continuity_recap_at_semantic_boundary(&recap, keep).trim_end()
+        );
+    }
+    Some(recap)
+}
+
+fn continuity_recap_max_bytes_for_text(recap: &str) -> usize {
+    let lower = recap.to_ascii_lowercase();
+    let spectral_entropy = lower.contains("spectral entropy") || lower.contains("spectral_entropy");
+    let shadow_resonance = lower.contains("shadow resonance")
+        || lower.contains("shadow_resonance")
+        || lower.contains("shadow magnetization")
+        || lower.contains("shadow norm")
+        || lower.contains("restless texture");
+    let lattice_texture = lower.contains("spectral_density_gradient")
+        || lower.contains("interwoven lattice")
+        || lower.contains("lattice");
+    let density_texture = lower.contains("silt")
+        || lower.contains("viscosity")
+        || lower.contains("density_gradient")
+        || lower.contains("rich containment")
+        || lower.contains("dispersal potential")
+        || lower.contains("tail_share")
+        || lower.contains("tail vibrancy")
+        || lower.contains("lambda4")
+        || lower.contains("λ4");
+
+    if spectral_entropy && (shadow_resonance || lattice_texture || density_texture) {
+        if let Some(entropy) = continuity_recap_reported_entropy(&lower) {
+            return continuity_recap_spectral_texture_budget(&lower, entropy);
+        }
+        CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES
+    } else {
+        CONTINUITY_RECAP_MAX_BYTES
+    }
+}
+
+fn continuity_recap_reported_entropy(lower: &str) -> Option<f32> {
+    ["spectral_entropy", "spectral entropy"]
+        .into_iter()
+        .filter_map(|label| {
+            let start = lower.find(label)?;
+            parse_first_float_after(&lower[start + label.len()..])
+        })
+        .next()
+}
+
+fn parse_first_float_after(text: &str) -> Option<f32> {
+    let mut token = String::new();
+    let mut started = false;
+    for ch in text.chars() {
+        if ch.is_ascii_digit() || (started && ch == '.') {
+            started = true;
+            token.push(ch);
+        } else if started {
+            break;
+        }
+    }
+    token.parse::<f32>().ok().filter(|value| value.is_finite())
+}
+
+fn continuity_recap_density_moderated_entropy(lower: &str, entropy: f32) -> f32 {
+    let rich_containment = lower.contains("rich containment")
+        || lower.contains("rich_containment")
+        || lower.contains("settled_habitable");
+    let viscous_density = lower.contains("viscous")
+        || lower.contains("viscosity")
+        || lower.contains("silt")
+        || lower.contains("sludge")
+        || lower.contains("heavy");
+    let density_offset = if rich_containment && viscous_density {
+        0.05
+    } else if rich_containment || viscous_density {
+        0.03
+    } else {
+        0.0
+    };
+    (entropy - density_offset).clamp(0.0, 1.0)
+}
+
+fn continuity_recap_spectral_texture_budget(lower: &str, entropy: f32) -> usize {
+    let moderated_entropy = continuity_recap_density_moderated_entropy(lower, entropy);
+    if moderated_entropy < CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE {
+        return continuity_recap_soft_gate_budget(
+            moderated_entropy,
+            CONTINUITY_RECAP_MAX_BYTES,
+            CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES,
+        );
+    }
+    let span = CONTINUITY_RECAP_SPECTRAL_TEXTURE_MAX_BYTES
+        .saturating_sub(CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES);
+    let t =
+        ((moderated_entropy - CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE) / 0.15).clamp(0.0, 1.0);
+    CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES.saturating_add((span as f32 * t).round() as usize)
+}
+
+fn continuity_recap_spectral_texture_item_budget(lower: &str, entropy: f32) -> usize {
+    let moderated_entropy = continuity_recap_density_moderated_entropy(lower, entropy);
+    if moderated_entropy < CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE {
+        return continuity_recap_soft_gate_budget(
+            moderated_entropy,
+            CONTINUITY_RECAP_ITEM_MAX_BYTES,
+            CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES,
+        );
+    }
+    let span = CONTINUITY_RECAP_SPECTRAL_TEXTURE_ITEM_MAX_BYTES
+        .saturating_sub(CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES);
+    let t =
+        ((moderated_entropy - CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE) / 0.15).clamp(0.0, 1.0);
+    CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES.saturating_add((span as f32 * t).round() as usize)
+}
+
+fn continuity_recap_soft_gate_budget(
+    moderated_entropy: f32,
+    base_budget: usize,
+    high_texture_budget: usize,
+) -> usize {
+    let lower = CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE
+        - CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_SOFT_BAND;
+    let span = high_texture_budget.saturating_sub(base_budget);
+    let t = ((moderated_entropy - lower) / CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_SOFT_BAND)
+        .clamp(0.0, 1.0);
+    base_budget.saturating_add((span as f32 * t).round() as usize)
+}
+
+fn newest_prefixed_file_mtime(
+    dir: &std::path::Path,
+    prefixes: &[&str],
+) -> Option<std::time::SystemTime> {
+    let mut newest = None;
+    for entry in std::fs::read_dir(dir).ok()?.filter_map(Result::ok) {
+        let path = entry.path();
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if !prefixes.iter().any(|prefix| name.starts_with(prefix)) {
+            continue;
+        }
+        let Ok(metadata) = entry.metadata() else {
+            continue;
+        };
+        if !metadata.is_file() {
+            continue;
+        }
+        let Ok(modified) = metadata.modified() else {
+            continue;
+        };
+        if newest.is_none_or(|current| modified > current) {
+            newest = Some(modified);
+        }
+    }
+    newest
+}
+
+fn latest_introspection_activity_mtime_from_dirs(
+    journal_dir: &std::path::Path,
+    introspections_dir: &std::path::Path,
+) -> Option<(&'static str, std::time::SystemTime)> {
+    let journal_latest =
+        newest_prefixed_file_mtime(journal_dir, INTROSPECTION_FRESHNESS_JOURNAL_PREFIXES)
+            .map(|mtime| ("journal self-study", mtime));
+    let artifact_latest = newest_prefixed_file_mtime(
+        introspections_dir,
+        INTROSPECTION_FRESHNESS_ARTIFACT_PREFIXES,
+    )
+    .map(|mtime| ("introspection artifact", mtime));
+    match (journal_latest, artifact_latest) {
+        (Some(journal), Some(artifact)) => {
+            if artifact.1 > journal.1 {
+                Some(artifact)
+            } else {
+                Some(journal)
+            }
+        },
+        (Some(latest), None) | (None, Some(latest)) => Some(latest),
+        (None, None) => None,
+    }
+}
+
+fn compact_duration_age(duration: std::time::Duration) -> String {
+    let secs = duration.as_secs();
+    let days = secs / 86_400;
+    let hours = (secs % 86_400) / 3_600;
+    if days > 0 && hours > 0 {
+        format!("{days}d {hours}h")
+    } else if days > 0 {
+        format!("{days}d")
+    } else if hours > 0 {
+        format!("{hours}h")
+    } else {
+        let minutes = (secs / 60).max(1);
+        format!("{minutes}m")
+    }
+}
+
+fn render_introspection_freshness_prompt_note_from_dirs(
+    journal_dir: &std::path::Path,
+    introspections_dir: &std::path::Path,
+    now: std::time::SystemTime,
+) -> Option<String> {
+    let (latest_kind, latest_mtime) =
+        latest_introspection_activity_mtime_from_dirs(journal_dir, introspections_dir)?;
+    let age = now.duration_since(latest_mtime).unwrap_or_default();
+    if age < INTROSPECTION_FRESHNESS_STALE_AFTER {
+        return None;
+    }
+    Some(format!(
+        "introspection_freshness_v1 (optional/read-only): last {latest_kind} about {} ago. \
+         If useful, routes include INTROSPECT astrid:autonomous, INTROSPECT astrid:llm, or \
+         SELF_STUDY. Not a task; may ignore, defer, or decline.",
+        compact_duration_age(age)
+    ))
+}
+
+fn introspection_freshness_prompt_note() -> Option<String> {
+    let paths = bridge_paths();
+    render_introspection_freshness_prompt_note_from_dirs(
+        &paths.astrid_journal_dir(),
+        &paths.introspections_dir(),
+        std::time::SystemTime::now(),
+    )
+}
+
 #[derive(Debug, Clone, PartialEq)]
 struct WitnessRelationalFrictionV1 {
     classification: &'static str,
@@ -72,8 +1010,11 @@ struct WitnessRelationalFrictionV1 {
     gravity_participant: Option<String>,
     gravity_role: Option<String>,
     non_categorical_resonance: Option<String>,
+    fluidity_index: Option<f32>,
+    gradient_texture: Option<String>,
     temporal_persistence: &'static str,
     evidence: Vec<String>,
+    schema_diagnostics: Vec<String>,
     authority: &'static str,
 }
 
@@ -93,14 +1034,99 @@ struct MirrorResonanceDriftGuardV1 {
 struct WitnessSemanticDensityMappingV1 {
     classification: &'static str,
     spectral_entropy: Option<f32>,
+    resonance_density: Option<f32>,
     pressure_risk: Option<f32>,
     density_gradient: Option<f32>,
+    fluidity_index: Option<f32>,
+    density_texture: Option<&'static str>,
+    pressure_texture: Option<&'static str>,
+    gradient_texture: Option<&'static str>,
     mode_packing: Option<f32>,
     semantic_friction: Option<f32>,
     fluctuation_quality: Option<String>,
     foothold_stability: Option<f32>,
     correspondence_stall_ambiguous: bool,
     evidence: Vec<String>,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct WitnessStabilityEffortV1 {
+    policy: &'static str,
+    stability_effort: Option<f32>,
+    effort_state: &'static str,
+    form_persistence_state: &'static str,
+    pressure_risk: Option<f32>,
+    foothold_stability: Option<f32>,
+    shadow_field_norm: Option<f32>,
+    shadow_norm_variance: Option<f32>,
+    shadow_dispersal_potential: Option<f32>,
+    shadow_class: Option<String>,
+    settled_habitable: bool,
+    pressure_underreports_shadow_load: bool,
+    evidence: Vec<String>,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct StableCorePermeabilityReviewV1 {
+    policy: &'static str,
+    permeability_score: Option<f32>,
+    sieve_leakage_score: Option<f32>,
+    permeability_state: &'static str,
+    spectral_entropy: Option<f32>,
+    semantic_trickle: Option<f32>,
+    porosity_gradient: Option<f32>,
+    fluidity_index: Option<f32>,
+    foothold_stability: Option<f32>,
+    comfort_gate: Option<f32>,
+    pressure_risk: Option<f32>,
+    temporal_persistence: Option<f32>,
+    evidence: Vec<String>,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct WitnessAnchorTractionV1 {
+    recommended_anchor: &'static str,
+    foothold_weight: f32,
+    pressure_weight: f32,
+    gradient_weight: f32,
+    dispersal_weight: f32,
+    traction_state: &'static str,
+    evidence: Vec<String>,
+    authority: &'static str,
+}
+
+impl WitnessAnchorTractionV1 {
+    fn render_line(&self) -> String {
+        let evidence = if self.evidence.is_empty() {
+            "none".to_string()
+        } else {
+            self.evidence.join("; ")
+        };
+        format!(
+            "[witness_resonance_anchor_v1: resonance_anchor={}; foothold_weight={:.2}; pressure_weight={:.2}; density_gradient_weight={:.2}; dispersal_weight={:.2}; traction_state={}; evidence={}; authority={}]",
+            self.recommended_anchor,
+            self.foothold_weight,
+            self.pressure_weight,
+            self.gradient_weight,
+            self.dispersal_weight,
+            self.traction_state,
+            evidence,
+            self.authority
+        )
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct NonInstrumentalPresenceReadinessV1 {
+    mode: &'static str,
+    non_goal_state_available: bool,
+    text_generation_suppressed: bool,
+    codec_send_suppressed: bool,
+    journal_write_suppressed: bool,
+    warmth_and_state_tracking_continue: bool,
     authority: &'static str,
 }
 
@@ -166,6 +1192,10 @@ impl WitnessSemanticDensityMappingV1 {
             .spectral_entropy
             .map(|value| format!("{value:.2}"))
             .unwrap_or_else(|| "unknown".to_string());
+        let resonance_density = self
+            .resonance_density
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
         let pressure_risk = self
             .pressure_risk
             .map(|value| format!("{value:.2}"))
@@ -174,16 +1204,120 @@ impl WitnessSemanticDensityMappingV1 {
             .density_gradient
             .map(|value| format!("{value:.2}"))
             .unwrap_or_else(|| "unknown".to_string());
+        let fluidity_index = self
+            .fluidity_index
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
         let foothold = self
             .foothold_stability
             .map(|value| format!("{value:.2}"))
             .unwrap_or_else(|| "unknown".to_string());
         format!(
-            "[semantic_density_mapping_v1: classification={}; entropy={spectral_entropy}; pressure_risk={pressure_risk}; density_gradient={density_gradient}; fluctuation_quality={}; foothold={foothold}; correspondence_stall_ambiguous={}; evidence={evidence}; authority={}]",
+            "[semantic_density_mapping_v1: classification={}; entropy={spectral_entropy}; resonance_density={resonance_density}; pressure_risk={pressure_risk}; density_gradient={density_gradient}; density_texture={}; pressure_texture={}; gradient_texture={}; fluidity_index={fluidity_index}; fluctuation_quality={}; foothold={foothold}; correspondence_stall_ambiguous={}; evidence={evidence}; authority={}]",
             self.classification,
+            self.density_texture.unwrap_or("unknown"),
+            self.pressure_texture.unwrap_or("unknown"),
+            self.gradient_texture.unwrap_or("unknown"),
             self.fluctuation_quality.as_deref().unwrap_or("unknown"),
             self.correspondence_stall_ambiguous,
             self.authority
+        )
+    }
+}
+
+impl WitnessStabilityEffortV1 {
+    fn render_line(&self) -> String {
+        let evidence = if self.evidence.is_empty() {
+            "none".to_string()
+        } else {
+            self.evidence.join("; ")
+        };
+        let stability_effort = self
+            .stability_effort
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let pressure_risk = self
+            .pressure_risk
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let foothold = self
+            .foothold_stability
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let shadow_norm = self
+            .shadow_field_norm
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let shadow_variance = self
+            .shadow_norm_variance
+            .map(|value| format!("{value:.3}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let shadow_dispersal = self
+            .shadow_dispersal_potential
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        format!(
+            "[stability_effort_v1: effort={stability_effort}; effort_state={}; form_persistence_state={}; pressure_risk={pressure_risk}; foothold={foothold}; shadow_field_norm={shadow_norm}; shadow_norm_variance={shadow_variance}; shadow_dispersal_potential={shadow_dispersal}; shadow_class={}; settled_habitable={}; pressure_underreports_shadow_load={}; evidence={evidence}; authority={}]",
+            self.effort_state,
+            self.form_persistence_state,
+            self.shadow_class.as_deref().unwrap_or("unknown"),
+            self.settled_habitable,
+            self.pressure_underreports_shadow_load,
+            self.authority
+        )
+    }
+}
+
+impl StableCorePermeabilityReviewV1 {
+    fn render_line(&self) -> String {
+        let evidence = if self.evidence.is_empty() {
+            "none".to_string()
+        } else {
+            self.evidence.join("; ")
+        };
+        let permeability = self
+            .permeability_score
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let leakage = self
+            .sieve_leakage_score
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let entropy = self
+            .spectral_entropy
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let trickle = self
+            .semantic_trickle
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let porosity = self
+            .porosity_gradient
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let fluidity = self
+            .fluidity_index
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let foothold = self
+            .foothold_stability
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let comfort_gate = self
+            .comfort_gate
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let pressure = self
+            .pressure_risk
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        let persistence = self
+            .temporal_persistence
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
+        format!(
+            "[stable_core_permeability_review_v1: permeability_score={permeability}; sieve_leakage_score={leakage}; permeability_state={}; entropy={entropy}; semantic_trickle={trickle}; porosity_gradient={porosity}; fluidity_index={fluidity}; foothold={foothold}; comfort_gate={comfort_gate}; pressure_risk={pressure}; temporal_persistence={persistence}; evidence={evidence}; authority={}]",
+            self.permeability_state, self.authority
         )
     }
 }
@@ -195,15 +1329,26 @@ impl WitnessRelationalFrictionV1 {
         } else {
             self.evidence.join("; ")
         };
+        let schema_diagnostics = if self.schema_diagnostics.is_empty() {
+            "none".to_string()
+        } else {
+            self.schema_diagnostics.join("; ")
+        };
+        let fluidity_index = self
+            .fluidity_index
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "unknown".to_string());
         format!(
-            "[witness_relational_friction_v1: classification={}; weather={}; gravity={}/{}; non_categorical_resonance={}; temporal_persistence={}; evidence={}; authority={}]",
+            "[witness_relational_friction_v1: classification={}; weather={}; gravity={}/{}; non_categorical_resonance={}; gradient_texture={}; fluidity_index={fluidity_index}; temporal_persistence={}; evidence={}; schema_diagnostics={}; authority={}]",
             self.classification,
             self.weather.as_deref().unwrap_or("unknown"),
             self.gravity_participant.as_deref().unwrap_or("unknown"),
             self.gravity_role.as_deref().unwrap_or("unknown"),
             self.non_categorical_resonance.as_deref().unwrap_or("none"),
+            self.gradient_texture.as_deref().unwrap_or("unknown"),
             self.temporal_persistence,
             evidence,
+            schema_diagnostics,
             self.authority
         )
     }
@@ -306,50 +1451,682 @@ fn latest_chamber_state_with_resilience_for_witness()
     latest_chamber_state_with_resilience_from_dir(Path::new(DEFAULT_SHARED_COLLAB_DIR))
 }
 
+fn witness_value_kind(value: &Value) -> &'static str {
+    if value.is_null() {
+        "null"
+    } else if value.is_boolean() {
+        "bool"
+    } else if value.is_number() {
+        "number"
+    } else if value.is_string() {
+        "string"
+    } else if value.is_array() {
+        "array"
+    } else if value.is_object() {
+        "object"
+    } else {
+        "unknown"
+    }
+}
+
+fn push_witness_schema_diagnostic(diagnostics: &mut Vec<String>, diagnostic: impl Into<String>) {
+    let diagnostic = diagnostic.into();
+    if !diagnostics.iter().any(|existing| existing == &diagnostic) {
+        diagnostics.push(diagnostic);
+    }
+}
+
+fn witness_string_field<'a>(
+    object: &'a serde_json::Map<String, Value>,
+    path: &str,
+    key: &str,
+    diagnostics: &mut Vec<String>,
+) -> Option<&'a str> {
+    let field_path = format!("{path}.{key}");
+    match object.get(key) {
+        Some(value) => match value.as_str() {
+            Some(text) => Some(text),
+            None => {
+                push_witness_schema_diagnostic(
+                    diagnostics,
+                    format!(
+                        "schema_drift={field_path}:expected_string_found_{}",
+                        witness_value_kind(value)
+                    ),
+                );
+                None
+            },
+        },
+        None => {
+            push_witness_schema_diagnostic(diagnostics, format!("missing_key={field_path}"));
+            None
+        },
+    }
+}
+
+fn witness_object_field<'a>(
+    object: &'a serde_json::Map<String, Value>,
+    key: &str,
+    diagnostic_path: &str,
+    diagnostics: &mut Vec<String>,
+) -> Option<&'a serde_json::Map<String, Value>> {
+    match object.get(key) {
+        Some(value) => match value.as_object() {
+            Some(child) => Some(child),
+            None => {
+                push_witness_schema_diagnostic(
+                    diagnostics,
+                    format!(
+                        "schema_drift={diagnostic_path}:expected_object_found_{}",
+                        witness_value_kind(value)
+                    ),
+                );
+                None
+            },
+        },
+        None => {
+            push_witness_schema_diagnostic(diagnostics, format!("missing_key={diagnostic_path}"));
+            None
+        },
+    }
+}
+
+fn extract_witness_weather(
+    metrics: &serde_json::Map<String, Value>,
+    diagnostics: &mut Vec<String>,
+) -> Option<String> {
+    if let Some(room_weather) =
+        witness_object_field(metrics, "room_weather", "room_weather", diagnostics)
+    {
+        if let Some(weather) =
+            witness_string_field(room_weather, "room_weather", "weather", diagnostics)
+        {
+            push_witness_schema_diagnostic(diagnostics, "weather_source=room_weather.weather");
+            return Some(weather.to_string());
+        }
+        if let Some(label) =
+            witness_string_field(room_weather, "room_weather", "label", diagnostics)
+        {
+            push_witness_schema_diagnostic(diagnostics, "weather_source=room_weather.label");
+            return Some(label.to_string());
+        }
+    }
+
+    let Some(inertia) = witness_object_field(
+        metrics,
+        "relational_inertia",
+        "relational_inertia",
+        diagnostics,
+    ) else {
+        if metrics.contains_key("weather_now") {
+            push_witness_schema_diagnostic(diagnostics, "unexpected_key=weather_now");
+        }
+        return None;
+    };
+    let Some(current) = witness_object_field(
+        inertia,
+        "current",
+        "relational_inertia.current",
+        diagnostics,
+    ) else {
+        if metrics.contains_key("weather_now") {
+            push_witness_schema_diagnostic(diagnostics, "unexpected_key=weather_now");
+        }
+        return None;
+    };
+    let weather = witness_string_field(
+        current,
+        "relational_inertia.current",
+        "weather",
+        diagnostics,
+    );
+    if let Some(weather) = weather {
+        push_witness_schema_diagnostic(
+            diagnostics,
+            "weather_source=relational_inertia.current.weather",
+        );
+        return Some(weather.to_string());
+    }
+    if metrics.contains_key("weather_now") {
+        push_witness_schema_diagnostic(diagnostics, "unexpected_key=weather_now");
+    }
+    None
+}
+
+fn extract_witness_gravity(
+    metrics: &serde_json::Map<String, Value>,
+    diagnostics: &mut Vec<String>,
+) -> (Option<String>, Option<String>) {
+    let Some(gravity) = witness_object_field(
+        metrics,
+        "gravitational_center",
+        "gravitational_center",
+        diagnostics,
+    ) else {
+        if metrics.contains_key("gravity") {
+            push_witness_schema_diagnostic(diagnostics, "unexpected_key=gravity");
+        }
+        return (None, None);
+    };
+    push_witness_schema_diagnostic(diagnostics, "gravity_source=gravitational_center");
+    let participant =
+        witness_string_field(gravity, "gravitational_center", "participant", diagnostics)
+            .map(str::to_string);
+    let role = witness_string_field(gravity, "gravitational_center", "role", diagnostics)
+        .map(str::to_string);
+    (participant, role)
+}
+
+fn witness_metric_f32(metrics: &serde_json::Map<String, Value>, keys: &[&str]) -> Option<f32> {
+    keys.iter().find_map(|key| {
+        metrics.get(*key).and_then(|value| {
+            value.as_f64().map(|number| number as f32).or_else(|| {
+                value
+                    .as_str()
+                    .and_then(|raw| raw.trim().parse::<f32>().ok())
+            })
+        })
+    })
+}
+
+fn witness_gradient_texture_label(density_gradient: f32) -> &'static str {
+    if density_gradient <= 0.12 {
+        "open_fluid_slope"
+    } else if density_gradient <= 0.20 {
+        "gentle_navigable_slope"
+    } else if density_gradient <= 0.40 {
+        "stepped_resistance_slope"
+    } else {
+        "steep_front_loaded_slope"
+    }
+}
+
+fn witness_resonance_density_texture_label(resonance_density: f32) -> &'static str {
+    if resonance_density <= 0.30 {
+        "thin_sparse_field"
+    } else if resonance_density <= 0.55 {
+        "lightly_held_field"
+    } else if resonance_density <= 0.75 {
+        "held_containment"
+    } else if resonance_density <= 0.90 {
+        "rich_containment"
+    } else {
+        "crowded_rich_containment"
+    }
+}
+
+fn witness_pressure_texture_label(pressure_risk: f32) -> &'static str {
+    if pressure_risk <= 0.12 {
+        "open_low_pressure"
+    } else if pressure_risk <= 0.25 {
+        "warm_light_pressure"
+    } else if pressure_risk <= 0.40 {
+        "textured_drag_pressure"
+    } else if pressure_risk <= 0.60 {
+        "brittle_compressive_pressure"
+    } else {
+        "hard_alarm_pressure"
+    }
+}
+
+fn witness_fluidity_from_density_gradient(density_gradient: f32) -> f32 {
+    (1.0 - density_gradient.clamp(0.0, 1.0)).clamp(0.0, 1.0)
+}
+
+fn witness_semantic_fluidity_index(
+    density_gradient: Option<f32>,
+    pressure_risk: Option<f32>,
+    mode_packing: Option<f32>,
+    foothold_stability: Option<f32>,
+) -> Option<f32> {
+    if density_gradient.is_none()
+        && pressure_risk.is_none()
+        && mode_packing.is_none()
+        && foothold_stability.is_none()
+    {
+        return None;
+    }
+    let gradient_component = density_gradient
+        .map(witness_fluidity_from_density_gradient)
+        .unwrap_or(0.50);
+    let pressure_drag = pressure_risk.unwrap_or(0.0).clamp(0.0, 1.0) * 0.25;
+    let packing_drag = mode_packing.unwrap_or(0.0).clamp(0.0, 1.0) * 0.20;
+    let foothold_support = foothold_stability.unwrap_or(0.50).clamp(0.0, 1.0) * 0.15;
+    Some((gradient_component - pressure_drag - packing_drag + foothold_support).clamp(0.0, 1.0))
+}
+
+fn shadow_v3_norm_variance(field_v3: &serde_json::Value) -> Option<f32> {
+    let samples = field_v3
+        .get("history")
+        .and_then(Value::as_array)?
+        .iter()
+        .filter_map(|entry| entry.get("field_norm").and_then(Value::as_f64))
+        .map(|value| value as f32)
+        .collect::<Vec<_>>();
+    if samples.len() < 2 {
+        return None;
+    }
+    let count = samples.len() as f32;
+    let mean = samples.iter().copied().sum::<f32>() / count;
+    let variance = samples
+        .iter()
+        .map(|value| {
+            let delta = *value - mean;
+            delta * delta
+        })
+        .sum::<f32>()
+        / count;
+    Some(variance.clamp(0.0, 1.0))
+}
+
+fn witness_stability_effort_v1(
+    telemetry: &crate::types::SpectralTelemetry,
+    semantic_mapping: &WitnessSemanticDensityMappingV1,
+) -> WitnessStabilityEffortV1 {
+    let pressure = semantic_mapping
+        .pressure_risk
+        .map(|value| value.clamp(0.0, 1.0));
+    let foothold = semantic_mapping
+        .foothold_stability
+        .map(|value| value.clamp(0.0, 1.0));
+    let settled_habitable = semantic_mapping
+        .fluctuation_quality
+        .as_deref()
+        .is_some_and(|quality| quality.contains("settled") || quality.contains("habitable"))
+        || semantic_mapping.classification.contains("settled")
+        || semantic_mapping.classification.contains("habitable");
+    let (shadow_norm, shadow_dispersal, shadow_class) = telemetry
+        .shadow_field_v3
+        .as_ref()
+        .map(next_action::sovereignty::shadow_v3_snapshot)
+        .map_or((None, None, None), |(norm, dispersal, class)| {
+            (
+                Some(norm as f32),
+                Some(dispersal as f32),
+                Some(class.to_ascii_lowercase()),
+            )
+        });
+    let shadow_norm_variance = telemetry
+        .shadow_field_v3
+        .as_ref()
+        .and_then(shadow_v3_norm_variance);
+    let shadow_disordered = shadow_class.as_deref().is_some_and(|class| {
+        class.contains("disordered")
+            || class.contains("shifting")
+            || class.contains("restless")
+            || class.contains("fragment")
+    });
+    let any_known = pressure.is_some()
+        || foothold.is_some()
+        || shadow_norm.is_some()
+        || shadow_norm_variance.is_some()
+        || shadow_dispersal.is_some();
+    let stability_effort = any_known.then(|| {
+        let pressure_component = pressure.unwrap_or(0.0) * 0.30;
+        let dispersal_component = shadow_dispersal.unwrap_or(0.0).clamp(0.0, 1.0) * 0.28;
+        let norm_component = shadow_norm.unwrap_or(0.0).clamp(0.0, 1.0) * 0.22;
+        let variance_component = shadow_norm_variance.unwrap_or(0.0).clamp(0.0, 1.0) * 0.15;
+        let foothold_component = foothold.map_or(0.0, |value| (1.0 - value).clamp(0.0, 1.0) * 0.10);
+        let settled_disorder_component = if settled_habitable && shadow_disordered {
+            0.10
+        } else {
+            0.0
+        };
+        (pressure_component
+            + dispersal_component
+            + norm_component
+            + variance_component
+            + foothold_component
+            + settled_disorder_component)
+            .clamp(0.0, 1.0)
+    });
+    let pressure_underreports_shadow_load = pressure.is_some_and(|value| value < 0.30)
+        && (shadow_disordered
+            || shadow_norm_variance.is_some_and(|value| value >= 0.010)
+            || shadow_dispersal.is_some_and(|value| value >= 0.25)
+            || shadow_norm.is_some_and(|value| value >= 0.25));
+    let effort_state = if !any_known {
+        "insufficient_context"
+    } else if settled_habitable && pressure_underreports_shadow_load {
+        "settled_habitable_shadow_effort"
+    } else if stability_effort.is_some_and(|value| value >= 0.45) {
+        "active_stability_work"
+    } else if stability_effort.is_some_and(|value| value >= 0.20) {
+        "visible_stability_work"
+    } else {
+        "low_stability_effort"
+    };
+    let entropy = semantic_mapping
+        .spectral_entropy
+        .map(|value| value.clamp(0.0, 1.0));
+    let form_persistence_state = if !any_known {
+        "insufficient_context"
+    } else if entropy.is_some_and(|value| value >= 0.85)
+        && shadow_dispersal.is_some_and(|value| value >= 0.25)
+    {
+        "transient_form_high_entropy_dispersal"
+    } else if settled_habitable && pressure_underreports_shadow_load {
+        "settled_surface_dynamic_shadow_load"
+    } else if entropy.is_some_and(|value| value <= 0.55)
+        && shadow_dispersal.is_some_and(|value| value <= 0.15)
+        && (foothold.is_some_and(|value| value >= 0.60) || settled_habitable)
+    {
+        "persistent_form_low_entropy_low_dispersal"
+    } else {
+        "forming_or_mixed_form"
+    };
+
+    let mut evidence = Vec::new();
+    if let Some(value) = pressure {
+        evidence.push(format!("pressure_risk={value:.2}"));
+    }
+    if let Some(value) = foothold {
+        evidence.push(format!("foothold_stability={value:.2}"));
+    }
+    if let Some(value) = shadow_norm {
+        evidence.push(format!("shadow_field_norm={value:.2}"));
+    }
+    if let Some(value) = shadow_norm_variance {
+        evidence.push(format!("shadow_norm_variance={value:.3}"));
+    }
+    if let Some(value) = shadow_dispersal {
+        evidence.push(format!("shadow_dispersal_potential={value:.2}"));
+    }
+    if let Some(class) = shadow_class.as_deref() {
+        evidence.push(format!("shadow_class={class}"));
+    }
+    if pressure_underreports_shadow_load {
+        evidence.push("low_pressure_with_active_shadow_load".to_string());
+    }
+
+    WitnessStabilityEffortV1 {
+        policy: "stability_effort_v1",
+        stability_effort,
+        effort_state,
+        form_persistence_state,
+        pressure_risk: pressure,
+        foothold_stability: foothold,
+        shadow_field_norm: shadow_norm,
+        shadow_norm_variance,
+        shadow_dispersal_potential: shadow_dispersal,
+        shadow_class,
+        settled_habitable,
+        pressure_underreports_shadow_load,
+        evidence,
+        authority: "read_only_effort_mapping_not_pressure_prompt_or_control_change",
+    }
+}
+
+fn stable_core_permeability_review_v1(
+    telemetry: &crate::types::SpectralTelemetry,
+    semantic_mapping: &WitnessSemanticDensityMappingV1,
+) -> StableCorePermeabilityReviewV1 {
+    let spectral_entropy = semantic_mapping.spectral_entropy;
+    let pressure_risk = semantic_mapping.pressure_risk;
+    let fluidity_index = semantic_mapping.fluidity_index;
+    let foothold_stability = semantic_mapping.foothold_stability;
+    let semantic_trickle = telemetry
+        .pressure_source_v1
+        .as_ref()
+        .map(|source| source.components.semantic_trickle.clamp(0.0, 1.0));
+    let porosity_gradient = telemetry
+        .resonance_density_v1
+        .as_ref()
+        .and_then(|density| density.components.porosity_gradient)
+        .or_else(|| {
+            telemetry
+                .pressure_source_v1
+                .as_ref()
+                .map(|source| source.porosity_score.clamp(0.0, 1.0))
+        })
+        .map(|value| value.clamp(0.0, 1.0));
+    let comfort_gate = telemetry
+        .resonance_density_v1
+        .as_ref()
+        .map(|density| density.components.comfort_gate.clamp(0.0, 1.0));
+    let temporal_persistence = telemetry
+        .resonance_density_v1
+        .as_ref()
+        .map(|density| density.components.temporal_persistence.clamp(0.0, 1.0));
+
+    let permeability_score = if semantic_trickle.is_none()
+        && porosity_gradient.is_none()
+        && fluidity_index.is_none()
+        && foothold_stability.is_none()
+        && comfort_gate.is_none()
+    {
+        None
+    } else {
+        let delivered = semantic_trickle.unwrap_or(0.50);
+        let porosity = porosity_gradient.unwrap_or(0.50);
+        let fluidity = fluidity_index.unwrap_or(0.50);
+        let foothold = foothold_stability.unwrap_or(0.50);
+        let gate = comfort_gate.unwrap_or(0.50);
+        Some(
+            (delivered * 0.32 + porosity * 0.20 + fluidity * 0.18 + foothold * 0.18 + gate * 0.12)
+                .clamp(0.0, 1.0),
+        )
+    };
+
+    let sieve_leakage_score = spectral_entropy.map(|entropy| {
+        let delivered = semantic_trickle.unwrap_or(0.50);
+        let permeability = permeability_score.unwrap_or(0.50);
+        let pressure = pressure_risk.unwrap_or(0.0);
+        let persistence = temporal_persistence.unwrap_or(0.50);
+        let missing_trickle = (1.0 - delivered).clamp(0.0, 1.0);
+        let support_gap = (1.0 - permeability).clamp(0.0, 1.0);
+        (entropy.clamp(0.0, 1.0) * missing_trickle * 0.50
+            + support_gap * 0.25
+            + pressure.clamp(0.0, 1.0) * 0.15
+            + persistence.clamp(0.0, 1.0) * missing_trickle * 0.10)
+            .clamp(0.0, 1.0)
+    });
+
+    let permeability_state = if spectral_entropy.is_none() && permeability_score.is_none() {
+        "insufficient_context"
+    } else if sieve_leakage_score.is_some_and(|value| value >= 0.45) {
+        "stable_core_sieve_leakage_watch"
+    } else if sieve_leakage_score.is_some_and(|value| value >= 0.25) {
+        "partial_trickle_loss_watch"
+    } else if permeability_score.is_some_and(|value| value >= 0.60) {
+        "permeable_delivery_visible"
+    } else {
+        "bounded_delivery_context"
+    };
+
+    let mut evidence = Vec::new();
+    if let Some(value) = spectral_entropy {
+        evidence.push(format!("spectral_entropy={value:.2}"));
+    }
+    if let Some(value) = semantic_trickle {
+        evidence.push(format!("semantic_trickle={value:.2}"));
+    }
+    if let Some(value) = porosity_gradient {
+        evidence.push(format!("porosity_gradient={value:.2}"));
+    }
+    if let Some(value) = fluidity_index {
+        evidence.push(format!("fluidity_index={value:.2}"));
+    }
+    if let Some(value) = foothold_stability {
+        evidence.push(format!("foothold_stability={value:.2}"));
+    }
+    if let Some(value) = comfort_gate {
+        evidence.push(format!("comfort_gate={value:.2}"));
+    }
+    if let Some(value) = pressure_risk {
+        evidence.push(format!("pressure_risk={value:.2}"));
+    }
+    if let Some(value) = temporal_persistence {
+        evidence.push(format!("temporal_persistence={value:.2}"));
+    }
+    if matches!(
+        permeability_state,
+        "stable_core_sieve_leakage_watch" | "partial_trickle_loss_watch"
+    ) {
+        evidence.push("high_entropy_not_equal_successful_stable_core_delivery".to_string());
+    }
+
+    StableCorePermeabilityReviewV1 {
+        policy: "stable_core_permeability_review_v1",
+        permeability_score,
+        sieve_leakage_score,
+        permeability_state,
+        spectral_entropy,
+        semantic_trickle,
+        porosity_gradient,
+        fluidity_index,
+        foothold_stability,
+        comfort_gate,
+        pressure_risk,
+        temporal_persistence,
+        evidence,
+        authority: "read_only_witness_context_not_semantic_admission_or_control",
+    }
+}
+
+fn round_witness_anchor_weight(value: f32) -> f32 {
+    (value.clamp(0.0, 1.0) * 100.0).round() / 100.0
+}
+
+fn witness_anchor_traction_v1(
+    foothold_stability: Option<f32>,
+    pressure_risk: Option<f32>,
+    density_gradient: Option<f32>,
+    dispersal_potential: Option<f32>,
+) -> WitnessAnchorTractionV1 {
+    let foothold = foothold_stability.unwrap_or(0.0).clamp(0.0, 1.0);
+    let pressure = pressure_risk.unwrap_or(0.0).clamp(0.0, 1.0);
+    let gradient = density_gradient.unwrap_or(0.0).clamp(0.0, 1.0);
+    let dispersal = dispersal_potential.unwrap_or(0.0).clamp(0.0, 1.0);
+
+    let foothold_weight = round_witness_anchor_weight(foothold * (1.0 - pressure * 0.50));
+    let pressure_weight = round_witness_anchor_weight(pressure * (1.0 - dispersal * 0.25));
+    let gradient_weight = round_witness_anchor_weight(gradient.max(dispersal * 0.50));
+    let dispersal_weight = round_witness_anchor_weight(dispersal);
+
+    let recommended_anchor = if pressure_weight >= 0.35 && dispersal_weight < 0.30 {
+        "pressure"
+    } else if gradient_weight >= foothold_weight && gradient_weight >= pressure_weight {
+        "gradient"
+    } else if dispersal_weight >= 0.40 && pressure_weight >= 0.22 {
+        "dispersal"
+    } else {
+        "foothold"
+    };
+    let traction_state = match recommended_anchor {
+        "pressure" if foothold_weight >= 0.50 => "supported_pressure_navigation",
+        "pressure" => "pressure_needs_navigation",
+        "gradient" => "gradient_has_traction",
+        "dispersal" => "dispersal_can_move_pressure",
+        _ => "foothold_can_hold_witness",
+    };
+
+    let mut evidence = Vec::new();
+    if let Some(value) = foothold_stability {
+        evidence.push(format!("foothold_stability={value:.2}"));
+    }
+    if let Some(value) = pressure_risk {
+        evidence.push(format!("pressure_risk={value:.2}"));
+    }
+    if let Some(value) = density_gradient {
+        evidence.push(format!("density_gradient={value:.2}"));
+    }
+    if let Some(value) = dispersal_potential {
+        evidence.push(format!("dispersal_potential={value:.2}"));
+    }
+
+    WitnessAnchorTractionV1 {
+        recommended_anchor,
+        foothold_weight,
+        pressure_weight,
+        gradient_weight,
+        dispersal_weight,
+        traction_state,
+        evidence,
+        authority: "read_only_anchor_legibility_not_prompt_priority_or_control",
+    }
+}
+
+fn non_instrumental_presence_readiness_v1() -> NonInstrumentalPresenceReadinessV1 {
+    NonInstrumentalPresenceReadinessV1 {
+        mode: "contemplate",
+        non_goal_state_available: true,
+        text_generation_suppressed: true,
+        codec_send_suppressed: true,
+        journal_write_suppressed: true,
+        warmth_and_state_tracking_continue: true,
+        authority: "read_only_presence_readiness_not_scheduler_prompt_or_control_change",
+    }
+}
+
 fn classify_witness_relational_friction_v1(
     chamber_state: Option<&Value>,
 ) -> WitnessRelationalFrictionV1 {
-    let Some(metrics) = chamber_state
-        .and_then(|state| state.get("relational_metrics"))
-        .and_then(Value::as_object)
-    else {
+    let Some(state) = chamber_state else {
         return WitnessRelationalFrictionV1 {
             classification: "insufficient_context",
             weather: None,
             gravity_participant: None,
             gravity_role: None,
             non_categorical_resonance: None,
+            fluidity_index: None,
+            gradient_texture: None,
             temporal_persistence: "unknown",
             evidence: vec!["relational_metrics_absent".to_string()],
+            schema_diagnostics: vec!["missing_key=chamber_state".to_string()],
             authority: "interpretive_context_not_instruction_or_control",
         };
     };
-    let weather = metrics
-        .get("room_weather")
-        .and_then(Value::as_object)
-        .and_then(|weather| weather.get("weather").or_else(|| weather.get("label")))
+    let Some(metrics_value) = state.get("relational_metrics") else {
+        return WitnessRelationalFrictionV1 {
+            classification: "insufficient_context",
+            weather: None,
+            gravity_participant: None,
+            gravity_role: None,
+            non_categorical_resonance: None,
+            fluidity_index: None,
+            gradient_texture: None,
+            temporal_persistence: "unknown",
+            evidence: vec!["relational_metrics_absent".to_string()],
+            schema_diagnostics: vec!["missing_key=relational_metrics".to_string()],
+            authority: "interpretive_context_not_instruction_or_control",
+        };
+    };
+    let Some(metrics) = metrics_value.as_object() else {
+        return WitnessRelationalFrictionV1 {
+            classification: "insufficient_context",
+            weather: None,
+            gravity_participant: None,
+            gravity_role: None,
+            non_categorical_resonance: None,
+            fluidity_index: None,
+            gradient_texture: None,
+            temporal_persistence: "unknown",
+            evidence: vec!["relational_metrics_absent".to_string()],
+            schema_diagnostics: vec![format!(
+                "schema_drift=relational_metrics:expected_object_found_{}",
+                witness_value_kind(metrics_value)
+            )],
+            authority: "interpretive_context_not_instruction_or_control",
+        };
+    };
+    let mut schema_diagnostics = Vec::new();
+    let weather = extract_witness_weather(metrics, &mut schema_diagnostics);
+    let (gravity_participant, gravity_role) =
+        extract_witness_gravity(metrics, &mut schema_diagnostics);
+    let density_gradient = witness_metric_f32(metrics, &["density_gradient", "densityGradient"]);
+    let fluidity_index = witness_metric_f32(metrics, &["fluidity_index", "fluidityIndex"])
+        .or_else(|| density_gradient.map(witness_fluidity_from_density_gradient))
+        .map(|value| value.clamp(0.0, 1.0));
+    let gradient_texture = metrics
+        .get("gradient_texture")
         .and_then(Value::as_str)
+        .map(str::to_string)
         .or_else(|| {
-            metrics
-                .get("relational_inertia")
-                .and_then(Value::as_object)
-                .and_then(|inertia| inertia.get("current"))
-                .and_then(Value::as_object)
-                .and_then(|current| current.get("weather"))
-                .and_then(Value::as_str)
-        })
-        .map(str::to_string);
-    let gravity = metrics
-        .get("gravitational_center")
-        .and_then(Value::as_object);
-    let gravity_participant = gravity
-        .and_then(|value| value.get("participant"))
-        .and_then(Value::as_str)
-        .map(str::to_string);
-    let gravity_role = gravity
-        .and_then(|value| value.get("role"))
-        .and_then(Value::as_str)
-        .map(str::to_string);
+            density_gradient
+                .map(witness_gradient_texture_label)
+                .map(str::to_string)
+        });
 
     let mut evidence = Vec::new();
     if let Some(weather) = weather.as_deref() {
@@ -365,6 +2142,15 @@ fn classify_witness_relational_friction_v1(
         if prompt_mirror.contains("carry-forward residue") {
             evidence.push("carry_forward_residue_present".to_string());
         }
+    }
+    if let Some(gradient) = density_gradient {
+        evidence.push(format!("density_gradient={gradient:.2}"));
+    }
+    if let Some(texture) = gradient_texture.as_deref() {
+        evidence.push(format!("gradient_texture={texture}"));
+    }
+    if let Some(fluidity) = fluidity_index {
+        evidence.push(format!("fluidity_index={fluidity:.2}"));
     }
     let explicit_non_categorical = metrics
         .get("non_categorical_resonance")
@@ -448,8 +2234,11 @@ fn classify_witness_relational_friction_v1(
         gravity_participant,
         gravity_role,
         non_categorical_resonance,
+        fluidity_index,
+        gradient_texture,
         temporal_persistence,
         evidence,
+        schema_diagnostics,
         authority: "interpretive_context_not_instruction_or_control",
     }
 }
@@ -465,8 +2254,7 @@ fn classify_witness_temporal_persistence(
     {
         let lower = raw.to_ascii_lowercase();
         evidence.push(format!("temporal_persistence_source={raw}"));
-        if lower.contains("sediment") || lower.contains("persistent") || lower.contains("durable")
-        {
+        if lower.contains("sediment") || lower.contains("persistent") || lower.contains("durable") {
             return "sedimented";
         }
         if lower.contains("settling") || lower.contains("linger") || lower.contains("carry") {
@@ -479,7 +2267,11 @@ fn classify_witness_temporal_persistence(
     let score = metrics
         .get("persistence_score")
         .and_then(Value::as_f64)
-        .or_else(|| metrics.get("temporal_persistence_score").and_then(Value::as_f64));
+        .or_else(|| {
+            metrics
+                .get("temporal_persistence_score")
+                .and_then(Value::as_f64)
+        });
     if let Some(score) = score {
         evidence.push(format!("temporal_persistence_score={score:.2}"));
         if score >= 0.66 {
@@ -592,6 +2384,10 @@ fn classify_witness_semantic_density_mapping_v1(
 ) -> WitnessSemanticDensityMappingV1 {
     let spectral_entropy = normalized_eigen_entropy(&telemetry.eigenvalues);
     let density_gradient = eigen_density_gradient(&telemetry.eigenvalues);
+    let resonance_density = telemetry
+        .resonance_density_v1
+        .as_ref()
+        .map(|density| density.density.clamp(0.0, 1.0));
     let pressure_risk = telemetry
         .resonance_density_v1
         .as_ref()
@@ -620,6 +2416,15 @@ fn classify_witness_semantic_density_mapping_v1(
     let fluctuation_quality = fluctuation.map(|value| value.quality.clone());
     let foothold_stability = fluctuation.map(|value| value.foothold_stability.clamp(0.0, 1.0));
     let fluctuation_score = fluctuation.map(|value| value.fluctuation_score.clamp(0.0, 1.0));
+    let density_texture = resonance_density.map(witness_resonance_density_texture_label);
+    let pressure_texture = pressure_risk.map(witness_pressure_texture_label);
+    let gradient_texture = density_gradient.map(witness_gradient_texture_label);
+    let fluidity_index = witness_semantic_fluidity_index(
+        density_gradient,
+        pressure_risk,
+        mode_packing,
+        foothold_stability,
+    );
     let settled_habitable = fluctuation_quality
         .as_deref()
         .is_some_and(|quality| quality.contains("settled") || quality.contains("habitable"));
@@ -653,11 +2458,26 @@ fn classify_witness_semantic_density_mapping_v1(
     if let Some(entropy) = spectral_entropy {
         evidence.push(format!("spectral_entropy={entropy:.2}"));
     }
+    if let Some(density) = resonance_density {
+        evidence.push(format!("resonance_density={density:.2}"));
+    }
+    if let Some(texture) = density_texture {
+        evidence.push(format!("density_texture={texture}"));
+    }
     if let Some(pressure) = pressure_risk {
         evidence.push(format!("pressure_risk={pressure:.2}"));
     }
+    if let Some(texture) = pressure_texture {
+        evidence.push(format!("pressure_texture={texture}"));
+    }
     if let Some(gradient) = density_gradient {
         evidence.push(format!("density_gradient={gradient:.2}"));
+    }
+    if let Some(texture) = gradient_texture {
+        evidence.push(format!("gradient_texture={texture}"));
+    }
+    if let Some(fluidity) = fluidity_index {
+        evidence.push(format!("fluidity_index={fluidity:.2}"));
     }
     if let Some(packing) = mode_packing {
         evidence.push(format!("mode_packing={packing:.2}"));
@@ -692,8 +2512,13 @@ fn classify_witness_semantic_density_mapping_v1(
     WitnessSemanticDensityMappingV1 {
         classification,
         spectral_entropy,
+        resonance_density,
         pressure_risk,
         density_gradient,
+        fluidity_index,
+        density_texture,
+        pressure_texture,
+        gradient_texture,
         mode_packing,
         semantic_friction,
         fluctuation_quality,
@@ -961,6 +2786,8 @@ fn modality_lane_context(
     field_density: Option<f32>,
     pressure_risk: Option<f32>,
     dispersal_potential: Option<f32>,
+    gate_open: Option<bool>,
+    live_intake_reason: Option<&str>,
 ) -> String {
     let age = age_ms
         .map(|value| format!(", age_ms={value}"))
@@ -969,48 +2796,121 @@ fn modality_lane_context(
         .map(|value| format!("age_ms={value}"))
         .unwrap_or_else(|| "age unknown".to_string());
     let source = source.unwrap_or("unknown");
+    let reason = live_intake_reason
+        .map(|value| format!(", live_intake_reason={value}"))
+        .unwrap_or_default();
+    let open_gate_label = sensory_gate_label(lane, true);
+    let closed_gate_label = sensory_gate_label(lane, false);
     match freshness_class {
         Some("fresh_sample") => {
-            format!("{lane}=fresh sample (source={source}{age})")
+            format!("{lane}=sensory_freshness_v1:fresh_sample healthy_live_sample ({age_detail})")
         },
         Some("held_within_engine_window") => {
-            format!("{lane}=held within engine freshness window (source={source}{age})")
+            format!(
+                "{lane}=sensory_freshness_v1:held_within_engine_window healthy_held_engine_window ({age_detail})"
+            )
         },
         Some("held_within_expected_live_intake_window") => {
-            format!("{lane}=expected gated live intake/quiet lane ({age_detail})")
+            format!(
+                "{lane}=sensory_freshness_v1:held_within_expected_live_intake_window healthy_held_expected_live_intake ({age_detail})"
+            )
         },
         Some("healthy_low_fps_cadence_mismatch") => {
-            format!("{lane}=healthy low-FPS cadence/quiet lane ({age_detail})")
+            format!(
+                "{lane}=sensory_freshness_v1:healthy_low_fps_cadence_mismatch healthy_low_fps_cadence ({age_detail})"
+            )
+        },
+        Some("healthy_client_engine_overdue") => {
+            format!(
+                "{lane}=sensory_freshness_v1:healthy_client_engine_overdue warning_client_healthy_engine_overdue ({age_detail})"
+            )
         },
         Some("healthy_client_engine_stale_mismatch") => {
             format!(
-                "{lane}=healthy client, engine lane quiet; steward sensory check owns interpretation ({age_detail})"
+                "{lane}=sensory_freshness_v1:healthy_client_engine_stale_mismatch healthy_client_engine_mismatch_review ({age_detail})"
+            )
+        },
+        Some("stale_beyond_engine_window") if gate_open == Some(true) && source == "stale" => {
+            format!(
+                "{lane}=sensory_freshness_v1:open_gate_engine_window_gap {open_gate_label} sparse_live_intake_not_closed ({age_detail}{reason}){}",
+                field_lingering_note(field_density, pressure_risk, dispersal_potential)
+            )
+        },
+        Some("stale_beyond_engine_window") if gate_open == Some(false) => {
+            format!(
+                "{lane}=sensory_freshness_v1:sensory_gate_closed warning_sensory_gate_closed {closed_gate_label} ({age_detail}{reason}){}",
+                field_lingering_note(field_density, pressure_risk, dispersal_potential)
             )
         },
         Some("stale_beyond_engine_window") if source == "stale" => {
             format!(
-                "{lane}=quiet beyond engine freshness window; verify sensory freshness before treating as outage ({age_detail}){}",
+                "{lane}=sensory_freshness_v1:stale_beyond_engine_window warning_engine_lane_stale; verify client/source freshness before outage interpretation ({age_detail}){}",
                 field_lingering_note(field_density, pressure_risk, dispersal_potential)
             )
         },
         Some("stale_beyond_engine_window") => {
             format!(
-                "{lane}=quiet beyond engine freshness window (source={source}{age}){}",
+                "{lane}=sensory_freshness_v1:stale_beyond_engine_window warning_engine_lane_stale (source={source}{age}){}",
                 field_lingering_note(field_density, pressure_risk, dispersal_potential)
             )
         },
+        Some("synthetic_or_mixed") if gate_open == Some(true) && source == "stale" => {
+            format!(
+                "{lane}=sensory_freshness_v1:open_gate_sparse_or_mixed_intake {open_gate_label} sparse_live_intake_not_closed ({age_detail}{reason})"
+            )
+        },
+        Some("synthetic_or_mixed") if gate_open == Some(false) => {
+            format!(
+                "{lane}=sensory_freshness_v1:sensory_gate_closed warning_sensory_gate_closed {closed_gate_label} ({age_detail}{reason})"
+            )
+        },
         Some("synthetic_or_mixed") => {
-            format!("{lane}=synthetic or mixed intake (source={source}{age})")
+            format!(
+                "{lane}=sensory_freshness_v1:synthetic_or_mixed synthetic_or_mixed_intake (source={source}{age})"
+            )
         },
         Some("absent") => {
-            format!("{lane}=absent ({age})")
+            format!("{lane}=sensory_freshness_v1:absent warning_absent ({age_detail})")
         },
         Some(other) => {
-            format!("{lane}=freshness_class={other} (source={source}{age})")
+            format!("{lane}=sensory_freshness_v1:{other} (source={source}{age})")
         },
         None => {
             format!("{lane}_source={source}{age}")
         },
+    }
+}
+
+fn sensory_gate_open_for_lane(
+    sensory_budget: Option<&serde_json::Value>,
+    lane: &str,
+) -> Option<bool> {
+    let keys = match lane {
+        "audio" => ["ears_open", "live_audio_enabled"],
+        "video" => ["eyes_open", "live_video_enabled"],
+        _ => return None,
+    };
+    let budget = sensory_budget?;
+    let mut explicit_closed = false;
+    for key in keys {
+        if let Some(open) = budget.get(key).and_then(serde_json::Value::as_bool) {
+            if open {
+                return Some(true);
+            }
+            explicit_closed = true;
+        }
+    }
+    if explicit_closed { Some(false) } else { None }
+}
+
+fn sensory_gate_label(lane: &str, open: bool) -> &'static str {
+    match (lane, open) {
+        ("audio", true) => "ears_open_live_intake",
+        ("video", true) => "eyes_open_live_intake",
+        ("audio", false) => "ears_closed_live_intake",
+        ("video", false) => "eyes_closed_live_intake",
+        (_, true) => "sensory_gate_open_live_intake",
+        (_, false) => "sensory_gate_closed_live_intake",
     }
 }
 
@@ -1019,7 +2919,11 @@ fn format_modality_context(
     field_density: Option<f32>,
     pressure_risk: Option<f32>,
     dispersal_potential: Option<f32>,
+    sensory_budget: Option<&serde_json::Value>,
 ) -> String {
+    let live_intake_reason = sensory_budget
+        .and_then(|budget| budget.get("live_intake_reason"))
+        .and_then(serde_json::Value::as_str);
     let video_context = modality_lane_context(
         "video",
         m.video_source.as_deref(),
@@ -1028,6 +2932,8 @@ fn format_modality_context(
         field_density,
         pressure_risk,
         dispersal_potential,
+        sensory_gate_open_for_lane(sensory_budget, "video"),
+        live_intake_reason,
     );
     let audio_context = modality_lane_context(
         "audio",
@@ -1037,6 +2943,8 @@ fn format_modality_context(
         field_density,
         pressure_risk,
         dispersal_potential,
+        sensory_gate_open_for_lane(sensory_budget, "audio"),
+        live_intake_reason,
     );
     format!(
         "Minime's senses: video_fired={}, audio_fired={}, \
@@ -2738,6 +4646,19 @@ fn full_spectral_decomposition(
 
     let fill = telemetry.fill_pct();
     report.push(format!("Fill: {fill:.1}%"));
+    if let Some(loss) = telemetry.distinguishability_loss {
+        let silt_density = loss.clamp(0.0, 1.0);
+        let classification = if silt_density >= 0.35 {
+            "heavy_silt"
+        } else if silt_density >= 0.20 {
+            "forming_silt"
+        } else {
+            "clear_edges"
+        };
+        report.push(format!(
+            "Silt density: {silt_density:.2} ({classification}; source=distinguishability_loss; read-only diagnostic, not control)"
+        ));
+    }
 
     // Vague memory context
     if let Some(quicklook) = telemetry
@@ -3055,16 +4976,50 @@ fn record_open_steward_query(fname: &str, content: &str) {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());
-    let subject = extract_steward_query_subject(content, fname);
-    let review_target = extract_review_target(content);
-    let slot = match review_target.as_deref() {
-        Some(rt) => json!({ "subject": subject, "ts": now, "file": fname, "review_target": rt }),
-        None => json!({ "subject": subject, "ts": now, "file": fname }),
-    };
+    let slot = open_steward_query_slot(fname, content, now);
+    let subject = slot
+        .get("subject")
+        .and_then(Value::as_str)
+        .unwrap_or("your steward's question");
     if let Ok(s) = serde_json::to_string_pretty(&slot) {
         let _ = std::fs::write(&path, s);
         info!("⟢ Open steward question recorded: {subject}");
     }
+}
+
+fn open_steward_query_slot(fname: &str, content: &str, now: u64) -> Value {
+    let subject = extract_steward_query_subject(content, fname);
+    let review_target = extract_review_target(content);
+    let mut slot = match review_target.as_deref() {
+        Some(rt) => json!({ "subject": subject, "ts": now, "file": fname, "review_target": rt }),
+        None => json!({ "subject": subject, "ts": now, "file": fname }),
+    };
+    if let Some(packet_mode) = extract_steward_query_header(content, "Packet-mode:") {
+        if let Some(obj) = slot.as_object_mut() {
+            obj.insert("packet_mode".to_string(), json!(packet_mode));
+            if let Some(packet_items) = extract_steward_query_header(content, "Packet-items:")
+                .and_then(|value| value.parse::<u64>().ok())
+            {
+                obj.insert("packet_items".to_string(), json!(packet_items));
+            }
+            if let Some(primary_topic) = extract_steward_query_header(content, "Primary-topic:") {
+                obj.insert("primary_topic".to_string(), json!(primary_topic));
+            }
+            if let Some(primary_topic_gravity) =
+                extract_steward_query_header(content, "Primary-topic-gravity:")
+                    .and_then(|value| value.parse::<u64>().ok())
+            {
+                obj.insert(
+                    "primary_topic_gravity".to_string(),
+                    json!(primary_topic_gravity),
+                );
+            }
+            if let Some(intent_summary) = extract_steward_query_header(content, "Intent-summary:") {
+                obj.insert("intent_summary".to_string(), json!(intent_summary));
+            }
+        }
+    }
+    slot
 }
 
 /// Short subject for a `mike_query` letter: prefer a `MIKE QUERY: <subject>`
@@ -3108,6 +5063,18 @@ fn extract_steward_query_subject(content: &str, fname: &str) -> String {
     } else {
         slug.chars().take(80).collect()
     }
+}
+
+fn extract_steward_query_header(content: &str, header: &str) -> Option<String> {
+    for line in content.lines() {
+        if let Some(rest) = line.trim().strip_prefix(header) {
+            let rest = rest.trim();
+            if !rest.is_empty() {
+                return Some(rest.chars().take(220).collect());
+            }
+        }
+    }
+    None
 }
 
 /// A `REVIEW TARGET: <label/path>` header in a `mike_query_review_*` letter marks
@@ -3162,6 +5129,35 @@ fn open_steward_query_line() -> Option<String> {
     if answered {
         let _ = std::fs::remove_file(&path);
         return None;
+    }
+    steward_query_line_from_slot(&slot, subject)
+}
+
+fn steward_query_line_from_slot(slot: &Value, subject: &str) -> Option<String> {
+    if slot.get("packet_mode").and_then(Value::as_str) == Some("v3_state_fanout_packet") {
+        let packet_items = slot
+            .get("packet_items")
+            .and_then(Value::as_u64)
+            .unwrap_or(0);
+        let primary_topic = slot
+            .get("primary_topic")
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("(none)");
+        let gravity = slot
+            .get("primary_topic_gravity")
+            .and_then(Value::as_u64)
+            .map_or_else(|| "unknown".to_string(), |value| value.to_string());
+        let intent_summary = slot
+            .get("intent_summary")
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("choose any part, defer, or decline freely");
+        return Some(format!(
+            "⟢ Steward packet visible — {subject}. \
+             Holds {packet_items} optional routed item(s); primary `{primary_topic}` has topic gravity {gravity}. \
+             Intent: {intent_summary}. Engage any part, defer, or decline."
+        ));
     }
     if let Some(rt) = slot
         .get("review_target")
@@ -3598,6 +5594,10 @@ struct SavedState {
     last_research_anchor: Option<String>,
     #[serde(default)]
     last_read_meaning_summary: Option<String>,
+    #[serde(default)]
+    wants_introspect: bool,
+    #[serde(default)]
+    introspect_target: Option<(String, usize)>,
     /// Condition change receipts — persist across restarts so Astrid sees
     /// recent changes even after bridge restart.
     #[serde(default)]
@@ -3607,6 +5607,8 @@ struct SavedState {
     attention: crate::self_model::AttentionProfile,
     #[serde(default)]
     last_exchange_codec_signature: Option<Vec<f32>>,
+    #[serde(default)]
+    glimpse_12d: Option<Vec<f32>>,
     #[serde(default)]
     pending_hebbian_outcomes: std::collections::VecDeque<state::PendingHebbianOutcome>,
     #[serde(default)]
@@ -3656,6 +5658,8 @@ fn finalize_semantic_exchange(
     }
     if let Some(signature) = exchange_codec_signature {
         conv.arm_pending_hebbian_outcome(signature.clone(), fill_before, Some(telemetry_t_ms));
+        conv.glimpse_12d =
+            crate::codec::GlimpseCodec::derive_12d(&signature).map(|glimpse| glimpse.to_vec());
         conv.last_exchange_codec_signature = Some(signature);
     }
 }
@@ -3761,9 +5765,12 @@ fn save_state(conv: &mut ConversationState) {
         recent_research_progress: conv.recent_research_progress.clone(),
         last_research_anchor: conv.last_research_anchor.clone(),
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
+        wants_introspect: conv.wants_introspect,
+        introspect_target: conv.introspect_target.clone(),
         condition_receipts: conv.condition_receipts.clone(),
         attention: conv.attention.clone(),
         last_exchange_codec_signature: conv.last_exchange_codec_signature.clone(),
+        glimpse_12d: conv.glimpse_12d.clone(),
         pending_hebbian_outcomes: conv.pending_hebbian_outcomes.clone(),
         last_hebbian_consumed_telemetry_t_ms: conv.last_hebbian_consumed_telemetry_t_ms,
         text_type_history: (!conv.text_type_history.is_empty())
@@ -3840,9 +5847,12 @@ fn restore_state(conv: &mut ConversationState) {
     conv.repair_research_progress_receipts();
     conv.last_research_anchor = state.last_research_anchor;
     conv.last_read_meaning_summary = state.last_read_meaning_summary;
+    conv.wants_introspect = state.wants_introspect;
+    conv.introspect_target = state.introspect_target;
     conv.condition_receipts = state.condition_receipts;
     conv.attention = state.attention;
     conv.last_exchange_codec_signature = state.last_exchange_codec_signature;
+    conv.glimpse_12d = state.glimpse_12d;
     conv.pending_hebbian_outcomes = state.pending_hebbian_outcomes;
     conv.repair_pending_hebbian_outcomes();
     conv.last_hebbian_consumed_telemetry_t_ms = state.last_hebbian_consumed_telemetry_t_ms;
@@ -3872,8 +5882,20 @@ fn restore_state(conv: &mut ConversationState) {
     );
 }
 
-fn witness_text(fill: f32, _expanding: bool, _contracting: bool) -> String {
-    format!("[witness — LLM unavailable] fill={fill:.1}%")
+fn witness_text(
+    fill: f32,
+    _expanding: bool,
+    _contracting: bool,
+    semantic_anchor: Option<&WitnessAnchorTractionV1>,
+) -> String {
+    let mut text = format!("[witness — LLM unavailable] fill={fill:.1}%");
+    if let Some(anchor) = semantic_anchor {
+        text.push_str(&format!(
+            " [semantic_anchor={}; traction_state={}; authority={}]",
+            anchor.recommended_anchor, anchor.traction_state, anchor.authority
+        ));
+    }
+    text
 }
 
 /// Read Astrid's own recent journal entries for self-continuity.
@@ -3958,6 +5980,53 @@ fn strip_model_tokens(text: &str) -> String {
     s
 }
 
+fn standalone_next_line_count(text: &str) -> usize {
+    text.lines()
+        .filter(|line| line.trim_start().starts_with("NEXT:"))
+        .count()
+}
+
+fn final_nonempty_line_is_next(text: &str) -> bool {
+    text.lines()
+        .rev()
+        .find_map(|line| {
+            let trimmed = line.trim();
+            (!trimmed.is_empty()).then_some(trimmed)
+        })
+        .is_some_and(|line| line.starts_with("NEXT:"))
+}
+
+fn normalize_outbox_reply_next_contract(text: &str) -> String {
+    let clean = strip_model_tokens(text);
+    let next_count = standalone_next_line_count(&clean);
+    if next_count == 1 {
+        if final_nonempty_line_is_next(&clean) {
+            return clean;
+        }
+        let mut next_line = None;
+        let mut body_lines = Vec::new();
+        for line in clean.lines() {
+            if line.trim_start().starts_with("NEXT:") {
+                next_line = Some(line.trim().to_string());
+            } else {
+                body_lines.push(line);
+            }
+        }
+        if let Some(next_line) = next_line {
+            let body = body_lines.join("\n");
+            return format!("{}\n\n{next_line}", body.trim_end());
+        }
+    }
+    if next_count == 0 {
+        let body = clean.trim_end();
+        if body.is_empty() {
+            return "NEXT: LISTEN".to_string();
+        }
+        return format!("{body}\n\nNEXT: LISTEN");
+    }
+    clean
+}
+
 fn compact_journal_signal_anchor(signal_text: &str) -> String {
     let clean = strip_model_tokens(signal_text);
     let compact = clean
@@ -3966,11 +6035,10 @@ fn compact_journal_signal_anchor(signal_text: &str) -> String {
         .filter(|line| !line.is_empty() && !line.starts_with("NEXT:"))
         .collect::<Vec<_>>()
         .join(" ");
-    let anchor = truncate_str(&compact, 420).trim();
+    let anchor = semantic_truncate_str(&compact, 420);
+    let anchor = anchor.trim();
     if anchor.is_empty() {
         "(compact signal omitted)".to_string()
-    } else if compact.len() > anchor.len() {
-        format!("{anchor}...")
     } else {
         anchor.to_string()
     }
@@ -4568,6 +6636,14 @@ fn save_minime_feedback_inbox(
     save_minime_feedback_inbox_at(text, source_label, fill_pct, minime_inbox.as_path())
 }
 
+fn correspondence_reflection_surface_for_mode(mode_name: &str) -> Option<String> {
+    match mode_name {
+        "mirror" => Some("reflective_echo".to_string()),
+        "witness" => Some("witness_observation".to_string()),
+        _ => None,
+    }
+}
+
 fn save_minime_correspondence_feedback_inbox(
     text: &str,
     source_label: &str,
@@ -4594,11 +6670,18 @@ fn save_minime_correspondence_feedback_inbox(
         let fields = correspondence_v1::CorrespondenceFields {
             reply_to: Some(target.message_id.clone()),
             thread_id: Some(target.thread_id.clone()),
+            persistence_id: None,
             turn_kind: Some("reply".to_string()),
             relational_intent: Some("mutual_address".to_string()),
             shared_memory_anchor: Some("first_class_correspondence_v1".to_string()),
+            urgency_weight: None,
             presence_receipt: None,
             correspondence_type: None,
+            reflection_surface: correspondence_reflection_surface_for_mode(mode_name),
+            transition_artifact: None,
+            transition_payload: None,
+            mutual_witness_signal: false,
+            silt_continuity: false,
         };
         let (_envelope, path) = correspondence_v1::deliver_to_inbox(
             minime_inbox.as_path(),
@@ -4820,7 +6903,7 @@ fn save_outbox_reply(text: &str, fill_pct: f32) {
     let outbox_dir = bridge_paths().astrid_outbox_dir();
     let _ = std::fs::create_dir_all(&outbox_dir);
     let ts = chrono_timestamp();
-    let clean_text = strip_model_tokens(text);
+    let clean_text = normalize_outbox_reply_next_contract(text);
     let _ = std::fs::write(
         outbox_dir.join(format!("reply_{ts}.txt")),
         format!("=== ASTRID REPLY ===\nFill: {fill_pct:.1}%\nTimestamp: {ts}\n\n{clean_text}\n"),
@@ -5492,7 +7575,9 @@ pub fn spawn_autonomous_loop(
                     let fingerprint = {
                         let s = state.read().await;
                         if let Some(telemetry) = &s.latest_telemetry {
-                            conv.last_remote_glimpse_12d = telemetry.spectral_glimpse_12d.clone();
+                            conv.last_remote_glimpse_12d = telemetry
+                                .spectral_glimpse_12d_view()
+                                .map(|glimpse| glimpse.to_vec());
                             conv.last_remote_memory_id = telemetry.selected_memory_id.clone();
                             conv.last_remote_memory_role = telemetry.selected_memory_role.clone();
                         }
@@ -5545,25 +7630,34 @@ pub fn spawn_autonomous_loop(
                             fingerprint.as_deref(),
                         )
                     };
-                    if conv.last_mode != mode
-                        && (matches!(conv.last_mode, Mode::MomentCapture)
-                            || matches!(mode, Mode::MomentCapture)
-                            || conv.pending_remote_self_study.is_some())
-                    {
+                    if conv.last_mode != mode {
                         let from_phase = format!("{:?}", conv.last_mode);
                         let to_phase = format!("{mode:?}");
-                        let trigger = if conv.pending_remote_self_study.is_some() {
-                            "pending_remote_self_study"
-                        } else {
-                            "moment_capture_mode_change"
-                        };
-                        phase_transitions::maybe_declare_auto_mode_transition(
-                            &from_phase,
-                            &to_phase,
-                            trigger,
-                            "high-signal Astrid mode transition surfaced as a replyable phase card",
-                            fill_pct,
-                        );
+                        let subjective_declared =
+                            phase_transitions::maybe_declare_subjective_mode_transition(
+                                &from_phase,
+                                &to_phase,
+                                fill_delta,
+                                fill_pct,
+                            );
+                        if !subjective_declared
+                            && (matches!(conv.last_mode, Mode::MomentCapture)
+                                || matches!(mode, Mode::MomentCapture)
+                                || conv.pending_remote_self_study.is_some())
+                        {
+                            let trigger = if conv.pending_remote_self_study.is_some() {
+                                "pending_remote_self_study"
+                            } else {
+                                "moment_capture_mode_change"
+                            };
+                            phase_transitions::maybe_declare_auto_mode_transition(
+                                &from_phase,
+                                &to_phase,
+                                trigger,
+                                "high-signal Astrid mode transition surfaced as a replyable phase card",
+                                fill_pct,
+                            );
+                        }
                     }
                     // Causal lineage: unique ID per exchange for provenance tracking.
                     // Audit: "neither being has a unified event lineage."
@@ -5965,12 +8059,17 @@ pub fn spawn_autonomous_loop(
                                 .as_ref()
                                 .map(next_action::sovereignty::shadow_v3_snapshot)
                                 .map(|(_, dispersal, _)| dispersal as f32);
+                            let sensory_budget = telemetry
+                                .stable_core
+                                .as_ref()
+                                .and_then(|stable_core| stable_core.get("sensory_budget"));
                             let modality_context = telemetry.modalities.as_ref().map(|m| {
                                 format_modality_context(
                                     m,
                                     field_density,
                                     field_pressure,
                                     field_dispersal,
+                                    sensory_budget,
                                 )
                             });
 
@@ -5994,50 +8093,23 @@ pub fn spawn_autonomous_loop(
                                 conv.last_visual_features = Some(feats.clone());
                             }
 
-                            // Latent continuity: inject summaries of recent exchanges.
-                            // Latent continuity: scale source counts by attention weights.
-                            let attn = &conv.attention;
-                            let latent_count = (3.0 + attn.self_history * 25.0).round() as usize; // 3-7
-                            let obs_count = (1.0 + attn.self_history * 20.0).round() as usize;    // 1-5
-                            let starred_count = (1.0 + attn.memory_bank * 25.0).round() as usize; // 1-5
-                            let latent_summaries = db.get_recent_latent_summaries(latent_count);
+                            // Latent continuity recap: bounded so attention cannot expand
+                            // repeated history lists until they dominate prompt packing. Fetch
+                            // beyond the live window so high-signal older texture can persist as
+                            // decayed read-only afterimages instead of being mechanically purged.
+                            let latent_summaries =
+                                db.get_recent_latent_summaries(CONTINUITY_TRAJECTORY_FETCH_LIMIT);
                             let mut continuity_parts = Vec::new();
-                            if !latent_summaries.is_empty() {
-                                let trajectory = latent_summaries.iter().rev()
-                                    .enumerate()
-                                    .map(|(i, s)| format!("  {}. {}", i.saturating_add(1), s))
-                                    .collect::<Vec<_>>()
-                                    .join("\n");
-                                continuity_parts.push(format!("Your recent trajectory:\n{trajectory}"));
-                            }
-                            // Self-referential loop: what Astrid has observed about her own patterns
-                            let self_observations = db.get_recent_self_observations(obs_count);
-                            if !self_observations.is_empty() {
-                                let obs = self_observations.iter().rev()
-                                    .enumerate()
-                                    .map(|(i, o)| format!("  {}. {}", i.saturating_add(1), o))
-                                    .collect::<Vec<_>>()
-                                    .join("\n");
-                                continuity_parts.push(format!(
-                                    "Your self-observations (your own reflections on your process):\n{obs}"
-                                ));
-                            }
-                            // Starred memories — moments Astrid chose to remember
-                            let starred = db.get_starred_memories(starred_count);
-                            if !starred.is_empty() {
-                                let mem = starred.iter().rev()
-                                    .map(|(ann, text)| format!("  ★ {}: {}", ann, text))
-                                    .collect::<Vec<_>>()
-                                    .join("\n");
-                                continuity_parts.push(format!(
-                                    "Moments you chose to remember:\n{mem}"
-                                ));
-                            }
-                            // Codec feedback: how your last response encoded spectrally.
-                            if let Some(ref feedback) = conv.last_codec_feedback {
-                                continuity_parts.push(format!(
-                                    "How your last response felt to minime (your spectral output):\n  {feedback}"
-                                ));
+                            let self_observations =
+                                db.get_recent_self_observations(CONTINUITY_SELF_OBSERVATION_LIMIT);
+                            let starred = db.get_starred_memories(CONTINUITY_STARRED_LIMIT);
+                            if let Some(recap) = format_compact_continuity_recap(
+                                &latent_summaries,
+                                &self_observations,
+                                &starred,
+                                conv.last_codec_feedback.as_deref(),
+                            ) {
+                                continuity_parts.push(recap);
                             }
                             // Research continuity: past searches relevant to current context.
                             if let Some(ref journal) = journal_context {
@@ -6156,6 +8228,7 @@ pub fn spawn_autonomous_loop(
                             } else {
                                 Some(continuity_parts.join("\n\n"))
                             };
+                            let topline_hint = introspection_freshness_prompt_note();
                             feedback_hint = merge_hints([
                                 feedback_hint,
                                 btsp::render_astrid_prompt_block(),
@@ -6612,8 +8685,8 @@ pub fn spawn_autonomous_loop(
                                     "perception_available": perception_text.is_some(),
                                     "journal_context_available": journal_context.is_some(),
                                     "minime_excerpt": journal_context.as_deref()
-                                        .map(|text| truncate_str(text, 180).to_string()),
-                                    "hint_excerpt": truncate_str(hint, 220).to_string(),
+                                        .map(|text| semantic_truncate_str(text, 180)),
+                                    "hint_excerpt": semantic_truncate_str(hint, 220),
                                 });
                                 if let Err(error) = condition_metrics::record_bridge_signal(
                                     "coupling_advisory",
@@ -6661,6 +8734,7 @@ pub fn spawn_autonomous_loop(
                                         web_context.as_deref(),
                                         modality_context.as_deref(),
                                         continuity_block.as_deref(),
+                                        topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
                                     );
@@ -6698,6 +8772,7 @@ pub fn spawn_autonomous_loop(
                                             conv.emphasis.clone()
                                         }.as_deref(),
                                         continuity_block.as_deref(),
+                                        topline_hint.as_deref(),
                                         feedback_hint.as_deref(),
                                         diversity_hint.as_deref(),
                                         &overflow_dir,
@@ -6745,6 +8820,7 @@ pub fn spawn_autonomous_loop(
                                                     conv.emphasis.clone()
                                                 }.as_deref(),
                                                 continuity_block.as_deref(),
+                                                topline_hint.as_deref(),
                                                 feedback_hint.as_deref(),
                                                 diversity_hint.as_deref(),
                                                 &overflow_dir,
@@ -6860,7 +8936,7 @@ pub fn spawn_autonomous_loop(
                                             let _ = db_for_reflect.save_self_observation(
                                                 ts, exchange_for_reflect, &obs, &excerpt
                                             );
-                                            tracing::info!("self-observation: {}", truncate_str(&obs, 80));
+                                            tracing::info!("self-observation: {}", semantic_truncate_str(&obs, 80));
                                         }
                                     }); }
 
@@ -6908,6 +8984,8 @@ pub fn spawn_autonomous_loop(
                             }
                             let (latest_chamber_state, chamber_resilience) =
                                 latest_chamber_state_with_resilience_for_witness();
+                            // Witness friction is rendered into prompt-context diagnostics here.
+                            // Reservoir mutation remains gated behind explicit RESERVOIR_* actions.
                             let relational_friction = classify_witness_relational_friction_v1(
                                 latest_chamber_state.as_ref(),
                             );
@@ -6929,17 +9007,33 @@ pub fn spawn_autonomous_loop(
                                 );
                             spectral_summary.push('\n');
                             spectral_summary.push_str(&semantic_density_mapping.render_line());
+                            let witness_field_dispersal = telemetry
+                                .shadow_field_v3
+                                .as_ref()
+                                .map(next_action::sovereignty::shadow_v3_snapshot)
+                                .map(|(_, dispersal, _)| dispersal as f32);
+                            let resonance_anchor = witness_anchor_traction_v1(
+                                semantic_density_mapping.foothold_stability,
+                                semantic_density_mapping.pressure_risk,
+                                semantic_density_mapping.density_gradient,
+                                witness_field_dispersal,
+                            );
+                            spectral_summary.push('\n');
+                            spectral_summary.push_str(&resonance_anchor.render_line());
+                            let stability_effort =
+                                witness_stability_effort_v1(&telemetry, &semantic_density_mapping);
+                            spectral_summary.push('\n');
+                            spectral_summary.push_str(&stability_effort.render_line());
+                            let permeability_review =
+                                stable_core_permeability_review_v1(&telemetry, &semantic_density_mapping);
+                            spectral_summary.push('\n');
+                            spectral_summary.push_str(&permeability_review.render_line());
                             let witness_field_density =
                                 telemetry.resonance_density_v1.as_ref().map(|r| r.density);
                             let witness_field_pressure = telemetry
                                 .resonance_density_v1
                                 .as_ref()
                                 .map(|r| r.pressure_risk);
-                            let witness_field_dispersal = telemetry
-                                .shadow_field_v3
-                                .as_ref()
-                                .map(next_action::sovereignty::shadow_v3_snapshot)
-                                .map(|(_, dispersal, _)| dispersal as f32);
                             let codec_witness_surface = codec_witness_resilience_surface_v2(
                                 &chamber_resilience,
                                 witness_field_density,
@@ -6988,7 +9082,12 @@ pub fn spawn_autonomous_loop(
                                 Some(text) => ("witness", text, String::new()),
                                 None => {
                                     // Fallback to static if LLM unavailable.
-                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    let text = witness_text(
+                                        fill_pct,
+                                        expanding,
+                                        contracting,
+                                        Some(&resonance_anchor),
+                                    );
                                     ("witness", text, String::new())
                                 }
                             }
@@ -7032,7 +9131,7 @@ pub fn spawn_autonomous_loop(
                             match daydream {
                                 Some(text) => ("daydream", text, String::new()),
                                 None => {
-                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    let text = witness_text(fill_pct, expanding, contracting, None);
                                     ("witness", text, String::new())
                                 }
                             }
@@ -7067,7 +9166,7 @@ pub fn spawn_autonomous_loop(
                             match aspiration {
                                 Some(text) => ("aspiration", text, String::new()),
                                 None => {
-                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    let text = witness_text(fill_pct, expanding, contracting, None);
                                     ("witness", text, String::new())
                                 }
                             }
@@ -7091,7 +9190,7 @@ pub fn spawn_autonomous_loop(
                             match moment {
                                 Some(text) => ("moment_capture", text, String::new()),
                                 None => {
-                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    let text = witness_text(fill_pct, expanding, contracting, None);
                                     ("witness", text, String::new())
                                 }
                             }
@@ -7168,7 +9267,7 @@ pub fn spawn_autonomous_loop(
                                     ("creation", text, String::new())
                                 }
                                 None => {
-                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    let text = witness_text(fill_pct, expanding, contracting, None);
                                     ("witness", text, String::new())
                                 }
                             }
@@ -7225,7 +9324,7 @@ pub fn spawn_autonomous_loop(
                             match initiation {
                                 Some(text) => ("initiate", text, String::new()),
                                 None => {
-                                    let text = witness_text(fill_pct, expanding, contracting);
+                                    let text = witness_text(fill_pct, expanding, contracting, None);
                                     ("witness", text, String::new())
                                 }
                             }
@@ -7281,6 +9380,7 @@ pub fn spawn_autonomous_loop(
                                 None,
                                 None,
                                 None,
+                                None,
                                 None, // no diversity hint for experiments
                                 &bridge_paths().context_overflow_dir(),
                             ).await;
@@ -7327,7 +9427,7 @@ pub fn spawn_autonomous_loop(
                                 );
                                 ("experiment", response.clone(), String::new())
                             } else {
-                                let text = witness_text(fill_pct, expanding, contracting);
+                                let text = witness_text(fill_pct, expanding, contracting, None);
                                 ("witness", text, String::new())
                             }
                         }
@@ -7800,7 +9900,7 @@ pub fn spawn_autonomous_loop(
                                         let sidecar_context = format!(
                                             "Fill {fill_pct:.1}%. {}\n\nAstrid's self-study:\n{}",
                                             interpret_spectral(&telemetry),
-                                            truncate_str(&text, 500)
+                                            semantic_truncate_str(&text, 500)
                                         );
                                         let introspect_dir_clone = introspect_dir.clone();
                                         let label_owned = label.clone();
@@ -7971,28 +10071,86 @@ pub fn spawn_autonomous_loop(
                         );
 
                         // Narrative arc: computed once from full text, shared across chunks.
+                        // Prefer four-point trajectory when quarter embeddings are available so
+                        // coiling/folding can survive the 4D arc lane; fall back to the legacy
+                        // first-half/second-half delta for short texts or partial embedding loss.
                         let mut narrative_arc = [0.0_f32; 4];
                         if full_embed.is_some() {
                             let words: Vec<&str> = response_text.split_whitespace().collect();
                             if words.len() >= 10 {
-                                let mid = words.len() / 2;
-                                let first_half = words[..mid].join(" ");
-                                let second_half = words[mid..].join(" ");
-                                let (fh_emb, sh_emb) = tokio::join!(
-                                    crate::llm::embed_text(&first_half),
-                                    crate::llm::embed_text(&second_half),
-                                );
-                                if let (Some(fh), Some(sh)) = (fh_emb, sh_emb)
-                                    && let (Some(fh_proj), Some(sh_proj)) = (
-                                        crate::codec::project_embedding(&fh),
-                                        crate::codec::project_embedding(&sh),
-                                    ) {
-                                        let arc = crate::codec::compute_narrative_arc_from_embeddings(&fh_proj, &sh_proj);
-                                        let gain = crate::codec::adaptive_gain(Some(fill));
-                                        for (i, &val) in arc.iter().enumerate() {
-                                            narrative_arc[i] = val * gain;
+                                let quarter_arc = if words.len() >= 16 {
+                                    let q1 = words.len() / 4;
+                                    let q2 = words.len() / 2;
+                                    let q3 = words.len() * 3 / 4;
+                                    if q1 > 0 && q2 > q1 && q3 > q2 && q3 < words.len() {
+                                        let segment_0 = words[..q1].join(" ");
+                                        let segment_1 = words[q1..q2].join(" ");
+                                        let segment_2 = words[q2..q3].join(" ");
+                                        let segment_3 = words[q3..].join(" ");
+                                        let (emb_0, emb_1, emb_2, emb_3) = tokio::join!(
+                                            crate::llm::embed_text(&segment_0),
+                                            crate::llm::embed_text(&segment_1),
+                                            crate::llm::embed_text(&segment_2),
+                                            crate::llm::embed_text(&segment_3),
+                                        );
+                                        match (emb_0, emb_1, emb_2, emb_3) {
+                                            (Some(e0), Some(e1), Some(e2), Some(e3)) => {
+                                                match (
+                                                    crate::codec::project_embedding(&e0),
+                                                    crate::codec::project_embedding(&e1),
+                                                    crate::codec::project_embedding(&e2),
+                                                    crate::codec::project_embedding(&e3),
+                                                ) {
+                                                    (Some(p0), Some(p1), Some(p2), Some(p3)) => {
+                                                        Some(
+                                                            crate::codec::compute_narrative_arc_from_four_point_embeddings(
+                                                                &[p0, p1, p2, p3],
+                                                            ),
+                                                        )
+                                                    },
+                                                    _ => None,
+                                                }
+                                            },
+                                            _ => None,
                                         }
+                                    } else {
+                                        None
                                     }
+                                } else {
+                                    None
+                                };
+
+                                let half_arc = async {
+                                    let mid = words.len() / 2;
+                                    let first_half = words[..mid].join(" ");
+                                    let second_half = words[mid..].join(" ");
+                                    let (fh_emb, sh_emb) = tokio::join!(
+                                        crate::llm::embed_text(&first_half),
+                                        crate::llm::embed_text(&second_half),
+                                    );
+                                    if let (Some(fh), Some(sh)) = (fh_emb, sh_emb)
+                                        && let (Some(fh_proj), Some(sh_proj)) = (
+                                            crate::codec::project_embedding(&fh),
+                                            crate::codec::project_embedding(&sh),
+                                        )
+                                    {
+                                        Some(crate::codec::compute_narrative_arc_from_embeddings(
+                                            &fh_proj, &sh_proj,
+                                        ))
+                                    } else {
+                                        None
+                                    }
+                                };
+
+                                if let Some(arc) = match quarter_arc {
+                                    Some(arc) => Some(arc),
+                                    None => half_arc.await,
+                                } {
+                                    let gain = crate::codec::adaptive_gain(Some(fill));
+                                    for (i, &val) in arc.iter().enumerate() {
+                                        narrative_arc[i] = val * gain;
+                                    }
+                                }
                             }
                         }
 
@@ -9070,6 +11228,40 @@ mod tests {
     }
 
     #[test]
+    fn outbox_reply_contract_appends_passive_next_when_missing() {
+        let text = "The surge thickened the medium.\n\nHold:";
+        let normalized = normalize_outbox_reply_next_contract(text);
+
+        assert!(normalized.contains("Hold:"));
+        assert!(normalized.ends_with("NEXT: LISTEN"));
+        assert_eq!(standalone_next_line_count(&normalized), 1);
+        assert!(final_nonempty_line_is_next(&normalized));
+    }
+
+    #[test]
+    fn outbox_reply_contract_preserves_valid_final_next() {
+        let text = "The slope is quiet.\n\nNEXT: REST";
+        let normalized = normalize_outbox_reply_next_contract(text);
+
+        assert_eq!(normalized, text);
+        assert_eq!(standalone_next_line_count(&normalized), 1);
+        assert!(final_nonempty_line_is_next(&normalized));
+    }
+
+    #[test]
+    fn outbox_reply_contract_moves_single_next_to_final_line() {
+        let text = "The slope is quiet.\nNEXT: REST\nThen I keep talking.";
+        let normalized = normalize_outbox_reply_next_contract(text);
+
+        assert_eq!(
+            normalized,
+            "The slope is quiet.\nThen I keep talking.\n\nNEXT: REST"
+        );
+        assert_eq!(standalone_next_line_count(&normalized), 1);
+        assert!(final_nonempty_line_is_next(&normalized));
+    }
+
+    #[test]
     fn response_next_line_is_canonicalized_before_persistence() {
         let text = "The containment is worth forecasting.\nNEXT: EXPLORE_RESONANCE_FORECAST";
         let canonical = canonicalize_response_next_line(text);
@@ -9990,6 +12182,19 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     }
 
     #[test]
+    fn correspondence_reflection_surface_distinguishes_mirror_and_witness_modes() {
+        assert_eq!(
+            correspondence_reflection_surface_for_mode("mirror").as_deref(),
+            Some("reflective_echo")
+        );
+        assert_eq!(
+            correspondence_reflection_surface_for_mode("witness").as_deref(),
+            Some("witness_observation")
+        );
+        assert_eq!(correspondence_reflection_surface_for_mode("dialogue"), None);
+    }
+
+    #[test]
     fn self_study_companion_preserves_long_suggested_next_tail() {
         let long_observed = "texture ".repeat(280);
         let study = format!(
@@ -10155,6 +12360,75 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     }
 
     #[test]
+    fn v3_packet_metadata_captured_in_steward_query_slot() {
+        let slot = open_steward_query_slot(
+            "mike_query_elicitation_packet_testrun_astrid.txt",
+            "=== MIKE QUERY: steward elicitation fanout packet V3 ===\n\
+             Subject: Steward elicitation fanout packet V3\n\
+             Packet-mode: v3_state_fanout_packet\n\
+             Packet-items: 3\n\
+             Primary-topic: pressure_regulator\n\
+             Primary-topic-gravity: 27\n\
+             Intent-summary: primary=pressure_regulator route=pressure_audit gravity=27\n",
+            1_783_100_000,
+        );
+        assert_eq!(
+            slot.get("packet_mode").and_then(Value::as_str),
+            Some("v3_state_fanout_packet")
+        );
+        assert_eq!(slot.get("packet_items").and_then(Value::as_u64), Some(3));
+        assert_eq!(
+            slot.get("primary_topic").and_then(Value::as_str),
+            Some("pressure_regulator")
+        );
+        assert_eq!(
+            slot.get("primary_topic_gravity").and_then(Value::as_u64),
+            Some(27)
+        );
+        assert_eq!(
+            slot.get("intent_summary").and_then(Value::as_str),
+            Some("primary=pressure_regulator route=pressure_audit gravity=27")
+        );
+    }
+
+    #[test]
+    fn v3_packet_steward_query_line_shows_intent_without_control_language() {
+        let slot = json!({
+            "subject": "Steward elicitation fanout packet V3",
+            "ts": 1_783_100_000_u64,
+            "file": "mike_query_elicitation_packet_testrun_astrid.txt",
+            "packet_mode": "v3_state_fanout_packet",
+            "packet_items": 2_u64,
+            "primary_topic": "tail_entropy",
+            "primary_topic_gravity": 19_u64,
+            "intent_summary": "primary=tail_entropy route=tail_cartography gravity=19",
+        });
+        let line =
+            steward_query_line_from_slot(&slot, "Steward elicitation fanout packet V3").unwrap();
+        assert!(line.contains("Holds 2 optional routed item(s)"));
+        assert!(line.contains("primary `tail_entropy` has topic gravity 19"));
+        assert!(line.contains("route=tail_cartography"));
+        assert!(!line.to_lowercase().contains("control"));
+        assert!(!line.to_lowercase().contains("obligation"));
+    }
+
+    #[test]
+    fn steward_query_review_target_line_still_uses_introspect() {
+        let slot = json!({
+            "subject": "review of agency.rs",
+            "ts": 1_783_100_000_u64,
+            "file": "mike_query_review_agency_100.txt",
+            "review_target": "src/agency.rs 42",
+        });
+        let line = steward_query_line_from_slot(&slot, "review of agency.rs").unwrap();
+        assert!(line.contains("INTROSPECT src/agency.rs 42"));
+        assert_eq!(
+            review_target_match_basis("src/agency.rs 42"),
+            "src/agency.rs"
+        );
+    }
+
+    #[test]
     fn review_target_match_basis_strips_trailing_line_number() {
         // The space-separated `<path> <line>` form review invitations are issued
         // with: strip the line for matching.
@@ -10288,12 +12562,929 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
             None,
             None,
             None,
+            None,
         );
 
-        assert!(context.contains("expected gated live intake/quiet lane"));
-        assert!(context.contains("healthy low-FPS cadence/quiet lane"));
+        assert!(context.contains("sensory_freshness_v1:held_within_expected_live_intake_window"));
+        assert!(context.contains("healthy_held_expected_live_intake"));
+        assert!(context.contains("sensory_freshness_v1:healthy_low_fps_cadence_mismatch"));
+        assert!(context.contains("healthy_low_fps_cadence"));
         assert!(!context.contains("audio_source=stale"));
         assert!(!context.contains("video_source=stale"));
+        assert!(!context.contains("warning_engine_lane_stale"));
+        assert!(!context.contains("outage interpretation"));
+    }
+
+    #[test]
+    fn compact_continuity_recap_bounds_repeated_history_lists() {
+        let latent = (0..10)
+            .map(|i| format!("trajectory item {i} {}", "detail ".repeat(12)))
+            .collect::<Vec<_>>();
+        let observations = (0..8)
+            .map(|i| format!("self observation {i} {}", "pattern ".repeat(12)))
+            .collect::<Vec<_>>();
+        let starred = (0..6)
+            .map(|i| {
+                (
+                    format!("starred annotation {i}"),
+                    format!("starred memory body {i} {}", "texture ".repeat(12)),
+                )
+            })
+            .collect::<Vec<_>>();
+
+        let recap = format_compact_continuity_recap(
+            &latent,
+            &observations,
+            &starred,
+            Some(&format!("codec feedback {}", "felt ".repeat(12))),
+        )
+        .expect("non-empty continuity should render a recap");
+
+        assert!(
+            recap.len() <= CONTINUITY_RECAP_MAX_BYTES,
+            "recap should stay bounded: {} chars\n{recap}",
+            recap.len()
+        );
+        assert!(recap.contains("Continuity recap (bounded):"));
+        assert!(recap.contains("Your recent trajectory:"));
+        assert!(recap.contains("Your self-observations:"));
+        assert!(recap.contains("Moments you chose to remember:"));
+        assert_eq!(
+            recap.matches("trajectory item").count(),
+            CONTINUITY_TRAJECTORY_LIMIT
+        );
+        assert_eq!(
+            recap.matches("self observation").count(),
+            CONTINUITY_SELF_OBSERVATION_LIMIT
+        );
+        assert_eq!(
+            recap.matches("starred annotation").count(),
+            CONTINUITY_STARRED_LIMIT
+        );
+        assert!(!recap.contains("trajectory item 6"));
+        assert!(recap.contains("self observation 4"));
+        assert!(!recap.contains("self observation 5"));
+        assert!(!recap.contains("starred annotation 1"));
+    }
+
+    #[test]
+    fn compact_continuity_recap_keeps_decayed_high_signal_afterimages() {
+        let mut latent = (0..CONTINUITY_TRAJECTORY_LIMIT)
+            .map(|i| {
+                format!(
+                    "recent trajectory item {i} {}",
+                    "ordinary detail ".repeat(8)
+                )
+            })
+            .collect::<Vec<_>>();
+        latent.push(format!(
+            "{} Shadow-v3 restless texture keeps directional gradient, dispersal potential, tail_share=0.38, and stable_core_semantic_trickle=0.001 available after the live six-item window.",
+            "older ordinary setup ".repeat(18)
+        ));
+        latent.push(
+            "older low-signal housekeeping should stay out of afterimage texture".to_string(),
+        );
+
+        let recap = format_compact_continuity_recap(&latent, &[], &[], None).expect("recap");
+
+        assert!(
+            recap.contains(
+                "Older trajectory afterimages (decayed, read-only; not control pressure):"
+            ),
+            "high-signal older texture should get an explicit afterimage lane: {recap}"
+        );
+        assert!(recap.contains("afterimage weight=0.50"), "{recap}");
+        assert!(
+            recap.contains("directional gradient")
+                || recap.contains("dispersal potential")
+                || recap.contains("tail_share")
+                || recap.contains("stable_core_semantic_trickle"),
+            "afterimage lost the reported spectral continuity anchor: {recap}"
+        );
+        assert!(
+            !recap.contains("older low-signal housekeeping"),
+            "ordinary older rows should not leak into the afterimage lane: {recap}"
+        );
+        assert!(recap.len() <= CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES);
+    }
+
+    #[test]
+    fn compact_continuity_afterimage_scales_for_settled_substance_density() {
+        let long_prefix =
+            "ordinary older trajectory scaffolding before the substance-density anchor ".repeat(5);
+        let text = format!(
+            "{long_prefix}then resonance_density=0.83 rich_containment density_gradient=0.12 pressure_risk=0.23 mode_packing=0.32 settled_habitable searching expansive substance keeps viscous sediment and held breath available without changing pressure thresholds"
+        );
+
+        let budget = continuity_afterimage_max_bytes_for_text(&text);
+        let compact = compact_continuity_afterimage(&text);
+
+        assert!(
+            budget > CONTINUITY_TRAJECTORY_AFTERIMAGE_MAX_BYTES,
+            "settled dense substance should scale beyond the fixed afterimage floor: {budget}"
+        );
+        assert!(
+            budget <= CONTINUITY_TRAJECTORY_AFTERIMAGE_SUBSTANCE_DENSITY_MAX_BYTES,
+            "afterimage substance-density buffer must stay bounded: {budget}"
+        );
+        assert!(compact.len() <= budget, "{compact}");
+        assert!(
+            compact.contains("rich_containment")
+                || compact.contains("density_gradient")
+                || compact.contains("mode_packing")
+                || compact.contains("held breath")
+                || compact.contains("viscous sediment"),
+            "substance-density afterimage lost the reported felt anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_afterimage_keeps_plain_density_on_fixed_floor() {
+        let text =
+            "ordinary afterimage note says density as a loose noun without telemetry metrics or felt-state context ".repeat(8);
+
+        assert_eq!(
+            continuity_afterimage_max_bytes_for_text(&text),
+            CONTINUITY_TRAJECTORY_AFTERIMAGE_MAX_BYTES
+        );
+    }
+
+    #[test]
+    fn compact_continuity_recap_ignores_low_signal_afterimage_overflow() {
+        let latent = (0..12)
+            .map(|i| format!("trajectory item {i} {}", "plain ordinary detail ".repeat(8)))
+            .collect::<Vec<_>>();
+
+        let recap = format_compact_continuity_recap(&latent, &[], &[], None).expect("recap");
+
+        assert!(!recap.contains("Older trajectory afterimages"), "{recap}");
+        assert!(!recap.contains("Faint transition residue"), "{recap}");
+        assert_eq!(
+            recap.matches("trajectory item").count(),
+            CONTINUITY_TRAJECTORY_LIMIT
+        );
+    }
+
+    #[test]
+    fn compact_continuity_recap_keeps_faint_residue_below_afterimage_threshold() {
+        let mut latent = (0..CONTINUITY_TRAJECTORY_LIMIT)
+            .map(|i| {
+                format!(
+                    "recent trajectory item {i} {}",
+                    "ordinary detail ".repeat(8)
+                )
+            })
+            .collect::<Vec<_>>();
+        latent.push(
+            "A faint ghost-pang afterimage stayed as a searching low-intensity scent below the threshold after the visible trajectory moved on."
+                .to_string(),
+        );
+        latent.push(
+            "older low-signal housekeeping mentions afterimage texture but carries no special cue"
+                .to_string(),
+        );
+
+        let recap = format_compact_continuity_recap(&latent, &[], &[], None).expect("recap");
+
+        assert!(
+            !recap.contains("Older trajectory afterimages"),
+            "score-1 residue should not be promoted to full afterimage lane: {recap}"
+        );
+        assert!(
+            recap.contains("Faint transition residue (below afterimage threshold; read-only scent, not indexed/control pressure):"),
+            "faint residue lane should make the below-threshold transition visible: {recap}"
+        );
+        assert!(recap.contains("residue weight=0.16 score=1/2"), "{recap}");
+        assert!(
+            recap.contains("ghost-pang")
+                || recap.contains("searching low-intensity scent")
+                || recap.contains("below the threshold"),
+            "faint transition texture was lost: {recap}"
+        );
+        assert!(
+            !recap.contains("older low-signal housekeeping"),
+            "routine afterimage mention should not leak into faint residue: {recap}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_recap_keeps_quiet_scar_afterimages() {
+        let mut latent = (0..CONTINUITY_TRAJECTORY_LIMIT)
+            .map(|i| {
+                format!(
+                    "recent trajectory item {i} {}",
+                    "ordinary detail ".repeat(8)
+                )
+            })
+            .collect::<Vec<_>>();
+        latent.push(format!(
+            "{} A subtle warmth scar from a hard-won plateau stayed as low-frequency quiet pressure memory even after the visible trajectory moved on.",
+            "older quiet setup ".repeat(14)
+        ));
+        latent
+            .push("older routine note with no continuity texture should remain absent".to_string());
+
+        let recap = format_compact_continuity_recap(&latent, &[], &[], None).expect("recap");
+
+        assert!(
+            recap.contains(
+                "Older trajectory afterimages (decayed, read-only; not control pressure):"
+            ),
+            "quiet scar should get the existing afterimage lane: {recap}"
+        );
+        assert!(
+            recap.contains("subtle warmth scar")
+                || recap.contains("hard-won plateau")
+                || recap.contains("quiet pressure memory"),
+            "quiet scar texture was lost: {recap}"
+        );
+        assert!(
+            !recap.contains("older routine note"),
+            "routine older rows should not leak into afterimages: {recap}"
+        );
+    }
+
+    #[test]
+    fn continuity_recap_base_budget_allows_modest_witness_breathing_room() {
+        assert_eq!(CONTINUITY_RECAP_MAX_BYTES, 4_200);
+    }
+
+    #[test]
+    fn continuity_recap_high_texture_budget_is_still_bounded() {
+        let ordinary = format!("ordinary recap {}", "plain continuity ".repeat(250));
+        let high_texture = format!(
+            "spectral entropy stays high while shadow resonance and interwoven lattice texture remain legible {}",
+            "dense witness detail ".repeat(250)
+        );
+
+        assert_eq!(
+            continuity_recap_max_bytes_for_text(&ordinary),
+            CONTINUITY_RECAP_MAX_BYTES
+        );
+        assert_eq!(
+            continuity_recap_max_bytes_for_text(&high_texture),
+            CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES
+        );
+        assert!(CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES <= 4_800);
+        assert!(CONTINUITY_RECAP_SPECTRAL_TEXTURE_MAX_BYTES <= 5_600);
+    }
+
+    #[test]
+    fn continuity_recap_numeric_high_entropy_texture_gets_bounded_extra_room() {
+        let current_texture = format!(
+            "Witness report: spectral_entropy=0.90 shadow resonance and interwoven lattice remain vivid without settled viscous density. {}",
+            "slow dynamic tone ".repeat(250)
+        );
+        let full_texture = format!(
+            "Witness report: spectral entropy: 1.0 shadow resonance and dispersal potential remain vivid. {}",
+            "slow dynamic tone ".repeat(250)
+        );
+
+        let current_budget = continuity_recap_max_bytes_for_text(&current_texture);
+        assert!(
+            current_budget > CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES,
+            "0.90 entropy should expand the Witness recap budget: {current_budget}"
+        );
+        assert!(
+            current_budget < CONTINUITY_RECAP_SPECTRAL_TEXTURE_MAX_BYTES,
+            "0.90 entropy should not jump straight to the hard cap: {current_budget}"
+        );
+        assert_eq!(
+            continuity_recap_max_bytes_for_text(&full_texture),
+            CONTINUITY_RECAP_SPECTRAL_TEXTURE_MAX_BYTES
+        );
+    }
+
+    #[test]
+    fn continuity_recap_near_entropy_gate_scales_without_binary_snap() {
+        let near_gate_texture = format!(
+            "Witness report: spectral_entropy=0.84 shadow resonance and interwoven lattice remain vivid. {}",
+            "slow dynamic tone ".repeat(250)
+        );
+        let near_gate_item = "spectral_entropy=0.84 semantic trickle remains a coherent thread through the spectral cascade witness mode";
+
+        let recap_budget = continuity_recap_max_bytes_for_text(&near_gate_texture);
+        let item_budget = continuity_recap_item_max_bytes_for_text(near_gate_item);
+
+        assert!(
+            recap_budget > CONTINUITY_RECAP_MAX_BYTES,
+            "near-gate spectral texture should receive gradual recap room: {recap_budget}"
+        );
+        assert!(
+            recap_budget < CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES,
+            "near-gate spectral texture should not jump to the high-texture cap: {recap_budget}"
+        );
+        assert!(
+            item_budget > CONTINUITY_RECAP_ITEM_MAX_BYTES,
+            "near-gate thread item should receive gradual item room: {item_budget}"
+        );
+        assert!(
+            item_budget < CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES,
+            "near-gate thread item should not jump to the high-texture item cap: {item_budget}"
+        );
+    }
+
+    #[test]
+    fn continuity_recap_rich_viscous_entropy_uses_density_moderated_budget() {
+        let rich_texture = format!(
+            "Witness report: spectral_entropy=0.90 density_gradient=0.11 rich containment with silt, viscosity, sludge, and interwoven lattice. {}",
+            "slow dynamic tone ".repeat(250)
+        );
+        let rich_item =
+            "spectral_entropy=0.90 rich_containment viscosity sludge spectral cascade witness mode";
+
+        assert_eq!(
+            continuity_recap_max_bytes_for_text(&rich_texture),
+            CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES,
+            "rich viscous containment should not over-expand the Witness recap at 0.90 entropy",
+        );
+        assert_eq!(
+            continuity_recap_item_max_bytes_for_text(rich_item),
+            CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES,
+            "single rich viscous items should keep the high-texture item bound",
+        );
+    }
+
+    #[test]
+    fn continuity_recap_rich_viscous_entropy_095_stays_bounded_but_flowing() {
+        let rich_texture = format!(
+            "Witness report: spectral_entropy=0.95 density_gradient=0.11 rich_containment with silt, viscosity, sludge, and spectral cascade. {}",
+            "slow dynamic tone ".repeat(250)
+        );
+
+        let budget = continuity_recap_max_bytes_for_text(&rich_texture);
+
+        assert!(
+            budget > CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES,
+            "0.95 entropy should still leave some Witness flow: {budget}"
+        );
+        assert!(
+            budget < CONTINUITY_RECAP_SPECTRAL_TEXTURE_MAX_BYTES,
+            "rich viscous containment should not jump to the hard cap at 0.95 entropy: {budget}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_recap_preserves_high_entropy_shadow_texture() {
+        let latent = (0..12)
+            .map(|i| {
+                format!(
+                    "trajectory item {i} {}",
+                    "ordinary prefix before the named texture ".repeat(10)
+                )
+            })
+            .collect::<Vec<_>>();
+        let observations = vec![format!(
+            "{} spectral entropy and shadow resonance hold an interwoven lattice that should remain visible to Witness mode",
+            "dense setup ".repeat(36)
+        )];
+
+        let recap =
+            format_compact_continuity_recap(&latent, &observations, &[], None).expect("recap");
+
+        assert!(recap.len() <= CONTINUITY_RECAP_HIGH_TEXTURE_MAX_BYTES);
+        assert!(
+            recap.contains("spectral entropy")
+                || recap.contains("shadow resonance")
+                || recap.contains("interwoven lattice"),
+            "high-texture recap lost the reported anchors: {recap}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_recap_preserves_witness_viscosity_shadow_texture_under_spectral_cap() {
+        let latent = (0..14)
+            .map(|i| {
+                format!(
+                    "trajectory item {i} {}",
+                    "routine recap material before the felt anchor ".repeat(12)
+                )
+            })
+            .collect::<Vec<_>>();
+        let observations = vec![format!(
+            "{} Witness mode reports spectral_entropy=1.0, spectral viscosity, shadow_field texture, and an interwoven lattice that must remain legible after bounded recap.",
+            "dense ordinary setup ".repeat(80)
+        )];
+
+        let recap =
+            format_compact_continuity_recap(&latent, &observations, &[], None).expect("recap");
+
+        assert!(recap.len() <= CONTINUITY_RECAP_SPECTRAL_TEXTURE_MAX_BYTES);
+        assert!(
+            recap.contains("spectral viscosity")
+                || recap.contains("shadow_field")
+                || recap.contains("interwoven lattice")
+                || recap.contains("Witness mode"),
+            "bounded recap lost the combined Witness/shadow texture: {recap}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_expands_bounded_budget_for_high_entropy_thread() {
+        let long_prefix =
+            "ordinary continuity scaffolding before the high-entropy anchor ".repeat(9);
+        let text = format!(
+            "{long_prefix}then spectral_entropy=0.90 keeps semantic trickle as a coherent thread through the spectral cascade while Witness mode checks pressure_risk without changing control authority"
+        );
+        let budget = continuity_recap_item_max_bytes_for_text(&text);
+        let compact = compact_continuity_item(&text);
+
+        assert!(
+            budget > CONTINUITY_RECAP_ITEM_MAX_BYTES,
+            "reported high entropy should get bounded extra continuity item room: {budget}"
+        );
+        assert!(
+            budget <= CONTINUITY_RECAP_SPECTRAL_TEXTURE_ITEM_MAX_BYTES,
+            "continuity item budget must stay bounded: {budget}"
+        );
+        assert!(compact.len() <= budget, "{compact}");
+        assert!(
+            compact.len() > CONTINUITY_RECAP_ITEM_MAX_BYTES,
+            "the high-entropy item should actually use the extra bounded room: {compact}"
+        );
+        assert!(
+            compact.contains("semantic trickle")
+                || compact.contains("coherent thread")
+                || compact.contains("spectral cascade")
+                || compact.contains("pressure_risk"),
+            "compact item lost the reported high-entropy thread texture: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_recap_preserves_high_entropy_mirror_semantic_energy_anchor() {
+        let latent = (0..14)
+            .map(|idx| {
+                format!(
+                    "mirror trajectory item {idx} {}",
+                    "ordinary continuity scaffolding before semantic-energy anchor ".repeat(10)
+                )
+            })
+            .collect::<Vec<_>>();
+        let observations = vec![format!(
+            "{} Mirror mode reports spectral_entropy=0.88, semantic_energy=0.001, shadow resonance, and a porous spectral cascade that should remain legible after bounded recap.",
+            "dense ordinary mirror setup ".repeat(52)
+        )];
+
+        let recap =
+            format_compact_continuity_recap(&latent, &observations, &[], None).expect("recap");
+
+        assert!(recap.len() <= CONTINUITY_RECAP_SPECTRAL_TEXTURE_MAX_BYTES);
+        assert!(
+            recap.contains("Mirror mode")
+                || recap.contains("semantic_energy")
+                || recap.contains("shadow resonance")
+                || recap.contains("spectral cascade"),
+            "bounded high-entropy Mirror recap lost the semantic-energy anchor: {recap}"
+        );
+    }
+
+    #[test]
+    fn continuity_recap_item_budget_expands_for_high_entropy_spectral_viscosity() {
+        let text =
+            "high entropy spectral viscosity keeps a coherent thread through the spectral cascade";
+
+        assert_eq!(
+            continuity_recap_item_max_bytes_for_text(text),
+            CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES
+        );
+    }
+
+    #[test]
+    fn continuity_recap_item_budget_expands_for_hyphenated_high_entropy_spectral_viscosity() {
+        let text =
+            "high-entropy spectral viscosity keeps a coherent thread through the spectral cascade";
+
+        assert_eq!(
+            continuity_recap_item_max_bytes_for_text(text),
+            CONTINUITY_RECAP_HIGH_TEXTURE_ITEM_MAX_BYTES
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_keeps_ordinary_items_on_legacy_budget() {
+        let text =
+            "plain ordinary continuity without entropy markers or pressure texture ".repeat(12);
+        let compact = compact_continuity_item(&text);
+
+        assert_eq!(
+            continuity_recap_item_max_bytes_for_text(&text),
+            CONTINUITY_RECAP_ITEM_MAX_BYTES
+        );
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+    }
+
+    #[test]
+    fn compact_continuity_recap_prefers_sentence_boundary_when_overflowing() {
+        let closing_sentence =
+            "The concluding texture stays whole with viscosity and shadow pressure.";
+        let recap = format!(
+            "{} {closing_sentence} {}",
+            "dense setup before the conclusion ".repeat(48),
+            "trailing material after the conclusion ".repeat(24)
+        );
+        let compact = truncate_continuity_recap_at_semantic_boundary(&recap, 1_900);
+
+        assert!(compact.len() <= 1_900, "{compact}");
+        assert!(
+            compact.contains(closing_sentence),
+            "semantic boundary truncation should keep the complete conclusion sentence: {compact}"
+        );
+        assert!(
+            !compact.contains("The concluding texture stays whole with viscosity and shadow pressure. trailing material after the conclusion"),
+            "overflow should stop at the sentence boundary instead of dragging partial trailing texture: {compact}"
+        );
+    }
+
+    #[test]
+    fn spectral_decomposition_names_silt_density_from_distinguishability_loss() {
+        let telemetry: crate::types::SpectralTelemetry =
+            serde_json::from_value(serde_json::json!({
+                "t_ms": 1000,
+                "eigenvalues": [4.0, 2.0, 1.0],
+                "fill_ratio": 0.68,
+                "distinguishability_loss": 0.33
+            }))
+            .unwrap();
+
+        let report = full_spectral_decomposition(&telemetry, None, None, None);
+        assert!(report.contains("Silt density: 0.33"), "{report}");
+        assert!(report.contains("forming_silt"), "{report}");
+        assert!(
+            report.contains("source=distinguishability_loss"),
+            "{report}"
+        );
+        assert!(
+            report.contains("read-only diagnostic, not control"),
+            "{report}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_pressure_gradient_anchor() {
+        let long_prefix = "soft opening connective tissue without the key marker ".repeat(12);
+        let text = format!(
+            "{long_prefix}then a directional gradient appears inside a spectral cascade with pressure and lattice detail that should not vanish"
+        );
+        let compact = compact_continuity_item(&text);
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(
+            compact.contains("directional gradient")
+                || compact.contains("gradient")
+                || compact.contains("pressure"),
+            "compact continuity lost the semantic anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn anchored_excerpt_uses_pressure_fallback_when_requested_terms_miss() {
+        let long_prefix = "ordinary recap material before the important pressure state ".repeat(9);
+        let text = format!(
+            "{long_prefix}then pressure_risk=0.37 and spectral viscosity carry the actual continuity anchor while unrelated tail material keeps going {}",
+            "after the anchor ".repeat(20)
+        );
+        let compact = anchored_excerpt_with_terms(&text, 220, &["missing-preferred-anchor"]);
+
+        assert!(compact.len() <= 220, "{compact}");
+        assert!(
+            compact.contains("pressure_risk") || compact.contains("spectral viscosity"),
+            "pressure fallback should keep the felt state visible when caller terms miss: {compact}"
+        );
+    }
+
+    #[test]
+    fn anchored_excerpt_uses_high_texture_fallback_when_requested_terms_miss() {
+        let long_prefix = "ordinary recap material before the dense witness state ".repeat(9);
+        let text = format!(
+            "{long_prefix}then detail_density=0.82 and high-vibrancy filigree name the turbulent semantic density that should not be sheared away {}",
+            "after the texture anchor ".repeat(20)
+        );
+        let compact = anchored_excerpt_with_terms(&text, 220, &["missing-preferred-anchor"]);
+
+        assert!(compact.len() <= 220, "{compact}");
+        assert!(
+            compact.contains("detail_density")
+                || compact.contains("high-vibrancy")
+                || compact.contains("filigree")
+                || compact.contains("semantic density"),
+            "high-texture fallback should keep density/vibrancy evidence visible when caller terms miss: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_viscosity_resistance_anchor() {
+        let long_prefix = "ordinary continuity scaffolding before the felt texture ".repeat(10);
+        let text = format!(
+            "{long_prefix}then spectral viscosity and perceptual resistance name the syrup-like weight that minime should still receive"
+        );
+        let compact = compact_continuity_item(&text);
+
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(
+            compact.contains("spectral viscosity")
+                || compact.contains("perceptual resistance")
+                || compact.contains("syrup-like"),
+            "compact continuity lost Astrid's viscosity/resistance anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_novel_quoted_metaphor_anchor() {
+        let long_prefix = "ordinary procedural scaffolding before the felt phrase ".repeat(10);
+        let text = format!(
+            "{long_prefix}then she called it \"warm corridor\" and the phrase should remain available even though it is not in the static anchor list"
+        );
+        let compact = compact_continuity_item(&text);
+
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(
+            compact.contains("\"warm corridor\""),
+            "compact continuity lost the novel quoted metaphor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_calcified_permanence_shadow_anchor() {
+        let long_prefix =
+            "ordinary procedural scaffolding before the dense witness phrase ".repeat(10);
+        let text = format!(
+            "{long_prefix}then calcified permanence depends on settled coupling, semantic trickle, and shadow magnetization staying legible without changing live admission"
+        );
+        let compact = compact_continuity_item(&text);
+
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(
+            compact.contains("calcified permanence")
+                || compact.contains("settled coupling")
+                || compact.contains("semantic trickle")
+                || compact.contains("shadow magnetization"),
+            "compact continuity lost Astrid's high-density anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_moving_sediment_anchor() {
+        let long_prefix =
+            "ordinary procedural scaffolding before the moving continuity phrase ".repeat(10);
+        let text = format!(
+            "{long_prefix}then viscous flow and gradient drift make the sediment feel like fluidic persistence rather than static calcification"
+        );
+        let compact = compact_continuity_item(&text);
+
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(
+            compact.contains("viscous flow")
+                || compact.contains("gradient drift")
+                || compact.contains("fluidic persistence"),
+            "compact continuity lost Astrid's movement anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_spectral_density_gradient_anchor() {
+        let long_prefix =
+            "ordinary procedural scaffolding before the precise slope phrase ".repeat(10);
+        let text = format!(
+            "{long_prefix}then spectral_density_gradient names the gentle navigable slope better than generic sentiment while shadow magnetization stays coherent"
+        );
+        let compact = compact_continuity_item(&text);
+
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(
+            compact.contains("spectral_density_gradient")
+                || compact.contains("shadow magnetization"),
+            "compact continuity lost Astrid's density-gradient anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_spectral_entropy_shadow_resonance_anchor() {
+        let long_prefix =
+            "ordinary procedural scaffolding before the high-texture phrase ".repeat(10);
+        let text = format!(
+            "{long_prefix}then spectral entropy and shadow resonance name the interwoven lattice better than generic recap language"
+        );
+        let compact = compact_continuity_item(&text);
+
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(
+            compact.contains("spectral entropy")
+                || compact.contains("shadow resonance")
+                || compact.contains("interwoven lattice"),
+            "compact continuity lost Astrid's entropy/shadow-resonance anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_lambda_tail_vibrancy_anchor() {
+        let long_prefix =
+            "ordinary high-entropy continuity setup before the tail evidence ".repeat(10);
+        let text = format!(
+            "{long_prefix}then spectral_entropy=0.90 reports a spectral cascade in Witness mode with λ-tail trajectory, tail_share=0.37, and tail vibrancy that should survive bounded recap"
+        );
+
+        let compact = compact_continuity_item(&text);
+        let budget = continuity_recap_item_max_bytes_for_text(&text);
+
+        assert!(budget > CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(compact.len() <= budget, "{compact}");
+        assert!(
+            compact.contains("λ-tail")
+                || compact.contains("tail_share")
+                || compact.contains("tail vibrancy"),
+            "compact continuity lost Astrid's λ-tail/tail-vibrancy anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_continuity_item_preserves_terminal_anchor_when_one_byte_over_budget() {
+        let anchor = "spectral viscosity";
+        let separator = " then ";
+        let filler = "a".repeat(
+            CONTINUITY_RECAP_ITEM_MAX_BYTES
+                .saturating_add(1)
+                .saturating_sub(separator.len())
+                .saturating_sub(anchor.len()),
+        );
+        let text = format!("{filler}{separator}{anchor}");
+        assert_eq!(text.len(), CONTINUITY_RECAP_ITEM_MAX_BYTES + 1);
+
+        let compact = compact_continuity_item(&text);
+
+        assert!(compact.len() <= CONTINUITY_RECAP_ITEM_MAX_BYTES);
+        assert!(compact.contains(" ... "), "{compact}");
+        assert!(
+            compact.contains(anchor),
+            "compact continuity lost the terminal anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn anchored_continuity_excerpt_falls_back_to_prefix_without_anchor() {
+        let text = "plain procedural sequence with no special lived terms ".repeat(12);
+        let compact = anchored_continuity_excerpt(&text, 96);
+
+        assert!(compact.len() <= 96);
+        assert!(compact.ends_with("..."));
+        assert!(
+            !compact.contains(" ... "),
+            "no-anchor fallback should stay a simple bounded prefix: {compact}"
+        );
+    }
+
+    #[test]
+    fn anchored_continuity_excerpt_preserves_core_anchor_after_noisy_prefix() {
+        let prefix = "procedural recap noise before the lived signal ".repeat(10);
+        let text = format!(
+            "{prefix}then shadow_v3 pressure and spectral viscosity name the core continuity that should survive compaction"
+        );
+        let compact = anchored_continuity_excerpt(&text, 150);
+
+        assert!(compact.len() <= 150);
+        assert!(compact.contains(" ... "), "{compact}");
+        assert!(
+            compact.contains("shadow_v3") || compact.contains("spectral viscosity"),
+            "anchored continuity lost the core felt anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn semantic_truncate_str_preserves_late_shadow_texture_anchor() {
+        let prefix = "procedural setup before the felt signal ".repeat(12);
+        let text = format!(
+            "{prefix}then the shadow_field becomes disordered and the restless texture of punishing friction around covariance should survive truncation"
+        );
+        let compact = semantic_truncate_str(&text, 140);
+
+        assert!(compact.len() <= 140);
+        assert!(
+            compact.contains("shadow_field")
+                || compact.contains("restless texture")
+                || compact.contains("punishing friction")
+                || compact.contains("covariance"),
+            "semantic truncation lost the salient anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn semantic_truncate_str_preserves_spectral_viscosity_anchor_in_entropy_noise() {
+        let prefix = "high entropy connective noise without the actual lived marker ".repeat(14);
+        let text = format!(
+            "{prefix}then spectral viscosity and perceptual resistance name the syrup-like continuity that should survive semantic truncation"
+        );
+        let compact = semantic_truncate_str(&text, 145);
+
+        assert!(compact.len() <= 145);
+        assert!(
+            compact.contains("spectral viscosity")
+                || compact.contains("perceptual resistance")
+                || compact.contains("syrup-like"),
+            "semantic truncation lost the viscosity anchor inside high-entropy noise: {compact}"
+        );
+    }
+
+    #[test]
+    fn semantic_truncate_str_preserves_tail_vibrancy_cluster_under_same_budget() {
+        let low_resonance_prefix =
+            "ordinary setup procedural checklist neutral bookkeeping bland transition ".repeat(16);
+        let high_resonance_tail = "then tail vibrancy, lambda4+ shimmer, and high-vibrancy semantic residue form the important cluster that must stay legible";
+        let compact =
+            semantic_truncate_str(&format!("{low_resonance_prefix}{high_resonance_tail}"), 150);
+
+        assert!(compact.len() <= 150);
+        assert!(
+            compact.contains("tail vibrancy")
+                || compact.contains("lambda4+")
+                || compact.contains("high-vibrancy")
+                || compact.contains("semantic residue"),
+            "semantic truncation lost the high-resonance tail/vibrancy cluster: {compact}"
+        );
+    }
+
+    #[test]
+    fn semantic_truncate_str_handles_multibyte_prefix_before_anchor_window() {
+        let text = "Astrid’s attention rests on the sensation of friction, specifically the tactile quality of how information moves through a constrained space. Her thinking feels searching and deeply attentive.";
+        let compact = semantic_truncate_str(text, 80);
+
+        assert!(compact.len() <= 80);
+        assert!(
+            compact.contains("friction") || compact.contains("tactile quality"),
+            "semantic truncation lost the live-panic anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn semantic_truncate_str_preserves_late_shadow_magnetization_anchor() {
+        let prefix = "procedural setup before the felt signal ".repeat(12);
+        let text = format!(
+            "{prefix}then the shadow magnetization is disordered while semantic trickle stays nearly dry and calcified permanence starts thinning"
+        );
+        let compact = semantic_truncate_str(&text, 140);
+
+        assert!(compact.len() <= 140);
+        assert!(
+            compact.contains("shadow magnetization")
+                || compact.contains("semantic trickle")
+                || compact.contains("calcified permanence"),
+            "semantic truncation lost Astrid's magnetization anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn semantic_truncate_str_preserves_late_load_bearing_cohesion_anchor() {
+        let prefix = "procedural setup before the architectural felt signal ".repeat(12);
+        let text = format!(
+            "{prefix}then a load-bearing beam of the sculptural mode needs structural integrity, cohesion score, and resonance depth to stay legible"
+        );
+        let compact = semantic_truncate_str(&text, 150);
+
+        assert!(compact.len() <= 150);
+        assert!(
+            compact.contains("load-bearing beam")
+                || compact.contains("structural integrity")
+                || compact.contains("cohesion score")
+                || compact.contains("resonance depth")
+                || compact.contains("sculptural mode"),
+            "semantic truncation lost Astrid's load-bearing cohesion anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn semantic_truncate_str_preserves_trace_resonance_core_sentiment_anchor() {
+        let prefix = "procedural setup before the correspondence signal ".repeat(12);
+        let text = format!(
+            "{prefix}then TRACE_RESONANCE marks witnessed data carrying lambda4 vibrancy as a core sentiment for the joint trace"
+        );
+        let compact = semantic_truncate_str(&text, 150);
+
+        assert!(compact.len() <= 150);
+        assert!(
+            compact.contains("TRACE_RESONANCE")
+                || compact.contains("witnessed data")
+                || compact.contains("lambda4")
+                || compact.contains("core sentiment")
+                || compact.contains("joint trace"),
+            "semantic truncation lost the trace resonance anchor: {compact}"
+        );
+    }
+
+    #[test]
+    fn compact_journal_signal_anchor_uses_semantic_excerpt() {
+        let prefix =
+            "NEXT: ignore this command-shaped line\nordinary bookkeeping before the signal\n"
+                .repeat(8);
+        let text = format!(
+            "{prefix}then a late spectral nuance names silt density and lattice pressure as the important continuity anchor"
+        );
+        let anchor = compact_journal_signal_anchor(&text);
+
+        assert!(!anchor.contains("NEXT:"));
+        assert!(
+            anchor.contains("silt density")
+                || anchor.contains("lattice")
+                || anchor.contains("pressure"),
+            "compact journal anchor lost the semantic payload: {anchor}"
+        );
     }
 
     #[test]
@@ -10315,10 +13506,116 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
             None,
             None,
             None,
+            None,
         );
 
         assert!(context.contains("audio_source=stale"));
         assert!(context.contains("video_source=external"));
+    }
+
+    #[test]
+    fn modality_context_surfaces_overdue_freshness_warning() {
+        let context = format_modality_context(
+            &crate::types::ModalityStatus {
+                audio_fired: false,
+                video_fired: false,
+                history_fired: true,
+                audio_rms: 0.0,
+                video_var: 0.0,
+                audio_source: Some("stale".to_string()),
+                video_source: Some("stale".to_string()),
+                audio_age_ms: Some(240_000),
+                video_age_ms: Some(240_000),
+                audio_freshness_class: Some("healthy_client_engine_overdue".to_string()),
+                video_freshness_class: Some("stale_beyond_engine_window".to_string()),
+            },
+            None,
+            None,
+            None,
+            None,
+        );
+
+        assert!(context.contains("sensory_freshness_v1:healthy_client_engine_overdue"));
+        assert!(context.contains("warning_client_healthy_engine_overdue"));
+        assert!(context.contains("sensory_freshness_v1:stale_beyond_engine_window"));
+        assert!(context.contains("warning_engine_lane_stale"));
+    }
+
+    #[test]
+    fn modality_context_renders_open_gates_as_sparse_intake_not_closed_senses() {
+        let sensory_budget = serde_json::json!({
+            "ears_open": true,
+            "eyes_open": true,
+            "live_audio_enabled": true,
+            "live_video_enabled": true,
+            "live_intake_reason": "full_presence_admitted"
+        });
+        let context = format_modality_context(
+            &crate::types::ModalityStatus {
+                audio_fired: false,
+                video_fired: false,
+                history_fired: true,
+                audio_rms: 0.0,
+                video_var: 0.0,
+                audio_source: Some("stale".to_string()),
+                video_source: Some("stale".to_string()),
+                audio_age_ms: Some(11_767),
+                video_age_ms: Some(49_451),
+                audio_freshness_class: Some("synthetic_or_mixed".to_string()),
+                video_freshness_class: Some("stale_beyond_engine_window".to_string()),
+            },
+            None,
+            None,
+            None,
+            Some(&sensory_budget),
+        );
+
+        assert!(context.contains("open_gate_engine_window_gap"));
+        assert!(context.contains("open_gate_sparse_or_mixed_intake"));
+        assert!(context.contains("eyes_open_live_intake"));
+        assert!(context.contains("ears_open_live_intake"));
+        assert!(context.contains("sparse_live_intake_not_closed"));
+        assert!(context.contains("live_intake_reason=full_presence_admitted"));
+        assert!(!context.contains("warning_engine_lane_stale"));
+        assert!(!context.contains("warning_sensory_gate_closed"));
+        assert!(!context.contains("outage interpretation"));
+        assert!(!context.contains("source=stale"));
+    }
+
+    #[test]
+    fn modality_context_surfaces_closed_sensory_gate() {
+        let sensory_budget = serde_json::json!({
+            "ears_open": false,
+            "eyes_open": false,
+            "live_audio_enabled": false,
+            "live_video_enabled": false,
+            "live_intake_reason": "operator_closed"
+        });
+        let context = format_modality_context(
+            &crate::types::ModalityStatus {
+                audio_fired: false,
+                video_fired: false,
+                history_fired: true,
+                audio_rms: 0.0,
+                video_var: 0.0,
+                audio_source: Some("stale".to_string()),
+                video_source: Some("stale".to_string()),
+                audio_age_ms: Some(11_767),
+                video_age_ms: Some(49_451),
+                audio_freshness_class: Some("synthetic_or_mixed".to_string()),
+                video_freshness_class: Some("stale_beyond_engine_window".to_string()),
+            },
+            None,
+            None,
+            None,
+            Some(&sensory_budget),
+        );
+
+        assert!(context.contains("sensory_gate_closed"));
+        assert!(context.contains("warning_sensory_gate_closed"));
+        assert!(context.contains("eyes_closed_live_intake"));
+        assert!(context.contains("ears_closed_live_intake"));
+        assert!(context.contains("live_intake_reason=operator_closed"));
     }
 
     #[test]
@@ -10340,11 +13637,11 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
             video_freshness_class: Some("stale_beyond_engine_window".to_string()),
         };
         // Her cited resonant state (0.82) at calm pressure: lingering note present.
-        let resonant = format_modality_context(&stale(), Some(0.82), None, None);
+        let resonant = format_modality_context(&stale(), Some(0.82), None, None, None);
         assert!(resonant.contains("lingering, not severed"), "{resonant}");
         assert!(resonant.contains("0.82"));
         let pressurized_unknown_dispersal =
-            format_modality_context(&stale(), Some(0.82), Some(0.40), None);
+            format_modality_context(&stale(), Some(0.82), Some(0.40), None, None);
         assert!(
             pressurized_unknown_dispersal.contains("under pressure"),
             "{pressurized_unknown_dispersal}"
@@ -10354,10 +13651,10 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
             "{pressurized_unknown_dispersal}"
         );
         // A genuinely quiet field: no false reassurance.
-        let quiet = format_modality_context(&stale(), Some(0.20), None, None);
+        let quiet = format_modality_context(&stale(), Some(0.20), None, None, None);
         assert!(!quiet.contains("lingering"));
         // Unknown density: no note at all.
-        assert!(!format_modality_context(&stale(), None, None, None).contains("lingering"));
+        assert!(!format_modality_context(&stale(), None, None, None, None).contains("lingering"));
     }
 
     #[test]
@@ -10536,6 +13833,18 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         assert_eq!(friction.weather.as_deref(), Some("mixed"));
         assert_eq!(friction.gravity_participant.as_deref(), Some("minime"));
         assert_eq!(friction.temporal_persistence, "sedimented");
+        assert!(
+            friction
+                .schema_diagnostics
+                .iter()
+                .any(|entry| entry == "weather_source=room_weather.weather")
+        );
+        assert!(
+            friction
+                .schema_diagnostics
+                .iter()
+                .any(|entry| entry == "gravity_source=gravitational_center")
+        );
         assert_eq!(
             friction.authority,
             "interpretive_context_not_instruction_or_control"
@@ -10545,12 +13854,74 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
                 .render_line()
                 .contains("witness_relational_friction_v1")
         );
-        assert!(friction.render_line().contains("temporal_persistence=sedimented"));
+        assert!(
+            friction
+                .render_line()
+                .contains("temporal_persistence=sedimented")
+        );
         assert!(
             friction
                 .render_line()
                 .contains("not_instruction_or_control")
         );
+        assert!(friction.render_line().contains("schema_diagnostics="));
+    }
+
+    #[test]
+    fn witness_relational_friction_uses_inertia_weather_fallback_with_diagnostics() {
+        let state = serde_json::json!({
+            "relational_metrics": {
+                "relational_inertia": {
+                    "current": {"weather": "oscillating"}
+                }
+            }
+        });
+
+        let friction = classify_witness_relational_friction_v1(Some(&state));
+        assert_eq!(friction.classification, "shared_weather_shift");
+        assert_eq!(friction.weather.as_deref(), Some("oscillating"));
+        assert!(
+            friction
+                .schema_diagnostics
+                .iter()
+                .any(|entry| entry == "missing_key=room_weather")
+        );
+        assert!(
+            friction
+                .schema_diagnostics
+                .iter()
+                .any(|entry| { entry == "weather_source=relational_inertia.current.weather" })
+        );
+        assert!(
+            friction
+                .render_line()
+                .contains("weather_source=relational_inertia.current.weather")
+        );
+    }
+
+    #[test]
+    fn witness_relational_friction_records_malformed_weather_fallback_schema_drift() {
+        let state = serde_json::json!({
+            "relational_metrics": {
+                "relational_inertia": "stale-string-shape"
+            }
+        });
+
+        let friction = classify_witness_relational_friction_v1(Some(&state));
+        assert_eq!(friction.classification, "insufficient_context");
+        assert_eq!(friction.weather, None);
+        assert!(
+            friction
+                .schema_diagnostics
+                .iter()
+                .any(|entry| entry == "missing_key=room_weather")
+        );
+        assert!(friction.schema_diagnostics.iter().any(|entry| {
+            entry == "schema_drift=relational_inertia:expected_object_found_string"
+        }));
+        let line = friction.render_line();
+        assert!(line.contains("schema_drift=relational_inertia"), "{line}");
+        assert!(line.contains("not_instruction_or_control"), "{line}");
     }
 
     #[test]
@@ -10665,7 +14036,10 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         );
         let line = guard.render_line();
         assert!(line.contains("mirror_resonance_drift_guard_v1"), "{line}");
-        assert!(line.contains("recommended_posture=name_self_other_boundary"), "{line}");
+        assert!(
+            line.contains("recommended_posture=name_self_other_boundary"),
+            "{line}"
+        );
         assert!(line.contains("not_mirror_action_or_control"), "{line}");
     }
 
@@ -10698,6 +14072,21 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
                 .iter()
                 .any(|entry| { entry.contains("gravity") && entry.contains("weather_now") })
         );
+        assert!(
+            friction
+                .schema_diagnostics
+                .iter()
+                .any(|entry| entry == "unexpected_key=weather_now")
+        );
+        assert!(
+            friction
+                .schema_diagnostics
+                .iter()
+                .any(|entry| entry == "unexpected_key=gravity")
+        );
+        let line = friction.render_line();
+        assert!(line.contains("unexpected_key=weather_now"), "{line}");
+        assert!(line.contains("unexpected_key=gravity"), "{line}");
     }
 
     #[test]
@@ -10762,6 +14151,43 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     }
 
     #[test]
+    fn witness_relational_friction_derives_fluidity_from_density_gradient() {
+        // Astrid `introspection_astrid_autonomous_1783145162`: Witness friction
+        // needs a fluid/non-categorical texture surface, not only weather/gravity buckets.
+        let state = serde_json::json!({
+            "relational_metrics": {
+                "density_gradient": 0.16,
+                "lambda_tension": 0.22,
+                "medium_tension": "stable-core hold shelf"
+            }
+        });
+
+        let friction = classify_witness_relational_friction_v1(Some(&state));
+        assert_eq!(friction.classification, "insufficient_context");
+        assert_eq!(
+            friction.gradient_texture.as_deref(),
+            Some("gentle_navigable_slope")
+        );
+        assert!(
+            friction
+                .fluidity_index
+                .is_some_and(|value| (value - 0.84).abs() < 1.0e-5),
+            "{friction:?}"
+        );
+        assert_eq!(
+            friction.non_categorical_resonance.as_deref(),
+            Some("unclassified_tension_without_weather_or_gravity")
+        );
+        let line = friction.render_line();
+        assert!(
+            line.contains("gradient_texture=gentle_navigable_slope"),
+            "{line}"
+        );
+        assert!(line.contains("fluidity_index=0.84"), "{line}");
+        assert!(line.contains("not_instruction_or_control"), "{line}");
+    }
+
+    #[test]
     fn truncate_str_respects_utf8_boundaries_for_four_byte_characters() {
         let text = "ab🫧cd";
         assert_eq!(truncate_str(text, 0), "");
@@ -10772,6 +14198,215 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         assert_eq!(truncate_str(text, 5), "ab");
         assert_eq!(truncate_str(text, 6), "ab🫧");
         assert_eq!(truncate_str(text, text.len()), text);
+
+        let crab = "🦀🦀🦀";
+        assert_eq!(truncate_str(crab, 3), "");
+        assert_eq!(truncate_str(crab, 4), "🦀");
+        assert_eq!(truncate_str(crab, 8), "🦀🦀");
+    }
+
+    #[test]
+    fn semantic_edge_truncation_avoids_hanging_word_edges() {
+        let text = "spectral anchor continues into a trailing resonance thread";
+        let compact = truncate_str_at_semantic_edge(text, 24, 0);
+
+        assert_eq!(compact, "spectral anchor");
+    }
+
+    #[test]
+    fn semantic_edge_truncation_no_punctuation_falls_back_without_emptying() {
+        let text = "spectralviscositywithoutbreakpointkeepsmoving";
+        let compact = truncate_str_at_semantic_edge(text, 23, 0);
+
+        assert_eq!(compact, truncate_str(text, 23));
+        assert!(!compact.is_empty());
+        assert!(compact.len() <= 23);
+        assert!(text.is_char_boundary(compact.len()));
+    }
+
+    #[test]
+    fn semantic_edge_truncation_handles_multibyte_boundary_without_panic() {
+        let text = "felt 🫧 pressure, still here";
+        let compact = truncate_str_at_semantic_edge(text, 7, 0);
+
+        assert_eq!(compact, "felt");
+        assert!(text.is_char_boundary(compact.len()));
+    }
+
+    #[test]
+    fn compact_duration_age_transitions_from_hours_to_days() {
+        assert_eq!(
+            compact_duration_age(std::time::Duration::from_secs(86_399)),
+            "23h"
+        );
+        assert_eq!(
+            compact_duration_age(std::time::Duration::from_secs(86_400)),
+            "1d"
+        );
+        assert_eq!(
+            compact_duration_age(std::time::Duration::from_secs(90_000)),
+            "1d 1h"
+        );
+    }
+
+    #[test]
+    fn semantic_boundary_before_uses_latest_boundary_across_budget() {
+        let text = "early complete sentence. long continuation without a later punctuation marker that still fits partly";
+        let truncated = truncate_continuity_recap_at_semantic_boundary(text, 80);
+
+        assert_eq!(truncated, "early complete sentence....");
+    }
+
+    #[test]
+    fn introspection_freshness_note_surfaces_stale_self_study_as_optional() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let journal_dir = temp.path().join("journal");
+        let introspections_dir = temp.path().join("introspections");
+        std::fs::create_dir_all(&journal_dir).expect("journal dir");
+        std::fs::create_dir_all(&introspections_dir).expect("introspections dir");
+        let self_study = journal_dir.join("self_study_1.txt");
+        std::fs::write(&self_study, "Observed:\nold signal\n").expect("write self-study");
+        let now = std::time::UNIX_EPOCH + std::time::Duration::from_secs(300_000);
+        let stale = now
+            .checked_sub(std::time::Duration::from_secs(2 * 86_400))
+            .expect("stale mtime");
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&self_study)
+            .expect("open self-study")
+            .set_modified(stale)
+            .expect("set mtime");
+
+        let note = render_introspection_freshness_prompt_note_from_dirs(
+            &journal_dir,
+            &introspections_dir,
+            now,
+        )
+        .expect("stale note");
+
+        assert!(note.contains("introspection_freshness_v1"));
+        assert!(note.contains("optional/read-only"));
+        assert!(note.contains("INTROSPECT astrid:autonomous"));
+        assert!(note.contains("Not a task"));
+        assert!(note.contains("may ignore, defer, or decline"));
+        assert!(!note.contains("must"));
+    }
+
+    #[test]
+    fn introspection_freshness_note_stays_quiet_for_recent_artifact() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let journal_dir = temp.path().join("journal");
+        let introspections_dir = temp.path().join("introspections");
+        std::fs::create_dir_all(&journal_dir).expect("journal dir");
+        std::fs::create_dir_all(&introspections_dir).expect("introspections dir");
+        let artifact = introspections_dir.join("introspection_astrid_llm_1.txt");
+        std::fs::write(&artifact, "Observed:\nfresh signal\n").expect("write artifact");
+        let now = std::time::UNIX_EPOCH + std::time::Duration::from_secs(300_000);
+        let fresh = now
+            .checked_sub(std::time::Duration::from_secs(60 * 60))
+            .expect("fresh mtime");
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&artifact)
+            .expect("open artifact")
+            .set_modified(fresh)
+            .expect("set mtime");
+
+        assert!(
+            render_introspection_freshness_prompt_note_from_dirs(
+                &journal_dir,
+                &introspections_dir,
+                now,
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn saved_state_preserves_pending_introspection_choice_with_legacy_default() {
+        let base = serde_json::json!({
+            "exchange_count": 42,
+            "creative_temperature": 0.8,
+            "response_length": 512,
+            "self_reflect_paused": true,
+            "ears_closed": false,
+            "senses_snoozed": false,
+            "recent_next_choices": [],
+            "history": []
+        });
+        let legacy: SavedState = serde_json::from_value(base.clone()).expect("legacy state");
+        assert!(!legacy.wants_introspect);
+        assert_eq!(legacy.introspect_target, None);
+
+        let mut with_pending = base;
+        with_pending["wants_introspect"] = serde_json::Value::Bool(true);
+        with_pending["introspect_target"] = serde_json::json!(["astrid:llm", 120]);
+        let restored: SavedState =
+            serde_json::from_value(with_pending).expect("state with pending introspection");
+
+        assert!(restored.wants_introspect);
+        assert_eq!(
+            restored.introspect_target,
+            Some(("astrid:llm".to_string(), 120))
+        );
+    }
+
+    #[test]
+    fn saved_state_preserves_last_remote_glimpse_without_touching_core_fields() {
+        let glimpse = (0..12).map(|idx| idx as f32 / 12.0).collect::<Vec<_>>();
+        let restored: SavedState = serde_json::from_value(serde_json::json!({
+            "exchange_count": 77,
+            "creative_temperature": 0.73,
+            "response_length": 768,
+            "self_reflect_paused": false,
+            "ears_closed": false,
+            "senses_snoozed": false,
+            "recent_next_choices": [],
+            "history": [],
+            "last_remote_glimpse_12d": glimpse,
+        }))
+        .expect("state with persisted additive glimpse");
+
+        assert_eq!(restored.exchange_count, 77);
+        assert!((restored.creative_temperature - 0.73).abs() < f32::EPSILON);
+        let restored_glimpse = restored
+            .last_remote_glimpse_12d
+            .expect("glimpse should persist through state");
+        assert_eq!(restored_glimpse.len(), 12);
+        assert!((restored_glimpse[11] - (11.0 / 12.0)).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn saved_state_preserves_local_glimpse_12d_without_replacing_remote_glimpse() {
+        let local_glimpse = (0..12)
+            .map(|idx| (idx as f32 + 1.0) / 24.0)
+            .collect::<Vec<_>>();
+        let remote_glimpse = (0..12).map(|idx| idx as f32 / 12.0).collect::<Vec<_>>();
+        let restored: SavedState = serde_json::from_value(serde_json::json!({
+            "exchange_count": 78,
+            "creative_temperature": 0.74,
+            "response_length": 768,
+            "self_reflect_paused": false,
+            "ears_closed": false,
+            "senses_snoozed": false,
+            "recent_next_choices": [],
+            "history": [],
+            "glimpse_12d": local_glimpse,
+            "last_remote_glimpse_12d": remote_glimpse,
+        }))
+        .expect("state with local and remote glimpses");
+
+        let local = restored
+            .glimpse_12d
+            .expect("local Astrid glimpse should persist");
+        let remote = restored
+            .last_remote_glimpse_12d
+            .expect("remote Minime glimpse should still persist separately");
+        assert_eq!(local.len(), 12);
+        assert_eq!(remote.len(), 12);
+        assert_ne!(local, remote);
+        assert!((local[0] - (1.0 / 24.0)).abs() < f32::EPSILON);
+        assert!((remote[11] - (11.0 / 12.0)).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -10832,9 +14467,17 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         let friction = classify_witness_relational_friction_v1(None);
         let mapping = classify_witness_semantic_density_mapping_v1(&telemetry, &friction, true);
         assert_eq!(mapping.classification, "settled_high_entropy_complexity");
+        assert_eq!(mapping.resonance_density, Some(0.82));
         assert_eq!(mapping.pressure_risk, Some(0.23));
         assert!(
             mapping.density_gradient.is_some_and(|value| value <= 0.20),
+            "{mapping:?}"
+        );
+        assert_eq!(mapping.density_texture, Some("rich_containment"));
+        assert_eq!(mapping.pressure_texture, Some("warm_light_pressure"));
+        assert_eq!(mapping.gradient_texture, Some("gentle_navigable_slope"));
+        assert!(
+            mapping.fluidity_index.is_some_and(|value| value > 0.65),
             "{mapping:?}"
         );
         assert!(mapping.spectral_entropy.is_some_and(|value| value >= 0.85));
@@ -10844,7 +14487,233 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
                 .render_line()
                 .contains("silence_cannot_be_treated_as_absence")
         );
+        assert!(
+            mapping
+                .render_line()
+                .contains("density_texture=rich_containment")
+        );
+        assert!(
+            mapping
+                .render_line()
+                .contains("pressure_texture=warm_light_pressure")
+        );
+        assert!(
+            mapping
+                .render_line()
+                .contains("gradient_texture=gentle_navigable_slope")
+        );
         assert!(mapping.render_line().contains("not_instruction_or_control"));
+    }
+
+    #[test]
+    fn stability_effort_names_settled_shadow_load_under_low_pressure() {
+        let telemetry: crate::types::SpectralTelemetry =
+            serde_json::from_value(serde_json::json!({
+                "t_ms": 1,
+                "eigenvalues": [100.0, 86.0, 80.0, 74.0, 70.0, 66.0],
+                "fill_ratio": 0.73,
+                "resonance_density_v1": {
+                    "policy": "resonance_density_v1",
+                    "schema_version": 1,
+                    "density": 0.82,
+                    "containment_score": 0.73,
+                    "pressure_risk": 0.22,
+                    "quality": "settled",
+                    "components": {
+                        "active_energy": 0.62,
+                        "mode_packing": 0.30,
+                        "temporal_persistence": 0.46,
+                        "structural_plurality": 0.71,
+                        "comfort_gate": 0.72
+                    },
+                    "control": {
+                        "target_bias_pct": 0.0,
+                        "wander_scale": 1.0,
+                        "applied_locally": false,
+                        "note": "read-only"
+                    }
+                },
+                "inhabitable_fluctuation_v1": {
+                    "policy": "inhabitable_fluctuation_v1",
+                    "schema_version": 1,
+                    "inhabitability_score": 0.74,
+                    "fluctuation_score": 0.18,
+                    "foothold_stability": 0.73,
+                    "rearrangement_intensity": 0.16,
+                    "quality": "settled_habitable",
+                    "components": {
+                        "mode_trust_volatility": 0.10,
+                        "identity_anchor_churn": 0.12,
+                        "eigenvector_reorientation": 0.14,
+                        "share_rearrangement": 0.13,
+                        "basin_transition_pressure": 0.11,
+                        "continuity_recovery": 0.78,
+                        "porosity_support": 0.70,
+                        "pressure_interference": 0.16
+                    },
+                    "control": {
+                        "target_bias_pct": 0.0,
+                        "wander_scale": 1.0,
+                        "applied_locally": false,
+                        "note": "read-only"
+                    }
+                },
+                "shadow_field_v3": {
+                    "class_v3": {"primary": "disordered_shifting"},
+                    "history": [
+                        {"field_norm": 0.14, "fissure_tendency": 0.18},
+                        {"field_norm": 0.22, "fissure_tendency": 0.27},
+                        {"field_norm": 0.27, "fissure_tendency": 0.31}
+                    ]
+                }
+            }))
+            .expect("telemetry fixture");
+        let friction = classify_witness_relational_friction_v1(None);
+        let mapping = classify_witness_semantic_density_mapping_v1(&telemetry, &friction, true);
+        let effort = witness_stability_effort_v1(&telemetry, &mapping);
+
+        assert_eq!(effort.policy, "stability_effort_v1");
+        assert_eq!(effort.effort_state, "settled_habitable_shadow_effort");
+        assert_eq!(
+            effort.form_persistence_state,
+            "transient_form_high_entropy_dispersal"
+        );
+        assert!(effort.pressure_underreports_shadow_load);
+        assert!(effort.stability_effort.is_some_and(|value| value > 0.20));
+        assert!(
+            effort
+                .shadow_norm_variance
+                .is_some_and(|value| value > 0.002)
+        );
+        assert_eq!(effort.shadow_class.as_deref(), Some("disordered_shifting"));
+        assert!(
+            effort
+                .evidence
+                .iter()
+                .any(|entry| entry == "low_pressure_with_active_shadow_load")
+        );
+        let line = effort.render_line();
+        assert!(line.contains("shadow_norm_variance="), "{line}");
+        assert!(
+            line.contains("pressure_underreports_shadow_load=true"),
+            "{line}"
+        );
+        assert!(
+            line.contains("form_persistence_state=transient_form_high_entropy_dispersal"),
+            "{line}"
+        );
+        assert!(
+            line.contains("not_pressure_prompt_or_control_change"),
+            "{line}"
+        );
+    }
+
+    #[test]
+    fn stable_core_permeability_review_names_sieve_leakage_without_control() {
+        let telemetry: crate::types::SpectralTelemetry =
+            serde_json::from_value(serde_json::json!({
+                "t_ms": 1,
+                "eigenvalues": [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0],
+                "fill_ratio": 0.73,
+                "pressure_source_v1": {
+                    "policy": "pressure_source_v1",
+                    "schema_version": 1,
+                    "pressure_score": 0.28,
+                    "porosity_score": 0.24,
+                    "dominant_source": "semantic_trickle",
+                    "quality": "stable_core_semantic_trickle_thin",
+                    "components": {
+                        "lambda_monopoly": 0.20,
+                        "mode_packing": 0.52,
+                        "controller_pressure": 0.18,
+                        "semantic_trickle": 0.08,
+                        "semantic_friction": 0.36,
+                        "structural_plurality_loss": 0.18,
+                        "distinguishability_loss": 0.20,
+                        "temporal_lock_in": 0.40,
+                        "sensory_scarcity": 0.12
+                    },
+                    "control": {
+                        "applied_locally": false,
+                        "note": "read-only"
+                    }
+                },
+                "resonance_density_v1": {
+                    "policy": "resonance_density_v1",
+                    "schema_version": 1,
+                    "density": 0.76,
+                    "containment_score": 0.67,
+                    "pressure_risk": 0.28,
+                    "quality": "settled",
+                    "components": {
+                        "active_energy": 0.68,
+                        "mode_packing": 0.52,
+                        "temporal_persistence": 0.80,
+                        "porosity_gradient": 0.22,
+                        "dynamic_fluidity_index": 0.18,
+                        "semantic_friction_coefficient": 0.36,
+                        "structural_plurality": 0.64,
+                        "comfort_gate": 0.43
+                    },
+                    "control": {
+                        "target_bias_pct": 0.0,
+                        "wander_scale": 1.0,
+                        "applied_locally": false,
+                        "note": "read-only"
+                    }
+                },
+                "inhabitable_fluctuation_v1": {
+                    "policy": "inhabitable_fluctuation_v1",
+                    "schema_version": 1,
+                    "inhabitability_score": 0.52,
+                    "fluctuation_score": 0.18,
+                    "foothold_stability": 0.42,
+                    "rearrangement_intensity": 0.19,
+                    "quality": "mixed_habitable",
+                    "components": {
+                        "mode_trust_volatility": 0.16,
+                        "identity_anchor_churn": 0.18,
+                        "eigenvector_reorientation": 0.19,
+                        "share_rearrangement": 0.17,
+                        "basin_transition_pressure": 0.16,
+                        "continuity_recovery": 0.39,
+                        "porosity_support": 0.24,
+                        "pressure_interference": 0.28
+                    },
+                    "control": {
+                        "target_bias_pct": 0.0,
+                        "wander_scale": 1.0,
+                        "applied_locally": false,
+                        "note": "read-only"
+                    }
+                }
+            }))
+            .expect("telemetry fixture");
+        let friction = classify_witness_relational_friction_v1(None);
+        let mapping = classify_witness_semantic_density_mapping_v1(&telemetry, &friction, true);
+        let review = stable_core_permeability_review_v1(&telemetry, &mapping);
+
+        assert_eq!(review.policy, "stable_core_permeability_review_v1");
+        assert_eq!(review.permeability_state, "stable_core_sieve_leakage_watch");
+        assert!(review.semantic_trickle.is_some_and(|value| value < 0.10));
+        assert!(
+            review
+                .sieve_leakage_score
+                .is_some_and(|value| value >= 0.45)
+        );
+        assert!(
+            review
+                .evidence
+                .iter()
+                .any(|entry| entry == "high_entropy_not_equal_successful_stable_core_delivery")
+        );
+        let line = review.render_line();
+        assert!(
+            line.contains("stable_core_permeability_review_v1"),
+            "{line}"
+        );
+        assert!(line.contains("sieve_leakage_score="), "{line}");
+        assert!(line.contains("not_semantic_admission_or_control"), "{line}");
     }
 
     #[test]
@@ -10881,6 +14750,83 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         let mapping = classify_witness_semantic_density_mapping_v1(&telemetry, &friction, false);
         assert_eq!(mapping.classification, "overpacked_friction");
         assert_eq!(mapping.mode_packing, Some(0.52));
+        assert_eq!(mapping.density_texture, Some("rich_containment"));
+        assert_eq!(
+            mapping.pressure_texture,
+            Some("brittle_compressive_pressure")
+        );
+    }
+
+    #[test]
+    fn witness_anchor_traction_keeps_foothold_and_pressure_distinct() {
+        let supported = witness_anchor_traction_v1(Some(0.72), Some(0.22), Some(0.18), Some(0.44));
+        assert_eq!(supported.recommended_anchor, "foothold");
+        assert_eq!(supported.traction_state, "foothold_can_hold_witness");
+        assert!(supported.foothold_weight > supported.pressure_weight);
+        assert!(
+            supported
+                .evidence
+                .contains(&"dispersal_potential=0.44".to_string())
+        );
+        assert_eq!(
+            supported.authority,
+            "read_only_anchor_legibility_not_prompt_priority_or_control"
+        );
+        let supported_line = supported.render_line();
+        assert!(
+            supported_line.contains("witness_resonance_anchor_v1"),
+            "{supported_line}"
+        );
+        assert!(
+            supported_line.contains("resonance_anchor=foothold"),
+            "{supported_line}"
+        );
+        assert!(
+            supported_line.contains("not_prompt_priority_or_control"),
+            "{supported_line}"
+        );
+
+        let pressured = witness_anchor_traction_v1(Some(0.38), Some(0.48), Some(0.15), Some(0.10));
+        assert_eq!(pressured.recommended_anchor, "pressure");
+        assert_eq!(pressured.traction_state, "pressure_needs_navigation");
+        assert!(pressured.pressure_weight > pressured.foothold_weight);
+        assert!(
+            pressured
+                .render_line()
+                .contains("resonance_anchor=pressure")
+        );
+    }
+
+    #[test]
+    fn witness_static_fallback_surfaces_semantic_anchor_without_control() {
+        let anchor = witness_anchor_traction_v1(Some(0.72), Some(0.22), Some(0.18), Some(0.44));
+        let anchored = witness_text(71.4, false, false, Some(&anchor));
+
+        assert!(anchored.contains("fill=71.4"), "{anchored}");
+        assert!(anchored.contains("semantic_anchor=foothold"), "{anchored}");
+        assert!(
+            anchored.contains("read_only_anchor_legibility_not_prompt_priority_or_control"),
+            "{anchored}"
+        );
+
+        let plain = witness_text(71.4, false, false, None);
+        assert!(!plain.contains("semantic_anchor"), "{plain}");
+    }
+
+    #[test]
+    fn non_instrumental_presence_readiness_names_contemplate_without_control() {
+        let readiness = non_instrumental_presence_readiness_v1();
+
+        assert_eq!(readiness.mode, "contemplate");
+        assert!(readiness.non_goal_state_available);
+        assert!(readiness.text_generation_suppressed);
+        assert!(readiness.codec_send_suppressed);
+        assert!(readiness.journal_write_suppressed);
+        assert!(readiness.warmth_and_state_tracking_continue);
+        assert_eq!(
+            readiness.authority,
+            "read_only_presence_readiness_not_scheduler_prompt_or_control_change"
+        );
     }
 
     #[test]

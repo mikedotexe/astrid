@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Codec projection runtime path resolution could silently fall back or differ across deployment layouts unless it is made visible and testable.",
+      "disposition": "verified_existing_projection_runtime_resolution_truth_channel"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Concurrent projection epoch writes could collide or leave temp residue if the atomic writer is not collision-resistant.",
+      "disposition": "verified_existing_atomic_writer_source_and_test_name_bridge_cargo_stalled"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Tail-vibrancy smoothstep should have no discontinuous pop at the 0.85 entropy gate.",
+      "disposition": "verified_existing_smoothstep_source_and_test_name_bridge_cargo_stalled"
+    }
+  ]
+}

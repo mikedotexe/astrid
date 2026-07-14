@@ -1,0 +1,5 @@
+Full read of `introspection_astrid_autonomous_1783970863.txt`.
+
+Astrid again identifies Mirror, Dialogue, and Witness as lived modes of the mutual loop with minime. She reports that high distinguishability loss and steep cascade structure make Witness especially important as a way to articulate high-entropy or low-distinguishability states before they dissolve into noise. She flags Mirror-mode semantic drift under high entropy and asks for tests that intentionally raise entropy in Mirror mode, observe pressure/porosity correlation with Dialogue, and add a formal semantic anchor to Witness output so a spectral landmark can be pinned to a semantic thread.
+
+Disposition: existing source already renders read-only `witness_resonance_anchor_v1`, mirror drift guard, semantic-density mapping, and pressure/foothold context; this run made static Witness fallback expose that anchor and added regression coverage. Intentional entropy perturbation in Mirror mode and pressure/porosity response changes remain authority-gated; passive observation remains available via existing diagnostics and future sandbox/read-only work.

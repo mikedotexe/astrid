@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783934501",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-fill/high-entropy semantic persistence can stutter if the entropy multiplier overextends or fragments thoughts.",
+      "disposition": "verified_existing",
+      "rationale": "Existing sensory_bus tests show high entropy extends semantic retention above low-entropy peers while remaining bounded by SEMANTIC_ENTROPY_PERSISTENCE_MAX_MULT and context caps."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 0.25 recovery hold fill threshold could feel jerky near 0.24/0.26.",
+      "disposition": "verified_existing",
+      "rationale": "Existing dynamic_semantic_stale_ms_for uses a 25%-40% smoothstep handover and tests semantic_stale_ms_smooths_thirty_percent_handover rather than a hard cliff."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A future stronger smoothing or dynamic decay change should remain bounded and authority-visible.",
+      "disposition": "verified_existing",
+      "rationale": "The current implementation already uses bounded semantic_context_persistence_multiplier tests and marks authority as not sensor cadence or regulator change."
+    }
+  ]
+}

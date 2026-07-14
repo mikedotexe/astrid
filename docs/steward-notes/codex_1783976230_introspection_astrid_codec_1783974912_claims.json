@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The 48-dimensional codec layout is a stable deterministic externalization layer, including narrative arc dims 40-43.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "capsules/spectral-bridge/src/codec.rs::SEMANTIC_DIM",
+      "capsules/spectral-bridge/src/codec.rs::compute_narrative_arc_from_embeddings"
+    ],
+    "authority": "source verification only"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Narrative arc evidence should capture process/state motion, velocity, and acceleration rather than only static first-half/second-half difference.",
+    "disposition": "verified_existing_plus_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/codec.rs::narrative_arc_dynamics_v1",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib narrative_arc_distinguishes_process_from_settled_state_without_live_gain -- --nocapture",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib narrative_arc_dynamics_exposes_velocity_and_acceleration_without_gain -- --nocapture"
+    ],
+    "authority": "read-only sidecar evidence; live_gain_write=false and live_vector_write=false"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "The rolling character-frequency entropy window should capture distributed cascade pressure rather than treating long mixed exchange texture as noise.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib char_freq_window_weights_longer_exchanges_more_heavily -- --nocapture"
+    ],
+    "authority": "read-only codec test; no live semantic vector change"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Increasing warmth/tension marker sensitivity or changing tanh smoothing could preserve more state-of-being nuance but would alter the live semantic lane.",
+    "disposition": "authority_gated",
+    "evidence": [
+      "current read-only checks: narrative_arc_dynamics_v1, warmth_entropy_interpretation_v1, codec_emotional_narrative_delta_check_v1"
+    ],
+    "authority": "Tier 5 live semantic vector/gain/marker retune; requires V2 authority lifecycle before implementation"
+  }
+]

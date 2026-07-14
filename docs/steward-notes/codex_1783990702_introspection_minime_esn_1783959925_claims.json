@@ -1,0 +1,40 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Minime's ESN uses exploration-noise and adaptive-introspection review surfaces to make jitter, density gradient, pressure, and entropy visible.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml entropy_ceiling_noise -- --nocapture"
+    ],
+    "authority": "read-only source and test verification; no ESN step/noise/rho change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Entropy near 0.90 is close enough to the proposed 0.92 ceiling to deserve pressure/noise review rather than being waved away as settled.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "esn::attractor_fingerprint_tests::entropy_ceiling_noise_damping_review_names_088_under_proposed_ceiling",
+      "esn::attractor_fingerprint_tests::adaptive_pressure_noise_trial_review_gates_threshold_and_noise_changes"
+    ],
+    "authority": "review packet only; live trial not runnable or approved"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "The proposed wider entropy ceiling and gentler noise gradient are live ESN parameter changes.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990702_minime_runtime_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Existing entropy/noise review packets keep candidates evidence-only and non-runnable without approval.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "esn::attractor_fingerprint_tests::entropy_ceiling_noise_damping_review_stays_observational_when_contained"
+    ],
+    "authority": "review packet enforces approval boundary; no live behavior changed"
+  }
+]

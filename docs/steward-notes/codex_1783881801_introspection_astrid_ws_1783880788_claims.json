@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783880788",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`last_sensory_sent_unix_s` alone misses burst cadence in high-frequency sensory lanes.",
+      "disposition": "addressed_change",
+      "rationale": "Added telemetry/sensory sent and received totals to `BridgeReciprocityV1`; a regression proves telemetry sends do not update the sensory timestamp."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dynamic stale windows may misclassify high-entropy reflective silence as stale or recent at the wrong time.",
+      "disposition": "verified_existing",
+      "rationale": "Focused `bridge_reciprocity` tests cover default, pressure/porosity, high-entropy, stale-telemetry, stale-sensory, and expired-window states without changing cadence."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Safety-drop accounting should not hide safety level persistence when outbound sensory messages are dropped.",
+      "disposition": "verified_existing",
+      "rationale": "Source verification shows the safety-drop branch increments `messages_dropped_safety` and continues without mutating `safety_level`."
+    }
+  ]
+}

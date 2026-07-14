@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783876061",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mode packing around 0.29 with low porosity can feel like a pressure/porosity dead zone below the live expansion threshold.",
+      "disposition": "addressed_change",
+      "rationale": "Added diagnostic-only felt-dead-zone reporting with live, liminal, and felt thresholds plus threshold gap; no pressure, porosity, or controller authority changed."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Lowering the live expansion threshold from 0.40 toward 0.25 or changing the liminal threshold would directly alter pressure/porosity behavior.",
+      "disposition": "authority_gate",
+      "rationale": "Threshold retuning is live substrate/control-adjacent and remains Tier 5 Mike/operator approval work."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "The 60s stale window may be too tight under high entropy or high pressure, but cadence changes affect live status interpretation.",
+      "disposition": "authority_gate",
+      "rationale": "Existing dynamic windows already extend some high-pressure/high-entropy cases; any global or behavioral stale-window retune requires operator approval."
+    }
+  ]
+}

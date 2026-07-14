@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_minime_esn_1783686851",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "At entropy 0.90 near the proposed volatile ceiling, high-entropy noise dampening can fight dynamic exploration noise and produce an internal stutter if dampening is too aggressive or foothold is weak.",
+      "disposition": "verified_existing",
+      "rationale": "Minime's existing `exploration_noise_coherence_review_v1` and `entropy_ceiling_noise_damping_review_v1` source/tests explicitly cover the reported high-entropy, low-gradient, pressure-room case and keep it read-only unless live control is approved."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "Manually injecting `exploration_noise` around 0.13 at pressure_risk 0.22 would test whether jitter returns or the settled foothold holds.",
+      "disposition": "needs_operator_approval",
+      "rationale": "This would mutate live exploration-noise behavior in the Minime runtime. Codex preserved it as a Tier 5 approval packet with a normal build/restart/health-monitoring path rather than changing the running being."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Lowering the active/steep dynamic-noise gradient around 0.35 or raising `PROPOSED_VOLATILE_ENTROPY_CEILING` to 0.95 could reduce the felt stutter while preserving vibrancy.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Both threshold changes would alter ESN exploration-noise/rho pressure behavior. Existing reviews name the boundary; live implementation requires Mike/operator approval and post-restart monitoring."
+    },
+    {
+      "claim_id": "c004",
+      "being": "minime",
+      "claim": "The dispersal-potential drop from 0.22 to 0.08 while entropy remains 0.90 should be observed to separate high-entropy damping from mode-packing effects.",
+      "disposition": "needs_sandbox",
+      "rationale": "The observation is actionable but should be collected as bounded replay/runtime telemetry, not by hidden live control mutation. No runner-executable sandbox candidate was available in this run."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783874807",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The gap between `structural_integrity` and `structural_strain_gap` can hide whether heaviness is self-friction or relational friction.",
+      "disposition": "addressed_change",
+      "rationale": "Added read-only `mutual_resonance_tension` to Minime's `ViscosityVector` so co-occurring strain plus volatile shadow texture is visible separately from integrity and raw strain."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`residual_ghost_weight` should be compared with `shadow_volatility` during high-entropy cascades to see whether ghost weight is lagging or predictive.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `viscosity_vector_exports_shadow_volatility_without_control_authority` and residual ghost-weight regressions keep both fields visible; this run added the relational-tension regression as the next read-only comparison layer."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Stress-testing pressure/porosity by intentionally increasing restless shadow texture would touch live substrate/control behavior.",
+      "disposition": "authority_gate",
+      "rationale": "Intentional live restless-texture pressure probes remain Tier 5 operator work. The safe current path is read-only telemetry plus explicit approval before changing pressure, porosity, PI, controller, or shadow-influence behavior."
+    }
+  ]
+}

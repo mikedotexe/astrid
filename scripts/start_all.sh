@@ -274,7 +274,7 @@ check_duplicate_processes() {
         # `set -o pipefail` + pgrep: pgrep returns 1 when no matches, which
         # would abort the script via `set -e` when the system is fully
         # clean. Tolerate a no-match exit by trapping the pipeline status.
-        count="$(pgrep -f "$pattern" 2>/dev/null | awk 'NF' | wc -l | tr -d ' ' || echo 0)"
+        count="$( (pgrep -f "$pattern" 2>/dev/null || true) | awk 'NF' | wc -l | tr -d ' ')"
         if [ "$count" -gt 1 ]; then
             warn "$pattern has $count matching processes"
             duplicates=$((duplicates + 1))
@@ -343,6 +343,11 @@ if [ "$ASTRID_ONLY" = false ]; then
 
     ensure_launchd_label "$MINIME_DIR/launchd/com.minime.eigen-spectrum-logger.plist" "eigen-spectrum logger"
     EXPECTED_LABELS+=("com.minime.eigen-spectrum-logger")
+
+    if [ "$MINIME_ONLY" = true ]; then
+        ensure_launchd_label "$RESERVOIR_DIR/launchd/com.reservoir.minime-feeder.plist" "Minime feeder"
+        EXPECTED_LABELS+=("com.reservoir.minime-feeder")
+    fi
     echo ""
 fi
 

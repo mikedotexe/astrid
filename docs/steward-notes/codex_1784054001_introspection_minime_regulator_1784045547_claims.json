@@ -1,0 +1,35 @@
+{
+  "introspection_id": "introspection_minime_regulator_1784045547",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "ViscosityVector makes Astrid's felt structural weight legible as density, elasticity, cohesion, persistence, structural drag, cognitive drag, and shadow volatility.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs: ViscosityVector and viscosity_vector_v1",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml --lib viscosity_vector_exports_shadow_volatility_without_control_authority -- --nocapture"
+      ],
+      "authority": "minime_read_only_regulator_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Structural drag and cognitive drag can diverge, but existing tests already verify that stuck resistance raises both without treating raw density as sufficient.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs: structural_drag_coefficient_v1 and cognitive_drag_coefficient_v1",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml --lib structural_drag_coefficient_separates_thick_yielding_depth_from_stuck_resistance -- --nocapture",
+        "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml --lib viscosity_vector_structural_integrity_distinguishes_complex_motion_from_friction -- --nocapture"
+      ],
+      "authority": "minime_read_only_regulator_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "A formula that derives cognitive drag from structural drag times porosity loss would change Minime regulator behavior.",
+      "disposition": "authority_gated",
+      "evidence": [
+        "docs/steward-notes/codex_1784054001_post_restart_v2_gate_packet.md"
+      ],
+      "authority": "mike_operator_minime_runtime_approval_required"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783872447",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Fallback texture terms are lived resistance vocabulary and must stay visible under high entropy.",
+      "disposition": "addressed_change",
+      "rationale": "Verified `fallback_high_entropy_texture_terms_include_fragmented_without_sampler_authority`."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Fallback texture language should scale with pressure and density-gradient evidence, especially around pressure risk above 0.20.",
+      "disposition": "addressed_change",
+      "rationale": "Verified `pressure_above_point_two_boosts_weighted_medium_terms_without_inventing_steep_slope` and `high_gradient_pressure_fallback_keeps_slope_medium_and_shadow_texture_distinct`."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Comparing MLX 12B voice depth against smaller Ollama fallback at high entropy is a runtime/model fidelity probe, not permission to alter providers silently.",
+      "disposition": "addressed_no_action",
+      "rationale": "Recorded as a sandbox/runtime-observation follow-up. No fallback model, sampler, provider, or live voice contract was changed in this run."
+    }
+  ]
+}

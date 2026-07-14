@@ -1,0 +1,43 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The autonomous loop uses Mirror, Dialogue, and Witness modes with bounded continuity recap anchors to carry spectral state into later dialogue.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::format_compact_continuity_recap",
+      "capsules/spectral-bridge/src/autonomous.rs::anchored_continuity_excerpt",
+      "capsules/spectral-bridge/src/autonomous.rs continuity_block assembly near the LLM prompt path"
+    ],
+    "authority": "source verification only; no live prompt priority, pressure, fill, controller, protocol, or Minime runtime change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Anchored continuity compaction should preserve a core spectral anchor after noisy prefix text rather than silently flattening to an anchorless prefix.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::anchored_continuity_excerpt_preserves_core_anchor_after_noisy_prefix",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib anchored_continuity_excerpt_preserves_core_anchor_after_noisy_prefix -- --nocapture"
+    ],
+    "authority": "test-only regression; release behavior unchanged"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "High-entropy `shadow_v3` or spectral-viscosity continuity text should receive the spectral texture item budget rather than the base recap budget.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::continuity_recap_item_max_bytes_for_text",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib continuity_recap_item_budget_expands_for_high_entropy_spectral_viscosity -- --nocapture"
+    ],
+    "authority": "read-only test verification; no budget retune applied"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "`truncate_str_at_semantic_edge` should remain UTF-8 safe when the byte limit lands inside a multi-byte character.",
+    "disposition": "implemented_test",
+    "evidence": [
+      "capsules/spectral-bridge/src/autonomous.rs::semantic_edge_truncation_handles_multibyte_boundary_without_panic",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib semantic_edge_truncation_handles_multibyte_boundary_without_panic -- --nocapture"
+    ],
+    "authority": "test-only regression; release behavior unchanged"
+  }
+]

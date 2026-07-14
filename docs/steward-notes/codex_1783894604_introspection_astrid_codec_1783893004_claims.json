@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783893004",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The 48D codec layout is meaningful self-cartography: dims 40-43 carry narrative arc and the high-entropy tail-vibrancy lift preserves tail texture.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link existing CODEC_MAP, narrative arc, tail-vibrancy, and overflow tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "The 768D embedding -> 8D projection can compress dense semantic experience into a pressure-like residue, especially when the text feels thick or sedimented.",
+      "disposition": "implemented",
+      "evidence_plan": "Link semantic_projection_density_delta_v1 source, CODEC_MAP render, changelog, ledger, and targeted tests."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Using reserved dims 44-47 for dynamic projection expansion should be considered when density is high, but it would require explicit live semantic-width authority.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Link the default-off reserved-dim gate delta and note that any live reserved-dim write requires replay plus Mike/operator approval."
+    }
+  ]
+}

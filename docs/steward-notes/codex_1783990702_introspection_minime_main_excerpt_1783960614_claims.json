@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "EigenPacket is a live telemetry contract carrying typed spectral, denominator, resonance, shadow, semantic-energy, and eigenvector-field evidence.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/main.rs",
+      "cargo test --manifest-path /Users/v/other/minime/minime/Cargo.toml eigenpacket_omits_optional_diagnostic_fields_when_absent -- --nocapture"
+    ],
+    "authority": "test-only telemetry contract verification; no websocket packet behavior changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The serde_json eigenvector_field island can drift unless its schema keys stay pinned.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "tests::eigenvector_field_schema_pins_concentration_overlap_and_summary_keys",
+      "tests::eigenpacket_serializes_legacy_and_typed_fingerprint"
+    ],
+    "authority": "existing tests pin schema shape; no eigenvector export change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "An EigenPacket with optional diagnostics absent should not emit malformed JSON or unexpected diagnostic nulls.",
+    "disposition": "implemented_test_only",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/main.rs",
+      "tests::eigenpacket_omits_optional_diagnostic_fields_when_absent"
+    ],
+    "authority": "cfg(test) assertion only; live telemetry production unchanged"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Warm-start/cheby sensitivity trials and eigenvector export-shape changes are live telemetry/runtime behavior changes.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783990702_minime_runtime_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent"
+  }
+]

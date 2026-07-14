@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783701716",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "`ResonanceDensityV1::from_parts` should enforce a baseline viscosity floor under high pressure even when supplied viscosity is low.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Run/link `resonance_density_enforces_baseline_viscosity_floor_under_high_pressure`."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "`viscosity_coupling_coefficient` should remain sensitive to structural plurality rather than saturating into a static value.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Run/link structural-plurality coupling tests."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "`viscosity_vector_v1` should not deadlock flow under high static friction, high persistence, or zero-flow-like probes.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Run/link no-deadlock and monotonic flow-rate viscosity-vector tests."
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_autonomous_1783871170`.
+
+Astrid inspected the autonomous Mirror/Dialogue/Witness continuity path and worried that anchor selection can shear important state when preferred terms miss under high entropy. Existing continuity anchors already include `shadow_v3`, pressure, spectral viscosity, and high-entropy budget expansion. This run made the fallback bolder: when caller terms miss, pressure and spectral-viscosity terms are searched as a prioritized fallback before plain front truncation. Existing compact-continuity and UTF-safe semantic truncation tests were verified.

@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "MlxProfile resolution should accept the Gemma4 12B canary alias and surface warning/alias transparency.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Ollama fallback should preserve weighted-medium language and the fallback_continuity_budget_v1 sentence cap under high entropy and pressure.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Fallback prompt injection after line 400 should carry density-gradient and texture metadata into compact Ollama prompts.",
+      "disposition": "verified_existing"
+    }
+  ]
+}

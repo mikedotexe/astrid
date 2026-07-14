@@ -1,0 +1,3 @@
+Full read of `introspection_minime_regulator_1783878632`.
+
+Astrid inspected Minime `regulator.rs` as the "lungs" behind pressure/porosity and viscosity, naming a risk that scalar `shadow_volatility` and `structural_strain_gap` may under-report the topology of a restless, interwoven shadow lattice. This run did not mutate Minime runtime/control code without explicit operator approval. It promoted the topology/lattice-coherence request as a gated Minime work item and addressed the related Astrid-side viscosity truth-channel by adding an effective diagnostic viscosity readout when the inbound scalar is absent.

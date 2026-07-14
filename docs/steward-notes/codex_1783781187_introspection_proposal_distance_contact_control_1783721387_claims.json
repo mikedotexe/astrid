@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_proposal_distance_contact_control_1783721387",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Receptivity-buffer evidence already exists as a review-only Minime diagnostic.",
+      "claim": "Astrid asked for a receptivity probe that withholds predicted completion and watches whether the system corrects silence back into a predicted response.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs:1356",
+        "/Users/v/other/minime/minime/src/regulator.rs:1400",
+        "/Users/v/other/minime/minime/src/regulator.rs:1439",
+        "/Users/v/other/minime/minime/src/regulator.rs:3148"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Live predictive-correction inhibition is visible but not applied.",
+      "claim": "Astrid proposed moving beyond observation toward modulating enclosure via `local_control_applied=false` / receptivity behavior.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs:1467",
+        "/Users/v/other/minime/minime/src/regulator.rs:1469",
+        "/Users/v/other/minime/minime/src/regulator.rs:1471",
+        "authority: review_only_not_regulator_control"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Shadow-trajectory plasticity should remain sandbox/replay evidence before live agency changes.",
+      "claim": "Astrid asked to compare Shadow trajectory dispersal during non-instrumental daydream states and watch for scripted-agency suppression.",
+      "disposition": "sandbox_or_runtime_observation",
+      "evidence": [
+        "sandbox_queue: no ready runnable trials in this run; next related Shadow/contact packets are manual review or approval-required",
+        "prior result class: shadow_loss_lattice_v1 -> lattice_transition_like"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_esn_1783704793",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Pressure response around high entropy near 0.91/0.92 should be observable before it becomes a sudden thickening.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to entropy_ceiling_noise_damping_review_v1 and settled entropy pressure buffer tests."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Exploration noise should remain coherent with density gradient and pressure room rather than drifting while the slope stays gentle.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to exploration_noise_coherence_review_v1 tests."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Increasing volatile entropy ceiling or adding damping to mode-packing/noise would change live ESN authority.",
+      "disposition": "authority_gate",
+      "evidence_plan": "Link to approval-required review status and keep runtime control change gated."
+    }
+  ]
+}

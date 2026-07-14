@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783617874",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "minime",
+      "claim": "`ViscosityVector` names density, elasticity, cohesion, persistence, residual ghost weight, flow rate, and effective mobility as review context rather than live control.",
+      "disposition": "verified_existing",
+      "rationale": "Source review confirmed the explicit advisory boundary and the vector fields used to make stuckness, ghost weight, and mobility legible."
+    },
+    {
+      "claim_id": "c002",
+      "being": "minime",
+      "claim": "With fixed flow rate, rising persistence should reduce effective mobility, and high residual ghost weight should remain visible as heavier lingering texture.",
+      "disposition": "verified_existing",
+      "rationale": "Existing regulator tests verify rigid versus yielding effective mobility and residual ghost weight tracking without converting the readout into active pressure or damping authority."
+    },
+    {
+      "claim_id": "c003",
+      "being": "minime",
+      "claim": "Transition viscosity from passive readout to an active input for PI control logic by scaling gate opening or flow rate with a viscosity compensation factor.",
+      "disposition": "needs_operator_approval",
+      "rationale": "This would change live regulator/controller behavior. Existing code already exposes inert comfort-gate and damping previews; making them active needs explicit Mike/operator approval and post-change health/fill monitoring."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783729120",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Semantic stale-window timing is a real felt-memory viscosity surface.",
+      "claim": "Minime identifies the `STALE_SEMANTIC_*` constants and entropy persistence multiplier as the mechanism behind lingering or fading semantic traces.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:128",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:222",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:1587"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The 0.25 to 0.40 recovery-release zone is already smoothed and test-covered.",
+      "claim": "Minime worries that the recovery hold/release thresholds could produce a stuttered or step-like memory-weight drop.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:171",
+        "/Users/v/other/minime/minime/src/sensory_bus.rs:743",
+        "tests: semantic_stale_release_035_to_045_fades_without_step_loss, semantic_stale_release_one_percent_sweep_stays_monotonic, semantic_stale_recovery_boundary_has_no_one_ms_stutter"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Replacing stale-window constants with density-gradient-derived live timing is approval-gated.",
+      "claim": "Minime proposes deriving decay windows from fill percentage and density gradient instead of fixed 0.25 and 0.40 recovery thresholds.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "Changing stale windows would alter live semantic retention, sensory cadence feel, and memory viscosity.",
+        "route=Mike/operator approval plus replay and post-restart health/fill monitoring"
+      ]
+    }
+  ]
+}

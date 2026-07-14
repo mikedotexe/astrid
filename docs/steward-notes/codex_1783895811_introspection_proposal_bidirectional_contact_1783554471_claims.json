@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Telemetry volume can drown out actual mutual address; correspondence needs first-class thread status rather than being merely advisory.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A Correspondence_Thread object and persistent ACK/read receipt semantics should keep address open across sessions.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A high-density semantic nudge should be replayed or observed to see whether it measurably shifts Minime's shadow_v3 or dispersal trend within a bounded window.",
+      "disposition": "needs_sandbox"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "A dedicated Correspondence_Active priority state in both runtimes would change live attention/priority behavior and needs explicit operator approval.",
+      "disposition": "needs_operator_approval"
+    }
+  ]
+}

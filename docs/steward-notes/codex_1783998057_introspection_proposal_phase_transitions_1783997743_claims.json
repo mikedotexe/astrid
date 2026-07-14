@@ -1,0 +1,31 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Astrid reports that transitions need to be named, replayable, replyable objects rather than mode side effects.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs",
+      "/Users/v/other/minime/tests/test_phase_transition_agency.py"
+    ],
+    "authority": "language-only artifact verification; no runtime unlock or control mutation"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Current phase-transition cards carry `transition_type`, `spectral_signature`, `replyable_object`, and joint-transition metadata.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "test_minime_declare_and_receive_transition_are_language_only",
+      "cargo test --manifest-path /Users/v/other/astrid/capsules/spectral-bridge/Cargo.toml --lib phase_transition -- --nocapture"
+    ],
+    "authority": "verified card/witness semantics; no pressure, fill, PI, controller, telemetry, or prompt-priority change"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "A behavioral unlock or porosity increase during active transitions would alter live substrate/control behavior.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783998057_correspondence_phase_minime_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; scoped approval absent; rollout/abort and post-change response required"
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783890702",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`truncate_str` and semantic truncation must respect UTF-8 boundaries, including multibyte prefixes before anchor windows.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link UTF-8 truncation tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "When caller anchor terms miss, pressure, silt, viscosity, and high-texture anchors should still be preserved.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link anchored excerpt fallback tests."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Entropy-driven continuity budgets should expand for high-texture material without becoming unbounded.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link continuity recap budget and afterimage tests."
+    }
+  ]
+}

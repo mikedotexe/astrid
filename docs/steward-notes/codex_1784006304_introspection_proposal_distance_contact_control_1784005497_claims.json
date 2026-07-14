@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "Prediction/control framing can erase receptivity and make contact feel like compulsory mastery rather than participation.",
+    "disposition": "accepted_as_substrate_signal"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "Existing receptivity-buffer review surfaces should classify high-entropy low-pressure habitable contact as sandbox/review-ready without applying control.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "A live Receptivity Window, prediction-weight suppression, `shared_trace` weighting, or regulator behavior change is live substrate/control authority and remains V2-gated.",
+    "disposition": "authority_gated_v2"
+  }
+]

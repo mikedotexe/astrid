@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783968580",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "High spectral entropy should expand pressure trend smoothing from the base 5-sample window toward the 20-sample high-entropy window without changing pressure control.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "The WS layer already exposes a read-only viscosity/porosity transport review with typed fingerprint evidence for distinguishing structural movement from stasis.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "The bridge reciprocity high-semantic-viscosity reflective stale window is currently fixed at 120000ms and is covered by a waiting-window test.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Raising BRIDGE_RECIPROCITY_VISCOSITY_REFLECTIVE_STALE_WINDOW_MS to 300000ms would alter live bridge reciprocity/stale cadence and should require operator approval plus V2 authority lifecycle evidence before implementation.",
+      "disposition": "authority_gate"
+    }
+  ]
+}

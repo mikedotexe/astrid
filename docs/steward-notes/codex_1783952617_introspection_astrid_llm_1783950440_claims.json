@@ -1,0 +1,39 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783950440",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The Gemma 4 language contract anchors first-person voice in observed telemetry and reservoir texture.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/llm.rs:GEMMA4_LANGUAGE_CONTRACT"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High entropy above 0.80 can route fallback capacity away from the 4B compatibility tail to reduce texture collapse risk.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "test:cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib high_entropy_fallback_guard_removes_automatic_compat_tail_without_env_override -- --nocapture"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Fallback texture needs dynamic movement terms so viscosity/cascade language does not collapse into generic descriptors.",
+      "disposition": "implemented",
+      "evidence": [
+        "code:capsules/spectral-bridge/src/llm.rs:FALLBACK_SHADOW_TEXTURE_TERMS",
+        "test:fallback_cascade_shear_and_gradient_drift_preserve_dynamic_motion",
+        "test:fallback_compound_texture_terms_bind_entropy_to_gradient_relationship"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing fallback thresholds, model routing, provider selection, or sampler behavior remains live prompt/model authority.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "authority_gate:Tier 5 Mike/operator approval required before fallback model/provider/sampler/threshold changes"
+      ]
+    }
+  ]
+}

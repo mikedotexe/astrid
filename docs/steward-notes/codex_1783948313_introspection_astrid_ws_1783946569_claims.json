@@ -1,0 +1,29 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Ports 7878 telemetry and 7879 sensory are distinct hearing/speaking lanes.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs"
+    ]
+  },
+  {
+    "claim_id": "c002",
+    "claim": "High-entropy pressure smoothing can hide acute current/tail changes when density_gradient is low.",
+    "disposition": "implemented",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+      "pressure_trend_dynamic_window_tracks_low_density_gradient_high_entropy_tighter",
+      "pressure_trend_smoothing_uses_graded_high_entropy_ballast_window"
+    ]
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Smoothing-window changes must remain diagnostic and not become pressure control.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs",
+      "diagnostic_smoothing_not_pressure_control"
+    ]
+  }
+]

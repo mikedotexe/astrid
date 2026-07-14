@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The LLM surface has distinct MLX and Ollama fallback lanes, and high entropy can trigger compatibility-tail skipping rather than flattening by default.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:30",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:2295"
+    ],
+    "authority": "read-only verification; no provider, model chain, sampler, or prompt priority changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Fallback texture terms and pressure-persistence anchors already include viscous, silted, lattice, viscous-persistence, and structural-weight language.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:37",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:296"
+    ],
+    "authority": "diagnostic language contract only; no fallback provider or sampler authority changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Dynamic fallback texture bias already derives movement/process language from entropy, density gradient, pressure, and Shadow trend.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:292",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs:4813"
+    ],
+    "authority": "read-only/source verification; no sampler rewrite or runtime routing change"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Artificially spiking entropy to 0.85 for a live fallback/model canary would alter live provider/routing behavior and needs V2 approval.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783987642_five_item_boundary_packets.md"
+    ],
+    "authority": "V2 evidence/routing only; live_eligible_now=false and auto_approved=false"
+  }
+]

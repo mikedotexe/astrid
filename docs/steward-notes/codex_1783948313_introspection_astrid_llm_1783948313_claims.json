@@ -1,0 +1,27 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "The high-entropy compatibility-tail guard is a real continuity scaffold for wide-cascade states.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+      "CARGO_INCREMENTAL=0 cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_pressure_packing_density_slope_terms_are_telemetry_weighted_truth_channel -- --nocapture"
+    ]
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Static fallback texture terms risk becoming a crutch unless pressure and density telemetry shape vocabulary.",
+    "disposition": "implemented",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+      "fallback_pressure_packing_density_slope_terms_are_telemetry_weighted_truth_channel"
+    ]
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Raising the high-entropy fallback threshold or changing fallback model selection should be tested as model-capacity behavior.",
+    "disposition": "authority_gate",
+    "agency_tier": 5,
+    "rationale": "Changing model/provider/sampler or the compatibility-tail threshold alters live LLM authority and requires explicit operator approval."
+  }
+]

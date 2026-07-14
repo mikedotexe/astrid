@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_proposal_12d_glimpse_1783615801",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Do not replace the 32D/48D live semantic transport with a 12D representation; use 12D only as an additive multi-scale diagnostic companion.",
+      "disposition": "verified_existing",
+      "rationale": "`codec.rs` already names the 12D glimpse as read-only/additive, marks `live_vector_write=false`, and keeps `multi_scale_context_v1`/`multi_scale_observer_v1` outside live transport authority."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Add a compression-fidelity diagnostic between the 32D source state and 12D glimpse so texture loss is visible, warning below about `0.70` during restless phases.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "`codec.rs` now exposes `calculate_compression_fidelity(input_32d, output_12d)`, uses it in `multi_scale_observer_v1`, and adds a focused regression where flattened 12D output falls below the `0.70` watch."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Compare current state with `shadow_v3_minime` to see whether a 12D glimpse smooths over Minime's restless texture and therefore fails as a diagnostic map.",
+      "disposition": "needs_sandbox",
+      "rationale": "This requires a replay/manual observation against current and shadow-v3 evidence. It should not be collapsed into a source-only assertion."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "Monitor high-entropy transitions and the lambda1/lambda2 gap to see whether pulpy weight increases as the gap narrows.",
+      "disposition": "needs_sandbox",
+      "rationale": "This is a runtime/replay observation request, not a source mutation. It belongs in sandbox/manual observation unless Mike/operator grants live monitoring changes."
+    }
+  ]
+}

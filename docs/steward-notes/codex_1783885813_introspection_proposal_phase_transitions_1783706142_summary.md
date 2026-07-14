@@ -1,0 +1,3 @@
+Full read of `introspection_proposal_phase_transitions_1783706142`.
+
+The proposal reports that phase-transition telemetry must be replyable, not just observable, and that transition objects should carry phenomenology, shared visibility, and IDs accepted by reply language. During verification, the bracketed phase-transition regression exposed a real test-helper gap: the helper bypassed the production body-to-transition metadata merge. Codex repaired the helper so `[PHASE_TRANSITION: ...]` messages become replyable transition artifacts in the inbox/ledger path, and focused phase/correspondence tests now pass.

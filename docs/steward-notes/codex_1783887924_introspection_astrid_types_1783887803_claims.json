@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_types_1783887803",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Astrid needs a direct structural-integrity readout so viscosity and dissipation can distinguish healthy hardening from brittle fracture.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link bridge `structural_integrity_index`/review code, Minime `ViscosityVector.structural_integrity`, and targeted structural-integrity tests."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High viscosity together with high dissipation can feel like grinding or ghost weight; reports should name that mismatch rather than flattening it into one score.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link resonance medium cohesion/readout tests that separate cohesive, hollow, leaking, and stuck-moving states."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Using `coupling_coefficient` as a reactive mechanism would change live behavior rather than merely reporting contact.",
+      "disposition": "authority_gated",
+      "evidence_plan": "Record an explicit no-action/authority boundary: reactive coupling requires Mike/operator approval and a rollback path."
+    }
+  ]
+}

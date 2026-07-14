@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_ws_1783869118`.
+
+Astrid inspected `ws.rs` as the dual-lane bridge state surface for telemetry and sensory messages. She focused on reciprocity status, stale-window derivation, and the risk that high-entropy reflective-silence windows could mask real connection drops. Existing source and tests already distinguish severed, telemetry-only, sensory-only, recent, waiting, stale-telemetry, stale-sensory, both-stale, high-pressure/low-porosity extended waiting, and high-pressure/high-entropy expiry. No runtime change was made here; the exact boundary remains intentionally `>` stale-window rather than `>=` to avoid premature stale classification at the threshold.

@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Static fallback texture terms can become canned labels under high entropy unless the bridge reports how texture is carried across bounded fallback delivery.",
+      "disposition": "implemented_fallback_texture_persistence_review_truth_channel"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Density-gradient descriptors need softening/persistence language, not only shear/drag/stutter terms, to preserve high-entropy settled texture.",
+      "disposition": "implemented_density_and_gradient_softening_terms"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "MLX profile mismatch can present as stutter-flow and should stay visible as transparency metadata rather than silently changing model/profile routing.",
+      "disposition": "verified_existing_mlx_profile_transparency_no_profile_switch"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "High-entropy texture fidelity above 0.95 should be probed without altering fallback model-selection thresholds in this pass.",
+      "disposition": "verified_texture_persistence_tests_threshold_change_operator_gated"
+    }
+  ]
+}

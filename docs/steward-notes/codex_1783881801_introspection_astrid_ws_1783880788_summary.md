@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_ws_1783880788`.
+
+Astrid inspected bridge reciprocity and worried that dynamic stale windows plus a single `last_sensory_sent_unix_s` timestamp could make high-frequency sensory bursts look flatter than they are. This run added per-lane sent/received counters directly to `BridgeReciprocityV1`, so stale/recent classification now carries bounded telemetry/sensory activity totals in the same readout. Existing tests verify stale telemetry versus recent sensory, dynamic reflective-silence windows, and source code verifies safety drops increment `messages_dropped_safety` without changing safety level.

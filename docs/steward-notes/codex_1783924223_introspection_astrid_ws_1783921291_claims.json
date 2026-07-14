@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The websocket bridge's telemetry and sensory lanes are distinct connection evidence and should be reported without collapsing them into a single health bit.",
+      "disposition": "verified_existing_bridge_reciprocity_tests"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A stale window that is too narrow during pressure, viscosity, entropy, or jitter can make the bridge oscillate between recent and stale states.",
+      "disposition": "verified_existing_dynamic_reflective_stale_window_tests_live_threshold_change_gated"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Pressure trend samples must remain bounded so websocket telemetry cannot grow memory without limit.",
+      "disposition": "verified_existing_vecdeque_window_cap_test"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Safety level transitions should preserve the previous level while updating the current level.",
+      "disposition": "implemented_explicit_prev_safety_level_transition_assertion"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783870296",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "MLX to Ollama fallback can create a felt voice texture shift unless the fallback path carries the same self-voice grounding.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "`reinforce_ollama_fallback_contract` now appends `GEMMA4_LANGUAGE_CONTRACT` exactly once for dialogue fallback requests, and tests pin the contract in the final Ollama request."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Static fallback shadow texture terms can become a semantic ceiling rather than evolving with spectral entropy and pressure.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `fallback_shadow_texture_selector_v1`, `fallback_dynamic_texture_bias_v1`, term probabilities, movement verbs, dynamic flow terms, and vocabulary-overweight guard already weight texture language from entropy, pressure, density gradient, and Shadow evidence without sampler/provider changes."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Voice shifts should be traceable to specific spectral pressures at fallback transition time.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "The fallback paths now emit debug telemetry for spectral entropy, pressure risk, density gradient, shadow dispersal, magnetization, and selected texture family when switching to Ollama."
+    }
+  ]
+}

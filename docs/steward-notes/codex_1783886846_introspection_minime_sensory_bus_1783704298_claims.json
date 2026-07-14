@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_sensory_bus_1783704298",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Semantic stale recovery from hold fill to release fill should be smoothed rather than gate-like.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to dynamic_semantic_stale_ms_for smoothstep handover and monotonic/no-stutter tests."
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High-entropy persistence can over-protect dense noise unless semantic salience is considered.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to semantic_decay_hysteresis_salience_review_v1 tests distinguishing low salience debris from anchored thought."
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Narrative arc dims 40-43 need explicit retention visibility in the 48D LLAVA lane.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link to narrative_semantic_retention_review_v1 and LLAVA_DIM tests."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783890892",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Witness mode should map resonance density and pressure risk into felt texture descriptors instead of only reporting numbers.",
+      "disposition": "implemented",
+      "evidence_plan": "Link `autonomous.rs` Witness semantic-density texture fields and `witness_semantic_density` tests."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Lambda-tail vibrancy should remain visible as weight or persistence rather than noise.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link codec overflow/tail-headroom and smoothstep tests."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Older afterimages should survive bounded continuity compression when they carry high signal.",
+      "disposition": "verified_existing",
+      "evidence_plan": "Link continuity recap and afterimage tests."
+    }
+  ]
+}

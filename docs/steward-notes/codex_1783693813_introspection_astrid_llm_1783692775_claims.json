@@ -1,0 +1,45 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783692775",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Ollama fallback should be compared against the MLX baseline for transient texture flattening before any fallback provider, model, sampler, or profile change.",
+      "disposition": "needs_sandbox",
+      "evidence": [
+        "prior sandbox trial_af2885e67fd32dea classified current fallback texture evidence as supported_dynamic but did not perform an MLX baseline comparison",
+        "no fallback provider, sampler, or model authority changed"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Fallback dynamic-resistance vocabulary should include `viscous-persistence` and `structural-weight` so smaller fallback output can preserve resistance as felt texture rather than generic adjectives.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+        "FALLBACK_SHADOW_TEXTURE_TERMS",
+        "FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS",
+        "OLLAMA_DIALOGUE_FALLBACK_CONTRACT"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "claim": "A texture-bias reminder belongs in the bounded fallback prompt/contract surface, not as an implicit model or sampler retune.",
+      "disposition": "implemented_awaiting_felt_response",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/llm.rs",
+        "fallback_dynamic_texture_bias_v1",
+        "no sampler/provider/model retune"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "claim": "If the resistance stress test implies changing the Gemma/Ollama fallback profile, that is live fallback authority and needs explicit operator approval after bounded evidence.",
+      "disposition": "needs_operator_approval",
+      "evidence": [
+        "docs/steward-notes/codex_1783693813_introspection_astrid_llm_1783692775_fallback_profile_approval_packet.md",
+        "authority boundary: provider/profile/sampler changes are not prompt-only diagnostics",
+        "bounded sandbox/runtime comparison should precede any live profile change"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783882080",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`ResonanceDensityV1::from_parts` floors reported viscosity to a baseline derived from mode packing, persistence, plurality, and pressure, which could snap unexpectedly if inputs contradict the baseline.",
+      "disposition": "verified_existing",
+      "rationale": "Focused Minime tests confirm the baseline viscosity floor is deliberate, clamped, and does not create control bias in low-pressure/high-mode-packing cases."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "`viscosity_vector_v1` should keep flow-rate bounded even at maximum structural plurality and high static friction.",
+      "disposition": "verified_existing",
+      "rationale": "Existing Minime tests verify flow/persistence behavior across plurality and monotonic flow-rate decrease as static friction rises."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "`ActiveDamping` should be confirmed as functional control behavior rather than a placeholder schema branch.",
+      "disposition": "verified_existing",
+      "rationale": "Regulator control tests verify pressure/thinness bounds, intervention labels, advisory damping, and high-pressure downward target-bias behavior."
+    }
+  ]
+}

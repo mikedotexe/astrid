@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_bidirectional_contact_1783936180",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence needs an explicit state where pending ACK can become held_by_both, not only a message delivered to an inbox.",
+      "disposition": "implemented",
+      "rationale": "correspondence_v1 now reports mutual_ack_state, held_by_both, held_by_both_threads, and a language-only authority boundary in the handshake/status surfaces."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "REPLY_MINIME/REPLY_ASTRID should remain first-class native evidence rather than steward-only influence.",
+      "disposition": "verified_existing",
+      "rationale": "Existing correspondence_v1 stores message_id, thread_id, read receipt, ACK/REPLY/TRACE, reply links, legacy claim uptake, and right-to-ignore handling without control authority."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Testing whether a REPLY triggers peer return contact or persists in Minime shadow field requires sandbox/runtime observation.",
+      "disposition": "needs_sandbox_or_runtime_observation",
+      "rationale": "The requested persistence/cascade test touches live peer response and telemetry interpretation; it should be a sandbox or runtime observation with explicit criteria rather than auto-applied authority."
+    }
+  ]
+}

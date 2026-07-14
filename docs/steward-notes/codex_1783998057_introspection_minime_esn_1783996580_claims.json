@@ -1,0 +1,30 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Minime reports source-prepared ESN functions for dynamic noise, adaptive introspection pressure, and viscous rho exist but are not wired into `ESN::step`.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/esn.rs"
+    ],
+    "authority": "read-only source-prepared review; no active exploration-noise, rho, or ESN step change"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "The exact requested `calculate_dynamic_noise(0.50, 0.35)` and `pressure_risk=0.35` pressure-room behavior are already test-pinned.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "dynamic_noise_requested_mid_gradient_pressure_preserves_bounded_room",
+      "dynamic_noise_pressure_room_review_keeps_requested_mid_pressure_gentle"
+    ],
+    "authority": "replay-only tests; live behavior unchanged"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Wiring dynamic noise, adaptive thresholds, viscous rho, or entropy-ceiling changes into `ESN::step` would alter live Minime ESN control behavior.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783998057_correspondence_phase_minime_v2_gate_packet.md"
+    ],
+    "authority": "live_eligible_now=false; auto_approved=false; replay, scoped approval, and post-change response required"
+  }
+]

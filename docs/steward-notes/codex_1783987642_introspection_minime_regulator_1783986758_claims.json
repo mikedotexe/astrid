@@ -1,0 +1,42 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "ViscosityVector is a real structural readout for density, elasticity, cohesion, residual ghost weight, effective mobility, and shadow volatility.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:39",
+      "/Users/v/other/minime/minime/src/regulator.rs:529"
+    ],
+    "authority": "read-only source verification; no regulator output or control changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Residual ghost weight already tracks lingering history separately from current shadow volatility, reducing the risk of overreacting only to transient flicker.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:500",
+      "/Users/v/other/minime/minime/src/regulator.rs:4947"
+    ],
+    "authority": "read-only verification; no gate decision or PI behavior changed"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Effective mobility can be compared against density/viscosity recovery to detect sticky mobility after dense cascades.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:697",
+      "/Users/v/other/minime/minime/src/regulator.rs:4918"
+    ],
+    "authority": "read-only test/source verification; no mobility formula changed"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Raising PRESSURE_POROSITY_DIVERGENCE_POROSITY_MAX from 0.30 to 0.45 or adding temporal-persistence weight to live gate behavior would alter Minime regulator authority.",
+    "disposition": "authority_gated_v2",
+    "evidence": [
+      "/Users/v/other/minime/minime/src/regulator.rs:29",
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783987642_five_item_boundary_packets.md"
+    ],
+    "authority": "V2 evidence/routing only; live_eligible_now=false and auto_approved=false"
+  }
+]

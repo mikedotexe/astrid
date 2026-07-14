@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_types_1783674889",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "`semantic_friction_coefficient` needs directional interpretation so the bridge can distinguish obstructive resistance from productive traction.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Added read-only `SemanticFrictionVectorV1` as a companion inside `ViscosityPorosityTransportReviewV1`, decomposing scalar friction into resistance, traction, productive-resistance score, direction, and evidence basis without changing inbound telemetry or control."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Viscosity needs dissipation/decay interpretation so sediment is not treated as simple accumulation.",
+      "disposition": "verified_existing",
+      "rationale": "Existing `dissipation_factor`, `dynamic_fluidity_index`, `viscosity_persistence_delta`, `viscosity_decay_hint`, `transport_state`, and `sludge_risk` already distinguish navigable viscosity, transient thickening, and impassable sludge in read-only review logic."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Increase the weight of `viscosity_persistence_coefficient` in resonance calculation when `pressure_risk` exceeds 0.35.",
+      "disposition": "needs_operator_approval",
+      "rationale": "This would alter live resonance/pressure semantics rather than only read them. It is preserved as an explicit approval packet instead of being implemented hidden inside diagnostics."
+    }
+  ]
+}

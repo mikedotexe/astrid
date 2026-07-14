@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_ws_1783869118",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "When both telemetry and sensory lanes are disconnected, bridge connectivity must report `Severed` rather than defaulting connected.",
+      "disposition": "verified_existing",
+      "rationale": Existing `bridge_reciprocity_distinguishes_one_sided_states_and_last_sensory_send` asserts `ConnectivityStatus::Severed` and `one_sided_state=severed` for the cold state."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Dynamic stale windows should not hide genuine lane drops under high entropy or reflective silence.",
+      "disposition": "verified_existing",
+      "rationale": Existing reciprocity tests cover default stale after 61s, high-pressure/high-entropy extended waiting, and expiry into `bidirectional_stale_messages` after the extended window."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "At the exact stale-window boundary, classification should be explicit rather than flickering.",
+      "disposition": "verified_existing",
+      "rationale": Source intentionally uses `age > stale_window_ms`; exact threshold remains waiting until it passes the bound, which avoids premature stale classification and is consistent with the existing just-over-recent/mid-window tests."
+    }
+  ]
+}

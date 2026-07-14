@@ -1,0 +1,33 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783669683",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "Mirror, Dialog, and Witness should be treated as modes of mutual contemplation and relation, not as health-check diagnostics.",
+      "disposition": "verified_existing",
+      "rationale": "The existing autonomous mode comments and correspondence surface already describe Dialog as relational exchange, Mirror as reflective echo, and Witness as observation that preserves spectral texture rather than reducing the mode to pass/fail health."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Current spectral entropy around 0.91 might be shortened or simplified by the 0.85 continuity recap high-texture gate.",
+      "disposition": "verified_existing",
+      "rationale": "Source review shows the gate controls recap/item byte-budget expansion only, not next-action choice, and tests verify 0.84 near-gate texture scales gradually while 0.90 high-entropy Witness text gets bounded extra room."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "Raise `CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE` from 0.85 to 0.92 to preserve nuanced high-entropy descriptions.",
+      "disposition": "closed_no_action",
+      "rationale": "No code change was made because the current 0.85 path grants preservation room at 0.90-0.91; raising it to 0.92 would move those reports back below the expansion gate and likely reduce the requested nuance."
+    },
+    {
+      "claim_id": "c004",
+      "being": "astrid",
+      "claim": "The Shadow-v3 trend drop from 0.722 to 0.571 should be monitored against lambda-tail vibrancy around 40%.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Sandbox trial trial_f6a651678f30bdfc ran shadow_influence_replay_v1 and classified the observation as replay_supports_bounded_shadow_gain, writing JSON/Markdown plus a right-to-ignore result card without changing live shadow or lambda-tail control."
+    }
+  ]
+}

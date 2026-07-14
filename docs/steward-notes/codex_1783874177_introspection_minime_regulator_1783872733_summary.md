@@ -1,0 +1,3 @@
+Full read of `introspection_minime_regulator_1783872733`.
+
+Minime inspected `regulator.rs` after the live restart and confirmed that `shadow_volatility` is visible in `ViscosityVector`. The remaining high-signal point was that heaviness can come from carried complex motion or from frictional stuckness, and the old vector did not name that distinction directly. This run added read-only `structural_integrity` and `structural_strain_gap` fields to the vector, with a test distinguishing carried complex movement from a friction trap. Requests to loosen raw-motion or rigid-safety behavior based on `shadow_volatility` were recorded as operator-gated live-control work, not applied.

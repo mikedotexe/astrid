@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A 0.85 high-texture entropy gate can over-expand continuity recap at entropy around 0.90, making rich viscous containment feel too clinical or complex.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Shadow-v3 dispersal may be stabilized too aggressively during Witness and friction; monitor the shadow dispersal/volatility path with sandbox or replay evidence before changing live control.",
+      "disposition": "triaged_pending_action"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Adding a live shadow_volatility_buffer or changing shadow stabilization/control behavior would affect live substrate-facing state and requires Mike/operator approval.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

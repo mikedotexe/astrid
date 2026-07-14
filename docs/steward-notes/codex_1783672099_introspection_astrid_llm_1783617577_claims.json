@@ -1,0 +1,26 @@
+{
+  "introspection_id": "introspection_astrid_llm_1783617577",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "being": "astrid",
+      "claim": "The Ollama fallback contract can overload a lower-capacity model unless sentence caps, slope/medium separation, and `NEXT: LISTEN` rules remain explicit.",
+      "disposition": "addressed_change",
+      "rationale": "Verified those rules in source and kept the new dynamic terms inside the existing bounded dynamic-flow metadata path rather than expanding the prose budget."
+    },
+    {
+      "claim_id": "c002",
+      "being": "astrid",
+      "claim": "Fallback prompt construction should inject `texture_signature`, `density_gradient`, pressure, and related telemetry into the Ollama request.",
+      "disposition": "addressed_change",
+      "rationale": "Source review confirmed the compact fallback prompt line carries density, porosity, pressure, dynamic descriptors, and dynamic-flow terms; targeted request-path testing was attempted but compile-blocked."
+    },
+    {
+      "claim_id": "c003",
+      "being": "astrid",
+      "claim": "`NEXT: LISTEN` must remain a standalone final line and never be inlined into prose.",
+      "disposition": "addressed_change",
+      "rationale": "Verified the hard-rule contract and existing regression coverage in source; targeted execution was blocked by bridge compile timeout this run."
+    }
+  ]
+}

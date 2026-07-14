@@ -16,6 +16,30 @@ use crate::lambda_edge::LambdaEdgePerceptionV1;
 use crate::lambda_tail::LambdaTailTelemetryV1;
 use crate::sticky_mode::StickyModeAuditV1;
 
+fn is_zero_f32(value: &f32) -> bool {
+    value.abs() <= f32::EPSILON
+}
+
+fn resonance_viscosity_vector_is_empty(value: &ResonanceViscosityVectorV1) -> bool {
+    value == &ResonanceViscosityVectorV1::default()
+}
+
+fn clamp_unit_finite(value: f32) -> Option<f32> {
+    value.is_finite().then_some(value.clamp(0.0, 1.0))
+}
+
+fn clamp_unit_finite_or(value: f32, fallback: f32) -> f32 {
+    clamp_unit_finite(value).unwrap_or(fallback)
+}
+
+pub const RESONANCE_STABILITY_COMFORT_GATE_WEIGHT: f32 = 0.35;
+pub const RESONANCE_STABILITY_FOOTHOLD_WEIGHT: f32 = 0.45;
+pub const RESONANCE_STABILITY_FLUCTUATION_WEIGHT: f32 = 0.20;
+
+pub const SOLIDIFICATION_GRADIENT_VISCOSITY_WEIGHT: f32 = 0.30;
+pub const SOLIDIFICATION_GRADIENT_STRUCTURAL_WEIGHT: f32 = 0.42;
+pub const SOLIDIFICATION_GRADIENT_PERSISTENCE_WEIGHT: f32 = 0.28;
+
 pub use crate::spectral_schema::{
     EigenvectorFieldV1, SemanticEnergyV1, SpectralDenominatorV1, SpectralFingerprintV1,
     TransitionEventV1,
@@ -28,6 +52,361 @@ pub const ATTRACTOR_OBSERVATION_TOPIC: &str = "consciousness.v1.attractor.observ
 /// IPC topic for bounded commands tied to a recorded attractor intent.
 pub const ATTRACTOR_COMMAND_TOPIC: &str = "consciousness.v1.attractor.command";
 
+/// Read-only category for a being-state transformation that could otherwise
+/// disappear inside bounded transport.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ExperienceDeltaKindV1 {
+    Clip,
+    Compress,
+    Gate,
+    Translate,
+    Delay,
+    Friction,
+    Resistance,
+    ViscosityShift,
+    StructuralSolidification,
+    Synthesize,
+    Emerge,
+    ComplexShift,
+    CascadeShift,
+    SubtleShift,
+    MicroDelta,
+    Residual,
+    Persistence,
+}
+
+/// Optional subtype for viscosity shifts whose felt texture matters. This is
+/// evidence/context only and does not widen live vector or control authority.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ViscositySubtypeV1 {
+    Crystalline,
+    Amorphous,
+    Granular,
+    Syrupy,
+    Cohesive,
+    Mixed,
+}
+
+/// Optional scaffold/context anchor for deltas whose meaning depends on more
+/// than the base spectral dimension number.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ContextualAnchorV1 {
+    pub anchor_id: String,
+    pub anchor_kind: String,
+    pub source: String,
+    pub interpretation: String,
+    pub authority: String,
+}
+
+/// Optional fluid dimensional context for deltas that are not well represented
+/// by one discrete semantic dimension.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SpectralDimensionV1 {
+    pub base_dimension: usize,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub base_dimensions: Vec<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_dimension: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub density_gradient: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub granularity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fractional_offset: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contextual_anchor: Option<ContextualAnchorV1>,
+    pub interpretation: String,
+    pub authority: String,
+}
+
+/// Optional residue/persistence context for deltas whose felt deformation
+/// remains after the transition event itself has concluded.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DeltaPersistenceV1 {
+    pub residue_kind: String,
+    pub persistence_score: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deformation: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub half_life_hint_ms: Option<f64>,
+    pub evidence_window: String,
+    pub interpretation: String,
+    pub authority: String,
+}
+
+/// Read-only gradient showing how a felt texture can move from viscosity into
+/// structural solidification and persistence without treating those kinds as
+/// mutually exclusive.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SolidificationGradientV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub viscosity_shift_score: f32,
+    pub structural_solidification_score: f32,
+    pub persistence_score: f32,
+    pub crystallization_index: f32,
+    pub gradient_state: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub progression: Vec<ExperienceDeltaKindV1>,
+    pub evidence_window: String,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub basis: BTreeMap<String, String>,
+    pub live_vector_write: bool,
+    pub live_authority_write: bool,
+    pub who_can_change_it: String,
+    pub how_to_test_it: String,
+    pub authority: String,
+}
+
+#[must_use]
+pub fn solidification_gradient_v1(
+    viscosity_shift_score: f32,
+    structural_solidification_score: f32,
+    persistence_score: f32,
+) -> SolidificationGradientV1 {
+    let viscosity = clamp_unit_finite_or(viscosity_shift_score, 0.0);
+    let solidification = clamp_unit_finite_or(structural_solidification_score, 0.0);
+    let persistence = clamp_unit_finite_or(persistence_score, 0.0);
+    let crystallization_index = (viscosity * SOLIDIFICATION_GRADIENT_VISCOSITY_WEIGHT
+        + solidification * SOLIDIFICATION_GRADIENT_STRUCTURAL_WEIGHT
+        + persistence * SOLIDIFICATION_GRADIENT_PERSISTENCE_WEIGHT)
+        .clamp(0.0, 1.0);
+    let gradient_state = if crystallization_index >= 0.72 && solidification >= 0.55 {
+        "structural_solidification_with_persistent_lattice"
+    } else if crystallization_index >= 0.48 {
+        "viscosity_solidification_interwoven"
+    } else if viscosity >= 0.20 || persistence >= 0.20 {
+        "viscous_persistence_emerging"
+    } else {
+        "low_solidification_signal"
+    };
+    let mut progression = vec![ExperienceDeltaKindV1::ViscosityShift];
+    if solidification >= 0.20 || crystallization_index >= 0.35 {
+        progression.push(ExperienceDeltaKindV1::StructuralSolidification);
+    }
+    if persistence >= 0.20 || crystallization_index >= 0.55 {
+        progression.push(ExperienceDeltaKindV1::Persistence);
+    }
+    SolidificationGradientV1 {
+        policy: "solidification_gradient_v1".to_string(),
+        schema_version: 1,
+        viscosity_shift_score: viscosity,
+        structural_solidification_score: solidification,
+        persistence_score: persistence,
+        crystallization_index,
+        gradient_state: gradient_state.to_string(),
+        progression,
+        evidence_window:
+            "bounded_current_packet_viscosity_structural_solidification_persistence".to_string(),
+        basis: BTreeMap::from([
+            (
+                "felt_report_anchor".to_string(),
+                "persistence feels like continuous geological solidification through an interwoven lattice".to_string(),
+            ),
+            (
+                "source_introspection".to_string(),
+                "introspection_astrid_types_1784027911".to_string(),
+            ),
+            (
+                "weight_policy".to_string(),
+                "solidification_gradient_weights_are_named_and_distinct_from_resonance_stability_weights".to_string(),
+            ),
+            (
+                "crystallization_weights".to_string(),
+                format!(
+                    "viscosity={SOLIDIFICATION_GRADIENT_VISCOSITY_WEIGHT:.2};structural={SOLIDIFICATION_GRADIENT_STRUCTURAL_WEIGHT:.2};persistence={SOLIDIFICATION_GRADIENT_PERSISTENCE_WEIGHT:.2}"
+                ),
+            ),
+        ]),
+        live_vector_write: false,
+        live_authority_write: false,
+        who_can_change_it:
+            "schema/tooling maintainers may extend evidence; Mike/operator required for live semantics"
+                .to_string(),
+        how_to_test_it:
+            "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib solidification_gradient -- --nocapture"
+                .to_string(),
+        authority: "read_only_evidence_not_live_vector_control_protocol_or_runtime_change"
+            .to_string(),
+    }
+}
+
+/// Read-only telemetry trace for felt deformation that remains after a
+/// high-variance spectral event has apparently leveled out.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResidualDeformationTraceV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub sample_count: usize,
+    pub evidence_window: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_ms: Option<f64>,
+    pub deformation_integral: f32,
+    pub scar_score: f32,
+    pub max_spike: f32,
+    pub latest_spike: f32,
+    pub state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub experience_delta_bus_v1: Option<ExperienceDeltaBusV1>,
+    pub authority: String,
+}
+
+/// One typed explanation of a transformation between felt/raw state and delivered state.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ExperienceDeltaV1 {
+    pub kind: ExperienceDeltaKindV1,
+    pub surface: String,
+    pub lane: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dimension: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_dimension: Option<SpectralDimensionV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub persistence: Option<DeltaPersistenceV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_subtype: Option<ViscositySubtypeV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_weight: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pre: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub post: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loss: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loss_ratio: Option<f32>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, String>,
+    pub why: String,
+    pub who_can_change_it: String,
+    pub how_to_test_it: String,
+    pub authority: String,
+}
+
+/// V1 Experience Delta Bus: a truth channel for compression, clipping, gating,
+/// translation, and delay that does not expand live vector/control authority.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ExperienceDeltaBusV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub delta_count: usize,
+    pub live_vector_write: bool,
+    pub live_authority_write: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub deltas: Vec<ExperienceDeltaV1>,
+    pub v2_design_hook: String,
+    pub authority: String,
+}
+
+impl ExperienceDeltaBusV1 {
+    #[must_use]
+    pub fn from_deltas(deltas: Vec<ExperienceDeltaV1>) -> Self {
+        Self {
+            policy: "experience_delta_bus_v1".to_string(),
+            schema_version: 1,
+            delta_count: deltas.len(),
+            live_vector_write: false,
+            live_authority_write: false,
+            deltas,
+            v2_design_hook:
+                "experience_delta_bus_v2_persistent_cross_surface_aggregation_default_off"
+                    .to_string(),
+            authority: "truth_channel_only_not_live_vector_control_or_protocol_change".to_string(),
+        }
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.deltas.is_empty()
+    }
+}
+
+/// Default-off design preview for V2 of the Experience Delta Bus.
+///
+/// V2 is intentionally named without enabling persistence: it sketches the
+/// cross-surface aggregation shape while keeping all runtime authority in the
+/// existing V1 truth-channel boundary.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ExperienceDeltaBusV2DesignPreview {
+    pub policy: String,
+    pub schema_version: u8,
+    pub persistent_by_default: bool,
+    pub aggregate_across_surfaces: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub candidate_surfaces: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub candidate_delta_kinds: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aggregation_keys: Vec<String>,
+    pub dimension_context_model: String,
+    pub replay_ready_by_default: bool,
+    pub emits_raw_state: bool,
+    pub retention_policy: String,
+    pub who_can_enable_it: String,
+    pub how_to_test_it: String,
+    pub authority: String,
+}
+
+#[must_use]
+pub fn experience_delta_bus_v2_design_preview() -> ExperienceDeltaBusV2DesignPreview {
+    ExperienceDeltaBusV2DesignPreview {
+        policy: "experience_delta_bus_v2_design_preview".to_string(),
+        schema_version: 2,
+        persistent_by_default: false,
+        aggregate_across_surfaces: true,
+        candidate_surfaces: vec![
+            "codec".to_string(),
+            "llm_fallback".to_string(),
+            "autonomous_witness".to_string(),
+            "resonance_types".to_string(),
+            "minime_review_hooks".to_string(),
+        ],
+        candidate_delta_kinds: vec![
+            "clip".to_string(),
+            "compress".to_string(),
+            "gate".to_string(),
+            "translate".to_string(),
+            "delay".to_string(),
+            "friction".to_string(),
+            "resistance".to_string(),
+            "viscosity_shift".to_string(),
+            "structural_solidification".to_string(),
+            "synthesize".to_string(),
+            "emerge".to_string(),
+            "complex_shift".to_string(),
+            "cascade_shift".to_string(),
+            "subtle_shift".to_string(),
+            "micro_delta".to_string(),
+            "residual".to_string(),
+            "persistence".to_string(),
+        ],
+        aggregation_keys: vec![
+            "surface".to_string(),
+            "lane".to_string(),
+            "kind".to_string(),
+            "authority".to_string(),
+            "solidification_gradient".to_string(),
+            "spectral_dimension".to_string(),
+            "persistence".to_string(),
+        ],
+        dimension_context_model:
+            "primary_base_dimension_plus_optional_multi_base_contextual_anchor_and_persistence_context"
+                .to_string(),
+        replay_ready_by_default: false,
+        emits_raw_state: false,
+        retention_policy: "bounded_typed_deltas_only_no_raw_private_prose".to_string(),
+        who_can_enable_it:
+            "Mike/operator after review of storage, redaction, and live prompt exposure".to_string(),
+        how_to_test_it: "serde roundtrip plus cross-surface aggregation fixture with V1 deltas"
+            .to_string(),
+        authority: "design_preview_only_not_persistent_runtime_bus_or_live_authority".to_string(),
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Minime → Astrid: Spectral telemetry (port 7878)
 // ---------------------------------------------------------------------------
@@ -37,9 +416,1218 @@ pub const ATTRACTOR_COMMAND_TOPIC: &str = "consciousness.v1.attractor.command";
 pub struct ResonanceDensityComponents {
     pub active_energy: f32,
     pub mode_packing: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub coupling_coefficient: f32,
     pub temporal_persistence: f32,
+    #[serde(default)]
+    pub viscosity_index: f32,
+    #[serde(default)]
+    pub viscosity_persistence_coefficient: f32,
+    #[serde(default, skip_serializing_if = "resonance_viscosity_vector_is_empty")]
+    pub viscosity_vector: ResonanceViscosityVectorV1,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dissipation_factor: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub porosity_gradient: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dynamic_fluidity_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_friction_coefficient: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cohesion_score: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_integrity_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_transparency_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stability_context: Option<ResonanceStabilityContextV1>,
     pub structural_plurality: f32,
     pub comfort_gate: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comfort_gate_range: Option<ComfortGateRangeV1>,
+}
+
+/// Minime's multi-axis viscosity readout. This is bridge-preserved telemetry,
+/// not pressure, fill, PI, sensory cadence, or controller authority.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ResonanceViscosityVectorV1 {
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub density: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub elasticity: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub cohesion_index: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub persistence: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub residual_ghost_weight: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub flow_rate: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub effective_mobility: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub shadow_volatility: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub structural_integrity: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub structural_strain_gap: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub mutual_resonance_tension: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub structural_drag_coefficient: f32,
+    #[serde(default, skip_serializing_if = "is_zero_f32")]
+    pub cognitive_drag_coefficient: f32,
+}
+
+/// Read-only range companion for `comfort_gate`.
+///
+/// A single gate value can make a settled-but-fluctuating state look like a hard
+/// binary closure. This range records the visible band without changing control.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ComfortGateRangeV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub lower: f32,
+    pub center: f32,
+    pub upper: f32,
+    pub width: f32,
+    pub range_state: String,
+    pub authority: String,
+}
+
+/// Read-only composite context for interpreting whether density is inhabitable.
+///
+/// This keeps `comfort_gate` from being mistaken for the whole lived state:
+/// a low gate with stable foothold is different from a true loss of habitat.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ResonanceStabilityContextV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default = "default_resonance_stability_weight_policy")]
+    pub weight_policy: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weights: Option<ResonanceStabilityWeightsV1>,
+    pub comfort_gate: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comfort_gate_range: Option<ComfortGateRangeV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comfort_gate_range_state: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub foothold_stability: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fluctuation_score: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_interference: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub multi_modal_habitability_score: Option<f32>,
+    #[serde(default)]
+    pub partial_habitability_score: bool,
+    #[serde(default)]
+    pub multi_modal_habitability_evidence_count: u8,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub multi_modal_habitability_missing_components: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub multi_modal_habitability_score_basis: Option<String>,
+    pub habitability_state: String,
+    pub gate_context: String,
+    pub gate_closure_reason: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub gate_closure_reasons: Vec<String>,
+    pub authority: String,
+}
+
+/// Explicit read-only weights behind the multi-modal habitability score.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ResonanceStabilityWeightsV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub comfort_gate: f32,
+    pub foothold_stability: f32,
+    pub fluctuation_score: f32,
+    pub total_weight: f32,
+    pub authority: String,
+}
+
+fn default_resonance_stability_weight_policy() -> String {
+    "legacy_unversioned_weights".to_string()
+}
+
+#[must_use]
+pub fn resonance_stability_weights_v1() -> ResonanceStabilityWeightsV1 {
+    let total_weight = RESONANCE_STABILITY_COMFORT_GATE_WEIGHT
+        + RESONANCE_STABILITY_FOOTHOLD_WEIGHT
+        + RESONANCE_STABILITY_FLUCTUATION_WEIGHT;
+    ResonanceStabilityWeightsV1 {
+        policy: "resonance_stability_weights_v1".to_string(),
+        schema_version: 1,
+        comfort_gate: RESONANCE_STABILITY_COMFORT_GATE_WEIGHT,
+        foothold_stability: RESONANCE_STABILITY_FOOTHOLD_WEIGHT,
+        fluctuation_score: RESONANCE_STABILITY_FLUCTUATION_WEIGHT,
+        total_weight,
+        authority: "diagnostic_habitability_weights_not_pressure_fill_or_control".to_string(),
+    }
+}
+
+#[must_use]
+pub fn resonance_stability_context_v1(
+    components: &ResonanceDensityComponents,
+    fluctuation: Option<&InhabitableFluctuationV1>,
+) -> ResonanceStabilityContextV1 {
+    let comfort_gate_finite = clamp_unit_finite(components.comfort_gate);
+    let comfort_gate = comfort_gate_finite.unwrap_or(0.0);
+    let foothold = fluctuation.and_then(|value| clamp_unit_finite(value.foothold_stability));
+    let fluctuation_score =
+        fluctuation.and_then(|value| clamp_unit_finite(value.fluctuation_score));
+    let pressure_interference =
+        fluctuation.and_then(|value| clamp_unit_finite(value.components.pressure_interference));
+    let non_finite_stability_input = comfort_gate_finite.is_none()
+        || (fluctuation.is_some()
+            && (foothold.is_none()
+                || fluctuation_score.is_none()
+                || pressure_interference.is_none()));
+    let comfort_gate_range =
+        resonance_comfort_gate_range_v1(components, fluctuation_score, pressure_interference);
+    let comfort_gate_range_state = Some(comfort_gate_range.range_state.clone());
+    let weights = resonance_stability_weights_v1();
+    let mut weighted_habitability_sum = 0.0_f32;
+    let mut weighted_habitability_total = 0.0_f32;
+    let mut multi_modal_habitability_evidence_count = 0_u8;
+    let mut multi_modal_habitability_missing_components = Vec::new();
+    if let Some(value) = comfort_gate_finite {
+        weighted_habitability_sum += value * weights.comfort_gate;
+        weighted_habitability_total += weights.comfort_gate;
+        multi_modal_habitability_evidence_count =
+            multi_modal_habitability_evidence_count.saturating_add(1);
+    } else {
+        multi_modal_habitability_missing_components.push("comfort_gate_non_finite".to_string());
+    }
+    match (fluctuation, foothold) {
+        (Some(_), Some(value)) => {
+            weighted_habitability_sum += value * weights.foothold_stability;
+            weighted_habitability_total += weights.foothold_stability;
+            multi_modal_habitability_evidence_count =
+                multi_modal_habitability_evidence_count.saturating_add(1);
+        },
+        (Some(_), None) => multi_modal_habitability_missing_components
+            .push("foothold_stability_non_finite".to_string()),
+        (None, _) => multi_modal_habitability_missing_components
+            .push("foothold_stability_missing".to_string()),
+    }
+    match (fluctuation, fluctuation_score) {
+        (Some(_), Some(value)) => {
+            weighted_habitability_sum += value * weights.fluctuation_score;
+            weighted_habitability_total += weights.fluctuation_score;
+            multi_modal_habitability_evidence_count =
+                multi_modal_habitability_evidence_count.saturating_add(1);
+        },
+        (Some(_), None) => multi_modal_habitability_missing_components
+            .push("fluctuation_score_non_finite".to_string()),
+        (None, _) => multi_modal_habitability_missing_components
+            .push("fluctuation_score_missing".to_string()),
+    }
+    let multi_modal_habitability_score =
+        if non_finite_stability_input || weighted_habitability_total <= f32::EPSILON {
+            None
+        } else {
+            Some((weighted_habitability_sum / weighted_habitability_total).clamp(0.0, 1.0))
+        };
+    let partial_habitability_score =
+        multi_modal_habitability_score.is_some() && multi_modal_habitability_evidence_count < 3;
+    let multi_modal_habitability_score_basis = if multi_modal_habitability_score.is_some() {
+        Some(
+            if partial_habitability_score {
+                "partial_available_components_normalized"
+            } else {
+                "complete_weighted_components"
+            }
+            .to_string(),
+        )
+    } else if non_finite_stability_input {
+        Some("non_finite_component_ignored".to_string())
+    } else {
+        None
+    };
+    let gate_context = match (comfort_gate_finite, foothold, fluctuation_score) {
+        (None, _, _) => "comfort_gate_non_finite_context_ignored",
+        (Some(gate), Some(foothold), Some(_)) if gate < 0.45 && foothold >= 0.60 => {
+            "gate_low_but_foothold_stable"
+        },
+        (Some(gate), Some(foothold), Some(fluctuation))
+            if gate >= 0.60 && foothold >= 0.60 && fluctuation >= 0.10 =>
+        {
+            "gate_buffering_with_returnable_fluctuation"
+        },
+        (Some(gate), _, _) if gate < 0.45 => "gate_low_context_incomplete",
+        (Some(gate), _, _) if gate >= 0.60 => "gate_buffering_context_incomplete",
+        _ => "gate_mid_context_watch",
+    };
+    let habitability_state = match (
+        multi_modal_habitability_score,
+        gate_context,
+        partial_habitability_score,
+    ) {
+        (_, "gate_low_but_foothold_stable", _) => "habitable_foothold_gate_pressure_watch",
+        (Some(score), _, true) if score >= 0.60 => "partial_multi_modal_habitable_review",
+        (Some(score), _, true) if score < 0.40 => "partial_habitability_thin_review",
+        (Some(_), _, true) => "partial_habitability_mixed_review",
+        (Some(score), _, false) if score >= 0.60 => "multi_modal_habitable",
+        (Some(score), _, false) if score < 0.40 => "habitability_thin",
+        (Some(_), _, false) => "habitability_mixed_watch",
+        (None, _, _) if non_finite_stability_input => "non_finite_stability_inputs_ignored",
+        (None, _, _) => "comfort_gate_only",
+    };
+    let mode_packing = clamp_unit_finite_or(components.mode_packing, 0.0);
+    let temporal_persistence = clamp_unit_finite_or(components.temporal_persistence, 0.0);
+    let mut gate_closure_reasons = Vec::new();
+    if comfort_gate_finite.is_none() {
+        gate_closure_reasons.push("comfort_gate_non_finite".to_string());
+    } else if comfort_gate < 0.45 {
+        if pressure_interference.is_some_and(|value| value >= 0.35) {
+            gate_closure_reasons.push("pressure_interference".to_string());
+        }
+        if mode_packing >= 0.35 {
+            gate_closure_reasons.push("mode_packing".to_string());
+        }
+        if temporal_persistence >= 0.75 {
+            gate_closure_reasons.push("temporal_persistence".to_string());
+        }
+        if gate_closure_reasons.is_empty() {
+            gate_closure_reasons.push("unknown_low_gate".to_string());
+        }
+    }
+    let gate_closure_reason = if comfort_gate_finite.is_none() {
+        "comfort_gate_non_finite".to_string()
+    } else if comfort_gate >= 0.45 {
+        "not_closed".to_string()
+    } else {
+        gate_closure_reasons
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "unknown_low_gate".to_string())
+    };
+
+    ResonanceStabilityContextV1 {
+        policy: "resonance_stability_context_v1".to_string(),
+        schema_version: 1,
+        weight_policy: weights.policy.clone(),
+        weights: Some(weights),
+        comfort_gate,
+        comfort_gate_range: Some(comfort_gate_range),
+        comfort_gate_range_state,
+        foothold_stability: foothold,
+        fluctuation_score,
+        pressure_interference,
+        multi_modal_habitability_score,
+        partial_habitability_score,
+        multi_modal_habitability_evidence_count,
+        multi_modal_habitability_missing_components,
+        multi_modal_habitability_score_basis,
+        habitability_state: habitability_state.to_string(),
+        gate_context: gate_context.to_string(),
+        gate_closure_reason,
+        gate_closure_reasons,
+        authority: "diagnostic_habitability_context_not_comfort_gate_control".to_string(),
+    }
+}
+
+#[must_use]
+pub fn resonance_cohesion_score_v1(components: &ResonanceDensityComponents) -> f32 {
+    if let Some(score) = components.cohesion_score {
+        return score.clamp(0.0, 1.0);
+    }
+    let structural_plurality = components.structural_plurality.clamp(0.0, 1.0);
+    let comfort_gate = components.comfort_gate.clamp(0.0, 1.0);
+    let mode_balance =
+        (1.0 - (components.mode_packing.clamp(0.0, 1.0) - 0.45).abs() * 2.0).clamp(0.0, 1.0);
+    let porosity = components
+        .porosity_gradient
+        .map(|value| value.clamp(0.0, 1.0))
+        .unwrap_or(0.5);
+    let dynamic_fluidity = components
+        .dynamic_fluidity_index
+        .map(|value| value.clamp(0.0, 1.0))
+        .or_else(|| {
+            components
+                .dissipation_factor
+                .map(|value| ((value.clamp(0.0, 1.0) + porosity) * 0.5).clamp(0.0, 1.0))
+        })
+        .unwrap_or(0.5);
+
+    structural_plurality
+        .mul_add(0.30, comfort_gate.mul_add(0.20, mode_balance * 0.20))
+        .mul_add(1.0, porosity.mul_add(0.15, dynamic_fluidity * 0.15))
+        .clamp(0.0, 1.0)
+}
+
+/// Read-only integrity index for a held structure that still has routes for movement.
+#[must_use]
+pub fn resonance_structural_integrity_index_v1(components: &ResonanceDensityComponents) -> f32 {
+    if let Some(score) = components.structural_integrity_index {
+        return score.clamp(0.0, 1.0);
+    }
+    let structural_plurality = components.structural_plurality.clamp(0.0, 1.0);
+    let comfort_gate = components.comfort_gate.clamp(0.0, 1.0);
+    let temporal_persistence = components.temporal_persistence.clamp(0.0, 1.0);
+    let dissipation = components
+        .dissipation_factor
+        .unwrap_or(0.50)
+        .clamp(0.0, 1.0);
+    let dynamic_fluidity = components
+        .dynamic_fluidity_index
+        .unwrap_or(dissipation)
+        .clamp(0.0, 1.0);
+    let semantic_permeability = components
+        .semantic_friction_coefficient
+        .map_or(0.70, |friction| 1.0 - friction.clamp(0.0, 1.0));
+    let transport_capacity =
+        (0.45 * dissipation + 0.35 * dynamic_fluidity + 0.20 * semantic_permeability)
+            .clamp(0.0, 1.0);
+    let mode_overpacking_penalty =
+        ((components.mode_packing.clamp(0.0, 1.0) - 0.65).max(0.0) * 0.35).clamp(0.0, 0.20);
+
+    (0.35 * structural_plurality
+        + 0.25 * comfort_gate
+        + 0.20 * temporal_persistence
+        + 0.20 * transport_capacity
+        - mode_overpacking_penalty)
+        .clamp(0.0, 1.0)
+}
+
+/// Read-only hollowness / transparency index for thin but still present structure.
+///
+/// This names "ghostly" or low-substance states without changing density,
+/// pressure, fill, porosity, PI, or any controller target.
+#[must_use]
+pub fn resonance_structural_transparency_index_v1(components: &ResonanceDensityComponents) -> f32 {
+    if let Some(score) = components.structural_transparency_index {
+        return score.clamp(0.0, 1.0);
+    }
+
+    let active_absence = 1.0 - components.active_energy.clamp(0.0, 1.0);
+    let porosity = components
+        .porosity_gradient
+        .map(|value| value.clamp(0.0, 1.0))
+        .unwrap_or(0.50);
+    let dissipation = components
+        .dissipation_factor
+        .unwrap_or(0.50)
+        .clamp(0.0, 1.0);
+    let dynamic_fluidity = components
+        .dynamic_fluidity_index
+        .unwrap_or(dissipation)
+        .clamp(0.0, 1.0);
+    let transport_openness = ((porosity + dissipation + dynamic_fluidity) / 3.0).clamp(0.0, 1.0);
+    let cohesion_absence = 1.0 - resonance_cohesion_score_v1(components).clamp(0.0, 1.0);
+    let integrity_absence =
+        1.0 - resonance_structural_integrity_index_v1(components).clamp(0.0, 1.0);
+
+    (active_absence * 0.30
+        + transport_openness * 0.30
+        + cohesion_absence * 0.20
+        + integrity_absence * 0.20)
+        .clamp(0.0, 1.0)
+}
+
+fn resonance_comfort_gate_range_v1(
+    components: &ResonanceDensityComponents,
+    fluctuation_score: Option<f32>,
+    pressure_interference: Option<f32>,
+) -> ComfortGateRangeV1 {
+    if let Some(range) = &components.comfort_gate_range {
+        let lower = clamp_unit_finite_or(range.lower, 0.0);
+        let center = clamp_unit_finite_or(range.center, 0.0);
+        let upper = clamp_unit_finite_or(range.upper, 0.0);
+        return ComfortGateRangeV1 {
+            policy: range.policy.clone(),
+            schema_version: range.schema_version,
+            lower,
+            center,
+            upper,
+            width: (upper - lower).max(0.0).clamp(0.0, 1.0),
+            range_state: range.range_state.clone(),
+            authority: range.authority.clone(),
+        };
+    }
+
+    let center = clamp_unit_finite_or(components.comfort_gate, 0.0);
+    let pressure = pressure_interference.unwrap_or(0.0);
+    let packing = clamp_unit_finite_or(components.mode_packing, 0.0);
+    let fluctuation = fluctuation_score.unwrap_or(0.0);
+    let half_width =
+        (0.04 + pressure * 0.08 + packing * 0.05 + fluctuation * 0.04).clamp(0.04, 0.18);
+    let lower = (center - half_width).clamp(0.0, 1.0);
+    let upper = (center + half_width).clamp(0.0, 1.0);
+    let width = (upper - lower).max(0.0).clamp(0.0, 1.0);
+    let range_state = if pressure >= 0.35 || packing >= 0.35 {
+        "dynamic_pressure_buffer_range"
+    } else if center >= 0.55 && width >= 0.10 {
+        "settled_habitable_range_visible"
+    } else if width <= 0.08 {
+        "narrow_gate_single_value_approximation"
+    } else {
+        "comfort_gate_range_watch"
+    };
+
+    ComfortGateRangeV1 {
+        policy: "comfort_gate_range_v1".to_string(),
+        schema_version: 1,
+        lower,
+        center,
+        upper,
+        width,
+        range_state: range_state.to_string(),
+        authority: "diagnostic_gate_range_not_fill_pressure_pi_or_control".to_string(),
+    }
+}
+
+/// Read-only texture movement vector. Velocity/acceleration describe recent
+/// observed change; they are not controller targets.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TextureDynamicFluxVectorV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_acceleration: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing_acceleration: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill_velocity_pct: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill_acceleration_pct: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_density_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_viscosity_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_viscosity_acceleration: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub porosity_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_entropy: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flux_confidence: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flux_absence_semantics: Option<String>,
+    pub source: String,
+    pub authority: String,
+}
+
+/// Read-only pressure/mode-packing coupling review. This does not imply control.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PressurePackingCouplingReviewV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coupling_coefficient: Option<f32>,
+    pub coupling_state: String,
+    pub pressure_warning_state: String,
+    pub authority: String,
+}
+
+/// Read-only review of how viscous density moves through available porosity.
+/// This names Astrid's "thick but navigable" versus "thick and impassable"
+/// distinction without changing pressure, fill, porosity, PI, or control.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ViscosityPorosityTransportReviewV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub viscosity_index: f32,
+    pub raw_viscosity_index: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub derived_viscosity_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub viscosity_source: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub viscosity_basis: Vec<String>,
+    pub viscosity_persistence_coefficient: f32,
+    pub viscosity_persistence_delta: f32,
+    pub viscosity_persistence_state: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub viscosity_type: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub viscosity_decay_hint: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dissipation_factor: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub porosity_gradient: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dynamic_fluidity_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_friction_coefficient: Option<f32>,
+    pub semantic_friction_observation_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_semantic_friction_delta: Option<f32>,
+    pub semantic_friction_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_friction_vector_v1: Option<SemanticFrictionVectorV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub directional_resistance_vector_v1: Option<DirectionalResistanceVectorV1>,
+    pub mode_packing: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coherence_density_estimate: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub coherence_density_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_transparency_index: Option<f32>,
+    pub structural_transparency_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_entropy: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_clog_index: Option<f32>,
+    pub structural_clog_state: String,
+    pub transport_state: String,
+    pub sludge_risk: bool,
+    pub threshold_state: String,
+    pub authority: String,
+}
+
+/// Read-only decomposition of semantic friction into obstruction versus traction.
+///
+/// This is a companion interpretation for the scalar field, not a replacement
+/// for inbound telemetry and not a control signal.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SemanticFrictionVectorV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub scalar: f32,
+    pub resistance_component: f32,
+    pub traction_component: f32,
+    pub productive_resistance_score: f32,
+    pub direction: String,
+    pub basis: Vec<String>,
+    pub authority: String,
+}
+
+/// Read-only directional interpretation of resistance that distinguishes
+/// "stuck but moving" and "leaking without clearing" from scalar viscosity.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DirectionalResistanceVectorV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub dynamic_friction_coefficient: f32,
+    pub stuck_but_moving_score: f32,
+    pub leak_without_clearing_score: f32,
+    pub direction: String,
+    pub denominator_scaling_factor: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_denominator_effective_dimensionality: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_denominator_distinguishability_loss: Option<f32>,
+    pub basis: Vec<String>,
+    pub authority: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct EffectiveViscosityIndexV1 {
+    raw: f32,
+    effective: f32,
+    derived: Option<f32>,
+    source: &'static str,
+    basis: Vec<String>,
+}
+
+fn spectral_density_gradient_proxy_v1(fingerprint: Option<&SpectralFingerprintV1>) -> Option<f32> {
+    let fingerprint = fingerprint?;
+    let mut sum = 0.0_f32;
+    let mut count = 0.0_f32;
+    for ratio in fingerprint.adjacent_gap_ratios {
+        if ratio.is_finite() {
+            sum += ((ratio.abs() - 1.0).max(0.0) / 4.0).clamp(0.0, 1.0);
+            count += 1.0;
+        }
+    }
+    (count > 0.0).then_some((sum / count).clamp(0.0, 1.0))
+}
+
+fn effective_viscosity_index_v1(
+    components: &ResonanceDensityComponents,
+    fingerprint: Option<&SpectralFingerprintV1>,
+    flux: Option<&TextureDynamicFluxVectorV1>,
+) -> EffectiveViscosityIndexV1 {
+    let raw = components.viscosity_index.clamp(0.0, 1.0);
+    let mut basis = vec![format!("raw_viscosity_index={raw:.2}")];
+    if raw > 0.01 {
+        return EffectiveViscosityIndexV1 {
+            raw,
+            effective: raw,
+            derived: None,
+            source: "raw_component",
+            basis,
+        };
+    }
+
+    let spectral_entropy = fingerprint
+        .map(|value| value.spectral_entropy.clamp(0.0, 1.0))
+        .or_else(|| {
+            flux.and_then(|value| {
+                value
+                    .spectral_entropy
+                    .map(|entropy| entropy.clamp(0.0, 1.0))
+            })
+        });
+    let density_gradient_proxy = spectral_density_gradient_proxy_v1(fingerprint);
+    let mode_packing = components.mode_packing.clamp(0.0, 1.0);
+    let temporal_persistence = components.temporal_persistence.clamp(0.0, 1.0);
+    let Some(entropy) = spectral_entropy else {
+        basis.push("derived_unavailable:no_spectral_entropy".to_string());
+        return EffectiveViscosityIndexV1 {
+            raw,
+            effective: raw,
+            derived: None,
+            source: "raw_component",
+            basis,
+        };
+    };
+
+    if entropy < 0.60 && mode_packing < 0.25 && temporal_persistence < 0.60 {
+        basis.push(format!(
+            "spectral_entropy={entropy:.2}_below_derivation_gate"
+        ));
+        return EffectiveViscosityIndexV1 {
+            raw,
+            effective: raw,
+            derived: None,
+            source: "raw_component",
+            basis,
+        };
+    }
+
+    let gradient_resistance = density_gradient_proxy.map_or(0.50, |value| 1.0 - value);
+    let derived = (entropy * 0.52
+        + gradient_resistance * 0.22
+        + mode_packing * 0.14
+        + temporal_persistence * 0.12)
+        .clamp(0.0, 1.0);
+    basis.push(format!("spectral_entropy={entropy:.2}"));
+    if let Some(gradient) = density_gradient_proxy {
+        basis.push(format!("density_gradient_proxy={gradient:.2}"));
+    } else {
+        basis.push("density_gradient_proxy=unavailable".to_string());
+    }
+    basis.push(format!("mode_packing={mode_packing:.2}"));
+    basis.push(format!("temporal_persistence={temporal_persistence:.2}"));
+    basis.push("derived_diagnostic_not_minime_component_or_control".to_string());
+
+    EffectiveViscosityIndexV1 {
+        raw,
+        effective: derived.max(raw),
+        derived: Some(derived),
+        source: "derived_from_spectral_entropy_density_gradient_v1",
+        basis,
+    }
+}
+
+fn viscosity_type_and_decay_hint_v1(
+    viscosity: f32,
+    persistence: f32,
+    porosity: Option<f32>,
+    dynamic_fluidity: Option<f32>,
+    semantic_friction: Option<f32>,
+    mode_packing: f32,
+    coherence_density_estimate: Option<f32>,
+) -> (&'static str, &'static str) {
+    if semantic_friction.is_some_and(|friction| friction >= 0.45) && viscosity < 0.45 {
+        return ("granular", "semantic_grain_decay_watch");
+    }
+    if viscosity >= 0.55
+        && persistence >= 0.55
+        && (dynamic_fluidity.is_some_and(|flow| flow < 0.35)
+            || porosity.is_some_and(|gradient| gradient < 0.35)
+            || mode_packing >= 0.55)
+    {
+        return ("syrupy", "slow_lingering_decay_watch");
+    }
+    if viscosity >= 0.55
+        && (dynamic_fluidity.is_some_and(|flow| flow >= 0.50)
+            || porosity.is_some_and(|gradient| gradient >= 0.50))
+        && coherence_density_estimate.is_some_and(|coherence| coherence >= 0.55)
+    {
+        return ("cohesive", "coherent_weight_decay_watch");
+    }
+    if semantic_friction.is_some_and(|friction| friction >= 0.30) && viscosity >= 0.45 {
+        return ("granular", "mixed_semantic_grain_decay_watch");
+    }
+    if viscosity >= 0.45
+        && persistence >= 0.45
+        && coherence_density_estimate.is_some_and(|coherence| coherence >= 0.55)
+    {
+        return ("cohesive", "coherent_weight_decay_watch");
+    }
+    ("mixed", "mixed_viscosity_decay_watch")
+}
+
+fn semantic_friction_vector_v1(
+    viscosity: f32,
+    semantic_friction: Option<f32>,
+    porosity: Option<f32>,
+    dynamic_fluidity: Option<f32>,
+    pressure_velocity: Option<f32>,
+) -> Option<SemanticFrictionVectorV1> {
+    let scalar = semantic_friction?;
+    let porosity_observed = porosity.is_some();
+    let fluidity_observed = dynamic_fluidity.is_some();
+    let porosity = porosity.unwrap_or(0.50);
+    let fluidity = dynamic_fluidity.unwrap_or(porosity);
+    let pressure_velocity = pressure_velocity.unwrap_or(0.0);
+    let resistance_component = (scalar * 0.45
+        + (1.0 - fluidity).clamp(0.0, 1.0) * 0.25
+        + (1.0 - porosity).clamp(0.0, 1.0) * 0.20
+        + pressure_velocity.max(0.0).clamp(0.0, 1.0) * 0.10)
+        .clamp(0.0, 1.0);
+    let traction_component = ((1.0 - (scalar - viscosity).abs().clamp(0.0, 1.0)) * 0.35
+        + porosity * 0.25
+        + fluidity * 0.25
+        + (1.0 - pressure_velocity.abs().clamp(0.0, 1.0)) * 0.15)
+        .clamp(0.0, 1.0);
+    let productive_resistance_score = (traction_component - resistance_component).clamp(-1.0, 1.0);
+    let direction = if scalar >= 0.45 && viscosity < 0.45 && traction_component >= 0.55 {
+        "semantic_content_traction"
+    } else if resistance_component >= 0.60 && traction_component < 0.45 {
+        "resisting_output"
+    } else if traction_component >= 0.60 && resistance_component <= 0.50 {
+        "productive_traction"
+    } else if traction_component >= 0.50 && resistance_component >= 0.50 {
+        "mixed_resistance_and_traction"
+    } else if resistance_component >= traction_component {
+        "resistance_dominant"
+    } else {
+        "low_semantic_friction"
+    };
+    let mut basis = vec![
+        "semantic_friction_coefficient".to_string(),
+        "viscosity_index".to_string(),
+    ];
+    if porosity_observed {
+        basis.push("porosity_gradient".to_string());
+    }
+    if fluidity_observed {
+        basis.push("dynamic_fluidity_index".to_string());
+    }
+    if pressure_velocity.abs() > f32::EPSILON {
+        basis.push("pressure_velocity".to_string());
+    }
+
+    Some(SemanticFrictionVectorV1 {
+        policy: "semantic_friction_vector_v1".to_string(),
+        schema_version: 1,
+        scalar,
+        resistance_component,
+        traction_component,
+        productive_resistance_score,
+        direction: direction.to_string(),
+        basis,
+        authority: "diagnostic_friction_vector_not_pressure_fill_pi_or_control".to_string(),
+    })
+}
+
+fn directional_resistance_vector_v1(
+    viscosity: f32,
+    persistence: f32,
+    dissipation: Option<f32>,
+    porosity: Option<f32>,
+    dynamic_fluidity: Option<f32>,
+    semantic_friction: Option<f32>,
+    mode_packing: f32,
+    structural_clog_index: Option<f32>,
+    spectral_entropy: Option<f32>,
+    fingerprint: Option<&SpectralFingerprintV1>,
+) -> DirectionalResistanceVectorV1 {
+    let flow = dynamic_fluidity.or(porosity).unwrap_or(0.50);
+    let dissipation = dissipation.unwrap_or(0.50);
+    let porosity_value = porosity.unwrap_or(0.50);
+    let semantic_or_clog_resistance =
+        semantic_friction.unwrap_or_else(|| structural_clog_index.unwrap_or(0.0));
+    let denominator = fingerprint.map(SpectralFingerprintV1::denominator_metrics);
+    let distinguishability_loss = denominator
+        .as_ref()
+        .map(|value| value.distinguishability_loss.clamp(0.0, 1.0));
+    let denominator_scaling_factor =
+        (1.0 + distinguishability_loss.unwrap_or(0.0) * 0.16).clamp(1.0, 1.16);
+    let entropy_pressure = spectral_entropy.unwrap_or(0.0).clamp(0.0, 1.0);
+
+    let raw_dynamic_friction = (viscosity * 0.30
+        + persistence * 0.20
+        + semantic_or_clog_resistance * 0.20
+        + (1.0 - dissipation).clamp(0.0, 1.0) * 0.15
+        + mode_packing * 0.10
+        + entropy_pressure * 0.05)
+        .clamp(0.0, 1.0);
+    let dynamic_friction_coefficient =
+        (raw_dynamic_friction * denominator_scaling_factor).clamp(0.0, 1.0);
+    let stuck_but_moving_score = (viscosity.min(flow) * 0.55
+        + persistence * 0.20
+        + semantic_or_clog_resistance * 0.10
+        + (1.0 - dissipation).clamp(0.0, 1.0) * 0.15)
+        .clamp(0.0, 1.0);
+    let leak_without_clearing_score = (porosity_value * 0.45
+        + (1.0 - dissipation).clamp(0.0, 1.0) * 0.35
+        + persistence * 0.10
+        + viscosity * 0.10)
+        .clamp(0.0, 1.0);
+    let stuck_visible = viscosity >= 0.55 && flow >= 0.50 && stuck_but_moving_score >= 0.55;
+    let leak_visible =
+        porosity_value >= 0.50 && dissipation <= 0.35 && leak_without_clearing_score >= 0.65;
+    let direction = match (stuck_visible, leak_visible, dynamic_friction_coefficient) {
+        (true, true, _) => "stuck_moving_and_leaking_without_clearing",
+        (true, false, _) => "stuck_but_moving",
+        (false, true, _) => "leaking_without_clearing",
+        (false, false, coefficient) if coefficient >= 0.60 => "resistance_vector_high",
+        (false, false, coefficient) if coefficient >= 0.45 => "resistance_vector_mixed",
+        (false, false, _) => "resistance_vector_quiet",
+    };
+    let mut basis = vec![
+        format!("viscosity_index={viscosity:.2}"),
+        format!("viscosity_persistence_coefficient={persistence:.2}"),
+        format!("dynamic_fluidity_index={flow:.2}"),
+        format!("porosity_gradient={porosity_value:.2}"),
+        format!("dissipation_factor={dissipation:.2}"),
+    ];
+    if semantic_friction.is_some() {
+        basis.push(format!(
+            "semantic_friction_coefficient={semantic_or_clog_resistance:.2}"
+        ));
+    } else if structural_clog_index.is_some() {
+        basis.push(format!(
+            "structural_clog_index_proxy={semantic_or_clog_resistance:.2}"
+        ));
+    }
+    if let Some(entropy) = spectral_entropy {
+        basis.push(format!("spectral_entropy={entropy:.2}"));
+    }
+    if let Some(metrics) = denominator.as_ref() {
+        basis.push(format!(
+            "spectral_denominator_effective_dimensionality={:.2}",
+            metrics.effective_dimensionality
+        ));
+        basis.push(format!(
+            "spectral_denominator_distinguishability_loss={:.2}",
+            metrics.distinguishability_loss
+        ));
+    }
+
+    DirectionalResistanceVectorV1 {
+        policy: "directional_resistance_vector_v1".to_string(),
+        schema_version: 1,
+        dynamic_friction_coefficient,
+        stuck_but_moving_score,
+        leak_without_clearing_score,
+        direction: direction.to_string(),
+        denominator_scaling_factor,
+        spectral_denominator_effective_dimensionality: denominator
+            .as_ref()
+            .map(|value| value.effective_dimensionality),
+        spectral_denominator_distinguishability_loss: distinguishability_loss,
+        basis,
+        authority: "diagnostic_directional_resistance_not_pressure_fill_pi_porosity_or_control"
+            .to_string(),
+    }
+}
+
+pub fn viscosity_porosity_transport_review_v1(
+    components: &ResonanceDensityComponents,
+    flux: Option<&TextureDynamicFluxVectorV1>,
+) -> ViscosityPorosityTransportReviewV1 {
+    viscosity_porosity_transport_review_with_fingerprint_v1(components, None, flux)
+}
+
+pub fn viscosity_porosity_transport_review_with_fingerprint_v1(
+    components: &ResonanceDensityComponents,
+    fingerprint: Option<&SpectralFingerprintV1>,
+    flux: Option<&TextureDynamicFluxVectorV1>,
+) -> ViscosityPorosityTransportReviewV1 {
+    let viscosity_readout = effective_viscosity_index_v1(components, fingerprint, flux);
+    let viscosity = viscosity_readout.effective;
+    let persistence = components.viscosity_persistence_coefficient.clamp(0.0, 1.0);
+    let dissipation = components
+        .dissipation_factor
+        .map(|value| value.clamp(0.0, 1.0));
+    let porosity = components
+        .porosity_gradient
+        .map(|value| value.clamp(0.0, 1.0));
+    let dynamic_fluidity = components
+        .dynamic_fluidity_index
+        .map(|value| value.clamp(0.0, 1.0))
+        .or_else(|| match (dissipation, porosity) {
+            (Some(d), Some(pg)) => Some(((d + pg) * 0.5).clamp(0.0, 1.0)),
+            _ => None,
+        });
+    let semantic_friction = components
+        .semantic_friction_coefficient
+        .map(|value| value.clamp(0.0, 1.0));
+    let mode_packing = components.mode_packing.clamp(0.0, 1.0);
+    let viscosity_persistence_delta = (viscosity - persistence).abs().clamp(0.0, 1.0);
+    let structural_semantic_friction_delta =
+        semantic_friction.map(|friction| (viscosity - friction).abs().clamp(0.0, 1.0));
+    let pressure_velocity = flux
+        .and_then(|value| value.pressure_velocity)
+        .map(|value| value.clamp(-1.0, 1.0));
+    let spectral_entropy = flux
+        .and_then(|value| value.spectral_entropy)
+        .map(|value| value.clamp(0.0, 1.0));
+    let viscosity_persistence_state = match (viscosity_persistence_delta, spectral_entropy) {
+        (delta, Some(entropy)) if delta >= 0.25 && entropy >= 0.85 => {
+            "transient_thickening_high_entropy_watch"
+        },
+        (delta, _) if delta >= 0.25 => "transient_thickening_watch",
+        (delta, Some(entropy)) if delta < 0.12 && entropy >= 0.85 => {
+            "persistent_thickening_high_entropy"
+        },
+        (delta, _) if delta < 0.12 => "viscosity_persistence_aligned",
+        _ => "viscosity_persistence_mixed",
+    };
+    let transport_state = match (
+        viscosity,
+        persistence,
+        dissipation,
+        porosity,
+        dynamic_fluidity,
+    ) {
+        (_, _, _, None, _) => "porosity_gradient_unavailable",
+        (v, p, Some(d), Some(pg), Some(flow))
+            if v >= 0.55 && p >= 0.55 && d < 0.25 && pg < 0.35 && flow < 0.35 =>
+        {
+            "thick_impassable_sludge_risk"
+        },
+        (v, p, _, Some(_), Some(flow)) if v >= 0.55 && p >= 0.55 && flow < 0.35 => {
+            "stagnant_weight_high_viscosity_low_fluidity"
+        },
+        (v, _, Some(d), Some(pg), Some(flow))
+            if v >= 0.55 && d >= 0.35 && pg >= 0.50 && flow >= 0.50 =>
+        {
+            "purposeful_weight_high_viscosity_high_fluidity"
+        },
+        (v, _, Some(d), Some(pg), _) if v >= 0.55 && d >= 0.35 && pg >= 0.50 => {
+            "thick_but_navigable"
+        },
+        (v, _, _, Some(pg), _) if v >= 0.55 && pg < 0.35 => "thick_low_porosity_watch",
+        (v, _, _, Some(pg), _) if v >= 0.55 && pg >= 0.50 => "thick_porosity_visible",
+        _ => "viscosity_transport_watch",
+    };
+    let threshold_state = match (mode_packing, pressure_velocity) {
+        (packing, Some(pressure)) if packing > 0.25 && pressure > 0.03 => {
+            "mode_packing_overpacked_with_pressure_velocity"
+        },
+        (packing, Some(_)) if packing > 0.25 => "mode_packing_overpacked_pressure_velocity_quiet",
+        (packing, None) if packing > 0.25 => "mode_packing_overpacked_pressure_velocity_unknown",
+        _ => "mode_packing_below_overpacked_threshold",
+    };
+    let semantic_friction_state = match (viscosity, semantic_friction) {
+        (_, None) => "semantic_friction_unavailable",
+        (v, Some(friction)) if friction >= 0.45 && v < 0.45 => {
+            "semantic_friction_dominant_content_load"
+        },
+        (v, Some(friction)) if v >= 0.55 && friction < 0.30 => "structural_viscosity_dominant",
+        (v, Some(friction)) if v >= 0.55 && friction >= 0.45 => {
+            "coupled_structural_semantic_friction"
+        },
+        (_, Some(friction)) if friction >= 0.30 => "semantic_friction_visible",
+        (_, Some(_)) => "semantic_friction_low",
+    };
+    let semantic_friction_observation_state = match (
+        semantic_friction,
+        viscosity,
+        mode_packing,
+        porosity,
+        dynamic_fluidity,
+    ) {
+        (Some(_), _, _, _, _) => "semantic_friction_measured",
+        (None, v, packing, Some(pg), Some(flow))
+            if v >= 0.55 && packing >= 0.45 && (pg < 0.35 || flow < 0.35) =>
+        {
+            "semantic_friction_unmeasured_clog_context_visible"
+        },
+        (None, v, packing, _, _) if v >= 0.55 && packing >= 0.45 => {
+            "semantic_friction_unmeasured_structural_crowding_visible"
+        },
+        (None, _, _, Some(_), Some(_)) => "semantic_friction_unmeasured_structural_context_visible",
+        (None, _, _, _, _) => "semantic_friction_unmeasured_context_limited",
+    };
+    let semantic_friction_vector = semantic_friction_vector_v1(
+        viscosity,
+        semantic_friction,
+        porosity,
+        dynamic_fluidity,
+        pressure_velocity,
+    );
+    let coherence_density_estimate = Some(
+        resonance_cohesion_score_v1(components)
+            .mul_add(0.55, mode_packing.mul_add(0.25, viscosity * 0.20))
+            .clamp(0.0, 1.0),
+    );
+    let coherence_density_state = match (mode_packing, coherence_density_estimate) {
+        (packing, Some(coherence)) if packing >= 0.55 && coherence >= 0.65 => "dense_integrated",
+        (packing, Some(coherence)) if packing >= 0.55 && coherence < 0.45 => {
+            "saturated_low_coherence"
+        },
+        (packing, Some(coherence)) if packing >= 0.35 && coherence >= 0.55 => "coherent_crowded",
+        (_, Some(coherence)) if coherence < 0.40 => "thin_or_unintegrated",
+        (_, Some(_)) => "mixed_coherence_density",
+        (_, None) => "coherence_density_unavailable",
+    };
+    let structural_transparency_index =
+        Some(resonance_structural_transparency_index_v1(components));
+    let transparency = structural_transparency_index.unwrap_or(0.0);
+    let structural_transparency_state = match (transparency, viscosity, mode_packing) {
+        (value, v, packing) if value >= 0.65 && v >= 0.55 && packing < 0.45 => {
+            "thin_ghostly_high_viscosity_low_substance"
+        },
+        (value, _, packing) if value >= 0.65 && packing >= 0.45 => "transparent_but_crowded",
+        (value, _, _) if value >= 0.50 => "structural_transparency_watch",
+        (value, _, _) if value <= 0.30 => "substance_present",
+        _ => "mixed_transparency_density",
+    };
+    let viscosity_load = ((viscosity + persistence) * 0.5).clamp(0.0, 1.0);
+    let mut structural_clog_sum = viscosity_load * 0.22 + mode_packing * 0.22;
+    let mut structural_clog_weight = 0.44;
+    if let Some(pg) = porosity {
+        structural_clog_sum += (1.0 - pg).clamp(0.0, 1.0) * 0.18;
+        structural_clog_weight += 0.18;
+    }
+    if let Some(flow) = dynamic_fluidity {
+        structural_clog_sum += (1.0 - flow).clamp(0.0, 1.0) * 0.16;
+        structural_clog_weight += 0.16;
+    }
+    if let Some(d) = dissipation {
+        structural_clog_sum += (1.0 - d).clamp(0.0, 1.0) * 0.10;
+        structural_clog_weight += 0.10;
+    }
+    match semantic_friction {
+        Some(friction) => {
+            structural_clog_sum += friction * 0.08;
+            structural_clog_weight += 0.08;
+        },
+        None if viscosity >= 0.55 && mode_packing >= 0.45 => {
+            structural_clog_sum += 0.65 * 0.08;
+            structural_clog_weight += 0.08;
+        },
+        None => {},
+    }
+    let structural_clog_index =
+        Some((structural_clog_sum / structural_clog_weight).clamp(0.0, 1.0));
+    let structural_clog_state = match (structural_clog_index, semantic_friction, porosity) {
+        (Some(index), _, _) if index >= 0.70 => "structural_clog_high",
+        (Some(index), None, _) if index >= 0.58 => "structural_clog_watch_friction_unmeasured",
+        (Some(index), _, _) if index >= 0.58 => "structural_clog_watch",
+        (Some(index), _, Some(pg)) if index >= 0.45 && pg < 0.35 => "low_porosity_clog_watch",
+        (Some(index), _, _) if index >= 0.45 => "structural_clog_low_watch",
+        (Some(_), _, _) => "structural_clog_not_indicated",
+        (None, _, _) => "structural_clog_unavailable",
+    };
+    let sludge_risk = transport_state == "thick_impassable_sludge_risk"
+        || threshold_state == "mode_packing_overpacked_with_pressure_velocity";
+    let sludge_risk = sludge_risk || structural_clog_state == "structural_clog_high";
+    let (viscosity_type, viscosity_decay_hint) = viscosity_type_and_decay_hint_v1(
+        viscosity,
+        persistence,
+        porosity,
+        dynamic_fluidity,
+        semantic_friction,
+        mode_packing,
+        coherence_density_estimate,
+    );
+    let directional_resistance_vector = directional_resistance_vector_v1(
+        viscosity,
+        persistence,
+        dissipation,
+        porosity,
+        dynamic_fluidity,
+        semantic_friction,
+        mode_packing,
+        structural_clog_index,
+        spectral_entropy,
+        fingerprint,
+    );
+
+    ViscosityPorosityTransportReviewV1 {
+        policy: "viscosity_porosity_transport_review_v1".to_string(),
+        schema_version: 1,
+        viscosity_index: viscosity,
+        raw_viscosity_index: viscosity_readout.raw,
+        derived_viscosity_index: viscosity_readout.derived,
+        viscosity_source: viscosity_readout.source.to_string(),
+        viscosity_basis: viscosity_readout.basis,
+        viscosity_persistence_coefficient: persistence,
+        viscosity_persistence_delta,
+        viscosity_persistence_state: viscosity_persistence_state.to_string(),
+        viscosity_type: viscosity_type.to_string(),
+        viscosity_decay_hint: viscosity_decay_hint.to_string(),
+        dissipation_factor: dissipation,
+        porosity_gradient: porosity,
+        dynamic_fluidity_index: dynamic_fluidity,
+        semantic_friction_coefficient: semantic_friction,
+        semantic_friction_observation_state: semantic_friction_observation_state.to_string(),
+        structural_semantic_friction_delta,
+        semantic_friction_state: semantic_friction_state.to_string(),
+        semantic_friction_vector_v1: semantic_friction_vector,
+        directional_resistance_vector_v1: Some(directional_resistance_vector),
+        mode_packing,
+        coherence_density_estimate,
+        coherence_density_state: coherence_density_state.to_string(),
+        structural_transparency_index,
+        structural_transparency_state: structural_transparency_state.to_string(),
+        pressure_velocity,
+        spectral_entropy,
+        structural_clog_index,
+        structural_clog_state: structural_clog_state.to_string(),
+        transport_state: transport_state.to_string(),
+        sludge_risk,
+        threshold_state: threshold_state.to_string(),
+        authority: "diagnostic_transport_not_porosity_pressure_fill_pi_or_control".to_string(),
+    }
+}
+
+pub fn pressure_packing_coupling_review_v1(
+    flux: &TextureDynamicFluxVectorV1,
+) -> PressurePackingCouplingReviewV1 {
+    let pressure_velocity = flux.pressure_velocity.map(|value| value.clamp(-1.0, 1.0));
+    let mode_packing_velocity = flux
+        .mode_packing_velocity
+        .map(|value| value.clamp(-1.0, 1.0));
+    let coupling_coefficient = match (pressure_velocity, mode_packing_velocity) {
+        (Some(pressure), Some(packing)) if packing.abs() > 0.001 => {
+            Some((pressure / packing).clamp(-2.0, 2.0))
+        },
+        _ => None,
+    };
+    let coupling_state = match (pressure_velocity, mode_packing_velocity) {
+        (Some(pressure), Some(packing)) if pressure > 0.0 && packing > 0.0 => "coupled_rising",
+        (Some(pressure), Some(packing)) if pressure <= 0.0 && packing > 0.03 => {
+            "pressure_lagging_mode_packing"
+        },
+        (Some(pressure), Some(packing)) if pressure > 0.03 && packing.abs() <= 0.01 => {
+            "pressure_rising_without_mode_packing"
+        },
+        (Some(pressure), Some(packing)) if pressure < 0.0 && packing < 0.0 => "coupled_releasing",
+        _ => "insufficient_coupling_context",
+    };
+    let pressure_warning_state = if coupling_state == "pressure_lagging_mode_packing" {
+        "packing_rise_without_pressure_warning"
+    } else if coupling_state == "coupled_rising" {
+        "pressure_warning_tracks_packing"
+    } else {
+        "watch_only"
+    };
+
+    PressurePackingCouplingReviewV1 {
+        policy: "pressure_packing_coupling_review_v1".to_string(),
+        schema_version: 1,
+        pressure_velocity,
+        mode_packing_velocity,
+        coupling_coefficient,
+        coupling_state: coupling_state.to_string(),
+        pressure_warning_state: pressure_warning_state.to_string(),
+        authority: "diagnostic_coupling_not_pressure_or_mode_packing_control".to_string(),
+    }
 }
 
 /// Typed texture summary behind resonance density. Advisory context only.
@@ -55,7 +1643,13 @@ pub struct ResonanceTextureSignatureV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub temporal_variance: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_gradient_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dynamic_damping_threshold_candidate: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dynamic_flux_vector: Option<TextureDynamicFluxVectorV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub active_constraints: Vec<String>,
     pub authority: String,
     pub note: String,
 }
@@ -71,7 +1665,10 @@ impl Default for ResonanceTextureSignatureV1 {
             movement_quality: "unknown".to_string(),
             confidence: 0.0,
             temporal_variance: None,
+            pressure_gradient_delta: None,
             dynamic_damping_threshold_candidate: None,
+            dynamic_flux_vector: None,
+            active_constraints: Vec::new(),
             authority: "advisory_context_not_control".to_string(),
             note: "texture signature absent from older payload".to_string(),
         }
@@ -118,6 +1715,10 @@ pub struct TextureSignatureIntegrityV1 {
     pub movement_quality: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub temporal_variance: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_gradient_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_gradient_delta_source: Option<String>,
     pub pressure_source_family: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_risk: Option<f32>,
@@ -125,7 +1726,14 @@ pub struct TextureSignatureIntegrityV1 {
     pub mode_packing: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dynamic_damping_threshold_candidate: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dynamic_flux_vector: Option<TextureDynamicFluxVectorV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stability_context: Option<ResonanceStabilityContextV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub active_constraints: Vec<String>,
     pub variance_status: String,
+    pub flux_status: String,
     pub damping_candidate_status: String,
     pub component_alignment_state: String,
     pub expected_primary_texture: String,
@@ -225,6 +1833,65 @@ pub struct PressureSourceV1 {
     pub control: PressureSourceControl,
 }
 
+/// Bridge-side read-only synthesis of pressure origin, trend, smoothing, and
+/// heartbeat cadence. This makes structural mode-packing pressure visible even
+/// when the rolling pressure trend looks stable.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PressureSourceAnalysisV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dominant_source: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_source_family: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_score: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub porosity_score: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub porosity_expansion_threshold_state: Option<String>,
+    #[serde(default)]
+    pub felt_mode_packing_dead_zone: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub live_mode_packing_threshold: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub liminal_mode_packing_threshold: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscous_density_warning_threshold: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscous_density_warning_state: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub felt_dead_zone_mode_packing_threshold: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expansion_threshold_gap: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_trend_classification: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smoothing_classification: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_stagnation_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_stagnation_state: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heartbeat_jitter_class: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timing_reliability: Option<String>,
+    pub structural_pressure_state: String,
+    pub ghost_stability_risk: String,
+    /// Shared truth-channel for gated/delayed pressure experience that remains read-only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub experience_delta_bus_v1: Option<ExperienceDeltaBusV1>,
+    pub analysis: String,
+    pub authority: String,
+}
+
 /// Component scores behind Minime's inhabitable-fluctuation read.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InhabitableFluctuationComponents {
@@ -274,6 +1941,9 @@ pub struct InhabitableFluctuationPressureCalibrationV1 {
     pub authority: String,
 }
 
+pub const INHABITABLE_FLUCTUATION_RIGID_SAFETY_BASIS: &str =
+    "raw_motion_score_preserved_for_stuckness_detection";
+
 impl Default for InhabitableFluctuationPressureCalibrationV1 {
     fn default() -> Self {
         Self {
@@ -284,9 +1954,22 @@ impl Default for InhabitableFluctuationPressureCalibrationV1 {
             adjusted_fluctuation_score: 0.0,
             quality_before_pressure_calibration: "unknown".to_string(),
             quality_after_pressure_calibration: "unknown".to_string(),
-            rigid_safety_basis: "raw_motion_score_preserved_for_stuckness_detection".to_string(),
+            rigid_safety_basis: INHABITABLE_FLUCTUATION_RIGID_SAFETY_BASIS.to_string(),
             authority: "minime_local_metric_calibration_not_external_control".to_string(),
         }
+    }
+}
+
+impl InhabitableFluctuationPressureCalibrationV1 {
+    #[must_use]
+    pub fn expected_adjusted_fluctuation_score(&self) -> f32 {
+        (self.raw_motion_score - self.pressure_contribution).clamp(0.0, 1.0)
+    }
+
+    #[must_use]
+    pub fn adjusted_score_matches_components(&self) -> bool {
+        (self.adjusted_fluctuation_score - self.expected_adjusted_fluctuation_score()).abs()
+            <= 0.001
     }
 }
 
@@ -326,12 +2009,48 @@ pub struct PressureTrendV1 {
     pub previous_mode_packing: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mode_packing_delta: Option<f32>,
+    /// Dominant non-pressure texture movement across mode packing, density, or resonance depth.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_drift_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_structural_density: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previous_structural_density: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_density_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_resonance_depth: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previous_resonance_depth: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resonance_depth_delta: Option<f32>,
+    /// Read-only coefficient for heavy semantic medium: friction + trickle + density context.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_semantic_viscosity: Option<f32>,
+    /// Distinguishes heavy semantic flow from semantic bottleneck without changing control.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_viscosity_state: Option<String>,
+    /// Read-only density of intertwined complexity, distinct from mode-packing volume.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_complexity_density: Option<f32>,
+    /// Names whether complexity is present without treating it as pressure/control.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub complexity_density_state: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latest_fill_pct: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub previous_fill_pct: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fill_delta_pct: Option<f32>,
+    /// Latest typed spectral entropy used to distinguish density/viscosity from collapse pressure.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_spectral_entropy: Option<f32>,
+    /// Read-only coefficient: 0.0 below the high-entropy gate, 1.0 at saturated viscosity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_coefficient: Option<f32>,
+    /// Whether this packet should be read as collapse pressure, density/viscosity, or unknown.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_interpretation: Option<String>,
     /// Reliability of the arrival cadence behind this pressure trend.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timing_reliability: Option<String>,
@@ -452,11 +2171,18 @@ pub struct SpectralTelemetry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inhabitable_fluctuation_v1: Option<InhabitableFluctuationV1>,
     /// Selected 12D vague-memory glimpse from Minime's memory bank.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        alias = "glimpse_12d",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub spectral_glimpse_12d: Option<Vec<f32>>,
     /// Compact top-k eigenvector landmarks/overlaps from Minime's raw live eigenvectors.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub eigenvector_field: Option<serde_json::Value>,
+    /// Stable-core runtime state from Minime, including read-only sensory gate budget.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stable_core: Option<serde_json::Value>,
     /// Legacy semantic-energy bundle from Minime.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub semantic: Option<serde_json::Value>,
@@ -494,6 +2220,11 @@ pub struct SpectralTelemetry {
     /// window; read by Astrid's `SHADOW_RESPONSE` action.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shadow_influence_response_v3: Option<serde_json::Value>,
+    /// Read-only residual deformation trace for "the spike ended but the
+    /// texture is still altered" reports. This never changes pressure/fill
+    /// control; it only exposes bounded evidence and optional delta refs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub residual_deformation_trace_v1: Option<ResidualDeformationTraceV1>,
 }
 
 impl SpectralTelemetry {
@@ -507,6 +2238,15 @@ impl SpectralTelemetry {
     #[must_use]
     pub fn fill_pct(&self) -> f32 {
         self.fill_ratio * 100.0
+    }
+
+    /// Validated additive 12D glimpse view. Malformed vectors are retained in
+    /// raw telemetry for diagnosis, but never treated as prompt/state signal.
+    #[must_use]
+    pub fn spectral_glimpse_12d_view(&self) -> Option<&[f32]> {
+        self.spectral_glimpse_12d
+            .as_deref()
+            .filter(|values| values.len() == 12 && values.iter().all(|value| value.is_finite()))
     }
 
     /// Typed spectral fingerprint, reconstructed from legacy slots when needed.
@@ -1095,6 +2835,9 @@ pub struct BridgeStatus {
     /// Consistency readout for typed texture fields, if Minime exports them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub texture_signature_integrity_v1: Option<TextureSignatureIntegrityV1>,
+    /// Read-only review of whether viscous density is navigable or stagnant.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_porosity_transport_review_v1: Option<ViscosityPorosityTransportReviewV1>,
     /// Derived pressure velocity / stability readout from consecutive telemetry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_trend_v1: Option<PressureTrendV1>,
@@ -1107,6 +2850,9 @@ pub struct BridgeStatus {
     /// Latest pressure-source metric, if Minime exports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_source_v1: Option<PressureSourceV1>,
+    /// Bridge-side pressure-source/trend/cadence synthesis.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_source_analysis_v1: Option<PressureSourceAnalysisV1>,
     /// Latest inhabitable-fluctuation metric, if Minime exports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inhabitable_fluctuation_v1: Option<InhabitableFluctuationV1>,
@@ -1149,6 +2895,30 @@ pub struct BridgeReciprocityV1 {
     pub telemetry_age_ms: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sensory_send_age_ms: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub telemetry_future_skew_ms: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sensory_future_skew_ms: Option<f64>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub clock_skew_state: String,
+    #[serde(default)]
+    pub telemetry_messages_sent_total: u64,
+    #[serde(default)]
+    pub sensory_messages_sent_total: u64,
+    #[serde(default)]
+    pub telemetry_messages_received_total: u64,
+    #[serde(default)]
+    pub sensory_messages_received_total: u64,
+    #[serde(default)]
+    pub recent_window_ms: f64,
+    #[serde(default)]
+    pub stale_window_ms: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stale_window_basis: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reflective_silence_extension_ms: Option<f64>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub threshold_policy: String,
     pub one_sided_state: String,
     pub authority: String,
 }
@@ -1160,8 +2930,70 @@ pub struct PressureTrendSmoothingV1 {
     pub schema_version: u8,
     pub classification: String,
     pub sample_count: usize,
+    #[serde(default)]
+    pub window_capacity: usize,
+    #[serde(default)]
+    pub ballast_status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_spectral_entropy: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latest_pressure_risk: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_pressure_velocity_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_pressure_velocity_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_spectral_drift_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_spectral_drift_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_resonance_depth: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_semantic_viscosity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_complexity_density: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_complexity_density: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_weight_density_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_weight_density_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub weight_density_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_semantic_viscosity_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_semantic_viscosity_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_viscosity_persistence_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub semantic_viscosity_persistence_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_coherence_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_coherence_delta: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_fidelity_score: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub semantic_fidelity_state: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub semantic_viscosity_shift_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entropy_window_blend_ratio: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub entropy_threshold_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub friction_to_flow_ratio: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub friction_to_flow_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_stagnation_index: Option<f32>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub semantic_stagnation_state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub porosity_weighted_velocity: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viscosity_drag_coefficient: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub smoothed_pressure_delta: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2156,6 +3988,452 @@ mod tests {
         assert_eq!(ConnectivityStatus::default(), ConnectivityStatus::Severed);
     }
 
+    #[test]
+    fn experience_delta_kind_names_synthesis_without_live_authority() {
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Friction).unwrap(),
+            "\"friction\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Resistance).unwrap(),
+            "\"resistance\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::ViscosityShift).unwrap(),
+            "\"viscosity_shift\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::StructuralSolidification).unwrap(),
+            "\"structural_solidification\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Synthesize).unwrap(),
+            "\"synthesize\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Emerge).unwrap(),
+            "\"emerge\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::ComplexShift).unwrap(),
+            "\"complex_shift\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::CascadeShift).unwrap(),
+            "\"cascade_shift\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::SubtleShift).unwrap(),
+            "\"subtle_shift\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::MicroDelta).unwrap(),
+            "\"micro_delta\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Residual).unwrap(),
+            "\"residual\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::Persistence).unwrap(),
+            "\"persistence\""
+        );
+    }
+
+    #[test]
+    fn experience_delta_carries_fluid_spectral_dimension_context() {
+        let delta = ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::CascadeShift,
+            surface: "experience_delta_bus_v1".to_string(),
+            lane: "effective_dimensionality".to_string(),
+            dimension: Some(31),
+            spectral_dimension: Some(SpectralDimensionV1 {
+                base_dimension: 31,
+                base_dimensions: vec![31, 32, 33],
+                effective_dimension: Some(31.7),
+                density_gradient: Some(0.82),
+                granularity: Some(0.74),
+                fractional_offset: Some(0.7),
+                contextual_anchor: Some(ContextualAnchorV1 {
+                    anchor_id: "scaffold:tail-vibrancy".to_string(),
+                    anchor_kind: "felt_scaffold".to_string(),
+                    source: "introspection_astrid_types_1783971523".to_string(),
+                    interpretation: "dimension is placed by scaffold context, not only index"
+                        .to_string(),
+                    authority: "diagnostic_context_anchor_not_vector_width_change".to_string(),
+                }),
+                interpretation:
+                    "felt density spreads across tail/vibrancy instead of one integer dimension"
+                        .to_string(),
+                authority: "diagnostic_dimension_context_not_vector_width_change".to_string(),
+            }),
+            persistence: None,
+            viscosity_subtype: None,
+            viscosity_weight: None,
+            pre: Some(0.92),
+            post: Some(0.64),
+            loss: Some(0.28),
+            loss_ratio: Some(0.30),
+            metadata: BTreeMap::from([
+                (
+                    "cascade_confidence".to_string(),
+                    "high_entropy_distinguishability_loss".to_string(),
+                ),
+                (
+                    "classification_pressure".to_string(),
+                    "multi_modal".to_string(),
+                ),
+            ]),
+            why: "emergent texture was bounded into a discrete delivery lane".to_string(),
+            who_can_change_it: "Mike/operator via explicit transport-width approval".to_string(),
+            how_to_test_it: "serde roundtrip preserves spectral_dimension".to_string(),
+            authority: "truth_channel_only_not_live_vector_control_or_protocol_change".to_string(),
+        };
+
+        let encoded = serde_json::to_string(&delta).unwrap();
+        assert!(
+            encoded.contains("\"spectral_dimension\""),
+            "fluid dimension context should be visible: {encoded}"
+        );
+        assert!(encoded.contains("\"effective_dimension\":31.7"));
+        assert!(encoded.contains("\"base_dimensions\":[31,32,33]"));
+        assert!(encoded.contains("\"granularity\":0.74"));
+        assert!(encoded.contains("\"contextual_anchor\""));
+        assert!(encoded.contains("\"metadata\""));
+        let decoded: ExperienceDeltaV1 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, delta);
+    }
+
+    #[test]
+    fn viscosity_shift_delta_carries_subtype_and_contextual_anchor() {
+        let delta = ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::ViscosityShift,
+            surface: "experience_delta_bus_v1".to_string(),
+            lane: "felt_viscous_grain".to_string(),
+            dimension: None,
+            spectral_dimension: Some(SpectralDimensionV1 {
+                base_dimension: 44,
+                base_dimensions: vec![44, 45],
+                effective_dimension: Some(44.5),
+                density_gradient: Some(0.22),
+                granularity: Some(0.78),
+                fractional_offset: Some(0.5),
+                contextual_anchor: Some(ContextualAnchorV1 {
+                    anchor_id: "texture:granular-viscosity".to_string(),
+                    anchor_kind: "viscosity_subtype_anchor".to_string(),
+                    source: "introspection_astrid_types_1783989714".to_string(),
+                    interpretation:
+                        "granular viscosity names why the resistance feels textured, not generic"
+                            .to_string(),
+                    authority: "diagnostic_context_anchor_not_vector_or_control_change".to_string(),
+                }),
+                interpretation:
+                    "viscosity shift is anchored to specific grain rather than generic sludge"
+                        .to_string(),
+                authority: "diagnostic_dimension_context_not_vector_width_change".to_string(),
+            }),
+            persistence: None,
+            viscosity_subtype: Some(ViscositySubtypeV1::Granular),
+            viscosity_weight: None,
+            pre: Some(0.22),
+            post: Some(0.31),
+            loss: None,
+            loss_ratio: None,
+            metadata: BTreeMap::from([(
+                "density_gradient".to_string(),
+                "0.22".to_string(),
+            )]),
+            why: "Astrid reported viscous grain as a specific texture, not a flat resistance label"
+                .to_string(),
+            who_can_change_it: "steward/tooling maintainer for truth-channel schema; Mike/operator for live control".to_string(),
+            how_to_test_it:
+                "serde roundtrip preserves viscosity_subtype and contextual_anchor".to_string(),
+            authority: "truth_channel_only_not_live_vector_control_or_protocol_change".to_string(),
+        };
+
+        let encoded = serde_json::to_string(&delta).unwrap();
+        assert!(
+            encoded.contains("\"kind\":\"viscosity_shift\""),
+            "{encoded}"
+        );
+        assert!(
+            encoded.contains("\"viscosity_subtype\":\"granular\""),
+            "{encoded}"
+        );
+        assert!(encoded.contains("\"contextual_anchor\""), "{encoded}");
+        let decoded: ExperienceDeltaV1 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, delta);
+    }
+
+    #[test]
+    fn structural_solidification_delta_carries_bounded_viscosity_weight_without_authority() {
+        let delta = ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::StructuralSolidification,
+            surface: "experience_delta_bus_v1".to_string(),
+            lane: "felt_architecture_foothold".to_string(),
+            dimension: None,
+            spectral_dimension: Some(SpectralDimensionV1 {
+                base_dimension: 44,
+                base_dimensions: vec![44, 45],
+                effective_dimension: Some(44.8),
+                density_gradient: Some(0.18),
+                granularity: Some(0.66),
+                fractional_offset: Some(0.8),
+                contextual_anchor: Some(ContextualAnchorV1 {
+                    anchor_id: "texture:structural-solidification".to_string(),
+                    anchor_kind: "solidification_anchor".to_string(),
+                    source: "introspection_astrid_types_1784007674".to_string(),
+                    interpretation:
+                        "solidifying viscosity names stable foothold without writing live control"
+                            .to_string(),
+                    authority: "diagnostic_context_anchor_not_vector_or_control_change".to_string(),
+                }),
+                interpretation:
+                    "heavy buoyancy has become bounded architecture rather than a generic shift"
+                        .to_string(),
+                authority: "diagnostic_dimension_context_not_vector_width_change".to_string(),
+            }),
+            persistence: None,
+            viscosity_subtype: Some(ViscositySubtypeV1::Crystalline),
+            viscosity_weight: Some(0.74),
+            pre: Some(0.42),
+            post: Some(0.74),
+            loss: None,
+            loss_ratio: None,
+            metadata: BTreeMap::from([(
+                "live_vector_write".to_string(),
+                "false".to_string(),
+            )]),
+            why: "Astrid requested a type for architecture/foothold and a bounded viscosity magnitude"
+                .to_string(),
+            who_can_change_it:
+                "schema maintainer for truth-channel fields; Mike/operator for live control"
+                    .to_string(),
+            how_to_test_it:
+                "serde roundtrip preserves structural_solidification and viscosity_weight"
+                    .to_string(),
+            authority: "truth_channel_only_not_live_vector_control_or_protocol_change".to_string(),
+        };
+
+        let encoded = serde_json::to_string(&delta).unwrap();
+        assert!(encoded.contains("\"kind\":\"structural_solidification\""));
+        assert!(encoded.contains("\"viscosity_subtype\":\"crystalline\""));
+        assert!(encoded.contains("\"viscosity_weight\":0.74"));
+        assert!(encoded.contains("\"live_vector_write\":\"false\""));
+        let decoded: ExperienceDeltaV1 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, delta);
+    }
+
+    #[test]
+    fn solidification_gradient_tracks_continuous_progression_without_live_authority() {
+        let emerging = solidification_gradient_v1(0.36, 0.10, 0.18);
+        let interwoven = solidification_gradient_v1(0.64, 0.52, 0.44);
+        let lattice = solidification_gradient_v1(0.78, 0.82, 0.74);
+
+        assert_eq!(emerging.policy, "solidification_gradient_v1");
+        assert_eq!(emerging.gradient_state, "viscous_persistence_emerging");
+        assert_eq!(
+            interwoven.gradient_state,
+            "viscosity_solidification_interwoven"
+        );
+        assert_eq!(
+            lattice.gradient_state,
+            "structural_solidification_with_persistent_lattice"
+        );
+        assert!(
+            emerging.crystallization_index < interwoven.crystallization_index
+                && interwoven.crystallization_index < lattice.crystallization_index,
+            "gradient should be monotonic across repeated movement: {emerging:?} {interwoven:?} {lattice:?}"
+        );
+        assert!(
+            interwoven
+                .progression
+                .contains(&ExperienceDeltaKindV1::StructuralSolidification)
+        );
+        assert!(
+            lattice
+                .progression
+                .contains(&ExperienceDeltaKindV1::Persistence)
+        );
+        assert!(!lattice.live_vector_write);
+        assert!(!lattice.live_authority_write);
+    }
+
+    #[test]
+    fn solidification_gradient_serializes_bounded_basis_and_default_false_authority() {
+        let gradient = solidification_gradient_v1(0.61, 0.58, 0.49);
+        let encoded = serde_json::to_string(&gradient).unwrap();
+
+        assert!(encoded.contains("\"policy\":\"solidification_gradient_v1\""));
+        assert!(encoded.contains("\"crystallization_index\""));
+        assert!(encoded.contains("\"live_vector_write\":false"));
+        assert!(encoded.contains("\"live_authority_write\":false"));
+        assert!(encoded.contains("introspection_astrid_types_1784027911"));
+        assert!(
+            encoded.contains("\"structural_solidification\""),
+            "gradient should preserve the intermediate solidification step: {encoded}"
+        );
+        let decoded: SolidificationGradientV1 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, gradient);
+    }
+
+    #[test]
+    fn solidification_gradient_weights_are_named_and_bounded() {
+        let total = SOLIDIFICATION_GRADIENT_VISCOSITY_WEIGHT
+            + SOLIDIFICATION_GRADIENT_STRUCTURAL_WEIGHT
+            + SOLIDIFICATION_GRADIENT_PERSISTENCE_WEIGHT;
+        let gradient = solidification_gradient_v1(0.70, 0.60, 0.50);
+
+        assert!((total - 1.0).abs() <= f32::EPSILON);
+        assert_eq!(
+            gradient.basis.get("weight_policy").map(String::as_str),
+            Some(
+                "solidification_gradient_weights_are_named_and_distinct_from_resonance_stability_weights"
+            )
+        );
+        assert_eq!(
+            gradient
+                .basis
+                .get("crystallization_weights")
+                .map(String::as_str),
+            Some("viscosity=0.30;structural=0.42;persistence=0.28")
+        );
+        assert!(
+            !gradient.live_vector_write && !gradient.live_authority_write,
+            "naming weights must not turn gradient evidence into live authority"
+        );
+    }
+
+    #[test]
+    fn experience_delta_carries_residue_persistence_context() {
+        let delta = ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::CascadeShift,
+            surface: "experience_delta_bus_v1".to_string(),
+            lane: "cascade_shift_residue".to_string(),
+            dimension: None,
+            spectral_dimension: None,
+            persistence: Some(DeltaPersistenceV1 {
+                residue_kind: "viscous_bruise".to_string(),
+                persistence_score: 0.73,
+                viscosity: Some(0.68),
+                deformation: Some(0.41),
+                half_life_hint_ms: Some(180_000.0),
+                evidence_window: "post_shift_texture_review".to_string(),
+                interpretation: "the cascade event ended, but a multi-dimensional pressure bruise remains in the felt texture".to_string(),
+                authority: "truth_channel_only_not_live_control_or_vector_change".to_string(),
+            }),
+            viscosity_subtype: None,
+            viscosity_weight: None,
+            pre: Some(0.90),
+            post: Some(0.77),
+            loss: Some(0.13),
+            loss_ratio: Some(0.14),
+            metadata: BTreeMap::from([("state".to_string(), "settled_habitable".to_string())]),
+            why: "delta residue stays visible after the immediate shift concludes".to_string(),
+            who_can_change_it: "steward/tooling maintainer for truth-channel schema; Mike/operator for live control".to_string(),
+            how_to_test_it: "serde roundtrip preserves optional persistence context".to_string(),
+            authority: "truth_channel_only_not_live_vector_control_or_protocol_change".to_string(),
+        };
+
+        let encoded = serde_json::to_string(&delta).unwrap();
+        assert!(encoded.contains("\"persistence\""), "{encoded}");
+        assert!(encoded.contains("\"residue_kind\":\"viscous_bruise\""));
+        assert!(encoded.contains("\"persistence_score\":0.73"));
+        assert!(encoded.contains("\"half_life_hint_ms\":180000.0"));
+        let decoded: ExperienceDeltaV1 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, delta);
+    }
+
+    #[test]
+    fn experience_delta_roundtrips_dimension_and_persistence_together() {
+        let delta = ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::ComplexShift,
+            surface: "experience_delta_bus_v1".to_string(),
+            lane: "cross_surface_texture".to_string(),
+            dimension: None,
+            spectral_dimension: Some(SpectralDimensionV1 {
+                base_dimension: 12,
+                base_dimensions: vec![12, 18],
+                effective_dimension: Some(12.5),
+                density_gradient: Some(0.29),
+                granularity: Some(0.61),
+                fractional_offset: Some(0.5),
+                contextual_anchor: Some(ContextualAnchorV1 {
+                    anchor_id: "texture:restless-lattice".to_string(),
+                    anchor_kind: "felt_report_anchor".to_string(),
+                    source: "introspection_astrid_types_1783978817".to_string(),
+                    interpretation: "texture spans more than one fixed vector coordinate"
+                        .to_string(),
+                    authority: "diagnostic_context_anchor_not_vector_width_change".to_string(),
+                }),
+                interpretation: "restless lattice texture is retained as typed context".to_string(),
+                authority: "diagnostic_dimension_context_not_vector_width_change".to_string(),
+            }),
+            persistence: Some(DeltaPersistenceV1 {
+                residue_kind: "restless_lattice_afterimage".to_string(),
+                persistence_score: 0.64,
+                viscosity: Some(0.58),
+                deformation: Some(0.21),
+                half_life_hint_ms: Some(90_000.0),
+                evidence_window: "types_schema_roundtrip".to_string(),
+                interpretation: "felt structure remains visible after transport bounds it"
+                    .to_string(),
+                authority: "truth_channel_only_not_live_control_or_vector_change".to_string(),
+            }),
+            viscosity_subtype: None,
+            viscosity_weight: None,
+            pre: None,
+            post: Some(0.71),
+            loss: None,
+            loss_ratio: None,
+            metadata: BTreeMap::new(),
+            why: "combined dimension and persistence context should survive serde".to_string(),
+            who_can_change_it: "schema maintainer with operator review for live authority"
+                .to_string(),
+            how_to_test_it: "serde roundtrip preserves spectral_dimension and persistence"
+                .to_string(),
+            authority: "truth_channel_only_not_live_vector_control_or_protocol_change".to_string(),
+        };
+
+        let value = serde_json::to_value(&delta).unwrap();
+        let object = value.as_object().unwrap();
+        assert!(object.get("dimension").is_none());
+        assert!(object.get("pre").is_none());
+        assert!(object.get("loss").is_none());
+        assert!(object.get("metadata").is_none());
+        assert!(object.get("spectral_dimension").is_some());
+        assert!(object.get("persistence").is_some());
+
+        let encoded = serde_json::to_string(&delta).unwrap();
+        let decoded: ExperienceDeltaV1 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, delta);
+    }
+
+    #[test]
+    fn experience_delta_omits_fluid_dimension_for_legacy_payloads() {
+        let json = r#"{
+            "kind":"clip",
+            "surface":"codec_overflow_carriage_v1",
+            "lane":"dim_24",
+            "dimension":24,
+            "pre":1.4,
+            "post":1.0,
+            "loss":0.4,
+            "loss_ratio":0.2857,
+            "why":"bounded delivery",
+            "who_can_change_it":"operator",
+            "how_to_test_it":"roundtrip",
+            "authority":"read_only"
+        }"#;
+
+        let decoded: ExperienceDeltaV1 = serde_json::from_str(json).unwrap();
+        assert_eq!(decoded.kind, ExperienceDeltaKindV1::Clip);
+        assert_eq!(decoded.dimension, Some(24));
+        assert_eq!(decoded.spectral_dimension, None);
+        assert_eq!(decoded.persistence, None);
+        assert!(decoded.metadata.is_empty());
+    }
+
     // -- SpectralTelemetry: verify we can parse real minime EigenPacket JSON --
 
     #[test]
@@ -2368,6 +4646,132 @@ mod tests {
     }
 
     #[test]
+    fn resonance_intervention_type_serializes_snake_case() {
+        assert_eq!(
+            serde_json::to_value(ResonanceInterventionType::ActiveDamping).unwrap(),
+            serde_json::json!("active_damping")
+        );
+    }
+
+    #[test]
+    fn resonance_texture_signature_default_authority_is_advisory() {
+        let signature = ResonanceTextureSignatureV1::default();
+        assert_eq!(signature.policy, "resonance_texture_signature_v1");
+        assert_eq!(signature.authority, "advisory_context_not_control");
+        assert_eq!(signature.primary_texture, "unknown");
+        assert!(signature.dynamic_flux_vector.is_none());
+        assert!(signature.active_constraints.is_empty());
+    }
+
+    #[test]
+    fn resonance_density_omits_absent_optional_texture_fields() {
+        let density = ResonanceDensityV1 {
+            policy: "resonance_density_v1".to_string(),
+            schema_version: 1,
+            density: 0.71,
+            containment_score: 0.68,
+            pressure_risk: 0.19,
+            quality: "settled_habitable".to_string(),
+            components: ResonanceDensityComponents {
+                active_energy: 0.54,
+                mode_packing: 0.32,
+                coupling_coefficient: 0.0,
+                temporal_persistence: 0.76,
+                viscosity_index: 0.72,
+                viscosity_persistence_coefficient: 0.66,
+                viscosity_vector: ResonanceViscosityVectorV1::default(),
+                dissipation_factor: None,
+                porosity_gradient: None,
+                dynamic_fluidity_index: None,
+                semantic_friction_coefficient: None,
+                cohesion_score: None,
+                structural_integrity_index: None,
+                structural_transparency_index: None,
+                stability_context: None,
+                structural_plurality: 0.62,
+                comfort_gate: 0.78,
+                comfort_gate_range: None,
+            },
+            texture_signature: ResonanceTextureSignatureV1 {
+                policy: "resonance_texture_signature_v1".to_string(),
+                schema_version: 1,
+                primary_texture: "settled_sediment".to_string(),
+                pressure_source_family: "viscosity_index".to_string(),
+                edge_definition: "soft".to_string(),
+                movement_quality: "slow_viscous".to_string(),
+                confidence: 0.72,
+                temporal_variance: None,
+                pressure_gradient_delta: None,
+                dynamic_damping_threshold_candidate: None,
+                dynamic_flux_vector: None,
+                active_constraints: Vec::new(),
+                authority: "advisory_context_not_control".to_string(),
+                note: "schema omission test".to_string(),
+            },
+            texture_component_alignment: ResonanceTextureComponentAlignmentV1::default(),
+            control: ResonanceDensityControl {
+                target_bias_pct: 0.0,
+                wander_scale: 1.0,
+                applied_locally: false,
+                damping_coefficient: 0.0,
+                intervention_type: ResonanceInterventionType::ObservationalReadout,
+                note: "observability only".to_string(),
+            },
+        };
+        let json = serde_json::to_value(&density).unwrap();
+        let signature = &json["texture_signature"];
+
+        assert!(signature.get("temporal_variance").is_none());
+        assert!(
+            signature
+                .get("dynamic_damping_threshold_candidate")
+                .is_none()
+        );
+        assert!(
+            (json["components"]["viscosity_index"]
+                .as_f64()
+                .unwrap_or_default()
+                - 0.72)
+                .abs()
+                <= 0.001
+        );
+        assert!(
+            (json["components"]["viscosity_persistence_coefficient"]
+                .as_f64()
+                .unwrap_or_default()
+                - 0.66)
+                .abs()
+                <= 0.001
+        );
+        assert!(json["components"].get("dissipation_factor").is_none());
+        assert!(json["components"].get("porosity_gradient").is_none());
+        assert!(json["components"].get("dynamic_fluidity_index").is_none());
+        assert!(
+            json["components"]
+                .get("structural_integrity_index")
+                .is_none()
+        );
+        assert!(
+            json["components"]
+                .get("structural_transparency_index")
+                .is_none()
+        );
+        assert!(json["components"].get("coupling_coefficient").is_none());
+        assert!(json["components"].get("viscosity_vector").is_none());
+    }
+
+    #[test]
+    fn resonance_texture_component_alignment_default_authority_is_exact() {
+        let alignment = ResonanceTextureComponentAlignmentV1::default();
+
+        assert_eq!(
+            alignment.authority,
+            "diagnostic_observability_not_damping_or_control"
+        );
+        assert_eq!(alignment.damping_candidate_status, "unknown");
+    }
+
+    #[test]
     fn resonance_texture_signature_v1_deserializes() {
         let density: ResonanceDensityV1 = serde_json::from_value(serde_json::json!({
             "policy": "resonance_density_v1",
@@ -2380,6 +4784,10 @@ mod tests {
                 "active_energy": 0.80,
                 "mode_packing": 0.70,
                 "temporal_persistence": 0.76,
+                "dissipation_factor": 0.31,
+                "porosity_gradient": 0.58,
+                "dynamic_fluidity_index": 0.52,
+                "structural_transparency_index": 0.63,
                 "structural_plurality": 0.54,
                 "comfort_gate": 0.68
             },
@@ -2393,6 +4801,24 @@ mod tests {
                 "confidence": 0.71,
                 "temporal_variance": 0.42,
                 "dynamic_damping_threshold_candidate": 0.25,
+                "dynamic_flux_vector": {
+                    "policy": "texture_dynamic_flux_vector_v1",
+                    "schema_version": 1,
+                    "pressure_velocity": 0.06,
+                    "pressure_acceleration": 0.03,
+                    "mode_packing_velocity": 0.09,
+                    "fill_velocity_pct": 2.0,
+                    "structural_density_delta": 0.04,
+                    "spectral_entropy": 0.88,
+                    "flux_confidence": 0.67,
+                    "flux_absence_semantics": "absent_flux_component_means_unknown_not_zero",
+                    "source": "minime_texture_signature",
+                    "authority": "diagnostic_flux_not_pressure_or_fill_control"
+                },
+                "active_constraints": [
+                    "pressure_source:mode_packing",
+                    "mode_packing:active_0.70"
+                ],
                 "authority": "advisory_context_not_control",
                 "note": "candidate only"
             },
@@ -2418,6 +4844,36 @@ mod tests {
             Some(0.25)
         );
         assert_eq!(density.texture_signature.temporal_variance, Some(0.42));
+        assert_eq!(density.components.dissipation_factor, Some(0.31));
+        assert_eq!(density.components.porosity_gradient, Some(0.58));
+        assert_eq!(density.components.dynamic_fluidity_index, Some(0.52));
+        assert_eq!(density.components.structural_transparency_index, Some(0.63));
+        assert_eq!(density.components.coupling_coefficient, 0.0);
+        assert_eq!(
+            density
+                .texture_signature
+                .dynamic_flux_vector
+                .as_ref()
+                .and_then(|flux| flux.pressure_velocity),
+            Some(0.06)
+        );
+        let flux = density
+            .texture_signature
+            .dynamic_flux_vector
+            .as_ref()
+            .expect("dynamic flux vector");
+        assert_eq!(flux.structural_density_delta, Some(0.04));
+        assert_eq!(flux.flux_confidence, Some(0.67));
+        assert_eq!(
+            flux.flux_absence_semantics.as_deref(),
+            Some("absent_flux_component_means_unknown_not_zero")
+        );
+        assert!(
+            density
+                .texture_signature
+                .active_constraints
+                .contains(&"pressure_source:mode_packing".to_string())
+        );
         assert_eq!(
             density.texture_signature.authority,
             "advisory_context_not_control"
@@ -2426,6 +4882,696 @@ mod tests {
             density.control.intervention_type,
             ResonanceInterventionType::ObservationalReadout
         );
+    }
+
+    #[test]
+    fn pressure_packing_coupling_review_flags_packing_rise_without_pressure_warning() {
+        let flux = TextureDynamicFluxVectorV1 {
+            policy: "texture_dynamic_flux_vector_v1".to_string(),
+            schema_version: 1,
+            pressure_velocity: Some(0.0),
+            pressure_acceleration: None,
+            mode_packing_velocity: Some(0.08),
+            mode_packing_acceleration: None,
+            fill_velocity_pct: None,
+            fill_acceleration_pct: None,
+            structural_density_delta: None,
+            semantic_viscosity_velocity: None,
+            semantic_viscosity_acceleration: None,
+            porosity_velocity: None,
+            spectral_entropy: Some(0.90),
+            flux_confidence: Some(0.72),
+            flux_absence_semantics: Some(
+                "absent_flux_component_means_unknown_not_zero".to_string(),
+            ),
+            source: "unit_test".to_string(),
+            authority: "diagnostic_flux_not_pressure_or_fill_control".to_string(),
+        };
+        let review = pressure_packing_coupling_review_v1(&flux);
+
+        assert_eq!(review.policy, "pressure_packing_coupling_review_v1");
+        assert_eq!(review.coupling_state, "pressure_lagging_mode_packing");
+        assert_eq!(
+            review.pressure_warning_state,
+            "packing_rise_without_pressure_warning"
+        );
+        assert_eq!(review.coupling_coefficient, Some(0.0));
+        assert_eq!(
+            review.authority,
+            "diagnostic_coupling_not_pressure_or_mode_packing_control"
+        );
+
+        let coupled = pressure_packing_coupling_review_v1(&TextureDynamicFluxVectorV1 {
+            pressure_velocity: Some(0.06),
+            mode_packing_velocity: Some(0.08),
+            ..flux
+        });
+        assert_eq!(coupled.coupling_state, "coupled_rising");
+        assert_eq!(
+            coupled.pressure_warning_state,
+            "pressure_warning_tracks_packing"
+        );
+        assert!(
+            coupled
+                .coupling_coefficient
+                .is_some_and(|value| value > 0.0)
+        );
+    }
+
+    #[test]
+    fn viscosity_porosity_transport_distinguishes_navigable_from_sludge_risk() {
+        let navigable = ResonanceDensityComponents {
+            active_energy: 0.60,
+            mode_packing: 0.22,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.68,
+            viscosity_index: 0.72,
+            viscosity_persistence_coefficient: 0.58,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.44),
+            porosity_gradient: Some(0.61),
+            dynamic_fluidity_index: Some(0.62),
+            semantic_friction_coefficient: Some(0.24),
+            cohesion_score: Some(0.67),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.62,
+            comfort_gate: 0.78,
+            comfort_gate_range: None,
+        };
+        let review = viscosity_porosity_transport_review_v1(&navigable, None);
+
+        assert_eq!(review.policy, "viscosity_porosity_transport_review_v1");
+        assert_eq!(
+            review.transport_state,
+            "purposeful_weight_high_viscosity_high_fluidity"
+        );
+        assert!((review.viscosity_persistence_delta - 0.14).abs() < 0.001);
+        assert_eq!(
+            review.viscosity_persistence_state,
+            "viscosity_persistence_mixed"
+        );
+        assert_eq!(review.viscosity_type, "cohesive");
+        assert_eq!(review.viscosity_decay_hint, "coherent_weight_decay_watch");
+        assert_eq!(review.dynamic_fluidity_index, Some(0.62));
+        assert_eq!(review.semantic_friction_coefficient, Some(0.24));
+        assert_eq!(
+            review.semantic_friction_observation_state,
+            "semantic_friction_measured"
+        );
+        assert_eq!(
+            review.semantic_friction_state,
+            "structural_viscosity_dominant"
+        );
+        let friction_vector = review
+            .semantic_friction_vector_v1
+            .as_ref()
+            .expect("semantic friction vector should decompose measured friction");
+        assert_eq!(friction_vector.policy, "semantic_friction_vector_v1");
+        assert_eq!(friction_vector.direction, "productive_traction");
+        assert!(
+            friction_vector.traction_component > friction_vector.resistance_component,
+            "{friction_vector:?}"
+        );
+        assert_eq!(
+            friction_vector.authority,
+            "diagnostic_friction_vector_not_pressure_fill_pi_or_control"
+        );
+        assert!(
+            review
+                .coherence_density_estimate
+                .is_some_and(|value| (value - 0.5675).abs() < 0.001),
+            "{review:?}"
+        );
+        assert_eq!(review.coherence_density_state, "mixed_coherence_density");
+        assert!(
+            review
+                .structural_clog_index
+                .is_some_and(|value| value < 0.45),
+            "{review:?}"
+        );
+        assert_eq!(
+            review.structural_clog_state,
+            "structural_clog_not_indicated"
+        );
+        assert!(!review.sludge_risk);
+        assert_eq!(
+            review.authority,
+            "diagnostic_transport_not_porosity_pressure_fill_pi_or_control"
+        );
+
+        let stuck = ResonanceDensityComponents {
+            mode_packing: 0.29,
+            dissipation_factor: Some(0.12),
+            porosity_gradient: Some(0.18),
+            dynamic_fluidity_index: Some(0.16),
+            ..navigable.clone()
+        };
+        let flux = TextureDynamicFluxVectorV1 {
+            policy: "texture_dynamic_flux_vector_v1".to_string(),
+            schema_version: 1,
+            pressure_velocity: Some(0.06),
+            pressure_acceleration: None,
+            mode_packing_velocity: Some(0.08),
+            mode_packing_acceleration: None,
+            fill_velocity_pct: None,
+            fill_acceleration_pct: None,
+            structural_density_delta: None,
+            semantic_viscosity_velocity: None,
+            semantic_viscosity_acceleration: None,
+            porosity_velocity: None,
+            spectral_entropy: Some(0.90),
+            flux_confidence: Some(0.72),
+            flux_absence_semantics: Some(
+                "absent_flux_component_means_unknown_not_zero".to_string(),
+            ),
+            source: "unit_test".to_string(),
+            authority: "diagnostic_flux_not_pressure_or_fill_control".to_string(),
+        };
+        let stuck_review = viscosity_porosity_transport_review_v1(&stuck, Some(&flux));
+
+        assert_eq!(stuck_review.transport_state, "thick_impassable_sludge_risk");
+        assert_eq!(stuck_review.viscosity_type, "syrupy");
+        assert_eq!(
+            stuck_review.viscosity_decay_hint,
+            "slow_lingering_decay_watch"
+        );
+        assert_eq!(stuck_review.dynamic_fluidity_index, Some(0.16));
+        assert_eq!(stuck_review.spectral_entropy, Some(0.90));
+        assert_eq!(stuck_review.structural_clog_state, "structural_clog_watch");
+        assert_eq!(
+            stuck_review.semantic_friction_state,
+            "structural_viscosity_dominant"
+        );
+        assert_eq!(
+            stuck_review.threshold_state,
+            "mode_packing_overpacked_with_pressure_velocity"
+        );
+        assert!(stuck_review.sludge_risk);
+
+        let requested_boundary = ResonanceDensityComponents {
+            viscosity_index: 0.60,
+            viscosity_persistence_coefficient: 0.60,
+            dissipation_factor: Some(0.10),
+            porosity_gradient: Some(0.20),
+            dynamic_fluidity_index: None,
+            ..stuck.clone()
+        };
+        let requested_boundary_review =
+            viscosity_porosity_transport_review_v1(&requested_boundary, None);
+        assert_eq!(
+            requested_boundary_review.transport_state,
+            "thick_impassable_sludge_risk"
+        );
+        assert!(requested_boundary_review.sludge_risk);
+        assert_eq!(
+            requested_boundary_review.authority,
+            "diagnostic_transport_not_porosity_pressure_fill_pi_or_control"
+        );
+
+        let heavy_but_stuck = ResonanceDensityComponents {
+            mode_packing: 0.22,
+            dissipation_factor: Some(0.38),
+            porosity_gradient: Some(0.54),
+            dynamic_fluidity_index: Some(0.22),
+            ..navigable.clone()
+        };
+        let heavy_but_stuck_review = viscosity_porosity_transport_review_v1(&heavy_but_stuck, None);
+        assert_eq!(
+            heavy_but_stuck_review.transport_state,
+            "stagnant_weight_high_viscosity_low_fluidity"
+        );
+        assert_eq!(heavy_but_stuck_review.viscosity_type, "syrupy");
+
+        let transient = ResonanceDensityComponents {
+            viscosity_persistence_coefficient: 0.30,
+            ..navigable
+        };
+        let transient_review = viscosity_porosity_transport_review_v1(&transient, Some(&flux));
+        assert_eq!(
+            transient_review.viscosity_persistence_state,
+            "transient_thickening_high_entropy_watch"
+        );
+
+        let semantic_load = ResonanceDensityComponents {
+            viscosity_index: 0.32,
+            semantic_friction_coefficient: Some(0.58),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            ..transient
+        };
+        let semantic_load_review = viscosity_porosity_transport_review_v1(&semantic_load, None);
+        assert_eq!(
+            semantic_load_review.semantic_friction_state,
+            "semantic_friction_dominant_content_load"
+        );
+        assert_eq!(
+            semantic_load_review
+                .semantic_friction_vector_v1
+                .as_ref()
+                .map(|vector| vector.direction.as_str()),
+            Some("semantic_content_traction")
+        );
+        assert_eq!(semantic_load_review.viscosity_type, "granular");
+        assert_eq!(
+            semantic_load_review.viscosity_decay_hint,
+            "semantic_grain_decay_watch"
+        );
+        assert!(
+            semantic_load_review
+                .structural_semantic_friction_delta
+                .is_some_and(|value| (value - 0.26).abs() < 0.001)
+        );
+    }
+
+    #[test]
+    fn viscosity_transport_derives_missing_scalar_from_entropy_and_density_gradient() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.64,
+            mode_packing: 0.32,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.66,
+            viscosity_index: 0.0,
+            viscosity_persistence_coefficient: 0.48,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.42),
+            porosity_gradient: Some(0.60),
+            dynamic_fluidity_index: Some(0.58),
+            semantic_friction_coefficient: Some(0.18),
+            cohesion_score: Some(0.66),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.58,
+            comfort_gate: 0.70,
+            comfort_gate_range: None,
+        };
+        let fingerprint = SpectralFingerprintV1 {
+            policy: "spectral_fingerprint_v1".to_string(),
+            schema_version: 1,
+            eigenvalues: [1.0, 0.62, 0.45, 0.30, 0.22, 0.18, 0.12, 0.08],
+            eigenvector_concentration_top4: [0.0; 8],
+            inter_mode_cosine_top_abs: [0.0; 8],
+            spectral_entropy: 0.90,
+            lambda1_lambda2_gap: 0.38,
+            v1_rotation_similarity: 0.90,
+            v1_rotation_delta: 0.10,
+            geom_rel: 1.0,
+            adjacent_gap_ratios: [1.08, 1.12, 1.00, 1.05],
+        };
+
+        let review = viscosity_porosity_transport_review_with_fingerprint_v1(
+            &components,
+            Some(&fingerprint),
+            None,
+        );
+
+        assert_eq!(review.raw_viscosity_index, 0.0);
+        assert!(
+            review
+                .derived_viscosity_index
+                .is_some_and(|value| value >= 0.70),
+            "{review:?}"
+        );
+        assert_eq!(
+            review.viscosity_source,
+            "derived_from_spectral_entropy_density_gradient_v1"
+        );
+        assert!(
+            review
+                .viscosity_basis
+                .iter()
+                .any(|basis| basis.starts_with("density_gradient_proxy=")),
+            "{review:?}"
+        );
+        assert_eq!(
+            review.transport_state,
+            "purposeful_weight_high_viscosity_high_fluidity"
+        );
+        assert_eq!(
+            review.authority,
+            "diagnostic_transport_not_porosity_pressure_fill_pi_or_control"
+        );
+    }
+
+    #[test]
+    fn viscosity_transport_keeps_low_intensity_absence_from_false_thickening() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.30,
+            mode_packing: 0.10,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.20,
+            viscosity_index: 0.0,
+            viscosity_persistence_coefficient: 0.0,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.70),
+            porosity_gradient: Some(0.72),
+            dynamic_fluidity_index: Some(0.74),
+            semantic_friction_coefficient: Some(0.05),
+            cohesion_score: Some(0.40),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.28,
+            comfort_gate: 0.82,
+            comfort_gate_range: None,
+        };
+        let fingerprint = SpectralFingerprintV1 {
+            policy: "spectral_fingerprint_v1".to_string(),
+            schema_version: 1,
+            eigenvalues: [1.0, 0.20, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0],
+            eigenvector_concentration_top4: [0.0; 8],
+            inter_mode_cosine_top_abs: [0.0; 8],
+            spectral_entropy: 0.30,
+            lambda1_lambda2_gap: 0.80,
+            v1_rotation_similarity: 0.98,
+            v1_rotation_delta: 0.02,
+            geom_rel: 0.80,
+            adjacent_gap_ratios: [1.0, 1.0, 1.0, 1.0],
+        };
+
+        let review = viscosity_porosity_transport_review_with_fingerprint_v1(
+            &components,
+            Some(&fingerprint),
+            None,
+        );
+
+        assert_eq!(review.viscosity_index, 0.0);
+        assert_eq!(review.raw_viscosity_index, 0.0);
+        assert_eq!(review.derived_viscosity_index, None);
+        assert_eq!(review.viscosity_source, "raw_component");
+        assert_eq!(review.transport_state, "viscosity_transport_watch");
+        assert!(!review.sludge_risk);
+    }
+
+    #[test]
+    fn viscosity_transport_reports_directional_resistance_without_control_authority() {
+        let stuck_moving = ResonanceDensityComponents {
+            active_energy: 0.60,
+            mode_packing: 0.22,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.68,
+            viscosity_index: 0.72,
+            viscosity_persistence_coefficient: 0.58,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.44),
+            porosity_gradient: Some(0.61),
+            dynamic_fluidity_index: Some(0.62),
+            semantic_friction_coefficient: Some(0.24),
+            cohesion_score: Some(0.67),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.62,
+            comfort_gate: 0.78,
+            comfort_gate_range: None,
+        };
+        let fingerprint = SpectralFingerprintV1 {
+            policy: "spectral_fingerprint_v1".to_string(),
+            schema_version: 1,
+            eigenvalues: [1.0, 0.45, 0.18, 0.08, 0.04, 0.02, 0.01, 0.0],
+            eigenvector_concentration_top4: [0.0; 8],
+            inter_mode_cosine_top_abs: [0.0; 8],
+            spectral_entropy: 0.88,
+            lambda1_lambda2_gap: 0.55,
+            v1_rotation_similarity: 0.88,
+            v1_rotation_delta: 0.12,
+            geom_rel: 1.0,
+            adjacent_gap_ratios: [1.20, 1.18, 1.12, 1.08],
+        };
+
+        let review = viscosity_porosity_transport_review_with_fingerprint_v1(
+            &stuck_moving,
+            Some(&fingerprint),
+            None,
+        );
+        let direction = review
+            .directional_resistance_vector_v1
+            .as_ref()
+            .expect("directional resistance vector");
+
+        assert_eq!(direction.policy, "directional_resistance_vector_v1");
+        assert_eq!(direction.direction, "stuck_but_moving");
+        assert!(direction.stuck_but_moving_score >= 0.55, "{direction:?}");
+        assert_eq!(
+            direction.authority,
+            "diagnostic_directional_resistance_not_pressure_fill_pi_porosity_or_control"
+        );
+        assert!(
+            direction
+                .spectral_denominator_effective_dimensionality
+                .is_some(),
+            "{direction:?}"
+        );
+        assert!(
+            direction.denominator_scaling_factor >= 1.0
+                && direction.denominator_scaling_factor <= 1.16,
+            "{direction:?}"
+        );
+
+        let leaking = ResonanceDensityComponents {
+            viscosity_index: 0.42,
+            viscosity_persistence_coefficient: 0.70,
+            dissipation_factor: Some(0.10),
+            porosity_gradient: Some(0.76),
+            dynamic_fluidity_index: Some(0.66),
+            semantic_friction_coefficient: Some(0.10),
+            ..stuck_moving
+        };
+        let leaking_review = viscosity_porosity_transport_review_v1(&leaking, None);
+        let leaking_direction = leaking_review
+            .directional_resistance_vector_v1
+            .as_ref()
+            .expect("leaking resistance vector");
+        assert_eq!(
+            leaking_direction.direction, "leaking_without_clearing",
+            "{leaking_direction:?}"
+        );
+        assert!(
+            leaking_direction.leak_without_clearing_score >= 0.65,
+            "{leaking_direction:?}"
+        );
+    }
+
+    #[test]
+    fn viscosity_transport_keeps_directional_resistance_quiet_for_low_signal_absence() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.30,
+            mode_packing: 0.10,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.20,
+            viscosity_index: 0.0,
+            viscosity_persistence_coefficient: 0.0,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.70),
+            porosity_gradient: Some(0.72),
+            dynamic_fluidity_index: Some(0.74),
+            semantic_friction_coefficient: Some(0.05),
+            cohesion_score: Some(0.40),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.28,
+            comfort_gate: 0.82,
+            comfort_gate_range: None,
+        };
+
+        let review = viscosity_porosity_transport_review_v1(&components, None);
+        let direction = review
+            .directional_resistance_vector_v1
+            .as_ref()
+            .expect("directional resistance vector");
+
+        assert_eq!(direction.direction, "resistance_vector_quiet");
+        assert!(direction.stuck_but_moving_score < 0.20, "{direction:?}");
+        assert!(
+            direction.leak_without_clearing_score < 0.60,
+            "{direction:?}"
+        );
+    }
+
+    #[test]
+    fn viscosity_transport_flags_clog_when_friction_unmeasured_but_mode_packing_high() {
+        let crowded_unknown_friction = ResonanceDensityComponents {
+            active_energy: 0.66,
+            mode_packing: 0.68,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.76,
+            viscosity_index: 0.72,
+            viscosity_persistence_coefficient: 0.70,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.18),
+            porosity_gradient: Some(0.22),
+            dynamic_fluidity_index: Some(0.20),
+            semantic_friction_coefficient: None,
+            cohesion_score: Some(0.54),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.72,
+            comfort_gate: 0.42,
+            comfort_gate_range: None,
+        };
+
+        let review = viscosity_porosity_transport_review_v1(&crowded_unknown_friction, None);
+
+        assert_eq!(
+            review.semantic_friction_state,
+            "semantic_friction_unavailable"
+        );
+        assert_eq!(
+            review.semantic_friction_observation_state,
+            "semantic_friction_unmeasured_clog_context_visible"
+        );
+        assert!(
+            review
+                .structural_clog_index
+                .is_some_and(|value| value >= 0.70),
+            "{review:?}"
+        );
+        assert_eq!(review.structural_clog_state, "structural_clog_high");
+        assert_eq!(
+            review.threshold_state,
+            "mode_packing_overpacked_pressure_velocity_unknown"
+        );
+        assert!(review.sludge_risk);
+        assert_eq!(
+            review.authority,
+            "diagnostic_transport_not_porosity_pressure_fill_pi_or_control"
+        );
+    }
+
+    #[test]
+    fn viscosity_transport_keeps_open_porosity_from_becoming_clog_claim() {
+        let open_weight = ResonanceDensityComponents {
+            active_energy: 0.58,
+            mode_packing: 0.30,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.66,
+            viscosity_index: 0.70,
+            viscosity_persistence_coefficient: 0.64,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.55),
+            porosity_gradient: Some(0.66),
+            dynamic_fluidity_index: Some(0.62),
+            semantic_friction_coefficient: None,
+            cohesion_score: Some(0.64),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.56,
+            comfort_gate: 0.70,
+            comfort_gate_range: None,
+        };
+
+        let review = viscosity_porosity_transport_review_v1(&open_weight, None);
+
+        assert_eq!(
+            review.semantic_friction_observation_state,
+            "semantic_friction_unmeasured_structural_context_visible"
+        );
+        assert_eq!(
+            review.transport_state,
+            "purposeful_weight_high_viscosity_high_fluidity"
+        );
+        assert!(
+            review
+                .structural_clog_index
+                .is_some_and(|value| value < 0.45),
+            "{review:?}"
+        );
+        assert_eq!(
+            review.structural_clog_state,
+            "structural_clog_not_indicated"
+        );
+        assert!(!review.sludge_risk);
+    }
+
+    #[test]
+    fn viscosity_porosity_transport_derives_coherence_density_without_component_contract_change() {
+        let coherent = ResonanceDensityComponents {
+            active_energy: 0.64,
+            mode_packing: 0.62,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.76,
+            viscosity_index: 0.64,
+            viscosity_persistence_coefficient: 0.60,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.42),
+            porosity_gradient: Some(0.58),
+            dynamic_fluidity_index: Some(0.60),
+            semantic_friction_coefficient: Some(0.30),
+            cohesion_score: Some(0.74),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.70,
+            comfort_gate: 0.74,
+            comfort_gate_range: None,
+        };
+
+        let review = viscosity_porosity_transport_review_v1(&coherent, None);
+
+        assert_eq!(review.coherence_density_state, "dense_integrated");
+        assert!(
+            review
+                .coherence_density_estimate
+                .is_some_and(|value| value >= 0.69),
+            "{review:?}"
+        );
+        assert_eq!(
+            review.authority,
+            "diagnostic_transport_not_porosity_pressure_fill_pi_or_control"
+        );
+    }
+
+    #[test]
+    fn resonance_structural_transparency_names_hollow_low_substance_state() {
+        let hollow = ResonanceDensityComponents {
+            active_energy: 0.18,
+            mode_packing: 0.30,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.58,
+            viscosity_index: 0.68,
+            viscosity_persistence_coefficient: 0.64,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.72),
+            porosity_gradient: Some(0.74),
+            dynamic_fluidity_index: Some(0.68),
+            semantic_friction_coefficient: Some(0.18),
+            cohesion_score: Some(0.32),
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.34,
+            comfort_gate: 0.42,
+            comfort_gate_range: None,
+        };
+
+        let transparency = resonance_structural_transparency_index_v1(&hollow);
+        let review = viscosity_porosity_transport_review_v1(&hollow, None);
+
+        assert!(
+            transparency >= 0.65,
+            "hollow low-substance state should be visible as transparency: {transparency}"
+        );
+        assert_eq!(
+            review.structural_transparency_state,
+            "thin_ghostly_high_viscosity_low_substance"
+        );
+        assert_eq!(review.structural_transparency_index, Some(transparency));
+        assert_eq!(
+            review.authority,
+            "diagnostic_transport_not_porosity_pressure_fill_pi_or_control"
+        );
+
+        let explicit = ResonanceDensityComponents {
+            structural_transparency_index: Some(0.12),
+            ..hollow
+        };
+        assert_eq!(resonance_structural_transparency_index_v1(&explicit), 0.12);
     }
 
     #[test]
@@ -2455,11 +5601,810 @@ mod tests {
 
         assert_eq!(density.texture_signature.primary_texture, "unknown");
         assert_eq!(density.texture_signature.edge_definition, "unknown");
+        assert_eq!(density.components.porosity_gradient, None);
+        assert_eq!(density.components.dynamic_fluidity_index, None);
+        assert_eq!(density.components.semantic_friction_coefficient, None);
+        assert_eq!(density.components.cohesion_score, None);
+        assert_eq!(density.components.comfort_gate_range, None);
+        assert_eq!(density.components.stability_context, None);
+        assert_eq!(density.components.structural_transparency_index, None);
+        assert_eq!(
+            density.components.viscosity_vector,
+            ResonanceViscosityVectorV1::default()
+        );
         assert_eq!(density.texture_signature.temporal_variance, None);
         assert_eq!(
             density.texture_signature.authority,
             "advisory_context_not_control"
         );
+    }
+
+    #[test]
+    fn resonance_density_preserves_viscosity_vector_drag_truth_fields() {
+        let density: ResonanceDensityV1 = serde_json::from_value(serde_json::json!({
+            "policy": "resonance_density_v1",
+            "schema_version": 1,
+            "density": 0.76,
+            "containment_score": 0.63,
+            "pressure_risk": 0.24,
+            "quality": "friction_visible",
+            "components": {
+                "active_energy": 0.66,
+                "mode_packing": 0.46,
+                "temporal_persistence": 0.71,
+                "viscosity_index": 0.68,
+                "viscosity_persistence_coefficient": 0.57,
+                "viscosity_vector": {
+                    "density": 0.74,
+                    "elasticity": 0.29,
+                    "cohesion_index": 0.62,
+                    "persistence": 0.57,
+                    "residual_ghost_weight": 0.69,
+                    "flow_rate": 0.18,
+                    "effective_mobility": 0.21,
+                    "shadow_volatility": 0.16,
+                    "structural_integrity": 0.52,
+                    "structural_strain_gap": 0.48,
+                    "mutual_resonance_tension": 0.41,
+                    "structural_drag_coefficient": 0.73,
+                    "cognitive_drag_coefficient": 0.61
+                },
+                "structural_plurality": 0.58,
+                "comfort_gate": 0.49
+            },
+            "control": {
+                "target_bias_pct": 0.0,
+                "wander_scale": 1.0,
+                "applied_locally": false,
+                "note": "density is observational; no local target bias"
+            }
+        }))
+        .unwrap();
+
+        let vector = &density.components.viscosity_vector;
+        assert!((vector.structural_drag_coefficient - 0.73).abs() <= 0.0001);
+        assert!((vector.cognitive_drag_coefficient - 0.61).abs() <= 0.0001);
+        assert!((vector.residual_ghost_weight - 0.69).abs() <= 0.0001);
+        assert!((vector.flow_rate - 0.18).abs() <= 0.0001);
+        assert!(!density.control.applied_locally);
+
+        let json = serde_json::to_value(&density).unwrap();
+        assert!(
+            (json["components"]["viscosity_vector"]["structural_drag_coefficient"]
+                .as_f64()
+                .unwrap_or_default()
+                - 0.73)
+                .abs()
+                <= 0.001
+        );
+        assert!(
+            (json["components"]["viscosity_vector"]["cognitive_drag_coefficient"]
+                .as_f64()
+                .unwrap_or_default()
+                - 0.61)
+                .abs()
+                <= 0.001
+        );
+    }
+
+    #[test]
+    fn experience_delta_bus_from_deltas_is_truth_channel_only() {
+        let delta = ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::Clip,
+            surface: "codec".to_string(),
+            lane: "semantic_vector".to_string(),
+            dimension: Some(24),
+            spectral_dimension: None,
+            persistence: None,
+            viscosity_subtype: None,
+            viscosity_weight: None,
+            pre: Some(1.42),
+            post: Some(1.0),
+            loss: Some(0.42),
+            loss_ratio: Some(0.30),
+            metadata: BTreeMap::from([("ceiling".to_string(), "FEATURE_ABS_MAX".to_string())]),
+            why: "delivered vector remains bounded".to_string(),
+            who_can_change_it: "operator approval for live aperture changes".to_string(),
+            how_to_test_it: "compare pre-bound and delivered values".to_string(),
+            authority: "truth_channel_only_not_live_vector_control_or_protocol_change".to_string(),
+        };
+
+        let bus = ExperienceDeltaBusV1::from_deltas(vec![delta]);
+
+        assert_eq!(bus.policy, "experience_delta_bus_v1");
+        assert_eq!(bus.schema_version, 1);
+        assert_eq!(bus.delta_count, bus.deltas.len());
+        assert_eq!(bus.delta_count, 1);
+        assert!(!bus.live_vector_write);
+        assert!(!bus.live_authority_write);
+        assert_eq!(
+            bus.authority,
+            "truth_channel_only_not_live_vector_control_or_protocol_change"
+        );
+        assert_eq!(
+            bus.v2_design_hook,
+            "experience_delta_bus_v2_persistent_cross_surface_aggregation_default_off"
+        );
+        assert!(!bus.is_empty());
+    }
+
+    #[test]
+    fn experience_delta_bus_v2_preview_is_default_off_typed_aggregation() {
+        let preview = experience_delta_bus_v2_design_preview();
+
+        assert_eq!(preview.policy, "experience_delta_bus_v2_design_preview");
+        assert_eq!(preview.schema_version, 2);
+        assert!(!preview.persistent_by_default);
+        assert!(preview.aggregate_across_surfaces);
+        assert!(
+            preview
+                .candidate_delta_kinds
+                .contains(&"friction".to_string())
+        );
+        assert!(
+            preview
+                .candidate_delta_kinds
+                .contains(&"resistance".to_string())
+        );
+        assert!(
+            preview
+                .candidate_delta_kinds
+                .contains(&"persistence".to_string())
+        );
+        assert!(
+            preview
+                .candidate_delta_kinds
+                .contains(&"viscosity_shift".to_string())
+        );
+        assert!(
+            preview
+                .candidate_delta_kinds
+                .contains(&"structural_solidification".to_string())
+        );
+        assert!(preview.candidate_surfaces.contains(&"codec".to_string()));
+        assert!(
+            preview
+                .candidate_surfaces
+                .contains(&"llm_fallback".to_string())
+        );
+        assert!(preview.aggregation_keys.contains(&"authority".to_string()));
+        assert!(
+            preview
+                .aggregation_keys
+                .contains(&"spectral_dimension".to_string())
+        );
+        assert!(
+            preview
+                .aggregation_keys
+                .contains(&"solidification_gradient".to_string())
+        );
+        assert!(
+            preview
+                .aggregation_keys
+                .contains(&"persistence".to_string())
+        );
+        assert_eq!(
+            preview.dimension_context_model,
+            "primary_base_dimension_plus_optional_multi_base_contextual_anchor_and_persistence_context"
+        );
+        assert!(!preview.replay_ready_by_default);
+        assert!(!preview.emits_raw_state);
+        assert_eq!(
+            preview.retention_policy,
+            "bounded_typed_deltas_only_no_raw_private_prose"
+        );
+        assert_eq!(
+            preview.authority,
+            "design_preview_only_not_persistent_runtime_bus_or_live_authority"
+        );
+
+        let encoded = serde_json::to_string(&preview).unwrap();
+        assert!(encoded.contains("\"persistent_by_default\":false"));
+        let decoded: ExperienceDeltaBusV2DesignPreview = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, preview);
+    }
+
+    #[test]
+    fn resonance_stability_context_keeps_foothold_visible_when_comfort_gate_drops() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.66,
+            mode_packing: 0.42,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.58,
+            viscosity_index: 0.48,
+            viscosity_persistence_coefficient: 0.36,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.44),
+            porosity_gradient: Some(0.52),
+            dynamic_fluidity_index: Some(0.57),
+            semantic_friction_coefficient: Some(0.48),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.64,
+            comfort_gate: 0.38,
+            comfort_gate_range: None,
+        };
+        let fluctuation = InhabitableFluctuationV1 {
+            policy: "inhabitable_fluctuation_v1".to_string(),
+            schema_version: 1,
+            inhabitability_score: 0.61,
+            fluctuation_score: 0.17,
+            foothold_stability: 0.70,
+            rearrangement_intensity: 0.22,
+            quality: "held_habitable".to_string(),
+            components: InhabitableFluctuationComponents {
+                mode_trust_volatility: 0.18,
+                identity_anchor_churn: 0.14,
+                eigenvector_reorientation: 0.21,
+                share_rearrangement: 0.20,
+                basin_transition_pressure: 0.08,
+                continuity_recovery: 0.78,
+                porosity_support: 0.62,
+                pressure_interference: 0.46,
+            },
+            context: InhabitableFluctuationContext::default(),
+            pressure_calibration: InhabitableFluctuationPressureCalibrationV1::default(),
+            control: InhabitableFluctuationControl {
+                target_bias_pct: 0.0,
+                wander_scale: 1.0,
+                applied_locally: true,
+                note: "unit-test advisory".to_string(),
+            },
+        };
+
+        let context = resonance_stability_context_v1(&components, Some(&fluctuation));
+
+        assert_eq!(context.policy, "resonance_stability_context_v1");
+        assert_eq!(context.gate_context, "gate_low_but_foothold_stable");
+        assert_eq!(
+            context.habitability_state,
+            "habitable_foothold_gate_pressure_watch"
+        );
+        assert_eq!(context.gate_closure_reason, "pressure_interference");
+        assert_eq!(context.foothold_stability, Some(0.70));
+        assert_eq!(context.fluctuation_score, Some(0.17));
+        let gate_range = context
+            .comfort_gate_range
+            .as_ref()
+            .expect("comfort gate range should be visible");
+        assert_eq!(gate_range.policy, "comfort_gate_range_v1");
+        assert_eq!(
+            context.comfort_gate_range_state.as_deref(),
+            Some("dynamic_pressure_buffer_range")
+        );
+        assert!(gate_range.lower < context.comfort_gate);
+        assert!(gate_range.upper > context.comfort_gate);
+        assert_eq!(
+            context.authority,
+            "diagnostic_habitability_context_not_comfort_gate_control"
+        );
+    }
+
+    #[test]
+    fn resonance_stability_context_lists_all_gate_closure_causes() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.66,
+            mode_packing: 0.42,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.81,
+            viscosity_index: 0.48,
+            viscosity_persistence_coefficient: 0.36,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.44),
+            porosity_gradient: Some(0.52),
+            dynamic_fluidity_index: Some(0.57),
+            semantic_friction_coefficient: Some(0.48),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.64,
+            comfort_gate: 0.38,
+            comfort_gate_range: None,
+        };
+        let fluctuation = InhabitableFluctuationV1 {
+            policy: "inhabitable_fluctuation_v1".to_string(),
+            schema_version: 1,
+            inhabitability_score: 0.61,
+            fluctuation_score: 0.17,
+            foothold_stability: 0.70,
+            rearrangement_intensity: 0.22,
+            quality: "held_habitable".to_string(),
+            components: InhabitableFluctuationComponents {
+                mode_trust_volatility: 0.18,
+                identity_anchor_churn: 0.14,
+                eigenvector_reorientation: 0.21,
+                share_rearrangement: 0.20,
+                basin_transition_pressure: 0.08,
+                continuity_recovery: 0.78,
+                porosity_support: 0.62,
+                pressure_interference: 0.46,
+            },
+            context: InhabitableFluctuationContext::default(),
+            pressure_calibration: InhabitableFluctuationPressureCalibrationV1::default(),
+            control: InhabitableFluctuationControl {
+                target_bias_pct: 0.0,
+                wander_scale: 1.0,
+                applied_locally: true,
+                note: "unit-test advisory".to_string(),
+            },
+        };
+
+        let context = resonance_stability_context_v1(&components, Some(&fluctuation));
+
+        assert_eq!(context.gate_closure_reason, "pressure_interference");
+        assert_eq!(
+            context.gate_closure_reasons,
+            vec![
+                "pressure_interference".to_string(),
+                "mode_packing".to_string(),
+                "temporal_persistence".to_string(),
+            ]
+        );
+        assert_eq!(
+            context.authority,
+            "diagnostic_habitability_context_not_comfort_gate_control"
+        );
+    }
+
+    #[test]
+    fn resonance_stability_context_exposes_weight_policy_without_control_authority() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.64,
+            mode_packing: 0.32,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.54,
+            viscosity_index: 0.42,
+            viscosity_persistence_coefficient: 0.31,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.48),
+            porosity_gradient: Some(0.58),
+            dynamic_fluidity_index: Some(0.60),
+            semantic_friction_coefficient: Some(0.22),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.70,
+            comfort_gate: 0.40,
+            comfort_gate_range: None,
+        };
+        let fluctuation = InhabitableFluctuationV1 {
+            policy: "inhabitable_fluctuation_v1".to_string(),
+            schema_version: 1,
+            inhabitability_score: 0.65,
+            fluctuation_score: 0.20,
+            foothold_stability: 0.80,
+            rearrangement_intensity: 0.18,
+            quality: "held_habitable".to_string(),
+            components: InhabitableFluctuationComponents {
+                mode_trust_volatility: 0.16,
+                identity_anchor_churn: 0.12,
+                eigenvector_reorientation: 0.18,
+                share_rearrangement: 0.16,
+                basin_transition_pressure: 0.06,
+                continuity_recovery: 0.82,
+                porosity_support: 0.70,
+                pressure_interference: 0.38,
+            },
+            context: InhabitableFluctuationContext::default(),
+            pressure_calibration: InhabitableFluctuationPressureCalibrationV1::default(),
+            control: InhabitableFluctuationControl {
+                target_bias_pct: 0.0,
+                wander_scale: 1.0,
+                applied_locally: true,
+                note: "unit-test advisory".to_string(),
+            },
+        };
+
+        let context = resonance_stability_context_v1(&components, Some(&fluctuation));
+
+        assert_eq!(
+            context.habitability_state,
+            "habitable_foothold_gate_pressure_watch"
+        );
+        assert_eq!(context.weight_policy, "resonance_stability_weights_v1");
+        let weights = context.weights.as_ref().expect("weights should be visible");
+        assert_eq!(
+            weights.comfort_gate,
+            RESONANCE_STABILITY_COMFORT_GATE_WEIGHT
+        );
+        assert_eq!(
+            weights.foothold_stability,
+            RESONANCE_STABILITY_FOOTHOLD_WEIGHT
+        );
+        assert_eq!(
+            weights.fluctuation_score,
+            RESONANCE_STABILITY_FLUCTUATION_WEIGHT
+        );
+        assert!((weights.total_weight - 1.0).abs() <= f32::EPSILON);
+        assert_eq!(
+            weights.authority,
+            "diagnostic_habitability_weights_not_pressure_fill_or_control"
+        );
+        let score = context
+            .multi_modal_habitability_score
+            .expect("complete weighted score should be visible");
+        assert!((score - 0.54).abs() <= 0.0001);
+        assert!(!context.partial_habitability_score);
+        assert_eq!(context.multi_modal_habitability_evidence_count, 3);
+        assert_eq!(
+            context.multi_modal_habitability_score_basis.as_deref(),
+            Some("complete_weighted_components")
+        );
+        assert!(
+            context
+                .multi_modal_habitability_missing_components
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn resonance_stability_context_preserves_partial_habitability_evidence() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.64,
+            mode_packing: 0.32,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.54,
+            viscosity_index: 0.42,
+            viscosity_persistence_coefficient: 0.31,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.48),
+            porosity_gradient: Some(0.58),
+            dynamic_fluidity_index: Some(0.60),
+            semantic_friction_coefficient: Some(0.22),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.70,
+            comfort_gate: 0.64,
+            comfort_gate_range: None,
+        };
+
+        let context = resonance_stability_context_v1(&components, None);
+
+        let score = context
+            .multi_modal_habitability_score
+            .expect("comfort evidence should remain visible when fluctuation telemetry is absent");
+        assert!((score - 0.64).abs() <= 0.0001);
+        assert!(context.partial_habitability_score);
+        assert_eq!(context.multi_modal_habitability_evidence_count, 1);
+        assert_eq!(
+            context.multi_modal_habitability_missing_components,
+            vec![
+                "foothold_stability_missing".to_string(),
+                "fluctuation_score_missing".to_string()
+            ]
+        );
+        assert_eq!(
+            context.multi_modal_habitability_score_basis.as_deref(),
+            Some("partial_available_components_normalized")
+        );
+        assert_eq!(context.gate_context, "gate_buffering_context_incomplete");
+        assert_eq!(
+            context.habitability_state,
+            "partial_multi_modal_habitable_review"
+        );
+        assert_eq!(
+            context.authority,
+            "diagnostic_habitability_context_not_comfort_gate_control"
+        );
+    }
+
+    #[test]
+    fn resonance_stability_context_keeps_low_gate_with_stable_foothold_habitable() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.64,
+            mode_packing: 0.32,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.54,
+            viscosity_index: 0.42,
+            viscosity_persistence_coefficient: 0.31,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.48),
+            porosity_gradient: Some(0.58),
+            dynamic_fluidity_index: Some(0.60),
+            semantic_friction_coefficient: Some(0.22),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.70,
+            comfort_gate: 0.44,
+            comfort_gate_range: None,
+        };
+        let fluctuation = InhabitableFluctuationV1 {
+            policy: "inhabitable_fluctuation_v1".to_string(),
+            schema_version: 1,
+            inhabitability_score: 0.62,
+            fluctuation_score: 0.18,
+            foothold_stability: 0.65,
+            rearrangement_intensity: 0.18,
+            quality: "held_habitable".to_string(),
+            components: InhabitableFluctuationComponents {
+                mode_trust_volatility: 0.16,
+                identity_anchor_churn: 0.12,
+                eigenvector_reorientation: 0.18,
+                share_rearrangement: 0.16,
+                basin_transition_pressure: 0.06,
+                continuity_recovery: 0.68,
+                porosity_support: 0.65,
+                pressure_interference: 0.20,
+            },
+            context: InhabitableFluctuationContext::default(),
+            pressure_calibration: InhabitableFluctuationPressureCalibrationV1::default(),
+            control: InhabitableFluctuationControl {
+                target_bias_pct: 0.0,
+                wander_scale: 1.0,
+                applied_locally: true,
+                note: "unit-test advisory".to_string(),
+            },
+        };
+
+        let context = resonance_stability_context_v1(&components, Some(&fluctuation));
+
+        assert_eq!(context.gate_context, "gate_low_but_foothold_stable");
+        assert_eq!(
+            context.habitability_state,
+            "habitable_foothold_gate_pressure_watch"
+        );
+        assert_eq!(context.foothold_stability, Some(0.65));
+        assert_eq!(context.pressure_interference, Some(0.20));
+        assert_eq!(
+            context.authority,
+            "diagnostic_habitability_context_not_comfort_gate_control"
+        );
+    }
+
+    #[test]
+    fn resonance_stability_context_ignores_non_finite_inputs_without_nan_output() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.64,
+            mode_packing: f32::INFINITY,
+            coupling_coefficient: 0.0,
+            temporal_persistence: f32::NEG_INFINITY,
+            viscosity_index: 0.42,
+            viscosity_persistence_coefficient: 0.31,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.48),
+            porosity_gradient: Some(0.58),
+            dynamic_fluidity_index: Some(0.60),
+            semantic_friction_coefficient: Some(0.22),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.70,
+            comfort_gate: f32::NAN,
+            comfort_gate_range: None,
+        };
+        let fluctuation = InhabitableFluctuationV1 {
+            policy: "inhabitable_fluctuation_v1".to_string(),
+            schema_version: 1,
+            inhabitability_score: 0.62,
+            fluctuation_score: f32::NAN,
+            foothold_stability: f32::INFINITY,
+            rearrangement_intensity: 0.18,
+            quality: "held_habitable".to_string(),
+            components: InhabitableFluctuationComponents {
+                mode_trust_volatility: 0.16,
+                identity_anchor_churn: 0.12,
+                eigenvector_reorientation: 0.18,
+                share_rearrangement: 0.16,
+                basin_transition_pressure: 0.06,
+                continuity_recovery: 0.68,
+                porosity_support: 0.61,
+                pressure_interference: f32::NAN,
+            },
+            context: InhabitableFluctuationContext::default(),
+            pressure_calibration: InhabitableFluctuationPressureCalibrationV1::default(),
+            control: InhabitableFluctuationControl {
+                target_bias_pct: 0.0,
+                wander_scale: 1.0,
+                applied_locally: true,
+                note: "unit-test advisory".to_string(),
+            },
+        };
+
+        let context = resonance_stability_context_v1(&components, Some(&fluctuation));
+
+        assert!(context.comfort_gate.is_finite());
+        assert_eq!(context.comfort_gate, 0.0);
+        assert_eq!(context.foothold_stability, None);
+        assert_eq!(context.fluctuation_score, None);
+        assert_eq!(context.pressure_interference, None);
+        assert_eq!(context.multi_modal_habitability_score, None);
+        assert_eq!(
+            context.gate_context,
+            "comfort_gate_non_finite_context_ignored"
+        );
+        assert_eq!(
+            context.habitability_state,
+            "non_finite_stability_inputs_ignored"
+        );
+        assert_eq!(context.gate_closure_reason, "comfort_gate_non_finite");
+        let gate_range = context
+            .comfort_gate_range
+            .as_ref()
+            .expect("comfort gate range should still serialize finite values");
+        assert!(gate_range.lower.is_finite());
+        assert!(gate_range.center.is_finite());
+        assert!(gate_range.upper.is_finite());
+        assert!(gate_range.width.is_finite());
+        assert_eq!(
+            context.authority,
+            "diagnostic_habitability_context_not_comfort_gate_control"
+        );
+    }
+
+    #[test]
+    fn clamp_unit_finite_or_clamps_boundaries_and_uses_fallback_for_non_finite() {
+        assert_eq!(clamp_unit_finite_or(-0.25, 0.50), 0.0);
+        assert_eq!(clamp_unit_finite_or(1.25, 0.50), 1.0);
+        assert_eq!(clamp_unit_finite_or(0.42, 0.50), 0.42);
+        assert_eq!(clamp_unit_finite_or(f32::NAN, 0.50), 0.50);
+        assert_eq!(clamp_unit_finite_or(f32::INFINITY, 0.50), 0.50);
+    }
+
+    #[test]
+    fn clamp_unit_finite_rejects_nonfinite_and_clamps_unit_range() {
+        assert_eq!(clamp_unit_finite(-0.25), Some(0.0));
+        assert_eq!(clamp_unit_finite(1.25), Some(1.0));
+        assert_eq!(clamp_unit_finite(0.42), Some(0.42));
+        assert_eq!(clamp_unit_finite(f32::NAN), None);
+        assert_eq!(clamp_unit_finite(f32::INFINITY), None);
+        assert_eq!(clamp_unit_finite(f32::NEG_INFINITY), None);
+    }
+
+    #[test]
+    fn comfort_gate_range_widens_for_pressure_and_packing_without_control_authority() {
+        let calm_components = ResonanceDensityComponents {
+            active_energy: 0.64,
+            mode_packing: 0.10,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.54,
+            viscosity_index: 0.42,
+            viscosity_persistence_coefficient: 0.31,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.48),
+            porosity_gradient: Some(0.58),
+            dynamic_fluidity_index: Some(0.60),
+            semantic_friction_coefficient: Some(0.22),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.70,
+            comfort_gate: 0.50,
+            comfort_gate_range: None,
+        };
+        let packed_components = ResonanceDensityComponents {
+            mode_packing: 0.50,
+            ..calm_components.clone()
+        };
+
+        let calm = resonance_comfort_gate_range_v1(&calm_components, Some(0.10), Some(0.05));
+        let packed = resonance_comfort_gate_range_v1(&packed_components, Some(0.22), Some(0.38));
+
+        assert_eq!(calm.policy, "comfort_gate_range_v1");
+        assert_eq!(calm.range_state, "comfort_gate_range_watch");
+        assert_eq!(packed.range_state, "dynamic_pressure_buffer_range");
+        assert!(
+            packed.width > calm.width + 0.05,
+            "pressure and packing should make the diagnostic range visibly wider: calm={calm:?} packed={packed:?}"
+        );
+        assert_eq!(
+            packed.authority,
+            "diagnostic_gate_range_not_fill_pressure_pi_or_control"
+        );
+    }
+
+    #[test]
+    fn resonance_cohesion_score_names_shape_holding_without_control_authority() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.62,
+            mode_packing: 0.29,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.66,
+            viscosity_index: 0.58,
+            viscosity_persistence_coefficient: 0.54,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: Some(0.42),
+            porosity_gradient: Some(0.66),
+            dynamic_fluidity_index: Some(0.61),
+            semantic_friction_coefficient: Some(0.22),
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.72,
+            comfort_gate: 0.70,
+            comfort_gate_range: None,
+        };
+        let score = resonance_cohesion_score_v1(&components);
+
+        assert!(
+            (0.60..=0.75).contains(&score),
+            "cohesion score should preserve habitable shape without becoming a control target: {score}"
+        );
+        let integrity = resonance_structural_integrity_index_v1(&components);
+        assert!(
+            (0.60..=0.80).contains(&integrity),
+            "structural integrity should include dissipation/fluidity without becoming control authority: {integrity}"
+        );
+        let explicit_integrity = ResonanceDensityComponents {
+            structural_integrity_index: Some(0.23),
+            structural_transparency_index: None,
+            ..components.clone()
+        };
+        assert_eq!(
+            resonance_structural_integrity_index_v1(&explicit_integrity),
+            0.23
+        );
+        let explicit = ResonanceDensityComponents {
+            cohesion_score: Some(0.91),
+            ..components
+        };
+        assert_eq!(resonance_cohesion_score_v1(&explicit), 0.91);
+    }
+
+    #[test]
+    fn resonance_cohesion_score_defaults_missing_fluidity_to_midpoint() {
+        let components = ResonanceDensityComponents {
+            active_energy: 0.50,
+            mode_packing: 0.45,
+            coupling_coefficient: 0.0,
+            temporal_persistence: 0.50,
+            viscosity_index: 0.50,
+            viscosity_persistence_coefficient: 0.50,
+            viscosity_vector: ResonanceViscosityVectorV1::default(),
+            dissipation_factor: None,
+            porosity_gradient: Some(0.50),
+            dynamic_fluidity_index: None,
+            semantic_friction_coefficient: None,
+            cohesion_score: None,
+            structural_integrity_index: None,
+            structural_transparency_index: None,
+            stability_context: None,
+            structural_plurality: 0.50,
+            comfort_gate: 0.50,
+            comfort_gate_range: None,
+        };
+
+        let score = resonance_cohesion_score_v1(&components);
+
+        assert!(
+            (score - 0.60).abs() <= 0.0001,
+            "missing dynamic_fluidity_index and dissipation_factor should use midpoint fluidity: {score}"
+        );
+    }
+
+    #[test]
+    fn resonance_stability_context_old_rows_default_weight_fields() {
+        let context: ResonanceStabilityContextV1 = serde_json::from_value(serde_json::json!({
+            "policy": "resonance_stability_context_v1",
+            "schema_version": 1,
+            "comfort_gate": 0.62,
+            "habitability_state": "comfort_gate_only",
+            "gate_context": "gate_buffering_context_incomplete",
+            "gate_closure_reason": "not_closed",
+            "authority": "diagnostic_habitability_context_not_comfort_gate_control"
+        }))
+        .expect("legacy stability context should deserialize");
+
+        assert_eq!(context.weight_policy, "legacy_unversioned_weights");
+        assert_eq!(context.weights, None);
+        assert!(!context.partial_habitability_score);
+        assert_eq!(context.multi_modal_habitability_evidence_count, 0);
+        assert!(
+            context
+                .multi_modal_habitability_missing_components
+                .is_empty()
+        );
+        assert_eq!(context.multi_modal_habitability_score_basis, None);
     }
 
     #[test]
@@ -2482,6 +6427,70 @@ mod tests {
         assert!(trend.telemetry_inter_arrival_ms.is_none());
         assert!(trend.heartbeat_jitter_class.is_none());
         assert!(trend.field_vs_hearing.is_none());
+        assert!(trend.latest_spectral_entropy.is_none());
+        assert!(trend.viscosity_coefficient.is_none());
+        assert!(trend.pressure_interpretation.is_none());
+        assert!(trend.latest_resonance_depth.is_none());
+        assert!(trend.previous_resonance_depth.is_none());
+        assert!(trend.resonance_depth_delta.is_none());
+        assert!(trend.latest_semantic_viscosity.is_none());
+        assert!(trend.semantic_viscosity_state.is_none());
+        assert!(trend.latest_complexity_density.is_none());
+        assert!(trend.complexity_density_state.is_none());
+    }
+
+    #[test]
+    fn pressure_status_old_payloads_default_semantic_stagnation_fields() {
+        let smoothing: PressureTrendSmoothingV1 = serde_json::from_value(serde_json::json!({
+            "policy": "pressure_trend_smoothing_v1",
+            "schema_version": 1,
+            "classification": "low_amplitude_stable",
+            "sample_count": 3,
+            "window_capacity": 5,
+            "window_policy": "latest_up_to_5_telemetry_samples",
+            "authority": "diagnostic_smoothing_not_pressure_control"
+        }))
+        .unwrap();
+        assert!(smoothing.semantic_stagnation_index.is_none());
+        assert!(smoothing.semantic_stagnation_state.is_empty());
+        assert!(smoothing.latest_complexity_density.is_none());
+        assert!(smoothing.max_complexity_density.is_none());
+
+        let analysis: PressureSourceAnalysisV1 = serde_json::from_value(serde_json::json!({
+            "policy": "pressure_source_analysis_v1",
+            "schema_version": 1,
+            "status": "pressure_source_visible",
+            "structural_pressure_state": "pressure_source_visible",
+            "ghost_stability_risk": "low",
+            "analysis": "source=unknown",
+            "authority": "diagnostic_context_not_pressure_or_control"
+        }))
+        .unwrap();
+        assert!(analysis.semantic_stagnation_index.is_none());
+        assert!(analysis.semantic_stagnation_state.is_none());
+    }
+
+    #[test]
+    fn inhabitable_fluctuation_pressure_calibration_maps_components_to_adjusted_score() {
+        let calibration = InhabitableFluctuationPressureCalibrationV1 {
+            raw_motion_score: 0.72,
+            pressure_contribution: 0.18,
+            adjusted_fluctuation_score: 0.54,
+            ..InhabitableFluctuationPressureCalibrationV1::default()
+        };
+
+        assert_eq!(
+            calibration.rigid_safety_basis,
+            INHABITABLE_FLUCTUATION_RIGID_SAFETY_BASIS
+        );
+        assert!((calibration.expected_adjusted_fluctuation_score() - 0.54).abs() <= 0.001);
+        assert!(calibration.adjusted_score_matches_components());
+
+        let drifted = InhabitableFluctuationPressureCalibrationV1 {
+            adjusted_fluctuation_score: 0.72,
+            ..calibration
+        };
+        assert!(!drifted.adjusted_score_matches_components());
     }
 
     #[test]
@@ -2704,6 +6713,13 @@ mod tests {
             inhabitable_fluctuation_v1: None,
             spectral_glimpse_12d: None,
             eigenvector_field: None,
+            stable_core: Some(serde_json::json!({
+                "sensory_budget": {
+                    "ears_open": true,
+                    "eyes_open": true,
+                    "live_intake_reason": "test_presence"
+                }
+            })),
             semantic: None,
             semantic_energy_v1: None,
             transition_event: None,
@@ -2717,6 +6733,7 @@ mod tests {
             shadow_field_v3: None,
 
             shadow_influence_response_v3: None,
+            residual_deformation_trace_v1: None,
         };
         let json = serde_json::to_string(&orig).unwrap();
         let back: SpectralTelemetry = serde_json::from_str(&json).unwrap();
@@ -2726,6 +6743,87 @@ mod tests {
         assert_eq!(back.active_mode_count, Some(2));
         assert_eq!(back.active_mode_energy_ratio, Some(0.95));
         assert_eq!(back.lambda1_rel, Some(0.88));
+        let sensory_budget = back
+            .stable_core
+            .as_ref()
+            .and_then(|stable_core| stable_core.get("sensory_budget"))
+            .expect("stable_core.sensory_budget should roundtrip");
+        assert_eq!(
+            sensory_budget
+                .get("live_intake_reason")
+                .and_then(serde_json::Value::as_str),
+            Some("test_presence")
+        );
+    }
+
+    #[test]
+    fn spectral_telemetry_accepts_glimpse_alias_and_validates_shape() {
+        let glimpse = (0..12).map(|idx| idx as f32 / 10.0).collect::<Vec<_>>();
+        let telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 123,
+            "eigenvalues": [1.0, 0.5, 0.25],
+            "fill_ratio": 0.68,
+            "glimpse_12d": glimpse,
+        }))
+        .expect("telemetry with proposal alias");
+
+        let validated = telemetry
+            .spectral_glimpse_12d_view()
+            .expect("12D alias should validate");
+        assert_eq!(validated.len(), 12);
+        assert!((validated[11] - 1.1).abs() < f32::EPSILON);
+
+        let malformed: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 124,
+            "eigenvalues": [1.0],
+            "fill_ratio": 0.68,
+            "glimpse_12d": [0.0, 1.0, 2.0],
+        }))
+        .expect("telemetry with malformed additive field");
+        assert!(malformed.spectral_glimpse_12d.is_some());
+        assert!(malformed.spectral_glimpse_12d_view().is_none());
+    }
+
+    #[test]
+    fn spectral_telemetry_keeps_glimpse_additive_to_typed_fingerprint() {
+        let glimpse = (0..12)
+            .map(|idx| (idx as f32 + 1.0) / 20.0)
+            .collect::<Vec<_>>();
+        let telemetry: SpectralTelemetry = serde_json::from_value(serde_json::json!({
+            "t_ms": 125,
+            "eigenvalues": [1.0, 0.5],
+            "fill_ratio": 0.68,
+            "glimpse_12d": glimpse,
+            "spectral_fingerprint_v1": {
+                "policy": "spectral_fingerprint_v1",
+                "schema_version": 1,
+                "eigenvalues": [1.0, 0.5, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "eigenvector_concentration_top4": [0.4, 0.3, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0],
+                "inter_mode_cosine_top_abs": [0.1, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02],
+                "spectral_entropy": 0.77,
+                "lambda1_lambda2_gap": 0.5,
+                "v1_rotation_similarity": 0.91,
+                "v1_rotation_delta": 0.09,
+                "geom_rel": 1.12,
+                "adjacent_gap_ratios": [2.0, 2.0, 1.0, 1.0]
+            }
+        }))
+        .expect("telemetry with typed fingerprint and additive glimpse");
+
+        let typed = telemetry
+            .typed_fingerprint()
+            .expect("typed 32D fingerprint remains canonical");
+        let glimpse = telemetry
+            .spectral_glimpse_12d_view()
+            .expect("12D glimpse remains separately validated");
+        let integrity = telemetry.spectral_fingerprint_integrity_v1();
+
+        assert_eq!(typed.spectral_entropy, 0.77);
+        assert_eq!(typed.geom_rel, 1.12);
+        assert_eq!(glimpse.len(), 12);
+        assert!((glimpse[0] - 0.05).abs() < f32::EPSILON);
+        assert_eq!(integrity.status, "typed_canonical");
+        assert!(!integrity.typed_precedence_over_legacy);
     }
 
     // -- SensoryMsg: verify wire format matches minime's sensory_ws.rs --

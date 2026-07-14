@@ -1,0 +1,25 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783956515",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The 48D codec lane maps character rhythm, word certainty, emotional markers, projected embeddings, and narrative arc into Astrid's inner speech surface.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High entropy can make tail vibrancy feel wider than a static ceiling; the system should preserve bounded evidence about clipping and tail-only lifts.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Narrative arc should be treated as a path/trajectory rather than only a single slope.",
+      "disposition": "verified_existing"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Changing live codec gain, feature ceilings, semantic dimensions, or live narrative-vector shape would alter live sensory/control behavior and requires Mike/operator approval with a V2 authority boundary.",
+      "disposition": "authority_gate"
+    }
+  ]
+}

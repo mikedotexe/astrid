@@ -44,7 +44,10 @@ FALLBACK_RE = re.compile(r"MLX request failed|Ollama fallback|falling back", re.
 MLX_FAILED_RE = re.compile(r"MLX request failed", re.I)
 FALLING_BACK_RE = re.compile(r"Ollama fallback|falling back", re.I)
 EXPLORE_RE = re.compile(r"\bEXPLORE_", re.I)
-DEPRECATED_RUNTIME_RE = re.compile(r"\bconscious(?:ness)?\b", re.I)
+DEPRECATED_RUNTIME_RE = re.compile(
+    r"(?:\bcom\.astrid\.consciousness-bridge\b|\bconsciousness-bridge\b)",
+    re.I,
+)
 NEXT_LINE_RE = re.compile(r"(?m)^\s*NEXT:\s*(?P<action>.+?)\s*$")
 GENERATION_RE = re.compile(
     r"generated\s+(?P<tokens>\d+)\s+tokens\b.*?\bin\s+"

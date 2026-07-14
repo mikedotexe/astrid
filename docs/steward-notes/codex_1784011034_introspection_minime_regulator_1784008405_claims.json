@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "`structural_strain_gap` and `structural_drag_coefficient` are mechanical readouts of felt fullness/friction and should distinguish density of meaning from stuck resistance.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "PI mode can make fullness feel like textured filtering rather than a hard gate, so tests should keep gate/filter and drag/flow distinctions visible.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "Adding semantic-density weighting to live PI flow-rate behavior would alter Minime regulator control and needs V2 operator approval.",
+    "disposition": "authority_gated"
+  }
+]

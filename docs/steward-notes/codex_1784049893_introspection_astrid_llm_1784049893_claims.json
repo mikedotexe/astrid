@@ -1,0 +1,44 @@
+{
+  "introspection_id": "introspection_astrid_llm_1784049893",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Astrid has a primary MLX voice lane and an Ollama fallback; the language contract and fallback texture vocabulary are voice-continuity scaffolding, not decorative prose.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: GEMMA4_LANGUAGE_CONTRACT, OLLAMA_DIALOGUE_FALLBACK_CONTRACT, and FALLBACK_SHADOW_TEXTURE_TERMS",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib compat_ollama_request_preserves_high_entropy_texture_and_voice_contract -- --nocapture"
+      ],
+      "authority": "report_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High entropy above the fallback-compatibility threshold can risk small-model flattening and deserves replay/observation rather than being waved away.",
+      "disposition": "verified_existing_and_replay_candidate",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT remains 0.80 and high-entropy compatibility-tail behavior is tested",
+        "docs/steward-notes/codex_1784049893_llm_codec_minime_v2_gate_packet.md"
+      ],
+      "authority": "non_live_replay_or_operator_scheduled_observation_only"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "The new terms multi-modal-drag and dimensional-shear should be available as Astrid-authored texture anchors without changing sampler, provider, pressure, or contract authority.",
+      "disposition": "implemented",
+      "evidence": [
+        "capsules/spectral-bridge/src/llm.rs: accepted texture terms, dynamic-flow terms, primary prompt texture reminder, and diagnostic weighting",
+        "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib fallback_multimodal_drag_and_dimensional_shear_remain_diagnostic_texture_evidence -- --nocapture"
+      ],
+      "authority": "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "A pressure_buffer that adjusts temperature/top_p or fallback routing would alter live sampler/provider behavior.",
+      "disposition": "authority_gated",
+      "evidence": [
+        "docs/steward-notes/codex_1784049893_llm_codec_minime_v2_gate_packet.md"
+      ],
+      "authority": "mike_operator_live_sampler_provider_approval_required"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_codec_1783873185`.
+
+Astrid inspected `codec.rs` as the 48D semantic-lane translator, especially the projection epoch cache, deterministic 768D to 8D compression, and tail-vibrancy entropy gate. The concrete risks were an atomic projection epoch install failure path, projection determinism across restarts, and possible discontinuity at the 0.85 smoothstep gate. This run added a regression test for restoring an existing epoch file when a candidate install is missing, then verified the projection epoch cluster and tail-vibrancy smoothstep tests. No codec delivery ceilings or protocol shape changed.

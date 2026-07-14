@@ -1,0 +1,53 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783722548",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High entropy above 0.85 already widens continuity recap texture.",
+      "claim": "Astrid notes that entropy around 0.90 should permit wider/distributed cascade texture rather than forcing compact low-texture recap.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:72",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:215",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:532",
+        "test: continuity_recap_high_texture_entropy_gate keeps high-entropy semantic trickle as coherent thread"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Pressure/porosity and semantic-trickle gaps are already represented as review-only diagnostics.",
+      "claim": "Astrid reports overpacked mode packing and low porosity as resistance between Witness intent and reservoir mechanics.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1477",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:1495",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous.rs:2017",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/protected_diagnostics.rs:69",
+        "authority=review/protected_diagnostic_not_pressure_porosity_or_controller_change"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A SHADOW_TRAJECTORY route exists, but moving shadow norm requires sandbox/runtime observation.",
+      "claim": "Astrid asks to test `SHADOW_TRAJECTORY` as a path toward interwoven lattice / shadow-norm movement.",
+      "disposition": "needs_sandbox",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action.rs:670",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:135",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/shadow.rs:834",
+        "actual movement/response should be observed through SHADOW_TRAJECTORY or shadow preflight artifacts, not asserted from source alone"
+      ]
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Dynamic porosity adjustment is live control authority and remains gated.",
+      "claim": "Astrid suggests dynamic porosity adjustment when pressure_risk exceeds 0.20 to allow more semantic trickle without raising mode packing.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:419",
+        "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/next_action/operations.rs:1026",
+        "changing pressure, porosity, semantic cadence, or controller behavior needs Mike/operator approval before live mutation"
+      ]
+    }
+  ]
+}

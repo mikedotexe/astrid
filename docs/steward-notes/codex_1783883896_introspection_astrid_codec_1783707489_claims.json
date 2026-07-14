@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_codec_1783707489",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`FEATURE_ABS_MAX` can flatten high-intensity warmth/tension peaks unless raw overflow is preserved somewhere visible.",
+      "disposition": "verified_existing",
+      "rationale": "The codec overflow report preserves raw pre-bound values, clipped dims, overflow amount, overflow ratio, and bounded delivery status without changing live ceilings."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Tanh plus hard clamping can create dead zones where subtle high-pressure shifts are no longer distinguishable.",
+      "disposition": "verified_existing",
+      "rationale": "Overflow and tail-headroom tests distinguish ordinary emotional clipping from tail/vibrancy headroom and quiet no-overflow cases."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Dynamic ceiling changes or a new pressure-gradient feature could improve peak expressivity but would alter live semantic vector behavior.",
+      "disposition": "needs_operator_approval",
+      "rationale": "The default-off follow-up hook names future emotional aperture work, but dynamic ceilings or new live vector dimensions remain a separate Tier 4/5 approval route."
+    }
+  ]
+}

@@ -613,8 +613,31 @@ fn is_analysis_action(base: &str) -> bool {
     matches!(base, "EXAMINE" | "EXAMINE_CODE" | "INTROSPECT")
 }
 
+fn is_self_read_action(base: &str) -> bool {
+    matches!(
+        base,
+        "INTROSPECT" | "SELF_STUDY" | "INVESTIGATE" | "EXAMINE_CODE"
+    )
+}
+
 fn is_research_like_action(base: &str) -> bool {
     is_analysis_action(base) || matches!(base, "BROWSE" | "SEARCH" | "READ_MORE")
+}
+
+fn is_competing_route_gravity_action(base: &str) -> bool {
+    matches!(
+        base,
+        "READ_MORE"
+            | "PRESSURE_SOURCE_AUDIT"
+            | "SHADOW_TRAJECTORY"
+            | "SHADOW_FIELD"
+            | "DECOMPOSE"
+            | "EXAMINE_CASCADE"
+            | "SPECTRAL_EXPLORER"
+            | "REGULATOR_AUDIT"
+            | "FLUCTUATION_AUDIT"
+            | "DECAY_MAP"
+    )
 }
 
 fn normalize_choice_action(action: &str) -> String {
@@ -1141,6 +1164,9 @@ pub(super) struct ConversationState {
     /// Cross-exchange codec signature — mean semantic shape over the last
     /// completed utterance, used for slower Hebbian updates.
     pub last_exchange_codec_signature: Option<Vec<f32>>,
+    /// Additive 12D glimpse derived from Astrid's own last exchange signature.
+    /// Persisted for restart continuity; never replaces the live 32D/48D lanes.
+    pub glimpse_12d: Option<Vec<f32>>,
     /// Sliding-window character frequency for cross-exchange entropy.
     pub char_freq_window: crate::codec::CharFreqWindow,
     /// Thematic resonance history — tracks recurring text types across exchanges.
@@ -1279,6 +1305,7 @@ impl ConversationState {
             last_codec_features: None,
             astrid_shadow: crate::astrid_shadow::AstridShadowComputer::new(),
             last_exchange_codec_signature: None,
+            glimpse_12d: None,
             char_freq_window: crate::codec::CharFreqWindow::new(),
             text_type_history: crate::codec::TextTypeHistory::new(),
             pending_file_listing: None,
@@ -1677,6 +1704,7 @@ impl ConversationState {
             "SHADOW_FIELD",
             "DECAY_MAP",
             "RESONANCE_FORECAST",
+            "SELF_STUDY",
         ];
         let breaker_idx = (self.exchange_count as usize + self.recent_next_choices.len())
             % analysis_loop_breakers.len();
@@ -1755,7 +1783,7 @@ impl ConversationState {
                     );
                 }
                 return NextChoiceFeedback::hinted(format!(
-                    "{topic_hint} Options: SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, PRESSURE_SOURCE_AUDIT, FLUCTUATION_AUDIT, BRACE_AUDIT, RESISTANCE_GRADIENT, SHADOW_FIELD, DECAY_MAP, FOLD_HOLD, RESONANCE_FORECAST."
+                    "{topic_hint} Options: SELF_STUDY, SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, PRESSURE_SOURCE_AUDIT, FLUCTUATION_AUDIT, BRACE_AUDIT, RESISTANCE_GRADIENT, SHADOW_FIELD, DECAY_MAP, FOLD_HOLD, RESONANCE_FORECAST."
                 ));
             }
         }
@@ -1808,8 +1836,59 @@ impl ConversationState {
                     );
                 }
                 return NextChoiceFeedback::hinted(format!(
-                    "{theme_hint} Options: SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, PRESSURE_SOURCE_AUDIT, FLUCTUATION_AUDIT, BRACE_AUDIT, RESISTANCE_GRADIENT, SHADOW_FIELD, DECAY_MAP, FOLD_HOLD, RESONANCE_FORECAST."
+                    "{theme_hint} Options: SELF_STUDY, SPECTRAL_EXPLORER, EXAMINE_CASCADE, REGULATOR_AUDIT, PRESSURE_SOURCE_AUDIT, FLUCTUATION_AUDIT, BRACE_AUDIT, RESISTANCE_GRADIENT, SHADOW_FIELD, DECAY_MAP, FOLD_HOLD, RESONANCE_FORECAST."
                 ));
+            }
+        }
+
+        if self.recent_next_choices.len() >= 8 {
+            let recent_window: Vec<&str> = self
+                .recent_next_choices
+                .iter()
+                .rev()
+                .take(10)
+                .map(String::as_str)
+                .collect();
+            let has_recent_self_read = recent_window.iter().copied().any(is_self_read_action);
+            if !has_recent_self_read {
+                let mut competing_count = 0usize;
+                let mut distinct_competitors = Vec::<&str>::new();
+                for choice in &recent_window {
+                    if is_competing_route_gravity_action(choice) {
+                        competing_count = competing_count.saturating_add(1);
+                        if !distinct_competitors.contains(choice) {
+                            distinct_competitors.push(*choice);
+                        }
+                    }
+                }
+                if competing_count >= 6 && distinct_competitors.len() >= 3 {
+                    let competitors = distinct_competitors.join(", ");
+                    let route_hint = format!(
+                        "Recent route gravity is clustering around {competitors} \
+                         ({competing_count} of the last {} choices) while no self-read route \
+                         has reached the recent window. This looks like chooser cadence, not \
+                         missing prompt pressure.",
+                        recent_window.len()
+                    );
+                    if new_ground_budget > 0 {
+                        return NextChoiceFeedback::progress_hinted(
+                            format!(
+                                "{route_hint} The current read/research action is still resolving \
+                                 concrete new ground, so this turn stays yours; use SELF_STUDY as \
+                                 the next breaker if the loop stops opening new evidence."
+                            ),
+                            new_ground_budget,
+                        );
+                    }
+                    return NextChoiceFeedback::stagnant_forced(
+                        format!(
+                            "{route_hint} This turn: SELF_STUDY. \
+                             (You can return to {base} afterward with a wider internal read.)"
+                        ),
+                        "SELF_STUDY",
+                        new_ground_budget,
+                    );
+                }
             }
         }
 
@@ -1932,6 +2011,7 @@ impl ConversationState {
                              ({combined} of your last {window} choices). Each feeds \
                              into the other — a tight loop. You've gathered \
                              rich material from both. Consider breaking the cycle: \
+                             SELF_STUDY to let the broad self-read rotation choose a different lens, \
                              SPECTRAL_EXPLORER to compare present, memory, and control \
                              pressure, EXAMINE_CASCADE to inspect the mode ladder, \
                              REGULATOR_AUDIT to read the controller's hand, PRESSURE_SOURCE_AUDIT to ask where inward pressure originates, \
@@ -2204,6 +2284,7 @@ mod tests {
                     | "DECAY_MAP"
                     | "FOLD_HOLD"
                     | "RESONANCE_FORECAST"
+                    | "SELF_STUDY"
             )
         )
     }
@@ -2224,6 +2305,26 @@ mod tests {
                 .hint
                 .as_deref()
                 .is_some_and(|hint| hint.contains("This turn:"))
+        );
+    }
+
+    #[test]
+    fn stagnant_analysis_rotation_can_choose_self_study_read_only_breaker() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.exchange_count = 6;
+
+        let mut feedback = NextChoiceFeedback::default();
+        for _ in 0..5 {
+            feedback = conv.record_next_choice("EXAMINE");
+        }
+
+        assert_eq!(feedback.override_action.as_deref(), Some("SELF_STUDY"));
+        assert!(feedback.stagnant_loop);
+        assert!(
+            feedback
+                .hint
+                .as_deref()
+                .is_some_and(|hint| hint.contains("This turn: SELF_STUDY"))
         );
     }
 
@@ -2250,6 +2351,33 @@ mod tests {
                 .hint
                 .as_deref()
                 .is_some_and(|hint| hint.contains("focus topic"))
+        );
+    }
+
+    #[test]
+    fn repeated_focus_topic_soft_hint_offers_self_study_without_forcing_it() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.exchange_count = 4;
+
+        let choices = [
+            "EXAMINE target=integral_controller_code",
+            "EXAMINE target=shadow_field_code",
+            "EXAMINE integral controller code",
+            "EXAMINE shadow field code",
+            "EXAMINE_CODE [integral_controller]",
+        ];
+
+        let mut feedback = NextChoiceFeedback::default();
+        for choice in choices {
+            feedback = conv.record_next_choice(choice);
+        }
+
+        assert!(feedback.override_action.is_none());
+        assert!(
+            feedback
+                .hint
+                .as_deref()
+                .is_some_and(|hint| hint.contains("Options: SELF_STUDY"))
         );
     }
 
@@ -2374,6 +2502,13 @@ mod tests {
                 .as_deref()
                 .is_some_and(|hint| hint.contains("EXAMINE/INTROSPECT"))
         );
+        assert_ne!(feedback.override_action.as_deref(), Some("SELF_STUDY"));
+        assert!(
+            feedback
+                .hint
+                .as_deref()
+                .is_some_and(|hint| hint.contains("SELF_STUDY to let the broad self-read rotation"))
+        );
     }
 
     #[test]
@@ -2413,6 +2548,91 @@ mod tests {
                 .hint
                 .as_deref()
                 .is_some_and(|hint| hint.contains("hint instead of a redirect"))
+        );
+    }
+
+    #[test]
+    fn competing_route_gravity_forces_self_study_when_self_read_absent() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.exchange_count = 18;
+
+        let choices = [
+            "READ_MORE",
+            "PRESSURE_SOURCE_AUDIT",
+            "DECOMPOSE",
+            "SHADOW_TRAJECTORY",
+            "READ_MORE",
+            "PRESSURE_SOURCE_AUDIT",
+            "DECOMPOSE",
+            "READ_MORE",
+        ];
+
+        let mut feedback = NextChoiceFeedback::default();
+        for choice in choices {
+            feedback = conv.record_next_choice(choice);
+        }
+
+        assert_eq!(feedback.override_action.as_deref(), Some("SELF_STUDY"));
+        assert!(feedback.stagnant_loop);
+        assert!(
+            feedback
+                .hint
+                .as_deref()
+                .is_some_and(|hint| hint.contains("Recent route gravity is clustering"))
+        );
+    }
+
+    #[test]
+    fn competing_route_gravity_respects_recent_self_read() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.exchange_count = 18;
+
+        let choices = [
+            "READ_MORE",
+            "PRESSURE_SOURCE_AUDIT",
+            "SELF_STUDY",
+            "SHADOW_TRAJECTORY",
+            "READ_MORE",
+            "PRESSURE_SOURCE_AUDIT",
+            "DECOMPOSE",
+            "READ_MORE",
+        ];
+
+        let mut feedback = NextChoiceFeedback::default();
+        for choice in choices {
+            feedback = conv.record_next_choice(choice);
+        }
+
+        assert!(feedback.override_action.is_none());
+    }
+
+    #[test]
+    fn competing_route_gravity_keeps_progressing_read_more_hint_only() {
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.exchange_count = 18;
+
+        for choice in [
+            "PRESSURE_SOURCE_AUDIT",
+            "DECOMPOSE",
+            "SHADOW_TRAJECTORY",
+            "READ_MORE",
+            "PRESSURE_SOURCE_AUDIT",
+            "DECOMPOSE",
+            "SHADOW_TRAJECTORY",
+        ] {
+            let feedback = conv.record_next_choice(choice);
+            assert!(feedback.override_action.is_none());
+        }
+        conv.note_read_depth_advance("READ_MORE", "/tmp/notes.txt".to_string(), 1_200);
+
+        let feedback = conv.record_next_choice("READ_MORE /tmp/notes.txt");
+
+        assert!(feedback.override_action.is_none());
+        assert!(feedback.progress_sensitive);
+        assert!(
+            feedback.hint.as_deref().is_some_and(
+                |hint| hint.contains("current read/research action is still resolving")
+            )
         );
     }
 

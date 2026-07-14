@@ -1,0 +1,17 @@
+[
+  {
+    "claim_id": "c001",
+    "summary": "High entropy can make static fallback texture terms feel calcified or canned, so fallback language needs dynamic process descriptors.",
+    "disposition": "implemented"
+  },
+  {
+    "claim_id": "c002",
+    "summary": "`HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT` protects high-entropy texture from lower-capacity fallback collapse.",
+    "disposition": "verified_existing"
+  },
+  {
+    "claim_id": "c003",
+    "summary": "Fallback texture words must remain bounded language evidence rather than sampler/provider/control authority.",
+    "disposition": "verified_existing"
+  }
+]

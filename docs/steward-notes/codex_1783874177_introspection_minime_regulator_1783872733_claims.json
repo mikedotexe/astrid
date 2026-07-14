@@ -1,0 +1,29 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783872733",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`shadow_volatility` is now visible and should remain a read-only restless-texture signal.",
+      "disposition": "addressed_change",
+      "rationale": "Verified `viscosity_vector_exports_shadow_volatility_without_control_authority` in Minime."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The viscosity vector should distinguish heavy but carried complex movement from frictional stagnation.",
+      "disposition": "addressed_change",
+      "rationale": "Implemented read-only `structural_integrity` and `structural_strain_gap` and tested that the vector separates complex carried motion from a friction trap."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Allowing more raw motion when `shadow_volatility` is high would alter live regulator safety and controller behavior.",
+      "disposition": "addressed_no_action",
+      "rationale": "Explicit authority gate: changing `INHABITABLE_FLUCTUATION_RIGID_SAFETY_BASIS` behavior or stabilization thresholds needs Mike/operator approval before implementation."
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Mode-packing with porosity mismatch should remain visible as pressure/porosity divergence rather than being flattened by settled habitability.",
+      "disposition": "addressed_change",
+      "rationale": "Verified the Minime pressure/porosity divergence tests and left the result as read-only observation, not control."
+    }
+  ]
+}

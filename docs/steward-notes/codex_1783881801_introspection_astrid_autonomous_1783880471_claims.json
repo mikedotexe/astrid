@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783880471",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "UTF-8 and semantic truncation can clip thick textures before Witness receives them.",
+      "disposition": "verified_existing",
+      "rationale": "The focused semantic truncation and four-byte UTF-8 boundary regressions pass and preserve late shadow, viscosity, load-bearing, and trace-resonance anchors."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Subtle warmth, pressure, or scar-like afterimages can be pruned as low signal.",
+      "disposition": "addressed_change",
+      "rationale": "Afterimage signal terms now include quiet scar/warmth/low-frequency pressure/plateau texture, with a regression proving those older memories enter only the decayed read-only afterimage lane."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing live continuity limits or adding resonance-preservation weight would affect prompt/report behavior and should stay bounded.",
+      "disposition": "addressed_change",
+      "rationale": "The implementation keeps `CONTINUITY_TRAJECTORY_LIMIT` unchanged and expands only the existing bounded afterimage classifier."
+    }
+  ]
+}

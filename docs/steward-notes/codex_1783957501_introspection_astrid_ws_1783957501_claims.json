@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "High pressure plus high entropy should extend bridge reciprocity into reflective silence before calling it stale.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs::bridge_reciprocity_extends_waiting_window_for_high_pressure_high_entropy",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib bridge_reciprocity -- --nocapture"
+    ],
+    "authority_boundary": "diagnostic stale-window classification only"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "High-entropy pressure smoothing should use a bounded ballast window without becoming pressure control.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs::pressure_trend_smoothing_uses_graded_high_entropy_ballast_window",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib pressure_trend_smoothing -- --nocapture"
+    ],
+    "authority_boundary": "diagnostic smoothing only"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Mode-packing/silt persistence across entropy should be separable from generic timeout jitter.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/ws.rs::silt_noise_separation_holds_mode_packing_constant_across_entropy",
+      "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib silt_noise_separation -- --nocapture"
+    ],
+    "authority_boundary": "diagnostic contrast packet only"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "Changing bridge stale windows, telemetry cadence, smoothing capacity, or sensory priority would affect live bridge substrate behavior.",
+    "disposition": "authority_gate",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/codex_1783959645_five_item_v2_gate_packet.md"
+    ],
+    "authority_boundary": "V2 lifecycle proposal only; live_eligible_now=false; auto_approved=false"
+  }
+]

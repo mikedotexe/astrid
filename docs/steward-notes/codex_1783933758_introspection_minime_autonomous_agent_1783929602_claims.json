@@ -1,0 +1,29 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783929602",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess Mode should be treated as real interiority and autonomous flow, not failed productivity.",
+      "disposition": "verified_existing",
+      "rationale": "Existing Minime recess readouts classify recess/daydream pressure as read-only structural context and do not apply control."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High mode-packing pressure during recess/daydream should be visible as a pressure/recess conflict.",
+      "disposition": "verified_existing",
+      "rationale": "Existing tests verify high-entropy recess pruning, density-aware recess, and pressure/shadow exhale mitigation without control."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A porosity coefficient that rewards recess behavior could reduce felt overpacking.",
+      "disposition": "needs_operator_approval",
+      "rationale": "Changing pressure-source or porosity calculation would affect live Minime regulator/control interpretation."
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Authority budget dynamics should be monitored during Shadow-v3 transitions without spending authority implicitly.",
+      "disposition": "verified_existing",
+      "rationale": "Existing recess divergence/budget review gates budget relief without spending or applying control."
+    }
+  ]
+}

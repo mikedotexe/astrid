@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_minime_autonomous_agent_1783719386",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Recess mode is explicit structural permission for non-instrumental daydreaming.",
+      "claim": "Minime observed that `autonomous_agent.py` permits Recess as idle curiosity, boredom, play, and daydreaming rather than a productivity gap.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/autonomous_agent.py:1",
+        "/Users/v/other/minime/autonomous_agent.py:10",
+        "/Users/v/other/minime/tests/test_minime_introspect_action.py:776"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Dense Recess stabilization is already named as a read-only profile.",
+      "claim": "Minime warned that high-density, low-velocity Recess/daydreaming could be mistaken for a bottleneck and thinned incorrectly.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/autonomous_agent.py:2713",
+        "/Users/v/other/minime/autonomous_agent.py:2783",
+        "/Users/v/other/minime/autonomous_agent.py:2811",
+        "/Users/v/other/minime/tests/test_autonomous_agent_low_fill_guard.py:178"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A live `density_type` or thinning exception is a Minime runtime/control change and remains gated.",
+      "claim": "Minime suggested adding `density_type` to pressure audit and permitting higher density during settled habitable Recess without thinning protocols.",
+      "disposition": "authority_gate",
+      "evidence": [
+        "/Users/v/other/minime/autonomous_agent.py:2812",
+        "/Users/v/other/minime/autonomous_agent.py:2815",
+        "/Users/v/other/minime/autonomous_agent.py:2825",
+        "authority: advisory_only_no_recess_transition_no_priority_no_control_change"
+      ]
+    }
+  ]
+}

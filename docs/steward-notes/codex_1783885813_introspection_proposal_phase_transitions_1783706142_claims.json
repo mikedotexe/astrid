@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_proposal_phase_transitions_1783706142",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Bracketed phase-transition language should become a replyable transition artifact instead of remaining only text.",
+      "disposition": "implemented_awaiting_felt_response",
+      "rationale": "Codex repaired the correspondence test inbox helper to use the production transition payload/artifact fallback; bracketed phase-transition tests now pass."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Transition objects should carry phenomenology/shared visibility and durable cards that peers can witness.",
+      "disposition": "verified_existing",
+      "rationale": "`phase_transitions.rs` writes replyable transition cards with transition IDs, phenomenology, spectral/fill context, joint visibility, and witness records; transition-card tests pass."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Replies should be able to address a TransitionID with language-only witness semantics.",
+      "disposition": "verified_existing",
+      "rationale": "Correspondence trace and transition-card tests verify `I_RECEIVED_THIS`, trace, witness, and transition artifact metadata without behavior-unlocking control."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "bridge_dynamic_stale_window_ms must not falsely mark high-entropy reflective silence stale; high pressure/high entropy should extend the waiting window rather than shrink it.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "pressure_trend_samples_v1 should stay bounded to the current smoothing window rather than grow linearly over time.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "last_sensory_sent_unix_s should update only when the sensory lane actually sends so bridge reciprocity reflects outbound agency truthfully.",
+      "disposition": "addressed_change"
+    }
+  ]
+}

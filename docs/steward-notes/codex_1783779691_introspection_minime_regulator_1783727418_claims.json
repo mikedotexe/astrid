@@ -1,0 +1,40 @@
+{
+  "introspection_id": "introspection_minime_regulator_1783727418",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Resonance density inputs must clamp outliers without producing non-finite texture or control.",
+      "claim": "Minime asks to verify `from_parts` clamps density, pressure_risk, and component outliers.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs:243",
+        "/Users/v/other/minime/minime/src/regulator.rs:4290",
+        "test: resonance_density_from_parts_clamps_extreme_components"
+      ]
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The apparent viscosity dead zone is an explicit baseline floor, not accidental data loss.",
+      "claim": "Minime reports that `components.viscosity_index.max(baseline_viscosity)` can override a low reported viscosity when pressure / persistence / packing imply a higher floor.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs:258",
+        "/Users/v/other/minime/minime/src/regulator.rs:4400",
+        "/Users/v/other/minime/minime/src/regulator.rs:4458",
+        "tests: resonance_density_enforces_baseline_viscosity_floor_under_high_pressure, resonance_density_pressure_floor_triggers_damping_without_mode_packing"
+      ]
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Density-derived target bias and wander scale are already bounded and tested.",
+      "claim": "Minime suggests inspecting `resonance_control_from_density_with_mode_packing` and PI use of `target_bias_pct` / `wander_scale`.",
+      "disposition": "verified_existing",
+      "evidence": [
+        "/Users/v/other/minime/minime/src/regulator.rs:329",
+        "/Users/v/other/minime/minime/src/regulator.rs:2834",
+        "/Users/v/other/minime/minime/src/regulator.rs:4427",
+        "test: high_pressure_risk_maps_to_downward_target_bias"
+      ]
+    }
+  ]
+}

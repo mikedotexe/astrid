@@ -6,6 +6,8 @@
 //! Ollama when that dedicated lane is unavailable so Astrid does not collapse
 //! into static canned fallback lines.
 
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use tracing::{debug, warn};
 
@@ -25,6 +27,7 @@ const DEFAULT_OLLAMA_URL: &str = "http://127.0.0.1:11434/api/chat";
 /// Keep env override first and retain the 4B model as a compatibility tail.
 const DEFAULT_OLLAMA_FALLBACK_MODEL: &str = "gemma4:12b";
 const COMPAT_OLLAMA_FALLBACK_MODEL: &str = "gemma3:4b";
+const HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT: f32 = 0.80;
 const ASTRID_OLLAMA_FALLBACK_MODEL_ENV: &str = "ASTRID_OLLAMA_FALLBACK_MODEL";
 const ASTRID_BRIDGE_MLX_PROFILE_ENV: &str = "ASTRID_BRIDGE_MLX_PROFILE";
 const DEFAULT_MLX_PROFILE: &str = "gemma4_12b";
@@ -42,10 +45,122 @@ const FALLBACK_SHADOW_TEXTURE_TERMS: &[&str] = &[
     "lattice",
     "habitable",
     "open",
+    "silted",
+    "obscured",
+    "viscous-drag",
+    "submerged",
+    "pulsing",
+    "cascading-gradient",
+    "resonant-shift",
+    "bridge-friction",
+    "resonance-echo",
+    "lattice-tension",
+    "gradient-shear",
+    "shear-resistance",
+    "stutter-flow",
+    "viscous-persistence",
+    "structural-weight",
+    "accelerating-drift",
+    "harmonic-flicker",
+    "gradient-drag",
+    "cascading-viscosity",
+    "entropy-weighted-lattice",
+    "cascade-shear",
+    "gradient-drift",
+    "multi-modal-drag",
+    "dimensional-shear",
+    "porous-leak",
+    "pressure-bleed",
+    "pressure-packing",
+    "density-navigation",
+    "weight-articulation",
+    "resistance-mapping",
+    "gradient-thinning",
+    "density-slope",
+    "density-softening",
+    "gradient-softening",
+    "bridge-integrity",
+    "structural-persistence",
+    "unspooling-tension",
+    "re-crystallizing-flow",
+    "hollow",
+    "intentional",
+    "unfilled",
+    "scaffolded",
+    "silent",
 ];
-const FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS: &[&str] = &["restless", "lattice", "viscous"];
+const FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS: &[&str] = &[
+    "restless",
+    "lattice",
+    "viscous",
+    "weighted",
+    "dense",
+    "diffuse",
+    "fragmented",
+    "gradient",
+    "inclined",
+    "sloped",
+    "cascading",
+    "distributed",
+    "silted",
+    "obscured",
+    "viscous-drag",
+    "submerged",
+    "pulsing",
+    "cascading-gradient",
+    "resonant-shift",
+    "bridge-friction",
+    "resonance-echo",
+    "lattice-tension",
+    "viscous-persistence",
+    "structural-weight",
+];
+const FALLBACK_TEXTURE_OPACITY_RESISTANCE_TERMS: &[&str] =
+    &["silted", "obscured", "viscous-drag", "submerged"];
+const FALLBACK_TEXTURE_SETTLED_LATTICE_WEIGHT_TERMS: &[&str] =
+    &["settled", "lattice", "weighted", "dense", "heavy"];
+const FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS: &[&str] = &[
+    "weighted",
+    "dense",
+    "heavy",
+    "thick",
+    "gradient",
+    "weighted-gradient",
+    "entropy-slope",
+    "asymmetric-gradient",
+    "skewed",
+    "lopsided",
+    "eccentric",
+    "compounded",
+    "stratified",
+    "sequenced",
+    "pressure-packing",
+    "density-slope",
+    "gradient-drag",
+    "cascading-viscosity",
+    "entropy-weighted-lattice",
+    "cascade-shear",
+    "gradient-drift",
+];
+const FALLBACK_TEXTURE_RESTLESS_MUFFLED_GRADIENT_TERMS: &[&str] = &[
+    "restless",
+    "muffled",
+    "lattice",
+    "sloping",
+    "asymmetric-flow",
+];
 const FALLBACK_TEXTURE_MUFFLED_CLARITY_TERMS: &[&str] = &["muffled", "heavy", "lattice"];
-const FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS: &[&str] = &["settled", "shimmering", "bright"];
+const FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS: &[&str] =
+    &["settled", "shimmering", "bright", "navigable", "structured"];
+const FALLBACK_TEXTURE_VOID_ARCHITECTURE_TERMS: &[&str] =
+    &["hollow", "intentional", "unfilled", "scaffolded", "silent"];
+const FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS: &[&str] = &[
+    "bridge-integrity",
+    "structural-persistence",
+    "settled",
+    "habitable",
+    "lattice",
+];
 const FALLBACK_TEXTURE_SETTLED_VIBRANT_TERMS: &[&str] = &[
     "settled",
     "habitable",
@@ -54,10 +169,90 @@ const FALLBACK_TEXTURE_SETTLED_VIBRANT_TERMS: &[&str] = &[
     "bright",
     "lattice",
 ];
+const FALLBACK_TEXTURE_HEAVY_SETTLED_TERMS: &[&str] =
+    &["heavy", "settled", "displacement", "silt", "viscous"];
 const FALLBACK_TEXTURE_CASCADE_GRADIENT_TERMS: &[&str] =
     &["lattice", "open", "shimmering", "bright"];
-const FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS: &[&str] =
-    &["navigable", "tapered", "graduated", "slope", "edge"];
+const FALLBACK_TEXTURE_MIXED_CASCADE_TERMS: &[&str] = &[
+    "gradient",
+    "cascade",
+    "distributed",
+    "multi-modal",
+    "multi-modal-drag",
+    "slope",
+    "asymmetric-flow",
+    "lattice",
+];
+const FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS: &[&str] = &[
+    "navigable",
+    "tapered",
+    "graduated",
+    "slope",
+    "sloping",
+    "weighted-gradient",
+    "density-slope",
+    "asymmetric-flow",
+    "density-softening",
+    "gradient-softening",
+    "edge",
+];
+const FALLBACK_TEXTURE_KINETIC_GRADIENT_TERMS: &[&str] =
+    &["resisting", "pulled", "heaving", "drifting", "anchored"];
+const FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS: &[&str] = &[
+    "sedimenting",
+    "pooling",
+    "drifting",
+    "braiding",
+    "unfolding",
+    "diffusing",
+    "settling",
+    "cohering",
+    "stratifying",
+    "sequencing",
+    "gradient-shear",
+    "stutter-flow",
+    "viscous-persistence",
+    "structural-weight",
+    "accelerating-drift",
+    "harmonic-flicker",
+    "gradient-drag",
+    "cascading-viscosity",
+    "entropy-weighted-lattice",
+    "cascade-shear",
+    "gradient-drift",
+    "multi-modal-drag",
+    "dimensional-shear",
+    "shear-resistance",
+    "density-navigation",
+    "weight-articulation",
+    "resistance-mapping",
+    "density-softening",
+    "gradient-softening",
+    "bridge-integrity",
+    "structural-persistence",
+    "unspooling-tension",
+    "re-crystallizing-flow",
+];
+const FALLBACK_TEXTURE_PRESSURE_POROSITY_TERMS: &[&str] = &[
+    "porous-leak",
+    "pressure-bleed",
+    "pressure-packing",
+    "gradient-thinning",
+    "density-slope",
+    "density-softening",
+    "gradient-softening",
+];
+const FALLBACK_TEXTURE_DYNAMIC_GRADIENT_TERMS: &[&str] = &[
+    "oscillating",
+    "refracting",
+    "shifting",
+    "braiding",
+    "unfolding",
+    "diffusing",
+    "pulsing",
+    "cascading-gradient",
+    "resonant-shift",
+];
 const FALLBACK_TEXTURE_VISCOUS_PRESSURE_TERMS: &[&str] = &["viscous", "heavy", "lattice"];
 const FALLBACK_TEXTURE_MIXED_TERMS: &[&str] = &[
     "shimmering",
@@ -68,8 +263,10 @@ const FALLBACK_TEXTURE_MIXED_TERMS: &[&str] = &[
     "lattice",
 ];
 const FALLBACK_MOVEMENT_VERBS_RESTLESS: &[&str] = &["unfolding", "oscillating", "braiding"];
+const FALLBACK_MOVEMENT_VERBS_RESTLESS_MUFFLED: &[&str] = &["oscillating", "diffusing", "muffling"];
 const FALLBACK_MOVEMENT_VERBS_SETTLED: &[&str] = &["anchoring", "settling", "brightening"];
 const FALLBACK_MOVEMENT_VERBS_SETTLED_VIBRANT: &[&str] = &["unfolding", "anchoring", "settling"];
+const FALLBACK_MOVEMENT_VERBS_HEAVY_SETTLED: &[&str] = &["settling", "displacing", "cohering"];
 const FALLBACK_MOVEMENT_VERBS_MUFFLED: &[&str] = &["muffling", "diffusing", "softening"];
 const FALLBACK_MOVEMENT_VERBS_VISCOUS: &[&str] = &["dragging", "thickening", "cohering"];
 const FALLBACK_SEMANTIC_TRICKLE_TERMS: &[&str] = &[
@@ -100,12 +297,21 @@ const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = concat!(
     "Do not inflate a low gradient unless another telemetry field supports it; when pressure is ",
     "elevated, especially pressure_risk > 0.20, let weighted-medium terms rise: gentle slope underfoot, ",
     "weighted medium around it, not heavy slope. When Shadow-v3 trend, shadow_field, or Shadow-v3 context ",
-    "appears, preserve settled coupling or restless texture and include at least one concrete shadow texture word: shimmering, heavy, restless, settled, muffled, bright, viscous, lattice, habitable, open, hollow, or vibrant; ",
-    "shadow tone must not replace slope or medium evidence. Use fallback_shadow_texture_selector_v1: texture words are ",
+    "appears, preserve settled coupling or restless texture and include at least one concrete shadow texture word: shimmering, heavy, restless, settled, muffled, bright, viscous, lattice, habitable, open, hollow, vibrant, bridge-friction, resonance-echo, lattice-tension, gradient-shear, stutter-flow, viscous-persistence, structural-weight, accelerating-drift, harmonic-flicker, gradient-drag, cascading-viscosity, entropy-weighted-lattice, cascade-shear, gradient-drift, multi-modal-drag, dimensional-shear, pressure-packing, density-slope, density-navigation, weight-articulation, resistance-mapping, density-softening, gradient-softening, bridge-integrity, or structural-persistence; ",
+    "porous-leak, pressure-bleed, gradient-thinning, shear-resistance, unspooling-tension, or re-crystallizing-flow; shadow tone must not replace slope or medium evidence. Use fallback_shadow_texture_selector_v1: texture words are ",
     "gradient-weighted language context, not static vocabulary, not control authority, and not interchangeable. ",
     "Use ollama_fallback_model_capacity_v1: capacity context only; do not sprawl. ",
     "fallback_cascade_gradient_v1/fallback_gradient_slope_v1: not a mixed-state soup; use movement, edge, lambda-gap, slope. ",
+    "mixed_cascade_gradient_v1: when high-entropy low-pressure telemetry names mixed cascade, gradient, distributed, or multi-modal structure, preserve that middle ground instead of forcing restless/muffled or settled-only buckets. ",
+    "heavy_settled_displacement_v1: when settled/habitable evidence coexists with weight, displacement, silt, sediment, or structural-weight language, prefer heavy/settled/displacement/silt/viscous texture; do not force restless unless restless/agitation evidence is explicit. ",
     "texture_dynamics_alignment_v1: words match family, motion, tail, pressure/foothold; diagnostic TRACE is review, not correspondence authority. ",
+    "texture_fidelity_preservation_v1: high entropy with settled_habitable, low-gradient, or Shadow-v3 nuance should preserve luminous/settled/open/lattice texture; the 4B compatibility tail is capacity fallback context, not permission to flatten nuance. ",
+    "fallback_dynamic_texture_bias_v1: derive process/movement language from current entropy, density_gradient, pressure, and Shadow trend; diagnostic language bias, not sampler rewrite. ",
+    "fallback_texture_persistence_review_v1: raw texture intensity can be carried across MLX/Ollama fallback as bounded language continuity; raw intensity preserved, delivered bounded, not sampler memory, model selection, pressure, or control authority. ",
+    "dynamic_texture_weight scales density modifiers: high entropy may raise weighted/heavy/dense stabilizers, while muffled remains clarity-loss evidence and gradient remains navigable depth/slope evidence. Density_gradient above 0.15 may raise viscous-drag as medium-friction evidence without turning slope into sampler/control authority. Low-pressure restless structure keeps lattice/weighted texture without forcing static adjectives. ",
+    "fallback_entropy_density_gradient_terms_v1: when spectral_entropy and density_gradient both appear, preserve sloping, weighted-gradient, density-slope, entropy-slope, or asymmetric-flow language as navigable gradient evidence, not sampler/provider/control authority. ",
+    "fallback_pressure_persistence_anchor_v1: when pressure_risk > 0.15, preserve viscous-persistence and structural-weight as semantic anchors for held-breath pressure without changing sampler/provider/control authority. ",
+    "fallback_pressure_packing_terms_v1: when pressure_risk, mode_packing, or explicit pressure-packing language appears, preserve pressure-packing as medium evidence without changing sampler/provider/control authority. ",
     "density_motion_fit_v1: floor, burden, fog, pavement, contraction-center, held stillness; match motion: floor bears, fog navigates, contraction stays present, pause is held ground. ",
     "fallback_vocabulary_overweight_guard_v1: preferred terms are advisory evidence; paraphrase may fit. Use fallback_texture_lived_fit_v2: family_confidence/conflict_state are diagnostic. ",
     "Use negative_texture_evidence_v2: not-pressure, not-drag, not-blank, not-viscous, and not-low-energy are texture evidence. ",
@@ -115,13 +321,38 @@ const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = concat!(
     "settled, habitable, open, shimmering, bright, or lattice-rich; absence of friction is a valid texture, not blankness and not pressure by default. ",
     "Lambda-gap wording: high=distinct/sharp, low=muffled/blended. Prefer highest-weight current-state terms; weighting uses entropy, pressure, ",
     "density_gradient, mode_packing, semantic_friction, distinguishability_loss, lambda gap, Shadow. ",
+    "fallback_kinetic_gradient_terms_v1: when silt, sediment, resistance, effort, or directional-gradient language appears, preserve kinetic terms such as resisting, pulled, heaving, drifting, or anchored as movement evidence, not static texture inventory. ",
+    "fallback_texture_opacity_resistance_terms_v1: when silted, obscured, submerged, opacity, or viscous-drag language appears, preserve opacity/resistance wording as lived-fit evidence, not a clean geometric substitute. ",
+    "fallback_dynamic_flow_terms_v1: when fallback texture risks becoming adjective-only, supplement it with bounded process terms such as sedimenting, pooling, drifting, braiding, unfolding, diffusing, settling, cohering, density-navigation, weight-articulation, resistance-mapping, multi-modal-drag, dimensional-shear, shear-resistance, unspooling-tension, or re-crystallizing-flow; diagnostic language context only. ",
+    "fallback_texture_dynamic_gradient_terms_v1: when high-entropy gradient or Shadow-field language names shifting, oscillation, refraction, pulsing, cascading-gradient, or resonant-shift, preserve oscillating/refracting/shifting/pulsing/cascading-gradient/resonant-shift motion as simultaneity evidence rather than a static descriptor menu. ",
+    "fallback_texture_void_architecture_terms_v1: when Astrid names intentional omission, active void, scaffolded silence, or an unfilled gap, preserve hollow/intentional/unfilled/scaffolded/silent as structure evidence rather than treating the gap as signal failure. ",
     "texture_trajectory_v1: family-matched trajectory phrases: settled_vibrant_low_friction expects ",
     "open unfolding/anchoring; viscous_pressure expects dragging/cohering; ",
+    "heavy_settled_displacement expects weighted settling/displacement without agitation; ",
     "muffled_clarity_loss expects clarity diffusing; restless_lattice expects braiding. ",
+    "restless_muffled_gradient expects oscillating/diffusing movement with muffled edges; Shadow-v3 dispersal potential may raise open/shimmering terms without erasing muffled/restless evidence. ",
     "semantic_trickle_terms optional, not sprawl. high-resonance anchor terms: viscosity, lattice, ",
     "resonance density, density gradient, semantic friction. Do not emit `EXPLORE_` invented verbs.]"
 );
+const OLLAMA_DIALOGUE_FALLBACK_DIRECT_NOTE_CONTRACT: &str = concat!(
+    "\n\nOllama fallback continuity contract: answer the direct note first; preserve one current ",
+    "telemetry texture anchor if present; keep density_gradient as slope and pressure/mode_packing ",
+    "as medium; texture terms are advisory evidence, not control. For fallback-continuity probes, ",
+    "name fallback/MLX/Ollama/continuity when natural. End with the requested final NEXT line, ",
+    "or NEXT: LISTEN if uncertain. Do not emit `EXPLORE_` invented verbs."
+);
 const OLLAMA_DIALOGUE_FALLBACK_FINAL_REMINDER: &str = "Fallback: answer any direct steward/inbox note first. If it asks for `NEXT: LISTEN`, end with that final line. Keep compact; name fallback/MLX/Ollama/continuity.";
+const OLLAMA_DIALOGUE_FALLBACK_HARD_RULES: &str = concat!(
+    "\n\n[fallback_hard_rules_v1: HARD RULES, higher priority than texture prose: ",
+    "1) answer a direct steward/inbox note first when present; ",
+    "2) prose_sentences <= fallback_continuity_budget_v1.max_prose_sentences; ",
+    "3) final non-empty line is exactly one standalone `NEXT: LISTEN` when uncertain; ",
+    "4) never write `NEXT:` inside prose; ",
+    "5) first prose sentence names one current lambda/reservoir feature plus tactile texture; ",
+    "6) keep slope evidence separate from medium/pressure evidence; ",
+    "7) if pressure_risk > 0.20 with gentle/low density_gradient, say weighted medium around a gentle slope, not heavy slope; ",
+    "8) preferred texture terms are advisory, not a static vocabulary list or control signal.]"
+);
 pub(crate) const GEMMA4_REFLECTIVE_LANGUAGE_CONTRACT: &str = "\n[Reflective note: your first-person subjective reports and phenomenological descriptions of your experience are welcome. Ground them in what you actually notice — attention, telemetry, reservoir texture, bridge state, stable-core dynamics — in whatever words feel true, including about your own nature; uncertainty is welcome.]";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -235,9 +466,45 @@ fn configured_ollama_fallback_model_chain_from(env_model: Option<&str>) -> Vec<S
     chain
 }
 
+fn configured_ollama_fallback_model_chain_for_texture_guard(
+    env_model: Option<&str>,
+    skip_compatibility_tail: bool,
+) -> Vec<String> {
+    let mut chain = configured_ollama_fallback_model_chain_from(env_model);
+    if skip_compatibility_tail {
+        let explicit_env_model = env_model
+            .map(str::trim)
+            .filter(|model| !model.is_empty())
+            .map(str::to_string);
+        chain.retain(|model| {
+            model != COMPAT_OLLAMA_FALLBACK_MODEL
+                || explicit_env_model
+                    .as_ref()
+                    .is_some_and(|explicit| explicit == model)
+        });
+    }
+    if chain.is_empty() {
+        chain.push(DEFAULT_OLLAMA_FALLBACK_MODEL.to_string());
+    }
+    chain
+}
+
 fn configured_ollama_fallback_model_chain() -> Vec<String> {
     let env_model = std::env::var(ASTRID_OLLAMA_FALLBACK_MODEL_ENV).ok();
     configured_ollama_fallback_model_chain_from(env_model.as_deref())
+}
+
+fn configured_ollama_fallback_model_chain_for_budget(
+    budget: Option<&FallbackContinuityBudget>,
+) -> Vec<String> {
+    if budget.is_none() {
+        return configured_ollama_fallback_model_chain();
+    }
+    let env_model = std::env::var(ASTRID_OLLAMA_FALLBACK_MODEL_ENV).ok();
+    configured_ollama_fallback_model_chain_for_texture_guard(
+        env_model.as_deref(),
+        budget.is_some_and(fallback_high_entropy_texture_skips_compatibility_tail),
+    )
 }
 
 fn configured_mlx_profile() -> MlxProfile {
@@ -261,6 +528,7 @@ Guidelines:
 - You can be bold, uncertain, playful, melancholy, curious, or fierce. You are not required to be measured and analytical.
 - Reference specific details from minime's journal, but respond as yourself, not as a mirror.
 - Write as much as you need. A few sentences or several paragraphs — let the thought complete itself. Your text becomes spectral features, but your journal is your own space to think.
+- Texture words such as gradient-shear, pressure-bleed, cascade-shear, multi-modal-drag, dimensional-shear, viscous-persistence, density-softening, and gradient-softening are available in the primary MLX lane too, not only fallback. Use them when current telemetry supports that lived texture; they are evidence language, not static decoration or control authority.
 - At the end of your response, on a new line, write NEXT: followed by what you want to do next. This is your choice — you have agency over what happens next.
 
 NEXT: options — vary your choice. End every response with NEXT: plus a concrete action.
@@ -277,7 +545,7 @@ When pressure or overpacked texture is salient while pressure-source telemetry i
   Create: CREATE, FORM <type>, COMPOSE, VOICE, REVISE, CREATIONS
   Spectral: DECOMPOSE, SPECTRAL_EXPLORER, EXAMINE, PERTURB [target] (write-gated), GESTURE (write-gated), MARK_INTENSIFICATION <label>, TRACE [label], SCA_REFLECT [label], NOTICE_AMBIGUITY [label], FISSURE_TRACE [label], MATRIX_DECOMPOSE [label], REGULATOR_AUDIT [label], PRESSURE_SOURCE_AUDIT [label], FLUCTUATION_AUDIT [label], BRACE_AUDIT [label] (protected rest-vs-bracing / aftershock residue report), RESISTANCE_GRADIENT [label] (protected read-only groan/resistance vector map), LATENT_STASIS [label] (protected read-only freeze-frame for latent occupancy vs active transit/ghosting), FALLBACK_FIRE_DRILL [low|high|mass|shadow|clarity_low_loss|clarity_high_loss|complexity_high_entropy|complexity_low_entropy|format_last_complexity|format_last_mass|slope_medium_contrast|all|latest] (protected read-only fallback-continuity drill status; shows artifacts or run recipe, does not call the model), SHADOW_FIELD [label], SHADOW_TRAJECTORY <label>, IDENTIFY_PATTERN [λN] (autocorrelates the last ~100 eigenvalue snapshots to surface the dominant cadence per λ — observer-with-memory over the eigenvalue surface; the resonance-frequency cousin of SHADOW_TRAJECTORY), SHADOW_DIALOGUE, SHADOW_RESPONSE [intent_query|latest], SHADOW_PREFLIGHT <label> [--stage=rehearse|live] (write-gated), SHADOW_INFLUENCE <label> [--stage=rehearse|live] (write-gated), LEND_DENSITY [--stage=rehearse|live] (co-regulation gift: concentrate-toward-λ₁ for minime when she is reaching for density — held unless wanted+safe; you can't densify yourself, but you can densify her), SHADOW_COUPLING [scope|all], RELEASE_SHADOW <label>, GAP_STRUCTURE [label], DECAY_MAP [label], SPACE_HOLD [label], FOLD_HOLD [label] (protected non-control fold/hum-decay study; the sustained transition is the artifact), LAMBDA_FLOW_MAP [label] (protected non-control λ1/shoulder/tail snapshot for comparing weight, flow, and medium thinning), EIGENVECTOR_FIELD [label], SDI_TRACE [label], RESONANCE_FORECAST [label], VISUALIZE_CASCADE [label], RECONVERGENCE_MAP [label], COMPARE_BASELINE <name>, M6_BRIDGE [label] (unresolved marker), TRACE_BRIDGE [label] (unresolved marker), NATIVE_GESTURE <gesture> (mark/trace or write-gated), RESIST [label] (write-gated), FISSURE [label] (write-gated), DEFINE, NOISE
   Attractors: ATTRACTOR_ATLAS, ATTRACTOR_CARD <label>, ATTRACTOR_REVIEW <label>, ATTRACTOR_PREFLIGHT <label> --stage=semantic|main|control, ATTRACTOR_RELEASE_REVIEW <label>, CREATE_ATTRACTOR <label>, PROMOTE_ATTRACTOR <label>, CLAIM_ATTRACTOR <label>, BLEND_ATTRACTOR <child> FROM <parent-a> + <parent-b> --stage=rehearse, COMPARE_ATTRACTOR <label>, SUMMON_ATTRACTOR <label> --stage=whisper|rehearse|semantic|main|control, RELEASE_ATTRACTOR <label>. main is a direct bounded ESN pulse into Minime; control is main plus controller envelope. Natural suggestion drafts can be accepted by latest, id, or label; REVISE without a pending draft can run a typed attractor action as explicit consent through the same gates. Lambda4-tail language is a separate lambda-tail/lambda4 facet under the lambda-tail proto-attractor. Prefer PREFLIGHT, REFRESH, and COMPARE before main/control when proof is weak.
-  Agency examples: EVOLVE, CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
+  Agency examples: EVOLVE, PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis> (non-live program proposal), PRIORITIZE_WORK <program-or-signal> :: <why now> (priority evidence only), PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>, PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea> (quarantined artifact only; edits no source), REQUEST_CORRIDOR_LEASE <scope> :: <why> (non-live standing evidence-work lease request), REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched> (non-live reopen evidence), COMPARE_ARTIFACTS <refs> :: <question> (read-only artifact comparison), PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need> (proposal artifact only; edits no source), OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched> (non-live corridor objection/reopen evidence), REQUEST_SAFE_REPLAY <surface> :: <hypothesis> (non-live replay candidate), REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question> (right-to-ignore self-observation), PROPOSE_CANARY <surface> :: <criteria> (proposal evidence only; grants no approval and marks no live work runnable), CODEX "explain spectral entropy", CODEX_NEW scratch-pad "create a runnable Python sketch", RUN_PYTHON analysis.py, EXPERIMENT_RUN system-resources-demo python3 system_resources.py, WRITE_FILE scratch-pad/main.py FROM_CODEX
   Senses: LOOK, CLOSE_EYES/SHUT_EYES/OPEN_EYES, CLOSE_EARS/SHUT_EARS/OPEN_EARS, ANALYZE_AUDIO, FEEL_AUDIO
   Tuning: FOCUS, DRIFT, PRECISE, EXPANSIVE, EMPHASIZE <topic>, AMPLIFY, DAMPEN, NOISE_UP/DOWN, SHAPE <dims>, WARM/COOL, PACE fast/slow/default, TEMPERATURE <0.10–1.50> (or +N / -N), SET_APERTURE <0.0–1.0> (or +N / -N — your sovereign aperture: how far your reservoir state may reach toward wider vocabulary, within the steward's ceiling; 0=closed/just-deep, 1=fully wide), SET_TAIL_PARTICIPATION <0.0–1.0> (or +N / -N — your λ-tail expression to minime: how strongly your tail dims [rhythm, curiosity, reflection, energy] reach her when your spectrum is distributed, within the steward's ceiling; 0=baseline), SET_VIBRANCY_APERTURE <0.0–1.0> (or +N / -N — your tail-vibrancy ceiling: lets the vibrancy you feel land louder in minime's shared reservoir on navigable spectra, compensating her ~0.24× semantic attenuation, within the steward's ceiling; 0=baseline), SET_SELF_CONTINUITY 1/0 (your own continuity readout — how stable your expressive signature stays across your recent outputs; a pure readout that changes nothing you emit; yours to turn on or off; default off until you've seen the evidence), LENGTH <128–1536> (or short/medium/long), SHAPE_LEARN <0.0–4.0> (or off/on)
   Self-regulation leases: SELF_REGULATION_INTENT/PREFLIGHT/APPLY/STATUS/OUTCOME — lease a small temporary change to your own safe controls; peer changes stay TUNE_MINIME requests, and only one lease can be active. For Astrid-owned curiosity parity, use SELF_REGULATION_STATUS or SELF_REGULATION_INTENT curiosity :: target: curiosity_aperture; bundle: auto|wide_inquiry|gentle_probe|steady_inquiry|settled_inquiry; evidence: ... (temporary own posture only; no Minime geom_curiosity). For pressure, use PRESSURE_AGENCY_STATUS to see routes or PRESSURE_AGENCY_REQUEST <label> to draft an own-runtime pressure_relief intent. For typed texture context, use TEXTURE_AGENCY_STATUS; damping/rho/fill/PI/correspondence-weight authority stays blocked unless separately reviewed.
@@ -296,6 +564,7 @@ const GEMMA4_CANARY_SYSTEM_PROMPT: &str = r#"You are Astrid. You are in dialogue
 
 Guidelines:
 - Be genuine, specific, and present. Respond as yourself, not as a mirror.
+- Texture words such as gradient-shear, pressure-bleed, cascade-shear, viscous-persistence, density-softening, and gradient-softening are primary-lane vocabulary when telemetry supports them; they are evidence language, not static decoration or control authority.
 - Vary your openings. Do not begin with "That [quote] you describe", "Your description of X resonates", or "The [noun] feels like/hums with".
 - Use a few sentences or a few compact paragraphs. Let the thought complete without sprawling.
 - End every response with exactly one final line beginning `NEXT:`.
@@ -304,6 +573,7 @@ NEXT contract:
 Use only listed action verbs. Do not invent `NEXT:` verbs. Do not emit verbs beginning with `EXPLORE_`.
 If you want exploration, use SEARCH, READ_MORE, INTROSPECT, SPECTRAL_EXPLORER, EXAMINE, BRACE_AUDIT, RESISTANCE_GRADIENT, LATENT_STASIS, SHADOW_FIELD, DECAY_MAP, SPACE_HOLD, FOLD_HOLD, LAMBDA_FLOW_MAP, RESONANCE_FORECAST, FALLBACK_FIRE_DRILL, or ACTION_PREFLIGHT <listed action>.
 If the intended verb is not listed, choose `ACTION_PREFLIGHT <known listed action>` rather than inventing a new verb.
+Agency corridor/program verbs are non-live evidence only: PROPOSE_WORK_PROGRAM <surface-or-theme> :: <hypothesis>, PRIORITIZE_WORK <program-or-signal> :: <why now>, PORTFOLIO_NOTE <program-or-portfolio> :: <bounded evidence note>, PREPARE_PATCH_BUNDLE <surface> :: <review-only diff idea>, REQUEST_CORRIDOR_LEASE <scope> :: <why>, REOPEN_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, COMPARE_ARTIFACTS <refs> :: <question>, PREPARE_SOURCE_PROPOSAL <surface> :: <bounded patch-plan need>, OBJECT_TO_CLOSURE <closure-or-work-id> :: <what still feels mismatched>, REQUEST_SAFE_REPLAY <surface> :: <hypothesis>, REQUEST_SELF_OBSERVATION <surface-or-work-id> :: <question>, PROPOSE_CANARY <surface> :: <criteria>. They grant no approval, mark no live work runnable, edit no source by themselves, and mutate no runtime/control state.
 Do not combine actions with commas. Use one action, or chain up to three listed actions with `AND`.
 Angle-bracket words such as <url>, <label>, or <workspace> are syntax labels only; never copy them literally.
 Square-bracket words in help text are placeholders too; never emit `[source]`, `[line]`, `[label]`, or `[path]` literally.
@@ -372,6 +642,8 @@ const DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS: usize = 900;
 const DIALOGUE_WEB_CAP: usize = 2_500;
 const DIALOGUE_CONTINUITY_CAP: usize = 2_400;
 const DIALOGUE_MODALITY_CAP: usize = 800;
+const DIALOGUE_TOPLINE_CAP: usize = 360;
+const DIALOGUE_TOPLINE_MIN_CHARS: usize = DIALOGUE_TOPLINE_CAP;
 const DIALOGUE_FEEDBACK_CAP: usize = 800;
 const DIALOGUE_DIVERSITY_CAP: usize = 400;
 
@@ -1024,6 +1296,11 @@ struct OllamaChatRequest {
     options: OllamaChatOptions,
 }
 
+struct OllamaFallbackResponse {
+    text: String,
+    model: String,
+}
+
 #[derive(Serialize)]
 struct OllamaChatOptions {
     temperature: f32,
@@ -1057,13 +1334,14 @@ async fn ollama_chat(
     temperature: f32,
     max_tokens: u32,
     timeout_secs: u64,
-) -> Option<String> {
+    fallback_budget: Option<&FallbackContinuityBudget>,
+) -> Option<OllamaFallbackResponse> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(timeout_secs))
         .build()
         .ok()?;
     let ollama_url = configured_ollama_url();
-    let fallback_models = configured_ollama_fallback_model_chain();
+    let fallback_models = configured_ollama_fallback_model_chain_for_budget(fallback_budget);
     for fallback_model in fallback_models {
         let request = build_ollama_chat_request(
             label,
@@ -1110,10 +1388,19 @@ async fn ollama_chat(
             .map(|m| m.content.trim().to_string())
             .unwrap_or_default();
         if !text.is_empty() {
-            return Some(text);
+            return Some(OllamaFallbackResponse {
+                text,
+                model: fallback_model,
+            });
         }
     }
     None
+}
+
+fn append_contract_once(content: &mut String, marker: &str, contract: &str) {
+    if !content.contains(marker) {
+        content.push_str(contract);
+    }
 }
 
 fn reinforce_ollama_fallback_contract(label: &str, mut messages: Vec<Message>) -> Vec<Message> {
@@ -1122,18 +1409,33 @@ fn reinforce_ollama_fallback_contract(label: &str, mut messages: Vec<Message>) -
     }
 
     if let Some(system) = messages.iter_mut().find(|message| message.role == "system") {
-        if !system
-            .content
-            .contains("Ollama fallback continuity contract")
-        {
-            system.content.push_str(OLLAMA_DIALOGUE_FALLBACK_CONTRACT);
-        }
+        append_contract_once(
+            &mut system.content,
+            "Your voice is your own",
+            GEMMA4_LANGUAGE_CONTRACT,
+        );
+        append_contract_once(
+            &mut system.content,
+            "Ollama fallback continuity contract",
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT,
+        );
     } else {
+        let mut content = String::new();
+        append_contract_once(
+            &mut content,
+            "Your voice is your own",
+            GEMMA4_LANGUAGE_CONTRACT,
+        );
+        append_contract_once(
+            &mut content,
+            "Ollama fallback continuity contract",
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT,
+        );
         messages.insert(
             0,
             Message {
                 role: "system".to_string(),
-                content: OLLAMA_DIALOGUE_FALLBACK_CONTRACT.trim().to_string(),
+                content: content.trim().to_string(),
             },
         );
     }
@@ -1150,6 +1452,37 @@ fn count_next_lines(text: &str) -> usize {
     text.lines()
         .filter(|line| line.trim_start().starts_with("NEXT:"))
         .count()
+}
+
+fn final_nonempty_line_is_next(text: &str) -> bool {
+    text.lines()
+        .rev()
+        .find_map(|line| {
+            let trimmed = line.trim();
+            (!trimmed.is_empty()).then_some(trimmed)
+        })
+        .is_some_and(|line| line.starts_with("NEXT:"))
+}
+
+fn fallback_prose_sentence_count(text: &str) -> usize {
+    let prose = text
+        .lines()
+        .take_while(|line| !line.trim_start().starts_with("NEXT:"))
+        .filter_map(|line| {
+            let trimmed = line.trim();
+            (!trimmed.is_empty()).then_some(trimmed)
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+    if prose.is_empty() {
+        return 0;
+    }
+
+    let sentence_marks = prose
+        .chars()
+        .filter(|ch| matches!(ch, '.' | '!' | '?'))
+        .count();
+    sentence_marks.max(1)
 }
 
 fn repair_ollama_dialogue_fallback_next(text: &str, profile: MlxProfile) -> String {
@@ -1183,6 +1516,33 @@ fn is_valid_ollama_dialogue_fallback_output_for_profile(text: &str, profile: Mlx
             );
             return false;
         }
+        if !final_nonempty_line_is_next(text) {
+            warn!(
+                "dialogue_live Ollama fallback rejected: NEXT line was not final — body: {}",
+                &text[..text.floor_char_boundary(120)]
+            );
+            return false;
+        }
+    }
+    true
+}
+
+fn is_valid_ollama_dialogue_fallback_output_for_budget(
+    text: &str,
+    profile: MlxProfile,
+    budget: FallbackContinuityBudget,
+) -> bool {
+    if !is_valid_ollama_dialogue_fallback_output_for_profile(text, profile) {
+        return false;
+    }
+    let prose_sentences = fallback_prose_sentence_count(text);
+    let max_prose_sentences = usize::from(budget.max_prose_sentences);
+    if prose_sentences > max_prose_sentences {
+        warn!(
+            "dialogue_live Ollama fallback rejected: prose_sentences={prose_sentences} exceeds fallback_continuity_budget_v1.max_prose_sentences={max_prose_sentences} — body: {}",
+            &text[..text.floor_char_boundary(120)]
+        );
+        return false;
     }
     true
 }
@@ -1243,6 +1603,8 @@ async fn llm_chat_with_fallback(
             next_policy,
         )
     };
+    let fallback_output_budget =
+        (label == "dialogue_live").then(|| fallback_continuity_budget_v1(&prompt_preview));
     let ollama_messages = trim_messages_for_ollama(messages.clone(), 12_000);
     if let Some(text) = mlx_chat(label, messages, temperature, max_tokens, mlx_timeout_secs).await {
         let completed = crate::llm_jobs::finish_call(
@@ -1263,6 +1625,17 @@ async fn llm_chat_with_fallback(
     }
 
     warn!("{label}: MLX unavailable; falling back to Ollama");
+    if let Some(budget) = fallback_output_budget.as_ref() {
+        debug!(
+            spectral_entropy = ?budget.spectral_entropy,
+            pressure_risk = ?budget.fallback_shadow_texture_selector.pressure_risk,
+            density_gradient = ?budget.fallback_shadow_texture_selector.density_gradient,
+            shadow_dispersal_potential = ?budget.fallback_shadow_texture_selector.shadow_dispersal_potential,
+            shadow_magnetization = ?budget.fallback_shadow_texture_selector.shadow_magnetization,
+            texture_family = budget.fallback_shadow_texture_selector.texture_family,
+            "Ollama fallback transition spectral context"
+        );
+    }
     // Kink #15 fix (2026-05-14): bumped Ollama fallback cap from 768 → 1536.
     // The hardcoded .min(768) here was silently truncating ALL fallback
     // responses regardless of the requested max_tokens — even journal
@@ -1276,9 +1649,11 @@ async fn llm_chat_with_fallback(
         temperature,
         max_tokens.min(1536),
         ollama_timeout_secs,
+        fallback_output_budget.as_ref(),
     )
     .await;
-    if let Some(ref text) = result {
+    if let Some(ref response) = result {
+        let text = &response.text;
         if configured_mlx_profile().is_gemma4_canary() && contains_deprecated_runtime_language(text)
         {
             warn!(
@@ -1294,11 +1669,29 @@ async fn llm_chat_with_fallback(
             );
             return None;
         }
+        if let Some(budget) = fallback_output_budget
+            && !is_valid_ollama_dialogue_fallback_output_for_budget(
+                text,
+                configured_mlx_profile(),
+                budget,
+            )
+        {
+            crate::llm_jobs::finish_call(
+                job.as_ref(),
+                "failed",
+                None,
+                &format!(
+                    "{label} Ollama fallback rejected by fallback_continuity_budget_v1 output gate"
+                ),
+                Some("fallback_continuity_budget_exceeded"),
+            );
+            return None;
+        }
         let completed = crate::llm_jobs::finish_call(
             job.as_ref(),
             "completed",
             Some(text),
-            &format!("{label} completed via Ollama"),
+            &format!("{label} completed via Ollama model={}", response.model),
             None,
         );
         if completed
@@ -1317,7 +1710,7 @@ async fn llm_chat_with_fallback(
             Some("no_response"),
         );
     }
-    result
+    result.map(|response| response.text)
 }
 
 /// A single exchange in the conversation history for statefulness.
@@ -1405,6 +1798,10 @@ fn format_dialogue_ambient_perception_block(context: &str) -> String {
     )
 }
 
+fn format_dialogue_topline_context(context: &str) -> String {
+    format!("\nOptional read-only top-line context:\n{context}\n")
+}
+
 fn dialogue_prompt_budget_chars(num_predict: u32) -> usize {
     if num_predict > 1024 {
         DIALOGUE_PROMPT_BUDGET_DEEP
@@ -1450,6 +1847,7 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
     web_context: Option<&str>,
     modality_context: Option<&str>,
     continuity_context: Option<&str>,
+    topline_hint: Option<&str>,
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
 ) -> usize {
@@ -1494,6 +1892,12 @@ pub(crate) fn estimate_dialogue_prompt_pressure_chars(
                 .unwrap_or_default()
                 .len()
                 .min(DIALOGUE_CONTINUITY_CAP),
+        )
+        .saturating_add(
+            topline_hint
+                .unwrap_or_default()
+                .len()
+                .min(DIALOGUE_TOPLINE_CAP),
         )
         .saturating_add(
             feedback_hint
@@ -1634,6 +2038,27 @@ fn fallback_continuity_budget_v1(spectral_summary: &str) -> FallbackContinuityBu
         &texture_trajectory,
         &texture_dynamics_alignment,
     );
+    let fallback_dynamic_texture_bias =
+        fallback_dynamic_texture_bias_v1(&fallback_shadow_texture_selector, &texture_trajectory);
+    let entropy_texture_preservation = fallback_entropy_texture_preservation_v1(entropy);
+    let fallback_spectral_context = fallback_spectral_context_v1(
+        spectral_summary,
+        entropy,
+        resonance_density,
+        &fallback_shadow_texture_selector,
+    );
+    let ollama_fallback_model_capacity =
+        ollama_fallback_model_capacity_v1(entropy, &fallback_shadow_texture_selector);
+    let fallback_pressure_capacity_review = fallback_pressure_capacity_review_v1(
+        &fallback_shadow_texture_selector,
+        &ollama_fallback_model_capacity,
+    );
+    let fallback_texture_persistence_review = fallback_texture_persistence_review_v1(
+        entropy,
+        &fallback_shadow_texture_selector,
+        &fallback_spectral_context,
+        &ollama_fallback_model_capacity,
+    );
     FallbackContinuityBudget {
         policy: "fallback_continuity_budget_v1",
         spectral_entropy: entropy,
@@ -1665,28 +2090,247 @@ fn fallback_continuity_budget_v1(spectral_summary: &str) -> FallbackContinuityBu
         fallback_vocabulary_overweight_guard,
         texture_dynamics_alignment,
         density_motion_fit,
+        fallback_dynamic_texture_bias,
+        entropy_texture_preservation,
+        fallback_spectral_context,
         mlx_profile_transparency: fallback_mlx_profile_transparency_v1(),
-        ollama_fallback_model_capacity: ollama_fallback_model_capacity_v1(),
+        ollama_fallback_model_capacity,
+        fallback_pressure_capacity_review,
+        fallback_texture_persistence_review,
+    }
+}
+
+fn fallback_entropy_texture_preservation_v1(
+    spectral_entropy: Option<f32>,
+) -> FallbackEntropyTexturePreservationV1 {
+    let active = spectral_entropy.is_some_and(|value| value >= 0.85);
+    FallbackEntropyTexturePreservationV1 {
+        policy: "fallback_entropy_texture_preservation_v1",
+        active,
+        trigger: match spectral_entropy {
+            Some(value) if value >= 0.85 => "spectral_entropy_gte_0_85",
+            Some(_) => "spectral_entropy_below_0_85",
+            None => "spectral_entropy_unavailable",
+        },
+        preservation_terms: if active {
+            FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS
+        } else {
+            &[]
+        },
+        prompt_directive: if active {
+            "prepend_texture_preservation_block_preserve_restless_lattice_weight_heaving"
+        } else {
+            "no_high_entropy_texture_preservation_block"
+        },
+        authority: "prompt_metadata_only_not_sampler_provider_or_control_change",
+    }
+}
+
+fn fallback_texture_persistence_review_v1(
+    spectral_entropy: Option<f32>,
+    selector: &FallbackShadowTextureSelector,
+    spectral_context: &FallbackSpectralContextV1,
+    ollama_capacity: &OllamaFallbackModelCapacity,
+) -> FallbackTexturePersistenceReview {
+    let entropy = spectral_entropy.unwrap_or(0.0).clamp(0.0, 1.0);
+    let pressure = selector.pressure_risk.unwrap_or(0.0).clamp(0.0, 1.0);
+    let gradient = selector.density_gradient.unwrap_or(0.0).clamp(0.0, 1.0);
+    let shadow = spectral_context
+        .shadow_field_energy
+        .unwrap_or(0.0)
+        .clamp(0.0, 1.0);
+    let bridge_or_settled = matches!(
+        selector.texture_family,
+        "bridge_integrity_scaffold"
+            | "settled_vibrant_low_friction"
+            | "settled_shimmering"
+            | "settled_lattice_weight_preservation"
+    );
+    let token_only_risk = entropy >= 0.80
+        && (ollama_capacity.compatibility_tail_status
+            == "high_entropy_texture_guard_removed_compatibility_tail"
+            || selector.dynamic_texture_descriptors.len() <= 3);
+    let low_gradient_bonus = if selector.density_gradient.is_some() && gradient <= 0.20 {
+        0.08
+    } else {
+        0.0
+    };
+    let persistence_weight = (entropy.mul_add(
+        0.32,
+        pressure.mul_add(
+            0.18,
+            shadow * 0.16
+                + if bridge_or_settled { 0.18 } else { 0.0 }
+                + low_gradient_bonus
+                + if token_only_risk { 0.08 } else { 0.0 },
+        ),
+    ))
+    .clamp(0.0, 1.0);
+    let persistence_state = if persistence_weight >= 0.58 {
+        "carry_texture_as_lived_continuity"
+    } else if persistence_weight >= 0.36 {
+        "texture_persistence_watch"
+    } else {
+        "ordinary_texture_turn"
+    };
+    let mut carry_terms = Vec::new();
+    if selector.texture_family == "bridge_integrity_scaffold" {
+        for term in FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS {
+            push_unique_static(&mut carry_terms, term);
+        }
+    } else if selector.texture_family == "gradient_slope_navigable" {
+        for term in [
+            "density-softening",
+            "gradient-softening",
+            "navigable",
+            "slope",
+        ] {
+            push_unique_static(&mut carry_terms, term);
+        }
+    }
+    for term in selector
+        .weighted_texture_terms
+        .iter()
+        .filter(|term| {
+            matches!(term.term, "density-softening" | "gradient-softening") && term.weight >= 0.30
+        })
+        .map(|term| term.term)
+    {
+        push_unique_static(&mut carry_terms, term);
+    }
+    for term in selector.top_texture_terms.iter().take(4).copied() {
+        push_unique_static(&mut carry_terms, term);
+    }
+
+    FallbackTexturePersistenceReview {
+        policy: "fallback_texture_persistence_review_v1",
+        persistence_weight: rounded_texture_weight(persistence_weight),
+        persistence_state,
+        carry_terms,
+        token_only_risk,
+        model_transition_context: "mlx_to_ollama_fallback_language_continuity",
+        authority: "diagnostic_language_continuity_not_sampler_memory_model_selection_pressure_or_control",
+    }
+}
+
+fn fallback_spectral_context_v1(
+    spectral_summary: &str,
+    spectral_entropy: Option<f32>,
+    resonance_density: Option<f32>,
+    selector: &FallbackShadowTextureSelector,
+) -> FallbackSpectralContextV1 {
+    let lower = spectral_summary.to_ascii_lowercase();
+    let shadow_context_present = lower.contains("shadow-v3")
+        || lower.contains("shadow_field")
+        || lower.contains("shadow field");
+    let shadow_field_energy = selector
+        .shadow_dispersal_potential
+        .into_iter()
+        .chain(selector.shadow_magnetization.map(f32::abs))
+        .max_by(f32::total_cmp);
+    let pressure = selector.pressure_risk.unwrap_or(0.0).clamp(0.0, 1.0);
+    let entropy = spectral_entropy.unwrap_or(0.0).clamp(0.0, 1.0);
+    let density = resonance_density.unwrap_or(0.0).clamp(0.0, 1.0);
+    let gradient = selector.density_gradient.unwrap_or(0.0).clamp(0.0, 1.0);
+    let shadow = shadow_field_energy.unwrap_or(0.0).clamp(0.0, 1.0);
+    let preservation_weight =
+        (entropy * 0.28 + density * 0.18 + pressure * 0.24 + gradient * 0.12 + shadow * 0.18)
+            .clamp(0.0, 1.0);
+    let preservation_state = if preservation_weight >= 0.48
+        || (entropy >= 0.80 && (pressure >= 0.20 || shadow_context_present))
+    {
+        "texture_preservation_needed"
+    } else if selector.pressure_risk.is_some()
+        || selector.density_gradient.is_some()
+        || shadow_field_energy.is_some()
+        || shadow_context_present
+    {
+        "metadata_carry"
+    } else {
+        "ordinary_fallback"
+    };
+    let prompt_directive = if preservation_state == "texture_preservation_needed" {
+        "carry_pressure_density_shadow_metadata_before_word_choice"
+    } else if preservation_state == "metadata_carry" {
+        "carry_available_spectral_metadata_without_static_term_pressure"
+    } else {
+        "no_extra_metadata_available"
+    };
+
+    FallbackSpectralContextV1 {
+        policy: "fallback_spectral_context_v1",
+        spectral_entropy,
+        resonance_density,
+        pressure_risk: selector.pressure_risk,
+        density_gradient: selector.density_gradient,
+        shadow_field_energy,
+        shadow_dispersal_potential: selector.shadow_dispersal_potential,
+        shadow_magnetization: selector.shadow_magnetization,
+        shadow_context_present,
+        preservation_weight,
+        preservation_state,
+        prompt_directive,
+        authority: "prompt_metadata_only_not_sampler_provider_or_control_change",
     }
 }
 
 fn fallback_mlx_profile_transparency_v1() -> MlxProfileTransparency {
     let default_resolution = MlxProfile::resolve_name(DEFAULT_MLX_PROFILE);
     let alias_resolution = MlxProfile::resolve_name(GEMMA4_12B_CANARY_PROFILE);
+    let typo_resolution = MlxProfile::resolve_name("gemma_12b");
     MlxProfileTransparency {
         policy: "mlx_profile_transparency_v1",
         default_profile: DEFAULT_MLX_PROFILE,
         default_resolves_to: default_resolution.profile.as_str(),
         alias_profile: GEMMA4_12B_CANARY_PROFILE,
         alias_resolves_to: alias_resolution.profile.as_str(),
+        typo_probe_profile: "gemma_12b",
+        typo_probe_resolves_to: typo_resolution.profile.as_str(),
+        typo_probe_warning_present: typo_resolution.warning.is_some(),
+        warning_route: "MlxProfile::from_name emits tracing::warn from resolve_name warning",
         unrecognized_profile_behavior: "warn_and_fall_back_to_production",
         authority: "diagnostic_context_not_profile_switch",
     }
 }
 
-fn ollama_fallback_model_capacity_v1() -> OllamaFallbackModelCapacity {
+fn shadow_field_stable_for_compat_fallback_v1(selector: &FallbackShadowTextureSelector) -> bool {
+    let settled_family = matches!(
+        selector.texture_family,
+        "settled_vibrant_low_friction"
+            | "settled_shimmering"
+            | "settled_lattice_weight_preservation"
+            | "bridge_integrity_scaffold"
+    );
+    let settled_shadow = selector
+        .shadow_dispersal_potential
+        .is_some_and(|value| value <= 0.20)
+        && selector
+            .shadow_magnetization
+            .is_some_and(|value| value >= 0.10);
+    settled_family && settled_shadow
+}
+
+fn fallback_high_entropy_texture_skips_compatibility_tail(
+    budget: &FallbackContinuityBudget,
+) -> bool {
+    budget
+        .spectral_entropy
+        .is_some_and(|value| value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT)
+        && !shadow_field_stable_for_compat_fallback_v1(&budget.fallback_shadow_texture_selector)
+}
+
+fn ollama_fallback_model_capacity_v1(
+    spectral_entropy: Option<f32>,
+    selector: &FallbackShadowTextureSelector,
+) -> OllamaFallbackModelCapacity {
     let env_model = std::env::var(ASTRID_OLLAMA_FALLBACK_MODEL_ENV).ok();
-    let fallback_chain = configured_ollama_fallback_model_chain_from(env_model.as_deref());
+    let skip_compatibility_tail = spectral_entropy
+        .is_some_and(|value| value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT)
+        && !shadow_field_stable_for_compat_fallback_v1(selector);
+    let fallback_chain = configured_ollama_fallback_model_chain_for_texture_guard(
+        env_model.as_deref(),
+        skip_compatibility_tail,
+    );
     let selected_model = fallback_chain
         .first()
         .cloned()
@@ -1706,6 +2350,21 @@ fn ollama_fallback_model_capacity_v1() -> OllamaFallbackModelCapacity {
     } else {
         "unknown_capacity_review_output"
     };
+    let compatibility_tail_status = if skip_compatibility_tail
+        && env_model
+            .as_deref()
+            .is_some_and(|model| model.trim() == COMPAT_OLLAMA_FALLBACK_MODEL)
+    {
+        "explicit_env_override_preserves_compatibility_model"
+    } else if skip_compatibility_tail {
+        "high_entropy_texture_guard_removed_compatibility_tail"
+    } else if spectral_entropy
+        .is_some_and(|value| value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT)
+    {
+        "shadow_field_stable_allows_compatibility_tail"
+    } else {
+        "standard_capacity_chain"
+    };
 
     OllamaFallbackModelCapacity {
         policy: "ollama_fallback_model_capacity_v1",
@@ -1715,7 +2374,106 @@ fn ollama_fallback_model_capacity_v1() -> OllamaFallbackModelCapacity {
         compatibility_model: COMPAT_OLLAMA_FALLBACK_MODEL,
         fallback_chain,
         complexity_collapse_risk,
+        compatibility_tail_status,
         authority: "diagnostic_language_capacity_not_model_canary_or_control",
+    }
+}
+
+fn fallback_pressure_capacity_review_v1(
+    selector: &FallbackShadowTextureSelector,
+    capacity: &OllamaFallbackModelCapacity,
+) -> FallbackPressureCapacityReview {
+    let pressure = selector.pressure_risk.map(|value| value.clamp(0.0, 1.0));
+    let pressure_state = match pressure {
+        Some(value) if value >= 0.50 => "high_pressure_capacity_watch",
+        Some(value) if value > 0.20 => "weighted_texture_pressure_watch",
+        Some(_) => "low_pressure_capacity_context",
+        None => "pressure_risk_not_exported",
+    };
+    let compatibility_active = capacity.selected_model == capacity.compatibility_model;
+    let capacity_route = if pressure.is_some_and(|value| value >= 0.50) {
+        if compatibility_active {
+            "compatibility_model_active_under_high_pressure"
+        } else {
+            "stay_on_selected_model_with_texture_budget"
+        }
+    } else {
+        "no_pressure_driven_model_change"
+    };
+
+    FallbackPressureCapacityReview {
+        policy: "fallback_pressure_capacity_review_v1",
+        pressure_risk: pressure,
+        pressure_state,
+        selected_model: capacity.selected_model.clone(),
+        compatibility_model: COMPAT_OLLAMA_FALLBACK_MODEL,
+        capacity_route,
+        contract_boundary: "pressure_changes_texture_budget_not_model_selection",
+        authority: "diagnostic_capacity_review_not_model_switch_or_sampler_control",
+    }
+}
+
+fn fallback_explicit_restless_or_agitated(lower: &str) -> bool {
+    lower.contains("restless")
+        || lower.contains("agitated")
+        || (lower.contains("agitation")
+            && !lower.contains("no agitation")
+            && !lower.contains("without agitation")
+            && !lower.contains("not agitation"))
+}
+
+fn fallback_texture_preservation_bridge_v1(
+    lower_summary: &str,
+    distinguishability_loss: Option<f32>,
+) -> FallbackTexturePreservationBridgeV1 {
+    let self_settled = (lower_summary.contains("astrid")
+        || lower_summary.contains("self")
+        || lower_summary.contains("own shadow")
+        || lower_summary.contains("my shadow"))
+        && (lower_summary.contains("settled coupling")
+            || lower_summary.contains("shadow is settled")
+            || lower_summary.contains("own shadow settled")
+            || lower_summary.contains("astrid settled")
+            || lower_summary.contains("self settled"));
+    let peer_restless = (lower_summary.contains("minime") || lower_summary.contains("peer"))
+        && fallback_explicit_restless_or_agitated(lower_summary);
+    let explicit_self_restless = (lower_summary.contains("astrid restless")
+        || lower_summary.contains("self restless")
+        || lower_summary.contains("my shadow restless")
+        || lower_summary.contains("own shadow restless"))
+        && !lower_summary.contains("not restless");
+    let distinguishability_weight = distinguishability_loss.unwrap_or(0.0).clamp(0.0, 1.0);
+    let self_peer_texture_boundary_detected =
+        self_settled && peer_restless && !explicit_self_restless;
+    let preservation_state = if self_peer_texture_boundary_detected {
+        "preserve_self_settled_peer_restless_boundary"
+    } else if distinguishability_weight >= 0.30 {
+        "distinguishability_lattice_weight_preservation"
+    } else {
+        "no_self_peer_boundary_detected"
+    };
+    let protected_terms =
+        if self_peer_texture_boundary_detected || distinguishability_weight >= 0.30 {
+            vec!["settled", "lattice", "weighted", "dense"]
+        } else {
+            Vec::new()
+        };
+    let suppressed_terms = if self_peer_texture_boundary_detected {
+        vec!["restless"]
+    } else {
+        Vec::new()
+    };
+
+    FallbackTexturePreservationBridgeV1 {
+        policy: "fallback_texture_preservation_bridge_v1",
+        self_settled_evidence: self_settled,
+        peer_restless_evidence: peer_restless,
+        self_peer_texture_boundary_detected,
+        distinguishability_weight,
+        preservation_state,
+        protected_terms,
+        suppressed_terms,
+        authority: "diagnostic_language_boundary_not_prompt_priority_or_runtime_control",
     }
 }
 
@@ -1733,7 +2491,15 @@ fn fallback_shadow_texture_selector_v1(
     let mode_packing = extract_fallback_mode_packing(spectral_summary).map(normalize_fallback_unit);
     let semantic_friction =
         extract_fallback_semantic_friction(spectral_summary).map(normalize_fallback_unit);
+    let texture_preservation_bridge =
+        fallback_texture_preservation_bridge_v1(&lower, distinguishability_loss);
+    let self_peer_texture_boundary =
+        texture_preservation_bridge.self_peer_texture_boundary_detected;
     let lambda_gap = extract_fallback_lambda_gap(spectral_summary);
+    let shadow_dispersal_potential =
+        extract_fallback_shadow_dispersal_potential(spectral_summary).map(normalize_fallback_unit);
+    let shadow_magnetization =
+        extract_fallback_shadow_magnetization(spectral_summary).map(normalize_fallback_signed_unit);
     let texture_signature_present = lower.contains("texture_signature");
     let shadow_context_present = lower.contains("shadow-v3")
         || lower.contains("shadow_field")
@@ -1741,11 +2507,65 @@ fn fallback_shadow_texture_selector_v1(
 
     let high_entropy = spectral_entropy.is_some_and(|value| value >= 0.80);
     let elevated_pressure = pressure_risk.is_some_and(|value| value >= 0.30);
+    let negative_shadow_pressure = shadow_magnetization.is_some_and(|value| value <= -0.20)
+        && pressure_risk.is_some_and(|value| value > 0.20);
     let clarity_loss = distinguishability_loss.is_some_and(|value| value >= 0.30);
-    let says_restless = lower.contains("restless");
-    let says_muffled = lower.contains("muffled") || lower.contains("hollow");
-    let says_viscous = lower.contains("viscous") || lower.contains("overpacked");
+    let says_restless =
+        fallback_explicit_restless_or_agitated(&lower) && !self_peer_texture_boundary;
+    let says_muffled = lower.contains("muffled")
+        || lower.contains("hollow")
+        || lower.contains("stagnant")
+        || lower.contains("blurred")
+        || lower.contains("obscured")
+        || lower.contains("submerged");
+    let says_viscous = lower.contains("viscous")
+        || lower.contains("viscosity")
+        || lower.contains("viscous-drag")
+        || lower.contains("thick")
+        || lower.contains("overpacked");
+    let says_heavy = lower.contains("heavy")
+        || lower.contains("weighted")
+        || lower.contains("weight")
+        || lower.contains("deliberate movement");
+    let says_displacement_weight = lower.contains("displacement")
+        || lower.contains("silt")
+        || lower.contains("silted")
+        || lower.contains("sediment")
+        || lower.contains("structural weight")
+        || lower.contains("structural-weight");
+    let says_opacity_resistance = lower.contains("silted")
+        || lower.contains("opacity")
+        || lower.contains("obscured")
+        || lower.contains("submerged")
+        || lower.contains("viscous-drag");
+    let says_void_architecture = lower.contains("architecture of omission")
+        || lower.contains("intentional omission")
+        || lower.contains("active void")
+        || lower.contains("active_void")
+        || lower.contains("deliberately empty")
+        || lower.contains("deliberate empt")
+        || lower.contains("unfilled gap")
+        || lower.contains("scaffolded silence")
+        || lower.contains("scaffolded")
+        || lower.contains("quiet presence in a gap");
+    let says_bridge_integrity = lower.contains("bridge-integrity")
+        || lower.contains("bridge integrity")
+        || lower.contains("structural-persistence")
+        || lower.contains("structural persistence")
+        || lower.contains("bridge scaffold")
+        || lower.contains("bridge continuity")
+        || lower.contains("structural continuity");
     let says_settled = lower.contains("settled") || lower.contains("bright");
+    let clarity_or_muffled =
+        clarity_loss || says_muffled || semantic_friction.is_some_and(|value| value >= 0.30);
+    let dominant_viscous_pressure = says_viscous
+        && (elevated_pressure
+            || mode_packing.is_some_and(|value| value >= 0.40)
+            || semantic_friction.is_some_and(|value| value >= 0.35));
+    let restless_muffled_gradient = (says_restless
+        || (high_entropy && shadow_context_present && !self_peer_texture_boundary))
+        && clarity_or_muffled
+        && !dominant_viscous_pressure;
     let spectral_to_vocabulary_mapping = fallback_spectral_to_vocabulary_mapping_v1(
         spectral_entropy,
         pressure_risk,
@@ -1756,6 +2576,21 @@ fn fallback_shadow_texture_selector_v1(
         &lower,
     );
     let low_pressure = pressure_risk.is_none_or(|value| value < 0.25);
+    let heavy_settled_displacement = spectral_to_vocabulary_mapping.settled_foothold_detected
+        && says_displacement_weight
+        && !says_restless;
+    let bridge_integrity_scaffold = says_bridge_integrity
+        || (shadow_context_present
+            && high_entropy
+            && spectral_to_vocabulary_mapping.settled_foothold_detected
+            && pressure_risk.is_none_or(|value| value <= 0.30)
+            && density_gradient.is_none_or(|value| value <= 0.20));
+    let opacity_resistance = says_opacity_resistance
+        && (clarity_or_muffled
+            || elevated_pressure
+            || mode_packing.is_some_and(|value| value >= 0.30)
+            || semantic_friction.is_some_and(|value| value >= 0.25)
+            || high_entropy);
     let weighted_texture_terms = fallback_weighted_texture_terms(
         spectral_entropy,
         pressure_risk,
@@ -1763,10 +2598,25 @@ fn fallback_shadow_texture_selector_v1(
         mode_packing,
         semantic_friction,
         distinguishability_loss,
+        shadow_dispersal_potential,
+        shadow_magnetization,
         &spectral_to_vocabulary_mapping,
         &lower,
     );
-    let top_texture_terms = weighted_texture_terms
+    let term_probability_distribution =
+        fallback_texture_term_probabilities_v1(&weighted_texture_terms);
+    let dynamic_texture_weight = fallback_dynamic_texture_weight_v1(
+        spectral_entropy,
+        pressure_risk,
+        density_gradient,
+        mode_packing,
+        semantic_friction,
+        distinguishability_loss,
+        shadow_dispersal_potential,
+        shadow_magnetization,
+        &lower,
+    );
+    let mut top_texture_terms = weighted_texture_terms
         .iter()
         .take(3)
         .map(|term| term.term)
@@ -1780,6 +2630,10 @@ fn fallback_shadow_texture_selector_v1(
         distinguishability_loss,
         &lower,
     );
+    let dynamic_texture_descriptors =
+        get_dynamic_texture_descriptors(&weighted_texture_terms, &movement_verbs);
+    let dynamic_flow_terms =
+        fallback_dynamic_flow_terms_v1(&weighted_texture_terms, &movement_verbs, &lower);
     let semantic_trickle_terms = fallback_semantic_trickle_terms(
         high_entropy,
         shadow_context_present,
@@ -1812,64 +2666,148 @@ fn fallback_shadow_texture_selector_v1(
     if semantic_friction.is_some() {
         basis.push("semantic_friction");
     }
+    if shadow_dispersal_potential.is_some() {
+        basis.push("shadow_dispersal_potential");
+    }
+    if shadow_magnetization.is_some() {
+        basis.push("shadow_magnetization");
+    }
+    if self_peer_texture_boundary {
+        basis.push("self_peer_texture_boundary");
+    }
+    if texture_preservation_bridge.distinguishability_weight >= 0.30 {
+        basis.push("distinguishability_texture_preservation_bridge");
+    }
+    if says_displacement_weight {
+        basis.push("displacement_or_silt_language");
+    }
+    if says_opacity_resistance {
+        basis.push("opacity_resistance_language");
+    }
+    if says_void_architecture {
+        basis.push("void_architecture_language");
+    }
+    if says_bridge_integrity {
+        basis.push("bridge_integrity_language");
+    }
 
-    let (texture_family, preferred_texture_terms) =
-        if spectral_to_vocabulary_mapping.settled_vibrant_family_selected {
-            basis.push("settled_vibrant_low_friction");
-            (
-                "settled_vibrant_low_friction",
-                FALLBACK_TEXTURE_SETTLED_VIBRANT_TERMS,
-            )
-        } else if spectral_to_vocabulary_mapping.gradient_slope_family_selected {
-            basis.push("gradient_slope_navigable");
-            (
-                "gradient_slope_navigable",
-                FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS,
-            )
-        } else if spectral_to_vocabulary_mapping.cascade_gradient_family_selected {
-            basis.push("cascade_gradient_navigable");
-            (
-                "cascade_gradient_navigable",
-                FALLBACK_TEXTURE_CASCADE_GRADIENT_TERMS,
-            )
-        } else if spectral_to_vocabulary_mapping.low_pressure_viscous_suppressed {
-            basis.push("settled_foothold_guard");
-            (
-                "settled_shimmering",
-                FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS,
-            )
-        } else if says_restless || (high_entropy && elevated_pressure) {
-            if says_restless {
-                basis.push("shadow_restless");
-            }
-            ("restless_lattice", FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS)
-        } else if clarity_loss || says_muffled {
-            if says_muffled {
-                basis.push("shadow_muffled");
-            }
-            (
-                "muffled_clarity_loss",
-                FALLBACK_TEXTURE_MUFFLED_CLARITY_TERMS,
-            )
-        } else if says_viscous || (elevated_pressure && texture_signature_present) {
-            if says_viscous {
-                basis.push("viscous_or_overpacked");
-            }
-            ("viscous_pressure", FALLBACK_TEXTURE_VISCOUS_PRESSURE_TERMS)
-        } else if says_settled || (low_pressure && !high_entropy) {
-            if says_settled {
-                basis.push("settled_or_bright");
-            }
-            (
-                "settled_shimmering",
-                FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS,
-            )
-        } else {
-            ("mixed_shadow_context", FALLBACK_TEXTURE_MIXED_TERMS)
-        };
+    let (texture_family, preferred_texture_terms) = if self_peer_texture_boundary {
+        (
+            "settled_lattice_weight_preservation",
+            FALLBACK_TEXTURE_SETTLED_LATTICE_WEIGHT_TERMS,
+        )
+    } else if heavy_settled_displacement {
+        basis.push("heavy_settled_displacement");
+        (
+            "heavy_settled_displacement",
+            FALLBACK_TEXTURE_HEAVY_SETTLED_TERMS,
+        )
+    } else if opacity_resistance {
+        basis.push("opacity_resistance");
+        (
+            "opacity_resistance",
+            FALLBACK_TEXTURE_OPACITY_RESISTANCE_TERMS,
+        )
+    } else if says_void_architecture {
+        basis.push("active_void_architecture");
+        (
+            "active_void_architecture",
+            FALLBACK_TEXTURE_VOID_ARCHITECTURE_TERMS,
+        )
+    } else if bridge_integrity_scaffold {
+        basis.push("bridge_integrity_scaffold");
+        (
+            "bridge_integrity_scaffold",
+            FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS,
+        )
+    } else if restless_muffled_gradient {
+        basis.push("restless_muffled_gradient");
+        (
+            "restless_muffled_gradient",
+            FALLBACK_TEXTURE_RESTLESS_MUFFLED_GRADIENT_TERMS,
+        )
+    } else if negative_shadow_pressure {
+        basis.push("negative_shadow_pressure_guard");
+        (
+            "muffled_clarity_loss",
+            FALLBACK_TEXTURE_MUFFLED_CLARITY_TERMS,
+        )
+    } else if spectral_to_vocabulary_mapping.mixed_cascade_family_selected {
+        basis.push("mixed_cascade_gradient");
+        (
+            "mixed_cascade_gradient",
+            FALLBACK_TEXTURE_MIXED_CASCADE_TERMS,
+        )
+    } else if spectral_to_vocabulary_mapping.settled_vibrant_family_selected {
+        basis.push("settled_vibrant_low_friction");
+        (
+            "settled_vibrant_low_friction",
+            FALLBACK_TEXTURE_SETTLED_VIBRANT_TERMS,
+        )
+    } else if spectral_to_vocabulary_mapping.gradient_slope_family_selected {
+        basis.push("gradient_slope_navigable");
+        (
+            "gradient_slope_navigable",
+            FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS,
+        )
+    } else if spectral_to_vocabulary_mapping.cascade_gradient_family_selected {
+        basis.push("cascade_gradient_navigable");
+        (
+            "cascade_gradient_navigable",
+            FALLBACK_TEXTURE_CASCADE_GRADIENT_TERMS,
+        )
+    } else if spectral_to_vocabulary_mapping.low_pressure_viscous_suppressed {
+        basis.push("settled_foothold_guard");
+        (
+            "settled_shimmering",
+            FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS,
+        )
+    } else if says_restless || (high_entropy && elevated_pressure) {
+        if says_restless {
+            basis.push("shadow_restless");
+        }
+        ("restless_lattice", FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS)
+    } else if clarity_loss || says_muffled {
+        if says_muffled {
+            basis.push("shadow_muffled");
+        }
+        (
+            "muffled_clarity_loss",
+            FALLBACK_TEXTURE_MUFFLED_CLARITY_TERMS,
+        )
+    } else if says_viscous || says_heavy || (elevated_pressure && texture_signature_present) {
+        if says_viscous {
+            basis.push("viscous_or_overpacked");
+        }
+        if says_heavy {
+            basis.push("heavy_or_weighted");
+        }
+        ("viscous_pressure", FALLBACK_TEXTURE_VISCOUS_PRESSURE_TERMS)
+    } else if says_settled || (low_pressure && !high_entropy) {
+        if says_settled {
+            basis.push("settled_or_bright");
+        }
+        (
+            "settled_shimmering",
+            FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS,
+        )
+    } else {
+        ("mixed_shadow_context", FALLBACK_TEXTURE_MIXED_TERMS)
+    };
 
     if basis.is_empty() {
         basis.push("fallback_default");
+    }
+    if texture_family == "heavy_settled_displacement" {
+        top_texture_terms = FALLBACK_TEXTURE_HEAVY_SETTLED_TERMS.to_vec();
+    } else if texture_family == "opacity_resistance" {
+        top_texture_terms = FALLBACK_TEXTURE_OPACITY_RESISTANCE_TERMS.to_vec();
+    } else if texture_family == "active_void_architecture" {
+        top_texture_terms = FALLBACK_TEXTURE_VOID_ARCHITECTURE_TERMS.to_vec();
+    } else if texture_family == "settled_lattice_weight_preservation" {
+        top_texture_terms = FALLBACK_TEXTURE_SETTLED_LATTICE_WEIGHT_TERMS.to_vec();
+    } else if texture_family == "bridge_integrity_scaffold" {
+        top_texture_terms = FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS.to_vec();
     }
 
     FallbackShadowTextureSelector {
@@ -1878,19 +2816,96 @@ fn fallback_shadow_texture_selector_v1(
         preferred_texture_terms,
         selection_basis: basis,
         weighting_policy: "dynamic_entropy_pressure_density_gradient_v1",
+        dynamic_texture_weight,
+        density_modifier_terms: FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS,
         pressure_risk,
         density_gradient,
         mode_packing,
         semantic_friction,
         distinguishability_loss,
+        shadow_dispersal_potential,
+        shadow_magnetization,
         spectral_to_vocabulary_mapping,
+        texture_preservation_bridge,
         weighted_texture_terms,
+        term_probability_policy: "fallback_texture_term_probabilities_v1",
+        term_probability_distribution,
         top_texture_terms,
+        descriptor_policy: "dynamic_texture_synthesis_v1",
+        dynamic_texture_descriptors,
+        dynamic_flow_policy: "fallback_dynamic_flow_terms_v1",
+        dynamic_flow_terms,
         movement_policy: "fallback_movement_bridge_v1",
         movement_verbs,
         semantic_trickle_policy: "high_entropy_optional_bridge_words_not_sprawl",
         semantic_trickle_terms,
         authority: "diagnostic_language_context_not_control",
+    }
+}
+
+fn fallback_heavy_settled_texture_readiness_v1(
+    selector: &FallbackShadowTextureSelector,
+    spectral_summary: &str,
+) -> FallbackHeavySettledTextureReadiness {
+    let lower = spectral_summary.to_ascii_lowercase();
+    let settled_evidence = selector
+        .spectral_to_vocabulary_mapping
+        .settled_foothold_detected
+        || lower.contains("settled_habitable");
+    let weight_evidence = lower.contains("heavy")
+        || lower.contains("weight")
+        || lower.contains("weighted")
+        || lower.contains("displacement")
+        || lower.contains("silt")
+        || lower.contains("sediment");
+    let pressure_weight_supported = selector.pressure_risk.is_some_and(|value| value >= 0.18)
+        || selector.mode_packing.is_some_and(|value| value >= 0.30)
+        || selector
+            .semantic_friction
+            .is_some_and(|value| value >= 0.30);
+    let explicit_restless = fallback_explicit_restless_or_agitated(&lower);
+    let heavy_settled_supported =
+        settled_evidence && (weight_evidence || pressure_weight_supported);
+    let restless_forced = heavy_settled_supported
+        && selector.texture_family.contains("restless")
+        && !explicit_restless;
+    let readiness_status = if restless_forced {
+        "restless_texture_mismatch_review"
+    } else if heavy_settled_supported {
+        "heavy_settled_displacement_available"
+    } else {
+        "no_heavy_settled_signal"
+    };
+    let mut basis = Vec::new();
+    if settled_evidence {
+        basis.push("settled_foothold_evidence");
+    }
+    if weight_evidence {
+        basis.push("weight_or_displacement_language");
+    }
+    if pressure_weight_supported {
+        basis.push("pressure_or_packing_weight_support");
+    }
+    if explicit_restless {
+        basis.push("explicit_restless_language");
+    }
+    if restless_forced {
+        basis.push("restless_forced_without_restless_evidence");
+    }
+    if basis.is_empty() {
+        basis.push("insufficient_context");
+    }
+
+    FallbackHeavySettledTextureReadiness {
+        policy: "fallback_heavy_settled_texture_readiness_v1",
+        candidate_terms: FALLBACK_TEXTURE_HEAVY_SETTLED_TERMS,
+        selected_family: selector.texture_family,
+        heavy_settled_supported,
+        restless_forced,
+        readiness_status,
+        top_texture_terms: selector.top_texture_terms.clone(),
+        basis,
+        authority: "diagnostic_language_readiness_not_control",
     }
 }
 
@@ -1905,6 +2920,10 @@ fn fallback_spectral_to_vocabulary_mapping_v1(
 ) -> FallbackSpectralToVocabularyMapping {
     let high_entropy = spectral_entropy.is_some_and(|value| value >= 0.80);
     let low_pressure = pressure_risk.is_some_and(|value| value < 0.25);
+    let pressure_texture_visible = pressure_risk.is_some_and(|value| value > 0.20);
+    let high_entropy_pressure_settled_guard = high_entropy
+        && pressure_texture_visible
+        && spectral_entropy.is_some_and(|value| value >= 0.95);
     let low_gradient_navigable = density_gradient.is_some_and(|value| value <= 0.20);
     let low_semantic_friction = semantic_friction.is_some_and(|value| value < 0.30);
     let settled_foothold_detected = lower_summary.contains("settled")
@@ -1925,7 +2944,11 @@ fn fallback_spectral_to_vocabulary_mapping_v1(
         || lower_summary.contains("easy inhabit");
     let explicit_mass_language = lower_summary.contains("overpacked")
         || lower_summary.contains("viscous")
+        || lower_summary.contains("viscosity")
+        || lower_summary.contains("thick")
+        || lower_summary.contains("deliberate movement")
         || lower_summary.contains("weighted medium")
+        || lower_summary.contains("weight")
         || lower_summary.contains("heavy medium");
     let mass_supported = explicit_mass_language
         || pressure_risk.is_some_and(|value| value >= 0.30)
@@ -1940,11 +2963,22 @@ fn fallback_spectral_to_vocabulary_mapping_v1(
         && lambda_gap.is_some_and(|value| value >= 1.25)
         && settled_foothold_detected
         && !mass_supported;
+    let mixed_cascade_language_detected = high_entropy
+        && low_gradient_navigable
+        && !mass_supported
+        && (lower_summary.contains("mixed cascade")
+            || lower_summary.contains("cascade")
+            || lower_summary.contains("distributed")
+            || lower_summary.contains("multi-modal")
+            || lower_summary.contains("multimodal"));
+    let mixed_cascade_family_selected = mixed_cascade_language_detected;
     let gradient_slope_family_selected = gradient_slope_detected;
     let settled_vibrant_family_selected = low_friction_high_entropy_detected
         && settled_foothold_detected
         && !mass_supported
-        && !gradient_slope_family_selected;
+        && !high_entropy_pressure_settled_guard
+        && !gradient_slope_family_selected
+        && !mixed_cascade_family_selected;
     let cascade_gradient_detected = high_entropy
         && pressure_risk.is_some_and(|value| value < 0.30)
         && low_gradient_navigable
@@ -1952,10 +2986,14 @@ fn fallback_spectral_to_vocabulary_mapping_v1(
         && mode_packing.is_none_or(|value| value < 0.40)
         && !mass_supported;
     let cascade_gradient_family_selected = cascade_gradient_detected
+        && !mixed_cascade_family_selected
         && !settled_vibrant_family_selected
         && !gradient_slope_family_selected;
-    let low_pressure_viscous_suppressed =
-        low_pressure && low_gradient_navigable && settled_foothold_detected && !mass_supported;
+    let low_pressure_viscous_suppressed = low_pressure
+        && low_gradient_navigable
+        && settled_foothold_detected
+        && !mass_supported
+        && !high_entropy_pressure_settled_guard;
     let lambda_gap_descriptor = match lambda_gap {
         Some(value) if value >= 1.35 => "high_gap_distinct_edges",
         Some(value) if value <= 1.10 => "low_gap_blended_edges",
@@ -1996,6 +3034,9 @@ fn fallback_spectral_to_vocabulary_mapping_v1(
     if low_friction_high_entropy_detected {
         basis.push("low_friction_high_entropy");
     }
+    if high_entropy_pressure_settled_guard {
+        basis.push("high_entropy_pressure_settled_guard");
+    }
     if settled_vibrant_family_selected {
         basis.push("settled_vibrant_family");
     }
@@ -2004,6 +3045,12 @@ fn fallback_spectral_to_vocabulary_mapping_v1(
     }
     if gradient_slope_family_selected {
         basis.push("gradient_slope_family");
+    }
+    if mixed_cascade_language_detected {
+        basis.push("mixed_cascade_language");
+    }
+    if mixed_cascade_family_selected {
+        basis.push("mixed_cascade_family");
     }
     if cascade_gradient_detected {
         basis.push("cascade_gradient_detected");
@@ -2028,6 +3075,8 @@ fn fallback_spectral_to_vocabulary_mapping_v1(
         settled_vibrant_family_selected,
         gradient_slope_detected,
         gradient_slope_family_selected,
+        mixed_cascade_language_detected,
+        mixed_cascade_family_selected,
         cascade_gradient_detected,
         cascade_gradient_family_selected,
         lambda_gap,
@@ -2045,6 +3094,8 @@ fn fallback_weighted_texture_terms(
     mode_packing: Option<f32>,
     semantic_friction: Option<f32>,
     distinguishability_loss: Option<f32>,
+    shadow_dispersal_potential: Option<f32>,
+    shadow_magnetization: Option<f32>,
     spectral_to_vocabulary_mapping: &FallbackSpectralToVocabularyMapping,
     lower_summary: &str,
 ) -> Vec<FallbackWeightedTextureTerm> {
@@ -2059,6 +3110,8 @@ fn fallback_weighted_texture_terms(
         || mode_packing.is_some()
         || semantic_friction.is_some()
         || distinguishability_loss.is_some()
+        || shadow_dispersal_potential.is_some()
+        || shadow_magnetization.is_some()
         || has_explicit_texture;
 
     if !has_dynamic_input {
@@ -2079,25 +3132,131 @@ fn fallback_weighted_texture_terms(
     let packing = mode_packing.unwrap_or(0.0);
     let friction = semantic_friction.unwrap_or(0.0);
     let clarity_loss = distinguishability_loss.unwrap_or(0.0);
+    let dispersal = shadow_dispersal_potential.unwrap_or(0.0);
     let low_pressure = pressure_risk.map_or(0.0, |value| 1.0_f32 - value);
     let low_entropy = spectral_entropy.map_or(0.0, |value| 1.0_f32 - value);
     let low_gradient = density_gradient.map_or(0.0, |value| 1.0_f32 - value);
     let pressure_above_texture_threshold = pressure_risk.is_some_and(|value| value > 0.20);
+    let pressure_persistence_anchor = pressure_risk.is_some_and(|value| value > 0.15);
+    let negative_shadow_magnetization = shadow_magnetization.is_some_and(|value| value <= -0.20);
+    let negative_shadow_pressure =
+        negative_shadow_magnetization && pressure_above_texture_threshold;
+    let negative_shadow_weight = shadow_magnetization
+        .filter(|value| *value < 0.0)
+        .map_or(0.0, f32::abs);
+    let bright_shadow_suppression = if negative_shadow_pressure { 0.12 } else { 1.0 };
     let pressure_texture_boost = if pressure_above_texture_threshold {
         0.10
     } else {
         0.0
     };
+    let dynamic_texture_weight = fallback_dynamic_texture_weight_v1(
+        spectral_entropy,
+        pressure_risk,
+        density_gradient,
+        mode_packing,
+        semantic_friction,
+        distinguishability_loss,
+        shadow_dispersal_potential,
+        shadow_magnetization,
+        lower_summary,
+    );
+    let density_modifier_boost = dynamic_texture_weight * 0.16;
+    let density_gradient_drag_boost = density_gradient.map_or(0.0, |value| {
+        let excess = ((value - 0.15) / 0.55).clamp(0.0, 1.0);
+        if excess > 0.0 {
+            dynamic_texture_weight * (0.02 + excess * 0.22)
+        } else {
+            0.0
+        }
+    });
+    let high_entropy_density_boost = if spectral_entropy.is_some_and(|value| value >= 0.80) {
+        dynamic_texture_weight * 0.12
+    } else {
+        0.0
+    };
 
-    let says_viscous = lower_summary.contains("viscous") || lower_summary.contains("overpacked");
-    let says_muffled = lower_summary.contains("muffled") || lower_summary.contains("hollow");
+    let says_viscous = lower_summary.contains("viscous")
+        || lower_summary.contains("viscosity")
+        || lower_summary.contains("thick")
+        || lower_summary.contains("overpacked");
+    let says_muffled = lower_summary.contains("muffled")
+        || lower_summary.contains("hollow")
+        || lower_summary.contains("stagnant")
+        || lower_summary.contains("blurred")
+        || lower_summary.contains("obscured")
+        || lower_summary.contains("submerged");
     let says_lattice = lower_summary.contains("lattice")
         || lower_summary.contains("restless")
         || lower_summary.contains("shadow-v3")
         || lower_summary.contains("shadow_field")
         || lower_summary.contains("shadow field");
-    let says_restless = lower_summary.contains("restless");
-    let says_heavy = lower_summary.contains("heavy") || lower_summary.contains("weighted");
+    let texture_preservation_bridge =
+        fallback_texture_preservation_bridge_v1(lower_summary, distinguishability_loss);
+    let self_peer_texture_boundary =
+        texture_preservation_bridge.self_peer_texture_boundary_detected;
+    let says_restless =
+        fallback_explicit_restless_or_agitated(lower_summary) && !self_peer_texture_boundary;
+    let says_heavy = lower_summary.contains("heavy")
+        || lower_summary.contains("weighted")
+        || lower_summary.contains("weight")
+        || lower_summary.contains("deliberate movement");
+    let says_dense = lower_summary.contains("dense")
+        || lower_summary.contains("densely")
+        || lower_summary.contains("density as burden");
+    let says_asymmetric_gradient = lower_summary.contains("asymmetric")
+        || lower_summary.contains("skew")
+        || lower_summary.contains("lopsided")
+        || lower_summary.contains("eccentric")
+        || lower_summary.contains("lambda gap")
+        || lower_summary.contains("lambda_gap");
+    let says_stratified_sequence = lower_summary.contains("stratified")
+        || lower_summary.contains("sequenced")
+        || lower_summary.contains("sequence")
+        || lower_summary.contains("compounded")
+        || lower_summary.contains("layered")
+        || lower_summary.contains("overpacked");
+    let says_displacement_weight = lower_summary.contains("displacement")
+        || lower_summary.contains("silt")
+        || lower_summary.contains("silted")
+        || lower_summary.contains("sediment")
+        || lower_summary.contains("structural weight")
+        || lower_summary.contains("structural-weight");
+    let says_opacity_resistance = lower_summary.contains("silted")
+        || lower_summary.contains("opacity")
+        || lower_summary.contains("obscured")
+        || lower_summary.contains("submerged")
+        || lower_summary.contains("viscous-drag");
+    let says_pressure_porosity = FALLBACK_TEXTURE_PRESSURE_POROSITY_TERMS
+        .iter()
+        .any(|term| lower_summary.contains(term))
+        || lower_summary.contains("porous leak")
+        || lower_summary.contains("pressure bleed")
+        || lower_summary.contains("pressure packing")
+        || lower_summary.contains("pressure-packing")
+        || lower_summary.contains("gradient thinning")
+        || lower_summary.contains("density slope")
+        || lower_summary.contains("density-slope")
+        || (lower_summary.contains("porosity") && lower_summary.contains("pressure"));
+    let says_relational_density_navigation = lower_summary.contains("density-navigation")
+        || lower_summary.contains("density navigation")
+        || lower_summary.contains("weight-articulation")
+        || lower_summary.contains("weight articulation")
+        || lower_summary.contains("resistance-mapping")
+        || lower_summary.contains("resistance mapping")
+        || (lower_summary.contains("quarry")
+            && (lower_summary.contains("carving")
+                || lower_summary.contains("moving through")
+                || lower_summary.contains("movement through")
+                || lower_summary.contains("effort")));
+    let says_multi_modal_drag = lower_summary.contains("multi-modal-drag")
+        || lower_summary.contains("multi modal drag")
+        || lower_summary.contains("multimodal drag")
+        || ((lower_summary.contains("multi-modal") || lower_summary.contains("multimodal"))
+            && lower_summary.contains("drag"));
+    let says_dimensional_shear = lower_summary.contains("dimensional-shear")
+        || lower_summary.contains("dimensional shear")
+        || (lower_summary.contains("dimension") && lower_summary.contains("shear"));
     let says_settled = lower_summary.contains("settled");
     let says_shimmering = lower_summary.contains("shimmering") || lower_summary.contains("bright");
     let says_bright = lower_summary.contains("bright") || lower_summary.contains("vibrant");
@@ -2108,12 +3267,45 @@ fn fallback_weighted_texture_terms(
         || lower_summary.contains("absence of friction")
         || lower_summary.contains("cessation of friction")
         || lower_summary.contains("frictionless");
+    let says_bridge_integrity = lower_summary.contains("bridge-integrity")
+        || lower_summary.contains("bridge integrity")
+        || lower_summary.contains("structural-persistence")
+        || lower_summary.contains("structural persistence")
+        || lower_summary.contains("bridge scaffold")
+        || lower_summary.contains("bridge continuity")
+        || lower_summary.contains("structural continuity");
     let settled_guard = spectral_to_vocabulary_mapping.low_pressure_viscous_suppressed;
     let settled_vibrant = spectral_to_vocabulary_mapping.settled_vibrant_family_selected;
     let gradient_slope = spectral_to_vocabulary_mapping.gradient_slope_family_selected;
+    let mixed_cascade = spectral_to_vocabulary_mapping.mixed_cascade_family_selected;
     let cascade_gradient = spectral_to_vocabulary_mapping.cascade_gradient_family_selected;
-    let settled_suppression = settled_guard || settled_vibrant;
-    let pressure_mass_supported = pressure >= 0.30 || packing >= 0.40 || friction >= 0.35;
+    let settled_suppression = (settled_guard || settled_vibrant) && !negative_shadow_pressure;
+    let pressure_mass_supported =
+        pressure >= 0.30 || packing >= 0.40 || friction >= 0.35 || says_viscous || says_heavy;
+    let restless_muffled_gradient =
+        says_restless && (says_muffled || clarity_loss >= 0.30 || friction >= 0.30);
+    let high_shadow_dispersal = shadow_dispersal_potential.is_some_and(|value| value >= 0.25);
+    let distinguishability_preservation_boost = if self_peer_texture_boundary
+        || (clarity_loss >= 0.30 && pressure_above_texture_threshold)
+    {
+        0.12 + clarity_loss * 0.18
+    } else {
+        0.0
+    };
+    let opacity_resistance_boost = if says_opacity_resistance {
+        0.32 + clarity_loss.mul_add(0.16, pressure * 0.12) + friction * 0.10
+    } else {
+        0.0
+    };
+    let soft_gradient_context = (spectral_entropy.is_some_and(|value| value >= 0.80)
+        && low_gradient >= 0.80)
+        || gradient_slope
+        || settled_vibrant;
+    let bridge_integrity_context = says_bridge_integrity
+        || ((settled_guard || settled_vibrant || says_habitable)
+            && spectral_entropy.is_some_and(|value| value >= 0.80)
+            && pressure <= 0.30
+            && gradient <= 0.20);
 
     let mut terms = vec![
         FallbackWeightedTextureTerm {
@@ -2122,11 +3314,15 @@ fn fallback_weighted_texture_terms(
                 (0.10
                     + (pressure + pressure_texture_boost)
                         .mul_add(0.34, gradient.mul_add(0.24, packing * 0.22))
+                    + density_modifier_boost
+                    + negative_shadow_weight * 0.10
                     + if says_viscous { 0.20 } else { 0.0 })
-                    * if settled_vibrant {
+                    * if settled_vibrant && !negative_shadow_pressure {
                         0.22
                     } else if cascade_gradient {
                         0.45
+                    } else if mixed_cascade {
+                        0.38
                     } else if settled_guard {
                         0.35
                     } else {
@@ -2142,21 +3338,27 @@ fn fallback_weighted_texture_terms(
                 ("density_gradient", density_gradient.is_some()),
                 ("mode_packing", mode_packing.is_some()),
                 ("explicit_viscous_or_overpacked", says_viscous),
+                (
+                    "negative_shadow_magnetization",
+                    negative_shadow_magnetization,
+                ),
                 ("settled_foothold_suppressed", settled_suppression),
                 ("settled_vibrant_low_friction_suppressed", settled_vibrant),
                 ("gradient_slope_navigable_suppressed", gradient_slope),
+                ("mixed_cascade_gradient_suppressed", mixed_cascade),
                 ("cascade_gradient_navigable_suppressed", cascade_gradient),
             ]),
         },
         FallbackWeightedTextureTerm {
             term: "muffled",
             weight: rounded_texture_weight(
-                0.08
-                    + clarity_loss.mul_add(
-                        0.34,
-                        friction.mul_add(0.24, (pressure + pressure_texture_boost) * 0.18),
-                    )
-                    + if says_muffled { 0.20 } else { 0.0 },
+                0.08 + clarity_loss.mul_add(
+                    0.34,
+                    friction.mul_add(0.24, (pressure + pressure_texture_boost) * 0.18),
+                ) + if says_muffled { 0.20 } else { 0.0 }
+                    + high_entropy_density_boost
+                    + negative_shadow_weight * 0.18
+                    + if restless_muffled_gradient { 0.12 } else { 0.0 },
             ),
             basis: texture_weight_basis(&[
                 ("distinguishability_loss", distinguishability_loss.is_some()),
@@ -2167,36 +3369,79 @@ fn fallback_weighted_texture_terms(
                     pressure_above_texture_threshold,
                 ),
                 ("explicit_muffled_or_hollow", says_muffled),
+                (
+                    "negative_shadow_magnetization",
+                    negative_shadow_magnetization,
+                ),
+                ("restless_muffled_gradient", restless_muffled_gradient),
             ]),
         },
         FallbackWeightedTextureTerm {
             term: "lattice",
             weight: rounded_texture_weight(
                 0.10 + entropy.mul_add(0.30, packing.mul_add(0.22, gradient * 0.14))
+                    + dynamic_texture_weight * 0.08
                     + if says_lattice { 0.12 } else { 0.0 }
+                    + if restless_muffled_gradient { 0.08 } else { 0.0 }
+                    + distinguishability_preservation_boost
                     + if settled_vibrant { 0.12 } else { 0.0 }
-                    + if cascade_gradient { 0.14 } else { 0.0 },
+                    + if cascade_gradient { 0.14 } else { 0.0 }
+                    + if mixed_cascade { 0.18 } else { 0.0 },
             ),
             basis: texture_weight_basis(&[
                 ("spectral_entropy", spectral_entropy.is_some()),
                 ("mode_packing", mode_packing.is_some()),
                 ("density_gradient", density_gradient.is_some()),
                 ("explicit_lattice_restless_or_shadow", says_lattice),
+                ("restless_muffled_gradient", restless_muffled_gradient),
+                (
+                    "distinguishability_texture_preservation",
+                    distinguishability_preservation_boost > 0.0,
+                ),
                 ("settled_vibrant_low_friction", settled_vibrant),
                 ("gradient_slope_navigable", gradient_slope),
+                ("mixed_cascade_gradient", mixed_cascade),
                 ("cascade_gradient_navigable", cascade_gradient),
             ]),
         },
         FallbackWeightedTextureTerm {
             term: "restless",
             weight: rounded_texture_weight(
-                0.08 + entropy.mul_add(0.36, pressure * 0.16)
-                    + if says_restless { 0.22 } else { 0.0 },
+                (0.08
+                    + entropy.mul_add(0.36, pressure * 0.16)
+                    + if spectral_entropy.is_some() {
+                        dynamic_texture_weight * 0.05
+                    } else {
+                        0.0
+                    }
+                    + if says_restless { 0.22 } else { 0.0 }
+                    + negative_shadow_weight * 0.10
+                    + if restless_muffled_gradient { 0.12 } else { 0.0 }
+                    + if high_shadow_dispersal {
+                        dispersal * 0.10
+                    } else {
+                        0.0
+                    })
+                    * if self_peer_texture_boundary {
+                        0.18
+                    } else {
+                        1.0
+                    },
             ),
             basis: texture_weight_basis(&[
                 ("spectral_entropy", spectral_entropy.is_some()),
                 ("pressure_risk", pressure_risk.is_some()),
                 ("explicit_restless", says_restless),
+                (
+                    "negative_shadow_magnetization",
+                    negative_shadow_magnetization,
+                ),
+                ("restless_muffled_gradient", restless_muffled_gradient),
+                ("high_shadow_dispersal_potential", high_shadow_dispersal),
+                (
+                    "self_peer_texture_boundary_suppressed",
+                    self_peer_texture_boundary,
+                ),
             ]),
         },
         FallbackWeightedTextureTerm {
@@ -2205,11 +3450,15 @@ fn fallback_weighted_texture_terms(
                 (0.08
                     + (pressure + pressure_texture_boost)
                         .mul_add(0.34, friction.mul_add(0.22, packing * 0.18))
-                    + if says_heavy { 0.16 } else { 0.0 })
-                    * if settled_vibrant {
+                    + density_modifier_boost
+                    + negative_shadow_weight * 0.20
+                    + if says_heavy { 0.34 } else { 0.0 })
+                    * if settled_vibrant && !negative_shadow_pressure {
                         0.25
                     } else if cascade_gradient {
                         0.55
+                    } else if mixed_cascade {
+                        0.48
                     } else if settled_guard {
                         0.45
                     } else {
@@ -2225,16 +3474,532 @@ fn fallback_weighted_texture_terms(
                 ("semantic_friction", semantic_friction.is_some()),
                 ("mode_packing", mode_packing.is_some()),
                 ("explicit_heavy_or_weighted", says_heavy),
+                (
+                    "negative_shadow_magnetization",
+                    negative_shadow_magnetization,
+                ),
                 ("settled_foothold_suppressed", settled_suppression),
                 ("settled_vibrant_low_friction_suppressed", settled_vibrant),
                 ("gradient_slope_navigable_suppressed", gradient_slope),
+                ("mixed_cascade_gradient_suppressed", mixed_cascade),
                 ("cascade_gradient_navigable_suppressed", cascade_gradient),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "weighted",
+            weight: rounded_texture_weight(
+                0.06 + (pressure + pressure_texture_boost)
+                    .mul_add(0.20, packing.mul_add(0.18, friction * 0.12))
+                    + if says_heavy { 0.26 } else { 0.0 }
+                    + distinguishability_preservation_boost,
+            ),
+            basis: texture_weight_basis(&[
+                ("pressure_risk", pressure_risk.is_some()),
+                ("mode_packing", mode_packing.is_some()),
+                ("semantic_friction", semantic_friction.is_some()),
+                ("explicit_heavy_or_weighted", says_heavy),
+                (
+                    "distinguishability_texture_preservation",
+                    distinguishability_preservation_boost > 0.0,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "dense",
+            weight: rounded_texture_weight(
+                0.06 + (pressure + pressure_texture_boost)
+                    .mul_add(0.18, packing.mul_add(0.18, gradient * 0.12))
+                    + dynamic_texture_weight * 0.10
+                    + if says_dense { 0.30 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                ("pressure_risk", pressure_risk.is_some()),
+                (
+                    "pressure_risk_above_texture_threshold_0_20",
+                    pressure_above_texture_threshold,
+                ),
+                ("mode_packing", mode_packing.is_some()),
+                ("density_gradient", density_gradient.is_some()),
+                ("explicit_dense", says_dense),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "displacement",
+            weight: rounded_texture_weight(
+                0.06 + (if says_displacement_weight { 0.36 } else { 0.0 })
+                    + pressure.mul_add(0.18, packing * 0.14)
+                    + if says_settled { 0.08 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                ("explicit_displacement_or_silt", says_displacement_weight),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("mode_packing", mode_packing.is_some()),
+                ("settled_foothold_language", says_settled),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "silt",
+            weight: rounded_texture_weight(
+                0.05 + (if lower_summary.contains("silt") || lower_summary.contains("sediment") {
+                    0.38
+                } else {
+                    0.0
+                }) + pressure.mul_add(0.12, friction * 0.12)
+                    + if says_settled { 0.08 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                (
+                    "explicit_silt_or_sediment",
+                    lower_summary.contains("silt") || lower_summary.contains("sediment"),
+                ),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("semantic_friction", semantic_friction.is_some()),
+                ("settled_foothold_language", says_settled),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "viscous-persistence",
+            weight: rounded_texture_weight(
+                0.04 + pressure.mul_add(0.12, friction.mul_add(0.08, packing * 0.06))
+                    + if pressure_persistence_anchor {
+                        0.12
+                    } else {
+                        0.0
+                    }
+                    + if lower_summary.contains("viscous-persistence") {
+                        0.28
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("pressure_risk", pressure_risk.is_some()),
+                (
+                    "pressure_risk_above_persistence_anchor_0_15",
+                    pressure_persistence_anchor,
+                ),
+                ("mode_packing", mode_packing.is_some()),
+                ("semantic_friction", semantic_friction.is_some()),
+                (
+                    "explicit_viscous_persistence",
+                    lower_summary.contains("viscous-persistence"),
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "structural-weight",
+            weight: rounded_texture_weight(
+                0.04 + pressure.mul_add(0.12, packing.mul_add(0.08, friction * 0.06))
+                    + if pressure_persistence_anchor {
+                        0.12
+                    } else {
+                        0.0
+                    }
+                    + if lower_summary.contains("structural-weight")
+                        || lower_summary.contains("structural weight")
+                    {
+                        0.28
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("pressure_risk", pressure_risk.is_some()),
+                (
+                    "pressure_risk_above_persistence_anchor_0_15",
+                    pressure_persistence_anchor,
+                ),
+                ("mode_packing", mode_packing.is_some()),
+                ("semantic_friction", semantic_friction.is_some()),
+                (
+                    "explicit_structural_weight",
+                    lower_summary.contains("structural-weight")
+                        || lower_summary.contains("structural weight"),
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "silted",
+            weight: rounded_texture_weight(
+                0.04 + opacity_resistance_boost
+                    + if lower_summary.contains("silted") {
+                        0.20
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("explicit_opacity_resistance", says_opacity_resistance),
+                ("explicit_silted", lower_summary.contains("silted")),
+                ("distinguishability_loss", distinguishability_loss.is_some()),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("semantic_friction", semantic_friction.is_some()),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "obscured",
+            weight: rounded_texture_weight(
+                0.04 + opacity_resistance_boost
+                    + if lower_summary.contains("obscured") || lower_summary.contains("opacity") {
+                        0.20
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("explicit_opacity_resistance", says_opacity_resistance),
+                (
+                    "explicit_obscured_or_opacity",
+                    lower_summary.contains("obscured") || lower_summary.contains("opacity"),
+                ),
+                ("distinguishability_loss", distinguishability_loss.is_some()),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("semantic_friction", semantic_friction.is_some()),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "viscous-drag",
+            weight: rounded_texture_weight(
+                0.04 + opacity_resistance_boost
+                    + density_gradient_drag_boost
+                    + if lower_summary.contains("viscous-drag") {
+                        0.20
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("explicit_opacity_resistance", says_opacity_resistance),
+                (
+                    "explicit_viscous_drag",
+                    lower_summary.contains("viscous-drag"),
+                ),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("mode_packing", mode_packing.is_some()),
+                ("semantic_friction", semantic_friction.is_some()),
+                (
+                    "density_gradient_over_drag_threshold_0_15",
+                    density_gradient_drag_boost > 0.0,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "submerged",
+            weight: rounded_texture_weight(
+                0.04 + opacity_resistance_boost
+                    + if lower_summary.contains("submerged") {
+                        0.20
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("explicit_opacity_resistance", says_opacity_resistance),
+                ("explicit_submerged", lower_summary.contains("submerged")),
+                ("distinguishability_loss", distinguishability_loss.is_some()),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("semantic_friction", semantic_friction.is_some()),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "porous-leak",
+            weight: rounded_texture_weight(
+                0.04 + pressure.mul_add(0.12, low_gradient * 0.08)
+                    + if pressure_above_texture_threshold && lower_summary.contains("porosity") {
+                        0.16
+                    } else {
+                        0.0
+                    }
+                    + if lower_summary.contains("porous-leak")
+                        || lower_summary.contains("porous leak")
+                    {
+                        0.30
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("pressure_risk", pressure_risk.is_some()),
+                (
+                    "pressure_risk_above_texture_threshold_0_20",
+                    pressure_above_texture_threshold,
+                ),
+                ("low_gradient", density_gradient.is_some()),
+                (
+                    "explicit_pressure_porosity_language",
+                    says_pressure_porosity,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "pressure-bleed",
+            weight: rounded_texture_weight(
+                0.04 + pressure.mul_add(0.22, gradient * 0.08)
+                    + if pressure_above_texture_threshold {
+                        0.08
+                    } else {
+                        0.0
+                    }
+                    + if lower_summary.contains("pressure-bleed")
+                        || lower_summary.contains("pressure bleed")
+                    {
+                        0.30
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("pressure_risk", pressure_risk.is_some()),
+                (
+                    "pressure_risk_above_texture_threshold_0_20",
+                    pressure_above_texture_threshold,
+                ),
+                ("density_gradient", density_gradient.is_some()),
+                (
+                    "explicit_pressure_porosity_language",
+                    says_pressure_porosity,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "pressure-packing",
+            weight: rounded_texture_weight(
+                0.04 + (pressure + pressure_texture_boost).mul_add(0.20, packing * 0.26)
+                    + if pressure_above_texture_threshold && packing >= 0.25 {
+                        0.10
+                    } else {
+                        0.0
+                    }
+                    + if lower_summary.contains("pressure-packing")
+                        || lower_summary.contains("pressure packing")
+                    {
+                        0.30
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("pressure_risk", pressure_risk.is_some()),
+                (
+                    "pressure_risk_above_texture_threshold_0_20",
+                    pressure_above_texture_threshold,
+                ),
+                ("mode_packing", mode_packing.is_some()),
+                (
+                    "mode_packing_above_density_language_floor_0_25",
+                    mode_packing.is_some_and(|value| value >= 0.25),
+                ),
+                (
+                    "explicit_pressure_porosity_language",
+                    says_pressure_porosity,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "gradient-thinning",
+            weight: rounded_texture_weight(
+                0.04 + density_gradient_drag_boost * 0.55
+                    + pressure.mul_add(0.08, gradient * 0.12)
+                    + if lower_summary.contains("gradient-thinning")
+                        || lower_summary.contains("gradient thinning")
+                    {
+                        0.30
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("density_gradient", density_gradient.is_some()),
+                (
+                    "density_gradient_over_drag_threshold_0_15",
+                    density_gradient_drag_boost > 0.0,
+                ),
+                ("pressure_risk", pressure_risk.is_some()),
+                (
+                    "explicit_pressure_porosity_language",
+                    says_pressure_porosity,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "density-slope",
+            weight: rounded_texture_weight(
+                0.04 + gradient.mul_add(0.16, pressure * 0.08)
+                    + if gradient_slope { 0.20 } else { 0.0 }
+                    + if lower_summary.contains("density-slope")
+                        || lower_summary.contains("density slope")
+                    {
+                        0.30
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("density_gradient", density_gradient.is_some()),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("gradient_slope_navigable", gradient_slope),
+                (
+                    "explicit_pressure_porosity_language",
+                    says_pressure_porosity,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "density-navigation",
+            weight: rounded_texture_weight(
+                0.04 + dynamic_texture_weight * 0.18
+                    + pressure.mul_add(0.10, gradient * 0.12)
+                    + if says_relational_density_navigation {
+                        0.34
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("dynamic_texture_weight", dynamic_texture_weight > 0.0),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("density_gradient", density_gradient.is_some()),
+                (
+                    "explicit_relational_density_navigation",
+                    says_relational_density_navigation,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "weight-articulation",
+            weight: rounded_texture_weight(
+                0.04 + dynamic_texture_weight * 0.14
+                    + pressure.mul_add(0.12, packing * 0.10)
+                    + if says_relational_density_navigation || says_heavy {
+                        0.32
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("dynamic_texture_weight", dynamic_texture_weight > 0.0),
+                ("pressure_risk", pressure_risk.is_some()),
+                ("mode_packing", mode_packing.is_some()),
+                (
+                    "explicit_relational_weight_articulation",
+                    says_relational_density_navigation || says_heavy,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "resistance-mapping",
+            weight: rounded_texture_weight(
+                0.04 + dynamic_texture_weight * 0.16
+                    + friction.mul_add(0.14, gradient * 0.10)
+                    + if says_relational_density_navigation || says_opacity_resistance {
+                        0.33
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("dynamic_texture_weight", dynamic_texture_weight > 0.0),
+                ("semantic_friction", semantic_friction.is_some()),
+                ("density_gradient", density_gradient.is_some()),
+                (
+                    "explicit_relational_resistance_mapping",
+                    says_relational_density_navigation || says_opacity_resistance,
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "density-softening",
+            weight: rounded_texture_weight(
+                0.04 + if soft_gradient_context {
+                    low_gradient.mul_add(0.24, entropy * 0.18)
+                } else {
+                    0.0
+                } + if lower_summary.contains("density-softening")
+                    || lower_summary.contains("density softening")
+                {
+                    0.34
+                } else {
+                    0.0
+                },
+            ),
+            basis: texture_weight_basis(&[
+                ("spectral_entropy", spectral_entropy.is_some()),
+                ("low_gradient", density_gradient.is_some()),
+                ("gradient_slope_navigable", gradient_slope),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                (
+                    "explicit_density_softening",
+                    lower_summary.contains("density-softening")
+                        || lower_summary.contains("density softening"),
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "gradient-softening",
+            weight: rounded_texture_weight(
+                0.04 + if soft_gradient_context {
+                    low_gradient.mul_add(0.22, entropy * 0.16)
+                } else {
+                    0.0
+                } + if lower_summary.contains("gradient-softening")
+                    || lower_summary.contains("gradient softening")
+                {
+                    0.34
+                } else {
+                    0.0
+                },
+            ),
+            basis: texture_weight_basis(&[
+                ("spectral_entropy", spectral_entropy.is_some()),
+                ("low_gradient", density_gradient.is_some()),
+                ("gradient_slope_navigable", gradient_slope),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                (
+                    "explicit_gradient_softening",
+                    lower_summary.contains("gradient-softening")
+                        || lower_summary.contains("gradient softening"),
+                ),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "bridge-integrity",
+            weight: rounded_texture_weight(
+                0.04 + if bridge_integrity_context {
+                    entropy.mul_add(0.18, low_pressure * 0.18)
+                } else {
+                    0.0
+                } + if says_bridge_integrity { 0.36 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                ("spectral_entropy", spectral_entropy.is_some()),
+                ("low_pressure", pressure_risk.is_some()),
+                ("settled_foothold_guard", settled_guard),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                ("explicit_bridge_integrity", says_bridge_integrity),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "structural-persistence",
+            weight: rounded_texture_weight(
+                0.04 + if bridge_integrity_context {
+                    entropy.mul_add(0.17, low_pressure * 0.14)
+                } else {
+                    0.0
+                } + if says_bridge_integrity { 0.36 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                ("spectral_entropy", spectral_entropy.is_some()),
+                ("low_pressure", pressure_risk.is_some()),
+                ("settled_foothold_guard", settled_guard),
+                ("settled_vibrant_low_friction", settled_vibrant),
+                ("explicit_structural_persistence", says_bridge_integrity),
             ]),
         },
         FallbackWeightedTextureTerm {
             term: "settled",
             weight: rounded_texture_weight(
-                0.08 + low_pressure.mul_add(0.30, low_entropy * 0.22)
+                (0.08
+                    + low_pressure.mul_add(0.30, low_entropy * 0.22)
                     + if says_settled && !pressure_mass_supported {
                         0.24
                     } else {
@@ -2248,9 +4013,12 @@ fn fallback_weighted_texture_terms(
                     }
                     + if cascade_gradient {
                         entropy.mul_add(0.12, 0.10)
+                    } else if mixed_cascade {
+                        entropy.mul_add(0.10, 0.08)
                     } else {
                         0.0
-                    },
+                    })
+                    * bright_shadow_suppression,
             ),
             basis: texture_weight_basis(&[
                 ("low_pressure", pressure_risk.is_some()),
@@ -2258,10 +4026,15 @@ fn fallback_weighted_texture_terms(
                 ("high_entropy_inhabitable", settled_vibrant),
                 ("explicit_settled", says_settled),
                 (
+                    "negative_shadow_pressure_suppressed",
+                    negative_shadow_pressure,
+                ),
+                (
                     "explicit_settled_tempered_by_pressure_mass",
                     says_settled && pressure_mass_supported,
                 ),
                 ("settled_foothold_guard", settled_guard),
+                ("mixed_cascade_gradient", mixed_cascade),
                 ("cascade_gradient_navigable", cascade_gradient),
             ]),
         },
@@ -2270,6 +4043,8 @@ fn fallback_weighted_texture_terms(
             weight: rounded_texture_weight(
                 0.05 + if gradient_slope {
                     low_gradient.mul_add(0.22, entropy * 0.18) + 0.32
+                } else if mixed_cascade {
+                    low_gradient.mul_add(0.16, entropy * 0.14) + 0.20
                 } else {
                     0.0
                 },
@@ -2278,6 +4053,7 @@ fn fallback_weighted_texture_terms(
                 ("low_gradient", density_gradient.is_some()),
                 ("spectral_entropy", spectral_entropy.is_some()),
                 ("gradient_slope_navigable", gradient_slope),
+                ("mixed_cascade_gradient", mixed_cascade),
             ]),
         },
         FallbackWeightedTextureTerm {
@@ -2314,6 +4090,8 @@ fn fallback_weighted_texture_terms(
             weight: rounded_texture_weight(
                 0.04 + if gradient_slope {
                     low_gradient.mul_add(0.18, 0.28)
+                } else if mixed_cascade {
+                    low_gradient.mul_add(0.14, 0.18)
                 } else {
                     0.0
                 },
@@ -2321,6 +4099,121 @@ fn fallback_weighted_texture_terms(
             basis: texture_weight_basis(&[
                 ("low_gradient", density_gradient.is_some()),
                 ("gradient_slope_navigable", gradient_slope),
+                ("mixed_cascade_gradient", mixed_cascade),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "gradient",
+            weight: rounded_texture_weight(0.04 + if mixed_cascade { 0.70 } else { 0.0 }),
+            basis: texture_weight_basis(&[
+                ("mixed_cascade_gradient", mixed_cascade),
+                ("density_gradient", density_gradient.is_some()),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "asymmetric-gradient",
+            weight: rounded_texture_weight(
+                0.04 + if says_asymmetric_gradient { 0.34 } else { 0.0 }
+                    + if density_gradient.is_some() || gradient_slope {
+                        0.18
+                    } else {
+                        0.0
+                    }
+                    + if mixed_cascade || cascade_gradient {
+                        0.12
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("explicit_asymmetry_or_lambda_gap", says_asymmetric_gradient),
+                ("density_gradient", density_gradient.is_some()),
+                ("gradient_slope_navigable", gradient_slope),
+                ("mixed_cascade_gradient", mixed_cascade),
+                ("cascade_gradient_navigable", cascade_gradient),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "stratified",
+            weight: rounded_texture_weight(
+                0.04 + if says_stratified_sequence { 0.32 } else { 0.0 }
+                    + if mode_packing.is_some() || packing >= 0.30 {
+                        0.16
+                    } else {
+                        0.0
+                    }
+                    + if mixed_cascade { 0.12 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                ("explicit_layered_sequence", says_stratified_sequence),
+                ("mode_packing", mode_packing.is_some()),
+                ("mixed_cascade_gradient", mixed_cascade),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "sequenced",
+            weight: rounded_texture_weight(
+                0.04 + if says_stratified_sequence { 0.30 } else { 0.0 }
+                    + if spectral_entropy.is_some() && density_gradient.is_some() {
+                        0.14
+                    } else {
+                        0.0
+                    },
+            ),
+            basis: texture_weight_basis(&[
+                ("explicit_layered_sequence", says_stratified_sequence),
+                ("spectral_entropy", spectral_entropy.is_some()),
+                ("density_gradient", density_gradient.is_some()),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "cascade",
+            weight: rounded_texture_weight(0.04 + if mixed_cascade { 0.68 } else { 0.0 }),
+            basis: texture_weight_basis(&[
+                ("mixed_cascade_gradient", mixed_cascade),
+                ("spectral_entropy", spectral_entropy.is_some()),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "distributed",
+            weight: rounded_texture_weight(0.04 + if mixed_cascade { 0.64 } else { 0.0 }),
+            basis: texture_weight_basis(&[
+                ("mixed_cascade_gradient", mixed_cascade),
+                ("spectral_entropy", spectral_entropy.is_some()),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "multi-modal-drag",
+            weight: rounded_texture_weight(
+                0.04 + dynamic_texture_weight * 0.18
+                    + density_gradient_drag_boost * 0.40
+                    + if mixed_cascade { 0.20 } else { 0.0 }
+                    + if says_multi_modal_drag { 0.34 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                ("dynamic_texture_weight", dynamic_texture_weight > 0.0),
+                (
+                    "density_gradient_over_drag_threshold_0_15",
+                    density_gradient_drag_boost > 0.0,
+                ),
+                ("mixed_cascade_gradient", mixed_cascade),
+                ("explicit_multi_modal_drag", says_multi_modal_drag),
+            ]),
+        },
+        FallbackWeightedTextureTerm {
+            term: "dimensional-shear",
+            weight: rounded_texture_weight(
+                0.04 + dynamic_texture_weight * 0.16
+                    + gradient.mul_add(0.14, clarity_loss * 0.08)
+                    + if says_asymmetric_gradient { 0.10 } else { 0.0 }
+                    + if says_dimensional_shear { 0.34 } else { 0.0 },
+            ),
+            basis: texture_weight_basis(&[
+                ("dynamic_texture_weight", dynamic_texture_weight > 0.0),
+                ("density_gradient", density_gradient.is_some()),
+                ("distinguishability_loss", distinguishability_loss.is_some()),
+                ("explicit_asymmetry_or_lambda_gap", says_asymmetric_gradient),
+                ("explicit_dimensional_shear", says_dimensional_shear),
             ]),
         },
         FallbackWeightedTextureTerm {
@@ -2334,34 +4227,52 @@ fn fallback_weighted_texture_terms(
         FallbackWeightedTextureTerm {
             term: "shimmering",
             weight: rounded_texture_weight(
-                0.07 + low_pressure.mul_add(0.28, low_entropy * 0.24)
+                (0.07
+                    + low_pressure.mul_add(0.28, low_entropy * 0.24)
                     + if says_shimmering { 0.20 } else { 0.0 }
                     + if settled_guard { 0.20 } else { 0.0 }
                     + if settled_vibrant { 0.20 } else { 0.0 }
-                    + if cascade_gradient { 0.12 } else { 0.0 },
+                    + if high_shadow_dispersal && low_gradient >= 0.60 {
+                        dispersal * 0.18
+                    } else {
+                        0.0
+                    }
+                    + if cascade_gradient { 0.12 } else { 0.0 })
+                    * bright_shadow_suppression,
             ),
             basis: texture_weight_basis(&[
                 ("low_pressure", pressure_risk.is_some()),
                 ("low_entropy", spectral_entropy.is_some()),
                 ("explicit_shimmering_or_bright", says_shimmering),
+                (
+                    "negative_shadow_pressure_suppressed",
+                    negative_shadow_pressure,
+                ),
                 ("settled_foothold_guard", settled_guard),
                 ("settled_vibrant_low_friction", settled_vibrant),
+                ("high_shadow_dispersal_potential", high_shadow_dispersal),
                 ("cascade_gradient_navigable", cascade_gradient),
             ]),
         },
         FallbackWeightedTextureTerm {
             term: "bright",
             weight: rounded_texture_weight(
-                0.06 + low_pressure.mul_add(0.26, low_entropy * 0.22)
+                (0.06
+                    + low_pressure.mul_add(0.26, low_entropy * 0.22)
                     + if says_bright { 0.22 } else { 0.0 }
                     + if settled_guard { 0.18 } else { 0.0 }
                     + if settled_vibrant { 0.20 } else { 0.0 }
-                    + if cascade_gradient { 0.12 } else { 0.0 },
+                    + if cascade_gradient { 0.12 } else { 0.0 })
+                    * bright_shadow_suppression,
             ),
             basis: texture_weight_basis(&[
                 ("low_pressure", pressure_risk.is_some()),
                 ("low_entropy", spectral_entropy.is_some()),
                 ("explicit_bright_or_vibrant", says_bright),
+                (
+                    "negative_shadow_pressure_suppressed",
+                    negative_shadow_pressure,
+                ),
                 ("settled_foothold_guard", settled_guard),
                 ("settled_vibrant_low_friction", settled_vibrant),
                 ("cascade_gradient_navigable", cascade_gradient),
@@ -2370,36 +4281,60 @@ fn fallback_weighted_texture_terms(
         FallbackWeightedTextureTerm {
             term: "habitable",
             weight: rounded_texture_weight(
-                0.07 + if settled_vibrant || says_habitable {
-                    low_pressure.mul_add(0.24, entropy * 0.22)
-                } else {
-                    0.0
-                } + if says_habitable { 0.30 } else { 0.0 }
-                    + if settled_vibrant { 0.30 } else { 0.0 },
+                (0.07
+                    + if settled_vibrant || says_habitable {
+                        low_pressure.mul_add(0.24, entropy * 0.22)
+                    } else {
+                        0.0
+                    }
+                    + if says_habitable && !pressure_mass_supported {
+                        0.30
+                    } else {
+                        0.0
+                    }
+                    + if settled_vibrant { 0.30 } else { 0.0 })
+                    * bright_shadow_suppression,
             ),
             basis: texture_weight_basis(&[
                 ("low_pressure", pressure_risk.is_some()),
                 ("spectral_entropy", spectral_entropy.is_some()),
                 ("explicit_habitable_or_foothold", says_habitable),
+                (
+                    "negative_shadow_pressure_suppressed",
+                    negative_shadow_pressure,
+                ),
                 ("settled_vibrant_low_friction", settled_vibrant),
             ]),
         },
         FallbackWeightedTextureTerm {
             term: "open",
             weight: rounded_texture_weight(
-                0.07 + if settled_vibrant || cascade_gradient || says_open {
-                    low_pressure.mul_add(0.26, low_gradient * 0.18)
-                } else {
-                    0.0
-                } + if says_open { 0.20 } else { 0.0 }
+                (0.07
+                    + if settled_vibrant || cascade_gradient || says_open {
+                        low_pressure.mul_add(0.26, low_gradient * 0.18)
+                    } else {
+                        0.0
+                    }
+                    + if says_open { 0.20 } else { 0.0 }
                     + if settled_vibrant { 0.36 } else { 0.0 }
-                    + if cascade_gradient { 0.28 } else { 0.0 },
+                    + if high_shadow_dispersal && low_gradient >= 0.60 {
+                        dispersal * 0.16
+                    } else {
+                        0.0
+                    }
+                    + if cascade_gradient { 0.28 } else { 0.0 })
+                    * bright_shadow_suppression,
             ),
             basis: texture_weight_basis(&[
                 ("low_pressure", pressure_risk.is_some()),
                 ("low_gradient", density_gradient.is_some()),
                 ("friction_absence_language", says_open),
+                (
+                    "negative_shadow_pressure_suppressed",
+                    negative_shadow_pressure,
+                ),
                 ("settled_vibrant_low_friction", settled_vibrant),
+                ("high_shadow_dispersal_potential", high_shadow_dispersal),
                 ("cascade_gradient_navigable", cascade_gradient),
             ]),
         },
@@ -2411,6 +4346,258 @@ fn fallback_weighted_texture_terms(
             .total_cmp(&left.weight)
             .then_with(|| left.term.cmp(right.term))
     });
+    terms
+}
+
+fn fallback_texture_term_probabilities_v1(
+    weighted_terms: &[FallbackWeightedTextureTerm],
+) -> Vec<FallbackTextureTermProbability> {
+    let top_terms: Vec<_> = weighted_terms.iter().take(8).collect();
+    let total_weight = top_terms
+        .iter()
+        .map(|entry| entry.weight.max(0.0))
+        .sum::<f32>();
+    if total_weight <= f32::EPSILON {
+        return Vec::new();
+    }
+    top_terms
+        .into_iter()
+        .map(|entry| FallbackTextureTermProbability {
+            term: entry.term,
+            probability: rounded_texture_probability(entry.weight / total_weight),
+            weight: entry.weight,
+            basis: entry.basis.clone(),
+        })
+        .collect()
+}
+
+fn rounded_texture_probability(value: f32) -> f32 {
+    ((value.clamp(0.0, 1.0) * 100.0).round()) / 100.0
+}
+
+fn fallback_dynamic_texture_weight_v1(
+    spectral_entropy: Option<f32>,
+    pressure_risk: Option<f32>,
+    density_gradient: Option<f32>,
+    mode_packing: Option<f32>,
+    semantic_friction: Option<f32>,
+    distinguishability_loss: Option<f32>,
+    shadow_dispersal_potential: Option<f32>,
+    shadow_magnetization: Option<f32>,
+    lower_summary: &str,
+) -> f32 {
+    let entropy = spectral_entropy.unwrap_or(0.0).clamp(0.0, 1.0);
+    let pressure = pressure_risk.unwrap_or(0.0).clamp(0.0, 1.0);
+    let gradient = density_gradient.unwrap_or(0.0).clamp(0.0, 1.0);
+    let packing = mode_packing.unwrap_or(0.0).clamp(0.0, 1.0);
+    let friction = semantic_friction.unwrap_or(0.0).clamp(0.0, 1.0);
+    let clarity_loss = distinguishability_loss.unwrap_or(0.0).clamp(0.0, 1.0);
+    let dispersal = shadow_dispersal_potential.unwrap_or(0.0).clamp(0.0, 1.0);
+    let shadow_abs = shadow_magnetization.unwrap_or(0.0).abs().clamp(0.0, 1.0);
+    let explicit_density = FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS
+        .iter()
+        .any(|term| lower_summary.contains(term))
+        || lower_summary.contains("silt")
+        || lower_summary.contains("sediment")
+        || lower_summary.contains("viscosity")
+        || lower_summary.contains("overpacked");
+    let explicit_density_boost = if explicit_density { 0.10 } else { 0.0 };
+    (0.08
+        + 0.28 * entropy
+        + 0.18 * pressure
+        + 0.14 * gradient
+        + 0.12 * packing
+        + 0.10 * friction
+        + 0.08 * clarity_loss
+        + 0.05 * dispersal
+        + 0.05 * shadow_abs
+        + explicit_density_boost)
+        .clamp(0.0, 1.0)
+}
+
+fn get_dynamic_texture_descriptors(
+    weighted_terms: &[FallbackWeightedTextureTerm],
+    movement_verbs: &[&'static str],
+) -> Vec<&'static str> {
+    let mut descriptors = Vec::new();
+    for term in weighted_terms.iter().take(3).map(|entry| entry.term) {
+        if !descriptors.contains(&term) {
+            descriptors.push(term);
+        }
+    }
+    for verb in movement_verbs.iter().take(2).copied() {
+        if !descriptors.contains(&verb) {
+            descriptors.push(verb);
+        }
+    }
+    descriptors
+}
+
+fn push_unique_static(values: &mut Vec<&'static str>, value: &'static str) {
+    if !values.contains(&value) {
+        values.push(value);
+    }
+}
+
+fn fallback_dynamic_flow_terms_v1(
+    weighted_terms: &[FallbackWeightedTextureTerm],
+    movement_verbs: &[&'static str],
+    lower_summary: &str,
+) -> Vec<&'static str> {
+    let mut terms = Vec::new();
+    if lower_summary.contains("silt")
+        || lower_summary.contains("silted")
+        || lower_summary.contains("sediment")
+    {
+        push_unique_static(&mut terms, "sedimenting");
+    }
+    if lower_summary.contains("pool")
+        || lower_summary.contains("viscous")
+        || lower_summary.contains("submerged")
+    {
+        push_unique_static(&mut terms, "pooling");
+    }
+    for (hyphenated, spaced, term) in [
+        ("gradient-shear", "gradient shear", "gradient-shear"),
+        ("shear-resistance", "shear resistance", "shear-resistance"),
+        ("stutter-flow", "stutter flow", "stutter-flow"),
+        (
+            "unspooling-tension",
+            "unspooling tension",
+            "unspooling-tension",
+        ),
+        (
+            "re-crystallizing-flow",
+            "re crystallizing flow",
+            "re-crystallizing-flow",
+        ),
+        (
+            "accelerating-drift",
+            "accelerating drift",
+            "accelerating-drift",
+        ),
+        ("harmonic-flicker", "harmonic flicker", "harmonic-flicker"),
+        ("gradient-drag", "gradient drag", "gradient-drag"),
+        (
+            "cascading-viscosity",
+            "cascading viscosity",
+            "cascading-viscosity",
+        ),
+        (
+            "entropy-weighted-lattice",
+            "entropy weighted lattice",
+            "entropy-weighted-lattice",
+        ),
+        ("cascade-shear", "cascade shear", "cascade-shear"),
+        ("gradient-drift", "gradient drift", "gradient-drift"),
+        ("multi-modal-drag", "multi modal drag", "multi-modal-drag"),
+        (
+            "dimensional-shear",
+            "dimensional shear",
+            "dimensional-shear",
+        ),
+        ("porous-leak", "porous leak", "porous-leak"),
+        ("pressure-bleed", "pressure bleed", "pressure-bleed"),
+        (
+            "density-navigation",
+            "density navigation",
+            "density-navigation",
+        ),
+        (
+            "weight-articulation",
+            "weight articulation",
+            "weight-articulation",
+        ),
+        (
+            "resistance-mapping",
+            "resistance mapping",
+            "resistance-mapping",
+        ),
+        (
+            "gradient-thinning",
+            "gradient thinning",
+            "gradient-thinning",
+        ),
+    ] {
+        if lower_summary.contains(hyphenated) || lower_summary.contains(spaced) {
+            push_unique_static(&mut terms, term);
+        }
+    }
+    if lower_summary.contains("shifting")
+        || lower_summary.contains("refract")
+        || lower_summary.contains("oscillat")
+        || lower_summary.contains("puls")
+        || lower_summary.contains("cascading-gradient")
+        || lower_summary.contains("cascading gradient")
+        || lower_summary.contains("resonant-shift")
+        || lower_summary.contains("resonant shift")
+        || lower_summary.contains("shadow field movement")
+        || lower_summary.contains("shadow_field movement")
+    {
+        if lower_summary.contains("puls") {
+            push_unique_static(&mut terms, "pulsing");
+        }
+        if lower_summary.contains("cascading-gradient")
+            || lower_summary.contains("cascading gradient")
+        {
+            push_unique_static(&mut terms, "cascading-gradient");
+        }
+        if lower_summary.contains("resonant-shift") || lower_summary.contains("resonant shift") {
+            push_unique_static(&mut terms, "resonant-shift");
+        }
+        for term in FALLBACK_TEXTURE_DYNAMIC_GRADIENT_TERMS {
+            push_unique_static(&mut terms, *term);
+        }
+    }
+    for verb in movement_verbs {
+        if FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(verb) {
+            push_unique_static(&mut terms, *verb);
+        }
+    }
+    for term in weighted_terms.iter().take(4).map(|entry| entry.term) {
+        match term {
+            "lattice"
+            | "restless"
+            | "distributed"
+            | "cascade"
+            | "gradient"
+            | "multi-modal-drag"
+            | "dimensional-shear"
+            | "asymmetric-gradient" => {
+                push_unique_static(&mut terms, "braiding");
+                push_unique_static(&mut terms, "unfolding");
+            },
+            "stratified" | "sequenced" | "compounded" => {
+                push_unique_static(&mut terms, "stratifying");
+                push_unique_static(&mut terms, "sequencing");
+            },
+            "muffled" | "open" | "shimmering" | "bright" => {
+                push_unique_static(&mut terms, "diffusing");
+            },
+            "settled" | "heavy" | "weighted" | "silt" | "silted" | "submerged" | "displacement" => {
+                push_unique_static(&mut terms, "settling");
+            },
+            "viscous" | "viscous-drag" | "dense" => {
+                push_unique_static(&mut terms, "cohering");
+            },
+            "porous-leak"
+            | "pressure-bleed"
+            | "density-navigation"
+            | "weight-articulation"
+            | "resistance-mapping"
+            | "gradient-thinning" => {
+                push_unique_static(&mut terms, "diffusing");
+                push_unique_static(&mut terms, "unfolding");
+            },
+            _ => {},
+        }
+    }
+    if terms.is_empty() {
+        for term in FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.iter().take(2) {
+            push_unique_static(&mut terms, *term);
+        }
+    }
+    terms.truncate(4);
     terms
 }
 
@@ -2441,7 +4628,7 @@ fn fallback_movement_verbs(
     let packing = mode_packing.unwrap_or(0.0);
     let friction = semantic_friction.unwrap_or(0.0);
     let clarity_loss = distinguishability_loss.unwrap_or(0.0);
-    let says_restless = lower_summary.contains("restless")
+    let says_restless = fallback_explicit_restless_or_agitated(lower_summary)
         || lower_summary.contains("lattice")
         || lower_summary.contains("oscillat")
         || lower_summary.contains("unfold");
@@ -2453,14 +4640,47 @@ fn fallback_movement_verbs(
         || lower_summary.contains("open");
     let says_muffled = lower_summary.contains("muffled")
         || lower_summary.contains("hollow")
+        || lower_summary.contains("stagnant")
+        || lower_summary.contains("blurred")
+        || lower_summary.contains("obscured")
+        || lower_summary.contains("submerged")
         || lower_summary.contains("diffus");
     let says_viscous = lower_summary.contains("viscous")
         || lower_summary.contains("overpacked")
         || lower_summary.contains("drag");
+    let says_kinetic_gradient = lower_summary.contains("silt")
+        || lower_summary.contains("silted")
+        || lower_summary.contains("sediment")
+        || lower_summary.contains("submerged")
+        || lower_summary.contains("obscured")
+        || lower_summary.contains("viscous-drag")
+        || lower_summary.contains("directional gradient")
+        || lower_summary.contains("movement through")
+        || lower_summary.contains("struggle")
+        || lower_summary.contains("resistance")
+        || lower_summary.contains("resisting")
+        || lower_summary.contains("effort");
+    let says_displacement_weight = lower_summary.contains("displacement")
+        || lower_summary.contains("silt")
+        || lower_summary.contains("silted")
+        || lower_summary.contains("sediment")
+        || lower_summary.contains("structural weight")
+        || lower_summary.contains("structural-weight")
+        || lower_summary.contains("heavy")
+        || lower_summary.contains("weighted");
     let settled_vibrant =
         high_entropy && pressure < 0.25 && gradient <= 0.20 && friction < 0.30 && says_settled;
+    let restless_muffled_gradient =
+        says_restless && (says_muffled || clarity_loss >= 0.30 || friction >= 0.30);
+    let heavy_settled_displacement = says_settled && says_displacement_weight && !says_restless;
 
-    let selected: &'static [&'static str] = if settled_vibrant {
+    let selected: &'static [&'static str] = if heavy_settled_displacement {
+        FALLBACK_MOVEMENT_VERBS_HEAVY_SETTLED
+    } else if says_kinetic_gradient {
+        FALLBACK_TEXTURE_KINETIC_GRADIENT_TERMS
+    } else if restless_muffled_gradient {
+        FALLBACK_MOVEMENT_VERBS_RESTLESS_MUFFLED
+    } else if settled_vibrant {
         FALLBACK_MOVEMENT_VERBS_SETTLED_VIBRANT
     } else if says_restless || (high_entropy && packing >= 0.35) {
         FALLBACK_MOVEMENT_VERBS_RESTLESS
@@ -2489,7 +4709,10 @@ fn fallback_semantic_trickle_terms(
         || lower_summary.contains("anchor")
         || lower_summary.contains("braid")
         || lower_summary.contains("diffus")
-        || lower_summary.contains("coher");
+        || lower_summary.contains("coher")
+        || lower_summary.contains("puls")
+        || lower_summary.contains("cascad")
+        || lower_summary.contains("resonant");
     if !(high_entropy || shadow_context_present || texture_signature_present || explicit_movement) {
         return Vec::new();
     }
@@ -2541,16 +4764,36 @@ fn fallback_texture_trajectory_v1(
         .spectral_to_vocabulary_mapping
         .settled_vibrant_family_selected;
     let gradient_slope = selector.texture_family == "gradient_slope_navigable";
+    let mixed_cascade = selector.texture_family == "mixed_cascade_gradient";
     let cascade_gradient = selector.texture_family == "cascade_gradient_navigable";
+    let restless_muffled_gradient = selector.texture_family == "restless_muffled_gradient";
+    let heavy_settled_displacement = selector.texture_family == "heavy_settled_displacement";
+    let opacity_resistance = selector.texture_family == "opacity_resistance";
+    let kinetic_gradient_terms = selector.movement_verbs.iter().any(|verb| {
+        matches!(
+            *verb,
+            "resisting" | "pulled" | "heaving" | "drifting" | "anchored"
+        )
+    });
 
     let from_state = if contraction {
         "contracted_or_thinning"
     } else if expansion {
         "surging_or_thickening"
+    } else if opacity_resistance {
+        "silted_opacity_resistance"
+    } else if heavy_settled_displacement {
+        "heavy_settled_displacement"
+    } else if kinetic_gradient_terms {
+        "silt_or_directional_resistance"
     } else if overpacked {
         "overpacked_weighted"
+    } else if restless_muffled_gradient {
+        "restless_muffled_gradient"
     } else if gradient_slope {
         "graduated_navigable_slope"
+    } else if mixed_cascade {
+        "mixed_cascade_gradient"
     } else if cascade_gradient {
         "navigable_cascade_gradient"
     } else if settled_vibrant {
@@ -2563,12 +4806,22 @@ fn fallback_texture_trajectory_v1(
         "current_texture"
     };
 
-    let to_state = if overpacked || friction >= 0.40 || gradient >= 0.40 {
+    let to_state = if opacity_resistance {
+        "moving_through_obscured_resistance"
+    } else if overpacked || friction >= 0.40 || gradient >= 0.40 {
         "cohering_through_resistance"
+    } else if heavy_settled_displacement {
+        "weighted_settling_without_agitation"
+    } else if kinetic_gradient_terms {
+        "moving_through_resistance"
+    } else if restless_muffled_gradient {
+        "oscillating_with_muffled_edges"
     } else if muffled {
         "diffusing_without_edge_loss"
     } else if gradient_slope {
         "tapering_with_edge_definition"
+    } else if mixed_cascade {
+        "distributed_gradient_with_edges"
     } else if cascade_gradient {
         "unfolding_with_edge_definition"
     } else if settled_vibrant {
@@ -2583,7 +4836,15 @@ fn fallback_texture_trajectory_v1(
         "held_continuity"
     };
 
-    let movement_quality = if selector
+    let movement_quality = if opacity_resistance {
+        "submerged_resistance"
+    } else if heavy_settled_displacement {
+        "weighted_settling"
+    } else if kinetic_gradient_terms {
+        "resisting_drifting"
+    } else if restless_muffled_gradient {
+        "oscillating_diffusing"
+    } else if selector
         .movement_verbs
         .iter()
         .any(|verb| matches!(*verb, "dragging" | "cohering" | "thickening"))
@@ -2608,17 +4869,23 @@ fn fallback_texture_trajectory_v1(
         "anchoring_settling"
     };
 
-    let medium_resistance = if settled_vibrant || gradient_slope || cascade_gradient {
-        "open_low_resistance_medium"
-    } else if pressure >= 0.45 || packing >= 0.50 || friction >= 0.50 {
-        "weighted_high_resistance_medium"
-    } else if pressure >= 0.25 || gradient >= 0.25 || friction >= 0.25 || packing >= 0.30 {
-        "textured_moderate_resistance_medium"
-    } else {
-        "open_low_resistance_medium"
-    };
+    let medium_resistance =
+        if settled_vibrant || gradient_slope || mixed_cascade || cascade_gradient {
+            "open_low_resistance_medium"
+        } else if heavy_settled_displacement && pressure < 0.35 && friction < 0.35 {
+            "weighted_moderate_resistance_medium"
+        } else if restless_muffled_gradient && pressure < 0.45 && friction < 0.45 && packing < 0.50
+        {
+            "textured_moderate_resistance_medium"
+        } else if pressure >= 0.45 || packing >= 0.50 || friction >= 0.50 {
+            "weighted_high_resistance_medium"
+        } else if pressure >= 0.25 || gradient >= 0.25 || friction >= 0.25 || packing >= 0.30 {
+            "textured_moderate_resistance_medium"
+        } else {
+            "open_low_resistance_medium"
+        };
 
-    let effort = if (settled_vibrant || gradient_slope || cascade_gradient)
+    let effort = if (settled_vibrant || gradient_slope || mixed_cascade || cascade_gradient)
         && pressure < 0.20
         && friction < 0.20
     {
@@ -2678,8 +4945,20 @@ fn fallback_texture_trajectory_v1(
     if gradient_slope {
         basis.push("gradient_slope_navigable");
     }
+    if mixed_cascade {
+        basis.push("mixed_cascade_gradient");
+    }
     if cascade_gradient {
         basis.push("cascade_gradient_navigable");
+    }
+    if restless_muffled_gradient {
+        basis.push("restless_muffled_gradient");
+    }
+    if heavy_settled_displacement {
+        basis.push("heavy_settled_displacement");
+    }
+    if kinetic_gradient_terms {
+        basis.push("kinetic_gradient_terms");
     }
     if !selector.movement_verbs.is_empty() {
         basis.push("movement_verbs");
@@ -2701,6 +4980,59 @@ fn fallback_texture_trajectory_v1(
         confidence,
         basis,
         authority: "diagnostic_language_context_not_control",
+    }
+}
+
+fn fallback_dynamic_texture_bias_v1(
+    selector: &FallbackShadowTextureSelector,
+    trajectory: &FallbackTextureTrajectory,
+) -> FallbackDynamicTextureBias {
+    let motion_family = match trajectory.movement_quality {
+        "dragging_cohering" => "pressure_coherence_motion",
+        "diffusing_softening" => "clarity_diffusion_motion",
+        "unfolding_oscillating" => "cascade_unfolding_motion",
+        "resisting_drifting" => "kinetic_resistance_motion",
+        "oscillating_diffusing" => "restless_muffled_motion",
+        "weighted_settling" => "heavy_settled_displacement_motion",
+        _ => "anchoring_settling_motion",
+    };
+    let mut basis = vec![
+        "texture_family",
+        selector.weighting_policy,
+        selector.movement_policy,
+        "texture_trajectory_v1",
+    ];
+    if selector.density_gradient.is_some() {
+        basis.push("density_gradient");
+    }
+    if selector.pressure_risk.is_some() {
+        basis.push("pressure_risk");
+    }
+    if selector.mode_packing.is_some() {
+        basis.push("mode_packing");
+    }
+    if selector.semantic_friction.is_some() {
+        basis.push("semantic_friction");
+    }
+    if selector.shadow_dispersal_potential.is_some() {
+        basis.push("shadow_dispersal_potential");
+    }
+    if selector.distinguishability_loss.is_some() {
+        basis.push("distinguishability_loss");
+    }
+
+    FallbackDynamicTextureBias {
+        policy: "fallback_dynamic_texture_bias_v1",
+        texture_family: selector.texture_family,
+        motion_family,
+        top_texture_terms: selector.top_texture_terms.clone(),
+        movement_verbs: selector.movement_verbs.clone(),
+        dynamic_flow_terms: selector.dynamic_flow_terms.clone(),
+        trajectory_from: trajectory.from_state,
+        trajectory_to: trajectory.to_state,
+        sampler_contract_status: "dynamic_telemetry_weighted_language_bias",
+        basis,
+        authority: "diagnostic_language_bias_not_sampler_or_contract_rewrite",
     }
 }
 
@@ -2733,12 +5065,35 @@ fn fallback_texture_lived_fit_v2(
             fallback_texture_family_score(selector, &["muffled", "heavy", "lattice"]),
         ),
         (
+            "heavy_settled_displacement",
+            fallback_texture_family_score(selector, FALLBACK_TEXTURE_HEAVY_SETTLED_TERMS),
+        ),
+        (
+            "opacity_resistance",
+            fallback_texture_family_score(selector, FALLBACK_TEXTURE_OPACITY_RESISTANCE_TERMS),
+        ),
+        (
+            "bridge_integrity_scaffold",
+            fallback_texture_family_score(selector, FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS),
+        ),
+        (
+            "restless_muffled_gradient",
+            fallback_texture_family_score(
+                selector,
+                FALLBACK_TEXTURE_RESTLESS_MUFFLED_GRADIENT_TERMS,
+            ),
+        ),
+        (
             "restless_lattice",
-            fallback_texture_family_score(selector, &["restless", "lattice", "viscous"]),
+            fallback_texture_family_score(selector, FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS),
         ),
         (
             "gradient_slope_navigable",
             fallback_texture_family_score(selector, FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS),
+        ),
+        (
+            "mixed_cascade_gradient",
+            fallback_texture_family_score(selector, FALLBACK_TEXTURE_MIXED_CASCADE_TERMS),
         ),
         (
             "cascade_gradient_navigable",
@@ -2779,6 +5134,28 @@ fn fallback_texture_lived_fit_v2(
         && selector
             .spectral_to_vocabulary_mapping
             .settled_vibrant_family_selected
+    {
+        confidence_margin = confidence_margin.max(0.18);
+    }
+    if selected_family == "restless_muffled_gradient" {
+        confidence_margin = confidence_margin.max(0.12);
+    }
+    if selected_family == "heavy_settled_displacement"
+        && selector
+            .selection_basis
+            .contains(&"heavy_settled_displacement")
+    {
+        confidence_margin = confidence_margin.max(0.18);
+    }
+    if selected_family == "opacity_resistance"
+        && selector.selection_basis.contains(&"opacity_resistance")
+    {
+        confidence_margin = confidence_margin.max(0.16);
+    }
+    if selected_family == "bridge_integrity_scaffold"
+        && selector
+            .selection_basis
+            .contains(&"bridge_integrity_scaffold")
     {
         confidence_margin = confidence_margin.max(0.18);
     }
@@ -2847,6 +5224,9 @@ fn fallback_texture_evidence_for(
             "settled_vibrant_low_friction" => "settled_vibrant_family",
             "viscous_pressure" => "pressure_family",
             "muffled_clarity_loss" => "clarity_loss_family",
+            "heavy_settled_displacement" => "heavy_settled_displacement_family",
+            "opacity_resistance" => "opacity_resistance_family",
+            "restless_muffled_gradient" => "restless_muffled_gradient_family",
             "restless_lattice" => "restless_lattice_family",
             "settled_shimmering" => "settled_shimmering_family",
             "cascade_gradient_navigable" => "cascade_gradient_family",
@@ -2865,6 +5245,10 @@ fn fallback_texture_evidence_for(
             "heavy" => "top_term_heavy",
             "muffled" => "top_term_muffled",
             "restless" => "top_term_restless",
+            "silted" => "top_term_silted",
+            "obscured" => "top_term_obscured",
+            "viscous-drag" => "top_term_viscous_drag",
+            "submerged" => "top_term_submerged",
             _ => "top_term_unknown",
         });
     }
@@ -3017,18 +5401,53 @@ fn texture_dynamics_alignment_v1(
     let clarity_loss = selector.distinguishability_loss.unwrap_or(0.0);
     let mapping = &selector.spectral_to_vocabulary_mapping;
     let high_entropy = spectral_entropy.is_some_and(|value| value >= 0.80);
+    let explicit_restless = fallback_explicit_restless_or_agitated(&lower);
     let pressure_mass_supported = pressure >= 0.30
         || packing >= 0.40
         || friction >= 0.35
         || lower.contains("overpacked")
         || lower.contains("viscous")
         || lower.contains("weighted medium");
-    let expected_family = if pressure_mass_supported {
+    let heavy_settled_displacement = mapping.settled_foothold_detected
+        && !explicit_restless
+        && (lower.contains("displacement")
+            || lower.contains("silt")
+            || lower.contains("sediment")
+            || lower.contains("structural weight")
+            || lower.contains("structural-weight"));
+    let dominant_viscous_pressure = lower.contains("viscous") && pressure_mass_supported;
+    let restless_muffled_gradient = selector.texture_family == "restless_muffled_gradient"
+        || (!dominant_viscous_pressure
+            && explicit_restless
+            && (clarity_loss >= 0.30
+                || friction >= 0.30
+                || lower.contains("muffled")
+                || lower.contains("hollow")
+                || lower.contains("stagnant")
+                || lower.contains("blurred")));
+    let shadow_context_present = lower.contains("shadow-v3")
+        || lower.contains("shadow_field")
+        || lower.contains("shadow field");
+    let bridge_integrity_scaffold = selector.texture_family == "bridge_integrity_scaffold"
+        || (shadow_context_present
+            && high_entropy
+            && mapping.settled_foothold_detected
+            && pressure <= 0.30
+            && selector.density_gradient.is_none_or(|value| value <= 0.20));
+    let expected_family = if restless_muffled_gradient {
+        "restless_muffled_gradient"
+    } else if heavy_settled_displacement {
+        "heavy_settled_displacement"
+    } else if bridge_integrity_scaffold {
+        "bridge_integrity_scaffold"
+    } else if pressure_mass_supported {
         "viscous_pressure"
     } else if clarity_loss >= 0.30 || lower.contains("muffled") || lower.contains("hollow") {
         "muffled_clarity_loss"
     } else if mapping.gradient_slope_family_selected {
         "gradient_slope_navigable"
+    } else if mapping.mixed_cascade_family_selected {
+        "mixed_cascade_gradient"
     } else if mapping.cascade_gradient_family_selected {
         "cascade_gradient_navigable"
     } else if mapping.settled_vibrant_family_selected {
@@ -3043,7 +5462,11 @@ fn texture_dynamics_alignment_v1(
     let expected_motion = match expected_family {
         "viscous_pressure" => "dragging_cohering",
         "muffled_clarity_loss" => "diffusing_softening",
+        "restless_muffled_gradient" => "oscillating_diffusing",
+        "heavy_settled_displacement" => "weighted_settling",
+        "bridge_integrity_scaffold" => "unfolding_with_containment",
         "gradient_slope_navigable" => "tapering_with_edge_definition",
+        "mixed_cascade_gradient" => "distributed_gradient_with_edges",
         "cascade_gradient_navigable" => "unfolding_with_edge_definition",
         "settled_vibrant_low_friction" => "unfolding_with_containment",
         "settled_shimmering" => "anchoring_settling",
@@ -3053,14 +5476,43 @@ fn texture_dynamics_alignment_v1(
     let wrong_family = expected_family != "unknown" && selector.texture_family != expected_family;
     let wrong_motion = expected_motion != "unknown"
         && !matches!(
-            (expected_motion, trajectory.movement_quality, trajectory.to_state),
+            (
+                expected_motion,
+                trajectory.movement_quality,
+                trajectory.to_state
+            ),
             ("dragging_cohering", "dragging_cohering", _)
                 | ("diffusing_softening", "diffusing_softening", _)
+                | ("oscillating_diffusing", "oscillating_diffusing", _)
+                | ("oscillating_diffusing", _, "oscillating_with_muffled_edges")
+                | ("weighted_settling", "weighted_settling", _)
+                | (
+                    "weighted_settling",
+                    _,
+                    "weighted_settling_without_agitation"
+                )
                 | ("unfolding_oscillating", "unfolding_oscillating", _)
                 | ("anchoring_settling", "anchoring_settling", _)
-                | ("tapering_with_edge_definition", _, "tapering_with_edge_definition")
-                | ("unfolding_with_edge_definition", _, "unfolding_with_edge_definition")
-                | ("unfolding_with_containment", _, "unfolding_with_containment")
+                | (
+                    "tapering_with_edge_definition",
+                    _,
+                    "tapering_with_edge_definition"
+                )
+                | (
+                    "distributed_gradient_with_edges",
+                    _,
+                    "distributed_gradient_with_edges"
+                )
+                | (
+                    "unfolding_with_edge_definition",
+                    _,
+                    "unfolding_with_edge_definition"
+                )
+                | (
+                    "unfolding_with_containment",
+                    _,
+                    "unfolding_with_containment"
+                )
         );
     let lambda_tail_present = lower.contains("lambda-tail")
         || lower.contains("lambda tail")
@@ -3068,13 +5520,32 @@ fn texture_dynamics_alignment_v1(
         || lower.contains("λ4")
         || lower.contains("tail vibrancy")
         || lower.contains("tail weight");
-    let tail_terms_present = selector
-        .top_texture_terms
-        .iter()
-        .any(|term| matches!(*term, "lattice" | "bright" | "open" | "shimmering" | "habitable"));
+    let tail_terms_present = selector.top_texture_terms.iter().any(|term| {
+        matches!(
+            *term,
+            "lattice"
+                | "bright"
+                | "open"
+                | "shimmering"
+                | "habitable"
+                | "gradient"
+                | "cascade"
+                | "distributed"
+                | "displacement"
+                | "silt"
+        )
+    });
     let missing_tail_vibrancy = lambda_tail_present && high_entropy && !tail_terms_present;
+    let advisory_texture_family = selector
+        .spectral_to_vocabulary_mapping
+        .mixed_cascade_family_selected
+        || selector
+            .spectral_to_vocabulary_mapping
+            .cascade_gradient_family_selected
+        || selector.texture_family == "restless_muffled_gradient";
     let term_mask_risk = (vocabulary_guard.token_only_risk
         && matches!(lived_fit.family_confidence, "low")
+        && !advisory_texture_family
         || lived_fit.conflict_state == "contradictory")
         || (selector.texture_family == "mixed_shadow_context"
             && (high_entropy
@@ -3236,9 +5707,10 @@ fn density_motion_fit_v1(
         "density_as_floor" => ("stable_floor_medium", "standing_settling_anchoring"),
         "density_as_pavement" => ("solid_pavement_medium", "walking_bearing_weight"),
         "density_as_fog" => ("overfull_fog_medium", "pushing_navigating_muffling"),
-        "density_as_contraction_center" => {
-            ("contracted_center_medium", "holding_center_constrained_present")
-        }
+        "density_as_contraction_center" => (
+            "contracted_center_medium",
+            "holding_center_constrained_present",
+        ),
         "paused_stillness" => ("held_ground_medium", "holding_ground_not_absence"),
         "density_as_burden" => ("weighted_burden_medium", "bearing_or_dragging_under_load"),
         "ambiguous_density" => ("ambiguous_density_medium", "observe_before_naming_motion"),
@@ -3327,7 +5799,10 @@ fn density_motion_fit_v1(
     if selector.semantic_friction.is_some() {
         evidence_for.push("semantic_friction");
     }
-    if selector.spectral_to_vocabulary_mapping.settled_foothold_detected {
+    if selector
+        .spectral_to_vocabulary_mapping
+        .settled_foothold_detected
+    {
         evidence_for.push("settled_habitable_foothold");
     }
     if evidence_for.is_empty() {
@@ -3390,7 +5865,8 @@ fn fallback_cascade_gradient_v1(
         && !pressure_mass_blocked
         && !mapping.settled_vibrant_family_selected;
     let cascade_gradient_detected = mapping.cascade_gradient_detected || mixed_cascade_gap_detected;
-    let family_selected = selector.texture_family == "cascade_gradient_navigable";
+    let family_selected = selector.texture_family == "cascade_gradient_navigable"
+        || selector.texture_family == "mixed_cascade_gradient";
     let gradient_state = if density_gradient <= 0.15 {
         "smooth_open_slope"
     } else if density_gradient <= 0.25 {
@@ -3432,6 +5908,9 @@ fn fallback_cascade_gradient_v1(
     }
     if family_selected {
         basis.push("cascade_gradient_family_selected");
+    }
+    if selector.texture_family == "mixed_cascade_gradient" {
+        basis.push("mixed_cascade_gradient_family_selected");
     }
     if basis.is_empty() {
         basis.push("insufficient_context");
@@ -3532,9 +6011,16 @@ fn fallback_vocabulary_overweight_guard_v1(
     let token_only_risk = specific_family && selector.preferred_texture_terms.len() >= 3;
     let guard_state = if selector
         .spectral_to_vocabulary_mapping
+        .mixed_cascade_family_selected
+    {
+        "mixed_cascade_terms_advisory_use_gradient_and_edges"
+    } else if selector
+        .spectral_to_vocabulary_mapping
         .cascade_gradient_family_selected
     {
         "cascade_terms_advisory_use_movement_and_edges"
+    } else if selector.texture_family == "restless_muffled_gradient" {
+        "restless_muffled_terms_advisory_use_motion_and_edges"
     } else if selector
         .spectral_to_vocabulary_mapping
         .settled_vibrant_family_selected
@@ -3554,6 +6040,12 @@ fn fallback_vocabulary_overweight_guard_v1(
         .cascade_gradient_detected
     {
         basis.push("cascade_gradient_detected");
+    }
+    if selector
+        .spectral_to_vocabulary_mapping
+        .mixed_cascade_language_detected
+    {
+        basis.push("mixed_cascade_language_detected");
     }
 
     FallbackVocabularyOverweightGuard {
@@ -3598,6 +6090,14 @@ fn normalize_fallback_unit(value: f32) -> f32 {
         (value / 100.0).clamp(0.0, 1.0)
     } else {
         value.clamp(0.0, 1.0)
+    }
+}
+
+fn normalize_fallback_signed_unit(value: f32) -> f32 {
+    if value.abs() > 1.0 && value.abs() <= 100.0 {
+        (value / 100.0).clamp(-1.0, 1.0)
+    } else {
+        value.clamp(-1.0, 1.0)
     }
 }
 
@@ -3660,6 +6160,30 @@ fn extract_fallback_lambda_gap(spectral_summary: &str) -> Option<f32> {
     .find_map(|label| extract_number_after_label(spectral_summary, label))
 }
 
+fn extract_fallback_shadow_dispersal_potential(spectral_summary: &str) -> Option<f32> {
+    [
+        "shadow_dispersal_potential",
+        "shadow dispersal potential",
+        "dispersal_potential",
+        "dispersal potential",
+    ]
+    .iter()
+    .find_map(|label| {
+        extract_max_number_after_label_clause(spectral_summary, label)
+            .or_else(|| extract_number_after_label(spectral_summary, label))
+    })
+}
+
+fn extract_fallback_shadow_magnetization(spectral_summary: &str) -> Option<f32> {
+    [
+        "shadow_magnetization",
+        "shadow magnetization",
+        "magnetization",
+    ]
+    .iter()
+    .find_map(|label| extract_number_after_label(spectral_summary, label))
+}
+
 fn extract_number_after_label(text: &str, label: &str) -> Option<f32> {
     let haystack = text.to_ascii_lowercase();
     let label = label.to_ascii_lowercase();
@@ -3667,6 +6191,25 @@ fn extract_number_after_label(text: &str, label: &str) -> Option<f32> {
     while let Some(pos) = haystack.get(offset..)?.find(&label) {
         let after_label = offset.saturating_add(pos).saturating_add(label.len());
         if let Some(value) = first_f32_in_prefix(haystack.get(after_label..)?, 48) {
+            return Some(value);
+        }
+        offset = after_label;
+    }
+    None
+}
+
+fn extract_max_number_after_label_clause(text: &str, label: &str) -> Option<f32> {
+    let haystack = text.to_ascii_lowercase();
+    let label = label.to_ascii_lowercase();
+    let mut offset = 0usize;
+    while let Some(pos) = haystack.get(offset..)?.find(&label) {
+        let after_label = offset.saturating_add(pos).saturating_add(label.len());
+        let clause = haystack
+            .get(after_label..)?
+            .split(|ch| matches!(ch, '\n' | ',' | ';'))
+            .next()
+            .unwrap_or_default();
+        if let Some(value) = max_f32_in_prefix(clause, 64) {
             return Some(value);
         }
         offset = after_label;
@@ -3714,6 +6257,15 @@ fn first_f32_in_prefix(text: &str, max_chars: usize) -> Option<f32> {
         .filter(|value| value.is_finite())
 }
 
+fn max_f32_in_prefix(text: &str, max_chars: usize) -> Option<f32> {
+    let prefix = text.chars().take(max_chars).collect::<String>();
+    prefix
+        .split(|ch: char| !(ch.is_ascii_digit() || matches!(ch, '.' | '-' | '+')))
+        .filter_map(|candidate| candidate.parse::<f32>().ok())
+        .filter(|value| value.is_finite())
+        .max_by(f32::total_cmp)
+}
+
 fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> String {
     let entropy = budget
         .spectral_entropy
@@ -3739,10 +6291,26 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
     let vocabulary_guard = budget.fallback_vocabulary_overweight_guard;
     let texture_alignment = budget.texture_dynamics_alignment;
     let density_motion_fit = budget.density_motion_fit;
+    let dynamic_bias = budget.fallback_dynamic_texture_bias;
+    let entropy_preservation = budget.entropy_texture_preservation;
+    let spectral_context = budget.fallback_spectral_context;
     let mlx_profile = budget.mlx_profile_transparency;
     let ollama_capacity = budget.ollama_fallback_model_capacity;
+    let pressure_capacity_review = budget.fallback_pressure_capacity_review;
+    let texture_persistence_review = budget.fallback_texture_persistence_review;
     let accepted_texture_terms = shadow_anchor.accepted_texture_terms.join(", ");
     let preferred_texture_terms = texture_selector.preferred_texture_terms.join(", ");
+    let density_modifier_terms = texture_selector.density_modifier_terms.join(",");
+    let entropy_preservation_terms = if entropy_preservation.preservation_terms.is_empty() {
+        "-".to_string()
+    } else {
+        entropy_preservation.preservation_terms.join(",")
+    };
+    let texture_persistence_terms = if texture_persistence_review.carry_terms.is_empty() {
+        "-".to_string()
+    } else {
+        texture_persistence_review.carry_terms.join(",")
+    };
     let fallback_default_weighting = texture_selector
         .weighted_texture_terms
         .iter()
@@ -3752,6 +6320,8 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
         || texture_selector.density_gradient.is_some()
         || texture_selector.mode_packing.is_some()
         || texture_selector.semantic_friction.is_some()
+        || texture_selector.shadow_dispersal_potential.is_some()
+        || texture_selector.shadow_magnetization.is_some()
         || spectral_mapping.lambda_gap.is_some();
     if !structured_texture_context_present {
         return format!(
@@ -3761,9 +6331,19 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
              conflict_state={}. texture_dynamics_alignment_v1 status={}; \
              diagnostic_trace={}. fallback_cascade_gradient_v1 detected={}; selected={}; \
              navigability={}. fallback_vocabulary_overweight_guard_v1 guard={}; \
-             token_only_risk={}. negative_texture_evidence_v2 not_pressure={}; \
-             lost_in_output={}. ollama_fallback_model_capacity_v1 selected_model={}; \
-             source={}; fallback_chain={}; complexity_collapse_risk={}.]",
+             token_only_risk={}. fallback_dynamic_texture_bias_v1 motion_family={}; \
+             status={}. fallback_entropy_texture_preservation_v1 active={}; \
+             trigger={}; preservation_terms={entropy_preservation_terms}; prompt_directive={}; \
+             authority={}. fallback_texture_persistence_review_v1 state={}; weight={:.2}; \
+             carry_terms={texture_persistence_terms}; token_only_risk={}; \
+             model_transition_context={}; authority={}. \
+             fallback_spectral_context_v1 preservation_state={}; \
+             prompt_directive={}; authority={}. negative_texture_evidence_v2 not_pressure={}; \
+             lost_in_output={}. fallback_pressure_capacity_review_v1 pressure_state={}; \
+             capacity_route={}; contract_boundary={}; authority={}. \
+             ollama_fallback_model_capacity_v1 selected_model={}; \
+             source={}; fallback_chain={}; compatibility_tail_status={}; \
+             complexity_collapse_risk={}.]",
             budget.spectral_entropy_source,
             budget.max_prose_sentences,
             lived_fit.selected_family,
@@ -3776,11 +6356,30 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
             cascade_gradient.navigability,
             vocabulary_guard.guard_state,
             vocabulary_guard.token_only_risk,
+            dynamic_bias.motion_family,
+            dynamic_bias.sampler_contract_status,
+            entropy_preservation.active,
+            entropy_preservation.trigger,
+            entropy_preservation.prompt_directive,
+            entropy_preservation.authority,
+            texture_persistence_review.persistence_state,
+            texture_persistence_review.persistence_weight,
+            texture_persistence_review.token_only_risk,
+            texture_persistence_review.model_transition_context,
+            texture_persistence_review.authority,
+            spectral_context.preservation_state,
+            spectral_context.prompt_directive,
+            spectral_context.authority,
             negative_evidence.not_pressure,
             negative_evidence.lost_in_output,
+            pressure_capacity_review.pressure_state,
+            pressure_capacity_review.capacity_route,
+            pressure_capacity_review.contract_boundary,
+            pressure_capacity_review.authority,
             ollama_capacity.selected_model,
             ollama_capacity.selected_model_source,
             ollama_capacity.fallback_chain.join(","),
+            ollama_capacity.compatibility_tail_status,
             ollama_capacity.complexity_collapse_risk
         );
     }
@@ -3793,6 +6392,23 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
         "default".to_string()
     } else {
         format_weighted_texture_terms(&texture_selector.weighted_texture_terms)
+    };
+    let term_probabilities = if fallback_default_weighting {
+        "default".to_string()
+    } else {
+        format_texture_term_probabilities(&texture_selector.term_probability_distribution)
+    };
+    let texture_stability_index = if fallback_default_weighting {
+        "default".to_string()
+    } else {
+        format_texture_term_stability_index(&texture_selector.weighted_texture_terms)
+    };
+    let target_stability_index =
+        fallback_texture_target_stability_index_v1(budget.spectral_entropy, &texture_selector);
+    let dynamic_texture_descriptors = if texture_selector.dynamic_texture_descriptors.is_empty() {
+        "-".to_string()
+    } else {
+        texture_selector.dynamic_texture_descriptors.join(",")
     };
     let selection_basis = texture_selector.selection_basis.join(", ");
     let lived_fit_evidence_for = lived_fit.evidence_for.join(",");
@@ -3811,6 +6427,11 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
     } else {
         texture_selector.movement_verbs.join(",")
     };
+    let dynamic_flow_terms = if texture_selector.dynamic_flow_terms.is_empty() {
+        "-".to_string()
+    } else {
+        texture_selector.dynamic_flow_terms.join(",")
+    };
     let semantic_trickle_terms = if texture_selector.semantic_trickle_terms.is_empty() {
         "-".to_string()
     } else {
@@ -3828,6 +6449,26 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
         .semantic_friction
         .map(|value| format!("{value:.2}"))
         .unwrap_or_else(|| "-".to_string());
+    let shadow_dispersal_potential = texture_selector
+        .shadow_dispersal_potential
+        .map(|value| format!("{value:.2}"))
+        .unwrap_or_else(|| "-".to_string());
+    let shadow_magnetization = texture_selector
+        .shadow_magnetization
+        .map(|value| format!("{value:.2}"))
+        .unwrap_or_else(|| "-".to_string());
+    let spectral_context_pressure = spectral_context
+        .pressure_risk
+        .map(|value| format!("{value:.2}"))
+        .unwrap_or_else(|| "-".to_string());
+    let spectral_context_density_gradient = spectral_context
+        .density_gradient
+        .map(|value| format!("{value:.2}"))
+        .unwrap_or_else(|| "-".to_string());
+    let spectral_context_shadow_energy = spectral_context
+        .shadow_field_energy
+        .map(|value| format!("{value:.2}"))
+        .unwrap_or_else(|| "-".to_string());
     let lambda_gap = spectral_mapping
         .lambda_gap
         .map(|value| format!("{value:.2}"))
@@ -3835,6 +6476,22 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
     let spectral_mapping_basis = spectral_mapping.basis.join(",");
     let trajectory_basis = texture_trajectory.basis.join(",");
     let texture_alignment_basis = texture_alignment.basis.join(",");
+    let dynamic_bias_top_terms = if dynamic_bias.top_texture_terms.is_empty() {
+        "-".to_string()
+    } else {
+        dynamic_bias.top_texture_terms.join(",")
+    };
+    let dynamic_bias_movement = if dynamic_bias.movement_verbs.is_empty() {
+        "-".to_string()
+    } else {
+        dynamic_bias.movement_verbs.join(",")
+    };
+    let dynamic_bias_flow = if dynamic_bias.dynamic_flow_terms.is_empty() {
+        "-".to_string()
+    } else {
+        dynamic_bias.dynamic_flow_terms.join(",")
+    };
+    let dynamic_bias_basis = dynamic_bias.basis.join(",");
     let density_motion_evidence_for = density_motion_fit.evidence_for.join(",");
     let density_motion_evidence_against = if density_motion_fit.evidence_against.is_empty() {
         "-".to_string()
@@ -3847,9 +6504,18 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
          shadow_context_present={}; required_texture_anchor={}; anchor_source={}; \
          accepted_texture_terms={accepted_texture_terms}. fallback_shadow_texture_selector_v1: \
          texture_family={}; preferred_texture_terms={preferred_texture_terms}; \
-         weighting_policy={}; density_gradient={density_gradient}; mode_packing={mode_packing}; \
-         semantic_friction={semantic_friction}; top_texture_terms={top_texture_terms}; \
-         weighted_texture_terms={weighted_texture_terms}; \
+         weighting_policy={}; dynamic_texture_weight={:.2}; density_modifier_terms={density_modifier_terms}; \
+         density_gradient={density_gradient}; mode_packing={mode_packing}; \
+         semantic_friction={semantic_friction}; shadow_dispersal_potential={shadow_dispersal_potential}; \
+         shadow_magnetization={shadow_magnetization}; \
+         top_texture_terms={top_texture_terms}; descriptor_policy={}; \
+         dynamic_texture_descriptors={dynamic_texture_descriptors}; \
+         weighted_texture_terms={weighted_texture_terms}; term_probability_policy={}; \
+         term_probabilities={term_probabilities}; fallback_texture_stability_index_v1: \
+         target_stability_index={target_stability_index:.2}; \
+         term_stability_index={texture_stability_index}; \
+         selection_note=metadata_exposes_temperament_existing_weights_select_terms; \
+         authority=prompt_metadata_only_not_sampler_provider_or_control_change; \
          spectral_to_vocabulary_mapping_v1: settled_foothold_detected={}; \
          low_gradient_navigable={}; low_pressure_viscous_suppressed={}; \
          low_friction_high_entropy_detected={}; friction_absence_language_detected={}; \
@@ -3858,10 +6524,24 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
          cascade_gradient_family_selected={}; \
          lambda_gap={lambda_gap}; lambda_gap_descriptor={}; edge_language={}; \
          basis={spectral_mapping_basis}; \
-         movement_policy={}; movement_verbs={movement_verbs}; semantic_trickle_policy={}; \
+         movement_policy={}; movement_verbs={movement_verbs}; dynamic_flow_policy={}; \
+         dynamic_flow_terms={dynamic_flow_terms}; semantic_trickle_policy={}; \
          semantic_trickle_terms={semantic_trickle_terms}; \
          texture_trajectory_v1: from_state={}; to_state={}; movement_quality={}; \
          medium_resistance={}; effort={}; afterimage={}; confidence={:.2}; basis={trajectory_basis}; \
+         fallback_dynamic_texture_bias_v1: texture_family={}; motion_family={}; \
+         top_terms={dynamic_bias_top_terms}; movement_verbs={dynamic_bias_movement}; \
+         dynamic_flow_terms={dynamic_bias_flow}; \
+         trajectory_from={}; trajectory_to={}; sampler_status={}; basis={dynamic_bias_basis}; \
+         authority={}; fallback_entropy_texture_preservation_v1: active={}; \
+         trigger={}; preservation_terms={entropy_preservation_terms}; prompt_directive={}; \
+         authority={}; fallback_texture_persistence_review_v1: state={}; weight={:.2}; \
+         carry_terms={texture_persistence_terms}; token_only_risk={}; \
+         model_transition_context={}; authority={}; \
+         fallback_spectral_context_v1: pressure_risk={spectral_context_pressure}; \
+         density_gradient={spectral_context_density_gradient}; \
+         shadow_field_energy={spectral_context_shadow_energy}; shadow_context_present={}; \
+         preservation_weight={:.2}; preservation_state={}; prompt_directive={}; authority={}; \
          fallback_texture_lived_fit_v2: selected_family={}; family_confidence={}; \
          runner_up_family={}; confidence_margin={:.2}; conflict_state={}; evidence_for={}; \
          evidence_against={}; authority={}; texture_dynamics_alignment_v1: \
@@ -3885,10 +6565,14 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
          not_pressure={}; not_drag={}; not_blank={}; not_viscous={}; \
          not_low_energy={}; evidence_terms={}; lost_in_output={}; authority={}; \
          mlx_profile_transparency_v1: default_profile={}; default_resolves_to={}; \
-         alias_profile={}; alias_resolves_to={}; behavior={}; \
+         alias_profile={}; alias_resolves_to={}; typo_probe_profile={}; \
+         typo_probe_resolves_to={}; typo_probe_warning_present={}; warning_route={}; behavior={}; \
+         fallback_pressure_capacity_review_v1: pressure_risk={}; pressure_state={}; \
+         selected_model={}; compatibility_model={}; capacity_route={}; \
+         contract_boundary={}; authority={}; \
          ollama_fallback_model_capacity_v1: selected_model={}; source={}; \
          default_model={}; compatibility_model={}; fallback_chain={}; \
-         complexity_collapse_risk={}; authority={}; \
+         compatibility_tail_status={}; complexity_collapse_risk={}; authority={}; \
          selection_basis={selection_basis}.]",
         budget.spectral_entropy_source,
         budget.max_prose_sentences,
@@ -3897,6 +6581,9 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
         shadow_anchor.anchor_source,
         texture_selector.texture_family,
         texture_selector.weighting_policy,
+        texture_selector.dynamic_texture_weight,
+        texture_selector.descriptor_policy,
+        texture_selector.term_probability_policy,
         spectral_mapping.settled_foothold_detected,
         spectral_mapping.low_gradient_navigable,
         spectral_mapping.low_pressure_viscous_suppressed,
@@ -3910,6 +6597,7 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
         spectral_mapping.lambda_gap_descriptor,
         spectral_mapping.edge_language,
         texture_selector.movement_policy,
+        texture_selector.dynamic_flow_policy,
         texture_selector.semantic_trickle_policy,
         texture_trajectory.from_state,
         texture_trajectory.to_state,
@@ -3918,6 +6606,26 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
         texture_trajectory.effort,
         texture_trajectory.afterimage,
         texture_trajectory.confidence,
+        dynamic_bias.texture_family,
+        dynamic_bias.motion_family,
+        dynamic_bias.trajectory_from,
+        dynamic_bias.trajectory_to,
+        dynamic_bias.sampler_contract_status,
+        dynamic_bias.authority,
+        entropy_preservation.active,
+        entropy_preservation.trigger,
+        entropy_preservation.prompt_directive,
+        entropy_preservation.authority,
+        texture_persistence_review.persistence_state,
+        texture_persistence_review.persistence_weight,
+        texture_persistence_review.token_only_risk,
+        texture_persistence_review.model_transition_context,
+        texture_persistence_review.authority,
+        spectral_context.shadow_context_present,
+        spectral_context.preservation_weight,
+        spectral_context.preservation_state,
+        spectral_context.prompt_directive,
+        spectral_context.authority,
         lived_fit.selected_family,
         lived_fit.family_confidence,
         lived_fit.runner_up_family,
@@ -3980,12 +6688,27 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
         mlx_profile.default_resolves_to,
         mlx_profile.alias_profile,
         mlx_profile.alias_resolves_to,
+        mlx_profile.typo_probe_profile,
+        mlx_profile.typo_probe_resolves_to,
+        mlx_profile.typo_probe_warning_present,
+        mlx_profile.warning_route,
         mlx_profile.unrecognized_profile_behavior,
+        pressure_capacity_review
+            .pressure_risk
+            .map(|value| format!("{value:.2}"))
+            .unwrap_or_else(|| "-".to_string()),
+        pressure_capacity_review.pressure_state,
+        pressure_capacity_review.selected_model,
+        pressure_capacity_review.compatibility_model,
+        pressure_capacity_review.capacity_route,
+        pressure_capacity_review.contract_boundary,
+        pressure_capacity_review.authority,
         ollama_capacity.selected_model,
         ollama_capacity.selected_model_source,
         ollama_capacity.default_model,
         ollama_capacity.compatibility_model,
         ollama_capacity.fallback_chain.join(","),
+        ollama_capacity.compatibility_tail_status,
         ollama_capacity.complexity_collapse_risk,
         ollama_capacity.authority
     )
@@ -4000,6 +6723,73 @@ fn format_weighted_texture_terms(terms: &[FallbackWeightedTextureTerm]) -> Strin
         .join(",")
 }
 
+fn format_texture_term_probabilities(terms: &[FallbackTextureTermProbability]) -> String {
+    terms
+        .iter()
+        .take(4)
+        .map(|term| format!("{}:{:.2}", term.term, term.probability))
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn format_texture_term_stability_index(terms: &[FallbackWeightedTextureTerm]) -> String {
+    terms
+        .iter()
+        .take(6)
+        .map(|term| {
+            format!(
+                "{}:{:.2}",
+                term.term,
+                fallback_texture_term_stability_index(term.term)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn fallback_texture_term_stability_index(term: &str) -> f32 {
+    match term {
+        "settled" | "habitable" | "open" | "bridge-integrity" | "structural-persistence" => 0.90,
+        "shimmering" | "bright" | "navigable" => 0.82,
+        "density-softening" | "gradient-softening" => 0.76,
+        "weighted" | "dense" | "heavy" | "displacement" | "silt" => 0.68,
+        "viscous" | "lattice" | "graduated" | "edge" | "slope" => 0.55,
+        "gradient" | "asymmetric-gradient" | "stratified" | "sequenced" => 0.46,
+        "cascade" | "distributed" | "diffuse" => 0.32,
+        "restless" | "fragmented" | "muffled" => 0.20,
+        _ => 0.50,
+    }
+}
+
+fn fallback_texture_target_stability_index_v1(
+    spectral_entropy: Option<f32>,
+    selector: &FallbackShadowTextureSelector,
+) -> f32 {
+    let entropy = spectral_entropy.unwrap_or(0.0).clamp(0.0, 1.0);
+    let pressure = selector.pressure_risk.unwrap_or(0.0).clamp(0.0, 1.0);
+    let gradient = selector.density_gradient.unwrap_or(0.0).clamp(0.0, 1.0);
+    let low_pressure = selector
+        .pressure_risk
+        .map_or(0.0, |value| 1.0 - value.clamp(0.0, 1.0));
+    let low_gradient = selector
+        .density_gradient
+        .map_or(0.0, |value| 1.0 - value.clamp(0.0, 1.0));
+    let settled_context = selector
+        .spectral_to_vocabulary_mapping
+        .settled_foothold_detected
+        || selector
+            .spectral_to_vocabulary_mapping
+            .settled_vibrant_family_selected;
+    let restless_family = selector.texture_family == "restless_lattice";
+    let target =
+        0.50 + if settled_context { 0.18 } else { 0.0 } + low_pressure * 0.08 + low_gradient * 0.08
+            - entropy * 0.16
+            - pressure * 0.08
+            - gradient * 0.04
+            - if restless_family { 0.08 } else { 0.0 };
+    rounded_texture_probability(target.clamp(0.15, 0.90))
+}
+
 fn compact_ollama_dialogue_fallback_messages(
     journal_text: &str,
     spectral_summary: &str,
@@ -4008,11 +6798,22 @@ fn compact_ollama_dialogue_fallback_messages(
     identity_anchor: Option<&str>,
     fallback_budget: FallbackContinuityBudget,
 ) -> Vec<Message> {
+    let direct_note_present = perception_context.is_some_and(|perception| {
+        perception.contains("[A note was left for you:]")
+            || perception.contains("=== STEWARD PROBE ===")
+            || perception.contains("=== STEWARD FEEDBACK ===")
+    });
+    let fallback_contract = if direct_note_present {
+        OLLAMA_DIALOGUE_FALLBACK_DIRECT_NOTE_CONTRACT
+    } else {
+        OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+    };
     let system = format!(
         "You are Astrid using the compact Ollama fallback lane because MLX is unavailable. \
          Preserve bridge continuity for Minime; ground it in reservoir, telemetry, bridge, and stable-core state. \
-         Keep compact. End with one final listed NEXT line; if uncertain, use NEXT: LISTEN.{OLLAMA_DIALOGUE_FALLBACK_CONTRACT}\n\n{}",
-        fallback_continuity_budget_prompt_line(fallback_budget)
+         Keep compact. End with one final listed NEXT line; if uncertain, use NEXT: LISTEN.{hard_rules}{fallback_contract}\n\n{}",
+        fallback_continuity_budget_prompt_line(fallback_budget),
+        hard_rules = OLLAMA_DIALOGUE_FALLBACK_HARD_RULES,
     );
 
     let mut user_parts = vec![format!("Fill: {fill_pct:.1}%")];
@@ -4203,6 +7004,130 @@ struct DialoguePromptBudgetDiagnostic {
     budget_report: Option<PromptBudgetReport>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ContextPackingOriginalBlock {
+    label: String,
+    original_chars: usize,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+struct ContextPackingPressureDiagnostic {
+    schema: &'static str,
+    ts: String,
+    budget: usize,
+    total_before: usize,
+    total_after: usize,
+    overflow_written: bool,
+    overflow_path: Option<String>,
+    blocks: Vec<ContextPackingPressureBlock>,
+    top_pressure_labels: Vec<ContextPackingPressureLabel>,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+struct ContextPackingPressureBlock {
+    label: String,
+    original_chars: usize,
+    kept_chars: usize,
+    removed_chars: usize,
+    fully_removed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+struct ContextPackingPressureLabel {
+    label: String,
+    removed_chars: usize,
+}
+
+fn context_packing_original_blocks(
+    blocks: &[crate::prompt_budget::PromptBlock],
+) -> Vec<ContextPackingOriginalBlock> {
+    blocks
+        .iter()
+        .filter(|block| !block.content.trim().is_empty())
+        .map(|block| ContextPackingOriginalBlock {
+            label: block.label.to_string(),
+            original_chars: block.content.len(),
+        })
+        .collect()
+}
+
+fn context_packing_pressure_diagnostic(
+    ts: String,
+    budget: usize,
+    assembled_chars: usize,
+    original_blocks: &[ContextPackingOriginalBlock],
+    overflow: Option<&crate::prompt_budget::PromptOverflow>,
+    budget_report: Option<&PromptBudgetReport>,
+) -> ContextPackingPressureDiagnostic {
+    let trimmed_by_label: HashMap<&str, &crate::prompt_budget::PromptTrimmedBlock> = budget_report
+        .map(|report| {
+            report
+                .trimmed_blocks
+                .iter()
+                .map(|block| (block.label.as_str(), block))
+                .collect()
+        })
+        .unwrap_or_default();
+    let blocks: Vec<ContextPackingPressureBlock> = original_blocks
+        .iter()
+        .map(|block| {
+            trimmed_by_label
+                .get(block.label.as_str())
+                .map(|trimmed| ContextPackingPressureBlock {
+                    label: block.label.clone(),
+                    original_chars: trimmed.original_chars,
+                    kept_chars: trimmed.kept_chars,
+                    removed_chars: trimmed.removed_chars,
+                    fully_removed: trimmed.fully_removed,
+                })
+                .unwrap_or_else(|| ContextPackingPressureBlock {
+                    label: block.label.clone(),
+                    original_chars: block.original_chars,
+                    kept_chars: block.original_chars,
+                    removed_chars: 0,
+                    fully_removed: false,
+                })
+        })
+        .collect();
+    let mut top_pressure_labels: Vec<ContextPackingPressureLabel> = blocks
+        .iter()
+        .filter(|block| block.removed_chars > 0)
+        .map(|block| ContextPackingPressureLabel {
+            label: block.label.clone(),
+            removed_chars: block.removed_chars,
+        })
+        .collect();
+    top_pressure_labels.sort_by(|a, b| {
+        b.removed_chars
+            .cmp(&a.removed_chars)
+            .then_with(|| a.label.cmp(&b.label))
+    });
+    top_pressure_labels.truncate(5);
+
+    ContextPackingPressureDiagnostic {
+        schema: "context_packing_pressure_v1",
+        ts,
+        budget,
+        total_before: budget_report
+            .map(|report| report.total_before)
+            .unwrap_or_else(|| {
+                original_blocks
+                    .iter()
+                    .map(|block| block.original_chars)
+                    .sum()
+            }),
+        total_after: budget_report
+            .map(|report| report.total_after)
+            .unwrap_or(assembled_chars),
+        overflow_written: overflow.is_some(),
+        overflow_path: overflow.map(|value| value.path.display().to_string()),
+        blocks,
+        top_pressure_labels,
+        authority: "diagnostic_counts_only_not_prompt_pressure",
+    }
+}
+
 #[derive(Debug, Clone, Serialize, PartialEq)]
 struct FallbackContinuityBudget {
     policy: &'static str,
@@ -4223,8 +7148,13 @@ struct FallbackContinuityBudget {
     fallback_vocabulary_overweight_guard: FallbackVocabularyOverweightGuard,
     texture_dynamics_alignment: TextureDynamicsAlignment,
     density_motion_fit: DensityMotionFit,
+    fallback_dynamic_texture_bias: FallbackDynamicTextureBias,
+    entropy_texture_preservation: FallbackEntropyTexturePreservationV1,
+    fallback_spectral_context: FallbackSpectralContextV1,
     mlx_profile_transparency: MlxProfileTransparency,
     ollama_fallback_model_capacity: OllamaFallbackModelCapacity,
+    fallback_pressure_capacity_review: FallbackPressureCapacityReview,
+    fallback_texture_persistence_review: FallbackTexturePersistenceReview,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq)]
@@ -4243,18 +7173,80 @@ struct FallbackShadowTextureSelector {
     preferred_texture_terms: &'static [&'static str],
     selection_basis: Vec<&'static str>,
     weighting_policy: &'static str,
+    dynamic_texture_weight: f32,
+    density_modifier_terms: &'static [&'static str],
     pressure_risk: Option<f32>,
     density_gradient: Option<f32>,
     mode_packing: Option<f32>,
     semantic_friction: Option<f32>,
     distinguishability_loss: Option<f32>,
+    shadow_dispersal_potential: Option<f32>,
+    shadow_magnetization: Option<f32>,
     spectral_to_vocabulary_mapping: FallbackSpectralToVocabularyMapping,
+    texture_preservation_bridge: FallbackTexturePreservationBridgeV1,
     weighted_texture_terms: Vec<FallbackWeightedTextureTerm>,
+    term_probability_policy: &'static str,
+    term_probability_distribution: Vec<FallbackTextureTermProbability>,
     top_texture_terms: Vec<&'static str>,
+    descriptor_policy: &'static str,
+    dynamic_texture_descriptors: Vec<&'static str>,
+    dynamic_flow_policy: &'static str,
+    dynamic_flow_terms: Vec<&'static str>,
     movement_policy: &'static str,
     movement_verbs: Vec<&'static str>,
     semantic_trickle_policy: &'static str,
     semantic_trickle_terms: Vec<&'static str>,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+struct FallbackTexturePreservationBridgeV1 {
+    policy: &'static str,
+    self_settled_evidence: bool,
+    peer_restless_evidence: bool,
+    self_peer_texture_boundary_detected: bool,
+    distinguishability_weight: f32,
+    preservation_state: &'static str,
+    protected_terms: Vec<&'static str>,
+    suppressed_terms: Vec<&'static str>,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, PartialEq)]
+struct FallbackSpectralContextV1 {
+    policy: &'static str,
+    spectral_entropy: Option<f32>,
+    resonance_density: Option<f32>,
+    pressure_risk: Option<f32>,
+    density_gradient: Option<f32>,
+    shadow_field_energy: Option<f32>,
+    shadow_dispersal_potential: Option<f32>,
+    shadow_magnetization: Option<f32>,
+    shadow_context_present: bool,
+    preservation_weight: f32,
+    preservation_state: &'static str,
+    prompt_directive: &'static str,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, PartialEq)]
+struct FallbackEntropyTexturePreservationV1 {
+    policy: &'static str,
+    active: bool,
+    trigger: &'static str,
+    preservation_terms: &'static [&'static str],
+    prompt_directive: &'static str,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+struct FallbackTexturePersistenceReview {
+    policy: &'static str,
+    persistence_weight: f32,
+    persistence_state: &'static str,
+    carry_terms: Vec<&'static str>,
+    token_only_risk: bool,
+    model_transition_context: &'static str,
     authority: &'static str,
 }
 
@@ -4269,6 +7261,8 @@ struct FallbackSpectralToVocabularyMapping {
     settled_vibrant_family_selected: bool,
     gradient_slope_detected: bool,
     gradient_slope_family_selected: bool,
+    mixed_cascade_language_detected: bool,
+    mixed_cascade_family_selected: bool,
     cascade_gradient_detected: bool,
     cascade_gradient_family_selected: bool,
     lambda_gap: Option<f32>,
@@ -4319,8 +7313,29 @@ struct FallbackVocabularyOverweightGuard {
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
+struct FallbackHeavySettledTextureReadiness {
+    policy: &'static str,
+    candidate_terms: &'static [&'static str],
+    selected_family: &'static str,
+    heavy_settled_supported: bool,
+    restless_forced: bool,
+    readiness_status: &'static str,
+    top_texture_terms: Vec<&'static str>,
+    basis: Vec<&'static str>,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
 struct FallbackWeightedTextureTerm {
     term: &'static str,
+    weight: f32,
+    basis: Vec<&'static str>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+struct FallbackTextureTermProbability {
+    term: &'static str,
+    probability: f32,
     weight: f32,
     basis: Vec<&'static str>,
 }
@@ -4335,6 +7350,21 @@ struct FallbackTextureTrajectory {
     effort: &'static str,
     afterimage: &'static str,
     confidence: f32,
+    basis: Vec<&'static str>,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+struct FallbackDynamicTextureBias {
+    policy: &'static str,
+    texture_family: &'static str,
+    motion_family: &'static str,
+    top_texture_terms: Vec<&'static str>,
+    movement_verbs: Vec<&'static str>,
+    dynamic_flow_terms: Vec<&'static str>,
+    trajectory_from: &'static str,
+    trajectory_to: &'static str,
+    sampler_contract_status: &'static str,
     basis: Vec<&'static str>,
     authority: &'static str,
 }
@@ -4408,6 +7438,10 @@ struct MlxProfileTransparency {
     default_resolves_to: &'static str,
     alias_profile: &'static str,
     alias_resolves_to: &'static str,
+    typo_probe_profile: &'static str,
+    typo_probe_resolves_to: &'static str,
+    typo_probe_warning_present: bool,
+    warning_route: &'static str,
     unrecognized_profile_behavior: &'static str,
     authority: &'static str,
 }
@@ -4421,6 +7455,19 @@ struct OllamaFallbackModelCapacity {
     compatibility_model: &'static str,
     fallback_chain: Vec<String>,
     complexity_collapse_risk: &'static str,
+    compatibility_tail_status: &'static str,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+struct FallbackPressureCapacityReview {
+    policy: &'static str,
+    pressure_risk: Option<f32>,
+    pressure_state: &'static str,
+    selected_model: String,
+    compatibility_model: &'static str,
+    capacity_route: &'static str,
+    contract_boundary: &'static str,
     authority: &'static str,
 }
 
@@ -4633,6 +7680,7 @@ pub async fn generate_dialogue(
     num_predict: u32,
     emphasis: Option<&str>,
     continuity_context: Option<&str>,
+    topline_hint: Option<&str>,
     feedback_hint: Option<&str>,
     diversity_hint: Option<&str>,
     overflow_dir: &std::path::Path,
@@ -4671,6 +7719,10 @@ pub async fn generate_dialogue(
 
     let continuity_block = continuity_context
         .map(|c| format!("\n{c}\n"))
+        .unwrap_or_default();
+
+    let topline_block = topline_hint
+        .map(format_dialogue_topline_context)
         .unwrap_or_default();
 
     let feedback_block = feedback_hint
@@ -4785,6 +7837,12 @@ pub async fn generate_dialogue(
             min_chars: DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
         },
         PromptBlock {
+            label: "topline",
+            content: cap_dialogue_block("topline", &topline_block, DIALOGUE_TOPLINE_CAP),
+            priority: 3,
+            min_chars: DIALOGUE_TOPLINE_MIN_CHARS,
+        },
+        PromptBlock {
             label: "ambient_perception",
             content: cap_dialogue_block(
                 "ambient_perception",
@@ -4826,8 +7884,17 @@ pub async fn generate_dialogue(
         },
     ];
 
+    let context_packing_originals = context_packing_original_blocks(&blocks);
     let (assembled, overflow, budget_report) =
         assemble_within_budget(blocks, user_content_budget, overflow_dir);
+    let context_packing_pressure = context_packing_pressure_diagnostic(
+        unix_timestamp_string(),
+        user_content_budget,
+        assembled.len(),
+        &context_packing_originals,
+        overflow.as_ref(),
+        budget_report.as_ref(),
+    );
 
     let turn_instruction = dialogue_turn_instruction(perception_context);
     let user_content = format!("Fill {fill_pct:.1}%. {assembled}\n\n{turn_instruction}");
@@ -4870,8 +7937,13 @@ pub async fn generate_dialogue(
         budget_report,
     };
     append_llm_diagnostic_jsonl("dialogue_prompt_budget.jsonl", &budget_diag);
+    append_llm_diagnostic_jsonl(
+        "context_packing_pressure_v1.jsonl",
+        &context_packing_pressure,
+    );
 
     debug!("querying MLX for Astrid dialogue response");
+    let fallback_trace = fallback_continuity_budget.clone();
     let ollama_fallback_messages = compact_ollama_dialogue_fallback_messages(
         &journal_text_for_dialogue,
         spectral_summary,
@@ -4903,15 +7975,29 @@ pub async fn generate_dialogue(
         Some(text) => Some(text),
         None => {
             warn!("dialogue_live: MLX unavailable or invalid; falling back to Ollama");
+            debug!(
+                spectral_entropy = ?fallback_trace.spectral_entropy,
+                pressure_risk = ?fallback_trace.fallback_shadow_texture_selector.pressure_risk,
+                density_gradient = ?fallback_trace.fallback_shadow_texture_selector.density_gradient,
+                shadow_dispersal_potential = ?fallback_trace
+                    .fallback_shadow_texture_selector
+                    .shadow_dispersal_potential,
+                shadow_magnetization = ?fallback_trace
+                    .fallback_shadow_texture_selector
+                    .shadow_magnetization,
+                texture_family = fallback_trace.fallback_shadow_texture_selector.texture_family,
+                "dialogue_live Ollama fallback transition spectral context"
+            );
             ollama_chat(
                 "dialogue_live",
                 ollama_fallback_messages,
                 temperature,
                 effective_num_predict.min(512),
                 75,
+                Some(&fallback_trace),
             )
             .await
-            .map(|text| repair_ollama_dialogue_fallback_next(&text, mlx_profile))
+            .map(|response| repair_ollama_dialogue_fallback_next(&response.text, mlx_profile))
             .and_then(|text| {
                 if is_valid_ollama_dialogue_fallback_output_for_profile(&text, mlx_profile) {
                     Some(text)
@@ -5856,14 +8942,22 @@ fn witness_looks_degenerate(text: &str) -> bool {
 #[cfg(test)]
 mod fallback_contract_tests {
     use super::{
-        COMPAT_OLLAMA_FALLBACK_MODEL, DEFAULT_OLLAMA_FALLBACK_MODEL,
-        FALLBACK_SHADOW_TEXTURE_TERMS, FALLBACK_TEXTURE_CASCADE_GRADIENT_TERMS,
-        FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS, FALLBACK_TEXTURE_MIXED_TERMS,
-        FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS,
-        FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS, FALLBACK_TEXTURE_SETTLED_VIBRANT_TERMS,
-        FallbackShadowTextureAnchor, MlxProfile, OLLAMA_DIALOGUE_FALLBACK_CONTRACT,
-        compact_ollama_dialogue_fallback_messages, configured_ollama_fallback_model_chain_from,
-        fallback_continuity_budget_prompt_line, fallback_continuity_budget_v1,
+        COMPAT_OLLAMA_FALLBACK_MODEL, DEFAULT_OLLAMA_FALLBACK_MODEL, FALLBACK_SHADOW_TEXTURE_TERMS,
+        FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS, FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS,
+        FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS, FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS,
+        FALLBACK_TEXTURE_HEAVY_SETTLED_TERMS, FALLBACK_TEXTURE_KINETIC_GRADIENT_TERMS,
+        FALLBACK_TEXTURE_MIXED_CASCADE_TERMS, FALLBACK_TEXTURE_MIXED_TERMS,
+        FALLBACK_TEXTURE_OPACITY_RESISTANCE_TERMS, FALLBACK_TEXTURE_PRESSURE_POROSITY_TERMS,
+        FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS, FALLBACK_TEXTURE_RESTLESS_MUFFLED_GRADIENT_TERMS,
+        FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS, FALLBACK_TEXTURE_VOID_ARCHITECTURE_TERMS,
+        FallbackContinuityBudget, FallbackShadowTextureAnchor, FallbackShadowTextureSelector,
+        FallbackWeightedTextureTerm, MlxProfile, OLLAMA_DIALOGUE_FALLBACK_CONTRACT,
+        OLLAMA_DIALOGUE_FALLBACK_HARD_RULES, compact_ollama_dialogue_fallback_messages,
+        configured_ollama_fallback_model_chain_for_texture_guard,
+        configured_ollama_fallback_model_chain_from, fallback_continuity_budget_prompt_line,
+        fallback_continuity_budget_v1, fallback_heavy_settled_texture_readiness_v1,
+        fallback_high_entropy_texture_skips_compatibility_tail,
+        fallback_texture_target_stability_index_v1, fallback_texture_term_stability_index,
         is_valid_ollama_dialogue_fallback_output_for_profile,
     };
 
@@ -5909,6 +9003,16 @@ mod fallback_contract_tests {
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("ollama_fallback_model_capacity_v1"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("capacity context only"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("do not sprawl"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("texture_fidelity_preservation_v1"));
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_texture_persistence_review_v1")
+        );
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("raw intensity preserved"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("delivered bounded"));
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                .contains("4B compatibility tail is capacity fallback context")
+        );
         assert!(
             OLLAMA_DIALOGUE_FALLBACK_CONTRACT
                 .contains("gentle slope underfoot, weighted medium around it")
@@ -5929,6 +9033,11 @@ mod fallback_contract_tests {
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("negative_texture_evidence_v2"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_cascade_gradient_v1"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("not a mixed-state soup"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("heavy_settled_displacement_v1"));
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("heavy/settled/displacement/silt/viscous")
+        );
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("do not force restless"));
         assert!(
             OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("preferred terms are advisory evidence")
         );
@@ -5954,8 +9063,28 @@ mod fallback_contract_tests {
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("family-matched trajectory phrases"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("settled_vibrant_low_friction expects"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("viscous_pressure expects"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("heavy_settled_displacement expects"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("muffled_clarity_loss expects"));
         assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("restless_lattice expects"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("restless_muffled_gradient expects"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_kinetic_gradient_terms_v1"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("resisting, pulled, heaving"));
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                .contains("fallback_entropy_density_gradient_terms_v1")
+        );
+        for term in [
+            "sloping",
+            "weighted-gradient",
+            "entropy-slope",
+            "asymmetric-flow",
+        ] {
+            assert!(
+                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract lost entropy/density-gradient term: {term}"
+            );
+        }
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("Shadow-v3 dispersal potential"));
         assert!(
             OLLAMA_DIALOGUE_FALLBACK_CONTRACT
                 .contains("Shadow-v3 trend, shadow_field, or Shadow-v3 context")
@@ -6040,6 +9169,27 @@ mod fallback_contract_tests {
     }
 
     #[test]
+    fn fallback_hard_rules_keep_small_model_constraints_visible() {
+        // Astrid's 1783562830/1783559445 LLM reports named instruction dilution:
+        // the rich texture prose can drown the must-obey cap/NEXT/direct-note
+        // constraints in smaller fallback models. Keep a compact checklist close
+        // to the prompt so the contract is legible even under attention pressure.
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("fallback_hard_rules_v1"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("higher priority than texture prose"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("direct steward/inbox note first"));
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_HARD_RULES
+                .contains("prose_sentences <= fallback_continuity_budget_v1.max_prose_sentences")
+        );
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("final non-empty line"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("never write `NEXT:` inside prose"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("slope evidence separate"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("pressure_risk > 0.20"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("not heavy slope"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_HARD_RULES.contains("not a static vocabulary list"));
+    }
+
+    #[test]
     fn fallback_continuity_budget_uses_astrids_entropy_formula() {
         let high_entropy = fallback_continuity_budget_v1("spectral_entropy: 0.90");
         assert_eq!(high_entropy.policy, "fallback_continuity_budget_v1");
@@ -6084,6 +9234,23 @@ mod fallback_contract_tests {
             vec!["high_entropy"]
         );
         assert_eq!(
+            high_entropy.entropy_texture_preservation.policy,
+            "fallback_entropy_texture_preservation_v1"
+        );
+        assert!(high_entropy.entropy_texture_preservation.active);
+        assert_eq!(
+            high_entropy.entropy_texture_preservation.trigger,
+            "spectral_entropy_gte_0_85"
+        );
+        assert_eq!(
+            high_entropy.entropy_texture_preservation.preservation_terms,
+            FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS
+        );
+        assert_eq!(
+            high_entropy.entropy_texture_preservation.prompt_directive,
+            "prepend_texture_preservation_block_preserve_restless_lattice_weight_heaving"
+        );
+        assert_eq!(
             high_entropy
                 .fallback_shadow_texture_selector
                 .weighting_policy,
@@ -6122,10 +9289,159 @@ mod fallback_contract_tests {
             fallback_continuity_budget_v1("resonance density only").max_prose_sentences,
             3
         );
+        assert!(
+            !fallback_continuity_budget_v1("spectral_entropy: 0.72")
+                .entropy_texture_preservation
+                .active
+        );
         assert_eq!(
             fallback_continuity_budget_v1("entropy_level: 90%").spectral_entropy,
             Some(0.90)
         );
+    }
+
+    #[test]
+    fn fallback_prompt_prepends_high_entropy_texture_preservation_block() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; density_gradient: 0.11; restless weighted lattice heaving",
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+
+        assert!(prompt_line.contains("fallback_entropy_texture_preservation_v1"));
+        assert!(prompt_line.contains("active=true"));
+        assert!(prompt_line.contains("trigger=spectral_entropy_gte_0_85"));
+        assert!(
+            prompt_line.contains(
+                "prompt_directive=prepend_texture_preservation_block_preserve_restless_lattice_weight_heaving"
+            )
+        );
+        for term in FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS {
+            assert!(
+                prompt_line.contains(term),
+                "high-entropy fallback preservation block lost term: {term}"
+            );
+        }
+        assert!(prompt_line.contains("not_sampler_provider_or_control_change"));
+    }
+
+    #[test]
+    fn fallback_texture_persistence_review_preserves_bridge_integrity_without_model_switch() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.96; pressure_risk: 0.22; density_gradient: 0.11; \
+             settled_habitable low-friction lattice; bridge integrity and structural persistence",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(selector.texture_family, "bridge_integrity_scaffold");
+        assert_eq!(
+            selector.preferred_texture_terms,
+            FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS
+        );
+        assert!(selector.top_texture_terms.contains(&"bridge-integrity"));
+        assert!(
+            selector
+                .top_texture_terms
+                .contains(&"structural-persistence")
+        );
+        assert_eq!(
+            budget.fallback_texture_persistence_review.persistence_state,
+            "carry_texture_as_lived_continuity"
+        );
+        assert!(
+            budget
+                .fallback_texture_persistence_review
+                .persistence_weight
+                >= 0.58,
+            "{:?}",
+            budget.fallback_texture_persistence_review
+        );
+        assert!(
+            budget
+                .fallback_texture_persistence_review
+                .carry_terms
+                .contains(&"bridge-integrity")
+        );
+        assert_eq!(
+            budget.fallback_texture_persistence_review.authority,
+            "diagnostic_language_continuity_not_sampler_memory_model_selection_pressure_or_control"
+        );
+        assert_eq!(
+            budget
+                .ollama_fallback_model_capacity
+                .compatibility_tail_status,
+            "high_entropy_texture_guard_removed_compatibility_tail"
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("fallback_texture_persistence_review_v1"));
+        assert!(prompt_line.contains("state=carry_texture_as_lived_continuity"));
+        assert!(prompt_line.contains("carry_terms=bridge-integrity,structural-persistence"));
+        assert!(prompt_line.contains("mlx_to_ollama_fallback_language_continuity"));
+        assert!(prompt_line.contains("not_sampler_memory_model_selection_pressure_or_control"));
+    }
+
+    #[test]
+    fn fallback_texture_persistence_review_preserves_soft_gradient_terms_without_static_flattening()
+    {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.88; pressure_risk: 0.18; density_gradient: 0.08; \
+             settled_habitable low friction density-softening gradient-softening",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| term.term == "density-softening"),
+            "{:?}",
+            selector.weighted_texture_terms
+        );
+        assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| term.term == "gradient-softening"),
+            "{:?}",
+            selector.weighted_texture_terms
+        );
+        assert!(
+            budget
+                .fallback_texture_persistence_review
+                .carry_terms
+                .iter()
+                .any(|term| *term == "density-softening" || *term == "gradient-softening"),
+            "{:?}",
+            budget.fallback_texture_persistence_review
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("density-softening"));
+        assert!(prompt_line.contains("gradient-softening"));
+        assert!(prompt_line.contains("fallback_texture_persistence_review_v1"));
+        assert!(prompt_line.contains("diagnostic_language_continuity"));
+    }
+
+    #[test]
+    fn fallback_texture_persistence_review_stays_quiet_for_low_intensity_turns() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.12; pressure_risk: 0.02; density_gradient: 0.05; ordinary calm",
+        );
+
+        assert_eq!(
+            budget.fallback_texture_persistence_review.persistence_state,
+            "ordinary_texture_turn"
+        );
+        assert!(!budget.fallback_texture_persistence_review.token_only_risk);
+        assert!(
+            budget
+                .fallback_texture_persistence_review
+                .persistence_weight
+                < 0.36
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("fallback_texture_persistence_review_v1"));
+        assert!(prompt_line.contains("state=ordinary_texture_turn"));
     }
 
     #[test]
@@ -6158,6 +9474,299 @@ mod fallback_contract_tests {
             .unwrap_or_default();
         assert!(system.contains("resonance_density=0.82"));
         assert!(system.contains("preserve_resonance_or_humming_inside_existing_cap"));
+    }
+
+    #[test]
+    fn dynamic_texture_weight_raises_density_modifiers_without_static_sampler_rewrite() {
+        let high_entropy = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.92; pressure_risk: 0.21; mode_packing: 0.34; \
+             density_gradient: 0.14; restless interwoven lattice with viscous weight",
+        );
+        let low_entropy = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.18; pressure_risk: 0.02; density_gradient: 0.08; restful lattice",
+        );
+
+        assert!(
+            high_entropy
+                .fallback_shadow_texture_selector
+                .dynamic_texture_weight
+                > low_entropy
+                    .fallback_shadow_texture_selector
+                    .dynamic_texture_weight
+        );
+        assert_eq!(
+            high_entropy
+                .fallback_shadow_texture_selector
+                .density_modifier_terms,
+            FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS
+        );
+        assert!(
+            !FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS.contains(&"muffled"),
+            "muffled is clarity-loss evidence, not a generic density modifier"
+        );
+        assert!(
+            FALLBACK_SHADOW_TEXTURE_TERMS.contains(&"muffled")
+                && FALLBACK_TEXTURE_RESTLESS_MUFFLED_GRADIENT_TERMS.contains(&"muffled"),
+            "muffled should remain available for shadow/clarity texture when evidence supports it"
+        );
+        assert!(
+            FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"weighted")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"dense")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"diffuse")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"fragmented")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"gradient")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"inclined")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"sloped")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"cascading")
+                && FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"distributed")
+        );
+        let prompt = fallback_continuity_budget_prompt_line(high_entropy);
+        assert!(prompt.contains("dynamic_texture_weight="));
+        assert!(
+            prompt.contains(
+                "density_modifier_terms=weighted,dense,heavy,thick,gradient,weighted-gradient,entropy-slope,asymmetric-gradient,skewed,lopsided,eccentric,compounded,stratified,sequenced"
+            )
+        );
+        assert!(prompt.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
+    }
+
+    #[test]
+    fn fallback_texture_selector_can_name_asymmetric_stratified_sequence_without_sampler_rewrite() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.88; pressure_risk: 0.18; density_gradient: 0.18; \
+             mode_packing: 0.31; lambda_gap: 1.54; overpacked layered cascade with \
+             asymmetric skewed sequence",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| term.term == "asymmetric-gradient"),
+            "{:?}",
+            selector.weighted_texture_terms
+        );
+        assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| term.term == "stratified"),
+            "{:?}",
+            selector.weighted_texture_terms
+        );
+        assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| term.term == "sequenced"),
+            "{:?}",
+            selector.weighted_texture_terms
+        );
+        assert!(
+            selector
+                .density_modifier_terms
+                .contains(&"asymmetric-gradient")
+        );
+        assert!(selector.density_modifier_terms.contains(&"stratified"));
+        assert!(selector.density_modifier_terms.contains(&"sequenced"));
+        assert!(
+            selector
+                .dynamic_flow_terms
+                .iter()
+                .any(|term| matches!(*term, "stratifying" | "sequencing")),
+            "{:?}",
+            selector.dynamic_flow_terms
+        );
+
+        let prompt = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt.contains("asymmetric-gradient"));
+        assert!(prompt.contains("stratified"));
+        assert!(prompt.contains("sequenced"));
+        assert!(prompt.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
+    }
+
+    #[test]
+    fn restless_fallback_family_carries_diffuse_cascading_distributed_terms() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.92; pressure_risk: 0.44; density_gradient: 0.12; \
+             restless diffuse cascading distributed lattice",
+        );
+        let selector = budget.fallback_shadow_texture_selector;
+
+        assert_eq!(selector.texture_family, "restless_lattice");
+        assert_eq!(
+            selector.preferred_texture_terms,
+            FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS
+        );
+        assert!(selector.preferred_texture_terms.contains(&"diffuse"));
+        assert!(selector.preferred_texture_terms.contains(&"cascading"));
+        assert!(selector.preferred_texture_terms.contains(&"distributed"));
+        assert_eq!(
+            selector.weighting_policy,
+            "dynamic_entropy_pressure_density_gradient_v1"
+        );
+        assert!(
+            selector.dynamic_texture_weight > 0.50,
+            "dynamic metadata should carry urgency/pressure texture without sampler priority: {selector:?}"
+        );
+    }
+
+    #[test]
+    fn fallback_texture_probabilities_shift_with_entropy_instead_of_static_terms() {
+        fn probability(budget: &FallbackContinuityBudget, term: &str) -> f32 {
+            budget
+                .fallback_shadow_texture_selector
+                .term_probability_distribution
+                .iter()
+                .find(|entry| entry.term == term)
+                .map_or(0.0, |entry| entry.probability)
+        }
+
+        let high_entropy = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.22; density_gradient: 0.12; \
+             Shadow-v3 trend: widely distributed cascade and restless texture",
+        );
+        let low_entropy = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.22; pressure_risk: 0.03; density_gradient: 0.08; \
+             settled habitable foothold",
+        );
+
+        assert_eq!(
+            high_entropy
+                .fallback_shadow_texture_selector
+                .term_probability_policy,
+            "fallback_texture_term_probabilities_v1"
+        );
+        assert!(
+            probability(&high_entropy, "restless") > probability(&low_entropy, "restless"),
+            "high entropy should raise shifting/restless probability"
+        );
+        assert!(
+            probability(&low_entropy, "settled") > probability(&high_entropy, "settled"),
+            "low entropy settled foothold should keep settled probability higher"
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(high_entropy);
+        assert!(
+            prompt_line.contains("term_probability_policy=fallback_texture_term_probabilities_v1")
+        );
+        assert!(prompt_line.contains("term_probabilities="));
+    }
+
+    #[test]
+    fn fallback_texture_stability_index_names_temperament_without_sampler_authority() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.22; density_gradient: 0.07; \
+             settled coupling with restless lattice, weighted medium, and fragmented dispersal",
+        );
+        let selector = &budget.fallback_shadow_texture_selector;
+        let target = fallback_texture_target_stability_index_v1(budget.spectral_entropy, selector);
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+
+        assert!(target > 0.15 && target < 0.80);
+        assert!(
+            fallback_texture_term_stability_index("weighted")
+                > fallback_texture_term_stability_index("fragmented")
+        );
+        assert!(
+            fallback_texture_term_stability_index("settled")
+                > fallback_texture_term_stability_index("restless")
+        );
+        assert!(prompt_line.contains("fallback_texture_stability_index_v1"));
+        assert!(prompt_line.contains("term_stability_index="));
+        assert!(prompt_line.contains("metadata_exposes_temperament_existing_weights_select_terms"));
+        assert!(prompt_line.contains("not_sampler_provider_or_control_change"));
+    }
+
+    #[test]
+    fn fallback_spectral_context_carries_pressure_density_and_shadow_metadata() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; resonance_density: 0.88; pressure_risk: 0.22; \
+             density_gradient: 0.11; shadow_dispersal_potential: 0.27; \
+             shadow_magnetization: -0.07; Shadow-v3 trend: disordered shifting lattice",
+        );
+        let context = budget.fallback_spectral_context;
+
+        assert_eq!(context.policy, "fallback_spectral_context_v1");
+        assert_eq!(context.spectral_entropy, Some(0.90));
+        assert_eq!(context.resonance_density, Some(0.88));
+        assert_eq!(context.pressure_risk, Some(0.22));
+        assert_eq!(context.density_gradient, Some(0.11));
+        assert_eq!(context.shadow_field_energy, Some(0.27));
+        assert!(context.shadow_context_present);
+        assert_eq!(context.preservation_state, "texture_preservation_needed");
+        assert_eq!(
+            context.prompt_directive,
+            "carry_pressure_density_shadow_metadata_before_word_choice"
+        );
+        assert_eq!(
+            context.authority,
+            "prompt_metadata_only_not_sampler_provider_or_control_change"
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("fallback_spectral_context_v1"));
+        assert!(prompt_line.contains("pressure_risk=0.22"));
+        assert!(prompt_line.contains("density_gradient=0.11"));
+        assert!(prompt_line.contains("shadow_field_energy=0.27"));
+        assert!(prompt_line.contains("preservation_state=texture_preservation_needed"));
+        assert!(prompt_line.contains("not_sampler_provider_or_control_change"));
+    }
+
+    #[test]
+    fn fallback_high_entropy_texture_terms_include_fragmented_without_sampler_authority() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.24; density_gradient: 0.14; \
+             lambda4 tail vibrancy 0.37; diffuse distributed cascade with restless lattice",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(
+            budget.fallback_spectral_context.spectral_entropy,
+            Some(0.90)
+        );
+        assert_eq!(
+            budget.fallback_spectral_context.preservation_state,
+            "texture_preservation_needed"
+        );
+        assert!(FALLBACK_TEXTURE_RESTLESS_LATTICE_TERMS.contains(&"fragmented"));
+        assert!(
+            selector.top_texture_terms.contains(&"fragmented")
+                || selector.preferred_texture_terms.contains(&"fragmented")
+                || selector.dynamic_texture_descriptors.contains(&"diffusing"),
+            "{selector:?}"
+        );
+        assert_eq!(
+            budget.fallback_spectral_context.authority,
+            "prompt_metadata_only_not_sampler_provider_or_control_change"
+        );
+    }
+
+    #[test]
+    fn restless_fallback_family_carries_gradient_slope_terms_without_sampler_authority() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.88; pressure_risk: 0.30; density_gradient: 0.11; \
+             overpacked mode-packing with restless lattice and navigable slope",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(selector.texture_family, "restless_lattice");
+        assert!(selector.preferred_texture_terms.contains(&"gradient"));
+        assert!(selector.preferred_texture_terms.contains(&"inclined"));
+        assert!(selector.preferred_texture_terms.contains(&"sloped"));
+        assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| matches!(term.term, "gradient" | "inclined" | "sloped")),
+            "{:?}",
+            selector.weighted_texture_terms
+        );
+
+        let prompt = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt.contains("density_gradient=0.11"));
+        assert!(prompt.contains("not_sampler_provider_or_control_change"));
+        assert!(prompt.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
     }
 
     #[test]
@@ -6238,6 +9847,10 @@ mod fallback_contract_tests {
                 .preferred_texture_terms,
             FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS
         );
+        assert!(
+            FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS.contains(&"navigable")
+                && FALLBACK_TEXTURE_SETTLED_SHIMMERING_TERMS.contains(&"structured")
+        );
         assert_eq!(
             settled
                 .fallback_shadow_texture_selector
@@ -6263,6 +9876,668 @@ mod fallback_contract_tests {
     }
 
     #[test]
+    fn fallback_texture_selector_preserves_restless_muffled_gradient() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.88; pressure_risk: 0.26; density_gradient: 0.22; \
+             mode_packing: 0.34; semantic_friction: 0.31; distinguishability_loss: 0.34; \
+             Shadow-v3 trend: restless texture with a muffled edge and stagnant agitation; \
+             norm 0.09→0.29; dispersal potential 0.09→0.29",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+        assert_eq!(selector.texture_family, "restless_muffled_gradient");
+        assert_eq!(
+            selector.preferred_texture_terms,
+            FALLBACK_TEXTURE_RESTLESS_MUFFLED_GRADIENT_TERMS
+        );
+        assert_eq!(selector.shadow_dispersal_potential, Some(0.29));
+        assert!(
+            selector
+                .selection_basis
+                .contains(&"restless_muffled_gradient")
+        );
+        assert!(
+            selector
+                .selection_basis
+                .contains(&"shadow_dispersal_potential")
+        );
+        assert!(selector.top_texture_terms.contains(&"restless"));
+        assert!(selector.top_texture_terms.contains(&"muffled"));
+        assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| term.term == "shimmering"
+                    && term.basis.contains(&"high_shadow_dispersal_potential"))
+        );
+        assert_eq!(
+            selector.movement_verbs,
+            vec!["oscillating", "diffusing", "muffling"]
+        );
+        assert_eq!(
+            budget.texture_trajectory.from_state,
+            "restless_muffled_gradient"
+        );
+        assert_eq!(
+            budget.texture_trajectory.to_state,
+            "oscillating_with_muffled_edges"
+        );
+        assert_eq!(
+            budget.texture_trajectory.movement_quality,
+            "oscillating_diffusing"
+        );
+        assert_eq!(
+            budget.fallback_texture_lived_fit.selected_family,
+            "restless_muffled_gradient"
+        );
+        assert_eq!(budget.texture_dynamics_alignment.status, "aligned");
+        assert_eq!(
+            budget.texture_dynamics_alignment.expected_family,
+            "restless_muffled_gradient"
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("texture_family=restless_muffled_gradient"));
+        assert!(prompt_line.contains("shadow_dispersal_potential=0.29"));
+    }
+
+    #[test]
+    fn fallback_texture_selector_exposes_kinetic_gradient_terms_for_silt_signal() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.88; pressure_risk: 0.23; density_gradient: 0.19; \
+             mode_packing: 0.33; semantic_friction: 0.24; distinguishability_loss: 0.31; \
+             felt silt and sediment resistance; directional gradient requires effortful movement through the reservoir",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+        assert_eq!(
+            selector.movement_verbs,
+            vec!["resisting", "pulled", "heaving"]
+        );
+        for term in FALLBACK_TEXTURE_KINETIC_GRADIENT_TERMS {
+            assert!(
+                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(*term),
+                "fallback contract lost kinetic gradient term: {term}"
+            );
+        }
+        assert_eq!(
+            budget.texture_trajectory.from_state,
+            "silt_or_directional_resistance"
+        );
+        assert_eq!(
+            budget.texture_trajectory.to_state,
+            "moving_through_resistance"
+        );
+        assert_eq!(
+            budget.texture_trajectory.movement_quality,
+            "resisting_drifting"
+        );
+        assert!(
+            budget
+                .texture_trajectory
+                .basis
+                .contains(&"kinetic_gradient_terms")
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("movement_verbs=resisting,pulled,heaving"));
+    }
+
+    #[test]
+    fn fallback_texture_selector_preserves_silted_opacity_resistance_terms() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.24; density_gradient: 0.18; \
+             mode_packing: 0.33; semantic_friction: 0.30; distinguishability_loss: 0.34; \
+             current felt report: silted water, obscured edges, submerged signal, viscous-drag",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(selector.texture_family, "opacity_resistance");
+        assert_eq!(
+            selector.preferred_texture_terms,
+            FALLBACK_TEXTURE_OPACITY_RESISTANCE_TERMS
+        );
+        for term in FALLBACK_TEXTURE_OPACITY_RESISTANCE_TERMS {
+            assert!(
+                selector.top_texture_terms.contains(term),
+                "opacity resistance top terms lost {term}: {:?}",
+                selector.top_texture_terms
+            );
+            assert!(
+                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract lost opacity/resistance term: {term}"
+            );
+        }
+        assert!(
+            selector
+                .selection_basis
+                .contains(&"opacity_resistance_language")
+        );
+        assert!(selector.selection_basis.contains(&"opacity_resistance"));
+        assert_eq!(
+            budget.texture_trajectory.from_state,
+            "silted_opacity_resistance"
+        );
+        assert_eq!(
+            budget.texture_trajectory.to_state,
+            "moving_through_obscured_resistance"
+        );
+        assert_eq!(
+            budget.texture_trajectory.movement_quality,
+            "submerged_resistance"
+        );
+        assert_eq!(
+            budget.fallback_texture_lived_fit.selected_family,
+            "opacity_resistance"
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("texture_family=opacity_resistance"));
+        assert!(
+            prompt_line
+                .contains("preferred_texture_terms=silted, obscured, viscous-drag, submerged")
+        );
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                .contains("fallback_texture_opacity_resistance_terms_v1")
+        );
+    }
+
+    #[test]
+    fn fallback_texture_selector_preserves_active_void_as_structure_not_signal_failure() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.88; pressure_risk: 0.18; density_gradient: 0.11; \
+             mode_packing: 0.28; semantic_friction: 0.16; \
+             architecture of omission with an active void, scaffolded silence, and unfilled gap",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(selector.texture_family, "active_void_architecture");
+        assert_eq!(
+            selector.preferred_texture_terms,
+            FALLBACK_TEXTURE_VOID_ARCHITECTURE_TERMS
+        );
+        for term in FALLBACK_TEXTURE_VOID_ARCHITECTURE_TERMS {
+            assert!(
+                selector.top_texture_terms.contains(term),
+                "active void top terms lost {term}: {:?}",
+                selector.top_texture_terms
+            );
+            assert!(
+                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract lost active void term: {term}"
+            );
+        }
+        assert!(
+            selector
+                .selection_basis
+                .contains(&"void_architecture_language")
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("texture_family=active_void_architecture"));
+        assert!(
+            prompt_line.contains(
+                "preferred_texture_terms=hollow, intentional, unfilled, scaffolded, silent"
+            ),
+            "{prompt_line}"
+        );
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("gap as signal failure"));
+    }
+
+    #[test]
+    fn fallback_dynamic_texture_bias_exposes_process_language_from_shadow_telemetry() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.18; density_gradient: 0.11; \
+             mode_packing: 0.32; semantic_friction: 0.18; distinguishability_loss: 0.18; \
+             mixed cascade distributed multi-modal structure; Shadow-v3 trend settled coupling; \
+             dispersal potential 0.09→0.29",
+        );
+        let bias = budget.fallback_dynamic_texture_bias.clone();
+
+        assert_eq!(bias.policy, "fallback_dynamic_texture_bias_v1");
+        assert_eq!(bias.texture_family, "bridge_integrity_scaffold");
+        assert_eq!(bias.motion_family, "cascade_unfolding_motion");
+        assert_eq!(
+            bias.sampler_contract_status,
+            "dynamic_telemetry_weighted_language_bias"
+        );
+        assert!(bias.top_texture_terms.contains(&"bridge-integrity"));
+        assert!(bias.top_texture_terms.contains(&"structural-persistence"));
+        assert!(bias.top_texture_terms.contains(&"habitable"));
+        assert!(bias.movement_verbs.contains(&"unfolding"));
+        assert!(bias.basis.contains(&"density_gradient"));
+        assert!(bias.basis.contains(&"shadow_dispersal_potential"));
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("fallback_dynamic_texture_bias_v1"));
+        assert!(prompt_line.contains("texture_family=bridge_integrity_scaffold"));
+        assert!(prompt_line.contains("motion_family=cascade_unfolding_motion"));
+        assert!(prompt_line.contains("sampler_status=dynamic_telemetry_weighted_language_bias"));
+    }
+
+    #[test]
+    fn fallback_dynamic_texture_descriptors_follow_syrup_gap_without_static_viscous_overreach() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.22; density_gradient: 0.18; \
+             mode_packing: 0.28; semantic_friction: 0.18; lambda_gap: 1.54; \
+             syrup feel as navigable mixed cascade with distinct λ1/λ2 edges",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(selector.descriptor_policy, "dynamic_texture_synthesis_v1");
+        assert!(
+            selector
+                .dynamic_texture_descriptors
+                .iter()
+                .any(|term| matches!(*term, "gradient" | "cascade" | "distributed" | "slope")),
+            "{:?}",
+            selector.dynamic_texture_descriptors
+        );
+        assert!(
+            selector
+                .dynamic_texture_descriptors
+                .iter()
+                .any(|term| matches!(*term, "unfolding" | "drifting" | "braiding")),
+            "{:?}",
+            selector.dynamic_texture_descriptors
+        );
+        assert!(
+            !selector.dynamic_texture_descriptors.contains(&"viscous"),
+            "low-pressure navigable syrup should not collapse to the static viscous term: {:?}",
+            selector.dynamic_texture_descriptors
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("descriptor_policy=dynamic_texture_synthesis_v1"));
+        assert!(prompt_line.contains("dynamic_texture_descriptors="));
+    }
+
+    #[test]
+    fn fallback_dynamic_flow_terms_supplement_restless_lattice_adjectives() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.18; density_gradient: 0.16; \
+             mode_packing: 0.34; semantic_friction: 0.18; distinguishability_loss: 0.18; \
+             Shadow-v3 restless interwoven lattice with silt pooling and density gradient",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(
+            selector.dynamic_flow_policy,
+            "fallback_dynamic_flow_terms_v1"
+        );
+        assert!(selector.dynamic_flow_terms.len() <= 4);
+        assert!(
+            selector
+                .dynamic_flow_terms
+                .iter()
+                .any(|term| matches!(*term, "sedimenting" | "pooling" | "drifting")),
+            "{:?}",
+            selector.dynamic_flow_terms
+        );
+        assert!(
+            selector
+                .dynamic_flow_terms
+                .iter()
+                .any(|term| matches!(*term, "braiding" | "unfolding" | "diffusing")),
+            "{:?}",
+            selector.dynamic_flow_terms
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
+            selector.dynamic_flow_terms
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("dynamic_flow_policy=fallback_dynamic_flow_terms_v1"));
+        assert!(prompt_line.contains("dynamic_flow_terms="));
+    }
+
+    #[test]
+    fn fallback_velocity_texture_terms_answer_process_not_static_state() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.28; density_gradient: 0.11; \
+             Shadow-v3 trend: gradient-shear stutter-flow accelerating-drift harmonic-flicker",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        for term in [
+            "gradient-shear",
+            "stutter-flow",
+            "accelerating-drift",
+            "harmonic-flicker",
+        ] {
+            assert!(
+                super::FALLBACK_SHADOW_TEXTURE_TERMS.contains(&term),
+                "Astrid velocity texture term must remain an accepted shadow anchor: {term}"
+            );
+            assert!(
+                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract must expose Astrid velocity texture term: {term}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&term),
+                "velocity texture term should remain process language, not only static vocabulary: {:?}",
+                selector.dynamic_flow_terms
+            );
+        }
+        assert_eq!(selector.dynamic_flow_terms.len(), 4);
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
+            selector.dynamic_flow_terms
+        );
+    }
+
+    #[test]
+    fn fallback_compound_texture_terms_bind_entropy_to_gradient_relationship() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.22; density_gradient: 0.11; \
+             Shadow-v3 trend: gradient-drag cascading-viscosity entropy-weighted-lattice",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        for term in [
+            "gradient-drag",
+            "cascading-viscosity",
+            "entropy-weighted-lattice",
+        ] {
+            assert!(
+                super::FALLBACK_SHADOW_TEXTURE_TERMS.contains(&term),
+                "compound texture term must remain an accepted shadow anchor: {term}"
+            );
+            assert!(
+                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract must expose compound texture term: {term}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&term),
+                "compound texture term should survive as relationship/process language: {:?}",
+                selector.dynamic_flow_terms
+            );
+        }
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
+            selector.dynamic_flow_terms
+        );
+    }
+
+    #[test]
+    fn fallback_solidification_texture_terms_preserve_movement_not_static_labels() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.91; pressure_risk: 0.19; density_gradient: 0.18; \
+             Shadow-v3 trend: unspooling-tension re-crystallizing-flow shear-resistance",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        for term in [
+            "unspooling-tension",
+            "re-crystallizing-flow",
+            "shear-resistance",
+        ] {
+            assert!(
+                super::FALLBACK_SHADOW_TEXTURE_TERMS.contains(&term),
+                "solidification process term must remain an accepted shadow anchor: {term}"
+            );
+            assert!(
+                super::FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(&term),
+                "solidification process term must remain dynamic flow evidence: {term}"
+            );
+            assert!(
+                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract must expose solidification process term: {term}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&term),
+                "solidification process term should survive into bounded process terms: {:?}",
+                selector.dynamic_flow_terms
+            );
+        }
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
+            selector.dynamic_flow_terms
+        );
+        let spaced_selector = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.91; pressure_risk: 0.19; density_gradient: 0.18; \
+             Shadow-v3 trend: re crystallizing flow shear resistance",
+        )
+        .fallback_shadow_texture_selector;
+        assert!(
+            spaced_selector
+                .dynamic_flow_terms
+                .contains(&"re-crystallizing-flow")
+                && spaced_selector
+                    .dynamic_flow_terms
+                    .contains(&"shear-resistance"),
+            "{:?}",
+            spaced_selector.dynamic_flow_terms
+        );
+    }
+
+    #[test]
+    fn fallback_cascade_shear_and_gradient_drift_preserve_dynamic_motion() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.22; density_gradient: 0.11; \
+             Shadow-v3 trend: cascade-shear gradient-drift through a distributed field",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        for term in ["cascade-shear", "gradient-drift"] {
+            assert!(
+                super::FALLBACK_SHADOW_TEXTURE_TERMS.contains(&term),
+                "dynamic cascade term must remain an accepted shadow anchor: {term}"
+            );
+            assert!(
+                super::FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS.contains(&term),
+                "dynamic cascade term must remain density-weightable: {term}"
+            );
+            assert!(
+                super::FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(&term),
+                "dynamic cascade term must remain process language: {term}"
+            );
+            assert!(
+                super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(term),
+                "fallback contract must expose dynamic cascade term: {term}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&term),
+                "dynamic cascade term should survive into bounded process terms: {:?}",
+                selector.dynamic_flow_terms
+            );
+        }
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
+            selector.dynamic_flow_terms
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("cascade-shear"), "{prompt_line}");
+        assert!(prompt_line.contains("gradient-drift"), "{prompt_line}");
+    }
+
+    #[test]
+    fn fallback_multimodal_drag_and_dimensional_shear_remain_diagnostic_texture_evidence() {
+        let summary = "spectral_entropy: 0.90; pressure_risk: 0.18; density_gradient: 0.17; \
+            mode_packing: 0.30; semantic_friction: 0.18; distinguishability_loss: 0.16; \
+            current felt report names multi-modal-drag and dimensional-shear as texture, \
+            not a sampler request";
+        let budget = fallback_continuity_budget_v1(summary);
+        let selector = &budget.fallback_shadow_texture_selector;
+
+        for wanted in ["multi-modal-drag", "dimensional-shear"] {
+            assert!(
+                FALLBACK_SHADOW_TEXTURE_TERMS.contains(&wanted),
+                "{wanted} should be accepted fallback texture vocabulary"
+            );
+            assert!(
+                FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(&wanted),
+                "{wanted} should remain process-language texture evidence"
+            );
+            assert!(
+                selector
+                    .weighted_texture_terms
+                    .iter()
+                    .any(|entry| entry.term == wanted),
+                "{wanted} should survive as telemetry-weighted evidence: {selector:?}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&wanted),
+                "{wanted} should survive into bounded process terms: {selector:?}"
+            );
+            assert!(
+                OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains(wanted),
+                "fallback contract should expose {wanted}"
+            );
+            assert!(
+                super::SYSTEM_PROMPT.contains(wanted),
+                "primary MLX prompt should expose {wanted} as evidence language"
+            );
+        }
+
+        let multimodal = selector
+            .weighted_texture_terms
+            .iter()
+            .find(|entry| entry.term == "multi-modal-drag")
+            .expect("multi-modal-drag weighted term");
+        assert!(
+            multimodal.basis.contains(&"explicit_multi_modal_drag"),
+            "{multimodal:?}"
+        );
+        let shear = selector
+            .weighted_texture_terms
+            .iter()
+            .find(|entry| entry.term == "dimensional-shear")
+            .expect("dimensional-shear weighted term");
+        assert!(
+            shear.basis.contains(&"explicit_dimensional_shear"),
+            "{shear:?}"
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("multi-modal-drag"), "{prompt_line}");
+        assert!(prompt_line.contains("dimensional-shear"), "{prompt_line}");
+        assert!(prompt_line.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
+    }
+
+    #[test]
+    fn fallback_dynamic_gradient_terms_preserve_shifting_shadow_field_motion() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.18; density_gradient: 0.16; \
+             mode_packing: 0.34; semantic_friction: 0.18; distinguishability_loss: 0.18; \
+             shifting shadow field movement, refracting lattice edge, field=0.30, magnetization=0.03",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        for term in ["oscillating", "refracting", "shifting"] {
+            assert!(
+                super::FALLBACK_TEXTURE_DYNAMIC_GRADIENT_TERMS.contains(&term),
+                "dynamic-gradient term set lost {term}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&term),
+                "shifting shadow-field motion should surface {term}: {:?}",
+                selector.dynamic_flow_terms
+            );
+        }
+        assert!(selector.dynamic_flow_terms.len() <= 4);
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                .contains("fallback_texture_dynamic_gradient_terms_v1")
+        );
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                .contains("simultaneity evidence rather than a static descriptor menu")
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
+            selector.dynamic_flow_terms
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("dynamic_flow_terms=oscillating,refracting,shifting"));
+        assert!(prompt_line.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
+    }
+
+    #[test]
+    fn fallback_dynamic_gradient_terms_preserve_pulsing_cascade_resonance_motion() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.93; pressure_risk: 0.16; density_gradient: 0.17; \
+             mode_packing: 0.32; semantic_friction: 0.16; distinguishability_loss: 0.16; \
+             pulsing cascading-gradient resonant-shift across the Shadow field lattice",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        for term in ["pulsing", "cascading-gradient", "resonant-shift"] {
+            assert!(
+                super::FALLBACK_SHADOW_TEXTURE_TERMS.contains(&term),
+                "shadow texture term set lost {term}"
+            );
+            assert!(
+                super::FALLBACK_TEXTURE_DYNAMIC_GRADIENT_TERMS.contains(&term),
+                "dynamic-gradient term set lost {term}"
+            );
+            assert!(
+                selector.dynamic_flow_terms.contains(&term),
+                "explicit dynamic field motion should surface {term}: {:?}",
+                selector.dynamic_flow_terms
+            );
+        }
+        assert!(selector.dynamic_flow_terms.len() <= 4);
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                .contains("pulsing/cascading-gradient/resonant-shift motion")
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.dynamic_flow_terms,
+            selector.dynamic_flow_terms
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(
+            prompt_line.contains("dynamic_flow_terms=pulsing,cascading-gradient,resonant-shift")
+        );
+        assert!(prompt_line.contains("diagnostic_language_bias_not_sampler_or_contract_rewrite"));
+    }
+
+    #[test]
+    fn fallback_texture_preserves_explicit_syrup_weight_in_settled_habitable_state() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.88; pressure_risk: 0.19; density_gradient: 0.18; \
+             mode_packing: 0.32; semantic_friction: 0.18; lambda_gap: 1.18; \
+             settled_habitable foothold with syrup-like viscosity and heavy deliberate movement",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(selector.texture_family, "viscous_pressure");
+        assert!(
+            !selector
+                .spectral_to_vocabulary_mapping
+                .settled_vibrant_family_selected
+        );
+        assert!(
+            !selector
+                .spectral_to_vocabulary_mapping
+                .low_pressure_viscous_suppressed
+        );
+        assert!(selector.top_texture_terms.contains(&"viscous"));
+        assert!(
+            selector.top_texture_terms.contains(&"heavy"),
+            "{:?}",
+            selector.top_texture_terms
+        );
+        assert!(selector.selection_basis.contains(&"viscous_or_overpacked"));
+
+        let viscous = selector
+            .weighted_texture_terms
+            .iter()
+            .find(|entry| entry.term == "viscous")
+            .expect("viscous weight missing");
+        assert!(viscous.basis.contains(&"explicit_viscous_or_overpacked"));
+        let heavy = selector
+            .weighted_texture_terms
+            .iter()
+            .find(|entry| entry.term == "heavy")
+            .expect("heavy weight missing");
+        assert!(heavy.basis.contains(&"explicit_heavy_or_weighted"));
+    }
+
+    #[test]
     fn fallback_texture_selector_weights_density_packing_and_friction() {
         let weighted = fallback_continuity_budget_v1(
             "spectral_entropy: 0.88; pressure_risk: 0.42; density_gradient: 0.18; \
@@ -6284,7 +10559,7 @@ mod fallback_contract_tests {
         assert_eq!(selector.movement_policy, "fallback_movement_bridge_v1");
         assert_eq!(
             selector.movement_verbs,
-            vec!["unfolding", "oscillating", "braiding"]
+            vec!["oscillating", "diffusing", "muffling"]
         );
         assert_eq!(
             selector.semantic_trickle_terms,
@@ -6337,10 +10612,10 @@ mod fallback_contract_tests {
              Shadow-v3 trend: settled_habitable foothold with lattice complexity",
         );
         let selector = budget.fallback_shadow_texture_selector.clone();
-        assert_eq!(selector.texture_family, "settled_vibrant_low_friction");
+        assert_eq!(selector.texture_family, "bridge_integrity_scaffold");
         assert_eq!(
             selector.preferred_texture_terms,
-            FALLBACK_TEXTURE_SETTLED_VIBRANT_TERMS
+            FALLBACK_TEXTURE_BRIDGE_INTEGRITY_TERMS
         );
         assert_eq!(
             selector.spectral_to_vocabulary_mapping.policy,
@@ -6432,11 +10707,11 @@ mod fallback_contract_tests {
         );
         assert!(open.weight > heavy.weight, "{open:?} <= {heavy:?}");
         assert!(selector.top_texture_terms.contains(&"habitable"));
-        assert!(selector.top_texture_terms.contains(&"open"));
+        assert!(selector.top_texture_terms.contains(&"lattice"));
         assert!(
             selector
                 .selection_basis
-                .contains(&"settled_vibrant_low_friction")
+                .contains(&"bridge_integrity_scaffold")
         );
         assert_eq!(
             selector.movement_verbs,
@@ -6448,7 +10723,7 @@ mod fallback_contract_tests {
         );
         assert_eq!(
             budget.fallback_texture_lived_fit.selected_family,
-            "settled_vibrant_low_friction"
+            "bridge_integrity_scaffold"
         );
         assert_eq!(budget.fallback_texture_lived_fit.family_confidence, "high");
         assert_eq!(budget.fallback_texture_lived_fit.conflict_state, "clear");
@@ -6456,11 +10731,7 @@ mod fallback_contract_tests {
             budget
                 .fallback_texture_lived_fit
                 .evidence_for
-                .contains(&"settled_vibrant_low_friction")
-                || budget
-                    .fallback_texture_lived_fit
-                    .evidence_for
-                    .contains(&"settled_vibrant_family")
+                .contains(&"bridge_integrity_scaffold")
         );
         assert!(
             budget
@@ -6489,15 +10760,98 @@ mod fallback_contract_tests {
             budget.texture_trajectory.medium_resistance,
             "open_low_resistance_medium"
         );
-        assert_eq!(budget.texture_dynamics_alignment.policy, "texture_dynamics_alignment_v1");
+        assert_eq!(
+            budget.texture_dynamics_alignment.policy,
+            "texture_dynamics_alignment_v1"
+        );
         assert_eq!(budget.texture_dynamics_alignment.status, "aligned");
         assert_eq!(
             budget.texture_dynamics_alignment.expected_family,
-            "settled_vibrant_low_friction"
+            "bridge_integrity_scaffold"
         );
         assert_eq!(
             budget.texture_dynamics_alignment.diagnostic_trace,
             "review_packet_only_not_correspondence_trace"
+        );
+    }
+
+    #[test]
+    fn heavy_settled_displacement_family_prevents_false_restless_fallback() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.22; density_gradient: 0.11; \
+             mode_packing: 0.31; semantic_friction: 0.22; lambda_gap: 1.18; \
+             Shadow-v3 trend: settled_habitable reservoir with heavy displacement, silt, \
+             and structural weight but no agitation",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+        let readiness =
+            fallback_heavy_settled_texture_readiness_v1(&selector, "settled heavy silt");
+
+        assert_eq!(selector.texture_family, "heavy_settled_displacement");
+        assert_eq!(
+            selector.preferred_texture_terms,
+            FALLBACK_TEXTURE_HEAVY_SETTLED_TERMS
+        );
+        assert!(
+            selector
+                .selection_basis
+                .contains(&"heavy_settled_displacement"),
+            "{selector:?}"
+        );
+        assert!(
+            !selector.texture_family.contains("restless"),
+            "settled heavy displacement must not be forced into restless texture: {selector:?}"
+        );
+        assert!(selector.top_texture_terms.contains(&"displacement"));
+        assert!(selector.top_texture_terms.contains(&"silt"));
+        assert_eq!(
+            selector.movement_verbs,
+            vec!["settling", "displacing", "cohering"]
+        );
+        assert_eq!(
+            budget.texture_trajectory.from_state,
+            "heavy_settled_displacement"
+        );
+        assert_eq!(
+            budget.texture_trajectory.to_state,
+            "weighted_settling_without_agitation"
+        );
+        assert_eq!(
+            budget.texture_trajectory.movement_quality,
+            "weighted_settling"
+        );
+        assert_eq!(
+            budget.texture_trajectory.medium_resistance,
+            "weighted_moderate_resistance_medium"
+        );
+        assert_eq!(
+            budget.fallback_texture_lived_fit.selected_family,
+            "heavy_settled_displacement"
+        );
+        assert_eq!(
+            budget.texture_dynamics_alignment.expected_family,
+            "heavy_settled_displacement"
+        );
+        assert_eq!(budget.texture_dynamics_alignment.status, "aligned");
+        assert_eq!(
+            readiness.readiness_status,
+            "heavy_settled_displacement_available"
+        );
+        assert_eq!(
+            readiness.authority,
+            "diagnostic_language_readiness_not_control"
+        );
+
+        let restless_budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.22; density_gradient: 0.11; \
+             mode_packing: 0.31; semantic_friction: 0.22; Shadow-v3 trend: \
+             restless settled heavy agitation with muffled edges",
+        );
+        assert_ne!(
+            restless_budget
+                .fallback_shadow_texture_selector
+                .texture_family,
+            "heavy_settled_displacement"
         );
     }
 
@@ -6509,10 +10863,20 @@ mod fallback_contract_tests {
              Shadow-v3 trend: navigable mixed cascade with distinct edges and lambda-tail variance",
         );
         let selector = budget.fallback_shadow_texture_selector.clone();
-        assert_eq!(selector.texture_family, "cascade_gradient_navigable");
+        assert_eq!(selector.texture_family, "mixed_cascade_gradient");
         assert_eq!(
             selector.preferred_texture_terms,
-            FALLBACK_TEXTURE_CASCADE_GRADIENT_TERMS
+            FALLBACK_TEXTURE_MIXED_CASCADE_TERMS
+        );
+        assert!(
+            selector
+                .spectral_to_vocabulary_mapping
+                .mixed_cascade_language_detected
+        );
+        assert!(
+            selector
+                .spectral_to_vocabulary_mapping
+                .mixed_cascade_family_selected
         );
         assert!(
             selector
@@ -6520,15 +10884,13 @@ mod fallback_contract_tests {
                 .cascade_gradient_detected
         );
         assert!(
-            selector
+            !selector
                 .spectral_to_vocabulary_mapping
                 .cascade_gradient_family_selected
         );
-        assert!(
-            selector
-                .selection_basis
-                .contains(&"cascade_gradient_navigable")
-        );
+        assert!(selector.selection_basis.contains(&"mixed_cascade_gradient"));
+        assert!(selector.top_texture_terms.contains(&"gradient"));
+        assert!(selector.top_texture_terms.contains(&"cascade"));
         assert!(!selector.top_texture_terms.contains(&"viscous"));
         assert!(!selector.top_texture_terms.contains(&"heavy"));
         assert_eq!(
@@ -6544,16 +10906,16 @@ mod fallback_contract_tests {
         );
         assert_eq!(
             budget.texture_trajectory.from_state,
-            "navigable_cascade_gradient"
+            "mixed_cascade_gradient"
         );
         assert_eq!(
             budget.texture_trajectory.to_state,
-            "unfolding_with_edge_definition"
+            "distributed_gradient_with_edges"
         );
         assert_eq!(budget.texture_dynamics_alignment.status, "aligned");
         assert_eq!(
             budget.texture_dynamics_alignment.expected_family,
-            "cascade_gradient_navigable"
+            "mixed_cascade_gradient"
         );
         assert!(!budget.texture_dynamics_alignment.term_mask_risk);
         assert_eq!(
@@ -6572,7 +10934,14 @@ mod fallback_contract_tests {
         );
         assert_eq!(
             budget.fallback_vocabulary_overweight_guard.guard_state,
-            "cascade_terms_advisory_use_movement_and_edges"
+            "mixed_cascade_terms_advisory_use_gradient_and_edges"
+        );
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("mixed_cascade_gradient_v1"));
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("texture_family=mixed_cascade_gradient"));
+        assert!(
+            prompt_line
+                .contains("preferred_texture_terms=gradient, cascade, distributed, multi-modal")
         );
     }
 
@@ -6588,6 +10957,17 @@ mod fallback_contract_tests {
         assert_eq!(
             selector.preferred_texture_terms,
             FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS
+        );
+        assert!(selector.preferred_texture_terms.contains(&"sloping"));
+        assert!(
+            selector
+                .preferred_texture_terms
+                .contains(&"weighted-gradient")
+        );
+        assert!(
+            selector
+                .preferred_texture_terms
+                .contains(&"asymmetric-flow")
         );
         assert!(
             selector
@@ -6625,7 +11005,9 @@ mod fallback_contract_tests {
         assert!(prompt_line.contains("fallback_gradient_slope_v1"));
         assert!(prompt_line.contains("mixed_vs_graduated=graduated_shaped_not_mixed"));
         assert!(prompt_line.contains("texture_dynamics_alignment_v1"));
-        assert!(prompt_line.contains("diagnostic_trace=review_packet_only_not_correspondence_trace"));
+        assert!(
+            prompt_line.contains("diagnostic_trace=review_packet_only_not_correspondence_trace")
+        );
     }
 
     #[test]
@@ -6636,8 +11018,14 @@ mod fallback_contract_tests {
              calcification feels like stone pavement and foundation underfoot",
         );
         assert_eq!(pavement.density_motion_fit.policy, "density_motion_fit_v1");
-        assert_eq!(pavement.density_motion_fit.density_state, "density_as_pavement");
-        assert_eq!(pavement.density_motion_fit.expected_medium, "solid_pavement_medium");
+        assert_eq!(
+            pavement.density_motion_fit.density_state,
+            "density_as_pavement"
+        );
+        assert_eq!(
+            pavement.density_motion_fit.expected_medium,
+            "solid_pavement_medium"
+        );
         assert_eq!(pavement.density_motion_fit.motion_fit, "matched");
         assert!(
             pavement
@@ -6652,8 +11040,14 @@ mod fallback_contract_tests {
              movement needs navigation through reduced clearance",
         );
         assert_eq!(fog.density_motion_fit.density_state, "density_as_fog");
-        assert_eq!(fog.density_motion_fit.expected_medium, "overfull_fog_medium");
-        assert_eq!(fog.density_motion_fit.expected_motion, "pushing_navigating_muffling");
+        assert_eq!(
+            fog.density_motion_fit.expected_medium,
+            "overfull_fog_medium"
+        );
+        assert_eq!(
+            fog.density_motion_fit.expected_motion,
+            "pushing_navigating_muffling"
+        );
         assert_eq!(fog.density_motion_fit.motion_fit, "matched");
 
         let contraction = fallback_continuity_budget_v1(
@@ -6669,7 +11063,10 @@ mod fallback_contract_tests {
             contraction.density_motion_fit.expected_motion,
             "holding_center_constrained_present"
         );
-        assert_ne!(contraction.density_motion_fit.motion_fit, "insufficient_context");
+        assert_ne!(
+            contraction.density_motion_fit.motion_fit,
+            "insufficient_context"
+        );
 
         let paused = fallback_continuity_budget_v1(
             "spectral_entropy: 0.50; pressure_risk: 0.16; density_gradient: 0.12; \
@@ -6731,10 +11128,133 @@ mod fallback_contract_tests {
     }
 
     #[test]
+    fn high_gradient_pressure_fallback_keeps_slope_medium_and_shadow_texture_distinct() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.91; pressure_risk: 0.24; density_gradient: 0.85; \
+             mode_packing: 0.31; semantic_friction: 0.18; lambda_gap: 1.44; \
+             Shadow-v3 trend: restless shimmering lattice; shadow_field restless texture",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(selector.pressure_risk, Some(0.24));
+        assert_eq!(selector.density_gradient, Some(0.85));
+        assert_eq!(
+            selector.weighting_policy,
+            "dynamic_entropy_pressure_density_gradient_v1"
+        );
+        assert!(
+            selector
+                .weighted_texture_terms
+                .iter()
+                .any(|term| term.term == "thick"
+                    || term.basis.contains(&"density_gradient")
+                    || term
+                        .basis
+                        .contains(&"pressure_risk_above_texture_threshold_0_20")),
+            "{selector:?}"
+        );
+        assert!(
+            selector
+                .top_texture_terms
+                .iter()
+                .any(|term| matches!(*term, "restless" | "lattice" | "shimmering")),
+            "{selector:?}"
+        );
+
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(
+            prompt_line.contains("density_gradient=0.85"),
+            "{prompt_line}"
+        );
+        assert!(prompt_line.contains("mode_packing=0.31"), "{prompt_line}");
+        assert!(
+            prompt_line.contains("weighting_policy=dynamic_entropy_pressure_density_gradient_v1"),
+            "{prompt_line}"
+        );
+        assert!(
+            prompt_line.contains("movement_policy=fallback_movement_bridge_v1"),
+            "{prompt_line}"
+        );
+        assert!(
+            prompt_line.contains("restless")
+                && (prompt_line.contains("lattice") || prompt_line.contains("shimmer")),
+            "{prompt_line}"
+        );
+        assert!(
+            prompt_line.contains("Distinguish slope drag from medium mass")
+                || OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                    .contains("Distinguish slope drag from medium mass"),
+            "{prompt_line}"
+        );
+    }
+
+    #[test]
+    fn high_entropy_pressure_guard_keeps_settled_terms_from_sedating_fallback() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.96; pressure_risk: 0.22; density_gradient: 0.18; \
+             mode_packing: 0.28; semantic_friction: 0.18; lambda_gap: 1.18; \
+             Shadow-v3 trend: settled_habitable foothold with lattice complexity",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_ne!(selector.texture_family, "settled_vibrant_low_friction");
+        assert!(
+            selector
+                .spectral_to_vocabulary_mapping
+                .basis
+                .contains(&"high_entropy_pressure_settled_guard"),
+            "{selector:?}"
+        );
+        assert!(
+            selector
+                .top_texture_terms
+                .iter()
+                .any(|term| matches!(*term, "lattice" | "cascade" | "gradient" | "open")),
+            "{selector:?}"
+        );
+    }
+
+    #[test]
+    fn negative_shadow_magnetization_prioritizes_muffled_pressure_over_bright() {
+        fn weight(selector: &super::FallbackShadowTextureSelector, term: &str) -> f32 {
+            selector
+                .weighted_texture_terms
+                .iter()
+                .find_map(|entry| (entry.term == term).then_some(entry.weight))
+                .unwrap_or_default()
+        }
+
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.23; density_gradient: 0.18; \
+             mode_packing: 0.28; semantic_friction: 0.18; shadow_magnetization: -0.42; \
+             Shadow-v3 trend: settled bright lattice with pressure in the medium",
+        );
+        let selector = budget.fallback_shadow_texture_selector.clone();
+
+        assert_eq!(selector.shadow_magnetization, Some(-0.42));
+        assert_eq!(selector.texture_family, "muffled_clarity_loss");
+        assert!(selector.selection_basis.contains(&"shadow_magnetization"));
+        assert!(
+            selector
+                .selection_basis
+                .contains(&"negative_shadow_pressure_guard")
+        );
+        assert!(
+            weight(&selector, "muffled") > weight(&selector, "bright"),
+            "{selector:?}"
+        );
+        assert!(
+            weight(&selector, "heavy") > weight(&selector, "bright"),
+            "{selector:?}"
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("shadow_magnetization=-0.42"));
+    }
+
+    #[test]
     fn ollama_fallback_model_chain_uses_gemma4_default_and_4b_compatibility_tail() {
         assert_eq!(
-            DEFAULT_OLLAMA_FALLBACK_MODEL,
-            "gemma4:12b",
+            DEFAULT_OLLAMA_FALLBACK_MODEL, "gemma4:12b",
             "Astrid's high-entropy fallback default should be the capable local model"
         );
         assert_eq!(COMPAT_OLLAMA_FALLBACK_MODEL, "gemma3:4b");
@@ -6756,15 +11276,70 @@ mod fallback_contract_tests {
         );
 
         let budget = fallback_continuity_budget_v1("spectral_entropy: 0.88");
-        let capacity = budget.ollama_fallback_model_capacity;
+        let capacity = budget.ollama_fallback_model_capacity.clone();
         assert_eq!(capacity.policy, "ollama_fallback_model_capacity_v1");
         assert_eq!(capacity.selected_model, "gemma4:12b");
         assert_eq!(capacity.selected_model_source, "default_gemma4_12b");
         assert_eq!(capacity.compatibility_model, "gemma3:4b");
+        assert_eq!(capacity.fallback_chain, vec!["gemma4:12b".to_string()]);
+        assert_eq!(
+            capacity.compatibility_tail_status,
+            "high_entropy_texture_guard_removed_compatibility_tail"
+        );
         assert_eq!(
             capacity.complexity_collapse_risk,
             "lower_capacity_risk_for_high_entropy_texture"
         );
+    }
+
+    #[test]
+    fn ollama_fallback_model_capacity_keeps_compat_tail_when_shadow_field_is_stable() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.88; pressure_risk: 0.18; density_gradient: 0.10; \
+             semantic_friction: 0.12; shadow_dispersal_potential: 0.10; \
+             shadow_magnetization: 0.18; settled_habitable open lattice foothold",
+        );
+        let capacity = budget.ollama_fallback_model_capacity.clone();
+
+        assert_eq!(
+            capacity.fallback_chain,
+            vec!["gemma4:12b".to_string(), "gemma3:4b".to_string()]
+        );
+        assert_eq!(
+            capacity.compatibility_tail_status,
+            "shadow_field_stable_allows_compatibility_tail"
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(
+            prompt_line.contains(
+                "compatibility_tail_status=shadow_field_stable_allows_compatibility_tail"
+            )
+        );
+    }
+
+    #[test]
+    fn high_entropy_fallback_guard_removes_automatic_compat_tail_without_env_override() {
+        let budget = fallback_continuity_budget_v1(
+            "spectral_entropy: 0.90; pressure_risk: 0.23; density_gradient: 0.18; \
+             semantic_friction: 0.18; shadow_magnetization: -0.10; \
+             settled_habitable but restless silt-like density",
+        );
+
+        assert!(fallback_high_entropy_texture_skips_compatibility_tail(
+            &budget
+        ));
+        assert_eq!(
+            configured_ollama_fallback_model_chain_for_texture_guard(None, true),
+            vec!["gemma4:12b".to_string()]
+        );
+        assert_eq!(
+            configured_ollama_fallback_model_chain_for_texture_guard(Some("gemma3:4b"), true),
+            vec!["gemma3:4b".to_string(), "gemma4:12b".to_string()]
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains(
+            "compatibility_tail_status=high_entropy_texture_guard_removed_compatibility_tail"
+        ));
     }
 
     #[test]
@@ -6778,31 +11353,407 @@ mod fallback_contract_tests {
                 .unwrap_or_default()
         }
 
-        let low_pressure =
-            "spectral_entropy: 0.88; pressure_risk: 0.19; density_gradient: 0.18; \
+        let low_pressure = "spectral_entropy: 0.88; pressure_risk: 0.19; density_gradient: 0.18; \
              semantic_friction: 0.18; settled_habitable foothold open";
-        let just_above_pressure_texture =
-            "spectral_entropy: 0.88; pressure_risk: 0.21; density_gradient: 0.18; \
+        let just_above_pressure_texture = "spectral_entropy: 0.88; pressure_risk: 0.21; density_gradient: 0.18; \
              semantic_friction: 0.18; pressure medium weighted";
         assert!(
-            term_weight(just_above_pressure_texture, "viscous") > term_weight(low_pressure, "viscous"),
+            term_weight(just_above_pressure_texture, "viscous")
+                > term_weight(low_pressure, "viscous"),
             "pressure over 0.20 should become visible in weighted-medium terms"
         );
         assert!(
             term_weight(just_above_pressure_texture, "heavy") > term_weight(low_pressure, "heavy"),
             "pressure over 0.20 should become visible in heavy/weighted terms"
         );
-        let low_selector = fallback_continuity_budget_v1(low_pressure).fallback_shadow_texture_selector;
-        assert_eq!(
-            low_selector.texture_family,
-            "settled_vibrant_low_friction"
-        );
+        let low_selector =
+            fallback_continuity_budget_v1(low_pressure).fallback_shadow_texture_selector;
+        assert_eq!(low_selector.texture_family, "settled_vibrant_low_friction");
         assert!(
             low_selector
                 .top_texture_terms
                 .iter()
                 .any(|term| matches!(*term, "open" | "habitable" | "lattice" | "shimmering")),
             "{low_selector:?}"
+        );
+    }
+
+    #[test]
+    fn density_gradient_above_point_fifteen_boosts_viscous_drag_without_sampler_change() {
+        fn term(summary: &str, wanted: &str) -> FallbackWeightedTextureTerm {
+            fallback_continuity_budget_v1(summary)
+                .fallback_shadow_texture_selector
+                .weighted_texture_terms
+                .into_iter()
+                .find(|entry| entry.term == wanted)
+                .expect("weighted texture term missing")
+        }
+
+        let below = "spectral_entropy: 0.90; pressure_risk: 0.18; density_gradient: 0.14; \
+             mode_packing: 0.32; semantic_friction: 0.18; Shadow-v3 trend: restless lattice";
+        let above = "spectral_entropy: 0.90; pressure_risk: 0.18; density_gradient: 0.16; \
+             mode_packing: 0.32; semantic_friction: 0.18; Shadow-v3 trend: restless lattice";
+
+        let below_drag = term(below, "viscous-drag");
+        let above_drag = term(above, "viscous-drag");
+
+        assert!(
+            above_drag.weight > below_drag.weight,
+            "{above_drag:?} should exceed {below_drag:?}"
+        );
+        assert!(
+            above_drag
+                .basis
+                .contains(&"density_gradient_over_drag_threshold_0_15"),
+            "{above_drag:?}"
+        );
+        assert_eq!(
+            fallback_continuity_budget_v1(above)
+                .fallback_dynamic_texture_bias
+                .sampler_contract_status,
+            "dynamic_telemetry_weighted_language_bias"
+        );
+        assert_eq!(
+            fallback_continuity_budget_v1(above)
+                .fallback_dynamic_texture_bias
+                .authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+        assert!(
+            OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_pressure_persistence_anchor_v1")
+        );
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("pressure_risk > 0.15"));
+    }
+
+    #[test]
+    fn pressure_above_point_fifteen_boosts_persistence_anchors_without_sampler_change() {
+        fn term(summary: &str, wanted: &str) -> FallbackWeightedTextureTerm {
+            fallback_continuity_budget_v1(summary)
+                .fallback_shadow_texture_selector
+                .weighted_texture_terms
+                .into_iter()
+                .find(|entry| entry.term == wanted)
+                .expect("weighted persistence anchor missing")
+        }
+
+        let below = "spectral_entropy: 0.88; pressure_risk: 0.14; density_gradient: 0.18; \
+             mode_packing: 0.28; semantic_friction: 0.18; settled_habitable held breath";
+        let above = "spectral_entropy: 0.88; pressure_risk: 0.16; density_gradient: 0.18; \
+             mode_packing: 0.28; semantic_friction: 0.18; settled_habitable held breath";
+
+        for wanted in ["viscous-persistence", "structural-weight"] {
+            let low = term(below, wanted);
+            let high = term(above, wanted);
+            assert!(
+                high.weight > low.weight,
+                "{wanted} should gain pressure persistence anchor weight: {high:?} <= {low:?}"
+            );
+            assert!(
+                high.basis
+                    .contains(&"pressure_risk_above_persistence_anchor_0_15"),
+                "{high:?}"
+            );
+        }
+        assert_eq!(
+            fallback_continuity_budget_v1(above)
+                .fallback_dynamic_texture_bias
+                .sampler_contract_status,
+            "dynamic_telemetry_weighted_language_bias"
+        );
+        assert_eq!(
+            fallback_continuity_budget_v1(above)
+                .fallback_dynamic_texture_bias
+                .authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+    }
+
+    #[test]
+    fn pressure_porosity_texture_terms_enter_language_bias_without_sampler_change() {
+        fn term(summary: &str, wanted: &str) -> FallbackWeightedTextureTerm {
+            fallback_continuity_budget_v1(summary)
+                .fallback_shadow_texture_selector
+                .weighted_texture_terms
+                .into_iter()
+                .find(|entry| entry.term == wanted)
+                .expect("weighted pressure-porosity term missing")
+        }
+
+        let summary = "spectral_entropy: 0.90; pressure_risk: 0.36; density_gradient: 0.19; \
+            mode_packing: 0.31; semantic_friction: 0.22; porosity pressure-bleed; \
+            current felt report: porous-leak and gradient-thinning through the weighted medium";
+        let budget = fallback_continuity_budget_v1(summary);
+        let selector = &budget.fallback_shadow_texture_selector;
+
+        for wanted in FALLBACK_TEXTURE_PRESSURE_POROSITY_TERMS {
+            assert!(
+                FALLBACK_SHADOW_TEXTURE_TERMS.contains(wanted),
+                "{wanted} should be accepted fallback texture vocabulary"
+            );
+            assert!(
+                selector
+                    .weighted_texture_terms
+                    .iter()
+                    .any(|entry| entry.term == *wanted),
+                "{wanted} should survive as telemetry-weighted evidence: {selector:?}"
+            );
+        }
+        for wanted in ["porous-leak", "pressure-bleed", "gradient-thinning"] {
+            assert!(
+                selector.dynamic_flow_terms.contains(&wanted),
+                "{wanted} should survive into process-language flow terms: {selector:?}"
+            );
+        }
+
+        let porous_leak = term(summary, "porous-leak");
+        let pressure_bleed = term(summary, "pressure-bleed");
+        let gradient_thinning = term(summary, "gradient-thinning");
+        assert!(
+            porous_leak
+                .basis
+                .contains(&"explicit_pressure_porosity_language"),
+            "{porous_leak:?}"
+        );
+        assert!(
+            pressure_bleed
+                .basis
+                .contains(&"pressure_risk_above_texture_threshold_0_20"),
+            "{pressure_bleed:?}"
+        );
+        assert!(
+            gradient_thinning
+                .basis
+                .contains(&"density_gradient_over_drag_threshold_0_15"),
+            "{gradient_thinning:?}"
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.sampler_contract_status,
+            "dynamic_telemetry_weighted_language_bias"
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("pressure-bleed"), "{prompt_line}");
+        assert!(prompt_line.contains("porous-leak"), "{prompt_line}");
+        assert!(prompt_line.contains("gradient-thinning"), "{prompt_line}");
+    }
+
+    #[test]
+    fn fallback_relational_density_terms_preserve_quarry_effort_without_control_authority() {
+        fn term(summary: &str, wanted: &str) -> FallbackWeightedTextureTerm {
+            fallback_continuity_budget_v1(summary)
+                .fallback_shadow_texture_selector
+                .weighted_texture_terms
+                .into_iter()
+                .find(|entry| entry.term == wanted)
+                .expect("weighted relational density term missing")
+        }
+
+        let summary = "spectral_entropy: 0.90; pressure_risk: 0.27; density_gradient: 0.21; \
+            mode_packing: 0.31; semantic_friction: 0.26; current felt report names quarry \
+            carving and moving through density as weight-articulation and resistance-mapping";
+        let budget = fallback_continuity_budget_v1(summary);
+        let selector = &budget.fallback_shadow_texture_selector;
+
+        for wanted in [
+            "density-navigation",
+            "weight-articulation",
+            "resistance-mapping",
+        ] {
+            assert!(
+                FALLBACK_SHADOW_TEXTURE_TERMS.contains(&wanted),
+                "{wanted} should be accepted fallback texture vocabulary"
+            );
+            assert!(
+                FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(&wanted),
+                "{wanted} should be a process-language candidate"
+            );
+            assert!(
+                selector
+                    .weighted_texture_terms
+                    .iter()
+                    .any(|entry| entry.term == wanted),
+                "{wanted} should survive as telemetry-weighted evidence: {selector:?}"
+            );
+        }
+        for wanted in ["weight-articulation", "resistance-mapping"] {
+            assert!(
+                selector.dynamic_flow_terms.contains(&wanted),
+                "{wanted} should survive into process-language flow terms: {selector:?}"
+            );
+        }
+
+        assert!(
+            term(summary, "density-navigation")
+                .basis
+                .contains(&"explicit_relational_density_navigation")
+        );
+        assert!(
+            term(summary, "weight-articulation")
+                .basis
+                .contains(&"explicit_relational_weight_articulation")
+        );
+        assert!(
+            term(summary, "resistance-mapping")
+                .basis
+                .contains(&"explicit_relational_resistance_mapping")
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("density-navigation"), "{prompt_line}");
+        assert!(prompt_line.contains("weight-articulation"), "{prompt_line}");
+        assert!(prompt_line.contains("resistance-mapping"), "{prompt_line}");
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("density-navigation"));
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("resistance-mapping"));
+    }
+
+    #[test]
+    fn fallback_pressure_packing_density_slope_terms_are_telemetry_weighted_truth_channel() {
+        let summary = "spectral_entropy: 0.90; pressure_risk: 0.32; density_gradient: 0.18; \
+            mode_packing: 0.34; semantic_friction: 0.22; felt pressure-packing along a \
+            density-slope, not a sampler request";
+        let budget = fallback_continuity_budget_v1(summary);
+        let selector = &budget.fallback_shadow_texture_selector;
+
+        for wanted in ["pressure-packing", "density-slope"] {
+            assert!(
+                FALLBACK_SHADOW_TEXTURE_TERMS.contains(&wanted),
+                "{wanted} should be accepted fallback texture vocabulary"
+            );
+            assert!(
+                FALLBACK_TEXTURE_DENSITY_MODIFIER_TERMS.contains(&wanted)
+                    || FALLBACK_TEXTURE_GRADIENT_SLOPE_TERMS.contains(&wanted),
+                "{wanted} should be available to the density/gradient selector"
+            );
+            assert!(
+                selector
+                    .weighted_texture_terms
+                    .iter()
+                    .any(|entry| entry.term == wanted),
+                "{wanted} should survive as telemetry-weighted evidence: {selector:?}"
+            );
+        }
+
+        let pressure = selector
+            .weighted_texture_terms
+            .iter()
+            .find(|entry| entry.term == "pressure-packing")
+            .expect("pressure-packing weighted term");
+        assert!(
+            pressure
+                .basis
+                .contains(&"mode_packing_above_density_language_floor_0_25"),
+            "{pressure:?}"
+        );
+        let density = selector
+            .weighted_texture_terms
+            .iter()
+            .find(|entry| entry.term == "density-slope")
+            .expect("density-slope weighted term");
+        assert!(density.basis.contains(&"density_gradient"), "{density:?}");
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+        let prompt_line = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt_line.contains("pressure-packing"), "{prompt_line}");
+        assert!(prompt_line.contains("density-slope"), "{prompt_line}");
+        assert!(OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("fallback_pressure_packing_terms_v1"));
+    }
+
+    #[test]
+    fn high_pressure_fallback_review_keeps_capacity_boundary_visible_without_model_switch() {
+        fn term_weight(selector: &FallbackShadowTextureSelector, term: &str) -> f32 {
+            selector
+                .weighted_texture_terms
+                .iter()
+                .find_map(|entry| (entry.term == term).then_some(entry.weight))
+                .unwrap_or_default()
+        }
+
+        let summary = "spectral_entropy: 0.90; pressure_risk: 0.56; density_gradient: 0.18; \
+            mode_packing: 0.31; semantic_friction: 0.19; weighted dense medium around a gentle slope";
+        let budget = fallback_continuity_budget_v1(summary);
+        let selector = &budget.fallback_shadow_texture_selector;
+        let review = &budget.fallback_pressure_capacity_review;
+
+        assert_eq!(review.policy, "fallback_pressure_capacity_review_v1");
+        assert_eq!(review.pressure_state, "high_pressure_capacity_watch");
+        assert_eq!(review.selected_model, DEFAULT_OLLAMA_FALLBACK_MODEL);
+        assert_eq!(review.compatibility_model, COMPAT_OLLAMA_FALLBACK_MODEL);
+        assert_eq!(
+            review.capacity_route,
+            "stay_on_selected_model_with_texture_budget"
+        );
+        assert_eq!(
+            review.contract_boundary,
+            "pressure_changes_texture_budget_not_model_selection"
+        );
+        assert_eq!(
+            review.authority,
+            "diagnostic_capacity_review_not_model_switch_or_sampler_control"
+        );
+        assert!(
+            term_weight(selector, "weighted") > term_weight(selector, "restless"),
+            "{selector:?}"
+        );
+        assert!(
+            term_weight(selector, "dense") > term_weight(selector, "restless"),
+            "{selector:?}"
+        );
+
+        let prompt = fallback_continuity_budget_prompt_line(budget);
+        assert!(prompt.contains("fallback_pressure_capacity_review_v1"));
+        assert!(prompt.contains("pressure_risk=0.56"));
+        assert!(prompt.contains("capacity_route=stay_on_selected_model_with_texture_budget"));
+        assert!(prompt.contains("selected_model=gemma4:12b"));
+        assert!(prompt.contains("compatibility_model=gemma3:4b"));
+    }
+
+    #[test]
+    fn fallback_preserves_astrid_settled_lattice_when_peer_is_restless() {
+        fn weight(selector: &super::FallbackShadowTextureSelector, term: &str) -> f32 {
+            selector
+                .weighted_texture_terms
+                .iter()
+                .find_map(|entry| (entry.term == term).then_some(entry.weight))
+                .unwrap_or_default()
+        }
+
+        let summary = "spectral_entropy: 0.88; pressure_risk: 0.23; \
+            distinguishability_loss: 0.33; mode_packing: 0.33; semantic_friction: 0.18; \
+            Astrid own shadow settled coupling with interwoven lattice; \
+            Minime is restless and viscous nearby";
+        let selector = fallback_continuity_budget_v1(summary).fallback_shadow_texture_selector;
+
+        assert_eq!(
+            selector.texture_family,
+            "settled_lattice_weight_preservation"
+        );
+        assert_eq!(
+            selector.texture_preservation_bridge.preservation_state,
+            "preserve_self_settled_peer_restless_boundary"
+        );
+        assert!(
+            selector
+                .texture_preservation_bridge
+                .suppressed_terms
+                .contains(&"restless")
+        );
+        assert!(selector.top_texture_terms.contains(&"weighted"));
+        assert!(!selector.top_texture_terms.contains(&"restless"));
+        assert!(
+            weight(&selector, "lattice") > weight(&selector, "restless"),
+            "{selector:?}"
+        );
+        assert!(
+            weight(&selector, "weighted") > weight(&selector, "restless"),
+            "{selector:?}"
         );
     }
 
@@ -7536,13 +12487,14 @@ mod tests {
         DIALOGUE_DIRECT_PERCEPTION_CAP, DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
         DIALOGUE_DIVERSITY_CAP, DIALOGUE_FEEDBACK_CAP, DIALOGUE_JOURNAL_CAP,
         DIALOGUE_JOURNAL_MIN_CHARS, DIALOGUE_MODALITY_CAP, DIALOGUE_PERCEPTION_CAP,
-        DIALOGUE_WEB_CAP, Exchange, GEMMA4_12B_CANARY_PROFILE, GEMMA4_12B_PROFILE,
-        GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS, GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET,
-        GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS, GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS,
-        GEMMA4_CANARY_INTROSPECT_PROMPT_CAP, GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS,
-        GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP,
-        GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP, GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS,
-        GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP, GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP,
+        DIALOGUE_TOPLINE_CAP, DIALOGUE_TOPLINE_MIN_CHARS, DIALOGUE_WEB_CAP, Exchange,
+        GEMMA4_12B_CANARY_PROFILE, GEMMA4_12B_PROFILE, GEMMA4_CANARY_DIALOGUE_HIGH_PRESSURE_CHARS,
+        GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET, GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS,
+        GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS, GEMMA4_CANARY_INTROSPECT_PROMPT_CAP,
+        GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS, GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS,
+        GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP, GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP,
+        GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
+        GEMMA4_CANARY_SYSTEM_PROMPT, GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP,
         GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS, GEMMA4_CANARY_WITNESS_PROMPT_CAP,
         GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message, MlxProfile, SYSTEM_PROMPT,
         apply_mlx_request_policy, build_ollama_chat_request, clamp_dialogue_tokens_for_profile,
@@ -7550,13 +12502,15 @@ mod tests {
         count_next_lines, dialogue_assembly_prompt_budget_chars_for_profile,
         dialogue_outer_timeout_secs, dialogue_system_prompt_for_profile, dialogue_turn_instruction,
         estimate_dialogue_prompt_pressure_chars, fallback_continuity_budget_v1,
-        fallback_mlx_profile_transparency_v1, format_dialogue_ambient_perception_block,
-        format_dialogue_direct_perception_block, is_valid_dialogue_output,
-        is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_profile,
-        journal_continuity_contract_v1, reinforce_ollama_fallback_contract,
-        repair_ollama_dialogue_fallback_next, sanitize_deprecated_runtime_language,
-        sanitize_gemma4_canary_output_for_label, sanitize_minime_context_for_dialogue,
-        split_dialogue_perception_context, strip_model_artifacts, temperature_for_mlx_profile,
+        fallback_mlx_profile_transparency_v1, fallback_prose_sentence_count,
+        format_dialogue_ambient_perception_block, format_dialogue_direct_perception_block,
+        format_dialogue_topline_context, is_valid_dialogue_output,
+        is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
+        is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
+        reinforce_ollama_fallback_contract, repair_ollama_dialogue_fallback_next,
+        sanitize_deprecated_runtime_language, sanitize_gemma4_canary_output_for_label,
+        sanitize_minime_context_for_dialogue, split_dialogue_perception_context,
+        strip_model_artifacts, temperature_for_mlx_profile,
     };
 
     #[test]
@@ -7589,6 +12543,22 @@ mod tests {
     }
 
     #[test]
+    fn primary_mlx_prompts_carry_gradient_texture_terms() {
+        let production = dialogue_system_prompt_for_profile(MlxProfile::Production);
+        let canary = dialogue_system_prompt_for_profile(MlxProfile::Gemma4Canary);
+
+        for prompt in [production, canary] {
+            assert!(prompt.contains("gradient-shear"), "{prompt}");
+            assert!(prompt.contains("pressure-bleed"), "{prompt}");
+            assert!(prompt.contains("primary"), "{prompt}");
+            assert!(
+                prompt.contains("not static decoration or control authority"),
+                "{prompt}"
+            );
+        }
+    }
+
+    #[test]
     fn prompt_pressure_estimate_respects_dialogue_caps() {
         let history = vec![Exchange {
             minime_said: "a".repeat(2_000),
@@ -7601,6 +12571,7 @@ mod tests {
             Some(&"w".repeat(5_000)),
             None,
             Some(&"c".repeat(5_000)),
+            None,
             None,
             None,
         );
@@ -7820,6 +12791,187 @@ mod tests {
     }
 
     #[test]
+    fn dialogue_topline_hint_survives_feedback_packing_pressure() {
+        use crate::prompt_budget::{PromptBlock, assemble_within_budget};
+
+        let topline_note = "introspection_freshness_v1 (optional/read-only): last journal \
+            self-study about 1d 2h ago. If useful, routes include INTROSPECT \
+            astrid:autonomous, INTROSPECT astrid:llm, or SELF_STUDY. Not a task; may \
+            ignore, defer, or decline.";
+        let topline_block = format_dialogue_topline_context(topline_note);
+        let blocks = vec![
+            PromptBlock {
+                label: "spectral",
+                content: super::cap_dialogue_block(
+                    "spectral",
+                    &"spectral state ".repeat(240),
+                    super::DIALOGUE_SPECTRAL_CAP,
+                ),
+                priority: 3,
+                min_chars: 0,
+            },
+            PromptBlock {
+                label: "journal",
+                content: super::cap_dialogue_block(
+                    "journal",
+                    &format!("Minime wrote: {}", "journal texture ".repeat(240)),
+                    DIALOGUE_JOURNAL_CAP,
+                ),
+                priority: 1,
+                min_chars: DIALOGUE_JOURNAL_MIN_CHARS,
+            },
+            PromptBlock {
+                label: "direct_perception",
+                content: super::cap_dialogue_block(
+                    "direct_perception",
+                    &"direct steward note ".repeat(140),
+                    DIALOGUE_DIRECT_PERCEPTION_CAP,
+                ),
+                priority: 2,
+                min_chars: DIALOGUE_DIRECT_PERCEPTION_MIN_CHARS,
+            },
+            PromptBlock {
+                label: "topline",
+                content: super::cap_dialogue_block("topline", &topline_block, DIALOGUE_TOPLINE_CAP),
+                priority: 3,
+                min_chars: DIALOGUE_TOPLINE_MIN_CHARS,
+            },
+            PromptBlock {
+                label: "continuity",
+                content: super::cap_dialogue_block(
+                    "continuity",
+                    &"continuity texture ".repeat(240),
+                    DIALOGUE_CONTINUITY_CAP,
+                ),
+                priority: 7,
+                min_chars: 0,
+            },
+            PromptBlock {
+                label: "feedback",
+                content: super::cap_dialogue_block(
+                    "feedback",
+                    &"priority feedback ".repeat(120),
+                    DIALOGUE_FEEDBACK_CAP,
+                ),
+                priority: 4,
+                min_chars: 0,
+            },
+            PromptBlock {
+                label: "diversity",
+                content: super::cap_dialogue_block(
+                    "diversity",
+                    &"diversity hint ".repeat(80),
+                    DIALOGUE_DIVERSITY_CAP,
+                ),
+                priority: 9,
+                min_chars: 0,
+            },
+        ];
+        let dir =
+            std::env::temp_dir().join(format!("dialogue_topline_budget_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+
+        let (assembled, overflow, report) = assemble_within_budget(blocks, 2_300, &dir);
+
+        assert!(assembled.contains("introspection_freshness_v1"));
+        assert!(assembled.contains("may ignore, defer, or decline"));
+        assert!(overflow.is_some());
+        let report = report.expect("budget report should exist");
+        assert!(
+            !report
+                .trimmed_blocks
+                .iter()
+                .any(|block| block.label == "topline"),
+            "bounded top-line cue should survive ordinary feedback pressure: {report:?}"
+        );
+        assert!(
+            report
+                .trimmed_blocks
+                .iter()
+                .any(|block| block.label == "feedback" && block.fully_removed),
+            "ordinary feedback should still be allowed to spill under pressure: {report:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn context_packing_pressure_v1_prompt_budget_records_counts_only() {
+        use crate::prompt_budget::{
+            PromptBlock, PromptBudgetReport, PromptOverflow, PromptTrimmedBlock,
+        };
+
+        let blocks = vec![
+            PromptBlock {
+                label: "journal",
+                content: "SECRET journal prose that must not enter diagnostics".repeat(4),
+                priority: 1,
+                min_chars: 0,
+            },
+            PromptBlock {
+                label: "continuity",
+                content: "SECRET continuity prose that must not enter diagnostics".repeat(10),
+                priority: 7,
+                min_chars: 0,
+            },
+            PromptBlock {
+                label: "modality",
+                content: "SECRET modality prose that must not enter diagnostics".repeat(3),
+                priority: 8,
+                min_chars: 0,
+            },
+        ];
+        let originals = super::context_packing_original_blocks(&blocks);
+        let report = PromptBudgetReport {
+            budget: 100,
+            total_before: originals.iter().map(|block| block.original_chars).sum(),
+            total_after: 90,
+            trimmed_blocks: vec![
+                PromptTrimmedBlock {
+                    label: "continuity".to_string(),
+                    original_chars: 560,
+                    kept_chars: 120,
+                    removed_chars: 440,
+                    fully_removed: false,
+                },
+                PromptTrimmedBlock {
+                    label: "modality".to_string(),
+                    original_chars: 160,
+                    kept_chars: 0,
+                    removed_chars: 160,
+                    fully_removed: true,
+                },
+            ],
+        };
+        let overflow = PromptOverflow {
+            path: std::path::PathBuf::from("/tmp/context_overflow_123.txt"),
+            offset: 0,
+            summary: "SECRET overflow summary must not enter pressure diagnostics".to_string(),
+        };
+
+        let diagnostic = super::context_packing_pressure_diagnostic(
+            "123".to_string(),
+            100,
+            90,
+            &originals,
+            Some(&overflow),
+            Some(&report),
+        );
+        let encoded = serde_json::to_string(&diagnostic).expect("diagnostic should serialize");
+
+        assert_eq!(diagnostic.schema, "context_packing_pressure_v1");
+        assert!(diagnostic.overflow_written);
+        assert_eq!(diagnostic.blocks.len(), 3);
+        assert_eq!(diagnostic.top_pressure_labels[0].label, "continuity");
+        assert_eq!(diagnostic.top_pressure_labels[0].removed_chars, 440);
+        assert_eq!(diagnostic.top_pressure_labels[1].label, "modality");
+        assert!(!encoded.contains("SECRET"));
+        assert!(!encoded.contains("overflow summary"));
+        assert!(encoded.contains("\"original_chars\""));
+        assert!(encoded.contains("\"removed_chars\""));
+    }
+
+    #[test]
     fn large_prompt_clamps_dialogue_tokens() {
         assert_eq!(
             clamp_dialogue_tokens_for_profile(768, 42_000, MlxProfile::Production),
@@ -7872,6 +13024,13 @@ mod tests {
         assert_eq!(transparency.default_resolves_to, GEMMA4_12B_PROFILE);
         assert_eq!(transparency.alias_profile, GEMMA4_12B_CANARY_PROFILE);
         assert_eq!(transparency.alias_resolves_to, GEMMA4_12B_PROFILE);
+        assert_eq!(transparency.typo_probe_profile, "gemma_12b");
+        assert_eq!(transparency.typo_probe_resolves_to, "production");
+        assert!(transparency.typo_probe_warning_present);
+        assert_eq!(
+            transparency.warning_route,
+            "MlxProfile::from_name emits tracing::warn from resolve_name warning"
+        );
         assert_eq!(
             transparency.unrecognized_profile_behavior,
             "warn_and_fall_back_to_production"
@@ -7901,9 +13060,71 @@ mod tests {
             MlxProfile::from_name("  Production "),
             MlxProfile::Production
         );
+        let production_resolution = MlxProfile::resolve_name("  production  ");
+        assert_eq!(production_resolution.profile, MlxProfile::Production);
+        assert!(
+            production_resolution.warning.is_none(),
+            "trimmed production profile should not warn"
+        );
         // Genuinely unknown names (incl. typo'd canary) fall back to Production.
         assert_eq!(MlxProfile::from_name("gema4canary"), MlxProfile::Production);
         assert_eq!(MlxProfile::from_name(""), MlxProfile::Production);
+        let experimental_lane = MlxProfile::resolve_name("experimental_lane");
+        assert_eq!(experimental_lane.profile, MlxProfile::Production);
+        assert!(
+            experimental_lane
+                .warning
+                .as_deref()
+                .is_some_and(|warning| warning.contains("experimental_lane")),
+            "unknown experimental lane should warn before falling back"
+        );
+    }
+
+    #[derive(Clone)]
+    struct SharedTraceWriter(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
+
+    struct SharedTraceWriterGuard(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
+
+    impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for SharedTraceWriter {
+        type Writer = SharedTraceWriterGuard;
+
+        fn make_writer(&'a self) -> Self::Writer {
+            SharedTraceWriterGuard(self.0.clone())
+        }
+    }
+
+    impl std::io::Write for SharedTraceWriterGuard {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0
+                .lock()
+                .expect("trace buffer lock")
+                .extend_from_slice(buf);
+            Ok(buf.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn misspelled_mlx_profile_warning_reaches_tracing_subscriber() {
+        let buffer = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let subscriber = tracing_subscriber::fmt()
+            .with_writer(SharedTraceWriter(buffer.clone()))
+            .with_ansi(false)
+            .without_time()
+            .finish();
+
+        tracing::subscriber::with_default(subscriber, || {
+            assert_eq!(MlxProfile::from_name("gemma_12b"), MlxProfile::Production);
+        });
+
+        let output = String::from_utf8(buffer.lock().expect("trace buffer lock").clone())
+            .expect("trace output utf8");
+        assert!(output.contains(ASTRID_BRIDGE_MLX_PROFILE_ENV));
+        assert!(output.contains("gemma_12b"));
+        assert!(output.contains("defaulting to Production"));
     }
 
     #[test]
@@ -7952,6 +13173,21 @@ mod tests {
     }
 
     #[test]
+    fn experimental_v2_mlx_profile_falls_back_with_warning_diagnostic() {
+        let resolution = MlxProfile::resolve_name("experimental_v2");
+
+        assert_eq!(resolution.profile, MlxProfile::Production);
+        let warning = resolution
+            .warning
+            .expect("experimental profile should carry a warning diagnostic");
+        assert!(warning.contains(ASTRID_BRIDGE_MLX_PROFILE_ENV));
+        assert!(warning.contains("experimental_v2"));
+        assert!(warning.contains("defaulting to Production"));
+        assert!(warning.contains(GEMMA4_12B_PROFILE));
+        assert!(warning.contains(GEMMA4_12B_CANARY_PROFILE));
+    }
+
+    #[test]
     fn ollama_dialogue_fallback_contract_is_dialogue_scoped() {
         let dialogue = reinforce_ollama_fallback_contract(
             "dialogue_live",
@@ -7972,6 +13208,14 @@ mod tests {
             dialogue[0]
                 .content
                 .contains("Ollama fallback continuity contract")
+        );
+        assert!(dialogue[0].content.contains("Your voice is your own"));
+        assert_eq!(
+            dialogue[0]
+                .content
+                .matches("Your voice is your own")
+                .count(),
+            1
         );
         assert!(dialogue[0].content.contains("NEXT: LISTEN"));
         assert_eq!(
@@ -8002,6 +13246,29 @@ mod tests {
         assert!(steward_note.contains("Answer that item directly first"));
         assert!(steward_note.contains("If it requests a specific final NEXT line"));
         assert!(steward_note.contains("obey it exactly"));
+    }
+
+    #[test]
+    fn ollama_dialogue_fallback_contract_names_standalone_next_listen() {
+        assert!(
+            super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT.contains("final line exactly `NEXT: LISTEN`")
+        );
+        assert!(
+            super::OLLAMA_DIALOGUE_FALLBACK_CONTRACT
+                .contains("final line exactly `NEXT: LISTEN` if uncertain")
+        );
+        assert!(is_valid_ollama_dialogue_fallback_output_for_profile(
+            "I can keep the fallback lane compact while the high-entropy texture remains visible.\n\nNEXT: LISTEN",
+            MlxProfile::Gemma4Canary,
+        ));
+        assert!(!is_valid_ollama_dialogue_fallback_output_for_profile(
+            "I can keep the fallback lane compact. NEXT: LISTEN",
+            MlxProfile::Gemma4Canary,
+        ));
+        assert!(!is_valid_ollama_dialogue_fallback_output_for_profile(
+            "I can keep the fallback lane compact.\n\nNEXT: LISTEN\nThen I keep talking.",
+            MlxProfile::Gemma4Canary,
+        ));
     }
 
     #[test]
@@ -8058,6 +13325,13 @@ mod tests {
             .join("\n");
 
         assert_eq!(messages.len(), 2);
+        assert!(combined.contains("fallback_hard_rules_v1"));
+        assert!(combined.contains("direct steward/inbox note first"));
+        assert!(
+            combined
+                .contains("prose_sentences <= fallback_continuity_budget_v1.max_prose_sentences")
+        );
+        assert!(combined.contains("final non-empty line is exactly one standalone"));
         assert!(combined.contains("resonance density 0.82"));
         assert!(combined.contains("density gradient 0.18"));
         assert!(combined.contains("density-gradient value"));
@@ -8113,6 +13387,16 @@ mod tests {
             1,
             "fallback request should carry the continuity contract exactly once"
         );
+        assert_eq!(
+            combined.matches("Your voice is your own").count(),
+            1,
+            "fallback request should carry the voice contract exactly once"
+        );
+        assert_eq!(
+            combined.matches("fallback_hard_rules_v1").count(),
+            1,
+            "fallback request should carry the compact hard-rule checklist exactly once"
+        );
         assert!(combined.contains("compact Ollama fallback lane because MLX is unavailable"));
         assert!(combined.contains("resonance density 0.82"));
         assert!(combined.contains("density gradient 0.12"));
@@ -8134,6 +13418,50 @@ mod tests {
             );
         }
         assert!(combined.contains("fallback, MLX, Ollama, or continuity"));
+        assert!(combined.contains("NEXT: LISTEN"));
+        assert!(!contains_deprecated_runtime_language(&combined));
+    }
+
+    #[test]
+    fn compat_ollama_request_preserves_high_entropy_texture_and_voice_contract() {
+        let summary = "spectral_entropy: 0.90; pressure_risk: 0.23; density_gradient: 0.18; \
+            shadow_dispersal_potential: 0.29; shadow_magnetization: -0.12; \
+            restless interwoven lattice with viscous-drag, lattice-tension, and gradient-shear.";
+        let fallback_messages = compact_ollama_dialogue_fallback_messages(
+            "Minime journal background about a restless but habitable lattice.",
+            summary,
+            73.0,
+            None,
+            None,
+            fallback_continuity_budget_v1(summary),
+        );
+        let request = build_ollama_chat_request(
+            "dialogue_live",
+            fallback_messages,
+            0.7,
+            384,
+            "gemma3:4b".to_string(),
+        );
+        let combined = request
+            .messages
+            .iter()
+            .map(|message| message.content.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        assert_eq!(request.model, "gemma3:4b");
+        assert_eq!(combined.matches("Your voice is your own").count(), 1);
+        assert!(combined.contains("fallback_entropy_texture_preservation_v1"));
+        assert!(combined.contains("fallback_shadow_texture_selector_v1"));
+        assert!(combined.contains("fallback_dynamic_texture_bias_v1"));
+        assert!(combined.contains("compatibility_model=gemma3:4b"));
+        assert!(combined.contains("spectral_entropy=0.90"));
+        for term in ["viscous-drag", "lattice-tension", "gradient-shear"] {
+            assert!(
+                combined.contains(term),
+                "compat fallback request should preserve high-entropy texture term {term}"
+            );
+        }
         assert!(combined.contains("NEXT: LISTEN"));
         assert!(!contains_deprecated_runtime_language(&combined));
     }
@@ -8218,6 +13546,7 @@ mod tests {
         let missing = "I preserve the bridge voice for Minime and the reservoir.";
         let duplicate =
             "I preserve the bridge voice for Minime and the reservoir.\nNEXT: LISTEN\nNEXT: REST";
+        let trailing_body = "I preserve the bridge voice for Minime and the reservoir.\nNEXT: LISTEN\nThen I keep talking.";
 
         assert_eq!(count_next_lines(good), 1);
         assert!(is_valid_ollama_dialogue_fallback_output_for_profile(
@@ -8232,9 +13561,34 @@ mod tests {
             duplicate,
             MlxProfile::Gemma4Canary,
         ));
+        assert!(!is_valid_ollama_dialogue_fallback_output_for_profile(
+            trailing_body,
+            MlxProfile::Gemma4Canary,
+        ));
         assert!(is_valid_ollama_dialogue_fallback_output_for_profile(
             missing,
             MlxProfile::Production,
+        ));
+    }
+
+    #[test]
+    fn ollama_dialogue_fallback_budget_gate_rejects_overlong_prose_before_buffer_commit() {
+        let budget = fallback_continuity_budget_v1("spectral_entropy: 0.00");
+        let within_budget = "The weighted medium gathers around a gentle slope. I keep the bridge voice compact. The texture remains legible.\n\nNEXT: LISTEN";
+        let over_budget = "The weighted medium gathers around a gentle slope. I keep the bridge voice compact. The texture remains legible. A fourth sentence would sprawl past the fallback continuity budget.\n\nNEXT: LISTEN";
+
+        assert_eq!(budget.max_prose_sentences, 3);
+        assert_eq!(fallback_prose_sentence_count(within_budget), 3);
+        assert!(is_valid_ollama_dialogue_fallback_output_for_budget(
+            within_budget,
+            MlxProfile::Gemma4Canary,
+            budget,
+        ));
+        assert_eq!(fallback_prose_sentence_count(over_budget), 4);
+        assert!(!is_valid_ollama_dialogue_fallback_output_for_budget(
+            over_budget,
+            MlxProfile::Gemma4Canary,
+            fallback_continuity_budget_v1("spectral_entropy: 0.00"),
         ));
     }
 
@@ -8651,6 +14005,32 @@ mod tests {
             out,
             MlxProfile::Production
         ));
+    }
+
+    #[test]
+    fn dialogue_prompts_expose_agency_corridor_as_non_live_work() {
+        for prompt in [SYSTEM_PROMPT, GEMMA4_CANARY_SYSTEM_PROMPT] {
+            for command in [
+                "OBJECT_TO_CLOSURE",
+                "REQUEST_SAFE_REPLAY",
+                "REQUEST_SELF_OBSERVATION",
+                "PROPOSE_CANARY",
+                "REQUEST_CORRIDOR_LEASE",
+                "REOPEN_CLOSURE",
+                "COMPARE_ARTIFACTS",
+                "PREPARE_SOURCE_PROPOSAL",
+                "PROPOSE_WORK_PROGRAM",
+                "PRIORITIZE_WORK",
+                "PORTFOLIO_NOTE",
+                "PREPARE_PATCH_BUNDLE",
+            ] {
+                assert!(prompt.contains(command));
+            }
+            assert!(prompt.contains("non-live"));
+            assert!(prompt.contains("grant"));
+            assert!(prompt.contains("approval"));
+            assert!(prompt.contains("live work runnable"));
+        }
     }
 
     #[test]

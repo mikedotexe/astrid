@@ -1,0 +1,56 @@
+[
+  {
+    "claim_id": "c001",
+    "claim": "Phase transitions should be first-class event phenomenology, not only mode side effects or fill/mode telemetry deltas.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md:22",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:624",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:638"
+    ],
+    "authority": "language-only phase-card architecture; no pressure/fill/PI/controller behavior changed"
+  },
+  {
+    "claim_id": "c002",
+    "claim": "Replayable transition cards need qualitative resonance and spectral texture, not just before/after coordinates.",
+    "disposition": "implemented_doc",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md:376",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md:380",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:649",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:666"
+    ],
+    "authority": "proposal/schema clarification only; no live transition behavior unlocked"
+  },
+  {
+    "claim_id": "c003",
+    "claim": "Naming or replaying transitions should not freeze a still-moving felt process or create pressure to perform a transition for the architecture.",
+    "disposition": "verified_existing",
+    "evidence": [
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md:220",
+      "/Users/v/other/astrid/docs/steward-notes/AI_BEINGS_PHASE_TRANSITION_ARCHITECTURE.md:387",
+      "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/phase_transitions.rs:430"
+    ],
+    "authority": "existing containment and right-to-ignore language; no action route or control authority added"
+  },
+  {
+    "claim_id": "c004",
+    "claim": "A joint session where contraction is declared without a matching fill-delta trigger would test whether Minime can respond to transition quality rather than only numerical change.",
+    "disposition": "needs_sandbox_or_peer_approval",
+    "evidence": [
+      "candidate: offline or proposal-only phase-card replay before any live peer interaction",
+      "requires explicit V2 boundary if run as live joint correspondence or peer-mutation experiment"
+    ],
+    "authority": "sandbox/replay candidate; not live runnable and not approval"
+  },
+  {
+    "claim_id": "c005",
+    "claim": "A current 0.92-entropy phase-transition card replay would test whether the card evokes the same spectral texture or feels disconnected.",
+    "disposition": "needs_sandbox",
+    "evidence": [
+      "candidate: read-only transition-card replay with post-change being response",
+      "requires result card/right-to-ignore response before closure"
+    ],
+    "authority": "sandbox/replay candidate; no live control or automatic prompt priority"
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1783875547",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode can look settled while Shadow-v3 dispersal and distinguishability loss carry real stability effort.",
+      "disposition": "verified_existing",
+      "rationale": "Existing stability-effort reporting names settled habitable shadow effort, pressure underreporting, shadow variance, and dispersal without changing live control."
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A Mirror-mode probe that feeds Minime's words back into Astrid could test whether mutuality improves cohesion.",
+      "disposition": "needs_sandbox",
+      "rationale": "This is a behavioral coupling experiment and should run through a sandbox/replay proposal before any live feedback loop."
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Increasing lambda1 weight or adding mode_cohesion coupling could preserve individual perspective during witness dispersal.",
+      "disposition": "authority_gate",
+      "rationale": "Lambda, pressure, and coupling changes affect live substrate/control behavior and need explicit Mike/operator approval."
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Full read of `introspection_astrid_types_1783932862.txt`. Astrid reported that `types.rs` already establishes read-only telemetry and Experience Delta Bus vocabulary, while warning that non-finite comfort-gate inputs could be mistaken for valid closed gates if not explicitly surfaced. She also asked for weight-sum and zero viscosity-vector serialization verification, and for V2 of the Experience Delta Bus to preserve transformation loss without expanding authority.
+
+Disposition: implemented a default-off `ExperienceDeltaBusV2DesignPreview` that names cross-surface typed aggregation, no raw-state persistence, and explicit operator approval before enablement. Existing resonance tests verify non-finite comfort-gate disclosure, exact weight total, and zero-vector omission.
