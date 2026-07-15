@@ -58,6 +58,37 @@ def test_parse_request_metrics_summarizes_candidate_audit_jsonl():
     assert summary["max_total_turn_s"] == 14.5
 
 
+def test_existing_server_log_defaults_to_reservoir_launchd_log():
+    root = Path("/tmp/reservoir-root")
+
+    assert soak.default_existing_server_log(root) == root / "logs" / "coupled-astrid.log"
+
+
+def test_parse_generation_stats_accepts_live_coupled_server_log_lines():
+    text = "\n".join(
+        [
+            "06:15:23 [coupled-astrid] generated 40 tokens on astrid in 2.2s (18.2 tok/s)",
+            "06:16:29 [coupled-astrid] generated 441 tokens on astrid in 65.5s (6.7 tok/s)",
+        ]
+    )
+
+    summary = soak.parse_generation_stats(text)
+
+    assert summary["count"] == 2
+    assert summary["max_elapsed_s"] == 65.5
+    assert summary["min_tokens_per_s"] == 6.7
+
+
+def test_read_tail_lines_limits_large_existing_server_log_tail():
+    with tempfile.TemporaryDirectory() as tmp:
+        log = Path(tmp) / "coupled-astrid.log"
+        log.write_text("\n".join(f"line {i}" for i in range(100)), encoding="utf-8")
+
+        tail = soak.read_tail_lines(log, max_lines=3, max_bytes=64)
+
+    assert tail == ["line 97", "line 98", "line 99"]
+
+
 def test_build_failure_reasons_honors_strict_zero_fallback_gate():
     events = {
         "bridge_artifact_strip_count": 0,

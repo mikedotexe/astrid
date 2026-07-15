@@ -30,6 +30,7 @@ BRIDGE_ENV_PROFILE = "ASTRID_BRIDGE_MLX_PROFILE"
 DEFAULT_BRIDGE_MLX_PROFILE = "gemma4_12b"
 BRIDGE_WORKSPACE = ASTRID_ROOT / "capsules/spectral-bridge/workspace"
 GENERATED_OUTPUT_DIRS = (BRIDGE_WORKSPACE / "outbox", BRIDGE_WORKSPACE / "journal")
+MODEL_LOG_TAIL_BYTES = 256 * 1024
 
 ARTIFACT_RE = re.compile(
     r"(?:<start_of_turn>|<end_of_turn>|<think>|</think>|/no_think|"
@@ -130,6 +131,10 @@ def log_offset(path: Path) -> int:
         return 0
 
 
+def default_existing_server_log(reservoir_root: Path) -> Path:
+    return reservoir_root / "logs" / "coupled-astrid.log"
+
+
 def read_from(path: Path, offset: int) -> str:
     try:
         with path.open("r", encoding="utf-8", errors="replace") as handle:
@@ -137,6 +142,21 @@ def read_from(path: Path, offset: int) -> str:
             return handle.read()
     except OSError:
         return ""
+
+
+def read_tail_lines(
+    path: Path,
+    max_lines: int = 80,
+    max_bytes: int = MODEL_LOG_TAIL_BYTES,
+) -> list[str]:
+    try:
+        size = path.stat().st_size
+        with path.open("rb") as handle:
+            handle.seek(max(0, size - max_bytes))
+            text = handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return []
+    return text.splitlines()[-max_lines:]
 
 
 def percentile(values: list[float], pct: float) -> float | None:
@@ -524,6 +544,14 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--bridge-mlx-profile", default=DEFAULT_BRIDGE_MLX_PROFILE)
     parser.add_argument("--max-fallback-incidents", type=int, default=1)
+    parser.add_argument(
+        "--existing-server-log",
+        type=Path,
+        help=(
+            "Generation log to parse when the candidate port is already occupied. "
+            "Defaults to RESERVOIR_ROOT/logs/coupled-astrid.log."
+        ),
+    )
     parser.add_argument("--keep-candidate-running", action="store_true")
     args = parser.parse_args()
 
@@ -552,6 +580,8 @@ def main() -> int:
 
     proc: subprocess.Popen[str] | None = None
     candidate_log_path: Path | None = None
+    model_generation_log_path: Path | None = None
+    model_generation_log_source: str | None = None
     started_candidate = False
     return_code = 0
 
@@ -562,6 +592,10 @@ def main() -> int:
         existing_pids = narrow.port_pids(candidate_port)
         if existing_pids:
             record["candidate_existing_pids"] = existing_pids
+            model_generation_log_path = (
+                args.existing_server_log or default_existing_server_log(args.reservoir_root)
+            )
+            model_generation_log_source = "existing_server"
         else:
             proc, candidate_log_path = narrow.start_candidate_server(
                 reservoir_root=args.reservoir_root,
@@ -575,6 +609,15 @@ def main() -> int:
             started_candidate = True
             record["candidate_server_pid"] = proc.pid
             record["candidate_server_log"] = str(candidate_log_path)
+            model_generation_log_path = candidate_log_path
+            model_generation_log_source = "started_candidate"
+
+        if model_generation_log_path is not None:
+            record["model_generation_log"] = {
+                "path": str(model_generation_log_path),
+                "source": model_generation_log_source,
+                "exists": model_generation_log_path.exists(),
+            }
 
         candidate_models = narrow.wait_for_models(candidate_url, args.startup_timeout, proc)
         record["candidate_models"] = {
@@ -603,7 +646,11 @@ def main() -> int:
 
         output_scan_start_ts = int(time.time())
         bridge_offset = log_offset(BRIDGE_LOG)
-        candidate_offset = log_offset(candidate_log_path) if candidate_log_path else 0
+        model_generation_log_offset = (
+            log_offset(model_generation_log_path) if model_generation_log_path else 0
+        )
+        if isinstance(record.get("model_generation_log"), dict):
+            record["model_generation_log"]["offset"] = model_generation_log_offset
         metrics_path = output_dir / "request_metrics" / "coupled_request_metrics.jsonl"
         metrics_offset = log_offset(metrics_path)
         record["setenv"] = launchctl("setenv", BRIDGE_ENV_URL, candidate_url)
@@ -621,15 +668,19 @@ def main() -> int:
         )
 
         bridge_text = read_from(BRIDGE_LOG, bridge_offset)
-        candidate_text = read_from(candidate_log_path, candidate_offset) if candidate_log_path else ""
+        model_generation_text = (
+            read_from(model_generation_log_path, model_generation_log_offset)
+            if model_generation_log_path
+            else ""
+        )
         metrics_text = read_from(metrics_path, metrics_offset)
         output_scan = scan_generated_outputs(
             BRIDGE_WORKSPACE,
             output_scan_start_ts,
             int(time.time()) + 1,
         )
-        events = count_events(bridge_text, candidate_text)
-        generations = parse_generation_stats(candidate_text)
+        events = count_events(bridge_text, model_generation_text)
+        generations = parse_generation_stats(model_generation_text)
         request_metrics = parse_request_metrics(metrics_text)
         bridge_bad_samples = [
             sample
@@ -655,21 +706,27 @@ def main() -> int:
             output_scan=output_scan,
             max_fallback_incidents=args.max_fallback_incidents,
         )
+        latency_summary = {
+            key: request_metrics.get(key)
+            for key in (
+                "count",
+                "p95_total_turn_s",
+                "max_total_turn_s",
+                "p95_first_token_s",
+                "max_first_token_s",
+                "max_prompt_chars",
+                "max_generated_tokens",
+            )
+        }
+        latency_summary["generation_count"] = generations.get("count")
+        latency_summary["p95_generation_elapsed_s"] = generations.get("p95_elapsed_s")
+        latency_summary["max_generation_elapsed_s"] = generations.get("max_elapsed_s")
+        latency_summary["min_generation_tokens_per_s"] = generations.get("min_tokens_per_s")
+        latency_summary["model_generation_log"] = record.get("model_generation_log")
         operator_review_packet = {
             "sampled_outputs": output_scan["sampled_outputs"],
             "next_lines": output_scan["next_lines"],
-            "latency_summary": {
-                key: request_metrics.get(key)
-                for key in (
-                    "count",
-                    "p95_total_turn_s",
-                    "max_total_turn_s",
-                    "p95_first_token_s",
-                    "max_first_token_s",
-                    "max_prompt_chars",
-                    "max_generated_tokens",
-                )
-            },
+            "latency_summary": latency_summary,
             "fallback_incidents": events["recent_fallback_incidents"],
             "generated_output_counts": output_scan["counts"],
             "review_questions": [
@@ -712,10 +769,9 @@ def main() -> int:
         record["started_candidate"] = started_candidate
         record["completed_at"] = iso_now()
         if candidate_log_path is not None and candidate_log_path.exists():
-            record["candidate_server_log_tail"] = candidate_log_path.read_text(
-                encoding="utf-8",
-                errors="replace",
-            ).splitlines()[-80:]
+            record["candidate_server_log_tail"] = read_tail_lines(candidate_log_path)
+        if model_generation_log_path is not None and model_generation_log_path.exists():
+            record["model_generation_log_tail"] = read_tail_lines(model_generation_log_path)
         write_record()
         print(record_path)
 
