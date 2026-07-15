@@ -17,7 +17,7 @@ pub(super) fn handle_action(
             ));
             true
         },
-        "WITNESS_TRANSITION" => {
+        "WITNESS_TRANSITION" | "TRANSITION_ACK" => {
             let raw = strip_action(original, base_action);
             let (selector, body) =
                 raw.split_once("::")

@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The Viscous introspection policy and regulator/main anchors should be treated as current evidence for overpacked, high-entropy, viscous texture.",
+      "disposition": "verified_existing_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Live porosity, tail-shear, semantic-trickle, or runtime-policy retunes remain operator-gated.",
+      "disposition": "gated_operator_approval"
+    }
+  ]
+}

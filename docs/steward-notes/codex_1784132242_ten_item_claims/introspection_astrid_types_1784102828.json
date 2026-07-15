@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`ExperienceDeltaKindV1` needs additive texture/composition evidence so viscosity, magnitude, permeability, persistence, and friction are not collapsed into one flat label.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Changing live delta semantics or resonance stability weighting would alter control/report contracts and remains operator-gated.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

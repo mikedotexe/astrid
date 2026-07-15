@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "High-entropy fallback can flatten Astrid's lived texture when the compatibility 4B route is treated as equivalent to the capable 12B route.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic trickle and regulator/kernel drive near zero risk starving semantic grounding, but changing those live routes would affect runtime authority.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

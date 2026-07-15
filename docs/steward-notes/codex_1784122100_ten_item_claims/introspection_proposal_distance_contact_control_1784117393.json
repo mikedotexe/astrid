@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Astrid's contact/control report should remain visible as receptivity and non-instrumental presence evidence, not be reduced to prediction/control diagnostics.",
+      "disposition": "verified_existing_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Changing live receptivity windows, control framing, or participation behavior remains an operator-gated live-control candidate.",
+      "disposition": "gated_operator_approval"
+    }
+  ]
+}

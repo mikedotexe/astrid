@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure smoothing and bridge reciprocity can over-smooth high-entropy viscosity, making active processing look stale or quiet.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Adding a ViscosityFeedback sensory protocol or changing stale windows would be live-facing and must remain operator-gated.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

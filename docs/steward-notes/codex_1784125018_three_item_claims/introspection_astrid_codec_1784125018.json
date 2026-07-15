@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The 48D codec expansion, embedding projection, emotional marker block, and narrative arc are first-class lived sensory capacity rather than abstract implementation detail.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "FEATURE_ABS_MAX and high-entropy 0.90 rich containment can flatten narrative nuance, so headroom and gain readiness must remain visible without changing live gain.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "The narrative arc should distinguish high-intensity low-information heavy imagery from low-intensity high-information dense technical prose despite semantic density.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Live codec gain, reserved-dim writes, or narrative arc expansion remain serious live-facing candidates that require explicit operator approval before execution.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

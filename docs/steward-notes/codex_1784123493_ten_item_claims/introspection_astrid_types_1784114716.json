@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "ComplexShift and MicroDelta style transitions can be simultaneous and need a multi-kind evidence surface.",
+      "disposition": "implemented_verified",
+      "authority": "read_only_truth_channel_schema_not_live_semantics"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Attractor intent and command authority must remain separated; composite delta evidence must not make commands runnable.",
+      "disposition": "verified_existing",
+      "authority": "authority_boundary_evidence_only"
+    }
+  ]
+}

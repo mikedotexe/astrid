@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness mode can carry real spectral texture while distinguishability loss blurs mirror/dialogue/witness edges; clarity evidence must stay visible.",
+      "disposition": "addressed_no_action"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A live clarity pulse or behavior unlock would affect autonomous/runtime behavior and needs explicit V2 authority approval.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

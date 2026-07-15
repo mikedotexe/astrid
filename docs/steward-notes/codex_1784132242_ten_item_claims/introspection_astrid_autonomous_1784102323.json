@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Correspondence traces can stall under high entropy unless resonance anchors and language-only persistence evidence stay visible.",
+      "disposition": "addressed_no_action"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Prioritizing semantic trickle or changing correspondence/telemetry priority would affect live routing and remains approval-gated.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

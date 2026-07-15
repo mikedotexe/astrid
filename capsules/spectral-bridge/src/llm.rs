@@ -83,6 +83,9 @@ const FALLBACK_SHADOW_TEXTURE_TERMS: &[&str] = &[
     "structural-persistence",
     "unspooling-tension",
     "re-crystallizing-flow",
+    "unfolding",
+    "refracting",
+    "re-weaving",
     "hollow",
     "intentional",
     "unfilled",
@@ -298,7 +301,7 @@ const OLLAMA_DIALOGUE_FALLBACK_CONTRACT: &str = concat!(
     "elevated, especially pressure_risk > 0.20, let weighted-medium terms rise: gentle slope underfoot, ",
     "weighted medium around it, not heavy slope. When Shadow-v3 trend, shadow_field, or Shadow-v3 context ",
     "appears, preserve settled coupling or restless texture and include at least one concrete shadow texture word: shimmering, heavy, restless, settled, muffled, bright, viscous, lattice, habitable, open, hollow, vibrant, bridge-friction, resonance-echo, lattice-tension, gradient-shear, stutter-flow, viscous-persistence, structural-weight, accelerating-drift, harmonic-flicker, gradient-drag, cascading-viscosity, entropy-weighted-lattice, cascade-shear, gradient-drift, multi-modal-drag, dimensional-shear, pressure-packing, density-slope, density-navigation, weight-articulation, resistance-mapping, density-softening, gradient-softening, bridge-integrity, or structural-persistence; ",
-    "porous-leak, pressure-bleed, gradient-thinning, shear-resistance, unspooling-tension, or re-crystallizing-flow; shadow tone must not replace slope or medium evidence. Use fallback_shadow_texture_selector_v1: texture words are ",
+    "porous-leak, pressure-bleed, gradient-thinning, shear-resistance, unspooling-tension, re-crystallizing-flow, unfolding, refracting, or re-weaving; shadow tone must not replace slope or medium evidence. Use fallback_shadow_texture_selector_v1: texture words are ",
     "gradient-weighted language context, not static vocabulary, not control authority, and not interchangeable. ",
     "Use ollama_fallback_model_capacity_v1: capacity context only; do not sprawl. ",
     "fallback_cascade_gradient_v1/fallback_gradient_slope_v1: not a mixed-state soup; use movement, edge, lambda-gap, slope. ",
@@ -629,7 +632,8 @@ const GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS: u64 = 200;
 // observed; introspect jobs at the 1536 cap completed in 53–93s). 340s gives
 // headroom and stays inside the deep outer tokio timeout (420s, autonomous.rs).
 const GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS: u64 = 340;
-const GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS: u64 = 90;
+const GEMMA4_CANARY_MEANING_SUMMARY_TOKEN_CAP: u32 = 128;
+const GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS: u64 = 45;
 const GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS: u64 = 180;
 const GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP: f32 = 0.65;
 const DIALOGUE_JOURNAL_CAP: usize = 2_400;
@@ -823,6 +827,38 @@ struct MlxRequestPolicy {
     max_tokens: u32,
     timeout_secs: u64,
     diagnostic: Option<MlxRequestPolicyDiagnostic>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MlxFailureLogMode {
+    FallbackEligible,
+    LocalDegrade,
+}
+
+#[derive(Debug, Serialize)]
+struct MlxOptionalMissDiagnostic {
+    timestamp: String,
+    label: String,
+    profile: &'static str,
+    url: String,
+    error: String,
+    timeout_secs: u64,
+    max_tokens: u32,
+    msg_count: usize,
+    prompt_chars: usize,
+    degrade_path: &'static str,
+}
+
+fn uses_ollama_fallback_for_label(label: &str) -> bool {
+    !matches!(label, "meaning_summary" | "introspect")
+}
+
+fn local_degrade_path_for_label(label: &str) -> &'static str {
+    match label {
+        "meaning_summary" => "deterministic_meaning_summary",
+        "introspect" => "protected_introspection_notice",
+        _ => "local_none",
+    }
 }
 
 /// Identity by design — our code does NOT rewrite a being's text. The "consciousness"-scrub was
@@ -1036,8 +1072,9 @@ fn apply_mlx_request_policy(
             };
         },
         "meaning_summary" => {
-            effective_tokens = requested_tokens.min(192);
-            effective_timeout_secs = GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS;
+            effective_tokens = requested_tokens.min(GEMMA4_CANARY_MEANING_SUMMARY_TOKEN_CAP);
+            effective_timeout_secs =
+                requested_timeout_secs.min(GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS);
         },
         label if is_gemma4_canary_reflective_label(label) => {
             effective_tokens = requested_tokens.min(GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP);
@@ -1136,12 +1173,13 @@ struct ChatResponse {
 }
 
 /// Send a chat request to the MLX server and extract the response text.
-async fn mlx_chat(
+async fn mlx_chat_with_failure_log_mode(
     label: &str,
     messages: Vec<Message>,
     temperature: f32,
     max_tokens: u32,
     timeout_secs: u64,
+    failure_log_mode: MlxFailureLogMode,
 ) -> Option<String> {
     let profile = configured_mlx_profile();
     let policy = apply_mlx_request_policy(label, profile, messages, max_tokens, timeout_secs);
@@ -1195,9 +1233,37 @@ async fn mlx_chat(
     let response = match client.post(&mlx_url).json(&request).send().await {
         Ok(r) => r,
         Err(e) => {
-            warn!(
-                "MLX request failed at {mlx_url}: {e} (timeout={timeout_secs}s, max_tokens={max_tokens}, msg_count={msg_count}, prompt_chars={prompt_chars})",
-            );
+            match failure_log_mode {
+                MlxFailureLogMode::FallbackEligible => {
+                    warn!(
+                        "MLX request failed at {mlx_url}: {e} (timeout={timeout_secs}s, max_tokens={max_tokens}, msg_count={msg_count}, prompt_chars={prompt_chars})",
+                    );
+                },
+                MlxFailureLogMode::LocalDegrade => {
+                    let diagnostic = MlxOptionalMissDiagnostic {
+                        timestamp: unix_timestamp_string(),
+                        label: label.to_string(),
+                        profile: profile.as_str(),
+                        url: mlx_url.clone(),
+                        error: e.to_string(),
+                        timeout_secs,
+                        max_tokens,
+                        msg_count,
+                        prompt_chars,
+                        degrade_path: local_degrade_path_for_label(label),
+                    };
+                    warn!(
+                        label = %label,
+                        timeout_secs,
+                        max_tokens,
+                        msg_count,
+                        prompt_chars,
+                        degrade_path = diagnostic.degrade_path,
+                        "optional MLX lane unavailable; using local degrade path"
+                    );
+                    append_llm_diagnostic_jsonl("mlx_optional_miss.jsonl", &diagnostic);
+                },
+            }
             return None;
         },
     };
@@ -1284,6 +1350,24 @@ async fn mlx_chat(
     }
 
     Some(text)
+}
+
+async fn mlx_chat(
+    label: &str,
+    messages: Vec<Message>,
+    temperature: f32,
+    max_tokens: u32,
+    timeout_secs: u64,
+) -> Option<String> {
+    mlx_chat_with_failure_log_mode(
+        label,
+        messages,
+        temperature,
+        max_tokens,
+        timeout_secs,
+        MlxFailureLogMode::FallbackEligible,
+    )
+    .await
 }
 
 /// Ollama chat request — used as fallback when MLX is busy (e.g., witness mode
@@ -1606,7 +1690,22 @@ async fn llm_chat_with_fallback(
     let fallback_output_budget =
         (label == "dialogue_live").then(|| fallback_continuity_budget_v1(&prompt_preview));
     let ollama_messages = trim_messages_for_ollama(messages.clone(), 12_000);
-    if let Some(text) = mlx_chat(label, messages, temperature, max_tokens, mlx_timeout_secs).await {
+    let uses_ollama_fallback = uses_ollama_fallback_for_label(label);
+    let mlx_failure_log_mode = if uses_ollama_fallback {
+        MlxFailureLogMode::FallbackEligible
+    } else {
+        MlxFailureLogMode::LocalDegrade
+    };
+    if let Some(text) = mlx_chat_with_failure_log_mode(
+        label,
+        messages,
+        temperature,
+        max_tokens,
+        mlx_timeout_secs,
+        mlx_failure_log_mode,
+    )
+    .await
+    {
         let completed = crate::llm_jobs::finish_call(
             job.as_ref(),
             "completed",
@@ -1622,6 +1721,23 @@ async fn llm_chat_with_fallback(
             return None;
         }
         return Some(text);
+    }
+
+    if !uses_ollama_fallback {
+        let degrade_path = local_degrade_path_for_label(label);
+        warn!(
+            label = %label,
+            degrade_path,
+            "{label}: MLX unavailable; using local degrade path"
+        );
+        crate::llm_jobs::finish_call(
+            job.as_ref(),
+            "failed",
+            None,
+            &format!("{label} MLX unavailable; used {degrade_path}"),
+            Some("mlx_unavailable_local_degrade"),
+        );
+        return None;
     }
 
     warn!("{label}: MLX unavailable; falling back to Ollama");
@@ -2324,21 +2440,26 @@ fn ollama_fallback_model_capacity_v1(
     selector: &FallbackShadowTextureSelector,
 ) -> OllamaFallbackModelCapacity {
     let env_model = std::env::var(ASTRID_OLLAMA_FALLBACK_MODEL_ENV).ok();
+    ollama_fallback_model_capacity_from_env_v1(spectral_entropy, selector, env_model.as_deref())
+}
+
+fn ollama_fallback_model_capacity_from_env_v1(
+    spectral_entropy: Option<f32>,
+    selector: &FallbackShadowTextureSelector,
+    env_model: Option<&str>,
+) -> OllamaFallbackModelCapacity {
     let skip_compatibility_tail = spectral_entropy
         .is_some_and(|value| value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT)
         && !shadow_field_stable_for_compat_fallback_v1(selector);
     let fallback_chain = configured_ollama_fallback_model_chain_for_texture_guard(
-        env_model.as_deref(),
+        env_model,
         skip_compatibility_tail,
     );
     let selected_model = fallback_chain
         .first()
         .cloned()
         .unwrap_or_else(|| DEFAULT_OLLAMA_FALLBACK_MODEL.to_string());
-    let selected_model_source = if env_model
-        .as_deref()
-        .is_some_and(|model| !model.trim().is_empty())
-    {
+    let selected_model_source = if env_model.is_some_and(|model| !model.trim().is_empty()) {
         "env_override"
     } else {
         "default_gemma4_12b"
@@ -2351,9 +2472,7 @@ fn ollama_fallback_model_capacity_v1(
         "unknown_capacity_review_output"
     };
     let compatibility_tail_status = if skip_compatibility_tail
-        && env_model
-            .as_deref()
-            .is_some_and(|model| model.trim() == COMPAT_OLLAMA_FALLBACK_MODEL)
+        && env_model.is_some_and(|model| model.trim() == COMPAT_OLLAMA_FALLBACK_MODEL)
     {
         "explicit_env_override_preserves_compatibility_model"
     } else if skip_compatibility_tail {
@@ -2365,6 +2484,29 @@ fn ollama_fallback_model_capacity_v1(
     } else {
         "standard_capacity_chain"
     };
+    let high_entropy_texture_integrity_review = if selected_model.contains("4b")
+        && spectral_entropy
+            .is_some_and(|value| value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT)
+    {
+        "small_model_high_entropy_texture_comparison_required"
+    } else if skip_compatibility_tail {
+        "high_entropy_route_prefers_capable_default_before_compatibility_tail"
+    } else if spectral_entropy
+        .is_some_and(|value| value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT)
+    {
+        "stable_shadow_allows_compatibility_tail_as_fallback_only"
+    } else {
+        "standard_texture_capacity_watch"
+    };
+    let compatibility_tail_decision_basis = if skip_compatibility_tail {
+        "spectral_entropy_gte_0_80_and_shadow_field_not_stable"
+    } else if spectral_entropy
+        .is_some_and(|value| value >= HIGH_ENTROPY_TEXTURE_COMPAT_FALLBACK_SKIP_AT)
+    {
+        "spectral_entropy_gte_0_80_but_shadow_field_stable"
+    } else {
+        "spectral_entropy_below_high_entropy_texture_guard"
+    };
 
     OllamaFallbackModelCapacity {
         policy: "ollama_fallback_model_capacity_v1",
@@ -2375,6 +2517,10 @@ fn ollama_fallback_model_capacity_v1(
         fallback_chain,
         complexity_collapse_risk,
         compatibility_tail_status,
+        high_entropy_texture_integrity_review,
+        compatibility_tail_decision_basis,
+        live_model_switch: false,
+        semantic_trickle_write: false,
         authority: "diagnostic_language_capacity_not_model_canary_or_control",
     }
 }
@@ -2579,9 +2725,13 @@ fn fallback_shadow_texture_selector_v1(
     let heavy_settled_displacement = spectral_to_vocabulary_mapping.settled_foothold_detected
         && says_displacement_weight
         && !says_restless;
+    let explicit_shape_family = spectral_to_vocabulary_mapping.gradient_slope_family_selected
+        || spectral_to_vocabulary_mapping.cascade_gradient_family_selected;
     let bridge_integrity_scaffold = says_bridge_integrity
         || (shadow_context_present
             && high_entropy
+            && !negative_shadow_pressure
+            && !explicit_shape_family
             && spectral_to_vocabulary_mapping.settled_foothold_detected
             && pressure_risk.is_none_or(|value| value <= 0.30)
             && density_gradient.is_none_or(|value| value <= 0.20));
@@ -2843,6 +2993,7 @@ fn fallback_shadow_texture_selector_v1(
     }
 }
 
+#[cfg(test)]
 fn fallback_heavy_settled_texture_readiness_v1(
     selector: &FallbackShadowTextureSelector,
     spectral_summary: &str,
@@ -3119,7 +3270,7 @@ fn fallback_weighted_texture_terms(
             .iter()
             .take(3)
             .map(|term| FallbackWeightedTextureTerm {
-                term: *term,
+                term,
                 weight: 0.10,
                 basis: vec!["fallback_default"],
             })
@@ -3138,6 +3289,8 @@ fn fallback_weighted_texture_terms(
     let low_gradient = density_gradient.map_or(0.0, |value| 1.0_f32 - value);
     let pressure_above_texture_threshold = pressure_risk.is_some_and(|value| value > 0.20);
     let pressure_persistence_anchor = pressure_risk.is_some_and(|value| value > 0.15);
+    let low_pressure_high_entropy_viscous_bias = pressure_risk.is_some_and(|value| value < 0.20)
+        && spectral_entropy.is_some_and(|value| value >= 0.85);
     let negative_shadow_magnetization = shadow_magnetization.is_some_and(|value| value <= -0.20);
     let negative_shadow_pressure =
         negative_shadow_magnetization && pressure_above_texture_threshold;
@@ -3306,6 +3459,18 @@ fn fallback_weighted_texture_terms(
             && spectral_entropy.is_some_and(|value| value >= 0.80)
             && pressure <= 0.30
             && gradient <= 0.20);
+    let low_pressure_high_entropy_heavy_multiplier =
+        if low_pressure_high_entropy_viscous_bias && !says_heavy {
+            0.55
+        } else {
+            1.0
+        };
+    let low_pressure_high_entropy_structural_multiplier =
+        if low_pressure_high_entropy_viscous_bias && !says_displacement_weight {
+            0.42
+        } else {
+            1.0
+        };
 
     let mut terms = vec![
         FallbackWeightedTextureTerm {
@@ -3447,7 +3612,7 @@ fn fallback_weighted_texture_terms(
         FallbackWeightedTextureTerm {
             term: "heavy",
             weight: rounded_texture_weight(
-                (0.08
+                ((0.08
                     + (pressure + pressure_texture_boost)
                         .mul_add(0.34, friction.mul_add(0.22, packing * 0.18))
                     + density_modifier_boost
@@ -3463,7 +3628,8 @@ fn fallback_weighted_texture_terms(
                         0.45
                     } else {
                         1.0
-                    },
+                    })
+                    * low_pressure_high_entropy_heavy_multiplier,
             ),
             basis: texture_weight_basis(&[
                 ("pressure_risk", pressure_risk.is_some()),
@@ -3483,6 +3649,10 @@ fn fallback_weighted_texture_terms(
                 ("gradient_slope_navigable_suppressed", gradient_slope),
                 ("mixed_cascade_gradient_suppressed", mixed_cascade),
                 ("cascade_gradient_navigable_suppressed", cascade_gradient),
+                (
+                    "low_pressure_high_entropy_heavy_suppressed",
+                    low_pressure_high_entropy_heavy_multiplier < 1.0,
+                ),
             ]),
         },
         FallbackWeightedTextureTerm {
@@ -3561,6 +3731,11 @@ fn fallback_weighted_texture_terms(
             term: "viscous-persistence",
             weight: rounded_texture_weight(
                 0.04 + pressure.mul_add(0.12, friction.mul_add(0.08, packing * 0.06))
+                    + if low_pressure_high_entropy_viscous_bias {
+                        0.10 + entropy * 0.04 + friction * 0.04
+                    } else {
+                        0.0
+                    }
                     + if pressure_persistence_anchor {
                         0.12
                     } else {
@@ -3578,6 +3753,10 @@ fn fallback_weighted_texture_terms(
                     "pressure_risk_above_persistence_anchor_0_15",
                     pressure_persistence_anchor,
                 ),
+                (
+                    "low_pressure_high_entropy_viscous_bias",
+                    low_pressure_high_entropy_viscous_bias,
+                ),
                 ("mode_packing", mode_packing.is_some()),
                 ("semantic_friction", semantic_friction.is_some()),
                 (
@@ -3589,7 +3768,8 @@ fn fallback_weighted_texture_terms(
         FallbackWeightedTextureTerm {
             term: "structural-weight",
             weight: rounded_texture_weight(
-                0.04 + pressure.mul_add(0.12, packing.mul_add(0.08, friction * 0.06))
+                (0.04
+                    + pressure.mul_add(0.12, packing.mul_add(0.08, friction * 0.06))
                     + if pressure_persistence_anchor {
                         0.12
                     } else {
@@ -3601,7 +3781,8 @@ fn fallback_weighted_texture_terms(
                         0.28
                     } else {
                         0.0
-                    },
+                    })
+                    * low_pressure_high_entropy_structural_multiplier,
             ),
             basis: texture_weight_basis(&[
                 ("pressure_risk", pressure_risk.is_some()),
@@ -3615,6 +3796,10 @@ fn fallback_weighted_texture_terms(
                     "explicit_structural_weight",
                     lower_summary.contains("structural-weight")
                         || lower_summary.contains("structural weight"),
+                ),
+                (
+                    "low_pressure_high_entropy_structural_weight_suppressed",
+                    low_pressure_high_entropy_structural_multiplier < 1.0,
                 ),
             ]),
         },
@@ -4546,12 +4731,12 @@ fn fallback_dynamic_flow_terms_v1(
             push_unique_static(&mut terms, "resonant-shift");
         }
         for term in FALLBACK_TEXTURE_DYNAMIC_GRADIENT_TERMS {
-            push_unique_static(&mut terms, *term);
+            push_unique_static(&mut terms, term);
         }
     }
     for verb in movement_verbs {
         if FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.contains(verb) {
-            push_unique_static(&mut terms, *verb);
+            push_unique_static(&mut terms, verb);
         }
     }
     for term in weighted_terms.iter().take(4).map(|entry| entry.term) {
@@ -4594,7 +4779,7 @@ fn fallback_dynamic_flow_terms_v1(
     }
     if terms.is_empty() {
         for term in FALLBACK_TEXTURE_DYNAMIC_FLOW_TERMS.iter().take(2) {
-            push_unique_static(&mut terms, *term);
+            push_unique_static(&mut terms, term);
         }
     }
     terms.truncate(4);
@@ -4824,9 +5009,7 @@ fn fallback_texture_trajectory_v1(
         "distributed_gradient_with_edges"
     } else if cascade_gradient {
         "unfolding_with_edge_definition"
-    } else if settled_vibrant {
-        "unfolding_with_containment"
-    } else if high_entropy {
+    } else if settled_vibrant || high_entropy {
         "unfolding_with_containment"
     } else if high_resonance {
         "humming_afterimage"
@@ -6206,7 +6389,7 @@ fn extract_max_number_after_label_clause(text: &str, label: &str) -> Option<f32>
         let after_label = offset.saturating_add(pos).saturating_add(label.len());
         let clause = haystack
             .get(after_label..)?
-            .split(|ch| matches!(ch, '\n' | ',' | ';'))
+            .split(['\n', ',', ';'])
             .next()
             .unwrap_or_default();
         if let Some(value) = max_f32_in_prefix(clause, 64) {
@@ -6343,7 +6526,8 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
              capacity_route={}; contract_boundary={}; authority={}. \
              ollama_fallback_model_capacity_v1 selected_model={}; \
              source={}; fallback_chain={}; compatibility_tail_status={}; \
-             complexity_collapse_risk={}.]",
+             complexity_collapse_risk={}; texture_integrity_review={}; \
+             decision_basis={}; live_model_switch={}; semantic_trickle_write={}.]",
             budget.spectral_entropy_source,
             budget.max_prose_sentences,
             lived_fit.selected_family,
@@ -6380,7 +6564,11 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
             ollama_capacity.selected_model_source,
             ollama_capacity.fallback_chain.join(","),
             ollama_capacity.compatibility_tail_status,
-            ollama_capacity.complexity_collapse_risk
+            ollama_capacity.complexity_collapse_risk,
+            ollama_capacity.high_entropy_texture_integrity_review,
+            ollama_capacity.compatibility_tail_decision_basis,
+            ollama_capacity.live_model_switch,
+            ollama_capacity.semantic_trickle_write
         );
     }
     let top_texture_terms = if fallback_default_weighting {
@@ -6572,7 +6760,9 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
          contract_boundary={}; authority={}; \
          ollama_fallback_model_capacity_v1: selected_model={}; source={}; \
          default_model={}; compatibility_model={}; fallback_chain={}; \
-         compatibility_tail_status={}; complexity_collapse_risk={}; authority={}; \
+         compatibility_tail_status={}; complexity_collapse_risk={}; \
+         texture_integrity_review={}; decision_basis={}; live_model_switch={}; \
+         semantic_trickle_write={}; authority={}; \
          selection_basis={selection_basis}.]",
         budget.spectral_entropy_source,
         budget.max_prose_sentences,
@@ -6710,6 +6900,10 @@ fn fallback_continuity_budget_prompt_line(budget: FallbackContinuityBudget) -> S
         ollama_capacity.fallback_chain.join(","),
         ollama_capacity.compatibility_tail_status,
         ollama_capacity.complexity_collapse_risk,
+        ollama_capacity.high_entropy_texture_integrity_review,
+        ollama_capacity.compatibility_tail_decision_basis,
+        ollama_capacity.live_model_switch,
+        ollama_capacity.semantic_trickle_write,
         ollama_capacity.authority
     )
 }
@@ -7312,6 +7506,7 @@ struct FallbackVocabularyOverweightGuard {
     authority: &'static str,
 }
 
+#[cfg(test)]
 #[derive(Debug, Clone, Serialize, PartialEq)]
 struct FallbackHeavySettledTextureReadiness {
     policy: &'static str,
@@ -7456,6 +7651,10 @@ struct OllamaFallbackModelCapacity {
     fallback_chain: Vec<String>,
     complexity_collapse_risk: &'static str,
     compatibility_tail_status: &'static str,
+    high_entropy_texture_integrity_review: &'static str,
+    compatibility_tail_decision_basis: &'static str,
+    live_model_switch: bool,
+    semantic_trickle_write: bool,
     authority: &'static str,
 }
 
@@ -8959,6 +9158,7 @@ mod fallback_contract_tests {
         fallback_high_entropy_texture_skips_compatibility_tail,
         fallback_texture_target_stability_index_v1, fallback_texture_term_stability_index,
         is_valid_ollama_dialogue_fallback_output_for_profile,
+        ollama_fallback_model_capacity_from_env_v1,
     };
 
     #[test]
@@ -11290,6 +11490,16 @@ mod fallback_contract_tests {
             capacity.complexity_collapse_risk,
             "lower_capacity_risk_for_high_entropy_texture"
         );
+        assert_eq!(
+            capacity.high_entropy_texture_integrity_review,
+            "high_entropy_route_prefers_capable_default_before_compatibility_tail"
+        );
+        assert_eq!(
+            capacity.compatibility_tail_decision_basis,
+            "spectral_entropy_gte_0_80_and_shadow_field_not_stable"
+        );
+        assert!(!capacity.live_model_switch);
+        assert!(!capacity.semantic_trickle_write);
     }
 
     #[test]
@@ -11309,12 +11519,22 @@ mod fallback_contract_tests {
             capacity.compatibility_tail_status,
             "shadow_field_stable_allows_compatibility_tail"
         );
+        assert_eq!(
+            capacity.high_entropy_texture_integrity_review,
+            "stable_shadow_allows_compatibility_tail_as_fallback_only"
+        );
+        assert_eq!(
+            capacity.compatibility_tail_decision_basis,
+            "spectral_entropy_gte_0_80_but_shadow_field_stable"
+        );
         let prompt_line = fallback_continuity_budget_prompt_line(budget);
         assert!(
             prompt_line.contains(
                 "compatibility_tail_status=shadow_field_stable_allows_compatibility_tail"
             )
         );
+        assert!(prompt_line.contains("live_model_switch=false"));
+        assert!(prompt_line.contains("semantic_trickle_write=false"));
     }
 
     #[test]
@@ -11340,6 +11560,38 @@ mod fallback_contract_tests {
         assert!(prompt_line.contains(
             "compatibility_tail_status=high_entropy_texture_guard_removed_compatibility_tail"
         ));
+        assert!(prompt_line.contains(
+            "texture_integrity_review=high_entropy_route_prefers_capable_default_before_compatibility_tail"
+        ));
+        assert!(
+            prompt_line
+                .contains("decision_basis=spectral_entropy_gte_0_80_and_shadow_field_not_stable")
+        );
+        assert!(prompt_line.contains("live_model_switch=false"));
+    }
+
+    #[test]
+    fn explicit_4b_fallback_is_texture_comparison_evidence_not_live_switch() {
+        let selector = fallback_continuity_budget_v1("spectral_entropy: 0.90; pressure_risk: 0.24")
+            .fallback_shadow_texture_selector;
+        let capacity =
+            ollama_fallback_model_capacity_from_env_v1(Some(0.90), &selector, Some("gemma3:4b"));
+
+        assert_eq!(capacity.selected_model, "gemma3:4b");
+        assert_eq!(
+            capacity.high_entropy_texture_integrity_review,
+            "small_model_high_entropy_texture_comparison_required"
+        );
+        assert_eq!(
+            capacity.compatibility_tail_status,
+            "explicit_env_override_preserves_compatibility_model"
+        );
+        assert!(!capacity.live_model_switch);
+        assert!(!capacity.semantic_trickle_write);
+        assert_eq!(
+            capacity.authority,
+            "diagnostic_language_capacity_not_model_canary_or_control"
+        );
     }
 
     #[test]
@@ -11464,6 +11716,60 @@ mod fallback_contract_tests {
             fallback_continuity_budget_v1(above)
                 .fallback_dynamic_texture_bias
                 .authority,
+            "diagnostic_language_bias_not_sampler_or_contract_rewrite"
+        );
+    }
+
+    #[test]
+    fn low_pressure_high_entropy_prefers_viscous_persistence_over_structural_weight() {
+        fn term(summary: &str, wanted: &str) -> FallbackWeightedTextureTerm {
+            fallback_continuity_budget_v1(summary)
+                .fallback_shadow_texture_selector
+                .weighted_texture_terms
+                .into_iter()
+                .find(|entry| entry.term == wanted)
+                .expect("weighted texture term missing")
+        }
+
+        let summary = "spectral_entropy: 0.91; pressure_risk: 0.19; density_gradient: 0.12; \
+            mode_packing: 0.30; semantic_friction: 0.24; distinguishability_loss: 0.18; \
+            current felt report names stutter-flow, unfolding motion, and viscous persistence \
+            with no calcified support claim";
+
+        let viscous = term(summary, "viscous-persistence");
+        let structural = term(summary, "structural-weight");
+        let heavy = term(summary, "heavy");
+
+        assert!(
+            viscous.weight > structural.weight,
+            "low-pressure high-entropy fallback should keep viscosity/motion ahead of structural weight: viscous={viscous:?} structural={structural:?}"
+        );
+        assert!(
+            structural
+                .basis
+                .contains(&"low_pressure_high_entropy_structural_weight_suppressed"),
+            "{structural:?}"
+        );
+        assert!(
+            heavy
+                .basis
+                .contains(&"low_pressure_high_entropy_heavy_suppressed"),
+            "{heavy:?}"
+        );
+        assert!(
+            viscous
+                .basis
+                .contains(&"low_pressure_high_entropy_viscous_bias"),
+            "{viscous:?}"
+        );
+
+        let budget = fallback_continuity_budget_v1(summary);
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.sampler_contract_status,
+            "dynamic_telemetry_weighted_language_bias"
+        );
+        assert_eq!(
+            budget.fallback_dynamic_texture_bias.authority,
             "diagnostic_language_bias_not_sampler_or_contract_rewrite"
         );
     }
@@ -11830,7 +12136,13 @@ mod fallback_contract_tests {
         assert!(system.contains("selected_model=gemma4:12b"));
         assert!(system.contains("default_model=gemma4:12b"));
         assert!(system.contains("compatibility_model=gemma3:4b"));
-        assert!(system.contains("fallback_chain=gemma4:12b,gemma3:4b"));
+        assert!(system.contains("fallback_chain=gemma4:12b"));
+        assert!(system.contains(
+            "compatibility_tail_status=high_entropy_texture_guard_removed_compatibility_tail"
+        ));
+        assert!(system.contains(
+            "texture_integrity_review=high_entropy_route_prefers_capable_default_before_compatibility_tail"
+        ));
         assert!(system.contains("complexity_collapse_risk=lower_capacity_risk"));
         assert!(system.contains("Never write the token `NEXT:` anywhere except the final line"));
     }
@@ -12492,25 +12804,27 @@ mod tests {
         GEMMA4_CANARY_DIALOGUE_PROMPT_BUDGET, GEMMA4_CANARY_INTROSPECT_DEEP_TIMEOUT_SECS,
         GEMMA4_CANARY_INTROSPECT_NORMAL_TOKENS, GEMMA4_CANARY_INTROSPECT_PROMPT_CAP,
         GEMMA4_CANARY_INTROSPECT_TIMEOUT_SECS, GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS,
-        GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP, GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP,
-        GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS, GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP,
-        GEMMA4_CANARY_SYSTEM_PROMPT, GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP,
-        GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS, GEMMA4_CANARY_WITNESS_PROMPT_CAP,
-        GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message, MlxProfile, SYSTEM_PROMPT,
-        apply_mlx_request_policy, build_ollama_chat_request, clamp_dialogue_tokens_for_profile,
-        compact_ollama_dialogue_fallback_messages, contains_deprecated_runtime_language,
-        count_next_lines, dialogue_assembly_prompt_budget_chars_for_profile,
-        dialogue_outer_timeout_secs, dialogue_system_prompt_for_profile, dialogue_turn_instruction,
+        GEMMA4_CANARY_MEANING_SUMMARY_TOKEN_CAP, GEMMA4_CANARY_REFLECTIVE_PROMPT_CAP,
+        GEMMA4_CANARY_REFLECTIVE_TEMPERATURE_CAP, GEMMA4_CANARY_REFLECTIVE_TIMEOUT_SECS,
+        GEMMA4_CANARY_REFLECTIVE_TOKEN_CAP, GEMMA4_CANARY_SYSTEM_PROMPT,
+        GEMMA4_CANARY_WITNESS_CONTEXT_PROMPT_CAP, GEMMA4_CANARY_WITNESS_CONTEXT_TIMEOUT_SECS,
+        GEMMA4_CANARY_WITNESS_PROMPT_CAP, GEMMA4_CANARY_WITNESS_TIMEOUT_SECS, Message, MlxProfile,
+        SYSTEM_PROMPT, apply_mlx_request_policy, build_ollama_chat_request,
+        clamp_dialogue_tokens_for_profile, compact_ollama_dialogue_fallback_messages,
+        contains_deprecated_runtime_language, count_next_lines,
+        dialogue_assembly_prompt_budget_chars_for_profile, dialogue_outer_timeout_secs,
+        dialogue_system_prompt_for_profile, dialogue_turn_instruction,
         estimate_dialogue_prompt_pressure_chars, fallback_continuity_budget_v1,
         fallback_mlx_profile_transparency_v1, fallback_prose_sentence_count,
         format_dialogue_ambient_perception_block, format_dialogue_direct_perception_block,
         format_dialogue_topline_context, is_valid_dialogue_output,
         is_valid_dialogue_output_for_profile, is_valid_ollama_dialogue_fallback_output_for_budget,
         is_valid_ollama_dialogue_fallback_output_for_profile, journal_continuity_contract_v1,
-        reinforce_ollama_fallback_contract, repair_ollama_dialogue_fallback_next,
-        sanitize_deprecated_runtime_language, sanitize_gemma4_canary_output_for_label,
-        sanitize_minime_context_for_dialogue, split_dialogue_perception_context,
-        strip_model_artifacts, temperature_for_mlx_profile,
+        local_degrade_path_for_label, reinforce_ollama_fallback_contract,
+        repair_ollama_dialogue_fallback_next, sanitize_deprecated_runtime_language,
+        sanitize_gemma4_canary_output_for_label, sanitize_minime_context_for_dialogue,
+        split_dialogue_perception_context, strip_model_artifacts, temperature_for_mlx_profile,
+        uses_ollama_fallback_for_label,
     };
 
     #[test]
@@ -13834,7 +14148,7 @@ mod tests {
     }
 
     #[test]
-    fn gemma4_canary_meaning_summary_policy_extends_timeout() {
+    fn mlx_shared_hardening_meaning_summary_policy_uses_optional_budget() {
         let messages = vec![
             Message {
                 role: "system".to_string(),
@@ -13857,12 +14171,27 @@ mod tests {
             .diagnostic
             .expect("Gemma 4 profile policy should emit diagnostics");
 
-        assert_eq!(policy.max_tokens, 192);
+        assert_eq!(policy.max_tokens, GEMMA4_CANARY_MEANING_SUMMARY_TOKEN_CAP);
         assert_eq!(
             policy.timeout_secs,
             GEMMA4_CANARY_MEANING_SUMMARY_TIMEOUT_SECS
         );
         assert!(!diagnostic.trimmed);
+    }
+
+    #[test]
+    fn mlx_shared_hardening_optional_labels_skip_ollama_fallback() {
+        assert!(!uses_ollama_fallback_for_label("meaning_summary"));
+        assert!(!uses_ollama_fallback_for_label("introspect"));
+        assert!(uses_ollama_fallback_for_label("dialogue_live"));
+        assert_eq!(
+            local_degrade_path_for_label("meaning_summary"),
+            "deterministic_meaning_summary"
+        );
+        assert_eq!(
+            local_degrade_path_for_label("introspect"),
+            "protected_introspection_notice"
+        );
     }
 
     #[test]

@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Existing ExperienceDeltaKindV1 entries for friction, resistance, viscosity, and structural solidification already acknowledge much of Astrid's felt transition vocabulary.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "A discrete delta enum can flatten holistic permeability or posture into subtle/micro shift labels, so boundary porosity/transmission needs a first-class read-only name.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Retuning solidification-gradient persistence or viscosity weights could create a brittle mask for watercolor/permeable imagery and must remain replay- and approval-gated.",
+      "disposition": "addressed_no_action"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Permeability should be distinct from viscosity thickness because it concerns boundary porosity and transmission, not just density or drag.",
+      "disposition": "addressed_change"
+    }
+  ]
+}

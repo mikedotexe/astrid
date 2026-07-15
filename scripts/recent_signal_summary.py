@@ -52,6 +52,7 @@ CONTEXT_PACKING_PRESSURE = ASTRID_DIAGNOSTICS / "context_packing_pressure_v1.jso
 CODEC_REPLAY_LABS = ASTRID_DIAGNOSTICS / "codec_replay_labs"
 INTROSPECTION_ADDRESSING_STATE_DIR = ASTRID_DIAGNOSTICS / "introspection_addressing_v1"
 SANDBOX_TRIAL_QUEUE_STATE_DIR = ASTRID_DIAGNOSTICS / "sandbox_trial_queue_v1"
+AUTHORITY_WAIT_READINESS_STATE_DIR = ASTRID_DIAGNOSTICS / "authority_wait_readiness_v1"
 AGENCY_CORRIDOR_STATE_DIR = ASTRID_DIAGNOSTICS / "agency_corridor_v1"
 AGENCY_CORRIDOR_V2_STATE_DIR = ASTRID_DIAGNOSTICS / "agency_corridor_v2"
 BRIDGE_LOG = Path("/tmp/bridge.log")
@@ -6209,6 +6210,8 @@ def _feedback_flywheel_summary(since_s: float) -> dict[str, Any]:
         "diagnostic_unavailable",
     }:
         status = "database_needs_review"
+    elif report_status == "counter_audit_mismatch":
+        status = "counter_audit_needs_review"
     elif int(work_summary.get("tier_mismatch_count") or 0) > 0:
         status = "tier_mismatch_needs_review"
     elif int(work_summary.get("grant_waiting_count") or 0) > 0:
@@ -6222,6 +6225,8 @@ def _feedback_flywheel_summary(since_s: float) -> dict[str, Any]:
     next_suggestions: list[str] = []
     if status == "database_needs_review":
         next_suggestions.append("repair or initialize introspection_addressing_v1 before deriving agency work")
+    if status == "counter_audit_needs_review":
+        next_suggestions.append("run `python3 scripts/introspection_addressing_audit.py audit-counters --json` and refresh inventory before trusting backlog counts")
     if int(work_summary.get("tier_mismatch_count") or 0) > 0:
         next_suggestions.append("raise or review any live-control work item categorized below Tier 5")
     if int(work_summary.get("grant_waiting_count") or 0) > 0:
@@ -6242,6 +6247,7 @@ def _feedback_flywheel_summary(since_s: float) -> dict[str, Any]:
         "introspection_addressing": {
             "status": report_status,
             "summary": report.get("summary") or {},
+            "counter_audit": report.get("counter_audit") or {},
         },
         "work_item_summary": work_summary,
         "next_reading_queue": report.get("next_queue") or [],
@@ -6313,6 +6319,48 @@ def _sandbox_trial_queue_summary(
         "next_suggestions": next_suggestions,
         "authority_boundary": report.get("authority_boundary")
         or "read-only sandbox trial queue summary; no live runtime mutation",
+    }
+
+
+def _authority_wait_readiness_summary() -> dict[str, Any]:
+    try:
+        import authority_wait_readiness
+    except Exception as exc:
+        return {
+            "schema": "authority_wait_readiness_v1",
+            "status": "diagnostic_unavailable",
+            "error": str(exc),
+            "authority_boundary": "authority wait readiness diagnostic unavailable; no approval, live runtime, source edit, deploy, staging, or commit action",
+        }
+    report = authority_wait_readiness.build_report(
+        AUTHORITY_WAIT_READINESS_STATE_DIR,
+        SANDBOX_TRIAL_QUEUE_STATE_DIR,
+    )
+    domains = report.get("domains") if isinstance(report.get("domains"), list) else []
+    active_domains = [
+        domain
+        for domain in domains
+        if isinstance(domain, dict) and int(domain.get("candidate_count") or 0) > 0
+    ]
+    active_domains.sort(
+        key=lambda domain: (
+            -int(domain.get("candidate_count") or 0),
+            str(domain.get("domain_id") or ""),
+        )
+    )
+    return {
+        "schema": "authority_wait_readiness_v1",
+        "status": report.get("status"),
+        "summary": report.get("summary") or {},
+        "active_domains": active_domains[:8],
+        "hard_violations": report.get("hard_violations") or [],
+        "unclassified_live_waits": report.get("unclassified_live_waits") or [],
+        "live_eligible_now": False,
+        "auto_approved": False,
+        "grants_approval": False,
+        "edits_source_now": False,
+        "authority_boundary": report.get("authority_boundary")
+        or "read-only authority wait readiness summary; no live runtime mutation",
     }
 
 
@@ -6442,6 +6490,7 @@ def build_summary(since_hours: float = 24.0) -> dict[str, Any]:
     sandbox_trial_queue = _sandbox_trial_queue_summary(
         reservoir_experience_layer=reservoir_experience_layer,
     )
+    authority_wait_readiness = _authority_wait_readiness_summary()
     agency_corridor = _agency_corridor_summary()
 
     return {
@@ -6494,6 +6543,7 @@ def build_summary(since_hours: float = 24.0) -> dict[str, Any]:
             "sensory_presence_uptake": sensory_presence_uptake,
             "introspection_addressing": introspection_addressing,
             "feedback_flywheel": feedback_flywheel,
+            "authority_wait_readiness": authority_wait_readiness,
             "agency_corridor": agency_corridor,
             "sandbox_trial_queue": sandbox_trial_queue,
             "sensory_runtime_health": _sensory_runtime_summary(now),
@@ -6957,6 +7007,33 @@ def render_markdown(summary: dict[str, Any]) -> str:
             suggestions = signal.get("next_suggestions") or []
             out.append("- next_suggestions: " + ("; ".join(suggestions) or "none"))
             out.append(f"- boundary: {signal.get('authority_boundary')}")
+        elif name == "authority_wait_readiness":
+            out.append(f"- status: {signal.get('status')}")
+            readiness_summary = signal.get("summary") or {}
+            out.append(
+                "- waits: "
+                + f"approval_required={readiness_summary.get('approval_required_live_candidates', 0)} "
+                + f"domains={readiness_summary.get('domains_with_candidates', 0)} "
+                + f"hard_violations={readiness_summary.get('hard_violation_count', 0)} "
+                + f"unclassified={readiness_summary.get('unclassified_live_wait_count', 0)}"
+            )
+            out.append(
+                "- guard_flags: "
+                + f"live_eligible_now={signal.get('live_eligible_now')} "
+                + f"auto_approved={signal.get('auto_approved')} "
+                + f"grants_approval={signal.get('grants_approval')} "
+                + f"edits_source_now={signal.get('edits_source_now')}"
+            )
+            for domain in signal.get("active_domains") or []:
+                out.append(
+                    f"- authority_domain: {domain.get('domain_id')} "
+                    f"candidates={domain.get('candidate_count', 0)} "
+                    f"state={domain.get('readiness_state')} "
+                    f"next={domain.get('recommended_next_non_live_action')}"
+                )
+            suggestions = readiness_summary.get("next_suggestions") or []
+            out.append("- next_suggestions: " + ("; ".join(suggestions) or "none"))
+            out.append(f"- boundary: {signal.get('authority_boundary')}")
         elif name == "agency_corridor":
             out.append(f"- status: {signal.get('status')}")
             corridor_summary = signal.get("summary") or {}
@@ -7044,11 +7121,11 @@ class RecentSignalSummaryTests(unittest.TestCase):
                 status = {
                     "schema": "introspection_addressing_v1",
                     "summary": {
-                        "total_indexed": 2,
+                        "total_indexed": 1,
                         "canonical_indexed": 1,
                         "full_read_count": 0,
                         "fully_addressed_count": 0,
-                        "pending_count": 2,
+                        "pending_count": 1,
                         "blocked_count": 0,
                         "corrupt_event_lines": 0,
                         "top_source_families": [{"source_family": "astrid_llm", "count": 1}],
@@ -7215,6 +7292,68 @@ class RecentSignalSummaryTests(unittest.TestCase):
         self.assertEqual(closure_loop["summary"]["proposal_card_needed_count"], 1)
         self.assertEqual(closure_loop["summary"]["ready_runner_waiting_count"], 1)
         self.assertEqual(summary["linked_reservoir_findings"], ["fresh reservoir finding"])
+
+    def test_authority_wait_readiness_summary_groups_live_waits(self) -> None:
+        import tempfile
+
+        global SANDBOX_TRIAL_QUEUE_STATE_DIR, AUTHORITY_WAIT_READINESS_STATE_DIR
+        old_sandbox_dir = SANDBOX_TRIAL_QUEUE_STATE_DIR
+        old_readiness_dir = AUTHORITY_WAIT_READINESS_STATE_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                SANDBOX_TRIAL_QUEUE_STATE_DIR = root / "sandbox"
+                AUTHORITY_WAIT_READINESS_STATE_DIR = root / "readiness"
+                SANDBOX_TRIAL_QUEUE_STATE_DIR.mkdir()
+                status = {
+                    "schema": "sandbox_trial_queue_v1",
+                    "schema_version": 1,
+                    "trials": {
+                        "trial_pressure": {
+                            "trial_id": "trial_pressure",
+                            "adapter": "manual_sandbox_review_v1",
+                            "trial_mode": "approval_required_live_trial",
+                            "status": "approval_required_live_trial",
+                            "runnable": False,
+                            "agency_tier": 5,
+                            "being": "astrid",
+                            "felt_report_anchor": "pressure threshold smoothing would change live mode-packing behavior",
+                            "authority_boundary_packet_v2": {
+                                "boundary_id": "boundary-pressure",
+                                "evidence_refs": ["wi_pressure"],
+                                "live_eligible_now": False,
+                                "auto_approved": False,
+                            },
+                        }
+                    },
+                    "corrupt_event_lines": 0,
+                }
+                (SANDBOX_TRIAL_QUEUE_STATE_DIR / "status.json").write_text(
+                    json.dumps(status),
+                    encoding="utf-8",
+                )
+                summary = _authority_wait_readiness_summary()
+        finally:
+            SANDBOX_TRIAL_QUEUE_STATE_DIR = old_sandbox_dir
+            AUTHORITY_WAIT_READINESS_STATE_DIR = old_readiness_dir
+
+        self.assertEqual(summary["status"], "approval_waits_mapped")
+        self.assertFalse(summary["live_eligible_now"])
+        self.assertFalse(summary["auto_approved"])
+        self.assertFalse(summary["grants_approval"])
+        self.assertFalse(summary["edits_source_now"])
+        self.assertEqual(summary["summary"]["approval_required_live_candidates"], 1)
+        self.assertEqual(summary["active_domains"][0]["domain_id"], "pressure_thresholds")
+        markdown = render_markdown(
+            {
+                "window_hours": 1,
+                "generated_at": "test",
+                "authority_boundary": "test",
+                "signals": {"authority_wait_readiness": summary},
+            }
+        )
+        self.assertIn("authority_domain: pressure_thresholds", markdown)
+        self.assertIn("live_eligible_now=False", markdown)
 
     def test_context_packing_pressure_summary_counts_recent_trimmed_labels(self) -> None:
         import tempfile

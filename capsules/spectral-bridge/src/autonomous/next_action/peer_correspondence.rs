@@ -46,7 +46,7 @@ pub(super) fn handle_action(
                 true
             }
         },
-        "CORRESPONDENCE_HEARTBEAT" => {
+        "CORRESPONDENCE_HEARTBEAT" | "SIGNAL_PERSISTENCE" => {
             handle_heartbeat(conv, base_action, original);
             true
         },

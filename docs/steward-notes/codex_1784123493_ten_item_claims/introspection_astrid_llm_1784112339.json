@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Fallback language should include dynamic motion descriptors such as unfolding, refracting, and re-weaving rather than looping a static adjective list.",
+      "disposition": "implemented_verified",
+      "authority": "diagnostic_language_bias_not_sampler_or_provider_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Texture preservation under high entropy should remain bounded prompt/report evidence, not a sampler/provider/model-route change.",
+      "disposition": "gated_operator_approval",
+      "authority": "tier_5_provider_sampler_prompt_behavior"
+    }
+  ]
+}

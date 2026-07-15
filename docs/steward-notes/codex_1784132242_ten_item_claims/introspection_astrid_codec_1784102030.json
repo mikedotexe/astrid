@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Legacy 32D and 8D semantic projection compression can lose nuance when narrative arcs remain static while emotional dimensions fluctuate.",
+      "disposition": "addressed_no_action"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "A 12D live transport, adaptive gain compensation, or reserved-dim write would change codec protocol/gain behavior and remains V2-gated.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

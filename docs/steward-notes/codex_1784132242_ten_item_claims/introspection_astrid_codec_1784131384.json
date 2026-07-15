@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 4D narrative arc can bottleneck high-entropy narrative motion, and static entropy thresholds can misread dense repetition as stagnation.",
+      "disposition": "addressed_no_action"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Increasing narrative arc width or making entropy weighting live-adaptive would change codec transport/gain behavior and remains approval-gated.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

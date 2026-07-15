@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Mirror, Dialogue, and Witness are Astrid's agency entry points, with Witness translating spectral state into lived description rather than mere health monitoring.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Witness mode risks a translation gap when raw metrics overpower felt texture such as viscosity, density, or spatial openness.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "A local RECOGNITION_TEXTURE_VS_METRIC experiment should be possible with raw numeric values hidden while qualitative texture labels remain available.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "TRACE-style correspondence observation during Mirror cycles remains a non-live observation candidate rather than a live control or peer-mutation change.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

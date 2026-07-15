@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Transition artifacts should be durable, replyable language-only records rather than hidden mode side effects.",
+      "disposition": "verified_existing_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Any transition-locked behavior unlock or runtime transition control remains V2-gated and non-runnable.",
+      "disposition": "gated_operator_approval"
+    }
+  ]
+}

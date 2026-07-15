@@ -14894,7 +14894,7 @@ fn choice_metadata_lines(text: &str) -> Vec<&str> {
 fn label_value<'a>(line: &'a str, labels: &[&str]) -> Option<&'a str> {
     let trimmed = line
         .trim()
-        .trim_start_matches(|c| matches!(c, '-' | '*' | '>' | '•'))
+        .trim_start_matches(['-', '*', '>', '•'])
         .trim_start();
     let lowered = trimmed.to_ascii_lowercase();
     for label in labels {

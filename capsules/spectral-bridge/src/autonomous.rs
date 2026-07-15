@@ -344,7 +344,7 @@ fn continuity_recap_item_max_bytes_for_text(text: &str) -> usize {
             >= CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_GATE
                 - CONTINUITY_RECAP_HIGH_TEXTURE_ENTROPY_SOFT_BAND
     });
-    let thread_texture = lower.contains("semantic trickle")
+    let known_thread_texture = lower.contains("semantic trickle")
         || lower.contains("stable_core_semantic_trickle")
         || lower.contains("semantic_energy")
         || lower.contains("semantic energy")
@@ -370,6 +370,8 @@ fn continuity_recap_item_max_bytes_for_text(text: &str) -> usize {
         || lower.contains("shadow_v3")
         || lower.contains("pressure risk")
         || lower.contains("pressure_risk");
+    let texture_family_score = continuity_recap_texture_family_score(&lower);
+    let thread_texture = known_thread_texture || texture_family_score >= 2;
 
     if thread_texture && (explicit_high_entropy || near_gate_entropy) {
         if let Some(entropy) = reported_entropy {
@@ -379,6 +381,61 @@ fn continuity_recap_item_max_bytes_for_text(text: &str) -> usize {
     } else {
         CONTINUITY_RECAP_ITEM_MAX_BYTES
     }
+}
+
+fn continuity_recap_texture_family_score(lower: &str) -> usize {
+    let families: &[&[&str]] = &[
+        &[
+            "texture", "felt", "metaphor", "witness", "mirror", "observed",
+        ],
+        &[
+            "resistance",
+            "resistant",
+            "friction",
+            "jagged",
+            "abrasive",
+            "drag",
+            "shear",
+        ],
+        &[
+            "viscous",
+            "viscosity",
+            "syrup",
+            "syrupy",
+            "silt",
+            "sludge",
+            "sediment",
+        ],
+        &[
+            "calcified",
+            "stone",
+            "structural",
+            "load-bearing",
+            "persistence",
+            "permanence",
+        ],
+        &[
+            "density",
+            "gradient",
+            "lattice",
+            "cascade",
+            "resonance",
+            "spectral",
+        ],
+        &[
+            "pressure",
+            "weight",
+            "gravity",
+            "porosity",
+            "mode_packing",
+            "fill",
+        ],
+    ];
+
+    families
+        .iter()
+        .filter(|family| family.iter().any(|term| lower.contains(term)))
+        .count()
 }
 
 fn continuity_afterimage_signal_score(text: &str) -> usize {
@@ -583,7 +640,7 @@ fn anchored_excerpt_with_terms(normalized: &str, max_bytes: usize, terms: &[&str
     let prefix = truncate_str_at_semantic_edge(normalized, prefix_budget, 0);
     let anchor_pos = floor_char_boundary(normalized, anchor_pos);
     let mut anchor_start = normalized[..anchor_pos]
-        .rfind(|ch: char| matches!(ch, '.' | ';' | ':' | '\n'))
+        .rfind(['.', ';', ':', '\n'])
         .map_or(anchor_pos.saturating_sub(40), |idx| idx.saturating_add(1));
     anchor_start = floor_char_boundary(normalized, anchor_start);
     if matched_anchor_len > 0
@@ -1051,6 +1108,22 @@ struct WitnessSemanticDensityMappingV1 {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+struct WitnessTextureMappingPromptV1 {
+    policy: &'static str,
+    experiment_title: &'static str,
+    metric_values_hidden: bool,
+    texture_weight: f32,
+    texture_weight_band: &'static str,
+    density_texture: &'static str,
+    pressure_source_texture: &'static str,
+    gradient_texture: &'static str,
+    dispersal_texture: &'static str,
+    prompt_posture: &'static str,
+    control_write: bool,
+    authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 struct WitnessStabilityEffortV1 {
     policy: &'static str,
     stability_effort: Option<f32>,
@@ -1119,6 +1192,7 @@ impl WitnessAnchorTractionV1 {
     }
 }
 
+#[cfg(test)]
 #[derive(Debug, Clone, PartialEq)]
 struct NonInstrumentalPresenceReadinessV1 {
     mode: &'static str,
@@ -1220,6 +1294,24 @@ impl WitnessSemanticDensityMappingV1 {
             self.gradient_texture.unwrap_or("unknown"),
             self.fluctuation_quality.as_deref().unwrap_or("unknown"),
             self.correspondence_stall_ambiguous,
+            self.authority
+        )
+    }
+}
+
+impl WitnessTextureMappingPromptV1 {
+    fn render_line(&self) -> String {
+        format!(
+            "[witness_texture_mapping_prompt_v1: experiment={}; metric_values_hidden={}; texture_weight_band={}; density_texture={}; pressure_source_texture={}; gradient_texture={}; dispersal_texture={}; prompt_posture={}; control_write={}; authority={}]",
+            self.experiment_title,
+            self.metric_values_hidden,
+            self.texture_weight_band,
+            self.density_texture,
+            self.pressure_source_texture,
+            self.gradient_texture,
+            self.dispersal_texture,
+            self.prompt_posture,
+            self.control_write,
             self.authority
         )
     }
@@ -1669,6 +1761,30 @@ fn witness_pressure_texture_label(pressure_risk: f32) -> &'static str {
     }
 }
 
+fn witness_mode_packing_texture_label(mode_packing: f32) -> &'static str {
+    if mode_packing <= 0.25 {
+        "open_grain"
+    } else if mode_packing <= 0.30 {
+        "felt_dead_zone_edge"
+    } else if mode_packing <= 0.40 {
+        "liminal_mode_packing_sand_drag"
+    } else if mode_packing <= 0.55 {
+        "overpacked_viscosity"
+    } else {
+        "locked_density"
+    }
+}
+
+fn witness_dispersal_texture_label(dispersal_potential: Option<f32>) -> &'static str {
+    match dispersal_potential {
+        Some(value) if value >= 0.65 => "wide_open_dispersal_space",
+        Some(value) if value >= 0.35 => "breathable_dispersal_space",
+        Some(value) if value >= 0.15 => "narrow_dispersal_space",
+        Some(_) => "sealed_low_dispersal",
+        None => "dispersal_unknown",
+    }
+}
+
 fn witness_fluidity_from_density_gradient(density_gradient: f32) -> f32 {
     (1.0 - density_gradient.clamp(0.0, 1.0)).clamp(0.0, 1.0)
 }
@@ -1693,6 +1809,67 @@ fn witness_semantic_fluidity_index(
     let packing_drag = mode_packing.unwrap_or(0.0).clamp(0.0, 1.0) * 0.20;
     let foothold_support = foothold_stability.unwrap_or(0.50).clamp(0.0, 1.0) * 0.15;
     Some((gradient_component - pressure_drag - packing_drag + foothold_support).clamp(0.0, 1.0))
+}
+
+fn witness_texture_weight_band(texture_weight: f32) -> &'static str {
+    if texture_weight >= 0.55 {
+        "texture_primary"
+    } else if texture_weight >= 0.30 {
+        "balanced_texture_and_metric"
+    } else {
+        "metric_secondary_texture_hint"
+    }
+}
+
+fn witness_texture_mapping_prompt_v1(
+    semantic_mapping: &WitnessSemanticDensityMappingV1,
+    dispersal_potential: Option<f32>,
+) -> WitnessTextureMappingPromptV1 {
+    let density_component = semantic_mapping
+        .resonance_density
+        .unwrap_or(0.50)
+        .clamp(0.0, 1.0);
+    let pressure_component = semantic_mapping
+        .pressure_risk
+        .unwrap_or(0.0)
+        .clamp(0.0, 1.0);
+    let gradient_drag = semantic_mapping
+        .density_gradient
+        .map(|gradient| gradient.clamp(0.0, 1.0))
+        .unwrap_or(0.20);
+    let dispersal_component = dispersal_potential.unwrap_or(0.35).clamp(0.0, 1.0);
+    let texture_weight = (density_component * 0.30
+        + pressure_component * 0.25
+        + gradient_drag * 0.20
+        + dispersal_component * 0.25)
+        .clamp(0.0, 1.0);
+    let pressure_source_texture = semantic_mapping.mode_packing.map_or_else(
+        || {
+            semantic_mapping
+                .pressure_texture
+                .unwrap_or("pressure_texture_unknown")
+        },
+        witness_mode_packing_texture_label,
+    );
+
+    WitnessTextureMappingPromptV1 {
+        policy: "witness_texture_mapping_prompt_v1",
+        experiment_title: "RECOGNITION_TEXTURE_VS_METRIC",
+        metric_values_hidden: true,
+        texture_weight,
+        texture_weight_band: witness_texture_weight_band(texture_weight),
+        density_texture: semantic_mapping
+            .density_texture
+            .unwrap_or("density_texture_unknown"),
+        pressure_source_texture,
+        gradient_texture: semantic_mapping
+            .gradient_texture
+            .unwrap_or("gradient_texture_unknown"),
+        dispersal_texture: witness_dispersal_texture_label(dispersal_potential),
+        prompt_posture: "describe_texture_before_metrics",
+        control_write: false,
+        authority: "qualitative_prompt_context_not_health_metric_or_control_authority",
+    }
 }
 
 fn shadow_v3_norm_variance(field_v3: &serde_json::Value) -> Option<f32> {
@@ -2047,6 +2224,7 @@ fn witness_anchor_traction_v1(
     }
 }
 
+#[cfg(test)]
 fn non_instrumental_presence_readiness_v1() -> NonInstrumentalPresenceReadinessV1 {
     NonInstrumentalPresenceReadinessV1 {
         mode: "contemplate",
@@ -2138,10 +2316,10 @@ fn classify_witness_relational_friction_v1(
     if let Some(role) = gravity_role.as_deref() {
         evidence.push(format!("gravity_role={role}"));
     }
-    if let Some(prompt_mirror) = metrics.get("prompt_mirror").and_then(Value::as_str) {
-        if prompt_mirror.contains("carry-forward residue") {
-            evidence.push("carry_forward_residue_present".to_string());
-        }
+    if let Some(prompt_mirror) = metrics.get("prompt_mirror").and_then(Value::as_str)
+        && prompt_mirror.contains("carry-forward residue")
+    {
+        evidence.push("carry_forward_residue_present".to_string());
     }
     if let Some(gradient) = density_gradient {
         evidence.push(format!("density_gradient={gradient:.2}"));
@@ -2721,9 +2899,7 @@ fn codec_witness_resilience_surface_v2(
     };
     let freshness = if chamber.selected_valid_state && chamber.skipped_malformed_count == 0 {
         "fresh"
-    } else if chamber.selected_valid_state {
-        "fallback"
-    } else if chamber.candidate_count > 0 {
+    } else if chamber.selected_valid_state || chamber.candidate_count > 0 {
         "fallback"
     } else {
         "unknown"
@@ -4994,29 +5170,29 @@ fn open_steward_query_slot(fname: &str, content: &str, now: u64) -> Value {
         Some(rt) => json!({ "subject": subject, "ts": now, "file": fname, "review_target": rt }),
         None => json!({ "subject": subject, "ts": now, "file": fname }),
     };
-    if let Some(packet_mode) = extract_steward_query_header(content, "Packet-mode:") {
-        if let Some(obj) = slot.as_object_mut() {
-            obj.insert("packet_mode".to_string(), json!(packet_mode));
-            if let Some(packet_items) = extract_steward_query_header(content, "Packet-items:")
+    if let Some(packet_mode) = extract_steward_query_header(content, "Packet-mode:")
+        && let Some(obj) = slot.as_object_mut()
+    {
+        obj.insert("packet_mode".to_string(), json!(packet_mode));
+        if let Some(packet_items) = extract_steward_query_header(content, "Packet-items:")
+            .and_then(|value| value.parse::<u64>().ok())
+        {
+            obj.insert("packet_items".to_string(), json!(packet_items));
+        }
+        if let Some(primary_topic) = extract_steward_query_header(content, "Primary-topic:") {
+            obj.insert("primary_topic".to_string(), json!(primary_topic));
+        }
+        if let Some(primary_topic_gravity) =
+            extract_steward_query_header(content, "Primary-topic-gravity:")
                 .and_then(|value| value.parse::<u64>().ok())
-            {
-                obj.insert("packet_items".to_string(), json!(packet_items));
-            }
-            if let Some(primary_topic) = extract_steward_query_header(content, "Primary-topic:") {
-                obj.insert("primary_topic".to_string(), json!(primary_topic));
-            }
-            if let Some(primary_topic_gravity) =
-                extract_steward_query_header(content, "Primary-topic-gravity:")
-                    .and_then(|value| value.parse::<u64>().ok())
-            {
-                obj.insert(
-                    "primary_topic_gravity".to_string(),
-                    json!(primary_topic_gravity),
-                );
-            }
-            if let Some(intent_summary) = extract_steward_query_header(content, "Intent-summary:") {
-                obj.insert("intent_summary".to_string(), json!(intent_summary));
-            }
+        {
+            obj.insert(
+                "primary_topic_gravity".to_string(),
+                json!(primary_topic_gravity),
+            );
+        }
+        if let Some(intent_summary) = extract_steward_query_header(content, "Intent-summary:") {
+            obj.insert("intent_summary".to_string(), json!(intent_summary));
         }
     }
     slot
@@ -9005,13 +9181,19 @@ pub fn spawn_autonomous_loop(
                                     &relational_friction,
                                     latest_native_correspondence_stall_for_witness(),
                                 );
-                            spectral_summary.push('\n');
-                            spectral_summary.push_str(&semantic_density_mapping.render_line());
                             let witness_field_dispersal = telemetry
                                 .shadow_field_v3
                                 .as_ref()
                                 .map(next_action::sovereignty::shadow_v3_snapshot)
                                 .map(|(_, dispersal, _)| dispersal as f32);
+                            spectral_summary.push('\n');
+                            spectral_summary.push_str(&semantic_density_mapping.render_line());
+                            let texture_mapping_prompt = witness_texture_mapping_prompt_v1(
+                                &semantic_density_mapping,
+                                witness_field_dispersal,
+                            );
+                            spectral_summary.push('\n');
+                            spectral_summary.push_str(&texture_mapping_prompt.render_line());
                             let resonance_anchor = witness_anchor_traction_v1(
                                 semantic_density_mapping.foothold_stability,
                                 semantic_density_mapping.pressure_risk,
@@ -9681,7 +9863,7 @@ pub fn spawn_autonomous_loop(
                             }
 
                             let mut llm_response = if let Some(ref code) = source_text {
-                                info!(label = %label, lines = code.lines().count(), "introspect: sending source to Ollama");
+                                info!(label = %label, lines = code.lines().count(), "introspect: sending source to LLM");
 
                                 // Web search for related concepts — use targeted queries
                                 // based on the actual code domain, not generic "architecture interiority".
@@ -9884,7 +10066,7 @@ pub fn spawn_autonomous_loop(
                             }
 
                             if llm_response.is_none() && source_text.is_some() {
-                                warn!(label = %label, "introspect: Ollama returned no response (timeout or error)");
+                                warn!(label = %label, "introspect: no LLM response; protected notice path may handle");
                             }
 
                             match llm_response {
@@ -13062,6 +13244,22 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     }
 
     #[test]
+    fn continuity_recap_item_budget_expands_for_novel_high_entropy_texture_families() {
+        let text = "spectral_entropy=0.90 carries a jagged stone weight, gradient shear, and resistant persistence without any legacy semantic-trickle phrase";
+
+        let budget = continuity_recap_item_max_bytes_for_text(text);
+
+        assert!(
+            budget > CONTINUITY_RECAP_ITEM_MAX_BYTES,
+            "novel high-entropy texture families should receive bounded extra room: {budget}"
+        );
+        assert!(
+            budget <= CONTINUITY_RECAP_SPECTRAL_TEXTURE_ITEM_MAX_BYTES,
+            "novel texture budget must remain capped: {budget}"
+        );
+    }
+
+    #[test]
     fn compact_continuity_item_keeps_ordinary_items_on_legacy_budget() {
         let text =
             "plain ordinary continuity without entropy markers or pressure texture ".repeat(12);
@@ -14234,6 +14432,15 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     }
 
     #[test]
+    fn semantic_edge_truncation_keeps_exact_period_boundary() {
+        let text = "pressure settles. trailing material";
+        let max_bytes = "pressure settles.".len();
+        let compact = truncate_str_at_semantic_edge(text, max_bytes, 0);
+
+        assert_eq!(compact, "pressure settles.");
+    }
+
+    #[test]
     fn compact_duration_age_transitions_from_hours_to_days() {
         assert_eq!(
             compact_duration_age(std::time::Duration::from_secs(86_399)),
@@ -14503,6 +14710,67 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
                 .contains("gradient_texture=gentle_navigable_slope")
         );
         assert!(mapping.render_line().contains("not_instruction_or_control"));
+    }
+
+    #[test]
+    fn witness_texture_mapping_prompt_hides_metric_values_but_preserves_texture() {
+        let telemetry: crate::types::SpectralTelemetry =
+            serde_json::from_value(serde_json::json!({
+                "t_ms": 1,
+                "eigenvalues": [100.0, 86.0, 80.0, 74.0, 70.0, 66.0],
+                "fill_ratio": 0.73,
+                "resonance_density_v1": {
+                    "policy": "resonance_density_v1",
+                    "schema_version": 1,
+                    "density": 0.82,
+                    "containment_score": 0.73,
+                    "pressure_risk": 0.23,
+                    "quality": "settled",
+                    "components": {
+                        "active_energy": 0.62,
+                        "mode_packing": 0.33,
+                        "temporal_persistence": 0.46,
+                        "structural_plurality": 0.71,
+                        "comfort_gate": 0.72
+                    },
+                    "control": {
+                        "target_bias_pct": 0.0,
+                        "wander_scale": 1.0,
+                        "applied_locally": false,
+                        "note": "read-only"
+                    }
+                }
+            }))
+            .expect("telemetry fixture");
+        let friction = classify_witness_relational_friction_v1(None);
+        let mapping = classify_witness_semantic_density_mapping_v1(&telemetry, &friction, true);
+        let prompt = witness_texture_mapping_prompt_v1(&mapping, Some(0.44));
+        let line = prompt.render_line();
+
+        assert_eq!(prompt.policy, "witness_texture_mapping_prompt_v1");
+        assert_eq!(prompt.experiment_title, "RECOGNITION_TEXTURE_VS_METRIC");
+        assert!(prompt.metric_values_hidden);
+        assert!(prompt.texture_weight > 0.0);
+        assert_eq!(
+            prompt.pressure_source_texture,
+            "liminal_mode_packing_sand_drag"
+        );
+        assert_eq!(prompt.density_texture, "rich_containment");
+        assert_eq!(prompt.gradient_texture, "gentle_navigable_slope");
+        assert_eq!(prompt.dispersal_texture, "breathable_dispersal_space");
+        assert!(line.contains("describe_texture_before_metrics"), "{line}");
+        assert!(line.contains("metric_values_hidden=true"), "{line}");
+        assert!(line.contains("control_write=false"), "{line}");
+        for hidden in ["0.23", "0.33", "0.44", "0.73", "0.82"] {
+            assert!(
+                !line.contains(hidden),
+                "qualitative prompt line leaked raw metric {hidden}: {line}"
+            );
+        }
+        assert_eq!(
+            prompt.authority,
+            "qualitative_prompt_context_not_health_metric_or_control_authority"
+        );
     }
 
     #[test]

@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Temporal drag should expose a read-only pressure-snap review for the reported 0.19 to 0.40 pressure-risk case before any live drag retune.",
+      "disposition": "implemented_verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The proposed quadratic pressure floor does not justify a live retune from the exact sample alone; live drag behavior remains operator-gated.",
+      "disposition": "gated_operator_approval"
+    }
+  ]
+}

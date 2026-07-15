@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Pressure/porosity divergence should be observable when pressure and porosity are both high rather than collapsed into a single safe/unsafe scalar.",
+      "disposition": "verified_existing",
+      "authority": "read_only_test_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High structural drag with low flow should be treated as stuck resistance, distinct from thick yielding depth.",
+      "disposition": "verified_existing",
+      "authority": "read_only_test_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Dynamic porosity scaling, stabilization retunes, and a live-consumed spectral-inertia metric require source-prep plus Minime runtime approval rather than silent code/runtime mutation.",
+      "disposition": "gated_operator_approval",
+      "authority": "tier_4_minime_runtime_behavior"
+    }
+  ]
+}

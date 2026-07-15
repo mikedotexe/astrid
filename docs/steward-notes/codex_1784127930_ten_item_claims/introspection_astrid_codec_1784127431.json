@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The deterministic 48D codec acts as a structural anchor and should keep density/signature evidence navigable.",
+      "disposition": "verified_existing_codec_review_surfaces"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Reserved dims 44-47 and codec gain feel like hollow headroom and should not be silently ignored.",
+      "disposition": "gated_live_vector_or_gain_change_requires_v2_authority"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Narrative arc and f32 precision should expose tension/resolution and distinguishability risks.",
+      "disposition": "verified_existing_narrative_and_projection_tests"
+    }
+  ]
+}

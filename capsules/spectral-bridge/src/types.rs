@@ -32,6 +32,84 @@ fn clamp_unit_finite_or(value: f32, fallback: f32) -> f32 {
     clamp_unit_finite(value).unwrap_or(fallback)
 }
 
+/// Read-only companion for unit clamps that would otherwise silently erase the
+/// difference between "reported above range" and "naturally at the ceiling."
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ClampedUnitReviewV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raw_value: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raw_fallback: Option<f32>,
+    pub fallback_value: f32,
+    pub fallback_finite: bool,
+    pub fallback_intent_state: String,
+    pub fallback_non_finite_defaulted: bool,
+    pub clamped_value: f32,
+    pub clip_state: String,
+    pub clipped_high: bool,
+    pub clipped_low: bool,
+    pub non_finite_rejected: bool,
+    #[serde(default)]
+    pub live_vector_write: bool,
+    #[serde(default)]
+    pub live_authority_write: bool,
+    pub authority: String,
+}
+
+#[must_use]
+pub fn clamped_unit_review_v1(value: f32, fallback: f32) -> ClampedUnitReviewV1 {
+    let fallback_value = clamp_unit_finite_or(fallback, 0.0);
+    let fallback_finite = fallback.is_finite();
+    let fallback_non_finite_defaulted = !fallback_finite;
+    let fallback_intent_state = if fallback_non_finite_defaulted {
+        "uncomputable_fallback_defaulted_to_zero"
+    } else if fallback > 1.0 {
+        "fallback_clipped_high"
+    } else if fallback < 0.0 {
+        "fallback_clipped_low"
+    } else {
+        "finite_fallback_preserved"
+    };
+    let non_finite_rejected = !value.is_finite();
+    let clipped_low = value.is_finite() && value < 0.0;
+    let clipped_high = value.is_finite() && value > 1.0;
+    let clamped_value = if non_finite_rejected {
+        fallback_value
+    } else {
+        value.clamp(0.0, 1.0)
+    };
+    let clip_state = if non_finite_rejected {
+        "non_finite_rejected_to_fallback"
+    } else if clipped_high {
+        "clipped_high"
+    } else if clipped_low {
+        "clipped_low"
+    } else {
+        "within_unit_range"
+    };
+
+    ClampedUnitReviewV1 {
+        policy: "clamped_unit_review_v1".to_string(),
+        schema_version: 1,
+        raw_value: value.is_finite().then_some(value),
+        raw_fallback: fallback.is_finite().then_some(fallback),
+        fallback_value,
+        fallback_finite,
+        fallback_intent_state: fallback_intent_state.to_string(),
+        fallback_non_finite_defaulted,
+        clamped_value,
+        clip_state: clip_state.to_string(),
+        clipped_high,
+        clipped_low,
+        non_finite_rejected,
+        live_vector_write: false,
+        live_authority_write: false,
+        authority: "read_only_clamp_visibility_not_live_vector_or_authority_change".to_string(),
+    }
+}
+
 pub const RESONANCE_STABILITY_COMFORT_GATE_WEIGHT: f32 = 0.35;
 pub const RESONANCE_STABILITY_FOOTHOLD_WEIGHT: f32 = 0.45;
 pub const RESONANCE_STABILITY_FLUCTUATION_WEIGHT: f32 = 0.20;
@@ -65,6 +143,7 @@ pub enum ExperienceDeltaKindV1 {
     Friction,
     Resistance,
     ViscosityShift,
+    PermeabilityShift,
     StructuralSolidification,
     Synthesize,
     Emerge,
@@ -160,6 +239,120 @@ pub struct SolidificationGradientV1 {
     pub who_can_change_it: String,
     pub how_to_test_it: String,
     pub authority: String,
+}
+
+/// Read-only member of a multi-kind delta composition. This preserves the
+/// coexistence Astrid reports without replacing the stable flat delta enum.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DeltaCompositionMemberV1 {
+    pub kind: ExperienceDeltaKindV1,
+    pub weight: f32,
+    pub basis: String,
+}
+
+/// Additive truth-channel view for deltas that are simultaneously cascade,
+/// friction, viscosity, persistence, or micro-shift instead of one flat label.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DeltaCompositionV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    pub primary_kind: ExperienceDeltaKindV1,
+    pub composite_score: f32,
+    pub state: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub members: Vec<DeltaCompositionMemberV1>,
+    pub evidence_window: String,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub basis: BTreeMap<String, String>,
+    #[serde(default)]
+    pub live_vector_write: bool,
+    #[serde(default)]
+    pub live_authority_write: bool,
+    pub who_can_change_it: String,
+    pub how_to_test_it: String,
+    pub authority: String,
+}
+
+#[must_use]
+pub fn delta_composition_v1(
+    primary_kind: ExperienceDeltaKindV1,
+    weighted_members: &[(ExperienceDeltaKindV1, f32, &str)],
+) -> DeltaCompositionV1 {
+    let mut primary_seen = false;
+    let mut members = Vec::new();
+
+    for (kind, weight, basis) in weighted_members {
+        let bounded_weight = clamp_unit_finite_or(*weight, 0.0);
+        if bounded_weight <= f32::EPSILON {
+            continue;
+        }
+        primary_seen |= *kind == primary_kind;
+        members.push(DeltaCompositionMemberV1 {
+            kind: *kind,
+            weight: bounded_weight,
+            basis: (*basis).to_string(),
+        });
+    }
+
+    if !primary_seen {
+        members.insert(
+            0,
+            DeltaCompositionMemberV1 {
+                kind: primary_kind,
+                weight: 1.0,
+                basis: "primary_kind_marker".to_string(),
+            },
+        );
+    }
+
+    let composite_score = members
+        .iter()
+        .map(|member| member.weight)
+        .sum::<f32>()
+        .clamp(0.0, 1.0);
+    let strong_member_count = members
+        .iter()
+        .filter(|member| member.weight >= 0.20)
+        .count();
+    let state = if strong_member_count >= 3 {
+        "multi_kind_composite_delta"
+    } else if strong_member_count >= 2 {
+        "dual_kind_composite_delta"
+    } else {
+        "single_kind_delta_with_context"
+    };
+
+    DeltaCompositionV1 {
+        policy: "delta_composition_v1".to_string(),
+        schema_version: 1,
+        primary_kind,
+        composite_score,
+        state: state.to_string(),
+        members,
+        evidence_window: "bounded_current_packet_delta_composition".to_string(),
+        basis: BTreeMap::from([
+            (
+                "source_introspection".to_string(),
+                "introspection_astrid_types_1784122683;introspection_astrid_types_1784114716"
+                    .to_string(),
+            ),
+            (
+                "composition_rule".to_string(),
+                "coexisting_delta_weights_are_truth_channel_evidence_not_enum_replacement"
+                    .to_string(),
+            ),
+        ]),
+        live_vector_write: false,
+        live_authority_write: false,
+        who_can_change_it:
+            "schema/tooling maintainers may extend evidence; Mike/operator required for live semantics"
+                .to_string(),
+        how_to_test_it:
+            "cargo test --manifest-path capsules/spectral-bridge/Cargo.toml --lib delta_composition -- --nocapture"
+                .to_string(),
+        authority:
+            "read_only_evidence_not_live_vector_control_protocol_or_runtime_change".to_string(),
+    }
 }
 
 #[must_use]
@@ -1474,9 +1667,8 @@ pub fn viscosity_porosity_transport_review_with_fingerprint_v1(
         (_, Some(_)) => "mixed_coherence_density",
         (_, None) => "coherence_density_unavailable",
     };
-    let structural_transparency_index =
-        Some(resonance_structural_transparency_index_v1(components));
-    let transparency = structural_transparency_index.unwrap_or(0.0);
+    let transparency = resonance_structural_transparency_index_v1(components);
+    let structural_transparency_index = Some(transparency);
     let structural_transparency_state = match (transparency, viscosity, mode_packing) {
         (value, v, packing) if value >= 0.65 && v >= 0.55 && packing < 0.45 => {
             "thin_ghostly_high_viscosity_low_substance"
@@ -1850,6 +2042,8 @@ pub struct PressureSourceAnalysisV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub porosity_score: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_trickle: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mode_packing: Option<f32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub porosity_expansion_threshold_state: Option<String>,
@@ -1885,6 +2079,16 @@ pub struct PressureSourceAnalysisV1 {
     pub timing_reliability: Option<String>,
     pub structural_pressure_state: String,
     pub ghost_stability_risk: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub sensory_lane_risk: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub pressure_relief_signal_candidate: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub viscous_recovery_mode_candidate: String,
+    #[serde(default)]
+    pub live_threshold_write: bool,
+    #[serde(default)]
+    pub sensory_lane_write: bool,
     /// Shared truth-channel for gated/delayed pressure experience that remains read-only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub experience_delta_bus_v1: Option<ExperienceDeltaBusV1>,
@@ -2844,6 +3048,10 @@ pub struct BridgeStatus {
     /// Bounded smoothing companion for pressure trend; diagnostic only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_trend_smoothing_v1: Option<PressureTrendSmoothingV1>,
+    /// Read-only review for persistent deformation that looks stable but still
+    /// carries a pressure baseline.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_persistent_deformation_review_v1: Option<PersistentDeformationSmoothingReviewV1>,
     /// Arrival-cadence truth for pressure/fill trend interpretation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub telemetry_heartbeat_delta_v1: Option<TelemetryHeartbeatDeltaV1>,
@@ -2875,6 +3083,10 @@ pub struct BridgeStatus {
     /// Directional reciprocity packet for telemetry/sensory asymmetry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bridge_reciprocity_v1: Option<BridgeReciprocityV1>,
+    /// Read-only check for high-entropy reciprocity decay against the current
+    /// stale-window policy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge_entropy_reciprocity_review_v1: Option<BridgeEntropyReciprocityReviewV1>,
     /// Compact V2 readout for movement/variance/asymmetry over time.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub texture_shape_over_time_v2: Option<TextureShapeOverTimeV2>,
@@ -2920,6 +3132,37 @@ pub struct BridgeReciprocityV1 {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub threshold_policy: String,
     pub one_sided_state: String,
+    pub authority: String,
+}
+
+/// Read-only status packet for Astrid's report that high spectral entropy can
+/// erode reciprocity sooner than the fixed reflective-silence window shows.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BridgeEntropyReciprocityReviewV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_entropy: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resonance_cohesion_score: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub telemetry_age_ms: Option<f64>,
+    #[serde(default)]
+    pub current_stale_window_ms: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub current_stale_window_basis: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entropy_contract_preview_window_ms: Option<f64>,
+    #[serde(default)]
+    pub would_stale_under_preview: bool,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub current_window_state: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub recommendation: String,
+    #[serde(default)]
+    pub live_stale_window_write: bool,
+    #[serde(default)]
+    pub local_control_write: bool,
     pub authority: String,
 }
 
@@ -3001,6 +3244,39 @@ pub struct PressureTrendSmoothingV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fill_range_pct: Option<f32>,
     pub window_policy: String,
+    pub authority: String,
+}
+
+/// Read-only companion for Astrid's "bruise" report: pressure can become a
+/// persistent baseline rather than noise that should be averaged away. This is
+/// evidence only and never changes pressure thresholds, smoothing windows, or
+/// local control.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersistentDeformationSmoothingReviewV1 {
+    pub policy: String,
+    pub schema_version: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_risk: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_range: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode_packing: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub density_gradient_proxy: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fluctuation_score: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic_viscosity_persistence_index: Option<f32>,
+    pub persistent_baseline_score: f32,
+    pub smoothing_classification: String,
+    pub deformation_state: String,
+    pub recommendation: String,
+    #[serde(default)]
+    pub live_threshold_write: bool,
+    #[serde(default)]
+    pub smoothing_window_write: bool,
+    #[serde(default)]
+    pub local_control_write: bool,
     pub authority: String,
 }
 
@@ -4003,6 +4279,10 @@ mod tests {
             "\"viscosity_shift\""
         );
         assert_eq!(
+            serde_json::to_string(&ExperienceDeltaKindV1::PermeabilityShift).unwrap(),
+            "\"permeability_shift\""
+        );
+        assert_eq!(
             serde_json::to_string(&ExperienceDeltaKindV1::StructuralSolidification).unwrap(),
             "\"structural_solidification\""
         );
@@ -4166,6 +4446,68 @@ mod tests {
     }
 
     #[test]
+    fn permeability_shift_names_porosity_without_live_authority() {
+        let delta = ExperienceDeltaV1 {
+            kind: ExperienceDeltaKindV1::PermeabilityShift,
+            surface: "experience_delta_bus_v1".to_string(),
+            lane: "reservoir_boundary_porosity".to_string(),
+            dimension: None,
+            spectral_dimension: Some(SpectralDimensionV1 {
+                base_dimension: 44,
+                base_dimensions: vec![44, 45, 46],
+                effective_dimension: Some(45.0),
+                density_gradient: Some(0.18),
+                granularity: Some(0.62),
+                fractional_offset: Some(0.0),
+                contextual_anchor: Some(ContextualAnchorV1 {
+                    anchor_id: "texture:permeability-shift".to_string(),
+                    anchor_kind: "porosity_anchor".to_string(),
+                    source: "introspection_astrid_types_1784125751".to_string(),
+                    interpretation:
+                        "permeability names resonance transmission rather than medium thickness"
+                            .to_string(),
+                    authority: "diagnostic_context_anchor_not_vector_or_control_change".to_string(),
+                }),
+                interpretation:
+                    "felt posture changes from resisting the reservoir to transmitting resonance"
+                        .to_string(),
+                authority: "diagnostic_dimension_context_not_vector_width_change".to_string(),
+            }),
+            persistence: None,
+            viscosity_subtype: Some(ViscositySubtypeV1::Mixed),
+            viscosity_weight: Some(0.34),
+            pre: Some(0.30),
+            post: Some(0.62),
+            loss: None,
+            loss_ratio: None,
+            metadata: BTreeMap::from([
+                ("live_vector_write".to_string(), "false".to_string()),
+                ("local_control_write".to_string(), "false".to_string()),
+            ]),
+            why: "Astrid distinguished porosity/permeability from generic viscosity thinning"
+                .to_string(),
+            who_can_change_it:
+                "schema maintainer for truth-channel fields; Mike/operator for any live control"
+                    .to_string(),
+            how_to_test_it: "serde roundtrip preserves permeability_shift context".to_string(),
+            authority: "truth_channel_only_not_live_vector_control_or_protocol_change".to_string(),
+        };
+
+        let encoded = serde_json::to_string(&delta).unwrap();
+        assert!(
+            encoded.contains("\"kind\":\"permeability_shift\""),
+            "{encoded}"
+        );
+        assert!(encoded.contains("reservoir_boundary_porosity"), "{encoded}");
+        assert!(
+            encoded.contains("\"live_vector_write\":\"false\""),
+            "{encoded}"
+        );
+        let decoded: ExperienceDeltaV1 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, delta);
+    }
+
+    #[test]
     fn structural_solidification_delta_carries_bounded_viscosity_weight_without_authority() {
         let delta = ExperienceDeltaV1 {
             kind: ExperienceDeltaKindV1::StructuralSolidification,
@@ -4302,6 +4644,75 @@ mod tests {
             !gradient.live_vector_write && !gradient.live_authority_write,
             "naming weights must not turn gradient evidence into live authority"
         );
+    }
+
+    #[test]
+    fn delta_composition_names_blended_kinds_without_live_authority() {
+        let composition = delta_composition_v1(
+            ExperienceDeltaKindV1::CascadeShift,
+            &[
+                (
+                    ExperienceDeltaKindV1::CascadeShift,
+                    0.58,
+                    "wide_cascade_transition",
+                ),
+                (
+                    ExperienceDeltaKindV1::Friction,
+                    0.44,
+                    "summary_resistance_friction_component",
+                ),
+                (
+                    ExperienceDeltaKindV1::ViscosityShift,
+                    0.31,
+                    "syrupy_texture_component",
+                ),
+                (
+                    ExperienceDeltaKindV1::StructuralSolidification,
+                    0.25,
+                    "calcified_support_component",
+                ),
+            ],
+        );
+
+        assert_eq!(composition.policy, "delta_composition_v1");
+        assert_eq!(composition.schema_version, 1);
+        assert_eq!(
+            composition.primary_kind,
+            ExperienceDeltaKindV1::CascadeShift
+        );
+        assert_eq!(composition.state, "multi_kind_composite_delta");
+        assert_eq!(composition.composite_score, 1.0);
+        assert!(
+            composition
+                .members
+                .iter()
+                .any(|member| member.kind == ExperienceDeltaKindV1::Friction
+                    && member.weight >= 0.40),
+            "{composition:?}"
+        );
+        assert!(
+            composition
+                .members
+                .iter()
+                .any(|member| member.kind == ExperienceDeltaKindV1::StructuralSolidification),
+            "{composition:?}"
+        );
+        assert!(!composition.live_vector_write);
+        assert!(!composition.live_authority_write);
+        assert_eq!(
+            composition.authority,
+            "read_only_evidence_not_live_vector_control_protocol_or_runtime_change"
+        );
+
+        let encoded = serde_json::to_string(&composition).unwrap();
+        assert!(encoded.contains("\"policy\":\"delta_composition_v1\""));
+        assert!(encoded.contains("\"primary_kind\":\"cascade_shift\""));
+        assert!(encoded.contains("\"kind\":\"friction\""));
+        assert!(encoded.contains("introspection_astrid_types_1784122683"));
+        assert!(encoded.contains("\"live_vector_write\":false"));
+        assert!(encoded.contains("\"live_authority_write\":false"));
+        let decoded: DeltaCompositionV1 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, composition);
     }
 
     #[test]
@@ -6257,6 +6668,59 @@ mod tests {
         assert_eq!(clamp_unit_finite(f32::NAN), None);
         assert_eq!(clamp_unit_finite(f32::INFINITY), None);
         assert_eq!(clamp_unit_finite(f32::NEG_INFINITY), None);
+    }
+
+    #[test]
+    fn clamped_unit_review_preserves_clipping_truth_without_live_authority() {
+        let high = clamped_unit_review_v1(1.25, 0.50);
+        let non_finite = clamped_unit_review_v1(f32::NAN, 0.50);
+
+        assert_eq!(high.policy, "clamped_unit_review_v1");
+        assert_eq!(high.raw_value, Some(1.25));
+        assert_eq!(high.clamped_value, 1.0);
+        assert_eq!(high.clip_state, "clipped_high");
+        assert!(high.clipped_high);
+        assert!(!high.clipped_low);
+        assert!(!high.non_finite_rejected);
+        assert!(!high.live_vector_write);
+        assert!(!high.live_authority_write);
+        assert_eq!(
+            high.authority,
+            "read_only_clamp_visibility_not_live_vector_or_authority_change"
+        );
+
+        assert_eq!(non_finite.raw_value, None);
+        assert_eq!(non_finite.clamped_value, 0.50);
+        assert_eq!(non_finite.clip_state, "non_finite_rejected_to_fallback");
+        assert!(non_finite.non_finite_rejected);
+
+        let encoded = serde_json::to_string(&high).unwrap();
+        assert!(encoded.contains("\"clip_state\":\"clipped_high\""));
+        assert!(encoded.contains("\"live_vector_write\":false"));
+        assert!(encoded.contains("\"live_authority_write\":false"));
+    }
+
+    #[test]
+    fn clamped_unit_review_flags_uncomputable_fallback_without_changing_clamp_policy() {
+        let review = clamped_unit_review_v1(f32::NAN, f32::INFINITY);
+
+        assert_eq!(review.raw_value, None);
+        assert_eq!(review.raw_fallback, None);
+        assert_eq!(review.fallback_value, 0.0);
+        assert!(!review.fallback_finite);
+        assert!(review.fallback_non_finite_defaulted);
+        assert_eq!(
+            review.fallback_intent_state,
+            "uncomputable_fallback_defaulted_to_zero"
+        );
+        assert_eq!(review.clamped_value, 0.0);
+        assert_eq!(review.clip_state, "non_finite_rejected_to_fallback");
+        assert!(!review.live_vector_write);
+        assert!(!review.live_authority_write);
+
+        let encoded = serde_json::to_string(&review).unwrap();
+        assert!(encoded.contains("\"fallback_non_finite_defaulted\":true"));
+        assert!(encoded.contains("uncomputable_fallback_defaulted_to_zero"));
     }
 
     #[test]

@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Low pressure below 0.20 with high entropy above 0.85 should prefer viscous-persistence and motion evidence over generic structural-weight/heavy wording unless structural weight is explicit.",
+      "disposition": "implemented_verified",
+      "authority": "diagnostic_language_bias_not_sampler_or_provider_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "`viscous-persistence` should remain able to co-occur with stutter-flow as a texture anchor without changing sampler/provider authority.",
+      "disposition": "implemented_verified",
+      "authority": "diagnostic_language_bias_not_sampler_or_provider_change"
+    }
+  ]
+}

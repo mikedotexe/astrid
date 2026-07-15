@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "A held correspondence state should be acknowledgeable without requiring a full peer ACK or reply.",
+      "disposition": "implemented_signal_persistence_alias"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "TRACE/REPLY routing should distinguish ghost/stalled correspondence from reply-linked peer evidence.",
+      "disposition": "verified_existing_correspondence_trace_status"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Forcing Witness-to-Mirror mode via Minime journal should remain gated until a safe test path is selected.",
+      "disposition": "gated_runtime_experiment_requires_operator_path"
+    }
+  ]
+}

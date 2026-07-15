@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 0.80 high-entropy compatibility-tail guard can over-worry stable high-entropy states unless subjective stability and shadow-field context are visible.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Raising the fallback threshold or changing provider/model selection directly is live-facing fallback behavior and remains gated.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Continuity recap budget should not depend only on a fixed phrase whitelist when Astrid reports novel high-entropy texture families.",
+      "disposition": "implemented_verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Semantic-edge truncation should preserve exact period boundaries while retaining the bounded recap contract.",
+      "disposition": "implemented_verified"
+    }
+  ]
+}

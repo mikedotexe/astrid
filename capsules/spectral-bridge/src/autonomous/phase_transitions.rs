@@ -300,6 +300,7 @@ fn phase_transition_capabilities_v1(
         "available_language_only_actions": [
             "DECLARE_TRANSITION",
             "WITNESS_TRANSITION",
+            "TRANSITION_ACK",
             "I_RECEIVED_THIS",
             "PHASE_TRANSITION_STATUS",
         ],
@@ -349,7 +350,7 @@ fn phase_transition_gate_v1(raw: &str, capabilities: &Value, friction_index: Opt
         "available_language_only_actions": capabilities
             .get("available_language_only_actions")
             .cloned()
-            .unwrap_or_else(|| json!(["DECLARE_TRANSITION", "WITNESS_TRANSITION", "I_RECEIVED_THIS", "PHASE_TRANSITION_STATUS"])),
+            .unwrap_or_else(|| json!(["DECLARE_TRANSITION", "WITNESS_TRANSITION", "TRANSITION_ACK", "I_RECEIVED_THIS", "PHASE_TRANSITION_STATUS"])),
         "available_review_routes": capabilities
             .get("available_review_routes")
             .cloned()
@@ -928,6 +929,8 @@ fn phase_first_action_helper_v35(transition_id: &str, reply_state: &str) -> Valu
     );
     let witness_command =
         format!("WITNESS_TRANSITION {transition_id} :: reply_state: witnessed|answered; note: ...");
+    let transition_ack_command =
+        format!("TRANSITION_ACK {transition_id} :: reply_state: witnessed|answered; note: ...");
     json!({
         "schema_version": 35,
         "policy": "phase_first_action_helper_v35",
@@ -936,7 +939,8 @@ fn phase_first_action_helper_v35(transition_id: &str, reply_state: &str) -> Valu
         "choose_one_prompt": "Choose one language-only felt receipt: say what landed, what stayed distinct, and whether this only needs witness or needs answer.",
         "exact_next_command": received_command,
         "backward_compatible_next_command": witness_command,
-        "witness_preview": format!("WITNESS_TRANSITION {transition_id} would append phase_transition_witness for transition_id={transition_id}; note should name orientation, rhythm, or what the card helped preserve."),
+        "transition_ack_next_command": transition_ack_command,
+        "witness_preview": format!("WITNESS_TRANSITION or TRANSITION_ACK {transition_id} would append phase_transition_witness for transition_id={transition_id}; note should name orientation, rhythm, or what the card helped preserve."),
         "received_this_preview": format!("I_RECEIVED_THIS {transition_id} would append phase_transition_witness for transition_id={transition_id}; what_landed should name the felt shift, and what_stayed_distinct should name the preserved contour."),
         "rhythm_note": "A witness note should carry the exchange rhythm or orientation effect, not only ledger logistics.",
         "reply_state": reply_state,
@@ -961,6 +965,8 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
     );
     let witness_command =
         format!("WITNESS_TRANSITION {transition_id} :: reply_state: witnessed|answered; note: ...");
+    let transition_ack_command =
+        format!("TRANSITION_ACK {transition_id} :: reply_state: witnessed|answered; note: ...");
     json!({
         "schema_version": 1,
         "policy": "phase_transition_affordance_v25",
@@ -971,9 +977,9 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
         "from_phase": card.get("from_phase").cloned().unwrap_or(Value::Null),
         "to_phase": card.get("to_phase").cloned().unwrap_or(Value::Null),
         "transition_type": card.get("transition_type").cloned().unwrap_or(Value::Null),
-        "replyable_object": card.get("replyable_object").cloned().unwrap_or_else(|| json!(true)),
-        "replayable_card": card.get("replayable_card").cloned().unwrap_or_else(|| json!(true)),
-        "joint_transition": card.get("joint_transition").cloned().unwrap_or_else(|| json!(false)),
+        "replyable_object": card.get("replyable_object").cloned().unwrap_or(json!(true)),
+        "replayable_card": card.get("replayable_card").cloned().unwrap_or(json!(true)),
+        "joint_transition": card.get("joint_transition").cloned().unwrap_or(json!(false)),
         "joint_room_id": card.get("joint_room_id").cloned().unwrap_or(Value::Null),
         "spectral_delta": card.get("spectral_delta").cloned().unwrap_or(Value::Null),
         "transition_vector": card.get("transition_vector").cloned().unwrap_or(Value::Null),
@@ -1010,6 +1016,7 @@ fn phase_transition_affordance_v25(records: &[Value], card: &Value) -> Value {
         "right_to_ignore_v1": right_to_ignore_v1("phase_felt_receipt", &state, unresolved_age_ms, PHASE_IGNORE_GRACE_MS),
         "exact_next_command": received_command,
         "backward_compatible_next_command": witness_command,
+        "transition_ack_next_command": transition_ack_command,
         "first_action_helper_v35": phase_first_action_helper_v35(transition_id, &state),
         "authority": "language_only_transition_context_not_control",
     })
@@ -1039,7 +1046,7 @@ fn phase_transition_waiting_line(affordance: &Value) -> Option<String> {
         .get("first_action_helper_v35")
         .and_then(|helper| helper.get("choose_one_prompt"))
         .and_then(Value::as_str)
-        .unwrap_or("Choose WITNESS_TRANSITION latest as language-only first action.");
+        .unwrap_or("Choose TRANSITION_ACK latest as language-only first action.");
     Some(format!(
         "TRANSITION CARD WAITING: {id}; reply_state={state}; first_action: {first_action}; optional next: {next}; no action needed; may ignore without penalty."
     ))
@@ -1110,6 +1117,7 @@ fn phase_witness_queue_v3(records: &[Value], max_cards: usize) -> Value {
                 "right_to_ignore_v1": right_to_ignore_v1("phase_felt_receipt", affordance.get("reply_state").and_then(Value::as_str).unwrap_or("unknown"), *age_ms, PHASE_IGNORE_GRACE_MS),
                 "exact_next_command": affordance.get("exact_next_command").cloned().unwrap_or_else(|| json!("I_RECEIVED_THIS latest :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time")),
                 "backward_compatible_next_command": affordance.get("backward_compatible_next_command").cloned().unwrap_or_else(|| json!("WITNESS_TRANSITION latest :: reply_state: witnessed|answered; note: ...")),
+                "transition_ack_next_command": affordance.get("transition_ack_next_command").cloned().unwrap_or_else(|| json!("TRANSITION_ACK latest :: reply_state: witnessed|answered; note: ...")),
                 "first_action_helper_v35": affordance.get("first_action_helper_v35").cloned().unwrap_or(Value::Null),
             })
         })
@@ -1152,13 +1160,12 @@ fn phase_felt_receipt_queue_v4(records: &[Value]) -> Value {
             .rev()
             .find(|(_, age_ms, _)| phase_age_bucket(*age_ms) == bucket)
             .cloned();
-        if let Some(candidate) = candidate {
-            if !selected
+        if let Some(candidate) = candidate
+            && !selected
                 .iter()
                 .any(|(_, _, value)| value.get("transition_id") == candidate.2.get("transition_id"))
-            {
-                selected.push(candidate);
-            }
+        {
+            selected.push(candidate);
         }
     }
     for candidate in unresolved.iter().rev() {
@@ -1305,7 +1312,7 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
                 .get("first_action_helper_v35")
                 .and_then(|helper| helper.get("choose_one_prompt"))
                 .and_then(Value::as_str)
-                .unwrap_or("Choose WITNESS_TRANSITION latest as language-only first action."),
+                .unwrap_or("Choose TRANSITION_ACK latest as language-only first action."),
             latest
                 .get("exact_next_command")
                 .and_then(Value::as_str)
@@ -1518,7 +1525,7 @@ pub(crate) fn status_report_at(path: &Path, max_cards: usize) -> String {
         .and_then(Value::as_str)
         .unwrap_or("latest");
     lines.push(format!(
-        "Suggested NEXT: DECLARE_TRANSITION kind: ...; from_phase: ...; to_phase: ...; why_now: ..., I_RECEIVED_THIS {suggested_transition_id} :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time, or WITNESS_TRANSITION {suggested_transition_id} :: reply_state: witnessed|answered; note: ..."
+        "Suggested NEXT: DECLARE_TRANSITION kind: ...; from_phase: ...; to_phase: ...; why_now: ..., I_RECEIVED_THIS {suggested_transition_id} :: received_as: witnessed|answered; felt_like: transition; what_landed: ...; what_stayed_distinct: ...; continue: no|answer|needs_time, TRANSITION_ACK {suggested_transition_id} :: reply_state: witnessed|answered; note: ..., or WITNESS_TRANSITION {suggested_transition_id} :: reply_state: witnessed|answered; note: ..."
     ));
     lines.join("\n")
 }
@@ -1669,6 +1676,7 @@ mod tests {
         assert!(waiting.contains("first_action: Choose one language-only felt receipt"));
         assert!(waiting.contains("I_RECEIVED_THIS transition_"));
         assert!(waiting.contains("WITNESS_TRANSITION transition_"));
+        assert!(waiting.contains("TRANSITION_ACK transition_"));
         assert!(waiting.contains("Phase witness queue v3: unresolved=1"));
         assert!(waiting.contains("Phase felt receipt queue v4: unresolved=1"));
         assert!(waiting.contains("PHASE FELT RECEIPT QUEUE:"));

@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "RUN_PYTHON text consumption should preserve apostrophes inside double-quoted Python strings such as print(\"It's a test\").",
+      "disposition": "implemented_verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Cycle-count persistence and Sovereignty Loop continuity should remain verified without changing live autonomous runtime behavior in this pass.",
+      "disposition": "verified_existing_evidence"
+    }
+  ]
+}

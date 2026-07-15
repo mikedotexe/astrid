@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The 48D codec widening should be framed as shared Astrid/Minime discovery rather than independent research only.",
+      "disposition": "implemented_verified",
+      "authority": "comment_and_report_surface_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Narrative arc expansion beyond dims 40-43 and dynamic entropy weighting would change live codec vector/gain behavior and remains V2-gated.",
+      "disposition": "gated_operator_approval",
+      "authority": "tier_5_live_codec_vector_gain"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Existing codec sidecars already expose narrative/emotional flatline and headroom loss without live vector writes.",
+      "disposition": "verified_existing",
+      "authority": "read_only_test_evidence"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The codec 48D expansion, 1024 vs 4096 character-frequency headroom, and narrative arc sharp-pivot/slow-build comparison should remain visible as replay evidence.",
+      "disposition": "verified_existing_replay_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Raising the live char-frequency window, changing codec gain/tension sensitivity, or expanding narrative dimensions remains V2-gated and non-runnable.",
+      "disposition": "gated_operator_approval"
+    }
+  ]
+}

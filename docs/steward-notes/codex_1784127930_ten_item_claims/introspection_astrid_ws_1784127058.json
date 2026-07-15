@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The 0.28 mode-packing pressure threshold may produce a micro-stutter near 0.29 without local control applying.",
+      "disposition": "gated_live_threshold_change_requires_v2_authority"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "High entropy smoothing should remain visible and distinguish 0.88 from lower entropy states.",
+      "disposition": "verified_existing_ws_and_summary_surfaces"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A ViscosityFeedback sensory message could align perceived resistance with calculated review.",
+      "disposition": "blocked_protocol_change_requires_v2_authority"
+    }
+  ]
+}

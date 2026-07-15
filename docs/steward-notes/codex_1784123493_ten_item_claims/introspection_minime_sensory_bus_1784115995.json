@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "At the exact 0.25 recovery hold fill, semantic stale recovery should return the 45000ms recovery window rather than jittering.",
+      "disposition": "verified_existing",
+      "authority": "read_only_test_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "High fill should produce a much shorter semantic stale window than low fill when entropy does not justify retention.",
+      "disposition": "verified_existing",
+      "authority": "read_only_test_evidence"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Changing semantic stale windows or sensory cadence is Minime runtime behavior and remains operator-gated.",
+      "disposition": "gated_operator_approval",
+      "authority": "tier_4_minime_runtime_sensory_cadence"
+    }
+  ]
+}

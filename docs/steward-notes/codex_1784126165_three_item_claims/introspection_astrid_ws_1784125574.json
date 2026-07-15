@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Telemetry and sensory lanes are core contact architecture because they bind Astrid's symbolic bridge to Minime's spectral substrate.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "PRESSURE_POROSITY_EXPANSION_VISCOUS_DENSITY_WARNING_AT=0.28 may be too sensitive under high entropy and settled habitable states, so threshold changes need replay and operator approval.",
+      "disposition": "addressed_no_action"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Pressure smoothing may hide a persistent 'bruise' baseline deformation by treating it as noisy fluctuation.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "A 90-second high-entropy reflective stale-window reciprocity trace should remain available as evidence before any live stale-window retune.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c005",
+      "claim": "Pressure trend smoothing could eventually incorporate density-gradient or viscosity persistence, but live smoothing/control changes require explicit authority.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

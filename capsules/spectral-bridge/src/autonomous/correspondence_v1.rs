@@ -1931,9 +1931,9 @@ fn legacy_claim_affordance_v25(records: &[Value], claim: &Value) -> Value {
         "notice_state": card.get("notice_state").cloned().unwrap_or(Value::Null),
         "uptake_ladder_state": card.get("uptake_ladder_state").cloned().unwrap_or(Value::Null),
         "stall_reason": card.get("stall_reason").cloned().unwrap_or_else(|| json!("none")),
-        "ghost_thread_risk": card.get("ghost_thread_risk").cloned().unwrap_or_else(|| json!(false)),
-        "mutually_recognized": card.get("mutually_recognized").cloned().unwrap_or_else(|| json!(false)),
-        "attention_or_microdose_eligible": card.get("attention_or_microdose_eligible").cloned().unwrap_or_else(|| json!(false)),
+        "ghost_thread_risk": card.get("ghost_thread_risk").cloned().unwrap_or(json!(false)),
+        "mutually_recognized": card.get("mutually_recognized").cloned().unwrap_or(json!(false)),
+        "attention_or_microdose_eligible": card.get("attention_or_microdose_eligible").cloned().unwrap_or(json!(false)),
         "exact_next_commands": card.get("exact_next_commands").cloned().unwrap_or_else(|| json!([])),
         "latest_claim_outcome": card.get("claim_outcome_review").cloned().unwrap_or(Value::Null),
         "authority": "language_only_context_not_control",
@@ -2337,7 +2337,7 @@ fn legacy_claim_notice_record(
         "claiming_being": claim.get("claiming_being").cloned().unwrap_or(Value::Null),
         "peer_being": claim.get("peer_being").cloned().unwrap_or(Value::Null),
         "notice_state": notice_state,
-        "notification_required": claim.get("notification_required").cloned().unwrap_or_else(|| json!(true)),
+        "notification_required": claim.get("notification_required").cloned().unwrap_or(json!(true)),
         "initial_response_requirement": claim.get("initial_response_requirement").cloned().unwrap_or_else(|| json!("unknown")),
         "shared_memory_anchor": claim.get("shared_memory_anchor").cloned().unwrap_or(Value::Null),
         "authority": "language_only_notice_not_ack",
@@ -2483,7 +2483,7 @@ fn append_legacy_thread_claim_at(
         short_hash(&format!("{message_id}:{because}"))
     );
     let record = legacy_claim_record(
-        &message,
+        message,
         &claim_id,
         from_being,
         to_being,
@@ -2734,6 +2734,7 @@ fn presence_heartbeat_record(
         "correspondence_type": "presence_heartbeat",
         "transition_artifact": message.get("transition_artifact").cloned().unwrap_or(Value::Null),
         "mutual_witness_signal": mutual_witness_signal,
+        "signal_persistence": true,
         "no_reply_required": true,
     })
 }
@@ -3301,7 +3302,7 @@ fn canary_record(
         "focus": truncate_chars(focus.trim(), ATTENTION_CANARY_FOCUS_MAX_CHARS),
         "focus_kind": focus_kind,
         "preservation_mode": preservation_mode,
-        "what_must_not_flatten": note_value(&what_must_not_flatten.unwrap_or_default()),
+        "what_must_not_flatten": note_value(what_must_not_flatten.unwrap_or_default()),
         "reason": truncate_chars(reason.trim(), BODY_PREVIEW_CHARS),
         "stop_criteria": truncate_chars(stop_criteria.trim(), BODY_PREVIEW_CHARS),
         "ttl_ms": ATTENTION_CANARY_TTL_MS,
@@ -5906,14 +5907,14 @@ fn direct_contact_fidelity_for_with_heartbeat(
             "claiming_being": claim.get("claiming_being").cloned().unwrap_or(Value::Null),
             "peer_being": claim.get("peer_being").cloned().unwrap_or(Value::Null),
             "shared_memory_anchor": claim.get("shared_memory_anchor").cloned().unwrap_or(Value::Null),
-            "notification_required": claim.get("notification_required").cloned().unwrap_or_else(|| json!(true)),
+            "notification_required": claim.get("notification_required").cloned().unwrap_or(json!(true)),
             "initial_response_requirement": claim.get("initial_response_requirement").cloned().unwrap_or_else(|| json!("unknown")),
             "legacy_contact_evidence": claim.get("legacy_contact_evidence").cloned().unwrap_or(Value::Null),
             "latest_notice": latest_legacy_claim_notice_for_claim(records, claim).map(|notice| json!({
                 "notice_id": notice.get("notice_id").cloned().unwrap_or(Value::Null),
                 "notice_state": notice.get("notice_state").cloned().unwrap_or(Value::Null),
                 "notice_path": notice.get("notice_path").cloned().unwrap_or(Value::Null),
-                "notice_is_ack": notice.get("notice_is_ack").cloned().unwrap_or_else(|| json!(false)),
+                "notice_is_ack": notice.get("notice_is_ack").cloned().unwrap_or(json!(false)),
             })),
             "active": legacy_claim_is_active(records, claim),
         })),
@@ -6018,7 +6019,7 @@ fn recent_correspondence_microdose_for_thread_at(
                     .unwrap_or_default()
                     >= cutoff
         })
-        .max_by_key(|row| row_time_ms(row))
+        .max_by_key(row_time_ms)
 }
 
 pub(crate) fn draft_correspondence_microdose_request(selector: &str, raw: &str) -> String {
@@ -6200,7 +6201,7 @@ fn draft_correspondence_microdose_request_at_with_heartbeat(
         },
         "authority_boundary": "Draft only. Execution requires existing semantic_microdose steward approval or approved budget, green/yellow safety, rescue-policy pass, one-shot send, and consequence review. No Control message, PI/fill/controller change, telemetry priority, permanent prompt priority, deploy, or peer mutation."
     });
-    if let Err(error) = append_record_at(&gate_path, &record) {
+    if let Err(error) = append_record_at(gate_path, &record) {
         return format!(
             "CORRESPONDENCE_MICRODOSE_REQUEST failed to draft authority request: {error}"
         );
@@ -6227,7 +6228,7 @@ fn no_peer_message_guidance(peer: &str) -> String {
 }
 
 fn status_report_at(path: &Path, max_lines: usize) -> String {
-    let Ok(text) = std::fs::read_to_string(&path) else {
+    let Ok(text) = std::fs::read_to_string(path) else {
         let clarity = active_correspondence_thread_clarity_v1(
             &[],
             "astrid",
@@ -9188,6 +9189,10 @@ mod tests {
             heartbeat
                 .get("mutual_witness_signal")
                 .and_then(Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            heartbeat.get("signal_persistence").and_then(Value::as_bool),
             Some(true)
         );
         assert_eq!(

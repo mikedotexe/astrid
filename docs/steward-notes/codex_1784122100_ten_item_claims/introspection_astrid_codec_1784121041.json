@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Inter-textual narrative continuity should be measurable across previous/current/next text rather than inferred only from one text's narrative arc.",
+      "disposition": "implemented_verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Any live persistence coefficient, gain, or vector-write retune for narrative continuity remains V2-gated and non-runnable.",
+      "disposition": "gated_operator_approval"
+    }
+  ]
+}

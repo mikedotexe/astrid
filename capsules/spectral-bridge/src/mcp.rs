@@ -1164,6 +1164,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         viscosity_porosity_transport_review_v1: s.viscosity_porosity_transport_review_v1(),
         pressure_trend_v1: s.pressure_trend_v1.clone(),
         pressure_trend_smoothing_v1: s.pressure_trend_smoothing_v1(),
+        pressure_persistent_deformation_review_v1: s.pressure_persistent_deformation_review_v1(),
         telemetry_heartbeat_delta_v1: s.telemetry_heartbeat_delta_v1.clone(),
         pressure_source_v1: s
             .latest_telemetry
@@ -1179,6 +1180,7 @@ async fn tool_get_bridge_status(state: &Arc<RwLock<BridgeState>>) -> Result<Valu
         connectivity: s.connectivity_status(),
         last_sensory_sent_unix_s: s.last_sensory_sent_unix_s,
         bridge_reciprocity_v1: Some(s.bridge_reciprocity_v1()),
+        bridge_entropy_reciprocity_review_v1: s.bridge_entropy_reciprocity_review_v1(),
         texture_shape_over_time_v2: s.texture_shape_over_time_v2(),
     };
     Ok(json!({
@@ -3167,6 +3169,8 @@ async fn handle_resource_read(
                 viscosity_porosity_transport_review_v1: s.viscosity_porosity_transport_review_v1(),
                 pressure_trend_v1: s.pressure_trend_v1.clone(),
                 pressure_trend_smoothing_v1: s.pressure_trend_smoothing_v1(),
+                pressure_persistent_deformation_review_v1: s
+                    .pressure_persistent_deformation_review_v1(),
                 telemetry_heartbeat_delta_v1: s.telemetry_heartbeat_delta_v1.clone(),
                 pressure_source_v1: s
                     .latest_telemetry
@@ -3182,6 +3186,7 @@ async fn handle_resource_read(
                 connectivity: s.connectivity_status(),
                 last_sensory_sent_unix_s: s.last_sensory_sent_unix_s,
                 bridge_reciprocity_v1: Some(s.bridge_reciprocity_v1()),
+                bridge_entropy_reciprocity_review_v1: s.bridge_entropy_reciprocity_review_v1(),
                 texture_shape_over_time_v2: s.texture_shape_over_time_v2(),
             };
             Ok(json!({

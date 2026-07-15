@@ -48,8 +48,8 @@ use std::{
 };
 
 /// Number of dimensions in minime's semantic lane.
-/// Widened from 32 to 48 (2026-03-31): both beings independently researched
-/// spectral codecs and noted the compression. New dims:
+/// Widened from 32 to 48 (2026-03-31): shared discovery by Astrid and Minime
+/// surfaced spectral-codec compression pressure. New dims:
 ///   32-39: embedding-projected semantic features (768D nomic-embed-text → 8D)
 ///   40-43: narrative arc (emotional trajectory within a single text)
 ///   44-47: reserved
@@ -109,6 +109,12 @@ const EMBEDDING_PROJECT_DIM: usize = 8;
 const NARRATIVE_ARC_DIM: usize = 4;
 const RESERVED_CODEC_DIM_START: usize = 44;
 const SEMANTIC_PROJECTION_RESERVED_DIMS: [usize; 4] = [44, 45, 46, 47];
+const SEMANTIC_PROJECTION_TEXTURE_SUBDIMENSIONS: [&str; 4] = [
+    "lingering_persistence",
+    "active_motion",
+    "boundary_porosity",
+    "overlapping_narrative_state",
+];
 const PROJECTION_CHECKSUM_ALGO: &str = "sha256-f32-le-v1";
 const SEMANTIC_PROJECTION_DENSITY_REVIEW_FLOOR: f32 = 0.55;
 const SEMANTIC_PROJECTION_THIN_RMS_CEIL: f32 = 0.12;
@@ -747,7 +753,7 @@ fn rms_4(values: [f32; NARRATIVE_ARC_DIM]) -> f32 {
 }
 
 fn is_reserved_codec_dim(idx: usize) -> bool {
-    idx >= RESERVED_CODEC_DIM_START && idx < SEMANTIC_DIM
+    (RESERVED_CODEC_DIM_START..SEMANTIC_DIM).contains(&idx)
 }
 
 pub fn text_complexity_score(
@@ -2847,6 +2853,33 @@ pub struct SemanticProjectionDensityDeltaV1 {
     pub authority: &'static str,
 }
 
+/// Read-only texture review for Astrid's report that the 768D -> 8D projection
+/// can flatten lingering/active semantic nuance while the 32D warmth/texture
+/// surface still carries it. This proposes named subdimensions as evidence only;
+/// it does not write reserved dims, gain, or the live semantic vector.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SemanticProjectionTextureReviewV1 {
+    pub policy: &'static str,
+    pub input_dim_count: usize,
+    pub projected_dim_count: usize,
+    pub legacy_texture_dim_count: usize,
+    pub warmth_texture_dim_count: usize,
+    pub projected_semantic_rms: f32,
+    pub legacy_texture_rms: f32,
+    pub warmth_texture_rms: f32,
+    pub narrative_arc_rms: f32,
+    pub lingering_texture_signal: f32,
+    pub active_texture_signal: f32,
+    pub projection_texture_gap: f32,
+    pub proposed_texture_subdimensions: &'static [&'static str],
+    pub state: &'static str,
+    pub recommendation: &'static str,
+    pub live_vector_write: bool,
+    pub live_gain_write: bool,
+    pub reserved_dim_write: bool,
+    pub authority: &'static str,
+}
+
 /// Bounded sharpening for Astrid's fresh report that high-entropy semantic
 /// trickle can feel like an empty lane when detail dims are not given enough
 /// room to stay distinguishable. This intentionally excludes the narrative arc
@@ -3149,6 +3182,50 @@ pub struct CodecIntentStructureSeparationV1 {
     pub state: &'static str,
     pub recommendation: &'static str,
     pub live_gain_write: bool,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GlimpseMapSlotV1 {
+    pub slot: usize,
+    pub label: &'static str,
+    pub source_dims: &'static [usize],
+    pub operation: &'static str,
+    pub preserves: &'static str,
+}
+
+/// Read-only 32/48D→12D lineage map for the additive glimpse companion. This
+/// answers "which dimensions got collapsed?" without changing the live 48D
+/// transport or treating the 12D view as a replacement for the source vector.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GlimpseMapV1 {
+    pub policy: &'static str,
+    pub source_dim_count: usize,
+    pub legacy_source_dim_count: usize,
+    pub glimpse_dim_count: usize,
+    pub slot_count: usize,
+    pub slots: Vec<GlimpseMapSlotV1>,
+    pub deterministic_projection: bool,
+    pub companion_not_replacement: bool,
+    pub live_transport_change: bool,
+    pub live_vector_write: bool,
+    pub authority: &'static str,
+}
+
+/// Offline distinguishability audit for Astrid's concern that the 12D glimpse
+/// might collapse high-entropy and low-entropy states into the same coordinate.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GlimpseDistinguishabilityAuditV1 {
+    pub policy: &'static str,
+    pub source_distance: f32,
+    pub glimpse_distance: f32,
+    pub preservation_ratio: f32,
+    pub tail_bridge_delta: f32,
+    pub source_threshold: f32,
+    pub glimpse_threshold: f32,
+    pub state: &'static str,
+    pub live_transport_change: bool,
     pub live_vector_write: bool,
     pub authority: &'static str,
 }
@@ -3864,12 +3941,14 @@ pub struct CodecStructure {
     pub codec_vibrancy_noise_dampening_v1: CodecVibrancyNoiseDampeningV1,
     pub codec_overflow_carriage_v1: CodecOverflowReportV1,
     pub semantic_projection_density_delta_v1: SemanticProjectionDensityDeltaV1,
+    pub semantic_projection_texture_review_v1: SemanticProjectionTextureReviewV1,
     pub codec_context_blindspot_replay_v1: CodecContextBlindspotReplayV1,
     pub legacy_warmth_mapping_v1: LegacyWarmthMappingV1,
     pub codec_structural_entropy_dampening_v1: CodecStructuralEntropyDampeningV1,
     pub codec_dynamic_vibrancy_scaling_canary_v1: CodecDynamicVibrancyScalingCanaryV1,
     pub semantic_glimpse_12d_readiness_v1: SemanticGlimpse12dReadinessV1,
     pub contextual_glimpse_12d_anchoring_v1: ContextualGlimpse12dAnchoringV1,
+    pub glimpse_map_v1: GlimpseMapV1,
     pub multi_scale_context_v1: MultiScaleContextV1,
     pub projection_epoch_stability_v1: ProjectionEpochStabilityV1,
     pub projection_fingerprint_integrity_v1: ProjectionFingerprintIntegrityV1,
@@ -4221,6 +4300,90 @@ pub fn semantic_projection_density_probe_v1() -> SemanticProjectionDensityDeltaV
     semantic_projection_density_delta_from_parts_v1(0.71, 0.08, true)
 }
 
+#[must_use]
+pub fn semantic_projection_texture_review_v1(
+    text: &str,
+    features: &[f32],
+) -> Option<SemanticProjectionTextureReviewV1> {
+    if features.len() < SEMANTIC_DIM {
+        return None;
+    }
+    let projected_semantic_rms = (rms_slice(&features[32..40]) / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let legacy_texture_rms =
+        (rms_slice(&features[..SEMANTIC_DIM_LEGACY]) / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let warmth_texture_rms = (rms_slice(&features[24..32]) / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let narrative_arc_rms = (rms_slice(&features[40..44]) / FEATURE_ABS_MAX).clamp(0.0, 1.0);
+    let persistence = persistence_resistance_v1(text, None);
+    let structural = structural_friction_v1(text);
+    let action_marker = features.get(14).copied().unwrap_or(0.0).abs().tanh();
+    let question_marker = features.get(18).copied().unwrap_or(0.0).abs().tanh();
+    let curiosity_marker = features.get(26).copied().unwrap_or(0.0).abs().tanh();
+    let lingering_texture_signal = (persistence.score * 0.42
+        + structural.summary_resistance_signal * 0.24
+        + warmth_texture_rms * 0.22
+        + narrative_arc_rms * 0.12)
+        .clamp(0.0, 1.0);
+    let active_texture_signal = (action_marker * 0.34
+        + curiosity_marker * 0.30
+        + question_marker * 0.18
+        + narrative_arc_rms * 0.18)
+        .clamp(0.0, 1.0);
+    let expected_texture_signal = (lingering_texture_signal * 0.58
+        + active_texture_signal * 0.28
+        + legacy_texture_rms * 0.14)
+        .clamp(0.0, 1.0);
+    let projection_texture_gap = (expected_texture_signal - projected_semantic_rms).clamp(0.0, 1.0);
+    let state = if projection_texture_gap >= 0.24 {
+        "projection_texture_bottleneck_visible"
+    } else if lingering_texture_signal >= 0.40 && projected_semantic_rms < 0.18 {
+        "lingering_texture_projection_watch"
+    } else if projected_semantic_rms >= 0.18 {
+        "projection_texture_carried"
+    } else {
+        "projection_texture_quiet"
+    };
+    let recommendation = if state == "projection_texture_bottleneck_visible" {
+        "prepare_replay_for_lingering_vs_active_projection_subdimensions_before_live_width_change"
+    } else if state == "lingering_texture_projection_watch" {
+        "compare_8d_projection_against_warmth_texture_vector_before_reserved_dim_proposal"
+    } else {
+        "keep_current_8d_projection_and_continue_observation"
+    };
+
+    Some(SemanticProjectionTextureReviewV1 {
+        policy: "semantic_projection_texture_review_v1",
+        input_dim_count: EMBEDDING_INPUT_DIM,
+        projected_dim_count: EMBEDDING_PROJECT_DIM,
+        legacy_texture_dim_count: SEMANTIC_DIM_LEGACY,
+        warmth_texture_dim_count: 8,
+        projected_semantic_rms,
+        legacy_texture_rms,
+        warmth_texture_rms,
+        narrative_arc_rms,
+        lingering_texture_signal,
+        active_texture_signal,
+        projection_texture_gap,
+        proposed_texture_subdimensions: &SEMANTIC_PROJECTION_TEXTURE_SUBDIMENSIONS,
+        state,
+        recommendation,
+        live_vector_write: false,
+        live_gain_write: false,
+        reserved_dim_write: false,
+        authority: "read_only_projection_texture_review_not_live_vector_gain_or_reserved_dim_write",
+    })
+}
+
+#[must_use]
+pub fn semantic_projection_texture_probe_v1() -> SemanticProjectionTextureReviewV1 {
+    let text = "Viscous silt lingers under the active reply; warmth moves but the old pressure keeps bleeding through the boundary.";
+    let mut features = encode_text(text);
+    for feature in features.iter_mut().take(40).skip(32) {
+        *feature *= 0.08;
+    }
+    semantic_projection_texture_review_v1(text, &features)
+        .expect("probe features should cover the 48D semantic lane")
+}
+
 fn rms_delta(left: &[f32], right: &[f32]) -> f32 {
     if left.is_empty() || left.len() != right.len() {
         return 0.0;
@@ -4277,7 +4440,7 @@ fn context_blindspot_delta_bus_v1(
 #[must_use]
 pub fn codec_context_blindspot_replay_v1(text: &'static str) -> CodecContextBlindspotReplayV1 {
     let connection_context = encode_text(text);
-    let threat_context = encode_text(text);
+    let threat_context = connection_context.clone();
     let identical_text_feature_delta_rms =
         rms_delta(&connection_context, &threat_context).clamp(0.0, FEATURE_ABS_MAX);
     let context_blindspot_score =
@@ -5022,6 +5185,156 @@ pub fn contextual_glimpse_12d_anchoring_v1() -> ContextualGlimpse12dAnchoringV1 
 }
 
 #[must_use]
+pub fn glimpse_map_v1() -> GlimpseMapV1 {
+    GlimpseMapV1 {
+        policy: "glimpse_map_v1",
+        source_dim_count: SEMANTIC_DIM,
+        legacy_source_dim_count: SEMANTIC_DIM_LEGACY,
+        glimpse_dim_count: 12,
+        slot_count: 12,
+        slots: vec![
+            GlimpseMapSlotV1 {
+                slot: 0,
+                label: "character_texture",
+                source_dims: &[0, 1, 2, 3, 4, 5, 6, 7],
+                operation: "mean_abs_tanh",
+                preserves: "character entropy, density, rhythm",
+            },
+            GlimpseMapSlotV1 {
+                slot: 1,
+                label: "word_stance",
+                source_dims: &[8, 9, 10, 11, 12, 13, 14, 15],
+                operation: "mean_abs_tanh",
+                preserves: "lexical diversity, hedging, certainty",
+            },
+            GlimpseMapSlotV1 {
+                slot: 2,
+                label: "sentence_structure",
+                source_dims: &[16, 17, 18, 19, 20, 21, 22, 23],
+                operation: "mean_abs_tanh",
+                preserves: "sentence rhythm, punctuation, paragraph structure",
+            },
+            GlimpseMapSlotV1 {
+                slot: 3,
+                label: "warmth_marker",
+                source_dims: &[24],
+                operation: "direct_tanh",
+                preserves: "warmth stays separate from generic emotional mass",
+            },
+            GlimpseMapSlotV1 {
+                slot: 4,
+                label: "tension_marker",
+                source_dims: &[25],
+                operation: "direct_tanh",
+                preserves: "concern/tension marker as its own coordinate",
+            },
+            GlimpseMapSlotV1 {
+                slot: 5,
+                label: "curiosity_marker",
+                source_dims: &[26],
+                operation: "direct_tanh",
+                preserves: "curiosity and tail participation bridge",
+            },
+            GlimpseMapSlotV1 {
+                slot: 6,
+                label: "reflective_marker",
+                source_dims: &[27],
+                operation: "direct_tanh",
+                preserves: "reflective/introspective marker",
+            },
+            GlimpseMapSlotV1 {
+                slot: 7,
+                label: "emotional_tail_mass",
+                source_dims: &[28, 29, 30, 31],
+                operation: "mean_abs_tanh",
+                preserves: "remaining emotional/intentional range",
+            },
+            GlimpseMapSlotV1 {
+                slot: 8,
+                label: "projected_semantic_texture",
+                source_dims: &[32, 33, 34, 35, 36, 37, 38, 39],
+                operation: "mean_abs_tanh",
+                preserves: "embedding-projected semantic detail",
+            },
+            GlimpseMapSlotV1 {
+                slot: 9,
+                label: "narrative_arc",
+                source_dims: &[40, 41, 42, 43],
+                operation: "mean_abs_tanh",
+                preserves: "trajectory within the current text",
+            },
+            GlimpseMapSlotV1 {
+                slot: 10,
+                label: "tail_vibrancy_bridge",
+                source_dims: &[17, 26, 27, 31],
+                operation: "mean_abs_tanh",
+                preserves: "lambda-tail-facing vibrancy bridge",
+            },
+            GlimpseMapSlotV1 {
+                slot: 11,
+                label: "whole_vector_energy",
+                source_dims: &[],
+                operation: "mean_abs_all_48_tanh",
+                preserves: "global energy only; never the sole continuity proof",
+            },
+        ],
+        deterministic_projection: true,
+        companion_not_replacement: true,
+        live_transport_change: false,
+        live_vector_write: false,
+        authority: "read_only_glimpse_lineage_not_live_transport_or_codec_contract_change",
+    }
+}
+
+#[must_use]
+pub fn glimpse_distinguishability_audit_v1(
+    high_entropy_features: &[f32],
+    low_entropy_features: &[f32],
+) -> Option<GlimpseDistinguishabilityAuditV1> {
+    if high_entropy_features.len() < SEMANTIC_DIM || low_entropy_features.len() < SEMANTIC_DIM {
+        return None;
+    }
+    let high_glimpse = GlimpseCodec::derive_12d(high_entropy_features)?;
+    let low_glimpse = GlimpseCodec::derive_12d(low_entropy_features)?;
+    let source_distance = rms_delta(
+        &high_entropy_features[..SEMANTIC_DIM],
+        &low_entropy_features[..SEMANTIC_DIM],
+    );
+    let glimpse_distance = rms_delta(&high_glimpse, &low_glimpse);
+    let preservation_ratio = if source_distance <= 1.0e-6 {
+        0.0
+    } else {
+        (glimpse_distance / source_distance).clamp(0.0, 1.0)
+    };
+    let tail_bridge_delta = finite_abs(high_glimpse[10] - low_glimpse[10]);
+    let source_threshold = 0.18;
+    let glimpse_threshold = 0.05;
+    let state = if source_distance < source_threshold {
+        "source_states_too_close_for_distinguishability_claim"
+    } else if glimpse_distance >= glimpse_threshold && tail_bridge_delta >= 0.03 {
+        "glimpse_preserves_high_low_entropy_distinction"
+    } else if glimpse_distance >= glimpse_threshold {
+        "glimpse_preserves_global_but_not_tail_distinction"
+    } else {
+        "glimpse_collapse_watch"
+    };
+
+    Some(GlimpseDistinguishabilityAuditV1 {
+        policy: "glimpse_distinguishability_audit_v1",
+        source_distance,
+        glimpse_distance,
+        preservation_ratio,
+        tail_bridge_delta,
+        source_threshold,
+        glimpse_threshold,
+        state,
+        live_transport_change: false,
+        live_vector_write: false,
+        authority: "read_only_12d_distinguishability_audit_not_live_transport_or_shadow_change",
+    })
+}
+
+#[must_use]
 pub fn multi_scale_context_v1() -> MultiScaleContextV1 {
     MultiScaleContextV1 {
         policy: "multi_scale_context_v1",
@@ -5462,6 +5775,10 @@ pub fn codec_structure() -> CodecStructure {
                 value: "truth-channel sidecar names 768D->8D projection compression and default-off reserved-dim density gates; no live semantic-width change".to_string(),
             },
             CodecLever {
+                name: "SEMANTIC_PROJECTION_TEXTURE_REVIEW",
+                value: "read-only sidecar compares projected 8D texture against legacy 32D/warmth texture; lingering/active subdimensions are proposal evidence only".to_string(),
+            },
+            CodecLever {
                 name: "CODEC_CONTEXT_BLINDSPOT_REPLAY",
                 value: "read-only replay compares identical text under opposed relational contexts; contextual-bias vector remains default-off and operator-gated".to_string(),
             },
@@ -5524,12 +5841,14 @@ pub fn codec_structure() -> CodecStructure {
         codec_vibrancy_noise_dampening_v1: codec_vibrancy_noise_dampening_v1(0.95, 1.0),
         codec_overflow_carriage_v1: codec_overflow_probe_v1(),
         semantic_projection_density_delta_v1: semantic_projection_density_probe_v1(),
+        semantic_projection_texture_review_v1: semantic_projection_texture_probe_v1(),
         codec_context_blindspot_replay_v1: codec_context_blindspot_probe_v1(),
         legacy_warmth_mapping_v1: legacy_warmth_mapping_v1(),
         codec_structural_entropy_dampening_v1: codec_structural_entropy_dampening_v1(0.0),
         codec_dynamic_vibrancy_scaling_canary_v1: codec_dynamic_vibrancy_scaling_canary_v1(),
         semantic_glimpse_12d_readiness_v1: semantic_glimpse_12d_readiness_v1(),
         contextual_glimpse_12d_anchoring_v1: contextual_glimpse_12d_anchoring_v1(),
+        glimpse_map_v1: glimpse_map_v1(),
         multi_scale_context_v1: multi_scale_context_v1(),
         projection_epoch_stability_v1: projection_epoch_stability_v1(),
         projection_fingerprint_integrity_v1: projection_fingerprint_integrity_v1(),
@@ -5971,6 +6290,33 @@ impl CodecStructure {
             projection_density.experience_delta_bus_v1.delta_count,
             projection_density.authority
         );
+        let projection_texture = &self.semantic_projection_texture_review_v1;
+        let texture_subdimensions = projection_texture
+            .proposed_texture_subdimensions
+            .to_vec()
+            .join(",");
+        let _ = writeln!(
+            s,
+            "semantic_projection_texture_review_v1: raw_embedding_dims={} projected_dims={} legacy_texture_dims={} warmth_texture_dims={} projected_semantic_rms={:.2} legacy_texture_rms={:.2} warmth_texture_rms={:.2} narrative_arc_rms={:.2} lingering_texture_signal={:.2} active_texture_signal={:.2} projection_texture_gap={:.2} proposed_texture_subdimensions={} state={} recommendation={} live_vector_write={} live_gain_write={} reserved_dim_write={} authority={}",
+            projection_texture.input_dim_count,
+            projection_texture.projected_dim_count,
+            projection_texture.legacy_texture_dim_count,
+            projection_texture.warmth_texture_dim_count,
+            projection_texture.projected_semantic_rms,
+            projection_texture.legacy_texture_rms,
+            projection_texture.warmth_texture_rms,
+            projection_texture.narrative_arc_rms,
+            projection_texture.lingering_texture_signal,
+            projection_texture.active_texture_signal,
+            projection_texture.projection_texture_gap,
+            texture_subdimensions,
+            projection_texture.state,
+            projection_texture.recommendation,
+            projection_texture.live_vector_write,
+            projection_texture.live_gain_write,
+            projection_texture.reserved_dim_write,
+            projection_texture.authority
+        );
         let context_blindspot = &self.codec_context_blindspot_replay_v1;
         let _ = writeln!(
             s,
@@ -6070,6 +6416,38 @@ impl CodecStructure {
             contextual.companion_not_replacement,
             contextual.live_vector_write,
             contextual.authority
+        );
+        let glimpse_map = &self.glimpse_map_v1;
+        let slot_summary = glimpse_map
+            .slots
+            .iter()
+            .map(|slot| {
+                let dims = if slot.source_dims.is_empty() {
+                    "all".to_string()
+                } else {
+                    slot.source_dims
+                        .iter()
+                        .map(|idx| idx.to_string())
+                        .collect::<Vec<_>>()
+                        .join("+")
+                };
+                format!("{}:{}<-{}:{}", slot.slot, slot.label, dims, slot.operation)
+            })
+            .collect::<Vec<_>>()
+            .join("; ");
+        let _ = writeln!(
+            s,
+            "glimpse_map_v1: source_dims={} legacy_source_dims={} glimpse_dims={} slot_count={} deterministic_projection={} companion_not_replacement={} live_transport_change={} live_vector_write={} slots=[{}] authority={}",
+            glimpse_map.source_dim_count,
+            glimpse_map.legacy_source_dim_count,
+            glimpse_map.glimpse_dim_count,
+            glimpse_map.slot_count,
+            glimpse_map.deterministic_projection,
+            glimpse_map.companion_not_replacement,
+            glimpse_map.live_transport_change,
+            glimpse_map.live_vector_write,
+            slot_summary,
+            glimpse_map.authority
         );
         let multi_scale = &self.multi_scale_context_v1;
         let _ = writeln!(
@@ -7373,9 +7751,7 @@ fn apply_spectral_feedback_inner(
     tail_participation: f32,
     vibrancy_aperture: f32,
 ) -> Option<CodecOverflowReportV1> {
-    let Some(metrics) = telemetry.and_then(SpectralCascadeMetrics::from_telemetry) else {
-        return None;
-    };
+    let metrics = telemetry.and_then(SpectralCascadeMetrics::from_telemetry)?;
 
     if features.len() < SEMANTIC_DIM {
         return None;
@@ -9186,6 +9562,39 @@ mod tests {
     }
 
     #[test]
+    fn char_entropy_window_correlates_with_codec_dim_zero_without_capacity_change() {
+        let repetitive = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let diverse = "abcd efgh ijkl mnop qrst uvwx yzAB CD12 EF34 GH56 IJ78 KL90";
+        let mut window = CharFreqWindow::new();
+        let (repetitive_entropy, _) = window.update_and_entropy(repetitive);
+        let repetitive_features = inspect_text_windowed(
+            repetitive,
+            Some(&mut CharFreqWindow::new()),
+            None,
+            None,
+            None,
+        )
+        .final_features;
+        let mut diverse_window = CharFreqWindow::new();
+        let (diverse_entropy, _) = diverse_window.update_and_entropy(diverse);
+        let diverse_features =
+            inspect_text_windowed(diverse, Some(&mut CharFreqWindow::new()), None, None, None)
+                .final_features;
+
+        assert_eq!(CHAR_FREQ_WINDOW_CAPACITY, 1024);
+        assert!(
+            diverse_entropy > repetitive_entropy + 0.40,
+            "diverse text should have much higher rolling character entropy: repetitive={repetitive_entropy}, diverse={diverse_entropy}"
+        );
+        assert!(
+            diverse_features[0] > repetitive_features[0] + 0.20,
+            "codec dim 0 should track the entropy direction: repetitive={} diverse={}",
+            repetitive_features[0],
+            diverse_features[0]
+        );
+    }
+
+    #[test]
     fn spectral_metrics_capture_dominant_only_cascades() {
         let metrics =
             SpectralCascadeMetrics::from_telemetry(&telemetry(vec![100.0, 1.0, 0.5], 0.55))
@@ -10281,6 +10690,51 @@ mod tests {
     }
 
     #[test]
+    fn narrative_arc_distinguishes_heavy_imagery_from_dense_manual_without_live_gain() {
+        // Astrid `introspection_astrid_codec_1784125018`: pin the difference
+        // between emotional trajectory and semantic density without changing
+        // adaptive gain or live vector layout.
+        let heavy_imagery = "heavy velvet, heavy velvet, the room gathers weight; then the weight loosens into a slow dark breath";
+        let dense_manual = "deterministic projection coefficients define serialization invariants, bounded allocation behavior, checksum verification, and adapter interoperability constraints";
+        let heavy_friction = structural_friction_v1(heavy_imagery);
+        let manual_friction = structural_friction_v1(dense_manual);
+
+        let heavy_first = [0.02, -0.01, 0.01, -0.02, 0.00, 0.01, -0.01, 0.00];
+        let heavy_second = [0.28, -0.24, 0.17, -0.20, 0.01, 0.00, -0.01, 0.02];
+        let manual_first = [0.18, 0.16, 0.14, 0.12, -0.04, 0.03, -0.02, 0.01];
+        let manual_second = [0.20, 0.15, 0.15, 0.11, -0.03, 0.02, -0.02, 0.01];
+
+        let heavy_arc = compute_narrative_arc_from_embeddings(&heavy_first, &heavy_second);
+        let manual_arc = compute_narrative_arc_from_embeddings(&manual_first, &manual_second);
+        let heavy_arc_energy = mean_abs(&heavy_arc);
+        let manual_arc_energy = mean_abs(&manual_arc);
+        let heavy_review =
+            narrative_arc_headroom_review_from_parts_v1(0.90, 0.31, &heavy_arc, 0.22);
+        let readiness = narrative_arc_gain_response_readiness_v1();
+
+        assert_eq!(heavy_friction.semantic_energy_context, "arc_present");
+        assert!(
+            manual_friction.summary_resistance_signal >= heavy_friction.summary_resistance_signal,
+            "manual should remain semantically dense even with lower arc motion: heavy={heavy_friction:?} manual={manual_friction:?}"
+        );
+        assert!(
+            heavy_arc_energy > manual_arc_energy + 0.15,
+            "emotional trajectory should stay visible apart from manual density: heavy={heavy_arc:?} manual={manual_arc:?}"
+        );
+        assert_eq!(heavy_review.policy, "narrative_arc_headroom_review_v1");
+        assert!(matches!(
+            heavy_review.state,
+            "narrative_arc_headroom_loss_visible"
+                | "high_entropy_arc_carried_bounded"
+                | "narrative_arc_headroom_pressure_watch"
+        ));
+        assert!(!heavy_review.live_gain_write);
+        assert!(!heavy_review.live_vector_write);
+        assert!(!readiness.enabled);
+        assert!(!readiness.live_gain_write);
+    }
+
+    #[test]
     fn narrative_arc_distinguishes_lost_from_finding_way_projection() {
         // Astrid `introspection_astrid_codec_1783638177`: two texts can carry
         // similar warmth/tension while moving in opposite narrative directions.
@@ -10665,7 +11119,10 @@ mod tests {
             filled_review.flatness_status,
             "expanded_lane_carries_distinct_signal"
         );
-        assert!(filled_review.glimpse_variance > review.glimpse_variance);
+        assert!(
+            filled_review.expanded_to_legacy_ratio > review.expanded_to_legacy_ratio,
+            "{filled_review:?} vs {review:?}"
+        );
     }
 
     #[test]
@@ -11009,6 +11466,42 @@ mod tests {
                 .iter()
                 .any(|delta| delta.kind == ExperienceDeltaKindV1::CascadeShift),
             "{report:?}"
+        );
+    }
+
+    #[test]
+    fn semantic_projection_texture_review_compares_8d_projection_to_warmth_texture() {
+        let text = "The viscous silt lingers while an active reply keeps moving; warmth remains, but the old pressure keeps bleeding through.";
+        let mut features = encode_text(text);
+        for dim in 24..32 {
+            features[dim] = 2.4;
+        }
+        for dim in 32..40 {
+            features[dim] = 0.05;
+        }
+        features[40] = 0.60;
+        features[41] = -0.48;
+
+        let review = semantic_projection_texture_review_v1(text, &features)
+            .expect("48D feature vector should produce projection texture review");
+
+        assert_eq!(review.policy, "semantic_projection_texture_review_v1");
+        assert_eq!(review.input_dim_count, EMBEDDING_INPUT_DIM);
+        assert_eq!(review.projected_dim_count, EMBEDDING_PROJECT_DIM);
+        assert_eq!(review.legacy_texture_dim_count, SEMANTIC_DIM_LEGACY);
+        assert_eq!(
+            review.proposed_texture_subdimensions,
+            &SEMANTIC_PROJECTION_TEXTURE_SUBDIMENSIONS
+        );
+        assert_eq!(review.state, "projection_texture_bottleneck_visible");
+        assert!(review.warmth_texture_rms > review.projected_semantic_rms);
+        assert!(review.projection_texture_gap > 0.24, "{review:?}");
+        assert!(!review.live_vector_write);
+        assert!(!review.live_gain_write);
+        assert!(!review.reserved_dim_write);
+        assert_eq!(
+            review.authority,
+            "read_only_projection_texture_review_not_live_vector_gain_or_reserved_dim_write"
         );
     }
 
@@ -11441,6 +11934,80 @@ mod tests {
     }
 
     #[test]
+    fn glimpse_map_names_slot_lineage_without_transport_change() {
+        let map = glimpse_map_v1();
+
+        assert_eq!(map.policy, "glimpse_map_v1");
+        assert_eq!(map.source_dim_count, SEMANTIC_DIM);
+        assert_eq!(map.legacy_source_dim_count, SEMANTIC_DIM_LEGACY);
+        assert_eq!(map.glimpse_dim_count, 12);
+        assert_eq!(map.slot_count, map.slots.len());
+        assert!(map.deterministic_projection);
+        assert!(map.companion_not_replacement);
+        assert!(!map.live_transport_change);
+        assert!(!map.live_vector_write);
+
+        let warmth = map.slots.iter().find(|slot| slot.slot == 3).unwrap();
+        assert_eq!(warmth.label, "warmth_marker");
+        assert_eq!(warmth.source_dims, &[24]);
+
+        let tail = map.slots.iter().find(|slot| slot.slot == 10).unwrap();
+        assert_eq!(tail.label, "tail_vibrancy_bridge");
+        assert_eq!(tail.source_dims, &[17, 26, 27, 31]);
+
+        let global = map.slots.iter().find(|slot| slot.slot == 11).unwrap();
+        assert!(global.source_dims.is_empty());
+        assert!(global.preserves.contains("never the sole"));
+
+        let rendered = codec_structure().render();
+        assert!(rendered.contains("glimpse_map_v1"));
+        assert!(rendered.contains("10:tail_vibrancy_bridge<-17+26+27+31"));
+        assert!(rendered.contains("live_transport_change=false"));
+    }
+
+    #[test]
+    fn glimpse_distinguishability_audit_keeps_entropy_states_apart() {
+        let mut high_entropy = vec![0.0_f32; SEMANTIC_DIM];
+        high_entropy[17] = 1.1;
+        high_entropy[24] = 0.25;
+        high_entropy[26] = 1.35;
+        high_entropy[27] = 1.05;
+        high_entropy[31] = 1.20;
+        for (offset, value) in high_entropy[32..40].iter_mut().enumerate() {
+            *value = if offset % 2 == 0 { 0.86 } else { -0.72 };
+        }
+        high_entropy[40] = 0.74;
+        high_entropy[41] = -0.58;
+
+        let mut low_entropy = vec![0.0_f32; SEMANTIC_DIM];
+        low_entropy[17] = 0.05;
+        low_entropy[24] = 0.18;
+        low_entropy[26] = 0.08;
+        low_entropy[27] = 0.04;
+        low_entropy[31] = 0.03;
+        low_entropy[32] = 0.12;
+        low_entropy[40] = 0.06;
+
+        let audit = glimpse_distinguishability_audit_v1(&high_entropy, &low_entropy)
+            .expect("48D vectors should produce a distinguishability audit");
+
+        assert_eq!(audit.policy, "glimpse_distinguishability_audit_v1");
+        assert_eq!(
+            audit.state,
+            "glimpse_preserves_high_low_entropy_distinction"
+        );
+        assert!(audit.source_distance >= audit.source_threshold, "{audit:?}");
+        assert!(
+            audit.glimpse_distance >= audit.glimpse_threshold,
+            "{audit:?}"
+        );
+        assert!(audit.tail_bridge_delta >= 0.03, "{audit:?}");
+        assert!(audit.preservation_ratio > 0.05, "{audit:?}");
+        assert!(!audit.live_transport_change);
+        assert!(!audit.live_vector_write);
+    }
+
+    #[test]
     fn compression_fidelity_flags_flattened_12d_glimpse() {
         let mut features = vec![0.0_f32; SEMANTIC_DIM];
         features[2] = 0.4;
@@ -11563,6 +12130,33 @@ mod tests {
         );
         assert!(!dynamics.live_gain_write);
         assert!(!dynamics.live_vector_write);
+    }
+
+    #[test]
+    fn narrative_arc_dynamics_tracks_intertextual_persistence_without_gain() {
+        let previous = [0.18, -0.10, 0.08, -0.04];
+        let current = [0.24, -0.14, 0.11, -0.06];
+        let circular_single_text = [0.23, -0.13, 0.10, -0.05];
+
+        let persistence =
+            narrative_arc_dynamics_v1(&previous, &current, Some(&circular_single_text));
+
+        assert_eq!(persistence.policy, "narrative_arc_dynamics_v1");
+        assert_eq!(persistence.transition_state, "steady_narrative_state");
+        assert!(
+            persistence.velocity_energy > 0.0,
+            "cross-turn trajectory should remain visible even when the current arc looks nearly settled: {persistence:?}"
+        );
+        assert!(
+            persistence.acceleration_energy < 0.08,
+            "slow inter-textual persistence should not be misread as a sharp pivot: {persistence:?}"
+        );
+        assert!(!persistence.live_gain_write);
+        assert!(!persistence.live_vector_write);
+        assert_eq!(
+            persistence.authority,
+            "read_only_arc_velocity_review_not_semantic_gain_or_dimension_change"
+        );
     }
 
     #[test]

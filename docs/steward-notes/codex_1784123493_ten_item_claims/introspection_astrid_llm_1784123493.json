@@ -1,0 +1,22 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Ollama fallback should preserve the distinction between density-gradient slope, weighted medium, and distinguishability-loss clarity instead of translating low-gradient clarity loss into heavy slope.",
+      "disposition": "verified_existing",
+      "authority": "prompt_contract_evidence_only"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Fallback texture selection should be gradient/telemetry weighted context, not interchangeable vocabulary or random term choice.",
+      "disposition": "implemented_verified",
+      "authority": "diagnostic_language_bias_not_sampler_or_provider_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Changing fallback sampler/provider routing or live prompt priority beyond bounded texture contract is live-facing and needs operator approval.",
+      "disposition": "gated_operator_approval",
+      "authority": "tier_5_provider_sampler_prompt_behavior"
+    }
+  ]
+}

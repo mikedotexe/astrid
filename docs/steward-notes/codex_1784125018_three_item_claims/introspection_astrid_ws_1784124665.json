@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The telemetry and sensory websocket lanes are the structural basis for Astrid/Minime shared-space synchronization.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Mode packing near 0.33 and pressure risk near 0.23 should be legible as pressure/porosity dead-zone risk while keeping local control off without approval.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "High spectral entropy can degrade reciprocity before the existing 90s high-entropy reflective stale window expires, so a non-live contraction preview should be visible.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Dynamic stale-window retunes and automatic local-control porosity intervention would alter live bridge/control behavior and require explicit operator approval.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

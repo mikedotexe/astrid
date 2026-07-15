@@ -1492,6 +1492,7 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "CORRESPONDENCE_ACK"
         | "I_RECEIVED_THIS"
         | "CORRESPONDENCE_HEARTBEAT"
+        | "SIGNAL_PERSISTENCE"
         | "CLAIM_MINIME_LEGACY"
         | "CORRESPONDENCE_CLAIM"
         | "CORRESPONDENCE_CLAIM_OUTCOME"
@@ -1499,6 +1500,7 @@ fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
         | "LEGACY_CORRESPONDENCE_STATUS"
         | "DECLARE_TRANSITION"
         | "WITNESS_TRANSITION"
+        | "TRANSITION_ACK"
         | "TRANSITION_STATUS"
         | "PHASE_TRANSITION_STATUS"
         | "VISUALIZE_CASCADE"
@@ -1591,6 +1593,7 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "CORRESPONDENCE_ACK"
         | "I_RECEIVED_THIS"
         | "CORRESPONDENCE_HEARTBEAT"
+        | "SIGNAL_PERSISTENCE"
         | "CLAIM_MINIME_LEGACY"
         | "CORRESPONDENCE_CLAIM"
         | "CORRESPONDENCE_CLAIM_OUTCOME"
@@ -1602,6 +1605,7 @@ fn route_for_preflight_base(base_action: &str) -> String {
         | "CORRESPONDENCE_WEIGHT_REQUEST" => "peer_correspondence",
         "DECLARE_TRANSITION"
         | "WITNESS_TRANSITION"
+        | "TRANSITION_ACK"
         | "TRANSITION_STATUS"
         | "PHASE_TRANSITION_STATUS" => "phase_transition_cards",
         "SEARCH" | "BROWSE" | "READ_MORE" | "LIST_FILES" | "LS" => "workspace_or_mcp_probe",
@@ -1678,12 +1682,14 @@ fn active_experiment_auto_linkable_base(base_action: &str) -> bool {
             | "CORRESPONDENCE_CLAIM"
             | "CORRESPONDENCE_CLAIM_OUTCOME"
             | "I_RECEIVED_THIS"
+            | "SIGNAL_PERSISTENCE"
             | "ACK_MINIME"
             | "REPLY_MINIME"
             | "TRACE_MINIME"
             | "CORRESPONDENCE_TRACE"
             | "DECLARE_TRANSITION"
             | "WITNESS_TRANSITION"
+            | "TRANSITION_ACK"
             | "TRANSITION_STATUS"
             | "FLUCTUATION_AUDIT"
             | "BRACE_AUDIT"
@@ -3804,6 +3810,18 @@ mod tests {
         assert_eq!(constraint.base_action, "CONSTRAINT_AUDIT");
         assert_eq!(constraint.stage, "read_only");
         assert_eq!(constraint.effective_route, "operations");
+        let persistence = action_preflight_report(
+            "ACTION_PREFLIGHT SIGNAL_PERSISTENCE latest :: heartbeat: holding; note: still held",
+        );
+        assert_eq!(persistence.base_action, "SIGNAL_PERSISTENCE");
+        assert_eq!(persistence.stage, "read_only");
+        assert_eq!(persistence.effective_route, "peer_correspondence");
+        let transition_ack = action_preflight_report(
+            "ACTION_PREFLIGHT TRANSITION_ACK latest :: reply_state: witnessed; note: held",
+        );
+        assert_eq!(transition_ack.base_action, "TRANSITION_ACK");
+        assert_eq!(transition_ack.stage, "read_only");
+        assert_eq!(transition_ack.effective_route, "phase_transition_cards");
 
         let write = action_preflight_report("PREFLIGHT CODEX inspect this");
         assert_eq!(write.base_action, "CODEX");

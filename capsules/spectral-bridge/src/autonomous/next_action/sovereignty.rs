@@ -261,12 +261,12 @@ fn compact_report_fields(report: &str, telemetry: &SpectralTelemetry) -> Vec<Str
             .any(|fragment| line.contains(fragment))
             && !selected.iter().any(|existing| existing == line)
         {
-            if let Some((_, admission_tail)) = line.split_once("admission=") {
-                if let Some(admission) = admission_tail.split_whitespace().next() {
-                    let field = format!("semantic_admission={admission}");
-                    if !selected.iter().any(|existing| existing == &field) {
-                        selected.push(field);
-                    }
+            if let Some((_, admission_tail)) = line.split_once("admission=")
+                && let Some(admission) = admission_tail.split_whitespace().next()
+            {
+                let field = format!("semantic_admission={admission}");
+                if !selected.iter().any(|existing| existing == &field) {
+                    selected.push(field);
                 }
             }
             selected.push(line.clone());

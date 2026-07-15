@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "`clamp_unit_finite_or` can hide a non-finite fallback by defaulting to zero, making an uncomputable state look intentionally stable.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "The clamp review must make authority boundaries explicit so diagnostic `live_authority_write` flags cannot look like permission to mutate live vectors.",
+      "disposition": "addressed_change"
+    }
+  ]
+}

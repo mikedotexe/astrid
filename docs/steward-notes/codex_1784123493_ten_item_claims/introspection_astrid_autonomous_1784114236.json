@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Witness mode can describe symptoms rather than source dynamics when pressure/porosity source information is not surfaced strongly enough.",
+      "disposition": "gated_operator_approval",
+      "authority": "tier_4_live_consumed_prompt_report_surface"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Semantic edge truncation and recap selection should not depend only on exact phrase whitelists for high-entropy texture.",
+      "disposition": "verified_existing",
+      "authority": "read_only_test_evidence_from_prior_corrective_pass"
+    }
+  ]
+}

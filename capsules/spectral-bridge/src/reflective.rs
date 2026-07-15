@@ -14,6 +14,7 @@ use std::{
     fs,
     path::Path,
     process::{Command, Output, Stdio},
+    sync::atomic::{AtomicU64, Ordering},
     thread,
     time::{Duration, Instant},
 };
@@ -34,7 +35,12 @@ const REFLECTIVE_SIDECAR_TIMEOUT_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_
 const DEFAULT_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 240;
 const MIN_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 30;
 const MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS: u64 = 900;
+const REFLECTIVE_SIDECAR_COOLDOWN_SECONDS_ENV: &str = "ASTRID_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS";
+const DEFAULT_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS: u64 = 600;
+const MAX_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS: u64 = 3_600;
 const SIDECAR_WAIT_POLL_MS: u64 = 200;
+
+static REFLECTIVE_SIDECAR_COOLDOWN_UNTIL_UNIX: AtomicU64 = AtomicU64::new(0);
 
 /// Lightweight regime classification — runs every exchange in <1ms.
 /// No LLM, no subprocess. Pure computation on spectral telemetry.
@@ -385,6 +391,37 @@ fn reflective_sidecar_timeout_seconds() -> u64 {
     )
 }
 
+fn reflective_sidecar_cooldown_seconds() -> u64 {
+    let raw = std::env::var(REFLECTIVE_SIDECAR_COOLDOWN_SECONDS_ENV).ok();
+    parse_bounded_u64(
+        raw.as_deref(),
+        DEFAULT_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS,
+        MAX_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS,
+    )
+}
+
+fn unix_now_seconds() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+fn reflective_sidecar_cooldown_remaining(now_unix_seconds: u64) -> Option<u64> {
+    let until = REFLECTIVE_SIDECAR_COOLDOWN_UNTIL_UNIX.load(Ordering::Relaxed);
+    (until > now_unix_seconds).then(|| until.saturating_sub(now_unix_seconds))
+}
+
+fn note_reflective_sidecar_timeout(now_unix_seconds: u64, cooldown_seconds: u64) {
+    if cooldown_seconds == 0 {
+        return;
+    }
+    REFLECTIVE_SIDECAR_COOLDOWN_UNTIL_UNIX.store(
+        now_unix_seconds.saturating_add(cooldown_seconds),
+        Ordering::Relaxed,
+    );
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ReflectiveRewriteInvocationPolicy {
     max_attempts: u32,
@@ -543,6 +580,14 @@ fn run_sidecar_command_with_timeout(
 /// For lighter per-exchange telemetry, use `query_controller_light()` (future).
 pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
     let paths = bridge_paths();
+    if let Some(remaining_seconds) = reflective_sidecar_cooldown_remaining(unix_now_seconds()) {
+        debug!(
+            remaining_seconds,
+            "skipping MLX reflective sidecar during timeout cooldown"
+        );
+        return None;
+    }
+
     let sidecar_script = paths.reflective_sidecar_script().to_path_buf();
     let script = Path::new(&sidecar_script);
     if !script.exists() {
@@ -588,9 +633,11 @@ pub async fn query_sidecar(spectral_context: &str) -> Option<ReflectiveReport> {
             .stderr(Stdio::piped());
         let run = run_sidecar_command_with_timeout(&mut command, sidecar_timeout).ok()?;
         if run.timed_out {
+            let cooldown_seconds = reflective_sidecar_cooldown_seconds();
+            note_reflective_sidecar_timeout(unix_now_seconds(), cooldown_seconds);
             warn!(
                 timeout_seconds = sidecar_timeout.as_secs(),
-                "MLX sidecar timed out; killed reflective subprocess"
+                cooldown_seconds, "MLX sidecar timed out; killed reflective subprocess"
             );
             return None;
         }
@@ -911,6 +958,47 @@ mod tests {
             ),
             MAX_REFLECTIVE_SIDECAR_TIMEOUT_SECONDS
         );
+    }
+
+    #[test]
+    fn reflective_sidecar_cooldown_parsing_defaults_and_clamps() {
+        assert_eq!(
+            parse_bounded_u64(
+                None,
+                DEFAULT_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS,
+                MAX_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS,
+            ),
+            DEFAULT_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS
+        );
+        assert_eq!(
+            parse_bounded_u64(
+                Some("0"),
+                DEFAULT_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS,
+                MAX_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS,
+            ),
+            0
+        );
+        assert_eq!(
+            parse_bounded_u64(
+                Some("99999"),
+                DEFAULT_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS,
+                MAX_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS,
+            ),
+            MAX_REFLECTIVE_SIDECAR_COOLDOWN_SECONDS
+        );
+    }
+
+    #[test]
+    fn reflective_sidecar_timeout_cooldown_tracks_remaining_window() {
+        REFLECTIVE_SIDECAR_COOLDOWN_UNTIL_UNIX.store(0, Ordering::Relaxed);
+        assert_eq!(reflective_sidecar_cooldown_remaining(100), None);
+
+        note_reflective_sidecar_timeout(100, 60);
+
+        assert_eq!(reflective_sidecar_cooldown_remaining(100), Some(60));
+        assert_eq!(reflective_sidecar_cooldown_remaining(125), Some(35));
+        assert_eq!(reflective_sidecar_cooldown_remaining(160), None);
+        REFLECTIVE_SIDECAR_COOLDOWN_UNTIL_UNIX.store(0, Ordering::Relaxed);
     }
 
     #[test]

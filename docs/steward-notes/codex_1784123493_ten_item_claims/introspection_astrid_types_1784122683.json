@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "A flat `ExperienceDeltaKindV1` label hides blended events such as CascadeShift with Friction, ViscosityShift, and StructuralSolidification components.",
+      "disposition": "implemented_verified",
+      "authority": "read_only_truth_channel_schema_not_live_semantics"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "Changing solidification or persistence weights would alter live interpretation semantics and must remain V2-gated.",
+      "disposition": "gated_operator_approval",
+      "authority": "tier_4_schema_semantics_retune"
+    }
+  ]
+}

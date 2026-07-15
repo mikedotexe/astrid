@@ -1390,6 +1390,87 @@ def work_item_summary(work_items: dict[str, dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _addressing_scope_counts(items: list[dict[str, Any]]) -> dict[str, Any]:
+    status_counts = Counter(str(item.get("status") or "unknown") for item in items)
+    full_read = sum(1 for item in items if item.get("full_read"))
+    fully_addressed = sum(1 for item in items if item.get("fully_addressed"))
+    remaining = sum(1 for item in items if not item.get("fully_addressed"))
+    return {
+        "indexed": len(items),
+        "full_read_count": full_read,
+        "fully_addressed_count": fully_addressed,
+        "remaining_count": remaining,
+        "unread_count": status_counts.get("unread", 0),
+        "read_needs_claims_count": status_counts.get("read_needs_claims", 0),
+        "triaged_pending_action_count": status_counts.get("triaged_pending_action", 0),
+        "triaged_watch_count": status_counts.get("triaged_watch", 0),
+        "blocked_needs_steward_count": status_counts.get("blocked_needs_steward", 0),
+        "status_counts": dict(sorted(status_counts.items())),
+    }
+
+
+def counter_audit_for_artifacts(
+    artifacts: dict[str, dict[str, Any]],
+    summary: dict[str, Any],
+) -> dict[str, Any]:
+    all_items = list(artifacts.values())
+    canonical_items = [
+        item for item in all_items if str(item.get("artifact_kind") or "") == "canonical_introspection"
+    ]
+    thin_items = [
+        item for item in all_items if str(item.get("artifact_kind") or "") == "thin_introspection_output"
+    ]
+    other_items = [
+        item
+        for item in all_items
+        if str(item.get("artifact_kind") or "")
+        not in {"canonical_introspection", "thin_introspection_output"}
+    ]
+    all_counts = _addressing_scope_counts(all_items)
+    canonical_counts = _addressing_scope_counts(canonical_items)
+    thin_counts = _addressing_scope_counts(thin_items)
+    other_counts = _addressing_scope_counts(other_items)
+    checks = {
+        "total_indexed_matches_scope_sum": int(summary.get("total_indexed") or 0)
+        == canonical_counts["indexed"] + thin_counts["indexed"] + other_counts["indexed"],
+        "all_remaining_matches_pending_count": all_counts["remaining_count"]
+        == int(summary.get("pending_count") or 0),
+        "all_addressed_plus_pending_matches_total": all_counts["fully_addressed_count"]
+        + all_counts["remaining_count"]
+        == all_counts["indexed"],
+        "canonical_addressed_plus_remaining_matches_indexed": canonical_counts["fully_addressed_count"]
+        + canonical_counts["remaining_count"]
+        == canonical_counts["indexed"],
+        "canonical_indexed_matches_summary": canonical_counts["indexed"]
+        == int(summary.get("canonical_indexed") or 0),
+        "full_read_not_above_total": all_counts["full_read_count"] <= all_counts["indexed"],
+        "canonical_full_read_not_above_indexed": canonical_counts["full_read_count"]
+        <= canonical_counts["indexed"],
+    }
+    mismatches = [name for name, ok in checks.items() if not ok]
+    return {
+        "schema": "introspection_addressing_counter_audit_v1",
+        "status": "consistent" if not mismatches else "mismatch",
+        "scope_note": (
+            "summary.pending_count is all indexed artifacts; use "
+            "canonical_introspections.remaining_count for the canonical reading backlog."
+        ),
+        "recommended_final_report_fields": {
+            "canonical_indexed": canonical_counts["indexed"],
+            "canonical_fully_addressed": canonical_counts["fully_addressed_count"],
+            "canonical_remaining": canonical_counts["remaining_count"],
+            "all_artifact_pending": all_counts["remaining_count"],
+            "noncanonical_pending": thin_counts["remaining_count"] + other_counts["remaining_count"],
+        },
+        "checks": checks,
+        "mismatches": mismatches,
+        "all_artifacts": all_counts,
+        "canonical_introspections": canonical_counts,
+        "thin_introspection_outputs": thin_counts,
+        "other_timestamped_text": other_counts,
+    }
+
+
 def materialized_status(
     artifacts: dict[str, dict[str, Any]],
     *,
@@ -1415,6 +1496,22 @@ def materialized_status(
         key: with_agency_status_overlay(item)
         for key, item in sorted(work_items.items())
     }
+    summary = {
+        "total_indexed": len(artifacts),
+        "canonical_indexed": canonical_indexed,
+        "thin_indexed": counts.get("thin_introspection_output", 0),
+        "other_indexed": counts.get("other_timestamped_text", 0),
+        "full_read_count": full_read_count,
+        "fully_addressed_count": fully_addressed_count,
+        "pending_count": pending_count,
+        "blocked_count": blocked_count,
+        "corrupt_event_lines": corrupt_event_lines,
+        "top_source_families": [
+            {"source_family": name, "count": count}
+            for name, count in source_counts.most_common(10)
+        ],
+    }
+    counter_audit = counter_audit_for_artifacts(artifacts, summary)
     status = {
         "schema": SCHEMA,
         "schema_version": SCHEMA_VERSION,
@@ -1424,21 +1521,8 @@ def materialized_status(
             "cutoff": cutoff_filename,
             "cutoff_indexed": cutoff_indexed,
         },
-        "summary": {
-            "total_indexed": len(artifacts),
-            "canonical_indexed": canonical_indexed,
-            "thin_indexed": counts.get("thin_introspection_output", 0),
-            "other_indexed": counts.get("other_timestamped_text", 0),
-            "full_read_count": full_read_count,
-            "fully_addressed_count": fully_addressed_count,
-            "pending_count": pending_count,
-            "blocked_count": blocked_count,
-            "corrupt_event_lines": corrupt_event_lines,
-            "top_source_families": [
-                {"source_family": name, "count": count}
-                for name, count in source_counts.most_common(10)
-            ],
-        },
+        "summary": summary,
+        "counter_audit": counter_audit,
         "authority_boundary": AUTHORITY_BOUNDARY,
         "agency_boundary": AGENCY_BOUNDARY,
         "agency_continuation_during_authority_wait": AGENCY_CONTINUES_DURING_AUTHORITY_WAIT,
@@ -1477,18 +1561,36 @@ def report_from_status(status: dict[str, Any]) -> dict[str, Any]:
         }
     summary = status.get("summary") if isinstance(status.get("summary"), dict) else {}
     cutoff = status.get("cutoff") if isinstance(status.get("cutoff"), dict) else {}
+    counter_audit = (
+        status.get("counter_audit")
+        if isinstance(status.get("counter_audit"), dict)
+        else counter_audit_for_artifacts(
+            status.get("artifacts") if isinstance(status.get("artifacts"), dict) else {},
+            summary,
+        )
+    )
+    canonical_remaining = int(
+        ((counter_audit.get("canonical_introspections") or {}).get("remaining_count") or 0)
+    )
+    noncanonical_pending = int(
+        ((counter_audit.get("recommended_final_report_fields") or {}).get("noncanonical_pending") or 0)
+    )
     work_items = status.get("work_items") if isinstance(status.get("work_items"), dict) else {}
     work_summary = (
         status.get("work_item_summary")
         if isinstance(status.get("work_item_summary"), dict)
         else work_item_summary(work_items)
     )
-    if summary.get("corrupt_event_lines"):
+    if counter_audit.get("status") == "mismatch":
+        report_status = "counter_audit_mismatch"
+    elif summary.get("corrupt_event_lines"):
         report_status = "database_corrupt_lines_ignored"
     elif not cutoff.get("cutoff_indexed"):
         report_status = "cutoff_not_indexed"
-    elif summary.get("canonical_indexed") and summary.get("pending_count") == 0:
+    elif summary.get("canonical_indexed") and canonical_remaining == 0 and noncanonical_pending == 0:
         report_status = "all_indexed_artifacts_addressed"
+    elif summary.get("canonical_indexed") and canonical_remaining == 0:
+        report_status = "all_canonical_introspections_addressed_noncanonical_pending"
     else:
         report_status = "queue_active"
     return {
@@ -1506,6 +1608,7 @@ def report_from_status(status: dict[str, Any]) -> dict[str, Any]:
             "corrupt_event_lines": int(summary.get("corrupt_event_lines") or 0),
             "top_source_families": summary.get("top_source_families") or [],
         },
+        "counter_audit": counter_audit,
         "work_item_summary": work_summary,
         "next_queue": queue_items(status, limit=3),
         "next_work_queue": work_queue_items(status, limit=3),
@@ -1549,6 +1652,25 @@ def build_report(state_dir: Path = DEFAULT_STATE_DIR) -> dict[str, Any]:
     report = status.get("report") if isinstance(status.get("report"), dict) else {}
     if not report or "work_item_summary" not in report:
         return report_from_status(status)
+    if "counter_audit" not in report:
+        if isinstance(status.get("artifacts"), dict):
+            return report_from_status(status)
+        legacy_report = dict(report)
+        legacy_report["counter_audit"] = {
+            "schema": "introspection_addressing_counter_audit_v1",
+            "status": "legacy_unavailable",
+            "scope_note": "Run inventory --write to materialize canonical/all-artifact counter reconciliation.",
+            "recommended_final_report_fields": {
+                "canonical_indexed": int((report.get("summary") or {}).get("canonical_indexed") or 0),
+                "canonical_fully_addressed": 0,
+                "canonical_remaining": int((report.get("summary") or {}).get("pending_count") or 0),
+                "all_artifact_pending": int((report.get("summary") or {}).get("pending_count") or 0),
+                "noncanonical_pending": 0,
+            },
+            "checks": {},
+            "mismatches": [],
+        }
+        return legacy_report
     return report
 
 
@@ -2167,6 +2289,12 @@ def promote_work_items(
 def render_queue_markdown(status: dict[str, Any], *, limit: int = 50) -> str:
     report = report_from_status(status)
     work_summary = report.get("work_item_summary") or {}
+    counter_audit = report.get("counter_audit") if isinstance(report.get("counter_audit"), dict) else {}
+    recommended = (
+        counter_audit.get("recommended_final_report_fields")
+        if isinstance(counter_audit.get("recommended_final_report_fields"), dict)
+        else {}
+    )
     lines = [
         "# Introspection Addressing Queue",
         "",
@@ -2175,6 +2303,9 @@ def render_queue_markdown(status: dict[str, Any], *, limit: int = 50) -> str:
         f"- canonical_indexed: {report.get('summary', {}).get('canonical_indexed', 0)}",
         f"- fully_addressed: {report.get('summary', {}).get('fully_addressed_count', 0)}",
         f"- pending: {report.get('summary', {}).get('pending_count', 0)}",
+        f"- counter_audit: {counter_audit.get('status', 'unknown')}",
+        f"- canonical_remaining: {recommended.get('canonical_remaining', 0)}",
+        f"- noncanonical_pending: {recommended.get('noncanonical_pending', 0)}",
         f"- active_work_items: {work_summary.get('active_work_items', 0)}",
         f"- grant_waiting: {work_summary.get('grant_waiting_count', 0)}",
         f"- awaiting_felt_response: {work_summary.get('post_change_awaiting_response_count', 0)}",
@@ -2225,6 +2356,12 @@ def render_queue_markdown(status: dict[str, Any], *, limit: int = 50) -> str:
 def render_report_markdown(report: dict[str, Any]) -> str:
     summary = report.get("summary") or {}
     work_summary = report.get("work_item_summary") or {}
+    counter_audit = report.get("counter_audit") if isinstance(report.get("counter_audit"), dict) else {}
+    recommended = (
+        counter_audit.get("recommended_final_report_fields")
+        if isinstance(counter_audit.get("recommended_final_report_fields"), dict)
+        else {}
+    )
     lines = [
         "# Introspection Addressing V1",
         "",
@@ -2234,6 +2371,10 @@ def render_report_markdown(report: dict[str, Any]) -> str:
         f"- full_read: {summary.get('full_read_count', 0)}",
         f"- fully_addressed: {summary.get('fully_addressed_count', 0)}",
         f"- pending: {summary.get('pending_count', 0)}",
+        f"- counter_audit: {counter_audit.get('status', 'unknown')}",
+        f"- canonical_remaining: {recommended.get('canonical_remaining', 0)}",
+        f"- all_artifact_pending: {recommended.get('all_artifact_pending', summary.get('pending_count', 0))}",
+        f"- noncanonical_pending: {recommended.get('noncanonical_pending', 0)}",
         f"- blocked: {summary.get('blocked_count', 0)}",
         f"- corrupt_event_lines: {summary.get('corrupt_event_lines', 0)}",
         f"- active_work_items: {work_summary.get('active_work_items', 0)}",
@@ -2244,6 +2385,12 @@ def render_report_markdown(report: dict[str, Any]) -> str:
         f"- tier_mismatches: {work_summary.get('tier_mismatch_count', 0)}",
         f"- boundary: {report.get('authority_boundary') or AUTHORITY_BOUNDARY}",
         f"- agency_boundary: {report.get('agency_boundary') or AGENCY_BOUNDARY}",
+        "",
+        "## Counter Audit",
+        "",
+        f"- status: {counter_audit.get('status', 'unknown')}",
+        f"- note: {counter_audit.get('scope_note', 'not available')}",
+        f"- mismatches: {counter_audit.get('mismatches', [])}",
         "",
         "## Agency Work Queue",
         "",
@@ -2419,6 +2566,55 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
         self.assertTrue(record["candidate_evidence"])
         self.assertEqual(record["status"], "unread")
         self.assertFalse(record["fully_addressed"])
+
+    def test_counter_audit_separates_canonical_remaining_from_all_pending(self) -> None:
+        canonical = {
+            "introspection_id": "introspection_astrid_llm_2",
+            "filename": "introspection_astrid_llm_2.txt",
+            "timestamp": 2,
+            "artifact_kind": "canonical_introspection",
+            "source_family": "astrid_llm",
+            "path": "/tmp/introspection_astrid_llm_2.txt",
+            "sha256": "abc",
+            "full_read": True,
+            "fully_addressed": True,
+            "status": "addressed_change",
+        }
+        thin = {
+            "introspection_id": "thin_introspection_output_astrid_codec_1",
+            "filename": "thin_introspection_output_astrid_codec_1.txt",
+            "timestamp": 1,
+            "artifact_kind": "thin_introspection_output",
+            "source_family": "astrid_codec",
+            "path": "/tmp/thin_introspection_output_astrid_codec_1.txt",
+            "sha256": "def",
+            "full_read": False,
+            "fully_addressed": False,
+            "status": "unread",
+        }
+
+        status = materialized_status(
+            {
+                canonical["introspection_id"]: canonical,
+                thin["introspection_id"]: thin,
+            },
+            cutoff={"cutoff": "introspection_astrid_llm_2.txt", "cutoff_timestamp": 2},
+        )
+        audit = status["counter_audit"]
+        recommended = audit["recommended_final_report_fields"]
+        report = report_from_status(status)
+        rendered = render_report_markdown(report)
+
+        self.assertEqual(audit["status"], "consistent")
+        self.assertEqual(status["summary"]["pending_count"], 1)
+        self.assertEqual(recommended["canonical_remaining"], 0)
+        self.assertEqual(recommended["noncanonical_pending"], 1)
+        self.assertEqual(
+            report["status"],
+            "all_canonical_introspections_addressed_noncanonical_pending",
+        )
+        self.assertIn("- canonical_remaining: 0", rendered)
+        self.assertIn("- noncanonical_pending: 1", rendered)
 
     def test_work_items_do_not_make_introspection_fully_addressed(self) -> None:
         import tempfile
@@ -2893,6 +3089,10 @@ def main(argv: list[str] | None = None) -> int:
     report_p.add_argument("--json", action="store_true")
     report_p.add_argument("--markdown", action="store_true")
 
+    audit_p = sub.add_parser("audit-counters")
+    audit_p.add_argument("--json", action="store_true")
+    audit_p.add_argument("--markdown", action="store_true")
+
     promote_p = sub.add_parser("promote-work-items")
     promote_p.add_argument("--ids", nargs="*", default=None)
     promote_p.add_argument("--next", type=int, default=0)
@@ -3007,6 +3207,36 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report, indent=2, sort_keys=True, ensure_ascii=False))
         else:
             print(render_report_markdown(report), end="")
+        return 0
+
+    if args.cmd == "audit-counters":
+        report = build_report(state_dir)
+        counter_audit = (
+            report.get("counter_audit")
+            if isinstance(report.get("counter_audit"), dict)
+            else {"schema": "introspection_addressing_counter_audit_v1", "status": "missing"}
+        )
+        if args.json:
+            print(json.dumps(counter_audit, indent=2, sort_keys=True, ensure_ascii=False))
+        else:
+            recommended = (
+                counter_audit.get("recommended_final_report_fields")
+                if isinstance(counter_audit.get("recommended_final_report_fields"), dict)
+                else {}
+            )
+            lines = [
+                "# Introspection Counter Audit",
+                "",
+                f"- status: {counter_audit.get('status', 'unknown')}",
+                f"- canonical_indexed: {recommended.get('canonical_indexed', 0)}",
+                f"- canonical_fully_addressed: {recommended.get('canonical_fully_addressed', 0)}",
+                f"- canonical_remaining: {recommended.get('canonical_remaining', 0)}",
+                f"- all_artifact_pending: {recommended.get('all_artifact_pending', 0)}",
+                f"- noncanonical_pending: {recommended.get('noncanonical_pending', 0)}",
+                f"- mismatches: {counter_audit.get('mismatches', [])}",
+                f"- note: {counter_audit.get('scope_note', 'not available')}",
+            ]
+            print("\n".join(lines).rstrip() + "\n", end="")
         return 0
 
     if args.cmd == "promote-work-items":

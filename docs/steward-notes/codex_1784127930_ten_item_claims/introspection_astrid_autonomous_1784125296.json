@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Mirror needs semantic anchor checks so metaphorical journal entries do not lose felt emotion through the eigenvalue lens.",
+      "disposition": "verified_existing_anchor_and_drift_guard"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Journal suppression can make memory feel hollow during high entropy and should stay visible in tests.",
+      "disposition": "verified_existing_test_suppression_guard"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "A correspondence semantic coherence threshold could trigger TRACE when spectral change is too radical.",
+      "disposition": "gated_language_policy_change_needs_replay_evidence"
+    }
+  ]
+}

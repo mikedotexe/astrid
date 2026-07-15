@@ -1,0 +1,16 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "Static high-entropy pressure smoothing may hide fast spikes and should be evaluated as a live bridge behavior retune, not silently changed.",
+      "disposition": "gated_operator_approval",
+      "authority": "tier_4_bridge_runtime_threshold_behavior"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "The current 0.32 pressure/mode-packing texture should remain distinguishable from the 0.29 warning band.",
+      "disposition": "verified_existing",
+      "authority": "read_only_test_evidence"
+    }
+  ]
+}

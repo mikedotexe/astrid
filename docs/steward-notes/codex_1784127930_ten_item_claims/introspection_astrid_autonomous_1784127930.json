@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Witness/Mirror high-entropy recaps need to preserve semantic anchors near the truncation boundary rather than severing crucial felt words.",
+      "disposition": "verified_existing_and_extended_by_language_surface"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Mirror can become literal echo unless spectral/semantic shift and drift evidence remain visible.",
+      "disposition": "verified_existing_mirror_drift_guard"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Entropy above 0.85 may warrant pressure/porosity risk sensitivity changes.",
+      "disposition": "blocked_live_control_requires_v2_authority"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "ESN exploration-noise, pressure-room, and viscous-rho review surfaces should preserve Minime's restless-but-habitable texture as read-only evidence.",
+      "disposition": "verified_existing_evidence"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Changing DEFAULT_EXPLORATION_NOISE, pressure-room thresholds, rho policy, or ESN step wiring remains live-control operator-gated.",
+      "disposition": "gated_operator_approval"
+    }
+  ]
+}

@@ -591,7 +591,7 @@ fn handle_pressure_relief(
 }
 
 fn pressure_relief_review_context() -> String {
-    let Some(review_path) = latest_self_study_review_json_path(&bridge_paths().bridge_workspace())
+    let Some(review_path) = latest_self_study_review_json_path(bridge_paths().bridge_workspace())
     else {
         return "  - latest_review=(none); gradient/tail packets unavailable; run self_study_review.py for current context.".to_string();
     };

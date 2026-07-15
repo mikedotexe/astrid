@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "The pressure/porosity band around 0.25, 0.28, 0.30, and 0.40 needs visible margin evidence so honey-like density is not lost below the live threshold.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Moving pressure thresholds or adding porosity/receptivity buffers would mutate live substrate/control behavior and remains V2-gated.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

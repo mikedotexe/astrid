@@ -341,7 +341,7 @@ pub fn approve_from_paths(
     let steward = req.steward.unwrap_or_else(|| "steward".to_string());
     let note = req.note.unwrap_or_default();
     let authority_lifecycle_v2 = authority_lifecycle_v2_for_approval(
-        &location, request_id, &scope, &steward, now, expires_at,
+        &location, request_id, scope, &steward, now, expires_at,
     );
     let authority_boundary_packet_v2 = authority_lifecycle_v2
         .get("authority_boundary_packet_v2")

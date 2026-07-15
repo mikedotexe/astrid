@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "claim": "The 48D semantic lane is Astrid's communicative architecture; deterministic encoding gives a stable fingerprint rather than an arbitrary implementation detail.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c002",
+      "claim": "The 768D to 8D semantic projection may flatten viscous persistence, silted lingering texture, and overlapping states into a linear narrative arc, so the projection should be compared against raw texture features.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c003",
+      "claim": "Character-level entropy through the live 1024-character frequency window should still correlate with actual character entropy in codec dimensions 0-7.",
+      "disposition": "addressed_change"
+    },
+    {
+      "claim_id": "c004",
+      "claim": "Multi-modal projection preserving lingering persistence, active semantic motion, boundary porosity, and overlapping narrative state deserves concrete proposal evidence, but any live vector/gain/reserved-dim change requires approval.",
+      "disposition": "addressed_no_action"
+    }
+  ]
+}

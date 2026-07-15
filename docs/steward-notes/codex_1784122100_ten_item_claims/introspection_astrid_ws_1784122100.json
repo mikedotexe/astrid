@@ -1,0 +1,14 @@
+{
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Pressure/porosity readiness should distinguish the reported 0.32 edge from the 0.29 warning band without applying local control.",
+      "disposition": "implemented_verified"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Changing pressure/porosity thresholds or high-entropy smoothing would alter live bridge/substrate behavior and remains Mike/operator-gated.",
+      "disposition": "gated_operator_approval"
+    }
+  ]
+}
