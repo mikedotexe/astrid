@@ -194,6 +194,8 @@ Before promoting future models, run the audit, canary it in one role, capture
 latency/memory/NEXT-parser/artifact-leak behavior, and write the rollback path.
 For Astrid, canary the coupled MLX lane first; do not make the Ollama fallback
 larger or more adventurous while it is still the emergency path.
+For future MLX core/package upgrades, use the dedicated operator checklist in
+[`docs/astrid-mlx-upgrade-runbook.md`](docs/astrid-mlx-upgrade-runbook.md).
 
 ```bash
 # Start and probe a Gemma 4 Astrid candidate on an alternate port.
