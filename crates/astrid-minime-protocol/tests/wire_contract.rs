@@ -117,6 +117,6 @@ fn legacy_packet_accepts_pre_active_mode_shape() {
         CompatibilityStatus::LegacyUnversioned
     );
     assert_eq!(packet.active_mode_count, 0);
-    assert_eq!(packet.active_mode_energy_ratio, 0.0);
+    assert!(packet.active_mode_energy_ratio.abs() < f32::EPSILON);
     assert!(!packet.modalities.audio_fired);
 }
