@@ -63,6 +63,7 @@ pub mod spectral_viz;
 pub mod sticky_mode;
 pub mod trace_lab;
 pub mod types;
+pub mod witness;
 pub mod ws;
 
 #[cfg(test)]

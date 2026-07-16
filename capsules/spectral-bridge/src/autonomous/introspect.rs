@@ -47,6 +47,15 @@ pub(super) struct IntrospectWindow {
     pub next_offset: Option<usize>,
 }
 
+fn minime_autonomy_implementation(minime_root: &Path) -> PathBuf {
+    let implementation = minime_root.join("minime_autonomy/runtime.py");
+    if implementation.exists() {
+        implementation
+    } else {
+        minime_root.join("autonomous_agent.py")
+    }
+}
+
 #[must_use]
 pub(super) fn introspect_sources() -> Vec<IntrospectSource> {
     let paths = bridge_paths();
@@ -57,27 +66,27 @@ pub(super) fn introspect_sources() -> Vec<IntrospectSource> {
     vec![
         IntrospectSource {
             label: "astrid:codec",
-            path: bridge_root.join("src/codec.rs"),
+            path: bridge_root.join("src/codec/projection.rs"),
         },
         IntrospectSource {
             label: "astrid:autonomous",
-            path: bridge_root.join("src/autonomous.rs"),
+            path: bridge_root.join("src/autonomous/runtime/orchestration.rs"),
         },
         IntrospectSource {
             label: "astrid:ws",
-            path: bridge_root.join("src/ws.rs"),
+            path: bridge_root.join("src/ws/telemetry_port.rs"),
         },
         IntrospectSource {
             label: "astrid:types",
-            path: bridge_root.join("src/types.rs"),
+            path: bridge_root.join("src/types/schema/telemetry.rs"),
         },
         IntrospectSource {
             label: "astrid:llm",
-            path: bridge_root.join("src/llm.rs"),
+            path: bridge_root.join("src/llm/provider/dialogue_runtime.rs"),
         },
         IntrospectSource {
             label: "minime:regulator",
-            path: minime_root.join("minime/src/regulator.rs"),
+            path: minime_root.join("minime/src/regulator/core.rs"),
         },
         IntrospectSource {
             label: "minime:sensory_bus",
@@ -89,11 +98,11 @@ pub(super) fn introspect_sources() -> Vec<IntrospectSource> {
         },
         IntrospectSource {
             label: "minime:main(excerpt)",
-            path: minime_root.join("minime/src/main.rs"),
+            path: minime_root.join("minime/src/runtime.rs"),
         },
         IntrospectSource {
             label: "minime:autonomous_agent",
-            path: minime_root.join("autonomous_agent.py"),
+            path: minime_autonomy_implementation(minime_root),
         },
         IntrospectSource {
             label: "proposal:phase_transitions",
@@ -325,7 +334,7 @@ fn semantic_introspect_target(target_label: &str) -> Option<(String, PathBuf)> {
                 "perturb parser",
                 "action arg",
             ][..],
-            paths.minime_root().join("autonomous_agent.py"),
+            minime_autonomy_implementation(paths.minime_root()),
         ),
     ];
 
@@ -371,6 +380,7 @@ fn source_roots(paths: &BridgePaths) -> Vec<PathBuf> {
         paths.bridge_root().join("src"),
         paths.astrid_root().join("docs/steward-notes"),
         paths.minime_root().join("minime/src"),
+        paths.minime_root().join("minime_autonomy"),
         paths.minime_root().join("autonomous_agent.py"),
     ]
 }
@@ -451,14 +461,9 @@ fn canonicalize_root(root: &Path) -> Option<PathBuf> {
 
 fn is_curated_large_introspect_target(label: &str, path: &Path) -> bool {
     let label_matches = normalize_introspect_lookup(label) == "minime autonomous agent";
-    let path_matches = path
-        .file_name()
-        .and_then(std::ffi::OsStr::to_str)
-        .is_some_and(|name| name == "autonomous_agent.py")
-        && path
-            .display()
-            .to_string()
-            .contains("/minime/autonomous_agent.py");
+    let display = path.display().to_string();
+    let path_matches = display.contains("/minime/autonomous_agent.py")
+        || display.contains("/minime/minime_autonomy/runtime.py");
     label_matches || path_matches
 }
 

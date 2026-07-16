@@ -1,3 +1,5 @@
+//! Typed autonomous action routing facade.
+
 mod ask_steward;
 mod attractor;
 mod audio;

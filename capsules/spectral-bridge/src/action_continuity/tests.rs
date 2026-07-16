@@ -242,7 +242,7 @@ fn continuity_control_plane_surfaces_generated_palette_and_caps() {
 #[test]
 fn control_plane_regression_does_not_reintroduce_old_local_budget_caps() {
     let source = std::fs::read_to_string(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/action_continuity.rs"),
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/action_continuity/runtime.rs"),
     )
     .expect("action_continuity source");
     let production_source = source

@@ -1,0 +1,13 @@
+error[E0451]: fields `provenance`, `texture`, `residual_deformation` and `pressure_trend` of struct `BridgeEvidenceV1` are private
+  --> tests/ui/producer_cannot_construct_bridge_evidence.rs:13:9
+   |
+12 |     BridgeEvidenceV1 {
+   |     ---------------- in this type
+13 |         provenance,
+   |         ^^^^^^^^^^ private field
+14 |         texture,
+   |         ^^^^^^^ private field
+15 |         residual_deformation,
+   |         ^^^^^^^^^^^^^^^^^^^^ private field
+16 |         pressure_trend,
+   |         ^^^^^^^^^^^^^^ private field

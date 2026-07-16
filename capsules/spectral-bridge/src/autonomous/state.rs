@@ -49,7 +49,7 @@ pub(crate) struct DisperseBaseline {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub(super) struct AstridMotifCooldown {
+pub(in crate::autonomous) struct AstridMotifCooldown {
     #[serde(default = "default_internal_topology_label")]
     pub label: String,
     #[serde(default = "default_internal_topology_class")]
@@ -457,7 +457,7 @@ pub(crate) struct PendingHebbianOutcome {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub(super) struct ResearchProgressReceipt {
+pub(in crate::autonomous) struct ResearchProgressReceipt {
     #[serde(default)]
     pub exchange_count: u64,
     #[serde(default)]
@@ -936,7 +936,7 @@ fn normalize_focus_theme(choice: &str) -> Option<String> {
 
 /// Conversational mode for each exchange.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Mode {
+pub(in crate::autonomous) enum Mode {
     /// Feed minime's own journal text back as sensory input.
     Mirror,
     /// Astrid's philosophical response engaging with minime's themes.
@@ -970,7 +970,7 @@ pub(super) enum Mode {
 /// controller behavior, or any peer state.
 #[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub(super) enum WitnessDepthV1 {
+pub(in crate::autonomous) enum WitnessDepthV1 {
     #[default]
     Summary,
     TextureField,
@@ -989,7 +989,7 @@ impl WitnessDepthV1 {
 
 /// A timestamped spectral snapshot for tracking rates of change.
 #[derive(Clone)]
-pub(super) struct SpectralSample {
+pub(in crate::autonomous) struct SpectralSample {
     pub fill: f32,
     pub lambda1: f32,
     /// λ4+ tail energy share at sample time — feeds the λ-tail trajectory note.
@@ -1001,7 +1001,7 @@ pub(super) struct SpectralSample {
 }
 
 /// Tracks conversational context across iterations.
-pub(super) struct ConversationState {
+pub(in crate::autonomous) struct ConversationState {
     pub prev_fill: f32,
     /// Ring buffer of recent (fill, lambda1, timestamp) samples for rate-of-change
     /// and multi-horizon trend reporting. Capped at 30 entries (~10 minutes of exchanges).

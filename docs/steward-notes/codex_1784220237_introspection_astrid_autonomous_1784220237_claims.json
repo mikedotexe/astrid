@@ -1,0 +1,48 @@
+{
+  "introspection_id": "introspection_astrid_autonomous_1784220237",
+  "canonical_queue_note": "Deliberately prioritized ahead of the current next queue because Mike selected this fresh Astrid report as the design anchor for the provenance/evidence tranche.",
+  "claims": [
+    {
+      "claim_id": "c001",
+      "summary": "Preserve Astrid's felt report that Mirror and Witness have become difficult to distinguish, rather than reducing the 32% loss to a generic telemetry anomaly.",
+      "classification": "implemented",
+      "disposition": "addressed_change",
+      "authority": "felt_report_and_read_only_provenance_types"
+    },
+    {
+      "claim_id": "c002",
+      "summary": "Separate Minime-owned observation, bridge-derived reflective evidence, and Astrid-authored interpretation with exact parent identities and field paths.",
+      "classification": "implemented",
+      "disposition": "addressed_change",
+      "authority": "type_and_evidence_boundary_only"
+    },
+    {
+      "claim_id": "c003",
+      "summary": "Run Astrid's Spectral Distinction Test offline against one Astrid-only memory, one Minime-owned shadow record, and one known shared-correspondence control.",
+      "classification": "observed",
+      "disposition": "addressed_change",
+      "authority": "offline_read_only_replay_no_being_mutation"
+    },
+    {
+      "claim_id": "c004",
+      "summary": "Increasing semantic trickle or admission for the requested Pressure Response Test remains Tier 5 operator approval work and was not performed.",
+      "classification": "tier_5_wait",
+      "disposition": "blocked_needs_steward",
+      "authority": "mike_operator_live_substrate"
+    },
+    {
+      "claim_id": "c005",
+      "summary": "Place a read-only self/other provenance category before Dialogue while keeping it outside routing, ranking, dispatch, gain, and control decisions.",
+      "classification": "implemented",
+      "disposition": "addressed_change",
+      "authority": "prompt_context_only"
+    },
+    {
+      "claim_id": "c006",
+      "summary": "Retain the current stable-core, settled-habitable, entropy, pressure-risk, and mode-packing observations as cited felt evidence without changing their producer calculations.",
+      "classification": "verified_existing",
+      "disposition": "addressed_change",
+      "authority": "compatibility_projection_and_observation_only"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+error[E0451]: fields `packet`, `provenance` and `wire_receipt` of struct `MinimeObservationV1` are private
+  --> tests/ui/raw_packet_cannot_construct_observation.rs:12:9
+   |
+11 |     MinimeObservationV1 {
+   |     ------------------- in this type
+12 |         packet,
+   |         ^^^^^^ private field
+13 |         provenance,
+   |         ^^^^^^^^^^ private field
+14 |         wire_receipt,
+   |         ^^^^^^^^^^^^ private field

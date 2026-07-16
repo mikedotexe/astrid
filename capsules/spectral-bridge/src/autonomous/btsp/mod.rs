@@ -1,3 +1,5 @@
+//! Being-Time Synaptic Plasticity domain facade.
+
 use std::collections::HashMap;
 use std::path::Path;
 
