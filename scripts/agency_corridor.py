@@ -27,6 +27,15 @@ try:
 except ModuleNotFoundError:  # unittest/importlib execution from the repository root
     from scripts.authority_state import normalize_artifact_authority_tree
 
+try:
+    from evidence_store import append_domain_events, read_domain_events, v2_active_for_state
+except ModuleNotFoundError:
+    from scripts.evidence_store import (
+        append_domain_events,
+        read_domain_events,
+        v2_active_for_state,
+    )
+
 ASTRID_REPO = Path("/Users/v/other/astrid")
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
 DEFAULT_STATE_DIR = ASTRID_WORKSPACE / "diagnostics/agency_corridor_v1"
@@ -143,6 +152,12 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def read_events(state_dir: Path) -> list[dict[str, Any]]:
+    if v2_active_for_state(state_dir):
+        stream = "corridor_v2" if state_dir.name.endswith("_v2") else "corridor_v1"
+        events, corrupt = read_domain_events(state_dir, stream)
+        if corrupt:
+            raise RuntimeError(f"canonical evidence store has {corrupt} corrupt event line(s)")
+        return events
     path = state_dir / EVENTS_FILE
     if not path.exists():
         return []
@@ -161,6 +176,10 @@ def read_events(state_dir: Path) -> list[dict[str, Any]]:
 
 def append_events(state_dir: Path, events: list[dict[str, Any]]) -> None:
     if not events:
+        return
+    if v2_active_for_state(state_dir):
+        stream = "corridor_v2" if state_dir.name.endswith("_v2") else "corridor_v1"
+        append_domain_events(state_dir, stream, events)
         return
     path = state_dir / EVENTS_FILE
     path.parent.mkdir(parents=True, exist_ok=True)

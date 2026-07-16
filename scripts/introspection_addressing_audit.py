@@ -24,6 +24,15 @@ try:
 except ModuleNotFoundError:  # unittest/importlib execution from the repository root
     from scripts.authority_state import normalize_artifact_authority_tree
 
+try:
+    from evidence_store import append_domain_events, read_domain_events, v2_active_for_state
+except ModuleNotFoundError:
+    from scripts.evidence_store import (
+        append_domain_events,
+        read_domain_events,
+        v2_active_for_state,
+    )
+
 ASTRID_REPO = Path(__file__).resolve().parents[1]
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
 DEFAULT_INTROSPECTIONS_DIR = ASTRID_WORKSPACE / "introspections"
@@ -995,6 +1004,9 @@ def queue_path(state_dir: Path) -> Path:
 def append_events(state_dir: Path, events: list[dict[str, Any]]) -> None:
     if not events:
         return
+    if v2_active_for_state(state_dir):
+        append_domain_events(state_dir, "addressing", events)
+        return
     path = event_path(state_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as fh:
@@ -1004,6 +1016,8 @@ def append_events(state_dir: Path, events: list[dict[str, Any]]) -> None:
 
 
 def read_events(state_dir: Path) -> tuple[list[dict[str, Any]], int]:
+    if v2_active_for_state(state_dir):
+        return read_domain_events(state_dir, "addressing")
     path = event_path(state_dir)
     if not path.exists():
         return [], 0
@@ -1188,6 +1202,8 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
                     "claim_id": claim_id,
                     "summary": bounded_text(str(claim.get("summary") or ""), limit=500),
                     "disposition": str(claim.get("disposition") or "triaged_pending_action"),
+                    "classification": str(claim.get("classification") or "") or None,
+                    "authority": str(claim.get("authority") or "") or None,
                     "evidence": [],
                     "rationale": None,
                 }
@@ -1359,6 +1375,19 @@ def replay_events(state_dir: Path) -> dict[str, Any]:
             item["updated_at"] = event.get("ts")
             refresh_work_item_authority_packets(item)
             work_items[work_item_id] = item
+    for item in work_items.values():
+        artifact = artifacts.get(str(item.get("source_introspection_id") or ""))
+        if not isinstance(artifact, dict):
+            continue
+        claim = (artifact.get("claims") or {}).get(str(item.get("claim_id") or ""))
+        if not isinstance(claim, dict):
+            continue
+        classification = str(claim.get("classification") or "").strip()
+        authority = str(claim.get("authority") or "").strip()
+        if classification:
+            item["claim_classification"] = classification
+        if authority:
+            item["claim_authority"] = authority
     for record in artifacts.values():
         _derive_status(record)
     return materialized_status(artifacts, work_items=work_items, cutoff=cutoff, corrupt_event_lines=corrupt)
@@ -3265,6 +3294,58 @@ class IntrospectionAddressingAuditTests(unittest.TestCase):
 
         self.assertEqual(claims[0]["classification"], "needs_sandbox")
         self.assertEqual(claims[0]["authority"], "non_live_observation_only")
+
+    def test_claim_metadata_survives_full_read_event_replay(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            state = root / "state"
+            summary = root / "summary.txt"
+            claims = root / "claims.json"
+            summary.write_text("read carefully")
+            claims.write_text(
+                json.dumps(
+                    {
+                        "claims": [
+                            {
+                                "claim_id": "c001",
+                                "summary": "Run one bounded replay.",
+                                "classification": "observed",
+                                "disposition": "addressed_change",
+                                "authority": "offline_read_only_replay",
+                            }
+                        ]
+                    }
+                )
+            )
+            artifact = {
+                "introspection_id": "introspection_astrid_autonomous_42",
+                "filename": "introspection_astrid_autonomous_42.txt",
+                "source_family": "astrid_autonomous",
+                "path": "/tmp/introspection_astrid_autonomous_42.txt",
+                "sha256": "abc",
+                "candidate_evidence": [],
+                "excerpt": "x",
+            }
+            append_events(
+                state,
+                [
+                    event_inventory_artifact(artifact),
+                    record_read_event(
+                        artifact["introspection_id"], "codex", summary, claims
+                    ),
+                ],
+            )
+            replayed = replay_events(state)["artifacts"][artifact["introspection_id"]][
+                "claims"
+            ]["c001"]
+            work_item = work_item_from_claim(artifact, replayed)
+
+        self.assertEqual(replayed["classification"], "observed")
+        self.assertEqual(replayed["authority"], "offline_read_only_replay")
+        self.assertEqual(work_item["claim_classification"], "observed")
+        self.assertEqual(work_item["claim_authority"], "offline_read_only_replay")
 
     def test_claim_classification_routes_status_without_lowering_live_authority(self) -> None:
         artifact = {

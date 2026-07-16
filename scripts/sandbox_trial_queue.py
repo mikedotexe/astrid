@@ -22,6 +22,15 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+try:
+    from evidence_store import append_domain_events, read_domain_events, v2_active_for_state
+except ModuleNotFoundError:
+    from scripts.evidence_store import (
+        append_domain_events,
+        read_domain_events,
+        v2_active_for_state,
+    )
+
 ASTRID_REPO = Path("/Users/v/other/astrid")
 MINIME_REPO = Path("/Users/v/other/minime")
 ASTRID_WORKSPACE = ASTRID_REPO / "capsules/spectral-bridge/workspace"
@@ -196,6 +205,12 @@ def events_path(state_dir: Path) -> Path:
 
 
 def replay_status(state_dir: Path) -> dict[str, Any]:
+    if v2_active_for_state(state_dir):
+        events, corrupt = read_domain_events(state_dir, "sandbox")
+        status = empty_status(corrupt)
+        for event in events:
+            apply_event(status, event)
+        return status
     path = events_path(state_dir)
     status = empty_status()
     if not path.exists():
@@ -434,6 +449,9 @@ def apply_event(status: dict[str, Any], event: dict[str, Any]) -> None:
 
 def append_events(state_dir: Path, events: list[dict[str, Any]]) -> None:
     if not events:
+        return
+    if v2_active_for_state(state_dir):
+        append_domain_events(state_dir, "sandbox", events)
         return
     path = events_path(state_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
